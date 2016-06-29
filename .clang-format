@@ -1,0 +1,27 @@
+UseTab: Never
+IndentWidth: 4
+Language : Cpp
+BreakBeforeBraces: Allman
+MaxEmptyLinesToKeep: 1
+IndentCaseLabels: false
+NamespaceIndentation: None
+AccessModifierOffset: -4
+SpacesInParentheses: false
+SpaceInEmptyParentheses: false
+SpacesInCStyleCastParentheses: false
+PointerAlignment: Left
+Cpp11BracedListStyle: false
+AllowShortIfStatementsOnASingleLine: false
+AllowShortFunctionsOnASingleLine : true
+AlignOperands: true
+Standard: Cpp11
+IndentCaseLabels: false
+AlignTrailingComments : false
+ConstructorInitializerAllOnOneLineOrOnePerLine : false
+ColumnLimit: 110
+BinPackParameters : true
+BinPackArguments : true
+AlwaysBreakTemplateDeclarations : true
+AlignConsecutiveAssignments : true
+PenaltyReturnTypeOnItsOwnLine: 50000
+CommentPragmas: '^ >>>'
