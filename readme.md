@@ -40,7 +40,9 @@ FFT (double precision, sizes from 1024 to 16777216)
     
 ## Prerequisities
 
-* XCode 6.3, 6.4, 7.x, 8.x, or C++14-compliant compiler (currently only Clang 3.7 or newer is supported)
+* OS X: XCode 6.3, 6.4, 7.x, 8.x
+* Windows: MinGW 5.2 and Clang 3.7 or newer
+* Ubuntu: GCC 5.1 and Clang 3.7 or newer
 * CoMeta metaprogramming library (already included)
 
 KFR is a header-only so just `#include <kfr/math.hpp>` to start using it
@@ -83,7 +85,8 @@ Execute `build.py` to run the tests or run tests manually from the `tests` direc
 Tested on the following systems:
 
 * OS X 10.11.4 / AppleClang 7.3.0.7030031
-* Windows 8.1 / clang version 3.8.0 (branches/release_38)
+* Ubuntu 14.04 / gcc-5 (Ubuntu 5.3.0-3ubuntu1~14.04) 5.3.0 20151204 / clang version 3.8.0 (tags/RELEASE_380/final)
+* Windows 8.1 / MinGW-W64 / clang version 3.8.0 (branches/release_38)
 
 
 ## Planned for future versions
