@@ -140,9 +140,14 @@ struct in_min_max<cpu_t::avx1> : in_min_max<cpu_t::sse41>
 };
 
 template <>
-struct in_min_max<cpu_t::avx2> : in_min_max<cpu_t::avx1>
+struct in_min_max<cpu_t::avx2> : in_min_max<cpu_t::avx1>, in_select<cpu_t::avx2>
 {
     constexpr static cpu_t cpu = cpu_t::avx2;
+
+private:
+    using in_select<cpu>::select;
+
+public:
     using in_min_max<cpu_t::avx1>::min;
     using in_min_max<cpu_t::avx1>::max;
 
@@ -159,6 +164,11 @@ struct in_min_max<cpu_t::avx2> : in_min_max<cpu_t::avx1>
     KFR_CPU_INTRIN(avx2) u16avx max(u16avx x, u16avx y) { return _mm256_max_epu16(*x, *y); }
     KFR_CPU_INTRIN(avx2) i32avx max(i32avx x, i32avx y) { return _mm256_max_epi32(*x, *y); }
     KFR_CPU_INTRIN(avx2) u32avx max(u32avx x, u32avx y) { return _mm256_max_epu32(*x, *y); }
+
+    KFR_CPU_INTRIN(avx2) i64avx min(i64avx x, i64avx y) { return select(x < y, x, y); }
+    KFR_CPU_INTRIN(avx2) u64avx min(u64avx x, u64avx y) { return select(x < y, x, y); }
+    KFR_CPU_INTRIN(avx2) i64avx max(i64avx x, i64avx y) { return select(x > y, x, y); }
+    KFR_CPU_INTRIN(avx2) u64avx max(u64avx x, u64avx y) { return select(x > y, x, y); }
 
     KFR_HANDLE_ALL(min)
     KFR_HANDLE_ALL(max)

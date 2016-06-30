@@ -115,8 +115,8 @@ template <cpu_t cc>
 struct in_saturated<cpu_t::avx2, cc> : in_saturated<cpu_t::sse2, cc>
 {
     constexpr static cpu_t cpu = cpu_t::avx2;
-    using in_saturated<cpu_t::sse41>::satadd;
-    using in_saturated<cpu_t::sse41>::satsub;
+    using in_saturated<cpu_t::sse2, cc>::satadd;
+    using in_saturated<cpu_t::sse2, cc>::satsub;
 
     KFR_SINTRIN u8avx satadd(u8avx x, u8avx y) { return _mm256_adds_epu8(*x, *y); }
     KFR_SINTRIN i8avx satadd(i8avx x, i8avx y) { return _mm256_adds_epi8(*x, *y); }
@@ -138,9 +138,7 @@ namespace native
 {
 using fn_satadd = internal::in_saturated<>::fn_satadd;
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INLINE ftype<common_type<T1, T2>>
-
-satadd(const T1& x, const T2& y)
+KFR_INLINE ftype<common_type<T1, T2>> satadd(const T1& x, const T2& y)
 {
     return internal::in_saturated<>::satadd(x, y);
 }
@@ -152,9 +150,7 @@ KFR_INLINE expr_func<fn_satadd, E1, E2> satadd(E1&& x, E2&& y)
 }
 using fn_satsub = internal::in_saturated<>::fn_satsub;
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INLINE ftype<common_type<T1, T2>>
-
-satsub(const T1& x, const T2& y)
+KFR_INLINE ftype<common_type<T1, T2>> satsub(const T1& x, const T2& y)
 {
     return internal::in_saturated<>::satsub(x, y);
 }
@@ -162,9 +158,7 @@ satsub(const T1& x, const T2& y)
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 KFR_INLINE expr_func<fn_satsub, E1, E2> satsub(E1&& x, E2&& y)
 {
-    return { fn_satsub(), std::forward<E1>(x), std::forward<E2>(y)
-
-    };
+    return { fn_satsub(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 }
 }

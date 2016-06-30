@@ -42,13 +42,13 @@ print('ok')
 
 if sys.platform.startswith('win32'):
     generator = 'MinGW Makefiles'    
-elif sys.platform.startswith('darwin'):
+else:
     generator = 'Unix Makefiles'
 
 options = [
     '-DCMAKE_BUILD_TYPE=Release',
     ]
 
-subprocess.call(['cmake', '-G', generator, '..'] + options, cwd=build_dir)
-subprocess.call(['cmake', '--build', '.'], cwd=build_dir)
-subprocess.call(['ctest'], cwd=os.path.join(build_dir, 'tests'))
+if subprocess.call(['cmake', '-G', generator, '..'] + options, cwd=build_dir): raise Exception('Can\'t make project')
+if subprocess.call(['cmake', '--build', '.'], cwd=build_dir): raise Exception('Can\'t build project')
+if subprocess.call(['ctest'], cwd=os.path.join(build_dir, 'tests')): raise Exception('Can\'t test project')
