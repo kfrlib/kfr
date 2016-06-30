@@ -1,5 +1,7 @@
 # KFR
 
+[![Build Status](https://travis-ci.org/kfrlib/kfr.svg)](https://travis-ci.org/kfrlib/kfr)
+
 KFR is an open source C++ math framework with focus on DSP.
 
 KFR is a header-only and has no external dependencies.
