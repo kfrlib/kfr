@@ -10,7 +10,10 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise-3.8
+            - george-edison55-precise-backports
           packages:
+            - cmake
+            - cmake-data
             - g++-5
             - clang-3.8
       env: COMPILER=clang++-3.8
@@ -21,4 +24,3 @@ script:
   - mkdir build
   - cd build
   - cmake -DCMAKE_CXX_COMPILER=$COMPILER .. && make
-  - ctest
