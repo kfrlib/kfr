@@ -19,7 +19,7 @@ cmake_minimum_required(VERSION 3.0)
 
 add_compile_options(-fno-exceptions -fno-rtti -ftemplate-backtrace-limit=0)
 
-link_libraries(stdc++ pthread)
+link_libraries(stdc++ pthread m)
 
 include_directories(../include)
 
