@@ -653,11 +653,11 @@ KFR_FN(addsub)
 template <typename T, size_t N>
 KFR_INLINE vec<T, N> negeven(const vec<T, N>& x)
 {
-    return x ^ broadcast<N / 2>(-T(), T());
+    return x ^ broadcast<N>(-T(), T());
 }
 template <typename T, size_t N>
 KFR_INLINE vec<T, N> negodd(const vec<T, N>& x)
 {
-    return x ^ broadcast<N / 2>(T(), -T());
+    return x ^ broadcast<N>(T(), -T());
 }
 }

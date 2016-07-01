@@ -55,7 +55,7 @@ KFR_INLINE constexpr vec<T, Nout> broadcast_helper(csizes_t<indices...>, T x, Ts
 }
 }
 
-template <size_t N, typename T, typename... Ts, size_t Nout = N*(2 + sizeof...(Ts))>
+template <size_t Nout, typename T, typename... Ts>
 constexpr KFR_INLINE vec<T, Nout> broadcast(T x, T y, Ts... rest)
 {
     return internal::broadcast_helper(csizeseq<Nout>, x, y, rest...);
@@ -289,12 +289,12 @@ namespace internal
 template <typename T, size_t N, typename = u8[N > 1]>
 constexpr KFR_INLINE mask<T, N> evenmask()
 {
-    return broadcast<N / 2, T>(maskbits<T>(true), maskbits<T>(false));
+    return broadcast<N, T>(maskbits<T>(true), maskbits<T>(false));
 }
 template <typename T, size_t N, typename = u8[N > 1]>
 constexpr KFR_INLINE mask<T, N> oddmask()
 {
-    return broadcast<N / 2, T>(maskbits<T>(false), maskbits<T>(true));
+    return broadcast<N, T>(maskbits<T>(false), maskbits<T>(true));
 }
 }
 
