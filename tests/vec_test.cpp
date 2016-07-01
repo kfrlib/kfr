@@ -49,7 +49,8 @@ TEST(vec_make_vector)
 {
     const signed char ch = -1;
     CHECK(make_vector(1, 2, ch) == vec<i32, 3>{ 1, 2, -1 });
-    CHECK(make_vector(1, 2, -100ll) == vec<i64, 3>{ 1, 2, -100 });
+    const i64 v = -100;
+    CHECK(make_vector(1, 2, v) == vec<i64, 3>{ 1, 2, -100 });
     CHECK(make_vector<i64>(1, 2, ch) == vec<i64, 3>{ 1, 2, -1 });
     CHECK(make_vector<f32>(1, 2, ch) == vec<f32, 3>{ 1, 2, -1 });
 
