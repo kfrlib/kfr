@@ -27,6 +27,7 @@ add_executable(basic_vector_test basic_vector_test.cpp ${KFR_SRC})
 add_executable(dft_test dft_test.cpp ${KFR_SRC})
 add_executable(empty_test empty_test.cpp ${KFR_SRC})
 add_executable(complex_test complex_test.cpp ${KFR_SRC})
+add_executable(vec_test vec_test.cpp ${KFR_SRC})
 
 find_package(PythonInterp 2.7)
 
@@ -42,6 +43,8 @@ if (PYTHONINTERP_FOUND)
             COMMAND ${PROJECT_BINARY_DIR}/tests/dft_test)
     add_test(NAME complex_test
             COMMAND ${PROJECT_BINARY_DIR}/tests/complex_test)
+    add_test(NAME vec_test
+            COMMAND ${PROJECT_BINARY_DIR}/tests/vec_test)
 else ()
     message(WARNING "Install Python to run tests")
 endif ()
