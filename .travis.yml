@@ -16,11 +16,14 @@ matrix:
             - cmake-data
             - g++-5
             - clang-3.8
-      env: COMPILER=clang++-3.8
+      env:
+        - CXXCOMPILER=clang++-3.8 CCOMPILER=clang-3.8
 
 before_install:
   - sudo apt-get update -qq
 script:
   - mkdir build
   - cd build
-  - cmake -DCMAKE_CXX_COMPILER=$COMPILER .. && make
+  - cmake -DCMAKE_CXX_COMPILER=$CXXCOMPILER -DCMAKE_C_COMPILER=$CCOMPILER -DCMAKE_BUILD_TYPE=Release .. && make
+  - cd tests
+  - ctest
