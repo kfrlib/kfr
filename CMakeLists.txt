@@ -17,18 +17,24 @@
 
 cmake_minimum_required(VERSION 3.0)
 
-if (${CMAKE_GENERATOR} STREQUAL "MinGW Makefiles" OR ${CMAKE_GENERATOR} STREQUAL "MSYS Makefiles")
-    if (CMAKE_BUILD_TYPE_INITIALIZED_TO_DEFAULT)
-        set(CMAKE_BUILD_TYPE Release)
-    endif ()
-    set(CMAKE_CXX_COMPILER clang++)
-    set(CMAKE_C_COMPILER clang)
-    set(CMAKE_CXX_FLAGS --target=x86_64-w64-windows-gnu CACHE STRING "compile flags" FORCE)
-    set(CMAKE_C_FLAGS --target=x86_64-w64-windows-gnu CACHE STRING "compile flags" FORCE)
-    set(CMAKE_EXE_LINKER_FLAGS --target=x86_64-w64-windows-gnu)
-    set(CMAKE_SHARED_LINKER_FLAGS --target=x86_64-w64-windows-gnu)
-    set(CMAKE_STATIC_LINKER_FLAGS --target=x86_64-w64-windows-gnu)
+set(OPT_BITNESS "") # cmake -DOPT_BITNESS="-m32" or -m64
+set(OPT_STATIC "") # cmake -DOPT_STATIC="-static"
+
+set(CMAKE_CXX_COMPILER clang++)
+set(CMAKE_C_COMPILER clang)
+if (CMAKE_BUILD_TYPE_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_BUILD_TYPE Release)
 endif ()
+if (${CMAKE_GENERATOR} STREQUAL "MinGW Makefiles" OR ${CMAKE_GENERATOR} STREQUAL "MSYS Makefiles")
+    set(OPT_TARGET "--target=x86_64-w64-windows-gnu")
+else ()
+    set(OPT_TARGET "") # default target
+endif ()
+set(CMAKE_CXX_FLAGS "${OPT_TARGET} ${OPT_BITNESS} ${OPT_STATIC}" CACHE STRING "compile flags" FORCE)
+set(CMAKE_C_FLAGS "${OPT_TARGET} ${OPT_BITNESS} ${OPT_STATIC}" CACHE STRING "compile flags" FORCE)
+set(CMAKE_EXE_LINKER_FLAGS "${OPT_TARGET} ${OPT_BITNESS}")
+set(CMAKE_SHARED_LINKER_FLAGS "${OPT_TARGET} ${OPT_BITNESS}")
+set(CMAKE_STATIC_LINKER_FLAGS "${OPT_TARGET} ${OPT_BITNESS}")
 
 project(kfr)
 
