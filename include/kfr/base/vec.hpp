@@ -1234,7 +1234,7 @@ struct expression_lambda : input_expression
 {
     KFR_INLINE expression_lambda(Fn&& fn) : fn(std::move(fn)) {}
 
-    template <typename T, size_t N, KFR_ENABLE_IF(is_callable<Fn, cinput_t, size_t, vec_t<T, N>>::value)>
+    template <typename T, size_t N, KFR_ENABLE_IF(N&& is_callable<Fn, cinput_t, size_t, vec_t<T, N>>::value)>
     KFR_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
     {
         return fn(cinput, index, y);

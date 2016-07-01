@@ -474,7 +474,7 @@ constexpr cvec<T, N> fixed_twiddle = get_fixed_twiddle<T, N, size, start, step, 
 template <typename T, size_t N, bool inverse>
 constexpr cvec<T, N> twiddleimagmask()
 {
-    return inverse ? broadcast<N, T>(-1, +1) : broadcast<N, T>(+1, -1);
+    return inverse ? broadcast<N * 2, T>(-1, +1) : broadcast<N * 2, T>(+1, -1);
 }
 
 #pragma clang diagnostic push
@@ -564,13 +564,13 @@ KFR_INTRIN void butterfly4(cfalse_t /*split_format*/, cvec<T, N> a0, cvec<T, N> 
     w2     = sum02 - sum13;
     if (inverse)
     {
-        diff13 = (diff13 ^ broadcast<N, T>(T(), -T()));
+        diff13 = (diff13 ^ broadcast<N * 2, T>(T(), -T()));
         diff13 = swap<2>(diff13);
     }
     else
     {
         diff13 = swap<2>(diff13);
-        diff13 = (diff13 ^ broadcast<N, T>(T(), -T()));
+        diff13 = (diff13 ^ broadcast<N * 2, T>(T(), -T()));
     }
 
     w1 = diff02 + diff13;
@@ -1436,10 +1436,10 @@ KFR_INTRIN void generic_butterfly(size_t radix, cbool_t<inverse>, complex<T>* ou
 }
 
 template <typename T, size_t N>
-constexpr cvec<T, N> cmask08 = broadcast<N, T>(T(), -T());
+constexpr cvec<T, N> cmask08 = broadcast<N * 2, T>(T(), -T());
 
 template <typename T, size_t N>
-constexpr cvec<T, N> cmask0088 = broadcast<N, T>(T(), T(), -T(), -T());
+constexpr cvec<T, N> cmask0088 = broadcast<N * 4, T>(T(), T(), -T(), -T());
 
 template <bool A = false, typename T, size_t N>
 KFR_INTRIN void cbitreverse_write(complex<T>* dest, vec<T, N> x)

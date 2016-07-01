@@ -113,13 +113,13 @@ KFR_INTRIN void radix4_body(size_t N, csize_t<width>, cfalse_t, cfalse_t, cfalse
     diff13 = a1 - a3;
     if (inverse)
     {
-        diff13 = (diff13 ^ broadcast<width, T>(T(), -T()));
+        diff13 = (diff13 ^ broadcast<width * 2, T>(T(), -T()));
         diff13 = swap<2>(diff13);
     }
     else
     {
         diff13 = swap<2>(diff13);
-        diff13 = (diff13 ^ broadcast<width, T>(T(), -T()));
+        diff13 = (diff13 ^ broadcast<width * 2, T>(T(), -T()));
     }
 
     w1 = diff02 + diff13;
