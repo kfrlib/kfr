@@ -42,7 +42,7 @@ FFT (double precision, sizes from 1024 to 16777216)
     
 ## Prerequisities
 
-* OS X: XCode 6.3, 6.4, 7.x, 8.x
+* macOS: XCode 6.3, 6.4, 7.x, 8.x
 * Windows: MinGW 5.2 and Clang 3.7 or newer
 * Ubuntu: GCC 5.1 and Clang 3.7 or newer
 * CoMeta metaprogramming library (already included)

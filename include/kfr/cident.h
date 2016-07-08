@@ -136,6 +136,7 @@
 #define CID_OS_MOBILE 1
 #elif TARGET_OS_MAC
 #define CID_OS_MAC 1
+#define CID_OS_MACOS 1
 #define CID_OS_OSX 1
 #endif
 #define CID_OS_POSIX 1
