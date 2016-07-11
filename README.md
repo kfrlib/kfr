@@ -37,6 +37,7 @@ Included DSP/audio algorithms:
 ## Performace
 
 FFT (double precision, sizes from 1024 to 16777216)
+See [fft benchmark](https://github.com/kfrlib/fft-benchmark) for details about benchmarking process.
 
 ![FFT Performance](img/fft_performance.png)
     
