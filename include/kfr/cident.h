@@ -161,7 +161,7 @@
 #define CID_MSC_VER 0
 #endif
 
-#if defined(__GNUC__) // GCC, Clang
+#if defined(__GNUC__) || defined(__clang__) // GCC, Clang
 #define CID_COMPILER_GNU 1
 #define CID_GNU_ATTRIBUTES 1
 #define CID_GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)
@@ -308,7 +308,7 @@
 #if CID_COMPILER_GNU && !defined(__EXCEPTIONS)
 #define CID_HAS_EXCEPTIONS 0
 #endif
-#if CID_MSC_VER && !_HAS_EXCEPTIONS
+#if CID_COMPILER_MSVC && !_HAS_EXCEPTIONS
 #define CID_HAS_EXCEPTIONS 0
 #endif
 
