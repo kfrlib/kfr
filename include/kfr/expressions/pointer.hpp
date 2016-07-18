@@ -44,7 +44,7 @@ struct expression_resource
     virtual void* instance() { return nullptr; }
 };
 template <typename E>
-struct expression_resource_impl : expression_resource
+struct alignas(E) expression_resource_impl : expression_resource
 {
     expression_resource_impl(E&& e) noexcept : e(std::move(e)) {}
     virtual ~expression_resource_impl() {}
@@ -56,8 +56,9 @@ private:
 template <typename E>
 std::shared_ptr<expression_resource> make_resource(E&& e)
 {
+    using T = expression_resource_impl<decay<E>>;
     return std::static_pointer_cast<expression_resource>(
-        std::make_shared<expression_resource_impl<decay<E>>>(std::move(e)));
+        std::allocate_shared<T>(allocator<T>(), std::move(e)));
 }
 
 template <typename T, size_t maxwidth = maximum_expression_width()>
