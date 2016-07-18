@@ -20,6 +20,7 @@ KFR is a header-only and has no external dependencies.
 Included DSP/audio algorithms:
 
 * FFT
+* Convolution
 * FIR filtering
 * FIR filter design using the window method
 * Resampling with configurable quality (See resampling.cpp from Examples directory)
