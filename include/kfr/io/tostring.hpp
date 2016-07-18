@@ -25,13 +25,29 @@
 #include "../base/complex.hpp"
 #include "../base/univector.hpp"
 #include "../base/vec.hpp"
+
+namespace cometa
+{
+
+template <typename T>
+inline std::string repr(const kfr::complex<T>& v);
+
+template <typename T, int N>
+inline std::string repr(kfr::simd<T, N> v);
+
+template <typename T, size_t N>
+inline std::string repr(kfr::vec<T, N> v);
+
+template <typename T, size_t Tag>
+inline std::string repr(const kfr::univector<T, Tag>& v);
+}
 #include "../cometa/string.hpp"
 #include <cmath>
 
-namespace kfr
+namespace cometa
 {
 
-namespace internal
+namespace details
 {
 
 constexpr size_t number_width           = 9;
@@ -49,7 +65,7 @@ std::string fmtvalue(std::true_type, const T& x)
 }
 
 template <typename T>
-std::string fmtvalue(std::true_type, const complex<T>& x)
+std::string fmtvalue(std::true_type, const kfr::complex<T>& x)
 {
     std::string restr = as_string(fmt<'g', number_width, number_precision>(x.real()));
     if (restr.size() > number_width)
@@ -83,30 +99,30 @@ inline std::string repr(const T* source, size_t N)
     {
         if (i > 0)
         {
-            if (i % internal::number_columns == 0)
+            if (i % details::number_columns == 0)
                 str += "\n";
             else
                 str += " ";
         }
-        str += as_string(internal::fmtvalue(std::is_floating_point<T>(), source[i]));
+        str += as_string(details::fmtvalue(std::is_floating_point<T>(), source[i]));
     }
     return str;
 }
 
 template <typename T>
-inline std::string repr(const complex<T>* source, size_t N)
+inline std::string repr(const kfr::complex<T>* source, size_t N)
 {
     std::string str;
     for (size_t i = 0; i < N; i++)
     {
         if (i > 0)
         {
-            if (i % (internal::number_columns / 2) == 0)
+            if (i % (details::number_columns / 2) == 0)
                 str += "\n";
             else
                 str += " ";
         }
-        str += as_string(internal::fmtvalue(std::true_type{}, source[i]));
+        str += as_string(details::fmtvalue(std::true_type{}, source[i]));
     }
     return str;
 }
@@ -118,13 +134,13 @@ inline std::string repr(kfr::simd<T, N> v)
 }
 
 template <typename T, size_t N>
-inline std::string repr(vec<T, N> v)
+inline std::string repr(kfr::vec<T, N> v)
 {
     return repr(v.data(), v.size());
 }
 
 template <typename T, size_t Tag>
-inline std::string repr(const univector<T, Tag>& v)
+inline std::string repr(const kfr::univector<T, Tag>& v)
 {
     return repr(v.data(), v.size());
 }
