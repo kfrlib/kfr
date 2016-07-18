@@ -85,9 +85,9 @@ public:
         return select(value >= 0, value, -value);
     }
 
-    KFR_AINTRIN i32sse abs(i32sse value) { return _mm_abs_epi32(*value); }
-    KFR_AINTRIN i16sse abs(i16sse value) { return _mm_abs_epi16(*value); }
-    KFR_AINTRIN i8sse abs(i8sse value) { return _mm_abs_epi8(*value); }
+    KFR_CPU_INTRIN(ssse3) i32sse abs(i32sse value) { return _mm_abs_epi32(*value); }
+    KFR_CPU_INTRIN(ssse3) i16sse abs(i16sse value) { return _mm_abs_epi16(*value); }
+    KFR_CPU_INTRIN(ssse3) i8sse abs(i8sse value) { return _mm_abs_epi8(*value); }
 
     template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
     KFR_SINTRIN vec<T, N> abs(vec<T, N> value)
@@ -106,9 +106,9 @@ struct in_abs<cpu_t::avx2> : in_abs<cpu_t::ssse3>
     constexpr static cpu_t cpu = cpu_t::avx2;
     using in_abs<cpu_t::ssse3>::abs;
 
-    KFR_AINTRIN i32avx abs(i32avx value) { return _mm256_abs_epi32(*value); }
-    KFR_AINTRIN i16avx abs(i16avx value) { return _mm256_abs_epi16(*value); }
-    KFR_AINTRIN i8avx abs(i8avx value) { return _mm256_abs_epi8(*value); }
+    KFR_CPU_INTRIN(avx2) i32avx abs(i32avx value) { return _mm256_abs_epi32(*value); }
+    KFR_CPU_INTRIN(avx2) i16avx abs(i16avx value) { return _mm256_abs_epi16(*value); }
+    KFR_CPU_INTRIN(avx2) i8avx abs(i8avx value) { return _mm256_abs_epi8(*value); }
 
     KFR_HANDLE_ALL(abs)
     KFR_HANDLE_SCALAR(abs)

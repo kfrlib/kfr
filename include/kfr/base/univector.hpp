@@ -42,13 +42,13 @@ struct univector_base : input_expression, output_expression
     template <typename U, size_t N>
     KFR_INLINE void operator()(coutput_t, size_t index, vec<U, N> value)
     {
-        T* data = ptr_cast<Class>(this)->data();
+        T* data = derived_cast<Class>(this)->data();
         write(ptr_cast<T>(data) + index, cast<T>(value));
     }
     template <typename U, size_t N>
     KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N>) const
     {
-        const T* data = ptr_cast<Class>(this)->data();
+        const T* data = derived_cast<Class>(this)->data();
         return cast<U>(read<N>(ptr_cast<T>(data) + index));
     }
 
@@ -56,18 +56,18 @@ struct univector_base : input_expression, output_expression
     KFR_INLINE Class& operator=(Input&& input)
     {
         assign_expr(std::forward<Input>(input));
-        return *ptr_cast<Class>(this);
+        return *derived_cast<Class>(this);
     }
     univector<T, 0> slice(size_t start = 0, size_t size = max_size_t)
     {
-        T* data                = ptr_cast<Class>(this)->data();
-        const size_t this_size = ptr_cast<Class>(this)->size();
+        T* data                = derived_cast<Class>(this)->data();
+        const size_t this_size = derived_cast<Class>(this)->size();
         return array_ref<T>(data + start, std::min(size, this_size - start));
     }
     univector<const T, 0> slice(size_t start = 0, size_t size = max_size_t) const
     {
-        const T* data          = ptr_cast<Class>(this)->data();
-        const size_t this_size = ptr_cast<Class>(this)->size();
+        const T* data          = derived_cast<Class>(this)->data();
+        const size_t this_size = derived_cast<Class>(this)->size();
         return array_ref<const T>(data + start, std::min(size, this_size - start));
     }
 
@@ -133,9 +133,9 @@ protected:
 
 private:
     constexpr infinite size() const noexcept = delete;
-    KFR_INLINE size_t get_size() const { return ptr_cast<Class>(this)->size(); }
-    KFR_INLINE const T* get_data() const { return ptr_cast<Class>(this)->data(); }
-    KFR_INLINE T* get_data() { return ptr_cast<Class>(this)->data(); }
+    KFR_INLINE size_t get_size() const { return derived_cast<Class>(this)->size(); }
+    KFR_INLINE const T* get_data() const { return derived_cast<Class>(this)->data(); }
+    KFR_INLINE T* get_data() { return derived_cast<Class>(this)->data(); }
 };
 
 template <typename T, size_t Size>

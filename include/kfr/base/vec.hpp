@@ -1151,8 +1151,6 @@ KFR_INLINE vec<T, N> tovec(simd<T, N> x)
 }
 KFR_INLINE f32x4 tovec(__m128 x) { return f32x4(x); }
 KFR_INLINE f64x2 tovec(__m128d x) { return f64x2(x); }
-KFR_INLINE f32x8 tovec(__m256 x) { return f32x8(x); }
-KFR_INLINE f64x4 tovec(__m256d x) { return f64x4(x); }
 
 template <typename T, typename... Args, size_t Nout = (sizeof...(Args) + 1)>
 constexpr KFR_INLINE mask<T, Nout> make_mask(bool arg, Args... args)

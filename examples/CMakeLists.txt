@@ -17,13 +17,11 @@
 
 cmake_minimum_required(VERSION 3.0)
 
-add_compile_options(-fno-exceptions -fno-rtti)
-
-set(ALL_WARNINGS -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-c99-extensions -Wno-padded)
-
-add_compile_options(-march=native)
-
-link_libraries(stdc++ pthread)
+if (NOT MSVC)
+    add_compile_options(-fno-exceptions -fno-rtti)
+    add_compile_options(-march=native)
+    link_libraries(stdc++ pthread)
+endif ()
 
 include_directories(../include)
 

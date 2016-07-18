@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/kfrlib/kfr.svg?branch=master)](https://travis-ci.org/kfrlib/kfr)
 
-KFR is an open source C++ math framework with focus on DSP.
+KFR is an open source C++ DSP framework that focuses on high performance.
 
 KFR is a header-only and has no external dependencies.
 
@@ -44,7 +44,9 @@ See [fft benchmark](https://github.com/kfrlib/fft-benchmark) for details about b
 ## Prerequisities
 
 * macOS: XCode 6.3, 6.4, 7.x, 8.x
-* Windows: MinGW 5.2 and Clang 3.7 or newer
+* Windows
+  * MinGW 5.2 and Clang 3.7 or newer
+  * Visual Studio 2015 update 2 and latest Clang 3.9.0
 * Ubuntu: GCC 5.1 and Clang 3.7 or newer
 * CoMeta metaprogramming library (already included)
 
@@ -75,7 +77,7 @@ git clone https://github.com/kfrlib/kfr.git
 To be able to run the tests and examples install the following python modules:
 
 ```
-pip install matplotlib
+pip install matplotlib # or download prebuilt package for windows
 pip install numpy # or download prebuilt package for windows
 pip install scipy # or download prebuilt package for windows
 ```
@@ -83,13 +85,14 @@ Install dspplot using `python setup.py install` inside dspplot directory
 
 ## Tests
 
-Execute `build.py` to run the tests or run tests manually from the `tests` directory
+Execute `build.py` or `build-cl.py` (Visual Studio version) to run the tests or run tests manually from the `tests` directory
 
 Tested on the following systems:
 
 * OS X 10.11.4 / AppleClang 7.3.0.7030031
 * Ubuntu 14.04 / gcc-5 (Ubuntu 5.3.0-3ubuntu1~14.04) 5.3.0 20151204 / clang version 3.8.0 (tags/RELEASE_380/final)
 * Windows 8.1 / MinGW-W64 / clang version 3.8.0 (branches/release_38)
+* Windows 8.1 / Visual Studio Update 2 / clang version 3.9.0 (SVN r273898 (27 June 2016))
 
 
 ## Planned for future versions

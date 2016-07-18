@@ -30,6 +30,10 @@ if (${CMAKE_GENERATOR} STREQUAL "MinGW Makefiles" OR ${CMAKE_GENERATOR} STREQUAL
 else ()
     set(OPT_TARGET "") # default target
 endif ()
+
+if (${CMAKE_GENERATOR} STREQUAL "Visual Studio 14 2015")
+    set(CMAKE_GENERATOR_TOOLSET LLVM-vs2014)
+endif ()
 set(CMAKE_CXX_FLAGS "${OPT_TARGET} ${OPT_BITNESS} ${OPT_STATIC}" CACHE STRING "compile flags" FORCE)
 set(CMAKE_C_FLAGS "${OPT_TARGET} ${OPT_BITNESS} ${OPT_STATIC}" CACHE STRING "compile flags" FORCE)
 set(CMAKE_EXE_LINKER_FLAGS "${OPT_TARGET} ${OPT_BITNESS}")
@@ -40,11 +44,14 @@ project(kfr)
 
 include(sources.cmake)
 
-add_compile_options(-std=c++1y)
-
 set(ALL_WARNINGS -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-c99-extensions -Wno-padded)
 
-add_compile_options(-march=native)
+if (NOT MSVC)
+    add_compile_options(-std=c++1y)
+    add_compile_options(-march=native)
+else ()
+    add_compile_options(/EHsc /D_HAS_EXCEPTIONS=0 /arch:AVX)
+endif ()
 
 add_subdirectory(examples)
 add_subdirectory(tests)

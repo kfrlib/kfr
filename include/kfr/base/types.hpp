@@ -542,6 +542,18 @@ constexpr inline static T* ptr_cast(U* ptr, ptrdiff_t offset)
     return ptr_cast<T>(ptr_cast<u8>(ptr) + offset);
 }
 
+template <typename T, typename U>
+constexpr inline static T* derived_cast(U* ptr)
+{
+    return static_cast<T*>(ptr);
+}
+
+template <typename T, typename U>
+constexpr inline static const T* derived_cast(const U* ptr)
+{
+    return static_cast<const T*>(ptr);
+}
+
 #pragma clang diagnostic pop
 
 __attribute__((unused)) static const char* cpu_name(cpu_t set)

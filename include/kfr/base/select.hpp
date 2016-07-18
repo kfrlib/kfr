@@ -55,16 +55,16 @@ struct in_select_impl<cpu_t::sse41> : in_select_impl<cpu_t::sse2>
 {
     constexpr static cpu_t cpu = cpu_t::sse41;
 
-    KFR_SINTRIN u8sse select(u8sse m, u8sse x, u8sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-    KFR_SINTRIN u16sse select(u16sse m, u16sse x, u16sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-    KFR_SINTRIN u32sse select(u32sse m, u32sse x, u32sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-    KFR_SINTRIN u64sse select(u64sse m, u64sse x, u64sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-    KFR_SINTRIN i8sse select(i8sse m, i8sse x, i8sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-    KFR_SINTRIN i16sse select(i16sse m, i16sse x, i16sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-    KFR_SINTRIN i32sse select(i32sse m, i32sse x, i32sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-    KFR_SINTRIN i64sse select(i64sse m, i64sse x, i64sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-    KFR_SINTRIN f32sse select(f32sse m, f32sse x, f32sse y) { return _mm_blendv_ps(*y, *x, *m); }
-    KFR_SINTRIN f64sse select(f64sse m, f64sse x, f64sse y) { return _mm_blendv_pd(*y, *x, *m); }
+    KFR_CPU_INTRIN(sse41) u8sse select(u8sse m, u8sse x, u8sse y) { return _mm_blendv_epi8(*y, *x, *m); }
+    KFR_CPU_INTRIN(sse41) u16sse select(u16sse m, u16sse x, u16sse y) { return _mm_blendv_epi8(*y, *x, *m); }
+    KFR_CPU_INTRIN(sse41) u32sse select(u32sse m, u32sse x, u32sse y) { return _mm_blendv_epi8(*y, *x, *m); }
+    KFR_CPU_INTRIN(sse41) u64sse select(u64sse m, u64sse x, u64sse y) { return _mm_blendv_epi8(*y, *x, *m); }
+    KFR_CPU_INTRIN(sse41) i8sse select(i8sse m, i8sse x, i8sse y) { return _mm_blendv_epi8(*y, *x, *m); }
+    KFR_CPU_INTRIN(sse41) i16sse select(i16sse m, i16sse x, i16sse y) { return _mm_blendv_epi8(*y, *x, *m); }
+    KFR_CPU_INTRIN(sse41) i32sse select(i32sse m, i32sse x, i32sse y) { return _mm_blendv_epi8(*y, *x, *m); }
+    KFR_CPU_INTRIN(sse41) i64sse select(i64sse m, i64sse x, i64sse y) { return _mm_blendv_epi8(*y, *x, *m); }
+    KFR_CPU_INTRIN(sse41) f32sse select(f32sse m, f32sse x, f32sse y) { return _mm_blendv_ps(*y, *x, *m); }
+    KFR_CPU_INTRIN(sse41) f64sse select(f64sse m, f64sse x, f64sse y) { return _mm_blendv_pd(*y, *x, *m); }
 
     KFR_HANDLE_ALL(select)
     KFR_SPEC_FN(in_select_impl, select)
@@ -76,8 +76,8 @@ struct in_select_impl<cpu_t::avx1> : in_select_impl<cpu_t::sse41>
     constexpr static cpu_t cpu = cpu_t::avx1;
     using in_select_impl<cpu_t::sse41>::select;
 
-    KFR_SINTRIN f64avx select(f64avx m, f64avx x, f64avx y) { return _mm256_blendv_pd(*y, *x, *m); }
-    KFR_SINTRIN f32avx select(f32avx m, f32avx x, f32avx y) { return _mm256_blendv_ps(*y, *x, *m); }
+    KFR_CPU_INTRIN(avx) f64avx select(f64avx m, f64avx x, f64avx y) { return _mm256_blendv_pd(*y, *x, *m); }
+    KFR_CPU_INTRIN(avx) f32avx select(f32avx m, f32avx x, f32avx y) { return _mm256_blendv_ps(*y, *x, *m); }
 
     KFR_HANDLE_ALL(select)
     KFR_SPEC_FN(in_select_impl, select)
@@ -89,35 +89,29 @@ struct in_select_impl<cpu_t::avx2> : in_select_impl<cpu_t::avx1>
     constexpr static cpu_t cpu = cpu_t::avx2;
     using in_select_impl<cpu_t::avx1>::select;
 
-    KFR_SINTRIN KFR_USE_CPU(avx2) u8avx select(u8avx m, u8avx x, u8avx y)
+    KFR_CPU_INTRIN(avx2) u8avx select(u8avx m, u8avx x, u8avx y) { return _mm256_blendv_epi8(*y, *x, *m); }
+    KFR_CPU_INTRIN(avx2) u16avx select(u16avx m, u16avx x, u16avx y)
     {
         return _mm256_blendv_epi8(*y, *x, *m);
     }
-    KFR_SINTRIN KFR_USE_CPU(avx2) u16avx select(u16avx m, u16avx x, u16avx y)
+    KFR_CPU_INTRIN(avx2) u32avx select(u32avx m, u32avx x, u32avx y)
     {
         return _mm256_blendv_epi8(*y, *x, *m);
     }
-    KFR_SINTRIN KFR_USE_CPU(avx2) u32avx select(u32avx m, u32avx x, u32avx y)
+    KFR_CPU_INTRIN(avx2) u64avx select(u64avx m, u64avx x, u64avx y)
     {
         return _mm256_blendv_epi8(*y, *x, *m);
     }
-    KFR_SINTRIN KFR_USE_CPU(avx2) u64avx select(u64avx m, u64avx x, u64avx y)
+    KFR_CPU_INTRIN(avx2) i8avx select(i8avx m, i8avx x, i8avx y) { return _mm256_blendv_epi8(*y, *x, *m); }
+    KFR_CPU_INTRIN(avx2) i16avx select(i16avx m, i16avx x, i16avx y)
     {
         return _mm256_blendv_epi8(*y, *x, *m);
     }
-    KFR_SINTRIN KFR_USE_CPU(avx2) i8avx select(i8avx m, i8avx x, i8avx y)
+    KFR_CPU_INTRIN(avx2) i32avx select(i32avx m, i32avx x, i32avx y)
     {
         return _mm256_blendv_epi8(*y, *x, *m);
     }
-    KFR_SINTRIN KFR_USE_CPU(avx2) i16avx select(i16avx m, i16avx x, i16avx y)
-    {
-        return _mm256_blendv_epi8(*y, *x, *m);
-    }
-    KFR_SINTRIN KFR_USE_CPU(avx2) i32avx select(i32avx m, i32avx x, i32avx y)
-    {
-        return _mm256_blendv_epi8(*y, *x, *m);
-    }
-    KFR_SINTRIN KFR_USE_CPU(avx2) i64avx select(i64avx m, i64avx x, i64avx y)
+    KFR_CPU_INTRIN(avx2) i64avx select(i64avx m, i64avx x, i64avx y)
     {
         return _mm256_blendv_epi8(*y, *x, *m);
     }

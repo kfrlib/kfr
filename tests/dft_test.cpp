@@ -3,6 +3,10 @@
  * Copyright (C) 2016  D Levin
  * See LICENSE.txt for details
  */
+
+ // library_version()
+#include <kfr/version.hpp>
+
 #include <tuple>
 
 #include "testo/testo.hpp"
@@ -42,7 +46,7 @@ TEST(fft_accuracy)
                       dft.execute(out, out, temp, inverse);
 
                       const float_type rms_diff = rms(cabs(refout - out));
-                      const double ops          = log2size * 50;
+                      const double ops          = log2size * 100;
                       const double epsilon      = std::numeric_limits<float_type>::epsilon();
                       CHECK(rms_diff < epsilon * ops);
                   });
