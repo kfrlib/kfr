@@ -50,6 +50,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/fft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/ft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/reference_dft.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/dft/conv.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dispatch/cpuid.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dispatch/runtimedispatch.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/biquad.hpp
