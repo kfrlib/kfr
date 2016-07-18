@@ -261,7 +261,7 @@ public:
         vec<T, filters> b2;
 
         vec<T, filters> out;
-        biquad_block() : s1(0), s2(0), a1(0), a2(0), b0(0), b1(0), b2(0), out(0) {}
+        biquad_block() : s1(0), s2(0), a1(0), a2(0), b0(1), b1(0), b2(0), out(0) {}
         biquad_block(const biquad_params<T>* bq, size_t count) : s1(0), s2(0), out(0)
         {
             count = count > filters ? filters : count;
@@ -290,59 +290,6 @@ public:
         }
     };
 
-    template <typename T, typename E1>
-    struct expression_biquad : public expression<E1>
-    {
-        using value_type = T;
-
-        template <cpu_t newcpu>
-        using retarget_this = typename in_biquad<newcpu>::template expression_biquad<T, retarget<E1, newcpu>>;
-
-        expression_biquad(const biquad_params<T>& bq, E1&& e1) noexcept
-            : expression<E1>(std::forward<E1>(e1)),
-              bq(bq)
-        {
-        }
-        template <typename U, size_t width>
-        inline vec<U, width> operator()(cinput_t, size_t index, vec_t<U, width> t) const
-        {
-            const vec<T, width> in  = cast<T>(this->argument_first(index, t));
-            const vec<T, width> in1 = insertleft(x[0], in);
-            const vec<T, width> in2 = insertleft(x[1], in1);
-            vec<T, width> out       = bq.b0 * in + bq.b1 * in1 + bq.b2 * in2;
-
-            out(0) = out[0] - bq.a1 * y[0] - bq.a2 * y[1];
-            out(1) = out[1] - bq.a1 * out[0] - bq.a2 * y[0];
-
-            KFR_LOOP_UNROLL
-            for (size_t i = 2; i < width; i++)
-            {
-                out(i) = out[i] - bq.a1 * out[i - 1] - bq.a2 * out[i - 2];
-            }
-
-            x[1] = in[width - 2];
-            x[0] = in[width - 1];
-            y[1] = out[width - 2];
-            y[0] = out[width - 1];
-            return cast<U>(out);
-        }
-        template <typename U>
-        inline vec<U, 1> operator()(cinput_t, size_t index, vec_t<U, 1> t) const
-        {
-            T in = cast<T>(this->argument_first(index, t))[0];
-
-            T out = bq.b0 * in + bq.b1 * x[0] + bq.b2 * x[1] - bq.a1 * y[0] - bq.a2 * y[1];
-            x[1]  = x[0];
-            x[0]  = in;
-            y[1]  = y[0];
-            y[0]  = out;
-            return cast<U>(out);
-        }
-        biquad_params<T> bq;
-        mutable std::array<T, 2> x{ 0, 0 };
-        mutable std::array<T, 2> y{ 0, 0 };
-    };
-
     template <size_t filters, typename T, typename E1>
     struct expression_biquads : public expression<E1>
     {
@@ -357,7 +304,7 @@ public:
         {
         }
         template <size_t width>
-        inline vec<T, width> operator()(cinput_t, size_t index, vec_t<T, width> t) const
+        KFR_INTRIN vec<T, width> operator()(cinput_t, size_t index, vec_t<T, width> t) const
         {
             const vec<T, width> in = this->argument_first(index, t);
             vec<T, width> out;
@@ -365,13 +312,13 @@ public:
             KFR_LOOP_UNROLL
             for (size_t i = 0; i < width; i++)
             {
-                bq.out = process(insertleft(in[i], bq.out));
+                bq.out = process(bq, insertleft(in[i], bq.out));
                 out(i) = bq.out[filters - 1];
             }
 
             return out;
         }
-        KFR_INLINE vec<T, filters> process(vec<T, filters> in) const
+        KFR_SINTRIN vec<T, filters> process(biquad_block<T, filters>& bq, vec<T, filters> in)
         {
             const vec<T, filters> out = bq.b0 * in + bq.s1;
             bq.s1 = bq.s2 + bq.b1 * in - bq.a1 * out;
@@ -384,10 +331,11 @@ public:
 }
 
 template <typename T, typename E1>
-KFR_INLINE internal::in_biquad<>::expression_biquad<T, internal::arg<E1>> biquad(const biquad_params<T>& bq,
+KFR_INLINE internal::in_biquad<>::expression_biquads<1, T, internal::arg<E1>> biquad(const biquad_params<T>& bq,
                                                                                  E1&& e1)
 {
-    return internal::in_biquad<>::expression_biquad<T, internal::arg<E1>>(bq, std::forward<E1>(e1));
+    const biquad_params<T> bqs[1] = { bq };
+    return internal::in_biquad<>::expression_biquads<1, T, internal::arg<E1>>(bqs, std::forward<E1>(e1));
 }
 template <size_t filters, typename T, typename E1>
 KFR_INLINE internal::in_biquad<>::expression_biquads<filters, T, internal::arg<E1>> biquad(
