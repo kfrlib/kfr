@@ -238,8 +238,7 @@ KFR_INLINE internal::expression_function<decay<Fn>, internal::arg<Args>...> bind
                                                                             std::forward<Args>(args)...);
 }
 
-template <typename Tout, cpu_t c = cpu_t::native, size_t width = internal::get_vector_width<Tout, c>(2, 4),
-          typename OutFn, typename Fn>
+template <typename Tout, cpu_t c = cpu_t::native, size_t width = 0, typename OutFn, typename Fn>
 KFR_INLINE void process(OutFn&& outfn, const Fn& fn, size_t size)
 {
     static_assert(is_output_expression<OutFn>::value, "OutFn must be an expression");
@@ -252,7 +251,8 @@ KFR_INLINE void process(OutFn&& outfn, const Fn& fn, size_t size)
     using Tin = conditional<is_generic<Fn>::value, Tout, value_type_of<Fn>>;
 
     size_t i = 0;
-    internal::process_cycle<Tout, Tin, width>(std::forward<OutFn>(outfn), fn, i, size);
+    internal::process_cycle<Tout, Tin, width == 0 ? internal::get_vector_width<Tout, c>(2, 4) : width>(
+        std::forward<OutFn>(outfn), fn, i, size);
     internal::process_cycle<Tout, Tin, comp>(std::forward<OutFn>(outfn), fn, i, size);
 
     fn.end_block(size);
