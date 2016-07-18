@@ -57,11 +57,11 @@ using ::cid::arraysize;
 }
 #endif
 
-#define KFR_VERSION_STRING "0.9.0"
+#define KFR_VERSION_STRING "0.9.1"
 #define KFR_VERSION_MAJOR 0
 #define KFR_VERSION_MINOR 9
-#define KFR_VERSION_BUILD 0
-#define KFR_VERSION 900
+#define KFR_VERSION_BUILD 1
+#define KFR_VERSION 901
 
 #ifdef __cplusplus
 namespace kfr
