@@ -261,8 +261,8 @@ public:
         vec<T, filters> b2;
 
         vec<T, filters> out;
-        biquad_block() : s1(), s2(), a1(), a2(), b0(), b1(), b2(), out() {}
-        biquad_block(const biquad_params<T>* bq, size_t count) : s1(), s2(), out()
+        biquad_block() : s1(0), s2(0), a1(0), a2(0), b0(0), b1(0), b2(0), out(0) {}
+        biquad_block(const biquad_params<T>* bq, size_t count) : s1(0), s2(0), out(0)
         {
             count = count > filters ? filters : count;
             for (size_t i = 0; i < count; i++)
@@ -304,7 +304,7 @@ public:
         {
         }
         template <typename U, size_t width>
-        inline vec<U, width> operator()(cinput_t, size_t index, vec_t<U, width> t)
+        inline vec<U, width> operator()(cinput_t, size_t index, vec_t<U, width> t) const
         {
             const vec<T, width> in  = cast<T>(this->argument_first(index, t));
             const vec<T, width> in1 = insertleft(x[0], in);
@@ -320,28 +320,27 @@ public:
                 out(i) = out[i] - bq.a1 * out[i - 1] - bq.a2 * out[i - 2];
             }
 
-            x(1) = in[width - 2];
-            x(0) = in[width - 1];
-
-            y(1) = out[width - 2];
-            y(0) = out[width - 1];
+            x[1] = in[width - 2];
+            x[0] = in[width - 1];
+            y[1] = out[width - 2];
+            y[0] = out[width - 1];
             return cast<U>(out);
         }
         template <typename U>
-        inline vec<U, 1> operator()(cinput_t, size_t index, vec_t<U, 1> t)
+        inline vec<U, 1> operator()(cinput_t, size_t index, vec_t<U, 1> t) const
         {
             T in = cast<T>(this->argument_first(index, t))[0];
 
             T out = bq.b0 * in + bq.b1 * x[0] + bq.b2 * x[1] - bq.a1 * y[0] - bq.a2 * y[1];
-            x(1)  = x[0];
-            x(0)  = in;
-            y(1)  = y[0];
-            y(0)  = out;
+            x[1]  = x[0];
+            x[0]  = in;
+            y[1]  = y[0];
+            y[0]  = out;
             return cast<U>(out);
         }
         biquad_params<T> bq;
-        mutable vec<T, 2> x = T(0);
-        mutable vec<T, 2> y = T(0);
+        mutable std::array<T, 2> x{ 0, 0 };
+        mutable std::array<T, 2> y{ 0, 0 };
     };
 
     template <size_t filters, typename T, typename E1>
