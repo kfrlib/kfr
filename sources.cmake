@@ -57,6 +57,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/oscillators.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/units.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fir.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fracdelay.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/goertzel.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/interpolation.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/resample.hpp

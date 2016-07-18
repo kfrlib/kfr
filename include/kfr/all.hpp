@@ -68,6 +68,7 @@
 #include "data/sincos.hpp"
 #include "dsp/biquad.hpp"
 #include "dsp/fir.hpp"
+#include "dsp/fracdelay.hpp"
 #include "dsp/goertzel.hpp"
 #include "dsp/interpolation.hpp"
 #include "dsp/oscillators.hpp"
