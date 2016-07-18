@@ -145,27 +145,6 @@ public:
         }
     }
 
-    template <size_t index, size_t order, typename T, size_t N>
-    KFR_SINTRIN void convole_round(vec<T, N>& output, vec<T, order> input, vec<T, order> taps,
-                                   vec<T, order> delay)
-    {
-        output(index) = dot(taps, rotatetwo<index + 1>(delay, input));
-    }
-
-    template <size_t index, size_t order, typename T, size_t N, KFR_ENABLE_IF(index >= N)>
-    KFR_SINTRIN void convole_rounds(vec<T, N>& /*output*/, vec<T, order> /*input*/, vec<T, order> /*taps*/,
-                                    vec<T, order> /*delay*/)
-    {
-    }
-
-    template <size_t index, size_t order, typename T, size_t N, KFR_ENABLE_IF(index < N)>
-    KFR_SINTRIN void convole_rounds(vec<T, N>& output, vec<T, order> input, vec<T, order> taps,
-                                    vec<T, order> delay)
-    {
-        convole_round<index, order, T, N>(output, input, taps, delay);
-        convole_rounds<index + 1, order, T, N>(output, input, taps, delay);
-    }
-
     template <size_t tapcount, typename T, typename E1>
     struct expression_short_fir : expression<E1>
     {
@@ -175,24 +154,24 @@ public:
             typename in_fir<newcpu>::template expression_short_fir<tapcount, T, retarget<E1, newcpu>>;
 
         expression_short_fir(E1&& e1, const array_ref<T>& taps)
-            : expression<E1>(std::forward<E1>(e1)), taps(taps)
+            : expression<E1>(std::forward<E1>(e1)), taps(taps), delayline(0)
         {
         }
         template <typename U, size_t N>
-        KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x)
+        KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x) const
         {
-            const vec<T, N> in = cast<T>(this->argument_first(index, x));
+            vec<T, N> in = cast<T>(this->argument_first(index, x));
 
-            vec<T, N> out;
-            vec<T, tapcount> winput = widen<tapcount>(in);
-            winput = reverse(winput);
-            convole_rounds<0, tapcount, T, N>(out, winput, taps, delayline);
-            delayline = rotatetwo<N>(delayline, winput);
+            vec<T, N> out = in * taps[0];
+            cfor(csize<1>, csize<tapcount>, [&](auto I) {
+                out = out + concat_and_slice<tapcount - 1 - I, N>(delayline, in) * taps[I];
+            });
+            delayline = concat_and_slice<N, tapcount - 1>(delayline, in);
 
             return cast<U>(out);
         }
-        const vec<T, tapcount> taps;
-        vec<T, tapcount> delayline;
+        vec<T, tapcount> taps;
+        mutable vec<T, tapcount - 1> delayline;
     };
 
     template <typename T, typename E1>
@@ -207,7 +186,7 @@ public:
         {
         }
         template <typename U, size_t N>
-        KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x)
+        KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x) const
         {
             const size_t tapcount = taps.size();
             const vec<T, N> input = cast<T>(this->argument_first(index, x));
@@ -224,9 +203,9 @@ public:
             delayline_cursor = cursor;
             return cast<U>(output);
         }
-        const univector_dyn<T> taps;
-        univector_dyn<T> delayline;
-        size_t delayline_cursor;
+        univector_dyn<T> taps;
+        mutable univector_dyn<T> delayline;
+        mutable size_t delayline_cursor;
     };
     KFR_SPEC_FN(in_fir, fir_lowpass)
     KFR_SPEC_FN(in_fir, fir_highpass)
