@@ -277,29 +277,4 @@ cpu_t detect_cpu()
     return cpu_t::lowest;
 }
 }
-
-namespace internal
-{
-
-KFR_INLINE cpu_t& cpu_v()
-{
-    static cpu_t v1 = cpu_t::native;
-    return v1;
-}
-
-KFR_INLINE char init_cpu_v()
-{
-    cpu_v() = detect_cpu<0>();
-    return 0;
-}
-
-KFR_INLINE char init_dummyvar()
-{
-    static char dummy = init_cpu_v();
-    return dummy;
-}
-
-static char dummyvar = init_dummyvar();
-}
-KFR_INLINE cpu_t get_cpu() { return internal::cpu_v(); }
 }
