@@ -37,7 +37,7 @@ int main(int argc, char** argv)
                                        biquad_notch(0.4, 0.5) };
         output = biquad(bq, simpleimpulse());
     }
-    plot_save("biquad_notch", output, options + ", title='Five Biquad Notch filters'");
+    plot_save("biquad_notch", output, options + ", title='Four Biquad Notch filters'");
 
     {
         biquad_params<double> bq[] = { biquad_lowpass(0.2, 0.9) };
@@ -61,7 +61,7 @@ int main(int argc, char** argv)
         biquad_params<double> bq[] = { biquad_peak(0.3, 3.0, -2.0) };
         output                     = biquad(bq, simpleimpulse());
     }
-    plot_save("biquad_peak2", output, options + ", title='Biquad Peak filter (0.3, 3, -3)'");
+    plot_save("biquad_peak2", output, options + ", title='Biquad Peak filter (0.3, 3, -2)'");
 
     {
         biquad_params<double> bq[] = { biquad_lowshelf(0.3, -1.0) };
