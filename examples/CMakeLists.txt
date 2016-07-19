@@ -21,6 +21,8 @@ if (NOT MSVC)
     add_compile_options(-fno-exceptions -fno-rtti)
     add_compile_options(-march=native)
     link_libraries(stdc++ pthread)
+else ()
+    add_compile_options(/arch:AVX)
 endif ()
 
 include_directories(../include)

@@ -36,9 +36,9 @@ if (${CMAKE_GENERATOR} STREQUAL "Visual Studio 14 2015")
 endif ()
 set(CMAKE_CXX_FLAGS "${OPT_TARGET} ${OPT_BITNESS} ${OPT_STATIC}" CACHE STRING "compile flags" FORCE)
 set(CMAKE_C_FLAGS "${OPT_TARGET} ${OPT_BITNESS} ${OPT_STATIC}" CACHE STRING "compile flags" FORCE)
-set(CMAKE_EXE_LINKER_FLAGS "${OPT_TARGET} ${OPT_BITNESS}")
-set(CMAKE_SHARED_LINKER_FLAGS "${OPT_TARGET} ${OPT_BITNESS}")
-set(CMAKE_STATIC_LINKER_FLAGS "${OPT_TARGET} ${OPT_BITNESS}")
+#set(CMAKE_EXE_LINKER_FLAGS "${OPT_TARGET} ${OPT_BITNESS}")
+#set(CMAKE_SHARED_LINKER_FLAGS "${OPT_TARGET} ${OPT_BITNESS}")
+#set(CMAKE_STATIC_LINKER_FLAGS "${OPT_TARGET} ${OPT_BITNESS}")
 
 project(kfr)
 
@@ -48,9 +48,8 @@ set(ALL_WARNINGS -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-
 
 if (NOT MSVC)
     add_compile_options(-std=c++1y)
-    add_compile_options(-march=native)
 else ()
-    add_compile_options(/EHsc /D_HAS_EXCEPTIONS=0 /arch:AVX)
+    add_compile_options(/EHsc /D_HAS_EXCEPTIONS=0)
 endif ()
 
 add_subdirectory(examples)

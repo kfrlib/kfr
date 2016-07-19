@@ -67,7 +67,7 @@ var/
 *.egg
 
 # Sphinx documentation
-docs/_build/
+docs/
 
 # CLion
 .idea/
