@@ -50,5 +50,5 @@ options = [
     ]
 
 if subprocess.call(['cmake', '-G', generator, '..'] + options, cwd=build_dir): raise Exception('Can\'t make project')
-if subprocess.call(['cmake', '--build', '.'], cwd=build_dir): raise Exception('Can\'t build project')
+if subprocess.call(['cmake', '--build', '.', '--', '-j4'], cwd=build_dir): raise Exception('Can\'t build project')
 if subprocess.call(['ctest'], cwd=os.path.join(build_dir, 'tests')): raise Exception('Can\'t test project')
