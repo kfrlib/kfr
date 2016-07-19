@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/kfrlib/kfr.svg?branch=master)](https://travis-ci.org/kfrlib/kfr)
 
-KFR is an open source C++ DSP framework that focuses on high performance.
+KFR is an open source C++ DSP framework that focuses on high performance (see benchmark results section).
 
 KFR is a header-only and has no external dependencies.
 
@@ -14,8 +14,7 @@ KFR is a header-only and has no external dependencies.
 * All data types are supported including complex numbers
 * All vector lengths are also supported. `vec<float,1>`, `vec<unsigned,3>`, `vec<complex<float>, 11>` all are valid vector types in KFR
 * Most of the standard library functions are re-implemented to support vector of any length and data type
-* Runtime CPU dispatching
-* Multi-versioning. Code for various architecttures (SSE2, AVX2, etc) can co-exist in one translation unit. No need to compile for all cpus
+* Runtime cpu detection
 
 Included DSP/audio algorithms:
 
@@ -25,6 +24,7 @@ Included DSP/audio algorithms:
 * FIR filter design using the window method
 * Resampling with configurable quality (See resampling.cpp from Examples directory)
 * Goertzel algorithm
+* Fractional delay
 * Biquad filtering
 * Biquad design functions
 * Oscillators: Sine, Square, Sawtooth, Triangle
@@ -35,14 +35,19 @@ Included DSP/audio algorithms:
 * Ring (Circular) buffer
 * Fast incremental sine/cosine generation
 
-## Performace
+## Benchmark results
+### FFT
 
 FFT (double precision, sizes from 1024 to 16777216)
 See [fft benchmark](https://github.com/kfrlib/fft-benchmark) for details about benchmarking process.
 
 ![FFT Performance](img/fft_performance.png)
+
+### Biquad
+
+[Biquad performance](https://github.com/kfrlib/biquad-benchmark/blob/master/bq.svg)
     
-## Prerequisities
+## Prerequisites
 
 * macOS: XCode 6.3, 6.4, 7.x, 8.x
 * Windows
