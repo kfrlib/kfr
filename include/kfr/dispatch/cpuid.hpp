@@ -122,7 +122,7 @@ KFR_INLINE u32 get_xcr0()
 }
 #endif
 
-template <size_t>
+template <size_t = 0>
 cpu_t detect_cpu()
 {
     cpu_features c;
