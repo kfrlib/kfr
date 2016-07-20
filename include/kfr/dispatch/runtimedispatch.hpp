@@ -24,7 +24,7 @@
 
 #include "../base/dispatch.hpp"
 #include "../base/types.hpp"
-#include "cpuid.hpp"
+#include "cpuid_auto.hpp"
 
 namespace kfr
 {
