@@ -22,8 +22,8 @@
  */
 #pragma once
 
-#include <cmath>
 #include "biquad.hpp"
+#include <cmath>
 
 namespace kfr
 {

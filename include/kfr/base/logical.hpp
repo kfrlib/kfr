@@ -277,14 +277,12 @@ namespace native
 {
 using fn_bittestnone = internal::in_bittest<>::fn_bittestnone;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-
 KFR_INTRIN ftype<T1> bittestnone(const T1& x)
 {
     return internal::in_bittest<>::bittestnone(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-
 KFR_INTRIN expr_func<fn_bittestnone, E1> bittestnone(E1&& x)
 {
     return { fn_bittestnone(), std::forward<E1>(x) };
@@ -292,14 +290,12 @@ KFR_INTRIN expr_func<fn_bittestnone, E1> bittestnone(E1&& x)
 
 using fn_bittestall = internal::in_bittest<>::fn_bittestall;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-
 KFR_INTRIN ftype<T1> bittestall(const T1& x)
 {
     return internal::in_bittest<>::bittestall(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-
 KFR_INTRIN expr_func<fn_bittestall, E1> bittestall(E1&& x)
 {
     return { fn_bittestall(), std::forward<E1>(x) };
@@ -307,9 +303,7 @@ KFR_INTRIN expr_func<fn_bittestall, E1> bittestall(E1&& x)
 
 using fn_bittestnone = internal::in_bittest<>::fn_bittestnone;
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INLINE ftype<common_type<T1, T2>>
-
-bittestnone(const T1& x, const T2& y)
+KFR_INLINE ftype<common_type<T1, T2>> bittestnone(const T1& x, const T2& y)
 {
     return internal::in_bittest<>::bittestnone(x, y);
 }
@@ -321,9 +315,7 @@ KFR_INLINE expr_func<fn_bittestnone, E1, E2> bittestnone(E1&& x, E2&& y)
 }
 using fn_bittestall = internal::in_bittest<>::fn_bittestall;
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INLINE ftype<common_type<T1, T2>>
-
-bittestall(const T1& x, const T2& y)
+KFR_INLINE ftype<common_type<T1, T2>> bittestall(const T1& x, const T2& y)
 {
     return internal::in_bittest<>::bittestall(x, y);
 }
@@ -331,9 +323,7 @@ bittestall(const T1& x, const T2& y)
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 KFR_INLINE expr_func<fn_bittestall, E1, E2> bittestall(E1&& x, E2&& y)
 {
-    return { fn_bittestall(), std::forward<E1>(x), std::forward<E2>(y)
-
-    };
+    return { fn_bittestall(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 }
 }

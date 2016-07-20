@@ -256,9 +256,7 @@ namespace native
 {
 using fn_min = internal::in_min_max<>::fn_min;
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INLINE ftype<common_type<T1, T2>>
-
-min(const T1& x, const T2& y)
+KFR_INLINE ftype<common_type<T1, T2>> min(const T1& x, const T2& y)
 {
     return internal::in_min_max<>::min(x, y);
 }
@@ -270,9 +268,7 @@ KFR_INLINE expr_func<fn_min, E1, E2> min(E1&& x, E2&& y)
 }
 using fn_max = internal::in_min_max<>::fn_max;
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INLINE ftype<common_type<T1, T2>>
-
-max(const T1& x, const T2& y)
+KFR_INLINE ftype<common_type<T1, T2>> max(const T1& x, const T2& y)
 {
     return internal::in_min_max<>::max(x, y);
 }
@@ -280,15 +276,11 @@ max(const T1& x, const T2& y)
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 KFR_INLINE expr_func<fn_max, E1, E2> max(E1&& x, E2&& y)
 {
-    return { fn_max(), std::forward<E1>(x), std::forward<E2>(y)
-
-    };
+    return { fn_max(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 using fn_minabs = internal::in_minabs_maxabs<>::fn_minabs;
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INLINE ftype<common_type<T1, T2>>
-
-minabs(const T1& x, const T2& y)
+KFR_INLINE ftype<common_type<T1, T2>> minabs(const T1& x, const T2& y)
 {
     return internal::in_minabs_maxabs<>::minabs(x, y);
 }
@@ -296,15 +288,11 @@ minabs(const T1& x, const T2& y)
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 KFR_INLINE expr_func<fn_minabs, E1, E2> minabs(E1&& x, E2&& y)
 {
-    return { fn_minabs(), std::forward<E1>(x), std::forward<E2>(y)
-
-    };
+    return { fn_minabs(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 using fn_maxabs = internal::in_minabs_maxabs<>::fn_maxabs;
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INLINE ftype<common_type<T1, T2>>
-
-maxabs(const T1& x, const T2& y)
+KFR_INLINE ftype<common_type<T1, T2>> maxabs(const T1& x, const T2& y)
 {
     return internal::in_minabs_maxabs<>::maxabs(x, y);
 }
@@ -312,15 +300,11 @@ maxabs(const T1& x, const T2& y)
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 KFR_INLINE expr_func<fn_maxabs, E1, E2> maxabs(E1&& x, E2&& y)
 {
-    return { fn_maxabs(), std::forward<E1>(x), std::forward<E2>(y)
-
-    };
+    return { fn_maxabs(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 using fn_clamp = internal::in_clamp<>::fn_clamp;
 template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>::value)>
-KFR_INLINE ftype<common_type<T1, T2, T3>>
-
-clamp(const T1& x, const T2& l, const T3& h)
+KFR_INLINE ftype<common_type<T1, T2, T3>> clamp(const T1& x, const T2& l, const T3& h)
 {
     return internal::in_clamp<>::clamp(x, l, h);
 }
@@ -328,15 +312,11 @@ clamp(const T1& x, const T2& l, const T3& h)
 template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2, E3>::value)>
 KFR_INLINE expr_func<fn_clamp, E1, E2, E3> clamp(E1&& x, E2&& l, E3&& h)
 {
-    return { fn_clamp(), std::forward<E1>(x), std::forward<E2>(l), std::forward<E3>(h)
-
-    };
+    return { fn_clamp(), std::forward<E1>(x), std::forward<E2>(l), std::forward<E3>(h) };
 }
 using fn_clampm1 = internal::in_clamp<>::fn_clampm1;
 template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>::value)>
-KFR_INLINE ftype<common_type<T1, T2, T3>>
-
-clampm1(const T1& x, const T2& l, const T3& h)
+KFR_INLINE ftype<common_type<T1, T2, T3>> clampm1(const T1& x, const T2& l, const T3& h)
 {
     return internal::in_clamp<>::clampm1(x, l, h);
 }
@@ -344,16 +324,12 @@ clampm1(const T1& x, const T2& l, const T3& h)
 template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2, E3>::value)>
 KFR_INLINE expr_func<fn_clampm1, E1, E2, E3> clampm1(E1&& x, E2&& l, E3&& h)
 {
-    return { fn_clampm1(), std::forward<E1>(x), std::forward<E2>(l), std::forward<E3>(h)
-
-    };
+    return { fn_clampm1(), std::forward<E1>(x), std::forward<E2>(l), std::forward<E3>(h) };
 }
 
 using fn_clamp = internal::in_clamp<>::fn_clamp;
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INLINE ftype<common_type<T1, T2>>
-
-clamp(const T1& x, const T2& h)
+KFR_INLINE ftype<common_type<T1, T2>> clamp(const T1& x, const T2& h)
 {
     return internal::in_clamp<>::clamp(x, h);
 }
@@ -361,15 +337,11 @@ clamp(const T1& x, const T2& h)
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 KFR_INLINE expr_func<fn_clamp, E1, E2> clamp(E1&& x, E2&& h)
 {
-    return { fn_clamp(), std::forward<E1>(x), std::forward<E2>(h)
-
-    };
+    return { fn_clamp(), std::forward<E1>(x), std::forward<E2>(h) };
 }
 using fn_clampm1 = internal::in_clamp<>::fn_clampm1;
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INLINE ftype<common_type<T1, T2>>
-
-clampm1(const T1& x, const T2& h)
+KFR_INLINE ftype<common_type<T1, T2>> clampm1(const T1& x, const T2& h)
 {
     return internal::in_clamp<>::clampm1(x, h);
 }
@@ -377,9 +349,7 @@ clampm1(const T1& x, const T2& h)
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 KFR_INLINE expr_func<fn_clampm1, E1, E2> clampm1(E1&& x, E2&& h)
 {
-    return { fn_clampm1(), std::forward<E1>(x), std::forward<E2>(h)
-
-    };
+    return { fn_clampm1(), std::forward<E1>(x), std::forward<E2>(h) };
 }
 }
 }

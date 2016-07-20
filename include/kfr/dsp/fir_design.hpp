@@ -35,7 +35,12 @@ namespace kfr
 namespace internal
 {
 template <cpu_t cpu = cpu_t::native>
-struct in_fir_design : in_sqrt<cpu>, in_abs<cpu>, in_log_exp<cpu>, in_sin_cos<cpu>, in_window<cpu>, in_reduce<cpu>
+struct in_fir_design : in_sqrt<cpu>,
+                       in_abs<cpu>,
+                       in_log_exp<cpu>,
+                       in_sin_cos<cpu>,
+                       in_window<cpu>,
+                       in_reduce<cpu>
 {
 private:
     using in_sqrt<cpu>::sqrt;

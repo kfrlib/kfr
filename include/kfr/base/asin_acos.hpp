@@ -71,14 +71,12 @@ namespace native
 {
 using fn_asin = internal::in_asin_acos<>::fn_asin;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-
 KFR_INTRIN ftype<T1> asin(const T1& x)
 {
     return internal::in_asin_acos<>::asin(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-
 KFR_INTRIN expr_func<fn_asin, E1> asin(E1&& x)
 {
     return { fn_asin(), std::forward<E1>(x) };
@@ -86,14 +84,12 @@ KFR_INTRIN expr_func<fn_asin, E1> asin(E1&& x)
 
 using fn_acos = internal::in_asin_acos<>::fn_acos;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-
 KFR_INTRIN ftype<T1> acos(const T1& x)
 {
     return internal::in_asin_acos<>::acos(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-
 KFR_INTRIN expr_func<fn_acos, E1> acos(E1&& x)
 {
     return { fn_acos(), std::forward<E1>(x) };

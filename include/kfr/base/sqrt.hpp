@@ -69,14 +69,12 @@ namespace native
 {
 using fn_sqrt = internal::in_sqrt<>::fn_sqrt;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-
 KFR_INTRIN ftype<T1> sqrt(const T1& x)
 {
     return internal::in_sqrt<>::sqrt(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-
 KFR_INTRIN expr_func<fn_sqrt, E1> sqrt(E1&& x)
 {
     return { fn_sqrt(), std::forward<E1>(x) };

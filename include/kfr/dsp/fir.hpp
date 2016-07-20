@@ -45,7 +45,6 @@ private:
     using in_reduce<cpu>::dotproduct;
 
 public:
-
     template <size_t tapcount, typename T, typename E1>
     struct expression_short_fir : expression<E1>
     {
@@ -126,5 +125,3 @@ KFR_INLINE internal::in_fir<>::expression_short_fir<TapCount, T, E1> short_fir(
 }
 }
 }
-
-

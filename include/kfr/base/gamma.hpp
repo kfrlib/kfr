@@ -75,14 +75,12 @@ namespace native
 {
 using fn_gamma = internal::in_gamma<>::fn_gamma;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-
 KFR_INTRIN ftype<T1> gamma(const T1& x)
 {
     return internal::in_gamma<>::gamma(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-
 KFR_INTRIN expr_func<fn_gamma, E1> gamma(E1&& x)
 {
     return { fn_gamma(), std::forward<E1>(x) };
@@ -90,14 +88,12 @@ KFR_INTRIN expr_func<fn_gamma, E1> gamma(E1&& x)
 
 using fn_factorial_approx = internal::in_gamma<>::fn_factorial_approx;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-
 KFR_INTRIN ftype<T1> factorial_approx(const T1& x)
 {
     return internal::in_gamma<>::factorial_approx(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-
 KFR_INTRIN expr_func<fn_factorial_approx, E1> factorial_approx(E1&& x)
 {
     return { fn_factorial_approx(), std::forward<E1>(x) };

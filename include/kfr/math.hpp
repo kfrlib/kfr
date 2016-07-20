@@ -41,9 +41,9 @@
 #include "base/select.hpp"
 #include "base/shuffle.hpp"
 #include "base/sin_cos.hpp"
-#include "kfr/base/hyperbolic.hpp"
 #include "base/sqrt.hpp"
 #include "base/tan.hpp"
+#include "kfr/base/hyperbolic.hpp"
 
 namespace kfr
 {

@@ -25,12 +25,12 @@
 #include "atan.hpp"
 #include "constants.hpp"
 #include "function.hpp"
+#include "hyperbolic.hpp"
 #include "log_exp.hpp"
 #include "min_max.hpp"
 #include "operators.hpp"
 #include "select.hpp"
 #include "sin_cos.hpp"
-#include "hyperbolic.hpp"
 #include "sqrt.hpp"
 
 #pragma clang diagnostic push
