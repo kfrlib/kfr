@@ -9,14 +9,13 @@ import glob
 
 path = os.path.dirname(os.path.realpath(__file__))
 
+masks = ['*.hpp', '*.h', '*.cpp', '*.c', '*.cxx']
+
 filenames = []
 for root, dirnames, files in os.walk(path, path):
-    for filename in fnmatch.filter(files, '*.hpp'):
-        filenames.append(os.path.join(root, filename))
-    for filename in fnmatch.filter(files, '*.h'):
-        filenames.append(os.path.join(root, filename))
-    for filename in fnmatch.filter(files, '*.cpp'):
-        filenames.append(os.path.join(root, filename))
+    for mask in masks:
+        for filename in fnmatch.filter(files, mask):
+            filenames.append(os.path.join(root, filename))
 
 for filename in filenames:
     print( filename, '...' )
