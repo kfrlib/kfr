@@ -30,7 +30,7 @@
 #include "operators.hpp"
 #include "select.hpp"
 #include "sin_cos.hpp"
-#include "sinh_cosh.hpp"
+#include "hyperbolic.hpp"
 #include "sqrt.hpp"
 
 #pragma clang diagnostic push
@@ -263,14 +263,14 @@ namespace internal
 {
 
 template <cpu_t c = cpu_t::native>
-struct in_complex : in_select<c>, in_sin_cos<c>, in_sinh_cosh<c>, in_sqrt<c>, in_atan<c>, in_log_exp<c>
+struct in_complex : in_select<c>, in_sin_cos<c>, in_hyperbolic<c>, in_sqrt<c>, in_atan<c>, in_log_exp<c>
 {
     constexpr static cpu_t cur = c;
     using in_sqrt<c>::sqrt;
     using in_sin_cos<c>::sincos;
     using in_sin_cos<c>::cossin;
-    using in_sinh_cosh<c>::sinhcosh;
-    using in_sinh_cosh<c>::coshsinh;
+    using in_hyperbolic<c>::sinhcosh;
+    using in_hyperbolic<c>::coshsinh;
     using in_atan<c>::atan2;
     using in_log_exp<c>::log;
     using in_log_exp<c>::log2;

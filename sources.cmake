@@ -38,7 +38,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/select.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/shuffle.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/sin_cos.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/base/sinh_cosh.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/hyperbolic.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/sqrt.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/tan.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/types.hpp
