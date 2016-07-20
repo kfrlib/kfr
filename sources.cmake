@@ -54,9 +54,11 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dispatch/cpuid.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dispatch/runtimedispatch.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/biquad.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/dsp/biquad_design.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/oscillators.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/units.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fir.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fir_design.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fracdelay.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/goertzel.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/interpolation.hpp

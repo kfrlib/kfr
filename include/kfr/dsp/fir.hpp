@@ -30,11 +30,6 @@
 #include "../expressions/reduce.hpp"
 #include "window.hpp"
 
-#pragma clang diagnostic push
-#if CID_HAS_WARNING("-Winaccessible-base")
-#pragma clang diagnostic ignored "-Winaccessible-base"
-#endif
-
 namespace kfr
 {
 
@@ -44,106 +39,12 @@ using fir_taps = univector<T, Size>;
 namespace internal
 {
 template <cpu_t cpu = cpu_t::native>
-struct in_fir : in_sqrt<cpu>, in_abs<cpu>, in_log_exp<cpu>, in_sin_cos<cpu>, in_window<cpu>, in_reduce<cpu>
+struct in_fir : in_reduce<cpu>
 {
 private:
-    using in_sqrt<cpu>::sqrt;
-    using in_abs<cpu>::abs;
-    using in_log_exp<cpu>::log;
-    using in_log_exp<cpu>::exp;
-    using in_log_exp<cpu>::log_fmadd;
-    using in_log_exp<cpu>::exp_fmadd;
-    using in_log_exp<cpu>::exp10;
-    using typename in_sin_cos<cpu>::fn_sinc;
-    using in_reduce<cpu>::reduce;
     using in_reduce<cpu>::dotproduct;
-    using in_reduce<cpu>::sum;
 
 public:
-    template <typename T>
-    KFR_SINTRIN void fir_lowpass(univector_ref<T> taps, T cutoff, const expression_pointer<T>& window,
-                                 bool normalize = true)
-    {
-        const T scale = 2.0 * cutoff;
-        taps          = bind_expression(fn_sinc(), symmlinspace<T, true>((taps.size() - 1) * cutoff * c_pi<T>,
-                                                                taps.size(), true)) *
-               scale * window;
-
-        if (is_odd(taps.size()))
-            taps[taps.size() / 2] = scale;
-
-        if (normalize)
-        {
-            const T invsum = reciprocal(sum(taps));
-            taps           = taps * invsum;
-        }
-    }
-    template <typename T>
-    KFR_SINTRIN void fir_highpass(univector_ref<T> taps, T cutoff, const expression_pointer<T>& window,
-                                  bool normalize = true)
-    {
-        const T scale = 2.0 * -cutoff;
-        taps          = bind_expression(fn_sinc(), symmlinspace<T, true>((taps.size() - 1) * cutoff * c_pi<T>,
-                                                                taps.size(), true)) *
-               scale * window;
-
-        if (is_odd(taps.size()))
-            taps[taps.size() / 2] = 1 - 2.0 * cutoff;
-
-        if (normalize)
-        {
-            const T invsum = reciprocal(sum(taps) + 1);
-            taps           = taps * invsum;
-        }
-    }
-
-    template <typename T>
-    KFR_SINTRIN void fir_bandpass(univector_ref<T> taps, T frequency1, T frequency2,
-                                  const expression_pointer<T>& window, bool normalize = true)
-    {
-        const T scale1 = 2.0 * frequency1;
-        const T scale2 = 2.0 * frequency2;
-        const T sc     = c_pi<T> * T(taps.size() - 1);
-        const T start1 = sc * frequency1;
-        const T start2 = sc * frequency2;
-
-        taps = (bind_expression(fn_sinc(), symmlinspace<T, true>(start2, taps.size(), true)) * scale2 -
-                bind_expression(fn_sinc(), symmlinspace<T, true>(start1, taps.size(), true)) * scale1) *
-               window;
-
-        if (is_odd(taps.size()))
-            taps[taps.size() / 2] = 2 * (frequency2 - frequency1);
-
-        if (normalize)
-        {
-            const T invsum = reciprocal(sum(taps) + 1);
-            taps           = taps * invsum;
-        }
-    }
-
-    template <typename T>
-    KFR_SINTRIN void fir_bandstop(univector_ref<T> taps, T frequency1, T frequency2,
-                                  const expression_pointer<T>& window, bool normalize = true)
-    {
-        const T scale1 = 2.0 * frequency1;
-        const T scale2 = 2.0 * frequency2;
-        const T sc     = c_pi<T> * T(taps.size() - 1);
-        const T start1 = sc * frequency1;
-        const T start2 = sc * frequency2;
-
-        taps = (bind_expression(fn_sinc(), symmlinspace<T, true>(start1, taps.size(), true)) * scale1 -
-                bind_expression(fn_sinc(), symmlinspace<T, true>(start2, taps.size(), true)) * scale2) *
-               window;
-
-        if (is_odd(taps.size()))
-            taps[taps.size() / 2] = 1 - 2 * (frequency2 - frequency1);
-
-        if (normalize)
-        {
-            const T invsum = reciprocal(sum(taps));
-            taps           = taps * invsum;
-        }
-    }
 
     template <size_t tapcount, typename T, typename E1>
     struct expression_short_fir : expression<E1>
@@ -206,40 +107,11 @@ public:
         mutable univector_dyn<T> delayline;
         mutable size_t delayline_cursor;
     };
-    KFR_SPEC_FN(in_fir, fir_lowpass)
-    KFR_SPEC_FN(in_fir, fir_highpass)
-    KFR_SPEC_FN(in_fir, fir_bandpass)
-    KFR_SPEC_FN(in_fir, fir_bandstop)
 };
 }
 
 namespace native
 {
-template <typename T, size_t Tag>
-KFR_INLINE void fir_lowpass(univector<T, Tag>& taps, identity<T> cutoff, const expression_pointer<T>& window,
-                            bool normalize = true)
-{
-    return internal::in_fir<>::fir_lowpass(taps.slice(), cutoff, window, normalize);
-}
-template <typename T, size_t Tag>
-KFR_INLINE void fir_highpass(univector<T, Tag>& taps, identity<T> cutoff, const expression_pointer<T>& window,
-                             bool normalize = true)
-{
-    return internal::in_fir<>::fir_highpass(taps.slice(), cutoff, window, normalize);
-}
-template <typename T, size_t Tag>
-KFR_INLINE void fir_bandpass(univector<T, Tag>& taps, identity<T> frequency1, identity<T> frequency2,
-                             const expression_pointer<T>& window, bool normalize = true)
-{
-    return internal::in_fir<>::fir_bandpass(taps.slice(), frequency1, frequency2, window, normalize);
-}
-template <typename T, size_t Tag>
-KFR_INLINE void fir_bandstop(univector<T, Tag>& taps, identity<T> frequency1, identity<T> frequency2,
-                             const expression_pointer<T>& window, bool normalize = true)
-{
-    return internal::in_fir<>::fir_bandstop(taps.slice(), frequency1, frequency2, window, normalize);
-}
-
 template <typename T, typename E1, size_t Tag>
 KFR_INLINE internal::in_fir<>::expression_fir<T, E1> fir(E1&& e1, const univector<T, Tag>& taps)
 {
@@ -255,4 +127,4 @@ KFR_INLINE internal::in_fir<>::expression_short_fir<TapCount, T, E1> short_fir(
 }
 }
 
-#pragma clang diagnostic pop
+

@@ -18,8 +18,11 @@
 // simpleimpulse()
 #include <kfr/dsp/oscillators.hpp>
 
-// fir*
+// fir
 #include <kfr/dsp/fir.hpp>
+
+// fir_*
+#include <kfr/dsp/fir_design.hpp>
 
 // plot_save()
 #include <kfr/io/python_plot.hpp>

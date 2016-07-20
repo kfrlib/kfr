@@ -15,8 +15,11 @@
 // simpleimpulse()
 #include <kfr/dsp/oscillators.hpp>
 
-// biquad*
+// biquad
 #include <kfr/dsp/biquad.hpp>
+
+// biquad_*
+#include <kfr/dsp/biquad_design.hpp>
 
 // plot_save()
 #include <kfr/io/python_plot.hpp>
