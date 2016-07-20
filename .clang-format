@@ -24,4 +24,4 @@ BinPackArguments : true
 AlwaysBreakTemplateDeclarations : true
 AlignConsecutiveAssignments : true
 PenaltyReturnTypeOnItsOwnLine: 50000
-CommentPragmas: '^ >>>'
+CommentPragmas: '^ >'
