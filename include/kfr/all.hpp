@@ -20,10 +20,9 @@
  * disclosing the source code of your own applications.
  * See http://www.kfrlib.com for details.
  */
- 
- #include "cometa/string.hpp"
 
-#include "version.hpp"
+#include "cometa/string.hpp"
+
 #include "base/abs.hpp"
 #include "base/asin_acos.hpp"
 #include "base/atan.hpp"
@@ -50,14 +49,15 @@
 #include "base/types.hpp"
 #include "base/univector.hpp"
 #include "base/vec.hpp"
+#include "dispatch/cpuid.hpp"
+#include "dispatch/runtimedispatch.hpp"
 #include "expressions/basic.hpp"
 #include "expressions/conversion.hpp"
 #include "expressions/generators.hpp"
 #include "expressions/operators.hpp"
 #include "expressions/pointer.hpp"
 #include "expressions/reduce.hpp"
-#include "dispatch/cpuid.hpp"
-#include "dispatch/runtimedispatch.hpp"
+#include "version.hpp"
 
 #include "misc/compiletime.hpp"
 #include "misc/random.hpp"

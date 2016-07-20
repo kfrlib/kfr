@@ -4,7 +4,7 @@
  * See LICENSE.txt for details
  */
 
- // library_version()
+// library_version()
 #include <kfr/version.hpp>
 
 #include <tuple>

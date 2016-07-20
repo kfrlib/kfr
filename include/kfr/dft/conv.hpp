@@ -53,7 +53,7 @@ KFR_INTRIN univector<T> convolve(const univector<T, Tag1>& src1, const univector
     plan.execute(src2padded, src2padded, temp);
     src1padded = src1padded * src2padded;
     plan.execute(src1padded, src1padded, temp, true);
-    return typed<T>( real(src1padded), src1.size() + src2.size() - 1 ) / T(size);
+    return typed<T>(real(src1padded), src1.size() + src2.size() - 1) / T(size);
 }
 }
 #pragma clang diagnostic pop

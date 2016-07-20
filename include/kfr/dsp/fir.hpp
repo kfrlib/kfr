@@ -163,9 +163,8 @@ public:
             vec<T, N> in = cast<T>(this->argument_first(index, x));
 
             vec<T, N> out = in * taps[0];
-            cfor(csize<1>, csize<tapcount>, [&](auto I) {
-                out = out + concat_and_slice<tapcount - 1 - I, N>(delayline, in) * taps[I];
-            });
+            cfor(csize<1>, csize<tapcount>,
+                 [&](auto I) { out = out + concat_and_slice<tapcount - 1 - I, N>(delayline, in) * taps[I]; });
             delayline = concat_and_slice<N, tapcount - 1>(delayline, in);
 
             return cast<U>(out);

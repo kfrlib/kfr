@@ -78,7 +78,7 @@ TEST(vec_tovec)
 TEST(vec_zerovector)
 {
     CHECK(zerovector<f32, 3>() == f32x3{ 0, 0, 0 });
-    //CHECK(zerovector<i16, 3>() == i16x3{ 0, 0, 0 }); // clang 3.9 (trunk) crashes here
+    // CHECK(zerovector<i16, 3>() == i16x3{ 0, 0, 0 }); // clang 3.9 (trunk) crashes here
     CHECK(zerovector(f64x8{}) == f64x8{ 0, 0, 0, 0, 0, 0, 0, 0 });
 }
 

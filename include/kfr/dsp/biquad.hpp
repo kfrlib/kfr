@@ -331,8 +331,8 @@ public:
 }
 
 template <typename T, typename E1>
-KFR_INLINE internal::in_biquad<>::expression_biquads<1, T, internal::arg<E1>> biquad(const biquad_params<T>& bq,
-                                                                                 E1&& e1)
+KFR_INLINE internal::in_biquad<>::expression_biquads<1, T, internal::arg<E1>> biquad(
+    const biquad_params<T>& bq, E1&& e1)
 {
     const biquad_params<T> bqs[1] = { bq };
     return internal::in_biquad<>::expression_biquads<1, T, internal::arg<E1>>(bqs, std::forward<E1>(e1));
