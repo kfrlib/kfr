@@ -38,8 +38,19 @@
 #pragma clang diagnostic ignored "-Winaccessible-base"
 #endif
 
+#ifdef KFR_STD_COMPLEX
+#include <complex>
+#endif
+
 namespace kfr
 {
+#ifdef KFR_STD_COMPLEX
+
+template <typename T>
+using complex = std::complex<T>;
+
+#else
+#ifndef KFR_CUSTOM_COMPLEX
 
 template <typename T>
 struct complex
@@ -68,6 +79,9 @@ struct complex
     T re;
     T im;
 };
+
+#endif
+#endif
 
 using c32   = complex<f32>;
 using c64   = complex<f64>;
@@ -205,9 +219,9 @@ constexpr KFR_INLINE vec<T, N> real(const vec<complex<T>, N>& value)
 }
 
 template <typename T>
-using realtype = decltype(real(std::declval<T>()));
+using realtype = decltype(kfr::real(std::declval<T>()));
 template <typename T>
-using realftype = ftype<decltype(real(std::declval<T>()))>;
+using realftype = ftype<decltype(kfr::real(std::declval<T>()))>;
 
 KFR_FN(real)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
@@ -600,7 +614,7 @@ struct compound_type_traits<kfr::complex<T>>
     template <typename U>
     using deep_rebind = kfr::complex<cometa::deep_rebind<subtype, U>>;
 
-    static constexpr const subtype& at(const kfr::complex<T>& value, size_t index)
+    static constexpr subtype at(const kfr::complex<T>& value, size_t index)
     {
         return index == 0 ? value.real() : value.imag();
     }
