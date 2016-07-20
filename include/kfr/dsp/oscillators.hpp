@@ -34,16 +34,6 @@
 namespace kfr
 {
 
-inline auto simpleimpulse()
-{
-    return lambda([](cinput_t, size_t index, auto x) {
-        if (index == 0)
-            return onoff(x);
-        else
-            return zerovector(x);
-    });
-}
-
 template <typename T>
 auto jaehne(T magn, size_t size)
 {

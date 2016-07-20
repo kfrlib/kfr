@@ -13,7 +13,7 @@
 #include <kfr/math.hpp>
 
 // simpleimpulse()
-#include <kfr/dsp/oscillators.hpp>
+#include <kfr/dsp/impulse.hpp>
 
 // biquad
 #include <kfr/dsp/biquad.hpp>

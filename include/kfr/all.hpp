@@ -72,6 +72,7 @@
 #include "dsp/fir_design.hpp"
 #include "dsp/fracdelay.hpp"
 #include "dsp/goertzel.hpp"
+#include "dsp/impulse.hpp"
 #include "dsp/interpolation.hpp"
 #include "dsp/oscillators.hpp"
 #include "dsp/resample.hpp"
