@@ -65,6 +65,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/interpolation.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/resample.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/speaker.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/dsp/waveshaper.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/weighting.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/window.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/expressions/basic.hpp

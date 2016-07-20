@@ -78,6 +78,7 @@
 #include "dsp/resample.hpp"
 #include "dsp/speaker.hpp"
 #include "dsp/units.hpp"
+#include "dsp/waveshaper.hpp"
 #include "dsp/weighting.hpp"
 #include "dsp/window.hpp"
 #include "io/audiofile.hpp"
