@@ -28,59 +28,42 @@
 
 namespace kfr
 {
-namespace internal
+
+template <typename T, typename M>
+KFR_SINTRIN T nearest(M mu, T x1, T x2)
 {
-template <cpu_t c = cpu_t::native, cpu_t cc = c>
-struct in_interpolation : in_sin_cos<cc>, in_select<cc>
+    return native::select(mu < M(0.5), x1, x2);
+}
+
+template <typename T, typename M>
+KFR_SINTRIN T linear(M mu, T x1, T x2)
 {
-private:
-    using in_sin_cos<cc>::fastcos;
-    using in_select<cc>::select;
+    return mix(mu, x1, x2);
+}
 
-public:
-    template <typename T, typename M>
-    KFR_SINTRIN T nearest(M mu, T x1, T x2)
-    {
-        return select(mu < M(0.5), x1, x2);
-    }
+template <typename T, typename M>
+KFR_SINTRIN T cosine(M mu, T x1, T x2)
+{
+    return mix((M(1) - native::fastcos(mu * c_pi<T>)) * M(0.5), x1, x2);
+}
 
-    template <typename T, typename M>
-    KFR_SINTRIN T linear(M mu, T x1, T x2)
-    {
-        return mix(mu, x1, x2);
-    }
+template <typename T, typename M>
+KFR_SINTRIN T cubic(M mu, T x0, T x1, T x2, T x3)
+{
+    const T a0 = x3 - x2 - x0 + x1;
+    const T a1 = x0 - x1 - a0;
+    const T a2 = x2 - x0;
+    const T a3 = x1;
+    return horner(mu, a0, a1, a2, a3);
+}
 
-    template <typename T, typename M>
-    KFR_SINTRIN T cosine(M mu, T x1, T x2)
-    {
-        return mix((M(1) - fastcos(mu * c_pi<T>)) * M(0.5), x1, x2);
-    }
-
-    template <typename T, typename M>
-    KFR_SINTRIN T cubic(M mu, T x0, T x1, T x2, T x3)
-    {
-        const T a0 = x3 - x2 - x0 + x1;
-        const T a1 = x0 - x1 - a0;
-        const T a2 = x2 - x0;
-        const T a3 = x1;
-        return horner(mu, a0, a1, a2, a3);
-    }
-
-    template <typename T, typename M>
-    KFR_SINTRIN T catmullrom(M mu, T x0, T x1, T x2, T x3)
-    {
-        const T a0 = T(0.5) * (x3 - x0) - T(1.5) * (x2 - x1);
-        const T a1 = x0 - T(2.5) * x1 + T(2) * x2 - T(0.5) * x3;
-        const T a2 = T(0.5) * (x2 - x0);
-        const T a3 = x1;
-        return horner(mu, a0, a1, a2, a3);
-    }
-
-    KFR_SPEC_FN(in_interpolation, nearest)
-    KFR_SPEC_FN(in_interpolation, linear)
-    KFR_SPEC_FN(in_interpolation, cosine)
-    KFR_SPEC_FN(in_interpolation, cubic)
-    KFR_SPEC_FN(in_interpolation, catmullrom)
-};
+template <typename T, typename M>
+KFR_SINTRIN T catmullrom(M mu, T x0, T x1, T x2, T x3)
+{
+    const T a0 = T(0.5) * (x3 - x0) - T(1.5) * (x2 - x1);
+    const T a1 = x0 - T(2.5) * x1 + T(2) * x2 - T(0.5) * x3;
+    const T a2 = T(0.5) * (x2 - x0);
+    const T a3 = x1;
+    return horner(mu, a0, a1, a2, a3);
 }
 }
