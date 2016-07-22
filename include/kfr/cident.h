@@ -234,10 +234,14 @@
 
 #define CID_ALWAYS_INLINE_STATIC CID_ALWAYS_INLINE static
 
+#ifdef CID_ARCH_x86
 #ifdef CID_OS_WIN
 #define CID_CDECL __cdecl
 #else
 #define CID_CDECL __attribute__((cdecl))
+#endif
+#else
+#define CID_CDECL
 #endif
 
 #ifdef CID_OS_WIN
