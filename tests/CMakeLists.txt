@@ -34,6 +34,7 @@ add_executable(fracdelay_test fracdelay_test.cpp ${KFR_SRC})
 add_executable(empty_test empty_test.cpp ${KFR_SRC})
 add_executable(complex_test complex_test.cpp ${KFR_SRC})
 add_executable(vec_test vec_test.cpp ${KFR_SRC})
+add_executable(stat_test stat_test.cpp ${KFR_SRC})
 
 enable_testing()
 
@@ -47,3 +48,5 @@ add_test(NAME complex_test
         COMMAND ${PROJECT_BINARY_DIR}/tests/complex_test)
 add_test(NAME vec_test
         COMMAND ${PROJECT_BINARY_DIR}/tests/vec_test)
+add_test(NAME stat_test
+        COMMAND ${PROJECT_BINARY_DIR}/tests/stat_test)
