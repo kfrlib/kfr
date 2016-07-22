@@ -26,6 +26,7 @@
 #include "intrinsics.h"
 
 #include <algorithm>
+#include <cmath>
 #include <tuple>
 #include <type_traits>
 
@@ -642,12 +643,14 @@ constexpr size_t maximum_vector_alignment_mask = maximum_vector_alignment - 1;
 constexpr size_t native_register_count         = bitness_const(8, 16);
 
 constexpr size_t common_float_vector_size = 16;
-constexpr size_t common_int_vector_size = 16;
+constexpr size_t common_int_vector_size   = 16;
 
 template <cpu_t c>
-constexpr size_t native_float_vector_size = c >= cpu_t::avx1 ? 32 : c >= cpu_t::sse2 ? 16 : common_float_vector_size;
+constexpr size_t native_float_vector_size =
+    c >= cpu_t::avx1 ? 32 : c >= cpu_t::sse2 ? 16 : common_float_vector_size;
 template <cpu_t c>
-constexpr size_t native_int_vector_size = c >= cpu_t::avx2 ? 32 : c >= cpu_t::sse2 ? 16 : common_int_vector_size;
+constexpr size_t native_int_vector_size =
+    c >= cpu_t::avx2 ? 32 : c >= cpu_t::sse2 ? 16 : common_int_vector_size;
 
 struct input_expression
 {

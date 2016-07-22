@@ -56,8 +56,8 @@ struct in_min_max<cpu_t::common, cc> : in_select<cc>
 
 private:
     using in_select<cc>::select;
-public:
 
+public:
     template <typename T>
     KFR_SINTRIN T min(initialvalue<T>)
     {
