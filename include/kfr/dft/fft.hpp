@@ -256,16 +256,27 @@ KFR_NOINLINE void initialize_twiddles(complex<T>*& twiddle, size_t stage_size, s
 template <typename T>
 KFR_INTRIN void prefetch_one(const complex<T>* in)
 {
+#ifdef CID_ARCH_X86
     __builtin_prefetch(ptr_cast<void>(in), 0, _MM_HINT_T0);
+#else
+    __builtin_prefetch(ptr_cast<void>(in));
+#endif
 }
 
 template <typename T>
 KFR_INTRIN void prefetch_four(size_t stride, const complex<T>* in)
 {
+#ifdef CID_ARCH_X86
     __builtin_prefetch(ptr_cast<void>(in), 0, _MM_HINT_T0);
     __builtin_prefetch(ptr_cast<void>(in + stride), 0, _MM_HINT_T0);
     __builtin_prefetch(ptr_cast<void>(in + stride * 2), 0, _MM_HINT_T0);
     __builtin_prefetch(ptr_cast<void>(in + stride * 3), 0, _MM_HINT_T0);
+#else
+    __builtin_prefetch(ptr_cast<void>(in));
+    __builtin_prefetch(ptr_cast<void>(in + stride));
+    __builtin_prefetch(ptr_cast<void>(in + stride * 2));
+    __builtin_prefetch(ptr_cast<void>(in + stride * 3));
+#endif
 }
 
 template <typename Ntype, size_t width, bool splitout, bool splitin, bool prefetch, bool use_br2,
