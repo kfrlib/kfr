@@ -50,6 +50,8 @@ struct in_select_impl<cpu_t::common>
     KFR_SPEC_FN(in_select_impl, select)
 };
 
+#ifdef CID_ARCH_X86
+
 template <>
 struct in_select_impl<cpu_t::sse41> : in_select_impl<cpu_t::common>
 {
@@ -119,6 +121,8 @@ struct in_select_impl<cpu_t::avx2> : in_select_impl<cpu_t::avx1>
     KFR_HANDLE_ALL(select)
     KFR_SPEC_FN(in_select_impl, select)
 };
+
+#endif
 
 template <cpu_t c = cpu_t::native>
 struct in_select : in_select_impl<c>

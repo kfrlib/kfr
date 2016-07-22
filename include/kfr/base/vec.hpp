@@ -1149,8 +1149,11 @@ KFR_INLINE vec<T, N> tovec(simd<T, N> x)
 {
     return x;
 }
+
+#ifdef CID_ARCH_SSE2
 KFR_INLINE f32x4 tovec(__m128 x) { return f32x4(x); }
 KFR_INLINE f64x2 tovec(__m128d x) { return f64x2(x); }
+#endif
 
 template <typename T, typename... Args, size_t Nout = (sizeof...(Args) + 1)>
 constexpr KFR_INLINE mask<T, Nout> make_mask(bool arg, Args... args)

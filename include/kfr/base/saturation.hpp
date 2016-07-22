@@ -108,6 +108,8 @@ protected:
     }
 };
 
+#ifdef CID_ARCH_X86
+
 template <cpu_t cc>
 struct in_saturated<cpu_t::sse2, cc> : in_saturated<cpu_t::common>, in_select<cc>
 {
@@ -169,6 +171,7 @@ struct in_saturated<cpu_t::avx2, cc> : in_saturated<cpu_t::sse2, cc>
     KFR_SPEC_FN(in_saturated, satadd)
     KFR_SPEC_FN(in_saturated, satsub)
 };
+#endif
 }
 namespace native
 {

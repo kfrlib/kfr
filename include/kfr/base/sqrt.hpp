@@ -58,6 +58,8 @@ struct in_sqrt<cpu_t::common>
     KFR_SPEC_FN(in_sqrt, sqrt)
 };
 
+#ifdef CID_ARCH_X86
+
 template <>
 struct in_sqrt<cpu_t::sse2>
 {
@@ -84,6 +86,7 @@ struct in_sqrt<cpu_t::avx1> : in_sqrt<cpu_t::sse2>
     KFR_HANDLE_SCALAR(sqrt)
     KFR_SPEC_FN(in_sqrt, sqrt)
 };
+#endif
 }
 namespace native
 {

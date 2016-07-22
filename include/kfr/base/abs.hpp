@@ -69,6 +69,8 @@ public:
     KFR_SPEC_FN(in_abs, abs)
 };
 
+#ifdef CID_ARCH_X86
+
 template <cpu_t cc>
 struct in_abs<cpu_t::ssse3, cc> : in_select<cc>
 {
@@ -113,6 +115,7 @@ struct in_abs<cpu_t::avx2, cc> : in_abs<cpu_t::ssse3, cc>
     KFR_HANDLE_SCALAR(abs)
     KFR_SPEC_FN(in_abs, abs)
 };
+#endif
 }
 
 namespace native

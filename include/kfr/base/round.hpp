@@ -169,6 +169,8 @@ struct in_round<cpu_t::common>
     KFR_SPEC_FN(in_round, fract)
 };
 
+#ifdef CID_ARCH_X86
+
 template <>
 struct in_round<cpu_t::sse41> : in_round<cpu_t::common>
 {
@@ -256,6 +258,8 @@ struct in_round<cpu_t::avx1> : in_round<cpu_t::sse41>
 #undef KFR_mm256_roundnearest_ps
 #undef KFR_mm256_trunc_pd
 #undef KFR_mm256_roundnearest_pd
+
+#endif
 }
 
 namespace native

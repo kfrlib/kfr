@@ -110,6 +110,8 @@ struct in_bittest<cpu_t::common>
     KFR_SPEC_FN(in_bittest, bittestall)
 };
 
+#ifdef CID_ARCH_X86
+
 template <>
 struct in_bittest<cpu_t::sse2>
 {
@@ -313,6 +315,7 @@ struct in_bittest<cpu_t::avx2> : in_bittest<cpu_t::avx1>
     KFR_SPEC_FN(in_bittest, bittestnone)
     KFR_SPEC_FN(in_bittest, bittestall)
 };
+#endif
 }
 
 namespace native

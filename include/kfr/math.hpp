@@ -31,6 +31,7 @@
 #include "base/constants.hpp"
 #include "base/digitreverse.hpp"
 #include "base/gamma.hpp"
+#include "base/hyperbolic.hpp"
 #include "base/log_exp.hpp"
 #include "base/logical.hpp"
 #include "base/min_max.hpp"
@@ -43,7 +44,6 @@
 #include "base/sin_cos.hpp"
 #include "base/sqrt.hpp"
 #include "base/tan.hpp"
-#include "kfr/base/hyperbolic.hpp"
 
 namespace kfr
 {

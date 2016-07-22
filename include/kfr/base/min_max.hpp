@@ -86,6 +86,8 @@ public:
     KFR_SPEC_FN(in_min_max, max)
 };
 
+#ifdef CID_ARCH_X86
+
 template <cpu_t cc>
 struct in_min_max<cpu_t::sse2, cc> : in_select<cc>
 {
@@ -219,6 +221,8 @@ public:
     KFR_SPEC_FN(in_min_max, min)
     KFR_SPEC_FN(in_min_max, max)
 };
+
+#endif
 
 template <cpu_t cpu = cpu_t::native>
 struct in_minabs_maxabs

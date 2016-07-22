@@ -2,6 +2,8 @@
 
 #if defined(_M_IX86) || defined(__i386__) || defined(_M_X64) || defined(__x86_64__)
 #define CID_ARCH_X86 1
+#elif defined (__arm__) || defined(__arm64__) || defined(_M_ARM)
+#define CID_ARCH_ARM 1
 #endif
 
 #ifdef CID_ARCH_X86
@@ -112,10 +114,20 @@
 #define CID_ARCH_NAME sse2
 #elif defined CID_ARCH_SSE
 #define CID_ARCH_NAME sse
-#else
-#define CID_ARCH_NAME common
 #endif
 
+#elif defined(CID_ARCH_ARM)
+
+#if defined(__arm64__)
+#define CID_ARCH_X64 1
+#else
+#define CID_ARCH_X32 1
+#endif
+
+#endif
+
+#ifndef CID_ARCH_NAME
+#define CID_ARCH_NAME common
 #endif
 
 #define CID_STRINGIFY2(x) #x
@@ -316,13 +328,20 @@
 #define CID_HAS_EXCEPTIONS 1
 #endif
 
+#if __has_include(<assert.h>)
 #include <assert.h>
+#define CID_HAS_ASSERT_H 1
+#endif
 
 #ifndef CID_THROW
 #if CID_HAS_EXCEPTIONS
 #define CID_THROW(x) throw x
 #else
+#ifdef CID_HAS_ASSERT_H
 #define CID_THROW(x) assert(false)
+#else
+#define CID_THROW(x) abort()
+#endif
 #endif
 #endif
 
