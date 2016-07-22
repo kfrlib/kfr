@@ -18,7 +18,8 @@
 cmake_minimum_required(VERSION 3.0)
 
 if (NOT MSVC)
-    add_compile_options(-fno-exceptions -fno-rtti -ftemplate-backtrace-limit=0 -march=native)
+    add_compile_options(-fno-exceptions -fno-rtti -ftemplate-backtrace-limit=0)
+    add_compile_options(-march=native)
     link_libraries(stdc++ pthread m)
 else ()
     add_compile_options(/arch:AVX)

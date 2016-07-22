@@ -38,9 +38,9 @@ struct in_select_impl : in_select_impl<older(c)>
 };
 
 template <>
-struct in_select_impl<cpu_t::sse2>
+struct in_select_impl<cpu_t::common>
 {
-    constexpr static cpu_t cur = cpu_t::sse2;
+    constexpr static cpu_t cur = cpu_t::common;
 
     template <typename T, size_t N>
     KFR_SINTRIN vec<T, N> select(vec<T, N> m, vec<T, N> x, vec<T, N> y)
@@ -51,7 +51,7 @@ struct in_select_impl<cpu_t::sse2>
 };
 
 template <>
-struct in_select_impl<cpu_t::sse41> : in_select_impl<cpu_t::sse2>
+struct in_select_impl<cpu_t::sse41> : in_select_impl<cpu_t::common>
 {
     constexpr static cpu_t cpu = cpu_t::sse41;
 

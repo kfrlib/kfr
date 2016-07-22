@@ -38,24 +38,57 @@ namespace kfr
 namespace internal
 {
 
-template <cpu_t cpu = cpu_t::native>
-struct in_min_max : in_min_max<older(cpu)>
+template <cpu_t cpu = cpu_t::native, cpu_t cc = cpu>
+struct in_min_max : in_min_max<older(cpu), cc>
 {
-    struct fn_min : in_min_max<older(cpu)>::fn_min, fn_disabled
+    struct fn_min : in_min_max<older(cpu), cc>::fn_min, fn_disabled
     {
     };
-    struct fn_max : in_min_max<older(cpu)>::fn_max, fn_disabled
+    struct fn_max : in_min_max<older(cpu), cc>::fn_max, fn_disabled
     {
     };
 };
 
-template <>
-struct in_min_max<cpu_t::sse2> : in_select<cpu_t::sse2>
+template <cpu_t cc>
+struct in_min_max<cpu_t::common, cc> : in_select<cc>
+{
+    constexpr static cpu_t cpu = cpu_t::common;
+
+    template <typename T>
+    KFR_SINTRIN T min(initialvalue<T>)
+    {
+        return std::numeric_limits<T>::max();
+    }
+    template <typename T>
+    KFR_SINTRIN T max(initialvalue<T>)
+    {
+        return std::numeric_limits<T>::min();
+    }
+
+    template <typename T, size_t N>
+    KFR_SINTRIN vec<T, N> min(vec<T, N> x, vec<T, N> y)
+    {
+        return select(x < y, x, y);
+    }
+    template <typename T, size_t N>
+    KFR_SINTRIN vec<T, N> max(vec<T, N> x, vec<T, N> y)
+    {
+        return select(x > y, x, y);
+    }
+
+    KFR_HANDLE_SCALAR(min)
+    KFR_HANDLE_SCALAR(max)
+    KFR_SPEC_FN(in_min_max, min)
+    KFR_SPEC_FN(in_min_max, max)
+};
+
+template <cpu_t cc>
+struct in_min_max<cpu_t::sse2, cc> : in_select<cc>
 {
     constexpr static cpu_t cpu = cpu_t::sse2;
 
 private:
-    using in_select<cpu>::select;
+    using in_select<cc>::select;
 
 public:
     template <typename T>
@@ -93,13 +126,14 @@ public:
 
     KFR_HANDLE_ALL(min)
     KFR_HANDLE_ALL(max)
-
+    KFR_HANDLE_SCALAR(min)
+    KFR_HANDLE_SCALAR(max)
     KFR_SPEC_FN(in_min_max, min)
     KFR_SPEC_FN(in_min_max, max)
 };
 
-template <>
-struct in_min_max<cpu_t::sse41> : in_min_max<cpu_t::sse2>
+template <cpu_t cc>
+struct in_min_max<cpu_t::sse41, cc> : in_min_max<cpu_t::sse2>
 {
     constexpr static cpu_t cpu = cpu_t::sse41;
     using in_min_max<cpu_t::sse2>::min;
@@ -117,12 +151,14 @@ struct in_min_max<cpu_t::sse41> : in_min_max<cpu_t::sse2>
 
     KFR_HANDLE_ALL(min)
     KFR_HANDLE_ALL(max)
+    KFR_HANDLE_SCALAR(min)
+    KFR_HANDLE_SCALAR(max)
     KFR_SPEC_FN(in_min_max, min)
     KFR_SPEC_FN(in_min_max, max)
 };
 
-template <>
-struct in_min_max<cpu_t::avx1> : in_min_max<cpu_t::sse41>
+template <cpu_t cc>
+struct in_min_max<cpu_t::avx1, cc> : in_min_max<cpu_t::sse41>
 {
     constexpr static cpu_t cpu = cpu_t::avx1;
     using in_min_max<cpu_t::sse41>::min;
@@ -135,12 +171,14 @@ struct in_min_max<cpu_t::avx1> : in_min_max<cpu_t::sse41>
 
     KFR_HANDLE_ALL(min)
     KFR_HANDLE_ALL(max)
+    KFR_HANDLE_SCALAR(min)
+    KFR_HANDLE_SCALAR(max)
     KFR_SPEC_FN(in_min_max, min)
     KFR_SPEC_FN(in_min_max, max)
 };
 
-template <>
-struct in_min_max<cpu_t::avx2> : in_min_max<cpu_t::avx1>, in_select<cpu_t::avx2>
+template <cpu_t cc>
+struct in_min_max<cpu_t::avx2, cc> : in_min_max<cpu_t::avx1>, in_select<cpu_t::avx2>
 {
     constexpr static cpu_t cpu = cpu_t::avx2;
 
@@ -172,6 +210,8 @@ public:
 
     KFR_HANDLE_ALL(min)
     KFR_HANDLE_ALL(max)
+    KFR_HANDLE_SCALAR(min)
+    KFR_HANDLE_SCALAR(max)
     KFR_SPEC_FN(in_min_max, min)
     KFR_SPEC_FN(in_min_max, max)
 };
@@ -193,6 +233,8 @@ public:
 
     KFR_HANDLE_ALL(minabs)
     KFR_HANDLE_ALL(maxabs)
+    KFR_HANDLE_SCALAR(min)
+    KFR_HANDLE_SCALAR(max)
     KFR_SPEC_FN(in_minabs_maxabs, minabs)
     KFR_SPEC_FN(in_minabs_maxabs, maxabs)
 };
@@ -247,6 +289,8 @@ struct in_clamp : in_min_max<cpu>
     }
     KFR_HANDLE_ALL(clamp)
     KFR_HANDLE_ALL(clampm1)
+    KFR_HANDLE_SCALAR(min)
+    KFR_HANDLE_SCALAR(max)
     KFR_SPEC_FN(in_clamp, clamp)
     KFR_SPEC_FN(in_clamp, clampm1)
 };

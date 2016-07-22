@@ -69,6 +69,48 @@ struct logical_and
 };
 
 template <>
+struct in_bittest<cpu_t::common>
+{
+    constexpr static cpu_t cpu = cpu_t::common;
+
+    template <typename T, size_t N>
+    KFR_SINTRIN bitmask<N> getmask(vec<T, N> x)
+    {
+        typename bitmask<N>::type val = 0;
+        for (size_t i = 0; i < N; i++)
+        {
+            val |= (ubitcast(x[i]) >> (typebits<T>::bits - 1)) << i;
+        }
+        return val;
+    }
+
+    template <typename T, size_t N>
+    KFR_SINTRIN bool bittestnone(vec<T, N> x)
+    {
+        return !getmask(x).value;
+    }
+    template <typename T, size_t N>
+    KFR_SINTRIN bool bittestnone(vec<T, N> x, vec<T, N> y)
+    {
+        return bittestnone(x & y);
+    }
+
+    template <typename T, size_t N>
+    KFR_SINTRIN bool bittestall(vec<T, N> x)
+    {
+        return !getmask(~x).value;
+    }
+    template <typename T, size_t N>
+    KFR_SINTRIN bool bittestall(vec<T, N> x, vec<T, N> y)
+    {
+        return bittestnone(~x & y);
+    }
+
+    KFR_SPEC_FN(in_bittest, bittestnone)
+    KFR_SPEC_FN(in_bittest, bittestall)
+};
+
+template <>
 struct in_bittest<cpu_t::sse2>
 {
     constexpr static cpu_t cpu = cpu_t::sse2;

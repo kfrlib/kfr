@@ -42,38 +42,41 @@ struct in_saturated : in_saturated<older(c), cc>
     struct fn_satadd : in_saturated<older(c), cc>::fn_satadd, fn_disabled
     {
     };
+    struct fn_satsub : in_saturated<older(c), cc>::fn_satsub, fn_disabled
+    {
+    };
 };
 
 template <cpu_t cc>
-struct in_saturated<cpu_t::sse2, cc> : in_select<cc>
+struct in_saturated<cpu_t::common, cc> : in_select<cc>
 {
-    constexpr static cpu_t cpu = cpu_t::sse2;
+    constexpr static cpu_t cpu = cpu_t::common;
 
-private:
-    using in_select<cc>::select;
+    template <typename T, size_t N, KFR_ENABLE_IF(std::is_signed<T>::value)>
+    KFR_SINTRIN vec<T, N> satadd(vec<T, N> a, vec<T, N> b)
+    {
+        return saturated_signed_add(a, b);
+    }
+    template <typename T, size_t N, KFR_ENABLE_IF(std::is_unsigned<T>::value)>
+    KFR_SINTRIN vec<T, N> satadd(vec<T, N> a, vec<T, N> b)
+    {
+        return saturated_unsigned_add(a, b);
+    }
 
-public:
-    KFR_SINTRIN u8sse satadd(u8sse x, u8sse y) { return _mm_adds_epu8(*x, *y); }
-    KFR_SINTRIN i8sse satadd(i8sse x, i8sse y) { return _mm_adds_epi8(*x, *y); }
-    KFR_SINTRIN u16sse satadd(u16sse x, u16sse y) { return _mm_adds_epu16(*x, *y); }
-    KFR_SINTRIN i16sse satadd(i16sse x, i16sse y) { return _mm_adds_epi16(*x, *y); }
+    template <typename T, size_t N, KFR_ENABLE_IF(std::is_signed<T>::value)>
+    KFR_SINTRIN vec<T, N> satsub(vec<T, N> a, vec<T, N> b)
+    {
+        return saturated_signed_sub(a, b);
+    }
+    template <typename T, size_t N, KFR_ENABLE_IF(std::is_unsigned<T>::value)>
+    KFR_SINTRIN vec<T, N> satsub(vec<T, N> a, vec<T, N> b)
+    {
+        return saturated_unsigned_sub(a, b);
+    }
+    KFR_SPEC_FN(in_saturated, satadd)
+    KFR_SPEC_FN(in_saturated, satsub)
 
-    KFR_SINTRIN u8sse satsub(u8sse x, u8sse y) { return _mm_subs_epu8(*x, *y); }
-    KFR_SINTRIN i8sse satsub(i8sse x, i8sse y) { return _mm_subs_epi8(*x, *y); }
-    KFR_SINTRIN u16sse satsub(u16sse x, u16sse y) { return _mm_subs_epu16(*x, *y); }
-    KFR_SINTRIN i16sse satsub(i16sse x, i16sse y) { return _mm_subs_epi16(*x, *y); }
-
-    KFR_SINTRIN i32sse satadd(i32sse a, i32sse b) { return saturated_signed_add(a, b); }
-    KFR_SINTRIN i64sse satadd(i64sse a, i64sse b) { return saturated_signed_add(a, b); }
-    KFR_SINTRIN u32sse satadd(u32sse a, u32sse b) { return saturated_unsigned_add(a, b); }
-    KFR_SINTRIN u64sse satadd(u64sse a, u64sse b) { return saturated_unsigned_add(a, b); }
-
-    KFR_SINTRIN i32sse satsub(i32sse a, i32sse b) { return saturated_signed_sub(a, b); }
-    KFR_SINTRIN i64sse satsub(i64sse a, i64sse b) { return saturated_signed_sub(a, b); }
-    KFR_SINTRIN u32sse satsub(u32sse a, u32sse b) { return saturated_unsigned_sub(a, b); }
-    KFR_SINTRIN u64sse satsub(u64sse a, u64sse b) { return saturated_unsigned_sub(a, b); }
-
-private:
+protected:
     template <typename T, size_t N>
     KFR_SINTRIN vec<T, N> saturated_signed_add(vec<T, N> a, vec<T, N> b)
     {
@@ -103,10 +106,41 @@ private:
     {
         return select(a < b, zerovector(a), a - b);
     }
+};
+
+template <cpu_t cc>
+struct in_saturated<cpu_t::sse2, cc> : in_saturated<cpu_t::common>, in_select<cc>
+{
+    constexpr static cpu_t cpu = cpu_t::sse2;
+
+private:
+    using in_select<cc>::select;
 
 public:
+    KFR_SINTRIN u8sse satadd(u8sse x, u8sse y) { return _mm_adds_epu8(*x, *y); }
+    KFR_SINTRIN i8sse satadd(i8sse x, i8sse y) { return _mm_adds_epi8(*x, *y); }
+    KFR_SINTRIN u16sse satadd(u16sse x, u16sse y) { return _mm_adds_epu16(*x, *y); }
+    KFR_SINTRIN i16sse satadd(i16sse x, i16sse y) { return _mm_adds_epi16(*x, *y); }
+
+    KFR_SINTRIN u8sse satsub(u8sse x, u8sse y) { return _mm_subs_epu8(*x, *y); }
+    KFR_SINTRIN i8sse satsub(i8sse x, i8sse y) { return _mm_subs_epi8(*x, *y); }
+    KFR_SINTRIN u16sse satsub(u16sse x, u16sse y) { return _mm_subs_epu16(*x, *y); }
+    KFR_SINTRIN i16sse satsub(i16sse x, i16sse y) { return _mm_subs_epi16(*x, *y); }
+
+    KFR_SINTRIN i32sse satadd(i32sse a, i32sse b) { return saturated_signed_add(a, b); }
+    KFR_SINTRIN i64sse satadd(i64sse a, i64sse b) { return saturated_signed_add(a, b); }
+    KFR_SINTRIN u32sse satadd(u32sse a, u32sse b) { return saturated_unsigned_add(a, b); }
+    KFR_SINTRIN u64sse satadd(u64sse a, u64sse b) { return saturated_unsigned_add(a, b); }
+
+    KFR_SINTRIN i32sse satsub(i32sse a, i32sse b) { return saturated_signed_sub(a, b); }
+    KFR_SINTRIN i64sse satsub(i64sse a, i64sse b) { return saturated_signed_sub(a, b); }
+    KFR_SINTRIN u32sse satsub(u32sse a, u32sse b) { return saturated_unsigned_sub(a, b); }
+    KFR_SINTRIN u64sse satsub(u64sse a, u64sse b) { return saturated_unsigned_sub(a, b); }
+
     KFR_HANDLE_ALL(satadd)
     KFR_HANDLE_ALL(satsub)
+    KFR_HANDLE_SCALAR(satadd)
+    KFR_HANDLE_SCALAR(satsub)
     KFR_SPEC_FN(in_saturated, satadd)
     KFR_SPEC_FN(in_saturated, satsub)
 };
@@ -130,6 +164,8 @@ struct in_saturated<cpu_t::avx2, cc> : in_saturated<cpu_t::sse2, cc>
 
     KFR_HANDLE_ALL(satadd)
     KFR_HANDLE_ALL(satsub)
+    KFR_HANDLE_SCALAR(satadd)
+    KFR_HANDLE_SCALAR(satsub)
     KFR_SPEC_FN(in_saturated, satadd)
     KFR_SPEC_FN(in_saturated, satsub)
 };

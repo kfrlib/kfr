@@ -37,21 +37,21 @@ namespace kfr
 namespace internal
 {
 
-template <cpu_t cpu = cpu_t::native>
-struct in_abs : in_abs<older(cpu)>
+template <cpu_t cpu = cpu_t::native, cpu_t cc = cpu>
+struct in_abs : in_abs<older(cpu), cc>
 {
-    struct fn_abs : in_abs<older(cpu)>::fn_abs, fn_disabled
+    struct fn_abs : in_abs<older(cpu), cc>::fn_abs, fn_disabled
     {
     };
 };
 
-template <>
-struct in_abs<cpu_t::sse2> : in_select<cpu_t::sse2>
+template <cpu_t cc>
+struct in_abs<cpu_t::common, cc> : in_select<cc>
 {
-    constexpr static cpu_t cpu = cpu_t::sse2;
+    constexpr static cpu_t cpu = cpu_t::common;
 
 private:
-    using in_select<cpu_t::sse2>::select;
+    using in_select<cc>::select;
 
 public:
     template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
@@ -65,18 +65,17 @@ public:
         return value & invhighbitmask<T>;
     }
 
-    KFR_HANDLE_ALL(abs)
     KFR_HANDLE_SCALAR(abs)
     KFR_SPEC_FN(in_abs, abs)
 };
 
-template <>
-struct in_abs<cpu_t::ssse3> : in_abs<cpu_t::sse2>, in_select<cpu_t::sse2>
+template <cpu_t cc>
+struct in_abs<cpu_t::ssse3, cc> : in_abs<cpu_t::common>, in_select<cc>
 {
     constexpr static cpu_t cpu = cpu_t::ssse3;
 
 private:
-    using in_select<cpu_t::sse2>::select;
+    using in_select<cc>::select;
 
 public:
     template <size_t N>
@@ -100,11 +99,11 @@ public:
     KFR_SPEC_FN(in_abs, abs)
 };
 
-template <>
-struct in_abs<cpu_t::avx2> : in_abs<cpu_t::ssse3>
+template <cpu_t cc>
+struct in_abs<cpu_t::avx2, cc> : in_abs<cc>
 {
     constexpr static cpu_t cpu = cpu_t::avx2;
-    using in_abs<cpu_t::ssse3>::abs;
+    using in_abs<cc>::abs;
 
     KFR_CPU_INTRIN(avx2) i32avx abs(i32avx value) { return _mm256_abs_epi32(*value); }
     KFR_CPU_INTRIN(avx2) i16avx abs(i16avx value) { return _mm256_abs_epi16(*value); }
@@ -120,7 +119,6 @@ namespace native
 {
 using fn_abs = internal::in_abs<>::fn_abs;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-
 KFR_INTRIN ftype<T1> abs(const T1& x)
 {
     return internal::in_abs<>::abs(x);

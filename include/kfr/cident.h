@@ -113,7 +113,7 @@
 #elif defined CID_ARCH_SSE
 #define CID_ARCH_NAME sse
 #else
-#define CID_ARCH_NAME legacy
+#define CID_ARCH_NAME common
 #endif
 
 #endif

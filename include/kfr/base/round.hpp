@@ -72,9 +72,9 @@ struct in_round : in_round<older(c)>
 };
 
 template <>
-struct in_round<cpu_t::sse2>
+struct in_round<cpu_t::common>
 {
-    constexpr static cpu_t cpu = cpu_t::sse2;
+    constexpr static cpu_t cpu = cpu_t::common;
 
     template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
     KFR_SINTRIN vec<T, N> floor(vec<T, N> value)
@@ -102,38 +102,61 @@ struct in_round<cpu_t::sse2>
         return T();
     }
 
-    KFR_SINTRIN f32sse floor(f32sse x)
+    template <size_t N>
+    KFR_SINTRIN vec<f32, N> floor(vec<f32, N> x)
     {
-        f32sse t = cast<f32>(cast<i32>(x));
+        vec<f32, N> t = cast<f32>(cast<i32>(x));
         return t - (bitcast<f32>(x < t) & 1.f);
     }
-    KFR_SINTRIN f64sse floor(f64sse x)
+    template <size_t N>
+    KFR_SINTRIN vec<f64, N> floor(vec<f64, N> x)
     {
-        f64sse t = cast<f64>(cast<i64>(x));
+        vec<f64, N> t = cast<f64>(cast<i64>(x));
         return t - (bitcast<f64>(x < t) & 1.0);
     }
-    KFR_SINTRIN f32sse ceil(f32sse x)
+    template <size_t N>
+    KFR_SINTRIN vec<f32, N> ceil(vec<f32, N> x)
     {
-        f32sse t = cast<f32>(cast<i32>(x));
+        vec<f32, N> t = cast<f32>(cast<i32>(x));
         return t + (bitcast<f32>(x > t) & 1.f);
     }
-    KFR_SINTRIN f64sse ceil(f64sse x)
+    template <size_t N>
+    KFR_SINTRIN vec<f64, N> ceil(vec<f64, N> x)
     {
-        f64sse t = cast<f64>(cast<i64>(x));
+        vec<f64, N> t = cast<f64>(cast<i64>(x));
         return t + (bitcast<f64>(x > t) & 1.0);
     }
-    KFR_SINTRIN f32sse round(f32sse x) { return cast<f32>(cast<i32>(x + mulsign(f32x4(0.5f), x))); }
-    KFR_SINTRIN f64sse round(f64sse x) { return cast<f64>(cast<i64>(x + mulsign(f64x2(0.5), x))); }
-    KFR_SINTRIN f32sse trunc(f32sse x) { return cast<f32>(cast<i32>(x)); }
-    KFR_SINTRIN f64sse trunc(f64sse x) { return cast<f64>(cast<i64>(x)); }
-    KFR_SINTRIN f32sse fract(f32sse x) { return x - floor(x); }
-    KFR_SINTRIN f64sse fract(f64sse x) { return x - floor(x); }
+    template <size_t N>
+    KFR_SINTRIN vec<f32, N> round(vec<f32, N> x)
+    {
+        return cast<f32>(cast<i32>(x + mulsign(broadcast<N>(0.5f), x)));
+    }
+    template <size_t N>
+    KFR_SINTRIN vec<f64, N> round(vec<f64, N> x)
+    {
+        return cast<f64>(cast<i64>(x + mulsign(broadcast<N>(0.5), x)));
+    }
+    template <size_t N>
+    KFR_SINTRIN vec<f32, N> trunc(vec<f32, N> x)
+    {
+        return cast<f32>(cast<i32>(x));
+    }
+    template <size_t N>
+    KFR_SINTRIN vec<f64, N> trunc(vec<f64, N> x)
+    {
+        return cast<f64>(cast<i64>(x));
+    }
+    template <size_t N>
+    KFR_SINTRIN vec<f32, N> fract(vec<f32, N> x)
+    {
+        return x - floor(x);
+    }
+    template <size_t N>
+    KFR_SINTRIN vec<f64, N> fract(vec<f64, N> x)
+    {
+        return x - floor(x);
+    }
 
-    KFR_HANDLE_ALL(floor)
-    KFR_HANDLE_ALL(ceil)
-    KFR_HANDLE_ALL(round)
-    KFR_HANDLE_ALL(trunc)
-    KFR_HANDLE_ALL(fract)
     KFR_HANDLE_SCALAR(floor)
     KFR_HANDLE_SCALAR(ceil)
     KFR_HANDLE_SCALAR(round)
@@ -147,7 +170,7 @@ struct in_round<cpu_t::sse2>
 };
 
 template <>
-struct in_round<cpu_t::sse41> : in_round<cpu_t::sse2>
+struct in_round<cpu_t::sse41> : in_round<cpu_t::common>
 {
     constexpr static cpu_t cpu = cpu_t::sse41;
 

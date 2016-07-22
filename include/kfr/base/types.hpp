@@ -314,13 +314,14 @@ constexpr inline ptrdiff_t distance(const void* x, const void* y)
 
 enum class cpu_t : int
 {
-    sse2    = 0,
-    sse3    = 1,
-    ssse3   = 2,
-    sse41   = 3,
-    sse42   = 4,
-    avx1    = 5,
-    avx2    = 6,
+    common  = 0,
+    sse2    = 1,
+    sse3    = 2,
+    ssse3   = 3,
+    sse41   = 4,
+    sse42   = 5,
+    avx1    = 6,
+    avx2    = 7,
     avx     = static_cast<int>(avx1),
     native  = static_cast<int>(KFR_ARCH_NAME),
     lowest  = static_cast<int>(sse2),
@@ -639,10 +640,14 @@ constexpr size_t native_cache_alignment_mask   = native_cache_alignment - 1;
 constexpr size_t maximum_vector_alignment      = 32;
 constexpr size_t maximum_vector_alignment_mask = maximum_vector_alignment - 1;
 constexpr size_t native_register_count         = bitness_const(8, 16);
+
+constexpr size_t common_float_vector_size = 16;
+constexpr size_t common_int_vector_size = 16;
+
 template <cpu_t c>
-constexpr size_t native_float_vector_size = c >= cpu_t::avx1 ? 32 : c >= cpu_t::sse2 ? 16 : 0;
+constexpr size_t native_float_vector_size = c >= cpu_t::avx1 ? 32 : c >= cpu_t::sse2 ? 16 : common_float_vector_size;
 template <cpu_t c>
-constexpr size_t native_int_vector_size = c >= cpu_t::avx2 ? 32 : c >= cpu_t::sse2 ? 16 : 0;
+constexpr size_t native_int_vector_size = c >= cpu_t::avx2 ? 32 : c >= cpu_t::sse2 ? 16 : common_int_vector_size;
 
 struct input_expression
 {

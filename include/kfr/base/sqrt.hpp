@@ -39,6 +39,26 @@ struct in_sqrt : in_sqrt<older(c)>
 };
 
 template <>
+struct in_sqrt<cpu_t::common>
+{
+    constexpr static cpu_t cpu = cpu_t::common;
+
+    template <size_t N>
+    KFR_SINTRIN vec<f32, N> sqrt(vec<f32, N> x)
+    {
+        return apply([](float xx) { return std::sqrt(xx); }, x);
+    }
+    template <size_t N>
+    KFR_SINTRIN vec<f64, N> sqrt(vec<f64, N> x)
+    {
+        return apply([](double xx) { return std::sqrt(xx); }, x);
+    }
+
+    KFR_HANDLE_SCALAR(sqrt)
+    KFR_SPEC_FN(in_sqrt, sqrt)
+};
+
+template <>
 struct in_sqrt<cpu_t::sse2>
 {
     constexpr static cpu_t cpu = cpu_t::sse2;
