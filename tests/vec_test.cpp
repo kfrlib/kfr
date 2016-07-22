@@ -65,6 +65,7 @@ TEST(vec_apply)
     CHECK(apply(fn_sqr(), make_vector(1, 2, 3, 4, 5)) == make_vector(1, 4, 9, 16, 25));
 }
 
+#ifdef CID_ARCH_SSE
 TEST(vec_tovec)
 {
     const __m128 x = _mm_set_ps(4.f, 3.f, 2.f, 1.f);
@@ -74,6 +75,7 @@ TEST(vec_tovec)
     const simd<f64, 7> z{ 1, 2, 3, 4, 5, 6, 7 };
     CHECK(tovec(z) == vec<f64, 7>(1, 2, 3, 4, 5, 6, 7));
 }
+#endif
 
 TEST(vec_zerovector)
 {

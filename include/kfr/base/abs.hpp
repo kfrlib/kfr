@@ -70,7 +70,7 @@ public:
 };
 
 template <cpu_t cc>
-struct in_abs<cpu_t::ssse3, cc> : in_abs<cpu_t::common>, in_select<cc>
+struct in_abs<cpu_t::ssse3, cc> : in_select<cc>
 {
     constexpr static cpu_t cpu = cpu_t::ssse3;
 
@@ -100,10 +100,10 @@ public:
 };
 
 template <cpu_t cc>
-struct in_abs<cpu_t::avx2, cc> : in_abs<cc>
+struct in_abs<cpu_t::avx2, cc> : in_abs<cpu_t::ssse3, cc>
 {
     constexpr static cpu_t cpu = cpu_t::avx2;
-    using in_abs<cc>::abs;
+    using in_abs<cpu_t::ssse3, cc>::abs;
 
     KFR_CPU_INTRIN(avx2) i32avx abs(i32avx value) { return _mm256_abs_epi32(*value); }
     KFR_CPU_INTRIN(avx2) i16avx abs(i16avx value) { return _mm256_abs_epi16(*value); }
