@@ -78,6 +78,27 @@ struct complex
     constexpr void imag(T value) noexcept { im = value; }
     T re;
     T im;
+
+    KFR_INTRIN friend complex operator+(const complex& x, const complex& y)
+    {
+        return (make_vector(x) + make_vector(y))[0];
+    }
+    KFR_INTRIN friend complex operator-(const complex& x, const complex& y)
+    {
+        return (make_vector(x) - make_vector(y))[0];
+    }
+    KFR_INTRIN friend complex operator*(const complex& x, const complex& y)
+    {
+        return (make_vector(x) * make_vector(y))[0];
+    }
+    KFR_INTRIN friend complex operator/(const complex& x, const complex& y)
+    {
+        return (make_vector(x) / make_vector(y))[0];
+    }
+    KFR_INTRIN friend complex operator-(const complex& x)
+    {
+        return (-make_vector(x))[0];
+    }
 };
 #endif
 #endif
