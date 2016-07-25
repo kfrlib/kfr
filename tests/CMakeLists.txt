@@ -38,8 +38,6 @@ add_executable(stat_test stat_test.cpp ${KFR_SRC})
 
 enable_testing()
 
-add_test(NAME dft_test
-        COMMAND ${PROJECT_BINARY_DIR}/tests/dft_test)
 add_test(NAME basic_vector_test
         COMMAND ${PROJECT_BINARY_DIR}/tests/basic_vector_test)
 add_test(NAME fracdelay_test
@@ -52,3 +50,5 @@ add_test(NAME vec_test
         COMMAND ${PROJECT_BINARY_DIR}/tests/vec_test)
 add_test(NAME stat_test
         COMMAND ${PROJECT_BINARY_DIR}/tests/stat_test)
+add_test(NAME dft_test
+        COMMAND ${PROJECT_BINARY_DIR}/tests/dft_test)
