@@ -35,149 +35,131 @@ namespace kfr
 namespace internal
 {
 
-template <cpu_t c = cpu_t::native>
-struct in_hyperbolic : in_log_exp<c>
+template <typename T, size_t N>
+KFR_SINTRIN vec<T, N> sinh(vec<T, N> x)
 {
-    constexpr static cpu_t cur = c;
-
-private:
-    using in_log_exp<c>::exp;
-
-public:
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> sinh(vec<T, N> x)
-    {
-        return (exp(x) - exp(-x)) * T(0.5);
-    }
-
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> cosh(vec<T, N> x)
-    {
-        return (exp(x) + exp(-x)) * T(0.5);
-    }
-
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> tanh(vec<T, N> x)
-    {
-        x = -2 * x;
-        return (1 - exp(x)) / (1 + exp(x));
-    }
-
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> coth(vec<T, N> x)
-    {
-        x = -2 * x;
-        return (1 + exp(x)) / (1 - exp(x));
-    }
-
-    template <typename T, size_t N, KFR_ENABLE_IF(N > 1)>
-    KFR_SINTRIN vec<T, N> sinhcosh(vec<T, N> x)
-    {
-        const vec<T, N> a = exp(x);
-        const vec<T, N> b = exp(-x);
-        return subadd(a, b) * T(0.5);
-    }
-
-    template <typename T, size_t N, KFR_ENABLE_IF(N > 1)>
-    KFR_SINTRIN vec<T, N> coshsinh(vec<T, N> x)
-    {
-        const vec<T, N> a = exp(x);
-        const vec<T, N> b = exp(-x);
-        return addsub(a, b) * T(0.5);
-    }
-    KFR_HANDLE_SCALAR(sinh)
-    KFR_HANDLE_SCALAR(cosh)
-    KFR_HANDLE_SCALAR(tanh)
-    KFR_HANDLE_SCALAR(coth)
-    KFR_HANDLE_SCALAR(sinhcosh)
-    KFR_HANDLE_SCALAR(coshsinh)
-    KFR_SPEC_FN(in_hyperbolic, sinh)
-    KFR_SPEC_FN(in_hyperbolic, cosh)
-    KFR_SPEC_FN(in_hyperbolic, tanh)
-    KFR_SPEC_FN(in_hyperbolic, coth)
-    KFR_SPEC_FN(in_hyperbolic, sinhcosh)
-    KFR_SPEC_FN(in_hyperbolic, coshsinh)
-};
+    return (exp(x) - exp(-x)) * T(0.5);
 }
 
-namespace native
+template <typename T, size_t N>
+KFR_SINTRIN vec<T, N> cosh(vec<T, N> x)
 {
-using fn_sinh = internal::in_hyperbolic<>::fn_sinh;
+    return (exp(x) + exp(-x)) * T(0.5);
+}
+
+template <typename T, size_t N>
+KFR_SINTRIN vec<T, N> tanh(vec<T, N> x)
+{
+    x = -2 * x;
+    return (1 - exp(x)) / (1 + exp(x));
+}
+
+template <typename T, size_t N>
+KFR_SINTRIN vec<T, N> coth(vec<T, N> x)
+{
+    x = -2 * x;
+    return (1 + exp(x)) / (1 - exp(x));
+}
+
+template <typename T, size_t N, KFR_ENABLE_IF(N > 1)>
+KFR_SINTRIN vec<T, N> sinhcosh(vec<T, N> x)
+{
+    const vec<T, N> a = exp(x);
+    const vec<T, N> b = exp(-x);
+    return subadd(a, b) * T(0.5);
+}
+
+template <typename T, size_t N, KFR_ENABLE_IF(N > 1)>
+KFR_SINTRIN vec<T, N> coshsinh(vec<T, N> x)
+{
+    const vec<T, N> a = exp(x);
+    const vec<T, N> b = exp(-x);
+    return addsub(a, b) * T(0.5);
+}
+
+KFR_HANDLE_SCALAR(sinh)
+KFR_HANDLE_SCALAR(cosh)
+KFR_HANDLE_SCALAR(tanh)
+KFR_HANDLE_SCALAR(coth)
+KFR_HANDLE_SCALAR(sinhcosh)
+KFR_HANDLE_SCALAR(coshsinh)
+KFR_FN(sinh)
+KFR_FN(cosh)
+KFR_FN(tanh)
+KFR_FN(coth)
+KFR_FN(sinhcosh)
+KFR_FN(coshsinh)
+}
+
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> sinh(const T1& x)
+KFR_INTRIN T1 sinh(const T1& x)
 {
-    return internal::in_hyperbolic<>::sinh(x);
+    return internal::sinh(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_sinh, E1> sinh(E1&& x)
+KFR_INTRIN expr_func<internal::fn_sinh, E1> sinh(E1&& x)
 {
-    return { fn_sinh(), std::forward<E1>(x) };
+    return { {}, std::forward<E1>(x) };
 }
 
-using fn_cosh = internal::in_hyperbolic<>::fn_cosh;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> cosh(const T1& x)
+KFR_INTRIN T1 cosh(const T1& x)
 {
-    return internal::in_hyperbolic<>::cosh(x);
+    return internal::cosh(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_cosh, E1> cosh(E1&& x)
+KFR_INTRIN expr_func<internal::fn_cosh, E1> cosh(E1&& x)
 {
-    return { fn_cosh(), std::forward<E1>(x) };
+    return { {}, std::forward<E1>(x) };
 }
 
-using fn_tanh = internal::in_hyperbolic<>::fn_tanh;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> tanh(const T1& x)
+KFR_INTRIN T1 tanh(const T1& x)
 {
-    return internal::in_hyperbolic<>::tanh(x);
+    return internal::tanh(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_tanh, E1> tanh(E1&& x)
+KFR_INTRIN expr_func<internal::fn_tanh, E1> tanh(E1&& x)
 {
-    return { fn_tanh(), std::forward<E1>(x) };
+    return { {}, std::forward<E1>(x) };
 }
 
-using fn_coth = internal::in_hyperbolic<>::fn_coth;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> coth(const T1& x)
+KFR_INTRIN T1 coth(const T1& x)
 {
-    return internal::in_hyperbolic<>::coth(x);
+    return internal::coth(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_coth, E1> coth(E1&& x)
+KFR_INTRIN expr_func<internal::fn_coth, E1> coth(E1&& x)
 {
-    return { fn_coth(), std::forward<E1>(x) };
+    return { {}, std::forward<E1>(x) };
 }
 
-using fn_sinhcosh = internal::in_hyperbolic<>::fn_sinhcosh;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> sinhcosh(const T1& x)
+KFR_INTRIN T1 sinhcosh(const T1& x)
 {
-    return internal::in_hyperbolic<>::sinhcosh(x);
+    return internal::sinhcosh(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_sinhcosh, E1> sinhcosh(E1&& x)
+KFR_INTRIN expr_func<internal::fn_sinhcosh, E1> sinhcosh(E1&& x)
 {
-    return { fn_sinhcosh(), std::forward<E1>(x) };
+    return { {}, std::forward<E1>(x) };
 }
 
-using fn_coshsinh = internal::in_hyperbolic<>::fn_coshsinh;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> coshsinh(const T1& x)
+KFR_INTRIN T1 coshsinh(const T1& x)
 {
-    return internal::in_hyperbolic<>::coshsinh(x);
+    return internal::coshsinh(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_coshsinh, E1> coshsinh(E1&& x)
+KFR_INTRIN expr_func<internal::fn_coshsinh, E1> coshsinh(E1&& x)
 {
-    return { fn_coshsinh(), std::forward<E1>(x) };
-}
+    return { {}, std::forward<E1>(x) };
 }
 }

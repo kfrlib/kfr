@@ -30,13 +30,11 @@
 #include <iostream>
 
 using namespace kfr;
-using namespace kfr::native;
 
 int main(int argc, char** argv)
 {
     println(library_version());
 
-    using namespace native;
     const std::string options = "phaseresp=False";
 
     univector<double, 15> taps15;

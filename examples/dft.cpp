@@ -17,7 +17,6 @@
 #include <kfr/dsp/oscillators.hpp>
 #include <kfr/dsp/units.hpp>
 #include <kfr/expressions/basic.hpp>
-#include <kfr/expressions/operators.hpp>
 #include <kfr/expressions/reduce.hpp>
 #include <kfr/math.hpp>
 #include <kfr/misc/random.hpp>
@@ -52,8 +51,8 @@ int main(int argc, char** argv)
     // get magnitude and convert to decibels
     univector<float_type, size> dB = amp_to_dB(cabs(out));
 
-    println("max  = ", max(dB));
-    println("min  = ", min(dB));
+    println("max  = ", maxof(dB));
+    println("min  = ", minof(dB));
     println("mean = ", mean(dB));
     println("rms  = ", rms(dB));
 

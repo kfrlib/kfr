@@ -10,7 +10,6 @@
 #include <kfr/base/complex.hpp>
 #include <kfr/cometa/string.hpp>
 #include <kfr/expressions/basic.hpp>
-#include <kfr/expressions/operators.hpp>
 #include <kfr/expressions/reduce.hpp>
 #include <kfr/math.hpp>
 #include <kfr/version.hpp>
@@ -22,6 +21,7 @@ void assert_is_same()
 {
     static_assert(std::is_same<T1, T2>::value, "");
 }
+
 
 TEST(complex_vector)
 {
@@ -178,6 +178,9 @@ int main(int argc, char** argv)
     static_assert(vector_width<c32, cpu_t::sse2> == 2, "");
     static_assert(vector_width<i32, cpu_t::sse2> == 4, "");
     static_assert(vector_width<complex<i32>, cpu_t::sse2> == 2, "");
+
+    static_assert(is_numeric<vec<complex<float>, 4>>::value, "");
+    static_assert(is_numeric_args<vec<complex<float>, 4>>::value, "");
 
     static_assert(sizeof(vec<c32, 4>) == sizeof(vec<f32, 8>), "");
     static_assert(vec<f32, 4>::size() == 4, "");

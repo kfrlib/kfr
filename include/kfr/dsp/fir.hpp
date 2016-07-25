@@ -26,7 +26,6 @@
 #include "../base/sin_cos.hpp"
 #include "../base/vec.hpp"
 #include "../expressions/basic.hpp"
-#include "../expressions/operators.hpp"
 #include "../expressions/reduce.hpp"
 #include "window.hpp"
 
@@ -38,90 +37,72 @@ using fir_taps = univector<T, Size>;
 
 namespace internal
 {
-template <cpu_t cpu = cpu_t::native>
-struct in_fir : in_reduce<cpu>
+template <size_t tapcount, typename T, typename E1>
+struct expression_short_fir : expression<E1>
 {
-private:
-    using in_reduce<cpu>::dotproduct;
+    static_assert(is_poweroftwo(tapcount), "tapcount must be a power of two");
 
-public:
-    template <size_t tapcount, typename T, typename E1>
-    struct expression_short_fir : expression<E1>
+    expression_short_fir(E1&& e1, const array_ref<T>& taps)
+        : expression<E1>(std::forward<E1>(e1)), taps(taps), delayline(0)
     {
-        static_assert(is_poweroftwo(tapcount), "tapcount must be a power of two");
-        template <cpu_t newcpu>
-        using retarget_this =
-            typename in_fir<newcpu>::template expression_short_fir<tapcount, T, retarget<E1, newcpu>>;
-
-        expression_short_fir(E1&& e1, const array_ref<T>& taps)
-            : expression<E1>(std::forward<E1>(e1)), taps(taps), delayline(0)
-        {
-        }
-        template <typename U, size_t N>
-        KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x) const
-        {
-            vec<T, N> in = cast<T>(this->argument_first(index, x));
-
-            vec<T, N> out = in * taps[0];
-            cfor(csize<1>, csize<tapcount>,
-                 [&](auto I) { out = out + concat_and_slice<tapcount - 1 - I, N>(delayline, in) * taps[I]; });
-            delayline = concat_and_slice<N, tapcount - 1>(delayline, in);
-
-            return cast<U>(out);
-        }
-        vec<T, tapcount> taps;
-        mutable vec<T, tapcount - 1> delayline;
-    };
-
-    template <typename T, typename E1>
-    struct expression_fir : expression<E1>
+    }
+    template <typename U, size_t N>
+    KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x) const
     {
-        template <cpu_t newcpu>
-        using retarget_this = typename in_fir<newcpu>::template expression_fir<T, retarget<E1, newcpu>>;
+        vec<T, N> in = cast<T>(this->argument_first(index, x));
 
-        expression_fir(E1&& e1, const array_ref<const T>& taps)
-            : expression<E1>(std::forward<E1>(e1)), taps(taps), delayline(taps.size(), T()),
-              delayline_cursor(0)
-        {
-        }
-        template <typename U, size_t N>
-        KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x) const
-        {
-            const size_t tapcount = taps.size();
-            const vec<T, N> input = cast<T>(this->argument_first(index, x));
+        vec<T, N> out = in * taps[0];
+        cfor(csize<1>, csize<tapcount>,
+             [&](auto I) { out = out + concat_and_slice<tapcount - 1 - I, N>(delayline, in) * taps[I]; });
+        delayline = concat_and_slice<N, tapcount - 1>(delayline, in);
 
-            vec<T, N> output;
-            size_t cursor = delayline_cursor;
-            KFR_LOOP_NOUNROLL
-            for (size_t i = 0; i < N; i++)
-            {
-                delayline.ringbuf_write(cursor, input[i]);
-                output(i) = dotproduct(taps, delayline.slice(cursor) /*, tapcount - cursor*/) +
-                            dotproduct(taps.slice(tapcount - cursor), delayline /*, cursor*/);
-            }
-            delayline_cursor = cursor;
-            return cast<U>(output);
+        return cast<U>(out);
+    }
+    vec<T, tapcount> taps;
+    mutable vec<T, tapcount - 1> delayline;
+};
+
+template <typename T, typename E1>
+struct expression_fir : expression<E1>
+{
+    expression_fir(E1&& e1, const array_ref<const T>& taps)
+        : expression<E1>(std::forward<E1>(e1)), taps(taps), delayline(taps.size(), T()), delayline_cursor(0)
+    {
+    }
+    template <typename U, size_t N>
+    KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x) const
+    {
+        const size_t tapcount = taps.size();
+        const vec<T, N> input = cast<T>(this->argument_first(index, x));
+
+        vec<T, N> output;
+        size_t cursor = delayline_cursor;
+        KFR_LOOP_NOUNROLL
+        for (size_t i = 0; i < N; i++)
+        {
+            delayline.ringbuf_write(cursor, input[i]);
+            output(i) = dotproduct(taps, delayline.slice(cursor) /*, tapcount - cursor*/) +
+                        dotproduct(taps.slice(tapcount - cursor), delayline /*, cursor*/);
         }
-        univector_dyn<T> taps;
-        mutable univector_dyn<T> delayline;
-        mutable size_t delayline_cursor;
-    };
+        delayline_cursor = cursor;
+        return cast<U>(output);
+    }
+    univector_dyn<T> taps;
+    mutable univector_dyn<T> delayline;
+    mutable size_t delayline_cursor;
 };
 }
 
-namespace native
-{
 template <typename T, typename E1, size_t Tag>
-KFR_INLINE internal::in_fir<>::expression_fir<T, E1> fir(E1&& e1, const univector<T, Tag>& taps)
+KFR_INLINE internal::expression_fir<T, E1> fir(E1&& e1, const univector<T, Tag>& taps)
 {
-    return internal::in_fir<>::expression_fir<T, E1>(std::forward<E1>(e1), taps.ref());
+    return internal::expression_fir<T, E1>(std::forward<E1>(e1), taps.ref());
 }
 template <typename T, size_t TapCount, typename E1>
-KFR_INLINE internal::in_fir<>::expression_short_fir<TapCount, T, E1> short_fir(
-    E1&& e1, const univector<T, TapCount>& taps)
+KFR_INLINE internal::expression_short_fir<TapCount, T, E1> short_fir(E1&& e1,
+                                                                     const univector<T, TapCount>& taps)
 {
     static_assert(TapCount >= 1 && TapCount < 16, "Use short_fir only for small FIR filters");
-    return internal::in_fir<>::expression_short_fir<TapCount, T, E1>(std::forward<E1>(e1), taps.ref());
-}
+    return internal::expression_short_fir<TapCount, T, E1>(std::forward<E1>(e1), taps.ref());
 }
 }

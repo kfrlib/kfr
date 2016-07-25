@@ -14,7 +14,6 @@
 #include <kfr/dft/fft.hpp>
 #include <kfr/dft/reference_dft.hpp>
 #include <kfr/expressions/basic.hpp>
-#include <kfr/expressions/operators.hpp>
 #include <kfr/expressions/reduce.hpp>
 #include <kfr/io/tostring.hpp>
 #include <kfr/math.hpp>

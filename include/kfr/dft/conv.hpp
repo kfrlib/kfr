@@ -27,7 +27,6 @@
 #include "../base/memory.hpp"
 #include "../base/read_write.hpp"
 #include "../base/vec.hpp"
-#include "../expressions/operators.hpp"
 
 #include "fft.hpp"
 

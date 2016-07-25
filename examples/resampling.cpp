@@ -21,16 +21,12 @@
 // swept
 #include <kfr/dsp/oscillators.hpp>
 
-// operator overloading for expressions
-#include <kfr/expressions/operators.hpp>
-
 // plot_save()
 #include <kfr/io/python_plot.hpp>
 
 #include <iostream>
 
 using namespace kfr;
-using namespace kfr::native;
 
 constexpr size_t input_sr  = 96000;
 constexpr size_t output_sr = 44100;
@@ -41,7 +37,6 @@ int main(int argc, char** argv)
 {
     println(library_version());
 
-    using namespace native;
     const std::string options = "phaseresp=False";
 
     univector<f64> swept_sine = swept(0.5, len);

@@ -30,77 +30,42 @@ namespace kfr
 namespace internal
 {
 
-template <cpu_t c = cpu_t::native>
-struct in_sqrt : in_sqrt<older(c)>
-{
-    struct fn_sqrt : fn_disabled
-    {
-    };
-};
+#if defined CID_ARCH_SSE2
 
-template <>
-struct in_sqrt<cpu_t::common>
-{
-    constexpr static cpu_t cpu = cpu_t::common;
+KFR_SINTRIN f32x1 sqrt(f32x1 x) { return slice<0, 1>(tovec(_mm_sqrt_ss(*extend<4>(x)))); }
+KFR_SINTRIN f64x1 sqrt(f64x1 x) { return slice<0, 1>(tovec(_mm_sqrt_sd(_mm_setzero_pd(), *extend<2>(x)))); }
+KFR_SINTRIN f32sse sqrt(f32sse x) { return _mm_sqrt_ps(*x); }
+KFR_SINTRIN f64sse sqrt(f64sse x) { return _mm_sqrt_pd(*x); }
 
-    template <size_t N>
-    KFR_SINTRIN vec<f32, N> sqrt(vec<f32, N> x)
-    {
-        return apply([](float xx) { return std::sqrt(xx); }, x);
-    }
-    template <size_t N>
-    KFR_SINTRIN vec<f64, N> sqrt(vec<f64, N> x)
-    {
-        return apply([](double xx) { return std::sqrt(xx); }, x);
-    }
-
-    KFR_HANDLE_SCALAR(sqrt)
-    KFR_SPEC_FN(in_sqrt, sqrt)
-};
-
-#ifdef CID_ARCH_X86
-
-template <>
-struct in_sqrt<cpu_t::sse2>
-{
-    constexpr static cpu_t cpu = cpu_t::sse2;
-
-    KFR_SINTRIN f32sse sqrt(f32sse x) { return _mm_sqrt_ps(*x); }
-    KFR_SINTRIN f64sse sqrt(f64sse x) { return _mm_sqrt_pd(*x); }
-
-    KFR_HANDLE_ALL(sqrt)
-    KFR_HANDLE_SCALAR(sqrt)
-    KFR_SPEC_FN(in_sqrt, sqrt)
-};
-
-template <>
-struct in_sqrt<cpu_t::avx1> : in_sqrt<cpu_t::sse2>
-{
-    constexpr static cpu_t cpu = cpu_t::avx1;
-    using in_sqrt<cpu_t::sse2>::sqrt;
-
-    KFR_SINTRIN f32avx KFR_USE_CPU(avx) sqrt(f32avx x) { return _mm256_sqrt_ps(*x); }
-    KFR_SINTRIN f64avx KFR_USE_CPU(avx) sqrt(f64avx x) { return _mm256_sqrt_pd(*x); }
-
-    KFR_HANDLE_ALL(sqrt)
-    KFR_HANDLE_SCALAR(sqrt)
-    KFR_SPEC_FN(in_sqrt, sqrt)
-};
+#if defined CID_ARCH_AVX
+KFR_SINTRIN f32avx sqrt(f32avx x) { return _mm256_sqrt_ps(*x); }
+KFR_SINTRIN f64avx sqrt(f64avx x) { return _mm256_sqrt_pd(*x); }
 #endif
-}
-namespace native
+
+KFR_HANDLE_ALL_SIZES_1(sqrt)
+
+#else
+
+// fallback
+template <typename T, size_t N>
+KFR_SINTRIN vec<T, N> sqrt(vec<T, N> x)
 {
-using fn_sqrt = internal::in_sqrt<>::fn_sqrt;
+    return apply([](T x) { return std::sqrt(x); }, x);
+}
+#endif
+KFR_HANDLE_SCALAR_1(sqrt)
+KFR_FN(sqrt)
+}
+
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN ftype<T1> sqrt(const T1& x)
 {
-    return internal::in_sqrt<>::sqrt(x);
+    return internal::sqrt(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_sqrt, E1> sqrt(E1&& x)
+KFR_INTRIN expr_func<internal::fn_sqrt, E1> sqrt(E1&& x)
 {
-    return { fn_sqrt(), std::forward<E1>(x) };
-}
+    return { {}, std::forward<E1>(x) };
 }
 }

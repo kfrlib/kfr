@@ -45,7 +45,3 @@
 #include "base/sqrt.hpp"
 #include "base/tan.hpp"
 
-namespace kfr
-{
-using namespace native;
-}

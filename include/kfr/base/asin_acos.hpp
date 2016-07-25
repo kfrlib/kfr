@@ -22,20 +22,10 @@
  */
 #pragma once
 
-#include "abs.hpp"
 #include "atan.hpp"
-#include "constants.hpp"
 #include "function.hpp"
-#include "min_max.hpp"
-#include "operators.hpp"
 #include "select.hpp"
-#include "shuffle.hpp"
 #include "sqrt.hpp"
-
-#pragma clang diagnostic push
-#if CID_HAS_WARNING("-Winaccessible-base")
-#pragma clang diagnostic ignored "-Winaccessible-base"
-#endif
 
 namespace kfr
 {
@@ -43,58 +33,44 @@ namespace kfr
 namespace internal
 {
 
-template <cpu_t cpu = cpu_t::native>
-struct in_asin_acos : private in_select<cpu>, private in_atan<cpu>, private in_sqrt<cpu>
+template <typename T, size_t N>
+KFR_SINTRIN vec<T, N> asin(vec<T, N> x)
 {
-private:
-    using in_atan<cpu>::atan2;
-    using in_sqrt<cpu>::sqrt;
-
-public:
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> asin(vec<T, N> x)
-    {
-        return atan2(x, sqrt(T(1) - x * x));
-    }
-
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> acos(vec<T, N> x)
-    {
-        return atan2(sqrt(T(1) - x * x), x);
-    }
-    KFR_SPEC_FN(in_asin_acos, asin)
-    KFR_SPEC_FN(in_asin_acos, acos)
-};
+    return atan2(x, sqrt(T(1) - x * x));
 }
 
-namespace native
+template <typename T, size_t N>
+KFR_SINTRIN vec<T, N> acos(vec<T, N> x)
 {
-using fn_asin = internal::in_asin_acos<>::fn_asin;
+    return atan2(sqrt(T(1) - x * x), x);
+}
+KFR_HANDLE_SCALAR(asin)
+KFR_HANDLE_SCALAR(acos)
+KFR_FN(asin)
+KFR_FN(acos)
+}
+
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> asin(const T1& x)
+KFR_INTRIN T1 asin(const T1& x)
 {
-    return internal::in_asin_acos<>::asin(x);
+    return internal::asin(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_asin, E1> asin(E1&& x)
+KFR_INTRIN expr_func<internal::fn_asin, E1> asin(E1&& x)
 {
-    return { fn_asin(), std::forward<E1>(x) };
+    return { {}, std::forward<E1>(x) };
 }
 
-using fn_acos = internal::in_asin_acos<>::fn_acos;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> acos(const T1& x)
+KFR_INTRIN T1 acos(const T1& x)
 {
-    return internal::in_asin_acos<>::acos(x);
+    return internal::acos(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_acos, E1> acos(E1&& x)
+KFR_INTRIN expr_func<internal::fn_acos, E1> acos(E1&& x)
 {
-    return { fn_acos(), std::forward<E1>(x) };
+    return { {}, std::forward<E1>(x) };
 }
 }
-}
-
-#pragma clang diagnostic pop

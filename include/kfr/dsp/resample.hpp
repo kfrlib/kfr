@@ -28,11 +28,6 @@
 #include "../expressions/reduce.hpp"
 #include "window.hpp"
 
-#pragma clang diagnostic push
-#if CID_HAS_WARNING("-Winaccessible-base")
-#pragma clang diagnostic ignored "-Winaccessible-base"
-#endif
-
 namespace kfr
 {
 namespace resample_quality
@@ -45,200 +40,174 @@ constexpr csize_t<10> high{};
 
 namespace internal
 {
-template <cpu_t cc = cpu_t::native>
-struct in_resampling : in_sqrt<cc>, in_abs<cc>, in_log_exp<cc>, in_sin_cos<cc>, in_window<cc>, in_reduce<cc>
+template <typename T1, typename T2>
+KFR_SINTRIN T1 resample_blackman(T1 n, T2 a)
 {
-private:
-    using in_sqrt<cc>::sqrt;
-    using in_abs<cc>::abs;
-    using in_log_exp<cc>::log;
-    using in_log_exp<cc>::exp;
-    using in_log_exp<cc>::log_fmadd;
-    using in_log_exp<cc>::exp_fmadd;
-    using in_log_exp<cc>::exp10;
-    using in_sin_cos<cc>::cos;
-    using in_sin_cos<cc>::sinc;
-    using in_reduce<cc>::dotproduct;
-    using in_reduce<cc>::sum;
+    const T1 a0 = (1 - a) * 0.5;
+    const T1 a1 = 0.5;
+    const T1 a2 = a * 0.5;
+    n           = n * c_pi<T1, 2>;
+    return a0 - a1 * cos(n) + a2 * cos(2 * n);
+}
 
-public:
-    template <typename T1, typename T2>
-    static inline T1 blackman(T1 n, T2 a)
+template <typename T, size_t quality>
+struct resampler
+{
+    using itype = i64;
+
+    constexpr static itype depth = static_cast<itype>(1 << (quality + 1));
+
+    resampler(itype interpolation_factor, itype decimation_factor, T scale = T(1), T cutoff = 0.49)
+        : input_position(0), output_position(0)
     {
-        const T1 a0 = (1 - a) * 0.5;
-        const T1 a1 = 0.5;
-        const T1 a2 = a * 0.5;
-        n           = n * c_pi<T1, 2>;
-        return a0 - a1 * cos(n) + a2 * cos(2 * n);
+        const i64 gcf = gcd(interpolation_factor, decimation_factor);
+        interpolation_factor /= gcf;
+        decimation_factor /= gcf;
+
+        taps  = depth * interpolation_factor;
+        order = size_t(depth * interpolation_factor - 1);
+
+        this->interpolation_factor = interpolation_factor;
+        this->decimation_factor    = decimation_factor;
+
+        const itype halftaps = taps / 2;
+        filter               = univector<T>(size_t(taps), T());
+        delay                = univector<T>(size_t(depth), T());
+
+        cutoff = cutoff / std::max(decimation_factor, interpolation_factor);
+
+        for (itype j = 0, jj = 0; j < taps; j++)
+        {
+            filter[size_t(j)] = scale * 2 * interpolation_factor * cutoff *
+                                sinc((jj - halftaps) * cutoff * c_pi<T, 2>) *
+                                resample_blackman(T(jj) / T(taps - 1), T(0.16));
+            jj += size_t(interpolation_factor);
+            if (jj >= taps)
+                jj = jj - taps + 1;
+        }
+
+        const T s = reciprocal(sum(filter)) * interpolation_factor;
+        filter    = filter * s;
     }
-
-    template <typename T, size_t quality>
-    struct resampler
+    KFR_INLINE size_t operator()(T* dest, size_t zerosize)
     {
-        template <cpu_t newcpu>
-        using retarget_this = typename in_resampling<newcpu>::template resampler<T, quality>;
+        size_t outputsize   = 0;
+        const itype srcsize = itype(zerosize);
 
-        using itype = i64;
-
-        constexpr static itype depth = static_cast<itype>(1 << (quality + 1));
-
-        resampler(itype interpolation_factor, itype decimation_factor, T scale = T(1), T cutoff = 0.49)
-            : input_position(0), output_position(0)
+        for (size_t i = 0;; i++)
         {
-            const i64 gcf = gcd(interpolation_factor, decimation_factor);
-            interpolation_factor /= gcf;
-            decimation_factor /= gcf;
+            const itype ii                 = itype(i) + output_position;
+            const itype workindex          = ii * (decimation_factor);
+            const itype workindex_rem      = workindex % (interpolation_factor);
+            const itype start              = workindex_rem ? (interpolation_factor)-workindex_rem : 0;
+            itype srcindex                 = workindex / (interpolation_factor);
+            srcindex                       = workindex_rem ? srcindex + 1 : srcindex;
+            const univector_ref<T> tap_ptr = filter.slice(static_cast<size_t>(start * depth));
+            srcindex                       = srcindex - (depth - 1);
 
-            taps  = depth * interpolation_factor;
-            order = size_t(depth * interpolation_factor - 1);
+            if (srcindex + depth >= input_position + srcsize)
+                break;
+            outputsize++;
 
-            this->interpolation_factor = interpolation_factor;
-            this->decimation_factor    = decimation_factor;
-
-            const itype halftaps = taps / 2;
-            filter               = univector<T>(size_t(taps), T());
-            delay                = univector<T>(size_t(depth), T());
-
-            cutoff = cutoff / std::max(decimation_factor, interpolation_factor);
-
-            for (itype j = 0, jj = 0; j < taps; j++)
+            if (dest)
             {
-                filter[size_t(j)] = scale * 2 * interpolation_factor * cutoff *
-                                    sinc((jj - halftaps) * cutoff * c_pi<T, 2>) *
-                                    blackman(T(jj) / T(taps - 1), T(0.16));
-                jj += size_t(interpolation_factor);
-                if (jj >= taps)
-                    jj = jj - taps + 1;
-            }
-
-            const T s = reciprocal(sum(filter)) * interpolation_factor;
-            filter    = filter * s;
-        }
-        KFR_INLINE size_t operator()(T* dest, size_t zerosize)
-        {
-            size_t outputsize   = 0;
-            const itype srcsize = itype(zerosize);
-
-            for (size_t i = 0;; i++)
-            {
-                const itype ii                 = itype(i) + output_position;
-                const itype workindex          = ii * (decimation_factor);
-                const itype workindex_rem      = workindex % (interpolation_factor);
-                const itype start              = workindex_rem ? (interpolation_factor)-workindex_rem : 0;
-                itype srcindex                 = workindex / (interpolation_factor);
-                srcindex                       = workindex_rem ? srcindex + 1 : srcindex;
-                const univector_ref<T> tap_ptr = filter.slice(static_cast<size_t>(start * depth));
-                srcindex                       = srcindex - (depth - 1);
-
-                if (srcindex + depth >= input_position + srcsize)
-                    break;
-                outputsize++;
-
-                if (dest)
+                if (srcindex >= input_position)
                 {
-                    if (srcindex >= input_position)
-                    {
-                        dest[i] = T(0);
-                    }
-                    else
-                    {
-                        const itype prev_count = input_position - srcindex;
-                        dest[i]                = dotproduct(delay.slice(size_t(depth - prev_count)), tap_ptr);
-                    }
+                    dest[i] = T(0);
+                }
+                else
+                {
+                    const itype prev_count = input_position - srcindex;
+                    dest[i]                = dotproduct(delay.slice(size_t(depth - prev_count)), tap_ptr);
                 }
             }
-            if (srcsize >= depth)
-            {
-                delay = zeros();
-            }
-            else
-            {
-                delay.slice(0, size_t(depth - srcsize)) = delay.slice(size_t(srcsize));
-                delay.slice(size_t(depth - srcsize)) = zeros();
-            }
-
-            input_position += srcsize;
-            output_position += outputsize;
-            return outputsize;
         }
-        KFR_INLINE size_t operator()(T* dest, univector_ref<const T> src)
+        if (srcsize >= depth)
         {
-            size_t outputsize   = 0;
-            const itype srcsize = itype(src.size());
+            delay = zeros();
+        }
+        else
+        {
+            delay.slice(0, size_t(depth - srcsize)) = delay.slice(size_t(srcsize));
+            delay.slice(size_t(depth - srcsize)) = zeros();
+        }
 
-            for (size_t i = 0;; i++)
+        input_position += srcsize;
+        output_position += outputsize;
+        return outputsize;
+    }
+    KFR_INLINE size_t operator()(T* dest, univector_ref<const T> src)
+    {
+        size_t outputsize   = 0;
+        const itype srcsize = itype(src.size());
+
+        for (size_t i = 0;; i++)
+        {
+            const itype ii                 = itype(i) + output_position;
+            const itype workindex          = ii * (decimation_factor);
+            const itype workindex_rem      = workindex % (interpolation_factor);
+            const itype start              = workindex_rem ? (interpolation_factor)-workindex_rem : 0;
+            itype srcindex                 = workindex / (interpolation_factor);
+            srcindex                       = workindex_rem ? srcindex + 1 : srcindex;
+            const univector_ref<T> tap_ptr = filter.slice(static_cast<size_t>(start * depth));
+            srcindex                       = srcindex - (depth - 1);
+
+            if (srcindex + depth >= input_position + srcsize)
+                break;
+            outputsize++;
+
+            if (dest)
             {
-                const itype ii                 = itype(i) + output_position;
-                const itype workindex          = ii * (decimation_factor);
-                const itype workindex_rem      = workindex % (interpolation_factor);
-                const itype start              = workindex_rem ? (interpolation_factor)-workindex_rem : 0;
-                itype srcindex                 = workindex / (interpolation_factor);
-                srcindex                       = workindex_rem ? srcindex + 1 : srcindex;
-                const univector_ref<T> tap_ptr = filter.slice(static_cast<size_t>(start * depth));
-                srcindex                       = srcindex - (depth - 1);
-
-                if (srcindex + depth >= input_position + srcsize)
-                    break;
-                outputsize++;
-
-                if (dest)
+                if (srcindex >= input_position)
                 {
-                    if (srcindex >= input_position)
-                    {
-                        dest[i] = dotproduct(src.slice(size_t(srcindex - input_position), size_t(depth)),
-                                             tap_ptr /*, depth*/);
-                    }
-                    else
-                    {
-                        const itype prev_count = input_position - srcindex;
-                        dest[i] =
-                            dotproduct(delay.slice(size_t(depth - prev_count)),
-                                       tap_ptr /*, size_t(prev_count)*/) +
-                            dotproduct(src, tap_ptr.slice(
-                                                size_t(prev_count),
-                                                size_t(depth - prev_count)) /*, size_t(depth - prev_count)*/);
-                    }
+                    dest[i] = dotproduct(src.slice(size_t(srcindex - input_position), size_t(depth)),
+                                         tap_ptr /*, depth*/);
+                }
+                else
+                {
+                    const itype prev_count = input_position - srcindex;
+                    dest[i] =
+                        dotproduct(delay.slice(size_t(depth - prev_count)),
+                                   tap_ptr /*, size_t(prev_count)*/) +
+                        dotproduct(
+                            src, tap_ptr.slice(size_t(prev_count),
+                                               size_t(depth - prev_count)) /*, size_t(depth - prev_count)*/);
                 }
             }
-            if (srcsize >= depth)
-            {
-                delay = src.slice(size_t(srcsize - depth));
-            }
-            else
-            {
-                delay.slice(0, size_t(depth - srcsize)) = delay.slice(size_t(srcsize));
-                delay.slice(size_t(depth - srcsize)) = src;
-            }
-
-            input_position += srcsize;
-            output_position += outputsize;
-            return outputsize;
         }
-        itype taps;
-        size_t order;
-        itype interpolation_factor;
-        itype decimation_factor;
-        univector<T> filter;
-        univector<T> delay;
-        itype input_position;
-        itype output_position;
-    };
+        if (srcsize >= depth)
+        {
+            delay = src.slice(size_t(srcsize - depth));
+        }
+        else
+        {
+            delay.slice(0, size_t(depth - srcsize)) = delay.slice(size_t(srcsize));
+            delay.slice(size_t(depth - srcsize)) = src;
+        }
+
+        input_position += srcsize;
+        output_position += outputsize;
+        return outputsize;
+    }
+    itype taps;
+    size_t order;
+    itype interpolation_factor;
+    itype decimation_factor;
+    univector<T> filter;
+    univector<T> delay;
+    itype input_position;
+    itype output_position;
 };
 }
 
-namespace native
-{
 template <typename T, size_t quality>
-inline internal::in_resampling<>::resampler<T, quality> resampler(csize_t<quality>,
+inline internal::resampler<T, quality> resampler(csize_t<quality>,
                                                                   size_t interpolation_factor,
                                                                   size_t decimation_factor, T scale = T(1),
                                                                   T cutoff = 0.49)
 {
-    using itype = typename internal::in_resampling<>::resampler<T, quality>::itype;
-    return internal::in_resampling<>::resampler<T, quality>(itype(interpolation_factor),
+    using itype = typename internal::resampler<T, quality>::itype;
+    return internal::resampler<T, quality>(itype(interpolation_factor),
                                                             itype(decimation_factor), scale, cutoff);
 }
 }
-}
-
-#pragma clang diagnostic pop

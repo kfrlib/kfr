@@ -27,383 +27,173 @@
 #include "operators.hpp"
 #include "select.hpp"
 
-#pragma clang diagnostic push
-#if CID_HAS_WARNING("-Winaccessible-base")
-#pragma clang diagnostic ignored "-Winaccessible-base"
-#endif
-
 namespace kfr
 {
 
 namespace internal
 {
 
-template <cpu_t cpu = cpu_t::native, cpu_t cc = cpu>
-struct in_min_max : in_min_max<older(cpu), cc>
-{
-    struct fn_min : in_min_max<older(cpu), cc>::fn_min, fn_disabled
-    {
-    };
-    struct fn_max : in_min_max<older(cpu), cc>::fn_max, fn_disabled
-    {
-    };
-};
+#if defined CID_ARCH_SSE2
 
-template <cpu_t cc>
-struct in_min_max<cpu_t::common, cc> : in_select<cc>
-{
-    constexpr static cpu_t cpu = cpu_t::common;
+KFR_SINTRIN f32sse min(f32sse x, f32sse y) { return _mm_min_ps(*x, *y); }
+KFR_SINTRIN f64sse min(f64sse x, f64sse y) { return _mm_min_pd(*x, *y); }
+KFR_SINTRIN u8sse min(u8sse x, u8sse y) { return _mm_min_epu8(*x, *y); }
+KFR_SINTRIN i16sse min(i16sse x, i16sse y) { return _mm_min_epi16(*x, *y); }
+KFR_SINTRIN i64sse min(i64sse x, i64sse y) { return select(x < y, x, y); }
+KFR_SINTRIN u64sse min(u64sse x, u64sse y) { return select(x < y, x, y); }
 
-private:
-    using in_select<cc>::select;
+KFR_SINTRIN f32sse max(f32sse x, f32sse y) { return _mm_max_ps(*x, *y); }
+KFR_SINTRIN f64sse max(f64sse x, f64sse y) { return _mm_max_pd(*x, *y); }
+KFR_SINTRIN u8sse max(u8sse x, u8sse y) { return _mm_max_epu8(*x, *y); }
+KFR_SINTRIN i16sse max(i16sse x, i16sse y) { return _mm_max_epi16(*x, *y); }
+KFR_SINTRIN i64sse max(i64sse x, i64sse y) { return select(x > y, x, y); }
+KFR_SINTRIN u64sse max(u64sse x, u64sse y) { return select(x > y, x, y); }
 
-public:
-    template <typename T>
-    KFR_SINTRIN T min(initialvalue<T>)
-    {
-        return std::numeric_limits<T>::max();
-    }
-    template <typename T>
-    KFR_SINTRIN T max(initialvalue<T>)
-    {
-        return std::numeric_limits<T>::min();
-    }
+#if defined CID_ARCH_AVX2
+KFR_SINTRIN u8avx min(u8avx x, u8avx y) { return _mm256_min_epu8(*x, *y); }
+KFR_SINTRIN i16avx min(i16avx x, i16avx y) { return _mm256_min_epi16(*x, *y); }
+KFR_SINTRIN i8avx min(i8avx x, i8avx y) { return _mm256_min_epi8(*x, *y); }
+KFR_SINTRIN u16avx min(u16avx x, u16avx y) { return _mm256_min_epu16(*x, *y); }
+KFR_SINTRIN i32avx min(i32avx x, i32avx y) { return _mm256_min_epi32(*x, *y); }
+KFR_SINTRIN u32avx min(u32avx x, u32avx y) { return _mm256_min_epu32(*x, *y); }
 
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> min(vec<T, N> x, vec<T, N> y)
-    {
-        return select(x < y, x, y);
-    }
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> max(vec<T, N> x, vec<T, N> y)
-    {
-        return select(x > y, x, y);
-    }
+KFR_SINTRIN u8avx max(u8avx x, u8avx y) { return _mm256_max_epu8(*x, *y); }
+KFR_SINTRIN i16avx max(i16avx x, i16avx y) { return _mm256_max_epi16(*x, *y); }
+KFR_SINTRIN i8avx max(i8avx x, i8avx y) { return _mm256_max_epi8(*x, *y); }
+KFR_SINTRIN u16avx max(u16avx x, u16avx y) { return _mm256_max_epu16(*x, *y); }
+KFR_SINTRIN i32avx max(i32avx x, i32avx y) { return _mm256_max_epi32(*x, *y); }
+KFR_SINTRIN u32avx max(u32avx x, u32avx y) { return _mm256_max_epu32(*x, *y); }
 
-    KFR_HANDLE_SCALAR(min)
-    KFR_HANDLE_SCALAR(max)
-    KFR_SPEC_FN(in_min_max, min)
-    KFR_SPEC_FN(in_min_max, max)
-};
+KFR_SINTRIN i64avx min(i64avx x, i64avx y) { return select(x < y, x, y); }
+KFR_SINTRIN u64avx min(u64avx x, u64avx y) { return select(x < y, x, y); }
+KFR_SINTRIN i64avx max(i64avx x, i64avx y) { return select(x > y, x, y); }
+KFR_SINTRIN u64avx max(u64avx x, u64avx y) { return select(x > y, x, y); }
+#endif
 
-#ifdef CID_ARCH_X86
+#if defined CID_ARCH_AVX
+KFR_SINTRIN f32avx min(f32avx x, f32avx y) { return _mm256_min_ps(*x, *y); }
+KFR_SINTRIN f64avx min(f64avx x, f64avx y) { return _mm256_min_pd(*x, *y); }
+KFR_SINTRIN f32avx max(f32avx x, f32avx y) { return _mm256_max_ps(*x, *y); }
+KFR_SINTRIN f64avx max(f64avx x, f64avx y) { return _mm256_max_pd(*x, *y); }
+#endif
 
-template <cpu_t cc>
-struct in_min_max<cpu_t::sse2, cc> : in_select<cc>
-{
-    constexpr static cpu_t cpu = cpu_t::sse2;
+#if defined CID_ARCH_SSE41
+KFR_SINTRIN i8sse min(i8sse x, i8sse y) { return _mm_min_epi8(*x, *y); }
+KFR_SINTRIN u16sse min(u16sse x, u16sse y) { return _mm_min_epu16(*x, *y); }
+KFR_SINTRIN i32sse min(i32sse x, i32sse y) { return _mm_min_epi32(*x, *y); }
+KFR_SINTRIN u32sse min(u32sse x, u32sse y) { return _mm_min_epu32(*x, *y); }
 
-private:
-    using in_select<cc>::select;
+KFR_SINTRIN i8sse max(i8sse x, i8sse y) { return _mm_max_epi8(*x, *y); }
+KFR_SINTRIN u16sse max(u16sse x, u16sse y) { return _mm_max_epu16(*x, *y); }
+KFR_SINTRIN i32sse max(i32sse x, i32sse y) { return _mm_max_epi32(*x, *y); }
+KFR_SINTRIN u32sse max(u32sse x, u32sse y) { return _mm_max_epu32(*x, *y); }
+#else
+KFR_SINTRIN i8sse min(i8sse x, i8sse y) { return select(x < y, x, y); }
+KFR_SINTRIN u16sse min(u16sse x, u16sse y) { return select(x < y, x, y); }
+KFR_SINTRIN i32sse min(i32sse x, i32sse y) { return select(x < y, x, y); }
+KFR_SINTRIN u32sse min(u32sse x, u32sse y) { return select(x < y, x, y); }
 
-public:
-    template <typename T>
-    KFR_SINTRIN T min(initialvalue<T>)
-    {
-        return std::numeric_limits<T>::max();
-    }
-    template <typename T>
-    KFR_SINTRIN T max(initialvalue<T>)
-    {
-        return std::numeric_limits<T>::min();
-    }
-
-    KFR_CPU_INTRIN(sse2) f32sse min(f32sse x, f32sse y) { return _mm_min_ps(*x, *y); }
-    KFR_CPU_INTRIN(sse2) f64sse min(f64sse x, f64sse y) { return _mm_min_pd(*x, *y); }
-    KFR_CPU_INTRIN(sse2) i8sse min(i8sse x, i8sse y) { return select(x < y, x, y); }
-    KFR_CPU_INTRIN(sse2) u16sse min(u16sse x, u16sse y) { return select(x < y, x, y); }
-    KFR_CPU_INTRIN(sse2) i32sse min(i32sse x, i32sse y) { return select(x < y, x, y); }
-    KFR_CPU_INTRIN(sse2) u32sse min(u32sse x, u32sse y) { return select(x < y, x, y); }
-    KFR_CPU_INTRIN(sse2) u8sse min(u8sse x, u8sse y) { return _mm_min_epu8(*x, *y); }
-    KFR_CPU_INTRIN(sse2) i16sse min(i16sse x, i16sse y) { return _mm_min_epi16(*x, *y); }
-    KFR_CPU_INTRIN(sse2) i64sse min(i64sse x, i64sse y) { return select(x < y, x, y); }
-    KFR_CPU_INTRIN(sse2) u64sse min(u64sse x, u64sse y) { return select(x < y, x, y); }
-
-    KFR_CPU_INTRIN(sse2) f32sse max(f32sse x, f32sse y) { return _mm_max_ps(*x, *y); }
-    KFR_CPU_INTRIN(sse2) f64sse max(f64sse x, f64sse y) { return _mm_max_pd(*x, *y); }
-    KFR_CPU_INTRIN(sse2) i8sse max(i8sse x, i8sse y) { return select(x > y, x, y); }
-    KFR_CPU_INTRIN(sse2) u16sse max(u16sse x, u16sse y) { return select(x > y, x, y); }
-    KFR_CPU_INTRIN(sse2) i32sse max(i32sse x, i32sse y) { return select(x > y, x, y); }
-    KFR_CPU_INTRIN(sse2) u32sse max(u32sse x, u32sse y) { return select(x > y, x, y); }
-    KFR_CPU_INTRIN(sse2) u8sse max(u8sse x, u8sse y) { return _mm_max_epu8(*x, *y); }
-    KFR_CPU_INTRIN(sse2) i16sse max(i16sse x, i16sse y) { return _mm_max_epi16(*x, *y); }
-    KFR_CPU_INTRIN(sse2) i64sse max(i64sse x, i64sse y) { return select(x > y, x, y); }
-    KFR_CPU_INTRIN(sse2) u64sse max(u64sse x, u64sse y) { return select(x > y, x, y); }
-
-    KFR_HANDLE_ALL(min)
-    KFR_HANDLE_ALL(max)
-    KFR_HANDLE_SCALAR(min)
-    KFR_HANDLE_SCALAR(max)
-    KFR_SPEC_FN(in_min_max, min)
-    KFR_SPEC_FN(in_min_max, max)
-};
-
-template <cpu_t cc>
-struct in_min_max<cpu_t::sse41, cc> : in_min_max<cpu_t::sse2>
-{
-    constexpr static cpu_t cpu = cpu_t::sse41;
-    using in_min_max<cpu_t::sse2>::min;
-    using in_min_max<cpu_t::sse2>::max;
-
-    KFR_CPU_INTRIN(sse41) i8sse min(i8sse x, i8sse y) { return _mm_min_epi8(*x, *y); }
-    KFR_CPU_INTRIN(sse41) u16sse min(u16sse x, u16sse y) { return _mm_min_epu16(*x, *y); }
-    KFR_CPU_INTRIN(sse41) i32sse min(i32sse x, i32sse y) { return _mm_min_epi32(*x, *y); }
-    KFR_CPU_INTRIN(sse41) u32sse min(u32sse x, u32sse y) { return _mm_min_epu32(*x, *y); }
-
-    KFR_CPU_INTRIN(sse41) i8sse max(i8sse x, i8sse y) { return _mm_max_epi8(*x, *y); }
-    KFR_CPU_INTRIN(sse41) u16sse max(u16sse x, u16sse y) { return _mm_max_epu16(*x, *y); }
-    KFR_CPU_INTRIN(sse41) i32sse max(i32sse x, i32sse y) { return _mm_max_epi32(*x, *y); }
-    KFR_CPU_INTRIN(sse41) u32sse max(u32sse x, u32sse y) { return _mm_max_epu32(*x, *y); }
-
-    KFR_HANDLE_ALL(min)
-    KFR_HANDLE_ALL(max)
-    KFR_HANDLE_SCALAR(min)
-    KFR_HANDLE_SCALAR(max)
-    KFR_SPEC_FN(in_min_max, min)
-    KFR_SPEC_FN(in_min_max, max)
-};
-
-template <cpu_t cc>
-struct in_min_max<cpu_t::avx1, cc> : in_min_max<cpu_t::sse41>
-{
-    constexpr static cpu_t cpu = cpu_t::avx1;
-    using in_min_max<cpu_t::sse41>::min;
-    using in_min_max<cpu_t::sse41>::max;
-
-    KFR_CPU_INTRIN(avx) f32avx min(f32avx x, f32avx y) { return _mm256_min_ps(*x, *y); }
-    KFR_CPU_INTRIN(avx) f64avx min(f64avx x, f64avx y) { return _mm256_min_pd(*x, *y); }
-    KFR_CPU_INTRIN(avx) f32avx max(f32avx x, f32avx y) { return _mm256_max_ps(*x, *y); }
-    KFR_CPU_INTRIN(avx) f64avx max(f64avx x, f64avx y) { return _mm256_max_pd(*x, *y); }
-
-    KFR_HANDLE_ALL(min)
-    KFR_HANDLE_ALL(max)
-    KFR_HANDLE_SCALAR(min)
-    KFR_HANDLE_SCALAR(max)
-    KFR_SPEC_FN(in_min_max, min)
-    KFR_SPEC_FN(in_min_max, max)
-};
-
-template <cpu_t cc>
-struct in_min_max<cpu_t::avx2, cc> : in_min_max<cpu_t::avx1>, in_select<cpu_t::avx2>
-{
-    constexpr static cpu_t cpu = cpu_t::avx2;
-
-private:
-    using in_select<cpu>::select;
-
-public:
-    using in_min_max<cpu_t::avx1>::min;
-    using in_min_max<cpu_t::avx1>::max;
-
-    KFR_CPU_INTRIN(avx2) u8avx min(u8avx x, u8avx y) { return _mm256_min_epu8(*x, *y); }
-    KFR_CPU_INTRIN(avx2) i16avx min(i16avx x, i16avx y) { return _mm256_min_epi16(*x, *y); }
-    KFR_CPU_INTRIN(avx2) i8avx min(i8avx x, i8avx y) { return _mm256_min_epi8(*x, *y); }
-    KFR_CPU_INTRIN(avx2) u16avx min(u16avx x, u16avx y) { return _mm256_min_epu16(*x, *y); }
-    KFR_CPU_INTRIN(avx2) i32avx min(i32avx x, i32avx y) { return _mm256_min_epi32(*x, *y); }
-    KFR_CPU_INTRIN(avx2) u32avx min(u32avx x, u32avx y) { return _mm256_min_epu32(*x, *y); }
-
-    KFR_CPU_INTRIN(avx2) u8avx max(u8avx x, u8avx y) { return _mm256_max_epu8(*x, *y); }
-    KFR_CPU_INTRIN(avx2) i16avx max(i16avx x, i16avx y) { return _mm256_max_epi16(*x, *y); }
-    KFR_CPU_INTRIN(avx2) i8avx max(i8avx x, i8avx y) { return _mm256_max_epi8(*x, *y); }
-    KFR_CPU_INTRIN(avx2) u16avx max(u16avx x, u16avx y) { return _mm256_max_epu16(*x, *y); }
-    KFR_CPU_INTRIN(avx2) i32avx max(i32avx x, i32avx y) { return _mm256_max_epi32(*x, *y); }
-    KFR_CPU_INTRIN(avx2) u32avx max(u32avx x, u32avx y) { return _mm256_max_epu32(*x, *y); }
-
-    KFR_CPU_INTRIN(avx2) i64avx min(i64avx x, i64avx y) { return select(x < y, x, y); }
-    KFR_CPU_INTRIN(avx2) u64avx min(u64avx x, u64avx y) { return select(x < y, x, y); }
-    KFR_CPU_INTRIN(avx2) i64avx max(i64avx x, i64avx y) { return select(x > y, x, y); }
-    KFR_CPU_INTRIN(avx2) u64avx max(u64avx x, u64avx y) { return select(x > y, x, y); }
-
-    KFR_HANDLE_ALL(min)
-    KFR_HANDLE_ALL(max)
-    KFR_HANDLE_SCALAR(min)
-    KFR_HANDLE_SCALAR(max)
-    KFR_SPEC_FN(in_min_max, min)
-    KFR_SPEC_FN(in_min_max, max)
-};
+KFR_SINTRIN i8sse max(i8sse x, i8sse y) { return select(x > y, x, y); }
+KFR_SINTRIN u16sse max(u16sse x, u16sse y) { return select(x > y, x, y); }
+KFR_SINTRIN i32sse max(i32sse x, i32sse y) { return select(x > y, x, y); }
+KFR_SINTRIN u32sse max(u32sse x, u32sse y) { return select(x > y, x, y); }
 
 #endif
 
-template <cpu_t cpu = cpu_t::native>
-struct in_minabs_maxabs
+KFR_HANDLE_ALL_SIZES_2(min)
+KFR_HANDLE_ALL_SIZES_2(max)
+
+#else
+
+// fallback
+template <typename T, size_t N>
+KFR_SINTRIN vec<T, N> min(vec<T, N> x, vec<T, N> y)
 {
-public:
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> minabs(vec<T, N> x, vec<T, N> y)
-    {
-        return in_min_max<cpu>::min(in_abs<cpu>::abs(x), in_abs<cpu>::abs(y));
-    }
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> maxabs(vec<T, N> x, vec<T, N> y)
-    {
-        return in_min_max<cpu>::max(in_abs<cpu>::abs(x), in_abs<cpu>::abs(y));
-    }
-
-    KFR_HANDLE_ALL(minabs)
-    KFR_HANDLE_ALL(maxabs)
-    KFR_HANDLE_SCALAR(min)
-    KFR_HANDLE_SCALAR(max)
-    KFR_SPEC_FN(in_minabs_maxabs, minabs)
-    KFR_SPEC_FN(in_minabs_maxabs, maxabs)
-};
-
-template <cpu_t cpu = cpu_t::native>
-struct in_clamp : in_min_max<cpu>
+    return select(x < y, x, y);
+}
+template <typename T, size_t N>
+KFR_SINTRIN vec<T, N> max(vec<T, N> x, vec<T, N> y)
 {
-    using in_min_max<cpu>::min;
-    using in_min_max<cpu>::max;
+    return select(x > y, x, y);
+}
+#endif
 
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> clamp(vec<T, N> x, T minimum, T maximum)
-    {
-        return clamp(x, broadcast<N>(minimum), broadcast<N>(maximum));
-    }
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> clamp(vec<T, N> x, T minimum, vec<T, N> maximum)
-    {
-        return clamp(x, broadcast<N>(minimum), maximum);
-    }
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> clamp(vec<T, N> x, vec<T, N> minimum, T maximum)
-    {
-        return clamp(x, minimum, broadcast<N>(maximum));
-    }
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> clamp(vec<T, N> x, T maximum)
-    {
-        return clamp(x, broadcast<N>(maximum));
-    }
-
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> clamp(vec<T, N> x, vec<T, N> minimum, vec<T, N> maximum)
-    {
-        return max(minimum, min(x, maximum));
-    }
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> clamp(vec<T, N> x, vec<T, N> maximum)
-    {
-        return max(zerovector<T, N>(), min(x, maximum));
-    }
-
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> clampm1(vec<T, N> x, vec<T, N> minimum, vec<T, N> maximum)
-    {
-        return max(minimum, min(x, maximum - T(1)));
-    }
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> clampm1(vec<T, N> x, vec<T, N> maximum)
-    {
-        return max(zerovector<T, N>(), min(x, maximum - T(1)));
-    }
-    KFR_HANDLE_ALL(clamp)
-    KFR_HANDLE_ALL(clampm1)
-    KFR_HANDLE_SCALAR(min)
-    KFR_HANDLE_SCALAR(max)
-    KFR_SPEC_FN(in_clamp, clamp)
-    KFR_SPEC_FN(in_clamp, clampm1)
-};
+template <typename T>
+KFR_SINTRIN T min(initialvalue<T>)
+{
+    return std::numeric_limits<T>::max();
+}
+template <typename T>
+KFR_SINTRIN T max(initialvalue<T>)
+{
+    return std::numeric_limits<T>::min();
+}
+template <typename T>
+KFR_SINTRIN T absmin(initialvalue<T>)
+{
+    return std::numeric_limits<T>::max();
+}
+template <typename T>
+KFR_SINTRIN T absmax(initialvalue<T>)
+{
+    return 0;
 }
 
-namespace native
-{
-using fn_min = internal::in_min_max<>::fn_min;
+KFR_HANDLE_SCALAR_2(min)
+KFR_FN(min)
+KFR_HANDLE_SCALAR_2(max)
+KFR_FN(max)
+KFR_HANDLE_SCALAR_2(absmin)
+KFR_FN(absmin)
+KFR_HANDLE_SCALAR_2(absmax)
+KFR_FN(absmax)
+}
+
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INLINE ftype<common_type<T1, T2>> min(const T1& x, const T2& y)
+KFR_INTRIN common_type<T1, T2> min(const T1& x, const T2& y)
 {
-    return internal::in_min_max<>::min(x, y);
+    return internal::min(x, y);
 }
 
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INLINE expr_func<fn_min, E1, E2> min(E1&& x, E2&& y)
+KFR_INTRIN expr_func<internal::fn_min, E1, E2> min(E1&& x, E2&& y)
 {
-    return { fn_min(), std::forward<E1>(x), std::forward<E2>(y) };
+    return { {}, std::forward<E1>(x), std::forward<E2>(y) };
 }
-using fn_max = internal::in_min_max<>::fn_max;
+
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INLINE ftype<common_type<T1, T2>> max(const T1& x, const T2& y)
+KFR_INTRIN common_type<T1, T2> max(const T1& x, const T2& y)
 {
-    return internal::in_min_max<>::max(x, y);
+    return internal::max(x, y);
 }
 
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INLINE expr_func<fn_max, E1, E2> max(E1&& x, E2&& y)
+KFR_INTRIN expr_func<internal::fn_max, E1, E2> max(E1&& x, E2&& y)
 {
-    return { fn_max(), std::forward<E1>(x), std::forward<E2>(y) };
+    return { {}, std::forward<E1>(x), std::forward<E2>(y) };
 }
-using fn_minabs = internal::in_minabs_maxabs<>::fn_minabs;
+
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INLINE ftype<common_type<T1, T2>> minabs(const T1& x, const T2& y)
+KFR_INTRIN common_type<T1, T2> absmin(const T1& x, const T2& y)
 {
-    return internal::in_minabs_maxabs<>::minabs(x, y);
+    return internal::absmin(x, y);
 }
 
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INLINE expr_func<fn_minabs, E1, E2> minabs(E1&& x, E2&& y)
+KFR_INTRIN expr_func<internal::fn_absmin, E1, E2> absmin(E1&& x, E2&& y)
 {
-    return { fn_minabs(), std::forward<E1>(x), std::forward<E2>(y) };
+    return { {}, std::forward<E1>(x), std::forward<E2>(y) };
 }
-using fn_maxabs = internal::in_minabs_maxabs<>::fn_maxabs;
+
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INLINE ftype<common_type<T1, T2>> maxabs(const T1& x, const T2& y)
+KFR_INTRIN common_type<T1, T2> absmax(const T1& x, const T2& y)
 {
-    return internal::in_minabs_maxabs<>::maxabs(x, y);
+    return internal::absmax(x, y);
 }
 
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INLINE expr_func<fn_maxabs, E1, E2> maxabs(E1&& x, E2&& y)
+KFR_INTRIN expr_func<internal::fn_absmax, E1, E2> absmax(E1&& x, E2&& y)
 {
-    return { fn_maxabs(), std::forward<E1>(x), std::forward<E2>(y) };
-}
-using fn_clamp = internal::in_clamp<>::fn_clamp;
-template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>::value)>
-KFR_INLINE ftype<common_type<T1, T2, T3>> clamp(const T1& x, const T2& l, const T3& h)
-{
-    return internal::in_clamp<>::clamp(x, l, h);
-}
-
-template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2, E3>::value)>
-KFR_INLINE expr_func<fn_clamp, E1, E2, E3> clamp(E1&& x, E2&& l, E3&& h)
-{
-    return { fn_clamp(), std::forward<E1>(x), std::forward<E2>(l), std::forward<E3>(h) };
-}
-using fn_clampm1 = internal::in_clamp<>::fn_clampm1;
-template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>::value)>
-KFR_INLINE ftype<common_type<T1, T2, T3>> clampm1(const T1& x, const T2& l, const T3& h)
-{
-    return internal::in_clamp<>::clampm1(x, l, h);
-}
-
-template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2, E3>::value)>
-KFR_INLINE expr_func<fn_clampm1, E1, E2, E3> clampm1(E1&& x, E2&& l, E3&& h)
-{
-    return { fn_clampm1(), std::forward<E1>(x), std::forward<E2>(l), std::forward<E3>(h) };
-}
-
-using fn_clamp = internal::in_clamp<>::fn_clamp;
-template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INLINE ftype<common_type<T1, T2>> clamp(const T1& x, const T2& h)
-{
-    return internal::in_clamp<>::clamp(x, h);
-}
-
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INLINE expr_func<fn_clamp, E1, E2> clamp(E1&& x, E2&& h)
-{
-    return { fn_clamp(), std::forward<E1>(x), std::forward<E2>(h) };
-}
-using fn_clampm1 = internal::in_clamp<>::fn_clampm1;
-template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INLINE ftype<common_type<T1, T2>> clampm1(const T1& x, const T2& h)
-{
-    return internal::in_clamp<>::clampm1(x, h);
-}
-
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INLINE expr_func<fn_clampm1, E1, E2> clampm1(E1&& x, E2&& h)
-{
-    return { fn_clampm1(), std::forward<E1>(x), std::forward<E2>(h) };
+    return { {}, std::forward<E1>(x), std::forward<E2>(y) };
 }
 }
-}
-
-#pragma clang diagnostic pop

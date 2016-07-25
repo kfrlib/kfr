@@ -27,18 +27,14 @@
 namespace kfr
 {
 
-namespace native
-{
-
 template <typename T, typename E1>
-KFR_INLINE internal::in_fir<>::expression_short_fir<2, T, E1> fracdelay(E1&& e1, T delay)
+KFR_INLINE internal::expression_short_fir<2, T, E1> fracdelay(E1&& e1, T delay)
 {
     if (delay < 0)
         delay = 0;
     if (delay > 1)
         delay = fract(delay);
     univector<T, 2> taps({ 1 - delay, delay });
-    return internal::in_fir<>::expression_short_fir<2, T, E1>(std::forward<E1>(e1), taps.ref());
-}
+    return internal::expression_short_fir<2, T, E1>(std::forward<E1>(e1), taps.ref());
 }
 }

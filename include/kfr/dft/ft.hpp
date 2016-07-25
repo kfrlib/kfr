@@ -485,7 +485,7 @@ constexpr cvec<T, N> twiddleimagmask()
 template <typename T, size_t N>
 KFR_NOINLINE static vec<T, N> cossin_conj(vec<T, N> x)
 {
-    return cconj(in_sin_cos<cpu_t::native>::cossin(x));
+    return cconj(cossin(x));
 }
 
 template <size_t k, size_t size, bool inverse = false, typename T, size_t width>

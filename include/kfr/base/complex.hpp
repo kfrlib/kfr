@@ -79,9 +79,31 @@ struct complex
     T re;
     T im;
 };
+#endif
+#endif
+}
+namespace cometa
+{
+template <typename T>
+struct compound_type_traits<kfr::complex<T>>
+{
+    constexpr static size_t width   = 2;
+    using subtype                   = T;
+    using deep_subtype              = cometa::deep_subtype<T>;
+    constexpr static bool is_scalar = false;
+    template <typename U>
+    using rebind = kfr::complex<U>;
+    template <typename U>
+    using deep_rebind = kfr::complex<cometa::deep_rebind<subtype, U>>;
 
-#endif
-#endif
+    static constexpr subtype at(const kfr::complex<T>& value, size_t index)
+    {
+        return index == 0 ? value.real() : value.imag();
+    }
+};
+}
+namespace kfr
+{
 
 using c32   = complex<f32>;
 using c64   = complex<f64>;
@@ -262,363 +284,280 @@ constexpr KFR_INLINE complex<T> make_complex(T1 real, T2 imag = T2(0))
 namespace internal
 {
 
-template <cpu_t c = cpu_t::native>
-struct in_complex : in_select<c>, in_sin_cos<c>, in_hyperbolic<c>, in_sqrt<c>, in_atan<c>, in_log_exp<c>
+template <typename T, size_t N>
+KFR_SINTRIN vec<complex<T>, N> csin(const vec<complex<T>, N>& x)
 {
-    constexpr static cpu_t cur = c;
-    using in_sqrt<c>::sqrt;
-    using in_sin_cos<c>::sincos;
-    using in_sin_cos<c>::cossin;
-    using in_hyperbolic<c>::sinhcosh;
-    using in_hyperbolic<c>::coshsinh;
-    using in_atan<c>::atan2;
-    using in_log_exp<c>::log;
-    using in_log_exp<c>::log2;
-    using in_log_exp<c>::log10;
-    using in_log_exp<c>::exp;
-    using in_log_exp<c>::exp2;
-    using in_log_exp<c>::exp10;
-
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<complex<T>, N> csin(const vec<complex<T>, N>& x)
-    {
-        return ccomp(sincos(cdecom(cdupreal(x))) * coshsinh(cdecom(cdupimag(x))));
-    }
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<complex<T>, N> csinh(const vec<complex<T>, N>& x)
-    {
-        return ccomp(sinhcosh(cdecom(cdupreal(x))) * cossin(cdecom(cdupimag(x))));
-    }
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<complex<T>, N> ccos(const vec<complex<T>, N>& x)
-    {
-        return ccomp(negodd(cossin(cdecom(cdupreal(x))) * coshsinh(cdecom(cdupimag(x)))));
-    }
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<complex<T>, N> ccosh(const vec<complex<T>, N>& x)
-    {
-        return ccomp(coshsinh(cdecom(cdupreal(x))) * cossin(cdecom(cdupimag(x))));
-    }
-
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> cabs(const vec<complex<T>, N>& x)
-    {
-        const vec<T, N* 2> xx = sqr(cdecom(x));
-        return sqrt(even(xx) + odd(xx));
-    }
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> carg(const vec<complex<T>, N>& x)
-    {
-        const vec<T, N* 2> xx = cdecom(x);
-        return atan2(even(xx), odd(xx));
-    }
-
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<complex<T>, N> clog(const vec<complex<T>, N>& x)
-    {
-        return make_complex(log(cabs(x)), carg(x));
-    }
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<complex<T>, N> clog2(const vec<complex<T>, N>& x)
-    {
-        return clog(x) * c_recip_log_2<T>;
-    }
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<complex<T>, N> clog10(const vec<complex<T>, N>& x)
-    {
-        return clog(x) * c_recip_log_10<T>;
-    }
-
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<complex<T>, N> cexp(const vec<complex<T>, N>& x)
-    {
-        return ccomp(exp(cdecom(cdupreal(x))) * cossin(cdecom(cdupimag(x))));
-    }
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<complex<T>, N> cexp2(const vec<complex<T>, N>& x)
-    {
-        return cexp(x * c_log_2<T>);
-    }
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<complex<T>, N> cexp10(const vec<complex<T>, N>& x)
-    {
-        return cexp(x * c_log_10<T>);
-    }
-
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<complex<T>, N> polar(const vec<complex<T>, N>& x)
-    {
-        return make_complex(cabs(x), carg(x));
-    }
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<complex<T>, N> cartesian(const vec<complex<T>, N>& x)
-    {
-        return cdupreal(x) * ccomp(cossin(cdecom(cdupimag(x))));
-    }
-
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> cabsdup(vec<T, N> x)
-    {
-        x = sqr(x);
-        return sqrt(x + swap<2>(x));
-    }
-
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<complex<T>, N> csqrt(const vec<complex<T>, N>& x)
-    {
-        const vec<T, N> t = (cabsdup(cdecom(x)) + cdecom(cnegimag(cdupreal(x)))) * T(0.5);
-        return ccomp(select(dupodd(x) < T(), cdecom(cnegimag(ccomp(t))), t));
-    }
-
-    KFR_HANDLE_SCALAR(csin)
-    KFR_HANDLE_SCALAR(csinh)
-    KFR_HANDLE_SCALAR(ccos)
-    KFR_HANDLE_SCALAR(ccosh)
-    KFR_HANDLE_SCALAR(cabs)
-    KFR_HANDLE_SCALAR(carg)
-    KFR_HANDLE_SCALAR(clog)
-    KFR_HANDLE_SCALAR(clog2)
-    KFR_HANDLE_SCALAR(clog10)
-    KFR_HANDLE_SCALAR(cexp)
-    KFR_HANDLE_SCALAR(cexp2)
-    KFR_HANDLE_SCALAR(cexp10)
-    KFR_HANDLE_SCALAR(polar)
-    KFR_HANDLE_SCALAR(cartesian)
-    KFR_HANDLE_SCALAR(csqrt)
-
-    KFR_SPEC_FN(in_complex, csin)
-    KFR_SPEC_FN(in_complex, csinh)
-    KFR_SPEC_FN(in_complex, ccos)
-    KFR_SPEC_FN(in_complex, ccosh)
-    KFR_SPEC_FN(in_complex, cabs)
-    KFR_SPEC_FN(in_complex, carg)
-    KFR_SPEC_FN(in_complex, clog)
-    KFR_SPEC_FN(in_complex, clog2)
-    KFR_SPEC_FN(in_complex, clog10)
-    KFR_SPEC_FN(in_complex, cexp)
-    KFR_SPEC_FN(in_complex, cexp2)
-    KFR_SPEC_FN(in_complex, cexp10)
-    KFR_SPEC_FN(in_complex, polar)
-    KFR_SPEC_FN(in_complex, cartesian)
-    KFR_SPEC_FN(in_complex, csqrt)
-};
+    return ccomp(sincos(cdecom(cdupreal(x))) * coshsinh(cdecom(cdupimag(x))));
+}
+template <typename T, size_t N>
+KFR_SINTRIN vec<complex<T>, N> csinh(const vec<complex<T>, N>& x)
+{
+    return ccomp(sinhcosh(cdecom(cdupreal(x))) * cossin(cdecom(cdupimag(x))));
+}
+template <typename T, size_t N>
+KFR_SINTRIN vec<complex<T>, N> ccos(const vec<complex<T>, N>& x)
+{
+    return ccomp(negodd(cossin(cdecom(cdupreal(x))) * coshsinh(cdecom(cdupimag(x)))));
+}
+template <typename T, size_t N>
+KFR_SINTRIN vec<complex<T>, N> ccosh(const vec<complex<T>, N>& x)
+{
+    return ccomp(coshsinh(cdecom(cdupreal(x))) * cossin(cdecom(cdupimag(x))));
 }
 
-namespace native
+template <typename T, size_t N>
+KFR_SINTRIN vec<T, N> cabs(const vec<complex<T>, N>& x)
 {
-using fn_csin = internal::in_complex<>::fn_csin;
+    const vec<T, N* 2> xx = sqr(cdecom(x));
+    return sqrt(even(xx) + odd(xx));
+}
+template <typename T, size_t N>
+KFR_SINTRIN vec<T, N> carg(const vec<complex<T>, N>& x)
+{
+    const vec<T, N* 2> xx = cdecom(x);
+    return atan2(even(xx), odd(xx));
+}
+
+template <typename T, size_t N>
+KFR_SINTRIN vec<complex<T>, N> clog(const vec<complex<T>, N>& x)
+{
+    return make_complex(log(cabs(x)), carg(x));
+}
+template <typename T, size_t N>
+KFR_SINTRIN vec<complex<T>, N> clog2(const vec<complex<T>, N>& x)
+{
+    return clog(x) * c_recip_log_2<T>;
+}
+template <typename T, size_t N>
+KFR_SINTRIN vec<complex<T>, N> clog10(const vec<complex<T>, N>& x)
+{
+    return clog(x) * c_recip_log_10<T>;
+}
+
+template <typename T, size_t N>
+KFR_SINTRIN vec<complex<T>, N> cexp(const vec<complex<T>, N>& x)
+{
+    return ccomp(exp(cdecom(cdupreal(x))) * cossin(cdecom(cdupimag(x))));
+}
+template <typename T, size_t N>
+KFR_SINTRIN vec<complex<T>, N> cexp2(const vec<complex<T>, N>& x)
+{
+    return cexp(x * c_log_2<T>);
+}
+template <typename T, size_t N>
+KFR_SINTRIN vec<complex<T>, N> cexp10(const vec<complex<T>, N>& x)
+{
+    return cexp(x * c_log_10<T>);
+}
+
+template <typename T, size_t N>
+KFR_SINTRIN vec<complex<T>, N> polar(const vec<complex<T>, N>& x)
+{
+    return make_complex(cabs(x), carg(x));
+}
+template <typename T, size_t N>
+KFR_SINTRIN vec<complex<T>, N> cartesian(const vec<complex<T>, N>& x)
+{
+    return cdupreal(x) * ccomp(cossin(cdecom(cdupimag(x))));
+}
+
+template <typename T, size_t N>
+KFR_SINTRIN vec<T, N> cabsdup(vec<T, N> x)
+{
+    x = sqr(x);
+    return sqrt(x + swap<2>(x));
+}
+
+template <typename T, size_t N>
+KFR_SINTRIN vec<complex<T>, N> csqrt(const vec<complex<T>, N>& x)
+{
+    const vec<T, N> t = (cabsdup(cdecom(x)) + cdecom(cnegimag(cdupreal(x)))) * T(0.5);
+    return ccomp(select(dupodd(x) < T(), cdecom(cnegimag(ccomp(t))), t));
+}
+
+KFR_HANDLE_SCALAR(csin)
+KFR_HANDLE_SCALAR(csinh)
+KFR_HANDLE_SCALAR(ccos)
+KFR_HANDLE_SCALAR(ccosh)
+KFR_HANDLE_SCALAR(cabs)
+KFR_HANDLE_SCALAR(carg)
+KFR_HANDLE_SCALAR(clog)
+KFR_HANDLE_SCALAR(clog2)
+KFR_HANDLE_SCALAR(clog10)
+KFR_HANDLE_SCALAR(cexp)
+KFR_HANDLE_SCALAR(cexp2)
+KFR_HANDLE_SCALAR(cexp10)
+KFR_HANDLE_SCALAR(polar)
+KFR_HANDLE_SCALAR(cartesian)
+KFR_HANDLE_SCALAR(csqrt)
+
+KFR_FN(csin)
+KFR_FN(csinh)
+KFR_FN(ccos)
+KFR_FN(ccosh)
+KFR_FN(cabs)
+KFR_FN(carg)
+KFR_FN(clog)
+KFR_FN(clog2)
+KFR_FN(clog10)
+KFR_FN(cexp)
+KFR_FN(cexp2)
+KFR_FN(cexp10)
+KFR_FN(polar)
+KFR_FN(cartesian)
+KFR_FN(csqrt)
+}
+
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> csin(const T1& x)
+KFR_INTRIN T1 csin(const T1& x)
 {
-    return internal::in_complex<>::csin(x);
+    return internal::csin(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_csin, E1> csin(E1&& x)
+KFR_INTRIN expr_func<internal::fn_csin, E1> csin(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
-
-using fn_csinh = internal::in_complex<>::fn_csinh;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> csinh(const T1& x)
+KFR_INTRIN T1 csinh(const T1& x)
 {
-    return internal::in_complex<>::csinh(x);
+    return internal::csinh(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_csinh, E1> csinh(E1&& x)
+KFR_INTRIN expr_func<internal::fn_csinh, E1> csinh(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
-
-using fn_ccos = internal::in_complex<>::fn_ccos;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> ccos(const T1& x)
+KFR_INTRIN T1 ccos(const T1& x)
 {
-    return internal::in_complex<>::ccos(x);
+    return internal::ccos(x);
 }
-
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_ccos, E1> ccos(E1&& x)
+KFR_INTRIN expr_func<internal::fn_ccos, E1> ccos(E1&& x)
 {
-    return { fn_ccos(), std::forward<E1>(x) };
+    return { {}, std::forward<E1>(x) };
 }
-
-using fn_ccosh = internal::in_complex<>::fn_ccosh;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> ccosh(const T1& x)
+KFR_INTRIN T1 ccosh(const T1& x)
 {
-    return internal::in_complex<>::ccosh(x);
+    return internal::ccosh(x);
 }
-
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_ccosh, E1> ccosh(E1&& x)
+KFR_INTRIN expr_func<internal::fn_ccosh, E1> ccosh(E1&& x)
 {
-    return { fn_ccosh(), std::forward<E1>(x) };
+    return { {}, std::forward<E1>(x) };
 }
-
-using fn_cabs = internal::in_complex<>::fn_cabs;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN realftype<T1> cabs(const T1& x)
+KFR_INTRIN realtype<T1> cabs(const T1& x)
 {
-    return internal::in_complex<>::cabs(x);
+    return internal::cabs(x);
 }
-
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_cabs, E1> cabs(E1&& x)
+KFR_INTRIN expr_func<internal::fn_cabs, E1> cabs(E1&& x)
 {
-    return { fn_cabs(), std::forward<E1>(x) };
+    return { {}, std::forward<E1>(x) };
 }
-
-using fn_carg = internal::in_complex<>::fn_carg;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN realftype<T1> carg(const T1& x)
+KFR_INTRIN realtype<T1> carg(const T1& x)
 {
-    return internal::in_complex<>::carg(x);
+    return internal::carg(x);
 }
-
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_carg, E1> carg(E1&& x)
+KFR_INTRIN expr_func<internal::fn_carg, E1> carg(E1&& x)
 {
-    return { fn_carg(), std::forward<E1>(x) };
+    return { {}, std::forward<E1>(x) };
 }
-
-using fn_clog = internal::in_complex<>::fn_clog;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> clog(const T1& x)
+KFR_INTRIN T1 clog(const T1& x)
 {
-    return internal::in_complex<>::clog(x);
+    return internal::clog(x);
 }
-
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_clog, E1> clog(E1&& x)
+KFR_INTRIN expr_func<internal::fn_clog, E1> clog(E1&& x)
 {
-    return { fn_clog(), std::forward<E1>(x) };
+    return { {}, std::forward<E1>(x) };
 }
-
-using fn_clog2 = internal::in_complex<>::fn_clog2;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> clog2(const T1& x)
+KFR_INTRIN T1 clog2(const T1& x)
 {
-    return internal::in_complex<>::clog2(x);
+    return internal::clog2(x);
 }
-
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_clog2, E1> clog2(E1&& x)
+KFR_INTRIN expr_func<internal::fn_clog2, E1> clog2(E1&& x)
 {
-    return { fn_clog2(), std::forward<E1>(x) };
+    return { {}, std::forward<E1>(x) };
 }
-
-using fn_clog10 = internal::in_complex<>::fn_clog10;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> clog10(const T1& x)
+KFR_INTRIN T1 clog10(const T1& x)
 {
-    return internal::in_complex<>::clog10(x);
+    return internal::clog10(x);
 }
-
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_clog10, E1> clog10(E1&& x)
+KFR_INTRIN expr_func<internal::fn_clog10, E1> clog10(E1&& x)
 {
-    return { fn_clog10(), std::forward<E1>(x) };
+    return { {}, std::forward<E1>(x) };
 }
-
-using fn_cexp = internal::in_complex<>::fn_cexp;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> cexp(const T1& x)
+KFR_INTRIN T1 cexp(const T1& x)
 {
-    return internal::in_complex<>::cexp(x);
+    return internal::cexp(x);
 }
-
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_cexp, E1> cexp(E1&& x)
+KFR_INTRIN expr_func<internal::fn_cexp, E1> cexp(E1&& x)
 {
-    return { fn_cexp(), std::forward<E1>(x) };
+    return { {}, std::forward<E1>(x) };
 }
-
-using fn_cexp2 = internal::in_complex<>::fn_cexp2;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> cexp2(const T1& x)
+KFR_INTRIN T1 cexp2(const T1& x)
 {
-    return internal::in_complex<>::cexp2(x);
+    return internal::cexp2(x);
 }
-
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_cexp2, E1> cexp2(E1&& x)
+KFR_INTRIN expr_func<internal::fn_cexp2, E1> cexp2(E1&& x)
 {
-    return { fn_cexp2(), std::forward<E1>(x) };
+    return { {}, std::forward<E1>(x) };
 }
-
-using fn_cexp10 = internal::in_complex<>::fn_cexp10;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> cexp10(const T1& x)
+KFR_INTRIN T1 cexp10(const T1& x)
 {
-    return internal::in_complex<>::cexp10(x);
+    return internal::cexp10(x);
 }
-
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_cexp10, E1> cexp10(E1&& x)
+KFR_INTRIN expr_func<internal::fn_cexp10, E1> cexp10(E1&& x)
 {
-    return { fn_cexp10(), std::forward<E1>(x) };
+    return { {}, std::forward<E1>(x) };
 }
-
-using fn_polar = internal::in_complex<>::fn_polar;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> polar(const T1& x)
+KFR_INTRIN T1 polar(const T1& x)
 {
-    return internal::in_complex<>::polar(x);
+    return internal::polar(x);
 }
-
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_polar, E1> polar(E1&& x)
+KFR_INTRIN expr_func<internal::fn_polar, E1> polar(E1&& x)
 {
-    return { fn_polar(), std::forward<E1>(x) };
+    return { {}, std::forward<E1>(x) };
 }
-
-using fn_cartesian = internal::in_complex<>::fn_cartesian;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> cartesian(const T1& x)
+KFR_INTRIN T1 cartesian(const T1& x)
 {
-    return internal::in_complex<>::cartesian(x);
+    return internal::cartesian(x);
 }
-
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_cartesian, E1> cartesian(E1&& x)
+KFR_INTRIN expr_func<internal::fn_cartesian, E1> cartesian(E1&& x)
 {
-    return { fn_cartesian(), std::forward<E1>(x) };
+    return { {}, std::forward<E1>(x) };
 }
-
-using fn_csqrt = internal::in_complex<>::fn_csqrt;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> csqrt(const T1& x)
+KFR_INTRIN T1 csqrt(const T1& x)
 {
-    return internal::in_complex<>::csqrt(x);
+    return internal::csqrt(x);
 }
-
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_csqrt, E1> csqrt(E1&& x)
+KFR_INTRIN expr_func<internal::fn_csqrt, E1> csqrt(E1&& x)
 {
-    return { fn_csqrt(), std::forward<E1>(x) };
+    return { {}, std::forward<E1>(x) };
 }
-}
-}
-namespace cometa
-{
-template <typename T>
-struct compound_type_traits<kfr::complex<T>>
-{
-    constexpr static size_t width   = 2;
-    using subtype                   = T;
-    using deep_subtype              = cometa::deep_subtype<T>;
-    constexpr static bool is_scalar = false;
-    template <typename U>
-    using rebind = kfr::complex<U>;
-    template <typename U>
-    using deep_rebind = kfr::complex<cometa::deep_rebind<subtype, U>>;
-
-    static constexpr subtype at(const kfr::complex<T>& value, size_t index)
-    {
-        return index == 0 ? value.real() : value.imag();
-    }
-};
 }
 
 #pragma clang diagnostic pop

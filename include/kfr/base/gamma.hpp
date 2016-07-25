@@ -41,63 +41,51 @@ constexpr T gamma_precalc[] = {
     -0x1.62f981f01cf84p+8, 0x5.a937aa5c48d98p+0,  -0x3.c640bf82e2104p-8, 0xc.914c540f959cp-24,
 };
 
-template <cpu_t c = cpu_t::native, cpu_t cc = c>
-struct in_gamma : in_log_exp<cc>
+template <typename T, size_t N>
+KFR_SINTRIN vec<T, N> gamma(vec<T, N> z)
 {
-private:
-    using in_log_exp<cc>::exp;
-    using in_log_exp<cc>::pow;
-
-public:
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> gamma(vec<T, N> z)
-    {
-        constexpr size_t Count = arraysize(internal::gamma_precalc<T>);
-        vec<T, N> accm = gamma_precalc<T>[0];
-        KFR_LOOP_UNROLL
-        for (size_t k = 1; k < Count; k++)
-            accm += gamma_precalc<T>[k] / (z + cast<utype<T>>(k));
-        accm *= exp(-(z + Count)) * pow(z + Count, z + 0.5);
-        return accm / z;
-    }
-
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> factorial_approx(vec<T, N> x)
-    {
-        return gamma(x + T(1));
-    }
-    KFR_SPEC_FN(in_gamma, gamma)
-    KFR_SPEC_FN(in_gamma, factorial_approx)
-};
+    constexpr size_t Count = arraysize(gamma_precalc<T>);
+    vec<T, N> accm = gamma_precalc<T>[0];
+    KFR_LOOP_UNROLL
+    for (size_t k = 1; k < Count; k++)
+        accm += gamma_precalc<T>[k] / (z + cast<utype<T>>(k));
+    accm *= exp(-(z + Count)) * pow(z + Count, z + 0.5);
+    return accm / z;
 }
 
-namespace native
+template <typename T, size_t N>
+KFR_SINTRIN vec<T, N> factorial_approx(vec<T, N> x)
 {
-using fn_gamma = internal::in_gamma<>::fn_gamma;
+    return gamma(x + T(1));
+}
+KFR_HANDLE_SCALAR(gamma)
+KFR_HANDLE_SCALAR(factorial_approx)
+KFR_FN(gamma)
+KFR_FN(factorial_approx)
+}
+
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> gamma(const T1& x)
+KFR_INTRIN T1 gamma(const T1& x)
 {
-    return internal::in_gamma<>::gamma(x);
+    return internal::gamma(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_gamma, E1> gamma(E1&& x)
+KFR_INTRIN expr_func<internal::fn_gamma, E1> gamma(E1&& x)
 {
-    return { fn_gamma(), std::forward<E1>(x) };
+    return { {}, std::forward<E1>(x) };
 }
 
-using fn_factorial_approx = internal::in_gamma<>::fn_factorial_approx;
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> factorial_approx(const T1& x)
+KFR_INTRIN T1 factorial_approx(const T1& x)
 {
-    return internal::in_gamma<>::factorial_approx(x);
+    return internal::factorial_approx(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn_factorial_approx, E1> factorial_approx(E1&& x)
+KFR_INTRIN expr_func<internal::fn_factorial_approx, E1> factorial_approx(E1&& x)
 {
-    return { fn_factorial_approx(), std::forward<E1>(x) };
-}
+    return { {}, std::forward<E1>(x) };
 }
 }
 

@@ -215,8 +215,8 @@ KFR_NOINLINE cvec<T, 1> calculate_twiddle(size_t n, size_t size)
     else
     {
         double kth  = c_pi<double, 2> * (n / static_cast<double>(size));
-        double tcos = +kfr::native::cos(kth);
-        double tsin = -kfr::native::sin(kth);
+        double tcos = +kfr::cos(kth);
+        double tsin = -kfr::sin(kth);
         return make_vector(static_cast<T>(tcos), static_cast<T>(tsin));
     }
 }

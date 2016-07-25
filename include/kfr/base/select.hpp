@@ -29,174 +29,71 @@ namespace kfr
 namespace internal
 {
 
-template <cpu_t c>
-struct in_select_impl : in_select_impl<older(c)>
-{
-    struct fn_select : fn_disabled
-    {
-    };
-};
+#if defined CID_ARCH_SSE41
 
-template <>
-struct in_select_impl<cpu_t::common>
-{
-    constexpr static cpu_t cur = cpu_t::common;
+KFR_SINTRIN u8sse select(mu8sse m, u8sse x, u8sse y) { return _mm_blendv_epi8(*y, *x, *m); }
+KFR_SINTRIN u16sse select(mu16sse m, u16sse x, u16sse y) { return _mm_blendv_epi8(*y, *x, *m); }
+KFR_SINTRIN u32sse select(mu32sse m, u32sse x, u32sse y) { return _mm_blendv_epi8(*y, *x, *m); }
+KFR_SINTRIN u64sse select(mu64sse m, u64sse x, u64sse y) { return _mm_blendv_epi8(*y, *x, *m); }
+KFR_SINTRIN i8sse select(mi8sse m, i8sse x, i8sse y) { return _mm_blendv_epi8(*y, *x, *m); }
+KFR_SINTRIN i16sse select(mi16sse m, i16sse x, i16sse y) { return _mm_blendv_epi8(*y, *x, *m); }
+KFR_SINTRIN i32sse select(mi32sse m, i32sse x, i32sse y) { return _mm_blendv_epi8(*y, *x, *m); }
+KFR_SINTRIN i64sse select(mi64sse m, i64sse x, i64sse y) { return _mm_blendv_epi8(*y, *x, *m); }
+KFR_SINTRIN f32sse select(mf32sse m, f32sse x, f32sse y) { return _mm_blendv_ps(*y, *x, *m); }
+KFR_SINTRIN f64sse select(mf64sse m, f64sse x, f64sse y) { return _mm_blendv_pd(*y, *x, *m); }
 
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> select(vec<T, N> m, vec<T, N> x, vec<T, N> y)
-    {
-        return y ^ ((x ^ y) & m);
-    }
-    KFR_SPEC_FN(in_select_impl, select)
-};
-
-#ifdef CID_ARCH_X86
-
-template <>
-struct in_select_impl<cpu_t::sse41> : in_select_impl<cpu_t::common>
-{
-    constexpr static cpu_t cpu = cpu_t::sse41;
-
-    KFR_CPU_INTRIN(sse41) u8sse select(u8sse m, u8sse x, u8sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-    KFR_CPU_INTRIN(sse41) u16sse select(u16sse m, u16sse x, u16sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-    KFR_CPU_INTRIN(sse41) u32sse select(u32sse m, u32sse x, u32sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-    KFR_CPU_INTRIN(sse41) u64sse select(u64sse m, u64sse x, u64sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-    KFR_CPU_INTRIN(sse41) i8sse select(i8sse m, i8sse x, i8sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-    KFR_CPU_INTRIN(sse41) i16sse select(i16sse m, i16sse x, i16sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-    KFR_CPU_INTRIN(sse41) i32sse select(i32sse m, i32sse x, i32sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-    KFR_CPU_INTRIN(sse41) i64sse select(i64sse m, i64sse x, i64sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-    KFR_CPU_INTRIN(sse41) f32sse select(f32sse m, f32sse x, f32sse y) { return _mm_blendv_ps(*y, *x, *m); }
-    KFR_CPU_INTRIN(sse41) f64sse select(f64sse m, f64sse x, f64sse y) { return _mm_blendv_pd(*y, *x, *m); }
-
-    KFR_HANDLE_ALL(select)
-    KFR_SPEC_FN(in_select_impl, select)
-};
-
-template <>
-struct in_select_impl<cpu_t::avx1> : in_select_impl<cpu_t::sse41>
-{
-    constexpr static cpu_t cpu = cpu_t::avx1;
-    using in_select_impl<cpu_t::sse41>::select;
-
-    KFR_CPU_INTRIN(avx) f64avx select(f64avx m, f64avx x, f64avx y) { return _mm256_blendv_pd(*y, *x, *m); }
-    KFR_CPU_INTRIN(avx) f32avx select(f32avx m, f32avx x, f32avx y) { return _mm256_blendv_ps(*y, *x, *m); }
-
-    KFR_HANDLE_ALL(select)
-    KFR_SPEC_FN(in_select_impl, select)
-};
-
-template <>
-struct in_select_impl<cpu_t::avx2> : in_select_impl<cpu_t::avx1>
-{
-    constexpr static cpu_t cpu = cpu_t::avx2;
-    using in_select_impl<cpu_t::avx1>::select;
-
-    KFR_CPU_INTRIN(avx2) u8avx select(u8avx m, u8avx x, u8avx y) { return _mm256_blendv_epi8(*y, *x, *m); }
-    KFR_CPU_INTRIN(avx2) u16avx select(u16avx m, u16avx x, u16avx y)
-    {
-        return _mm256_blendv_epi8(*y, *x, *m);
-    }
-    KFR_CPU_INTRIN(avx2) u32avx select(u32avx m, u32avx x, u32avx y)
-    {
-        return _mm256_blendv_epi8(*y, *x, *m);
-    }
-    KFR_CPU_INTRIN(avx2) u64avx select(u64avx m, u64avx x, u64avx y)
-    {
-        return _mm256_blendv_epi8(*y, *x, *m);
-    }
-    KFR_CPU_INTRIN(avx2) i8avx select(i8avx m, i8avx x, i8avx y) { return _mm256_blendv_epi8(*y, *x, *m); }
-    KFR_CPU_INTRIN(avx2) i16avx select(i16avx m, i16avx x, i16avx y)
-    {
-        return _mm256_blendv_epi8(*y, *x, *m);
-    }
-    KFR_CPU_INTRIN(avx2) i32avx select(i32avx m, i32avx x, i32avx y)
-    {
-        return _mm256_blendv_epi8(*y, *x, *m);
-    }
-    KFR_CPU_INTRIN(avx2) i64avx select(i64avx m, i64avx x, i64avx y)
-    {
-        return _mm256_blendv_epi8(*y, *x, *m);
-    }
-
-    KFR_HANDLE_ALL(select)
-    KFR_SPEC_FN(in_select_impl, select)
-};
-
+#if defined CID_ARCH_AVX
+KFR_SINTRIN f64avx select(mf64avx m, f64avx x, f64avx y) { return _mm256_blendv_pd(*y, *x, *m); }
+KFR_SINTRIN f32avx select(mf32avx m, f32avx x, f32avx y) { return _mm256_blendv_ps(*y, *x, *m); }
 #endif
 
-template <cpu_t c = cpu_t::native>
-struct in_select : in_select_impl<c>
+#if defined CID_ARCH_AVX2
+KFR_SINTRIN u8avx select(mu8avx m, u8avx x, u8avx y) { return _mm256_blendv_epi8(*y, *x, *m); }
+KFR_SINTRIN u16avx select(mu16avx m, u16avx x, u16avx y) { return _mm256_blendv_epi8(*y, *x, *m); }
+KFR_SINTRIN u32avx select(mu32avx m, u32avx x, u32avx y) { return _mm256_blendv_epi8(*y, *x, *m); }
+KFR_SINTRIN u64avx select(mu64avx m, u64avx x, u64avx y) { return _mm256_blendv_epi8(*y, *x, *m); }
+KFR_SINTRIN i8avx select(mi8avx m, i8avx x, i8avx y) { return _mm256_blendv_epi8(*y, *x, *m); }
+KFR_SINTRIN i16avx select(mi16avx m, i16avx x, i16avx y) { return _mm256_blendv_epi8(*y, *x, *m); }
+KFR_SINTRIN i32avx select(mi32avx m, i32avx x, i32avx y) { return _mm256_blendv_epi8(*y, *x, *m); }
+KFR_SINTRIN i64avx select(mi64avx m, i64avx x, i64avx y) { return _mm256_blendv_epi8(*y, *x, *m); }
+#endif
+
+template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T, cpu_t::native>)>
+KFR_SINTRIN vec<T, N> select(mask<T, N> a, vec<T, N> b, vec<T, N> c)
 {
-    using in_select_impl<c>::select;
-
-    template <typename T, size_t N, typename M>
-    KFR_SINTRIN vec<T, N> select(mask<M, N> m, vec<T, N> x, vec<T, N> y)
-    {
-        static_assert(sizeof(M) == sizeof(T), "select: Incompatible types");
-        return in_select_impl<c>::select(bitcast<T>(m), x, y);
-    }
-    template <typename T, size_t N, typename M>
-    KFR_SINTRIN vec<T, N> select(mask<M, N> m, mask<T, N> x, mask<T, N> y)
-    {
-        static_assert(sizeof(M) == sizeof(T), "select: Incompatible types");
-        return in_select_impl<c>::select(bitcast<T>(m), ref_cast<vec<T, N>>(x), ref_cast<vec<T, N>>(y));
-    }
-
-    template <typename T, size_t N, typename M>
-    KFR_SINTRIN vec<T, N> select(mask<M, N> m, T x, T y)
-    {
-        static_assert(sizeof(M) == sizeof(T), "select: Incompatible types");
-        return in_select_impl<c>::select(bitcast<T>(m), broadcast<N>(x), broadcast<N>(y));
-    }
-
-    template <typename T, size_t N, typename M>
-    KFR_SINTRIN vec<T, N> select(mask<M, N> m, vec<T, N> x, T y)
-    {
-        static_assert(sizeof(M) == sizeof(T), "select: Incompatible types");
-        return in_select_impl<c>::select(bitcast<T>(m), x, broadcast<N>(y));
-    }
-
-    template <typename T, size_t N, typename M>
-    KFR_SINTRIN vec<T, N> select(mask<M, N> m, T x, vec<T, N> y)
-    {
-        static_assert(sizeof(M) == sizeof(T), "select: Incompatible types");
-        return in_select_impl<c>::select(bitcast<T>(m), broadcast<N>(x), y);
-    }
-    template <typename T, size_t N, typename M>
-    KFR_SINTRIN vec<T, N> select(mask<M, N> m, mask<T, N> x, T y)
-    {
-        static_assert(sizeof(M) == sizeof(T), "select: Incompatible types");
-        return in_select_impl<c>::select(bitcast<T>(m), ref_cast<vec<T, N>>(x), broadcast<N>(y));
-    }
-
-    template <typename T, size_t N, typename M>
-    KFR_SINTRIN vec<T, N> select(mask<M, N> m, T x, mask<T, N> y)
-    {
-        static_assert(sizeof(M) == sizeof(T), "select: Incompatible types");
-        return in_select_impl<c>::select(m, broadcast<N>(x), ref_cast<vec<T, N>>(y));
-    }
-    KFR_SPEC_FN(in_select, select)
-
-    template <typename T, size_t N>
-    KFR_SINTRIN vec<T, N> sign(vec<T, N> x)
-    {
-        return select(x > T(), T(1), select(x < T(), T(-1), T(0)));
-    }
-};
+    return slice<0, N>(select(expand_simd(a).asmask(), expand_simd(b), expand_simd(c)));
+}
+template <typename T, size_t N, KFR_ENABLE_IF(N >= vector_width<T, cpu_t::native>), typename = void>
+KFR_SINTRIN vec<T, N> select(mask<T, N> a, vec<T, N> b, vec<T, N> c)
+{
+    return concat(select(low(a).asmask(), low(b), low(c)), select(high(a).asmask(), high(b), high(c)));
 }
 
-namespace native
+#else
+
+// fallback
+template <typename T, size_t N>
+KFR_SINTRIN vec<T, N> select(mask<T, N> m, vec<T, N> x, vec<T, N> y)
 {
-using fn_select = internal::in_select<>::fn_select;
-template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>::value)>
-KFR_INLINE ftype<common_type<T2, T3>> select(const T1& arg1, const T2& arg2, const T3& arg3)
-{
-    return internal::in_select<>::select(arg1, arg2, arg3);
+    return y ^ ((x ^ y) & m);
 }
+#endif
+
+KFR_I_FN(select)
+}
+
+template <typename T1, size_t N, typename T2, typename T3,
+          KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>::value),
+          typename Tout = subtype<common_type<T2, T3>>>
+KFR_INTRIN vec<Tout, N> select(const mask<T1, N>& m, const T2& x, const T3& y)
+{
+    static_assert(sizeof(T1) == sizeof(Tout), "select: incompatible types");
+    return internal::select(bitcast<Tout>(m).asmask(), static_cast<vec<Tout, N>>(x), static_cast<vec<Tout, N>>(y));
+}
+
 template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2, E3>::value)>
-KFR_INLINE expr_func<fn_select, E1, E2, E3> select(E1&& arg1, E2&& arg2, E3&& arg3)
+KFR_INTRIN expr_func<internal::fn_select, E1, E2, E3> select(E1&& m, E2&& x, E3&& y)
 {
-    return { fn_select(), std::forward<E1>(arg1), std::forward<E2>(arg2), std::forward<E3>(arg3) };
-}
+    return { {}, std::forward<E1>(m), std::forward<E2>(x), std::forward<E3>(y) };
 }
 }

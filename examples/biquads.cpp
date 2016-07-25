@@ -25,13 +25,11 @@
 #include <kfr/io/python_plot.hpp>
 
 using namespace kfr;
-using namespace kfr::native;
 
 int main(int argc, char** argv)
 {
     println(library_version());
 
-    using namespace native;
     const std::string options = "phaseresp=True";
 
     univector<double, 128> output;

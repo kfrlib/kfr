@@ -20,6 +20,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/abs.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/asin_acos.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/atan.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/clamp.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/complex.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/constants.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/digitreverse.hpp
@@ -31,6 +32,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/logical.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/memory.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/min_max.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/modzerobessel.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/operators.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/read_write.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/round.hpp
@@ -71,7 +73,6 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/expressions/basic.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/expressions/conversion.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/expressions/generators.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/expressions/operators.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/expressions/pointer.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/expressions/reduce.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/audiofile.hpp
