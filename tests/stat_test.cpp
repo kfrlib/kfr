@@ -8,6 +8,8 @@
 #include <kfr/io/tostring.hpp>
 #include <kfr/version.hpp>
 
+#include <kfr/math.hpp>
+
 #include <kfr/expressions/reduce.hpp>
 
 #include <tuple>
@@ -46,6 +48,13 @@ TEST(test_stat)
         CHECK(maxof(a) == 5);
         CHECK(sumsqr(a) == 55);
         CHECK(product(a) == 120);
+    }
+    {
+        univector<complex<float>, 5> a({ 1, 2, 3, 4, 5 });
+        CHECK(sum(a) == c32{ 15 });
+        CHECK(mean(a) == c32{ 3 });
+        CHECK(sumsqr(a) == c32{ 55 });
+        CHECK(product(a) == c32{ 120 });
     }
 }
 

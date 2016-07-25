@@ -52,3 +52,4 @@ add_test(NAME stat_test
         COMMAND ${PROJECT_BINARY_DIR}/tests/stat_test)
 add_test(NAME dft_test
         COMMAND ${PROJECT_BINARY_DIR}/tests/dft_test)
+        
