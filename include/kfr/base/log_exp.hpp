@@ -23,10 +23,10 @@
 #pragma once
 
 #include "abs.hpp"
+#include "clamp.hpp"
 #include "constants.hpp"
 #include "function.hpp"
 #include "min_max.hpp"
-#include "clamp.hpp"
 #include "operators.hpp"
 #include "round.hpp"
 #include "select.hpp"
@@ -508,8 +508,4 @@ KFR_INTRIN expr_func<internal::fn_cbrt, E1> cbrt(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
-
-
-
-
 }

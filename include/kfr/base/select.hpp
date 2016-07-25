@@ -82,13 +82,13 @@ KFR_SINTRIN vec<T, N> select(mask<T, N> m, vec<T, N> x, vec<T, N> y)
 KFR_I_FN(select)
 }
 
-template <typename T1, size_t N, typename T2, typename T3,
-          KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>::value),
+template <typename T1, size_t N, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>::value),
           typename Tout = subtype<common_type<T2, T3>>>
 KFR_INTRIN vec<Tout, N> select(const mask<T1, N>& m, const T2& x, const T3& y)
 {
     static_assert(sizeof(T1) == sizeof(Tout), "select: incompatible types");
-    return internal::select(bitcast<Tout>(m).asmask(), static_cast<vec<Tout, N>>(x), static_cast<vec<Tout, N>>(y));
+    return internal::select(bitcast<Tout>(m).asmask(), static_cast<vec<Tout, N>>(x),
+                            static_cast<vec<Tout, N>>(y));
 }
 
 template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2, E3>::value)>

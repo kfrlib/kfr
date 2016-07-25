@@ -109,7 +109,7 @@ KFR_SINTRIN vec<f32, N> atan2(vec<f32, N> y, vec<f32, N> x)
     r                       = mulsign(r, x);
     r = select(isinf(x) || x == 0.0f, pi_over_2 - select(x.asmask(), mulsign(pi_over_2, x), 0.0f), r);
     r = select(isinf(y), pi_over_2 - select(x.asmask(), mulsign(pi_over_4, x), 0.0f), r);
-    r = select(y == 0.0f, fbitcast(ibitcast(x <  0) & ibitcast(pi)), r);
+    r = select(y == 0.0f, fbitcast(ibitcast(x < 0) & ibitcast(pi)), r);
     r = fbitcast(ibitcast(isnan(x) || isnan(y)) | ibitcast(mulsign(r, y)));
     return r;
 }

@@ -44,4 +44,3 @@
 #include "base/sin_cos.hpp"
 #include "base/sqrt.hpp"
 #include "base/tan.hpp"
-

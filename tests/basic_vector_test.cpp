@@ -90,13 +90,11 @@ TEST(test)
 
     CHECK(blend(numbers1, numbers2, elements<0, 1, 1, 0, 1, 1, 0, 1>) ==
           vec<int, 8>{ 0, 101, 102, 3, 104, 105, 6, 107 });
-    CHECK(blend(numbers1, numbers2, elements<0, 1, 1>) ==
-          vec<int, 8>{ 0, 101, 102, 3, 104, 105, 6, 107 });
+    CHECK(blend(numbers1, numbers2, elements<0, 1, 1>) == vec<int, 8>{ 0, 101, 102, 3, 104, 105, 6, 107 });
 
     // * Transpose matrix:
     const auto sixteen = enumerate<float, 16>();
-    CHECK(transpose<4>(sixteen) ==
-          vec<float, 16>{ 0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15 });
+    CHECK(transpose<4>(sixteen) == vec<float, 16>{ 0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15 });
 }
 
 int main(int /*argc*/, char** /*argv*/)

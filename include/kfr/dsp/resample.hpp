@@ -201,13 +201,11 @@ struct resampler
 }
 
 template <typename T, size_t quality>
-inline internal::resampler<T, quality> resampler(csize_t<quality>,
-                                                                  size_t interpolation_factor,
-                                                                  size_t decimation_factor, T scale = T(1),
-                                                                  T cutoff = 0.49)
+inline internal::resampler<T, quality> resampler(csize_t<quality>, size_t interpolation_factor,
+                                                 size_t decimation_factor, T scale = T(1), T cutoff = 0.49)
 {
     using itype = typename internal::resampler<T, quality>::itype;
-    return internal::resampler<T, quality>(itype(interpolation_factor),
-                                                            itype(decimation_factor), scale, cutoff);
+    return internal::resampler<T, quality>(itype(interpolation_factor), itype(decimation_factor), scale,
+                                           cutoff);
 }
 }

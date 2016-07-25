@@ -661,7 +661,6 @@ KFR_INLINE vec<T, N> negodd(const vec<T, N>& x)
     return x ^ broadcast<N>(T(), -T());
 }
 
-
 #define KFR_EXPR_UNARY(fn, op)                                                                               \
     template <typename A1, KFR_ENABLE_IF(is_input_expression<A1>::value)>                                    \
     KFR_INLINE auto operator op(A1&& a1)->decltype(bind_expression(fn(), std::forward<A1>(a1)))              \
