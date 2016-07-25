@@ -323,7 +323,8 @@ constexpr inline ptrdiff_t distance(const void* x, const void* y)
 
 enum class cpu_t : int
 {
-    common  = 0,
+    common = 0,
+#ifdef CID_ARCH_X86
     sse2    = 1,
     sse3    = 2,
     ssse3   = 3,
@@ -332,9 +333,15 @@ enum class cpu_t : int
     avx1    = 6,
     avx2    = 7,
     avx     = static_cast<int>(avx1),
-    native  = static_cast<int>(KFR_ARCH_NAME),
     lowest  = static_cast<int>(sse2),
     highest = static_cast<int>(avx2),
+#endif
+#ifdef CID_ARCH_ARM
+    neon    = 1,
+    lowest  = static_cast<int>(neon),
+    highest = static_cast<int>(neon),
+#endif
+    native  = static_cast<int>(KFR_ARCH_NAME),
     runtime = -1,
 };
 
@@ -349,8 +356,12 @@ namespace internal
 constexpr cpu_t older(cpu_t x) { return static_cast<cpu_t>(static_cast<int>(x) - 1); }
 constexpr cpu_t newer(cpu_t x) { return static_cast<cpu_t>(static_cast<int>(x) + 1); }
 
+#ifdef CID_ARCH_X86
 constexpr auto cpu_list =
     cvals<cpu_t, cpu_t::avx2, cpu_t::avx1, cpu_t::sse41, cpu_t::ssse3, cpu_t::sse3, cpu_t::sse2>;
+#else
+constexpr auto cpu_list = cvals<cpu_t, cpu_t::neon>;
+#endif
 }
 
 template <cpu_t cpu>
@@ -359,8 +370,6 @@ template <cpu_t cpu>
 constexpr auto cpuval = cpuval_t<cpu>{};
 
 constexpr auto cpu_all = cfilter(internal::cpu_list, internal::cpu_list >= cpuval<cpu_t::native>);
-constexpr auto cpu_shuffle =
-    cfilter(cpu_all, cpu_all != cpuval<cpu_t::sse3> && cpu_all != cpuval<cpu_t::ssse3>);
 
 template <typename T>
 constexpr datatype typeclass = std::is_floating_point<typename compound_type_traits<T>::subtype>::value
@@ -655,10 +664,20 @@ constexpr size_t common_int_vector_size   = 16;
 
 template <cpu_t c>
 constexpr size_t native_float_vector_size =
+#ifdef CID_ARCH_X86
     c >= cpu_t::avx1 ? 32 : c >= cpu_t::sse2 ? 16 : common_float_vector_size;
+#endif
+#ifdef CID_ARCH_ARM
+c == cpu_t::neon ? 16 : common_float_vector_size;
+#endif
 template <cpu_t c>
 constexpr size_t native_int_vector_size =
+#ifdef CID_ARCH_X86
     c >= cpu_t::avx2 ? 32 : c >= cpu_t::sse2 ? 16 : common_int_vector_size;
+#endif
+#ifdef CID_ARCH_ARM
+c == cpu_t::neon ? 16 : common_int_vector_size;
+#endif
 
 struct input_expression
 {
@@ -709,7 +728,12 @@ template <cpu_t c>
 constexpr size_t native_vector_alignment = std::max(native_float_vector_size<c>, native_int_vector_size<c>);
 
 template <cpu_t c>
-constexpr bool fast_unaligned = c >= cpu_t::avx1;
+constexpr bool fast_unaligned =
+#ifdef CID_ARCH_X86
+    c >= cpu_t::avx1;
+#else
+    false;
+#endif
 
 template <cpu_t c>
 constexpr size_t native_vector_alignment_mask = native_vector_alignment<c> - 1;

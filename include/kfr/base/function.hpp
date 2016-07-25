@@ -42,7 +42,7 @@ namespace kfr
 
 namespace internal
 {
-
+#ifdef CID_ARCH_X86
 using f32sse = vec<f32, 4>;
 using f64sse = vec<f64, 2>;
 using i8sse  = vec<i8, vector_width<i8, cpu_t::sse2>>;
@@ -86,11 +86,39 @@ using mu8avx  = mask<u8, vector_width<u8, cpu_t::avx2>>;
 using mu16avx = mask<u16, vector_width<u16, cpu_t::avx2>>;
 using mu32avx = mask<u32, vector_width<u32, cpu_t::avx2>>;
 using mu64avx = mask<u64, vector_width<u64, cpu_t::avx2>>;
+#else
+using f32neon = vec<f32, 4>;
+using f64neon = vec<f64, 2>;
+using  i8neon  = vec<i8, 16>;
+using i16neon = vec<i16, 8>;
+using i32neon = vec<i32, 4>;
+using i64neon = vec<i64, 2>;
+using  u8neon  = vec<u8, 16>;
+using u16neon = vec<u16, 8>;
+using u32neon = vec<u32, 4>;
+using u64neon = vec<u64, 2>;
+
+using mf32neon = mask<f32, 4>;
+using mf64neon = mask<f64, 2>;
+using mi8neon  = mask<i8, 16>;
+using mi16neon = mask<i16, 8>;
+using mi32neon = mask<i32, 4>;
+using mi64neon = mask<i64, 2>;
+using mu8neon  = mask<u8, 16>;
+using mu16neon = mask<u16, 8>;
+using mu32neon = mask<u32, 4>;
+using mu64neon = mask<u64, 2>;
+#endif
 
 template <cpu_t c, typename T>
 constexpr inline size_t next_simd_width(size_t n)
 {
+#ifdef CID_ARCH_X86
     return n > vector_width<T, cpu_t::sse2> ? vector_width<T, c> : vector_width<T, cpu_t::sse2>;
+#endif
+#ifdef CID_ARCH_ARM
+    return vector_width<T, cpu_t::neon>;
+#endif
 }
 
 template <typename T, size_t N, size_t Nout = next_simd_width<cpu_t::native, T>(N)>

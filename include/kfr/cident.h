@@ -124,6 +124,17 @@
 #define CID_ARCH_X32 1
 #endif
 
+#ifdef __ARM_NEON__
+
+#if __ARM_ARCH >= 8 && defined(__aarch64__)
+#define CID_ARCH_NEON64 1
+#define CID_ARCH_NAME neon64
+#else
+#define CID_ARCH_NEON 1
+#define CID_ARCH_NAME neon
+#endif
+#endif
+
 #endif
 
 #ifndef CID_ARCH_NAME
