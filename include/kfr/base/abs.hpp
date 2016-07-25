@@ -72,7 +72,7 @@ KFR_SINTRIN vec<T, N> abs(vec<T, N> a)
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
 KFR_SINTRIN vec<T, N> abs(vec<T, N> x)
 {
-    return select(value >= T(), value, -value);
+    return select(x >= T(), x, -x);
 }
 #endif
 KFR_HANDLE_SCALAR_1(abs)
