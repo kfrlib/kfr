@@ -47,6 +47,16 @@
         }                                                                                                    \
     };
 
+#define KFR_I_FN(fn)                                                                                         \
+    struct fn_##fn                                                                                           \
+    {                                                                                                        \
+        template <typename... Args>                                                                          \
+        CID_INLINE_MEMBER decltype(internal::fn(std::declval<Args>()...)) operator()(Args&&... args) const   \
+        {                                                                                                    \
+            return internal::fn(std::forward<Args>(args)...);                                                \
+        }                                                                                                    \
+    };
+
 #define KFR_FNR(fn, in, out)                                                                                 \
     struct fn_##fn                                                                                           \
     {                                                                                                        \
