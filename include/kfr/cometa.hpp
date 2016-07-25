@@ -35,7 +35,7 @@ constexpr inline bool args_and() { return true; }
 template <typename... Ts>
 constexpr inline bool args_and(bool x, Ts... rest)
 {
-    return x && args_or(rest...);
+    return x && args_and(rest...);
 }
 
 template <typename T, typename Enable = void>

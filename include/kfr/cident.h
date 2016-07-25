@@ -2,7 +2,7 @@
 
 #if defined(_M_IX86) || defined(__i386__) || defined(_M_X64) || defined(__x86_64__)
 #define CID_ARCH_X86 1
-#elif defined (__arm__) || defined(__arm64__) || defined(_M_ARM)
+#elif defined(__arm__) || defined(__arm64__) || defined(_M_ARM)
 #define CID_ARCH_ARM 1
 #endif
 
