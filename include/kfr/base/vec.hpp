@@ -717,10 +717,10 @@ struct mask : public vec<T, N>
     {
     }
 
-    template <typename M, typename = u8[sizeof(T) == sizeof(M)]>
-    constexpr KFR_INLINE mask(mask<M, N> value) : base(reinterpret_cast<const vec<T, N>&>(value))
-    {
-    }
+//    template <typename M, typename = u8[sizeof(T) == sizeof(M)]>
+//    constexpr KFR_INLINE mask(mask<M, N> value) : base(reinterpret_cast<const vec<T, N>&>(value))
+//    {
+//    }
     constexpr KFR_INLINE mask operator~() const { return bitcast<T>(~ubitcast(this->v)); }
     constexpr KFR_INLINE mask operator&(vec<T, N> x) const
     {
@@ -743,6 +743,12 @@ struct mask : public vec<T, N>
 
     KFR_INLINE vec<T, N>& asvec() { return ref_cast<mask>(*this); }
     KFR_INLINE const vec<T, N>& asvec() const { return ref_cast<mask>(*this); }
+
+    template <typename U, KFR_ENABLE_IF(sizeof(T) == sizeof(U))>
+    KFR_INLINE operator mask<U, N>() const
+    {
+        return bitcast<U>(*this);
+    }
 
     KFR_INLINE bool operator[](size_t index) const { return ibitcast(this->v[index]) < 0; }
 };
@@ -1041,49 +1047,6 @@ using double16 = f64x16;
 
 namespace internal
 {
-using f32sse = vec<f32, vector_width<f32, cpu_t::sse2>>;
-using f64sse = vec<f64, vector_width<f64, cpu_t::sse2>>;
-using i8sse  = vec<i8, vector_width<i8, cpu_t::sse2>>;
-using i16sse = vec<i16, vector_width<i16, cpu_t::sse2>>;
-using i32sse = vec<i32, vector_width<i32, cpu_t::sse2>>;
-using i64sse = vec<i64, vector_width<i64, cpu_t::sse2>>;
-using u8sse  = vec<u8, vector_width<u8, cpu_t::sse2>>;
-using u16sse = vec<u16, vector_width<u16, cpu_t::sse2>>;
-using u32sse = vec<u32, vector_width<u32, cpu_t::sse2>>;
-using u64sse = vec<u64, vector_width<u64, cpu_t::sse2>>;
-
-using mf32sse = mask<f32, vector_width<f32, cpu_t::sse2>>;
-using mf64sse = mask<f64, vector_width<f64, cpu_t::sse2>>;
-using mi8sse  = mask<i8, vector_width<i8, cpu_t::sse2>>;
-using mi16sse = mask<i16, vector_width<i16, cpu_t::sse2>>;
-using mi32sse = mask<i32, vector_width<i32, cpu_t::sse2>>;
-using mi64sse = mask<i64, vector_width<i64, cpu_t::sse2>>;
-using mu8sse  = mask<u8, vector_width<u8, cpu_t::sse2>>;
-using mu16sse = mask<u16, vector_width<u16, cpu_t::sse2>>;
-using mu32sse = mask<u32, vector_width<u32, cpu_t::sse2>>;
-using mu64sse = mask<u64, vector_width<u64, cpu_t::sse2>>;
-
-using f32avx = vec<f32, vector_width<f32, cpu_t::avx1>>;
-using f64avx = vec<f64, vector_width<f64, cpu_t::avx1>>;
-using i8avx  = vec<i8, vector_width<i8, cpu_t::avx2>>;
-using i16avx = vec<i16, vector_width<i16, cpu_t::avx2>>;
-using i32avx = vec<i32, vector_width<i32, cpu_t::avx2>>;
-using i64avx = vec<i64, vector_width<i64, cpu_t::avx2>>;
-using u8avx  = vec<u8, vector_width<u8, cpu_t::avx2>>;
-using u16avx = vec<u16, vector_width<u16, cpu_t::avx2>>;
-using u32avx = vec<u32, vector_width<u32, cpu_t::avx2>>;
-using u64avx = vec<u64, vector_width<u64, cpu_t::avx2>>;
-
-using mf32avx = mask<f32, vector_width<f32, cpu_t::avx1>>;
-using mf64avx = mask<f64, vector_width<f64, cpu_t::avx1>>;
-using mi8avx  = mask<i8, vector_width<i8, cpu_t::avx2>>;
-using mi16avx = mask<i16, vector_width<i16, cpu_t::avx2>>;
-using mi32avx = mask<i32, vector_width<i32, cpu_t::avx2>>;
-using mi64avx = mask<i64, vector_width<i64, cpu_t::avx2>>;
-using mu8avx  = mask<u8, vector_width<u8, cpu_t::avx2>>;
-using mu16avx = mask<u16, vector_width<u16, cpu_t::avx2>>;
-using mu32avx = mask<u32, vector_width<u32, cpu_t::avx2>>;
-using mu64avx = mask<u64, vector_width<u64, cpu_t::avx2>>;
 
 template <typename T, size_t N>
 struct vec_type
