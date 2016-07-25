@@ -122,7 +122,7 @@ cstring<N1 - Nfrom + Nto> str_replace(const cstring<N1>& str, const cstring<Nfro
 
 namespace details
 {
-template <typename T, char t = -1, int width = -1, int prec = -1>
+template <typename T, char t = static_cast<char>(-1), int width = -1, int prec = -1>
 struct fmt_t
 {
     const T& value;
@@ -199,7 +199,7 @@ CID_INLINE constexpr auto value_fmt(ctype_t<ctype_t<T>>)
 }
 
 template <typename T, int width, int prec>
-CID_INLINE constexpr auto value_fmt(ctype_t<fmt_t<T, -1, width, prec>> fmt)
+CID_INLINE constexpr auto value_fmt(ctype_t<fmt_t<T, static_cast<char>(-1), width, prec>> fmt)
 {
     return concat_cstring(value_fmt_arg(fmt), value_fmt(ctype<repr_type<T>>));
 }
@@ -305,7 +305,7 @@ CID_INLINE details::fmt_t<T, t, width, prec> fmt(const T& value)
 }
 
 template <int width = -1, int prec = -1, typename T>
-CID_INLINE details::fmt_t<T, -1, width, prec> fmtwidth(const T& value)
+CID_INLINE details::fmt_t<T, static_cast<char>(-1), width, prec> fmtwidth(const T& value)
 {
     return { value };
 }

@@ -177,7 +177,7 @@ struct cmp_eq
     template <typename L, typename R>
     bool operator()(L&& left, R&& right)
     {
-        equality_comparer<std::decay_t<L>, std::decay_t<R>> eq;
+        equality_comparer<decay<L>, decay<R>> eq;
         return eq(left, right);
     }
 };
