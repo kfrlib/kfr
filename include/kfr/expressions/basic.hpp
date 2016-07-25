@@ -263,8 +263,6 @@ struct expression_sequence : expression<E...>
 {
 public:
     using base = expression<E...>;
-    template <cpu_t newcpu>
-    using retarget_this = expression_sequence<retarget<E, newcpu>...>;
 
     template <typename... Expr_>
     KFR_INLINE expression_sequence(const size_t (&segments)[base::size], Expr_&&... expr) noexcept

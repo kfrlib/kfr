@@ -130,10 +130,6 @@ public:
     {
         using value_type = T;
 
-        template <cpu_t newcpu>
-        using retarget_this =
-            typename in_biquad<newcpu>::template expression_biquads<filters, T, retarget<E1, newcpu>>;
-
         expression_biquads(const biquad_block<T, filters>& bq, E1&& e1)
             : expression<E1>(std::forward<E1>(e1)), bq(bq)
         {

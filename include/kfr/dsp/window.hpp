@@ -118,8 +118,6 @@ struct expression_rectangular : input_expression
 {
     using value_type = T;
 
-    template <cpu_t newcpu>
-    using retarget_this = expression_rectangular<T>;
     expression_rectangular(size_t size, T = T(), window_symmetry = window_symmetry::symmetric) : m_size(size)
     {
     }
@@ -141,8 +139,6 @@ struct expression_triangular : input_expression
 {
     using value_type = T;
 
-    template <cpu_t newcpu>
-    using retarget_this = expression_triangular<T>;
     expression_triangular(size_t size, T = T(), window_symmetry symmetry = window_symmetry::symmetric)
         : linspace(size, symmetry), m_size(size)
     {
@@ -165,8 +161,6 @@ struct expression_bartlett : input_expression
 {
     using value_type = T;
 
-    template <cpu_t newcpu>
-    using retarget_this = expression_bartlett<T>;
     expression_bartlett(size_t size, T = T(), window_symmetry symmetry = window_symmetry::symmetric)
         : linspace(size, symmetry), m_size(size)
     {
@@ -189,8 +183,6 @@ struct expression_cosine : input_expression
 {
     using value_type = T;
 
-    template <cpu_t newcpu>
-    using retarget_this = expression_cosine<T>;
     expression_cosine(size_t size, T = T(), window_symmetry symmetry = window_symmetry::symmetric)
         : linspace(size, symmetry), m_size(size)
     {
@@ -213,8 +205,6 @@ struct expression_hann : input_expression
 {
     using value_type = T;
 
-    template <cpu_t newcpu>
-    using retarget_this = expression_hann<T>;
     expression_hann(size_t size, T = T(), window_symmetry symmetry = window_symmetry::symmetric)
         : linspace(size, symmetry), m_size(size)
     {
@@ -236,9 +226,6 @@ template <typename T>
 struct expression_bartlett_hann : input_expression
 {
     using value_type = T;
-
-    template <cpu_t newcpu>
-    using retarget_this = expression_bartlett_hann<T>;
 
     expression_bartlett_hann(size_t size, T = T(), window_symmetry symmetry = window_symmetry::symmetric)
         : linspace(size, symmetry), m_size(size)
@@ -263,8 +250,6 @@ struct expression_hamming : input_expression
 {
     using value_type = T;
 
-    template <cpu_t newcpu>
-    using retarget_this = expression_hamming<T>;
     expression_hamming(size_t size, T alpha = 0.54, window_symmetry symmetry = window_symmetry::symmetric)
         : linspace(size, symmetry), alpha(alpha), m_size(size)
     {
@@ -288,8 +273,6 @@ struct expression_bohman : input_expression
 {
     using value_type = T;
 
-    template <cpu_t newcpu>
-    using retarget_this = expression_bohman<T>;
     expression_bohman(size_t size, T = T(), window_symmetry symmetry = window_symmetry::symmetric)
         : linspace(size, symmetry), m_size(size)
     {
@@ -313,8 +296,6 @@ struct expression_blackman : input_expression
 {
     using value_type = T;
 
-    template <cpu_t newcpu>
-    using retarget_this = expression_blackman<T>;
     expression_blackman(size_t size, T alpha = 0.16, window_symmetry symmetry = window_symmetry::symmetric)
         : linspace(size, symmetry), a0((1 - alpha) * 0.5), a1(0.5), a2(alpha * 0.5), m_size(size)
     {
@@ -339,8 +320,6 @@ struct expression_blackman_harris : input_expression
 {
     using value_type = T;
 
-    template <cpu_t newcpu>
-    using retarget_this = expression_blackman_harris<T>;
     expression_blackman_harris(size_t size, T = T(), window_symmetry symmetry = window_symmetry::symmetric)
         : linspace(size, symmetry), m_size(size)
     {
@@ -365,8 +344,6 @@ struct expression_kaiser : input_expression
 {
     using value_type = T;
 
-    template <cpu_t newcpu>
-    using retarget_this = expression_kaiser<T>;
     expression_kaiser(size_t size, T beta = 0.5, window_symmetry symmetry = window_symmetry::symmetric)
         : linspace(size, symmetry), beta(beta), m(reciprocal(modzerobessel(make_vector(beta))[0])),
           m_size(size)
@@ -392,8 +369,6 @@ struct expression_flattop : input_expression
 {
     using value_type = T;
 
-    template <cpu_t newcpu>
-    using retarget_this = expression_flattop<T>;
     expression_flattop(size_t size, T = T(), window_symmetry symmetry = window_symmetry::symmetric)
         : linspace(size, symmetry), m_size(size)
     {
@@ -422,9 +397,6 @@ struct expression_gaussian : input_expression
 {
     using value_type = T;
 
-    template <cpu_t newcpu>
-    using retarget_this = expression_gaussian<T>;
-
     expression_gaussian(size_t size, T alpha = 2.5, window_symmetry symmetry = window_symmetry::symmetric)
         : linspace(size, symmetry), alpha(alpha), m_size(size)
     {
@@ -448,8 +420,6 @@ struct expression_lanczos : input_expression
 {
     using value_type = T;
 
-    template <cpu_t newcpu>
-    using retarget_this = expression_lanczos<T>;
     expression_lanczos(size_t size, T alpha = 2.5, window_symmetry symmetry = window_symmetry::symmetric)
         : linspace(size, symmetry), alpha(alpha), m_size(size)
     {
@@ -525,7 +495,7 @@ KFR_INLINE internal::expression_bartlett_hann<T> window_bartlett_hann(size_t siz
 }
 template <typename T = fbase>
 KFR_INLINE internal::expression_hamming<T> window_hamming(size_t size, T alpha = 0.54,
-                                                           ctype_t<T> = ctype_t<T>())
+                                                          ctype_t<T> = ctype_t<T>())
 {
     return internal::expression_hamming<T>(size, alpha);
 }
@@ -549,7 +519,7 @@ KFR_INLINE internal::expression_blackman_harris<T> window_blackman_harris(
 }
 template <typename T = fbase>
 KFR_INLINE internal::expression_kaiser<T> window_kaiser(size_t size, T beta = T(0.5),
-                                                         ctype_t<T> = ctype_t<T>())
+                                                        ctype_t<T> = ctype_t<T>())
 {
     return internal::expression_kaiser<T>(size, beta);
 }
@@ -560,7 +530,7 @@ KFR_INLINE internal::expression_flattop<T> window_flattop(size_t size, ctype_t<T
 }
 template <typename T = fbase>
 KFR_INLINE internal::expression_gaussian<T> window_gaussian(size_t size, T alpha = 2.5,
-                                                             ctype_t<T> = ctype_t<T>())
+                                                            ctype_t<T> = ctype_t<T>())
 {
     return internal::expression_gaussian<T>(size, alpha);
 }

@@ -72,8 +72,6 @@
     struct fn_##fn                                                                                           \
     {                                                                                                        \
         constexpr fn_##fn() noexcept = default;                                                              \
-        template <cpu_t newcpu>                                                                              \
-        using retarget_this = typename tpl<newcpu>::fn_##fn;                                                 \
         template <typename... Args>                                                                          \
         KFR_INLINE decltype(fn(std::declval<Args>()...)) operator()(Args&&... args) const                    \
         {                                                                                                    \

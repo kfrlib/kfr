@@ -96,9 +96,9 @@ protected:
     }
 
     mutable size_t counter;
-    retarget<ReduceFn, cpu> reducefn;
-    retarget<TransformFn, cpu> transformfn;
-    retarget<FinalFn, cpu> finalfn;
+    ReduceFn reducefn;
+    TransformFn transformfn;
+    FinalFn finalfn;
     mutable vec<T, width> value;
 };
 

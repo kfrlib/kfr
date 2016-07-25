@@ -22,7 +22,6 @@
  */
 #pragma once
 
-#include "dispatch.hpp"
 #include "expression.hpp"
 #include "shuffle.hpp"
 #include "types.hpp"

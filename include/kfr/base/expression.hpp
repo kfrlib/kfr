@@ -22,7 +22,6 @@
  */
 #pragma once
 
-#include "dispatch.hpp"
 #include "types.hpp"
 #include "vec.hpp"
 
@@ -172,9 +171,6 @@ struct expression_function : expression<Args...>
     using ratio = func_ratio<Fn>;
 
     using value_type = typename generic_result<Fn, ctypes_t<value_type_of<Args>...>>::type;
-
-    template <cpu_t newcpu>
-    using retarget_this = expression_function<retarget<Fn, newcpu>, retarget<Args, newcpu>...>;
 
     expression_function(Fn&& fn, Args&&... args) noexcept : expression<Args...>(std::forward<Args>(args)...),
                                                             fn(std::forward<Fn>(fn))

@@ -717,10 +717,10 @@ struct mask : public vec<T, N>
     {
     }
 
-//    template <typename M, typename = u8[sizeof(T) == sizeof(M)]>
-//    constexpr KFR_INLINE mask(mask<M, N> value) : base(reinterpret_cast<const vec<T, N>&>(value))
-//    {
-//    }
+    //    template <typename M, typename = u8[sizeof(T) == sizeof(M)]>
+    //    constexpr KFR_INLINE mask(mask<M, N> value) : base(reinterpret_cast<const vec<T, N>&>(value))
+    //    {
+    //    }
     constexpr KFR_INLINE mask operator~() const { return bitcast<T>(~ubitcast(this->v)); }
     constexpr KFR_INLINE mask operator&(vec<T, N> x) const
     {

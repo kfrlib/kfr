@@ -109,9 +109,6 @@ public:
     template <typename T, size_t width = get_vector_width<T, cpu>(1, 2)>
     struct generator_linear : generator<T, width, generator_linear<T, width>>
     {
-        template <cpu_t newcpu>
-        using retarget_this = typename in_generators<newcpu>::template generator_linear<T>;
-
         constexpr generator_linear(T start, T step) noexcept : step(step), vstep(step* width)
         {
             this->resync(start);
@@ -129,9 +126,6 @@ public:
     template <typename T, size_t width = get_vector_width<T, cpu>(1, 2)>
     struct generator_exp : generator<T, width, generator_exp<T, width>>
     {
-        template <cpu_t newcpu>
-        using retarget_this = typename in_generators<newcpu>::template generator_exp<T>;
-
         generator_exp(T start, T step) noexcept : step(step), vstep(exp(make_vector(step* width))[0] - 1)
         {
             this->resync(start);
@@ -152,9 +146,6 @@ public:
     template <typename T, size_t width = get_vector_width<T, cpu>(1, 2)>
     struct generator_exp2 : generator<T, width, generator_exp2<T, width>>
     {
-        template <cpu_t newcpu>
-        using retarget_this = typename in_generators<newcpu>::template generator_exp2<T>;
-
         generator_exp2(T start, T step) noexcept : step(step), vstep(exp2(make_vector(step* width))[0] - 1)
         {
             this->resync(start);
@@ -175,9 +166,6 @@ public:
     template <typename T, size_t width = get_vector_width<T, cpu>(1, 2)>
     struct generator_cossin : generator<T, width, generator_cossin<T, width>>
     {
-        template <cpu_t newcpu>
-        using retarget_this = typename in_generators<newcpu>::template generator_cossin<T>;
-
         generator_cossin(T start, T step)
             : step(step), alpha(2 * sqr(sin(width / 2 * step / 2))), beta(-sin(width / 2 * step))
         {
@@ -203,9 +191,6 @@ public:
     template <typename T, size_t width = get_vector_width<T, cpu>(2, 4)>
     struct generator_sin : generator<T, width, generator_sin<T, width>>
     {
-        template <cpu_t newcpu>
-        using retarget_this = typename in_generators<newcpu>::template generator_sin<T>;
-
         generator_sin(T start, T step)
             : step(step), alpha(2 * sqr(sin(width * step / 2))), beta(sin(width * step))
         {

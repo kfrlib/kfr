@@ -35,9 +35,6 @@ namespace internal
 template <typename From, typename E>
 struct expression_convert : expression<E>
 {
-    template <cpu_t newcpu>
-    using retarget_this = expression_convert<From, retarget<E, newcpu>>;
-
     KFR_INLINE expression_convert(E&& expr) noexcept : expression<E>(std::forward<E>(expr)) {}
 
     template <typename T, size_t N>
