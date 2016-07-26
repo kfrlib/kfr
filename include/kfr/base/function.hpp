@@ -130,6 +130,12 @@ KFR_SINTRIN vec<T, Nout> expand_simd(vec<T, N> x)
     return extend<Nout>(x);
 }
 
+template <typename T, size_t N, size_t Nout = next_simd_width<cpu_t::native, T>(N)>
+KFR_SINTRIN vec<T, Nout> expand_simd(vec<T, N> x, identity<T> value)
+{
+    return widen<Nout>(x, value);
+}
+
 #define KFR_HANDLE_ALL_SIZES_1(fn)                                                                           \
     template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T, cpu_t::native>)>                       \
     KFR_SINTRIN vec<T, N> fn(vec<T, N> a)                                                                    \
