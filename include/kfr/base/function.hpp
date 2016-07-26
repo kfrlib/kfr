@@ -89,11 +89,11 @@ using mu64avx = mask<u64, vector_width<u64, cpu_t::avx2>>;
 #else
 using f32neon = vec<f32, 4>;
 using f64neon = vec<f64, 2>;
-using  i8neon  = vec<i8, 16>;
+using i8neon  = vec<i8, 16>;
 using i16neon = vec<i16, 8>;
 using i32neon = vec<i32, 4>;
 using i64neon = vec<i64, 2>;
-using  u8neon  = vec<u8, 16>;
+using u8neon  = vec<u8, 16>;
 using u16neon = vec<u16, 8>;
 using u32neon = vec<u32, 4>;
 using u64neon = vec<u64, 2>;
