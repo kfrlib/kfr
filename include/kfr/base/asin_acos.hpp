@@ -33,25 +33,27 @@ namespace kfr
 namespace internal
 {
 
-template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> asin(vec<T, N> x)
+template <typename T, size_t N, typename Tout = flt_type<T>>
+KFR_SINTRIN vec<Tout, N> asin(vec<T, N> x)
 {
-    return atan2(x, sqrt(T(1) - x * x));
+    const vec<Tout, N> xx = cast<Tout>(x);
+    return atan2(xx, sqrt(Tout(1) - xx * xx));
 }
 
-template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> acos(vec<T, N> x)
+template <typename T, size_t N, typename Tout = flt_type<T>>
+KFR_SINTRIN vec<Tout, N> acos(vec<T, N> x)
 {
-    return atan2(sqrt(T(1) - x * x), x);
+    const vec<Tout, N> xx = cast<Tout>(x);
+    return atan2(sqrt(Tout(1) - xx * xx), xx);
 }
-KFR_HANDLE_SCALAR(asin)
-KFR_HANDLE_SCALAR(acos)
-KFR_FN(asin)
-KFR_FN(acos)
+KFR_HANDLE_SCALAR_1(asin)
+KFR_HANDLE_SCALAR_1(acos)
+KFR_I_FN(asin)
+KFR_I_FN(acos)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 asin(const T1& x)
+KFR_INTRIN flt_type<T1> asin(const T1& x)
 {
     return internal::asin(x);
 }
@@ -63,7 +65,7 @@ KFR_INTRIN expr_func<internal::fn_asin, E1> asin(E1&& x)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 acos(const T1& x)
+KFR_INTRIN flt_type<T1> acos(const T1& x)
 {
     return internal::acos(x);
 }
