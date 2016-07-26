@@ -33,20 +33,26 @@ namespace internal
 template <typename T, size_t N>
 KFR_SINTRIN vec<T, N> saturated_signed_add(vec<T, N> a, vec<T, N> b)
 {
-    constexpr size_t shift = typebits<i32>::bits - 1;
-    const vec<T, N> sum = a + b;
-    a = (a >> shift) + allonesvector(a);
+    using UT               = utype<T>;
+    constexpr size_t shift = typebits<UT>::bits - 1;
+    vec<UT, N> aa        = bitcast<UT>(a);
+    vec<UT, N> bb        = bitcast<UT>(b);
+    const vec<UT, N> sum = aa + bb;
+    aa = (aa >> shift) + static_cast<UT>(std::numeric_limits<T>::max());
 
-    return select(((a ^ b) | ~(b ^ sum)) >= 0, a, sum);
+    return select(bitcast<T>((aa ^ bb) | ~(bb ^ sum)) >= 0, a, bitcast<T>(sum));
 }
 template <typename T, size_t N>
 KFR_SINTRIN vec<T, N> saturated_signed_sub(vec<T, N> a, vec<T, N> b)
 {
-    constexpr size_t shift = typebits<i32>::bits - 1;
-    const vec<T, N> diff = a - b;
-    a = (a >> shift) + allonesvector(a);
+    using UT               = utype<T>;
+    constexpr size_t shift = typebits<UT>::bits - 1;
+    vec<UT, N> aa         = bitcast<UT>(a);
+    vec<UT, N> bb         = bitcast<UT>(b);
+    const vec<UT, N> diff = aa - bb;
+    aa = (aa >> shift) + static_cast<UT>(std::numeric_limits<T>::max());
 
-    return select(((a ^ b) & (a ^ diff)) < 0, a, diff);
+    return select(bitcast<T>((aa ^ bb) & (aa ^ diff)) < 0, a, bitcast<T>(diff));
 }
 template <typename T, size_t N>
 KFR_SINTRIN vec<T, N> saturated_unsigned_add(vec<T, N> a, vec<T, N> b)
@@ -94,6 +100,9 @@ KFR_SINTRIN u16avx satsub(u16avx x, u16avx y) { return _mm256_subs_epu16(*x, *y)
 KFR_SINTRIN i16avx satsub(i16avx x, i16avx y) { return _mm256_subs_epi16(*x, *y); }
 #endif
 
+KFR_HANDLE_ALL_SIZES_2(satadd)
+KFR_HANDLE_ALL_SIZES_2(satsub)
+
 #else
 // fallback
 template <typename T, size_t N, KFR_ENABLE_IF(std::is_signed<T>::value)>
@@ -117,10 +126,10 @@ KFR_SINTRIN vec<T, N> satsub(vec<T, N> a, vec<T, N> b)
     return saturated_unsigned_sub(a, b);
 }
 #endif
-KFR_HANDLE_SCALAR_1(satadd)
-KFR_FN(satadd)
-KFR_HANDLE_SCALAR_1(satsub)
-KFR_FN(satsub)
+KFR_HANDLE_SCALAR_2(satadd)
+KFR_I_FN(satadd)
+KFR_HANDLE_SCALAR_2(satsub)
+KFR_I_FN(satsub)
 }
 
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
