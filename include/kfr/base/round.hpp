@@ -78,11 +78,11 @@ KFR_SINTRIN f32avx fract(f32avx x) { return x - floor(x); }
 KFR_SINTRIN f64avx fract(f64avx x) { return x - floor(x); }
 #endif
 
-KFR_HANDLE_ALL_SIZES_1(floor)
-KFR_HANDLE_ALL_SIZES_1(ceil)
-KFR_HANDLE_ALL_SIZES_1(round)
-KFR_HANDLE_ALL_SIZES_1(trunc)
-KFR_HANDLE_ALL_SIZES_1(fract)
+KFR_HANDLE_ALL_SIZES_F_1(floor)
+KFR_HANDLE_ALL_SIZES_F_1(ceil)
+KFR_HANDLE_ALL_SIZES_F_1(round)
+KFR_HANDLE_ALL_SIZES_F_1(trunc)
+KFR_HANDLE_ALL_SIZES_F_1(fract)
 
 #else
 
@@ -144,46 +144,46 @@ KFR_SINTRIN vec<f64, N> fract(vec<f64, N> x)
 }
 #endif
 
-// template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
-// KFR_SINTRIN vec<T, N> floor(vec<T, N> value)
-//{
-//    return value;
-//}
-// template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
-// KFR_SINTRIN vec<T, N> ceil(vec<T, N> value)
-//{
-//    return value;
-//}
-// template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
-// KFR_SINTRIN vec<T, N> trunc(vec<T, N> value)
-//{
-//    return value;
-//}
-// template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
-// KFR_SINTRIN vec<T, N> round(vec<T, N> value)
-//{
-//    return value;
-//}
-// template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
-// KFR_SINTRIN vec<T, N> fract(vec<T, N>)
-//{
-//    return T(0);
-//}
+template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
+KFR_SINTRIN vec<T, N> floor(vec<T, N> value)
+{
+    return value;
+}
+template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
+KFR_SINTRIN vec<T, N> ceil(vec<T, N> value)
+{
+    return value;
+}
+template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
+KFR_SINTRIN vec<T, N> trunc(vec<T, N> value)
+{
+    return value;
+}
+template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
+KFR_SINTRIN vec<T, N> round(vec<T, N> value)
+{
+    return value;
+}
+template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
+KFR_SINTRIN vec<T, N> fract(vec<T, N>)
+{
+    return T(0);
+}
 
 KFR_HANDLE_SCALAR_1(floor)
 KFR_HANDLE_SCALAR_1(ceil)
 KFR_HANDLE_SCALAR_1(round)
 KFR_HANDLE_SCALAR_1(trunc)
 KFR_HANDLE_SCALAR_1(fract)
-KFR_FN(floor)
-KFR_FN(ceil)
-KFR_FN(round)
-KFR_FN(trunc)
-KFR_FN(fract)
+KFR_I_FN(floor)
+KFR_I_FN(ceil)
+KFR_I_FN(round)
+KFR_I_FN(trunc)
+KFR_I_FN(fract)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> floor(const T1& x)
+KFR_INTRIN T1 floor(const T1& x)
 {
     return internal::floor(x);
 }
@@ -195,7 +195,7 @@ KFR_INTRIN expr_func<internal::fn_floor, E1> floor(E1&& x)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> ceil(const T1& x)
+KFR_INTRIN T1 ceil(const T1& x)
 {
     return internal::ceil(x);
 }
@@ -207,7 +207,7 @@ KFR_INTRIN expr_func<internal::fn_ceil, E1> ceil(E1&& x)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> round(const T1& x)
+KFR_INTRIN T1 round(const T1& x)
 {
     return internal::round(x);
 }
@@ -219,7 +219,7 @@ KFR_INTRIN expr_func<internal::fn_round, E1> round(E1&& x)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> trunc(const T1& x)
+KFR_INTRIN T1 trunc(const T1& x)
 {
     return internal::trunc(x);
 }
@@ -231,7 +231,7 @@ KFR_INTRIN expr_func<internal::fn_trunc, E1> trunc(E1&& x)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> fract(const T1& x)
+KFR_INTRIN T1 fract(const T1& x)
 {
     return internal::fract(x);
 }

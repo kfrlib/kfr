@@ -42,7 +42,7 @@ KFR_SINTRIN f32avx sqrt(f32avx x) { return _mm256_sqrt_ps(*x); }
 KFR_SINTRIN f64avx sqrt(f64avx x) { return _mm256_sqrt_pd(*x); }
 #endif
 
-KFR_HANDLE_ALL_SIZES_1(sqrt)
+KFR_HANDLE_ALL_SIZES_FLT_1(sqrt)
 
 #else
 
@@ -58,7 +58,7 @@ KFR_FN(sqrt)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> sqrt(const T1& x)
+KFR_INTRIN flt_type<T1> sqrt(const T1& x)
 {
     return internal::sqrt(x);
 }

@@ -40,6 +40,9 @@ namespace kfr
         return fn(make_vector(x), make_vector(rest)...)[0];                                                  \
     }
 
+template <typename T>
+using flt_type = conditional<std::is_floating_point<deep_subtype<T>>::value, T, deep_rebind<T, fbase>>;
+
 namespace internal
 {
 #ifdef CID_ARCH_X86
@@ -143,6 +146,74 @@ KFR_SINTRIN vec<T, Nout> expand_simd(vec<T, N> x)
     KFR_SINTRIN T fn(T a)                                                                                    \
     {                                                                                                        \
         return fn(make_vector(a))[0];                                                                        \
+    }
+
+#define KFR_HANDLE_ALL_SIZES_FLT_1(fn)                                                                       \
+    template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T, cpu_t::native>)>                       \
+    KFR_SINTRIN vec<flt_type<T>, N> fn(vec<T, N> a)                                                          \
+    {                                                                                                        \
+        return slice<0, N>(fn(expand_simd(cast<flt_type<T>>(a))));                                           \
+    }                                                                                                        \
+    template <typename T, size_t N, KFR_ENABLE_IF(N >= vector_width<T, cpu_t::native>), typename = void>     \
+    KFR_SINTRIN vec<flt_type<T>, N> fn(vec<T, N> a)                                                          \
+    {                                                                                                        \
+        return concat(fn(low(cast<flt_type<T>>(a))), fn(high(cast<flt_type<T>>(a))));                        \
+    }
+
+#define KFR_HANDLE_ALL_SIZES_F_1(fn)                                                                         \
+    template <typename T, size_t N,                                                                          \
+              KFR_ENABLE_IF(N < vector_width<T, cpu_t::native> && is_f_class<T>::value)>                     \
+    KFR_SINTRIN vec<T, N> fn(vec<T, N> a)                                                                    \
+    {                                                                                                        \
+        return slice<0, N>(fn(expand_simd(a)));                                                              \
+    }                                                                                                        \
+    template <typename T, size_t N,                                                                          \
+              KFR_ENABLE_IF(N >= vector_width<T, cpu_t::native> && is_f_class<T>::value), typename = void>   \
+    KFR_SINTRIN vec<T, N> fn(vec<T, N> a)                                                                    \
+    {                                                                                                        \
+        return concat(fn(low(a)), fn(high(a)));                                                              \
+    }
+
+#define KFR_HANDLE_ALL_SIZES_I_1(fn)                                                                         \
+    template <typename T, size_t N,                                                                          \
+              KFR_ENABLE_IF(N < vector_width<T, cpu_t::native> && is_i_class<T>::value)>                     \
+    KFR_SINTRIN vec<T, N> fn(vec<T, N> a)                                                                    \
+    {                                                                                                        \
+        return slice<0, N>(fn(expand_simd(a)));                                                              \
+    }                                                                                                        \
+    template <typename T, size_t N,                                                                          \
+              KFR_ENABLE_IF(N >= vector_width<T, cpu_t::native> && is_i_class<T>::value), typename = void>   \
+    KFR_SINTRIN vec<T, N> fn(vec<T, N> a)                                                                    \
+    {                                                                                                        \
+        return concat(fn(low(a)), fn(high(a)));                                                              \
+    }
+
+#define KFR_HANDLE_ALL_SIZES_U_1(fn)                                                                         \
+    template <typename T, size_t N,                                                                          \
+              KFR_ENABLE_IF(N < vector_width<T, cpu_t::native> && is_u_class<T>::value)>                     \
+    KFR_SINTRIN vec<T, N> fn(vec<T, N> a)                                                                    \
+    {                                                                                                        \
+        return slice<0, N>(fn(expand_simd(a)));                                                              \
+    }                                                                                                        \
+    template <typename T, size_t N,                                                                          \
+              KFR_ENABLE_IF(N >= vector_width<T, cpu_t::native> && is_u_class<T>::value), typename = void>   \
+    KFR_SINTRIN vec<T, N> fn(vec<T, N> a)                                                                    \
+    {                                                                                                        \
+        return concat(fn(low(a)), fn(high(a)));                                                              \
+    }
+
+#define KFR_HANDLE_ALL_SIZES_NOT_F_1(fn)                                                                     \
+    template <typename T, size_t N,                                                                          \
+              KFR_ENABLE_IF(N < vector_width<T, cpu_t::native> && !is_f_class<T>::value)>                    \
+    KFR_SINTRIN vec<T, N> fn(vec<T, N> a)                                                                    \
+    {                                                                                                        \
+        return slice<0, N>(fn(expand_simd(a)));                                                              \
+    }                                                                                                        \
+    template <typename T, size_t N,                                                                          \
+              KFR_ENABLE_IF(N >= vector_width<T, cpu_t::native> && !is_f_class<T>::value), typename = void>  \
+    KFR_SINTRIN vec<T, N> fn(vec<T, N> a)                                                                    \
+    {                                                                                                        \
+        return concat(fn(low(a)), fn(high(a)));                                                              \
     }
 
 #define KFR_HANDLE_ALL_SIZES_2(fn)                                                                           \
