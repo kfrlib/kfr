@@ -16,12 +16,6 @@
 
 using namespace kfr;
 
-template <typename T1, typename T2>
-void assert_is_same()
-{
-    static_assert(std::is_same<T1, T2>::value, "");
-}
-
 TEST(complex_vector)
 {
     const vec<c32, 1> c32x1{ c32{ 0, 1 } };

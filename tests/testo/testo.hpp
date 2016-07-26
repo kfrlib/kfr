@@ -525,6 +525,17 @@ static int run_all(const std::string& name = std::string(), bool show_successful
     return static_cast<int>(failed.size());
 }
 
+template <typename T1, typename T2>
+void assert_is_same()
+{
+    static_assert(std::is_same<T1, T2>::value, "");
+}
+template <typename T1, typename T2>
+void assert_is_same_decay()
+{
+    static_assert(std::is_same<cometa::decay<T1>, cometa::decay<T2>>::value, "");
+}
+
 #define TESTO_CHECK(...)                                                                                     \
     {                                                                                                        \
         ::testo::active_test()->check(::testo::make_comparison() <= __VA_ARGS__, #__VA_ARGS__);              \
