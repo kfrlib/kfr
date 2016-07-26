@@ -4,6 +4,7 @@
 #include <array>
 #include <cstdio>
 #include <string>
+#include <utility>
 
 #pragma clang diagnostic push
 #if CID_HAS_WARNING("-Wformat-security")
@@ -27,6 +28,12 @@ template <typename T>
 inline std::string repr(const named_arg<T>& value)
 {
     return std::string(value.name) + " = " + as_string(value.value);
+}
+
+template <typename T1, typename T2>
+inline std::string repr(const std::pair<T1, T2>& value)
+{
+    return "(" + as_string(value.first) + "; " + as_string(value.second) + ")";
 }
 
 template <typename T>
