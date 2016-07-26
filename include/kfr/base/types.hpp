@@ -653,6 +653,17 @@ constexpr inline const T& bitness_const(const T& x32, const T& x64)
 #endif
 }
 
+constexpr inline const char* bitness_const(const char* x32, const char* x64)
+{
+#ifdef KFR_ARCH_X64
+    (void)x32;
+    return x64;
+#else
+    (void)x64;
+    return x32;
+#endif
+}
+
 constexpr size_t native_cache_alignment        = 64;
 constexpr size_t native_cache_alignment_mask   = native_cache_alignment - 1;
 constexpr size_t maximum_vector_alignment      = 32;
