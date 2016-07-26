@@ -39,7 +39,6 @@ namespace kfr
 template <typename T, size_t N>
 KFR_INLINE vec<T, N> sort(vec<T, N> x)
 {
-    using namespace kfr::native;
     constexpr size_t Nhalf = N / 2;
     vec<T, Nhalf> e = low(x);
     vec<T, Nhalf> o = high(x);
@@ -73,7 +72,6 @@ KFR_INLINE vec<T, N> sort(vec<T, N> x)
 template <typename T, size_t N>
 KFR_INLINE vec<T, N> sortdesc(vec<T, N> x)
 {
-    using namespace kfr::native;
     constexpr size_t Nhalf = N / 2;
     vec<T, Nhalf> e = low(x);
     vec<T, Nhalf> o = high(x);
