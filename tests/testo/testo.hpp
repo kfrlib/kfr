@@ -537,9 +537,10 @@ void assert_is_same_decay()
 }
 
 #define TESTO_CHECK(...)                                                                                     \
+    do                                                                                                       \
     {                                                                                                        \
         ::testo::active_test()->check(::testo::make_comparison() <= __VA_ARGS__, #__VA_ARGS__);              \
-    }
+    } while (0)
 
 #define TESTO_TEST(name)                                                                                     \
     void test_function_##name();                                                                             \
