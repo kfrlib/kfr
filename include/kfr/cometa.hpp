@@ -1167,18 +1167,6 @@ CID_INTRIN void cforeach(cvals_t<T, v0, values...>, Fn&& fn)
     cforeach(cvals_t<T, values...>(), std::forward<Fn>(fn));
 }
 
-template <typename Fn>
-CID_INTRIN void cforeach(ctypes_t<>, Fn&&)
-{
-}
-
-template <typename T0, typename... types, typename Fn>
-CID_INTRIN void cforeach(ctypes_t<T0, types...>, Fn&& fn)
-{
-    fn(ctype<T0>);
-    cforeach(ctypes_t<types...>(), std::forward<Fn>(fn));
-}
-
 template <typename T, typename Fn, CMT_ENABLE_IF(has_begin_end<T>::value)>
 CID_INTRIN void cforeach(T&& list, Fn&& fn)
 {
@@ -1204,6 +1192,17 @@ CID_INTRIN void cforeach_tuple_impl(const std::tuple<Ts...>& tuple, Fn&& fn, csi
 {
     swallow{ (fn(std::get<indices>(tuple)), void(), 0)... };
 }
+template <typename T0, typename... types, typename Fn, size_t... indices>
+CID_INTRIN void cforeach_types_impl(ctypes_t<T0, types...>, Fn&& fn, csizes_t<indices...>)
+{
+    swallow{ (fn(ctype<type_of<details::get_nth_type<indices, T0, types...>>>), void(), 0)... };
+}
+}
+
+template <typename... Ts, typename Fn>
+CID_INTRIN void cforeach(ctypes_t<Ts...> types, Fn&& fn)
+{
+    details::cforeach_types_impl(types, std::forward<Fn>(fn), csizeseq<sizeof...(Ts)>);
 }
 
 template <typename... Ts, typename Fn>
