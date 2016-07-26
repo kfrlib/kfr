@@ -1075,14 +1075,14 @@ struct maxvec
 };
 
 template <size_t Index, typename T, size_t N, typename Fn, typename... Args,
-          typename Tout = result_of<Fn(subtype<remove_reference<Args>>...)>>
+          typename Tout = result_of<Fn(subtype<decay<Args>>...)>>
 constexpr KFR_INLINE Tout applyfn_helper(Fn&& fn, Args&&... args)
 {
     return fn(args[Index]...);
 }
 
 template <typename T, size_t N, typename Fn, typename... Args,
-          typename Tout = result_of<Fn(subtype<remove_reference<Args>>...)>, size_t... Indices>
+          typename Tout = result_of<Fn(subtype<decay<Args>>...)>, size_t... Indices>
 constexpr KFR_INLINE vec<Tout, N> apply_helper(Fn&& fn, csizes_t<Indices...>, Args&&... args)
 {
     return make_vector(applyfn_helper<Indices, T, N>(std::forward<Fn>(fn), std::forward<Args>(args)...)...);
@@ -1095,7 +1095,7 @@ constexpr KFR_INLINE vec<T, N> apply0_helper(Fn&& fn, csizes_t<Indices...>)
 }
 
 template <typename T, size_t N, typename Fn, typename... Args,
-          typename Tout = result_of<Fn(T, subtype<remove_reference<Args>>...)>>
+          typename Tout = result_of<Fn(T, subtype<decay<Args>>...)>>
 constexpr KFR_INLINE vec<Tout, N> apply(Fn&& fn, vec<T, N> arg, Args&&... args)
 {
     return internal::apply_helper<T, N>(std::forward<Fn>(fn), csizeseq<N>, arg, std::forward<Args>(args)...);
