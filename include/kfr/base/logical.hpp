@@ -46,53 +46,21 @@ struct bitmask
     type value;
 };
 
-struct logical_and
-{
-    template <typename T1, typename T2>
-    auto operator()(T1 x, T2 y) -> decltype(x && y)
-    {
-        return x && y;
-    }
-
-    template <typename T>
-    T operator()(initialvalue<T>)
-    {
-        return T();
-    }
-};
+#if defined CID_ARCH_SSE2
 
 #if defined CID_ARCH_SSE41
 
-KFR_SINTRIN bool bittestnone(f32sse x, f32sse y) { return _mm_testz_ps(*x, *y); }
-KFR_SINTRIN bool bittestnone(f64sse x, f64sse y) { return _mm_testz_pd(*x, *y); }
-KFR_SINTRIN bool bittestnone(u8sse x, u8sse y) { return _mm_testz_si128(*x, *y); }
-KFR_SINTRIN bool bittestnone(u16sse x, u16sse y) { return _mm_testz_si128(*x, *y); }
-KFR_SINTRIN bool bittestnone(u32sse x, u32sse y) { return _mm_testz_si128(*x, *y); }
-KFR_SINTRIN bool bittestnone(u64sse x, u64sse y) { return _mm_testz_si128(*x, *y); }
-KFR_SINTRIN bool bittestnone(i8sse x, i8sse y) { return _mm_testz_si128(*x, *y); }
-KFR_SINTRIN bool bittestnone(i16sse x, i16sse y) { return _mm_testz_si128(*x, *y); }
-KFR_SINTRIN bool bittestnone(i32sse x, i32sse y) { return _mm_testz_si128(*x, *y); }
-KFR_SINTRIN bool bittestnone(i64sse x, i64sse y) { return _mm_testz_si128(*x, *y); }
-KFR_SINTRIN bool bittestnone(f32sse x) { return _mm_testz_ps(*x, *x); }
-KFR_SINTRIN bool bittestnone(f64sse x) { return _mm_testz_pd(*x, *x); }
-KFR_SINTRIN bool bittestnone(u8sse x) { return _mm_testz_si128(*x, *x); }
-KFR_SINTRIN bool bittestnone(u16sse x) { return _mm_testz_si128(*x, *x); }
-KFR_SINTRIN bool bittestnone(u32sse x) { return _mm_testz_si128(*x, *x); }
-KFR_SINTRIN bool bittestnone(u64sse x) { return _mm_testz_si128(*x, *x); }
-KFR_SINTRIN bool bittestnone(i8sse x) { return _mm_testz_si128(*x, *x); }
-KFR_SINTRIN bool bittestnone(i16sse x) { return _mm_testz_si128(*x, *x); }
-KFR_SINTRIN bool bittestnone(i32sse x) { return _mm_testz_si128(*x, *x); }
-KFR_SINTRIN bool bittestnone(i64sse x) { return _mm_testz_si128(*x, *x); }
-KFR_SINTRIN bool bittestall(f32sse x, f32sse y) { return _mm_testc_ps(*x, *y); }
-KFR_SINTRIN bool bittestall(f64sse x, f64sse y) { return _mm_testc_pd(*x, *y); }
-KFR_SINTRIN bool bittestall(u8sse x, u8sse y) { return _mm_testc_si128(*x, *y); }
-KFR_SINTRIN bool bittestall(u16sse x, u16sse y) { return _mm_testc_si128(*x, *y); }
-KFR_SINTRIN bool bittestall(u32sse x, u32sse y) { return _mm_testc_si128(*x, *y); }
-KFR_SINTRIN bool bittestall(u64sse x, u64sse y) { return _mm_testc_si128(*x, *y); }
-KFR_SINTRIN bool bittestall(i8sse x, i8sse y) { return _mm_testc_si128(*x, *y); }
-KFR_SINTRIN bool bittestall(i16sse x, i16sse y) { return _mm_testc_si128(*x, *y); }
-KFR_SINTRIN bool bittestall(i32sse x, i32sse y) { return _mm_testc_si128(*x, *y); }
-KFR_SINTRIN bool bittestall(i64sse x, i64sse y) { return _mm_testc_si128(*x, *y); }
+KFR_SINTRIN bool bittestany(f32sse x) { return !_mm_testz_ps(*x, *x); }
+KFR_SINTRIN bool bittestany(f64sse x) { return !_mm_testz_pd(*x, *x); }
+KFR_SINTRIN bool bittestany(u8sse x) { return !_mm_testz_si128(*x, *x); }
+KFR_SINTRIN bool bittestany(u16sse x) { return !_mm_testz_si128(*x, *x); }
+KFR_SINTRIN bool bittestany(u32sse x) { return !_mm_testz_si128(*x, *x); }
+KFR_SINTRIN bool bittestany(u64sse x) { return !_mm_testz_si128(*x, *x); }
+KFR_SINTRIN bool bittestany(i8sse x) { return !_mm_testz_si128(*x, *x); }
+KFR_SINTRIN bool bittestany(i16sse x) { return !_mm_testz_si128(*x, *x); }
+KFR_SINTRIN bool bittestany(i32sse x) { return !_mm_testz_si128(*x, *x); }
+KFR_SINTRIN bool bittestany(i64sse x) { return !_mm_testz_si128(*x, *x); }
+
 KFR_SINTRIN bool bittestall(f32sse x) { return _mm_testc_ps(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(f64sse x) { return _mm_testc_pd(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(u8sse x) { return _mm_testc_si128(*x, *allonesvector(x)); }
@@ -103,45 +71,24 @@ KFR_SINTRIN bool bittestall(i8sse x) { return _mm_testc_si128(*x, *allonesvector
 KFR_SINTRIN bool bittestall(i16sse x) { return _mm_testc_si128(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(i32sse x) { return _mm_testc_si128(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(i64sse x) { return _mm_testc_si128(*x, *allonesvector(x)); }
+#endif
 
 #if defined CID_ARCH_AVX
-KFR_SINTRIN bool bittestnone(f32avx x, f32avx y) { return _mm256_testz_ps(*x, *y); }
-KFR_SINTRIN bool bittestnone(f64avx x, f64avx y) { return _mm256_testz_pd(*x, *y); }
-KFR_SINTRIN bool bittestnone(f32avx x) { return _mm256_testz_ps(*x, *x); }
-KFR_SINTRIN bool bittestnone(f64avx x) { return _mm256_testz_pd(*x, *x); }
-KFR_SINTRIN bool bittestnall(f32avx x, f32avx y) { return _mm256_testc_ps(*x, *y); }
-KFR_SINTRIN bool bittestnall(f64avx x, f64avx y) { return _mm256_testc_pd(*x, *y); }
+KFR_SINTRIN bool bittestany(f32avx x) { return !_mm256_testz_ps(*x, *x); }
+KFR_SINTRIN bool bittestany(f64avx x) { return !_mm256_testz_pd(*x, *x); }
+
 KFR_SINTRIN bool bittestnall(f32avx x) { return _mm256_testc_ps(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestnall(f64avx x) { return _mm256_testc_pd(*x, *allonesvector(x)); }
 #endif
 
-#if defined CID_ARCH_AVX2
-KFR_SINTRIN bool bittestnone(u8avx x, u8avx y) { return _mm256_testz_si256(*x, *y); }
-KFR_SINTRIN bool bittestnone(u16avx x, u16avx y) { return _mm256_testz_si256(*x, *y); }
-KFR_SINTRIN bool bittestnone(u32avx x, u32avx y) { return _mm256_testz_si256(*x, *y); }
-KFR_SINTRIN bool bittestnone(u64avx x, u64avx y) { return _mm256_testz_si256(*x, *y); }
-KFR_SINTRIN bool bittestnone(i8avx x, i8avx y) { return _mm256_testz_si256(*x, *y); }
-KFR_SINTRIN bool bittestnone(i16avx x, i16avx y) { return _mm256_testz_si256(*x, *y); }
-KFR_SINTRIN bool bittestnone(i32avx x, i32avx y) { return _mm256_testz_si256(*x, *y); }
-KFR_SINTRIN bool bittestnone(i64avx x, i64avx y) { return _mm256_testz_si256(*x, *y); }
-
-KFR_SINTRIN bool bittestnone(u8avx x) { return _mm256_testz_si256(*x, *x); }
-KFR_SINTRIN bool bittestnone(u16avx x) { return _mm256_testz_si256(*x, *x); }
-KFR_SINTRIN bool bittestnone(u32avx x) { return _mm256_testz_si256(*x, *x); }
-KFR_SINTRIN bool bittestnone(u64avx x) { return _mm256_testz_si256(*x, *x); }
-KFR_SINTRIN bool bittestnone(i8avx x) { return _mm256_testz_si256(*x, *x); }
-KFR_SINTRIN bool bittestnone(i16avx x) { return _mm256_testz_si256(*x, *x); }
-KFR_SINTRIN bool bittestnone(i32avx x) { return _mm256_testz_si256(*x, *x); }
-KFR_SINTRIN bool bittestnone(i64avx x) { return _mm256_testz_si256(*x, *x); }
-
-KFR_SINTRIN bool bittestall(u8avx x, u8avx y) { return _mm256_testc_si256(*x, *y); }
-KFR_SINTRIN bool bittestall(u16avx x, u16avx y) { return _mm256_testc_si256(*x, *y); }
-KFR_SINTRIN bool bittestall(u32avx x, u32avx y) { return _mm256_testc_si256(*x, *y); }
-KFR_SINTRIN bool bittestall(u64avx x, u64avx y) { return _mm256_testc_si256(*x, *y); }
-KFR_SINTRIN bool bittestall(i8avx x, i8avx y) { return _mm256_testc_si256(*x, *y); }
-KFR_SINTRIN bool bittestall(i16avx x, i16avx y) { return _mm256_testc_si256(*x, *y); }
-KFR_SINTRIN bool bittestall(i32avx x, i32avx y) { return _mm256_testc_si256(*x, *y); }
-KFR_SINTRIN bool bittestall(i64avx x, i64avx y) { return _mm256_testc_si256(*x, *y); }
+KFR_SINTRIN bool bittestany(u8avx x) { return !_mm256_testz_si256(*x, *x); }
+KFR_SINTRIN bool bittestany(u16avx x) { return !_mm256_testz_si256(*x, *x); }
+KFR_SINTRIN bool bittestany(u32avx x) { return !_mm256_testz_si256(*x, *x); }
+KFR_SINTRIN bool bittestany(u64avx x) { return !_mm256_testz_si256(*x, *x); }
+KFR_SINTRIN bool bittestany(i8avx x) { return !_mm256_testz_si256(*x, *x); }
+KFR_SINTRIN bool bittestany(i16avx x) { return !_mm256_testz_si256(*x, *x); }
+KFR_SINTRIN bool bittestany(i32avx x) { return !_mm256_testz_si256(*x, *x); }
+KFR_SINTRIN bool bittestany(i64avx x) { return !_mm256_testz_si256(*x, *x); }
 
 KFR_SINTRIN bool bittestall(u8avx x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(u16avx x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
@@ -151,31 +98,19 @@ KFR_SINTRIN bool bittestall(i8avx x) { return _mm256_testc_si256(*x, *allonesvec
 KFR_SINTRIN bool bittestall(i16avx x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(i32avx x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(i64avx x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
-#endif
 
-#elif defined CID_ARCH_SSE2
+#if !defined CID_ARCH_SSE41
 
-KFR_SINTRIN bool bittestnone(f32sse x) { return !_mm_movemask_ps(*x); }
-KFR_SINTRIN bool bittestnone(f64sse x) { return !_mm_movemask_pd(*x); }
-KFR_SINTRIN bool bittestnone(u8sse x) { return !_mm_movemask_epi8(*x); }
-KFR_SINTRIN bool bittestnone(u16sse x) { return !_mm_movemask_epi8(*x); }
-KFR_SINTRIN bool bittestnone(u32sse x) { return !_mm_movemask_epi8(*x); }
-KFR_SINTRIN bool bittestnone(u64sse x) { return !_mm_movemask_epi8(*x); }
-KFR_SINTRIN bool bittestnone(i8sse x) { return !_mm_movemask_epi8(*x); }
-KFR_SINTRIN bool bittestnone(i16sse x) { return !_mm_movemask_epi8(*x); }
-KFR_SINTRIN bool bittestnone(i32sse x) { return !_mm_movemask_epi8(*x); }
-KFR_SINTRIN bool bittestnone(i64sse x) { return !_mm_movemask_epi8(*x); }
-
-KFR_SINTRIN bool bittestnone(f32sse x, f32sse y) { return bittestnone(x & y); }
-KFR_SINTRIN bool bittestnone(f64sse x, f64sse y) { return bittestnone(x & y); }
-KFR_SINTRIN bool bittestnone(u8sse x, u8sse y) { return bittestnone(x & y); }
-KFR_SINTRIN bool bittestnone(u16sse x, u16sse y) { return bittestnone(x & y); }
-KFR_SINTRIN bool bittestnone(u32sse x, u32sse y) { return bittestnone(x & y); }
-KFR_SINTRIN bool bittestnone(u64sse x, u64sse y) { return bittestnone(x & y); }
-KFR_SINTRIN bool bittestnone(i8sse x, i8sse y) { return bittestnone(x & y); }
-KFR_SINTRIN bool bittestnone(i16sse x, i16sse y) { return bittestnone(x & y); }
-KFR_SINTRIN bool bittestnone(i32sse x, i32sse y) { return bittestnone(x & y); }
-KFR_SINTRIN bool bittestnone(i64sse x, i64sse y) { return bittestnone(x & y); }
+KFR_SINTRIN bool bittestany(f32sse x) { return _mm_movemask_ps(*x); }
+KFR_SINTRIN bool bittestany(f64sse x) { return _mm_movemask_pd(*x); }
+KFR_SINTRIN bool bittestany(u8sse x) { return _mm_movemask_epi8(*x); }
+KFR_SINTRIN bool bittestany(u16sse x) { return _mm_movemask_epi8(*x); }
+KFR_SINTRIN bool bittestany(u32sse x) { return _mm_movemask_epi8(*x); }
+KFR_SINTRIN bool bittestany(u64sse x) { return _mm_movemask_epi8(*x); }
+KFR_SINTRIN bool bittestany(i8sse x) { return _mm_movemask_epi8(*x); }
+KFR_SINTRIN bool bittestany(i16sse x) { return _mm_movemask_epi8(*x); }
+KFR_SINTRIN bool bittestany(i32sse x) { return _mm_movemask_epi8(*x); }
+KFR_SINTRIN bool bittestany(i64sse x) { return _mm_movemask_epi8(*x); }
 
 KFR_SINTRIN bool bittestall(f32sse x) { return !_mm_movemask_ps(*~x); }
 KFR_SINTRIN bool bittestall(f64sse x) { return !_mm_movemask_pd(*~x); }
@@ -187,17 +122,29 @@ KFR_SINTRIN bool bittestall(i8sse x) { return !_mm_movemask_epi8(*~x); }
 KFR_SINTRIN bool bittestall(i16sse x) { return !_mm_movemask_epi8(*~x); }
 KFR_SINTRIN bool bittestall(i32sse x) { return !_mm_movemask_epi8(*~x); }
 KFR_SINTRIN bool bittestall(i64sse x) { return !_mm_movemask_epi8(*~x); }
+#endif
 
-KFR_SINTRIN bool bittestall(f32sse x, f32sse y) { return bittestnone(~x & y); }
-KFR_SINTRIN bool bittestall(f64sse x, f64sse y) { return bittestnone(~x & y); }
-KFR_SINTRIN bool bittestall(u8sse x, u8sse y) { return bittestnone(~x & y); }
-KFR_SINTRIN bool bittestall(u16sse x, u16sse y) { return bittestnone(~x & y); }
-KFR_SINTRIN bool bittestall(u32sse x, u32sse y) { return bittestnone(~x & y); }
-KFR_SINTRIN bool bittestall(u64sse x, u64sse y) { return bittestnone(~x & y); }
-KFR_SINTRIN bool bittestall(i8sse x, i8sse y) { return bittestnone(~x & y); }
-KFR_SINTRIN bool bittestall(i16sse x, i16sse y) { return bittestnone(~x & y); }
-KFR_SINTRIN bool bittestall(i32sse x, i32sse y) { return bittestnone(~x & y); }
-KFR_SINTRIN bool bittestall(i64sse x, i64sse y) { return bittestnone(~x & y); }
+template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T, cpu_t::native>)>
+KFR_SINTRIN bool bittestall(vec<T, N> a)
+{
+    return bittestall(expand_simd(a, internal::maskbits<T>(true)));
+}
+template <typename T, size_t N, KFR_ENABLE_IF(N >= vector_width<T, cpu_t::native>), typename = void>
+KFR_SINTRIN bool bittestall(vec<T, N> a)
+{
+    return bittestall(low(a)) && bittestall(high(a));
+}
+
+template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T, cpu_t::native>)>
+KFR_SINTRIN bool bittestany(vec<T, N> a)
+{
+    return bittestany(expand_simd(a, internal::maskbits<T>(false)));
+}
+template <typename T, size_t N, KFR_ENABLE_IF(N >= vector_width<T, cpu_t::native>), typename = void>
+KFR_SINTRIN bool bittestany(vec<T, N> a)
+{
+    return bittestany(low(a)) || bittestany(high(a));
+}
 
 #else
 
@@ -213,14 +160,14 @@ KFR_SINTRIN bitmask<N> getmask(vec<T, N> x)
 }
 
 template <typename T, size_t N>
-KFR_SINTRIN bool bittestnone(vec<T, N> x)
+KFR_SINTRIN bool bittestany(vec<T, N> x)
 {
-    return !getmask(x).value;
+    return getmask(x).value;
 }
 template <typename T, size_t N>
-KFR_SINTRIN bool bittestnone(vec<T, N> x, vec<T, N> y)
+KFR_SINTRIN bool bittestany(vec<T, N> x, vec<T, N> y)
 {
-    return bittestnone(x & y);
+    return bittestany(x & y);
 }
 
 template <typename T, size_t N>
@@ -231,20 +178,22 @@ KFR_SINTRIN bool bittestall(vec<T, N> x)
 template <typename T, size_t N>
 KFR_SINTRIN bool bittestall(vec<T, N> x, vec<T, N> y)
 {
-    return bittestnone(~x & y);
+    return !bittestany(~x & y);
 }
 #endif
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 bittestnone(const T1& x)
+/// Returns x[0] && x[1] && ... && x[N-1]
+template <typename T, size_t N>
+KFR_SINTRIN bool all(const mask<T, N>& x)
 {
-    return internal::bittestnone(x);
+    return internal::bittestall(x.asvec());
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 bittestall(const T1& x)
+/// Returns x[0] || x[1] || ... || x[N-1]
+template <typename T, size_t N>
+KFR_SINTRIN bool any(const mask<T, N>& x)
 {
-    return internal::bittestall(x);
+    return internal::bittestany(x.asvec());
 }
 }
