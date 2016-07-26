@@ -27,6 +27,7 @@ namespace kfr
 
 enum class Speaker : int
 {
+    None          = -1,
     Mono          = 0,
     M             = static_cast<int>(Mono),
     Left          = 1,
@@ -58,6 +59,7 @@ enum class Speaker : int
 
 enum class SpeakerArrangement : int
 {
+    None           = -1,
     Mono           = 0,
     Stereo         = 1,
     StereoSurround = 2,
