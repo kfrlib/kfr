@@ -106,7 +106,7 @@ struct expression_file_reader : expression_file_base, input_expression
         position = index + N;
         return cast<U>(input);
     }
-    size_t position = 0;
+    mutable size_t position = 0;
 };
 }
 
