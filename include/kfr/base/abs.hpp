@@ -40,11 +40,7 @@ KFR_SINTRIN vec<T, N> abs(vec<T, N> x)
 
 #if defined CID_ARCH_SSSE3
 
-template <typename T, size_t N>
-KFR_SINTRIN vec<i64, N> abs(vec<i64, N> x)
-{
-    return select(x >= T(), x, -x);
-}
+KFR_SINTRIN i64sse abs(i64sse x) { return select(x >= 0, x, -x); }
 KFR_SINTRIN i32sse abs(i32sse value) { return _mm_abs_epi32(*value); }
 KFR_SINTRIN i16sse abs(i16sse value) { return _mm_abs_epi16(*value); }
 KFR_SINTRIN i8sse abs(i8sse value) { return _mm_abs_epi8(*value); }
