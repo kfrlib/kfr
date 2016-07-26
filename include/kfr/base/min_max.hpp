@@ -139,14 +139,25 @@ KFR_SINTRIN T absmax(initialvalue<T>)
     return 0;
 }
 
+template <typename T, size_t N>
+KFR_SINTRIN vec<T, N> absmin(vec<T, N> x, vec<T, N> y)
+{
+    return min(abs(x), abs(y));
+}
+template <typename T, size_t N>
+KFR_SINTRIN vec<T, N> absmax(vec<T, N> x, vec<T, N> y)
+{
+    return max(abs(x), abs(y));
+}
+
 KFR_HANDLE_SCALAR_2(min)
-KFR_FN(min)
+KFR_I_FN(min)
 KFR_HANDLE_SCALAR_2(max)
-KFR_FN(max)
+KFR_I_FN(max)
 KFR_HANDLE_SCALAR_2(absmin)
-KFR_FN(absmin)
+KFR_I_FN(absmin)
 KFR_HANDLE_SCALAR_2(absmax)
-KFR_FN(absmax)
+KFR_I_FN(absmax)
 }
 
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
