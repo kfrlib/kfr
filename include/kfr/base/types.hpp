@@ -642,7 +642,7 @@ constexpr size_t widthof()
 }
 
 template <typename T>
-constexpr inline T bitness_const(T x32, T x64)
+constexpr inline const T& bitness_const(const T& x32, const T& x64)
 {
 #ifdef KFR_ARCH_X64
     (void)x32;
