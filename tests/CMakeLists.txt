@@ -28,6 +28,7 @@ endif ()
 include_directories(../include)
 
 add_executable(basic_vector_test basic_vector_test.cpp ${KFR_SRC})
+add_executable(intrinsic_test intrinsic_test.cpp ${KFR_SRC})
 add_executable(dft_test dft_test.cpp ${KFR_SRC})
 add_executable(conv_test conv_test.cpp ${KFR_SRC})
 add_executable(fracdelay_test fracdelay_test.cpp ${KFR_SRC})
@@ -40,6 +41,8 @@ enable_testing()
 
 add_test(NAME basic_vector_test
         COMMAND ${PROJECT_BINARY_DIR}/tests/basic_vector_test)
+add_test(NAME intrinsic_test
+        COMMAND ${PROJECT_BINARY_DIR}/tests/intrinsic_test)
 add_test(NAME fracdelay_test
         COMMAND ${PROJECT_BINARY_DIR}/tests/fracdelay_test)
 add_test(NAME conv_test
