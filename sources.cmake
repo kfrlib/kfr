@@ -17,6 +17,8 @@
 
 set(
     KFR_SRC
+    ${PROJECT_SOURCE_DIR}/include/kfr/all.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/cident.h
     ${PROJECT_SOURCE_DIR}/include/kfr/base/abs.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/asin_acos.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/atan.hpp
@@ -39,6 +41,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/select.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/shuffle.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/sin_cos.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/specializations.i
     ${PROJECT_SOURCE_DIR}/include/kfr/base/hyperbolic.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/sqrt.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/tan.hpp
