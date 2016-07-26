@@ -361,26 +361,6 @@ struct cvals_t<T>
     constexpr static size_t size() { return 0; }
 };
 
-namespace details
-{
-template <typename T1, typename T2>
-struct concat_impl;
-
-template <typename T, T... values1, T... values2>
-struct concat_impl<cvals_t<T, values1...>, cvals_t<T, values2...>>
-{
-    using type = cvals_t<T, values1..., values2...>;
-};
-}
-template <typename T1, typename T2>
-using concat_lists = typename details::concat_impl<T1, T2>::type;
-
-template <typename T1, typename T2>
-constexpr inline concat_lists<T1, T2> cconcat(T1, T2)
-{
-    return {};
-}
-
 template <bool... values>
 using cbools_t = cvals_t<bool, values...>;
 
@@ -475,6 +455,30 @@ struct ctypes_t
 
 template <typename... Ts>
 constexpr ctypes_t<Ts...> ctypes{};
+namespace details
+{
+template <typename T1, typename T2>
+struct concat_impl;
+
+template <typename T, T... values1, T... values2>
+struct concat_impl<cvals_t<T, values1...>, cvals_t<T, values2...>>
+{
+    using type = cvals_t<T, values1..., values2...>;
+};
+template <typename... types1, typename... types2>
+struct concat_impl<ctypes_t<types1...>, ctypes_t<types2...>>
+{
+    using type = ctypes_t<types1..., types2...>;
+};
+}
+template <typename T1, typename T2>
+using concat_lists = typename details::concat_impl<T1, T2>::type;
+
+template <typename T1, typename T2>
+constexpr inline concat_lists<T1, T2> cconcat(T1, T2)
+{
+    return {};
+}
 
 namespace details
 {
