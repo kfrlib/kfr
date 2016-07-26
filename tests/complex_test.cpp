@@ -15,6 +15,7 @@
 #include <kfr/version.hpp>
 
 using namespace kfr;
+using testo::assert_is_same;
 
 TEST(complex_vector)
 {
