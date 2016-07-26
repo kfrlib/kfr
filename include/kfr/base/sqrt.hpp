@@ -47,10 +47,10 @@ KFR_HANDLE_ALL_SIZES_FLT_1(sqrt)
 #else
 
 // fallback
-template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> sqrt(vec<T, N> x)
+template <typename T, size_t N, typename Tout = flt_type<T>>
+KFR_SINTRIN vec<Tout, N> sqrt(vec<T, N> x)
 {
-    return apply([](T x) { return std::sqrt(x); }, x);
+    return apply([](T x) { return std::sqrt(static_cast<Tout>(x)); }, x);
 }
 #endif
 KFR_HANDLE_SCALAR_1(sqrt)

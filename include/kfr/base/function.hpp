@@ -143,7 +143,7 @@ KFR_SINTRIN vec<T, Nout> expand_simd(vec<T, N> x)
     }
 #define KFR_HANDLE_SCALAR_1(fn)                                                                              \
     template <typename T, KFR_ENABLE_IF(is_numeric<T>::value)>                                               \
-    KFR_SINTRIN T fn(T a)                                                                                    \
+    KFR_SINTRIN auto fn(T a)                                                                                 \
     {                                                                                                        \
         return fn(make_vector(a))[0];                                                                        \
     }
@@ -229,7 +229,7 @@ KFR_SINTRIN vec<T, Nout> expand_simd(vec<T, N> x)
     }
 #define KFR_HANDLE_SCALAR_2(fn)                                                                              \
     template <typename T, KFR_ENABLE_IF(is_numeric<T>::value)>                                               \
-    KFR_SINTRIN T fn(T a, T b)                                                                               \
+    KFR_SINTRIN auto fn(T a, T b)                                                                            \
     {                                                                                                        \
         return fn(make_vector(a), make_vector(b))[0];                                                        \
     }
@@ -247,7 +247,7 @@ KFR_SINTRIN vec<T, Nout> expand_simd(vec<T, N> x)
     }
 #define KFR_HANDLE_SCALAR_3(fn)                                                                              \
     template <typename T, KFR_ENABLE_IF(is_numeric<T>::value)>                                               \
-    KFR_SINTRIN T fn(T a, T b, T c)                                                                          \
+    KFR_SINTRIN auto fn(T a, T b, T c)                                                                       \
     {                                                                                                        \
         return fn(make_vector(a), make_vector(b), make_vector(c))[0];                                        \
     }
@@ -265,7 +265,7 @@ KFR_SINTRIN vec<T, Nout> expand_simd(vec<T, N> x)
     }
 #define KFR_HANDLE_SCALAR_4(fn)                                                                              \
     template <typename T, KFR_ENABLE_IF(is_numeric<T>::value)>                                               \
-    KFR_SINTRIN T fn(T a, T b, T c, T d)                                                                     \
+    KFR_SINTRIN auto fn(T a, T b, T c, T d)                                                                  \
     {                                                                                                        \
         return fn(make_vector(a), make_vector(b), make_vector(c), make_vector(d))[0];                        \
     }

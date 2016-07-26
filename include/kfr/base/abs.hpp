@@ -50,10 +50,10 @@ KFR_SINTRIN u16sse abs(u16sse x) { return x; }
 KFR_SINTRIN u8sse abs(u8sse x) { return x; }
 
 #if defined CID_ARCH_AVX2
-KFR_SINTRIN i64avx abs(i64avx value) { return select(x >= 0, x, -x); }
-KFR_SINTRIN i32avx abs(i32avx value) { return _mm256_abs_epi32(*value); }
-KFR_SINTRIN i16avx abs(i16avx value) { return _mm256_abs_epi16(*value); }
-KFR_SINTRIN i8avx abs(i8avx value) { return _mm256_abs_epi8(*value); }
+KFR_SINTRIN i64avx abs(i64avx x) { return select(x >= 0, x, -x); }
+KFR_SINTRIN i32avx abs(i32avx x) { return _mm256_abs_epi32(*x); }
+KFR_SINTRIN i16avx abs(i16avx x) { return _mm256_abs_epi16(*x); }
+KFR_SINTRIN i8avx abs(i8avx x) { return _mm256_abs_epi8(*x); }
 KFR_SINTRIN u64avx abs(u64avx x) { return x; }
 KFR_SINTRIN u32avx abs(u32avx x) { return x; }
 KFR_SINTRIN u16avx abs(u16avx x) { return x; }
