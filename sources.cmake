@@ -86,7 +86,6 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/misc/random.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/misc/small_buffer.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/misc/sort.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/vec.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/version.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/kfr.h
     ${PROJECT_SOURCE_DIR}/include/kfr/base/intrinsics.h

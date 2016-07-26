@@ -8,14 +8,8 @@
 
 #include "testo/testo.hpp"
 #include <kfr/math.hpp>
-#include <kfr/vec.hpp>
 
 using namespace kfr;
-
-template <typename Fn>
-void test_intrinsic(Fn&& fn)
-{
-}
 
 constexpr ctypes_t<i8x1, i16x1, i32x1, i64x1, //
                    i8x2, i16x2, i32x2, i64x2, //

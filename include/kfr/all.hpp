@@ -86,7 +86,6 @@
 #include "io/python_plot.hpp"
 #include "io/tostring.hpp"
 #include "math.hpp"
-#include "vec.hpp"
 
 #include "dft/bitrev.hpp"
 #include "dft/conv.hpp"

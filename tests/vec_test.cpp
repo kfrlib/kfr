@@ -8,7 +8,6 @@
 
 #include "testo/testo.hpp"
 #include <kfr/math.hpp>
-#include <kfr/vec.hpp>
 
 using namespace kfr;
 

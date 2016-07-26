@@ -20,7 +20,6 @@
 #include <kfr/expressions/reduce.hpp>
 #include <kfr/math.hpp>
 #include <kfr/misc/random.hpp>
-#include <kfr/vec.hpp>
 
 using namespace kfr;
 

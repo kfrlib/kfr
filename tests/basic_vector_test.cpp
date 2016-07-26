@@ -8,7 +8,6 @@
 
 #include <kfr/cometa/string.hpp>
 #include <kfr/math.hpp>
-#include <kfr/vec.hpp>
 #include <kfr/version.hpp>
 
 #include "testo/testo.hpp"
