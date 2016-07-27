@@ -114,10 +114,10 @@ KFR_SINTRIN void fir_bandstop(univector_ref<T> taps, T frequency1, T frequency2,
     }
 }
 
-KFR_FN(fir_lowpass)
-KFR_FN(fir_highpass)
-KFR_FN(fir_bandpass)
-KFR_FN(fir_bandstop)
+KFR_I_FN(fir_lowpass)
+KFR_I_FN(fir_highpass)
+KFR_I_FN(fir_bandpass)
+KFR_I_FN(fir_bandstop)
 }
 
 template <typename T, size_t Tag>

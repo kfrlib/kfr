@@ -58,10 +58,10 @@ KFR_SINTRIN vec<T, N> factorial_approx(vec<T, N> x)
 {
     return gamma(x + T(1));
 }
-KFR_HANDLE_SCALAR(gamma)
-KFR_HANDLE_SCALAR(factorial_approx)
-KFR_FN(gamma)
-KFR_FN(factorial_approx)
+KFR_I_CONVERTER(gamma)
+KFR_I_CONVERTER(factorial_approx)
+KFR_I_FN(gamma)
+KFR_I_FN(factorial_approx)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>

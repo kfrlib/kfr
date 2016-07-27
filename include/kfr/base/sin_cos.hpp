@@ -315,21 +315,21 @@ KFR_SINTRIN T cossindeg(const T& x)
     return cossin(x * c_degtorad<T>);
 }
 
-KFR_HANDLE_SCALAR_1(sin)
-KFR_HANDLE_SCALAR_1(cos)
-KFR_HANDLE_SCALAR_1(fastsin)
-KFR_HANDLE_SCALAR_1(fastcos)
-KFR_HANDLE_SCALAR_1(sincos)
-KFR_HANDLE_SCALAR_1(cossin)
-KFR_HANDLE_SCALAR_1(sinc)
+KFR_I_CONVERTER(sin)
+KFR_I_CONVERTER(cos)
+KFR_I_CONVERTER(fastsin)
+KFR_I_CONVERTER(fastcos)
+KFR_I_CONVERTER(sincos)
+KFR_I_CONVERTER(cossin)
+KFR_I_CONVERTER(sinc)
 
-KFR_FN(sin)
-KFR_FN(cos)
-KFR_FN(fastsin)
-KFR_FN(fastcos)
-KFR_FN(sincos)
-KFR_FN(cossin)
-KFR_FN(sinc)
+KFR_I_FN(sin)
+KFR_I_FN(cos)
+KFR_I_FN(fastsin)
+KFR_I_FN(fastcos)
+KFR_I_FN(sincos)
+KFR_I_FN(cossin)
+KFR_I_FN(sinc)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>

@@ -77,18 +77,18 @@ KFR_SINTRIN vec<T, N> coshsinh(vec<T, N> x)
     return addsub(a, b) * T(0.5);
 }
 
-KFR_HANDLE_SCALAR(sinh)
-KFR_HANDLE_SCALAR(cosh)
-KFR_HANDLE_SCALAR(tanh)
-KFR_HANDLE_SCALAR(coth)
-KFR_HANDLE_SCALAR(sinhcosh)
-KFR_HANDLE_SCALAR(coshsinh)
-KFR_FN(sinh)
-KFR_FN(cosh)
-KFR_FN(tanh)
-KFR_FN(coth)
-KFR_FN(sinhcosh)
-KFR_FN(coshsinh)
+KFR_I_CONVERTER(sinh)
+KFR_I_CONVERTER(cosh)
+KFR_I_CONVERTER(tanh)
+KFR_I_CONVERTER(coth)
+KFR_I_CONVERTER(sinhcosh)
+KFR_I_CONVERTER(coshsinh)
+KFR_I_FN(sinh)
+KFR_I_FN(cosh)
+KFR_I_FN(tanh)
+KFR_I_FN(coth)
+KFR_I_FN(sinhcosh)
+KFR_I_FN(coshsinh)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>

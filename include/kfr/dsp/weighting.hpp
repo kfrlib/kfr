@@ -103,11 +103,11 @@ KFR_SINTRIN T cweightingdB(T f)
     return amp_to_dB(cweighting(f));
 }
 
-KFR_FN(aweighting)
-KFR_FN(bweighting)
-KFR_FN(cweighting)
-KFR_FN(aweightingdB)
-KFR_FN(bweightingdB)
-KFR_FN(cweightingdB)
+KFR_I_FN(aweighting)
+KFR_I_FN(bweighting)
+KFR_I_FN(cweighting)
+KFR_I_FN(aweightingdB)
+KFR_I_FN(bweightingdB)
+KFR_I_FN(cweightingdB)
 }
 }

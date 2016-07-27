@@ -93,8 +93,8 @@ KFR_INLINE vec<T, N> modzerobessel(vec<T, N> x)
     return result;
 }
 
-KFR_HANDLE_SCALAR(modzerobessel)
-KFR_FN(modzerobessel)
+KFR_I_CONVERTER(modzerobessel)
+KFR_I_FN(modzerobessel)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>

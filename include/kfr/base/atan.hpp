@@ -200,12 +200,12 @@ KFR_SINTRIN common_type<T1, T2> atan2deg(const T1& y, const T2& x)
     return atan2(y, x) * c_radtodeg<common_type<T1, T2>>;
 }
 
-KFR_HANDLE_SCALAR(atan)
-KFR_HANDLE_SCALAR(atan2)
-KFR_FN(atan)
-KFR_FN(atandeg)
-KFR_FN(atan2)
-KFR_FN(atan2deg)
+KFR_I_CONVERTER(atan)
+KFR_I_CONVERTER(atan2)
+KFR_I_FN(atan)
+KFR_I_FN(atandeg)
+KFR_I_FN(atan2)
+KFR_I_FN(atan2deg)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>

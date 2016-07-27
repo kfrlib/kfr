@@ -393,37 +393,48 @@ KFR_SINTRIN vec<complex<T>, N> csqrt(const vec<complex<T>, N>& x)
     return ccomp(select(dupodd(x) < T(), cdecom(cnegimag(ccomp(t))), t));
 }
 
-KFR_HANDLE_SCALAR(csin)
-KFR_HANDLE_SCALAR(csinh)
-KFR_HANDLE_SCALAR(ccos)
-KFR_HANDLE_SCALAR(ccosh)
-KFR_HANDLE_SCALAR(cabs)
-KFR_HANDLE_SCALAR(carg)
-KFR_HANDLE_SCALAR(clog)
-KFR_HANDLE_SCALAR(clog2)
-KFR_HANDLE_SCALAR(clog10)
-KFR_HANDLE_SCALAR(cexp)
-KFR_HANDLE_SCALAR(cexp2)
-KFR_HANDLE_SCALAR(cexp10)
-KFR_HANDLE_SCALAR(polar)
-KFR_HANDLE_SCALAR(cartesian)
-KFR_HANDLE_SCALAR(csqrt)
+KFR_I_CONVERTER(csin)
+KFR_I_CONVERTER(csinh)
+KFR_I_CONVERTER(ccos)
+KFR_I_CONVERTER(ccosh)
+KFR_I_CONVERTER(clog)
+KFR_I_CONVERTER(clog2)
+KFR_I_CONVERTER(clog10)
+KFR_I_CONVERTER(cexp)
+KFR_I_CONVERTER(cexp2)
+KFR_I_CONVERTER(cexp10)
+KFR_I_CONVERTER(polar)
+KFR_I_CONVERTER(cartesian)
+KFR_I_CONVERTER(csqrt)
 
-KFR_FN(csin)
-KFR_FN(csinh)
-KFR_FN(ccos)
-KFR_FN(ccosh)
-KFR_FN(cabs)
-KFR_FN(carg)
-KFR_FN(clog)
-KFR_FN(clog2)
-KFR_FN(clog10)
-KFR_FN(cexp)
-KFR_FN(cexp2)
-KFR_FN(cexp10)
-KFR_FN(polar)
-KFR_FN(cartesian)
-KFR_FN(csqrt)
+template <typename T1>
+KFR_SINTRIN realtype<T1> cabs(const T1& a)
+{
+    using vecout = vec1<T1>;
+    return to_scalar(internal::cabs(vecout(a)));
+}
+template <typename T1>
+KFR_SINTRIN realtype<T1> carg(const T1& a)
+{
+    using vecout = vec1<T1>;
+    return to_scalar(internal::carg(vecout(a)));
+}
+
+KFR_I_FN(csin)
+KFR_I_FN(csinh)
+KFR_I_FN(ccos)
+KFR_I_FN(ccosh)
+KFR_I_FN(cabs)
+KFR_I_FN(carg)
+KFR_I_FN(clog)
+KFR_I_FN(clog2)
+KFR_I_FN(clog10)
+KFR_I_FN(cexp)
+KFR_I_FN(cexp2)
+KFR_I_FN(cexp10)
+KFR_I_FN(polar)
+KFR_I_FN(cartesian)
+KFR_I_FN(csqrt)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>

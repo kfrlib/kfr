@@ -53,8 +53,8 @@ KFR_SINTRIN vec<Tout, N> sqrt(vec<T, N> x)
     return apply([](T x) { return std::sqrt(static_cast<Tout>(x)); }, x);
 }
 #endif
-KFR_HANDLE_SCALAR_1(sqrt)
-KFR_FN(sqrt)
+KFR_I_CONVERTER(sqrt)
+KFR_I_FN(sqrt)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>

@@ -125,9 +125,9 @@ KFR_SINTRIN T tandeg(const T& x)
     return tan(x * c_degtorad<T>);
 }
 
-KFR_HANDLE_SCALAR(tan)
-KFR_FN(tan)
-KFR_FN(tandeg)
+KFR_I_CONVERTER(tan)
+KFR_I_FN(tan)
+KFR_I_FN(tandeg)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>

@@ -126,14 +126,15 @@ KFR_SINTRIN vec<T, N> satsub(vec<T, N> a, vec<T, N> b)
     return saturated_unsigned_sub(a, b);
 }
 #endif
-KFR_HANDLE_SCALAR_2(satadd)
+KFR_I_CONVERTER(satadd)
 KFR_I_FN(satadd)
-KFR_HANDLE_SCALAR_2(satsub)
+KFR_I_CONVERTER(satsub)
 KFR_I_FN(satsub)
 }
 
-template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INTRIN common_type<T1, T2> satadd(const T1& x, const T2& y)
+template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value),
+          typename Tout = common_type<T1, T2>>
+KFR_INTRIN Tout satadd(const T1& x, const T2& y)
 {
     return internal::satadd(x, y);
 }
@@ -144,8 +145,9 @@ KFR_INTRIN expr_func<internal::fn_satadd, E1, E2> satadd(E1&& x, E2&& y)
     return { {}, std::forward<E1>(x), std::forward<E2>(y) };
 }
 
-template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INTRIN common_type<T1, T2> satsub(const T1& x, const T2& y)
+template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value),
+          typename Tout = common_type<T1, T2>>
+KFR_INTRIN Tout satsub(const T1& x, const T2& y)
 {
     return internal::satsub(x, y);
 }

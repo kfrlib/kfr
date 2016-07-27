@@ -71,8 +71,8 @@ KFR_SINTRIN vec<T, N> abs(vec<T, N> x)
     return select(x >= T(), x, -x);
 }
 #endif
-KFR_HANDLE_SCALAR_1(abs)
-KFR_FN(abs)
+KFR_I_CONVERTER(abs)
+KFR_I_FN(abs)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>

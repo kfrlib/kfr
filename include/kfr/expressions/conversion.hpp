@@ -50,5 +50,4 @@ KFR_INLINE internal::expression_convert<From, decay<E>> convert(E&& expr)
 {
     return internal::expression_convert<From, decay<E>>(std::forward<E>(expr));
 }
-KFR_FN(convert)
 }

@@ -150,18 +150,19 @@ KFR_SINTRIN vec<T, N> absmax(vec<T, N> x, vec<T, N> y)
     return max(abs(x), abs(y));
 }
 
-KFR_HANDLE_SCALAR_2(min)
+KFR_I_CONVERTER(min)
 KFR_I_FN(min)
-KFR_HANDLE_SCALAR_2(max)
+KFR_I_CONVERTER(max)
 KFR_I_FN(max)
-KFR_HANDLE_SCALAR_2(absmin)
+KFR_I_CONVERTER(absmin)
 KFR_I_FN(absmin)
-KFR_HANDLE_SCALAR_2(absmax)
+KFR_I_CONVERTER(absmax)
 KFR_I_FN(absmax)
 }
 
-template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INTRIN common_type<T1, T2> min(const T1& x, const T2& y)
+template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value),
+          typename Tout = common_type<T1, T2>>
+KFR_INTRIN Tout min(const T1& x, const T2& y)
 {
     return internal::min(x, y);
 }
@@ -172,8 +173,9 @@ KFR_INTRIN expr_func<internal::fn_min, E1, E2> min(E1&& x, E2&& y)
     return { {}, std::forward<E1>(x), std::forward<E2>(y) };
 }
 
-template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INTRIN common_type<T1, T2> max(const T1& x, const T2& y)
+template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value),
+          typename Tout = common_type<T1, T2>>
+KFR_INTRIN Tout max(const T1& x, const T2& y)
 {
     return internal::max(x, y);
 }
@@ -184,8 +186,9 @@ KFR_INTRIN expr_func<internal::fn_max, E1, E2> max(E1&& x, E2&& y)
     return { {}, std::forward<E1>(x), std::forward<E2>(y) };
 }
 
-template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INTRIN common_type<T1, T2> absmin(const T1& x, const T2& y)
+template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value),
+          typename Tout = common_type<T1, T2>>
+KFR_INTRIN Tout absmin(const T1& x, const T2& y)
 {
     return internal::absmin(x, y);
 }
@@ -196,8 +199,9 @@ KFR_INTRIN expr_func<internal::fn_absmin, E1, E2> absmin(E1&& x, E2&& y)
     return { {}, std::forward<E1>(x), std::forward<E2>(y) };
 }
 
-template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INTRIN common_type<T1, T2> absmax(const T1& x, const T2& y)
+template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value),
+          typename Tout = common_type<T1, T2>>
+KFR_INTRIN Tout absmax(const T1& x, const T2& y)
 {
     return internal::absmax(x, y);
 }
