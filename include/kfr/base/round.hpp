@@ -170,16 +170,45 @@ KFR_SINTRIN vec<T, N> fract(vec<T, N>)
     return T(0);
 }
 
+template <typename T, size_t N, typename IT = itype<T>>
+KFR_SINTRIN vec<IT, N> ifloor(vec<T, N> value)
+{
+    return cast<IT>(floor(value));
+}
+template <typename T, size_t N, typename IT = itype<T>>
+KFR_SINTRIN vec<IT, N> iceil(vec<T, N> value)
+{
+    return cast<IT>(ceil(value));
+}
+template <typename T, size_t N, typename IT = itype<T>>
+KFR_SINTRIN vec<IT, N> itrunc(vec<T, N> value)
+{
+    return cast<IT>(trunc(value));
+}
+template <typename T, size_t N, typename IT = itype<T>>
+KFR_SINTRIN vec<IT, N> iround(vec<T, N> value)
+{
+    return cast<IT>(round(value));
+}
+
 KFR_HANDLE_SCALAR_1(floor)
 KFR_HANDLE_SCALAR_1(ceil)
 KFR_HANDLE_SCALAR_1(round)
 KFR_HANDLE_SCALAR_1(trunc)
 KFR_HANDLE_SCALAR_1(fract)
+KFR_HANDLE_SCALAR_1(ifloor)
+KFR_HANDLE_SCALAR_1(iceil)
+KFR_HANDLE_SCALAR_1(iround)
+KFR_HANDLE_SCALAR_1(itrunc)
 KFR_I_FN(floor)
 KFR_I_FN(ceil)
 KFR_I_FN(round)
 KFR_I_FN(trunc)
 KFR_I_FN(fract)
+KFR_I_FN(ifloor)
+KFR_I_FN(iceil)
+KFR_I_FN(iround)
+KFR_I_FN(itrunc)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -238,6 +267,54 @@ KFR_INTRIN T1 fract(const T1& x)
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<internal::fn_fract, E1> fract(E1&& x)
+{
+    return { {}, std::forward<E1>(x) };
+}
+
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_INTRIN itype<T1> ifloor(const T1& x)
+{
+    return internal::ifloor(x);
+}
+
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_INTRIN expr_func<internal::fn_ifloor, E1> ifloor(E1&& x)
+{
+    return { {}, std::forward<E1>(x) };
+}
+
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_INTRIN itype<T1> iceil(const T1& x)
+{
+    return internal::iceil(x);
+}
+
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_INTRIN expr_func<internal::fn_iceil, E1> iceil(E1&& x)
+{
+    return { {}, std::forward<E1>(x) };
+}
+
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_INTRIN itype<T1> iround(const T1& x)
+{
+    return internal::iround(x);
+}
+
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_INTRIN expr_func<internal::fn_iround, E1> iround(E1&& x)
+{
+    return { {}, std::forward<E1>(x) };
+}
+
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_INTRIN itype<T1> itrunc(const T1& x)
+{
+    return internal::itrunc(x);
+}
+
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_INTRIN expr_func<internal::fn_itrunc, E1> itrunc(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }

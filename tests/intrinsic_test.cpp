@@ -127,6 +127,11 @@ TEST(intrin_round)
     testo::assert_is_same<decltype(kfr::round(100)), int>();
     testo::assert_is_same<decltype(kfr::trunc(100)), int>();
     testo::assert_is_same<decltype(kfr::fract(100)), int>();
+
+    testo::assert_is_same<decltype(kfr::ifloor(100.f)), int>();
+    testo::assert_is_same<decltype(kfr::iceil(100.f)), int>();
+    testo::assert_is_same<decltype(kfr::iround(100.f)), int>();
+    testo::assert_is_same<decltype(kfr::itrunc(100.f)), int>();
     CHECK(kfr::floor(100) == 100);
     CHECK(kfr::ceil(100) == 100);
     CHECK(kfr::round(100) == 100);
