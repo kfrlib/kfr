@@ -286,12 +286,12 @@ KFR_FN(generate_vector)
 
 namespace internal
 {
-template <typename T, size_t N, typename = u8[N > 1]>
+template <typename T, size_t N>
 constexpr KFR_INLINE mask<T, N> evenmask()
 {
     return broadcast<N, T>(maskbits<T>(true), maskbits<T>(false));
 }
-template <typename T, size_t N, typename = u8[N > 1]>
+template <typename T, size_t N>
 constexpr KFR_INLINE mask<T, N> oddmask()
 {
     return broadcast<N, T>(maskbits<T>(false), maskbits<T>(true));
