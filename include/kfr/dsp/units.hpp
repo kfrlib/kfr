@@ -36,7 +36,7 @@ namespace kfr
 
 using sample_rate_t = double;
 
-namespace internal
+namespace intrinsics
 {
 template <typename T, typename TF = ftype<T>>
 KFR_SINTRIN TF amp_to_dB(T amp)
@@ -53,7 +53,7 @@ KFR_SINTRIN TF dB_to_amp(T dB)
 }
 
 template <typename T, typename TF = ftype<T>>
-KFR_SINTRIN TF amp_to_dB2(T amp, T offset)
+KFR_SINTRIN TF amp_to_dB(T amp, T offset)
 {
     return log_fmadd(amp, subtype<TF>(8.6858896380650365530225783783322), offset);
     // return T( 20.0 ) * log10( level );
@@ -114,22 +114,22 @@ KFR_SINTRIN Tc hertz_to_note(T1 hertz, T2 tunenote, T3 tunehertz)
     return log_fmadd(hertz, subtype<Tc>(17.312340490667560888319096172023), offset);
 }
 
+}
 KFR_I_FN(note_to_hertz)
 KFR_I_FN(hertz_to_note)
 KFR_I_FN(amp_to_dB)
 KFR_I_FN(dB_to_amp)
 KFR_I_FN(power_to_dB)
 KFR_I_FN(dB_to_power)
-}
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 note_to_hertz(const T1& x)
 {
-    return internal::note_to_hertz(x);
+    return intrinsics::note_to_hertz(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_note_to_hertz, E1> note_to_hertz(E1&& x)
+KFR_INTRIN expr_func<fn::note_to_hertz, E1> note_to_hertz(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -137,11 +137,11 @@ KFR_INTRIN expr_func<internal::fn_note_to_hertz, E1> note_to_hertz(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 hertz_to_note(const T1& x)
 {
-    return internal::hertz_to_note(x);
+    return intrinsics::hertz_to_note(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_hertz_to_note, E1> hertz_to_note(E1&& x)
+KFR_INTRIN expr_func<fn::hertz_to_note, E1> hertz_to_note(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -149,11 +149,11 @@ KFR_INTRIN expr_func<internal::fn_hertz_to_note, E1> hertz_to_note(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 amp_to_dB(const T1& x)
 {
-    return internal::amp_to_dB(x);
+    return intrinsics::amp_to_dB(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_amp_to_dB, E1> amp_to_dB(E1&& x)
+KFR_INTRIN expr_func<fn::amp_to_dB, E1> amp_to_dB(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -161,11 +161,11 @@ KFR_INTRIN expr_func<internal::fn_amp_to_dB, E1> amp_to_dB(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 dB_to_amp(const T1& x)
 {
-    return internal::dB_to_amp(x);
+    return intrinsics::dB_to_amp(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_dB_to_amp, E1> dB_to_amp(E1&& x)
+KFR_INTRIN expr_func<fn::dB_to_amp, E1> dB_to_amp(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -173,11 +173,11 @@ KFR_INTRIN expr_func<internal::fn_dB_to_amp, E1> dB_to_amp(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 power_to_dB(const T1& x)
 {
-    return internal::power_to_dB(x);
+    return intrinsics::power_to_dB(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_power_to_dB, E1> power_to_dB(E1&& x)
+KFR_INTRIN expr_func<fn::power_to_dB, E1> power_to_dB(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -185,11 +185,11 @@ KFR_INTRIN expr_func<internal::fn_power_to_dB, E1> power_to_dB(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 dB_to_power(const T1& x)
 {
-    return internal::dB_to_power(x);
+    return intrinsics::dB_to_power(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_dB_to_power, E1> dB_to_power(E1&& x)
+KFR_INTRIN expr_func<fn::dB_to_power, E1> dB_to_power(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }

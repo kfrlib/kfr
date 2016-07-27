@@ -27,7 +27,7 @@
 namespace kfr
 {
 
-namespace internal
+namespace intrinsics
 {
 
 #if defined CID_ARCH_SSE2
@@ -54,17 +54,17 @@ KFR_SINTRIN vec<Tout, N> sqrt(vec<T, N> x)
 }
 #endif
 KFR_I_CONVERTER(sqrt)
-KFR_I_FN(sqrt)
 }
+KFR_I_FN(sqrt)
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN flt_type<T1> sqrt(const T1& x)
 {
-    return internal::sqrt(x);
+    return intrinsics::sqrt(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_sqrt, E1> sqrt(E1&& x)
+KFR_INTRIN expr_func<fn::sqrt, E1> sqrt(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }

@@ -38,7 +38,7 @@
 namespace kfr
 {
 
-namespace internal
+namespace intrinsics
 {
 
 template <typename T>
@@ -323,6 +323,8 @@ KFR_I_CONVERTER(sincos)
 KFR_I_CONVERTER(cossin)
 KFR_I_CONVERTER(sinc)
 
+}
+
 KFR_I_FN(sin)
 KFR_I_FN(cos)
 KFR_I_FN(fastsin)
@@ -330,16 +332,15 @@ KFR_I_FN(fastcos)
 KFR_I_FN(sincos)
 KFR_I_FN(cossin)
 KFR_I_FN(sinc)
-}
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN ftype<T1> sin(const T1& x)
 {
-    return internal::sin(x);
+    return intrinsics::sin(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_sin, E1> sin(E1&& x)
+KFR_INTRIN expr_func<fn::sin, E1> sin(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -347,11 +348,11 @@ KFR_INTRIN expr_func<internal::fn_sin, E1> sin(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN ftype<T1> cos(const T1& x)
 {
-    return internal::cos(x);
+    return intrinsics::cos(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_cos, E1> cos(E1&& x)
+KFR_INTRIN expr_func<fn::cos, E1> cos(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -359,11 +360,11 @@ KFR_INTRIN expr_func<internal::fn_cos, E1> cos(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN ftype<T1> fastsin(const T1& x)
 {
-    return internal::fastsin(x);
+    return intrinsics::fastsin(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_fastsin, E1> fastsin(E1&& x)
+KFR_INTRIN expr_func<fn::fastsin, E1> fastsin(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -371,11 +372,11 @@ KFR_INTRIN expr_func<internal::fn_fastsin, E1> fastsin(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN ftype<T1> fastcos(const T1& x)
 {
-    return internal::fastcos(x);
+    return intrinsics::fastcos(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_fastcos, E1> fastcos(E1&& x)
+KFR_INTRIN expr_func<fn::fastcos, E1> fastcos(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -383,11 +384,11 @@ KFR_INTRIN expr_func<internal::fn_fastcos, E1> fastcos(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN ftype<T1> sincos(const T1& x)
 {
-    return internal::sincos(x);
+    return intrinsics::sincos(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_sincos, E1> sincos(E1&& x)
+KFR_INTRIN expr_func<fn::sincos, E1> sincos(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -395,11 +396,11 @@ KFR_INTRIN expr_func<internal::fn_sincos, E1> sincos(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN ftype<T1> cossin(const T1& x)
 {
-    return internal::cossin(x);
+    return intrinsics::cossin(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_cossin, E1> cossin(E1&& x)
+KFR_INTRIN expr_func<fn::cossin, E1> cossin(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -407,11 +408,11 @@ KFR_INTRIN expr_func<internal::fn_cossin, E1> cossin(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN ftype<T1> sinc(const T1& x)
 {
-    return internal::sinc(x);
+    return intrinsics::sinc(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_sinc, E1> sinc(E1&& x)
+KFR_INTRIN expr_func<fn::sinc, E1> sinc(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }

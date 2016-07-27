@@ -32,7 +32,7 @@
 namespace kfr
 {
 
-namespace internal
+namespace intrinsics
 {
 template <typename T>
 constexpr T gamma_precalc[] = {
@@ -60,18 +60,18 @@ KFR_SINTRIN vec<T, N> factorial_approx(vec<T, N> x)
 }
 KFR_I_CONVERTER(gamma)
 KFR_I_CONVERTER(factorial_approx)
+}
 KFR_I_FN(gamma)
 KFR_I_FN(factorial_approx)
-}
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 gamma(const T1& x)
 {
-    return internal::gamma(x);
+    return intrinsics::gamma(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_gamma, E1> gamma(E1&& x)
+KFR_INTRIN expr_func<fn::gamma, E1> gamma(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -79,11 +79,11 @@ KFR_INTRIN expr_func<internal::fn_gamma, E1> gamma(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 factorial_approx(const T1& x)
 {
-    return internal::factorial_approx(x);
+    return intrinsics::factorial_approx(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_factorial_approx, E1> factorial_approx(E1&& x)
+KFR_INTRIN expr_func<fn::factorial_approx, E1> factorial_approx(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }

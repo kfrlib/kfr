@@ -32,7 +32,7 @@
 namespace kfr
 {
 
-namespace internal
+namespace intrinsics
 {
 
 template <typename T, size_t N>
@@ -83,22 +83,22 @@ KFR_I_CONVERTER(tanh)
 KFR_I_CONVERTER(coth)
 KFR_I_CONVERTER(sinhcosh)
 KFR_I_CONVERTER(coshsinh)
+}
 KFR_I_FN(sinh)
 KFR_I_FN(cosh)
 KFR_I_FN(tanh)
 KFR_I_FN(coth)
 KFR_I_FN(sinhcosh)
 KFR_I_FN(coshsinh)
-}
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 sinh(const T1& x)
 {
-    return internal::sinh(x);
+    return intrinsics::sinh(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_sinh, E1> sinh(E1&& x)
+KFR_INTRIN expr_func<fn::sinh, E1> sinh(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -106,11 +106,11 @@ KFR_INTRIN expr_func<internal::fn_sinh, E1> sinh(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 cosh(const T1& x)
 {
-    return internal::cosh(x);
+    return intrinsics::cosh(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_cosh, E1> cosh(E1&& x)
+KFR_INTRIN expr_func<fn::cosh, E1> cosh(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -118,11 +118,11 @@ KFR_INTRIN expr_func<internal::fn_cosh, E1> cosh(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 tanh(const T1& x)
 {
-    return internal::tanh(x);
+    return intrinsics::tanh(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_tanh, E1> tanh(E1&& x)
+KFR_INTRIN expr_func<fn::tanh, E1> tanh(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -130,11 +130,11 @@ KFR_INTRIN expr_func<internal::fn_tanh, E1> tanh(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 coth(const T1& x)
 {
-    return internal::coth(x);
+    return intrinsics::coth(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_coth, E1> coth(E1&& x)
+KFR_INTRIN expr_func<fn::coth, E1> coth(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -142,11 +142,11 @@ KFR_INTRIN expr_func<internal::fn_coth, E1> coth(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 sinhcosh(const T1& x)
 {
-    return internal::sinhcosh(x);
+    return intrinsics::sinhcosh(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_sinhcosh, E1> sinhcosh(E1&& x)
+KFR_INTRIN expr_func<fn::sinhcosh, E1> sinhcosh(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -154,11 +154,11 @@ KFR_INTRIN expr_func<internal::fn_sinhcosh, E1> sinhcosh(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 coshsinh(const T1& x)
 {
-    return internal::coshsinh(x);
+    return intrinsics::coshsinh(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_coshsinh, E1> coshsinh(E1&& x)
+KFR_INTRIN expr_func<fn::coshsinh, E1> coshsinh(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }

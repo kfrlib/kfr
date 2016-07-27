@@ -38,13 +38,13 @@ namespace kfr
     KFR_SINTRIN Tout fn(const T1& a, const Args&... b)                                                       \
     {                                                                                                        \
         using vecout = vec1<Tout>;                                                                           \
-        return to_scalar(internal::fn(vecout(a), vecout(b)...));                                             \
+        return to_scalar(::kfr::intrinsics::fn(vecout(a), vecout(b)...));                                    \
     }
 
 template <typename T>
 using flt_type = conditional<std::is_floating_point<deep_subtype<T>>::value, T, deep_rebind<T, fbase>>;
 
-namespace internal
+namespace intrinsics
 {
 #ifdef CID_ARCH_X86
 using f32sse = vec<f32, 4>;

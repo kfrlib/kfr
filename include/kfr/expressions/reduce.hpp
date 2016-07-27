@@ -142,7 +142,7 @@ KFR_SINTRIN T minof(E1&& x)
 {
     static_assert(!is_generic<E1>::value, "e1 must be a typed expression (use typed<T>())");
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use typed<T>())");
-    return internal::reduce(std::forward<E1>(x), internal::fn_min());
+    return internal::reduce(std::forward<E1>(x), fn::min());
 }
 
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
@@ -150,7 +150,7 @@ KFR_SINTRIN T maxof(E1&& x)
 {
     static_assert(!is_generic<E1>::value, "e1 must be a typed expression (use typed<T>())");
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use typed<T>())");
-    return internal::reduce(std::forward<E1>(x), internal::fn_max());
+    return internal::reduce(std::forward<E1>(x), fn::max());
 }
 
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
@@ -158,7 +158,7 @@ KFR_SINTRIN T absminof(E1&& x)
 {
     static_assert(!is_generic<E1>::value, "e1 must be a typed expression (use typed<T>())");
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use typed<T>())");
-    return internal::reduce(std::forward<E1>(x), internal::fn_absmin());
+    return internal::reduce(std::forward<E1>(x), fn::absmin());
 }
 
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
@@ -166,7 +166,7 @@ KFR_SINTRIN T absmaxof(E1&& x)
 {
     static_assert(!is_generic<E1>::value, "e1 must be a typed expression (use typed<T>())");
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use typed<T>())");
-    return internal::reduce(std::forward<E1>(x), internal::fn_absmax());
+    return internal::reduce(std::forward<E1>(x), fn::absmax());
 }
 
 template <typename E1, typename E2, typename T = value_type_of<E1>,

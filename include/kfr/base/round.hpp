@@ -28,7 +28,7 @@
 namespace kfr
 {
 
-namespace internal
+namespace intrinsics
 {
 
 #define KFR_mm_trunc_ps(V) _mm_round_ps((V), _MM_FROUND_TRUNC)
@@ -200,6 +200,7 @@ KFR_I_CONVERTER(ifloor)
 KFR_I_CONVERTER(iceil)
 KFR_I_CONVERTER(iround)
 KFR_I_CONVERTER(itrunc)
+}
 KFR_I_FN(floor)
 KFR_I_FN(ceil)
 KFR_I_FN(round)
@@ -209,16 +210,15 @@ KFR_I_FN(ifloor)
 KFR_I_FN(iceil)
 KFR_I_FN(iround)
 KFR_I_FN(itrunc)
-}
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 floor(const T1& x)
 {
-    return internal::floor(x);
+    return intrinsics::floor(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_floor, E1> floor(E1&& x)
+KFR_INTRIN expr_func<fn::floor, E1> floor(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -226,11 +226,11 @@ KFR_INTRIN expr_func<internal::fn_floor, E1> floor(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 ceil(const T1& x)
 {
-    return internal::ceil(x);
+    return intrinsics::ceil(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_ceil, E1> ceil(E1&& x)
+KFR_INTRIN expr_func<fn::ceil, E1> ceil(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -238,11 +238,11 @@ KFR_INTRIN expr_func<internal::fn_ceil, E1> ceil(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 round(const T1& x)
 {
-    return internal::round(x);
+    return intrinsics::round(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_round, E1> round(E1&& x)
+KFR_INTRIN expr_func<fn::round, E1> round(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -250,11 +250,11 @@ KFR_INTRIN expr_func<internal::fn_round, E1> round(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 trunc(const T1& x)
 {
-    return internal::trunc(x);
+    return intrinsics::trunc(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_trunc, E1> trunc(E1&& x)
+KFR_INTRIN expr_func<fn::trunc, E1> trunc(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -262,11 +262,11 @@ KFR_INTRIN expr_func<internal::fn_trunc, E1> trunc(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 fract(const T1& x)
 {
-    return internal::fract(x);
+    return intrinsics::fract(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_fract, E1> fract(E1&& x)
+KFR_INTRIN expr_func<fn::fract, E1> fract(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -274,11 +274,11 @@ KFR_INTRIN expr_func<internal::fn_fract, E1> fract(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN itype<T1> ifloor(const T1& x)
 {
-    return internal::ifloor(x);
+    return intrinsics::ifloor(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_ifloor, E1> ifloor(E1&& x)
+KFR_INTRIN expr_func<fn::ifloor, E1> ifloor(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -286,11 +286,11 @@ KFR_INTRIN expr_func<internal::fn_ifloor, E1> ifloor(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN itype<T1> iceil(const T1& x)
 {
-    return internal::iceil(x);
+    return intrinsics::iceil(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_iceil, E1> iceil(E1&& x)
+KFR_INTRIN expr_func<fn::iceil, E1> iceil(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -298,11 +298,11 @@ KFR_INTRIN expr_func<internal::fn_iceil, E1> iceil(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN itype<T1> iround(const T1& x)
 {
-    return internal::iround(x);
+    return intrinsics::iround(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_iround, E1> iround(E1&& x)
+KFR_INTRIN expr_func<fn::iround, E1> iround(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -310,11 +310,11 @@ KFR_INTRIN expr_func<internal::fn_iround, E1> iround(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN itype<T1> itrunc(const T1& x)
 {
-    return internal::itrunc(x);
+    return intrinsics::itrunc(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_itrunc, E1> itrunc(E1&& x)
+KFR_INTRIN expr_func<fn::itrunc, E1> itrunc(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }

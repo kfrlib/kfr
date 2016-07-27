@@ -29,7 +29,7 @@
 namespace kfr
 {
 
-namespace internal
+namespace intrinsics
 {
 // floating point
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
@@ -72,17 +72,18 @@ KFR_SINTRIN vec<T, N> abs(vec<T, N> x)
 }
 #endif
 KFR_I_CONVERTER(abs)
-KFR_I_FN(abs)
 }
+
+KFR_I_FN(abs)
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 abs(const T1& x)
 {
-    return internal::abs(x);
+    return intrinsics::abs(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_abs, E1> abs(E1&& x)
+KFR_INTRIN expr_func<fn::abs, E1> abs(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }

@@ -67,7 +67,7 @@ KFR_INLINE vec<T, std::max(N1, N2)> cmul(vec<T, N1> x, vec<T, N2> y)
 {
     return internal::cmul_impl(x, y);
 }
-KFR_I_FN(cmul)
+KFR_FN(cmul)
 
 template <typename T, size_t N, KFR_ENABLE_IF(N >= 2)>
 KFR_INLINE vec<T, N> cmul_conj(vec<T, N> x, vec<T, N> y)
@@ -103,8 +103,8 @@ KFR_INLINE vec<T, N> cmul_conj(vec<T, 2> x, vec<T, N> y)
     vec<T, N> xx = resize<N>(x);
     return cmul_conj(xx, y);
 }
-KFR_I_FN(cmul_conj)
-KFR_I_FN(cmul_2conj)
+KFR_FN(cmul_conj)
+KFR_FN(cmul_2conj)
 
 template <size_t N, bool A = false, typename T>
 KFR_INLINE cvec<T, N> cread(const complex<T>* src)

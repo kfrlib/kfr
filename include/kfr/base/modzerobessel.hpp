@@ -32,7 +32,7 @@
 namespace kfr
 {
 
-namespace internal
+namespace intrinsics
 {
 
 template <typename T>
@@ -94,17 +94,17 @@ KFR_INLINE vec<T, N> modzerobessel(vec<T, N> x)
 }
 
 KFR_I_CONVERTER(modzerobessel)
-KFR_I_FN(modzerobessel)
 }
+KFR_I_FN(modzerobessel)
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 modzerobessel(const T1& x)
 {
-    return internal::modzerobessel(x);
+    return intrinsics::modzerobessel(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_modzerobessel, E1> modzerobessel(E1&& x)
+KFR_INTRIN expr_func<fn::modzerobessel, E1> modzerobessel(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }

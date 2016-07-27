@@ -30,7 +30,7 @@
 
 namespace kfr
 {
-namespace internal
+namespace intrinsics
 {
 template <size_t N>
 KFR_SINTRIN vec<f32, N> atan2k(vec<f32, N> y, vec<f32, N> x)
@@ -202,20 +202,20 @@ KFR_SINTRIN common_type<T1, T2> atan2deg(const T1& y, const T2& x)
 
 KFR_I_CONVERTER(atan)
 KFR_I_CONVERTER(atan2)
+}
 KFR_I_FN(atan)
 KFR_I_FN(atandeg)
 KFR_I_FN(atan2)
 KFR_I_FN(atan2deg)
-}
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN ftype<T1> atan(const T1& x)
 {
-    return internal::atan(x);
+    return intrinsics::atan(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_atan, E1> atan(E1&& x)
+KFR_INTRIN expr_func<fn::atan, E1> atan(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -223,11 +223,11 @@ KFR_INTRIN expr_func<internal::fn_atan, E1> atan(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN ftype<T1> atandeg(const T1& x)
 {
-    return internal::atandeg(x);
+    return intrinsics::atandeg(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_atandeg, E1> atandeg(E1&& x)
+KFR_INTRIN expr_func<fn::atandeg, E1> atandeg(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -235,11 +235,11 @@ KFR_INTRIN expr_func<internal::fn_atandeg, E1> atandeg(E1&& x)
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
 KFR_INTRIN common_type<T1, T2> atan2(const T1& x, const T2& y)
 {
-    return internal::atan2(x, y);
+    return intrinsics::atan2(x, y);
 }
 
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INTRIN expr_func<internal::fn_atan2, E1, E2> atan2(E1&& x, E2&& y)
+KFR_INTRIN expr_func<fn::atan2, E1, E2> atan2(E1&& x, E2&& y)
 {
     return { {}, std::forward<E1>(x), std::forward<E2>(y) };
 }
@@ -247,11 +247,11 @@ KFR_INTRIN expr_func<internal::fn_atan2, E1, E2> atan2(E1&& x, E2&& y)
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
 KFR_INTRIN common_type<T1, T2> atan2deg(const T1& x, const T2& y)
 {
-    return internal::atan2deg(x, y);
+    return intrinsics::atan2deg(x, y);
 }
 
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INTRIN expr_func<internal::fn_atan2deg, E1, E2> atan2deg(E1&& x, E2&& y)
+KFR_INTRIN expr_func<fn::atan2deg, E1, E2> atan2deg(E1&& x, E2&& y)
 {
     return { {}, std::forward<E1>(x), std::forward<E2>(y) };
 }

@@ -28,7 +28,7 @@
 namespace kfr
 {
 
-namespace internal
+namespace intrinsics
 {
 
 template <size_t bits>
@@ -79,7 +79,6 @@ KFR_SINTRIN bool bittestany(f64avx x) { return !_mm256_testz_pd(*x, *x); }
 
 KFR_SINTRIN bool bittestnall(f32avx x) { return _mm256_testc_ps(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestnall(f64avx x) { return _mm256_testc_pd(*x, *allonesvector(x)); }
-#endif
 
 KFR_SINTRIN bool bittestany(u8avx x) { return !_mm256_testz_si256(*x, *x); }
 KFR_SINTRIN bool bittestany(u16avx x) { return !_mm256_testz_si256(*x, *x); }
@@ -98,6 +97,8 @@ KFR_SINTRIN bool bittestall(i8avx x) { return _mm256_testc_si256(*x, *allonesvec
 KFR_SINTRIN bool bittestall(i16avx x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(i32avx x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(i64avx x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
+
+#endif
 
 #if !defined CID_ARCH_SSE41
 
@@ -187,13 +188,13 @@ KFR_SINTRIN bool bittestall(vec<T, N> x, vec<T, N> y)
 template <typename T, size_t N>
 KFR_SINTRIN bool all(const mask<T, N>& x)
 {
-    return internal::bittestall(x.asvec());
+    return intrinsics::bittestall(x.asvec());
 }
 
 /// Returns x[0] || x[1] || ... || x[N-1]
 template <typename T, size_t N>
 KFR_SINTRIN bool any(const mask<T, N>& x)
 {
-    return internal::bittestany(x.asvec());
+    return intrinsics::bittestany(x.asvec());
 }
 }

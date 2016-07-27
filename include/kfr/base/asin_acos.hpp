@@ -30,7 +30,7 @@
 namespace kfr
 {
 
-namespace internal
+namespace intrinsics
 {
 
 template <typename T, size_t N, typename Tout = flt_type<T>>
@@ -48,18 +48,18 @@ KFR_SINTRIN vec<Tout, N> acos(vec<T, N> x)
 }
 KFR_I_CONVERTER(asin)
 KFR_I_CONVERTER(acos)
+}
 KFR_I_FN(asin)
 KFR_I_FN(acos)
-}
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN flt_type<T1> asin(const T1& x)
 {
-    return internal::asin(x);
+    return intrinsics::asin(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_asin, E1> asin(E1&& x)
+KFR_INTRIN expr_func<fn::asin, E1> asin(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -67,11 +67,11 @@ KFR_INTRIN expr_func<internal::fn_asin, E1> asin(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN flt_type<T1> acos(const T1& x)
 {
-    return internal::acos(x);
+    return intrinsics::acos(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<internal::fn_acos, E1> acos(E1&& x)
+KFR_INTRIN expr_func<fn::acos, E1> acos(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
