@@ -154,6 +154,12 @@ TEST(intrin_round)
 
 TEST(intrin_min_max)
 {
+    CHECK(min(1, 2) == 1);
+    CHECK(min(1, 2u) == 1u);
+    CHECK(min(pack(1), 2) == pack(1));
+    CHECK(min(pack(1, 2, 3), 2) == pack(1, 2, 2));
+    CHECK(min(pack(1., 2., 3.), 2) == pack(1., 2., 2.));
+
     testo::matrix(named("type") = float_types,
                   named("value") =
                       std::vector<std::pair<double, double>>{ { -100, +100 }, { infinity, 0.0 } },
