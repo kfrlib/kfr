@@ -22,13 +22,12 @@
  */
 #pragma once
 
+#include "../base/operators.hpp"
 #include "../base/sqrt.hpp"
-#include "../base/vec.hpp"
-#include "units.hpp"
 
 namespace kfr
 {
-namespace internal
+namespace intrinsics
 {
 
 template <typename T>
@@ -86,28 +85,44 @@ KFR_SINTRIN T cweighting(T f)
 {
     return weight_c_unnorm(f) * weight_c_gain<subtype<T>>;
 }
-
-template <typename T>
-KFR_SINTRIN T aweightingdB(T f)
-{
-    return amp_to_dB(aweighting(f));
 }
-template <typename T>
-KFR_SINTRIN T bweightingdB(T f)
-{
-    return amp_to_dB(bweighting(f));
-}
-template <typename T>
-KFR_SINTRIN T cweightingdB(T f)
-{
-    return amp_to_dB(cweighting(f));
-}
-
 KFR_I_FN(aweighting)
 KFR_I_FN(bweighting)
 KFR_I_FN(cweighting)
-KFR_I_FN(aweightingdB)
-KFR_I_FN(bweightingdB)
-KFR_I_FN(cweightingdB)
+
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_INTRIN T1 aweighting(const T1& x)
+{
+    return intrinsics::aweighting(x);
+}
+
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_INTRIN expr_func<fn::aweighting, E1> aweighting(E1&& x)
+{
+    return { {}, std::forward<E1>(x) };
+}
+
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_INTRIN T1 bweighting(const T1& x)
+{
+    return intrinsics::bweighting(x);
+}
+
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_INTRIN expr_func<fn::bweighting, E1> bweighting(E1&& x)
+{
+    return { {}, std::forward<E1>(x) };
+}
+
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_INTRIN T1 cweighting(const T1& x)
+{
+    return intrinsics::cweighting(x);
+}
+
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_INTRIN expr_func<fn::cweighting, E1> cweighting(E1&& x)
+{
+    return { {}, std::forward<E1>(x) };
 }
 }
