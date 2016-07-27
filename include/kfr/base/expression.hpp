@@ -110,7 +110,7 @@ private:
     {
         using ratio          = func_ratio<Fn>;
         constexpr size_t Nin = N * ratio::input / ratio::output;
-        using Tout           = conditional<is_same<generic, value_type>::value, T, value_type>;
+        using Tout           = conditional<is_same<generic, value_type>::value, T, common_type<T, value_type>>;
 
         return cast<T>(fn(cast<Tout>(std::get<indices>(this->args)(
             cinput, index * ratio::input / ratio::output, vec_t_for<Args, Nin, Tout>()))...));
@@ -162,7 +162,7 @@ struct generic_result
 template <typename Fn, typename... Args>
 struct generic_result<Fn, ctypes_t<Args...>, void_t<enable_if<!or_t<is_same<generic, Args>...>::value>>>
 {
-    using type = subtype<decltype(std::declval<Fn>()(std::declval<vec<decay<Args>, 1>>()...))>;
+    using type = decltype(std::declval<Fn>()(std::declval<Args>()...));
 };
 
 template <typename Fn, typename... Args>
@@ -266,7 +266,7 @@ struct expressoin_typed : input_expression
     expressoin_typed(E1&& e1) : e1(std::forward<E1>(e1)) {}
 
     template <typename U, size_t N>
-    KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N>)
+    KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N>) const
     {
         return cast<U>(e1(cinput, index, vec_t<T, N>()));
     }
