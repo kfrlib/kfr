@@ -114,4 +114,22 @@ TEST(vec_low_high)
     CHECK(high(vec<u8, 2>(1, 2)) == vec<u8, 1>(2));
 }
 
+TEST(vec_conv)
+{
+    testo::assert_is_same<common_type<i32, f32>, f32>();
+    testo::assert_is_same<common_type<f32, f64>, f64>();
+    testo::assert_is_same<common_type<i32, f32x4>, f32x4>();
+    testo::assert_is_same<common_type<f32x4, f64>, f32x4>();
+    testo::assert_is_same<common_type<f32x4, f64x4>, f64x4>();
+
+    testo::assert_is_same<decltype(min(1, 2)), int>();
+    testo::assert_is_same<decltype(min(1, 2u)), unsigned int>();
+    testo::assert_is_same<decltype(min(1, 2)), int>();
+    testo::assert_is_same<decltype(min(pack(1), 2u)), i32x1>();
+    testo::assert_is_same<decltype(min(2u, pack(1))), i32x1>();
+    testo::assert_is_same<decltype(min(pack(1), pack(2u))), u32x1>();
+    testo::assert_is_same<decltype(min(pack(1, 2, 3), pack(1.0, 2.0, 3.0))), f64x3>();
+    testo::assert_is_same<decltype(min(pack(1.0, 2.0, 3.0), pack(1, 2, 3))), f64x3>();
+}
+
 int main(int argc, char** argv) { return testo::run_all("", true); }
