@@ -1295,3 +1295,17 @@ struct compound_type_traits<kfr::mask<T, N>>
     static constexpr subtype at(const kfr::mask<T, N>& value, size_t index) { return value[index]; }
 };
 }
+namespace std
+{
+template <typename T1, typename T2, size_t N>
+struct common_type<kfr::vec<T1, N>, kfr::vec<T2, N>>
+{
+    using type = kfr::vec<typename common_type<T1, T2>::type, N>;
+};
+
+template <typename T1, typename T2, size_t N>
+struct common_type<kfr::mask<T1, N>, kfr::mask<T2, N>>
+{
+    using type = kfr::mask<typename common_type<T1, T2>::type, N>;
+};
+}
