@@ -78,7 +78,6 @@ KFR_SINTRIN vec<T, N> select(mask<T, N> m, vec<T, N> x, vec<T, N> y)
     return y ^ ((x ^ y) & m);
 }
 #endif
-
 }
 KFR_I_FN(select)
 
@@ -88,7 +87,7 @@ KFR_INTRIN vec<Tout, N> select(const mask<T1, N>& m, const T2& x, const T3& y)
 {
     static_assert(sizeof(T1) == sizeof(Tout), "select: incompatible types");
     return intrinsics::select(bitcast<Tout>(m).asmask(), static_cast<vec<Tout, N>>(x),
-                            static_cast<vec<Tout, N>>(y));
+                              static_cast<vec<Tout, N>>(y));
 }
 
 template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2, E3>::value)>

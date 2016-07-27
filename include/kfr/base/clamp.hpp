@@ -41,7 +41,6 @@ KFR_SINTRIN vec<T, N> clamp(vec<T, N> x, vec<T, N> hi)
 {
     return max(min(x, hi), zerovector<T, N>());
 }
-
 }
 KFR_I_FN(clamp)
 

@@ -118,7 +118,6 @@ KFR_SINTRIN T triangle(T x)
 {
     return trianglenorm(c_recip_pi<T, 1, 2> * x);
 }
-
 }
 KFR_I_FN(rawsine)
 KFR_I_FN(sine)

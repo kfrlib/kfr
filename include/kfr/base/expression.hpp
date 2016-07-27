@@ -227,11 +227,11 @@ KFR_INLINE internal::expression_scalar<T, N> scalar(vec<T, N> val)
 }
 
 template <typename Fn, typename... Args>
-KFR_INLINE internal::expression_function<decay<Fn>, internal::arg<Args>...> bind_expression(
-    Fn&& fn, Args&&... args)
+KFR_INLINE internal::expression_function<decay<Fn>, internal::arg<Args>...> bind_expression(Fn&& fn,
+                                                                                            Args&&... args)
 {
-    return internal::expression_function<decay<Fn>, internal::arg<Args>...>(
-        std::forward<Fn>(fn), std::forward<Args>(args)...);
+    return internal::expression_function<decay<Fn>, internal::arg<Args>...>(std::forward<Fn>(fn),
+                                                                            std::forward<Args>(args)...);
 }
 
 template <typename Tout, cpu_t c = cpu_t::native, size_t width = 0, typename OutFn, typename Fn>

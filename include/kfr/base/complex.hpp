@@ -419,7 +419,6 @@ KFR_SINTRIN realtype<T1> carg(const T1& a)
     using vecout = vec1<T1>;
     return to_scalar(intrinsics::carg(vecout(a)));
 }
-
 }
 
 KFR_I_FN(csin)

@@ -113,7 +113,6 @@ KFR_SINTRIN Tc hertz_to_note(T1 hertz, T2 tunenote, T3 tunehertz)
 
     return log_fmadd(hertz, subtype<Tc>(17.312340490667560888319096172023), offset);
 }
-
 }
 KFR_I_FN(note_to_hertz)
 KFR_I_FN(hertz_to_note)

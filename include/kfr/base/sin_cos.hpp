@@ -322,7 +322,6 @@ KFR_I_CONVERTER(fastcos)
 KFR_I_CONVERTER(sincos)
 KFR_I_CONVERTER(cossin)
 KFR_I_CONVERTER(sinc)
-
 }
 
 KFR_I_FN(sin)

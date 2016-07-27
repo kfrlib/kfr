@@ -324,7 +324,6 @@ KFR_I_CONVERTER(logb)
 KFR_I_CONVERTER(pow)
 KFR_I_CONVERTER(root)
 KFR_I_CONVERTER(cbrt)
-
 }
 KFR_I_FN(exp)
 KFR_I_FN(exp2)
