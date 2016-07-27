@@ -551,6 +551,15 @@ constexpr KFR_INLINE vec<T, N> make_vector(cvals_t<T, Values...>)
 }
 KFR_FN(make_vector)
 
+template <typename Type = void, typename Arg, typename... Args, size_t N = (sizeof...(Args) + 1),
+          typename SubType = conditional<is_void<Type>::value, common_type<Arg, Args...>, Type>>
+constexpr KFR_INLINE vec<SubType, N> pack(const Arg& x, const Args&... rest)
+{
+    return internal::make_vector_impl<SubType>(csizeseq<N * widthof<SubType>()>, static_cast<SubType>(x),
+                                               static_cast<SubType>(rest)...);
+}
+KFR_FN(pack)
+
 template <typename T, size_t N>
 struct vec : vec_t<T, N>
 {
@@ -650,7 +659,7 @@ struct vec : vec_t<T, N>
     KFR_INLINE array_t arr() { return ref_cast<array_t>(v); }
 
     template <typename U, KFR_ENABLE_IF(std::is_convertible<T, U>::value)>
-    constexpr operator vec<U, N>() noexcept
+    constexpr operator vec<U, N>() const noexcept
     {
         return cast<U>(*this);
     }
