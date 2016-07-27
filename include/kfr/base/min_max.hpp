@@ -121,17 +121,20 @@ KFR_SINTRIN vec<T, N> max(vec<T, N> x, vec<T, N> y)
 template <typename T>
 KFR_SINTRIN T min(initialvalue<T>)
 {
-    return std::numeric_limits<T>::max();
+    return std::numeric_limits<T>::has_infinity ? std::numeric_limits<T>::infinity()
+                                                : std::numeric_limits<T>::max();
 }
 template <typename T>
 KFR_SINTRIN T max(initialvalue<T>)
 {
-    return std::numeric_limits<T>::min();
+    return std::numeric_limits<T>::has_infinity ? -std::numeric_limits<T>::infinity()
+                                                : std::numeric_limits<T>::min();
 }
 template <typename T>
 KFR_SINTRIN T absmin(initialvalue<T>)
 {
-    return std::numeric_limits<T>::max();
+    return std::numeric_limits<T>::has_infinity ? std::numeric_limits<T>::infinity()
+                                                : std::numeric_limits<T>::max();
 }
 template <typename T>
 KFR_SINTRIN T absmax(initialvalue<T>)
