@@ -34,9 +34,6 @@
 #include "../base/memory.hpp"
 #include "../data/sincos.hpp"
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Winaccessible-base"
-
 namespace kfr
 {
 
@@ -1501,5 +1498,3 @@ KFR_INTRIN void cdigitreverse4_write<false, f64, 32>(complex<f64>* dest, vec<f64
 #endif
 }
 }
-
-#pragma clang diagnostic pop

@@ -26,11 +26,6 @@
 #include "../base/operators.hpp"
 #include "../base/vec.hpp"
 
-#pragma clang diagnostic push
-#if CID_HAS_WARNING("-Winaccessible-base")
-#pragma clang diagnostic ignored "-Winaccessible-base"
-#endif
-
 namespace kfr
 {
 
@@ -175,5 +170,3 @@ KFR_INLINE internal::in_biquad<>::expression_biquads<filters, T, internal::arg<E
     return internal::in_biquad<>::expression_biquads<filters, T, internal::arg<E1>>(bq, std::forward<E1>(e1));
 }
 }
-
-#pragma clang diagnostic pop

@@ -33,11 +33,6 @@
 #include "sin_cos.hpp"
 #include "sqrt.hpp"
 
-#pragma clang diagnostic push
-#if CID_HAS_WARNING("-Winaccessible-base")
-#pragma clang diagnostic ignored "-Winaccessible-base"
-#endif
-
 #ifdef KFR_STD_COMPLEX
 #include <complex>
 #endif
@@ -588,5 +583,3 @@ KFR_INTRIN expr_func<fn::csqrt, E1> csqrt(E1&& x)
     return { {}, std::forward<E1>(x) };
 }
 }
-
-#pragma clang diagnostic pop
