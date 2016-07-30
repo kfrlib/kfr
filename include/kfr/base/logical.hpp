@@ -50,8 +50,6 @@ struct bitmask
 
 #if defined CID_ARCH_SSE41
 
-KFR_SINTRIN bool bittestany(f32sse x) { return !_mm_testz_ps(*x, *x); }
-KFR_SINTRIN bool bittestany(f64sse x) { return !_mm_testz_pd(*x, *x); }
 KFR_SINTRIN bool bittestany(u8sse x) { return !_mm_testz_si128(*x, *x); }
 KFR_SINTRIN bool bittestany(u16sse x) { return !_mm_testz_si128(*x, *x); }
 KFR_SINTRIN bool bittestany(u32sse x) { return !_mm_testz_si128(*x, *x); }
@@ -61,8 +59,6 @@ KFR_SINTRIN bool bittestany(i16sse x) { return !_mm_testz_si128(*x, *x); }
 KFR_SINTRIN bool bittestany(i32sse x) { return !_mm_testz_si128(*x, *x); }
 KFR_SINTRIN bool bittestany(i64sse x) { return !_mm_testz_si128(*x, *x); }
 
-KFR_SINTRIN bool bittestall(f32sse x) { return _mm_testc_ps(*x, *allonesvector(x)); }
-KFR_SINTRIN bool bittestall(f64sse x) { return _mm_testc_pd(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(u8sse x) { return _mm_testc_si128(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(u16sse x) { return _mm_testc_si128(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(u32sse x) { return _mm_testc_si128(*x, *allonesvector(x)); }
@@ -74,6 +70,11 @@ KFR_SINTRIN bool bittestall(i64sse x) { return _mm_testc_si128(*x, *allonesvecto
 #endif
 
 #if defined CID_ARCH_AVX
+KFR_SINTRIN bool bittestany(f32sse x) { return !_mm_testz_ps(*x, *x); }
+KFR_SINTRIN bool bittestany(f64sse x) { return !_mm_testz_pd(*x, *x); }
+KFR_SINTRIN bool bittestall(f32sse x) { return _mm_testc_ps(*x, *allonesvector(x)); }
+KFR_SINTRIN bool bittestall(f64sse x) { return _mm_testc_pd(*x, *allonesvector(x)); }
+
 KFR_SINTRIN bool bittestany(f32avx x) { return !_mm256_testz_ps(*x, *x); }
 KFR_SINTRIN bool bittestany(f64avx x) { return !_mm256_testz_pd(*x, *x); }
 
@@ -97,7 +98,11 @@ KFR_SINTRIN bool bittestall(i8avx x) { return _mm256_testc_si256(*x, *allonesvec
 KFR_SINTRIN bool bittestall(i16avx x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(i32avx x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(i64avx x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
-
+#elif defined CID_ARCH_SSE41
+KFR_SINTRIN bool bittestany(f32sse x) { return !_mm_testz_si128(*bitcast<u8>(x), *bitcast<u8>(x)); }
+KFR_SINTRIN bool bittestany(f64sse x) { return !_mm_testz_si128(*bitcast<u8>(x), *bitcast<u8>(x)); }
+KFR_SINTRIN bool bittestall(f32sse x) { return _mm_testc_si128(*bitcast<u8>(x), *allonesvector(bitcast<u8>(x))); }
+KFR_SINTRIN bool bittestall(f64sse x) { return _mm_testc_si128(*bitcast<u8>(x), *allonesvector(bitcast<u8>(x))); }
 #endif
 
 #if !defined CID_ARCH_SSE41
