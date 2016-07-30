@@ -1,10 +1,11 @@
-sudo: required
-dist: precise
 language: cpp
 
 matrix:
   include:
-    - compiler: clang
+    - os: linux
+      compiler: clang
+      sudo: required
+      dist: precise
       addons:
         apt:
           sources:
@@ -18,9 +19,23 @@ matrix:
             - clang-3.8
       env:
         - CXXCOMPILER=clang++-3.8 CCOMPILER=clang-3.8
+    - os: osx
+      osx_image: xcode8
+    - os: osx
+      osx_image: xcode7.3
+    - os: osx
+      osx_image: xcode7.2
+    - os: osx
+      osx_image: xcode7.1
+    - os: osx
+      osx_image: xcode7
 
 before_install:
-  - sudo apt-get update -qq
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update -qq ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew reinstall cmake ; fi
+  - cmake --version
+  
 script:
   - mkdir build
   - cd build
