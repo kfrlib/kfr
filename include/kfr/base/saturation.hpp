@@ -142,7 +142,7 @@ KFR_INTRIN Tout satadd(const T1& x, const T2& y)
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 KFR_INTRIN expr_func<fn::satadd, E1, E2> satadd(E1&& x, E2&& y)
 {
-    return { {}, std::forward<E1>(x), std::forward<E2>(y) };
+    return { fn::satadd(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value),
@@ -155,6 +155,6 @@ KFR_INTRIN Tout satsub(const T1& x, const T2& y)
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 KFR_INTRIN expr_func<fn::satsub, E1, E2> satsub(E1&& x, E2&& y)
 {
-    return { {}, std::forward<E1>(x), std::forward<E2>(y) };
+    return { fn::satsub(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 }

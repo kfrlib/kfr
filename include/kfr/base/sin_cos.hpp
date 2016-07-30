@@ -342,7 +342,7 @@ KFR_INTRIN ftype<T1> sin(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::sin, E1> sin(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::sin(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -354,7 +354,7 @@ KFR_INTRIN ftype<T1> cos(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::cos, E1> cos(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::cos(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -366,7 +366,7 @@ KFR_INTRIN ftype<T1> fastsin(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::fastsin, E1> fastsin(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::fastsin(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -378,7 +378,7 @@ KFR_INTRIN ftype<T1> fastcos(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::fastcos, E1> fastcos(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::fastcos(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -390,7 +390,7 @@ KFR_INTRIN ftype<T1> sincos(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::sincos, E1> sincos(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::sincos(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -402,7 +402,7 @@ KFR_INTRIN ftype<T1> cossin(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::cossin, E1> cossin(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::cossin(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -414,7 +414,7 @@ KFR_INTRIN ftype<T1> sinc(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::sinc, E1> sinc(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::sinc(), std::forward<E1>(x) };
 }
 
 template <typename T>

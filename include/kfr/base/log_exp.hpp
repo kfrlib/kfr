@@ -347,7 +347,7 @@ KFR_INTRIN T1 exp(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::exp, E1> exp(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::exp(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -359,7 +359,7 @@ KFR_INTRIN T1 exp2(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::exp2, E1> exp2(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::exp2(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -371,7 +371,7 @@ KFR_INTRIN T1 exp10(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::exp10, E1> exp10(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::exp10(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -383,7 +383,7 @@ KFR_INTRIN T1 log(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::log, E1> log(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::log(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -395,7 +395,7 @@ KFR_INTRIN T1 log2(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::log2, E1> log2(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::log2(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -407,7 +407,7 @@ KFR_INTRIN T1 log10(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::log10, E1> log10(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::log10(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -419,7 +419,7 @@ KFR_INTRIN T1 logb(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::logb, E1> logb(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::logb(), std::forward<E1>(x) };
 }
 
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
@@ -431,7 +431,7 @@ KFR_INTRIN common_type<T1, T2> logn(const T1& x, const T2& y)
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 KFR_INTRIN expr_func<fn::logn, E1, E2> logn(E1&& x, E2&& y)
 {
-    return { {}, std::forward<E1>(x), std::forward<E2>(y) };
+    return { fn::logn(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
@@ -443,7 +443,7 @@ KFR_INTRIN common_type<T1, T2> logm(const T1& x, const T2& y)
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 KFR_INTRIN expr_func<fn::logm, E1, E2> logm(E1&& x, E2&& y)
 {
-    return { {}, std::forward<E1>(x), std::forward<E2>(y) };
+    return { fn::logm(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 
 template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>::value)>
@@ -455,7 +455,7 @@ KFR_INTRIN common_type<T1, T2, T3> exp_fmadd(const T1& x, const T2& y, const T3&
 template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2, E3>::value)>
 KFR_INTRIN expr_func<fn::exp_fmadd, E1, E2, E3> exp_fmadd(E1&& x, E2&& y, E3&& z)
 {
-    return { {}, std::forward<E1>(x), std::forward<E2>(y), std::forward<E3>(z) };
+    return { fn::exp_fmadd(), std::forward<E1>(x), std::forward<E2>(y), std::forward<E3>(z) };
 }
 
 template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>::value)>
@@ -467,7 +467,7 @@ KFR_INTRIN common_type<T1, T2, T3> log_fmadd(const T1& x, const T2& y, const T3&
 template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2, E3>::value)>
 KFR_INTRIN expr_func<fn::log_fmadd, E1, E2, E3> log_fmadd(E1&& x, E2&& y, E3&& z)
 {
-    return { {}, std::forward<E1>(x), std::forward<E2>(y), std::forward<E3>(z) };
+    return { fn::log_fmadd(), std::forward<E1>(x), std::forward<E2>(y), std::forward<E3>(z) };
 }
 
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
@@ -479,7 +479,7 @@ KFR_INTRIN common_type<T1, T2> pow(const T1& x, const T2& y)
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 KFR_INTRIN expr_func<fn::pow, E1, E2> pow(E1&& x, E2&& y)
 {
-    return { {}, std::forward<E1>(x), std::forward<E2>(y) };
+    return { fn::pow(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
@@ -491,7 +491,7 @@ KFR_INTRIN common_type<T1, T2> root(const T1& x, const T2& y)
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 KFR_INTRIN expr_func<fn::root, E1, E2> root(E1&& x, E2&& y)
 {
-    return { {}, std::forward<E1>(x), std::forward<E2>(y) };
+    return { fn::root(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -503,6 +503,6 @@ KFR_INTRIN T1 cbrt(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::cbrt, E1> cbrt(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::cbrt(), std::forward<E1>(x) };
 }
 }

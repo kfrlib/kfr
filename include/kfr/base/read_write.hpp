@@ -109,7 +109,8 @@ KFR_INLINE vec<T, N * groupsize> gather(const T* base, const vec<IT, N>& offset)
 }
 
 template <size_t groupsize, typename T, size_t N, size_t Nout = N* groupsize, typename IT, size_t... Indices>
-KFR_INLINE void scatter_helper(T* base, const vec<IT, N>& offset, const vec<T, Nout>& value, csizes_t<Indices...>)
+KFR_INLINE void scatter_helper(T* base, const vec<IT, N>& offset, const vec<T, Nout>& value,
+                               csizes_t<Indices...>)
 {
     swallow{ (write(base + groupsize * (*offset)[Indices], slice<Indices * groupsize, groupsize>(value)),
               0)... };

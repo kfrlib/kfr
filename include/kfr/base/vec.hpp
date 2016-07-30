@@ -127,7 +127,8 @@ get_vec_index(int = 0)
 constexpr size_t index_undefined = static_cast<size_t>(-1);
 
 template <typename T, size_t N, size_t... Indices, KFR_ENABLE_IF(!is_compound<T>::value)>
-KFR_INLINE vec<T, sizeof...(Indices)> shufflevector(csizes_t<Indices...>, const vec<T, N>& x, const vec<T, N>& y)
+KFR_INLINE vec<T, sizeof...(Indices)> shufflevector(csizes_t<Indices...>, const vec<T, N>& x,
+                                                    const vec<T, N>& y)
 {
     vec<T, sizeof...(Indices)> result = __builtin_shufflevector(
         *x, *y, static_cast<intptr_t>(Indices == index_undefined ? -1 : static_cast<intptr_t>(Indices))...);
@@ -150,7 +151,8 @@ constexpr auto inflate(csize_t<groupsize>, csizes_t<indices...>)
 }
 
 template <typename T, size_t N, size_t... Indices, KFR_ENABLE_IF(is_compound<T>::value)>
-KFR_INLINE vec<T, sizeof...(Indices)> shufflevector(csizes_t<Indices...> indices, const vec<T, N>& x, const vec<T, N>& y)
+KFR_INLINE vec<T, sizeof...(Indices)> shufflevector(csizes_t<Indices...> indices, const vec<T, N>& x,
+                                                    const vec<T, N>& y)
 {
     return subcast<T>(
         shufflevector(inflate(csize<widthof<T>()>, indices), subcast<subtype<T>>(x), subcast<subtype<T>>(y)));

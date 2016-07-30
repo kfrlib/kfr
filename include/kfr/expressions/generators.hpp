@@ -35,7 +35,7 @@ namespace internal
 {
 
 template <typename T, size_t width_, typename Class>
-struct generator: input_expression
+struct generator : input_expression
 {
     constexpr static size_t width = width_;
     using type                    = T;

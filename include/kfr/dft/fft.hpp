@@ -74,7 +74,7 @@ namespace internal
 
 template <size_t width, bool inverse, typename T>
 KFR_SINTRIN cvec<T, width> radix4_apply_twiddle(csize_t<width>, cfalse_t /*split_format*/, cbool_t<inverse>,
-                                               cvec<T, width> w, cvec<T, width> tw)
+                                                cvec<T, width> w, cvec<T, width> tw)
 {
     cvec<T, width> b1 = w * dupeven(tw);
     w = swap<2>(w);
@@ -87,8 +87,8 @@ KFR_SINTRIN cvec<T, width> radix4_apply_twiddle(csize_t<width>, cfalse_t /*split
 
 template <size_t width, bool use_br2, bool inverse, bool aligned, typename T>
 KFR_SINTRIN void radix4_body(size_t N, csize_t<width>, cfalse_t, cfalse_t, cfalse_t, cbool_t<use_br2>,
-                            cbool_t<inverse>, cbool_t<aligned>, complex<T>* out, const complex<T>* in,
-                            const complex<T>* twiddle)
+                             cbool_t<inverse>, cbool_t<aligned>, complex<T>* out, const complex<T>* in,
+                             const complex<T>* twiddle)
 {
     const size_t N4 = N / 4;
     cvec<T, width> w1, w2, w3;
@@ -134,7 +134,7 @@ KFR_SINTRIN void radix4_body(size_t N, csize_t<width>, cfalse_t, cfalse_t, cfals
 
 template <size_t width, bool inverse, typename T>
 KFR_SINTRIN cvec<T, width> radix4_apply_twiddle(csize_t<width>, ctrue_t /*split_format*/, cbool_t<inverse>,
-                                               cvec<T, width> w, cvec<T, width> tw)
+                                                cvec<T, width> w, cvec<T, width> tw)
 {
     vec<T, width> re1, im1, twre, twim;
     split(w, re1, im1);
@@ -151,8 +151,8 @@ KFR_SINTRIN cvec<T, width> radix4_apply_twiddle(csize_t<width>, ctrue_t /*split_
 
 template <size_t width, bool splitout, bool splitin, bool use_br2, bool inverse, bool aligned, typename T>
 KFR_SINTRIN void radix4_body(size_t N, csize_t<width>, ctrue_t, cbool_t<splitout>, cbool_t<splitin>,
-                            cbool_t<use_br2>, cbool_t<inverse>, cbool_t<aligned>, complex<T>* out,
-                            const complex<T>* in, const complex<T>* twiddle)
+                             cbool_t<use_br2>, cbool_t<inverse>, cbool_t<aligned>, complex<T>* out,
+                             const complex<T>* in, const complex<T>* twiddle)
 {
     const size_t N4 = N / 4;
     cvec<T, width> w1, w2, w3;
@@ -223,7 +223,7 @@ KFR_NOINLINE cvec<T, 1> calculate_twiddle(size_t n, size_t size)
 
 template <typename T, size_t width>
 KFR_SINTRIN void initialize_twiddles_impl(complex<T>*& twiddle, size_t nn, size_t nnstep, size_t size,
-                                         bool split_format)
+                                          bool split_format)
 {
     vec<T, 2 * width> result = T();
     KFR_LOOP_UNROLL
@@ -282,8 +282,8 @@ KFR_SINTRIN void prefetch_four(size_t stride, const complex<T>* in)
 template <typename Ntype, size_t width, bool splitout, bool splitin, bool prefetch, bool use_br2,
           bool inverse, bool aligned, typename T>
 KFR_SINTRIN cfalse_t radix4_pass(Ntype N, size_t blocks, csize_t<width>, cbool_t<splitout>, cbool_t<splitin>,
-                                cbool_t<use_br2>, cbool_t<prefetch>, cbool_t<inverse>, cbool_t<aligned>,
-                                complex<T>* out, const complex<T>* in, const complex<T>*& twiddle)
+                                 cbool_t<use_br2>, cbool_t<prefetch>, cbool_t<inverse>, cbool_t<aligned>,
+                                 complex<T>* out, const complex<T>* in, const complex<T>*& twiddle)
 {
     constexpr static size_t prefetch_offset = width * 8;
     const auto N4                           = N / csize<4>;
@@ -502,10 +502,10 @@ protected:
     {
         radix4_pass(512, 1, csize<width>, ctrue, cbool<splitin>, cbool<use_br2>, cbool<prefetch>,
                     cbool<inverse>, cbool<aligned>, out, in, twiddle);
-        radix4_pass(128, 4, csize<width>, ctrue, ctrue, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, out, twiddle);
-        radix4_pass(32, 16, csize<width>, cfalse, ctrue, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, out, twiddle);
+        radix4_pass(128, 4, csize<width>, ctrue, ctrue, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
+                    cbool<aligned>, out, out, twiddle);
+        radix4_pass(32, 16, csize<width>, cfalse, ctrue, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
+                    cbool<aligned>, out, out, twiddle);
         radix4_pass(csize<8>, 64, csize<width>, cfalse, cfalse, cbool<use_br2>, cbool<prefetch>,
                     cbool<inverse>, cbool<aligned>, out, out, twiddle);
     }
@@ -514,8 +514,8 @@ protected:
     {
         radix4_pass(512, 1, csize<width>, ctrue, cbool<splitin>, cbool<use_br2>, cbool<prefetch>,
                     cbool<inverse>, cbool<aligned>, out, in, twiddle);
-        radix4_pass(128, 4, csize<width>, cfalse, ctrue, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, out, twiddle);
+        radix4_pass(128, 4, csize<width>, cfalse, ctrue, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
+                    cbool<aligned>, out, out, twiddle);
         radix4_pass(csize<32>, 16, csize<width>, cfalse, cfalse, cbool<use_br2>, cbool<prefetch>,
                     cbool<inverse>, cbool<aligned>, out, out, twiddle);
     }
@@ -524,12 +524,12 @@ protected:
     {
         radix4_pass(1024, 1, csize<width>, ctrue, cbool<splitin>, cbool<use_br2>, cbool<prefetch>,
                     cbool<inverse>, cbool<aligned>, out, in, twiddle);
-        radix4_pass(256, 4, csize<width>, ctrue, ctrue, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, out, twiddle);
-        radix4_pass(64, 16, csize<width>, ctrue, ctrue, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, out, twiddle);
-        radix4_pass(16, 64, csize<width>, cfalse, ctrue, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, out, twiddle);
+        radix4_pass(256, 4, csize<width>, ctrue, ctrue, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
+                    cbool<aligned>, out, out, twiddle);
+        radix4_pass(64, 16, csize<width>, ctrue, ctrue, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
+                    cbool<aligned>, out, out, twiddle);
+        radix4_pass(16, 64, csize<width>, cfalse, ctrue, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
+                    cbool<aligned>, out, out, twiddle);
         radix4_pass(csize<4>, 256, csize<width>, cfalse, cfalse, cbool<use_br2>, cbool<prefetch>,
                     cbool<inverse>, cbool<aligned>, out, out, twiddle);
     }
@@ -538,10 +538,10 @@ protected:
     {
         radix4_pass(1024, 1, csize<width>, ctrue, cbool<splitin>, cbool<use_br2>, cbool<prefetch>,
                     cbool<inverse>, cbool<aligned>, out, in, twiddle);
-        radix4_pass(256, 4, csize<width>, ctrue, ctrue, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, out, twiddle);
-        radix4_pass(64, 16, csize<width>, cfalse, ctrue, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, out, twiddle);
+        radix4_pass(256, 4, csize<width>, ctrue, ctrue, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
+                    cbool<aligned>, out, out, twiddle);
+        radix4_pass(64, 16, csize<width>, cfalse, ctrue, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
+                    cbool<aligned>, out, out, twiddle);
         radix4_pass(csize<16>, 64, csize<width>, cfalse, cfalse, cbool<use_br2>, cbool<prefetch>,
                     cbool<inverse>, cbool<aligned>, out, out, twiddle);
     }
@@ -689,18 +689,18 @@ protected:
 
     KFR_INTRIN void final_pass(csize_t<8>, complex<T>* out, const complex<T>* in, const complex<T>* twiddle)
     {
-        radix4_pass(128, 1, csize<width>, ctrue, cfalse, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, in, twiddle);
-        radix4_pass(32, 4, csize<width>, cfalse, ctrue, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, out, twiddle);
+        radix4_pass(128, 1, csize<width>, ctrue, cfalse, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
+                    cbool<aligned>, out, in, twiddle);
+        radix4_pass(32, 4, csize<width>, cfalse, ctrue, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
+                    cbool<aligned>, out, out, twiddle);
         radix4_pass(csize<8>, 16, csize<width>, cfalse, cfalse, cbool<use_br2>, cbool<prefetch>,
                     cbool<inverse>, cbool<aligned>, out, out, twiddle);
     }
 
     KFR_INTRIN void final_pass(csize_t<32>, complex<T>* out, const complex<T>* in, const complex<T>* twiddle)
     {
-        radix4_pass(128, 1, csize<width>, cfalse, cfalse, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, in, twiddle);
+        radix4_pass(128, 1, csize<width>, cfalse, cfalse, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
+                    cbool<aligned>, out, in, twiddle);
         radix4_pass(csize<32>, 4, csize<width>, cfalse, cfalse, cbool<use_br2>, cbool<prefetch>,
                     cbool<inverse>, cbool<aligned>, out, out, twiddle);
     }
@@ -775,12 +775,12 @@ protected:
 
     KFR_INTRIN void final_pass(csize_t<4>, complex<T>* out, const complex<T>* in, const complex<T>* twiddle)
     {
-        radix4_pass(256, 1, csize<width>, ctrue, cfalse, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, in, twiddle);
+        radix4_pass(256, 1, csize<width>, ctrue, cfalse, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
+                    cbool<aligned>, out, in, twiddle);
         radix4_pass(64, 4, csize<width>, ctrue, ctrue, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
                     cbool<aligned>, out, out, twiddle);
-        radix4_pass(16, 16, csize<width>, cfalse, ctrue, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, out, twiddle);
+        radix4_pass(16, 16, csize<width>, cfalse, ctrue, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
+                    cbool<aligned>, out, out, twiddle);
         radix4_pass(csize<4>, 64, csize<width>, cfalse, cfalse, cbool<use_br2>, cbool<prefetch>,
                     cbool<inverse>, cbool<aligned>, out, out, twiddle);
     }

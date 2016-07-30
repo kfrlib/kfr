@@ -130,7 +130,7 @@ KFR_INTRIN T1 note_to_hertz(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::note_to_hertz, E1> note_to_hertz(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::note_to_hertz(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -142,7 +142,7 @@ KFR_INTRIN T1 hertz_to_note(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::hertz_to_note, E1> hertz_to_note(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::hertz_to_note(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -154,7 +154,7 @@ KFR_INTRIN T1 amp_to_dB(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::amp_to_dB, E1> amp_to_dB(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::amp_to_dB(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -166,7 +166,7 @@ KFR_INTRIN T1 dB_to_amp(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::dB_to_amp, E1> dB_to_amp(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::dB_to_amp(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -178,7 +178,7 @@ KFR_INTRIN T1 power_to_dB(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::power_to_dB, E1> power_to_dB(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::power_to_dB(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -190,6 +190,6 @@ KFR_INTRIN T1 dB_to_power(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::dB_to_power, E1> dB_to_power(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::dB_to_power(), std::forward<E1>(x) };
 }
 }

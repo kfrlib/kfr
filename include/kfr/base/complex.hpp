@@ -440,7 +440,7 @@ KFR_INTRIN T1 csin(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::csin, E1> csin(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::csin(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 csinh(const T1& x)
@@ -450,7 +450,7 @@ KFR_INTRIN T1 csinh(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::csinh, E1> csinh(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::csinh(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 ccos(const T1& x)
@@ -460,7 +460,7 @@ KFR_INTRIN T1 ccos(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::ccos, E1> ccos(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::ccos(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 ccosh(const T1& x)
@@ -470,7 +470,7 @@ KFR_INTRIN T1 ccosh(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::ccosh, E1> ccosh(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::ccosh(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN realtype<T1> cabs(const T1& x)
@@ -480,7 +480,7 @@ KFR_INTRIN realtype<T1> cabs(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::cabs, E1> cabs(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::cabs(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN realtype<T1> carg(const T1& x)
@@ -490,7 +490,7 @@ KFR_INTRIN realtype<T1> carg(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::carg, E1> carg(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::carg(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 clog(const T1& x)
@@ -500,7 +500,7 @@ KFR_INTRIN T1 clog(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::clog, E1> clog(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::clog(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 clog2(const T1& x)
@@ -510,7 +510,7 @@ KFR_INTRIN T1 clog2(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::clog2, E1> clog2(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::clog2(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 clog10(const T1& x)
@@ -520,7 +520,7 @@ KFR_INTRIN T1 clog10(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::clog10, E1> clog10(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::clog10(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 cexp(const T1& x)
@@ -530,7 +530,7 @@ KFR_INTRIN T1 cexp(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::cexp, E1> cexp(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::cexp(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 cexp2(const T1& x)
@@ -540,7 +540,7 @@ KFR_INTRIN T1 cexp2(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::cexp2, E1> cexp2(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::cexp2(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 cexp10(const T1& x)
@@ -550,7 +550,7 @@ KFR_INTRIN T1 cexp10(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::cexp10, E1> cexp10(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::cexp10(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 polar(const T1& x)
@@ -560,7 +560,7 @@ KFR_INTRIN T1 polar(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::polar, E1> polar(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::polar(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 cartesian(const T1& x)
@@ -570,7 +570,7 @@ KFR_INTRIN T1 cartesian(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::cartesian, E1> cartesian(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::cartesian(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_INTRIN T1 csqrt(const T1& x)
@@ -580,6 +580,6 @@ KFR_INTRIN T1 csqrt(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::csqrt, E1> csqrt(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::csqrt(), std::forward<E1>(x) };
 }
 }

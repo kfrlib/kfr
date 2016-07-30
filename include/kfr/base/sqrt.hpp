@@ -69,6 +69,6 @@ KFR_INTRIN flt_type<T1> sqrt(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::sqrt, E1> sqrt(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::sqrt(), std::forward<E1>(x) };
 }
 }

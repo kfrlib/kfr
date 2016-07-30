@@ -221,7 +221,8 @@ struct shuffle_index_shuffle
 }
 
 template <size_t... Indices, typename T, size_t N>
-KFR_INLINE vec<T, N> shuffle(const vec<T, N>& x, const vec<T, N>& y, elements_t<Indices...> = elements_t<Indices...>())
+KFR_INLINE vec<T, N> shuffle(const vec<T, N>& x, const vec<T, N>& y,
+                             elements_t<Indices...> = elements_t<Indices...>())
 {
     return shufflevector<N, internal::shuffle_index_shuffle<N, Indices...>>(x, y);
 }
@@ -346,7 +347,8 @@ struct shuffle_index_blend
 }
 
 template <size_t... Indices, typename T, size_t N>
-KFR_INLINE vec<T, N> blend(const vec<T, N>& x, const vec<T, N>& y, elements_t<Indices...> = elements_t<Indices...>())
+KFR_INLINE vec<T, N> blend(const vec<T, N>& x, const vec<T, N>& y,
+                           elements_t<Indices...> = elements_t<Indices...>())
 {
     return shufflevector<N, internal::shuffle_index_blend<N, Indices...>, 1>(x, y);
 }

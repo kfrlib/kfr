@@ -73,7 +73,7 @@ KFR_INTRIN T1 gamma(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::gamma, E1> gamma(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::gamma(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -85,7 +85,7 @@ KFR_INTRIN T1 factorial_approx(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::factorial_approx, E1> factorial_approx(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::factorial_approx(), std::forward<E1>(x) };
 }
 }
 

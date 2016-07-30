@@ -139,7 +139,7 @@ KFR_INTRIN T1 tan(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::tan, E1> tan(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::tan(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -151,6 +151,6 @@ KFR_INTRIN T1 tandeg(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::tandeg, E1> tandeg(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::tandeg(), std::forward<E1>(x) };
 }
 }

@@ -99,7 +99,7 @@ KFR_INTRIN T1 aweighting(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::aweighting, E1> aweighting(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::aweighting(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -111,7 +111,7 @@ KFR_INTRIN T1 bweighting(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::bweighting, E1> bweighting(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::bweighting(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -123,6 +123,6 @@ KFR_INTRIN T1 cweighting(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::cweighting, E1> cweighting(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::cweighting(), std::forward<E1>(x) };
 }
 }

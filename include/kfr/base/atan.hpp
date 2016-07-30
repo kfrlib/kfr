@@ -217,7 +217,7 @@ KFR_INTRIN ftype<T1> atan(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::atan, E1> atan(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::atan(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
@@ -229,7 +229,7 @@ KFR_INTRIN ftype<T1> atandeg(const T1& x)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INTRIN expr_func<fn::atandeg, E1> atandeg(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::atandeg(), std::forward<E1>(x) };
 }
 
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
@@ -241,7 +241,7 @@ KFR_INTRIN common_type<T1, T2> atan2(const T1& x, const T2& y)
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 KFR_INTRIN expr_func<fn::atan2, E1, E2> atan2(E1&& x, E2&& y)
 {
-    return { {}, std::forward<E1>(x), std::forward<E2>(y) };
+    return { fn::atan2(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
@@ -253,6 +253,6 @@ KFR_INTRIN common_type<T1, T2> atan2deg(const T1& x, const T2& y)
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 KFR_INTRIN expr_func<fn::atan2deg, E1, E2> atan2deg(E1&& x, E2&& y)
 {
-    return { {}, std::forward<E1>(x), std::forward<E2>(y) };
+    return { fn::atan2deg(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 }

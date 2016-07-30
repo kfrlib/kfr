@@ -194,6 +194,7 @@ struct aligned_new
 };
 
 #define KFR_CLASS_REFCOUNT(cl)                                                                               \
+    \
 public:                                                                                                      \
     void addref() const { m_refcount++; }                                                                    \
     void release() const                                                                                     \
@@ -203,7 +204,7 @@ public:                                                                         
             delete this;                                                                                     \
         }                                                                                                    \
     }                                                                                                        \
-                                                                                                             \
+    \
 private:                                                                                                     \
     mutable std::atomic_uintptr_t m_refcount = ATOMIC_VAR_INIT(0);
 }
