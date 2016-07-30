@@ -54,10 +54,51 @@ inline T ref_abs(T x)
 }
 
 template <typename T>
+bool builtin_add_overflow(T x, T y, T* r)
+{
+#if __has_builtin(__builtin_add_overflow)
+    return __builtin_add_overflow(x, y, r);
+#else
+    *r = x + y;
+    return static_cast<long long>(x) + static_cast<long long>(y) != static_cast<long long>(*r);
+#endif
+}
+template <>
+bool builtin_add_overflow<u64>(u64 x, u64 y, u64* r)
+{
+    return __builtin_uaddll_overflow(x, y, reinterpret_cast<unsigned long long*>(r));
+}
+template <>
+bool builtin_add_overflow<i64>(i64 x, i64 y, i64* r)
+{
+    return __builtin_saddll_overflow(x, y, reinterpret_cast<long long*>(r));
+}
+template <typename T>
+bool builtin_sub_overflow(T x, T y, T* r)
+{
+#if __has_builtin(__builtin_sub_overflow)
+    return __builtin_sub_overflow(x, y, r);
+#else
+    *r = x - y;
+    return static_cast<long long>(x) - static_cast<long long>(y) != static_cast<long long>(*r);
+#endif
+}
+template <>
+bool builtin_sub_overflow<u64>(u64 x, u64 y, u64* r)
+{
+    return __builtin_usubll_overflow(x, y, reinterpret_cast<unsigned long long*>(r));
+}
+template <>
+bool builtin_sub_overflow<i64>(i64 x, i64 y, i64* r)
+{
+    return __builtin_ssubll_overflow(x, y, reinterpret_cast<long long*>(r));
+}
+//#endif
+template <typename T>
 inline T ref_satadd(T x, T y)
 {
     T result;
-    if (__builtin_add_overflow(x, y, &result))
+    if (builtin_add_overflow(x, y, &result))
         return x < 0 ? std::numeric_limits<T>::min() : std::numeric_limits<T>::max();
     else
         return result;
@@ -67,7 +108,7 @@ template <typename T>
 inline T ref_satsub(T x, T y)
 {
     T result;
-    if (__builtin_sub_overflow(x, y, &result))
+    if (builtin_sub_overflow(x, y, &result))
         return x < y ? std::numeric_limits<T>::min() : std::numeric_limits<T>::max();
     else
         return result;
