@@ -48,7 +48,7 @@ struct expression_sequential_file_writer : expression_file_base, output_expressi
 {
     using expression_file_base::expression_file_base;
     template <typename U, size_t N>
-    void operator()(coutput_t, size_t, vec<U, N> value)
+    void operator()(coutput_t, size_t, const vec<U, N>& value)
     {
         write(value);
     }
@@ -81,7 +81,7 @@ struct expression_file_writer : expression_file_base, output_expression
 {
     using expression_file_base::expression_file_base;
     template <typename U, size_t N>
-    void operator()(coutput_t, size_t index, vec<U, N> value)
+    void operator()(coutput_t, size_t index, const vec<U, N>& value)
     {
         if (position != index)
             fseeko(file, static_cast<off_t>(index * sizeof(T)), SEEK_SET);

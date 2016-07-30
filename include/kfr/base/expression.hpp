@@ -143,7 +143,7 @@ struct expression_scalar : input_expression
     using value_type    = T;
     expression_scalar() = delete;
     constexpr expression_scalar(const T& val) noexcept : val(val) {}
-    constexpr expression_scalar(vec<T, width> val) noexcept : val(val) {}
+    constexpr expression_scalar(const vec<T, width>& val) noexcept : val(val) {}
     const vec<T, width> val;
 
     template <typename U, size_t N>
@@ -221,7 +221,7 @@ KFR_INLINE internal::expression_scalar<T> scalar(const T& val)
 }
 
 template <typename T, size_t N>
-KFR_INLINE internal::expression_scalar<T, N> scalar(vec<T, N> val)
+KFR_INLINE internal::expression_scalar<T, N> scalar(const vec<T, N>& val)
 {
     return internal::expression_scalar<T, N>(val);
 }

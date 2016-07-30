@@ -31,7 +31,7 @@ namespace kfr
 namespace intrinsics
 {
 template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> saturated_signed_add(vec<T, N> a, vec<T, N> b)
+KFR_SINTRIN vec<T, N> saturated_signed_add(const vec<T, N>& a, const vec<T, N>& b)
 {
     using UT               = utype<T>;
     constexpr size_t shift = typebits<UT>::bits - 1;
@@ -43,7 +43,7 @@ KFR_SINTRIN vec<T, N> saturated_signed_add(vec<T, N> a, vec<T, N> b)
     return select(bitcast<T>((aa ^ bb) | ~(bb ^ sum)) >= 0, a, bitcast<T>(sum));
 }
 template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> saturated_signed_sub(vec<T, N> a, vec<T, N> b)
+KFR_SINTRIN vec<T, N> saturated_signed_sub(const vec<T, N>& a, const vec<T, N>& b)
 {
     using UT               = utype<T>;
     constexpr size_t shift = typebits<UT>::bits - 1;
@@ -55,49 +55,49 @@ KFR_SINTRIN vec<T, N> saturated_signed_sub(vec<T, N> a, vec<T, N> b)
     return select(bitcast<T>((aa ^ bb) & (aa ^ diff)) < 0, a, bitcast<T>(diff));
 }
 template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> saturated_unsigned_add(vec<T, N> a, vec<T, N> b)
+KFR_SINTRIN vec<T, N> saturated_unsigned_add(const vec<T, N>& a, const vec<T, N>& b)
 {
     const vec<T, N> t = allonesvector(a);
     return select(a > t - b, t, a + b);
 }
 template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> saturated_unsigned_sub(vec<T, N> a, vec<T, N> b)
+KFR_SINTRIN vec<T, N> saturated_unsigned_sub(const vec<T, N>& a, const vec<T, N>& b)
 {
     return select(a < b, zerovector(a), a - b);
 }
 
 #if defined CID_ARCH_SSE2
 
-KFR_SINTRIN u8sse satadd(u8sse x, u8sse y) { return _mm_adds_epu8(*x, *y); }
-KFR_SINTRIN i8sse satadd(i8sse x, i8sse y) { return _mm_adds_epi8(*x, *y); }
-KFR_SINTRIN u16sse satadd(u16sse x, u16sse y) { return _mm_adds_epu16(*x, *y); }
-KFR_SINTRIN i16sse satadd(i16sse x, i16sse y) { return _mm_adds_epi16(*x, *y); }
+KFR_SINTRIN u8sse satadd(const u8sse& x, const u8sse& y) { return _mm_adds_epu8(*x, *y); }
+KFR_SINTRIN i8sse satadd(const i8sse& x, const i8sse& y) { return _mm_adds_epi8(*x, *y); }
+KFR_SINTRIN u16sse satadd(const u16sse& x, const u16sse& y) { return _mm_adds_epu16(*x, *y); }
+KFR_SINTRIN i16sse satadd(const i16sse& x, const i16sse& y) { return _mm_adds_epi16(*x, *y); }
 
-KFR_SINTRIN u8sse satsub(u8sse x, u8sse y) { return _mm_subs_epu8(*x, *y); }
-KFR_SINTRIN i8sse satsub(i8sse x, i8sse y) { return _mm_subs_epi8(*x, *y); }
-KFR_SINTRIN u16sse satsub(u16sse x, u16sse y) { return _mm_subs_epu16(*x, *y); }
-KFR_SINTRIN i16sse satsub(i16sse x, i16sse y) { return _mm_subs_epi16(*x, *y); }
+KFR_SINTRIN u8sse satsub(const u8sse& x, const u8sse& y) { return _mm_subs_epu8(*x, *y); }
+KFR_SINTRIN i8sse satsub(const i8sse& x, const i8sse& y) { return _mm_subs_epi8(*x, *y); }
+KFR_SINTRIN u16sse satsub(const u16sse& x, const u16sse& y) { return _mm_subs_epu16(*x, *y); }
+KFR_SINTRIN i16sse satsub(const i16sse& x, const i16sse& y) { return _mm_subs_epi16(*x, *y); }
 
-KFR_SINTRIN i32sse satadd(i32sse a, i32sse b) { return saturated_signed_add(a, b); }
-KFR_SINTRIN i64sse satadd(i64sse a, i64sse b) { return saturated_signed_add(a, b); }
-KFR_SINTRIN u32sse satadd(u32sse a, u32sse b) { return saturated_unsigned_add(a, b); }
-KFR_SINTRIN u64sse satadd(u64sse a, u64sse b) { return saturated_unsigned_add(a, b); }
+KFR_SINTRIN i32sse satadd(const i32sse& a, const i32sse& b) { return saturated_signed_add(a, b); }
+KFR_SINTRIN i64sse satadd(const i64sse& a, const i64sse& b) { return saturated_signed_add(a, b); }
+KFR_SINTRIN u32sse satadd(const u32sse& a, const u32sse& b) { return saturated_unsigned_add(a, b); }
+KFR_SINTRIN u64sse satadd(const u64sse& a, const u64sse& b) { return saturated_unsigned_add(a, b); }
 
-KFR_SINTRIN i32sse satsub(i32sse a, i32sse b) { return saturated_signed_sub(a, b); }
-KFR_SINTRIN i64sse satsub(i64sse a, i64sse b) { return saturated_signed_sub(a, b); }
-KFR_SINTRIN u32sse satsub(u32sse a, u32sse b) { return saturated_unsigned_sub(a, b); }
-KFR_SINTRIN u64sse satsub(u64sse a, u64sse b) { return saturated_unsigned_sub(a, b); }
+KFR_SINTRIN i32sse satsub(const i32sse& a, const i32sse& b) { return saturated_signed_sub(a, b); }
+KFR_SINTRIN i64sse satsub(const i64sse& a, const i64sse& b) { return saturated_signed_sub(a, b); }
+KFR_SINTRIN u32sse satsub(const u32sse& a, const u32sse& b) { return saturated_unsigned_sub(a, b); }
+KFR_SINTRIN u64sse satsub(const u64sse& a, const u64sse& b) { return saturated_unsigned_sub(a, b); }
 
 #if defined CID_ARCH_AVX2
-KFR_SINTRIN u8avx satadd(u8avx x, u8avx y) { return _mm256_adds_epu8(*x, *y); }
-KFR_SINTRIN i8avx satadd(i8avx x, i8avx y) { return _mm256_adds_epi8(*x, *y); }
-KFR_SINTRIN u16avx satadd(u16avx x, u16avx y) { return _mm256_adds_epu16(*x, *y); }
-KFR_SINTRIN i16avx satadd(i16avx x, i16avx y) { return _mm256_adds_epi16(*x, *y); }
+KFR_SINTRIN u8avx satadd(const u8avx& x, const u8avx& y) { return _mm256_adds_epu8(*x, *y); }
+KFR_SINTRIN i8avx satadd(const i8avx& x, const i8avx& y) { return _mm256_adds_epi8(*x, *y); }
+KFR_SINTRIN u16avx satadd(const u16avx& x, const u16avx& y) { return _mm256_adds_epu16(*x, *y); }
+KFR_SINTRIN i16avx satadd(const i16avx& x, const i16avx& y) { return _mm256_adds_epi16(*x, *y); }
 
-KFR_SINTRIN u8avx satsub(u8avx x, u8avx y) { return _mm256_subs_epu8(*x, *y); }
-KFR_SINTRIN i8avx satsub(i8avx x, i8avx y) { return _mm256_subs_epi8(*x, *y); }
-KFR_SINTRIN u16avx satsub(u16avx x, u16avx y) { return _mm256_subs_epu16(*x, *y); }
-KFR_SINTRIN i16avx satsub(i16avx x, i16avx y) { return _mm256_subs_epi16(*x, *y); }
+KFR_SINTRIN u8avx satsub(const u8avx& x, const u8avx& y) { return _mm256_subs_epu8(*x, *y); }
+KFR_SINTRIN i8avx satsub(const i8avx& x, const i8avx& y) { return _mm256_subs_epi8(*x, *y); }
+KFR_SINTRIN u16avx satsub(const u16avx& x, const u16avx& y) { return _mm256_subs_epu16(*x, *y); }
+KFR_SINTRIN i16avx satsub(const i16avx& x, const i16avx& y) { return _mm256_subs_epi16(*x, *y); }
 #endif
 
 KFR_HANDLE_ALL_SIZES_2(satadd)
@@ -106,22 +106,22 @@ KFR_HANDLE_ALL_SIZES_2(satsub)
 #else
 // fallback
 template <typename T, size_t N, KFR_ENABLE_IF(std::is_signed<T>::value)>
-KFR_SINTRIN vec<T, N> satadd(vec<T, N> a, vec<T, N> b)
+KFR_SINTRIN vec<T, N> satadd(const vec<T, N>& a, const vec<T, N>& b)
 {
     return saturated_signed_add(a, b);
 }
 template <typename T, size_t N, KFR_ENABLE_IF(std::is_unsigned<T>::value)>
-KFR_SINTRIN vec<T, N> satadd(vec<T, N> a, vec<T, N> b)
+KFR_SINTRIN vec<T, N> satadd(const vec<T, N>& a, const vec<T, N>& b)
 {
     return saturated_unsigned_add(a, b);
 }
 template <typename T, size_t N, KFR_ENABLE_IF(std::is_signed<T>::value)>
-KFR_SINTRIN vec<T, N> satsub(vec<T, N> a, vec<T, N> b)
+KFR_SINTRIN vec<T, N> satsub(const vec<T, N>& a, const vec<T, N>& b)
 {
     return saturated_signed_sub(a, b);
 }
 template <typename T, size_t N, KFR_ENABLE_IF(std::is_unsigned<T>::value)>
-KFR_SINTRIN vec<T, N> satsub(vec<T, N> a, vec<T, N> b)
+KFR_SINTRIN vec<T, N> satsub(const vec<T, N>& a, const vec<T, N>& b)
 {
     return saturated_unsigned_sub(a, b);
 }

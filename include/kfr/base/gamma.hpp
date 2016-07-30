@@ -42,7 +42,7 @@ constexpr T gamma_precalc[] = {
 };
 
 template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> gamma(vec<T, N> z)
+KFR_SINTRIN vec<T, N> gamma(const vec<T, N>& z)
 {
     constexpr size_t Count = arraysize(gamma_precalc<T>);
     vec<T, N> accm = gamma_precalc<T>[0];
@@ -54,7 +54,7 @@ KFR_SINTRIN vec<T, N> gamma(vec<T, N> z)
 }
 
 template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> factorial_approx(vec<T, N> x)
+KFR_SINTRIN vec<T, N> factorial_approx(const vec<T, N>& x)
 {
     return gamma(x + T(1));
 }

@@ -32,14 +32,17 @@ namespace intrinsics
 
 #if defined CID_ARCH_SSE2
 
-KFR_SINTRIN f32x1 sqrt(f32x1 x) { return slice<0, 1>(tovec(_mm_sqrt_ss(*extend<4>(x)))); }
-KFR_SINTRIN f64x1 sqrt(f64x1 x) { return slice<0, 1>(tovec(_mm_sqrt_sd(_mm_setzero_pd(), *extend<2>(x)))); }
-KFR_SINTRIN f32sse sqrt(f32sse x) { return _mm_sqrt_ps(*x); }
-KFR_SINTRIN f64sse sqrt(f64sse x) { return _mm_sqrt_pd(*x); }
+KFR_SINTRIN f32x1 sqrt(const f32x1& x) { return slice<0, 1>(tovec(_mm_sqrt_ss(*extend<4>(x)))); }
+KFR_SINTRIN f64x1 sqrt(const f64x1& x)
+{
+    return slice<0, 1>(tovec(_mm_sqrt_sd(_mm_setzero_pd(), *extend<2>(x))));
+}
+KFR_SINTRIN f32sse sqrt(const f32sse& x) { return _mm_sqrt_ps(*x); }
+KFR_SINTRIN f64sse sqrt(const f64sse& x) { return _mm_sqrt_pd(*x); }
 
 #if defined CID_ARCH_AVX
-KFR_SINTRIN f32avx sqrt(f32avx x) { return _mm256_sqrt_ps(*x); }
-KFR_SINTRIN f64avx sqrt(f64avx x) { return _mm256_sqrt_pd(*x); }
+KFR_SINTRIN f32avx sqrt(const f32avx& x) { return _mm256_sqrt_ps(*x); }
+KFR_SINTRIN f64avx sqrt(const f64avx& x) { return _mm256_sqrt_pd(*x); }
 #endif
 
 KFR_HANDLE_ALL_SIZES_FLT_1(sqrt)
@@ -48,7 +51,7 @@ KFR_HANDLE_ALL_SIZES_FLT_1(sqrt)
 
 // fallback
 template <typename T, size_t N, typename Tout = flt_type<T>>
-KFR_SINTRIN vec<Tout, N> sqrt(vec<T, N> x)
+KFR_SINTRIN vec<Tout, N> sqrt(const vec<T, N>& x)
 {
     return apply([](T x) { return std::sqrt(static_cast<Tout>(x)); }, x);
 }

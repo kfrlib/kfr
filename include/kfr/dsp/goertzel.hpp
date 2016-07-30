@@ -53,7 +53,7 @@ public:
             result.imag(q2 * sin(omega));
         }
         template <typename U, size_t N>
-        KFR_INLINE void operator()(coutput_t, size_t index, vec<U, N> x)
+        KFR_INLINE void operator()(coutput_t, size_t index, const vec<U, N>& x)
         {
             vec<T, N> in = cast<T>(x);
             KFR_LOOP_UNROLL
@@ -90,7 +90,7 @@ public:
             }
         }
         template <typename U, size_t N>
-        KFR_INLINE void operator()(coutput_t, size_t index, vec<U, N> x)
+        KFR_INLINE void operator()(coutput_t, size_t index, const vec<U, N>& x)
         {
             const vec<T, N> in = cast<T>(x);
             KFR_LOOP_UNROLL

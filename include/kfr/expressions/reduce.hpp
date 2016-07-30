@@ -70,7 +70,7 @@ struct expression_reduce : output_expression
     }
 
     template <typename U, size_t N>
-    KFR_INLINE void operator()(coutput_t, size_t, vec<U, N> x) const
+    KFR_INLINE void operator()(coutput_t, size_t, const vec<U, N>& x) const
     {
         counter += N;
         process(x);

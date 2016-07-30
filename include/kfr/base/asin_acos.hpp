@@ -34,14 +34,14 @@ namespace intrinsics
 {
 
 template <typename T, size_t N, typename Tout = flt_type<T>>
-KFR_SINTRIN vec<Tout, N> asin(vec<T, N> x)
+KFR_SINTRIN vec<Tout, N> asin(const vec<T, N>& x)
 {
     const vec<Tout, N> xx = cast<Tout>(x);
     return atan2(xx, sqrt(Tout(1) - xx * xx));
 }
 
 template <typename T, size_t N, typename Tout = flt_type<T>>
-KFR_SINTRIN vec<Tout, N> acos(vec<T, N> x)
+KFR_SINTRIN vec<Tout, N> acos(const vec<T, N>& x)
 {
     const vec<Tout, N> xx = cast<Tout>(x);
     return atan2(sqrt(Tout(1) - xx * xx), xx);

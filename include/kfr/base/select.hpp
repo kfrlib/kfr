@@ -31,40 +31,100 @@ namespace intrinsics
 
 #if defined CID_ARCH_SSE41
 
-KFR_SINTRIN u8sse select(mu8sse m, u8sse x, u8sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-KFR_SINTRIN u16sse select(mu16sse m, u16sse x, u16sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-KFR_SINTRIN u32sse select(mu32sse m, u32sse x, u32sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-KFR_SINTRIN u64sse select(mu64sse m, u64sse x, u64sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-KFR_SINTRIN i8sse select(mi8sse m, i8sse x, i8sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-KFR_SINTRIN i16sse select(mi16sse m, i16sse x, i16sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-KFR_SINTRIN i32sse select(mi32sse m, i32sse x, i32sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-KFR_SINTRIN i64sse select(mi64sse m, i64sse x, i64sse y) { return _mm_blendv_epi8(*y, *x, *m); }
-KFR_SINTRIN f32sse select(mf32sse m, f32sse x, f32sse y) { return _mm_blendv_ps(*y, *x, *m); }
-KFR_SINTRIN f64sse select(mf64sse m, f64sse x, f64sse y) { return _mm_blendv_pd(*y, *x, *m); }
+KFR_SINTRIN u8sse select(const mu8sse& m, const u8sse& x, const u8sse& y)
+{
+    return _mm_blendv_epi8(*y, *x, *m);
+}
+KFR_SINTRIN u16sse select(const mu16sse& m, const u16sse& x, const u16sse& y)
+{
+    return _mm_blendv_epi8(*y, *x, *m);
+}
+KFR_SINTRIN u32sse select(const mu32sse& m, const u32sse& x, const u32sse& y)
+{
+    return _mm_blendv_epi8(*y, *x, *m);
+}
+KFR_SINTRIN u64sse select(const mu64sse& m, const u64sse& x, const u64sse& y)
+{
+    return _mm_blendv_epi8(*y, *x, *m);
+}
+KFR_SINTRIN i8sse select(const mi8sse& m, const i8sse& x, const i8sse& y)
+{
+    return _mm_blendv_epi8(*y, *x, *m);
+}
+KFR_SINTRIN i16sse select(const mi16sse& m, const i16sse& x, const i16sse& y)
+{
+    return _mm_blendv_epi8(*y, *x, *m);
+}
+KFR_SINTRIN i32sse select(const mi32sse& m, const i32sse& x, const i32sse& y)
+{
+    return _mm_blendv_epi8(*y, *x, *m);
+}
+KFR_SINTRIN i64sse select(const mi64sse& m, const i64sse& x, const i64sse& y)
+{
+    return _mm_blendv_epi8(*y, *x, *m);
+}
+KFR_SINTRIN f32sse select(const mf32sse& m, const f32sse& x, const f32sse& y)
+{
+    return _mm_blendv_ps(*y, *x, *m);
+}
+KFR_SINTRIN f64sse select(const mf64sse& m, const f64sse& x, const f64sse& y)
+{
+    return _mm_blendv_pd(*y, *x, *m);
+}
 
 #if defined CID_ARCH_AVX
-KFR_SINTRIN f64avx select(mf64avx m, f64avx x, f64avx y) { return _mm256_blendv_pd(*y, *x, *m); }
-KFR_SINTRIN f32avx select(mf32avx m, f32avx x, f32avx y) { return _mm256_blendv_ps(*y, *x, *m); }
+KFR_SINTRIN f64avx select(const mf64avx& m, const f64avx& x, const f64avx& y)
+{
+    return _mm256_blendv_pd(*y, *x, *m);
+}
+KFR_SINTRIN f32avx select(const mf32avx& m, const f32avx& x, const f32avx& y)
+{
+    return _mm256_blendv_ps(*y, *x, *m);
+}
 #endif
 
 #if defined CID_ARCH_AVX2
-KFR_SINTRIN u8avx select(mu8avx m, u8avx x, u8avx y) { return _mm256_blendv_epi8(*y, *x, *m); }
-KFR_SINTRIN u16avx select(mu16avx m, u16avx x, u16avx y) { return _mm256_blendv_epi8(*y, *x, *m); }
-KFR_SINTRIN u32avx select(mu32avx m, u32avx x, u32avx y) { return _mm256_blendv_epi8(*y, *x, *m); }
-KFR_SINTRIN u64avx select(mu64avx m, u64avx x, u64avx y) { return _mm256_blendv_epi8(*y, *x, *m); }
-KFR_SINTRIN i8avx select(mi8avx m, i8avx x, i8avx y) { return _mm256_blendv_epi8(*y, *x, *m); }
-KFR_SINTRIN i16avx select(mi16avx m, i16avx x, i16avx y) { return _mm256_blendv_epi8(*y, *x, *m); }
-KFR_SINTRIN i32avx select(mi32avx m, i32avx x, i32avx y) { return _mm256_blendv_epi8(*y, *x, *m); }
-KFR_SINTRIN i64avx select(mi64avx m, i64avx x, i64avx y) { return _mm256_blendv_epi8(*y, *x, *m); }
+KFR_SINTRIN u8avx select(const mu8avx& m, const u8avx& x, const u8avx& y)
+{
+    return _mm256_blendv_epi8(*y, *x, *m);
+}
+KFR_SINTRIN u16avx select(const mu16avx& m, const u16avx& x, const u16avx& y)
+{
+    return _mm256_blendv_epi8(*y, *x, *m);
+}
+KFR_SINTRIN u32avx select(const mu32avx& m, const u32avx& x, const u32avx& y)
+{
+    return _mm256_blendv_epi8(*y, *x, *m);
+}
+KFR_SINTRIN u64avx select(const mu64avx& m, const u64avx& x, const u64avx& y)
+{
+    return _mm256_blendv_epi8(*y, *x, *m);
+}
+KFR_SINTRIN i8avx select(const mi8avx& m, const i8avx& x, const i8avx& y)
+{
+    return _mm256_blendv_epi8(*y, *x, *m);
+}
+KFR_SINTRIN i16avx select(const mi16avx& m, const i16avx& x, const i16avx& y)
+{
+    return _mm256_blendv_epi8(*y, *x, *m);
+}
+KFR_SINTRIN i32avx select(const mi32avx& m, const i32avx& x, const i32avx& y)
+{
+    return _mm256_blendv_epi8(*y, *x, *m);
+}
+KFR_SINTRIN i64avx select(const mi64avx& m, const i64avx& x, const i64avx& y)
+{
+    return _mm256_blendv_epi8(*y, *x, *m);
+}
 #endif
 
 template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T, cpu_t::native>)>
-KFR_SINTRIN vec<T, N> select(mask<T, N> a, vec<T, N> b, vec<T, N> c)
+KFR_SINTRIN vec<T, N> select(const mask<T, N>& a, const vec<T, N>& b, const vec<T, N>& c)
 {
     return slice<0, N>(select(expand_simd(a).asmask(), expand_simd(b), expand_simd(c)));
 }
 template <typename T, size_t N, KFR_ENABLE_IF(N >= vector_width<T, cpu_t::native>), typename = void>
-KFR_SINTRIN vec<T, N> select(mask<T, N> a, vec<T, N> b, vec<T, N> c)
+KFR_SINTRIN vec<T, N> select(const mask<T, N>& a, const vec<T, N>& b, const vec<T, N>& c)
 {
     return concat(select(low(a).asmask(), low(b), low(c)), select(high(a).asmask(), high(b), high(c)));
 }
@@ -73,7 +133,7 @@ KFR_SINTRIN vec<T, N> select(mask<T, N> a, vec<T, N> b, vec<T, N> c)
 
 // fallback
 template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> select(mask<T, N> m, vec<T, N> x, vec<T, N> y)
+KFR_SINTRIN vec<T, N> select(mask<T, N> m, const vec<T, N>& x, const vec<T, N>& y)
 {
     return y ^ ((x ^ y) & m);
 }

@@ -40,7 +40,7 @@ template <typename T, typename Class>
 struct univector_base : input_expression, output_expression
 {
     template <typename U, size_t N>
-    KFR_INLINE void operator()(coutput_t, size_t index, vec<U, N> value)
+    KFR_INLINE void operator()(coutput_t, size_t index, const vec<U, N>& value)
     {
         T* data = derived_cast<Class>(this)->data();
         write(ptr_cast<T>(data) + index, cast<T>(value));

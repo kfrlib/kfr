@@ -36,33 +36,33 @@ namespace intrinsics
 {
 
 template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> sinh(vec<T, N> x)
+KFR_SINTRIN vec<T, N> sinh(const vec<T, N>& x)
 {
     return (exp(x) - exp(-x)) * T(0.5);
 }
 
 template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> cosh(vec<T, N> x)
+KFR_SINTRIN vec<T, N> cosh(const vec<T, N>& x)
 {
     return (exp(x) + exp(-x)) * T(0.5);
 }
 
 template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> tanh(vec<T, N> x)
+KFR_SINTRIN vec<T, N> tanh(const vec<T, N>& x)
 {
     x = -2 * x;
     return (1 - exp(x)) / (1 + exp(x));
 }
 
 template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> coth(vec<T, N> x)
+KFR_SINTRIN vec<T, N> coth(const vec<T, N>& x)
 {
     x = -2 * x;
     return (1 + exp(x)) / (1 - exp(x));
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(N > 1)>
-KFR_SINTRIN vec<T, N> sinhcosh(vec<T, N> x)
+KFR_SINTRIN vec<T, N> sinhcosh(const vec<T, N>& x)
 {
     const vec<T, N> a = exp(x);
     const vec<T, N> b = exp(-x);
@@ -70,7 +70,7 @@ KFR_SINTRIN vec<T, N> sinhcosh(vec<T, N> x)
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(N > 1)>
-KFR_SINTRIN vec<T, N> coshsinh(vec<T, N> x)
+KFR_SINTRIN vec<T, N> coshsinh(const vec<T, N>& x)
 {
     const vec<T, N> a = exp(x);
     const vec<T, N> b = exp(-x);

@@ -209,7 +209,7 @@ struct is_complex_impl<complex<T>> : std::true_type
 
 // real to complex
 template <typename To, typename From, size_t N, KFR_ENABLE_IF(internal::is_complex_impl<To>::value)>
-constexpr KFR_INLINE vec<To, N> cast(vec<From, N> value) noexcept
+constexpr KFR_INLINE vec<To, N> cast(const vec<From, N>& value) noexcept
 {
     const vec<subtype<To>, N> casted = cast<subtype<To>>(value);
     return subcast<To>(interleave(casted, zerovector(casted)));
@@ -217,14 +217,14 @@ constexpr KFR_INLINE vec<To, N> cast(vec<From, N> value) noexcept
 
 // complex to complex
 template <typename To, typename From, size_t N, KFR_ENABLE_IF(internal::is_complex_impl<To>::value)>
-constexpr KFR_INLINE vec<To, N> cast(vec<complex<From>, N> value) noexcept
+constexpr KFR_INLINE vec<To, N> cast(const vec<complex<From>, N>& value) noexcept
 {
     return subcast<To>(cast<subtype<To>>(subcast<From>(value)));
 }
 
 // complex to real
 template <typename To, typename From, size_t N, KFR_ENABLE_IF(!internal::is_complex_impl<To>::value)>
-constexpr KFR_INLINE vec<To, N> cast(vec<complex<From>, N> value) noexcept
+constexpr KFR_INLINE vec<To, N> cast(const vec<complex<From>, N>& value) noexcept
 {
     static_assert(sizeof(To) == 0, "Can't cast complex to real");
     return {};
@@ -375,7 +375,7 @@ KFR_SINTRIN vec<complex<T>, N> cartesian(const vec<complex<T>, N>& x)
 }
 
 template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> cabsdup(vec<T, N> x)
+KFR_SINTRIN vec<T, N> cabsdup(const vec<T, N>& x)
 {
     x = sqr(x);
     return sqrt(x + swap<2>(x));

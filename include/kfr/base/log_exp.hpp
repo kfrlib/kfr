@@ -39,55 +39,53 @@ namespace intrinsics
 {
 
 template <size_t N>
-KFR_SINTRIN vec<i32, N> vilogbp1(vec<f32, N> d)
+KFR_SINTRIN vec<i32, N> vilogbp1(const vec<f32, N>& d)
 {
     mask<i32, N> m = d < 5.421010862427522E-20f;
-    d = select(m, 1.8446744073709552E19f * d, d);
-    vec<i32, N> q = (ibitcast(d) >> 23) & 0xff;
+    vec<i32, N> q  = (ibitcast(select(m, 1.8446744073709552E19f * d, d)) >> 23) & 0xff;
     q = select(m, q - (64 + 0x7e), q - 0x7e);
     return q;
 }
 
 template <size_t N>
-KFR_SINTRIN vec<i64, N> vilogbp1(vec<f64, N> d)
+KFR_SINTRIN vec<i64, N> vilogbp1(const vec<f64, N>& d)
 {
     mask<i64, N> m = d < 4.9090934652977266E-91;
-    d = select(m, 2.037035976334486E90 * d, d);
-    vec<i64, N> q = (ibitcast(d) >> 52) & 0x7ff;
+    vec<i64, N> q  = (ibitcast(select(m, 2.037035976334486E90 * d, d)) >> 52) & 0x7ff;
     q = select(m, q - (300 + 0x03fe), q - 0x03fe);
     return q;
 }
 
 template <size_t N>
-KFR_SINTRIN vec<f32, N> vldexpk(vec<f32, N> x, vec<i32, N> q)
+KFR_SINTRIN vec<f32, N> vldexpk(const vec<f32, N>& x, const vec<i32, N>& q)
 {
     vec<i32, N> m = q >> 31;
     m = (((m + q) >> 6) - m) << 4;
-    q = q - (m << 2);
+    const vec<i32, N> qq = q - (m << 2);
     m = clamp(m + 0x7f, vec<i32, N>(0xff));
     vec<f32, N> u = pow4(bitcast<f32>(cast<i32>(m) << 23));
-    return x * u * bitcast<f32>((cast<i32>(q + 0x7f)) << 23);
+    return x * u * bitcast<f32>((cast<i32>(qq + 0x7f)) << 23);
 }
 
 template <size_t N>
-KFR_SINTRIN vec<f64, N> vldexpk(vec<f64, N> x, vec<i64, N> q)
+KFR_SINTRIN vec<f64, N> vldexpk(const vec<f64, N>& x, const vec<i64, N>& q)
 {
     vec<i64, N> m = q >> 31;
     m = (((m + q) >> 9) - m) << 7;
-    q = q - (m << 2);
+    const vec<i64, N> qq = q - (m << 2);
     m = clamp(m + 0x3ff, i64(0x7ff));
     vec<f64, N> u = pow4(bitcast<f64>(cast<i64>(m) << 52));
-    return x * u * bitcast<f64>((cast<i64>(q + 0x3ff)) << 52);
+    return x * u * bitcast<f64>((cast<i64>(qq + 0x3ff)) << 52);
 }
 
 template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> logb(vec<T, N> x)
+KFR_SINTRIN vec<T, N> logb(const vec<T, N>& x)
 {
     return select(x == T(), -c_infinity<T>, cast<T>(vilogbp1(x) - 1));
 }
 
 template <size_t N>
-KFR_SINTRIN vec<f32, N> log(vec<f32, N> d)
+KFR_SINTRIN vec<f32, N> log(const vec<f32, N>& d)
 {
     vec<i32, N> e = vilogbp1(d * 0.7071); // 0678118654752440084436210485f );
     vec<f32, N> m = vldexpk(d, -e);
@@ -110,7 +108,7 @@ KFR_SINTRIN vec<f32, N> log(vec<f32, N> d)
 }
 
 template <size_t N>
-KFR_SINTRIN vec<f64, N> log(vec<f64, N> d)
+KFR_SINTRIN vec<f64, N> log(const vec<f64, N>& d)
 {
     vec<i64, N> e = vilogbp1(d * 0.7071); // 0678118654752440084436210485 );
     vec<f64, N> m = vldexpk(d, -e);
@@ -136,18 +134,18 @@ KFR_SINTRIN vec<f64, N> log(vec<f64, N> d)
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
-KFR_SINTRIN vec<T, N> log2(vec<T, N> x)
+KFR_SINTRIN vec<T, N> log2(const vec<T, N>& x)
 {
     return log(x) * c_recip_log_2<T>;
 }
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
-KFR_SINTRIN vec<T, N> log10(vec<T, N> x)
+KFR_SINTRIN vec<T, N> log10(const vec<T, N>& x)
 {
     return log(x) * c_recip_log_10<T>;
 }
 
 template <size_t N>
-KFR_SINTRIN vec<f32, N> exp(vec<f32, N> d)
+KFR_SINTRIN vec<f32, N> exp(const vec<f32, N>& d)
 {
     const f32 ln2_part1 = 0.6931457519f;
     const f32 ln2_part2 = 1.4286067653e-6f;
@@ -181,7 +179,7 @@ KFR_SINTRIN vec<f32, N> exp(vec<f32, N> d)
 }
 
 template <size_t N>
-KFR_SINTRIN vec<f64, N> exp(vec<f64, N> d)
+KFR_SINTRIN vec<f64, N> exp(const vec<f64, N>& d)
 {
     const f64 ln2_part1 = 0.69314717501401901245;
     const f64 ln2_part2 = 5.545926273775592108e-009;
@@ -222,12 +220,12 @@ KFR_SINTRIN vec<f64, N> exp(vec<f64, N> d)
     return u;
 }
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
-KFR_SINTRIN vec<T, N> exp2(vec<T, N> x)
+KFR_SINTRIN vec<T, N> exp2(const vec<T, N>& x)
 {
     return exp(x * c_log_2<T>);
 }
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
-KFR_SINTRIN vec<T, N> exp10(vec<T, N> x)
+KFR_SINTRIN vec<T, N> exp10(const vec<T, N>& x)
 {
     return exp(x * c_log_10<T>);
 }
@@ -257,7 +255,7 @@ KFR_SINTRIN common_type<T1, T2, T3> log_fmadd(const T1& x, const T2& m, const T3
 }
 
 template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> pow(vec<T, N> a, vec<T, N> b)
+KFR_SINTRIN vec<T, N> pow(const vec<T, N>& a, const vec<T, N>& b)
 {
     const vec<T, N> t       = exp(b * log(abs(a)));
     const mask<T, N> isint  = floor(b) == b;
@@ -267,49 +265,49 @@ KFR_SINTRIN vec<T, N> pow(vec<T, N> a, vec<T, N> b)
 }
 
 template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> root(vec<T, N> x, vec<T, N> b)
+KFR_SINTRIN vec<T, N> root(const vec<T, N>& x, const vec<T, N>& b)
 {
     return exp(reciprocal(b) * log(x));
 }
 
 template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> cbrt(vec<T, N> x)
+KFR_SINTRIN vec<T, N> cbrt(const vec<T, N>& x)
 {
     return pow<T, N>(x, T(0.333333333333333333333333333333333));
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value), typename Tout = ftype<T>>
-KFR_SINTRIN vec<Tout, N> exp(vec<T, N> x)
+KFR_SINTRIN vec<Tout, N> exp(const vec<T, N>& x)
 {
     return exp(cast<Tout>(x));
 }
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value), typename Tout = ftype<T>>
-KFR_SINTRIN vec<Tout, N> exp2(vec<T, N> x)
+KFR_SINTRIN vec<Tout, N> exp2(const vec<T, N>& x)
 {
     return exp2(cast<Tout>(x));
 }
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value), typename Tout = ftype<T>>
-KFR_SINTRIN vec<Tout, N> exp10(vec<T, N> x)
+KFR_SINTRIN vec<Tout, N> exp10(const vec<T, N>& x)
 {
     return exp10(cast<Tout>(x));
 }
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value), typename Tout = ftype<T>>
-KFR_SINTRIN vec<Tout, N> log(vec<T, N> x)
+KFR_SINTRIN vec<Tout, N> log(const vec<T, N>& x)
 {
     return log(cast<Tout>(x));
 }
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value), typename Tout = ftype<T>>
-KFR_SINTRIN vec<Tout, N> log2(vec<T, N> x)
+KFR_SINTRIN vec<Tout, N> log2(const vec<T, N>& x)
 {
     return log2(cast<Tout>(x));
 }
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value), typename Tout = ftype<T>>
-KFR_SINTRIN vec<Tout, N> log10(vec<T, N> x)
+KFR_SINTRIN vec<Tout, N> log10(const vec<T, N>& x)
 {
     return log10(cast<Tout>(x));
 }
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value), typename Tout = ftype<T>>
-KFR_SINTRIN vec<Tout, N> cbrt(vec<T, N> x)
+KFR_SINTRIN vec<Tout, N> cbrt(const vec<T, N>& x)
 {
     return cbrt(cast<Tout>(x));
 }

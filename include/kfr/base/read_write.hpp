@@ -36,7 +36,7 @@ KFR_INLINE vec<T, N> read(const T* src)
 }
 
 template <bool A = false, size_t N, typename T>
-KFR_INLINE void write(T* dest, vec<T, N> value)
+KFR_INLINE void write(T* dest, const vec<T, N>& value)
 {
     internal_read_write::write<A, N, T>(dest, value);
 }
@@ -54,7 +54,7 @@ KFR_INLINE vec<T, Nout> gather(const T* base)
 }
 
 template <size_t Index, size_t... Indices, typename T, size_t N, size_t InIndex = 0>
-KFR_INLINE void scatter(const T* base, vec<T, N> value)
+KFR_INLINE void scatter(const T* base, const vec<T, N>& value)
 {
     base[Index] = value[InIndex];
     scatter<Indices..., T, N, InIndex + 1>(base, value);
@@ -63,7 +63,7 @@ KFR_INLINE void scatter(const T* base, vec<T, N> value)
 namespace internal
 {
 template <typename T, size_t N, size_t... Indices>
-KFR_INLINE vec<T, N> gather(const T* base, vec<u32, N> indices, csizes_t<Indices...>)
+KFR_INLINE vec<T, N> gather(const T* base, const vec<u32, N>& indices, csizes_t<Indices...>)
 {
     return make_vector(base[indices[Indices]]...);
 }
@@ -80,7 +80,7 @@ KFR_INLINE vec<T, Nout> gather_stride_s(const T* base, size_t stride, csizes_t<I
 }
 
 template <typename T, size_t N>
-KFR_INLINE vec<T, N> gather(const T* base, vec<u32, N> indices)
+KFR_INLINE vec<T, N> gather(const T* base, const vec<u32, N>& indices)
 {
     return internal::gather(base, indices, csizeseq<N>);
 }
@@ -98,24 +98,24 @@ KFR_INLINE vec<T, Nout> gather_stride(const T* base)
 }
 
 template <size_t groupsize, typename T, size_t N, typename IT, size_t... Indices>
-KFR_INLINE vec<T, N * groupsize> gather_helper(const T* base, vec<IT, N> offset, csizes_t<Indices...>)
+KFR_INLINE vec<T, N * groupsize> gather_helper(const T* base, const vec<IT, N>& offset, csizes_t<Indices...>)
 {
     return concat(read<groupsize>(base + groupsize * (*offset)[Indices])...);
 }
 template <size_t groupsize = 1, typename T, size_t N, typename IT>
-KFR_INLINE vec<T, N * groupsize> gather(const T* base, vec<IT, N> offset)
+KFR_INLINE vec<T, N * groupsize> gather(const T* base, const vec<IT, N>& offset)
 {
     return gather_helper<groupsize>(base, offset, csizeseq<N>);
 }
 
 template <size_t groupsize, typename T, size_t N, size_t Nout = N* groupsize, typename IT, size_t... Indices>
-KFR_INLINE void scatter_helper(T* base, vec<IT, N> offset, vec<T, Nout> value, csizes_t<Indices...>)
+KFR_INLINE void scatter_helper(T* base, const vec<IT, N>& offset, const vec<T, Nout>& value, csizes_t<Indices...>)
 {
     swallow{ (write(base + groupsize * (*offset)[Indices], slice<Indices * groupsize, groupsize>(value)),
               0)... };
 }
 template <size_t groupsize = 1, typename T, size_t N, size_t Nout = N* groupsize, typename IT>
-KFR_INLINE void scatter(T* base, vec<IT, N> offset, vec<T, Nout> value)
+KFR_INLINE void scatter(T* base, const vec<IT, N>& offset, const vec<T, Nout>& value)
 {
     return scatter_helper<groupsize>(base, offset, value, csizeseq<N>);
 }

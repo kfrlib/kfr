@@ -32,18 +32,18 @@ namespace internal
 {
 
 template <typename T, typename ReduceFn>
-KFR_INLINE T horizontal_impl(vec<T, 1> value, ReduceFn&&)
+KFR_INLINE T horizontal_impl(const vec<T, 1>& value, ReduceFn&&)
 {
     return T(value[0]);
 }
 
 template <typename T, size_t N, typename ReduceFn, KFR_ENABLE_IF(N > 1 && is_poweroftwo(N))>
-KFR_INLINE T horizontal_impl(vec<T, N> value, ReduceFn&& reduce)
+KFR_INLINE T horizontal_impl(const vec<T, N>& value, ReduceFn&& reduce)
 {
     return horizontal_impl(reduce(low(value), high(value)), std::forward<ReduceFn>(reduce));
 }
 template <typename T, size_t N, typename ReduceFn, KFR_ENABLE_IF(N > 1 && !is_poweroftwo(N))>
-KFR_INLINE T horizontal_impl(vec<T, N> value, ReduceFn&& reduce)
+KFR_INLINE T horizontal_impl(const vec<T, N>& value, ReduceFn&& reduce)
 {
     const T initial = reduce(initialvalue<T>());
     return horizontal_impl(widen<next_poweroftwo(N)>(value, initial), std::forward<ReduceFn>(reduce));
@@ -51,7 +51,7 @@ KFR_INLINE T horizontal_impl(vec<T, N> value, ReduceFn&& reduce)
 }
 
 template <typename T, size_t N, typename ReduceFn>
-KFR_INLINE T horizontal(vec<T, N> value, ReduceFn&& reduce)
+KFR_INLINE T horizontal(const vec<T, N>& value, ReduceFn&& reduce)
 {
     return internal::horizontal_impl(value, std::forward<ReduceFn>(reduce));
 }
@@ -486,7 +486,7 @@ constexpr KFR_INLINE T reciprocal(T x)
 KFR_FN(reciprocal)
 
 template <typename T, size_t N>
-KFR_INLINE vec<T, N> mulsign(vec<T, N> x, vec<T, N> y)
+KFR_INLINE vec<T, N> mulsign(const vec<T, N>& x, const vec<T, N>& y)
 {
     return x ^ (y & internal::highbitmask<T>);
 }
@@ -494,13 +494,13 @@ KFR_FN_S(mulsign)
 KFR_FN(mulsign)
 
 template <typename T, size_t N>
-constexpr KFR_INLINE vec<T, N> copysign(vec<T, N> x, vec<T, N> y)
+constexpr KFR_INLINE vec<T, N> copysign(const vec<T, N>& x, const vec<T, N>& y)
 {
     return (x & internal::highbitmask<T>) | (y & internal::highbitmask<T>);
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
-KFR_INLINE vec<T, N> fmod(vec<T, N> x, vec<T, N> y)
+KFR_INLINE vec<T, N> fmod(const vec<T, N>& x, const vec<T, N>& y)
 {
     return x - cast<itype<T>>(x / y) * y;
 }
@@ -509,55 +509,55 @@ KFR_FN_S(fmod)
 KFR_FN(fmod)
 
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
-constexpr KFR_INLINE vec<T, N> rem(vec<T, N> x, vec<T, N> y)
+constexpr KFR_INLINE vec<T, N> rem(const vec<T, N>& x, const vec<T, N>& y)
 {
     return x % y;
 }
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
-KFR_INLINE vec<T, N> rem(vec<T, N> x, vec<T, N> y)
+KFR_INLINE vec<T, N> rem(const vec<T, N>& x, const vec<T, N>& y)
 {
     return fmod(x, y);
 }
 
 template <typename T, size_t N>
-KFR_INLINE mask<T, N> isnan(vec<T, N> x)
+KFR_INLINE mask<T, N> isnan(const vec<T, N>& x)
 {
     return x != x;
 }
 
 template <typename T, size_t N>
-KFR_INLINE mask<T, N> isinf(vec<T, N> x)
+KFR_INLINE mask<T, N> isinf(const vec<T, N>& x)
 {
     return x == c_infinity<T> || x == -c_infinity<T>;
 }
 
 template <typename T, size_t N>
-KFR_INLINE mask<T, N> isfinite(vec<T, N> x)
+KFR_INLINE mask<T, N> isfinite(const vec<T, N>& x)
 {
     return !isnan(x) && !isinf(x);
 }
 
 template <typename T, size_t N>
-KFR_INLINE mask<T, N> isnegative(vec<T, N> x)
+KFR_INLINE mask<T, N> isnegative(const vec<T, N>& x)
 {
     return (x & internal::highbitmask<T>) != 0;
 }
 
 template <typename T, size_t N>
-KFR_INLINE mask<T, N> ispositive(vec<T, N> x)
+KFR_INLINE mask<T, N> ispositive(const vec<T, N>& x)
 {
     return !isnegative(x);
 }
 
 template <typename T, size_t N>
-KFR_INLINE mask<T, N> iszero(vec<T, N> x)
+KFR_INLINE mask<T, N> iszero(const vec<T, N>& x)
 {
     return x == T();
 }
 
 /// Swap byte order
 template <typename T, size_t N, KFR_ENABLE_IF(sizeof(vec<T, N>) > 8)>
-KFR_INLINE vec<T, N> swapbyteorder(vec<T, N> x)
+KFR_INLINE vec<T, N> swapbyteorder(const vec<T, N>& x)
 {
     return bitcast<T>(swap<sizeof(T)>(bitcast<u8>(x)));
 }
@@ -580,7 +580,7 @@ KFR_FN(swapbyteorder)
 
 /// Sum all elements of the vector
 template <typename T, size_t N>
-KFR_INLINE T hadd(vec<T, N> value)
+KFR_INLINE T hadd(const vec<T, N>& value)
 {
     return horizontal(value, fn_add());
 }
@@ -588,26 +588,26 @@ KFR_FN(hadd)
 
 /// Multiply all elements of the vector
 template <typename T, size_t N>
-KFR_INLINE T hmul(vec<T, N> value)
+KFR_INLINE T hmul(const vec<T, N>& value)
 {
     return horizontal(value, fn_mul());
 }
 KFR_FN(hmul)
 
 template <typename T, size_t N>
-KFR_INLINE T hbitwiseand(vec<T, N> value)
+KFR_INLINE T hbitwiseand(const vec<T, N>& value)
 {
     return horizontal(value, fn_bitwiseand());
 }
 KFR_FN(hbitwiseand)
 template <typename T, size_t N>
-KFR_INLINE T hbitwiseor(vec<T, N> value)
+KFR_INLINE T hbitwiseor(const vec<T, N>& value)
 {
     return horizontal(value, fn_bitwiseor());
 }
 KFR_FN(hbitwiseor)
 template <typename T, size_t N>
-KFR_INLINE T hbitwisexor(vec<T, N> value)
+KFR_INLINE T hbitwisexor(const vec<T, N>& value)
 {
     return horizontal(value, fn_bitwisexor());
 }
@@ -615,7 +615,7 @@ KFR_FN(hbitwisexor)
 
 /// Calculate the Dot-Product of two vectors
 template <typename T, size_t N>
-KFR_INLINE T dot(vec<T, N> x, vec<T, N> y)
+KFR_INLINE T dot(const vec<T, N>& x, const vec<T, N>& y)
 {
     return hadd(x * y);
 }
@@ -623,7 +623,7 @@ KFR_FN(dot)
 
 /// Calculate the Arithmetic mean of all elements in the vector
 template <typename T, size_t N>
-KFR_INLINE T avg(vec<T, N> value)
+KFR_INLINE T avg(const vec<T, N>& value)
 {
     return hadd(value) / N;
 }
@@ -631,19 +631,19 @@ KFR_FN(avg)
 
 /// Calculate the RMS of all elements in the vector
 template <typename T, size_t N>
-KFR_INLINE T rms(vec<T, N> value)
+KFR_INLINE T rms(const vec<T, N>& value)
 {
     return internal::builtin_sqrt(hadd(value * value) / N);
 }
 KFR_FN(rms)
 
 template <typename T, size_t N, KFR_ENABLE_IF(N >= 2)>
-KFR_INLINE vec<T, N> subadd(vec<T, N> a, vec<T, N> b)
+KFR_INLINE vec<T, N> subadd(const vec<T, N>& a, const vec<T, N>& b)
 {
     return blend<1, 0>(a + b, a - b);
 }
 template <typename T, size_t N, KFR_ENABLE_IF(N >= 2)>
-KFR_INLINE vec<T, N> addsub(vec<T, N> a, vec<T, N> b)
+KFR_INLINE vec<T, N> addsub(const vec<T, N>& a, const vec<T, N>& b)
 {
     return blend<0, 1>(a + b, a - b);
 }

@@ -52,19 +52,20 @@ template <typename T>
 constexpr static T fold_constant_rem2 = choose_const<T>(-0x1.de973ep-32f, 0x1.8469898cc5170p-49);
 
 template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> trig_horner(vec<T, N>, mask<T, N> msk, T a0, T b0)
+KFR_SINTRIN vec<T, N> trig_horner(const vec<T, N>&, const mask<T, N>& msk, const T& a0, const T& b0)
 {
     return select(msk, a0, b0);
 }
 
 template <typename T, size_t N, typename... Ts>
-KFR_SINTRIN vec<T, N> trig_horner(vec<T, N> x, mask<T, N> msk, T a0, T b0, T a1, T b1, Ts... values)
+KFR_SINTRIN vec<T, N> trig_horner(const vec<T, N>& x, const mask<T, N>& msk, const T& a0, const T& b0,
+                                  const T& a1, const T& b1, const Ts&... values)
 {
     return fmadd(trig_horner(x, msk, a1, b1, values...), x, select(msk, a0, b0));
 }
 
 template <typename T, size_t N, typename Tprecise = f64>
-KFR_SINTRIN vec<T, N> trig_fold(vec<T, N> x, vec<itype<T>, N>& quadrant)
+KFR_SINTRIN vec<T, N> trig_fold(const vec<T, N>& x, vec<itype<T>, N>& quadrant)
 {
     const vec<T, N> xabs    = abs(x);
     constexpr vec<T, N> div = fold_constant_div<T>;
@@ -83,7 +84,7 @@ KFR_SINTRIN vec<T, N> trig_fold(vec<T, N> x, vec<itype<T>, N>& quadrant)
 }
 
 template <size_t N>
-KFR_SINTRIN vec<f32, N> trig_sincos(vec<f32, N> folded, mask<f32, N> cosmask)
+KFR_SINTRIN vec<f32, N> trig_sincos(const vec<f32, N>& folded, const mask<f32, N>& cosmask)
 {
     constexpr f32 sin_c2  = -0x2.aaaaacp-4f;
     constexpr f32 sin_c4  = 0x2.222334p-8f;
@@ -106,7 +107,7 @@ KFR_SINTRIN vec<f32, N> trig_sincos(vec<f32, N> folded, mask<f32, N> cosmask)
 }
 
 template <size_t N>
-KFR_SINTRIN vec<f64, N> trig_sincos(vec<f64, N> folded, mask<f64, N> cosmask)
+KFR_SINTRIN vec<f64, N> trig_sincos(const vec<f64, N>& folded, const mask<f64, N>& cosmask)
 {
     constexpr f64 sin_c2  = -0x2.aaaaaaaaaaaaap-4;
     constexpr f64 sin_c4  = 0x2.22222222220cep-8;
@@ -135,7 +136,7 @@ KFR_SINTRIN vec<f64, N> trig_sincos(vec<f64, N> folded, mask<f64, N> cosmask)
 }
 
 template <typename T, size_t N, typename = u8[N > 1]>
-KFR_SINTRIN vec<T, N> sincos_mask(vec<T, N> x_full, mask<T, N> cosmask)
+KFR_SINTRIN vec<T, N> sincos_mask(const vec<T, N>& x_full, const mask<T, N>& cosmask)
 {
     vec<itype<T>, N> quadrant;
     vec<T, N> folded = trig_fold(x_full, quadrant);
@@ -156,7 +157,7 @@ KFR_SINTRIN vec<T, N> sincos_mask(vec<T, N> x_full, mask<T, N> cosmask)
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
-KFR_SINTRIN vec<T, N> sin(vec<T, N> x)
+KFR_SINTRIN vec<T, N> sin(const vec<T, N>& x)
 {
     vec<itype<T>, N> quadrant;
     vec<T, N> folded = trig_fold(x, quadrant);
@@ -171,7 +172,7 @@ KFR_SINTRIN vec<T, N> sin(vec<T, N> x)
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
-KFR_SINTRIN vec<T, N> cos(vec<T, N> x)
+KFR_SINTRIN vec<T, N> cos(const vec<T, N>& x)
 {
     vec<itype<T>, N> quadrant;
     vec<T, N> folded = trig_fold(x, quadrant);
@@ -187,7 +188,7 @@ KFR_SINTRIN vec<T, N> cos(vec<T, N> x)
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
-KFR_SINTRIN vec<T, N> fastsin(vec<T, N> x)
+KFR_SINTRIN vec<T, N> fastsin(const vec<T, N>& x)
 {
     constexpr vec<T, N> msk = broadcast<N>(internal::highbitmask<T>);
 
@@ -212,7 +213,7 @@ KFR_SINTRIN vec<T, N> fastsin(vec<T, N> x)
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
-KFR_SINTRIN vec<T, N> fastcos(vec<T, N> x)
+KFR_SINTRIN vec<T, N> fastcos(const vec<T, N>& x)
 {
     x += c_pi<T, 1, 2>;
     x = select(x >= c_pi<T, 2>, x - c_pi<T, 2>, x);
@@ -220,61 +221,61 @@ KFR_SINTRIN vec<T, N> fastcos(vec<T, N> x)
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(N > 1 && is_f_class<T>::value)>
-KFR_SINTRIN vec<T, N> sincos(vec<T, N> x)
+KFR_SINTRIN vec<T, N> sincos(const vec<T, N>& x)
 {
     return sincos_mask(x, internal::oddmask<T, N>());
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(N > 1 && is_f_class<T>::value)>
-KFR_SINTRIN vec<T, N> cossin(vec<T, N> x)
+KFR_SINTRIN vec<T, N> cossin(const vec<T, N>& x)
 {
     return sincos_mask(x, internal::evenmask<T, N>());
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
-KFR_SINTRIN vec<T, N> sinc(vec<T, N> x)
+KFR_SINTRIN vec<T, N> sinc(const vec<T, N>& x)
 {
     return select(abs(x) <= c_epsilon<T>, T(1), sin(x) / x);
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value), typename Tout = ftype<T>>
-KFR_SINTRIN vec<Tout, N> sin(vec<T, N> x)
+KFR_SINTRIN vec<Tout, N> sin(const vec<T, N>& x)
 {
     return sin(cast<Tout>(x));
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value), typename Tout = ftype<T>>
-KFR_SINTRIN vec<Tout, N> cos(vec<T, N> x)
+KFR_SINTRIN vec<Tout, N> cos(const vec<T, N>& x)
 {
     return cos(cast<Tout>(x));
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value), typename Tout = ftype<T>>
-KFR_SINTRIN vec<Tout, N> fastsin(vec<T, N> x)
+KFR_SINTRIN vec<Tout, N> fastsin(const vec<T, N>& x)
 {
     return fastsin(cast<Tout>(x));
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value), typename Tout = ftype<T>>
-KFR_SINTRIN vec<Tout, N> fastcos(vec<T, N> x)
+KFR_SINTRIN vec<Tout, N> fastcos(const vec<T, N>& x)
 {
     return fastcos(cast<Tout>(x));
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value), typename Tout = ftype<T>>
-KFR_SINTRIN vec<Tout, N> sincos(vec<T, N> x)
+KFR_SINTRIN vec<Tout, N> sincos(const vec<T, N>& x)
 {
     return sincos(cast<Tout>(x));
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value), typename Tout = ftype<T>>
-KFR_SINTRIN vec<Tout, N> cossin(vec<T, N> x)
+KFR_SINTRIN vec<Tout, N> cossin(const vec<T, N>& x)
 {
     return cossin(cast<Tout>(x));
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value), typename Tout = ftype<T>>
-KFR_SINTRIN vec<Tout, N> sinc(vec<T, N> x)
+KFR_SINTRIN vec<Tout, N> sinc(const vec<T, N>& x)
 {
     return sinc(cast<Tout>(x));
 }

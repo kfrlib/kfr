@@ -33,31 +33,31 @@ namespace intrinsics
 {
 // floating point
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
-KFR_SINTRIN vec<T, N> abs(vec<T, N> x)
+KFR_SINTRIN vec<T, N> abs(const vec<T, N>& x)
 {
     return x & internal::invhighbitmask<T>;
 }
 
 #if defined CID_ARCH_SSSE3
 
-KFR_SINTRIN i64sse abs(i64sse x) { return select(x >= 0, x, -x); }
-KFR_SINTRIN i32sse abs(i32sse x) { return _mm_abs_epi32(*x); }
-KFR_SINTRIN i16sse abs(i16sse x) { return _mm_abs_epi16(*x); }
-KFR_SINTRIN i8sse abs(i8sse x) { return _mm_abs_epi8(*x); }
-KFR_SINTRIN u64sse abs(u64sse x) { return x; }
-KFR_SINTRIN u32sse abs(u32sse x) { return x; }
-KFR_SINTRIN u16sse abs(u16sse x) { return x; }
-KFR_SINTRIN u8sse abs(u8sse x) { return x; }
+KFR_SINTRIN i64sse abs(const i64sse& x) { return select(x >= 0, x, -x); }
+KFR_SINTRIN i32sse abs(const i32sse& x) { return _mm_abs_epi32(*x); }
+KFR_SINTRIN i16sse abs(const i16sse& x) { return _mm_abs_epi16(*x); }
+KFR_SINTRIN i8sse abs(const i8sse& x) { return _mm_abs_epi8(*x); }
+KFR_SINTRIN u64sse abs(const u64sse& x) { return x; }
+KFR_SINTRIN u32sse abs(const u32sse& x) { return x; }
+KFR_SINTRIN u16sse abs(const u16sse& x) { return x; }
+KFR_SINTRIN u8sse abs(const u8sse& x) { return x; }
 
 #if defined CID_ARCH_AVX2
-KFR_SINTRIN i64avx abs(i64avx x) { return select(x >= 0, x, -x); }
-KFR_SINTRIN i32avx abs(i32avx x) { return _mm256_abs_epi32(*x); }
-KFR_SINTRIN i16avx abs(i16avx x) { return _mm256_abs_epi16(*x); }
-KFR_SINTRIN i8avx abs(i8avx x) { return _mm256_abs_epi8(*x); }
-KFR_SINTRIN u64avx abs(u64avx x) { return x; }
-KFR_SINTRIN u32avx abs(u32avx x) { return x; }
-KFR_SINTRIN u16avx abs(u16avx x) { return x; }
-KFR_SINTRIN u8avx abs(u8avx x) { return x; }
+KFR_SINTRIN i64avx abs(const i64avx& x) { return select(x >= 0, x, -x); }
+KFR_SINTRIN i32avx abs(const i32avx& x) { return _mm256_abs_epi32(*x); }
+KFR_SINTRIN i16avx abs(const i16avx& x) { return _mm256_abs_epi16(*x); }
+KFR_SINTRIN i8avx abs(const i8avx& x) { return _mm256_abs_epi8(*x); }
+KFR_SINTRIN u64avx abs(const u64avx& x) { return x; }
+KFR_SINTRIN u32avx abs(const u32avx& x) { return x; }
+KFR_SINTRIN u16avx abs(const u16avx& x) { return x; }
+KFR_SINTRIN u8avx abs(const u8avx& x) { return x; }
 #endif
 
 KFR_HANDLE_ALL_SIZES_NOT_F_1(abs)
@@ -66,7 +66,7 @@ KFR_HANDLE_ALL_SIZES_NOT_F_1(abs)
 
 // fallback
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
-KFR_SINTRIN vec<T, N> abs(vec<T, N> x)
+KFR_SINTRIN vec<T, N> abs(const vec<T, N>& x)
 {
     return select(x >= T(), x, -x);
 }

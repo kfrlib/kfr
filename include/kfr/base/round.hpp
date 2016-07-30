@@ -53,29 +53,29 @@ namespace intrinsics
 
 #if defined CID_ARCH_SSE41
 
-KFR_SINTRIN f32sse floor(f32sse value) { return _mm_floor_ps(*value); }
-KFR_SINTRIN f32sse ceil(f32sse value) { return _mm_ceil_ps(*value); }
-KFR_SINTRIN f32sse trunc(f32sse value) { return KFR_mm_trunc_ps(*value); }
-KFR_SINTRIN f32sse round(f32sse value) { return KFR_mm_roundnearest_ps(*value); }
-KFR_SINTRIN f64sse floor(f64sse value) { return _mm_floor_pd(*value); }
-KFR_SINTRIN f64sse ceil(f64sse value) { return _mm_ceil_pd(*value); }
-KFR_SINTRIN f64sse trunc(f64sse value) { return KFR_mm_trunc_pd(*value); }
-KFR_SINTRIN f64sse round(f64sse value) { return KFR_mm_roundnearest_pd(*value); }
-KFR_SINTRIN f32sse fract(f32sse x) { return x - floor(x); }
-KFR_SINTRIN f64sse fract(f64sse x) { return x - floor(x); }
+KFR_SINTRIN f32sse floor(const f32sse& value) { return _mm_floor_ps(*value); }
+KFR_SINTRIN f32sse ceil(const f32sse& value) { return _mm_ceil_ps(*value); }
+KFR_SINTRIN f32sse trunc(const f32sse& value) { return KFR_mm_trunc_ps(*value); }
+KFR_SINTRIN f32sse round(const f32sse& value) { return KFR_mm_roundnearest_ps(*value); }
+KFR_SINTRIN f64sse floor(const f64sse& value) { return _mm_floor_pd(*value); }
+KFR_SINTRIN f64sse ceil(const f64sse& value) { return _mm_ceil_pd(*value); }
+KFR_SINTRIN f64sse trunc(const f64sse& value) { return KFR_mm_trunc_pd(*value); }
+KFR_SINTRIN f64sse round(const f64sse& value) { return KFR_mm_roundnearest_pd(*value); }
+KFR_SINTRIN f32sse fract(const f32sse& x) { return x - floor(x); }
+KFR_SINTRIN f64sse fract(const f64sse& x) { return x - floor(x); }
 
 #if defined CID_ARCH_AVX
 
-KFR_SINTRIN f32avx floor(f32avx value) { return _mm256_floor_ps(*value); }
-KFR_SINTRIN f32avx ceil(f32avx value) { return _mm256_ceil_ps(*value); }
-KFR_SINTRIN f32avx trunc(f32avx value) { return KFR_mm256_trunc_ps(*value); }
-KFR_SINTRIN f32avx round(f32avx value) { return KFR_mm256_roundnearest_ps(*value); }
-KFR_SINTRIN f64avx floor(f64avx value) { return _mm256_floor_pd(*value); }
-KFR_SINTRIN f64avx ceil(f64avx value) { return _mm256_ceil_pd(*value); }
-KFR_SINTRIN f64avx trunc(f64avx value) { return KFR_mm256_trunc_pd(*value); }
-KFR_SINTRIN f64avx round(f64avx value) { return KFR_mm256_roundnearest_pd(*value); }
-KFR_SINTRIN f32avx fract(f32avx x) { return x - floor(x); }
-KFR_SINTRIN f64avx fract(f64avx x) { return x - floor(x); }
+KFR_SINTRIN f32avx floor(const f32avx& value) { return _mm256_floor_ps(*value); }
+KFR_SINTRIN f32avx ceil(const f32avx& value) { return _mm256_ceil_ps(*value); }
+KFR_SINTRIN f32avx trunc(const f32avx& value) { return KFR_mm256_trunc_ps(*value); }
+KFR_SINTRIN f32avx round(const f32avx& value) { return KFR_mm256_roundnearest_ps(*value); }
+KFR_SINTRIN f64avx floor(const f64avx& value) { return _mm256_floor_pd(*value); }
+KFR_SINTRIN f64avx ceil(const f64avx& value) { return _mm256_ceil_pd(*value); }
+KFR_SINTRIN f64avx trunc(const f64avx& value) { return KFR_mm256_trunc_pd(*value); }
+KFR_SINTRIN f64avx round(const f64avx& value) { return KFR_mm256_roundnearest_pd(*value); }
+KFR_SINTRIN f32avx fract(const f32avx& x) { return x - floor(x); }
+KFR_SINTRIN f64avx fract(const f64avx& x) { return x - floor(x); }
 #endif
 
 KFR_HANDLE_ALL_SIZES_F_1(floor)
@@ -89,104 +89,104 @@ KFR_HANDLE_ALL_SIZES_F_1(fract)
 // fallback
 
 template <size_t N>
-KFR_SINTRIN vec<f32, N> floor(vec<f32, N> x)
+KFR_SINTRIN vec<f32, N> floor(const vec<f32, N>& x)
 {
     vec<f32, N> t = cast<f32>(cast<i32>(x));
     return t - (bitcast<f32>(x < t) & 1.f);
 }
 template <size_t N>
-KFR_SINTRIN vec<f64, N> floor(vec<f64, N> x)
+KFR_SINTRIN vec<f64, N> floor(const vec<f64, N>& x)
 {
     vec<f64, N> t = cast<f64>(cast<i64>(x));
     return t - (bitcast<f64>(x < t) & 1.0);
 }
 template <size_t N>
-KFR_SINTRIN vec<f32, N> ceil(vec<f32, N> x)
+KFR_SINTRIN vec<f32, N> ceil(const vec<f32, N>& x)
 {
     vec<f32, N> t = cast<f32>(cast<i32>(x));
     return t + (bitcast<f32>(x > t) & 1.f);
 }
 template <size_t N>
-KFR_SINTRIN vec<f64, N> ceil(vec<f64, N> x)
+KFR_SINTRIN vec<f64, N> ceil(const vec<f64, N>& x)
 {
     vec<f64, N> t = cast<f64>(cast<i64>(x));
     return t + (bitcast<f64>(x > t) & 1.0);
 }
 template <size_t N>
-KFR_SINTRIN vec<f32, N> round(vec<f32, N> x)
+KFR_SINTRIN vec<f32, N> round(const vec<f32, N>& x)
 {
     return cast<f32>(cast<i32>(x + mulsign(broadcast<N>(0.5f), x)));
 }
 template <size_t N>
-KFR_SINTRIN vec<f64, N> round(vec<f64, N> x)
+KFR_SINTRIN vec<f64, N> round(const vec<f64, N>& x)
 {
     return cast<f64>(cast<i64>(x + mulsign(broadcast<N>(0.5), x)));
 }
 template <size_t N>
-KFR_SINTRIN vec<f32, N> trunc(vec<f32, N> x)
+KFR_SINTRIN vec<f32, N> trunc(const vec<f32, N>& x)
 {
     return cast<f32>(cast<i32>(x));
 }
 template <size_t N>
-KFR_SINTRIN vec<f64, N> trunc(vec<f64, N> x)
+KFR_SINTRIN vec<f64, N> trunc(const vec<f64, N>& x)
 {
     return cast<f64>(cast<i64>(x));
 }
 template <size_t N>
-KFR_SINTRIN vec<f32, N> fract(vec<f32, N> x)
+KFR_SINTRIN vec<f32, N> fract(const vec<f32, N>& x)
 {
     return x - floor(x);
 }
 template <size_t N>
-KFR_SINTRIN vec<f64, N> fract(vec<f64, N> x)
+KFR_SINTRIN vec<f64, N> fract(const vec<f64, N>& x)
 {
     return x - floor(x);
 }
 #endif
 
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
-KFR_SINTRIN vec<T, N> floor(vec<T, N> value)
+KFR_SINTRIN vec<T, N> floor(const vec<T, N>& value)
 {
     return value;
 }
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
-KFR_SINTRIN vec<T, N> ceil(vec<T, N> value)
+KFR_SINTRIN vec<T, N> ceil(const vec<T, N>& value)
 {
     return value;
 }
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
-KFR_SINTRIN vec<T, N> trunc(vec<T, N> value)
+KFR_SINTRIN vec<T, N> trunc(const vec<T, N>& value)
 {
     return value;
 }
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
-KFR_SINTRIN vec<T, N> round(vec<T, N> value)
+KFR_SINTRIN vec<T, N> round(const vec<T, N>& value)
 {
     return value;
 }
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
-KFR_SINTRIN vec<T, N> fract(vec<T, N>)
+KFR_SINTRIN vec<T, N> fract(const vec<T, N>&)
 {
     return T(0);
 }
 
 template <typename T, size_t N, typename IT = itype<T>>
-KFR_SINTRIN vec<IT, N> ifloor(vec<T, N> value)
+KFR_SINTRIN vec<IT, N> ifloor(const vec<T, N>& value)
 {
     return cast<IT>(floor(value));
 }
 template <typename T, size_t N, typename IT = itype<T>>
-KFR_SINTRIN vec<IT, N> iceil(vec<T, N> value)
+KFR_SINTRIN vec<IT, N> iceil(const vec<T, N>& value)
 {
     return cast<IT>(ceil(value));
 }
 template <typename T, size_t N, typename IT = itype<T>>
-KFR_SINTRIN vec<IT, N> itrunc(vec<T, N> value)
+KFR_SINTRIN vec<IT, N> itrunc(const vec<T, N>& value)
 {
     return cast<IT>(trunc(value));
 }
 template <typename T, size_t N, typename IT = itype<T>>
-KFR_SINTRIN vec<IT, N> iround(vec<T, N> value)
+KFR_SINTRIN vec<IT, N> iround(const vec<T, N>& value)
 {
     return cast<IT>(round(value));
 }

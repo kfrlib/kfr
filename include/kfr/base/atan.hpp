@@ -100,7 +100,7 @@ KFR_SINTRIN vec<f64, N> atan2k(vec<f64, N> y, vec<f64, N> x)
 }
 
 template <size_t N>
-KFR_SINTRIN vec<f32, N> atan2(vec<f32, N> y, vec<f32, N> x)
+KFR_SINTRIN vec<f32, N> atan2(const vec<f32, N>& y, const vec<f32, N>& x)
 {
     vec<f32, N> r = atan2k(abs(y), x);
     constexpr f32 pi        = 3.1415926535897932384626433832795f;
@@ -115,7 +115,7 @@ KFR_SINTRIN vec<f32, N> atan2(vec<f32, N> y, vec<f32, N> x)
 }
 
 template <size_t N>
-KFR_SINTRIN vec<f64, N> atan2(vec<f64, N> y, vec<f64, N> x)
+KFR_SINTRIN vec<f64, N> atan2(const vec<f64, N>& y, const vec<f64, N>& x)
 {
     vec<f64, N> r = atan2k(abs(y), x);
     constexpr f64 pi        = 3.1415926535897932384626433832795;
@@ -130,7 +130,7 @@ KFR_SINTRIN vec<f64, N> atan2(vec<f64, N> y, vec<f64, N> x)
 }
 
 template <size_t N>
-KFR_SINTRIN vec<f32, N> atan(vec<f32, N> s)
+KFR_SINTRIN vec<f32, N> atan(const vec<f32, N>& s)
 {
     vec<f32, N> t, u;
     vec<i32, N> q;
@@ -154,7 +154,7 @@ KFR_SINTRIN vec<f32, N> atan(vec<f32, N> s)
 }
 
 template <size_t N>
-KFR_SINTRIN vec<f64, N> atan(vec<f64, N> s)
+KFR_SINTRIN vec<f64, N> atan(const vec<f64, N>& s)
 {
     vec<f64, N> t, u;
     vec<i64, N> q;

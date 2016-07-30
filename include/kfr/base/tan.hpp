@@ -35,7 +35,7 @@ namespace intrinsics
 {
 
 template <typename T, size_t N, typename IT = itype<T>>
-KFR_SINTRIN vec<T, N> trig_fold_simple(vec<T, N> x_full, mask<T, N>& inverse)
+KFR_SINTRIN vec<T, N> trig_fold_simple(const vec<T, N>& x_full, mask<T, N>& inverse)
 {
     constexpr T pi_14 = c_pi<T, 1, 4>;
 
@@ -56,7 +56,7 @@ KFR_SINTRIN vec<T, N> trig_fold_simple(vec<T, N> x_full, mask<T, N>& inverse)
 }
 
 template <size_t N>
-KFR_SINTRIN vec<f32, N> tan(vec<f32, N> x_full)
+KFR_SINTRIN vec<f32, N> tan(const vec<f32, N>& x_full)
 {
     mask<f32, N> inverse;
     const vec<f32, N> x = trig_fold_simple(x_full, inverse);
@@ -84,7 +84,7 @@ KFR_SINTRIN vec<f32, N> tan(vec<f32, N> x_full)
 }
 
 template <size_t N>
-KFR_SINTRIN vec<f64, N> tan(vec<f64, N> x_full)
+KFR_SINTRIN vec<f64, N> tan(const vec<f64, N>& x_full)
 {
     mask<f64, N> inverse;
     const vec<f64, N> x = trig_fold_simple(x_full, inverse);

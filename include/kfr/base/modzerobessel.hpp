@@ -77,7 +77,7 @@ constexpr T bessel_coef[] = { T(0.25),
                               T(1.5021381070956226783e-096) };
 
 template <typename T, size_t N>
-KFR_INLINE vec<T, N> modzerobessel(vec<T, N> x)
+KFR_INLINE vec<T, N> modzerobessel(const vec<T, N>& x)
 {
     const vec<T, N> x_2     = x * 0.5;
     const vec<T, N> x_2_sqr = x_2 * x_2;
