@@ -110,7 +110,7 @@ private:
     {
         using ratio          = func_ratio<Fn>;
         constexpr size_t Nin = N * ratio::input / ratio::output;
-        using Tout           = conditional<is_same<generic, value_type>::value, T, value_type>;
+        using Tout           = conditional<is_same<generic, value_type>::value, T, common_type<T, value_type>>;
 
         return cast<T>(fn(cast<Tout>(std::get<indices>(this->args)(
             cinput, index * ratio::input / ratio::output, vec_t_for<Args, Nin, Tout>()))...));
