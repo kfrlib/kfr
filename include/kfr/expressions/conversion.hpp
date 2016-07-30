@@ -38,7 +38,7 @@ struct expression_convert : expression<E>
     KFR_INLINE expression_convert(E&& expr) noexcept : expression<E>(std::forward<E>(expr)) {}
 
     template <typename T, size_t N>
-    KFR_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>)
+    KFR_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
     {
         return this->argument_first(index, vec_t<From, N>());
     }

@@ -266,7 +266,7 @@ struct expressoin_typed : input_expression
     expressoin_typed(E1&& e1) : e1(std::forward<E1>(e1)) {}
 
     template <typename U, size_t N>
-    KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N>)
+    KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N>) const
     {
         return cast<U>(e1(cinput, index, vec_t<T, N>()));
     }

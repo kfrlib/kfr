@@ -192,7 +192,7 @@ struct expression_skip : expression<E1>, inherit_value_type<E1>
 {
     expression_skip(E1&& e1, size_t count) : expression<E1>(std::forward<E1>(e1)), count(count) {}
     template <typename T, size_t N>
-    KFR_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y)
+    KFR_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
     {
         return this->argument_first(index + count, y);
     }
@@ -274,7 +274,7 @@ public:
     }
 
     template <typename T, size_t N>
-    KFR_NOINLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y)
+    KFR_NOINLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
     {
         std::size_t sindex = size_t(std::upper_bound(std::begin(segments), std::end(segments), index) - 1 -
                                     std::begin(segments));
