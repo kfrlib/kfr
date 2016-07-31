@@ -13,7 +13,7 @@
 #include <kfr/math.hpp>
 
 // expression_pointer<>, topointer()
-#include <kfr/expressions/pointer.hpp>
+#include <kfr/base/pointer.hpp>
 
 // simpleimpulse()
 #include <kfr/dsp/oscillators.hpp>

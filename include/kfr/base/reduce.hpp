@@ -26,7 +26,7 @@
 #include "../base/min_max.hpp"
 #include "../base/operators.hpp"
 #include "../base/vec.hpp"
-#include "basic.hpp"
+#include "basic_expressions.hpp"
 
 namespace kfr
 {

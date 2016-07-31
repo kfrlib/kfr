@@ -8,7 +8,7 @@
 #include <kfr/io/tostring.hpp>
 #include <kfr/version.hpp>
 
-#include <kfr/expressions/reduce.hpp>
+#include <kfr/base/reduce.hpp>
 
 #include <tuple>
 

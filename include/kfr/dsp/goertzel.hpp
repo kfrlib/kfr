@@ -22,10 +22,10 @@
  */
 #pragma once
 
+#include "../base/basic_expressions.hpp"
 #include "../base/complex.hpp"
 #include "../base/sin_cos.hpp"
 #include "../base/vec.hpp"
-#include "../expressions/basic.hpp"
 
 namespace kfr
 {

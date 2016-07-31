@@ -27,9 +27,9 @@
  */
 #pragma once
 
+#include "../base/basic_expressions.hpp"
 #include "../base/log_exp.hpp"
 #include "../base/vec.hpp"
-#include "../expressions/basic.hpp"
 
 namespace kfr
 {

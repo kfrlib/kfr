@@ -72,11 +72,11 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/waveshaper.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/weighting.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/window.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/expressions/basic.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/expressions/conversion.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/expressions/generators.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/expressions/pointer.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/expressions/reduce.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/basic_expressions.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/conversion.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/generators.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/pointer.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/reduce.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/audiofile.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/file.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/python_plot.hpp

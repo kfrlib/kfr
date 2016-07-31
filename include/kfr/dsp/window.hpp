@@ -24,10 +24,10 @@
 
 #include "../base/log_exp.hpp"
 #include "../base/modzerobessel.hpp"
+#include "../base/pointer.hpp"
 #include "../base/sin_cos.hpp"
 #include "../base/sqrt.hpp"
 #include "../base/vec.hpp"
-#include "../expressions/pointer.hpp"
 
 namespace kfr
 {

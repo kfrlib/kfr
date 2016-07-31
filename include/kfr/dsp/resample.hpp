@@ -24,8 +24,8 @@
 
 #include "../base/function.hpp"
 #include "../base/memory.hpp"
+#include "../base/reduce.hpp"
 #include "../base/vec.hpp"
-#include "../expressions/reduce.hpp"
 #include "window.hpp"
 
 namespace kfr

@@ -10,12 +10,12 @@
 #include <tuple>
 
 #include "testo/testo.hpp"
+#include <kfr/base/basic_expressions.hpp>
 #include <kfr/base/random.hpp>
+#include <kfr/base/reduce.hpp>
 #include <kfr/cometa/string.hpp>
 #include <kfr/dft/fft.hpp>
 #include <kfr/dft/reference_dft.hpp>
-#include <kfr/expressions/basic.hpp>
-#include <kfr/expressions/reduce.hpp>
 #include <kfr/io/tostring.hpp>
 #include <kfr/math.hpp>
 #include <kfr/version.hpp>

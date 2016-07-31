@@ -23,10 +23,10 @@
 
 #pragma once
 
+#include "../base/basic_expressions.hpp"
 #include "../base/function.hpp"
 #include "../base/operators.hpp"
 #include "../base/vec.hpp"
-#include "../expressions/basic.hpp"
 
 namespace kfr
 {

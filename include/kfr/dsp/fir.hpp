@@ -22,11 +22,12 @@
  */
 #pragma once
 
+#include "../base/basic_expressions.hpp"
 #include "../base/memory.hpp"
+#include "../base/reduce.hpp"
 #include "../base/sin_cos.hpp"
+#include "../base/univector.hpp"
 #include "../base/vec.hpp"
-#include "../expressions/basic.hpp"
-#include "../expressions/reduce.hpp"
 #include "window.hpp"
 
 namespace kfr

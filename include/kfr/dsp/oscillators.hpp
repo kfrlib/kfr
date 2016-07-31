@@ -22,8 +22,8 @@
  */
 #pragma once
 
+#include "../base/basic_expressions.hpp"
 #include "../base/sin_cos.hpp"
-#include "../expressions/basic.hpp"
 
 namespace kfr
 {

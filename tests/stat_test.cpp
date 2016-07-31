@@ -10,7 +10,7 @@
 
 #include <kfr/math.hpp>
 
-#include <kfr/expressions/reduce.hpp>
+#include <kfr/base/reduce.hpp>
 
 #include <tuple>
 

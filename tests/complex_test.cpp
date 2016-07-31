@@ -7,10 +7,10 @@
 #include <kfr/io/tostring.hpp>
 
 #include "testo/testo.hpp"
+#include <kfr/base/basic_expressions.hpp>
 #include <kfr/base/complex.hpp>
+#include <kfr/base/reduce.hpp>
 #include <kfr/cometa/string.hpp>
-#include <kfr/expressions/basic.hpp>
-#include <kfr/expressions/reduce.hpp>
 #include <kfr/math.hpp>
 #include <kfr/version.hpp>
 
