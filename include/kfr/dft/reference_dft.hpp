@@ -26,8 +26,8 @@
 #include "../base/constants.hpp"
 #include "../base/memory.hpp"
 #include "../base/read_write.hpp"
+#include "../base/small_buffer.hpp"
 #include "../base/vec.hpp"
-#include "../misc/small_buffer.hpp"
 #include <cmath>
 
 namespace kfr

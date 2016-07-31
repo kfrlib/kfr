@@ -10,6 +10,7 @@
 #include <tuple>
 
 #include "testo/testo.hpp"
+#include <kfr/base/random.hpp>
 #include <kfr/cometa/string.hpp>
 #include <kfr/dft/fft.hpp>
 #include <kfr/dft/reference_dft.hpp>
@@ -17,7 +18,6 @@
 #include <kfr/expressions/reduce.hpp>
 #include <kfr/io/tostring.hpp>
 #include <kfr/math.hpp>
-#include <kfr/misc/random.hpp>
 #include <kfr/version.hpp>
 
 using namespace kfr;

@@ -22,7 +22,7 @@
  */
 #pragma once
 
-#include "../base/memory.hpp"
+#include "memory.hpp"
 #include <algorithm>
 #include <cstdint>
 

@@ -21,9 +21,9 @@
  * See http://www.kfrlib.com for details.
  */
 #pragma once
-#include "../base/constants.hpp"
-#include "../base/operators.hpp"
-#include "../base/types.hpp"
+#include "constants.hpp"
+#include "operators.hpp"
+#include "types.hpp"
 
 namespace kfr
 {

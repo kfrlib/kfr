@@ -22,9 +22,9 @@
  */
 #pragma once
 
-#include "../base/min_max.hpp"
-#include "../base/shuffle.hpp"
-#include "../base/vec.hpp"
+#include "min_max.hpp"
+#include "shuffle.hpp"
+#include "vec.hpp"
 
 namespace kfr
 {
@@ -37,7 +37,7 @@ namespace kfr
  * @endcode
  */
 template <typename T, size_t N>
-KFR_INLINE vec<T, N> sort(vec<T, N> x)
+KFR_INLINE vec<T, N> sort(const vec<T, N>& x)
 {
     constexpr size_t Nhalf = N / 2;
     vec<T, Nhalf> e = low(x);
@@ -70,7 +70,7 @@ KFR_INLINE vec<T, N> sort(vec<T, N> x)
  * @endcode
  */
 template <typename T, size_t N>
-KFR_INLINE vec<T, N> sortdesc(vec<T, N> x)
+KFR_INLINE vec<T, N> sortdesc(const vec<T, N>& x)
 {
     constexpr size_t Nhalf = N / 2;
     vec<T, Nhalf> e = low(x);

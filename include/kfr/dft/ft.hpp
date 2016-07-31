@@ -27,9 +27,9 @@
 #include "../base/digitreverse.hpp"
 #include "../base/read_write.hpp"
 #include "../base/sin_cos.hpp"
+#include "../base/small_buffer.hpp"
 #include "../base/univector.hpp"
 #include "../base/vec.hpp"
-#include "../misc/small_buffer.hpp"
 
 #include "../base/memory.hpp"
 #include "../data/sincos.hpp"

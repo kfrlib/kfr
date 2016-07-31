@@ -21,10 +21,10 @@
  * See http://www.kfrlib.com for details.
  */
 #pragma once
-#include "../base/function.hpp"
-#include "../base/operators.hpp"
-#include "../base/shuffle.hpp"
-#include "../base/vec.hpp"
+#include "function.hpp"
+#include "operators.hpp"
+#include "shuffle.hpp"
+#include "vec.hpp"
 
 namespace kfr
 {
