@@ -98,7 +98,7 @@ KFR_INTRIN T1 sinh(const T1& x)
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::sinh, E1> sinh(E1&& x)
+KFR_INTRIN internal::expression_function<fn::sinh, E1> sinh(E1&& x)
 {
     return { fn::sinh(), std::forward<E1>(x) };
 }
@@ -110,7 +110,7 @@ KFR_INTRIN T1 cosh(const T1& x)
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::cosh, E1> cosh(E1&& x)
+KFR_INTRIN internal::expression_function<fn::cosh, E1> cosh(E1&& x)
 {
     return { fn::cosh(), std::forward<E1>(x) };
 }
@@ -122,7 +122,7 @@ KFR_INTRIN T1 tanh(const T1& x)
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::tanh, E1> tanh(E1&& x)
+KFR_INTRIN internal::expression_function<fn::tanh, E1> tanh(E1&& x)
 {
     return { fn::tanh(), std::forward<E1>(x) };
 }
@@ -134,7 +134,7 @@ KFR_INTRIN T1 coth(const T1& x)
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::coth, E1> coth(E1&& x)
+KFR_INTRIN internal::expression_function<fn::coth, E1> coth(E1&& x)
 {
     return { fn::coth(), std::forward<E1>(x) };
 }
@@ -146,7 +146,7 @@ KFR_INTRIN T1 sinhcosh(const T1& x)
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::sinhcosh, E1> sinhcosh(E1&& x)
+KFR_INTRIN internal::expression_function<fn::sinhcosh, E1> sinhcosh(E1&& x)
 {
     return { fn::sinhcosh(), std::forward<E1>(x) };
 }
@@ -158,7 +158,7 @@ KFR_INTRIN T1 coshsinh(const T1& x)
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::coshsinh, E1> coshsinh(E1&& x)
+KFR_INTRIN internal::expression_function<fn::coshsinh, E1> coshsinh(E1&& x)
 {
     return { fn::coshsinh(), std::forward<E1>(x) };
 }

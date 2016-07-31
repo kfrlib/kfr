@@ -153,6 +153,13 @@ struct expression_scalar : input_expression
     }
 };
 
+template <typename T>
+using arg_impl = conditional<is_number<T>::value || is_vec<T>::value,
+                             expression_scalar<subtype<decay<T>>, compound_type_traits<decay<T>>::width>, T>;
+
+template <typename T>
+using arg = internal::arg_impl<T>;
+
 template <typename Fn, typename Args, typename Enable = void>
 struct generic_result
 {
@@ -166,14 +173,15 @@ struct generic_result<Fn, ctypes_t<Args...>, void_t<enable_if<!or_t<is_same<gene
 };
 
 template <typename Fn, typename... Args>
-struct expression_function : expression<Args...>
+struct expression_function : expression<arg<Args>...>
 {
     using ratio = func_ratio<Fn>;
 
-    using value_type = typename generic_result<Fn, ctypes_t<value_type_of<Args>...>>::type;
+    using value_type = typename generic_result<Fn, ctypes_t<value_type_of<arg<Args>>...>>::type;
 
-    expression_function(Fn&& fn, Args&&... args) noexcept : expression<Args...>(std::forward<Args>(args)...),
-                                                            fn(std::forward<Fn>(fn))
+    expression_function(Fn&& fn, arg<Args>&&... args) noexcept
+        : expression<arg<Args>...>(std::forward<arg<Args>>(args)...),
+          fn(std::forward<Fn>(fn))
     {
     }
     template <typename T, size_t N>
@@ -188,13 +196,6 @@ struct expression_function : expression<Args...>
 protected:
     Fn fn;
 };
-
-template <typename T>
-using arg_impl = conditional<is_number<T>::value || is_vec<T>::value,
-                             expression_scalar<subtype<decay<T>>, compound_type_traits<decay<T>>::width>, T>;
-
-template <typename T>
-using arg = internal::arg_impl<T>;
 
 template <typename Tout, typename Tin, size_t width, typename OutFn, typename Fn>
 KFR_INLINE void process_cycle(OutFn&& outfn, const Fn& fn, size_t& i, size_t size)
@@ -304,8 +305,5 @@ inline internal::expressoin_sized<T, E1> typed(E1&& e1, size_t size)
 {
     return internal::expressoin_sized<T, E1>(std::forward<E1>(e1), size);
 }
-
-template <typename Fn, typename... Args>
-using expr_func = internal::expression_function<Fn, internal::arg<Args>...>;
 }
 #pragma clang diagnostic pop

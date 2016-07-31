@@ -486,7 +486,7 @@ KFR_INLINE vec<T, Nout> interleave(const vec<T, N>& x, const vec<T, N>& y)
 KFR_FNR(interleave, 1, 2)
 
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INLINE expr_func<fn_interleave, E1, E2> interleave(E1&& x, E2&& y)
+KFR_INLINE internal::expression_function<fn_interleave, E1, E2> interleave(E1&& x, E2&& y)
 {
     return { fn_interleave(), std::forward<E1>(x), std::forward<E2>(y) };
 }

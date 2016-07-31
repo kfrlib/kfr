@@ -171,7 +171,7 @@ KFR_INTRIN Tout min(const T1& x, const T2& y)
 }
 
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INTRIN expr_func<fn::min, E1, E2> min(E1&& x, E2&& y)
+KFR_INTRIN internal::expression_function<fn::min, E1, E2> min(E1&& x, E2&& y)
 {
     return { fn::min(), std::forward<E1>(x), std::forward<E2>(y) };
 }
@@ -184,7 +184,7 @@ KFR_INTRIN Tout max(const T1& x, const T2& y)
 }
 
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INTRIN expr_func<fn::max, E1, E2> max(E1&& x, E2&& y)
+KFR_INTRIN internal::expression_function<fn::max, E1, E2> max(E1&& x, E2&& y)
 {
     return { fn::max(), std::forward<E1>(x), std::forward<E2>(y) };
 }
@@ -197,7 +197,7 @@ KFR_INTRIN Tout absmin(const T1& x, const T2& y)
 }
 
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INTRIN expr_func<fn::absmin, E1, E2> absmin(E1&& x, E2&& y)
+KFR_INTRIN internal::expression_function<fn::absmin, E1, E2> absmin(E1&& x, E2&& y)
 {
     return { fn::absmin(), std::forward<E1>(x), std::forward<E2>(y) };
 }
@@ -210,7 +210,7 @@ KFR_INTRIN Tout absmax(const T1& x, const T2& y)
 }
 
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INTRIN expr_func<fn::absmax, E1, E2> absmax(E1&& x, E2&& y)
+KFR_INTRIN internal::expression_function<fn::absmax, E1, E2> absmax(E1&& x, E2&& y)
 {
     return { fn::absmax(), std::forward<E1>(x), std::forward<E2>(y) };
 }

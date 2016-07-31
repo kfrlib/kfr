@@ -74,12 +74,12 @@ constexpr inline T add(initialvalue<T>)
 KFR_FN(add)
 
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INLINE expr_func<fn_add, E1, E2> add(E1&& x, E2&& y)
+KFR_INLINE internal::expression_function<fn_add, E1, E2> add(E1&& x, E2&& y)
 {
     return { fn_add(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INLINE expr_func<fn_add, E1> add(E1&& x, E2&& y, E3&& z)
+KFR_INLINE internal::expression_function<fn_add, E1> add(E1&& x, E2&& y, E3&& z)
 {
     return { fn_add(), std::forward<E1>(x), std::forward<E2>(y), std::forward<E3>(z)
 
@@ -99,7 +99,7 @@ constexpr inline T sub(initialvalue<T>)
 KFR_FN(sub)
 
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INLINE expr_func<fn_sub, E1, E2> sub(E1&& x, E2&& y)
+KFR_INLINE internal::expression_function<fn_sub, E1, E2> sub(E1&& x, E2&& y)
 {
     return { fn_sub(), std::forward<E1>(x), std::forward<E2>(y)
 
@@ -124,12 +124,12 @@ constexpr inline T mul(initialvalue<T>)
 }
 KFR_FN(mul)
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INLINE expr_func<fn_mul, E1, E2> mul(E1&& x, E2&& y)
+KFR_INLINE internal::expression_function<fn_mul, E1, E2> mul(E1&& x, E2&& y)
 {
     return { fn_mul(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INLINE expr_func<fn_mul, E1> mul(E1&& x, E2&& y, E3&& z)
+KFR_INLINE internal::expression_function<fn_mul, E1> mul(E1&& x, E2&& y, E3&& z)
 {
     return { fn_mul(), std::forward<E1>(x), std::forward<E2>(y), std::forward<E3>(z) };
 }
@@ -141,7 +141,7 @@ constexpr inline T1 sqr(T1 x)
 }
 KFR_FN(sqr)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INLINE expr_func<fn_sqr, E1> sqr(E1&& x)
+KFR_INLINE internal::expression_function<fn_sqr, E1> sqr(E1&& x)
 {
     return { fn_sqr(), std::forward<E1>(x) };
 }
@@ -154,7 +154,7 @@ constexpr inline T1 cub(T1 x)
 KFR_FN(cub)
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INLINE expr_func<fn_cub, E1> cub(E1&& x)
+KFR_INLINE internal::expression_function<fn_cub, E1> cub(E1&& x)
 {
     return { fn_cub(), std::forward<E1>(x)
 
@@ -190,28 +190,28 @@ KFR_FN(pow4)
 KFR_FN(pow5)
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INLINE expr_func<fn_pow2, E1> pow2(E1&& x)
+KFR_INLINE internal::expression_function<fn_pow2, E1> pow2(E1&& x)
 {
     return { fn_pow2(), std::forward<E1>(x)
 
     };
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INLINE expr_func<fn_pow3, E1> pow3(E1&& x)
+KFR_INLINE internal::expression_function<fn_pow3, E1> pow3(E1&& x)
 {
     return { fn_pow3(), std::forward<E1>(x)
 
     };
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INLINE expr_func<fn_pow4, E1> pow4(E1&& x)
+KFR_INLINE internal::expression_function<fn_pow4, E1> pow4(E1&& x)
 {
     return { fn_pow4(), std::forward<E1>(x)
 
     };
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INLINE expr_func<fn_pow5, E1> pow5(E1&& x)
+KFR_INLINE internal::expression_function<fn_pow5, E1> pow5(E1&& x)
 {
     return { fn_pow5(), std::forward<E1>(x)
 
@@ -239,7 +239,7 @@ constexpr inline T ipow(T x, int base)
 KFR_FN(ipow)
 
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INLINE expr_func<fn_ipow, E1, E2> ipow(E1&& x, E2&& b)
+KFR_INLINE internal::expression_function<fn_ipow, E1, E2> ipow(E1&& x, E2&& b)
 {
     return { fn_ipow(), std::forward<E1>(x), std::forward<E2>(b)
 

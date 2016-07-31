@@ -140,7 +140,7 @@ KFR_INTRIN T1 rawsine(const T1& x)
     return intrinsics::rawsine(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::rawsine, E1> rawsine(E1&& x)
+KFR_INTRIN internal::expression_function<fn::rawsine, E1> rawsine(E1&& x)
 {
     return { fn::rawsine(), std::forward<E1>(x) };
 }
@@ -150,7 +150,7 @@ KFR_INTRIN T1 sine(const T1& x)
     return intrinsics::sine(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::sine, E1> sine(E1&& x)
+KFR_INTRIN internal::expression_function<fn::sine, E1> sine(E1&& x)
 {
     return { fn::sine(), std::forward<E1>(x) };
 }
@@ -160,7 +160,7 @@ KFR_INTRIN T1 sinenorm(const T1& x)
     return intrinsics::sinenorm(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::sinenorm, E1> sinenorm(E1&& x)
+KFR_INTRIN internal::expression_function<fn::sinenorm, E1> sinenorm(E1&& x)
 {
     return { fn::sinenorm(), std::forward<E1>(x) };
 }
@@ -170,7 +170,7 @@ KFR_INTRIN T1 rawsquare(const T1& x)
     return intrinsics::rawsquare(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::rawsquare, E1> rawsquare(E1&& x)
+KFR_INTRIN internal::expression_function<fn::rawsquare, E1> rawsquare(E1&& x)
 {
     return { fn::rawsquare(), std::forward<E1>(x) };
 }
@@ -180,7 +180,7 @@ KFR_INTRIN T1 square(const T1& x)
     return intrinsics::square(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::square, E1> square(E1&& x)
+KFR_INTRIN internal::expression_function<fn::square, E1> square(E1&& x)
 {
     return { fn::square(), std::forward<E1>(x) };
 }
@@ -190,7 +190,7 @@ KFR_INTRIN T1 squarenorm(const T1& x)
     return intrinsics::squarenorm(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::squarenorm, E1> squarenorm(E1&& x)
+KFR_INTRIN internal::expression_function<fn::squarenorm, E1> squarenorm(E1&& x)
 {
     return { fn::squarenorm(), std::forward<E1>(x) };
 }
@@ -200,7 +200,7 @@ KFR_INTRIN T1 rawtriangle(const T1& x)
     return intrinsics::rawtriangle(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::rawtriangle, E1> rawtriangle(E1&& x)
+KFR_INTRIN internal::expression_function<fn::rawtriangle, E1> rawtriangle(E1&& x)
 {
     return { fn::rawtriangle(), std::forward<E1>(x) };
 }
@@ -210,7 +210,7 @@ KFR_INTRIN T1 triangle(const T1& x)
     return intrinsics::triangle(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::triangle, E1> triangle(E1&& x)
+KFR_INTRIN internal::expression_function<fn::triangle, E1> triangle(E1&& x)
 {
     return { fn::triangle(), std::forward<E1>(x) };
 }
@@ -220,7 +220,7 @@ KFR_INTRIN T1 trianglenorm(const T1& x)
     return intrinsics::trianglenorm(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::trianglenorm, E1> trianglenorm(E1&& x)
+KFR_INTRIN internal::expression_function<fn::trianglenorm, E1> trianglenorm(E1&& x)
 {
     return { fn::trianglenorm(), std::forward<E1>(x) };
 }
@@ -230,7 +230,7 @@ KFR_INTRIN T1 rawsawtooth(const T1& x)
     return intrinsics::rawsawtooth(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::rawsawtooth, E1> rawsawtooth(E1&& x)
+KFR_INTRIN internal::expression_function<fn::rawsawtooth, E1> rawsawtooth(E1&& x)
 {
     return { fn::rawsawtooth(), std::forward<E1>(x) };
 }
@@ -240,7 +240,7 @@ KFR_INTRIN T1 sawtooth(const T1& x)
     return intrinsics::sawtooth(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::sawtooth, E1> sawtooth(E1&& x)
+KFR_INTRIN internal::expression_function<fn::sawtooth, E1> sawtooth(E1&& x)
 {
     return { fn::sawtooth(), std::forward<E1>(x) };
 }
@@ -250,7 +250,7 @@ KFR_INTRIN T1 sawtoothnorm(const T1& x)
     return intrinsics::sawtoothnorm(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::sawtoothnorm, E1> sawtoothnorm(E1&& x)
+KFR_INTRIN internal::expression_function<fn::sawtoothnorm, E1> sawtoothnorm(E1&& x)
 {
     return { fn::sawtoothnorm(), std::forward<E1>(x) };
 }
@@ -260,7 +260,7 @@ KFR_INTRIN T1 isawtooth(const T1& x)
     return intrinsics::isawtooth(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::isawtooth, E1> isawtooth(E1&& x)
+KFR_INTRIN internal::expression_function<fn::isawtooth, E1> isawtooth(E1&& x)
 {
     return { fn::isawtooth(), std::forward<E1>(x) };
 }
@@ -270,7 +270,7 @@ KFR_INTRIN T1 isawtoothnorm(const T1& x)
     return intrinsics::isawtoothnorm(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::isawtoothnorm, E1> isawtoothnorm(E1&& x)
+KFR_INTRIN internal::expression_function<fn::isawtoothnorm, E1> isawtoothnorm(E1&& x)
 {
     return { fn::isawtoothnorm(), std::forward<E1>(x) };
 }

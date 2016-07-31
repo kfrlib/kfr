@@ -59,7 +59,7 @@ KFR_INTRIN flt_type<T1> asin(const T1& x)
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::asin, E1> asin(E1&& x)
+KFR_INTRIN internal::expression_function<fn::asin, E1> asin(E1&& x)
 {
     return { fn::asin(), std::forward<E1>(x) };
 }
@@ -71,7 +71,7 @@ KFR_INTRIN flt_type<T1> acos(const T1& x)
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::acos, E1> acos(E1&& x)
+KFR_INTRIN internal::expression_function<fn::acos, E1> acos(E1&& x)
 {
     return { fn::acos(), std::forward<E1>(x) };
 }

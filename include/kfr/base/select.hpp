@@ -151,7 +151,7 @@ KFR_INTRIN vec<Tout, N> select(const mask<T1, N>& m, const T2& x, const T3& y)
 }
 
 template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2, E3>::value)>
-KFR_INTRIN expr_func<fn::select, E1, E2, E3> select(E1&& m, E2&& x, E3&& y)
+KFR_INTRIN internal::expression_function<fn::select, E1, E2, E3> select(E1&& m, E2&& x, E3&& y)
 {
     return { fn::select(), std::forward<E1>(m), std::forward<E2>(x), std::forward<E3>(y) };
 }

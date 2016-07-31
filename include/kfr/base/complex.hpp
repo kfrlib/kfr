@@ -260,7 +260,7 @@ using realftype = ftype<decltype(kfr::real(std::declval<T>()))>;
 
 KFR_FN(real)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INLINE expr_func<fn_real, E1> real(E1&& x)
+KFR_INLINE internal::expression_function<fn_real, E1> real(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -277,7 +277,7 @@ constexpr KFR_INLINE vec<T, N> imag(const vec<complex<T>, N>& value)
 }
 KFR_FN(imag)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INLINE expr_func<fn_imag, E1> imag(E1&& x)
+KFR_INLINE internal::expression_function<fn_imag, E1> imag(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -438,7 +438,7 @@ KFR_INTRIN T1 csin(const T1& x)
     return intrinsics::csin(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::csin, E1> csin(E1&& x)
+KFR_INTRIN internal::expression_function<fn::csin, E1> csin(E1&& x)
 {
     return { fn::csin(), std::forward<E1>(x) };
 }
@@ -448,7 +448,7 @@ KFR_INTRIN T1 csinh(const T1& x)
     return intrinsics::csinh(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::csinh, E1> csinh(E1&& x)
+KFR_INTRIN internal::expression_function<fn::csinh, E1> csinh(E1&& x)
 {
     return { fn::csinh(), std::forward<E1>(x) };
 }
@@ -458,7 +458,7 @@ KFR_INTRIN T1 ccos(const T1& x)
     return intrinsics::ccos(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::ccos, E1> ccos(E1&& x)
+KFR_INTRIN internal::expression_function<fn::ccos, E1> ccos(E1&& x)
 {
     return { fn::ccos(), std::forward<E1>(x) };
 }
@@ -468,7 +468,7 @@ KFR_INTRIN T1 ccosh(const T1& x)
     return intrinsics::ccosh(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::ccosh, E1> ccosh(E1&& x)
+KFR_INTRIN internal::expression_function<fn::ccosh, E1> ccosh(E1&& x)
 {
     return { fn::ccosh(), std::forward<E1>(x) };
 }
@@ -478,7 +478,7 @@ KFR_INTRIN realtype<T1> cabs(const T1& x)
     return intrinsics::cabs(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::cabs, E1> cabs(E1&& x)
+KFR_INTRIN internal::expression_function<fn::cabs, E1> cabs(E1&& x)
 {
     return { fn::cabs(), std::forward<E1>(x) };
 }
@@ -488,7 +488,7 @@ KFR_INTRIN realtype<T1> carg(const T1& x)
     return intrinsics::carg(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::carg, E1> carg(E1&& x)
+KFR_INTRIN internal::expression_function<fn::carg, E1> carg(E1&& x)
 {
     return { fn::carg(), std::forward<E1>(x) };
 }
@@ -498,7 +498,7 @@ KFR_INTRIN T1 clog(const T1& x)
     return intrinsics::clog(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::clog, E1> clog(E1&& x)
+KFR_INTRIN internal::expression_function<fn::clog, E1> clog(E1&& x)
 {
     return { fn::clog(), std::forward<E1>(x) };
 }
@@ -508,7 +508,7 @@ KFR_INTRIN T1 clog2(const T1& x)
     return intrinsics::clog2(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::clog2, E1> clog2(E1&& x)
+KFR_INTRIN internal::expression_function<fn::clog2, E1> clog2(E1&& x)
 {
     return { fn::clog2(), std::forward<E1>(x) };
 }
@@ -518,7 +518,7 @@ KFR_INTRIN T1 clog10(const T1& x)
     return intrinsics::clog10(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::clog10, E1> clog10(E1&& x)
+KFR_INTRIN internal::expression_function<fn::clog10, E1> clog10(E1&& x)
 {
     return { fn::clog10(), std::forward<E1>(x) };
 }
@@ -528,7 +528,7 @@ KFR_INTRIN T1 cexp(const T1& x)
     return intrinsics::cexp(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::cexp, E1> cexp(E1&& x)
+KFR_INTRIN internal::expression_function<fn::cexp, E1> cexp(E1&& x)
 {
     return { fn::cexp(), std::forward<E1>(x) };
 }
@@ -538,7 +538,7 @@ KFR_INTRIN T1 cexp2(const T1& x)
     return intrinsics::cexp2(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::cexp2, E1> cexp2(E1&& x)
+KFR_INTRIN internal::expression_function<fn::cexp2, E1> cexp2(E1&& x)
 {
     return { fn::cexp2(), std::forward<E1>(x) };
 }
@@ -548,7 +548,7 @@ KFR_INTRIN T1 cexp10(const T1& x)
     return intrinsics::cexp10(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::cexp10, E1> cexp10(E1&& x)
+KFR_INTRIN internal::expression_function<fn::cexp10, E1> cexp10(E1&& x)
 {
     return { fn::cexp10(), std::forward<E1>(x) };
 }
@@ -558,7 +558,7 @@ KFR_INTRIN T1 polar(const T1& x)
     return intrinsics::polar(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::polar, E1> polar(E1&& x)
+KFR_INTRIN internal::expression_function<fn::polar, E1> polar(E1&& x)
 {
     return { fn::polar(), std::forward<E1>(x) };
 }
@@ -568,7 +568,7 @@ KFR_INTRIN T1 cartesian(const T1& x)
     return intrinsics::cartesian(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::cartesian, E1> cartesian(E1&& x)
+KFR_INTRIN internal::expression_function<fn::cartesian, E1> cartesian(E1&& x)
 {
     return { fn::cartesian(), std::forward<E1>(x) };
 }
@@ -578,7 +578,7 @@ KFR_INTRIN T1 csqrt(const T1& x)
     return intrinsics::csqrt(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::csqrt, E1> csqrt(E1&& x)
+KFR_INTRIN internal::expression_function<fn::csqrt, E1> csqrt(E1&& x)
 {
     return { fn::csqrt(), std::forward<E1>(x) };
 }

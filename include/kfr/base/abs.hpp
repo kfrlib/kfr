@@ -83,7 +83,7 @@ KFR_INTRIN T1 abs(const T1& x)
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN expr_func<fn::abs, E1> abs(E1&& x)
+KFR_INTRIN internal::expression_function<fn::abs, E1> abs(E1&& x)
 {
     return { fn::abs(), std::forward<E1>(x) };
 }
