@@ -55,8 +55,8 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/ft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/reference_dft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/conv.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dispatch/cpuid.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dispatch/cpuid_auto.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/cpuid.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/cpuid_auto.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/biquad.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/biquad_design.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/impulse.hpp
