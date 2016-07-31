@@ -30,24 +30,49 @@ try:
     os.makedirs(build_dir)
 except:
     pass
-
-print('Checking clang...', end=' ')
-if subprocess.call(['clang', '--version'], stdout=subprocess.PIPE): 
+    
+options = [
+    '-DCMAKE_BUILD_TYPE=Release',
+    ]
+    
+CMAKE_C_COMPILER = ''
+CMAKE_CXX_COMPILER = ''
+    
+for v in ('clang-3.9', 'clang-3.8', 'clang-3.7', 'clang'):
+    print('Checking ', v, '...', end=' ')
+    try:
+        if subprocess.call([v, '--version'], stdout=subprocess.PIPE) == 0:
+            CMAKE_C_COMPILER = v
+            break
+    except:
+        pass
+        
+if not CMAKE_C_COMPILER:
     raise Exception('clang is not on your PATH')
 print('ok')
-print('Checking clang++...', end=' ')
-if subprocess.call(['clang++', '--version'], stdout=subprocess.PIPE): 
+        
+for v in ('clang++-3.9', 'clang++-3.8', 'clang++-3.7', 'clang++'):
+    print('Checking ', v, '...', end=' ')
+    try:
+        if subprocess.call([v, '--version'], stdout=subprocess.PIPE) == 0:
+            CMAKE_CXX_COMPILER = v
+            break
+    except:
+        pass
+        
+if not CMAKE_CXX_COMPILER:
     raise Exception('clang++ is not on your PATH')
+    
 print('ok')
+        
+options.append('-DCMAKE_C_COMPILER='+CMAKE_C_COMPILER)
+options.append('-DCMAKE_CXX_COMPILER='+CMAKE_CXX_COMPILER)
 
 if sys.platform.startswith('win32'):
     generator = 'MinGW Makefiles'    
 else:
     generator = 'Unix Makefiles'
 
-options = [
-    '-DCMAKE_BUILD_TYPE=Release',
-    ]
 
 if subprocess.call(['cmake', '-G', generator, '..'] + options, cwd=build_dir): raise Exception('Can\'t make project')
 if subprocess.call(['cmake', '--build', '.', '--', '-j4'], cwd=build_dir): raise Exception('Can\'t build project')
