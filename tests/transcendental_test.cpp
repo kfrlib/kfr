@@ -9,6 +9,7 @@
 #include "testo/testo.hpp"
 #include <kfr/math.hpp>
 
+#define MPFR_THREAD_LOCAL
 #include "mpfr/mpfrplus.hpp"
 
 using namespace kfr;
