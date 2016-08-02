@@ -31,10 +31,19 @@ endif ()
 
 include_directories(../include)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/tests/cmake/")
+
+find_package(MPFR)
+
 add_executable(basic_vector_test basic_vector_test.cpp ${KFR_SRC})
 add_executable(intrinsic_test intrinsic_test.cpp ${KFR_SRC})
 add_executable(dft_test dft_test.cpp ${KFR_SRC})
 add_executable(conv_test conv_test.cpp ${KFR_SRC})
+if (MPFR_FOUND)
+    add_executable(transcendental_test transcendental_test.cpp ${KFR_SRC})
+    target_include_directories(transcendental_test PRIVATE ${MPFR_INCLUDE_DIR})
+    target_link_libraries(transcendental_test ${MPFR_LIBRARIES})
+endif ()
 add_executable(fracdelay_test fracdelay_test.cpp ${KFR_SRC})
 add_executable(empty_test empty_test.cpp ${KFR_SRC})
 add_executable(complex_test complex_test.cpp ${KFR_SRC})
@@ -51,6 +60,10 @@ add_test(NAME fracdelay_test
         COMMAND ${PROJECT_BINARY_DIR}/tests/fracdelay_test)
 add_test(NAME conv_test
         COMMAND ${PROJECT_BINARY_DIR}/tests/conv_test)
+if (MPFR_FOUND)
+    add_test(NAME transcendental_test
+        COMMAND ${PROJECT_BINARY_DIR}/tests/transcendental_test)
+endif ()
 add_test(NAME complex_test
         COMMAND ${PROJECT_BINARY_DIR}/tests/complex_test)
 add_test(NAME vec_test
@@ -59,4 +72,3 @@ add_test(NAME stat_test
         COMMAND ${PROJECT_BINARY_DIR}/tests/stat_test)
 add_test(NAME dft_test
         COMMAND ${PROJECT_BINARY_DIR}/tests/dft_test)
-        
