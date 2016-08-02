@@ -27,6 +27,7 @@
 
 namespace kfr
 {
+#ifdef CID_ARCH_X86
 
 struct cpu_features
 {
@@ -277,4 +278,13 @@ cpu_t detect_cpu()
     return cpu_t::lowest;
 }
 }
+#else
+
+template <size_t = 0>
+cpu_t detect_cpu()
+{
+    return cpu_t::native;
+}
+
+#endif
 }

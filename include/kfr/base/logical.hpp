@@ -158,6 +158,59 @@ KFR_SINTRIN bool bittestany(const vec<T, N>& a)
     return bittestany(low(a)) || bittestany(high(a));
 }
 
+#elif CID_ARCH_NEON
+
+KFR_SINTRIN bool bittestall(const u32neon& a)
+{
+    const uint32x2_t tmp = vand_u32(vget_low_u32(*a), vget_high_u32(*a));
+    return vget_lane_u32(vpmin_u32(tmp, tmp), 0) == 0xFFFFFFFFu;
+}
+
+KFR_SINTRIN bool bittestany(const u32neon& a)
+{
+    const uint32x2_t tmp = vorr_u32(vget_low_u32(*a), vget_high_u32(*a));
+    return vget_lane_u32(vpmax_u32(tmp, tmp), 0) != 0;
+}
+KFR_SINTRIN bool bittestany(const u8neon& a) { return bitcast<u8>(bittestany(bitcast<u32>(a))); }
+KFR_SINTRIN bool bittestany(const u16neon& a) { return bitcast<u16>(bittestany(bitcast<u32>(a))); }
+KFR_SINTRIN bool bittestany(const u64neon& a) { return bitcast<u64>(bittestany(bitcast<u32>(a))); }
+KFR_SINTRIN bool bittestany(const i8neon& a) { return bitcast<i8>(bittestany(bitcast<u32>(a))); }
+KFR_SINTRIN bool bittestany(const i16neon& a) { return bitcast<i16>(bittestany(bitcast<u32>(a))); }
+KFR_SINTRIN bool bittestany(const i64neon& a) { return bitcast<i64>(bittestany(bitcast<u32>(a))); }
+KFR_SINTRIN bool bittestany(const f32neon& a) { return bitcast<f32>(bittestany(bitcast<u32>(a))); }
+KFR_SINTRIN bool bittestany(const f64neon& a) { return bitcast<f64>(bittestany(bitcast<u32>(a))); }
+
+KFR_SINTRIN bool bittestall(const u8neon& a) { return bitcast<u8>(bittestall(bitcast<u32>(a))); }
+KFR_SINTRIN bool bittestall(const u16neon& a) { return bitcast<u16>(bittestall(bitcast<u32>(a))); }
+KFR_SINTRIN bool bittestall(const u64neon& a) { return bitcast<u64>(bittestall(bitcast<u32>(a))); }
+KFR_SINTRIN bool bittestall(const i8neon& a) { return bitcast<i8>(bittestall(bitcast<u32>(a))); }
+KFR_SINTRIN bool bittestall(const i16neon& a) { return bitcast<i16>(bittestall(bitcast<u32>(a))); }
+KFR_SINTRIN bool bittestall(const i64neon& a) { return bitcast<i64>(bittestall(bitcast<u32>(a))); }
+KFR_SINTRIN bool bittestall(const f32neon& a) { return bitcast<f32>(bittestall(bitcast<u32>(a))); }
+KFR_SINTRIN bool bittestall(const f64neon& a) { return bitcast<f64>(bittestall(bitcast<u32>(a))); }
+
+template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T, cpu_t::native>)>
+KFR_SINTRIN bool bittestall(const vec<T, N>& a)
+{
+    return bittestall(expand_simd(a, internal::maskbits<T>(true)));
+}
+template <typename T, size_t N, KFR_ENABLE_IF(N >= vector_width<T, cpu_t::native>), typename = void>
+KFR_SINTRIN bool bittestall(const vec<T, N>& a)
+{
+    return bittestall(low(a)) && bittestall(high(a));
+}
+
+template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T, cpu_t::native>)>
+KFR_SINTRIN bool bittestany(const vec<T, N>& a)
+{
+    return bittestany(expand_simd(a, internal::maskbits<T>(false)));
+}
+template <typename T, size_t N, KFR_ENABLE_IF(N >= vector_width<T, cpu_t::native>), typename = void>
+KFR_SINTRIN bool bittestany(const vec<T, N>& a)
+{
+    return bittestany(low(a)) || bittestany(high(a));
+}
+
 #else
 
 template <typename T, size_t N>

@@ -129,6 +129,53 @@ KFR_SINTRIN vec<T, N> select(const mask<T, N>& a, const vec<T, N>& b, const vec<
     return concat(select(low(a).asmask(), low(b), low(c)), select(high(a).asmask(), high(b), high(c)));
 }
 
+#elif defined CID_ARCH_NEON
+
+KFR_SINTRIN f32neon select(const mf32neon& m, const f32neon& x, const f32neon& y)
+{
+    return vbslq_f32(*m, *x, *y);
+}
+
+KFR_SINTRIN i8neon select(const mi8neon& m, const i8neon& x, const i8neon& y) { return vbslq_s8(*m, *x, *y); }
+KFR_SINTRIN u8neon select(const mu8neon& m, const u8neon& x, const u8neon& y) { return vbslq_u8(*m, *x, *y); }
+KFR_SINTRIN i16neon select(const mi16neon& m, const i16neon& x, const i16neon& y)
+{
+    return vbslq_s16(*m, *x, *y);
+}
+KFR_SINTRIN u16neon select(const mu16neon& m, const u16neon& x, const u16neon& y)
+{
+    return vbslq_u16(*m, *x, *y);
+}
+KFR_SINTRIN i32neon select(const mi32neon& m, const i32neon& x, const i32neon& y)
+{
+    return vbslq_s32(*m, *x, *y);
+}
+KFR_SINTRIN u32neon select(const mu32neon& m, const u32neon& x, const u32neon& y)
+{
+    return vbslq_u32(*m, *x, *y);
+}
+KFR_SINTRIN i64neon select(const mi64neon& m, const i64neon& x, const i64neon& y)
+{
+    return vbslq_s64(*m, *x, *y);
+}
+KFR_SINTRIN u64neon select(const mu64neon& m, const u64neon& x, const u64neon& y)
+{
+    return vbslq_u64(*m, *x, *y);
+}
+
+#ifdef CID_ARCH_NEON64
+KFR_SINTRIN f64neon select(const mf64neon& m, const f64neon& x, const f64neon& y)
+{
+    return vbslq_f64(*m, *x, *y);
+}
+#else
+template <typename T, size_t N>
+KFR_SINTRIN vec<T, N> select(const mask<T, N>& m, const vec<T, N>& x, const vec<T, N>& y)
+{
+    return y ^ ((x ^ y) & m);
+}
+#endif
+
 #else
 
 // fallback
