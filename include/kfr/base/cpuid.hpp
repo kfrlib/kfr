@@ -241,15 +241,9 @@ cpu_t detect_cpu()
     c.has3DNOWEXT    = c.isAMD && f_81_EDX >> 30 & 1;
     c.has3DNOW       = c.isAMD && f_81_EDX >> 31 & 1;
 
-    const u32 xcr0 = get_xcr0();
+    c.hasAVXOSSUPPORT    = c.hasAVX && c.hasOSXSAVE && (get_xcr0() & 0x06) == 0x06;
+    c.hasAVX512OSSUPPORT = c.hasAVXOSSUPPORT && c.hasAVX512F && c.hasOSXSAVE && (get_xcr0() & 0xE0) == 0xE0;
 
-    c.hasAVXOSSUPPORT    = c.hasAVX && c.hasOSXSAVE && (xcr0 & 0x06) == 0x06;
-    c.hasAVX512OSSUPPORT = c.hasAVX512F && c.hasOSXSAVE && (xcr0 & 0xE0) == 0xE0;
-
-#ifdef KFR_AVAIL_AVX512
-    if (c.hasAVX512F && c.hasAVX512BW && c.hasAVX512DQ && c.hasAVX512OSSUPPORT)
-        return cpu_t::avx3;
-#endif
 #ifdef KFR_AVAIL_AVX2
     if (c.hasAVX2 && c.hasAVXOSSUPPORT)
         return cpu_t::avx2;
