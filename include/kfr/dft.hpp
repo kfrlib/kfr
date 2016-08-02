@@ -20,8 +20,12 @@
  * disclosing the source code of your own applications.
  * See http://www.kfrlib.com for details.
  */
+#pragma once
 
 #include "base.hpp"
-#include "dft.hpp"
-#include "dsp.hpp"
-#include "io.hpp"
+
+#include "dft/bitrev.hpp"
+#include "dft/conv.hpp"
+#include "dft/fft.hpp"
+#include "dft/ft.hpp"
+#include "dft/reference_dft.hpp"

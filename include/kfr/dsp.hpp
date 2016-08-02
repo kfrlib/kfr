@@ -20,8 +20,22 @@
  * disclosing the source code of your own applications.
  * See http://www.kfrlib.com for details.
  */
+#pragma once
 
 #include "base.hpp"
-#include "dft.hpp"
-#include "dsp.hpp"
-#include "io.hpp"
+
+#include "dsp/biquad.hpp"
+#include "dsp/biquad_design.hpp"
+#include "dsp/fir.hpp"
+#include "dsp/fir_design.hpp"
+#include "dsp/fracdelay.hpp"
+#include "dsp/goertzel.hpp"
+#include "dsp/impulse.hpp"
+#include "dsp/interpolation.hpp"
+#include "dsp/oscillators.hpp"
+#include "dsp/resample.hpp"
+#include "dsp/speaker.hpp"
+#include "dsp/units.hpp"
+#include "dsp/waveshaper.hpp"
+#include "dsp/weighting.hpp"
+#include "dsp/window.hpp"
