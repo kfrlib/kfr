@@ -1,4 +1,4 @@
-#include <kfr/math.hpp>
+#include <kfr/all.hpp>
 
 using namespace kfr;
 

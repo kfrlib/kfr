@@ -22,21 +22,20 @@
  */
 #pragma once
 
-#include "../base/abs.hpp"
+#include "../base/clamp.hpp"
 #include "../base/hyperbolic.hpp"
-#include "../base/min_max.hpp"
 
 namespace kfr
 {
 template <typename E1>
 inline auto waveshaper_hardclip(E1&& input, double clip_level)
 {
-    return native::clamp(input, -clip_level, +clip_level);
+    return clamp(input, -clip_level, +clip_level);
 }
 
 template <typename E1>
 inline auto waveshaper_tanh(E1&& input, double saturation)
 {
-    return native::tanh(saturation * input) * (native::coth(saturation));
+    return tanh(saturation * input) * (coth(saturation));
 }
 }
