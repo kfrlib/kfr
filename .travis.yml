@@ -17,6 +17,7 @@ matrix:
             - cmake-data
             - g++-5
             - clang-3.8
+            - libmpfr-dev
       env:
         - CXXCOMPILER=clang++-3.8 CCOMPILER=clang-3.8
     - os: osx

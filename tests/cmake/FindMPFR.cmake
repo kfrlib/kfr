@@ -1,0 +1,5 @@
+find_path(MPFR_INCLUDE_DIR NAMES mpfr.h)
+find_library(MPFR_LIBRARIES NAMES mpfr libmpfr)
+
+include(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(MPFR DEFAULT_MSG MPFR_INCLUDE_DIR MPFR_LIBRARIES)
