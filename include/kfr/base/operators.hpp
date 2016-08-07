@@ -81,9 +81,7 @@ KFR_INLINE internal::expression_function<fn_add, E1, E2> add(E1&& x, E2&& y)
 template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 KFR_INLINE internal::expression_function<fn_add, E1> add(E1&& x, E2&& y, E3&& z)
 {
-    return { fn_add(), std::forward<E1>(x), std::forward<E2>(y), std::forward<E3>(z)
-
-    };
+    return { fn_add(), std::forward<E1>(x), std::forward<E2>(y), std::forward<E3>(z) };
 }
 
 template <typename T1, typename T2>
@@ -101,9 +99,7 @@ KFR_FN(sub)
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 KFR_INLINE internal::expression_function<fn_sub, E1, E2> sub(E1&& x, E2&& y)
 {
-    return { fn_sub(), std::forward<E1>(x), std::forward<E2>(y)
-
-    };
+    return { fn_sub(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 
 template <typename T1>
@@ -111,10 +107,10 @@ constexpr inline T1 mul(T1 x)
 {
     return x;
 }
-template <typename T1, typename T2, typename... Ts>
-constexpr inline common_type<T1, T2, Ts...> mul(T1 x, T2 y, Ts... rest)
+template <typename T1, typename T2, typename... Ts, typename Tout = common_type<T1, T2, Ts...>>
+constexpr inline Tout mul(T1 x, T2 y, Ts... rest)
 {
-    return x * mul(std::forward<T2>(y), std::forward<Ts>(rest)...);
+    return static_cast<Tout>(x) * static_cast<Tout>(mul(std::forward<T2>(y), std::forward<Ts>(rest)...));
 }
 
 template <typename T>
@@ -156,9 +152,7 @@ KFR_FN(cub)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INLINE internal::expression_function<fn_cub, E1> cub(E1&& x)
 {
-    return { fn_cub(), std::forward<E1>(x)
-
-    };
+    return { fn_cub(), std::forward<E1>(x) };
 }
 
 template <typename T>
@@ -192,30 +186,22 @@ KFR_FN(pow5)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INLINE internal::expression_function<fn_pow2, E1> pow2(E1&& x)
 {
-    return { fn_pow2(), std::forward<E1>(x)
-
-    };
+    return { fn_pow2(), std::forward<E1>(x) };
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INLINE internal::expression_function<fn_pow3, E1> pow3(E1&& x)
 {
-    return { fn_pow3(), std::forward<E1>(x)
-
-    };
+    return { fn_pow3(), std::forward<E1>(x) };
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INLINE internal::expression_function<fn_pow4, E1> pow4(E1&& x)
 {
-    return { fn_pow4(), std::forward<E1>(x)
-
-    };
+    return { fn_pow4(), std::forward<E1>(x) };
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_INLINE internal::expression_function<fn_pow5, E1> pow5(E1&& x)
 {
-    return { fn_pow5(), std::forward<E1>(x)
-
-    };
+    return { fn_pow5(), std::forward<E1>(x) };
 }
 
 /// Raise x to the power base $x^{base}$
@@ -265,24 +251,24 @@ KFR_FN(sqrsum)
 KFR_FN(sqrdiff)
 
 /// Division
-template <typename T1, typename T2>
-inline common_type<T1, T2> div(T1 x, T2 y)
+template <typename T1, typename T2, typename Tout = common_type<T1, T2>>
+inline Tout div(const T1& x, const T2& y)
 {
-    return x / y;
+    return static_cast<Tout>(x) / static_cast<Tout>(y);
 }
 KFR_FN(div)
 
 /// Remainder
-template <typename T1, typename T2>
-inline common_type<T1, T2> rem(T1 x, T2 y)
+template <typename T1, typename T2, typename Tout = common_type<T1, T2>>
+inline Tout rem(const T1& x, const T2& y)
 {
-    return x % y;
+    return static_cast<Tout>(x) % static_cast<Tout>(y);
 }
 KFR_FN(rem)
 
 /// Negation
 template <typename T1>
-inline T1 neg(T1 x)
+inline T1 neg(const T1& x)
 {
     return -x;
 }
@@ -290,7 +276,7 @@ KFR_FN(neg)
 
 /// Bitwise Not
 template <typename T1>
-inline T1 bitwisenot(T1 x)
+inline T1 bitwisenot(const T1& x)
 {
     return ~x;
 }
@@ -499,26 +485,6 @@ constexpr KFR_INLINE vec<T, N> copysign(const vec<T, N>& x, const vec<T, N>& y)
     return (x & internal::highbitmask<T>) | (y & internal::highbitmask<T>);
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
-KFR_INLINE vec<T, N> fmod(const vec<T, N>& x, const vec<T, N>& y)
-{
-    return x - cast<itype<T>>(x / y) * y;
-}
-
-KFR_FN_S(fmod)
-KFR_FN(fmod)
-
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
-constexpr KFR_INLINE vec<T, N> rem(const vec<T, N>& x, const vec<T, N>& y)
-{
-    return x % y;
-}
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
-KFR_INLINE vec<T, N> rem(const vec<T, N>& x, const vec<T, N>& y)
-{
-    return fmod(x, y);
-}
-
 template <typename T, size_t N>
 KFR_INLINE mask<T, N> isnan(const vec<T, N>& x)
 {
@@ -695,4 +661,49 @@ KFR_EXPR_BINARY(fn_less, <)
 KFR_EXPR_BINARY(fn_greater, >)
 KFR_EXPR_BINARY(fn_lessorequal, <=)
 KFR_EXPR_BINARY(fn_greaterorequal, >=)
+
+template <typename T, size_t N1, size_t... Ns>
+vec<vec<T, sizeof...(Ns) + 1>, N1> packtranspose(const vec<T, N1>& x, const vec<T, Ns>&... rest)
+{
+    const vec<T, N1*(sizeof...(Ns) + 1)> t = transpose<N1>(concat(x, rest...));
+    return compcast<vec<T, sizeof...(Ns) + 1>>(t);
+}
+
+KFR_FN(packtranspose)
+
+namespace internal
+{
+template <typename... E>
+struct expression_pack : expression<E...>, output_expression
+{
+    expression_pack(E&&... e) : expression<E...>(std::forward<E>(e)...) {}
+    using value_type = vec<common_type<value_type_of<E>...>, sizeof...(E)>;
+    using size_type  = typename expression<E...>::size_type;
+    constexpr size_type size() const noexcept { return expression<E...>::size(); }
+
+    template <typename U, size_t N>
+    KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x) const
+    {
+        return this->call(fn_packtranspose(), index, x);
+    }
+    template <typename U, size_t N>
+    KFR_INLINE void operator()(coutput_t, size_t index, const vec<U, N>& x)
+    {
+        output(index, x, csizeseq<sizeof...(E)>);
+    }
+
+private:
+    template <typename U, size_t N, size_t... indices>
+    void output(size_t index, const vec<U, N>& x, csizes_t<indices...>)
+    {
+        swallow{ (std::get<indices>(this->args)(coutput, index, x[indices]), void(), 0)... };
+    }
+};
+}
+
+template <typename... E, KFR_ENABLE_IF(is_input_expressions<E...>::value)>
+internal::expression_pack<internal::arg<E>...> pack(E&&... e)
+{
+    return internal::expression_pack<internal::arg<E>...>(std::forward<E>(e)...);
+}
 }

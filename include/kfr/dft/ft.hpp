@@ -103,6 +103,9 @@ KFR_INLINE vec<T, N> cmul_conj(vec<T, 2> x, vec<T, N> y)
 KFR_FN(cmul_conj)
 KFR_FN(cmul_2conj)
 
+template <typename T, size_t N>
+using cvec = vec<T, N * 2>;
+
 template <size_t N, bool A = false, typename T>
 KFR_INLINE cvec<T, N> cread(const complex<T>* src)
 {

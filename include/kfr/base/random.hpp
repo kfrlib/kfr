@@ -114,8 +114,8 @@ inline enable_if_not_f<vec<T, N>> random_range(random_bit_generator& gen, T min,
     using big_type = findinttype<sqr(std::numeric_limits<T>::min()), sqr(std::numeric_limits<T>::max())>;
 
     vec<T, N> u                = random_uniform<T, N>(gen);
-    const vec<big_type, N> tmp = cast<big_type>(u);
-    return cast<T>((tmp * (max - min) + min) >> typebits<T>::bits);
+    const vec<big_type, N> tmp = u;
+    return (tmp * (max - min) + min) >> typebits<T>::bits;
 }
 
 namespace internal
@@ -128,7 +128,7 @@ struct expression_random_uniform : input_expression
     template <typename U, size_t N>
     vec<U, N> operator()(cinput_t, size_t, vec_t<U, N>) const
     {
-        return cast<U>(random_uniform<T, N>(gen));
+        return random_uniform<T, N>(gen);
     }
     mutable random_bit_generator gen;
 };
@@ -146,7 +146,7 @@ struct expression_random_range : input_expression
     template <typename U, size_t N>
     vec<U, N> operator()(cinput_t, size_t, vec_t<U, N>) const
     {
-        return cast<U>(random_range<N, T>(gen, min, max));
+        return random_range<N, T>(gen, min, max);
     }
     mutable random_bit_generator gen;
     const T min;

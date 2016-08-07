@@ -43,7 +43,7 @@ struct generator : input_expression
     template <typename U, size_t N>
     KFR_INLINE vec<U, N> operator()(cinput_t, size_t, vec_t<U, N> t) const
     {
-        return cast<U>(generate(t));
+        return generate(t);
     }
 
     void resync(T start) const { ptr_cast<Class>(this)->sync(start); }
@@ -108,7 +108,7 @@ protected:
     T vstep;
 };
 
-template <typename T, size_t width = get_vector_width<T, cpu_t::native>(1, 2)>
+template <typename T, size_t width = get_vector_width<T, cpu_t::native>(1, 2), KFR_ARCH_DEP>
 struct generator_exp : generator<T, width, generator_exp<T, width>>
 {
     generator_exp(T start, T step) noexcept : step(step), vstep(exp(make_vector(step* width))[0] - 1)
@@ -125,7 +125,7 @@ protected:
     T vstep;
 };
 
-template <typename T, size_t width = get_vector_width<T, cpu_t::native>(1, 2)>
+template <typename T, size_t width = get_vector_width<T, cpu_t::native>(1, 2), KFR_ARCH_DEP>
 struct generator_exp2 : generator<T, width, generator_exp2<T, width>>
 {
     generator_exp2(T start, T step) noexcept : step(step), vstep(exp2(make_vector(step* width))[0] - 1)
@@ -142,7 +142,7 @@ protected:
     T vstep;
 };
 
-template <typename T, size_t width = get_vector_width<T, cpu_t::native>(1, 2)>
+template <typename T, size_t width = get_vector_width<T, cpu_t::native>(1, 2), KFR_ARCH_DEP>
 struct generator_cossin : generator<T, width, generator_cossin<T, width>>
 {
     generator_cossin(T start, T step)
@@ -167,7 +167,7 @@ protected:
     }
 };
 
-template <typename T, size_t width = get_vector_width<T, cpu_t::native>(2, 4)>
+template <typename T, size_t width = get_vector_width<T, cpu_t::native>(2, 4), KFR_ARCH_DEP>
 struct generator_sin : generator<T, width, generator_sin<T, width>>
 {
     generator_sin(T start, T step)

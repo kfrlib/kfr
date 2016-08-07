@@ -85,7 +85,7 @@ struct expression_file_writer : expression_file_base, output_expression
     {
         if (position != index)
             fseeko(file, static_cast<off_t>(index * sizeof(T)), SEEK_SET);
-        const vec<T, N> output = cast<T>(value);
+        const vec<T, N> output = value;
         fwrite(output.data(), sizeof(T), output.size(), file);
         position = index + N;
     }
@@ -104,7 +104,7 @@ struct expression_file_reader : expression_file_base, input_expression
         vec<T, N> input = qnan;
         fread(input.data(), sizeof(T), input.size(), file);
         position = index + N;
-        return cast<U>(input);
+        return input;
     }
     mutable size_t position = 0;
 };

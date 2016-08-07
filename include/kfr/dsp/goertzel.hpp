@@ -32,7 +32,7 @@ namespace kfr
 namespace internal
 {
 
-template <typename T>
+template <typename T, KFR_ARCH_DEP>
 struct expression_goertzel : output_expression
 {
     expression_goertzel(complex<T>& result, T omega)
@@ -47,7 +47,7 @@ struct expression_goertzel : output_expression
     template <typename U, size_t N>
     KFR_INLINE void operator()(coutput_t, size_t index, const vec<U, N>& x)
     {
-        vec<T, N> in = cast<T>(x);
+        vec<T, N> in = x;
         KFR_LOOP_UNROLL
         for (size_t i = 0; i < N; i++)
         {
@@ -84,7 +84,7 @@ struct expression_parallel_goertzel : output_expression
     template <typename U, size_t N>
     KFR_INLINE void operator()(coutput_t, size_t index, const vec<U, N>& x)
     {
-        const vec<T, N> in = cast<T>(x);
+        const vec<T, N> in = x;
         KFR_LOOP_UNROLL
         for (size_t i = 0; i < N; i++)
         {

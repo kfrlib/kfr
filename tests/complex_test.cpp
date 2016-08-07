@@ -44,17 +44,17 @@ TEST(complex_vector)
 
 TEST(complex_cast)
 {
-    const vec<f32, 4> v1 = subcast<f32>(make_vector(c32{ 0, 1 }, c32{ 2, 3 }));
+    const vec<f32, 4> v1 = bitcast<f32>(make_vector(c32{ 0, 1 }, c32{ 2, 3 }));
     CHECK(v1(0) == 0.f);
     CHECK(v1(1) == 1.f);
     CHECK(v1(2) == 2.f);
     CHECK(v1(3) == 3.f);
 
-    const vec<c32, 1> v2 = subcast<c32>(make_vector(1.f, 2.f));
+    const vec<c32, 1> v2 = bitcast<c32>(make_vector(1.f, 2.f));
     CHECK(v2(0) == 1.f);
     CHECK(v2(1) == 2.f);
 
-    const vec<c32, 2> v3 = cast<c32>(make_vector(1.f, 2.f));
+    const vec<c32, 2> v3 = make_vector(1.f, 2.f);
     CHECK(v3(0) == 1.f);
     CHECK(v3(1) == 0.f);
     CHECK(v3(2) == 2.f);

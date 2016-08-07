@@ -41,7 +41,7 @@ namespace intrinsics
 template <typename T, typename TF = ftype<T>>
 KFR_SINTRIN TF amp_to_dB(T amp)
 {
-    return log(cast<subtype<TF>>(amp)) * subtype<TF>(8.6858896380650365530225783783322);
+    return log(static_cast<TF>(amp)) * subtype<TF>(8.6858896380650365530225783783322);
     // return T( 20.0 ) * log10( level );
 }
 

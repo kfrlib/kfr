@@ -82,7 +82,7 @@ struct expression_pointer : input_expression
         constexpr size_t findex = ilog2(N);
         static_assert(N <= maxwidth, "N is greater than maxwidth");
         func_t func = reinterpret_cast<func_t>(vtable->get(csize<2 + findex>));
-        vec<U, N> result = cast<U>(func(instance, index));
+        vec<U, N> result = func(instance, index);
         return result;
     }
     KFR_INLINE void begin_block(size_t size) const

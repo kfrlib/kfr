@@ -99,8 +99,7 @@ protected:
 
 private:
     template <typename Arg, size_t N, typename Tin,
-              typename Tout1 = conditional<is_generic<Arg>::value, Tin, typename decay<Arg>::value_type>,
-              typename Tout  = Tout1>
+              typename Tout = conditional<is_generic<Arg>::value, Tin, value_type_of<Arg>>>
     KFR_INLINE vec_t<Tout, N> vec_t_for() const
     {
         return {};
@@ -112,8 +111,8 @@ private:
         constexpr size_t Nin = N * ratio::input / ratio::output;
         using Tout = conditional<is_same<generic, value_type>::value, T, common_type<T, value_type>>;
 
-        return cast<T>(fn(cast<Tout>(std::get<indices>(this->args)(
-            cinput, index * ratio::input / ratio::output, vec_t_for<Args, Nin, Tout>()))...));
+        return fn(std::get<indices>(this->args)(cinput, index * ratio::input / ratio::output,
+                                                vec_t_for<Args, Nin, Tout>())...);
     }
     template <size_t... indices>
     KFR_INLINE void begin_block_impl(size_t size, csizes_t<indices...>)
@@ -149,7 +148,7 @@ struct expression_scalar : input_expression
     template <typename U, size_t N>
     KFR_INLINE vec<U, N> operator()(cinput_t, size_t, vec_t<U, N>) const
     {
-        return resize<N>(cast<U>(val));
+        return resize<N>(static_cast<vec<U, width>>(val));
     }
 };
 
@@ -204,7 +203,7 @@ KFR_INLINE void process_cycle(OutFn&& outfn, const Fn& fn, size_t& i, size_t siz
     KFR_LOOP_NOUNROLL
     for (; i < count; i += width)
     {
-        outfn(coutput, i, cast<Tout>(fn(cinput, i, vec_t<Tin, width>())));
+        outfn(coutput, i, fn(cinput, i, vec_t<Tin, width>()));
     }
 }
 }
@@ -269,7 +268,7 @@ struct expressoin_typed : input_expression
     template <typename U, size_t N>
     KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N>) const
     {
-        return cast<U>(e1(cinput, index, vec_t<T, N>()));
+        return e1(cinput, index, vec_t<T, N>());
     }
     E1 e1;
 };
@@ -286,7 +285,7 @@ struct expressoin_sized : input_expression
     KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N>) const
     {
         auto val = e1(cinput, index, vec_t<T, N>());
-        return cast<U>(val);
+        return val;
     }
 
     constexpr size_t size() const noexcept { return m_size; }

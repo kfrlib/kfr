@@ -349,6 +349,8 @@ enum class cpu_t : int
     runtime = -1,
 };
 
+#define KFR_ARCH_DEP cpu_t cpu = cpu_t::native
+
 template <cpu_t cpu>
 using ccpu_t = cval_t<cpu_t, cpu>;
 
@@ -578,6 +580,12 @@ constexpr inline static const T* derived_cast(const U* ptr)
     return static_cast<const T*>(ptr);
 }
 
+template <typename T, typename U>
+constexpr inline static T implicit_cast(U&& value)
+{
+    return std::forward<T>(value);
+}
+
 #pragma clang diagnostic pop
 
 __attribute__((unused)) static const char* cpu_name(cpu_t set)
@@ -781,10 +789,12 @@ namespace cometa
 template <typename T, size_t N>
 struct compound_type_traits<kfr::vec_t<T, N>>
 {
-    constexpr static size_t width   = N;
-    using subtype                   = T;
-    using deep_subtype              = cometa::deep_subtype<T>;
-    constexpr static bool is_scalar = false;
+    constexpr static size_t width      = N;
+    constexpr static size_t deep_width = width * compound_type_traits<T>::width;
+    using subtype                      = T;
+    using deep_subtype                 = cometa::deep_subtype<T>;
+    constexpr static bool is_scalar    = false;
+    constexpr static size_t depth      = cometa::compound_type_traits<T>::depth + 1;
 
     template <typename U>
     using rebind = kfr::vec_t<U, N>;

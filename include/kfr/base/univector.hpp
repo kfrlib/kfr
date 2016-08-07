@@ -43,13 +43,13 @@ struct univector_base : input_expression, output_expression
     KFR_INLINE void operator()(coutput_t, size_t index, const vec<U, N>& value)
     {
         T* data = derived_cast<Class>(this)->data();
-        write(ptr_cast<T>(data) + index, cast<T>(value));
+        write(ptr_cast<T>(data) + index, vec<T, N>(value));
     }
     template <typename U, size_t N>
     KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N>) const
     {
         const T* data = derived_cast<Class>(this)->data();
-        return cast<U>(read<N>(ptr_cast<T>(data) + index));
+        return static_cast<vec<U, N>>(read<N>(ptr_cast<T>(data) + index));
     }
 
     template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
@@ -197,7 +197,7 @@ struct univector<T, tag_array_ref> : array_ref<T>, univector_base<T, univector<T
     constexpr static bool is_array_ref = true;
     constexpr static bool is_vector    = false;
     constexpr static bool is_aligned   = false;
-    using value_type                   = T;
+    using value_type                   = remove_const<T>;
 
     using univector_base<T, univector>::operator=;
 };

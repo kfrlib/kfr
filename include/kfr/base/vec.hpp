@@ -99,7 +99,7 @@ struct vec_ptr
 template <typename To, typename From, size_t N,
           KFR_ENABLE_IF(std::is_same<subtype<From>, subtype<To>>::value),
           size_t Nout = N* compound_type_traits<From>::width / compound_type_traits<To>::width>
-constexpr KFR_INLINE vec<To, Nout> subcast(const vec<From, N>& value) noexcept
+constexpr KFR_INLINE vec<To, Nout> compcast(const vec<From, N>& value) noexcept
 {
     return *value;
 }
@@ -154,8 +154,8 @@ template <typename T, size_t N, size_t... Indices, KFR_ENABLE_IF(is_compound<T>:
 KFR_INLINE vec<T, sizeof...(Indices)> shufflevector(csizes_t<Indices...> indices, const vec<T, N>& x,
                                                     const vec<T, N>& y)
 {
-    return subcast<T>(
-        shufflevector(inflate(csize<widthof<T>()>, indices), subcast<subtype<T>>(x), subcast<subtype<T>>(y)));
+    return compcast<T>(shufflevector(inflate(csize<widthof<T>()>, indices), compcast<subtype<T>>(x),
+                                     compcast<subtype<T>>(y)));
 }
 
 template <size_t... Indices, size_t Nout = sizeof...(Indices), typename T, size_t N>
@@ -225,14 +225,90 @@ constexpr swiz<14> s14{};
 constexpr swiz<15> s15{};
 }
 
-template <typename To, typename From, KFR_ENABLE_IF(!is_compound<From>::value)>
-constexpr KFR_INLINE To cast(From value) noexcept
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wold-style-cast"
+
+template <size_t N, typename T>
+constexpr KFR_INLINE vec<T, N> broadcast(T x)
 {
-    return static_cast<To>(value);
+    return (simd<T, N>)(x);
 }
-template <typename To, typename From, KFR_ENABLE_IF(!is_compound<From>::value)>
-constexpr KFR_INLINE To bitcast(From value) noexcept
+
+#pragma clang diagnostic pop
+
+namespace internal
 {
+
+template <typename To, typename From, size_t N, typename Tsub = deep_subtype<To>,
+          size_t Nout = N* compound_type_traits<To>::deep_width>
+constexpr KFR_INLINE vec<To, N> builtin_convertvector(const vec<From, N>& value) noexcept
+{
+    return __builtin_convertvector(*value, simd<Tsub, Nout>);
+}
+
+// scalar to scalar
+template <typename To, typename From>
+struct conversion
+{
+    static_assert(std::is_convertible<From, To>::value, "");
+    static To cast(const From& value) { return value; }
+};
+
+// vector to vector
+template <typename To, typename From, size_t N>
+struct conversion<vec<To, N>, vec<From, N>>
+{
+    static_assert(!is_compound<To>::value, "");
+    static_assert(!is_compound<From>::value, "");
+    static vec<To, N> cast(const vec<From, N>& value) { return builtin_convertvector<To>(value); }
+};
+
+// vector<vector> to vector<vector>
+template <typename To, typename From, size_t N1, size_t N2>
+struct conversion<vec<vec<To, N1>, N2>, vec<vec<From, N1>, N2>>
+{
+    static_assert(!is_compound<To>::value, "");
+    static_assert(!is_compound<From>::value, "");
+    static vec<vec<To, N1>, N2> cast(const vec<vec<From, N1>, N2>& value)
+    {
+        return builtin_convertvector<vec<To, N1>>(value);
+    }
+};
+
+// scalar to vector
+template <typename To, typename From, size_t N>
+struct conversion<vec<To, N>, From>
+{
+    static_assert(std::is_convertible<From, To>::value, "");
+    static vec<To, N> cast(const From& value) { return broadcast<N>(static_cast<To>(value)); }
+};
+
+// mask to mask
+template <typename To, typename From, size_t N>
+struct conversion<mask<To, N>, mask<From, N>>
+{
+    static_assert(sizeof(To) == sizeof(From), "");
+    static mask<To, N> cast(const mask<From, N>& value) { return reinterpret_cast<simd<To, N>>(*value); }
+};
+}
+
+template <typename From, size_t N, typename Tsub = deep_subtype<From>,
+          size_t Nout = N * sizeof(From) / sizeof(Tsub)>
+constexpr KFR_INLINE vec<Tsub, Nout> flatten(const vec<From, N>& value) noexcept
+{
+    return *value;
+}
+
+template <typename To, typename From, typename Tout = deep_rebind<From, To>>
+constexpr KFR_INLINE Tout cast(const From& value) noexcept
+{
+    return static_cast<Tout>(value);
+}
+
+template <typename To, typename From>
+constexpr KFR_INLINE To bitcast(const From& value) noexcept
+{
+    static_assert(sizeof(From) == sizeof(To), "bitcast: Incompatible types");
     union {
         From from;
         To to;
@@ -240,43 +316,34 @@ constexpr KFR_INLINE To bitcast(From value) noexcept
     return u.to;
 }
 
+template <typename To, typename From, size_t N, size_t Nout = N * sizeof(From) / sizeof(To)>
+constexpr KFR_INLINE vec<To, Nout> bitcast(const vec<From, N>& value) noexcept
+{
+    return reinterpret_cast<typename vec<To, Nout>::simd_t>(*value);
+}
+
+template <typename To, typename From, size_t N, size_t Nout = N * sizeof(From) / sizeof(To)>
+constexpr KFR_INLINE mask<To, Nout> bitcast(const mask<From, N>& value) noexcept
+{
+    return reinterpret_cast<typename mask<To, Nout>::simd_t>(*value);
+}
+
 template <typename From, typename To = utype<From>, KFR_ENABLE_IF(!is_compound<From>::value)>
-constexpr KFR_INLINE To ubitcast(From value) noexcept
+constexpr KFR_INLINE To ubitcast(const From& value) noexcept
 {
     return bitcast<To>(value);
 }
 
 template <typename From, typename To = itype<From>, KFR_ENABLE_IF(!is_compound<From>::value)>
-constexpr KFR_INLINE To ibitcast(From value) noexcept
+constexpr KFR_INLINE To ibitcast(const From& value) noexcept
 {
     return bitcast<To>(value);
 }
 
 template <typename From, typename To = ftype<From>, KFR_ENABLE_IF(!is_compound<From>::value)>
-constexpr KFR_INLINE To fbitcast(From value) noexcept
+constexpr KFR_INLINE To fbitcast(const From& value) noexcept
 {
     return bitcast<To>(value);
-}
-
-template <typename To, typename From, size_t N, KFR_ENABLE_IF(!is_compound<To>::value)>
-constexpr KFR_INLINE vec<To, N> cast(const vec<From, N>& value) noexcept
-{
-    return __builtin_convertvector(*value, simd<To, N>);
-}
-template <typename To, typename From, simdindex N>
-constexpr KFR_INLINE simd<To, N> cast(const simd<From, N>& value) noexcept
-{
-    return __builtin_convertvector(value, simd<To, N>);
-}
-template <typename To, typename From, size_t N, size_t Nout = sizeof(From) * N / sizeof(To)>
-constexpr KFR_INLINE vec<To, Nout> bitcast(const vec<From, N>& value) noexcept
-{
-    return reinterpret_cast<simd<To, Nout>>(*value);
-}
-template <typename To, typename From, simdindex N, simdindex Nout = sizeof(From) * N / sizeof(To)>
-constexpr KFR_INLINE simd<To, Nout> bitcast(const simd<From, N>& value) noexcept
-{
-    return reinterpret_cast<simd<To, Nout>>(value);
 }
 
 template <typename From, size_t N, typename To = utype<From>, size_t Nout = sizeof(From) * N / sizeof(To)>
@@ -295,27 +362,6 @@ template <typename From, size_t N, typename To = ftype<From>, size_t Nout = size
 constexpr KFR_INLINE vec<To, Nout> fbitcast(const vec<From, N>& value) noexcept
 {
     return reinterpret_cast<simd<To, Nout>>(*value);
-}
-
-template <typename From, simdindex N, typename To = utype<From>,
-          simdindex Nout = sizeof(From) * N / sizeof(To)>
-constexpr KFR_INLINE simd<To, Nout> ubitcast(const simd<From, N>& value) noexcept
-{
-    return reinterpret_cast<simd<To, Nout>>(value);
-}
-
-template <typename From, simdindex N, typename To = itype<From>,
-          simdindex Nout = sizeof(From) * N / sizeof(To)>
-constexpr KFR_INLINE simd<To, Nout> ibitcast(const simd<From, N>& value) noexcept
-{
-    return reinterpret_cast<simd<To, Nout>>(value);
-}
-
-template <typename From, simdindex N, typename To = ftype<From>,
-          simdindex Nout = sizeof(From) * N / sizeof(To)>
-constexpr KFR_INLINE simd<To, Nout> fbitcast(const simd<From, N>& value) noexcept
-{
-    return reinterpret_cast<simd<To, Nout>>(value);
 }
 
 constexpr KFR_INLINE size_t vector_alignment(size_t size) { return next_poweroftwo(size); }
@@ -344,17 +390,6 @@ KFR_INLINE vec<T, Nout> repeat(const vec<T, N>& x)
     return shufflevector<Nout, internal::shuffle_index_wrap<N, 0, 1>>(x);
 }
 KFR_FN(repeat)
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wold-style-cast"
-
-template <size_t N, typename T>
-constexpr KFR_INLINE vec<T, N> broadcast(T x)
-{
-    return (simd<T, N>)(x);
-}
-
-#pragma clang diagnostic pop
 
 template <size_t Nout, typename T, size_t N, KFR_ENABLE_IF(Nout != N)>
 KFR_INLINE vec<T, Nout> resize(const vec<T, N>& x)
@@ -422,7 +457,8 @@ private:
 template <typename T>
 struct vec_op
 {
-    using scalar_type = subtype<T>;
+    using scalar_type  = subtype<T>;
+    using uscalar_type = utype<scalar_type>;
 
     template <simdindex N>
     constexpr static simd<scalar_type, N> add(simd<scalar_type, N> x, simd<scalar_type, N> y) noexcept
@@ -467,53 +503,56 @@ struct vec_op
     template <simdindex N>
     constexpr static simd<scalar_type, N> band(simd<scalar_type, N> x, simd<scalar_type, N> y) noexcept
     {
-        return bitcast<scalar_type>(ubitcast(x) & ubitcast(y));
+        return reinterpret_cast<simd<scalar_type, N>>(reinterpret_cast<simd<uscalar_type, N>>(x) &
+                                                      reinterpret_cast<simd<uscalar_type, N>>(y));
     }
     template <simdindex N>
     constexpr static simd<scalar_type, N> bor(simd<scalar_type, N> x, simd<scalar_type, N> y) noexcept
     {
-        return bitcast<scalar_type>(ubitcast(x) | ubitcast(y));
+        return reinterpret_cast<simd<scalar_type, N>>(reinterpret_cast<simd<uscalar_type, N>>(x) |
+                                                      reinterpret_cast<simd<uscalar_type, N>>(y));
     }
     template <simdindex N>
     constexpr static simd<scalar_type, N> bxor(simd<scalar_type, N> x, simd<scalar_type, N> y) noexcept
     {
-        return bitcast<scalar_type>(ubitcast(x) ^ ubitcast(y));
+        return reinterpret_cast<simd<scalar_type, N>>(reinterpret_cast<simd<uscalar_type, N>>(x) ^
+                                                      reinterpret_cast<simd<uscalar_type, N>>(y));
     }
     template <simdindex N>
     constexpr static simd<scalar_type, N> bnot(simd<scalar_type, N> x) noexcept
     {
-        return bitcast<scalar_type>(~ubitcast(x));
+        return reinterpret_cast<simd<scalar_type, N>>(~reinterpret_cast<simd<uscalar_type, N>>(x));
     }
 
     template <simdindex N>
     constexpr static simd<scalar_type, N> eq(simd<scalar_type, N> x, simd<scalar_type, N> y) noexcept
     {
-        return bitcast<scalar_type>(x == y);
+        return reinterpret_cast<simd<scalar_type, N>>(x == y);
     }
     template <simdindex N>
     constexpr static simd<scalar_type, N> ne(simd<scalar_type, N> x, simd<scalar_type, N> y) noexcept
     {
-        return bitcast<scalar_type>(x != y);
+        return reinterpret_cast<simd<scalar_type, N>>(x != y);
     }
     template <simdindex N>
     constexpr static simd<scalar_type, N> lt(simd<scalar_type, N> x, simd<scalar_type, N> y) noexcept
     {
-        return bitcast<scalar_type>(x < y);
+        return reinterpret_cast<simd<scalar_type, N>>(x < y);
     }
     template <simdindex N>
     constexpr static simd<scalar_type, N> gt(simd<scalar_type, N> x, simd<scalar_type, N> y) noexcept
     {
-        return bitcast<scalar_type>(x > y);
+        return reinterpret_cast<simd<scalar_type, N>>(x > y);
     }
     template <simdindex N>
     constexpr static simd<scalar_type, N> le(simd<scalar_type, N> x, simd<scalar_type, N> y) noexcept
     {
-        return bitcast<scalar_type>(x <= y);
+        return reinterpret_cast<simd<scalar_type, N>>(x <= y);
     }
     template <simdindex N>
     constexpr static simd<scalar_type, N> ge(simd<scalar_type, N> x, simd<scalar_type, N> y) noexcept
     {
-        return bitcast<scalar_type>(x >= y);
+        return reinterpret_cast<simd<scalar_type, N>>(x >= y);
     }
 };
 
@@ -554,7 +593,8 @@ constexpr KFR_INLINE vec<T, N> make_vector(cvals_t<T, Values...>)
 KFR_FN(make_vector)
 
 template <typename Type = void, typename Arg, typename... Args, size_t N = (sizeof...(Args) + 1),
-          typename SubType = conditional<is_void<Type>::value, common_type<Arg, Args...>, Type>>
+          typename SubType = conditional<is_void<Type>::value, common_type<Arg, Args...>, Type>,
+          KFR_ENABLE_IF(is_numeric<SubType>::value)>
 constexpr KFR_INLINE vec<SubType, N> pack(const Arg& x, const Args&... rest)
 {
     return internal::make_vector_impl<SubType>(csizeseq<N * widthof<SubType>()>, static_cast<SubType>(x),
@@ -567,6 +607,7 @@ struct vec : vec_t<T, N>
 {
     static_assert(N > 0 && N <= 256, "Invalid vector size");
 
+    using UT          = utype<T>;
     using value_type  = T;
     using scalar_type = subtype<T>;
     constexpr static size_t scalar_size() noexcept { return N * compound_type_traits<T>::width; }
@@ -579,6 +620,10 @@ struct vec : vec_t<T, N>
     constexpr KFR_INLINE vec() noexcept {}
     constexpr KFR_INLINE vec(simd_t value) noexcept : v(value) {}
     constexpr KFR_INLINE vec(const array_ref<T>& value) noexcept
+        : v(*internal_read_write::read<N, false>(value.data()))
+    {
+    }
+    constexpr KFR_INLINE vec(const array_ref<const T>& value) noexcept
         : v(*internal_read_write::read<N, false>(value.data()))
     {
     }
@@ -690,10 +735,10 @@ struct vec : vec_t<T, N>
     using array_t = T (&)[N];
     KFR_INLINE array_t arr() { return ref_cast<array_t>(v); }
 
-    template <typename U, KFR_ENABLE_IF(std::is_convertible<T, U>::value)>
+    template <typename U, KFR_ENABLE_IF(std::is_convertible<T, U>::value && !std::is_same<U, vec>::value)>
     constexpr operator vec<U, N>() const noexcept
     {
-        return cast<U>(*this);
+        return internal::conversion<vec<U, N>, vec<T, N>>::cast(*this);
     }
 
 private:
@@ -730,6 +775,7 @@ private:
 template <typename T, size_t N>
 struct mask : public vec<T, N>
 {
+    using UT                      = utype<T>;
     using type                    = T;
     constexpr static size_t width = N;
 
@@ -758,23 +804,19 @@ struct mask : public vec<T, N>
     {
     }
 
-    //    template <typename M, typename = u8[sizeof(T) == sizeof(M)]>
-    //    constexpr KFR_INLINE mask(mask<M, N> value) : base(reinterpret_cast<const vec<T, N>&>(value))
-    //    {
-    //    }
-    constexpr KFR_INLINE mask operator~() const { return bitcast<T>(~ubitcast(this->v)); }
-    constexpr KFR_INLINE mask operator&(const vec<T, N>& x) const
+    friend constexpr KFR_INLINE mask operator&(const mask& x, const mask& y)
     {
-        return bitcast<T>(ubitcast(this->v) & ubitcast(x.v));
+        return vec_op<T>::band(x.v, y.v);
     }
-    constexpr KFR_INLINE mask operator|(const vec<T, N>& x) const
+    friend constexpr KFR_INLINE mask operator|(const mask& x, const mask& y)
     {
-        return bitcast<T>(ubitcast(this->v) | ubitcast(x.v));
+        return vec_op<T>::bor(x.v, y.v);
     }
-    constexpr KFR_INLINE mask operator^(const vec<T, N>& x) const
+    friend constexpr KFR_INLINE mask operator^(const mask& x, const mask& y)
     {
-        return bitcast<T>(ubitcast(this->v) ^ ubitcast(x.v));
+        return vec_op<T>::bxor(x.v, y.v);
     }
+    friend constexpr KFR_INLINE mask operator~(const mask& x) { return vec_op<T>::bnot(x.v); }
 
     constexpr KFR_INLINE mask operator&&(const mask& x) const { return *this & x; }
     constexpr KFR_INLINE mask operator||(const mask& x) const { return *this | x; }
@@ -794,8 +836,8 @@ struct mask : public vec<T, N>
     KFR_INLINE bool operator[](size_t index) const { return ibitcast(this->v[index]) < 0; }
 };
 
-template <typename T, size_t N>
-using cvec = vec<T, N * 2>;
+template <typename T, size_t N1, size_t N2 = N1>
+using mat = vec<vec<T, N1>, N2>;
 
 namespace internal
 {
@@ -1171,7 +1213,7 @@ template <typename T, size_t N>
 constexpr KFR_INLINE vec<T, N> zerovector()
 {
     constexpr size_t width = N * compound_type_traits<T>::width;
-    return subcast<T>(vec<subtype<T>, width>(simd<subtype<T>, width>()));
+    return compcast<T>(vec<subtype<T>, width>(simd<subtype<T>, width>()));
 }
 
 template <typename T, size_t N>
@@ -1285,10 +1327,12 @@ namespace cometa
 template <typename T, size_t N>
 struct compound_type_traits<kfr::simd<T, N>>
 {
-    using subtype                   = T;
-    using deep_subtype              = cometa::deep_subtype<T>;
-    constexpr static size_t width   = N;
-    constexpr static bool is_scalar = false;
+    using subtype                      = T;
+    using deep_subtype                 = cometa::deep_subtype<T>;
+    constexpr static size_t width      = N;
+    constexpr static size_t deep_width = width * compound_type_traits<T>::width;
+    constexpr static bool is_scalar    = false;
+    constexpr static size_t depth      = cometa::compound_type_traits<T>::depth + 1;
     template <typename U>
     using rebind = kfr::simd<U, N>;
     template <typename U>
@@ -1300,10 +1344,12 @@ struct compound_type_traits<kfr::simd<T, N>>
 template <typename T, size_t N>
 struct compound_type_traits<kfr::vec<T, N>>
 {
-    using subtype                   = T;
-    using deep_subtype              = cometa::deep_subtype<T>;
-    constexpr static size_t width   = N;
-    constexpr static bool is_scalar = false;
+    using subtype                      = T;
+    using deep_subtype                 = cometa::deep_subtype<T>;
+    constexpr static size_t width      = N;
+    constexpr static size_t deep_width = width * compound_type_traits<T>::width;
+    constexpr static bool is_scalar    = false;
+    constexpr static size_t depth      = cometa::compound_type_traits<T>::depth + 1;
     template <typename U>
     using rebind = kfr::vec<U, N>;
     template <typename U>
@@ -1315,10 +1361,12 @@ struct compound_type_traits<kfr::vec<T, N>>
 template <typename T, size_t N>
 struct compound_type_traits<kfr::mask<T, N>>
 {
-    using subtype                   = T;
-    using deep_subtype              = cometa::deep_subtype<T>;
-    constexpr static size_t width   = N;
-    constexpr static bool is_scalar = false;
+    using subtype                      = T;
+    using deep_subtype                 = cometa::deep_subtype<T>;
+    constexpr static size_t width      = N;
+    constexpr static size_t deep_width = width * compound_type_traits<T>::width;
+    constexpr static bool is_scalar    = false;
+    constexpr static size_t depth      = cometa::compound_type_traits<T>::depth + 1;
     template <typename U>
     using rebind = kfr::mask<U, N>;
     template <typename U>

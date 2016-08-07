@@ -135,10 +135,12 @@ constexpr size_t typeindex()
 template <typename T>
 struct compound_type_traits
 {
-    constexpr static size_t width   = 1;
-    using subtype                   = T;
-    using deep_subtype              = T;
-    constexpr static bool is_scalar = true;
+    constexpr static size_t width      = 1;
+    constexpr static size_t deep_width = width;
+    using subtype                      = T;
+    using deep_subtype                 = T;
+    constexpr static size_t depth      = 0;
+    constexpr static bool is_scalar    = true;
 
     template <typename U>
     using rebind = U;
@@ -166,10 +168,12 @@ using deep_rebind = typename compound_type_traits<T>::template deep_rebind<SubTy
 template <typename T>
 struct compound_type_traits<std::pair<T, T>>
 {
-    constexpr static size_t width   = 2;
-    using subtype                   = T;
-    using deep_subtype              = cometa::deep_subtype<T>;
-    constexpr static bool is_scalar = false;
+    constexpr static size_t width      = 2;
+    constexpr static size_t deep_width = width * compound_type_traits<T>::width;
+    using subtype                      = T;
+    using deep_subtype                 = cometa::deep_subtype<T>;
+    constexpr static bool is_scalar    = false;
+    constexpr static size_t depth      = cometa::compound_type_traits<T>::depth + 1;
 
     template <typename U>
     using rebind = std::pair<U, U>;
