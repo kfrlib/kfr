@@ -376,11 +376,11 @@ struct shuffle_index_outputright
 }
 
 template <size_t elements, typename T, size_t N>
-KFR_INLINE vec<T, N> swap(vec<T, N> x)
+KFR_INLINE vec<T, N> swap(const vec<T, N>& x)
 {
     return shufflevector<N, internal::shuffle_index_swap<elements>>(x);
 }
-KFR_FN(swap)
+CMT_FN_TPL((size_t elements), (elements), swap)
 
 template <size_t shift, typename T, size_t N>
 KFR_INLINE vec<T, N> rotatetwo(const vec<T, N>& lo, const vec<T, N>& hi)
@@ -519,6 +519,11 @@ template <size_t groupsize = 1, typename T, size_t N>
 KFR_INLINE vec<T, N> reverse(const vec<T, N>& x)
 {
     return shufflevector<N, internal::shuffle_index_reverse<N / groupsize>, groupsize>(x);
+}
+template <typename T, size_t N1, size_t N2>
+KFR_INLINE vec<vec<T, N1>, N2> reverse(const vec<vec<T, N1>, N2>& x)
+{
+    return *swap<N1>(flatten(x));
 }
 KFR_FN(reverse)
 
