@@ -52,7 +52,7 @@ struct expression_short_fir : expression<E1>
     {
     }
     template <typename U, size_t N>
-    KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x) const
+    CMT_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x) const
     {
         vec<T, N> in = cast<T>(this->argument_first(index, x));
 
@@ -75,14 +75,14 @@ struct expression_fir : expression<E1>
     {
     }
     template <typename U, size_t N>
-    KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x) const
+    CMT_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x) const
     {
         const size_t tapcount = taps.size();
         const vec<T, N> input = cast<T>(this->argument_first(index, x));
 
         vec<T, N> output;
         size_t cursor = delayline_cursor;
-        KFR_LOOP_NOUNROLL
+        CMT_LOOP_NOUNROLL
         for (size_t i = 0; i < N; i++)
         {
             delayline.ringbuf_write(cursor, input[i]);
@@ -99,12 +99,12 @@ struct expression_fir : expression<E1>
 }
 
 template <typename T, typename E1, size_t Tag>
-KFR_INLINE internal::expression_fir<T, E1> fir(E1&& e1, const univector<T, Tag>& taps)
+CMT_INLINE internal::expression_fir<T, E1> fir(E1&& e1, const univector<T, Tag>& taps)
 {
     return internal::expression_fir<T, E1>(std::forward<E1>(e1), taps.ref());
 }
 template <typename T, size_t TapCount, typename E1>
-KFR_INLINE internal::expression_short_fir<TapCount, T, E1> short_fir(E1&& e1,
+CMT_INLINE internal::expression_short_fir<TapCount, T, E1> short_fir(E1&& e1,
                                                                      const univector<T, TapCount>& taps)
 {
     static_assert(TapCount >= 1 && TapCount < 16, "Use short_fir only for small FIR filters");

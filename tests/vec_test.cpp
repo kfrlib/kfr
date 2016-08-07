@@ -65,7 +65,7 @@ TEST(vec_apply)
     CHECK(apply(fn_sqr(), make_vector(1, 2, 3, 4, 5)) == make_vector(1, 4, 9, 16, 25));
 }
 
-#ifdef CID_ARCH_SSE
+#ifdef CMT_ARCH_SSE
 TEST(vec_tovec)
 {
     const __m128 x = _mm_set_ps(4.f, 3.f, 2.f, 1.f);

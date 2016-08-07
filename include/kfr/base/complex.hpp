@@ -157,41 +157,41 @@ struct vec_op<complex<T>> : private vec_op<T>
 };
 
 template <typename T, size_t N>
-KFR_INLINE vec<complex<T>, N> cdupreal(const vec<complex<T>, N>& x)
+CMT_INLINE vec<complex<T>, N> cdupreal(const vec<complex<T>, N>& x)
 {
     return compcast<complex<T>>(dupeven(compcast<T>(x)));
 }
 KFR_FN(cdupreal)
 
 template <typename T, size_t N>
-KFR_INLINE vec<complex<T>, N> cdupimag(const vec<complex<T>, N>& x)
+CMT_INLINE vec<complex<T>, N> cdupimag(const vec<complex<T>, N>& x)
 {
     return compcast<complex<T>>(dupodd(compcast<T>(x)));
 }
 KFR_FN(cdupimag)
 
 template <typename T, size_t N>
-KFR_INLINE vec<complex<T>, N> cswapreim(const vec<complex<T>, N>& x)
+CMT_INLINE vec<complex<T>, N> cswapreim(const vec<complex<T>, N>& x)
 {
     return compcast<complex<T>>(swap<2>(compcast<T>(x)));
 }
 KFR_FN(cswapreim)
 
 template <typename T, size_t N>
-KFR_INLINE vec<complex<T>, N> cnegreal(const vec<complex<T>, N>& x)
+CMT_INLINE vec<complex<T>, N> cnegreal(const vec<complex<T>, N>& x)
 {
     return x ^ complex<T>(-T(), T());
 }
 KFR_FN(cnegreal)
 template <typename T, size_t N>
-KFR_INLINE vec<complex<T>, N> cnegimag(const vec<complex<T>, N>& x)
+CMT_INLINE vec<complex<T>, N> cnegimag(const vec<complex<T>, N>& x)
 {
     return x ^ complex<T>(T(), -T());
 }
 KFR_FN(cnegimag)
 
 template <typename T, size_t N>
-KFR_INLINE vec<complex<T>, N> cconj(const vec<complex<T>, N>& x)
+CMT_INLINE vec<complex<T>, N> cconj(const vec<complex<T>, N>& x)
 {
     return cnegimag(x);
 }
@@ -235,24 +235,24 @@ struct conversion<vec<complex<To>, N>, vec<From, N>>
 }
 
 template <typename T, size_t N>
-constexpr KFR_INLINE vec<complex<T>, N / 2> ccomp(const vec<T, N>& x)
+constexpr CMT_INLINE vec<complex<T>, N / 2> ccomp(const vec<T, N>& x)
 {
     return compcast<complex<T>>(x);
 }
 
 template <typename T, size_t N>
-constexpr KFR_INLINE vec<T, N * 2> cdecom(const vec<complex<T>, N>& x)
+constexpr CMT_INLINE vec<T, N * 2> cdecom(const vec<complex<T>, N>& x)
 {
     return compcast<T>(x);
 }
 
 template <typename T>
-constexpr KFR_INLINE T real(const complex<T>& value)
+constexpr CMT_INLINE T real(const complex<T>& value)
 {
     return value.real();
 }
 template <typename T, size_t N>
-constexpr KFR_INLINE vec<T, N> real(const vec<complex<T>, N>& value)
+constexpr CMT_INLINE vec<T, N> real(const vec<complex<T>, N>& value)
 {
     return even(compcast<T>(value));
 }
@@ -264,36 +264,36 @@ using realftype = ftype<decltype(kfr::real(std::declval<T>()))>;
 
 KFR_FN(real)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INLINE internal::expression_function<fn_real, E1> real(E1&& x)
+CMT_INLINE internal::expression_function<fn_real, E1> real(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
 
 template <typename T>
-constexpr KFR_INLINE T imag(const complex<T>& value)
+constexpr CMT_INLINE T imag(const complex<T>& value)
 {
     return value.imag();
 }
 template <typename T, size_t N>
-constexpr KFR_INLINE vec<T, N> imag(const vec<complex<T>, N>& value)
+constexpr CMT_INLINE vec<T, N> imag(const vec<complex<T>, N>& value)
 {
     return odd(compcast<T>(value));
 }
 KFR_FN(imag)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INLINE internal::expression_function<fn_imag, E1> imag(E1&& x)
+CMT_INLINE internal::expression_function<fn_imag, E1> imag(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
 
 template <typename T1, typename T2 = T1, size_t N, typename T = common_type<T1, T2>>
-constexpr KFR_INLINE vec<complex<T>, N> make_complex(const vec<T1, N>& real, const vec<T2, N>& imag = T2(0))
+constexpr CMT_INLINE vec<complex<T>, N> make_complex(const vec<T1, N>& real, const vec<T2, N>& imag = T2(0))
 {
     return compcast<complex<T>>(interleave(cast<T>(real), cast<T>(imag)));
 }
 
 template <typename T1, typename T2 = T1, typename T = common_type<T1, T2>>
-constexpr KFR_INLINE complex<T> make_complex(T1 real, T2 imag = T2(0))
+constexpr CMT_INLINE complex<T> make_complex(T1 real, T2 imag = T2(0))
 {
     return complex<T>(cast<T>(real), cast<T>(imag));
 }

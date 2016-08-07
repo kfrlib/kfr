@@ -38,12 +38,12 @@ namespace internal
 struct stereo_matrix
 {
     template <typename T, size_t N>
-    KFR_INLINE vec<vec<T, 2>, N> operator()(const vec<vec<T, 2>, N>& x) const
+    CMT_INLINE vec<vec<T, 2>, N> operator()(const vec<vec<T, 2>, N>& x) const
     {
         return process(x, csizeseq<N>);
     }
     template <typename T, size_t N, size_t... indices>
-    KFR_INLINE vec<vec<T, 2>, N> process(const vec<vec<T, 2>, N>& x, csizes_t<indices...>) const
+    CMT_INLINE vec<vec<T, 2>, N> process(const vec<vec<T, 2>, N>& x, csizes_t<indices...>) const
     {
         return vec<vec<T, 2>, N>(hadd(transpose(x[indices] * matrix))...);
     }

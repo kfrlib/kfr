@@ -51,7 +51,7 @@ namespace intrinsics
 #define KFR_mm256_trunc_pd(V) _mm256_round_pd((V), _MM_FROUND_TRUNC)
 #define KFR_mm256_roundnearest_pd(V) _mm256_round_pd((V), _MM_FROUND_NINT)
 
-#if defined CID_ARCH_SSE41
+#if defined CMT_ARCH_SSE41
 
 KFR_SINTRIN f32sse floor(const f32sse& value) { return _mm_floor_ps(*value); }
 KFR_SINTRIN f32sse ceil(const f32sse& value) { return _mm_ceil_ps(*value); }
@@ -64,7 +64,7 @@ KFR_SINTRIN f64sse round(const f64sse& value) { return KFR_mm_roundnearest_pd(*v
 KFR_SINTRIN f32sse fract(const f32sse& x) { return x - floor(x); }
 KFR_SINTRIN f64sse fract(const f64sse& x) { return x - floor(x); }
 
-#if defined CID_ARCH_AVX
+#if defined CMT_ARCH_AVX
 
 KFR_SINTRIN f32avx floor(const f32avx& value) { return _mm256_floor_ps(*value); }
 KFR_SINTRIN f32avx ceil(const f32avx& value) { return _mm256_ceil_ps(*value); }
@@ -320,7 +320,7 @@ KFR_INTRIN internal::expression_function<fn::itrunc, E1> itrunc(E1&& x)
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
-KFR_INLINE vec<T, N> fmod(const vec<T, N>& x, const vec<T, N>& y)
+CMT_INLINE vec<T, N> fmod(const vec<T, N>& x, const vec<T, N>& y)
 {
     return x - trunc(x / y) * y;
 }
@@ -329,12 +329,12 @@ KFR_FN_S(fmod)
 KFR_FN(fmod)
 
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
-constexpr KFR_INLINE vec<T, N> rem(const vec<T, N>& x, const vec<T, N>& y)
+constexpr CMT_INLINE vec<T, N> rem(const vec<T, N>& x, const vec<T, N>& y)
 {
     return x % y;
 }
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
-KFR_INLINE vec<T, N> rem(const vec<T, N>& x, const vec<T, N>& y)
+CMT_INLINE vec<T, N> rem(const vec<T, N>& x, const vec<T, N>& y)
 {
     return fmod(x, y);
 }

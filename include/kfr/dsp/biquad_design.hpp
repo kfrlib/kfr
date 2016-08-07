@@ -29,7 +29,7 @@ namespace kfr
 {
 
 template <typename T>
-KFR_INLINE biquad_params<T> biquad_allpass(T frequency, T Q)
+CMT_INLINE biquad_params<T> biquad_allpass(T frequency, T Q)
 {
     const T alpha = std::sin(frequency) / 2.0 * Q;
     const T cs    = std::cos(frequency);
@@ -44,7 +44,7 @@ KFR_INLINE biquad_params<T> biquad_allpass(T frequency, T Q)
 }
 
 template <typename T>
-KFR_INLINE biquad_params<T> biquad_lowpass(T frequency, T Q)
+CMT_INLINE biquad_params<T> biquad_lowpass(T frequency, T Q)
 {
     const T K    = std::tan(c_pi<T, 1> * frequency);
     const T K2   = K * K;
@@ -58,7 +58,7 @@ KFR_INLINE biquad_params<T> biquad_lowpass(T frequency, T Q)
 }
 
 template <typename T>
-KFR_INLINE biquad_params<T> biquad_highpass(T frequency, T Q)
+CMT_INLINE biquad_params<T> biquad_highpass(T frequency, T Q)
 {
     const T K    = std::tan(c_pi<T, 1> * frequency);
     const T K2   = K * K;
@@ -72,7 +72,7 @@ KFR_INLINE biquad_params<T> biquad_highpass(T frequency, T Q)
 }
 
 template <typename T>
-KFR_INLINE biquad_params<T> biquad_bandpass(T frequency, T Q)
+CMT_INLINE biquad_params<T> biquad_bandpass(T frequency, T Q)
 {
     const T K    = std::tan(c_pi<T, 1> * frequency);
     const T K2   = K * K;
@@ -86,7 +86,7 @@ KFR_INLINE biquad_params<T> biquad_bandpass(T frequency, T Q)
 }
 
 template <typename T>
-KFR_INLINE biquad_params<T> biquad_notch(T frequency, T Q)
+CMT_INLINE biquad_params<T> biquad_notch(T frequency, T Q)
 {
     const T K    = std::tan(c_pi<T, 1> * frequency);
     const T K2   = K * K;
@@ -100,7 +100,7 @@ KFR_INLINE biquad_params<T> biquad_notch(T frequency, T Q)
 }
 
 template <typename T>
-KFR_INLINE biquad_params<T> biquad_peak(T frequency, T Q, T gain)
+CMT_INLINE biquad_params<T> biquad_peak(T frequency, T Q, T gain)
 {
     biquad_params<T> result;
     const T K  = std::tan(c_pi<T, 1> * frequency);
@@ -131,7 +131,7 @@ KFR_INLINE biquad_params<T> biquad_peak(T frequency, T Q, T gain)
 }
 
 template <typename T>
-KFR_INLINE biquad_params<T> biquad_lowshelf(T frequency, T gain)
+CMT_INLINE biquad_params<T> biquad_lowshelf(T frequency, T gain)
 {
     biquad_params<T> result;
     const T K  = std::tan(c_pi<T, 1> * frequency);
@@ -162,7 +162,7 @@ KFR_INLINE biquad_params<T> biquad_lowshelf(T frequency, T gain)
 }
 
 template <typename T>
-KFR_INLINE biquad_params<T> biquad_highshelf(T frequency, T gain)
+CMT_INLINE biquad_params<T> biquad_highshelf(T frequency, T gain)
 {
     biquad_params<T> result;
     const T K  = std::tan(c_pi<T, 1> * frequency);

@@ -130,7 +130,7 @@ struct expression_biquads : public expression<E1>
         const vec<T, width> in = this->argument_first(index, t);
         vec<T, width> out;
 
-        KFR_LOOP_UNROLL
+        CMT_LOOP_UNROLL
         for (size_t i = 0; i < width; i++)
         {
             bq.out = process(bq, insertleft(in[i], bq.out));
@@ -151,13 +151,13 @@ struct expression_biquads : public expression<E1>
 }
 
 template <typename T, typename E1>
-KFR_INLINE internal::expression_biquads<1, T, internal::arg<E1>> biquad(const biquad_params<T>& bq, E1&& e1)
+CMT_INLINE internal::expression_biquads<1, T, internal::arg<E1>> biquad(const biquad_params<T>& bq, E1&& e1)
 {
     const biquad_params<T> bqs[1] = { bq };
     return internal::expression_biquads<1, T, internal::arg<E1>>(bqs, std::forward<E1>(e1));
 }
 template <size_t filters, typename T, typename E1>
-KFR_INLINE internal::expression_biquads<filters, T, internal::arg<E1>> biquad(
+CMT_INLINE internal::expression_biquads<filters, T, internal::arg<E1>> biquad(
     const biquad_params<T> (&bq)[filters], E1&& e1)
 {
     return internal::expression_biquads<filters, T, internal::arg<E1>>(bq, std::forward<E1>(e1));

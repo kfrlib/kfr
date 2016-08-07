@@ -41,7 +41,7 @@ struct generator : input_expression
     using type                    = T;
 
     template <typename U, size_t N>
-    KFR_INLINE vec<U, N> operator()(cinput_t, size_t, vec_t<U, N> t) const
+    CMT_INLINE vec<U, N> operator()(cinput_t, size_t, vec_t<U, N> t) const
     {
         return generate(t);
     }
@@ -65,7 +65,7 @@ protected:
     }
 
     template <size_t N, KFR_ENABLE_IF(N == width)>
-    KFR_INLINE vec<T, N> generate(vec_t<T, N>) const
+    CMT_INLINE vec<T, N> generate(vec_t<T, N>) const
     {
         const vec<T, N> result = value;
         call_next();
@@ -73,7 +73,7 @@ protected:
     }
 
     template <size_t N, KFR_ENABLE_IF(N < width)>
-    KFR_INLINE vec<T, N> generate(vec_t<T, N>) const
+    CMT_INLINE vec<T, N> generate(vec_t<T, N>) const
     {
         const vec<T, N> result = narrow<N>(value);
         shift(csize<N>);
@@ -81,7 +81,7 @@ protected:
     }
 
     template <size_t N, KFR_ENABLE_IF(N > width)>
-    KFR_INLINE vec<T, N> generate(vec_t<T, N> x) const
+    CMT_INLINE vec<T, N> generate(vec_t<T, N> x) const
     {
         const auto lo = generate(low(x));
         const auto hi = generate(high(x));
@@ -99,9 +99,9 @@ struct generator_linear : generator<T, width, generator_linear<T, width>>
         this->resync(start);
     }
 
-    KFR_INLINE void sync(T start) const noexcept { this->value = start + enumerate<T, width>() * step; }
+    CMT_INLINE void sync(T start) const noexcept { this->value = start + enumerate<T, width>() * step; }
 
-    KFR_INLINE void next() const noexcept { this->value += vstep; }
+    CMT_INLINE void next() const noexcept { this->value += vstep; }
 
 protected:
     T step;
@@ -116,9 +116,9 @@ struct generator_exp : generator<T, width, generator_exp<T, width>>
         this->resync(start);
     }
 
-    KFR_INLINE void sync(T start) const noexcept { this->value = exp(start + enumerate<T, width>() * step); }
+    CMT_INLINE void sync(T start) const noexcept { this->value = exp(start + enumerate<T, width>() * step); }
 
-    KFR_INLINE void next() const noexcept { this->value += this->value * vstep; }
+    CMT_INLINE void next() const noexcept { this->value += this->value * vstep; }
 
 protected:
     T step;
@@ -133,9 +133,9 @@ struct generator_exp2 : generator<T, width, generator_exp2<T, width>>
         this->resync(start);
     }
 
-    KFR_INLINE void sync(T start) const noexcept { this->value = exp2(start + enumerate<T, width>() * step); }
+    CMT_INLINE void sync(T start) const noexcept { this->value = exp2(start + enumerate<T, width>() * step); }
 
-    KFR_INLINE void next() const noexcept { this->value += this->value * vstep; }
+    CMT_INLINE void next() const noexcept { this->value += this->value * vstep; }
 
 protected:
     T step;
@@ -150,9 +150,9 @@ struct generator_cossin : generator<T, width, generator_cossin<T, width>>
     {
         this->resync(start);
     }
-    KFR_INLINE void sync(T start) const noexcept { this->value = init_cossin(step, start); }
+    CMT_INLINE void sync(T start) const noexcept { this->value = init_cossin(step, start); }
 
-    KFR_INLINE void next() const noexcept
+    CMT_INLINE void next() const noexcept
     {
         this->value = this->value - subadd(alpha * this->value, beta * swap<2>(this->value));
     }
@@ -161,7 +161,7 @@ protected:
     T step;
     T alpha;
     T beta;
-    KFR_NOINLINE static vec<T, width> init_cossin(T w, T phase)
+    CMT_NOINLINE static vec<T, width> init_cossin(T w, T phase)
     {
         return cossin(dup(phase + enumerate<T, width / 2>() * w));
     }
@@ -175,14 +175,14 @@ struct generator_sin : generator<T, width, generator_sin<T, width>>
     {
         this->resync(start);
     }
-    KFR_INLINE void sync(T start) const noexcept
+    CMT_INLINE void sync(T start) const noexcept
     {
         const vec<T, width* 2> cs = splitpairs(cossin(dup(start + enumerate<T, width>() * step)));
         this->cos_value = low(cs);
         this->value     = high(cs);
     }
 
-    KFR_INLINE void next() const noexcept
+    CMT_INLINE void next() const noexcept
     {
         const vec<T, width> c = this->cos_value;
         const vec<T, width> s = this->value;

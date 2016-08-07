@@ -25,7 +25,7 @@
 #include "log_exp.hpp"
 
 #pragma clang diagnostic push
-#if CID_HAS_WARNING("-Wc99-extensions")
+#if CMT_HAS_WARNING("-Wc99-extensions")
 #pragma clang diagnostic ignored "-Wc99-extensions"
 #endif
 
@@ -46,7 +46,7 @@ KFR_SINTRIN vec<T, N> gamma(const vec<T, N>& z)
 {
     constexpr size_t Count = arraysize(gamma_precalc<T>);
     vec<T, N> accm = gamma_precalc<T>[0];
-    KFR_LOOP_UNROLL
+    CMT_LOOP_UNROLL
     for (size_t k = 1; k < Count; k++)
         accm += gamma_precalc<T>[k] / (z + cast<utype<T>>(k));
     accm *= exp(-(z + Count)) * pow(z + Count, z + 0.5);

@@ -32,7 +32,7 @@ namespace kfr
 namespace intrinsics
 {
 
-#if defined CID_ARCH_SSSE3
+#if defined CMT_ARCH_SSSE3
 
 // floating point
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
@@ -50,7 +50,7 @@ KFR_SINTRIN u32sse abs(const u32sse& x) { return x; }
 KFR_SINTRIN u16sse abs(const u16sse& x) { return x; }
 KFR_SINTRIN u8sse abs(const u8sse& x) { return x; }
 
-#if defined CID_ARCH_AVX2
+#if defined CMT_ARCH_AVX2
 KFR_SINTRIN i64avx abs(const i64avx& x) { return select(x >= 0, x, -x); }
 KFR_SINTRIN i32avx abs(const i32avx& x) { return _mm256_abs_epi32(*x); }
 KFR_SINTRIN i16avx abs(const i16avx& x) { return _mm256_abs_epi16(*x); }
@@ -63,12 +63,12 @@ KFR_SINTRIN u8avx abs(const u8avx& x) { return x; }
 
 KFR_HANDLE_ALL_SIZES_NOT_F_1(abs)
 
-#elif defined CID_ARCH_NEON
+#elif defined CMT_ARCH_NEON
 
 KFR_SINTRIN i8neon abs(const i8neon& x) { return vabsq_s8(*x); }
 KFR_SINTRIN i16neon abs(const i16neon& x) { return vabsq_s16(*x); }
 KFR_SINTRIN i32neon abs(const i32neon& x) { return vabsq_s32(*x); }
-#if defined CID_ARCH_NEON64
+#if defined CMT_ARCH_NEON64
 KFR_SINTRIN i64neon abs(const i64neon& x) { return vabsq_s64(*x); }
 #else
 KFR_SINTRIN i64neon abs(const i64neon& x) { return select(x >= 0, x, -x); }
@@ -80,7 +80,7 @@ KFR_SINTRIN u32neon abs(const u32neon& x) { return x; }
 KFR_SINTRIN u64neon abs(const u64neon& x) { return x; }
 
 KFR_SINTRIN f32neon abs(const f32neon& x) { return vabsq_f32(*x); }
-#if defined CID_ARCH_NEON64
+#if defined CMT_ARCH_NEON64
 KFR_SINTRIN f64neon abs(const f64neon& x) { return vabsq_f64(*x); }
 #else
 KFR_SINTRIN f64neon abs(const f64neon& x) { return x & internal::invhighbitmask<f64>; }

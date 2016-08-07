@@ -46,9 +46,9 @@ struct bitmask
     type value;
 };
 
-#if defined CID_ARCH_SSE2
+#if defined CMT_ARCH_SSE2
 
-#if defined CID_ARCH_SSE41
+#if defined CMT_ARCH_SSE41
 
 KFR_SINTRIN bool bittestany(const u8sse& x) { return !_mm_testz_si128(*x, *x); }
 KFR_SINTRIN bool bittestany(const u16sse& x) { return !_mm_testz_si128(*x, *x); }
@@ -69,7 +69,7 @@ KFR_SINTRIN bool bittestall(const i32sse& x) { return _mm_testc_si128(*x, *allon
 KFR_SINTRIN bool bittestall(const i64sse& x) { return _mm_testc_si128(*x, *allonesvector(x)); }
 #endif
 
-#if defined CID_ARCH_AVX
+#if defined CMT_ARCH_AVX
 KFR_SINTRIN bool bittestany(const f32sse& x) { return !_mm_testz_ps(*x, *x); }
 KFR_SINTRIN bool bittestany(const f64sse& x) { return !_mm_testz_pd(*x, *x); }
 KFR_SINTRIN bool bittestall(const f32sse& x) { return _mm_testc_ps(*x, *allonesvector(x)); }
@@ -98,7 +98,7 @@ KFR_SINTRIN bool bittestall(const i8avx& x) { return _mm256_testc_si256(*x, *all
 KFR_SINTRIN bool bittestall(const i16avx& x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(const i32avx& x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(const i64avx& x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
-#elif defined CID_ARCH_SSE41
+#elif defined CMT_ARCH_SSE41
 KFR_SINTRIN bool bittestany(const f32sse& x) { return !_mm_testz_si128(*bitcast<u8>(x), *bitcast<u8>(x)); }
 KFR_SINTRIN bool bittestany(const f64sse& x) { return !_mm_testz_si128(*bitcast<u8>(x), *bitcast<u8>(x)); }
 KFR_SINTRIN bool bittestall(const f32sse& x)
@@ -111,7 +111,7 @@ KFR_SINTRIN bool bittestall(const f64sse& x)
 }
 #endif
 
-#if !defined CID_ARCH_SSE41
+#if !defined CMT_ARCH_SSE41
 
 KFR_SINTRIN bool bittestany(const f32sse& x) { return _mm_movemask_ps(*x); }
 KFR_SINTRIN bool bittestany(const f64sse& x) { return _mm_movemask_pd(*x); }
@@ -158,7 +158,7 @@ KFR_SINTRIN bool bittestany(const vec<T, N>& a)
     return bittestany(low(a)) || bittestany(high(a));
 }
 
-#elif CID_ARCH_NEON
+#elif CMT_ARCH_NEON
 
 KFR_SINTRIN bool bittestall(const u32neon& a)
 {

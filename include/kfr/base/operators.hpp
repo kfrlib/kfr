@@ -32,18 +32,18 @@ namespace internal
 {
 
 template <typename T, typename ReduceFn>
-KFR_INLINE T horizontal_impl(const vec<T, 1>& value, ReduceFn&&)
+CMT_INLINE T horizontal_impl(const vec<T, 1>& value, ReduceFn&&)
 {
     return T(value[0]);
 }
 
 template <typename T, size_t N, typename ReduceFn, KFR_ENABLE_IF(N > 1 && is_poweroftwo(N))>
-KFR_INLINE T horizontal_impl(const vec<T, N>& value, ReduceFn&& reduce)
+CMT_INLINE T horizontal_impl(const vec<T, N>& value, ReduceFn&& reduce)
 {
     return horizontal_impl(reduce(low(value), high(value)), std::forward<ReduceFn>(reduce));
 }
 template <typename T, size_t N, typename ReduceFn, KFR_ENABLE_IF(N > 1 && !is_poweroftwo(N))>
-KFR_INLINE T horizontal_impl(const vec<T, N>& value, ReduceFn&& reduce)
+CMT_INLINE T horizontal_impl(const vec<T, N>& value, ReduceFn&& reduce)
 {
     const T initial = reduce(initialvalue<T>());
     return horizontal_impl(widen<next_poweroftwo(N)>(value, initial), std::forward<ReduceFn>(reduce));
@@ -51,7 +51,7 @@ KFR_INLINE T horizontal_impl(const vec<T, N>& value, ReduceFn&& reduce)
 }
 
 template <typename T, size_t N, typename ReduceFn>
-KFR_INLINE T horizontal(const vec<T, N>& value, ReduceFn&& reduce)
+CMT_INLINE T horizontal(const vec<T, N>& value, ReduceFn&& reduce)
 {
     return internal::horizontal_impl(value, std::forward<ReduceFn>(reduce));
 }
@@ -74,12 +74,12 @@ constexpr inline T add(initialvalue<T>)
 KFR_FN(add)
 
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INLINE internal::expression_function<fn_add, E1, E2> add(E1&& x, E2&& y)
+CMT_INLINE internal::expression_function<fn_add, E1, E2> add(E1&& x, E2&& y)
 {
     return { fn_add(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INLINE internal::expression_function<fn_add, E1> add(E1&& x, E2&& y, E3&& z)
+CMT_INLINE internal::expression_function<fn_add, E1> add(E1&& x, E2&& y, E3&& z)
 {
     return { fn_add(), std::forward<E1>(x), std::forward<E2>(y), std::forward<E3>(z) };
 }
@@ -97,7 +97,7 @@ constexpr inline T sub(initialvalue<T>)
 KFR_FN(sub)
 
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INLINE internal::expression_function<fn_sub, E1, E2> sub(E1&& x, E2&& y)
+CMT_INLINE internal::expression_function<fn_sub, E1, E2> sub(E1&& x, E2&& y)
 {
     return { fn_sub(), std::forward<E1>(x), std::forward<E2>(y) };
 }
@@ -120,12 +120,12 @@ constexpr inline T mul(initialvalue<T>)
 }
 KFR_FN(mul)
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INLINE internal::expression_function<fn_mul, E1, E2> mul(E1&& x, E2&& y)
+CMT_INLINE internal::expression_function<fn_mul, E1, E2> mul(E1&& x, E2&& y)
 {
     return { fn_mul(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INLINE internal::expression_function<fn_mul, E1> mul(E1&& x, E2&& y, E3&& z)
+CMT_INLINE internal::expression_function<fn_mul, E1> mul(E1&& x, E2&& y, E3&& z)
 {
     return { fn_mul(), std::forward<E1>(x), std::forward<E2>(y), std::forward<E3>(z) };
 }
@@ -137,7 +137,7 @@ constexpr inline T1 sqr(T1 x)
 }
 KFR_FN(sqr)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INLINE internal::expression_function<fn_sqr, E1> sqr(E1&& x)
+CMT_INLINE internal::expression_function<fn_sqr, E1> sqr(E1&& x)
 {
     return { fn_sqr(), std::forward<E1>(x) };
 }
@@ -150,7 +150,7 @@ constexpr inline T1 cub(T1 x)
 KFR_FN(cub)
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INLINE internal::expression_function<fn_cub, E1> cub(E1&& x)
+CMT_INLINE internal::expression_function<fn_cub, E1> cub(E1&& x)
 {
     return { fn_cub(), std::forward<E1>(x) };
 }
@@ -184,22 +184,22 @@ KFR_FN(pow4)
 KFR_FN(pow5)
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INLINE internal::expression_function<fn_pow2, E1> pow2(E1&& x)
+CMT_INLINE internal::expression_function<fn_pow2, E1> pow2(E1&& x)
 {
     return { fn_pow2(), std::forward<E1>(x) };
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INLINE internal::expression_function<fn_pow3, E1> pow3(E1&& x)
+CMT_INLINE internal::expression_function<fn_pow3, E1> pow3(E1&& x)
 {
     return { fn_pow3(), std::forward<E1>(x) };
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INLINE internal::expression_function<fn_pow4, E1> pow4(E1&& x)
+CMT_INLINE internal::expression_function<fn_pow4, E1> pow4(E1&& x)
 {
     return { fn_pow4(), std::forward<E1>(x) };
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INLINE internal::expression_function<fn_pow5, E1> pow5(E1&& x)
+CMT_INLINE internal::expression_function<fn_pow5, E1> pow5(E1&& x)
 {
     return { fn_pow5(), std::forward<E1>(x) };
 }
@@ -225,7 +225,7 @@ constexpr inline T ipow(T x, int base)
 KFR_FN(ipow)
 
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INLINE internal::expression_function<fn_ipow, E1, E2> ipow(E1&& x, E2&& b)
+CMT_INLINE internal::expression_function<fn_ipow, E1, E2> ipow(E1&& x, E2&& b)
 {
     return { fn_ipow(), std::forward<E1>(x), std::forward<E2>(b)
 
@@ -439,13 +439,13 @@ namespace internal
 {
 
 template <typename T1, typename T2>
-constexpr KFR_INLINE T1 horner(T1, T2 c0)
+constexpr CMT_INLINE T1 horner(T1, T2 c0)
 {
     return c0;
 }
 
 template <typename T1, typename T2, typename T3, typename... Ts>
-constexpr KFR_INLINE T1 horner(T1 x, T2 c0, T3 c1, Ts... values)
+constexpr CMT_INLINE T1 horner(T1 x, T2 c0, T3 c1, Ts... values)
 {
     return fmadd(horner(x, c1, values...), x, c0);
 }
@@ -455,7 +455,7 @@ constexpr KFR_INLINE T1 horner(T1 x, T2 c0, T3 c1, Ts... values)
 ///
 /// ``horner(x, 1, 2, 3)`` is equivalent to \(3x^2 + 2x + 1\)
 template <typename T1, typename... Ts>
-constexpr KFR_INLINE T1 horner(T1 x, Ts... c)
+constexpr CMT_INLINE T1 horner(T1 x, Ts... c)
 {
     return internal::horner(x, c...);
 }
@@ -464,7 +464,7 @@ KFR_FN(horner)
 /// Calculate Multiplicative Inverse of `x`
 /// Returns `1/x`
 template <typename T>
-constexpr KFR_INLINE T reciprocal(T x)
+constexpr CMT_INLINE T reciprocal(T x)
 {
     static_assert(std::is_floating_point<subtype<T>>::value, "T must be floating point type");
     return subtype<T>(1) / x;
@@ -472,7 +472,7 @@ constexpr KFR_INLINE T reciprocal(T x)
 KFR_FN(reciprocal)
 
 template <typename T, size_t N>
-KFR_INLINE vec<T, N> mulsign(const vec<T, N>& x, const vec<T, N>& y)
+CMT_INLINE vec<T, N> mulsign(const vec<T, N>& x, const vec<T, N>& y)
 {
     return x ^ (y & internal::highbitmask<T>);
 }
@@ -480,65 +480,65 @@ KFR_FN_S(mulsign)
 KFR_FN(mulsign)
 
 template <typename T, size_t N>
-constexpr KFR_INLINE vec<T, N> copysign(const vec<T, N>& x, const vec<T, N>& y)
+constexpr CMT_INLINE vec<T, N> copysign(const vec<T, N>& x, const vec<T, N>& y)
 {
     return (x & internal::highbitmask<T>) | (y & internal::highbitmask<T>);
 }
 
 template <typename T, size_t N>
-KFR_INLINE mask<T, N> isnan(const vec<T, N>& x)
+CMT_INLINE mask<T, N> isnan(const vec<T, N>& x)
 {
     return x != x;
 }
 
 template <typename T, size_t N>
-KFR_INLINE mask<T, N> isinf(const vec<T, N>& x)
+CMT_INLINE mask<T, N> isinf(const vec<T, N>& x)
 {
     return x == c_infinity<T> || x == -c_infinity<T>;
 }
 
 template <typename T, size_t N>
-KFR_INLINE mask<T, N> isfinite(const vec<T, N>& x)
+CMT_INLINE mask<T, N> isfinite(const vec<T, N>& x)
 {
     return !isnan(x) && !isinf(x);
 }
 
 template <typename T, size_t N>
-KFR_INLINE mask<T, N> isnegative(const vec<T, N>& x)
+CMT_INLINE mask<T, N> isnegative(const vec<T, N>& x)
 {
     return (x & internal::highbitmask<T>) != 0;
 }
 
 template <typename T, size_t N>
-KFR_INLINE mask<T, N> ispositive(const vec<T, N>& x)
+CMT_INLINE mask<T, N> ispositive(const vec<T, N>& x)
 {
     return !isnegative(x);
 }
 
 template <typename T, size_t N>
-KFR_INLINE mask<T, N> iszero(const vec<T, N>& x)
+CMT_INLINE mask<T, N> iszero(const vec<T, N>& x)
 {
     return x == T();
 }
 
 /// Swap byte order
 template <typename T, size_t N, KFR_ENABLE_IF(sizeof(vec<T, N>) > 8)>
-KFR_INLINE vec<T, N> swapbyteorder(const vec<T, N>& x)
+CMT_INLINE vec<T, N> swapbyteorder(const vec<T, N>& x)
 {
     return bitcast<T>(swap<sizeof(T)>(bitcast<u8>(x)));
 }
 template <typename T, KFR_ENABLE_IF(sizeof(T) == 8)>
-KFR_INLINE T swapbyteorder(T x)
+CMT_INLINE T swapbyteorder(T x)
 {
     return reinterpret_cast<const T&>(__builtin_bswap64(reinterpret_cast<const u64&>(x)));
 }
 template <typename T, KFR_ENABLE_IF(sizeof(T) == 4)>
-KFR_INLINE T swapbyteorder(T x)
+CMT_INLINE T swapbyteorder(T x)
 {
     return reinterpret_cast<const T&>(__builtin_bswap32(reinterpret_cast<const u32&>(x)));
 }
 template <typename T, KFR_ENABLE_IF(sizeof(T) == 2)>
-KFR_INLINE T swapbyteorder(T x)
+CMT_INLINE T swapbyteorder(T x)
 {
     return reinterpret_cast<const T&>(__builtin_bswap16(reinterpret_cast<const u16&>(x)));
 }
@@ -546,7 +546,7 @@ KFR_FN(swapbyteorder)
 
 /// Sum all elements of the vector
 template <typename T, size_t N>
-KFR_INLINE T hadd(const vec<T, N>& value)
+CMT_INLINE T hadd(const vec<T, N>& value)
 {
     return horizontal(value, fn_add());
 }
@@ -554,26 +554,26 @@ KFR_FN(hadd)
 
 /// Multiply all elements of the vector
 template <typename T, size_t N>
-KFR_INLINE T hmul(const vec<T, N>& value)
+CMT_INLINE T hmul(const vec<T, N>& value)
 {
     return horizontal(value, fn_mul());
 }
 KFR_FN(hmul)
 
 template <typename T, size_t N>
-KFR_INLINE T hbitwiseand(const vec<T, N>& value)
+CMT_INLINE T hbitwiseand(const vec<T, N>& value)
 {
     return horizontal(value, fn_bitwiseand());
 }
 KFR_FN(hbitwiseand)
 template <typename T, size_t N>
-KFR_INLINE T hbitwiseor(const vec<T, N>& value)
+CMT_INLINE T hbitwiseor(const vec<T, N>& value)
 {
     return horizontal(value, fn_bitwiseor());
 }
 KFR_FN(hbitwiseor)
 template <typename T, size_t N>
-KFR_INLINE T hbitwisexor(const vec<T, N>& value)
+CMT_INLINE T hbitwisexor(const vec<T, N>& value)
 {
     return horizontal(value, fn_bitwisexor());
 }
@@ -581,7 +581,7 @@ KFR_FN(hbitwisexor)
 
 /// Calculate the Dot-Product of two vectors
 template <typename T, size_t N>
-KFR_INLINE T dot(const vec<T, N>& x, const vec<T, N>& y)
+CMT_INLINE T dot(const vec<T, N>& x, const vec<T, N>& y)
 {
     return hadd(x * y);
 }
@@ -589,7 +589,7 @@ KFR_FN(dot)
 
 /// Calculate the Arithmetic mean of all elements in the vector
 template <typename T, size_t N>
-KFR_INLINE T avg(const vec<T, N>& value)
+CMT_INLINE T avg(const vec<T, N>& value)
 {
     return hadd(value) / N;
 }
@@ -597,19 +597,19 @@ KFR_FN(avg)
 
 /// Calculate the RMS of all elements in the vector
 template <typename T, size_t N>
-KFR_INLINE T rms(const vec<T, N>& value)
+CMT_INLINE T rms(const vec<T, N>& value)
 {
     return internal::builtin_sqrt(hadd(value * value) / N);
 }
 KFR_FN(rms)
 
 template <typename T, size_t N, KFR_ENABLE_IF(N >= 2)>
-KFR_INLINE vec<T, N> subadd(const vec<T, N>& a, const vec<T, N>& b)
+CMT_INLINE vec<T, N> subadd(const vec<T, N>& a, const vec<T, N>& b)
 {
     return blend<1, 0>(a + b, a - b);
 }
 template <typename T, size_t N, KFR_ENABLE_IF(N >= 2)>
-KFR_INLINE vec<T, N> addsub(const vec<T, N>& a, const vec<T, N>& b)
+CMT_INLINE vec<T, N> addsub(const vec<T, N>& a, const vec<T, N>& b)
 {
     return blend<0, 1>(a + b, a - b);
 }
@@ -617,26 +617,26 @@ KFR_FN(subadd)
 KFR_FN(addsub)
 
 template <typename T, size_t N>
-KFR_INLINE vec<T, N> negeven(const vec<T, N>& x)
+CMT_INLINE vec<T, N> negeven(const vec<T, N>& x)
 {
     return x ^ broadcast<N>(-T(), T());
 }
 template <typename T, size_t N>
-KFR_INLINE vec<T, N> negodd(const vec<T, N>& x)
+CMT_INLINE vec<T, N> negodd(const vec<T, N>& x)
 {
     return x ^ broadcast<N>(T(), -T());
 }
 
 #define KFR_EXPR_UNARY(fn, op)                                                                               \
     template <typename A1, KFR_ENABLE_IF(is_input_expression<A1>::value)>                                    \
-    KFR_INLINE auto operator op(A1&& a1)->decltype(bind_expression(fn(), std::forward<A1>(a1)))              \
+    CMT_INLINE auto operator op(A1&& a1)->decltype(bind_expression(fn(), std::forward<A1>(a1)))              \
     {                                                                                                        \
         return bind_expression(fn(), std::forward<A1>(a1));                                                  \
     }
 
 #define KFR_EXPR_BINARY(fn, op)                                                                              \
     template <typename A1, typename A2, KFR_ENABLE_IF(is_input_expressions<A1, A2>::value)>                  \
-    KFR_INLINE auto operator op(A1&& a1, A2&& a2)                                                            \
+    CMT_INLINE auto operator op(A1&& a1, A2&& a2)                                                            \
         ->decltype(bind_expression(fn(), std::forward<A1>(a1), std::forward<A2>(a2)))                        \
     {                                                                                                        \
         return bind_expression(fn(), std::forward<A1>(a1), std::forward<A2>(a2));                            \
@@ -661,6 +661,8 @@ KFR_EXPR_BINARY(fn_less, <)
 KFR_EXPR_BINARY(fn_greater, >)
 KFR_EXPR_BINARY(fn_lessorequal, <=)
 KFR_EXPR_BINARY(fn_greaterorequal, >=)
+#undef KFR_EXPR_UNARY
+#undef KFR_EXPR_BINARY
 
 template <typename T, size_t N1, size_t... Ns>
 vec<vec<T, sizeof...(Ns) + 1>, N1> packtranspose(const vec<T, N1>& x, const vec<T, Ns>&... rest)
@@ -684,12 +686,12 @@ struct expression_pack : expression<E...>, output_expression
     constexpr size_type size() const noexcept { return expression<E...>::size(); }
 
     template <typename U, size_t N>
-    KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x) const
+    CMT_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x) const
     {
         return this->call(fn_packtranspose(), index, x);
     }
     template <typename U, size_t N>
-    KFR_INLINE void operator()(coutput_t, size_t index, const vec<vec<U, count>, N>& x)
+    CMT_INLINE void operator()(coutput_t, size_t index, const vec<vec<U, count>, N>& x)
     {
         output(index, x, csizeseq<count>);
     }

@@ -59,7 +59,8 @@ struct sample_rate_converter
 
     constexpr static itype depth = static_cast<itype>(1 << (quality + 1));
 
-    sample_rate_converter(itype interpolation_factor, itype decimation_factor, T scale = T(1), T cutoff = 0.49)
+    sample_rate_converter(itype interpolation_factor, itype decimation_factor, T scale = T(1),
+                          T cutoff = 0.49)
         : input_position(0), output_position(0)
     {
         const i64 gcf = gcd(interpolation_factor, decimation_factor);
@@ -91,7 +92,7 @@ struct sample_rate_converter
         const T s = reciprocal(sum(filter)) * interpolation_factor;
         filter    = filter * s;
     }
-    KFR_INLINE size_t operator()(T* dest, size_t zerosize)
+    CMT_INLINE size_t operator()(T* dest, size_t zerosize)
     {
         size_t outputsize   = 0;
         const itype srcsize = itype(zerosize);
@@ -138,7 +139,7 @@ struct sample_rate_converter
         output_position += outputsize;
         return outputsize;
     }
-    KFR_INLINE size_t operator()(T* dest, univector_ref<const T> src)
+    CMT_INLINE size_t operator()(T* dest, univector_ref<const T> src)
     {
         size_t outputsize   = 0;
         const itype srcsize = itype(src.size());
@@ -203,21 +204,24 @@ struct sample_rate_converter
 }
 
 template <typename T, size_t quality>
-inline internal::sample_rate_converter<T, quality> sample_rate_converter(csize_t<quality>, size_t interpolation_factor,
-                                                 size_t decimation_factor, T scale = T(1), T cutoff = 0.49)
+inline internal::sample_rate_converter<T, quality> sample_rate_converter(csize_t<quality>,
+                                                                         size_t interpolation_factor,
+                                                                         size_t decimation_factor,
+                                                                         T scale = T(1), T cutoff = 0.49)
 {
     using itype = typename internal::sample_rate_converter<T, quality>::itype;
-    return internal::sample_rate_converter<T, quality>(itype(interpolation_factor), itype(decimation_factor), scale,
-                                           cutoff);
+    return internal::sample_rate_converter<T, quality>(itype(interpolation_factor), itype(decimation_factor),
+                                                       scale, cutoff);
 }
 
 // Deprecated in 0.9.2
 template <typename T, size_t quality>
 inline internal::sample_rate_converter<T, quality> resampler(csize_t<quality>, size_t interpolation_factor,
-                                                 size_t decimation_factor, T scale = T(1), T cutoff = 0.49)
+                                                             size_t decimation_factor, T scale = T(1),
+                                                             T cutoff = 0.49)
 {
     using itype = typename internal::sample_rate_converter<T, quality>::itype;
-    return internal::sample_rate_converter<T, quality>(itype(interpolation_factor), itype(decimation_factor), scale,
-                                           cutoff);
+    return internal::sample_rate_converter<T, quality>(itype(interpolation_factor), itype(decimation_factor),
+                                                       scale, cutoff);
 }
 }

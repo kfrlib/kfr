@@ -86,20 +86,20 @@ using vec_algn = internal::struct_with_alignment<simd<T, N>, A>;
 template <typename T, size_t N, bool A>
 struct vec_ptr
 {
-    constexpr KFR_INLINE vec_ptr(T* data) noexcept : data(data) {}
-    constexpr KFR_INLINE vec_ptr(const T* data) noexcept : data(const_cast<T*>(data)) {}
-    KFR_INLINE const vec_algn<T, N, A>& operator[](size_t i) const
+    constexpr CMT_INLINE vec_ptr(T* data) noexcept : data(data) {}
+    constexpr CMT_INLINE vec_ptr(const T* data) noexcept : data(const_cast<T*>(data)) {}
+    CMT_INLINE const vec_algn<T, N, A>& operator[](size_t i) const
     {
         return *static_cast<vec_algn<T, N, A>*>(data + i);
     }
-    KFR_INLINE vec_algn<T, N, A>& operator[](size_t i) { return *static_cast<vec_algn<T, N, A>*>(data + i); }
+    CMT_INLINE vec_algn<T, N, A>& operator[](size_t i) { return *static_cast<vec_algn<T, N, A>*>(data + i); }
     T* data;
 };
 
 template <typename To, typename From, size_t N,
           KFR_ENABLE_IF(std::is_same<subtype<From>, subtype<To>>::value),
           size_t Nout = N* compound_type_traits<From>::width / compound_type_traits<To>::width>
-constexpr KFR_INLINE vec<To, Nout> compcast(const vec<From, N>& value) noexcept
+constexpr CMT_INLINE vec<To, Nout> compcast(const vec<From, N>& value) noexcept
 {
     return *value;
 }
@@ -127,7 +127,7 @@ get_vec_index(int = 0)
 constexpr size_t index_undefined = static_cast<size_t>(-1);
 
 template <typename T, size_t N, size_t... Indices, KFR_ENABLE_IF(!is_compound<T>::value)>
-KFR_INLINE vec<T, sizeof...(Indices)> shufflevector(csizes_t<Indices...>, const vec<T, N>& x,
+CMT_INLINE vec<T, sizeof...(Indices)> shufflevector(csizes_t<Indices...>, const vec<T, N>& x,
                                                     const vec<T, N>& y)
 {
     vec<T, sizeof...(Indices)> result = __builtin_shufflevector(
@@ -151,7 +151,7 @@ constexpr auto inflate(csize_t<groupsize>, csizes_t<indices...>)
 }
 
 template <typename T, size_t N, size_t... Indices, KFR_ENABLE_IF(is_compound<T>::value)>
-KFR_INLINE vec<T, sizeof...(Indices)> shufflevector(csizes_t<Indices...> indices, const vec<T, N>& x,
+CMT_INLINE vec<T, sizeof...(Indices)> shufflevector(csizes_t<Indices...> indices, const vec<T, N>& x,
                                                     const vec<T, N>& y)
 {
     return compcast<T>(shufflevector(inflate(csize<widthof<T>()>, indices), compcast<subtype<T>>(x),
@@ -159,14 +159,14 @@ KFR_INLINE vec<T, sizeof...(Indices)> shufflevector(csizes_t<Indices...> indices
 }
 
 template <size_t... Indices, size_t Nout = sizeof...(Indices), typename T, size_t N>
-KFR_INLINE vec<T, Nout> shufflevector(csizes_t<Indices...>, const vec<T, N>& x)
+CMT_INLINE vec<T, Nout> shufflevector(csizes_t<Indices...>, const vec<T, N>& x)
 {
     return internal::shufflevector<T, N>(csizes<Indices...>, x, x);
 }
 
 template <typename Fn, size_t groupsize, typename T, size_t N, size_t... Indices,
           size_t Nout = sizeof...(Indices)>
-KFR_INLINE vec<T, Nout> shufflevector(const vec<T, N>& x, const vec<T, N>& y, cvals_t<size_t, Indices...>)
+CMT_INLINE vec<T, Nout> shufflevector(const vec<T, N>& x, const vec<T, N>& y, cvals_t<size_t, Indices...>)
 {
     static_assert(N % groupsize == 0, "N % groupsize == 0");
     return internal::shufflevector<T, N>(
@@ -175,13 +175,13 @@ KFR_INLINE vec<T, Nout> shufflevector(const vec<T, N>& x, const vec<T, N>& y, cv
 }
 
 template <size_t Nout, typename Fn, size_t groupsize = 1, typename T, size_t N>
-KFR_INLINE vec<T, Nout> shufflevector(const vec<T, N>& x, const vec<T, N>& y)
+CMT_INLINE vec<T, Nout> shufflevector(const vec<T, N>& x, const vec<T, N>& y)
 {
     return internal::shufflevector<Fn, groupsize>(x, y, csizeseq<Nout>);
 }
 
 template <size_t Nout, typename Fn, size_t groupsize = 1, typename T, size_t N>
-KFR_INLINE vec<T, Nout> shufflevector(const vec<T, N>& x)
+CMT_INLINE vec<T, Nout> shufflevector(const vec<T, N>& x)
 {
     return internal::shufflevector<Fn, groupsize>(x, x, csizeseq<Nout>);
 }
@@ -229,7 +229,7 @@ constexpr swiz<15> s15{};
 #pragma clang diagnostic ignored "-Wold-style-cast"
 
 template <size_t N, typename T>
-constexpr KFR_INLINE vec<T, N> broadcast(T x)
+constexpr CMT_INLINE vec<T, N> broadcast(T x)
 {
     return (simd<T, N>)(x);
 }
@@ -241,7 +241,7 @@ namespace internal
 
 template <typename To, typename From, size_t N, typename Tsub = deep_subtype<To>,
           size_t Nout = N* compound_type_traits<To>::deep_width>
-constexpr KFR_INLINE vec<To, N> builtin_convertvector(const vec<From, N>& value) noexcept
+constexpr CMT_INLINE vec<To, N> builtin_convertvector(const vec<From, N>& value) noexcept
 {
     return __builtin_convertvector(*value, simd<Tsub, Nout>);
 }
@@ -300,19 +300,19 @@ constexpr size_t size_of() noexcept
 
 template <typename From, size_t N, typename Tsub = deep_subtype<From>,
           size_t Nout = N* size_of<From>() / size_of<Tsub>()>
-constexpr KFR_INLINE vec<Tsub, Nout> flatten(const vec<From, N>& value) noexcept
+constexpr CMT_INLINE vec<Tsub, Nout> flatten(const vec<From, N>& value) noexcept
 {
     return *value;
 }
 
 template <typename To, typename From, typename Tout = deep_rebind<From, To>>
-constexpr KFR_INLINE Tout cast(const From& value) noexcept
+constexpr CMT_INLINE Tout cast(const From& value) noexcept
 {
     return static_cast<Tout>(value);
 }
 
 template <typename To, typename From>
-constexpr KFR_INLINE To bitcast(const From& value) noexcept
+constexpr CMT_INLINE To bitcast(const From& value) noexcept
 {
     static_assert(sizeof(From) == sizeof(To), "bitcast: Incompatible types");
     union {
@@ -323,67 +323,67 @@ constexpr KFR_INLINE To bitcast(const From& value) noexcept
 }
 
 template <typename To, typename From, size_t N, size_t Nout = N* size_of<From>() / size_of<To>()>
-constexpr KFR_INLINE vec<To, Nout> bitcast(const vec<From, N>& value) noexcept
+constexpr CMT_INLINE vec<To, Nout> bitcast(const vec<From, N>& value) noexcept
 {
     return reinterpret_cast<typename vec<To, Nout>::simd_t>(*value);
 }
 
 template <typename To, typename From, size_t N, size_t Nout = N* size_of<From>() / size_of<To>()>
-constexpr KFR_INLINE mask<To, Nout> bitcast(const mask<From, N>& value) noexcept
+constexpr CMT_INLINE mask<To, Nout> bitcast(const mask<From, N>& value) noexcept
 {
     return reinterpret_cast<typename mask<To, Nout>::simd_t>(*value);
 }
 
 template <typename From, typename To = utype<From>, KFR_ENABLE_IF(!is_compound<From>::value)>
-constexpr KFR_INLINE To ubitcast(const From& value) noexcept
+constexpr CMT_INLINE To ubitcast(const From& value) noexcept
 {
     return bitcast<To>(value);
 }
 
 template <typename From, typename To = itype<From>, KFR_ENABLE_IF(!is_compound<From>::value)>
-constexpr KFR_INLINE To ibitcast(const From& value) noexcept
+constexpr CMT_INLINE To ibitcast(const From& value) noexcept
 {
     return bitcast<To>(value);
 }
 
 template <typename From, typename To = ftype<From>, KFR_ENABLE_IF(!is_compound<From>::value)>
-constexpr KFR_INLINE To fbitcast(const From& value) noexcept
+constexpr CMT_INLINE To fbitcast(const From& value) noexcept
 {
     return bitcast<To>(value);
 }
 
 template <typename From, size_t N, typename To = utype<From>,
           size_t Nout = size_of<From>() * N / size_of<To>()>
-constexpr KFR_INLINE vec<To, Nout> ubitcast(const vec<From, N>& value) noexcept
+constexpr CMT_INLINE vec<To, Nout> ubitcast(const vec<From, N>& value) noexcept
 {
     return reinterpret_cast<simd<To, Nout>>(*value);
 }
 
 template <typename From, size_t N, typename To = itype<From>,
           size_t Nout = size_of<From>() * N / size_of<To>()>
-constexpr KFR_INLINE vec<To, Nout> ibitcast(const vec<From, N>& value) noexcept
+constexpr CMT_INLINE vec<To, Nout> ibitcast(const vec<From, N>& value) noexcept
 {
     return reinterpret_cast<simd<To, Nout>>(*value);
 }
 
 template <typename From, size_t N, typename To = ftype<From>,
           size_t Nout = size_of<From>() * N / size_of<To>()>
-constexpr KFR_INLINE vec<To, Nout> fbitcast(const vec<From, N>& value) noexcept
+constexpr CMT_INLINE vec<To, Nout> fbitcast(const vec<From, N>& value) noexcept
 {
     return reinterpret_cast<simd<To, Nout>>(*value);
 }
 
-constexpr KFR_INLINE size_t vector_alignment(size_t size) { return next_poweroftwo(size); }
+constexpr CMT_INLINE size_t vector_alignment(size_t size) { return next_poweroftwo(size); }
 
 template <typename T, size_t N, size_t... Sizes, size_t Nout = N + csum(csizes<Sizes...>)>
-KFR_INLINE vec<T, Nout> concat(const vec<T, N>& x, const vec<T, Sizes>&... rest);
+CMT_INLINE vec<T, Nout> concat(const vec<T, N>& x, const vec<T, Sizes>&... rest);
 
 namespace internal
 {
 template <size_t start = 0, size_t stride = 1>
 struct shuffle_index
 {
-    constexpr KFR_INLINE size_t operator()(size_t index) const { return start + index * stride; }
+    constexpr CMT_INLINE size_t operator()(size_t index) const { return start + index * stride; }
 };
 
 template <size_t count, size_t start = 0, size_t stride = 1>
@@ -394,19 +394,19 @@ struct shuffle_index_wrap
 }
 
 template <size_t count, typename T, size_t N, size_t Nout = N* count>
-KFR_INLINE vec<T, Nout> repeat(const vec<T, N>& x)
+CMT_INLINE vec<T, Nout> repeat(const vec<T, N>& x)
 {
     return shufflevector<Nout, internal::shuffle_index_wrap<N, 0, 1>>(x);
 }
 KFR_FN(repeat)
 
 template <size_t Nout, typename T, size_t N, KFR_ENABLE_IF(Nout != N)>
-KFR_INLINE vec<T, Nout> resize(const vec<T, N>& x)
+CMT_INLINE vec<T, Nout> resize(const vec<T, N>& x)
 {
     return shufflevector<Nout, internal::shuffle_index_wrap<N, 0, 1>>(x);
 }
 template <size_t Nout, typename T, size_t N, KFR_ENABLE_IF(Nout == N)>
-constexpr KFR_INLINE vec<T, Nout> resize(const vec<T, N>& x)
+constexpr CMT_INLINE vec<T, Nout> resize(const vec<T, N>& x)
 {
     return x;
 }
@@ -416,13 +416,13 @@ namespace internal_read_write
 {
 
 template <size_t N, bool A = false, typename T, KFR_ENABLE_IF(is_poweroftwo(N))>
-KFR_INLINE vec<T, N> read(const T* src)
+CMT_INLINE vec<T, N> read(const T* src)
 {
     return ptr_cast<vec_algn<subtype<T>, vec<T, N>::scalar_size(), A>>(src)->value;
 }
 
 template <size_t N, bool A = false, typename T, KFR_ENABLE_IF(!is_poweroftwo(N))>
-KFR_INLINE vec<T, N> read(const T* src)
+CMT_INLINE vec<T, N> read(const T* src)
 {
     constexpr size_t first = prev_poweroftwo(N);
     constexpr size_t rest  = N - first;
@@ -431,13 +431,13 @@ KFR_INLINE vec<T, N> read(const T* src)
 }
 
 template <bool A = false, size_t N, typename T, KFR_ENABLE_IF(is_poweroftwo(N))>
-KFR_INLINE void write(T* dest, const vec<T, N>& value)
+CMT_INLINE void write(T* dest, const vec<T, N>& value)
 {
     ptr_cast<vec_algn<subtype<T>, vec<T, N>::scalar_size(), A>>(dest)->value = *value;
 }
 
 template <bool A = false, size_t N, typename T, KFR_ENABLE_IF(!is_poweroftwo(N))>
-KFR_INLINE void write(T* dest, const vec<T, N>& value)
+CMT_INLINE void write(T* dest, const vec<T, N>& value)
 {
     constexpr size_t first = prev_poweroftwo(N);
     constexpr size_t rest  = N - first;
@@ -568,7 +568,7 @@ struct vec_op
 namespace internal
 {
 template <typename T, typename... Args, size_t... indices, size_t N = 1 + sizeof...(Args)>
-constexpr KFR_INLINE vec<T, N> make_vector_impl(csizes_t<indices...>, const T& x, const Args&... rest)
+constexpr CMT_INLINE vec<T, N> make_vector_impl(csizes_t<indices...>, const T& x, const Args&... rest)
 {
     constexpr size_t width = compound_type_traits<T>::width;
     const T list[]         = { x, rest... };
@@ -584,18 +584,18 @@ constexpr KFR_INLINE vec<T, N> make_vector_impl(csizes_t<indices...>, const T& x
 /// @encode
 template <typename Type = void, typename Arg, typename... Args, size_t N = (sizeof...(Args) + 1),
           typename SubType = conditional<is_void<Type>::value, common_type<Arg, Args...>, Type>>
-constexpr KFR_INLINE vec<SubType, N> make_vector(const Arg& x, const Args&... rest)
+constexpr CMT_INLINE vec<SubType, N> make_vector(const Arg& x, const Args&... rest)
 {
     return internal::make_vector_impl<SubType>(csizeseq<N * widthof<SubType>()>, static_cast<SubType>(x),
                                                static_cast<SubType>(rest)...);
 }
 template <typename T, size_t N>
-constexpr KFR_INLINE vec<T, N> make_vector(const vec<T, N>& x)
+constexpr CMT_INLINE vec<T, N> make_vector(const vec<T, N>& x)
 {
     return x;
 }
 template <typename T, T... Values, size_t N = sizeof...(Values)>
-constexpr KFR_INLINE vec<T, N> make_vector(cvals_t<T, Values...>)
+constexpr CMT_INLINE vec<T, N> make_vector(cvals_t<T, Values...>)
 {
     return make_vector<T>(Values...);
 }
@@ -604,7 +604,7 @@ KFR_FN(make_vector)
 template <typename Type = void, typename Arg, typename... Args, size_t N = (sizeof...(Args) + 1),
           typename SubType = conditional<is_void<Type>::value, common_type<Arg, Args...>, Type>,
           KFR_ENABLE_IF(is_numeric<SubType>::value)>
-constexpr KFR_INLINE vec<SubType, N> pack(const Arg& x, const Args&... rest)
+constexpr CMT_INLINE vec<SubType, N> pack(const Arg& x, const Args&... rest)
 {
     return internal::make_vector_impl<SubType>(csizeseq<N * widthof<SubType>()>, static_cast<SubType>(x),
                                                static_cast<SubType>(rest)...);
@@ -629,98 +629,98 @@ struct vec : vec_t<T, N>
 
     constexpr static bool is_pod = true;
 
-    constexpr KFR_INLINE vec() noexcept {}
-    constexpr KFR_INLINE vec(simd_t value) noexcept : v(value) {}
-    constexpr KFR_INLINE vec(const array_ref<T>& value) noexcept
+    constexpr CMT_INLINE vec() noexcept {}
+    constexpr CMT_INLINE vec(simd_t value) noexcept : v(value) {}
+    constexpr CMT_INLINE vec(const array_ref<T>& value) noexcept
         : v(*internal_read_write::read<N, false>(value.data()))
     {
     }
-    constexpr KFR_INLINE vec(const array_ref<const T>& value) noexcept
+    constexpr CMT_INLINE vec(const array_ref<const T>& value) noexcept
         : v(*internal_read_write::read<N, false>(value.data()))
     {
     }
     template <typename U,
               KFR_ENABLE_IF(std::is_convertible<U, T>::value&& compound_type_traits<T>::width > 1)>
-    constexpr KFR_INLINE vec(const U& value) noexcept
+    constexpr CMT_INLINE vec(const U& value) noexcept
         : v(*resize<scalar_size()>(bitcast<scalar_type>(make_vector(static_cast<T>(value)))))
     {
     }
     template <typename U,
               KFR_ENABLE_IF(std::is_convertible<U, T>::value&& compound_type_traits<T>::width == 1)>
-    constexpr KFR_INLINE vec(const U& value) noexcept : v(static_cast<T>(value))
+    constexpr CMT_INLINE vec(const U& value) noexcept : v(static_cast<T>(value))
     {
     }
     template <typename... Ts>
-    constexpr KFR_INLINE vec(const T& x, const T& y, const Ts&... rest) noexcept
+    constexpr CMT_INLINE vec(const T& x, const T& y, const Ts&... rest) noexcept
         : v(*make_vector<T>(x, y, rest...))
     {
         static_assert(N <= 2 + sizeof...(Ts), "Too few initializers for vec");
     }
     template <size_t N1, size_t N2, size_t... Ns>
-    constexpr KFR_INLINE vec(const vec<T, N1>& v1, const vec<T, N2>& v2,
+    constexpr CMT_INLINE vec(const vec<T, N1>& v1, const vec<T, N2>& v2,
                              const vec<T, Ns>&... vectors) noexcept : v(*concat(v1, v2, vectors...))
     {
         static_assert(csum(csizes<N1, N2, Ns...>) == N, "Can't concat vectors: invalid csizes");
     }
-    constexpr KFR_INLINE vec(const vec&) noexcept = default;
-    constexpr KFR_INLINE vec(vec&&) noexcept      = default;
-    constexpr KFR_INLINE vec& operator=(const vec&) noexcept = default;
-    constexpr KFR_INLINE vec& operator=(vec&&) noexcept = default;
+    constexpr CMT_INLINE vec(const vec&) noexcept = default;
+    constexpr CMT_INLINE vec(vec&&) noexcept      = default;
+    constexpr CMT_INLINE vec& operator=(const vec&) noexcept = default;
+    constexpr CMT_INLINE vec& operator=(vec&&) noexcept = default;
 
-    friend constexpr KFR_INLINE vec operator+(const vec& x, const vec& y) { return vec_op<T>::add(x.v, y.v); }
-    friend constexpr KFR_INLINE vec operator-(const vec& x, const vec& y) { return vec_op<T>::sub(x.v, y.v); }
-    friend constexpr KFR_INLINE vec operator*(const vec& x, const vec& y) { return vec_op<T>::mul(x.v, y.v); }
-    friend constexpr KFR_INLINE vec operator/(const vec& x, const vec& y) { return vec_op<T>::div(x.v, y.v); }
-    friend constexpr KFR_INLINE vec operator%(const vec& x, const vec& y) { return vec_op<T>::rem(x.v, y.v); }
-    friend constexpr KFR_INLINE vec operator-(const vec& x) { return vec_op<T>::neg(x.v); }
+    friend constexpr CMT_INLINE vec operator+(const vec& x, const vec& y) { return vec_op<T>::add(x.v, y.v); }
+    friend constexpr CMT_INLINE vec operator-(const vec& x, const vec& y) { return vec_op<T>::sub(x.v, y.v); }
+    friend constexpr CMT_INLINE vec operator*(const vec& x, const vec& y) { return vec_op<T>::mul(x.v, y.v); }
+    friend constexpr CMT_INLINE vec operator/(const vec& x, const vec& y) { return vec_op<T>::div(x.v, y.v); }
+    friend constexpr CMT_INLINE vec operator%(const vec& x, const vec& y) { return vec_op<T>::rem(x.v, y.v); }
+    friend constexpr CMT_INLINE vec operator-(const vec& x) { return vec_op<T>::neg(x.v); }
 
-    friend constexpr KFR_INLINE vec operator&(const vec& x, const vec& y)
+    friend constexpr CMT_INLINE vec operator&(const vec& x, const vec& y)
     {
         return vec_op<T>::band(x.v, y.v);
     }
-    friend constexpr KFR_INLINE vec operator|(const vec& x, const vec& y) { return vec_op<T>::bor(x.v, y.v); }
-    friend constexpr KFR_INLINE vec operator^(const vec& x, const vec& y)
+    friend constexpr CMT_INLINE vec operator|(const vec& x, const vec& y) { return vec_op<T>::bor(x.v, y.v); }
+    friend constexpr CMT_INLINE vec operator^(const vec& x, const vec& y)
     {
         return vec_op<T>::bxor(x.v, y.v);
     }
-    friend constexpr KFR_INLINE vec operator~(const vec& x) { return vec_op<T>::bnot(x.v); }
+    friend constexpr CMT_INLINE vec operator~(const vec& x) { return vec_op<T>::bnot(x.v); }
 
-    friend constexpr KFR_INLINE vec operator<<(const vec& x, const vec& y)
+    friend constexpr CMT_INLINE vec operator<<(const vec& x, const vec& y)
     {
         return vec_op<T>::shl(x.v, y.v);
     }
-    friend constexpr KFR_INLINE vec operator>>(const vec& x, const vec& y)
+    friend constexpr CMT_INLINE vec operator>>(const vec& x, const vec& y)
     {
         return vec_op<T>::shr(x.v, y.v);
     }
 
-    friend constexpr KFR_INLINE mask<T, N> operator==(const vec& x, const vec& y)
+    friend constexpr CMT_INLINE mask<T, N> operator==(const vec& x, const vec& y)
     {
         return vec_op<T>::eq(x.v, y.v);
     }
-    friend constexpr KFR_INLINE mask<T, N> operator!=(const vec& x, const vec& y)
+    friend constexpr CMT_INLINE mask<T, N> operator!=(const vec& x, const vec& y)
     {
         return vec_op<T>::ne(x.v, y.v);
     }
-    friend constexpr KFR_INLINE mask<T, N> operator<(const vec& x, const vec& y)
+    friend constexpr CMT_INLINE mask<T, N> operator<(const vec& x, const vec& y)
     {
         return vec_op<T>::lt(x.v, y.v);
     }
-    friend constexpr KFR_INLINE mask<T, N> operator>(const vec& x, const vec& y)
+    friend constexpr CMT_INLINE mask<T, N> operator>(const vec& x, const vec& y)
     {
         return vec_op<T>::gt(x.v, y.v);
     }
-    friend constexpr KFR_INLINE mask<T, N> operator<=(const vec& x, const vec& y)
+    friend constexpr CMT_INLINE mask<T, N> operator<=(const vec& x, const vec& y)
     {
         return vec_op<T>::le(x.v, y.v);
     }
-    friend constexpr KFR_INLINE mask<T, N> operator>=(const vec& x, const vec& y)
+    friend constexpr CMT_INLINE mask<T, N> operator>=(const vec& x, const vec& y)
     {
         return vec_op<T>::ge(x.v, y.v);
     }
 
 #define KFR_ASGN_OP(aop, op)                                                                                 \
-    friend KFR_INLINE vec& operator aop(vec& x, const vec& y)                                                \
+    friend CMT_INLINE vec& operator aop(vec& x, const vec& y)                                                \
     {                                                                                                        \
         x = x op y;                                                                                          \
         return x;                                                                                            \
@@ -735,17 +735,18 @@ struct vec : vec_t<T, N>
     KFR_ASGN_OP(^=, ^)
     KFR_ASGN_OP(<<=, <<)
     KFR_ASGN_OP(>>=, >>)
+#undef KFR_ASGN_OP
 
-    constexpr KFR_INLINE simd_t operator*() const { return v; }
-    constexpr KFR_INLINE simd_t& operator*() { return v; }
-    KFR_INLINE mask<T, N>& asmask() { return ref_cast<mask<T, N>>(*this); }
-    KFR_INLINE const mask<T, N>& asmask() const { return ref_cast<mask<T, N>>(*this); }
-    KFR_INLINE value_type operator[](size_t index) const { return data()[index]; }
+    constexpr CMT_INLINE simd_t operator*() const { return v; }
+    constexpr CMT_INLINE simd_t& operator*() { return v; }
+    CMT_INLINE mask<T, N>& asmask() { return ref_cast<mask<T, N>>(*this); }
+    CMT_INLINE const mask<T, N>& asmask() const { return ref_cast<mask<T, N>>(*this); }
+    CMT_INLINE value_type operator[](size_t index) const { return data()[index]; }
 
-    KFR_INLINE value_type* data() { return ptr_cast<T>(&v); }
-    KFR_INLINE const T* data() const { return ptr_cast<T>(&v); }
+    CMT_INLINE value_type* data() { return ptr_cast<T>(&v); }
+    CMT_INLINE const T* data() const { return ptr_cast<T>(&v); }
     using array_t = T (&)[N];
-    KFR_INLINE array_t arr() { return ref_cast<array_t>(v); }
+    CMT_INLINE array_t arr() { return ref_cast<array_t>(v); }
 
     template <typename U, KFR_ENABLE_IF(std::is_convertible<T, U>::value && !std::is_same<U, vec>::value)>
     constexpr operator vec<U, N>() const noexcept
@@ -771,12 +772,12 @@ private:
     struct getter_setter
     {
         constexpr getter_setter(simd_t& v, size_t index) noexcept : v(v), index(index) {}
-        KFR_INLINE getter_setter& operator=(scalar_type value) noexcept
+        CMT_INLINE getter_setter& operator=(scalar_type value) noexcept
         {
             v[index] = value;
             return *this;
         }
-        KFR_INLINE operator scalar_type() const { return v[index]; }
+        CMT_INLINE operator scalar_type() const { return v[index]; }
     private:
         friend struct vec;
         simd_t& v;
@@ -793,59 +794,59 @@ struct mask : public vec<T, N>
 
     using base = vec<T, N>;
 
-    constexpr KFR_INLINE mask() noexcept : base() {}
+    constexpr CMT_INLINE mask() noexcept : base() {}
 
-    constexpr KFR_INLINE mask(simd<T, N> value) noexcept : base(value) {}
+    constexpr CMT_INLINE mask(simd<T, N> value) noexcept : base(value) {}
     template <size_t N1, size_t... Ns>
-    constexpr KFR_INLINE mask(const mask<T, N1>& mask1, const mask<T, Ns>&... masks) noexcept
+    constexpr CMT_INLINE mask(const mask<T, N1>& mask1, const mask<T, Ns>&... masks) noexcept
         : base(*concat(mask1, masks...))
     {
     }
     template <typename... Ts, typename = enable_if<sizeof...(Ts) + 2 == N>>
-    constexpr KFR_INLINE mask(bool x, bool y, Ts... rest) noexcept
+    constexpr CMT_INLINE mask(bool x, bool y, Ts... rest) noexcept
         : base{ internal::maskbits<T>(x), internal::maskbits<T>(y), internal::maskbits<T>(rest)... }
     {
     }
-    constexpr KFR_INLINE mask(const mask&) noexcept = default;
-    constexpr KFR_INLINE mask(mask&&) noexcept      = default;
-    KFR_INLINE mask& operator=(const mask&) noexcept = default;
-    KFR_INLINE mask& operator=(mask&&) noexcept = default;
+    constexpr CMT_INLINE mask(const mask&) noexcept = default;
+    constexpr CMT_INLINE mask(mask&&) noexcept      = default;
+    CMT_INLINE mask& operator=(const mask&) noexcept = default;
+    CMT_INLINE mask& operator=(mask&&) noexcept = default;
 
     template <typename M, KFR_ENABLE_IF(sizeof(T) == sizeof(M))>
-    constexpr KFR_INLINE mask(const vec<M, N>& value) : base(bitcast<T>(value))
+    constexpr CMT_INLINE mask(const vec<M, N>& value) : base(bitcast<T>(value))
     {
     }
 
-    friend constexpr KFR_INLINE mask operator&(const mask& x, const mask& y)
+    friend constexpr CMT_INLINE mask operator&(const mask& x, const mask& y)
     {
         return vec_op<T>::band(x.v, y.v);
     }
-    friend constexpr KFR_INLINE mask operator|(const mask& x, const mask& y)
+    friend constexpr CMT_INLINE mask operator|(const mask& x, const mask& y)
     {
         return vec_op<T>::bor(x.v, y.v);
     }
-    friend constexpr KFR_INLINE mask operator^(const mask& x, const mask& y)
+    friend constexpr CMT_INLINE mask operator^(const mask& x, const mask& y)
     {
         return vec_op<T>::bxor(x.v, y.v);
     }
-    friend constexpr KFR_INLINE mask operator~(const mask& x) { return vec_op<T>::bnot(x.v); }
+    friend constexpr CMT_INLINE mask operator~(const mask& x) { return vec_op<T>::bnot(x.v); }
 
-    constexpr KFR_INLINE mask operator&&(const mask& x) const { return *this & x; }
-    constexpr KFR_INLINE mask operator||(const mask& x) const { return *this | x; }
-    constexpr KFR_INLINE mask operator!() const { return ~*this; }
+    constexpr CMT_INLINE mask operator&&(const mask& x) const { return *this & x; }
+    constexpr CMT_INLINE mask operator||(const mask& x) const { return *this | x; }
+    constexpr CMT_INLINE mask operator!() const { return ~*this; }
 
-    constexpr KFR_INLINE simd<T, N> operator*() const { return this->v; }
+    constexpr CMT_INLINE simd<T, N> operator*() const { return this->v; }
 
-    KFR_INLINE vec<T, N>& asvec() { return ref_cast<mask>(*this); }
-    KFR_INLINE const vec<T, N>& asvec() const { return ref_cast<mask>(*this); }
+    CMT_INLINE vec<T, N>& asvec() { return ref_cast<mask>(*this); }
+    CMT_INLINE const vec<T, N>& asvec() const { return ref_cast<mask>(*this); }
 
     template <typename U, KFR_ENABLE_IF(sizeof(T) == sizeof(U))>
-    KFR_INLINE operator mask<U, N>() const
+    CMT_INLINE operator mask<U, N>() const
     {
         return bitcast<U>(*this);
     }
 
-    KFR_INLINE bool operator[](size_t index) const { return ibitcast(this->v[index]) < 0; }
+    CMT_INLINE bool operator[](size_t index) const { return ibitcast(this->v[index]) < 0; }
 };
 
 template <typename T, size_t N1, size_t N2 = N1>
@@ -857,31 +858,31 @@ namespace internal
 template <size_t start, size_t count>
 struct shuffle_index_extend
 {
-    constexpr KFR_INLINE size_t operator()(size_t index) const
+    constexpr CMT_INLINE size_t operator()(size_t index) const
     {
         return index >= start && index < start + count ? index - start : index_undefined;
     }
 };
 
 template <size_t start, size_t count, typename T, size_t N>
-KFR_INLINE vec<T, count> concatexact(const vec<T, N>& x, const vec<T, N>& y)
+CMT_INLINE vec<T, count> concatexact(const vec<T, N>& x, const vec<T, N>& y)
 {
     return kfr::shufflevector<count, internal::shuffle_index<start>>(x, y);
 }
 
 template <size_t start, size_t count, typename T, size_t N1, size_t N2>
-KFR_INLINE enable_if<(N1 == N2), vec<T, count>> concattwo(const vec<T, N1>& x, const vec<T, N2>& y)
+CMT_INLINE enable_if<(N1 == N2), vec<T, count>> concattwo(const vec<T, N1>& x, const vec<T, N2>& y)
 {
     return concatexact<start, count>(x, y);
 }
 
 template <size_t start, size_t count, typename T, size_t N1, size_t N2>
-KFR_INLINE enable_if<(N1 > N2), vec<T, count>> concattwo(const vec<T, N1>& x, const vec<T, N2>& y)
+CMT_INLINE enable_if<(N1 > N2), vec<T, count>> concattwo(const vec<T, N1>& x, const vec<T, N2>& y)
 {
     return concatexact<start, count>(x, shufflevector<N1, internal::shuffle_index_extend<0, N2>>(y));
 }
 template <size_t start, size_t count, typename T, size_t N1, size_t N2>
-KFR_INLINE enable_if<(N1 < N2), vec<T, count>> concattwo(const vec<T, N1>& x, const vec<T, N2>& y)
+CMT_INLINE enable_if<(N1 < N2), vec<T, count>> concattwo(const vec<T, N1>& x, const vec<T, N2>& y)
 {
     return concatexact<N2 - N1 + start, count>(
         shufflevector<N2, internal::shuffle_index_extend<N2 - N1, N1>>(x), y);
@@ -899,26 +900,26 @@ constexpr mask<T, Nout> partial_mask()
 }
 
 template <typename T, size_t N>
-KFR_INLINE vec<T, N> concat(const vec<T, N>& x)
+CMT_INLINE vec<T, N> concat(const vec<T, N>& x)
 {
     return x;
 }
 
 template <typename T, size_t N1, size_t N2>
-KFR_INLINE vec<T, N1 + N2> concat(const vec<T, N1>& x, const vec<T, N2>& y)
+CMT_INLINE vec<T, N1 + N2> concat(const vec<T, N1>& x, const vec<T, N2>& y)
 {
     return concattwo<0, N1 + N2>(x, y);
 }
 
 template <typename T, size_t N1, size_t N2, size_t... Sizes>
-KFR_INLINE auto concat(const vec<T, N1>& x, const vec<T, N2>& y, const vec<T, Sizes>&... args)
+CMT_INLINE auto concat(const vec<T, N1>& x, const vec<T, N2>& y, const vec<T, Sizes>&... args)
 {
     return concat(x, concat(y, args...));
 }
 }
 
 template <typename T, size_t N, size_t... Sizes, size_t Nout>
-KFR_INLINE vec<T, Nout> concat(const vec<T, N>& x, const vec<T, Sizes>&... rest)
+CMT_INLINE vec<T, Nout> concat(const vec<T, N>& x, const vec<T, Sizes>&... rest)
 {
     return internal::concat(x, rest...);
 }
@@ -1193,19 +1194,19 @@ struct maxvec
 
 template <size_t Index, typename T, size_t N, typename Fn, typename... Args,
           typename Tout = result_of<Fn(subtype<decay<Args>>...)>>
-constexpr KFR_INLINE Tout applyfn_helper(Fn&& fn, Args&&... args)
+constexpr CMT_INLINE Tout applyfn_helper(Fn&& fn, Args&&... args)
 {
     return fn(args[Index]...);
 }
 
 template <typename T, size_t N, typename Fn, typename... Args,
           typename Tout = result_of<Fn(subtype<decay<Args>>...)>, size_t... Indices>
-constexpr KFR_INLINE vec<Tout, N> apply_helper(Fn&& fn, csizes_t<Indices...>, Args&&... args)
+constexpr CMT_INLINE vec<Tout, N> apply_helper(Fn&& fn, csizes_t<Indices...>, Args&&... args)
 {
     return make_vector(applyfn_helper<Indices, T, N>(std::forward<Fn>(fn), std::forward<Args>(args)...)...);
 }
 template <typename T, size_t N, typename Fn, size_t... Indices>
-constexpr KFR_INLINE vec<T, N> apply0_helper(Fn&& fn, csizes_t<Indices...>)
+constexpr CMT_INLINE vec<T, N> apply0_helper(Fn&& fn, csizes_t<Indices...>)
 {
     return make_vector(((void)Indices, void(), fn())...);
 }
@@ -1213,30 +1214,30 @@ constexpr KFR_INLINE vec<T, N> apply0_helper(Fn&& fn, csizes_t<Indices...>)
 
 template <typename T, size_t N, typename Fn, typename... Args,
           typename Tout = result_of<Fn(T, subtype<decay<Args>>...)>>
-constexpr KFR_INLINE vec<Tout, N> apply(Fn&& fn, const vec<T, N>& arg, Args&&... args)
+constexpr CMT_INLINE vec<Tout, N> apply(Fn&& fn, const vec<T, N>& arg, Args&&... args)
 {
     return internal::apply_helper<T, N>(std::forward<Fn>(fn), csizeseq<N>, arg, std::forward<Args>(args)...);
 }
 
 template <size_t N, typename Fn, typename T = result_of<Fn()>>
-constexpr KFR_INLINE vec<T, N> apply(Fn&& fn)
+constexpr CMT_INLINE vec<T, N> apply(Fn&& fn)
 {
     return internal::apply0_helper<T, N>(std::forward<Fn>(fn), csizeseq<N>);
 }
 
 template <typename T, int N>
-KFR_INLINE vec<T, N> tovec(simd<T, N> x)
+CMT_INLINE vec<T, N> tovec(simd<T, N> x)
 {
     return x;
 }
 
-#ifdef CID_ARCH_SSE2
-KFR_INLINE f32x4 tovec(__m128 x) { return f32x4(x); }
-KFR_INLINE f64x2 tovec(__m128d x) { return f64x2(x); }
+#ifdef CMT_ARCH_SSE2
+CMT_INLINE f32x4 tovec(__m128 x) { return f32x4(x); }
+CMT_INLINE f64x2 tovec(__m128d x) { return f64x2(x); }
 #endif
 
 template <typename T, typename... Args, size_t Nout = (sizeof...(Args) + 1)>
-constexpr KFR_INLINE mask<T, Nout> make_mask(bool arg, Args... args)
+constexpr CMT_INLINE mask<T, Nout> make_mask(bool arg, Args... args)
 {
     simd<T, Nout> temp{ internal::maskbits<T>(arg), internal::maskbits<T>(static_cast<bool>(args))... };
     return temp;
@@ -1244,63 +1245,63 @@ constexpr KFR_INLINE mask<T, Nout> make_mask(bool arg, Args... args)
 KFR_FN(make_mask)
 
 template <typename T, size_t N>
-constexpr KFR_INLINE vec<T, N> zerovector()
+constexpr CMT_INLINE vec<T, N> zerovector()
 {
     constexpr size_t width = N * compound_type_traits<T>::width;
     return compcast<T>(vec<subtype<T>, width>(simd<subtype<T>, width>()));
 }
 
 template <typename T, size_t N>
-constexpr KFR_INLINE vec<T, N> zerovector(vec_t<T, N>)
+constexpr CMT_INLINE vec<T, N> zerovector(vec_t<T, N>)
 {
     return zerovector<T, N>();
 }
 KFR_FN(zerovector)
 
 template <typename T, size_t N>
-constexpr KFR_INLINE vec<T, N> allonesvector()
+constexpr CMT_INLINE vec<T, N> allonesvector()
 {
     return zerovector<T, N>() == zerovector<T, N>();
 }
 template <typename T, size_t N>
-constexpr KFR_INLINE vec<T, N> allonesvector(vec_t<T, N>)
+constexpr CMT_INLINE vec<T, N> allonesvector(vec_t<T, N>)
 {
     return allonesvector<T, N>();
 }
 KFR_FN(allonesvector)
 
 template <typename T, size_t N>
-constexpr KFR_INLINE vec<T, N> undefinedvector()
+constexpr CMT_INLINE vec<T, N> undefinedvector()
 {
     return vec<T, N>{};
 }
 template <typename T, size_t N>
-constexpr KFR_INLINE vec<T, N> undefinedvector(vec_t<T, N>)
+constexpr CMT_INLINE vec<T, N> undefinedvector(vec_t<T, N>)
 {
     return undefinedvector<T, N>();
 }
 KFR_FN(undefinedvector)
 
 template <typename T, size_t N, size_t Nout = prev_poweroftwo(N - 1)>
-KFR_INLINE vec<T, Nout> low(const vec<T, N>& x)
+CMT_INLINE vec<T, Nout> low(const vec<T, N>& x)
 {
     return shufflevector<Nout, internal::shuffle_index<>>(x);
 }
 
 template <typename T, size_t N, size_t Nout = prev_poweroftwo(N - 1)>
-KFR_INLINE vec_t<T, Nout> low(vec_t<T, N>)
+CMT_INLINE vec_t<T, Nout> low(vec_t<T, N>)
 {
     return {};
 }
 
 template <typename T, size_t N, size_t Nout = N - prev_poweroftwo(N - 1)>
-KFR_INLINE vec<T, Nout> high(const vec<T, N>& x)
+CMT_INLINE vec<T, Nout> high(const vec<T, N>& x)
 {
     return shufflevector<Nout, internal::shuffle_index<prev_poweroftwo(N - 1)>>(x);
 }
 
 template <typename T, size_t N, size_t Nout = N - prev_poweroftwo(N - 1)>
-KFR_INLINE vec_t<T, Nout> high(vec_t<T, N>)
+CMT_INLINE vec_t<T, Nout> high(vec_t<T, N>)
 {
     return {};
 }
@@ -1313,16 +1314,16 @@ namespace internal
 template <typename Fn>
 struct expression_lambda : input_expression
 {
-    KFR_INLINE expression_lambda(Fn&& fn) : fn(std::move(fn)) {}
+    CMT_INLINE expression_lambda(Fn&& fn) : fn(std::move(fn)) {}
 
     template <typename T, size_t N, KFR_ENABLE_IF(N&& is_callable<Fn, cinput_t, size_t, vec_t<T, N>>::value)>
-    KFR_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
     {
         return fn(cinput, index, y);
     }
 
     template <typename T, size_t N, KFR_ENABLE_IF(N&& is_callable<Fn, size_t>::value)>
-    KFR_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
+    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
     {
         vec<T, N> result;
         for (size_t i = 0; i < N; i++)
@@ -1332,7 +1333,7 @@ struct expression_lambda : input_expression
         return result;
     }
     template <typename T, size_t N, KFR_ENABLE_IF(N&& is_callable<Fn>::value)>
-    KFR_INLINE vec<T, N> operator()(cinput_t, size_t, vec_t<T, N>) const
+    CMT_INLINE vec<T, N> operator()(cinput_t, size_t, vec_t<T, N>) const
     {
         vec<T, N> result;
         for (size_t i = 0; i < N; i++)

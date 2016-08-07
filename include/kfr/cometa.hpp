@@ -748,7 +748,7 @@ inline auto call_if_callable(Fn&& fn)
 template <typename Fn, typename... Args>
 inline auto bind_func(Fn&& fn, Args&&... args)
 {
-    return [=]() CID_INLINE_LAMBDA { return fn(details::call_if_callable(std::forward<Args>(args))...); };
+    return [=]() CMT_INLINE_LAMBDA { return fn(details::call_if_callable(std::forward<Args>(args))...); };
 }
 
 template <typename T>
@@ -884,7 +884,7 @@ using identity = typename details::identity_impl<T>::type;
 struct swallow
 {
     template <typename... T>
-    CID_INTRIN constexpr swallow(T&&...) noexcept
+    CMT_INTRIN constexpr swallow(T&&...) noexcept
     {
     }
 };
@@ -909,24 +909,24 @@ struct carray<T, 1>
     static constexpr size_t size() noexcept { return 1; }
 
     template <size_t index>
-    CID_INTRIN constexpr T& get(csize_t<index>) noexcept
+    CMT_INTRIN constexpr T& get(csize_t<index>) noexcept
     {
         static_assert(index == 0, "carray: Array index is out of range");
         return val;
     }
     template <size_t index>
-    CID_INTRIN constexpr const T& get(csize_t<index>) const noexcept
+    CMT_INTRIN constexpr const T& get(csize_t<index>) const noexcept
     {
         static_assert(index == 0, "carray: Array index is out of range");
         return val;
     }
     template <size_t index>
-    CID_INTRIN constexpr T& get() noexcept
+    CMT_INTRIN constexpr T& get() noexcept
     {
         return get(csize<index>);
     }
     template <size_t index>
-    CID_INTRIN constexpr const T& get() const noexcept
+    CMT_INTRIN constexpr const T& get() const noexcept
     {
         return get(csize<index>);
     }
@@ -964,39 +964,39 @@ struct carray : carray<T, N - 1>
     constexpr carray(const carray&) noexcept = default;
     constexpr carray(carray&&) noexcept      = default;
     static constexpr size_t size() noexcept { return N; }
-    CID_INTRIN constexpr T& get(csize_t<N - 1>) noexcept { return val; }
+    CMT_INTRIN constexpr T& get(csize_t<N - 1>) noexcept { return val; }
     template <size_t index>
-    CID_INTRIN constexpr T& get(csize_t<index>) noexcept
+    CMT_INTRIN constexpr T& get(csize_t<index>) noexcept
     {
         return carray<T, N - 1>::get(csize<index>);
     }
     template <size_t index>
-    CID_INTRIN constexpr T& get() noexcept
+    CMT_INTRIN constexpr T& get() noexcept
     {
         return get(csize<index>);
     }
-    CID_INTRIN constexpr const T& get(csize_t<N - 1>) const noexcept { return val; }
+    CMT_INTRIN constexpr const T& get(csize_t<N - 1>) const noexcept { return val; }
     template <size_t index>
-    CID_INTRIN constexpr const T& get(csize_t<index>) const noexcept
+    CMT_INTRIN constexpr const T& get(csize_t<index>) const noexcept
     {
         return carray<T, N - 1>::get(csize<index>);
     }
     template <size_t index>
-    CID_INTRIN constexpr const T& get() const noexcept
+    CMT_INTRIN constexpr const T& get() const noexcept
     {
         return get(csize<index>);
     }
-    CID_INTRIN constexpr const T* front() const noexcept { return carray<T, N - 1>::front(); }
-    CID_INTRIN constexpr T* front() noexcept { return carray<T, N - 1>::front(); }
-    CID_INTRIN constexpr const T* back() const noexcept { return val; }
-    CID_INTRIN constexpr T* back() noexcept { return val; }
-    CID_INTRIN constexpr const T* begin() const noexcept { return carray<T, N - 1>::begin(); }
-    CID_INTRIN constexpr const T* end() const noexcept { return &val + 1; }
-    CID_INTRIN constexpr T* begin() noexcept { return carray<T, N - 1>::begin(); }
-    CID_INTRIN constexpr T* end() noexcept { return &val + 1; }
-    CID_INTRIN constexpr const T* data() const noexcept { return begin(); }
-    CID_INTRIN constexpr T* data() noexcept { return begin(); }
-    CID_INTRIN constexpr bool empty() const noexcept { return false; }
+    CMT_INTRIN constexpr const T* front() const noexcept { return carray<T, N - 1>::front(); }
+    CMT_INTRIN constexpr T* front() noexcept { return carray<T, N - 1>::front(); }
+    CMT_INTRIN constexpr const T* back() const noexcept { return val; }
+    CMT_INTRIN constexpr T* back() noexcept { return val; }
+    CMT_INTRIN constexpr const T* begin() const noexcept { return carray<T, N - 1>::begin(); }
+    CMT_INTRIN constexpr const T* end() const noexcept { return &val + 1; }
+    CMT_INTRIN constexpr T* begin() noexcept { return carray<T, N - 1>::begin(); }
+    CMT_INTRIN constexpr T* end() noexcept { return &val + 1; }
+    CMT_INTRIN constexpr const T* data() const noexcept { return begin(); }
+    CMT_INTRIN constexpr T* data() noexcept { return begin(); }
+    CMT_INTRIN constexpr bool empty() const noexcept { return false; }
 private:
     T val;
 };
@@ -1005,7 +1005,7 @@ private:
     struct fn_##fn                                                                                           \
     {                                                                                                        \
         template <typename... Args>                                                                          \
-        CID_INLINE_MEMBER decltype(fn(std::declval<Args>()...)) operator()(Args&&... args) const             \
+        CMT_INLINE_MEMBER decltype(fn(std::declval<Args>()...)) operator()(Args&&... args) const             \
         {                                                                                                    \
             return fn(std::forward<Args>(args)...);                                                          \
         }                                                                                                    \
@@ -1018,7 +1018,7 @@ private:
     struct fn_##fn                                                                                           \
     {                                                                                                        \
         template <typename... Args>                                                                          \
-        CID_INLINE_MEMBER decltype(fn<CMT_ESC tpl_args>(std::declval<Args>()...)) operator()(                \
+        CMT_INLINE_MEMBER decltype(fn<CMT_ESC tpl_args>(std::declval<Args>()...)) operator()(                \
             Args&&... args) const                                                                            \
         {                                                                                                    \
             return fn<CMT_ESC tpl_args>(std::forward<Args>(args)...);                                        \
@@ -1160,19 +1160,19 @@ template <typename T>
 using value_type_of = typename decay<T>::value_type;
 
 template <typename T, typename Fn>
-CID_INTRIN void cforeach(cvals_t<T>, Fn&&)
+CMT_INTRIN void cforeach(cvals_t<T>, Fn&&)
 {
 }
 
 template <typename T, T v0, T... values, typename Fn>
-CID_INTRIN void cforeach(cvals_t<T, v0, values...>, Fn&& fn)
+CMT_INTRIN void cforeach(cvals_t<T, v0, values...>, Fn&& fn)
 {
     fn(cval<T, v0>);
     cforeach(cvals_t<T, values...>(), std::forward<Fn>(fn));
 }
 
 template <typename T, typename Fn, CMT_ENABLE_IF(has_begin_end<T>::value)>
-CID_INTRIN void cforeach(T&& list, Fn&& fn)
+CMT_INTRIN void cforeach(T&& list, Fn&& fn)
 {
     for (const auto& v : list)
     {
@@ -1181,7 +1181,7 @@ CID_INTRIN void cforeach(T&& list, Fn&& fn)
 }
 
 template <typename T, size_t N, typename Fn>
-CID_INTRIN void cforeach(const T (&array)[N], Fn&& fn)
+CMT_INTRIN void cforeach(const T (&array)[N], Fn&& fn)
 {
     for (size_t i = 0; i < N; i++)
     {
@@ -1192,38 +1192,38 @@ CID_INTRIN void cforeach(const T (&array)[N], Fn&& fn)
 namespace details
 {
 template <typename... Ts, typename Fn, size_t... indices>
-CID_INTRIN void cforeach_tuple_impl(const std::tuple<Ts...>& tuple, Fn&& fn, csizes_t<indices...>)
+CMT_INTRIN void cforeach_tuple_impl(const std::tuple<Ts...>& tuple, Fn&& fn, csizes_t<indices...>)
 {
     swallow{ (fn(std::get<indices>(tuple)), void(), 0)... };
 }
 template <typename T0, typename... types, typename Fn, size_t... indices>
-CID_INTRIN void cforeach_types_impl(ctypes_t<T0, types...>, Fn&& fn, csizes_t<indices...>)
+CMT_INTRIN void cforeach_types_impl(ctypes_t<T0, types...>, Fn&& fn, csizes_t<indices...>)
 {
     swallow{ (fn(ctype<type_of<details::get_nth_type<indices, T0, types...>>>), void(), 0)... };
 }
 }
 
 template <typename... Ts, typename Fn>
-CID_INTRIN void cforeach(ctypes_t<Ts...> types, Fn&& fn)
+CMT_INTRIN void cforeach(ctypes_t<Ts...> types, Fn&& fn)
 {
     details::cforeach_types_impl(types, std::forward<Fn>(fn), csizeseq<sizeof...(Ts)>);
 }
 
 template <typename... Ts, typename Fn>
-CID_INTRIN void cforeach(const std::tuple<Ts...>& tuple, Fn&& fn)
+CMT_INTRIN void cforeach(const std::tuple<Ts...>& tuple, Fn&& fn)
 {
     details::cforeach_tuple_impl(tuple, std::forward<Fn>(fn), csizeseq<sizeof...(Ts)>);
 }
 
 template <typename A0, typename A1, typename Fn>
-CID_INTRIN void cforeach(A0&& a0, A1&& a1, Fn&& fn)
+CMT_INTRIN void cforeach(A0&& a0, A1&& a1, Fn&& fn)
 {
     cforeach(std::forward<A0>(a0),
              [&](auto v0) { cforeach(std::forward<A1>(a1), [&](auto v1) { fn(v0, v1); }); });
 }
 
 template <typename A0, typename A1, typename A2, typename Fn>
-CID_INTRIN void cforeach(A0&& a0, A1&& a1, A2&& a2, Fn&& fn)
+CMT_INTRIN void cforeach(A0&& a0, A1&& a1, A2&& a2, Fn&& fn)
 {
     cforeach(std::forward<A0>(a0), [&](auto v0) {
         cforeach(std::forward<A1>(a1),
@@ -1232,13 +1232,13 @@ CID_INTRIN void cforeach(A0&& a0, A1&& a1, A2&& a2, Fn&& fn)
 }
 
 template <typename T, typename Fn, typename DefFn = fn_noop, typename CmpFn = fn_is_equal>
-CID_INTRIN decltype(auto) cswitch(cvals_t<T>, identity<T>, Fn&&, DefFn&& deffn = DefFn(), CmpFn&& = CmpFn())
+CMT_INTRIN decltype(auto) cswitch(cvals_t<T>, identity<T>, Fn&&, DefFn&& deffn = DefFn(), CmpFn&& = CmpFn())
 {
     return deffn();
 }
 
 template <typename T, T v0, T... values, typename Fn, typename DefFn = fn_noop, typename CmpFn = fn_is_equal>
-CID_INTRIN decltype(auto) cswitch(cvals_t<T, v0, values...>, identity<T> value, Fn&& fn,
+CMT_INTRIN decltype(auto) cswitch(cvals_t<T, v0, values...>, identity<T> value, Fn&& fn,
                                   DefFn&& deffn = DefFn(), CmpFn&& cmpfn = CmpFn())
 {
     if (cmpfn(value, v0))
@@ -1253,19 +1253,19 @@ CID_INTRIN decltype(auto) cswitch(cvals_t<T, v0, values...>, identity<T> value, 
 }
 
 template <typename TrueFn, typename FalseFn = fn_noop>
-CID_INTRIN decltype(auto) cif(cbool_t<true>, TrueFn&& truefn, FalseFn&& = FalseFn())
+CMT_INTRIN decltype(auto) cif(cbool_t<true>, TrueFn&& truefn, FalseFn&& = FalseFn())
 {
     return truefn(cbool<true>);
 }
 
 template <typename TrueFn, typename FalseFn = fn_noop>
-CID_INTRIN decltype(auto) cif(cbool_t<false>, TrueFn&&, FalseFn&& falsefn = FalseFn())
+CMT_INTRIN decltype(auto) cif(cbool_t<false>, TrueFn&&, FalseFn&& falsefn = FalseFn())
 {
     return falsefn(cbool<false>);
 }
 
 template <typename T, T start, T stop, typename BodyFn>
-CID_INTRIN decltype(auto) cfor(cval_t<T, start>, cval_t<T, stop>, BodyFn&& bodyfn)
+CMT_INTRIN decltype(auto) cfor(cval_t<T, start>, cval_t<T, stop>, BodyFn&& bodyfn)
 {
     return cforeach(cvalrange<T, start, stop>, std::forward<BodyFn>(bodyfn));
 }
@@ -1320,20 +1320,20 @@ struct virtual_function
 {
     virtual Result operator()(Args... args)     = 0;
     virtual virtual_function* make_copy() const = 0;
-    CID_INTRIN virtual ~virtual_function()      = default;
+    CMT_INTRIN virtual ~virtual_function()      = default;
 };
 
 template <typename Fn, typename Result, typename... Args>
 struct virtual_function_impl : virtual_function<Result, Args...>
 {
 public:
-    CID_INTRIN virtual_function_impl(const Fn& fn) : fn(fn) {}
-    CID_INTRIN Result operator()(Args... args) override final { return fn(args...); }
-    CID_INTRIN virtual_function<Result, Args...>* make_copy() const override final
+    CMT_INTRIN virtual_function_impl(const Fn& fn) : fn(fn) {}
+    CMT_INTRIN Result operator()(Args... args) override final { return fn(args...); }
+    CMT_INTRIN virtual_function<Result, Args...>* make_copy() const override final
     {
         return new virtual_function_impl{ fn };
     }
-    CID_INTRIN ~virtual_function_impl() {}
+    CMT_INTRIN ~virtual_function_impl() {}
 
 private:
     Fn fn;
@@ -1351,13 +1351,13 @@ struct func_filter<Result(Args...)>
 };
 
 template <typename T>
-constexpr CID_INTRIN T return_val() noexcept
+constexpr CMT_INTRIN T return_val() noexcept
 {
     return {};
 }
 
 template <>
-constexpr CID_INTRIN void return_val<void>() noexcept
+constexpr CMT_INTRIN void return_val<void>() noexcept
 {
 }
 }
@@ -1385,16 +1385,16 @@ struct function<Result(Args...)>
         return *this;
     }
 
-    CID_INTRIN function() : fn(nullptr) {}
-    CID_INTRIN function(std::nullptr_t) : fn(nullptr) {}
+    CMT_INTRIN function() : fn(nullptr) {}
+    CMT_INTRIN function(std::nullptr_t) : fn(nullptr) {}
     template <typename Func>
-    CID_INTRIN function(const Func& x)
+    CMT_INTRIN function(const Func& x)
         : fn(new details::virtual_function_impl<typename details::func_filter<Func>::type, Result, Args...>(
               x))
     {
     }
     function(const this_t& other) : fn(other.fn ? other.fn->make_copy() : nullptr) {}
-    CID_INTRIN function& operator=(const this_t& other)
+    CMT_INTRIN function& operator=(const this_t& other)
     {
         if ((&other != this) && (other.fn))
         {
@@ -1404,14 +1404,14 @@ struct function<Result(Args...)>
         }
         return *this;
     }
-    CID_INTRIN function& operator=(std::nullptr_t)
+    CMT_INTRIN function& operator=(std::nullptr_t)
     {
         delete fn;
         fn = nullptr;
         return *this;
     }
     template <typename Fn>
-    CID_INTRIN function& operator=(const Fn& x)
+    CMT_INTRIN function& operator=(const Fn& x)
     {
         using FnImpl =
             details::virtual_function_impl<typename details::func_filter<Fn>::type, Result, Args...>;
@@ -1420,24 +1420,24 @@ struct function<Result(Args...)>
         fn = temp;
         return *this;
     }
-    CID_INTRIN Result operator()(Args... args) const
+    CMT_INTRIN Result operator()(Args... args) const
     {
         if (fn)
             return (*fn)(args...);
         else
             return details::return_val<Result>();
     }
-    CID_INTRIN explicit operator bool() const noexcept { return !!fn; }
+    CMT_INTRIN explicit operator bool() const noexcept { return !!fn; }
 
-    CID_INTRIN ~function() { delete fn; }
+    CMT_INTRIN ~function() { delete fn; }
 private:
     details::virtual_function<Result, Args...>* fn;
 };
 
 template <typename Ret, typename... Args, typename T, typename Fn, typename DefFn = fn_noop>
-CID_INLINE function<Ret(Args...)> cdispatch(cvals_t<T>, identity<T>, Fn&&, DefFn&& deffn = DefFn())
+CMT_INLINE function<Ret(Args...)> cdispatch(cvals_t<T>, identity<T>, Fn&&, DefFn&& deffn = DefFn())
 {
-    return [=](Args... args) CID_INLINE_MEMBER -> Ret { return deffn(std::forward<Args>(args)...); };
+    return [=](Args... args) CMT_INLINE_MEMBER -> Ret { return deffn(std::forward<Args>(args)...); };
 }
 
 template <typename Ret, typename... Args, typename T, T v0, T... values, typename Fn,
@@ -1448,7 +1448,7 @@ inline function<Ret(Args...)> cdispatch(cvals_t<T, v0, values...>, identity<T> v
     if (value == v0)
     {
         return [=](Args... args)
-                   CID_INLINE_MEMBER -> Ret { return fn(cval<T, v0>, std::forward<Args>(args)...); };
+                   CMT_INLINE_MEMBER -> Ret { return fn(cval<T, v0>, std::forward<Args>(args)...); };
     }
     else
     {
@@ -1466,7 +1466,7 @@ inline size_t cfind(cvals_t<T, values...>, identity<T> value)
 }
 
 template <typename Fn, typename... Args>
-CID_NOINLINE static result_of<Fn(Args...)> noinline(Fn&& fn, Args&&... args)
+CMT_NOINLINE static result_of<Fn(Args...)> noinline(Fn&& fn, Args&&... args)
 {
     return fn(std::forward<Args>(args)...);
 }
@@ -1475,7 +1475,7 @@ template <typename Fn>
 struct fn_noinline
 {
     template <typename... Args>
-    CID_INTRIN result_of<Fn(Args...)> operator()(Args&&... args) const
+    CMT_INTRIN result_of<Fn(Args...)> operator()(Args&&... args) const
     {
         return noinline(Fn{}, std::forward<Args>(args)...);
     }
@@ -1483,7 +1483,7 @@ struct fn_noinline
 
 template <typename... Args, typename Fn, typename Ret = decltype(std::declval<Fn>()(std::declval<Args>()...)),
           typename NonMemFn = Ret (*)(Fn*, Args...)>
-CID_INTRIN NonMemFn make_nonmember(const Fn&)
+CMT_INTRIN NonMemFn make_nonmember(const Fn&)
 {
     return [](Fn* fn, Args... args) -> Ret { return fn->operator()(std::forward<Args>(args)...); };
 }
@@ -1519,9 +1519,9 @@ inline const char* type_name() noexcept
 {
     constexpr size_t prefix  = details::strlen("const char *cometa::type_name() [T = ");
     constexpr size_t postfix = details::strlen("]");
-    constexpr size_t length  = sizeof(CID_FUNC_SIGNATURE) - 1 - prefix - postfix;
+    constexpr size_t length  = sizeof(CMT_FUNC_SIGNATURE) - 1 - prefix - postfix;
     static const std::array<char, length + 1> name =
-        details::gettypename_impl(CID_FUNC_SIGNATURE + prefix, csizeseq<length>);
+        details::gettypename_impl(CMT_FUNC_SIGNATURE + prefix, csizeseq<length>);
     return name.data();
 }
 
@@ -1732,14 +1732,14 @@ struct autocast_impl
 {
     const Tfrom value;
     template <typename T>
-    CID_INTRIN constexpr operator T() const noexcept
+    CMT_INTRIN constexpr operator T() const noexcept
     {
         return static_cast<T>(value);
     }
 };
 
 template <typename Tfrom>
-CID_INTRIN constexpr autocast_impl<Tfrom> autocast(const Tfrom& value) noexcept
+CMT_INTRIN constexpr autocast_impl<Tfrom> autocast(const Tfrom& value) noexcept
 {
     return { value };
 }

@@ -31,7 +31,7 @@
 #include "fft.hpp"
 
 #pragma clang diagnostic push
-#if CID_HAS_WARNING("-Wshadow")
+#if CMT_HAS_WARNING("-Wshadow")
 #pragma clang diagnostic ignored "-Wshadow"
 #endif
 

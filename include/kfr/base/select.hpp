@@ -29,7 +29,7 @@ namespace kfr
 namespace intrinsics
 {
 
-#if defined CID_ARCH_SSE41
+#if defined CMT_ARCH_SSE41
 
 KFR_SINTRIN u8sse select(const mu8sse& m, const u8sse& x, const u8sse& y)
 {
@@ -72,7 +72,7 @@ KFR_SINTRIN f64sse select(const mf64sse& m, const f64sse& x, const f64sse& y)
     return _mm_blendv_pd(*y, *x, *m);
 }
 
-#if defined CID_ARCH_AVX
+#if defined CMT_ARCH_AVX
 KFR_SINTRIN f64avx select(const mf64avx& m, const f64avx& x, const f64avx& y)
 {
     return _mm256_blendv_pd(*y, *x, *m);
@@ -83,7 +83,7 @@ KFR_SINTRIN f32avx select(const mf32avx& m, const f32avx& x, const f32avx& y)
 }
 #endif
 
-#if defined CID_ARCH_AVX2
+#if defined CMT_ARCH_AVX2
 KFR_SINTRIN u8avx select(const mu8avx& m, const u8avx& x, const u8avx& y)
 {
     return _mm256_blendv_epi8(*y, *x, *m);
@@ -129,7 +129,7 @@ KFR_SINTRIN vec<T, N> select(const mask<T, N>& a, const vec<T, N>& b, const vec<
     return concat(select(low(a).asmask(), low(b), low(c)), select(high(a).asmask(), high(b), high(c)));
 }
 
-#elif defined CID_ARCH_NEON
+#elif defined CMT_ARCH_NEON
 
 KFR_SINTRIN f32neon select(const mf32neon& m, const f32neon& x, const f32neon& y)
 {
@@ -163,7 +163,7 @@ KFR_SINTRIN u64neon select(const mu64neon& m, const u64neon& x, const u64neon& y
     return vbslq_u64(*m, *x, *y);
 }
 
-#ifdef CID_ARCH_NEON64
+#ifdef CMT_ARCH_NEON64
 KFR_SINTRIN f64neon select(const mf64neon& m, const f64neon& x, const f64neon& y)
 {
     return vbslq_f64(*m, *x, *y);

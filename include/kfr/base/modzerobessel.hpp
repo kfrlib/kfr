@@ -25,7 +25,7 @@
 #include "log_exp.hpp"
 
 #pragma clang diagnostic push
-#if CID_HAS_WARNING("-Wc99-extensions")
+#if CMT_HAS_WARNING("-Wc99-extensions")
 #pragma clang diagnostic ignored "-Wc99-extensions"
 #endif
 
@@ -77,7 +77,7 @@ constexpr T bessel_coef[] = { T(0.25),
                               T(1.5021381070956226783e-096) };
 
 template <typename T, size_t N>
-KFR_INLINE vec<T, N> modzerobessel(const vec<T, N>& x)
+CMT_INLINE vec<T, N> modzerobessel(const vec<T, N>& x)
 {
     const vec<T, N> x_2     = x * 0.5;
     const vec<T, N> x_2_sqr = x_2 * x_2;
@@ -85,7 +85,7 @@ KFR_INLINE vec<T, N> modzerobessel(const vec<T, N>& x)
     vec<T, N> result;
     result = 1 + x_2_sqr;
 
-    KFR_LOOP_UNROLL
+    CMT_LOOP_UNROLL
     for (size_t i = 0; i < (sizeof(T) == 4 ? 20 : 39); i++)
     {
         result = fmadd((num *= x_2_sqr), bessel_coef<T>[i], result);

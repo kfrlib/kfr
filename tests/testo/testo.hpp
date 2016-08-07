@@ -545,7 +545,7 @@ void assert_is_same_decay()
 #define TESTO_TEST(name)                                                                                     \
     void test_function_##name();                                                                             \
     ::testo::test_case test_case_##name(&test_function_##name, #name);                                       \
-    void CID_NOINLINE test_function_##name()
+    void CMT_NOINLINE test_function_##name()
 
 #define TESTO_DTEST(name)                                                                                    \
     template <typename>                                                                                      \

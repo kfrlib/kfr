@@ -35,10 +35,10 @@ namespace internal
 template <typename From, typename E>
 struct expression_convert : expression<E>
 {
-    KFR_INLINE expression_convert(E&& expr) noexcept : expression<E>(std::forward<E>(expr)) {}
+    CMT_INLINE expression_convert(E&& expr) noexcept : expression<E>(std::forward<E>(expr)) {}
 
     template <typename T, size_t N>
-    KFR_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
+    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
     {
         return this->argument_first(index, vec_t<From, N>());
     }
@@ -46,7 +46,7 @@ struct expression_convert : expression<E>
 }
 
 template <typename From, typename E>
-KFR_INLINE internal::expression_convert<From, decay<E>> convert(E&& expr)
+CMT_INLINE internal::expression_convert<From, decay<E>> convert(E&& expr)
 {
     return internal::expression_convert<From, decay<E>>(std::forward<E>(expr));
 }

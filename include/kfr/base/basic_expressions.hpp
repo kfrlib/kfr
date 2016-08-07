@@ -60,30 +60,30 @@ struct expression_iterator
 }
 
 template <typename E1, typename T = value_type_of<E1>>
-KFR_INLINE internal::expression_iterator<T, E1> to_iterator(E1&& e1)
+CMT_INLINE internal::expression_iterator<T, E1> to_iterator(E1&& e1)
 {
     return internal::expression_iterator<T, E1>(std::forward<E1>(e1));
 }
 
 template <typename T, typename... Ts>
-KFR_INLINE auto sequence(T x, Ts... rest)
+CMT_INLINE auto sequence(T x, Ts... rest)
 {
     const T seq[]      = { x, static_cast<T>(rest)... };
     constexpr size_t N = arraysize(seq);
     return lambda([=](size_t index) { return seq[index % N]; });
 }
-KFR_INLINE auto zeros()
+CMT_INLINE auto zeros()
 {
     return lambda([](cinput_t, size_t, auto x) { return zerovector(x); });
 }
-KFR_INLINE auto ones()
+CMT_INLINE auto ones()
 {
     return lambda([](cinput_t, size_t, auto x) {
         using U = subtype<decltype(x)>;
         return U(1);
     });
 }
-KFR_INLINE auto counter()
+CMT_INLINE auto counter()
 {
     return lambda([](cinput_t, size_t index, auto x) {
         using T    = subtype<decltype(x)>;
@@ -93,7 +93,7 @@ KFR_INLINE auto counter()
     });
 }
 template <typename T1>
-KFR_INLINE auto counter(T1 start)
+CMT_INLINE auto counter(T1 start)
 {
     return lambda([start](cinput_t, size_t index, auto x) {
         using T    = subtype<decltype(x)>;
@@ -103,7 +103,7 @@ KFR_INLINE auto counter(T1 start)
     });
 }
 template <typename T1, typename T2>
-KFR_INLINE auto counter(T1 start, T2 step)
+CMT_INLINE auto counter(T1 start, T2 step)
 {
     return lambda([start, step](cinput_t, size_t index, auto x) {
         using T    = subtype<decltype(x)>;
@@ -192,7 +192,7 @@ struct expression_skip : expression<E1>, inherit_value_type<E1>
 {
     expression_skip(E1&& e1, size_t count) : expression<E1>(std::forward<E1>(e1)), count(count) {}
     template <typename T, size_t N>
-    KFR_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
     {
         return this->argument_first(index + count, y);
     }
@@ -218,7 +218,7 @@ struct expression_linspace<T, false> : input_expression
     }
 
     template <typename U, size_t N>
-    KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x) const
+    CMT_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x) const
     {
         using UI = itype<U>;
         return U(start) + (enumerate(x) + cast<U>(cast<UI>(index))) * U(offset);
@@ -242,13 +242,13 @@ struct expression_linspace<T, true> : input_expression
     }
 
     template <typename U, size_t N>
-    KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x) const
+    CMT_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x) const
     {
         using UI = itype<U>;
         return mix((enumerate(x) + cast<U>(cast<UI>(index))) * invsize, cast<U>(start), cast<U>(stop));
     }
     template <typename U, size_t N>
-    KFR_INLINE static vec<U, N> mix(vec<U, N> t, U x, U y)
+    CMT_INLINE static vec<U, N> mix(vec<U, N> t, U x, U y)
     {
         return (U(1.0) - t) * x + t * y;
     }
@@ -265,7 +265,7 @@ public:
     using base = expression<E...>;
 
     template <typename... Expr_>
-    KFR_INLINE expression_sequence(const size_t (&segments)[base::size], Expr_&&... expr) noexcept
+    CMT_INLINE expression_sequence(const size_t (&segments)[base::size], Expr_&&... expr) noexcept
         : base(std::forward<Expr_>(expr)...)
     {
         std::copy(std::begin(segments), std::end(segments), this->segments.begin() + 1);
@@ -274,7 +274,7 @@ public:
     }
 
     template <typename T, size_t N>
-    KFR_NOINLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    CMT_NOINLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
     {
         std::size_t sindex = size_t(std::upper_bound(std::begin(segments), std::end(segments), index) - 1 -
                                     std::begin(segments));
@@ -296,7 +296,7 @@ public:
 
 protected:
     template <typename T, size_t N>
-    KFR_NOINLINE vec<T, N> get(size_t index, size_t expr_index, vec_t<T, N> y)
+    CMT_NOINLINE vec<T, N> get(size_t index, size_t expr_index, vec_t<T, N> y)
     {
         return cswitch(indicesfor<E...>, expr_index, [&](auto val) { return this->argument(val, index, y); },
                        [&]() { return zerovector(y); });
@@ -307,13 +307,13 @@ protected:
 }
 
 template <typename E1>
-KFR_INLINE internal::expression_skip<E1> skip(E1&& e1, size_t count = 1)
+CMT_INLINE internal::expression_skip<E1> skip(E1&& e1, size_t count = 1)
 {
     return internal::expression_skip<E1>(std::forward<E1>(e1), count);
 }
 
 template <typename T1, typename T2, bool precise = false, typename TF = ftype<common_type<T1, T2>>>
-KFR_INLINE internal::expression_linspace<TF, precise> linspace(T1 start, T2 stop, size_t size,
+CMT_INLINE internal::expression_linspace<TF, precise> linspace(T1 start, T2 stop, size_t size,
                                                                bool endpoint = false)
 {
     return internal::expression_linspace<TF, precise>(start, stop, size, endpoint);
@@ -321,7 +321,7 @@ KFR_INLINE internal::expression_linspace<TF, precise> linspace(T1 start, T2 stop
 KFR_FN(linspace)
 
 template <typename T, bool precise = false, typename TF = ftype<T>>
-KFR_INLINE internal::expression_linspace<TF, precise> symmlinspace(T symsize, size_t size,
+CMT_INLINE internal::expression_linspace<TF, precise> symmlinspace(T symsize, size_t size,
                                                                    bool endpoint = false)
 {
     return internal::expression_linspace<TF, precise>(symmetric_linspace, symsize, size, endpoint);
@@ -329,7 +329,7 @@ KFR_INLINE internal::expression_linspace<TF, precise> symmlinspace(T symsize, si
 KFR_FN(symmlinspace)
 
 template <size_t size, typename... E>
-KFR_INLINE internal::expression_sequence<decay<E>...> gen_sequence(const size_t (&list)[size], E&&... gens)
+CMT_INLINE internal::expression_sequence<decay<E>...> gen_sequence(const size_t (&list)[size], E&&... gens)
 {
     static_assert(size == sizeof...(E), "Lists must be of equal length");
     return internal::expression_sequence<decay<E>...>(list, std::forward<E>(gens)...);

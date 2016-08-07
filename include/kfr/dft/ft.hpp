@@ -41,18 +41,18 @@ namespace internal
 {
 
 template <typename T, size_t N, KFR_ENABLE_IF(N >= 2)>
-KFR_INLINE vec<T, N> cmul_impl(vec<T, N> x, vec<T, N> y)
+CMT_INLINE vec<T, N> cmul_impl(vec<T, N> x, vec<T, N> y)
 {
     return subadd(x * dupeven(y), swap<2>(x) * dupodd(y));
 }
 template <typename T, size_t N, KFR_ENABLE_IF(N > 2)>
-KFR_INLINE vec<T, N> cmul_impl(vec<T, N> x, vec<T, 2> y)
+CMT_INLINE vec<T, N> cmul_impl(vec<T, N> x, vec<T, 2> y)
 {
     vec<T, N> yy = resize<N>(y);
     return cmul_impl(x, yy);
 }
 template <typename T, size_t N, KFR_ENABLE_IF(N > 2)>
-KFR_INLINE vec<T, N> cmul_impl(vec<T, 2> x, vec<T, N> y)
+CMT_INLINE vec<T, N> cmul_impl(vec<T, 2> x, vec<T, N> y)
 {
     vec<T, N> xx = resize<N>(x);
     return cmul_impl(xx, y);
@@ -60,24 +60,24 @@ KFR_INLINE vec<T, N> cmul_impl(vec<T, 2> x, vec<T, N> y)
 
 /// Complex Multiplication
 template <typename T, size_t N1, size_t N2>
-KFR_INLINE vec<T, std::max(N1, N2)> cmul(vec<T, N1> x, vec<T, N2> y)
+CMT_INLINE vec<T, std::max(N1, N2)> cmul(vec<T, N1> x, vec<T, N2> y)
 {
     return internal::cmul_impl(x, y);
 }
 KFR_FN(cmul)
 
 template <typename T, size_t N, KFR_ENABLE_IF(N >= 2)>
-KFR_INLINE vec<T, N> cmul_conj(vec<T, N> x, vec<T, N> y)
+CMT_INLINE vec<T, N> cmul_conj(vec<T, N> x, vec<T, N> y)
 {
     return swap<2>(subadd(swap<2>(x) * cdupreal(y), x * cdupimag(y)));
 }
 template <typename T, size_t N, KFR_ENABLE_IF(N >= 2)>
-KFR_INLINE vec<T, N> cmul_2conj(vec<T, N> in0, vec<T, N> in1, vec<T, N> tw)
+CMT_INLINE vec<T, N> cmul_2conj(vec<T, N> in0, vec<T, N> in1, vec<T, N> tw)
 {
     return (in0 + in1) * cdupreal(tw) + swap<2>(cnegimag(in0 - in1)) * cdupimag(tw);
 }
 template <typename T, size_t N, KFR_ENABLE_IF(N >= 2)>
-KFR_INLINE void cmul_2conj(vec<T, N>& out0, vec<T, N>& out1, vec<T, 2> in0, vec<T, 2> in1, vec<T, N> tw)
+CMT_INLINE void cmul_2conj(vec<T, N>& out0, vec<T, N>& out1, vec<T, 2> in0, vec<T, 2> in1, vec<T, N> tw)
 {
     const vec<T, N> twr   = cdupreal(tw);
     const vec<T, N> twi   = cdupimag(tw);
@@ -89,13 +89,13 @@ KFR_INLINE void cmul_2conj(vec<T, N>& out0, vec<T, N>& out1, vec<T, 2> in0, vec<
     out1 += sumtw - diftw;
 }
 template <typename T, size_t N, KFR_ENABLE_IF(N > 2)>
-KFR_INLINE vec<T, N> cmul_conj(vec<T, N> x, vec<T, 2> y)
+CMT_INLINE vec<T, N> cmul_conj(vec<T, N> x, vec<T, 2> y)
 {
     vec<T, N> yy = resize<N>(y);
     return cmul_conj(x, yy);
 }
 template <typename T, size_t N, KFR_ENABLE_IF(N > 2)>
-KFR_INLINE vec<T, N> cmul_conj(vec<T, 2> x, vec<T, N> y)
+CMT_INLINE vec<T, N> cmul_conj(vec<T, 2> x, vec<T, N> y)
 {
     vec<T, N> xx = resize<N>(x);
     return cmul_conj(xx, y);
@@ -107,66 +107,66 @@ template <typename T, size_t N>
 using cvec = vec<T, N * 2>;
 
 template <size_t N, bool A = false, typename T>
-KFR_INLINE cvec<T, N> cread(const complex<T>* src)
+CMT_INLINE cvec<T, N> cread(const complex<T>* src)
 {
     return internal_read_write::read<N * 2, A>(ptr_cast<T>(src));
 }
 
 template <size_t N, bool A = false, typename T>
-KFR_INLINE void cwrite(complex<T>* dest, cvec<T, N> value)
+CMT_INLINE void cwrite(complex<T>* dest, cvec<T, N> value)
 {
     return internal_read_write::write<A>(ptr_cast<T>(dest), value);
 }
 
 template <size_t count, size_t N, size_t stride, bool A, typename T, size_t... indices>
-KFR_INLINE cvec<T, count * N> cread_group_impl(const complex<T>* src, csizes_t<indices...>)
+CMT_INLINE cvec<T, count * N> cread_group_impl(const complex<T>* src, csizes_t<indices...>)
 {
     return concat(read<N * 2, A>(ptr_cast<T>(src + stride * indices))...);
 }
 template <size_t count, size_t N, size_t stride, bool A, typename T, size_t... indices>
-KFR_INLINE void cwrite_group_impl(complex<T>* dest, cvec<T, count * N> value, csizes_t<indices...>)
+CMT_INLINE void cwrite_group_impl(complex<T>* dest, cvec<T, count * N> value, csizes_t<indices...>)
 {
     swallow{ (write<A>(ptr_cast<T>(dest + stride * indices), slice<indices * N * 2, N * 2>(value)), 0)... };
 }
 
 template <size_t count, size_t N, bool A, typename T, size_t... indices>
-KFR_INLINE cvec<T, count * N> cread_group_impl(const complex<T>* src, size_t stride, csizes_t<indices...>)
+CMT_INLINE cvec<T, count * N> cread_group_impl(const complex<T>* src, size_t stride, csizes_t<indices...>)
 {
     return concat(read<N * 2, A>(ptr_cast<T>(src + stride * indices))...);
 }
 template <size_t count, size_t N, bool A, typename T, size_t... indices>
-KFR_INLINE void cwrite_group_impl(complex<T>* dest, size_t stride, cvec<T, count * N> value,
+CMT_INLINE void cwrite_group_impl(complex<T>* dest, size_t stride, cvec<T, count * N> value,
                                   csizes_t<indices...>)
 {
     swallow{ (write<A>(ptr_cast<T>(dest + stride * indices), slice<indices * N * 2, N * 2>(value)), 0)... };
 }
 
 template <size_t count, size_t N, size_t stride, bool A = false, typename T>
-KFR_INLINE cvec<T, count * N> cread_group(const complex<T>* src)
+CMT_INLINE cvec<T, count * N> cread_group(const complex<T>* src)
 {
     return cread_group_impl<count, N, stride, A>(src, csizeseq<count>);
 }
 
 template <size_t count, size_t N, size_t stride, bool A = false, typename T>
-KFR_INLINE void cwrite_group(complex<T>* dest, cvec<T, count * N> value)
+CMT_INLINE void cwrite_group(complex<T>* dest, cvec<T, count * N> value)
 {
     return cwrite_group_impl<count, N, stride, A>(dest, value, csizeseq<count>);
 }
 
 template <size_t count, size_t N, bool A = false, typename T>
-KFR_INLINE cvec<T, count * N> cread_group(const complex<T>* src, size_t stride)
+CMT_INLINE cvec<T, count * N> cread_group(const complex<T>* src, size_t stride)
 {
     return cread_group_impl<count, N, A>(src, stride, csizeseq<count>);
 }
 
 template <size_t count, size_t N, bool A = false, typename T>
-KFR_INLINE void cwrite_group(complex<T>* dest, size_t stride, cvec<T, count * N> value)
+CMT_INLINE void cwrite_group(complex<T>* dest, size_t stride, cvec<T, count * N> value)
 {
     return cwrite_group_impl<count, N, A>(dest, stride, value, csizeseq<count>);
 }
 
 template <size_t N, bool A = false, bool split = false, typename T>
-KFR_INLINE cvec<T, N> cread_split(const complex<T>* src)
+CMT_INLINE cvec<T, N> cread_split(const complex<T>* src)
 {
     cvec<T, N> temp = internal_read_write::read<N * 2, A>(ptr_cast<T>(src));
     if (split)
@@ -175,7 +175,7 @@ KFR_INLINE cvec<T, N> cread_split(const complex<T>* src)
 }
 
 template <size_t N, bool A = false, bool split = false, typename T>
-KFR_INLINE void cwrite_split(complex<T>* dest, cvec<T, N> value)
+CMT_INLINE void cwrite_split(complex<T>* dest, cvec<T, N> value)
 {
     if (split)
         value = interleavehalfs(value);
@@ -253,13 +253,13 @@ inline void cwrite_split<4, true, true, f64>(complex<f64>* dest, cvec<f64, 4> x)
 }
 
 template <size_t N, size_t stride, typename T, size_t... Indices>
-KFR_INLINE cvec<T, N> cgather_helper(const complex<T>* base, csizes_t<Indices...>)
+CMT_INLINE cvec<T, N> cgather_helper(const complex<T>* base, csizes_t<Indices...>)
 {
     return concat(ref_cast<cvec<T, 1>>(base[Indices * stride])...);
 }
 
 template <size_t N, size_t stride, typename T>
-KFR_INLINE cvec<T, N> cgather(const complex<T>* base)
+CMT_INLINE cvec<T, N> cgather(const complex<T>* base)
 {
     if (stride == 1)
     {
@@ -269,7 +269,7 @@ KFR_INLINE cvec<T, N> cgather(const complex<T>* base)
         return cgather_helper<N, stride, T>(base, csizeseq<N>);
 }
 
-KFR_INLINE size_t cgather_next(size_t& index, size_t stride, size_t size, size_t)
+CMT_INLINE size_t cgather_next(size_t& index, size_t stride, size_t size, size_t)
 {
     size_t temp = index;
     index += stride;
@@ -277,7 +277,7 @@ KFR_INLINE size_t cgather_next(size_t& index, size_t stride, size_t size, size_t
         index -= size;
     return temp;
 }
-KFR_INLINE size_t cgather_next(size_t& index, size_t stride, size_t)
+CMT_INLINE size_t cgather_next(size_t& index, size_t stride, size_t)
 {
     size_t temp = index;
     index += stride;
@@ -285,45 +285,45 @@ KFR_INLINE size_t cgather_next(size_t& index, size_t stride, size_t)
 }
 
 template <size_t N, typename T, size_t... Indices>
-KFR_INLINE cvec<T, N> cgather_helper(const complex<T>* base, size_t& index, size_t stride,
+CMT_INLINE cvec<T, N> cgather_helper(const complex<T>* base, size_t& index, size_t stride,
                                      csizes_t<Indices...>)
 {
     return concat(ref_cast<cvec<T, 1>>(base[cgather_next(index, stride, Indices)])...);
 }
 
 template <size_t N, typename T>
-KFR_INLINE cvec<T, N> cgather(const complex<T>* base, size_t& index, size_t stride)
+CMT_INLINE cvec<T, N> cgather(const complex<T>* base, size_t& index, size_t stride)
 {
     return cgather_helper<N, T>(base, index, stride, csizeseq<N>);
 }
 template <size_t N, typename T>
-KFR_INLINE cvec<T, N> cgather(const complex<T>* base, size_t stride)
+CMT_INLINE cvec<T, N> cgather(const complex<T>* base, size_t stride)
 {
     size_t index = 0;
     return cgather_helper<N, T>(base, index, stride, csizeseq<N>);
 }
 
 template <size_t N, typename T, size_t... Indices>
-KFR_INLINE cvec<T, N> cgather_helper(const complex<T>* base, size_t& index, size_t stride, size_t size,
+CMT_INLINE cvec<T, N> cgather_helper(const complex<T>* base, size_t& index, size_t stride, size_t size,
                                      csizes_t<Indices...>)
 {
     return concat(ref_cast<cvec<T, 1>>(base[cgather_next(index, stride, size, Indices)])...);
 }
 
 template <size_t N, typename T>
-KFR_INLINE cvec<T, N> cgather(const complex<T>* base, size_t& index, size_t stride, size_t size)
+CMT_INLINE cvec<T, N> cgather(const complex<T>* base, size_t& index, size_t stride, size_t size)
 {
     return cgather_helper<N, T>(base, index, stride, size, csizeseq<N>);
 }
 
 template <size_t N, size_t stride, typename T, size_t... Indices>
-KFR_INLINE void cscatter_helper(complex<T>* base, cvec<T, N> value, csizes_t<Indices...>)
+CMT_INLINE void cscatter_helper(complex<T>* base, cvec<T, N> value, csizes_t<Indices...>)
 {
     swallow{ (cwrite<1>(base + Indices * stride, slice<Indices * 2, 2>(value)), 0)... };
 }
 
 template <size_t N, size_t stride, typename T>
-KFR_INLINE void cscatter(complex<T>* base, cvec<T, N> value)
+CMT_INLINE void cscatter(complex<T>* base, cvec<T, N> value)
 {
     if (stride == 1)
     {
@@ -336,25 +336,25 @@ KFR_INLINE void cscatter(complex<T>* base, cvec<T, N> value)
 }
 
 template <size_t N, typename T, size_t... Indices>
-KFR_INLINE void cscatter_helper(complex<T>* base, size_t stride, cvec<T, N> value, csizes_t<Indices...>)
+CMT_INLINE void cscatter_helper(complex<T>* base, size_t stride, cvec<T, N> value, csizes_t<Indices...>)
 {
     swallow{ (cwrite<1>(base + Indices * stride, slice<Indices * 2, 2>(value)), 0)... };
 }
 
 template <size_t N, typename T>
-KFR_INLINE void cscatter(complex<T>* base, size_t stride, cvec<T, N> value)
+CMT_INLINE void cscatter(complex<T>* base, size_t stride, cvec<T, N> value)
 {
     return cscatter_helper<N, T>(base, stride, value, csizeseq<N>);
 }
 
 template <size_t groupsize = 1, typename T, size_t N, typename IT>
-KFR_INLINE vec<T, N * 2 * groupsize> cgather(const complex<T>* base, vec<IT, N> offset)
+CMT_INLINE vec<T, N * 2 * groupsize> cgather(const complex<T>* base, vec<IT, N> offset)
 {
     return gather_helper<2 * groupsize>(ptr_cast<T>(base), offset, csizeseq<N>);
 }
 
 template <size_t groupsize = 1, typename T, size_t N, typename IT>
-KFR_INLINE void cscatter(complex<T>* base, vec<IT, N> offset, vec<T, N * 2 * groupsize> value)
+CMT_INLINE void cscatter(complex<T>* base, vec<IT, N> offset, vec<T, N * 2 * groupsize> value)
 {
     return scatter_helper<2 * groupsize>(ptr_cast<T>(base), offset, value, csizeseq<N>);
 }
@@ -483,7 +483,7 @@ constexpr cvec<T, N> twiddleimagmask()
 #pragma clang diagnostic pop
 
 template <typename T, size_t N>
-KFR_NOINLINE static vec<T, N> cossin_conj(vec<T, N> x)
+CMT_NOINLINE static vec<T, N> cossin_conj(vec<T, N> x)
 {
     return cconj(cossin(x));
 }
@@ -1324,7 +1324,7 @@ KFR_INTRIN void butterfly_cycle(size_t&, size_t, csize_t<0>, Args&&...)
 template <size_t width, typename... Args>
 KFR_INTRIN void butterfly_cycle(size_t& i, size_t count, csize_t<width>, Args&&... args)
 {
-    KFR_LOOP_NOUNROLL
+    CMT_LOOP_NOUNROLL
     for (; i < count / width * width; i += width)
         butterfly(i, csize<width>, std::forward<Args>(args)...);
     butterfly_cycle(i, count, csize<width / 2>, std::forward<Args>(args)...);
@@ -1348,14 +1348,14 @@ KFR_INTRIN void generic_butterfly_cycle(csize_t<width>, size_t radix, cbool_t<in
                                         const complex<T>* in, Tstride ostride, size_t halfradix,
                                         size_t halfradix_sqr, const complex<T>* twiddle, size_t i)
 {
-    KFR_LOOP_NOUNROLL
+    CMT_LOOP_NOUNROLL
     for (; i < halfradix / width * width; i += width)
     {
         const cvec<T, 1> in0 = cread<1>(in);
         cvec<T, width> sum0  = resize<2 * width>(in0);
         cvec<T, width> sum1  = sum0;
 
-        KFR_LOOP_NOUNROLL
+        CMT_LOOP_NOUNROLL
         for (size_t j = 0; j < halfradix; j++)
         {
             const cvec<T, 1> ina = cread<1>(in + (1 + j));
@@ -1393,13 +1393,13 @@ KFR_INTRIN void generic_butterfly_w(size_t radix, cbool_t<inverse>, complex<T>* 
     {
         cvec<T, width> sum = T();
         size_t j = 0;
-        KFR_LOOP_NOUNROLL
+        CMT_LOOP_NOUNROLL
         for (; j < radix / width * width; j += width)
         {
             sum += cread<width>(in + j);
         }
         cvec<T, 1> sums = T();
-        KFR_LOOP_NOUNROLL
+        CMT_LOOP_NOUNROLL
         for (; j < radix; j++)
         {
             sums += cread<1>(in + j);
@@ -1427,10 +1427,10 @@ KFR_INTRIN void generic_butterfly(size_t radix, cbool_t<inverse>, complex<T>* ou
     constexpr size_t width = vector_width<T, cpu_t::native>;
 
     cswitch(csizes<11>, radix,
-            [&](auto radix_) KFR_INLINE_LAMBDA {
+            [&](auto radix_) CMT_INLINE_LAMBDA {
                 generic_butterfly_w<width>(val_of(radix_), cbool<inverse>, out, in, twiddle, ostride);
             },
-            [&]() KFR_INLINE_LAMBDA {
+            [&]() CMT_INLINE_LAMBDA {
                 generic_butterfly_w<width>(radix, cbool<inverse>, out, in, twiddle, ostride);
             });
 }

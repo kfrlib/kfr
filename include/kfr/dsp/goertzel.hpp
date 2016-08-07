@@ -45,10 +45,10 @@ struct expression_goertzel : output_expression
         result.imag(q2 * sin(omega));
     }
     template <typename U, size_t N>
-    KFR_INLINE void operator()(coutput_t, size_t index, const vec<U, N>& x)
+    CMT_INLINE void operator()(coutput_t, size_t index, const vec<U, N>& x)
     {
         vec<T, N> in = x;
-        KFR_LOOP_UNROLL
+        CMT_LOOP_UNROLL
         for (size_t i = 0; i < N; i++)
         {
             q0 = coeff * q1 - q2 + in[i];
@@ -82,10 +82,10 @@ struct expression_parallel_goertzel : output_expression
         }
     }
     template <typename U, size_t N>
-    KFR_INLINE void operator()(coutput_t, size_t index, const vec<U, N>& x)
+    CMT_INLINE void operator()(coutput_t, size_t index, const vec<U, N>& x)
     {
         const vec<T, N> in = x;
-        KFR_LOOP_UNROLL
+        CMT_LOOP_UNROLL
         for (size_t i = 0; i < N; i++)
         {
             q0 = coeff * q1 - q2 + in[i];

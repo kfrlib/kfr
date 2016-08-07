@@ -25,7 +25,7 @@
 #include "../cometa/string.hpp"
 #include <cstdlib>
 
-#ifdef KFR_OS_WIN
+#ifdef CMT_OS_WIN
 #include <direct.h>
 #define cross_getcwd _getcwd
 #else
@@ -46,7 +46,7 @@ void python(const std::string& name, const std::string& code)
         cross_getcwd(curdir, arraysize(curdir));
         filename = curdir;
     }
-#ifdef KFR_OS_WIN
+#ifdef CMT_OS_WIN
     const char* slash = "\\";
 #else
     const char* slash = "/";

@@ -41,7 +41,7 @@
     struct fn_##fn                                                                                           \
     {                                                                                                        \
         template <typename... Args>                                                                          \
-        CID_INLINE_MEMBER decltype(fn(std::declval<Args>()...)) operator()(Args&&... args) const             \
+        CMT_INLINE_MEMBER decltype(fn(std::declval<Args>()...)) operator()(Args&&... args) const             \
         {                                                                                                    \
             return fn(std::forward<Args>(args)...);                                                          \
         }                                                                                                    \
@@ -53,7 +53,7 @@
     struct FN                                                                                                \
     {                                                                                                        \
         template <typename... Args>                                                                          \
-        CID_INLINE_MEMBER decltype(::kfr::intrinsics::FN(std::declval<Args>()...)) operator()(               \
+        CMT_INLINE_MEMBER decltype(::kfr::intrinsics::FN(std::declval<Args>()...)) operator()(               \
             Args&&... args) const                                                                            \
         {                                                                                                    \
             return ::kfr::intrinsics::FN(std::forward<Args>(args)...);                                       \
@@ -66,7 +66,7 @@
     {                                                                                                        \
         using ratio = ioratio<in, out>;                                                                      \
         template <typename... Args>                                                                          \
-        CID_INLINE_MEMBER decltype(fn(std::declval<Args>()...)) operator()(Args&&... args) const             \
+        CMT_INLINE_MEMBER decltype(fn(std::declval<Args>()...)) operator()(Args&&... args) const             \
         {                                                                                                    \
             return fn(std::forward<Args>(args)...);                                                          \
         }                                                                                                    \
@@ -77,7 +77,7 @@
     {                                                                                                        \
         constexpr fn_##fn() noexcept = default;                                                              \
         template <typename... Args>                                                                          \
-        KFR_INLINE decltype(fn(std::declval<Args>()...)) operator()(Args&&... args) const                    \
+        CMT_INLINE decltype(fn(std::declval<Args>()...)) operator()(Args&&... args) const                    \
         {                                                                                                    \
             return fn(std::forward<Args>(args)...);                                                          \
         }                                                                                                    \
@@ -200,7 +200,7 @@ inline datatype operator&(datatype x, datatype y)
 struct generic
 {
     template <typename T>
-    KFR_INLINE constexpr operator T() const noexcept
+    CMT_INLINE constexpr operator T() const noexcept
     {
         return T();
     }
@@ -209,7 +209,7 @@ struct generic
 struct infinite
 {
     template <typename T>
-    KFR_INLINE constexpr operator T() const noexcept
+    CMT_INLINE constexpr operator T() const noexcept
     {
         return T();
     }
@@ -234,9 +234,9 @@ enum class archendianness : int
     _archendianness_max = static_cast<int>(bigendian)
 };
 
-typedef void*(KFR_CDECL* func_allocate)(size_t);
+typedef void*(CMT_CDECL* func_allocate)(size_t);
 
-typedef void(KFR_CDECL* func_deallocate)(void*);
+typedef void(CMT_CDECL* func_deallocate)(void*);
 
 struct mem_allocator
 {
@@ -328,7 +328,7 @@ constexpr inline ptrdiff_t distance(const void* x, const void* y)
 enum class cpu_t : int
 {
     common = 0,
-#ifdef CID_ARCH_X86
+#ifdef CMT_ARCH_X86
     sse2    = 1,
     sse3    = 2,
     ssse3   = 3,
@@ -340,12 +340,12 @@ enum class cpu_t : int
     lowest  = static_cast<int>(sse2),
     highest = static_cast<int>(avx2),
 #endif
-#ifdef CID_ARCH_ARM
+#ifdef CMT_ARCH_ARM
     neon    = 1,
     lowest  = static_cast<int>(neon),
     highest = static_cast<int>(neon),
 #endif
-    native  = static_cast<int>(KFR_ARCH_NAME),
+    native  = static_cast<int>(CMT_ARCH_NAME),
     runtime = -1,
 };
 
@@ -362,7 +362,7 @@ namespace internal
 constexpr cpu_t older(cpu_t x) { return static_cast<cpu_t>(static_cast<int>(x) - 1); }
 constexpr cpu_t newer(cpu_t x) { return static_cast<cpu_t>(static_cast<int>(x) + 1); }
 
-#ifdef CID_ARCH_X86
+#ifdef CMT_ARCH_X86
 constexpr auto cpu_list =
     cvals<cpu_t, cpu_t::avx2, cpu_t::avx1, cpu_t::sse41, cpu_t::ssse3, cpu_t::sse3, cpu_t::sse2>;
 #else
@@ -518,23 +518,23 @@ using enable_if_not_f = enable_if<typeclass<T> != datatype::f, R>;
 
 namespace internal
 {
-KFR_INLINE f32 builtin_sqrt(f32 x) { return __builtin_sqrtf(x); }
-KFR_INLINE f64 builtin_sqrt(f64 x) { return __builtin_sqrt(x); }
-KFR_INLINE f80 builtin_sqrt(f80 x) { return __builtin_sqrtl(x); }
-KFR_INLINE void builtin_memcpy(void* dest, const void* src, size_t size)
+CMT_INLINE f32 builtin_sqrt(f32 x) { return __builtin_sqrtf(x); }
+CMT_INLINE f64 builtin_sqrt(f64 x) { return __builtin_sqrt(x); }
+CMT_INLINE f80 builtin_sqrt(f80 x) { return __builtin_sqrtl(x); }
+CMT_INLINE void builtin_memcpy(void* dest, const void* src, size_t size)
 {
     __builtin_memcpy(dest, src, size);
 }
-KFR_INLINE void builtin_memset(void* dest, int val, size_t size) { __builtin_memset(dest, val, size); }
+CMT_INLINE void builtin_memset(void* dest, int val, size_t size) { __builtin_memset(dest, val, size); }
 template <typename T1>
-KFR_INLINE void zeroize(T1& value)
+CMT_INLINE void zeroize(T1& value)
 {
     builtin_memset(static_cast<void*>(std::addressof(value)), 0, sizeof(T1));
 }
 }
 
 #pragma clang diagnostic push
-#if CID_HAS_WARNING("-Wundefined-reinterpret-cast")
+#if CMT_HAS_WARNING("-Wundefined-reinterpret-cast")
 #pragma clang diagnostic ignored "-Wundefined-reinterpret-cast"
 #endif
 
@@ -598,7 +598,7 @@ __attribute__((unused)) static const char* cpu_name(cpu_t set)
 
 #define KFR_FN_S(fn)                                                                                         \
     template <typename Arg, typename... Args>                                                                \
-    KFR_INLINE enable_if_not_vec<Arg> fn(Arg arg, Args... args)                                              \
+    CMT_INLINE enable_if_not_vec<Arg> fn(Arg arg, Args... args)                                              \
     {                                                                                                        \
         return fn(make_vector(arg), make_vector(args)...)[0];                                                \
     }
@@ -657,7 +657,7 @@ constexpr size_t widthof()
 template <typename T>
 constexpr inline const T& bitness_const(const T& x32, const T& x64)
 {
-#ifdef KFR_ARCH_X64
+#ifdef CMT_ARCH_X64
     (void)x32;
     return x64;
 #else
@@ -668,7 +668,7 @@ constexpr inline const T& bitness_const(const T& x32, const T& x64)
 
 constexpr inline const char* bitness_const(const char* x32, const char* x64)
 {
-#ifdef KFR_ARCH_X64
+#ifdef CMT_ARCH_X64
     (void)x32;
     return x64;
 #else
@@ -688,18 +688,18 @@ constexpr size_t common_int_vector_size   = 16;
 
 template <cpu_t c>
 constexpr size_t native_float_vector_size =
-#ifdef CID_ARCH_X86
+#ifdef CMT_ARCH_X86
     c >= cpu_t::avx1 ? 32 : c >= cpu_t::sse2 ? 16 : common_float_vector_size;
 #endif
-#ifdef CID_ARCH_ARM
+#ifdef CMT_ARCH_ARM
 c == cpu_t::neon ? 16 : common_float_vector_size;
 #endif
 template <cpu_t c>
 constexpr size_t native_int_vector_size =
-#ifdef CID_ARCH_X86
+#ifdef CMT_ARCH_X86
     c >= cpu_t::avx2 ? 32 : c >= cpu_t::sse2 ? 16 : common_int_vector_size;
 #endif
-#ifdef CID_ARCH_ARM
+#ifdef CMT_ARCH_ARM
 c == cpu_t::neon ? 16 : common_int_vector_size;
 #endif
 
@@ -709,8 +709,8 @@ struct input_expression
     using size_type  = infinite;
     constexpr size_type size() const noexcept { return {}; }
 
-    KFR_INLINE void begin_block(size_t) const {}
-    KFR_INLINE void end_block(size_t) const {}
+    CMT_INLINE void begin_block(size_t) const {}
+    CMT_INLINE void end_block(size_t) const {}
 };
 
 struct output_expression
@@ -719,8 +719,8 @@ struct output_expression
     using size_type  = infinite;
     constexpr size_type size() const noexcept { return {}; }
 
-    KFR_INLINE void output_begin_block(size_t) const {}
-    KFR_INLINE void output_end_block(size_t) const {}
+    CMT_INLINE void output_begin_block(size_t) const {}
+    CMT_INLINE void output_end_block(size_t) const {}
 };
 
 template <typename E>
@@ -754,7 +754,7 @@ constexpr size_t native_vector_alignment = std::max(native_float_vector_size<c>,
 
 template <cpu_t c>
 constexpr bool fast_unaligned =
-#ifdef CID_ARCH_X86
+#ifdef CMT_ARCH_X86
     c >= cpu_t::avx1;
 #else
     false;

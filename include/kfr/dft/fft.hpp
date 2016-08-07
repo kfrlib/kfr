@@ -35,7 +35,7 @@
 #include "ft.hpp"
 
 #pragma clang diagnostic push
-#if CID_HAS_WARNING("-Wshadow")
+#if CMT_HAS_WARNING("-Wshadow")
 #pragma clang diagnostic ignored "-Wshadow"
 #endif
 
@@ -65,7 +65,7 @@ protected:
 };
 
 #pragma clang diagnostic push
-#if CID_HAS_WARNING("-Wassume")
+#if CMT_HAS_WARNING("-Wassume")
 #pragma clang diagnostic ignored "-Wassume"
 #endif
 
@@ -194,7 +194,7 @@ KFR_SINTRIN void radix4_body(size_t N, csize_t<width>, ctrue_t, cbool_t<splitout
 }
 
 template <typename T>
-KFR_NOINLINE cvec<T, 1> calculate_twiddle(size_t n, size_t size)
+CMT_NOINLINE cvec<T, 1> calculate_twiddle(size_t n, size_t size)
 {
     if (n == 0)
     {
@@ -226,7 +226,7 @@ KFR_SINTRIN void initialize_twiddles_impl(complex<T>*& twiddle, size_t nn, size_
                                           bool split_format)
 {
     vec<T, 2 * width> result = T();
-    KFR_LOOP_UNROLL
+    CMT_LOOP_UNROLL
     for (size_t i = 0; i < width; i++)
     {
         const cvec<T, 1> r = calculate_twiddle<T>(nn + nnstep * i, size);
@@ -241,10 +241,10 @@ KFR_SINTRIN void initialize_twiddles_impl(complex<T>*& twiddle, size_t nn, size_
 }
 
 template <typename T, size_t width>
-KFR_NOINLINE void initialize_twiddles(complex<T>*& twiddle, size_t stage_size, size_t size, bool split_format)
+CMT_NOINLINE void initialize_twiddles(complex<T>*& twiddle, size_t stage_size, size_t size, bool split_format)
 {
     size_t nnstep = size / stage_size;
-    KFR_LOOP_NOUNROLL
+    CMT_LOOP_NOUNROLL
     for (size_t n = 0; n < stage_size / 4; n += width)
     {
         initialize_twiddles_impl<T, width>(twiddle, n * nnstep * 1, nnstep * 1, size, split_format);
@@ -256,7 +256,7 @@ KFR_NOINLINE void initialize_twiddles(complex<T>*& twiddle, size_t stage_size, s
 template <typename T>
 KFR_SINTRIN void prefetch_one(const complex<T>* in)
 {
-#ifdef CID_ARCH_X86
+#ifdef CMT_ARCH_X86
     __builtin_prefetch(ptr_cast<void>(in), 0, _MM_HINT_T0);
 #else
     __builtin_prefetch(ptr_cast<void>(in));
@@ -266,7 +266,7 @@ KFR_SINTRIN void prefetch_one(const complex<T>* in)
 template <typename T>
 KFR_SINTRIN void prefetch_four(size_t stride, const complex<T>* in)
 {
-#ifdef CID_ARCH_X86
+#ifdef CMT_ARCH_X86
     __builtin_prefetch(ptr_cast<void>(in), 0, _MM_HINT_T0);
     __builtin_prefetch(ptr_cast<void>(in + stride), 0, _MM_HINT_T0);
     __builtin_prefetch(ptr_cast<void>(in + stride * 2), 0, _MM_HINT_T0);
@@ -291,7 +291,7 @@ KFR_SINTRIN cfalse_t radix4_pass(Ntype N, size_t blocks, csize_t<width>, cbool_t
     __builtin_assume(blocks > 0);
     __builtin_assume(N > 0);
     __builtin_assume(N4 > 0);
-    KFR_LOOP_NOUNROLL for (size_t b = 0; b < blocks; b++)
+    CMT_LOOP_NOUNROLL for (size_t b = 0; b < blocks; b++)
     {
 #pragma clang loop unroll_count(default_unroll_count)
         for (size_t n2 = 0; n2 < N4; n2 += width)
@@ -410,7 +410,7 @@ KFR_SINTRIN ctrue_t radix4_pass(csize_t<4>, size_t blocks, csize_t<width>, cfals
 {
     constexpr static size_t prefetch_offset = width * 4;
     __builtin_assume(blocks > 0);
-    KFR_LOOP_NOUNROLL
+    CMT_LOOP_NOUNROLL
     for (size_t b = 0; b < blocks; b += 4)
     {
         if (prefetch)

@@ -29,7 +29,7 @@ namespace kfr
 {
 static std::string library_version()
 {
-    return "KFR " + std::string(version_string) + " " + CID_STRINGIFY(KFR_ARCH_NAME) +
+    return "KFR " + std::string(version_string) + " " + CMT_STRINGIFY(CMT_ARCH_NAME) +
            bitness_const(" 32-bit", " 64-bit");
 }
 }

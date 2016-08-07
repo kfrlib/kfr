@@ -33,7 +33,7 @@ namespace kfr
 namespace intrinsics
 {
 
-#if defined CID_ARCH_SSE2
+#if defined CMT_ARCH_SSE2
 
 KFR_SINTRIN f32sse min(const f32sse& x, const f32sse& y) { return _mm_min_ps(*x, *y); }
 KFR_SINTRIN f64sse min(const f64sse& x, const f64sse& y) { return _mm_min_pd(*x, *y); }
@@ -49,7 +49,7 @@ KFR_SINTRIN i16sse max(const i16sse& x, const i16sse& y) { return _mm_max_epi16(
 KFR_SINTRIN i64sse max(const i64sse& x, const i64sse& y) { return select(x > y, x, y); }
 KFR_SINTRIN u64sse max(const u64sse& x, const u64sse& y) { return select(x > y, x, y); }
 
-#if defined CID_ARCH_AVX2
+#if defined CMT_ARCH_AVX2
 KFR_SINTRIN u8avx min(const u8avx& x, const u8avx& y) { return _mm256_min_epu8(*x, *y); }
 KFR_SINTRIN i16avx min(const i16avx& x, const i16avx& y) { return _mm256_min_epi16(*x, *y); }
 KFR_SINTRIN i8avx min(const i8avx& x, const i8avx& y) { return _mm256_min_epi8(*x, *y); }
@@ -70,14 +70,14 @@ KFR_SINTRIN i64avx max(const i64avx& x, const i64avx& y) { return select(x > y, 
 KFR_SINTRIN u64avx max(const u64avx& x, const u64avx& y) { return select(x > y, x, y); }
 #endif
 
-#if defined CID_ARCH_AVX
+#if defined CMT_ARCH_AVX
 KFR_SINTRIN f32avx min(const f32avx& x, const f32avx& y) { return _mm256_min_ps(*x, *y); }
 KFR_SINTRIN f64avx min(const f64avx& x, const f64avx& y) { return _mm256_min_pd(*x, *y); }
 KFR_SINTRIN f32avx max(const f32avx& x, const f32avx& y) { return _mm256_max_ps(*x, *y); }
 KFR_SINTRIN f64avx max(const f64avx& x, const f64avx& y) { return _mm256_max_pd(*x, *y); }
 #endif
 
-#if defined CID_ARCH_SSE41
+#if defined CMT_ARCH_SSE41
 KFR_SINTRIN i8sse min(const i8sse& x, const i8sse& y) { return _mm_min_epi8(*x, *y); }
 KFR_SINTRIN u16sse min(const u16sse& x, const u16sse& y) { return _mm_min_epu16(*x, *y); }
 KFR_SINTRIN i32sse min(const i32sse& x, const i32sse& y) { return _mm_min_epi32(*x, *y); }
@@ -103,7 +103,7 @@ KFR_SINTRIN u32sse max(const u32sse& x, const u32sse& y) { return select(x > y, 
 KFR_HANDLE_ALL_SIZES_2(min)
 KFR_HANDLE_ALL_SIZES_2(max)
 
-#elif defined CID_ARCH_NEON
+#elif defined CMT_ARCH_NEON
 
 KFR_SINTRIN i8neon min(const i8neon& x, const i8neon& y) { return vminq_s8(*x, *y); }
 KFR_SINTRIN u8neon min(const u8neon& x, const u8neon& y) { return vminq_u8(*x, *y); }
@@ -123,7 +123,7 @@ KFR_SINTRIN u64neon min(const u64neon& x, const u64neon& y) { return select(x < 
 
 KFR_SINTRIN f32neon min(const f32neon& x, const f32neon& y) { return vminq_f32(*x, *y); }
 KFR_SINTRIN f32neon max(const f32neon& x, const f32neon& y) { return vmaxq_f32(*x, *y); }
-#if defined CID_ARCH_NEON64
+#if defined CMT_ARCH_NEON64
 KFR_SINTRIN f64neon min(const f64neon& x, const f64neon& y) { return vminq_f64(*x, *y); }
 KFR_SINTRIN f64neon max(const f64neon& x, const f64neon& y) { return vmaxq_f64(*x, *y); }
 #else

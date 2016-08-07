@@ -27,7 +27,7 @@
 
 namespace kfr
 {
-#ifdef CID_ARCH_X86
+#ifdef CMT_ARCH_X86
 
 struct cpu_features
 {
@@ -105,17 +105,17 @@ struct cpu_data
     u32 data[4];
 };
 
-#if defined KFR_COMPILER_GNU || defined KFR_COMPILER_CLANG
-KFR_INLINE u32 get_cpuid(u32 func, u32 subfunc, u32* eax, u32* ebx, u32* ecx, u32* edx)
+#if defined CMT_COMPILER_GNU || defined CMT_COMPILER_CLANG
+CMT_INLINE u32 get_cpuid(u32 func, u32 subfunc, u32* eax, u32* ebx, u32* ecx, u32* edx)
 {
     __asm__("cpuid" : "=a"(*eax), "=b"(*ebx), "=c"(*ecx), "=d"(*edx) : "0"(func), "2"(subfunc));
     return 1;
 }
-KFR_INLINE void cpuid(u32* ptr, u32 func, u32 subfunc = 0)
+CMT_INLINE void cpuid(u32* ptr, u32 func, u32 subfunc = 0)
 {
     get_cpuid(func, subfunc, &ptr[0], &ptr[1], &ptr[2], &ptr[3]);
 }
-KFR_INLINE u32 get_xcr0()
+CMT_INLINE u32 get_xcr0()
 {
     u32 xcr0;
     __asm__("xgetbv" : "=a"(xcr0) : "c"(0) : "%edx");
@@ -245,30 +245,18 @@ cpu_t detect_cpu()
     c.hasAVXOSSUPPORT    = c.hasAVX && c.hasOSXSAVE && (get_xcr0() & 0x06) == 0x06;
     c.hasAVX512OSSUPPORT = c.hasAVXOSSUPPORT && c.hasAVX512F && c.hasOSXSAVE && (get_xcr0() & 0xE0) == 0xE0;
 
-#ifdef KFR_AVAIL_AVX2
     if (c.hasAVX2 && c.hasAVXOSSUPPORT)
         return cpu_t::avx2;
-#endif
-#ifdef KFR_AVAIL_AVX
     if (c.hasAVX && c.hasAVXOSSUPPORT)
         return cpu_t::avx1;
-#endif
-#ifdef KFR_AVAIL_SSE41
     if (c.hasSSE41)
         return cpu_t::sse41;
-#endif
-#ifdef KFR_AVAIL_SSSE3
     if (c.hasSSSE3)
         return cpu_t::ssse3;
-#endif
-#ifdef KFR_AVAIL_SSE3
     if (c.hasSSE3)
         return cpu_t::sse3;
-#endif
-#ifdef KFR_AVAIL_SSE2
     if (c.hasSSE2)
         return cpu_t::sse2;
-#endif
     return cpu_t::lowest;
 }
 }
