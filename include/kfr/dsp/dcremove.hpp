@@ -22,21 +22,17 @@
  */
 #pragma once
 
-#include "base.hpp"
+#include "biquad.hpp"
+#include "biquad_design.hpp"
 
-#include "dsp/biquad.hpp"
-#include "dsp/biquad_design.hpp"
-#include "dsp/dcremove.hpp"
-#include "dsp/fir.hpp"
-#include "dsp/fir_design.hpp"
-#include "dsp/fracdelay.hpp"
-#include "dsp/goertzel.hpp"
-#include "dsp/impulse.hpp"
-#include "dsp/interpolation.hpp"
-#include "dsp/oscillators.hpp"
-#include "dsp/resample.hpp"
-#include "dsp/speaker.hpp"
-#include "dsp/units.hpp"
-#include "dsp/waveshaper.hpp"
-#include "dsp/weighting.hpp"
-#include "dsp/window.hpp"
+namespace kfr
+{
+
+template <typename T, typename E1>
+KFR_INLINE internal::expression_biquads<1, T, internal::arg<E1>> dcremove(
+    E1&& e1, double cutoff = 0.00025)
+{
+    const biquad_params<T> bqs[1] = { biquad_highpass(cutoff, 0.5) };
+    return internal::expression_biquads<1, T, internal::arg<E1>>(bqs, std::forward<E1>(e1));
+}
+}
