@@ -22,22 +22,14 @@
  */
 #pragma once
 
-#include "base.hpp"
+#include "../base.hpp"
 
-#include "dsp/biquad.hpp"
-#include "dsp/biquad_design.hpp"
-#include "dsp/dcremove.hpp"
-#include "dsp/fir.hpp"
-#include "dsp/fir_design.hpp"
-#include "dsp/fracdelay.hpp"
-#include "dsp/goertzel.hpp"
-#include "dsp/impulse.hpp"
-#include "dsp/interpolation.hpp"
-#include "dsp/mixdown.hpp"
-#include "dsp/oscillators.hpp"
-#include "dsp/resample.hpp"
-#include "dsp/speaker.hpp"
-#include "dsp/units.hpp"
-#include "dsp/waveshaper.hpp"
-#include "dsp/weighting.hpp"
-#include "dsp/window.hpp"
+namespace kfr
+{
+
+template <typename... E>
+internal::expression_function<fn_add, E...> mixdown(E&&... e)
+{
+    return internal::expression_function<fn_add, E...>(fn_add(), std::forward<E>(e)...);
+}
+}

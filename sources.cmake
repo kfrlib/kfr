@@ -72,6 +72,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/goertzel.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/impulse.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/interpolation.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/dsp/mixdown.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/oscillators.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/resample.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/speaker.hpp
