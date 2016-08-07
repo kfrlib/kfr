@@ -61,10 +61,10 @@ constexpr inline T add(T x)
 {
     return x;
 }
-template <typename T1, typename T2, typename... Ts>
-constexpr inline common_type<T1, T2, Ts...> add(T1 x, T2 y, Ts... rest)
+template <typename T1, typename T2, typename... Ts, typename Tout = common_type<T1, T2, Ts...>>
+constexpr inline Tout add(T1 x, T2 y, Ts... rest)
 {
-    return x + add(std::forward<T2>(y), std::forward<Ts>(rest)...);
+    return static_cast<Tout>(x) + static_cast<Tout>(add(std::forward<T2>(y), std::forward<Ts>(rest)...));
 }
 template <typename T>
 constexpr inline T add(initialvalue<T>)
@@ -676,8 +676,10 @@ namespace internal
 template <typename... E>
 struct expression_pack : expression<E...>, output_expression
 {
+    constexpr static size_t count = sizeof...(E);
+
     expression_pack(E&&... e) : expression<E...>(std::forward<E>(e)...) {}
-    using value_type = vec<common_type<value_type_of<E>...>, sizeof...(E)>;
+    using value_type = vec<common_type<value_type_of<E>...>, count>;
     using size_type  = typename expression<E...>::size_type;
     constexpr size_type size() const noexcept { return expression<E...>::size(); }
 
@@ -687,16 +689,17 @@ struct expression_pack : expression<E...>, output_expression
         return this->call(fn_packtranspose(), index, x);
     }
     template <typename U, size_t N>
-    KFR_INLINE void operator()(coutput_t, size_t index, const vec<U, N>& x)
+    KFR_INLINE void operator()(coutput_t, size_t index, const vec<vec<U, count>, N>& x)
     {
-        output(index, x, csizeseq<sizeof...(E)>);
+        output(index, x, csizeseq<count>);
     }
 
 private:
     template <typename U, size_t N, size_t... indices>
-    void output(size_t index, const vec<U, N>& x, csizes_t<indices...>)
+    void output(size_t index, const vec<vec<U, count>, N>& x, csizes_t<indices...>)
     {
-        swallow{ (std::get<indices>(this->args)(coutput, index, x[indices]), void(), 0)... };
+        const vec<vec<U, N>, count> xx = compcast<vec<U, N>>(transpose<count>(flatten(x)));
+        swallow{ (std::get<indices>(this->args)(coutput, index, xx[indices]), void(), 0)... };
     }
 };
 }
