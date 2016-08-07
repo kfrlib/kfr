@@ -19,17 +19,24 @@ cmake_minimum_required(VERSION 3.0)
 
 if (NOT MSVC)
     add_compile_options(-fno-exceptions -fno-rtti -ftemplate-backtrace-limit=0)
+    link_libraries(stdc++ pthread m)
+endif ()    
+
+include_directories(../include)
+
+add_executable(multiarch multiarch.cpp multiarch_fir_sse2.cpp multiarch_fir_avx.cpp ${KFR_SRC})
+set_source_files_properties(multiarch_fir_sse2.cpp PROPERTIES COMPILE_FLAGS "-mno-avx -mno-sse3 -msse2")
+set_source_files_properties(multiarch_fir_avx.cpp PROPERTIES COMPILE_FLAGS -mavx)
+
+if (NOT MSVC)
     if (NOT ARCH_FLAGS)
         add_compile_options(-march=native)
     else ()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ARCH_FLAGS}")
     endif ()
-    link_libraries(stdc++ pthread m)
 else ()
     add_compile_options(/arch:AVX)
 endif ()
-
-include_directories(../include)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/tests/cmake/")
 
@@ -70,5 +77,7 @@ add_test(NAME vec_test
         COMMAND ${PROJECT_BINARY_DIR}/tests/vec_test)
 add_test(NAME stat_test
         COMMAND ${PROJECT_BINARY_DIR}/tests/stat_test)
+add_test(NAME multiarch
+        COMMAND ${PROJECT_BINARY_DIR}/tests/multiarch)
 add_test(NAME dft_test
         COMMAND ${PROJECT_BINARY_DIR}/tests/dft_test)
