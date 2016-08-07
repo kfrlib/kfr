@@ -75,6 +75,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/mixdown.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/oscillators.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/resample.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/dsp/sample_rate_conversion.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/speaker.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/units.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/waveshaper.hpp

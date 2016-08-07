@@ -13,7 +13,7 @@
 #include <kfr/math.hpp>
 
 // resample*
-#include <kfr/dsp/resample.hpp>
+#include <kfr/dsp/sample_rate_conversion.hpp>
 
 // file*
 #include <kfr/io/audiofile.hpp>
