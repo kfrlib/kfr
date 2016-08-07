@@ -562,8 +562,8 @@ template <typename T, typename... Args, size_t... indices, size_t N = 1 + sizeof
 constexpr KFR_INLINE vec<T, N> make_vector_impl(csizes_t<indices...>, const T& x, const Args&... rest)
 {
     constexpr size_t width = compound_type_traits<T>::width;
-    const std::tuple<const T&, const Args&...> list(x, rest...);
-    typename vec<T, N>::simd_t result{ compound_type_traits<T>::at(std::get<indices / width>(list),
+    const T list[]         = { x, rest... };
+    typename vec<T, N>::simd_t result{ compound_type_traits<T>::at(list[indices / width],
                                                                    indices % width)... };
     return result;
 }

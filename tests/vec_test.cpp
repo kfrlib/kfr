@@ -182,10 +182,6 @@ TEST(vec_is_convertible)
     CHECK(static_cast<vec<complex<double>, 2>>(vec<complex<float>, 2>{ c32{ 1.f, 2.f }, c32{ 1.f, 2.f } }) ==
           vec<complex<double>, 2>{ c64{ 1., 2. }, c64{ 1., 2. } });
 
-    CHECK(static_cast<vec<vec<double, 5>, 2>>(vec<vec<float, 5>, 2>{
-              vec<float, 5>{ 1.f, 2.f, 3.f, 4.f, 5.f }, vec<float, 5>{ 11.f, 22.f, 33.f, 44.f, 55.f } }) ==
-          vec<vec<double, 5>, 2>{ vec<double, 5>{ 1., 2., 3., 4., 5. },
-                                  vec<double, 5>{ 11., 22., 33., 44., 55. } });
 }
 
 TEST(vec_pack_expr)
