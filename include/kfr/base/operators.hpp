@@ -61,10 +61,10 @@ constexpr inline T add(T x)
 {
     return x;
 }
-template <typename T1, typename T2, typename... Ts, typename Tout = common_type<T1, T2, Ts...>>
-constexpr inline Tout add(T1 x, T2 y, Ts... rest)
+template <typename T1, typename T2, typename... Ts>
+constexpr inline common_type<T1, T2, Ts...> add(T1 x, T2 y, Ts... rest)
 {
-    return static_cast<Tout>(x) + static_cast<Tout>(add(std::forward<T2>(y), std::forward<Ts>(rest)...));
+    return x + add(std::forward<T2>(y), std::forward<Ts>(rest)...);
 }
 template <typename T>
 constexpr inline T add(initialvalue<T>)
@@ -107,10 +107,10 @@ constexpr inline T1 mul(T1 x)
 {
     return x;
 }
-template <typename T1, typename T2, typename... Ts, typename Tout = common_type<T1, T2, Ts...>>
-constexpr inline Tout mul(T1 x, T2 y, Ts... rest)
+template <typename T1, typename T2, typename... Ts>
+constexpr inline common_type<T1, T2, Ts...> mul(T1 x, T2 y, Ts... rest)
 {
-    return static_cast<Tout>(x) * static_cast<Tout>(mul(std::forward<T2>(y), std::forward<Ts>(rest)...));
+    return x * mul(std::forward<T2>(y), std::forward<Ts>(rest)...);
 }
 
 template <typename T>
