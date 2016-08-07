@@ -616,7 +616,8 @@ struct vec : vec_t<T, N>
 {
     static_assert(N > 0 && N <= 256, "Invalid vector size");
 
-    static_assert(!is_vec<T>::value || is_poweroftwo(size_of<T>()), "Inner vector size must be a power of two");
+    static_assert(!is_vec<T>::value || is_poweroftwo(size_of<T>()),
+                  "Inner vector size must be a power of two");
 
     using UT          = utype<T>;
     using value_type  = T;
@@ -1064,6 +1065,28 @@ using mu64x4  = mask<u64, 4>;
 using mu64x8  = mask<u64, 8>;
 using mu64x16 = mask<u64, 16>;
 using mu64x32 = mask<u64, 32>;
+
+using u8x2x2  = vec<vec<u8, 2>, 2>;
+using i8x2x2  = vec<vec<i8, 2>, 2>;
+using u16x2x2 = vec<vec<u16, 2>, 2>;
+using i16x2x2 = vec<vec<i16, 2>, 2>;
+using u32x2x2 = vec<vec<u32, 2>, 2>;
+using i32x2x2 = vec<vec<i32, 2>, 2>;
+using u64x2x2 = vec<vec<u64, 2>, 2>;
+using i64x2x2 = vec<vec<i64, 2>, 2>;
+using f32x2x2 = vec<vec<f32, 2>, 2>;
+using f64x2x2 = vec<vec<f64, 2>, 2>;
+
+using u8x4x4  = vec<vec<u8, 4>, 4>;
+using i8x4x4  = vec<vec<i8, 4>, 4>;
+using u16x4x4 = vec<vec<u16, 4>, 4>;
+using i16x4x4 = vec<vec<i16, 4>, 4>;
+using u32x4x4 = vec<vec<u32, 4>, 4>;
+using i32x4x4 = vec<vec<i32, 4>, 4>;
+using u64x4x4 = vec<vec<u64, 4>, 4>;
+using i64x4x4 = vec<vec<i64, 4>, 4>;
+using f32x4x4 = vec<vec<f32, 4>, 4>;
+using f64x4x4 = vec<vec<f64, 4>, 4>;
 
 namespace glsl_names
 {
