@@ -132,4 +132,75 @@ TEST(vec_conv)
     testo::assert_is_same<decltype(min(pack(1.0, 2.0, 3.0), pack(1, 2, 3))), f64x3>();
 }
 
+TEST(vec_matrix)
+{
+    using i32x2x2 = vec<vec<int, 2>, 2>;
+    const i32x2x2 m22{ i32x2{ 1, 2 }, i32x2{ 3, 4 } };
+    CHECK(m22 * 10 == i32x2x2{ i32x2{ 10, 20 }, i32x2{ 30, 40 } });
+
+    CHECK(m22 * i32x2{ -1, 100 } == i32x2x2{ i32x2{ -1, 200 }, i32x2{ -3, 400 } });
+
+    i32x2 xy{ 10, 20 };
+    i32x2x2 m{ i32x2{ 1, 2 }, i32x2{ 3, 4 } };
+    xy = hadd(xy * m);
+    CHECK(xy == i32x2{ 40, 120 });
+}
+
+TEST(vec_is_convertible)
+{
+    static_assert(std::is_convertible<float, f32x4>::value, "");
+    static_assert(std::is_convertible<float, f64x8>::value, "");
+    static_assert(std::is_convertible<float, u8x3>::value, "");
+
+    static_assert(std::is_convertible<u16x4, i32x4>::value, "");
+    static_assert(!std::is_convertible<u16x4, i32x3>::value, "");
+    static_assert(!std::is_convertible<u16x1, u16x16>::value, "");
+
+    static_assert(std::is_convertible<float, complex<float>>::value, "");
+    static_assert(std::is_convertible<float, complex<double>>::value, "");
+    static_assert(std::is_convertible<short, complex<double>>::value, "");
+
+    static_assert(std::is_convertible<complex<float>, vec<complex<float>, 4>>::value, "");
+    static_assert(!std::is_convertible<vec<complex<float>, 1>, vec<complex<float>, 4>>::value, "");
+
+    static_assert(std::is_convertible<vec<complex<float>, 2>, vec<complex<double>, 2>>::value, "");
+    static_assert(std::is_convertible<vec<vec<float, 5>, 2>, vec<vec<double, 5>, 2>>::value, "");
+
+    CHECK(static_cast<f32x4>(4.f) == f32x4{ 4.f, 4.f, 4.f, 4.f });
+    CHECK(static_cast<f64x8>(4.f) == f64x8{ 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0 });
+    CHECK(static_cast<u8x3>(4.f) == u8x3{ 4, 4, 4 });
+
+    CHECK(static_cast<i32x4>(u16x4{ 1, 2, 3, 4 }) == i32x4{ 1, 2, 3, 4 });
+
+    CHECK(static_cast<complex<float>>(10.f) == complex<float>{ 10.f, 0.f });
+    CHECK(static_cast<complex<double>>(10.f) == complex<double>{ 10., 0. });
+    CHECK(static_cast<complex<double>>(static_cast<short>(10)) == complex<double>{ 10., 0. });
+
+    CHECK(static_cast<vec<complex<float>, 4>>(complex<float>{ 1.f, 2.f }) ==
+          vec<complex<float>, 4>{ c32{ 1.f, 2.f }, c32{ 1.f, 2.f }, c32{ 1.f, 2.f }, c32{ 1.f, 2.f } });
+
+    CHECK(static_cast<vec<complex<double>, 2>>(vec<complex<float>, 2>{ c32{ 1.f, 2.f }, c32{ 1.f, 2.f } }) ==
+          vec<complex<double>, 2>{ c64{ 1., 2. }, c64{ 1., 2. } });
+
+    CHECK(static_cast<vec<vec<double, 5>, 2>>(vec<vec<float, 5>, 2>{
+              vec<float, 5>{ 1.f, 2.f, 3.f, 4.f, 5.f }, vec<float, 5>{ 11.f, 22.f, 33.f, 44.f, 55.f } }) ==
+          vec<vec<double, 5>, 2>{ vec<double, 5>{ 1., 2., 3., 4., 5. },
+                                  vec<double, 5>{ 11., 22., 33., 44., 55. } });
+}
+
+TEST(vec_pack_expr)
+{
+    const univector<float, 10> v1{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    const univector<float, 10> v2{ 11, 22, 33, 44, 55, 66, 77, 88, 99, 110 };
+    const univector<f32x2, 10> v3 = pack(v1, v2);
+    CHECK(v3[0] == f32x2{ 1, 11 });
+    CHECK(v3[1] == f32x2{ 2, 22 });
+    CHECK(v3[9] == f32x2{ 10, 110 });
+
+    const univector<f32x2, 10> v4 = bind_expression(fn_reverse(), v3);
+    CHECK(v4[0] == f32x2{ 11, 1 });
+    CHECK(v4[1] == f32x2{ 22, 2 });
+    CHECK(v4[9] == f32x2{ 110, 10 });
+}
+
 int main(int argc, char** argv) { return testo::run_all("", true); }
