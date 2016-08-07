@@ -739,8 +739,9 @@ template <typename... Ts>
 using is_numeric_args = and_t<is_numeric<Ts>...>;
 
 template <typename T, cpu_t c = cpu_t::native>
-constexpr size_t vector_width = typeclass<T> == datatype::f ? native_float_vector_size<c> / sizeof(T)
-                                                            : native_int_vector_size<c> / sizeof(T);
+constexpr size_t vector_width = std::max(size_t(1), typeclass<T> == datatype::f
+                                                        ? native_float_vector_size<c> / sizeof(T)
+                                                        : native_int_vector_size<c> / sizeof(T));
 
 template <cpu_t c>
 constexpr size_t vector_width<void, c> = 0;
