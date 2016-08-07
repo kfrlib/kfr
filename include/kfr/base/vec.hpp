@@ -292,8 +292,14 @@ struct conversion<mask<To, N>, mask<From, N>>
 };
 }
 
+template <typename T>
+constexpr size_t size_of() noexcept
+{
+    return sizeof(deep_subtype<T>) * compound_type_traits<T>::deep_width;
+}
+
 template <typename From, size_t N, typename Tsub = deep_subtype<From>,
-          size_t Nout = N * sizeof(From) / sizeof(Tsub)>
+          size_t Nout = N* size_of<From>() / size_of<Tsub>()>
 constexpr KFR_INLINE vec<Tsub, Nout> flatten(const vec<From, N>& value) noexcept
 {
     return *value;
@@ -316,13 +322,13 @@ constexpr KFR_INLINE To bitcast(const From& value) noexcept
     return u.to;
 }
 
-template <typename To, typename From, size_t N, size_t Nout = N * sizeof(From) / sizeof(To)>
+template <typename To, typename From, size_t N, size_t Nout = N* size_of<From>() / size_of<To>()>
 constexpr KFR_INLINE vec<To, Nout> bitcast(const vec<From, N>& value) noexcept
 {
     return reinterpret_cast<typename vec<To, Nout>::simd_t>(*value);
 }
 
-template <typename To, typename From, size_t N, size_t Nout = N * sizeof(From) / sizeof(To)>
+template <typename To, typename From, size_t N, size_t Nout = N* size_of<From>() / size_of<To>()>
 constexpr KFR_INLINE mask<To, Nout> bitcast(const mask<From, N>& value) noexcept
 {
     return reinterpret_cast<typename mask<To, Nout>::simd_t>(*value);
@@ -346,19 +352,22 @@ constexpr KFR_INLINE To fbitcast(const From& value) noexcept
     return bitcast<To>(value);
 }
 
-template <typename From, size_t N, typename To = utype<From>, size_t Nout = sizeof(From) * N / sizeof(To)>
+template <typename From, size_t N, typename To = utype<From>,
+          size_t Nout = size_of<From>() * N / size_of<To>()>
 constexpr KFR_INLINE vec<To, Nout> ubitcast(const vec<From, N>& value) noexcept
 {
     return reinterpret_cast<simd<To, Nout>>(*value);
 }
 
-template <typename From, size_t N, typename To = itype<From>, size_t Nout = sizeof(From) * N / sizeof(To)>
+template <typename From, size_t N, typename To = itype<From>,
+          size_t Nout = size_of<From>() * N / size_of<To>()>
 constexpr KFR_INLINE vec<To, Nout> ibitcast(const vec<From, N>& value) noexcept
 {
     return reinterpret_cast<simd<To, Nout>>(*value);
 }
 
-template <typename From, size_t N, typename To = ftype<From>, size_t Nout = sizeof(From) * N / sizeof(To)>
+template <typename From, size_t N, typename To = ftype<From>,
+          size_t Nout = size_of<From>() * N / size_of<To>()>
 constexpr KFR_INLINE vec<To, Nout> fbitcast(const vec<From, N>& value) noexcept
 {
     return reinterpret_cast<simd<To, Nout>>(*value);
@@ -606,6 +615,8 @@ template <typename T, size_t N>
 struct vec : vec_t<T, N>
 {
     static_assert(N > 0 && N <= 256, "Invalid vector size");
+
+    static_assert(!is_vec<T>::value || is_poweroftwo(size_of<T>()), "Inner vector size must be a power of two");
 
     using UT          = utype<T>;
     using value_type  = T;
