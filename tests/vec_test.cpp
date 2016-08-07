@@ -7,6 +7,7 @@
 #include <kfr/io/tostring.hpp>
 
 #include "testo/testo.hpp"
+#include <kfr/dsp/mixdown.hpp>
 #include <kfr/math.hpp>
 
 using namespace kfr;
@@ -144,6 +145,10 @@ TEST(vec_matrix)
     i32x2x2 m{ i32x2{ 1, 2 }, i32x2{ 3, 4 } };
     xy = hadd(xy * m);
     CHECK(xy == i32x2{ 40, 120 });
+
+    i32x2 xy2{ 10, 20 };
+    xy2 = hadd(transpose(xy2 * m));
+    CHECK(xy2 == i32x2{ 50, 110 });
 }
 
 TEST(vec_is_convertible)
@@ -189,17 +194,19 @@ TEST(vec_is_convertible)
 
 TEST(vec_pack_expr)
 {
-    const univector<float, 10> v1{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-    const univector<float, 10> v2{ 11, 22, 33, 44, 55, 66, 77, 88, 99, 110 };
-    const univector<f32x2, 10> v3 = pack(v1, v2);
+    const univector<float, 20> v1 = 1 + counter();
+    const univector<float, 20> v2 = v1 * 11;
+    const univector<f32x2, 20> v3 = pack(v1, v2);
     CHECK(v3[0] == f32x2{ 1, 11 });
     CHECK(v3[1] == f32x2{ 2, 22 });
-    CHECK(v3[9] == f32x2{ 10, 110 });
+    CHECK(v3[18] == f32x2{ 19, 209 });
+    CHECK(v3[19] == f32x2{ 20, 220 });
 
-    const univector<f32x2, 10> v4 = bind_expression(fn_reverse(), v3);
+    const univector<f32x2, 20> v4 = bind_expression(fn_reverse(), v3);
     CHECK(v4[0] == f32x2{ 11, 1 });
     CHECK(v4[1] == f32x2{ 22, 2 });
-    CHECK(v4[9] == f32x2{ 110, 10 });
+    CHECK(v4[18] == f32x2{ 209, 19 });
+    CHECK(v4[19] == f32x2{ 220, 20 });
 }
 
 int main(int argc, char** argv) { return testo::run_all("", true); }
