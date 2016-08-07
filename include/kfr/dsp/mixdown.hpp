@@ -32,4 +32,31 @@ internal::expression_function<fn_add, E...> mixdown(E&&... e)
 {
     return internal::expression_function<fn_add, E...>(fn_add(), std::forward<E>(e)...);
 }
+
+namespace internal
+{
+struct stereo_matrix
+{
+    template <typename T, size_t N>
+    KFR_INLINE vec<vec<T, 2>, N> operator()(const vec<vec<T, 2>, N>& x) const
+    {
+        return process(x, csizeseq<N>);
+    }
+    template <typename T, size_t N, size_t... indices>
+    KFR_INLINE vec<vec<T, 2>, N> process(const vec<vec<T, 2>, N>& x, csizes_t<indices...>) const
+    {
+        return vec<vec<T, 2>, N>(hadd(transpose(x[indices] * matrix))...);
+    }
+    const f64x2x2 matrix;
+};
+}
+
+template <typename Left, typename Right,
+          typename Result = internal::expression_function<
+              internal::stereo_matrix, internal::expression_pack<internal::arg<Left>, internal::arg<Right>>>>
+Result mixdown_stereo(Left&& left, Right&& right, const f64x2x2& matrix)
+{
+    return Result(internal::stereo_matrix{ matrix },
+                  pack(std::forward<Left>(left), std::forward<Right>(right)));
+}
 }
