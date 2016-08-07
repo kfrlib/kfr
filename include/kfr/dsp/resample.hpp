@@ -50,7 +50,7 @@ KFR_SINTRIN T1 resample_blackman(T1 n, T2 a)
     return a0 - a1 * cos(n) + a2 * cos(2 * n);
 }
 
-template <typename T, size_t quality>
+template <typename T, size_t quality, KFR_ARCH_DEP>
 struct resampler
 {
     using itype = i64;
