@@ -36,8 +36,8 @@ struct expression_iterator
     constexpr expression_iterator(E1&& e1) : e1(std::forward<E1>(e1)) {}
     struct iterator
     {
-        T operator*() { return get(); }
-        T get() { return expr.e1(cinput, position, vec_t<T, 1>())[0]; }
+        T operator*() const { return get(); }
+        T get() const { return expr.e1(cinput, position, vec_t<T, 1>())[0]; }
         iterator& operator++()
         {
             ++position;
@@ -50,11 +50,11 @@ struct expression_iterator
             return copy;
         }
         bool operator!=(const iterator& other) const { return position != other.position; }
-        expression_iterator& expr;
+        const expression_iterator& expr;
         size_t position;
     };
-    iterator begin() { return { *this, 0 }; }
-    iterator end() { return { *this, e1.size() }; }
+    iterator begin() const { return { *this, 0 }; }
+    iterator end() const { return { *this, e1.size() }; }
     E1 e1;
 };
 }
@@ -135,13 +135,13 @@ template <typename T, typename E1>
 struct expression_reader
 {
     constexpr expression_reader(E1&& e1) noexcept : e1(std::forward<E1>(e1)) {}
-    T read()
+    T read() const
     {
         const T result = e1(cinput, m_position, vec_t<T, 1>());
         m_position++;
         return result;
     }
-    size_t m_position = 0;
+    mutable size_t m_position = 0;
     E1 e1;
 };
 template <typename T, typename E1>
