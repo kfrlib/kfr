@@ -448,6 +448,11 @@ KFR_INLINE vec<T, N> transpose(const vec<T, N>& x)
 {
     return x;
 }
+template <typename T, size_t N>
+KFR_INLINE vec<vec<T, N>, N> transpose(const vec<vec<T, N>, N>& x)
+{
+    return *transpose<2>(flatten(x));
+}
 KFR_FN(transpose)
 
 template <size_t side, size_t groupsize = 1, typename T, size_t N, KFR_ENABLE_IF(N / groupsize > 3)>
