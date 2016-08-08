@@ -375,8 +375,8 @@ constexpr CMT_INLINE vec<To, Nout> fbitcast(const vec<From, N>& value) noexcept
 
 constexpr CMT_INLINE size_t vector_alignment(size_t size) { return next_poweroftwo(size); }
 
-template <typename T, size_t N, size_t... Sizes, size_t Nout = N + csum(csizes<Sizes...>)>
-CMT_INLINE vec<T, Nout> concat(const vec<T, N>& x, const vec<T, Sizes>&... rest);
+template <typename T, size_t N, size_t... Sizes>
+CMT_INLINE vec<T, N + csum(csizes<Sizes...>)> concat(const vec<T, N>& x, const vec<T, Sizes>&... rest);
 
 namespace internal
 {
@@ -944,8 +944,8 @@ CMT_INLINE auto concat(const vec<T, N1>& x, const vec<T, N2>& y, const vec<T, Si
 }
 }
 
-template <typename T, size_t N, size_t... Sizes, size_t Nout>
-CMT_INLINE vec<T, Nout> concat(const vec<T, N>& x, const vec<T, Sizes>&... rest)
+template <typename T, size_t N, size_t... Sizes>
+CMT_INLINE vec<T, N + csum(csizes<Sizes...>)> concat(const vec<T, N>& x, const vec<T, Sizes>&... rest)
 {
     return internal::concat(x, rest...);
 }

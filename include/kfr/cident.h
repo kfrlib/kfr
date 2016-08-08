@@ -1,7 +1,7 @@
 #pragma once
 
 #ifdef LIBC_WORKAROUND_GETS
-extern char *gets (char *__s);
+extern char* gets(char* __s);
 #endif
 
 #if defined(_M_IX86) || defined(__i386__) || defined(_M_X64) || defined(__x86_64__)
@@ -276,6 +276,21 @@ extern char *gets (char *__s);
 #define CMT_HAS_BUILTIN(builtin) __has_builtin(builtin)
 #else
 #define CMT_HAS_BUILTIN(builtin) 0
+#endif
+
+#if CMT_HAS_BUILTIN(CMT_ASSUME)
+#define CMT_ASSUME(x) __builtin_assume(x)
+#else
+#define CMT_ASSUME(x)                                                                                        \
+    do                                                                                                       \
+    {                                                                                                        \
+    } while (0)
+#endif
+
+#if CMT_HAS_BUILTIN(CMT_ASSUME)
+#define CMT_ASSUME_ALIGNED(x, a) __builtin_assume_aligned(x, a)
+#else
+#define CMT_ASSUME_ALIGNED(x, a) x
 #endif
 
 #ifdef __has_feature

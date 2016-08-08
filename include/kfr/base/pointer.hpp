@@ -134,8 +134,8 @@ expression_vtable<T, maxwidth> make_expression_vtable_impl()
     result.get(csize<1>) = reinterpret_cast<void*>(&internal::make_expression_end_block<decay<E>>);
 
     cforeach(csizeseq<size>, [&](auto u) {
-        constexpr size_t N = 1 << val_of(u);
-        result.get(csize<2 + val_of(u)>) =
+        constexpr size_t N = 1 << val_of(decltype(u)());
+        result.get(csize<2 + val_of(decltype(u)())>) =
             reinterpret_cast<void*>(internal::make_expression_func<T, N, decay<E>>());
     });
     return result;

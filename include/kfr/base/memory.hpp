@@ -85,7 +85,7 @@ inline void aligned_free(void* ptr)
 template <typename T = void, size_t alignment = native_cache_alignment>
 CMT_INLINE T* aligned_allocate(size_t size = 1)
 {
-    T* ptr = static_cast<T*>(__builtin_assume_aligned(
+    T* ptr = static_cast<T*>(CMT_ASSUME_ALIGNED(
         internal::aligned_malloc(std::max(alignment, size * details::elementsize<T>), alignment), alignment));
     return ptr;
 }

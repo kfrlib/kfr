@@ -348,7 +348,8 @@ struct multioutput : output_expression
     template <typename T, size_t N>
     void operator()(coutput_t, size_t index, const vec<T, N>& x)
     {
-        cfor(csize<0>, csize<sizeof...(E)>, [&](auto n) { std::get<val_of(n)>(outputs)(coutput, index, x); });
+        cfor(csize<0>, csize<sizeof...(E)>,
+             [&](auto n) { std::get<val_of(decltype(n)())>(outputs)(coutput, index, x); });
     }
     std::tuple<E...> outputs;
 

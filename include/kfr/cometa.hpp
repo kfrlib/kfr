@@ -24,12 +24,12 @@ using void_t = void;
 
 // Workaround for GCC 4.8
 template <typename T>
-constexpr const T& cmax(const T& x, const T& y)
+constexpr const T& const_max(const T& x, const T& y)
 {
     return x > y ? x : y;
 }
 template <typename T>
-constexpr const T& cmin(const T& x, const T& y)
+constexpr const T& const_min(const T& x, const T& y)
 {
     return x < y ? x : y;
 }

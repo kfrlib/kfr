@@ -562,7 +562,7 @@ CMT_NOINLINE expression_pointer<T> window(size_t size, window_type type, T win_p
               window_type::flattop, window_type::gaussian, window_type::lanczos>,
         type,
         [=](auto win) {
-            constexpr window_type window = val_of(win);
+            constexpr window_type window = val_of(decltype(win)());
             return to_pointer<T>(
                 typename internal::window_by_type<window>::template type<T>(size, win_param, symmetry));
         },

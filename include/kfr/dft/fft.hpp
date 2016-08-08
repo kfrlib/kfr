@@ -288,12 +288,12 @@ KFR_SINTRIN cfalse_t radix4_pass(Ntype N, size_t blocks, csize_t<width>, cbool_t
     constexpr static size_t prefetch_offset = width * 8;
     const auto N4                           = N / csize<4>;
     const auto N43                          = N4 * csize<3>;
-    __builtin_assume(blocks > 0);
-    __builtin_assume(N > 0);
-    __builtin_assume(N4 > 0);
+    CMT_ASSUME(blocks > 0);
+    CMT_ASSUME(N > 0);
+    CMT_ASSUME(N4 > 0);
     CMT_LOOP_NOUNROLL for (size_t b = 0; b < blocks; b++)
     {
-#pragma clang loop unroll_count(default_unroll_count)
+#pragma clang loop unroll_count(2)
         for (size_t n2 = 0; n2 < N4; n2 += width)
         {
             if (prefetch)
@@ -315,7 +315,7 @@ KFR_SINTRIN ctrue_t radix4_pass(csize_t<32>, size_t blocks, csize_t<width>, cfal
                                 cbool_t<use_br2>, cbool_t<prefetch>, cbool_t<inverse>, cbool_t<aligned>,
                                 complex<T>* out, const complex<T>*, const complex<T>*& /*twiddle*/)
 {
-    __builtin_assume(blocks > 0);
+    CMT_ASSUME(blocks > 0);
     constexpr static size_t prefetch_offset = 32 * 4;
     for (size_t b = 0; b < blocks; b++)
     {
@@ -352,7 +352,7 @@ KFR_SINTRIN ctrue_t radix4_pass(csize_t<8>, size_t blocks, csize_t<width>, cfals
                                 cbool_t<use_br2>, cbool_t<prefetch>, cbool_t<inverse>, cbool_t<aligned>,
                                 complex<T>* out, const complex<T>*, const complex<T>*& /*twiddle*/)
 {
-    __builtin_assume(blocks > 0);
+    CMT_ASSUME(blocks > 0);
     constexpr static size_t prefetch_offset = width * 16;
     for (size_t b = 0; b < blocks; b += 2)
     {
@@ -377,7 +377,7 @@ KFR_SINTRIN ctrue_t radix4_pass(csize_t<16>, size_t blocks, csize_t<width>, cfal
                                 cbool_t<use_br2>, cbool_t<prefetch>, cbool_t<inverse>, cbool_t<aligned>,
                                 complex<T>* out, const complex<T>*, const complex<T>*& /*twiddle*/)
 {
-    __builtin_assume(blocks > 0);
+    CMT_ASSUME(blocks > 0);
     constexpr static size_t prefetch_offset = width * 4;
 #pragma clang loop unroll_count(2)
     for (size_t b = 0; b < blocks; b += 2)
@@ -409,7 +409,7 @@ KFR_SINTRIN ctrue_t radix4_pass(csize_t<4>, size_t blocks, csize_t<width>, cfals
                                 complex<T>* out, const complex<T>*, const complex<T>*& /*twiddle*/)
 {
     constexpr static size_t prefetch_offset = width * 4;
-    __builtin_assume(blocks > 0);
+    CMT_ASSUME(blocks > 0);
     CMT_LOOP_NOUNROLL
     for (size_t b = 0; b < blocks; b += 4)
     {
@@ -453,8 +453,8 @@ protected:
         if (splitin)
             in                  = out;
         const size_t stage_size = this->stage_size;
-        __builtin_assume(stage_size >= 2048);
-        __builtin_assume(stage_size % 2048 == 0);
+        CMT_ASSUME(stage_size >= 2048);
+        CMT_ASSUME(stage_size % 2048 == 0);
         radix4_pass(stage_size, 1, csize<width>, ctrue, cbool<splitin>, cbool<!is_even>, cbool<prefetch>,
                     cbool<inverse>, cbool<aligned>, out, in, twiddle);
     }
@@ -836,14 +836,14 @@ struct dft_plan
             const size_t log2n = ilog2(size);
             cswitch(csizes<1, 2, 3, 4, 5, 6, 7, 8>, log2n,
                     [&](auto log2n) {
-                        add_stage<internal::fft_specialization_t<T, val_of(log2n), false>::template type>(
-                            size, type);
+                        add_stage<internal::fft_specialization_t<T, val_of(decltype(log2n)()),
+                                                                 false>::template type>(size, type);
                     },
                     [&]() {
                         cswitch(cfalse_true, is_even(log2n), [&](auto is_even) {
                             make_fft(size, type, is_even, ctrue);
-                            add_stage<internal::fft_reorder_stage_impl_t<T, val_of(is_even)>::template type>(
-                                size, type);
+                            add_stage<internal::fft_reorder_stage_impl_t<
+                                T, val_of(decltype(is_even)())>::template type>(size, type);
                         });
                     });
             initialize(type);
