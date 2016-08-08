@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef LIBC_WORKAROUND_GETS
+extern char *gets (char *__s);
+#endif
+
 #if defined(_M_IX86) || defined(__i386__) || defined(_M_X64) || defined(__x86_64__)
 #define CMT_ARCH_X86 1
 #elif defined(__arm__) || defined(__arm64__) || defined(_M_ARM) || defined(__aarch64__)
@@ -11,10 +15,6 @@
 #define CMT_ARCH_X64 1
 #else
 #define CMT_ARCH_X32 1
-#endif
-
-#ifdef LIBC_WORKAROUND_GETS
-extern char *gets (char *__s);
 #endif
 
 #if defined __AVX512F__ && !defined CMT_ARCH_AVX512
