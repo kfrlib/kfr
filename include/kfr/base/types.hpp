@@ -739,7 +739,7 @@ template <typename... Ts>
 using is_numeric_args = and_t<is_numeric<Ts>...>;
 
 template <typename T, cpu_t c = cpu_t::native>
-constexpr size_t vector_width = std::max(size_t(1), typeclass<T> == datatype::f
+constexpr size_t vector_width = cmax(size_t(1), typeclass<T> == datatype::f
                                                         ? native_float_vector_size<c> / sizeof(T)
                                                         : native_int_vector_size<c> / sizeof(T));
 
@@ -750,7 +750,7 @@ namespace internal
 {
 
 template <cpu_t c>
-constexpr size_t native_vector_alignment = std::max(native_float_vector_size<c>, native_int_vector_size<c>);
+constexpr size_t native_vector_alignment = cmax(native_float_vector_size<c>, native_int_vector_size<c>);
 
 template <cpu_t c>
 constexpr bool fast_unaligned =
@@ -781,7 +781,7 @@ template <typename T, cpu_t c>
 constexpr size_t vector_capacity = native_register_count* vector_width<T, c>;
 
 template <typename T, cpu_t c>
-constexpr size_t maximum_vector_size = std::min(static_cast<size_t>(32), vector_capacity<T, c> / 4);
+constexpr size_t maximum_vector_size = cmin(static_cast<size_t>(32), vector_capacity<T, c> / 4);
 }
 }
 namespace cometa

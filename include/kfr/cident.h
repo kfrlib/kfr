@@ -13,6 +13,10 @@
 #define CMT_ARCH_X32 1
 #endif
 
+#ifdef LIBC_WORKAROUND_GETS
+extern char *gets (char *__s);
+#endif
+
 #if defined __AVX512F__ && !defined CMT_ARCH_AVX512
 #define CMT_ARCH_AVX512 1
 #define CMT_ARCH_AVX2 1
