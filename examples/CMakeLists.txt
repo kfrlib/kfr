@@ -15,7 +15,7 @@
 # along with KFR.
 
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 2.8)
 
 if (NOT MSVC)
     add_compile_options(-fno-exceptions -fno-rtti)

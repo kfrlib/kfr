@@ -15,7 +15,13 @@
 # along with KFR.
 
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 2.8)
+
+if(CMAKE_VERSION VERSION_LESS "2.8.12")
+    function(add_compile_options)
+        add_definitions(${ARGN})
+    endfunction(add_compile_options)
+endif()
 
 set(OPT_BITNESS "") # cmake -DOPT_BITNESS="-m32" or -m64
 set(OPT_STATIC "") # cmake -DOPT_STATIC="-static"
