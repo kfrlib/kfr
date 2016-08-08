@@ -22,6 +22,8 @@ matrix:
       osx_image: xcode7.3
     - os: osx
       osx_image: xcode7
+    - os: osx
+      osx_image: beta-xcode6.3
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update ; fi
