@@ -172,7 +172,7 @@ KFR_SINTRIN f64neon select(const mf64neon& m, const f64neon& x, const f64neon& y
 template <typename T, size_t N>
 KFR_SINTRIN vec<T, N> select(const mask<T, N>& m, const vec<T, N>& x, const vec<T, N>& y)
 {
-    return y ^ ((x ^ y) & m);
+    return y ^ ((x ^ y) & vec<T, N>(*m));
 }
 #endif
 
