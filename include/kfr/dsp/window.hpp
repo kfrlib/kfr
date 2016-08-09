@@ -495,7 +495,7 @@ CMT_INLINE internal::expression_bartlett_hann<T> window_bartlett_hann(size_t siz
     return internal::expression_bartlett_hann<T>(size);
 }
 template <typename T = fbase>
-CMT_INLINE internal::expression_hamming<T> window_hamming(size_t size, T alpha = 0.54,
+CMT_INLINE internal::expression_hamming<T> window_hamming(size_t size, identity<T> alpha = 0.54,
                                                           ctype_t<T> = ctype_t<T>())
 {
     return internal::expression_hamming<T>(size, alpha);
@@ -507,7 +507,7 @@ CMT_INLINE internal::expression_bohman<T> window_bohman(size_t size, ctype_t<T> 
 }
 template <typename T = fbase>
 CMT_INLINE internal::expression_blackman<T> window_blackman(
-    size_t size, T alpha = 0.16, window_symmetry symmetry = window_symmetry::symmetric,
+    size_t size, identity<T> alpha = 0.16, window_symmetry symmetry = window_symmetry::symmetric,
     ctype_t<T> = ctype_t<T>())
 {
     return internal::expression_blackman<T>(size, alpha, symmetry);
@@ -519,7 +519,7 @@ CMT_INLINE internal::expression_blackman_harris<T> window_blackman_harris(
     return internal::expression_blackman_harris<T>(size, T(), symmetry);
 }
 template <typename T = fbase>
-CMT_INLINE internal::expression_kaiser<T> window_kaiser(size_t size, T beta = T(0.5),
+CMT_INLINE internal::expression_kaiser<T> window_kaiser(size_t size, identity<T> beta = T(0.5),
                                                         ctype_t<T> = ctype_t<T>())
 {
     return internal::expression_kaiser<T>(size, beta);
@@ -530,7 +530,7 @@ CMT_INLINE internal::expression_flattop<T> window_flattop(size_t size, ctype_t<T
     return internal::expression_flattop<T>(size);
 }
 template <typename T = fbase>
-CMT_INLINE internal::expression_gaussian<T> window_gaussian(size_t size, T alpha = 2.5,
+CMT_INLINE internal::expression_gaussian<T> window_gaussian(size_t size, identity<T> alpha = 2.5,
                                                             ctype_t<T> = ctype_t<T>())
 {
     return internal::expression_gaussian<T>(size, alpha);
@@ -543,7 +543,7 @@ CMT_INLINE internal::expression_lanczos<T> window_lanczos(size_t size, ctype_t<T
 
 template <typename T           = fbase, window_type type,
           typename window_expr = typename internal::window_by_type<type>::template type<T>>
-CMT_NOINLINE window_expr window(size_t size, cval_t<window_type, type>, T win_param = T(),
+CMT_NOINLINE window_expr window(size_t size, cval_t<window_type, type>, identity<T> win_param = T(),
                                 window_symmetry symmetry = window_symmetry::symmetric,
                                 ctype_t<T>               = ctype_t<T>())
 {
@@ -551,7 +551,7 @@ CMT_NOINLINE window_expr window(size_t size, cval_t<window_type, type>, T win_pa
 }
 
 template <typename T = fbase>
-CMT_NOINLINE expression_pointer<T> window(size_t size, window_type type, T win_param,
+CMT_NOINLINE expression_pointer<T> window(size_t size, window_type type, identity<T> win_param,
                                           window_symmetry symmetry = window_symmetry::symmetric,
                                           ctype_t<T>               = ctype_t<T>())
 {
