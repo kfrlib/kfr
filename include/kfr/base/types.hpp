@@ -102,7 +102,7 @@ using imax = int64_t;
 using fmax = double;
 using f80  = long double;
 
-#ifdef KFR_BASETYPE_F32
+#if defined(KFR_BASETYPE_F32) || defined(KFR_NO_NATIVE_F64)
 using fbase = f32;
 #else
 using fbase = f64;
@@ -342,8 +342,9 @@ enum class cpu_t : int
 #endif
 #ifdef CMT_ARCH_ARM
     neon    = 1,
+    neon64  = 2,
     lowest  = static_cast<int>(neon),
-    highest = static_cast<int>(neon),
+    highest = static_cast<int>(neon64),
 #endif
     native  = static_cast<int>(CMT_ARCH_NAME),
     runtime = -1,
