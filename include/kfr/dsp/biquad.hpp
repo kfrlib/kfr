@@ -44,6 +44,15 @@ enum class biquad_type
 template <typename T>
 struct biquad_params
 {
+    template <typename U>
+    constexpr biquad_params(const biquad_params<U>& bq) noexcept : a0(static_cast<T>(bq.a0)),
+                                                                   a1(static_cast<T>(bq.a1)),
+                                                                   a2(static_cast<T>(bq.a2)),
+                                                                   b0(static_cast<T>(bq.b0)),
+                                                                   b1(static_cast<T>(bq.b1)),
+                                                                   b2(static_cast<T>(bq.b2))
+    {
+    }
     constexpr static bool is_pod = true;
 
     static_assert(std::is_floating_point<T>::value, "T must be a floating point type");
