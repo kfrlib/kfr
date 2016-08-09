@@ -132,10 +132,12 @@ extern char* gets(char* __s);
 
 #if __ARM_ARCH >= 8 && defined(__aarch64__)
 #define CMT_ARCH_NEON64 1
+#define CMT_ARCH_NEON 1
 #define CMT_ARCH_NAME neon64
 #else
 #define CMT_ARCH_NEON 1
 #define CMT_ARCH_NAME neon
+#define KFR_NO_NATIVE_F64 1
 #endif
 #endif
 
@@ -143,6 +145,14 @@ extern char* gets(char* __s);
 
 #ifndef CMT_ARCH_NAME
 #define CMT_ARCH_NAME common
+#endif
+
+#ifndef KFR_NO_NATIVE_F64
+#define KFR_NATIVE_F64 1
+#endif
+
+#ifndef KFR_NO_NATIVE_I64
+#define KFR_NATIVE_I64 1
 #endif
 
 #define CMT_STRINGIFY2(x) #x
