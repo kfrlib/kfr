@@ -9,7 +9,9 @@
 #endif
 
 MPFR_DIAG_PRAGMA(push)
+#if defined  __clang__ && defined __has_warning && __has_warning("-Wreserved-id-macro")
 MPFR_DIAG_PRAGMA(ignored "-Wreserved-id-macro")
+#endif
 MPFR_DIAG_PRAGMA(ignored "-Wpadded")
 MPFR_DIAG_PRAGMA(ignored "-Wdeprecated")
 MPFR_DIAG_PRAGMA(ignored "-Wshorten-64-to-32")
