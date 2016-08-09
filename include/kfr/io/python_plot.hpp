@@ -37,6 +37,10 @@ namespace kfr
 {
 namespace internal
 {
+#pragma clang diagnostic push
+#if CMT_HAS_WARNING("-Wdeprecated-declarations")
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
 void python(const std::string& name, const std::string& code)
 {
@@ -58,6 +62,7 @@ void python(const std::string& name, const std::string& code)
     fclose(f);
     std::system(("python \"" + filename + "\"").c_str());
 }
+#pragma clang diagnostic pop
 }
 
 static std::string concat_args() { return {}; }
