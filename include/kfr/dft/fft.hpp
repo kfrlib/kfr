@@ -35,7 +35,7 @@
 #include "ft.hpp"
 
 #pragma clang diagnostic push
-#if CID_HAS_WARNING("-Wshadow")
+#if CMT_HAS_WARNING("-Wshadow")
 #pragma clang diagnostic ignored "-Wshadow"
 #endif
 
@@ -65,7 +65,7 @@ protected:
 };
 
 #pragma clang diagnostic push
-#if CID_HAS_WARNING("-Wassume")
+#if CMT_HAS_WARNING("-Wassume")
 #pragma clang diagnostic ignored "-Wassume"
 #endif
 
@@ -194,7 +194,7 @@ KFR_SINTRIN void radix4_body(size_t N, csize_t<width>, ctrue_t, cbool_t<splitout
 }
 
 template <typename T>
-KFR_NOINLINE cvec<T, 1> calculate_twiddle(size_t n, size_t size)
+CMT_NOINLINE cvec<T, 1> calculate_twiddle(size_t n, size_t size)
 {
     if (n == 0)
     {
@@ -214,9 +214,9 @@ KFR_NOINLINE cvec<T, 1> calculate_twiddle(size_t n, size_t size)
     }
     else
     {
-        double kth  = c_pi<double, 2> * (n / static_cast<double>(size));
-        double tcos = +kfr::cos(kth);
-        double tsin = -kfr::sin(kth);
+        fbase kth  = c_pi<fbase, 2> * (n / static_cast<fbase>(size));
+        fbase tcos = +kfr::cos(kth);
+        fbase tsin = -kfr::sin(kth);
         return make_vector(static_cast<T>(tcos), static_cast<T>(tsin));
     }
 }
@@ -226,7 +226,7 @@ KFR_SINTRIN void initialize_twiddles_impl(complex<T>*& twiddle, size_t nn, size_
                                           bool split_format)
 {
     vec<T, 2 * width> result = T();
-    KFR_LOOP_UNROLL
+    CMT_LOOP_UNROLL
     for (size_t i = 0; i < width; i++)
     {
         const cvec<T, 1> r = calculate_twiddle<T>(nn + nnstep * i, size);
@@ -241,10 +241,10 @@ KFR_SINTRIN void initialize_twiddles_impl(complex<T>*& twiddle, size_t nn, size_
 }
 
 template <typename T, size_t width>
-KFR_NOINLINE void initialize_twiddles(complex<T>*& twiddle, size_t stage_size, size_t size, bool split_format)
+CMT_NOINLINE void initialize_twiddles(complex<T>*& twiddle, size_t stage_size, size_t size, bool split_format)
 {
     size_t nnstep = size / stage_size;
-    KFR_LOOP_NOUNROLL
+    CMT_LOOP_NOUNROLL
     for (size_t n = 0; n < stage_size / 4; n += width)
     {
         initialize_twiddles_impl<T, width>(twiddle, n * nnstep * 1, nnstep * 1, size, split_format);
@@ -256,7 +256,7 @@ KFR_NOINLINE void initialize_twiddles(complex<T>*& twiddle, size_t stage_size, s
 template <typename T>
 KFR_SINTRIN void prefetch_one(const complex<T>* in)
 {
-#ifdef CID_ARCH_X86
+#ifdef CMT_ARCH_X86
     __builtin_prefetch(ptr_cast<void>(in), 0, _MM_HINT_T0);
 #else
     __builtin_prefetch(ptr_cast<void>(in));
@@ -266,7 +266,7 @@ KFR_SINTRIN void prefetch_one(const complex<T>* in)
 template <typename T>
 KFR_SINTRIN void prefetch_four(size_t stride, const complex<T>* in)
 {
-#ifdef CID_ARCH_X86
+#ifdef CMT_ARCH_X86
     __builtin_prefetch(ptr_cast<void>(in), 0, _MM_HINT_T0);
     __builtin_prefetch(ptr_cast<void>(in + stride), 0, _MM_HINT_T0);
     __builtin_prefetch(ptr_cast<void>(in + stride * 2), 0, _MM_HINT_T0);
@@ -288,12 +288,12 @@ KFR_SINTRIN cfalse_t radix4_pass(Ntype N, size_t blocks, csize_t<width>, cbool_t
     constexpr static size_t prefetch_offset = width * 8;
     const auto N4                           = N / csize<4>;
     const auto N43                          = N4 * csize<3>;
-    __builtin_assume(blocks > 0);
-    __builtin_assume(N > 0);
-    __builtin_assume(N4 > 0);
-    KFR_LOOP_NOUNROLL for (size_t b = 0; b < blocks; b++)
+    CMT_ASSUME(blocks > 0);
+    CMT_ASSUME(N > 0);
+    CMT_ASSUME(N4 > 0);
+    CMT_LOOP_NOUNROLL for (size_t b = 0; b < blocks; b++)
     {
-#pragma clang loop unroll_count(default_unroll_count)
+#pragma clang loop unroll_count(2)
         for (size_t n2 = 0; n2 < N4; n2 += width)
         {
             if (prefetch)
@@ -315,7 +315,7 @@ KFR_SINTRIN ctrue_t radix4_pass(csize_t<32>, size_t blocks, csize_t<width>, cfal
                                 cbool_t<use_br2>, cbool_t<prefetch>, cbool_t<inverse>, cbool_t<aligned>,
                                 complex<T>* out, const complex<T>*, const complex<T>*& /*twiddle*/)
 {
-    __builtin_assume(blocks > 0);
+    CMT_ASSUME(blocks > 0);
     constexpr static size_t prefetch_offset = 32 * 4;
     for (size_t b = 0; b < blocks; b++)
     {
@@ -352,7 +352,7 @@ KFR_SINTRIN ctrue_t radix4_pass(csize_t<8>, size_t blocks, csize_t<width>, cfals
                                 cbool_t<use_br2>, cbool_t<prefetch>, cbool_t<inverse>, cbool_t<aligned>,
                                 complex<T>* out, const complex<T>*, const complex<T>*& /*twiddle*/)
 {
-    __builtin_assume(blocks > 0);
+    CMT_ASSUME(blocks > 0);
     constexpr static size_t prefetch_offset = width * 16;
     for (size_t b = 0; b < blocks; b += 2)
     {
@@ -377,7 +377,7 @@ KFR_SINTRIN ctrue_t radix4_pass(csize_t<16>, size_t blocks, csize_t<width>, cfal
                                 cbool_t<use_br2>, cbool_t<prefetch>, cbool_t<inverse>, cbool_t<aligned>,
                                 complex<T>* out, const complex<T>*, const complex<T>*& /*twiddle*/)
 {
-    __builtin_assume(blocks > 0);
+    CMT_ASSUME(blocks > 0);
     constexpr static size_t prefetch_offset = width * 4;
 #pragma clang loop unroll_count(2)
     for (size_t b = 0; b < blocks; b += 2)
@@ -409,8 +409,8 @@ KFR_SINTRIN ctrue_t radix4_pass(csize_t<4>, size_t blocks, csize_t<width>, cfals
                                 complex<T>* out, const complex<T>*, const complex<T>*& /*twiddle*/)
 {
     constexpr static size_t prefetch_offset = width * 4;
-    __builtin_assume(blocks > 0);
-    KFR_LOOP_NOUNROLL
+    CMT_ASSUME(blocks > 0);
+    CMT_LOOP_NOUNROLL
     for (size_t b = 0; b < blocks; b += 4)
     {
         if (prefetch)
@@ -453,8 +453,8 @@ protected:
         if (splitin)
             in                  = out;
         const size_t stage_size = this->stage_size;
-        __builtin_assume(stage_size >= 2048);
-        __builtin_assume(stage_size % 2048 == 0);
+        CMT_ASSUME(stage_size >= 2048);
+        CMT_ASSUME(stage_size % 2048 == 0);
         radix4_pass(stage_size, 1, csize<width>, ctrue, cbool<splitin>, cbool<!is_even>, cbool<prefetch>,
                     cbool<inverse>, cbool<aligned>, out, in, twiddle);
     }
@@ -836,14 +836,14 @@ struct dft_plan
             const size_t log2n = ilog2(size);
             cswitch(csizes<1, 2, 3, 4, 5, 6, 7, 8>, log2n,
                     [&](auto log2n) {
-                        add_stage<internal::fft_specialization_t<T, val_of(log2n), false>::template type>(
-                            size, type);
+                        add_stage<internal::fft_specialization_t<T, val_of(decltype(log2n)()),
+                                                                 false>::template type>(size, type);
                     },
                     [&]() {
                         cswitch(cfalse_true, is_even(log2n), [&](auto is_even) {
                             make_fft(size, type, is_even, ctrue);
-                            add_stage<internal::fft_reorder_stage_impl_t<T, val_of(is_even)>::template type>(
-                                size, type);
+                            add_stage<internal::fft_reorder_stage_impl_t<
+                                T, val_of(decltype(is_even)())>::template type>(size, type);
                         });
                     });
             initialize(type);

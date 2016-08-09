@@ -13,7 +13,7 @@
 #include <kfr/math.hpp>
 
 // resample*
-#include <kfr/dsp/resample.hpp>
+#include <kfr/dsp/sample_rate_conversion.hpp>
 
 // file*
 #include <kfr/io/audiofile.hpp>
@@ -31,7 +31,7 @@ using namespace kfr;
 constexpr size_t input_sr  = 96000;
 constexpr size_t output_sr = 44100;
 constexpr size_t len       = 96000 * 6;
-constexpr f64 i32max       = 2147483647.0;
+constexpr fbase i32max     = 2147483647.0;
 
 int main(int argc, char** argv)
 {
@@ -39,11 +39,11 @@ int main(int argc, char** argv)
 
     const std::string options = "phaseresp=False";
 
-    univector<f64> swept_sine = swept(0.5, len);
+    univector<fbase> swept_sine = swept<fbase>(0.5, len);
 
     {
-        auto r = resampler(resample_quality::high, output_sr, input_sr, 1.0, 0.496);
-        univector<f64> resampled(len * output_sr / input_sr);
+        auto r = resampler<fbase>(resample_quality::high, output_sr, input_sr, 1.0, 0.496);
+        univector<fbase> resampled(len * output_sr / input_sr);
 
         const size_t destsize = r(resampled.data(), swept_sine);
 
@@ -57,8 +57,8 @@ int main(int argc, char** argv)
     }
 
     {
-        auto r = resampler(resample_quality::normal, output_sr, input_sr, 1.0, 0.496);
-        univector<f64> resampled(len * output_sr / input_sr);
+        auto r = resampler<fbase>(resample_quality::normal, output_sr, input_sr, 1.0, 0.496);
+        univector<fbase> resampled(len * output_sr / input_sr);
 
         const size_t destsize = r(resampled.data(), swept_sine);
 
@@ -72,8 +72,8 @@ int main(int argc, char** argv)
     }
 
     {
-        auto r = resampler(resample_quality::low, output_sr, input_sr, 1.0, 0.496);
-        univector<f64> resampled(len * output_sr / input_sr);
+        auto r = resampler<fbase>(resample_quality::low, output_sr, input_sr, 1.0, 0.496);
+        univector<fbase> resampled(len * output_sr / input_sr);
 
         const size_t destsize = r(resampled.data(), swept_sine);
 
@@ -87,8 +87,8 @@ int main(int argc, char** argv)
     }
 
     {
-        auto r = resampler(resample_quality::draft, output_sr, input_sr, 1.0, 0.496);
-        univector<f64> resampled(len * output_sr / input_sr);
+        auto r = resampler<fbase>(resample_quality::draft, output_sr, input_sr, 1.0, 0.496);
+        univector<fbase> resampled(len * output_sr / input_sr);
 
         const size_t destsize = r(resampled.data(), swept_sine);
 

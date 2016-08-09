@@ -20,34 +20,43 @@
  * disclosing the source code of your own applications.
  * See http://www.kfrlib.com for details.
  */
-
 #pragma once
 
-#include "../base/basic_expressions.hpp"
-#include "../base/function.hpp"
-#include "../base/operators.hpp"
-#include "../base/vec.hpp"
+#include "../base.hpp"
 
 namespace kfr
 {
+
+template <typename... E>
+internal::expression_function<fn_add, E...> mixdown(E&&... e)
+{
+    return internal::expression_function<fn_add, E...>(fn_add(), std::forward<E>(e)...);
+}
+
 namespace internal
 {
-template <typename From, typename E>
-struct expression_convert : expression<E>
+struct stereo_matrix
 {
-    CMT_INLINE expression_convert(E&& expr) noexcept : expression<E>(std::forward<E>(expr)) {}
-
     template <typename T, size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
+    CMT_INLINE vec<vec<T, 2>, N> operator()(const vec<vec<T, 2>, N>& x) const
     {
-        return this->argument_first(index, vec_t<From, N>());
+        return process(x, csizeseq<N>);
     }
+    template <typename T, size_t N, size_t... indices>
+    CMT_INLINE vec<vec<T, 2>, N> process(const vec<vec<T, 2>, N>& x, csizes_t<indices...>) const
+    {
+        return vec<vec<T, 2>, N>(hadd(transpose(x[indices] * matrix))...);
+    }
+    const f64x2x2 matrix;
 };
 }
 
-template <typename From, typename E>
-CMT_INLINE internal::expression_convert<From, decay<E>> convert(E&& expr)
+template <typename Left, typename Right,
+          typename Result = internal::expression_function<
+              internal::stereo_matrix, internal::expression_pack<internal::arg<Left>, internal::arg<Right>>>>
+Result mixdown_stereo(Left&& left, Right&& right, const f64x2x2& matrix)
 {
-    return internal::expression_convert<From, decay<E>>(std::forward<E>(expr));
+    return Result(internal::stereo_matrix{ matrix },
+                  pack(std::forward<Left>(left), std::forward<Right>(right)));
 }
 }

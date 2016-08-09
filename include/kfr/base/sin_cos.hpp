@@ -31,7 +31,7 @@
 #include "select.hpp"
 #include "shuffle.hpp"
 
-#if CID_HAS_WARNING("-Wc99-extensions")
+#if CMT_HAS_WARNING("-Wc99-extensions")
 #pragma clang diagnostic ignored "-Wc99-extensions"
 #endif
 

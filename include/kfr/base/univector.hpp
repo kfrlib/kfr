@@ -40,20 +40,20 @@ template <typename T, typename Class>
 struct univector_base : input_expression, output_expression
 {
     template <typename U, size_t N>
-    KFR_INLINE void operator()(coutput_t, size_t index, const vec<U, N>& value)
+    CMT_INLINE void operator()(coutput_t, size_t index, const vec<U, N>& value)
     {
         T* data = derived_cast<Class>(this)->data();
-        write(ptr_cast<T>(data) + index, cast<T>(value));
+        write(ptr_cast<T>(data) + index, vec<T, N>(value));
     }
     template <typename U, size_t N>
-    KFR_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N>) const
+    CMT_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N>) const
     {
         const T* data = derived_cast<Class>(this)->data();
-        return cast<U>(read<N>(ptr_cast<T>(data) + index));
+        return static_cast<vec<U, N>>(read<N>(ptr_cast<T>(data) + index));
     }
 
     template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
-    KFR_INLINE Class& operator=(Input&& input)
+    CMT_INLINE Class& operator=(Input&& input)
     {
         assign_expr(std::forward<Input>(input));
         return *derived_cast<Class>(this);
@@ -126,16 +126,16 @@ struct univector_base : input_expression, output_expression
 
 protected:
     template <typename Input>
-    KFR_INLINE void assign_expr(Input&& input)
+    CMT_INLINE void assign_expr(Input&& input)
     {
         process<T>(*this, std::forward<Input>(input), get_size());
     }
 
 private:
     constexpr infinite size() const noexcept = delete;
-    KFR_INLINE size_t get_size() const { return derived_cast<Class>(this)->size(); }
-    KFR_INLINE const T* get_data() const { return derived_cast<Class>(this)->data(); }
-    KFR_INLINE T* get_data() { return derived_cast<Class>(this)->data(); }
+    CMT_INLINE size_t get_size() const { return derived_cast<Class>(this)->size(); }
+    CMT_INLINE const T* get_data() const { return derived_cast<Class>(this)->data(); }
+    CMT_INLINE T* get_data() { return derived_cast<Class>(this)->data(); }
 };
 
 template <typename T, size_t Size>
@@ -197,7 +197,7 @@ struct univector<T, tag_array_ref> : array_ref<T>, univector_base<T, univector<T
     constexpr static bool is_array_ref = true;
     constexpr static bool is_vector    = false;
     constexpr static bool is_aligned   = false;
-    using value_type                   = T;
+    using value_type                   = remove_const<T>;
 
     using univector_base<T, univector>::operator=;
 };
@@ -249,39 +249,39 @@ template <typename T, size_t Size1 = tag_dynamic_vector, size_t Size2 = tag_dyna
 using univector3d      = univector<univector<univector<T, Size3>, Size2>, Size1>;
 
 template <cpu_t c = cpu_t::native, size_t Tag, typename T, typename Fn>
-KFR_INLINE void process(univector<T, Tag>& vector, Fn&& fn)
+CMT_INLINE void process(univector<T, Tag>& vector, Fn&& fn)
 {
     static_assert(is_input_expression<Fn>::value, "Fn must be an expression");
     return process<T, c>(vector, std::forward<Fn>(fn), vector.size());
 }
 
 template <cpu_t c = cpu_t::native, typename T, size_t Nsize, typename Fn>
-KFR_INLINE void process(T (&dest)[Nsize], Fn&& fn)
+CMT_INLINE void process(T (&dest)[Nsize], Fn&& fn)
 {
     static_assert(is_input_expression<Fn>::value, "Fn must be an expression");
     return process<T, c>(univector<T, tag_array_ref>(dest), std::forward<Fn>(fn), Nsize);
 }
 template <cpu_t c = cpu_t::native, typename T, typename Fn>
-KFR_INLINE void process(const array_ref<T>& vector, Fn&& fn)
+CMT_INLINE void process(const array_ref<T>& vector, Fn&& fn)
 {
     static_assert(is_input_expression<Fn>::value, "Fn must be an expression");
     return process<T, c>(univector<T, tag_array_ref>(vector), std::forward<Fn>(fn), vector.size());
 }
 
 template <typename T>
-KFR_INLINE univector_ref<T> make_univector(T* data, size_t size)
+CMT_INLINE univector_ref<T> make_univector(T* data, size_t size)
 {
     return univector_ref<T>(data, size);
 }
 
 template <typename T>
-KFR_INLINE univector_ref<const T> make_univector(const T* data, size_t size)
+CMT_INLINE univector_ref<const T> make_univector(const T* data, size_t size)
 {
     return univector_ref<const T>(data, size);
 }
 
 template <typename Expr, typename T = value_type_of<Expr>>
-KFR_INLINE univector<T> render(Expr&& expr)
+CMT_INLINE univector<T> render(Expr&& expr)
 {
     univector<T> result;
     result.resize(expr.size());
@@ -290,7 +290,7 @@ KFR_INLINE univector<T> render(Expr&& expr)
 }
 
 template <typename Expr, typename T = value_type_of<Expr>>
-KFR_INLINE univector<T> render(Expr&& expr, size_t size)
+CMT_INLINE univector<T> render(Expr&& expr, size_t size)
 {
     univector<T> result;
     result.resize(size);

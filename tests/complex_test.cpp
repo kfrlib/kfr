@@ -44,17 +44,17 @@ TEST(complex_vector)
 
 TEST(complex_cast)
 {
-    const vec<f32, 4> v1 = subcast<f32>(make_vector(c32{ 0, 1 }, c32{ 2, 3 }));
+    const vec<f32, 4> v1 = bitcast<f32>(make_vector(c32{ 0, 1 }, c32{ 2, 3 }));
     CHECK(v1(0) == 0.f);
     CHECK(v1(1) == 1.f);
     CHECK(v1(2) == 2.f);
     CHECK(v1(3) == 3.f);
 
-    const vec<c32, 1> v2 = subcast<c32>(make_vector(1.f, 2.f));
+    const vec<c32, 1> v2 = bitcast<c32>(make_vector(1.f, 2.f));
     CHECK(v2(0) == 1.f);
     CHECK(v2(1) == 2.f);
 
-    const vec<c32, 2> v3 = cast<c32>(make_vector(1.f, 2.f));
+    const vec<c32, 2> v3 = make_vector(1.f, 2.f);
     CHECK(v3(0) == 1.f);
     CHECK(v3(1) == 0.f);
     CHECK(v3(2) == 2.f);
@@ -101,6 +101,15 @@ TEST(complex_math)
     CHECK(cexp(c32{ 1.f, 1.f }) == c32{ 1.4686939399158849, 2.2873552871788423 });
     CHECK(cexp2(c32{ 1.f, 1.f }) == c32{ 1.5384778027279442, 1.2779225526272695 });
     CHECK(cexp10(c32{ 1.f, 1.f }) == c32{ -6.682015101903131, 7.439803369574931 });
+
+#ifdef KFR_NATIVE_F64
+    CHECK(csin(c64{ 1.f, 1.f }) == c64{ 1.2984575814159773, 0.634963914784736 });
+    CHECK(ccos(c64{ 1.f, 1.f }) == c64{ 0.8337300251311489, -0.9888977057628651 });
+    CHECK(csinh(c64{ 1.f, 1.f }) == c64{ 0.634963914784736, 1.2984575814159773 });
+    CHECK(ccosh(c64{ 1.f, 1.f }) == c64{ 0.8337300251311489, 0.9888977057628651 });
+    CHECK(clog(c64{ 1.f, 1.f }) == c64{ 0.34657359027997264, 0.7853981633974483 });
+    CHECK(cexp(c64{ 1.f, 1.f }) == c64{ 1.4686939399158849, 2.2873552871788423 });
+#endif
 }
 
 TEST(complex_read_write)
@@ -168,10 +177,12 @@ int main(int argc, char** argv)
 {
     println(library_version());
 
+#ifdef CMT_ARCH_SSE2
     static_assert(vector_width<f32, cpu_t::sse2> == 4, "");
     static_assert(vector_width<c32, cpu_t::sse2> == 2, "");
     static_assert(vector_width<i32, cpu_t::sse2> == 4, "");
     static_assert(vector_width<complex<i32>, cpu_t::sse2> == 2, "");
+#endif
 
     static_assert(is_numeric<vec<complex<float>, 4>>::value, "");
     static_assert(is_numeric_args<vec<complex<float>, 4>>::value, "");

@@ -20,8 +20,11 @@
  * disclosing the source code of your own applications.
  * See http://www.kfrlib.com for details.
  */
+#pragma once
 
 #include "base.hpp"
-#include "dft.hpp"
-#include "dsp.hpp"
-#include "io.hpp"
+
+#include "io/audiofile.hpp"
+#include "io/file.hpp"
+#include "io/python_plot.hpp"
+#include "io/tostring.hpp"

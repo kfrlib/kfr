@@ -32,14 +32,14 @@ namespace kfr
 {
 
 template <typename T>
-KFR_INLINE T final_mean(T value, size_t size)
+CMT_INLINE T final_mean(T value, size_t size)
 {
     return value / T(size);
 }
 KFR_FN(final_mean)
 
 template <typename T>
-KFR_INLINE T final_rootmean(T value, size_t size)
+CMT_INLINE T final_rootmean(T value, size_t size)
 {
     return internal::builtin_sqrt(value / T(size));
 }
@@ -48,12 +48,12 @@ KFR_FN(final_rootmean)
 namespace internal
 {
 template <typename FinalFn, typename T, KFR_ENABLE_IF(is_callable<FinalFn, T, size_t>::value)>
-KFR_INLINE auto reduce_call_final(FinalFn&& finalfn, size_t size, T value)
+CMT_INLINE auto reduce_call_final(FinalFn&& finalfn, size_t size, T value)
 {
     return finalfn(value, size);
 }
 template <typename FinalFn, typename T, KFR_ENABLE_IF(!is_callable<FinalFn, T, size_t>::value)>
-KFR_INLINE auto reduce_call_final(FinalFn&& finalfn, size_t, T value)
+CMT_INLINE auto reduce_call_final(FinalFn&& finalfn, size_t, T value)
 {
     return finalfn(value);
 }
@@ -70,26 +70,26 @@ struct expression_reduce : output_expression
     }
 
     template <typename U, size_t N>
-    KFR_INLINE void operator()(coutput_t, size_t, const vec<U, N>& x) const
+    CMT_INLINE void operator()(coutput_t, size_t, const vec<U, N>& x) const
     {
         counter += N;
         process(x);
     }
 
-    KFR_INLINE T get() { return internal::reduce_call_final(finalfn, counter, horizontal(value, reducefn)); }
+    CMT_INLINE T get() { return internal::reduce_call_final(finalfn, counter, horizontal(value, reducefn)); }
 
 protected:
     void reset() { counter = 0; }
-    KFR_INLINE void process(vec<T, width> x) const { value = reducefn(transformfn(x), value); }
+    CMT_INLINE void process(vec<T, width> x) const { value = reducefn(transformfn(x), value); }
 
     template <size_t N, KFR_ENABLE_IF(N < width)>
-    KFR_INLINE void process(vec<T, N> x) const
+    CMT_INLINE void process(vec<T, N> x) const
     {
         value = combine(value, reducefn(transformfn(x), narrow<N>(value)));
     }
 
     template <size_t N, KFR_ENABLE_IF(N > width)>
-    KFR_INLINE void process(vec<T, N> x) const
+    CMT_INLINE void process(vec<T, N> x) const
     {
         process(low(x));
         process(high(x));

@@ -29,14 +29,13 @@ int main(int argc, char** argv)
 
     // fft size
     const size_t size = 128;
-    using float_type  = double;
 
     // initialize input & output buffers
-    univector<complex<float_type>, size> in  = sin(linspace(0.0, c_pi<float_type, 2> * 4.0, size));
-    univector<complex<float_type>, size> out = scalar(qnan);
+    univector<complex<fbase>, size> in  = sin(linspace(0.0, c_pi<fbase, 2> * 4.0, size));
+    univector<complex<fbase>, size> out = scalar(qnan);
 
     // initialize fft
-    const dft_plan<float_type> dft(size);
+    const dft_plan<fbase> dft(size);
 
     // allocate work buffer for fft (if needed)
     univector<u8> temp(dft.temp_size);
@@ -48,7 +47,7 @@ int main(int argc, char** argv)
     out = out / size;
 
     // get magnitude and convert to decibels
-    univector<float_type, size> dB = amp_to_dB(cabs(out));
+    univector<fbase, size> dB = amp_to_dB(cabs(out));
 
     println("max  = ", maxof(dB));
     println("min  = ", minof(dB));

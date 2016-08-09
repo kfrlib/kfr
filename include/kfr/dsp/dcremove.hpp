@@ -20,8 +20,18 @@
  * disclosing the source code of your own applications.
  * See http://www.kfrlib.com for details.
  */
+#pragma once
 
-#include "base.hpp"
-#include "dft.hpp"
-#include "dsp.hpp"
-#include "io.hpp"
+#include "biquad.hpp"
+#include "biquad_design.hpp"
+
+namespace kfr
+{
+
+template <typename T, typename E1>
+CMT_INLINE internal::expression_biquads<1, T, internal::arg<E1>> dcremove(E1&& e1, double cutoff = 0.00025)
+{
+    const biquad_params<T> bqs[1] = { biquad_highpass(cutoff, 0.5) };
+    return internal::expression_biquads<1, T, internal::arg<E1>>(bqs, std::forward<E1>(e1));
+}
+}

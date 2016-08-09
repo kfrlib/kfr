@@ -83,15 +83,15 @@ inline void aligned_free(void* ptr)
 }
 
 template <typename T = void, size_t alignment = native_cache_alignment>
-KFR_INLINE T* aligned_allocate(size_t size = 1)
+CMT_INLINE T* aligned_allocate(size_t size = 1)
 {
-    T* ptr = static_cast<T*>(__builtin_assume_aligned(
+    T* ptr = static_cast<T*>(CMT_ASSUME_ALIGNED(
         internal::aligned_malloc(std::max(alignment, size * details::elementsize<T>), alignment), alignment));
     return ptr;
 }
 
 template <typename T = void>
-KFR_INLINE void aligned_deallocate(T* ptr)
+CMT_INLINE void aligned_deallocate(T* ptr)
 {
     return internal::aligned_free(ptr);
 }
@@ -101,29 +101,29 @@ namespace internal
 template <typename T>
 struct aligned_deleter
 {
-    KFR_INLINE void operator()(T* ptr) const { aligned_deallocate(ptr); }
+    CMT_INLINE void operator()(T* ptr) const { aligned_deallocate(ptr); }
 };
 }
 
 template <typename T>
 struct autofree
 {
-    KFR_INLINE autofree() {}
-    explicit KFR_INLINE autofree(size_t size) : ptr(aligned_allocate<T>(size)) {}
+    CMT_INLINE autofree() {}
+    explicit CMT_INLINE autofree(size_t size) : ptr(aligned_allocate<T>(size)) {}
     autofree(const autofree&) = delete;
     autofree& operator=(const autofree&) = delete;
     autofree(autofree&&) noexcept        = default;
     autofree& operator=(autofree&&) noexcept = default;
-    KFR_INLINE T& operator[](size_t index) noexcept { return ptr[index]; }
-    KFR_INLINE const T& operator[](size_t index) const noexcept { return ptr[index]; }
+    CMT_INLINE T& operator[](size_t index) noexcept { return ptr[index]; }
+    CMT_INLINE const T& operator[](size_t index) const noexcept { return ptr[index]; }
 
     template <typename U = T>
-    KFR_INLINE U* data() noexcept
+    CMT_INLINE U* data() noexcept
     {
         return ptr_cast<U>(ptr.get());
     }
     template <typename U = T>
-    KFR_INLINE const U* data() const noexcept
+    CMT_INLINE const U* data() const noexcept
     {
         return ptr_cast<U>(ptr.get());
     }
@@ -159,7 +159,7 @@ struct allocator
     {
         pointer result = aligned_allocate<value_type>(n);
         if (!result)
-            CID_THROW(std::bad_alloc());
+            CMT_THROW(std::bad_alloc());
         return result;
     }
     void deallocate(pointer p, size_type) { aligned_deallocate(p); }

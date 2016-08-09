@@ -7,7 +7,7 @@
 #include <utility>
 
 #pragma clang diagnostic push
-#if CID_HAS_WARNING("-Wformat-security")
+#if CMT_HAS_WARNING("-Wformat-security")
 #pragma clang diagnostic ignored "-Wformat-security"
 #pragma clang diagnostic ignored "-Wused-but-marked-unused"
 #endif
@@ -16,7 +16,7 @@ namespace cometa
 {
 
 template <typename... Args>
-CID_INLINE std::string as_string(const Args&... args);
+CMT_INLINE std::string as_string(const Args&... args);
 
 template <typename T>
 constexpr inline const T& repr(const T& value)
@@ -46,13 +46,13 @@ namespace details
 {
 
 template <size_t N, size_t... indices>
-CID_INLINE constexpr cstring<N> make_cstring_impl(const char (&str)[N], csizes_t<indices...>)
+CMT_INLINE constexpr cstring<N> make_cstring_impl(const char (&str)[N], csizes_t<indices...>)
 {
     return { { str[indices]..., 0 } };
 }
 
 template <size_t N1, size_t N2, size_t... indices>
-CID_INLINE constexpr cstring<N1 - 1 + N2 - 1 + 1> concat_str_impl(const cstring<N1>& str1,
+CMT_INLINE constexpr cstring<N1 - 1 + N2 - 1 + 1> concat_str_impl(const cstring<N1>& str1,
                                                                   const cstring<N2>& str2,
                                                                   csizes_t<indices...>)
 {
@@ -60,7 +60,7 @@ CID_INLINE constexpr cstring<N1 - 1 + N2 - 1 + 1> concat_str_impl(const cstring<
     return { { (indices < L1 ? str1[indices] : str2[indices - L1])..., 0 } };
 }
 template <size_t N1, size_t N2, typename... Args>
-CID_INLINE constexpr cstring<N1 - 1 + N2 - 1 + 1> concat_str_impl(const cstring<N1>& str1,
+CMT_INLINE constexpr cstring<N1 - 1 + N2 - 1 + 1> concat_str_impl(const cstring<N1>& str1,
                                                                   const cstring<N2>& str2)
 {
     return concat_str_impl(str1, str2, csizeseq<N1 - 1 + N2 - 1>);
@@ -77,29 +77,29 @@ cstring<N1 - Nfrom + Nto> str_replace_impl(size_t pos, const cstring<N1>& str, c
 }
 }
 
-CID_INLINE constexpr cstring<1> concat_cstring() { return { { 0 } }; }
+CMT_INLINE constexpr cstring<1> concat_cstring() { return { { 0 } }; }
 
 template <size_t N1>
-CID_INLINE constexpr cstring<N1> concat_cstring(const cstring<N1>& str1)
+CMT_INLINE constexpr cstring<N1> concat_cstring(const cstring<N1>& str1)
 {
     return str1;
 }
 
 template <size_t N1, size_t N2, typename... Args>
-CID_INLINE constexpr auto concat_cstring(const cstring<N1>& str1, const cstring<N2>& str2,
+CMT_INLINE constexpr auto concat_cstring(const cstring<N1>& str1, const cstring<N2>& str2,
                                          const Args&... args)
 {
     return details::concat_str_impl(str1, concat_cstring(str2, args...));
 }
 
 template <size_t N>
-CID_INLINE constexpr cstring<N> make_cstring(const char (&str)[N])
+CMT_INLINE constexpr cstring<N> make_cstring(const char (&str)[N])
 {
     return details::make_cstring_impl(str, csizeseq<N - 1>);
 }
 
 template <char... chars>
-CID_INLINE constexpr cstring<sizeof...(chars) + 1> make_cstring(cchars_t<chars...>)
+CMT_INLINE constexpr cstring<sizeof...(chars) + 1> make_cstring(cchars_t<chars...>)
 {
     return { { chars..., 0 } };
 }
@@ -152,99 +152,99 @@ constexpr auto itoa()
 }
 
 template <typename T, char t, int width, int prec, CMT_ENABLE_IF(width < 0 && prec >= 0)>
-CID_INLINE constexpr auto value_fmt_arg(ctype_t<fmt_t<T, t, width, prec>>)
+CMT_INLINE constexpr auto value_fmt_arg(ctype_t<fmt_t<T, t, width, prec>>)
 {
     return concat_cstring(make_cstring("."), itoa<prec>());
 }
 template <typename T, char t, int width, int prec, CMT_ENABLE_IF(width >= 0 && prec < 0)>
-CID_INLINE constexpr auto value_fmt_arg(ctype_t<fmt_t<T, t, width, prec>>)
+CMT_INLINE constexpr auto value_fmt_arg(ctype_t<fmt_t<T, t, width, prec>>)
 {
     return itoa<width>();
 }
 template <typename T, char t, int width, int prec, CMT_ENABLE_IF(width < 0 && prec < 0)>
-CID_INLINE constexpr auto value_fmt_arg(ctype_t<fmt_t<T, t, width, prec>>)
+CMT_INLINE constexpr auto value_fmt_arg(ctype_t<fmt_t<T, t, width, prec>>)
 {
     return make_cstring("");
 }
 template <typename T, char t, int width, int prec, CMT_ENABLE_IF(width >= 0 && prec >= 0)>
-CID_INLINE constexpr auto value_fmt_arg(ctype_t<fmt_t<T, t, width, prec>>)
+CMT_INLINE constexpr auto value_fmt_arg(ctype_t<fmt_t<T, t, width, prec>>)
 {
     return concat_cstring(itoa<width>(), make_cstring("."), itoa<prec>());
 }
 
-CID_INLINE constexpr auto value_fmt(ctype_t<bool>) { return make_cstring("s"); }
-CID_INLINE constexpr auto value_fmt(ctype_t<std::string>) { return make_cstring("s"); }
-CID_INLINE constexpr auto value_fmt(ctype_t<char>) { return make_cstring("d"); }
-CID_INLINE constexpr auto value_fmt(ctype_t<signed char>) { return make_cstring("d"); }
-CID_INLINE constexpr auto value_fmt(ctype_t<unsigned char>) { return make_cstring("d"); }
-CID_INLINE constexpr auto value_fmt(ctype_t<short>) { return make_cstring("d"); }
-CID_INLINE constexpr auto value_fmt(ctype_t<unsigned short>) { return make_cstring("d"); }
-CID_INLINE constexpr auto value_fmt(ctype_t<int>) { return make_cstring("d"); }
-CID_INLINE constexpr auto value_fmt(ctype_t<long>) { return make_cstring("ld"); }
-CID_INLINE constexpr auto value_fmt(ctype_t<long long>) { return make_cstring("lld"); }
-CID_INLINE constexpr auto value_fmt(ctype_t<unsigned int>) { return make_cstring("u"); }
-CID_INLINE constexpr auto value_fmt(ctype_t<unsigned long>) { return make_cstring("lu"); }
-CID_INLINE constexpr auto value_fmt(ctype_t<unsigned long long>) { return make_cstring("llu"); }
-CID_INLINE constexpr auto value_fmt(ctype_t<float>) { return make_cstring("g"); }
-CID_INLINE constexpr auto value_fmt(ctype_t<double>) { return make_cstring("g"); }
-CID_INLINE constexpr auto value_fmt(ctype_t<long double>) { return make_cstring("Lg"); }
-CID_INLINE constexpr auto value_fmt(ctype_t<const char*>) { return make_cstring("s"); }
-CID_INLINE constexpr auto value_fmt(ctype_t<char*>) { return make_cstring("s"); }
-CID_INLINE constexpr auto value_fmt(ctype_t<void*>) { return make_cstring("p"); }
-CID_INLINE constexpr auto value_fmt(ctype_t<const void*>) { return make_cstring("p"); }
+CMT_INLINE constexpr auto value_fmt(ctype_t<bool>) { return make_cstring("s"); }
+CMT_INLINE constexpr auto value_fmt(ctype_t<std::string>) { return make_cstring("s"); }
+CMT_INLINE constexpr auto value_fmt(ctype_t<char>) { return make_cstring("d"); }
+CMT_INLINE constexpr auto value_fmt(ctype_t<signed char>) { return make_cstring("d"); }
+CMT_INLINE constexpr auto value_fmt(ctype_t<unsigned char>) { return make_cstring("d"); }
+CMT_INLINE constexpr auto value_fmt(ctype_t<short>) { return make_cstring("d"); }
+CMT_INLINE constexpr auto value_fmt(ctype_t<unsigned short>) { return make_cstring("d"); }
+CMT_INLINE constexpr auto value_fmt(ctype_t<int>) { return make_cstring("d"); }
+CMT_INLINE constexpr auto value_fmt(ctype_t<long>) { return make_cstring("ld"); }
+CMT_INLINE constexpr auto value_fmt(ctype_t<long long>) { return make_cstring("lld"); }
+CMT_INLINE constexpr auto value_fmt(ctype_t<unsigned int>) { return make_cstring("u"); }
+CMT_INLINE constexpr auto value_fmt(ctype_t<unsigned long>) { return make_cstring("lu"); }
+CMT_INLINE constexpr auto value_fmt(ctype_t<unsigned long long>) { return make_cstring("llu"); }
+CMT_INLINE constexpr auto value_fmt(ctype_t<float>) { return make_cstring("g"); }
+CMT_INLINE constexpr auto value_fmt(ctype_t<double>) { return make_cstring("g"); }
+CMT_INLINE constexpr auto value_fmt(ctype_t<long double>) { return make_cstring("Lg"); }
+CMT_INLINE constexpr auto value_fmt(ctype_t<const char*>) { return make_cstring("s"); }
+CMT_INLINE constexpr auto value_fmt(ctype_t<char*>) { return make_cstring("s"); }
+CMT_INLINE constexpr auto value_fmt(ctype_t<void*>) { return make_cstring("p"); }
+CMT_INLINE constexpr auto value_fmt(ctype_t<const void*>) { return make_cstring("p"); }
 
 template <char... chars>
-CID_INLINE constexpr auto value_fmt(ctype_t<cchars_t<chars...>>)
+CMT_INLINE constexpr auto value_fmt(ctype_t<cchars_t<chars...>>)
 {
     return concat_cstring(make_cstring("s"), make_cstring(cchars<chars...>));
 }
 
 template <typename T>
-CID_INLINE constexpr auto value_fmt(ctype_t<ctype_t<T>>)
+CMT_INLINE constexpr auto value_fmt(ctype_t<ctype_t<T>>)
 {
     return make_cstring("s");
 }
 
 template <typename T, int width, int prec>
-CID_INLINE constexpr auto value_fmt(ctype_t<fmt_t<T, static_cast<char>(-1), width, prec>> fmt)
+CMT_INLINE constexpr auto value_fmt(ctype_t<fmt_t<T, static_cast<char>(-1), width, prec>> fmt)
 {
     return concat_cstring(value_fmt_arg(fmt), value_fmt(ctype<repr_type<T>>));
 }
 template <typename T, char t, int width, int prec>
-CID_INLINE constexpr auto value_fmt(ctype_t<fmt_t<T, t, width, prec>> fmt)
+CMT_INLINE constexpr auto value_fmt(ctype_t<fmt_t<T, t, width, prec>> fmt)
 {
     return concat_cstring(value_fmt_arg(fmt), cstring<2>{ { t, 0 } });
 }
 
 template <char... chars>
-CID_INLINE const char* pack_value(const cchars_t<chars...>&)
+CMT_INLINE const char* pack_value(const cchars_t<chars...>&)
 {
     return "";
 }
 
 template <typename Arg>
-CID_INLINE const Arg& pack_value(const Arg& value)
+CMT_INLINE const Arg& pack_value(const Arg& value)
 {
     return value;
 }
-CID_INLINE double pack_value(float value) { return static_cast<double>(value); }
-CID_INLINE auto pack_value(bool value) { return value ? "true" : "false"; }
-CID_INLINE auto pack_value(const std::string& value) { return value.c_str(); }
+CMT_INLINE double pack_value(float value) { return static_cast<double>(value); }
+CMT_INLINE auto pack_value(bool value) { return value ? "true" : "false"; }
+CMT_INLINE auto pack_value(const std::string& value) { return value.c_str(); }
 
 template <typename T>
-CID_INLINE const char* pack_value(ctype_t<T>)
+CMT_INLINE const char* pack_value(ctype_t<T>)
 {
     return type_name<T>();
 }
 
 template <typename T, char t, int width, int prec>
-CID_INLINE auto pack_value(const fmt_t<T, t, width, prec>& value)
+CMT_INLINE auto pack_value(const fmt_t<T, t, width, prec>& value)
 {
     return pack_value(repr(value.value));
 }
 
 template <size_t N1, size_t Nnew, size_t... indices>
-CID_INLINE constexpr cstring<N1 - 3 + Nnew> fmt_replace_impl(const cstring<N1>& str,
+CMT_INLINE constexpr cstring<N1 - 3 + Nnew> fmt_replace_impl(const cstring<N1>& str,
                                                              const cstring<Nnew>& newfmt,
                                                              csizes_t<indices...>)
 {
@@ -279,7 +279,7 @@ CID_INLINE constexpr cstring<N1 - 3 + Nnew> fmt_replace_impl(const cstring<N1>& 
 }
 
 template <size_t N1, size_t Nto>
-CID_INLINE constexpr cstring<N1 - 3 + Nto> fmt_replace(const cstring<N1>& str, const cstring<Nto>& newfmt)
+CMT_INLINE constexpr cstring<N1 - 3 + Nto> fmt_replace(const cstring<N1>& str, const cstring<Nto>& newfmt)
 {
     return fmt_replace_impl(str, newfmt, csizeseq<N1 - 3 + Nto - 1>);
 }
@@ -295,10 +295,10 @@ inline std::string replace_one(const std::string& str, const std::string& from, 
     return r;
 }
 
-CID_INLINE const std::string& build_fmt(const std::string& str, ctypes_t<>) { return str; }
+CMT_INLINE const std::string& build_fmt(const std::string& str, ctypes_t<>) { return str; }
 
 template <typename Arg, typename... Args>
-CID_INLINE auto build_fmt(const std::string& str, ctypes_t<Arg, Args...>)
+CMT_INLINE auto build_fmt(const std::string& str, ctypes_t<Arg, Args...>)
 {
     constexpr auto fmt = value_fmt(ctype<decay<Arg>>);
     return build_fmt(replace_one(str, "{}", "%" + std::string(fmt.data())), ctypes<Args...>);
@@ -306,13 +306,13 @@ CID_INLINE auto build_fmt(const std::string& str, ctypes_t<Arg, Args...>)
 }
 
 template <char t, int width = -1, int prec = -1, typename T>
-CID_INLINE details::fmt_t<T, t, width, prec> fmt(const T& value)
+CMT_INLINE details::fmt_t<T, t, width, prec> fmt(const T& value)
 {
     return { value };
 }
 
 template <int width = -1, int prec = -1, typename T>
-CID_INLINE details::fmt_t<T, static_cast<char>(-1), width, prec> fmtwidth(const T& value)
+CMT_INLINE details::fmt_t<T, static_cast<char>(-1), width, prec> fmtwidth(const T& value)
 {
     return { value };
 }
@@ -358,7 +358,7 @@ template <char... chars>
 struct print_t
 {
     template <typename... Args>
-    CID_INLINE void operator()(const Args&... args)
+    CMT_INLINE void operator()(const Args&... args)
     {
         constexpr auto format_str = build_fmt_str(cchars<chars...>, ctypes<repr_type<Args>...>);
 
@@ -373,7 +373,7 @@ constexpr format_t<chars...> operator""_format()
 }
 
 template <typename Char, Char... chars>
-constexpr CID_INLINE print_t<chars...> operator""_print()
+constexpr CMT_INLINE print_t<chars...> operator""_print()
 {
     return {};
 }
@@ -381,28 +381,28 @@ constexpr CID_INLINE print_t<chars...> operator""_print()
 #pragma clang diagnostic pop
 
 template <typename... Args>
-CID_INLINE void printfmt(const std::string& fmt, const Args&... args)
+CMT_INLINE void printfmt(const std::string& fmt, const Args&... args)
 {
     const auto format_str = details::build_fmt(fmt, ctypes<repr_type<Args>...>);
     std::printf(format_str.data(), details::pack_value(repr(args))...);
 }
 
 template <typename... Args>
-CID_INLINE void fprintfmt(FILE* f, const std::string& fmt, const Args&... args)
+CMT_INLINE void fprintfmt(FILE* f, const std::string& fmt, const Args&... args)
 {
     const auto format_str = details::build_fmt(fmt, ctypes<repr_type<Args>...>);
     std::fprintf(f, format_str.data(), details::pack_value(repr(args))...);
 }
 
 template <typename... Args>
-CID_INLINE int snprintfmt(char* str, size_t size, const std::string& fmt, const Args&... args)
+CMT_INLINE int snprintfmt(char* str, size_t size, const std::string& fmt, const Args&... args)
 {
     const auto format_str = details::build_fmt(fmt, ctypes<repr_type<Args>...>);
     return std::snprintf(str, size, format_str.data(), details::pack_value(repr(args))...);
 }
 
 template <typename... Args>
-CID_INLINE std::string format(const std::string& fmt, const Args&... args)
+CMT_INLINE std::string format(const std::string& fmt, const Args&... args)
 {
     std::string result;
     const auto format_str = details::build_fmt(fmt, ctypes<repr_type<Args>...>);
@@ -416,7 +416,7 @@ CID_INLINE std::string format(const std::string& fmt, const Args&... args)
 }
 
 template <typename... Args>
-CID_INLINE void print(const Args&... args)
+CMT_INLINE void print(const Args&... args)
 {
     constexpr auto format_str = concat_cstring(
         concat_cstring(make_cstring("%"), details::value_fmt(ctype<decay<repr_type<Args>>>))...);
@@ -424,7 +424,7 @@ CID_INLINE void print(const Args&... args)
 }
 
 template <typename... Args>
-CID_INLINE void println(const Args&... args)
+CMT_INLINE void println(const Args&... args)
 {
     constexpr auto format_str = concat_cstring(
         concat_cstring(make_cstring("%"), details::value_fmt(ctype<decay<repr_type<Args>>>))...,
@@ -433,7 +433,7 @@ CID_INLINE void println(const Args&... args)
 }
 
 template <typename... Args>
-CID_INLINE std::string as_string(const Args&... args)
+CMT_INLINE std::string as_string(const Args&... args)
 {
     std::string result;
     constexpr auto format_str = concat_cstring(

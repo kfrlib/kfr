@@ -30,6 +30,8 @@ namespace kfr
 
 namespace intrinsics
 {
+
+// Generic functions
 template <typename T, size_t N>
 KFR_SINTRIN vec<T, N> saturated_signed_add(const vec<T, N>& a, const vec<T, N>& b)
 {
@@ -66,7 +68,7 @@ KFR_SINTRIN vec<T, N> saturated_unsigned_sub(const vec<T, N>& a, const vec<T, N>
     return select(a < b, zerovector(a), a - b);
 }
 
-#if defined CID_ARCH_SSE2
+#if defined CMT_ARCH_SSE2
 
 KFR_SINTRIN u8sse satadd(const u8sse& x, const u8sse& y) { return _mm_adds_epu8(*x, *y); }
 KFR_SINTRIN i8sse satadd(const i8sse& x, const i8sse& y) { return _mm_adds_epi8(*x, *y); }
@@ -88,7 +90,7 @@ KFR_SINTRIN i64sse satsub(const i64sse& a, const i64sse& b) { return saturated_s
 KFR_SINTRIN u32sse satsub(const u32sse& a, const u32sse& b) { return saturated_unsigned_sub(a, b); }
 KFR_SINTRIN u64sse satsub(const u64sse& a, const u64sse& b) { return saturated_unsigned_sub(a, b); }
 
-#if defined CID_ARCH_AVX2
+#if defined CMT_ARCH_AVX2
 KFR_SINTRIN u8avx satadd(const u8avx& x, const u8avx& y) { return _mm256_adds_epu8(*x, *y); }
 KFR_SINTRIN i8avx satadd(const i8avx& x, const i8avx& y) { return _mm256_adds_epi8(*x, *y); }
 KFR_SINTRIN u16avx satadd(const u16avx& x, const u16avx& y) { return _mm256_adds_epu16(*x, *y); }
@@ -99,6 +101,31 @@ KFR_SINTRIN i8avx satsub(const i8avx& x, const i8avx& y) { return _mm256_subs_ep
 KFR_SINTRIN u16avx satsub(const u16avx& x, const u16avx& y) { return _mm256_subs_epu16(*x, *y); }
 KFR_SINTRIN i16avx satsub(const i16avx& x, const i16avx& y) { return _mm256_subs_epi16(*x, *y); }
 #endif
+
+KFR_HANDLE_ALL_SIZES_2(satadd)
+KFR_HANDLE_ALL_SIZES_2(satsub)
+
+#elif defined CMT_ARCH_NEON
+
+KFR_SINTRIN u8neon satadd(const u8neon& x, const u8neon& y) { return vqaddq_u8(*x, *y); }
+KFR_SINTRIN i8neon satadd(const i8neon& x, const i8neon& y) { return vqaddq_s8(*x, *y); }
+KFR_SINTRIN u16neon satadd(const u16neon& x, const u16neon& y) { return vqaddq_u16(*x, *y); }
+KFR_SINTRIN i16neon satadd(const i16neon& x, const i16neon& y) { return vqaddq_s16(*x, *y); }
+
+KFR_SINTRIN u8neon satsub(const u8neon& x, const u8neon& y) { return vqsubq_u8(*x, *y); }
+KFR_SINTRIN i8neon satsub(const i8neon& x, const i8neon& y) { return vqsubq_s8(*x, *y); }
+KFR_SINTRIN u16neon satsub(const u16neon& x, const u16neon& y) { return vqsubq_u16(*x, *y); }
+KFR_SINTRIN i16neon satsub(const i16neon& x, const i16neon& y) { return vqsubq_s16(*x, *y); }
+
+KFR_SINTRIN u32neon satadd(const u32neon& a, const u32neon& b) { return vqaddq_u32(*a, *b); }
+KFR_SINTRIN i32neon satadd(const i32neon& a, const i32neon& b) { return vqaddq_s32(*a, *b); }
+KFR_SINTRIN u64neon satadd(const u64neon& a, const u64neon& b) { return vqaddq_u64(*a, *b); }
+KFR_SINTRIN i64neon satadd(const i64neon& a, const i64neon& b) { return vqaddq_s64(*a, *b); }
+
+KFR_SINTRIN i32neon satsub(const i32neon& a, const i32neon& b) { return vqsubq_u32(*a, *b); }
+KFR_SINTRIN i64neon satsub(const i64neon& a, const i64neon& b) { return vqsubq_s32(*a, *b); }
+KFR_SINTRIN u32neon satsub(const u32neon& a, const u32neon& b) { return vqsubq_u64(*a, *b); }
+KFR_SINTRIN u64neon satsub(const u64neon& a, const u64neon& b) { return vqsubq_s64(*a, *b); }
 
 KFR_HANDLE_ALL_SIZES_2(satadd)
 KFR_HANDLE_ALL_SIZES_2(satsub)

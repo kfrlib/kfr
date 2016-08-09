@@ -29,6 +29,8 @@
 namespace cometa
 {
 
+inline std::string repr(kfr::cpu_t v);
+
 template <typename T>
 inline std::string repr(const kfr::complex<T>& v);
 
@@ -91,6 +93,8 @@ inline std::string repr(const kfr::complex<T>& v)
     return as_string(v.real()) + " + " + as_string(v.imag()) + "j";
 }
 
+inline std::string repr(kfr::cpu_t v) { return kfr::cpu_name(v); }
+
 template <typename T>
 inline std::string repr(const T* source, size_t N)
 {
@@ -99,7 +103,7 @@ inline std::string repr(const T* source, size_t N)
     {
         if (i > 0)
         {
-            if (i % details::number_columns == 0)
+            if (i % details::number_columns == 0 || kfr::is_vec<T>::value)
                 str += "\n";
             else
                 str += " ";

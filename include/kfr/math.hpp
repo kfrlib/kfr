@@ -22,25 +22,4 @@
  */
 #pragma once
 
-#include "base/vec.hpp"
-
-#include "base/abs.hpp"
-#include "base/asin_acos.hpp"
-#include "base/atan.hpp"
-#include "base/complex.hpp"
-#include "base/constants.hpp"
-#include "base/digitreverse.hpp"
-#include "base/gamma.hpp"
-#include "base/hyperbolic.hpp"
-#include "base/log_exp.hpp"
-#include "base/logical.hpp"
-#include "base/min_max.hpp"
-#include "base/operators.hpp"
-#include "base/read_write.hpp"
-#include "base/round.hpp"
-#include "base/saturation.hpp"
-#include "base/select.hpp"
-#include "base/shuffle.hpp"
-#include "base/sin_cos.hpp"
-#include "base/sqrt.hpp"
-#include "base/tan.hpp"
+#include "base.hpp"

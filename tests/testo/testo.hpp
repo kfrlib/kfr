@@ -372,7 +372,7 @@ struct test_case
 
     void check(bool result, const std::string& value, const char* expr)
     {
-        subtests.push_back(subtest{ result, format("{} | {}", padleft(22, expr), value), comment });
+        subtests.push_back(subtest{ result, as_string(padleft(22, expr), " | ", value), comment });
         result ? success++ : failed++;
         if (show_progress)
         {
@@ -393,8 +393,7 @@ struct test_case
     void check(comparison<Op, L, R> comparison, const char* expr)
     {
         bool result = comparison();
-        check(result, format("{} {} {}", as_string(comparison.left), Op::op(), as_string(comparison.right)),
-              expr);
+        check(result, as_string(comparison.left, " ", Op::op(), " ", comparison.right), expr);
     }
 
     template <typename L>
@@ -409,7 +408,8 @@ struct test_case
         comment = text;
         if (show_progress)
         {
-            printfmt("\n{}:\n", comment);
+            println();
+            println(comment, ":");
         }
     }
 
@@ -469,22 +469,22 @@ template <typename Arg0, typename Fn>
 void matrix(named_arg<Arg0>&& arg0, Fn&& fn)
 {
     cforeach(std::forward<Arg0>(arg0.value), [&](auto v0) {
-        active_test()->set_comment(format("{} = {}", arg0.name, v0));
+        active_test()->set_comment(as_string(arg0.name, " = ", v0));
         fn(v0);
     });
     if (active_test()->show_progress)
-        printfmt("\n");
+        println();
 }
 
 template <typename Arg0, typename Arg1, typename Fn>
 void matrix(named_arg<Arg0>&& arg0, named_arg<Arg1>&& arg1, Fn&& fn)
 {
     cforeach(std::forward<Arg0>(arg0.value), std::forward<Arg1>(arg1.value), [&](auto v0, auto v1) {
-        active_test()->set_comment(format("{} = {}, {} = {}", arg0.name, v0, arg1.name, v1));
+        active_test()->set_comment(as_string(arg0.name, " = ", v0, ", ", arg1.name, " = ", v1));
         fn(v0, v1);
     });
     if (active_test()->show_progress)
-        printfmt("\n");
+        println();
 }
 
 template <typename Arg0, typename Arg1, typename Arg2, typename Fn>
@@ -493,11 +493,11 @@ void matrix(named_arg<Arg0>&& arg0, named_arg<Arg1>&& arg1, named_arg<Arg2>&& ar
     cforeach(std::forward<Arg0>(arg0.value), std::forward<Arg1>(arg1.value), std::forward<Arg2>(arg2.value),
              [&](auto v0, auto v1, auto v2) {
                  active_test()->set_comment(
-                     format("{} = {}, {} = {}, {} = {}", arg0.name, v0, arg1.name, v1, arg2.name, v2));
+                     as_string(arg0.name, " = ", v0, ", ", arg1.name, " = ", v1, ", ", arg2.name, " = ", v2));
                  fn(v0, v1, v2);
              });
     if (active_test()->show_progress)
-        printfmt("\n");
+        println();
 }
 
 static int run_all(const std::string& name = std::string(), bool show_successful = false)
@@ -545,7 +545,7 @@ void assert_is_same_decay()
 #define TESTO_TEST(name)                                                                                     \
     void test_function_##name();                                                                             \
     ::testo::test_case test_case_##name(&test_function_##name, #name);                                       \
-    void CID_NOINLINE test_function_##name()
+    void CMT_NOINLINE test_function_##name()
 
 #define TESTO_DTEST(name)                                                                                    \
     template <typename>                                                                                      \

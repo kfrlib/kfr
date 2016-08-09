@@ -65,14 +65,14 @@ KFR_SINTRIN vec<f64, N> atan2k(vec<f64, N> y, vec<f64, N> x)
 {
     vec<f64, N> s, t, u;
     vec<i64, N> q;
-    q = select(x < 0, -2ll, 0ll);
+    q = select(x < 0, i64(-2), i64(0));
     x = select(x < 0, -x, x);
-    vec<i64, N> m;
+    mask<i64, N> m;
     m = y > x;
     t = x;
     x = select(m, y, x);
     y = select(m, -t, y);
-    q = select(m, q + 1ll, q);
+    q = select(m, q + i64(1), q);
     s = y / x;
     t = s * s;
     u = -1.88796008463073496563746e-05;
@@ -122,8 +122,8 @@ KFR_SINTRIN vec<f64, N> atan2(const vec<f64, N>& y, const vec<f64, N>& x)
     constexpr f64 pi_over_2 = 1.5707963267948966192313216916398;
     constexpr f64 pi_over_4 = 0.78539816339744830961566084581988;
     r                       = mulsign(r, x);
-    r = select(isinf(x) || x == 0.0, pi_over_2 - select(x, mulsign(pi_over_2, x), 0.0), r);
-    r = select(isinf(y), pi_over_2 - select(x, mulsign(pi_over_4, x), 0.0), r);
+    r = select(isinf(x) || x == 0.0, pi_over_2 - select(x.asmask(), mulsign(pi_over_2, x), 0.0), r);
+    r = select(isinf(y), pi_over_2 - select(x.asmask(), mulsign(pi_over_4, x), 0.0), r);
     r = select(y == 0.0, fbitcast(ibitcast(x < 0) & ibitcast(pi)), r);
     r = fbitcast(ibitcast(isnan(x) || isnan(y)) | ibitcast(mulsign(r, y)));
     return r;
@@ -158,7 +158,7 @@ KFR_SINTRIN vec<f64, N> atan(const vec<f64, N>& s)
 {
     vec<f64, N> t, u;
     vec<i64, N> q;
-    q = select(s < 0.0, 2ll, 0ll);
+    q = select(s < 0.0, i64(2), i64(0));
     s = select(s < 0.0, -s, s);
     q = select(s > 1.0, q | 1, q);
     s = select(s > 1.0, 1.0 / s, s);

@@ -46,7 +46,7 @@ using flt_type = conditional<std::is_floating_point<deep_subtype<T>>::value, T, 
 
 namespace intrinsics
 {
-#ifdef CID_ARCH_X86
+#ifdef CMT_ARCH_X86
 using f32sse = vec<f32, 4>;
 using f64sse = vec<f64, 2>;
 using i8sse  = vec<i8, 16>;
@@ -117,10 +117,10 @@ using mu64neon = mask<u64, 2>;
 template <cpu_t c, typename T>
 constexpr inline size_t next_simd_width(size_t n)
 {
-#ifdef CID_ARCH_X86
+#ifdef CMT_ARCH_X86
     return n > vector_width<T, cpu_t::sse2> ? vector_width<T, c> : vector_width<T, cpu_t::sse2>;
 #endif
-#ifdef CID_ARCH_ARM
+#ifdef CMT_ARCH_ARM
     return vector_width<T, cpu_t::neon>;
 #endif
 }

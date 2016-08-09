@@ -46,9 +46,9 @@ struct bitmask
     type value;
 };
 
-#if defined CID_ARCH_SSE2
+#if defined CMT_ARCH_SSE2
 
-#if defined CID_ARCH_SSE41
+#if defined CMT_ARCH_SSE41
 
 KFR_SINTRIN bool bittestany(const u8sse& x) { return !_mm_testz_si128(*x, *x); }
 KFR_SINTRIN bool bittestany(const u16sse& x) { return !_mm_testz_si128(*x, *x); }
@@ -69,7 +69,7 @@ KFR_SINTRIN bool bittestall(const i32sse& x) { return _mm_testc_si128(*x, *allon
 KFR_SINTRIN bool bittestall(const i64sse& x) { return _mm_testc_si128(*x, *allonesvector(x)); }
 #endif
 
-#if defined CID_ARCH_AVX
+#if defined CMT_ARCH_AVX
 KFR_SINTRIN bool bittestany(const f32sse& x) { return !_mm_testz_ps(*x, *x); }
 KFR_SINTRIN bool bittestany(const f64sse& x) { return !_mm_testz_pd(*x, *x); }
 KFR_SINTRIN bool bittestall(const f32sse& x) { return _mm_testc_ps(*x, *allonesvector(x)); }
@@ -98,7 +98,7 @@ KFR_SINTRIN bool bittestall(const i8avx& x) { return _mm256_testc_si256(*x, *all
 KFR_SINTRIN bool bittestall(const i16avx& x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(const i32avx& x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(const i64avx& x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
-#elif defined CID_ARCH_SSE41
+#elif defined CMT_ARCH_SSE41
 KFR_SINTRIN bool bittestany(const f32sse& x) { return !_mm_testz_si128(*bitcast<u8>(x), *bitcast<u8>(x)); }
 KFR_SINTRIN bool bittestany(const f64sse& x) { return !_mm_testz_si128(*bitcast<u8>(x), *bitcast<u8>(x)); }
 KFR_SINTRIN bool bittestall(const f32sse& x)
@@ -111,7 +111,7 @@ KFR_SINTRIN bool bittestall(const f64sse& x)
 }
 #endif
 
-#if !defined CID_ARCH_SSE41
+#if !defined CMT_ARCH_SSE41
 
 KFR_SINTRIN bool bittestany(const f32sse& x) { return _mm_movemask_ps(*x); }
 KFR_SINTRIN bool bittestany(const f64sse& x) { return _mm_movemask_pd(*x); }
@@ -135,6 +135,59 @@ KFR_SINTRIN bool bittestall(const i16sse& x) { return !_mm_movemask_epi8(*~x); }
 KFR_SINTRIN bool bittestall(const i32sse& x) { return !_mm_movemask_epi8(*~x); }
 KFR_SINTRIN bool bittestall(const i64sse& x) { return !_mm_movemask_epi8(*~x); }
 #endif
+
+template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T, cpu_t::native>)>
+KFR_SINTRIN bool bittestall(const vec<T, N>& a)
+{
+    return bittestall(expand_simd(a, internal::maskbits<T>(true)));
+}
+template <typename T, size_t N, KFR_ENABLE_IF(N >= vector_width<T, cpu_t::native>), typename = void>
+KFR_SINTRIN bool bittestall(const vec<T, N>& a)
+{
+    return bittestall(low(a)) && bittestall(high(a));
+}
+
+template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T, cpu_t::native>)>
+KFR_SINTRIN bool bittestany(const vec<T, N>& a)
+{
+    return bittestany(expand_simd(a, internal::maskbits<T>(false)));
+}
+template <typename T, size_t N, KFR_ENABLE_IF(N >= vector_width<T, cpu_t::native>), typename = void>
+KFR_SINTRIN bool bittestany(const vec<T, N>& a)
+{
+    return bittestany(low(a)) || bittestany(high(a));
+}
+
+#elif CMT_ARCH_NEON
+
+KFR_SINTRIN bool bittestall(const u32neon& a)
+{
+    const uint32x2_t tmp = vand_u32(vget_low_u32(*a), vget_high_u32(*a));
+    return vget_lane_u32(vpmin_u32(tmp, tmp), 0) == 0xFFFFFFFFu;
+}
+
+KFR_SINTRIN bool bittestany(const u32neon& a)
+{
+    const uint32x2_t tmp = vorr_u32(vget_low_u32(*a), vget_high_u32(*a));
+    return vget_lane_u32(vpmax_u32(tmp, tmp), 0) != 0;
+}
+KFR_SINTRIN bool bittestany(const u8neon& a) { return bittestany(bitcast<u32>(a)); }
+KFR_SINTRIN bool bittestany(const u16neon& a) { return bittestany(bitcast<u32>(a)); }
+KFR_SINTRIN bool bittestany(const u64neon& a) { return bittestany(bitcast<u32>(a)); }
+KFR_SINTRIN bool bittestany(const i8neon& a) { return bittestany(bitcast<u32>(a)); }
+KFR_SINTRIN bool bittestany(const i16neon& a) { return bittestany(bitcast<u32>(a)); }
+KFR_SINTRIN bool bittestany(const i64neon& a) { return bittestany(bitcast<u32>(a)); }
+KFR_SINTRIN bool bittestany(const f32neon& a) { return bittestany(bitcast<u32>(a)); }
+KFR_SINTRIN bool bittestany(const f64neon& a) { return bittestany(bitcast<u32>(a)); }
+
+KFR_SINTRIN bool bittestall(const u8neon& a) { return bittestall(bitcast<u32>(a)); }
+KFR_SINTRIN bool bittestall(const u16neon& a) { return bittestall(bitcast<u32>(a)); }
+KFR_SINTRIN bool bittestall(const u64neon& a) { return bittestall(bitcast<u32>(a)); }
+KFR_SINTRIN bool bittestall(const i8neon& a) { return bittestall(bitcast<u32>(a)); }
+KFR_SINTRIN bool bittestall(const i16neon& a) { return bittestall(bitcast<u32>(a)); }
+KFR_SINTRIN bool bittestall(const i64neon& a) { return bittestall(bitcast<u32>(a)); }
+KFR_SINTRIN bool bittestall(const f32neon& a) { return bittestall(bitcast<u32>(a)); }
+KFR_SINTRIN bool bittestall(const f64neon& a) { return bittestall(bitcast<u32>(a)); }
 
 template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T, cpu_t::native>)>
 KFR_SINTRIN bool bittestall(const vec<T, N>& a)

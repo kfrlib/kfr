@@ -32,95 +32,86 @@ namespace kfr
 namespace internal
 {
 
-template <cpu_t c = cpu_t::native, cpu_t cc = c>
-struct in_goertzel : in_sin_cos<cc>
+template <typename T, KFR_ARCH_DEP>
+struct expression_goertzel : output_expression
 {
-private:
-    using in_sin_cos<cc>::sin;
-    using in_sin_cos<cc>::cos;
-
-public:
-    template <typename T>
-    struct expression_goertzel : output_expression
+    expression_goertzel(complex<T>& result, T omega)
+        : result(result), omega(omega), coeff(2 * cos(omega)), q0(), q1(), q2()
     {
-        expression_goertzel(complex<T>& result, identity<T> omega)
-            : result(result), omega(omega), coeff(2 * cos(omega)), q0(), q1(), q2()
-        {
-        }
-        ~expression_goertzel()
-        {
-            result.real(q1 - q2 * cos(omega));
-            result.imag(q2 * sin(omega));
-        }
-        template <typename U, size_t N>
-        KFR_INLINE void operator()(coutput_t, size_t index, const vec<U, N>& x)
-        {
-            vec<T, N> in = cast<T>(x);
-            KFR_LOOP_UNROLL
-            for (size_t i = 0; i < N; i++)
-            {
-                q0 = coeff * q1 - q2 + in[i];
-                q2 = q1;
-                q1 = q0;
-            }
-        }
-        complex<T>& result;
-        const T omega;
-        const T coeff;
-        T q0;
-        T q1;
-        T q2;
-    };
-
-    template <typename T, size_t width>
-    struct expression_parallel_goertzel : output_expression
-    {
-        expression_parallel_goertzel(complex<T> result[], vec<T, width> omega)
-            : result(result), omega(omega), coeff(cos(omega)), q0(), q1(), q2()
-        {
-        }
-        ~expression_parallel_goertzel()
-        {
-            const vec<T, width> re = q1 - q2 * cos(omega);
-            const vec<T, width> im = q2 * sin(omega);
-            for (size_t i = 0; i < width; i++)
-            {
-                result[i].real(re[i]);
-                result[i].imag(im[i]);
-            }
-        }
-        template <typename U, size_t N>
-        KFR_INLINE void operator()(coutput_t, size_t index, const vec<U, N>& x)
-        {
-            const vec<T, N> in = cast<T>(x);
-            KFR_LOOP_UNROLL
-            for (size_t i = 0; i < N; i++)
-            {
-                q0 = coeff * q1 - q2 + in[i];
-                q2 = q1;
-                q1 = q0;
-            }
-        }
-        complex<T> result[];
-        const vec<T, width> omega;
-        const vec<T, width> coeff;
-        vec<T, width> q0;
-        vec<T, width> q1;
-        vec<T, width> q2;
-    };
-
-    template <typename T>
-    KFR_SINTRIN expression_goertzel<T> goertzel(complex<T>& result, identity<T> omega)
-    {
-        return expression_goertzel<T>(result, omega);
     }
-
-    template <typename T, size_t width>
-    KFR_SINTRIN expression_parallel_goertzel<T, width> goertzel(complex<T> (&result)[width],
-                                                                const T (&omega)[width])
+    ~expression_goertzel()
     {
-        return expression_parallel_goertzel<T, width>(result, read<width>(omega));
+        result.real(q1 - q2 * cos(omega));
+        result.imag(q2 * sin(omega));
     }
+    template <typename U, size_t N>
+    CMT_INLINE void operator()(coutput_t, size_t index, const vec<U, N>& x)
+    {
+        vec<T, N> in = x;
+        CMT_LOOP_UNROLL
+        for (size_t i = 0; i < N; i++)
+        {
+            q0 = coeff * q1 - q2 + in[i];
+            q2 = q1;
+            q1 = q0;
+        }
+    }
+    complex<T>& result;
+    const T omega;
+    const T coeff;
+    T q0;
+    T q1;
+    T q2;
 };
+
+template <typename T, size_t width>
+struct expression_parallel_goertzel : output_expression
+{
+    expression_parallel_goertzel(complex<T> result[], vec<T, width> omega)
+        : result(result), omega(omega), coeff(cos(omega)), q0(), q1(), q2()
+    {
+    }
+    ~expression_parallel_goertzel()
+    {
+        const vec<T, width> re = q1 - q2 * cos(omega);
+        const vec<T, width> im = q2 * sin(omega);
+        for (size_t i = 0; i < width; i++)
+        {
+            result[i].real(re[i]);
+            result[i].imag(im[i]);
+        }
+    }
+    template <typename U, size_t N>
+    CMT_INLINE void operator()(coutput_t, size_t index, const vec<U, N>& x)
+    {
+        const vec<T, N> in = x;
+        CMT_LOOP_UNROLL
+        for (size_t i = 0; i < N; i++)
+        {
+            q0 = coeff * q1 - q2 + in[i];
+            q2 = q1;
+            q1 = q0;
+        }
+    }
+    complex<T> result[];
+    const vec<T, width> omega;
+    const vec<T, width> coeff;
+    vec<T, width> q0;
+    vec<T, width> q1;
+    vec<T, width> q2;
+};
+};
+
+template <typename T>
+KFR_SINTRIN internal::expression_goertzel<T> goertzel(complex<T>& result, identity<T> omega)
+{
+    return internal::expression_goertzel<T>(result, omega);
+}
+
+template <typename T, size_t width>
+KFR_SINTRIN internal::expression_parallel_goertzel<T, width> goertzel(complex<T> (&result)[width],
+                                                                      const T (&omega)[width])
+{
+    return internal::expression_parallel_goertzel<T, width>(result, read<width>(omega));
 }
 }

@@ -90,19 +90,19 @@ struct shuffle_index_digitreverse
 }
 
 template <size_t radix, size_t groupsize = 1, typename T, size_t N>
-KFR_INLINE vec<T, N> digitreverse(const vec<T, N>& x)
+CMT_INLINE vec<T, N> digitreverse(const vec<T, N>& x)
 {
     return shufflevector<N, internal::shuffle_index_digitreverse<radix, ilog2(N / groupsize)>, groupsize>(x);
 }
 
 template <size_t groupsize = 1, typename T, size_t N>
-KFR_INLINE vec<T, N> bitreverse(const vec<T, N>& x)
+CMT_INLINE vec<T, N> bitreverse(const vec<T, N>& x)
 {
     return digitreverse<2, groupsize>(x);
 }
 
 template <size_t groupsize = 1, typename T, size_t N>
-KFR_INLINE vec<T, N> digitreverse4(const vec<T, N>& x)
+CMT_INLINE vec<T, N> digitreverse4(const vec<T, N>& x)
 {
     return digitreverse<4, groupsize>(x);
 }

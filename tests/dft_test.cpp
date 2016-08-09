@@ -22,12 +22,18 @@
 
 using namespace kfr;
 
+#ifdef KFR_NATIVE_F64
+constexpr ctypes_t<float, double> float_types{};
+#else
+constexpr ctypes_t<float> float_types{};
+#endif
+
 TEST(fft_accuracy)
 {
     testo::active_test()->show_progress = true;
     random_bit_generator gen(2247448713, 915890490, 864203735, 2982561);
 
-    testo::matrix(named("type")       = ctypes<float, double>, //
+    testo::matrix(named("type")       = float_types, //
                   named("inverse")    = std::make_tuple(false, true), //
                   named("log2(size)") = make_range(1, 21), //
                   [&gen](auto type, bool inverse, size_t log2size) {

@@ -25,7 +25,7 @@
 #include "../cometa/string.hpp"
 #include <cstdlib>
 
-#ifdef KFR_OS_WIN
+#ifdef CMT_OS_WIN
 #include <direct.h>
 #define cross_getcwd _getcwd
 #else
@@ -37,6 +37,10 @@ namespace kfr
 {
 namespace internal
 {
+#pragma clang diagnostic push
+#if CMT_HAS_WARNING("-Wdeprecated-declarations")
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
 void python(const std::string& name, const std::string& code)
 {
@@ -46,7 +50,7 @@ void python(const std::string& name, const std::string& code)
         cross_getcwd(curdir, arraysize(curdir));
         filename = curdir;
     }
-#ifdef KFR_OS_WIN
+#ifdef CMT_OS_WIN
     const char* slash = "\\";
 #else
     const char* slash = "/";
@@ -58,6 +62,7 @@ void python(const std::string& name, const std::string& code)
     fclose(f);
     std::system(("python \"" + filename + "\"").c_str());
 }
+#pragma clang diagnostic pop
 }
 
 static std::string concat_args() { return {}; }

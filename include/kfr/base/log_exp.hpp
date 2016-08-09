@@ -81,7 +81,7 @@ KFR_SINTRIN vec<f64, N> vldexpk(const vec<f64, N>& x, const vec<i64, N>& q)
 template <typename T, size_t N>
 KFR_SINTRIN vec<T, N> logb(const vec<T, N>& x)
 {
-    return select(x == T(), -c_infinity<T>, cast<T>(vilogbp1(x) - 1));
+    return select(x == T(), -c_infinity<T>, static_cast<vec<T, N>>(vilogbp1(x) - 1));
 }
 
 template <size_t N>
