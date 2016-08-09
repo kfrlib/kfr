@@ -17,11 +17,11 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-if(CMAKE_VERSION VERSION_LESS "2.8.12")
+if (CMAKE_VERSION VERSION_LESS "2.8.12")
     function(add_compile_options)
         add_definitions(${ARGN})
     endfunction(add_compile_options)
-endif()
+endif ()
 
 set(OPT_BITNESS "") # cmake -DOPT_BITNESS="-m32" or -m64
 set(OPT_STATIC "") # cmake -DOPT_STATIC="-static"
@@ -51,6 +51,8 @@ project(kfr)
 include(sources.cmake)
 
 set(ALL_WARNINGS -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-c99-extensions -Wno-padded)
+
+set(STD_LIB stdc++)
 
 if (NOT MSVC)
     add_compile_options(-std=c++1y)
