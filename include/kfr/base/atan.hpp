@@ -65,14 +65,14 @@ KFR_SINTRIN vec<f64, N> atan2k(vec<f64, N> y, vec<f64, N> x)
 {
     vec<f64, N> s, t, u;
     vec<i64, N> q;
-    q = select(x < 0, -2ll, 0ll);
+    q = select(x < 0, i64(-2), i64(0));
     x = select(x < 0, -x, x);
     mask<i64, N> m;
     m = y > x;
     t = x;
     x = select(m, y, x);
     y = select(m, -t, y);
-    q = select(m, q + 1ll, q);
+    q = select(m, q + i64(1), q);
     s = y / x;
     t = s * s;
     u = -1.88796008463073496563746e-05;
@@ -158,7 +158,7 @@ KFR_SINTRIN vec<f64, N> atan(const vec<f64, N>& s)
 {
     vec<f64, N> t, u;
     vec<i64, N> q;
-    q = select(s < 0.0, 2ll, 0ll);
+    q = select(s < 0.0, i64(2), i64(0));
     s = select(s < 0.0, -s, s);
     q = select(s > 1.0, q | 1, q);
     s = select(s > 1.0, 1.0 / s, s);
