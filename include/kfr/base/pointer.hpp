@@ -32,7 +32,7 @@ namespace kfr
 constexpr size_t maximum_expression_width() { return bitness_const(16, 32); }
 
 template <typename T, size_t maxwidth = maximum_expression_width()>
-using expression_vtable = carray<void*, 2 + ilog2(maxwidth) + 1>;
+using expression_vtable = std::array<void*, 2 + ilog2(maxwidth) + 1>;
 
 struct dummy_content
 {
@@ -81,20 +81,20 @@ struct expression_pointer : input_expression
         static_assert(is_poweroftwo(N), "N must be a power of two");
         constexpr size_t findex = ilog2(N);
         static_assert(N <= maxwidth, "N is greater than maxwidth");
-        func_t func = reinterpret_cast<func_t>(vtable->get(csize<2 + findex>));
-        vec<U, N> result = func(instance, index);
+        func_t func = reinterpret_cast<func_t>((*vtable)[2 + findex]);
+        vec<U, N> result = vec<T, N>(func(instance, index));
         return result;
     }
     CMT_INLINE void begin_block(size_t size) const
     {
         using func_t = void (*)(void*, size_t);
-        func_t func  = reinterpret_cast<func_t>(vtable->get(csize<0>));
+        func_t func  = reinterpret_cast<func_t>((*vtable)[0]);
         func(instance, size);
     }
     CMT_INLINE void end_block(size_t size) const
     {
         using func_t = void (*)(void*, size_t);
-        func_t func  = reinterpret_cast<func_t>(vtable->get(csize<1>));
+        func_t func  = reinterpret_cast<func_t>((*vtable)[1]);
         func(instance, size);
     }
 
@@ -107,10 +107,12 @@ private:
 namespace internal
 {
 template <typename T, size_t N, typename Fn, typename Ret = simd<T, N>,
-          typename NonMemFn = Ret (*)(Fn*, size_t, vec_t<T, N>)>
+          typename NonMemFn = Ret (*)(void*, size_t)>
 CMT_INLINE NonMemFn make_expression_func()
 {
-    return [](Fn* fn, size_t index, vec_t<T, N> x) { return *(fn->operator()(cinput, index, x)); };
+    return [](void* fn, size_t index) -> Ret {
+        return *(reinterpret_cast<Fn*>(fn)->operator()(cinput, index, vec_t<T, N>()));
+    };
 }
 
 template <typename Fn, typename NonMemFn = void (*)(Fn*, size_t)>
@@ -130,12 +132,12 @@ expression_vtable<T, maxwidth> make_expression_vtable_impl()
     expression_vtable<T, maxwidth> result;
     constexpr size_t size = result.size() - 2;
 
-    result.get(csize<0>) = reinterpret_cast<void*>(&internal::make_expression_begin_block<decay<E>>);
-    result.get(csize<1>) = reinterpret_cast<void*>(&internal::make_expression_end_block<decay<E>>);
+    result[0] = reinterpret_cast<void*>(&internal::make_expression_begin_block<decay<E>>);
+    result[1] = reinterpret_cast<void*>(&internal::make_expression_end_block<decay<E>>);
 
     cforeach(csizeseq<size>, [&](auto u) {
         constexpr size_t N = 1 << val_of(decltype(u)());
-        result.get(csize<2 + val_of(decltype(u)())>) =
+        result[2 + val_of(decltype(u)())] =
             reinterpret_cast<void*>(internal::make_expression_func<T, N, decay<E>>());
     });
     return result;
