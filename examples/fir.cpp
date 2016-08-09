@@ -37,15 +37,15 @@ int main(int argc, char** argv)
 
     const std::string options = "phaseresp=False";
 
-    univector<double, 15> taps15;
-    univector<double, 127> taps127;
-    univector<double, 8191> taps8191;
+    univector<fbase, 15> taps15;
+    univector<fbase, 127> taps127;
+    univector<fbase, 8191> taps8191;
 
-    expression_pointer<double> hann = to_pointer(window_hann(taps15.size()));
+    expression_pointer<fbase> hann = to_pointer(window_hann(taps15.size()));
 
-    expression_pointer<double> kaiser = to_pointer(window_kaiser(taps127.size(), 3.0));
+    expression_pointer<fbase> kaiser = to_pointer(window_kaiser(taps127.size(), 3.0));
 
-    expression_pointer<double> blackman_harris = to_pointer(window_blackman_harris(taps8191.size()));
+    expression_pointer<fbase> blackman_harris = to_pointer(window_blackman_harris(taps8191.size()));
 
     fir_lowpass(taps15, 0.15, hann, true);
     plot_save("fir_lowpass_hann", taps15, options + ", title='15-point lowpass FIR, Hann window'");

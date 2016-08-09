@@ -11,39 +11,52 @@
 
 using namespace kfr;
 
-constexpr ctypes_t<i8x1, i16x1, i32x1, i64x1, //
-                   i8x2, i16x2, i32x2, i64x2, //
-                   i8x4, i16x4, i32x4, i64x4, //
-                   i8x8, i16x8, i32x8, i64x8, //
-                   i8x16, i16x16, i32x16, i64x16, //
-                   i8x3, i16x3, i32x3, i64x3 //
+constexpr ctypes_t<i8x1, i8x2, i8x4, i8x8, i8x16, i8x3, //
+                   i16x1, i16x2, i16x4, i16x8, i16x16, i16x3, //
+                   i32x1, i32x2, i32x4, i32x8, i32x16, i32x3 //
+#ifdef KFR_NATIVE_I64
+                   ,
+                   i64x1, i64x2, i64x4, i64x8, i64x16, i64x3 //
+#endif
                    >
     signed_types{};
 
-constexpr ctypes_t<u8x1, u16x1, u32x1, u64x1, //
-                   u8x2, u16x2, u32x2, u64x2, //
-                   u8x4, u16x4, u32x4, u64x4, //
-                   u8x8, u16x8, u32x8, u64x8, //
-                   u8x16, u16x16, u32x16, u64x16, //
-                   u8x3, u16x3, u32x3, u64x3 //
+constexpr ctypes_t<u8x1, u8x2, u8x4, u8x8, u8x16, u8x3, //
+                   u16x1, u16x2, u16x4, u16x8, u16x16, u16x3, //
+                   u32x1, u32x2, u32x4, u32x8, u32x16, u32x3 //
+#ifdef KFR_NATIVE_I64
+                   ,
+                   u64x1, u64x2, u64x4, u64x8, u64x16, u64x3 //
+#endif
                    >
     unsigned_types{};
 
-constexpr ctypes_t<f32x1, f64x1, //
-                   f32x2, f64x2, //
-                   f32x4, f64x4, //
-                   f32x8, f64x8, //
-                   f32x16, f64x16, //
-                   f32x3, f64x3 //
+constexpr ctypes_t<f32x1, f32x2, f32x4, f32x8, f32x16, f32x3 //
+#ifdef KFR_NATIVE_F64
+                   ,
+                   f64x1, f64x2, f64x4, f64x8, f64x16, f64x3 //
+#endif
                    >
     float_types{};
 
-constexpr ctypes_t<u8x1, i8x1, u16x1, i16x1, u32x1, i32x1, u64x1, i64x1, f32x1, f64x1, //
-                   u8x2, i8x2, u16x2, i16x2, u32x2, i32x2, u64x2, i64x2, f32x2, f64x2, //
-                   u8x4, i8x4, u16x4, i16x4, u32x4, i32x4, u64x4, i64x4, f32x4, f64x4, //
-                   u8x8, i8x8, u16x8, i16x8, u32x8, i32x8, u64x8, i64x8, f32x8, f64x8, //
-                   u8x16, i8x16, u16x16, i16x16, u32x16, i32x16, u64x16, i64x16, f32x16, f64x16, //
-                   u8x3, i8x3, u16x3, i16x3, u32x3, i32x3, u64x3, i64x3, f32x3, f64x3 //
+constexpr ctypes_t<i8x1, i8x2, i8x4, i8x8, i8x16, i8x3, //
+                   i16x1, i16x2, i16x4, i16x8, i16x16, i16x3, //
+                   i32x1, i32x2, i32x4, i32x8, i32x16, i32x3, //
+#ifdef KFR_NATIVE_I64
+
+                   i64x1, i64x2, i64x4, i64x8, i64x16, i64x3, //
+#endif
+                   u8x1, u8x2, u8x4, u8x8, u8x16, u8x3, //
+                   u16x1, u16x2, u16x4, u16x8, u16x16, u16x3, //
+                   u32x1, u32x2, u32x4, u32x8, u32x16, u32x3, //
+#ifdef KFR_NATIVE_I64
+                   u64x1, u64x2, u64x4, u64x8, u64x16, u64x3, //
+#endif
+                   f32x1, f32x2, f32x4, f32x8, f32x16, f32x3 //
+#ifdef KFR_NATIVE_F64
+                   ,
+                   f64x1, f64x2, f64x4, f64x8, f64x16, f64x3 //
+#endif
                    >
     all_types{};
 
@@ -145,13 +158,13 @@ TEST(intrin_abs)
 
 TEST(intrin_sqrt)
 {
-    testo::assert_is_same<decltype(kfr::sqrt(9)), double>();
-    testo::assert_is_same<decltype(kfr::sqrt(make_vector(9))), f64x1>();
-    testo::assert_is_same<decltype(kfr::sqrt(make_vector(9, 25))), f64x2>();
+    testo::assert_is_same<decltype(kfr::sqrt(9)), fbase>();
+    testo::assert_is_same<decltype(kfr::sqrt(make_vector(9))), vec<fbase, 1>>();
+    testo::assert_is_same<decltype(kfr::sqrt(make_vector(9, 25))), vec<fbase, 2>>();
     CHECK(kfr::sqrt(9) == 3.0);
     CHECK(kfr::sqrt(-9) == qnan);
-    CHECK(kfr::sqrt(make_vector(9)) == make_vector(3.0));
-    CHECK(kfr::sqrt(make_vector(-9)) == make_vector(qnan));
+    CHECK(kfr::sqrt(make_vector(9)) == make_vector<fbase>(3.0));
+    CHECK(kfr::sqrt(make_vector(-9)) == make_vector<fbase>(qnan));
     testo::matrix(named("type") = float_types, named("value") = std::vector<int>{ 0, 2, 65536 },
                   [](auto type, int value) {
                       using T    = type_of<decltype(type)>;
@@ -180,8 +193,8 @@ TEST(intrin_round)
     CHECK(kfr::fract(100) == 0);
 
     testo::matrix(named("type")  = float_types,
-                  named("value") = std::vector<double>{ -1.51, -1.49, 0.0, +1.49, +1.51 },
-                  [](auto type, double value) {
+                  named("value") = std::vector<fbase>{ -1.51, -1.49, 0.0, +1.49, +1.51 },
+                  [](auto type, fbase value) {
                       using T    = type_of<decltype(type)>;
                       using Tsub = subtype<T>;
                       const T x(value);
@@ -201,10 +214,9 @@ TEST(intrin_min_max)
     CHECK(min(pack(1, 2, 3), 2) == pack(1, 2, 2));
     CHECK(min(pack(1., 2., 3.), 2) == pack(1., 2., 2.));
 
-    testo::matrix(named("type") = float_types,
-                  named("value") =
-                      std::vector<std::pair<double, double>>{ { -100, +100 }, { infinity, 0.0 } },
-                  [](auto type, std::pair<double, double> value) {
+    testo::matrix(named("type")  = float_types,
+                  named("value") = std::vector<std::pair<fbase, fbase>>{ { -100, +100 }, { infinity, 0.0 } },
+                  [](auto type, std::pair<fbase, fbase> value) {
                       using T    = type_of<decltype(type)>;
                       using Tsub = subtype<T>;
                       const T x(value.first);

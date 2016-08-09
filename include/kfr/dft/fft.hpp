@@ -214,9 +214,9 @@ CMT_NOINLINE cvec<T, 1> calculate_twiddle(size_t n, size_t size)
     }
     else
     {
-        double kth  = c_pi<double, 2> * (n / static_cast<double>(size));
-        double tcos = +kfr::cos(kth);
-        double tsin = -kfr::sin(kth);
+        fbase kth  = c_pi<fbase, 2> * (n / static_cast<fbase>(size));
+        fbase tcos = +kfr::cos(kth);
+        fbase tsin = -kfr::sin(kth);
         return make_vector(static_cast<T>(tcos), static_cast<T>(tsin));
     }
 }
