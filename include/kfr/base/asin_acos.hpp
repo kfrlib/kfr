@@ -46,8 +46,8 @@ KFR_SINTRIN vec<Tout, N> acos(const vec<T, N>& x)
     const vec<Tout, N> xx = x;
     return atan2(sqrt(Tout(1) - xx * xx), xx);
 }
-KFR_I_CONVERTER(asin)
-KFR_I_CONVERTER(acos)
+KFR_I_FLT_CONVERTER(asin)
+KFR_I_FLT_CONVERTER(acos)
 }
 KFR_I_FN(asin)
 KFR_I_FN(acos)

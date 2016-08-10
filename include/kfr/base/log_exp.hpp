@@ -133,15 +133,15 @@ KFR_SINTRIN vec<f64, N> log(const vec<f64, N>& d)
     return x;
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
-KFR_SINTRIN vec<T, N> log2(const vec<T, N>& x)
+template <typename T, size_t N, typename Tout = flt_type<T>>
+KFR_SINTRIN vec<Tout, N> log2(const vec<T, N>& x)
 {
-    return log(x) * c_recip_log_2<T>;
+    return log(cast<Tout>(x)) * c_recip_log_2<Tout>;
 }
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
-KFR_SINTRIN vec<T, N> log10(const vec<T, N>& x)
+template <typename T, size_t N, typename Tout = flt_type<T>>
+KFR_SINTRIN vec<Tout, N> log10(const vec<T, N>& x)
 {
-    return log(x) * c_recip_log_10<T>;
+    return log(cast<Tout>(x)) * c_recip_log_10<Tout>;
 }
 
 template <size_t N>
@@ -219,39 +219,15 @@ KFR_SINTRIN vec<f64, N> exp(const vec<f64, N>& d)
 
     return u;
 }
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
-KFR_SINTRIN vec<T, N> exp2(const vec<T, N>& x)
+template <typename T, size_t N, typename Tout = flt_type<T>>
+KFR_SINTRIN vec<Tout, N> exp2(const vec<T, N>& x)
 {
-    return exp(x * c_log_2<T>);
+    return exp(x * c_log_2<Tout>);
 }
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
-KFR_SINTRIN vec<T, N> exp10(const vec<T, N>& x)
+template <typename T, size_t N, typename Tout = flt_type<T>>
+KFR_SINTRIN vec<Tout, N> exp10(const vec<T, N>& x)
 {
-    return exp(x * c_log_10<T>);
-}
-
-template <typename T1, typename T2>
-KFR_SINTRIN common_type<T1, T2> logn(const T1& a, const T2& b)
-{
-    return log(a) / log(b);
-}
-
-template <typename T1, typename T2>
-KFR_SINTRIN common_type<T1, T2> logm(const T1& a, const T2& b)
-{
-    return log(a) * b;
-}
-
-template <typename T1, typename T2, typename T3>
-KFR_SINTRIN common_type<T1, T2, T3> exp_fmadd(const T1& x, const T2& m, const T3& a)
-{
-    return exp(fmadd(x, m, a));
-}
-
-template <typename T1, typename T2, typename T3>
-KFR_SINTRIN common_type<T1, T2, T3> log_fmadd(const T1& x, const T2& m, const T3& a)
-{
-    return fmadd(log(x), m, a);
+    return exp(x * c_log_10<Tout>);
 }
 
 template <typename T, size_t N>
@@ -276,52 +252,46 @@ KFR_SINTRIN vec<T, N> cbrt(const vec<T, N>& x)
     return pow<T, N>(x, T(0.333333333333333333333333333333333));
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value), typename Tout = ftype<T>>
-KFR_SINTRIN vec<Tout, N> exp(const vec<T, N>& x)
-{
-    return exp(cast<Tout>(x));
-}
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value), typename Tout = ftype<T>>
-KFR_SINTRIN vec<Tout, N> exp2(const vec<T, N>& x)
-{
-    return exp2(cast<Tout>(x));
-}
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value), typename Tout = ftype<T>>
-KFR_SINTRIN vec<Tout, N> exp10(const vec<T, N>& x)
-{
-    return exp10(cast<Tout>(x));
-}
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value), typename Tout = ftype<T>>
-KFR_SINTRIN vec<Tout, N> log(const vec<T, N>& x)
-{
-    return log(cast<Tout>(x));
-}
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value), typename Tout = ftype<T>>
-KFR_SINTRIN vec<Tout, N> log2(const vec<T, N>& x)
-{
-    return log2(cast<Tout>(x));
-}
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value), typename Tout = ftype<T>>
-KFR_SINTRIN vec<Tout, N> log10(const vec<T, N>& x)
-{
-    return log10(cast<Tout>(x));
-}
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value), typename Tout = ftype<T>>
+template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value), typename Tout = flt_type<T>>
 KFR_SINTRIN vec<Tout, N> cbrt(const vec<T, N>& x)
 {
     return cbrt(cast<Tout>(x));
 }
 
-KFR_I_CONVERTER(exp)
-KFR_I_CONVERTER(exp2)
-KFR_I_CONVERTER(exp10)
-KFR_I_CONVERTER(log)
-KFR_I_CONVERTER(log2)
-KFR_I_CONVERTER(log10)
-KFR_I_CONVERTER(logb)
-KFR_I_CONVERTER(pow)
-KFR_I_CONVERTER(root)
-KFR_I_CONVERTER(cbrt)
+KFR_I_FLT_CONVERTER(exp)
+KFR_I_FLT_CONVERTER(exp2)
+KFR_I_FLT_CONVERTER(exp10)
+KFR_I_FLT_CONVERTER(log)
+KFR_I_FLT_CONVERTER(log2)
+KFR_I_FLT_CONVERTER(log10)
+KFR_I_FLT_CONVERTER(logb)
+KFR_I_FLT_CONVERTER(pow)
+KFR_I_FLT_CONVERTER(root)
+KFR_I_FLT_CONVERTER(cbrt)
+
+template <typename T1, typename T2>
+KFR_SINTRIN flt_type<common_type<T1, T2>> logn(const T1& a, const T2& b)
+{
+    return log(a) / log(b);
+}
+
+template <typename T1, typename T2>
+KFR_SINTRIN flt_type<common_type<T1, T2>> logm(const T1& a, const T2& b)
+{
+    return log(a) * b;
+}
+
+template <typename T1, typename T2, typename T3>
+KFR_SINTRIN flt_type<common_type<T1, T2, T3>> exp_fmadd(const T1& x, const T2& m, const T3& a)
+{
+    return exp(fmadd(x, m, a));
+}
+
+template <typename T1, typename T2, typename T3>
+KFR_SINTRIN flt_type<common_type<T1, T2, T3>> log_fmadd(const T1& x, const T2& m, const T3& a)
+{
+    return fmadd(log(x), m, a);
+}
 }
 KFR_I_FN(exp)
 KFR_I_FN(exp2)
@@ -339,7 +309,7 @@ KFR_I_FN(root)
 KFR_I_FN(cbrt)
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 exp(const T1& x)
+KFR_INTRIN flt_type<T1> exp(const T1& x)
 {
     return intrinsics::exp(x);
 }
@@ -351,7 +321,7 @@ KFR_INTRIN internal::expression_function<fn::exp, E1> exp(E1&& x)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 exp2(const T1& x)
+KFR_INTRIN flt_type<T1> exp2(const T1& x)
 {
     return intrinsics::exp2(x);
 }
@@ -363,7 +333,7 @@ KFR_INTRIN internal::expression_function<fn::exp2, E1> exp2(E1&& x)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 exp10(const T1& x)
+KFR_INTRIN flt_type<T1> exp10(const T1& x)
 {
     return intrinsics::exp10(x);
 }
@@ -375,7 +345,7 @@ KFR_INTRIN internal::expression_function<fn::exp10, E1> exp10(E1&& x)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 log(const T1& x)
+KFR_INTRIN flt_type<T1> log(const T1& x)
 {
     return intrinsics::log(x);
 }
@@ -387,7 +357,7 @@ KFR_INTRIN internal::expression_function<fn::log, E1> log(E1&& x)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 log2(const T1& x)
+KFR_INTRIN flt_type<T1> log2(const T1& x)
 {
     return intrinsics::log2(x);
 }
@@ -399,7 +369,7 @@ KFR_INTRIN internal::expression_function<fn::log2, E1> log2(E1&& x)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 log10(const T1& x)
+KFR_INTRIN flt_type<T1> log10(const T1& x)
 {
     return intrinsics::log10(x);
 }
@@ -411,7 +381,7 @@ KFR_INTRIN internal::expression_function<fn::log10, E1> log10(E1&& x)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 logb(const T1& x)
+KFR_INTRIN flt_type<T1> logb(const T1& x)
 {
     return intrinsics::logb(x);
 }
@@ -423,7 +393,7 @@ KFR_INTRIN internal::expression_function<fn::logb, E1> logb(E1&& x)
 }
 
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INTRIN common_type<T1, T2> logn(const T1& x, const T2& y)
+KFR_INTRIN flt_type<common_type<T1, T2>> logn(const T1& x, const T2& y)
 {
     return intrinsics::logn(x, y);
 }
@@ -435,7 +405,7 @@ KFR_INTRIN internal::expression_function<fn::logn, E1, E2> logn(E1&& x, E2&& y)
 }
 
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INTRIN common_type<T1, T2> logm(const T1& x, const T2& y)
+KFR_INTRIN flt_type<common_type<T1, T2>> logm(const T1& x, const T2& y)
 {
     return intrinsics::logm(x, y);
 }
@@ -447,7 +417,7 @@ KFR_INTRIN internal::expression_function<fn::logm, E1, E2> logm(E1&& x, E2&& y)
 }
 
 template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>::value)>
-KFR_INTRIN common_type<T1, T2, T3> exp_fmadd(const T1& x, const T2& y, const T3& z)
+KFR_INTRIN flt_type<common_type<T1, T2, T3>> exp_fmadd(const T1& x, const T2& y, const T3& z)
 {
     return intrinsics::exp_fmadd(x, y, z);
 }
@@ -459,7 +429,7 @@ KFR_INTRIN internal::expression_function<fn::exp_fmadd, E1, E2, E3> exp_fmadd(E1
 }
 
 template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>::value)>
-KFR_INTRIN common_type<T1, T2, T3> log_fmadd(const T1& x, const T2& y, const T3& z)
+KFR_INTRIN flt_type<common_type<T1, T2, T3>> log_fmadd(const T1& x, const T2& y, const T3& z)
 {
     return intrinsics::log_fmadd(x, y, z);
 }
@@ -471,7 +441,7 @@ KFR_INTRIN internal::expression_function<fn::log_fmadd, E1, E2, E3> log_fmadd(E1
 }
 
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INTRIN common_type<T1, T2> pow(const T1& x, const T2& y)
+KFR_INTRIN flt_type<common_type<T1, T2>> pow(const T1& x, const T2& y)
 {
     return intrinsics::pow(x, y);
 }
@@ -483,7 +453,7 @@ KFR_INTRIN internal::expression_function<fn::pow, E1, E2> pow(E1&& x, E2&& y)
 }
 
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INTRIN common_type<T1, T2> root(const T1& x, const T2& y)
+KFR_INTRIN flt_type<common_type<T1, T2>> root(const T1& x, const T2& y)
 {
     return intrinsics::root(x, y);
 }
@@ -495,7 +465,7 @@ KFR_INTRIN internal::expression_function<fn::root, E1, E2> root(E1&& x, E2&& y)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 cbrt(const T1& x)
+KFR_INTRIN flt_type<T1> cbrt(const T1& x)
 {
     return intrinsics::cbrt(x);
 }

@@ -111,21 +111,19 @@ KFR_SINTRIN u8neon satadd(const u8neon& x, const u8neon& y) { return vqaddq_u8(*
 KFR_SINTRIN i8neon satadd(const i8neon& x, const i8neon& y) { return vqaddq_s8(*x, *y); }
 KFR_SINTRIN u16neon satadd(const u16neon& x, const u16neon& y) { return vqaddq_u16(*x, *y); }
 KFR_SINTRIN i16neon satadd(const i16neon& x, const i16neon& y) { return vqaddq_s16(*x, *y); }
-
-KFR_SINTRIN u8neon satsub(const u8neon& x, const u8neon& y) { return vqsubq_u8(*x, *y); }
-KFR_SINTRIN i8neon satsub(const i8neon& x, const i8neon& y) { return vqsubq_s8(*x, *y); }
-KFR_SINTRIN u16neon satsub(const u16neon& x, const u16neon& y) { return vqsubq_u16(*x, *y); }
-KFR_SINTRIN i16neon satsub(const i16neon& x, const i16neon& y) { return vqsubq_s16(*x, *y); }
-
 KFR_SINTRIN u32neon satadd(const u32neon& a, const u32neon& b) { return vqaddq_u32(*a, *b); }
 KFR_SINTRIN i32neon satadd(const i32neon& a, const i32neon& b) { return vqaddq_s32(*a, *b); }
 KFR_SINTRIN u64neon satadd(const u64neon& a, const u64neon& b) { return vqaddq_u64(*a, *b); }
 KFR_SINTRIN i64neon satadd(const i64neon& a, const i64neon& b) { return vqaddq_s64(*a, *b); }
 
-KFR_SINTRIN i32neon satsub(const i32neon& a, const i32neon& b) { return vqsubq_u32(*a, *b); }
-KFR_SINTRIN i64neon satsub(const i64neon& a, const i64neon& b) { return vqsubq_s32(*a, *b); }
-KFR_SINTRIN u32neon satsub(const u32neon& a, const u32neon& b) { return vqsubq_u64(*a, *b); }
-KFR_SINTRIN u64neon satsub(const u64neon& a, const u64neon& b) { return vqsubq_s64(*a, *b); }
+KFR_SINTRIN u8neon satsub(const u8neon& x, const u8neon& y) { return vqsubq_u8(*x, *y); }
+KFR_SINTRIN i8neon satsub(const i8neon& x, const i8neon& y) { return vqsubq_s8(*x, *y); }
+KFR_SINTRIN u16neon satsub(const u16neon& x, const u16neon& y) { return vqsubq_u16(*x, *y); }
+KFR_SINTRIN i16neon satsub(const i16neon& x, const i16neon& y) { return vqsubq_s16(*x, *y); }
+KFR_SINTRIN u32neon satsub(const u32neon& a, const u32neon& b) { return vqsubq_u32(*a, *b); }
+KFR_SINTRIN i32neon satsub(const i32neon& a, const i32neon& b) { return vqsubq_s32(*a, *b); }
+KFR_SINTRIN u64neon satsub(const u64neon& a, const u64neon& b) { return vqsubq_u64(*a, *b); }
+KFR_SINTRIN i64neon satsub(const i64neon& a, const i64neon& b) { return vqsubq_s64(*a, *b); }
 
 KFR_HANDLE_ALL_SIZES_2(satadd)
 KFR_HANDLE_ALL_SIZES_2(satsub)

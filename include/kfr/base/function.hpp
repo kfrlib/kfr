@@ -41,8 +41,54 @@ namespace kfr
         return to_scalar(::kfr::intrinsics::fn(vecout(a), vecout(b)...));                                    \
     }
 
+#define KFR_I_FLT_CONVERTER(fn)                                                                              \
+    template <typename T1, typename... Args,                                                                 \
+              typename Tout = ::kfr::flt_type<::cometa::common_type<T1, Args...>>>                           \
+    KFR_SINTRIN Tout fn(const T1& a, const Args&... b)                                                       \
+    {                                                                                                        \
+        using vecout = vec1<Tout>;                                                                           \
+        return to_scalar(::kfr::intrinsics::fn(vecout(a), vecout(b)...));                                    \
+    }
+
+namespace internal
+{
 template <typename T>
-using flt_type = conditional<std::is_floating_point<deep_subtype<T>>::value, T, deep_rebind<T, fbase>>;
+struct flt_type_impl
+{
+    using type = fbase;
+};
+
+template <typename T, size_t N>
+struct flt_type_impl<vec<T, N>>
+{
+    using type = vec<fbase, N>;
+};
+
+template <>
+struct flt_type_impl<float>
+{
+    using type = float;
+};
+template <>
+struct flt_type_impl<double>
+{
+    using type = double;
+};
+
+template <size_t N>
+struct flt_type_impl<vec<float, N>>
+{
+    using type = vec<float, N>;
+};
+template <size_t N>
+struct flt_type_impl<vec<double, N>>
+{
+    using type = vec<double, N>;
+};
+}
+
+template <typename T>
+using flt_type = typename internal::flt_type_impl<T>::type;
 
 namespace intrinsics
 {

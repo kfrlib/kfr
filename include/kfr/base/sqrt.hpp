@@ -53,10 +53,10 @@ KFR_HANDLE_ALL_SIZES_FLT_1(sqrt)
 template <typename T, size_t N, typename Tout = flt_type<T>>
 KFR_SINTRIN vec<Tout, N> sqrt(const vec<T, N>& x)
 {
-    return apply([](T x) { return std::sqrt(static_cast<Tout>(x)); }, x);
+    return apply([](Tout x) { return std::sqrt(x); }, cast<Tout>(x));
 }
 #endif
-KFR_I_CONVERTER(sqrt)
+KFR_I_FLT_CONVERTER(sqrt)
 }
 KFR_I_FN(sqrt)
 

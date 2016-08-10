@@ -111,6 +111,8 @@ KFR_SINTRIN i16neon min(const i16neon& x, const i16neon& y) { return vminq_s16(*
 KFR_SINTRIN u16neon min(const u16neon& x, const u16neon& y) { return vminq_u16(*x, *y); }
 KFR_SINTRIN i32neon min(const i32neon& x, const i32neon& y) { return vminq_s32(*x, *y); }
 KFR_SINTRIN u32neon min(const u32neon& x, const u32neon& y) { return vminq_u32(*x, *y); }
+KFR_SINTRIN i64neon min(const i64neon& x, const i64neon& y) { return select(x < y, x, y); }
+KFR_SINTRIN u64neon min(const u64neon& x, const u64neon& y) { return select(x < y, x, y); }
 
 KFR_SINTRIN i8neon max(const i8neon& x, const i8neon& y) { return vmaxq_s8(*x, *y); }
 KFR_SINTRIN u8neon max(const u8neon& x, const u8neon& y) { return vmaxq_u8(*x, *y); }
@@ -118,8 +120,8 @@ KFR_SINTRIN i16neon max(const i16neon& x, const i16neon& y) { return vmaxq_s16(*
 KFR_SINTRIN u16neon max(const u16neon& x, const u16neon& y) { return vmaxq_u16(*x, *y); }
 KFR_SINTRIN i32neon max(const i32neon& x, const i32neon& y) { return vmaxq_s32(*x, *y); }
 KFR_SINTRIN u32neon max(const u32neon& x, const u32neon& y) { return vmaxq_u32(*x, *y); }
-KFR_SINTRIN i64neon min(const i64neon& x, const i64neon& y) { return select(x < y, x, y); }
-KFR_SINTRIN u64neon min(const u64neon& x, const u64neon& y) { return select(x < y, x, y); }
+KFR_SINTRIN i64neon max(const i64neon& x, const i64neon& y) { return select(x > y, x, y); }
+KFR_SINTRIN u64neon max(const u64neon& x, const u64neon& y) { return select(x > y, x, y); }
 
 KFR_SINTRIN f32neon min(const f32neon& x, const f32neon& y) { return vminq_f32(*x, *y); }
 KFR_SINTRIN f32neon max(const f32neon& x, const f32neon& y) { return vmaxq_f32(*x, *y); }

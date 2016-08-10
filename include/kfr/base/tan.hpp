@@ -119,19 +119,19 @@ KFR_SINTRIN vec<f64, N> tan(const vec<f64, N>& x_full)
     const vec<f64, N> z = select(inverse, val / -x, val * x);
     return mulsign(z, x_full);
 }
-template <typename T>
-KFR_SINTRIN T tandeg(const T& x)
-{
-    return tan(x * c_degtorad<T>);
-}
 
-KFR_I_CONVERTER(tan)
+KFR_I_FLT_CONVERTER(tan)
+template <typename T>
+KFR_SINTRIN flt_type<T> tandeg(const T& x)
+{
+    return tan(x * c_degtorad<flt_type<T>>);
+}
 }
 KFR_I_FN(tan)
 KFR_I_FN(tandeg)
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 tan(const T1& x)
+KFR_INTRIN flt_type<T1> tan(const T1& x)
 {
     return intrinsics::tan(x);
 }
@@ -143,7 +143,7 @@ KFR_INTRIN internal::expression_function<fn::tan, E1> tan(E1&& x)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 tandeg(const T1& x)
+KFR_INTRIN flt_type<T1> tandeg(const T1& x)
 {
     return intrinsics::tandeg(x);
 }
