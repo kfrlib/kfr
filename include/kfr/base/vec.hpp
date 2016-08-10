@@ -1303,7 +1303,7 @@ CMT_INLINE vec<T, N> tovec(const simd<T, N>& x)
 {
     return x;
 }
-template <typename T, int N>
+template <typename T, size_t N>
 CMT_INLINE vec<T, N> tovec(const mask<T, N>& x)
 {
     return *x;
