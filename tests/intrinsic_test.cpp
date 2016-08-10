@@ -162,9 +162,9 @@ TEST(intrin_sqrt)
     testo::assert_is_same<decltype(kfr::intrinsics::sqrt(9)), fbase>();
     testo::assert_is_same<decltype(kfr::sqrt(make_vector(9))), vec<fbase, 1>>();
     testo::assert_is_same<decltype(kfr::sqrt(make_vector(9, 25))), vec<fbase, 2>>();
-    CHECK(kfr::sqrt(9) == 3.0);
-    CHECK(kfr::sqrt(2) == 1.4142135623730950488);
-    CHECK(kfr::sqrt(-9) == qnan);
+    CHECK(kfr::sqrt(9) == fbase(3.0));
+    CHECK(kfr::sqrt(2) == fbase(1.4142135623730950488));
+    CHECK(kfr::sqrt(-9) == fbase(qnan));
     CHECK(kfr::sqrt(make_vector(9)) == make_vector<fbase>(3.0));
     CHECK(kfr::sqrt(make_vector(-9)) == make_vector<fbase>(qnan));
     testo::matrix(named("type") = float_types, named("value") = std::vector<int>{ 0, 2, 65536 },
