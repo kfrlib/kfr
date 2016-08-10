@@ -56,7 +56,7 @@ KFR_SINTRIN vec<Tout, N> sqrt(const vec<T, N>& x)
     return apply([](Tout x) { return std::sqrt(x); }, cast<Tout>(x));
 }
 #endif
-KFR_I_CONVERTER(sqrt)
+KFR_I_FLT_CONVERTER(sqrt)
 }
 KFR_I_FN(sqrt)
 

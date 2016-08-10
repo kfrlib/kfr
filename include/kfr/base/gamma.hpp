@@ -58,14 +58,14 @@ KFR_SINTRIN vec<T, N> factorial_approx(const vec<T, N>& x)
 {
     return gamma(x + T(1));
 }
-KFR_I_CONVERTER(gamma)
-KFR_I_CONVERTER(factorial_approx)
+KFR_I_FLT_CONVERTER(gamma)
+KFR_I_FLT_CONVERTER(factorial_approx)
 }
 KFR_I_FN(gamma)
 KFR_I_FN(factorial_approx)
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 gamma(const T1& x)
+KFR_INTRIN flt_type<T1> gamma(const T1& x)
 {
     return intrinsics::gamma(x);
 }
@@ -77,7 +77,7 @@ KFR_INTRIN internal::expression_function<fn::gamma, E1> gamma(E1&& x)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 factorial_approx(const T1& x)
+KFR_INTRIN flt_type<T1> factorial_approx(const T1& x)
 {
     return intrinsics::factorial_approx(x);
 }

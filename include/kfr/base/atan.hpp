@@ -188,20 +188,34 @@ KFR_SINTRIN vec<f64, N> atan(const vec<f64, N>& s)
     return t;
 }
 
-template <typename T>
-KFR_SINTRIN T atandeg(const T& x)
+template <size_t N>
+KFR_SINTRIN vec<f32, N> atandeg(const vec<f32, N>& x)
 {
-    return atan(x) * c_radtodeg<T>;
+    return atan(x) * c_radtodeg<f32>;
 }
 
-template <typename T1, typename T2>
-KFR_SINTRIN common_type<T1, T2> atan2deg(const T1& y, const T2& x)
+template <size_t N>
+KFR_SINTRIN vec<f64, N> atandeg(const vec<f64, N>& x)
 {
-    return atan2(y, x) * c_radtodeg<common_type<T1, T2>>;
+    return atan(x) * c_radtodeg<f64>;
 }
 
-KFR_I_CONVERTER(atan)
-KFR_I_CONVERTER(atan2)
+template <size_t N>
+KFR_SINTRIN vec<f32, N> atan2deg(const vec<f32, N>& y, const vec<f32, N>& x)
+{
+    return atan2(y, x) * c_radtodeg<f32>;
+}
+
+template <size_t N>
+KFR_SINTRIN vec<f64, N> atan2deg(const vec<f64, N>& y, const vec<f64, N>& x)
+{
+    return atan2(y, x) * c_radtodeg<f64>;
+}
+
+KFR_I_FLT_CONVERTER(atan)
+KFR_I_FLT_CONVERTER(atan2)
+KFR_I_FLT_CONVERTER(atandeg)
+KFR_I_FLT_CONVERTER(atan2deg)
 }
 KFR_I_FN(atan)
 KFR_I_FN(atandeg)
@@ -209,7 +223,7 @@ KFR_I_FN(atan2)
 KFR_I_FN(atan2deg)
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> atan(const T1& x)
+KFR_INTRIN flt_type<T1> atan(const T1& x)
 {
     return intrinsics::atan(x);
 }
@@ -221,7 +235,7 @@ KFR_INTRIN internal::expression_function<fn::atan, E1> atan(E1&& x)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN ftype<T1> atandeg(const T1& x)
+KFR_INTRIN flt_type<T1> atandeg(const T1& x)
 {
     return intrinsics::atandeg(x);
 }

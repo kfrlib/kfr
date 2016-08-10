@@ -611,8 +611,15 @@ constexpr CMT_INLINE vec<SubType, N> pack(const Arg& x, const Args&... rest)
 }
 KFR_FN(pack)
 
+namespace operators
+{
+struct empty
+{
+};
+}
+
 template <typename T, size_t N>
-struct vec : vec_t<T, N>
+struct vec : vec_t<T, N>, operators::empty
 {
     static_assert(N > 0 && N <= 256, "Invalid vector size");
 
@@ -737,32 +744,6 @@ struct vec : vec_t<T, N>
     KFR_ASGN_OP(>>=, >>)
 #undef KFR_ASGN_OP
 
-    template <typename U, typename C = common_type<U, T>>
-    friend constexpr CMT_INLINE vec<C, N> operator+(const vec& x, const vec<U, N>& y)
-    {
-        return vec_op<C>::add(static_cast<vec<C, N>>(x).v, static_cast<vec<C, N>>(y).v);
-    }
-    template <typename U, typename C = common_type<U, T>>
-    friend constexpr CMT_INLINE vec<C, N> operator-(const vec& x, const vec<U, N>& y)
-    {
-        return vec_op<C>::sub(static_cast<vec<C, N>>(x).v, static_cast<vec<C, N>>(y).v);
-    }
-    template <typename U, typename C = common_type<U, T>>
-    friend constexpr CMT_INLINE vec<C, N> operator*(const vec& x, const vec<U, N>& y)
-    {
-        return vec_op<C>::mul(static_cast<vec<C, N>>(x).v, static_cast<vec<C, N>>(y).v);
-    }
-    template <typename U, typename C = common_type<U, T>>
-    friend constexpr CMT_INLINE vec<C, N> operator/(const vec& x, const vec<U, N>& y)
-    {
-        return vec_op<C>::div(static_cast<vec<C, N>>(x).v, static_cast<vec<C, N>>(y).v);
-    }
-    template <typename U, typename C = common_type<U, T>>
-    friend constexpr CMT_INLINE vec<C, N> operator%(const vec& x, const vec<U, N>& y)
-    {
-        return vec_op<C>::rem(static_cast<vec<C, N>>(x).v, static_cast<vec<C, N>>(y).v);
-    }
-
     constexpr CMT_INLINE simd_t operator*() const { return v; }
     constexpr CMT_INLINE simd_t& operator*() { return v; }
     CMT_INLINE mask<T, N>& asmask() { return ref_cast<mask<T, N>>(*this); }
@@ -810,6 +791,72 @@ private:
         const size_t index;
     };
 };
+
+namespace operators
+{
+template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>>
+constexpr CMT_INLINE vec<C, N> operator+(const vec<T1, N>& x, const T2& y)
+{
+    return vec_op<C>::add(*static_cast<vec<C, N>>(x), *static_cast<vec<C, N>>(y));
+}
+template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>>
+constexpr CMT_INLINE vec<C, N> operator-(const vec<T1, N>& x, const T2& y)
+{
+    return vec_op<C>::sub(*static_cast<vec<C, N>>(x), *static_cast<vec<C, N>>(y));
+}
+template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>>
+constexpr CMT_INLINE vec<C, N> operator*(const vec<T1, N>& x, const T2& y)
+{
+    return vec_op<C>::mul(*static_cast<vec<C, N>>(x), *static_cast<vec<C, N>>(y));
+}
+template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>>
+constexpr CMT_INLINE vec<C, N> operator/(const vec<T1, N>& x, const T2& y)
+{
+    return vec_op<C>::div(*static_cast<vec<C, N>>(x), *static_cast<vec<C, N>>(y));
+}
+
+template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>>
+constexpr CMT_INLINE vec<C, N> operator+(const T1& x, const vec<T2, N>& y)
+{
+    return vec_op<C>::add(*static_cast<vec<C, N>>(x), *static_cast<vec<C, N>>(y));
+}
+template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>>
+constexpr CMT_INLINE vec<C, N> operator-(const T1& x, const vec<T2, N>& y)
+{
+    return vec_op<C>::sub(*static_cast<vec<C, N>>(x), *static_cast<vec<C, N>>(y));
+}
+template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>>
+constexpr CMT_INLINE vec<C, N> operator*(const T1& x, const vec<T2, N>& y)
+{
+    return vec_op<C>::mul(*static_cast<vec<C, N>>(x), *static_cast<vec<C, N>>(y));
+}
+template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>>
+constexpr CMT_INLINE vec<C, N> operator/(const T1& x, const vec<T2, N>& y)
+{
+    return vec_op<C>::div(*static_cast<vec<C, N>>(x), *static_cast<vec<C, N>>(y));
+}
+
+template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>>
+constexpr CMT_INLINE vec<C, N> operator+(const vec<T1, N>& x, const vec<T2, N>& y)
+{
+    return vec_op<C>::add(*static_cast<vec<C, N>>(x), *static_cast<vec<C, N>>(y));
+}
+template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>>
+constexpr CMT_INLINE vec<C, N> operator-(const vec<T1, N>& x, const vec<T2, N>& y)
+{
+    return vec_op<C>::sub(*static_cast<vec<C, N>>(x), *static_cast<vec<C, N>>(y));
+}
+template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>>
+constexpr CMT_INLINE vec<C, N> operator*(const vec<T1, N>& x, const vec<T2, N>& y)
+{
+    return vec_op<C>::mul(*static_cast<vec<C, N>>(x), *static_cast<vec<C, N>>(y));
+}
+template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>>
+constexpr CMT_INLINE vec<C, N> operator/(const vec<T1, N>& x, const vec<T2, N>& y)
+{
+    return vec_op<C>::div(*static_cast<vec<C, N>>(x), *static_cast<vec<C, N>>(y));
+}
+}
 
 template <typename T, size_t N>
 struct mask : public vec<T, N>
@@ -1440,6 +1487,16 @@ namespace std
 {
 template <typename T1, typename T2, size_t N>
 struct common_type<kfr::vec<T1, N>, kfr::vec<T2, N>>
+{
+    using type = kfr::vec<typename common_type<T1, T2>::type, N>;
+};
+template <typename T1, typename T2, size_t N>
+struct common_type<kfr::vec<T1, N>, T2>
+{
+    using type = kfr::vec<typename common_type<T1, T2>::type, N>;
+};
+template <typename T1, typename T2, size_t N>
+struct common_type<T1, kfr::vec<T2, N>>
 {
     using type = kfr::vec<typename common_type<T1, T2>::type, N>;
 };

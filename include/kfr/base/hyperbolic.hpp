@@ -35,54 +35,54 @@ namespace kfr
 namespace intrinsics
 {
 
-template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> sinh(const vec<T, N>& x)
+template <typename T, size_t N, typename Tout = flt_type<T>>
+KFR_SINTRIN vec<Tout, N> sinh(const vec<T, N>& x)
 {
-    return (exp(x) - exp(-x)) * T(0.5);
+    return (exp(x) - exp(-x)) * Tout(0.5);
 }
 
-template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> cosh(const vec<T, N>& x)
+template <typename T, size_t N, typename Tout = flt_type<T>>
+KFR_SINTRIN vec<Tout, N> cosh(const vec<T, N>& x)
 {
-    return (exp(x) + exp(-x)) * T(0.5);
+    return (exp(x) + exp(-x)) * Tout(0.5);
 }
 
-template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> tanh(const vec<T, N>& x)
+template <typename T, size_t N, typename Tout = flt_type<T>>
+KFR_SINTRIN vec<Tout, N> tanh(const vec<T, N>& x)
 {
-    x = -2 * x;
-    return (1 - exp(x)) / (1 + exp(x));
+    const vec<Tout, N> a = exp(2 * x);
+    return (a - 1) / (a + 1);
 }
 
-template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> coth(const vec<T, N>& x)
+template <typename T, size_t N, typename Tout = flt_type<T>>
+KFR_SINTRIN vec<Tout, N> coth(const vec<T, N>& x)
 {
-    x = -2 * x;
-    return (1 + exp(x)) / (1 - exp(x));
+    const vec<Tout, N> a = exp(2 * x);
+    return (a + 1) / (a - 1);
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(N > 1)>
-KFR_SINTRIN vec<T, N> sinhcosh(const vec<T, N>& x)
+template <typename T, size_t N, typename Tout = flt_type<T>>
+KFR_SINTRIN vec<Tout, N> sinhcosh(const vec<T, N>& x)
 {
-    const vec<T, N> a = exp(x);
-    const vec<T, N> b = exp(-x);
-    return subadd(a, b) * T(0.5);
+    const vec<Tout, N> a = exp(x);
+    const vec<Tout, N> b = exp(-x);
+    return subadd(a, b) * Tout(0.5);
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(N > 1)>
-KFR_SINTRIN vec<T, N> coshsinh(const vec<T, N>& x)
+template <typename T, size_t N, typename Tout = flt_type<T>>
+KFR_SINTRIN vec<Tout, N> coshsinh(const vec<T, N>& x)
 {
-    const vec<T, N> a = exp(x);
-    const vec<T, N> b = exp(-x);
-    return addsub(a, b) * T(0.5);
+    const vec<Tout, N> a = exp(x);
+    const vec<Tout, N> b = exp(-x);
+    return addsub(a, b) * Tout(0.5);
 }
 
-KFR_I_CONVERTER(sinh)
-KFR_I_CONVERTER(cosh)
-KFR_I_CONVERTER(tanh)
-KFR_I_CONVERTER(coth)
-KFR_I_CONVERTER(sinhcosh)
-KFR_I_CONVERTER(coshsinh)
+KFR_I_FLT_CONVERTER(sinh)
+KFR_I_FLT_CONVERTER(cosh)
+KFR_I_FLT_CONVERTER(tanh)
+KFR_I_FLT_CONVERTER(coth)
+KFR_I_FLT_CONVERTER(sinhcosh)
+KFR_I_FLT_CONVERTER(coshsinh)
 }
 KFR_I_FN(sinh)
 KFR_I_FN(cosh)
@@ -92,7 +92,7 @@ KFR_I_FN(sinhcosh)
 KFR_I_FN(coshsinh)
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 sinh(const T1& x)
+KFR_INTRIN flt_type<T1> sinh(const T1& x)
 {
     return intrinsics::sinh(x);
 }
@@ -104,7 +104,7 @@ KFR_INTRIN internal::expression_function<fn::sinh, E1> sinh(E1&& x)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 cosh(const T1& x)
+KFR_INTRIN flt_type<T1> cosh(const T1& x)
 {
     return intrinsics::cosh(x);
 }
@@ -116,7 +116,7 @@ KFR_INTRIN internal::expression_function<fn::cosh, E1> cosh(E1&& x)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 tanh(const T1& x)
+KFR_INTRIN flt_type<T1> tanh(const T1& x)
 {
     return intrinsics::tanh(x);
 }
@@ -128,7 +128,7 @@ KFR_INTRIN internal::expression_function<fn::tanh, E1> tanh(E1&& x)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 coth(const T1& x)
+KFR_INTRIN flt_type<T1> coth(const T1& x)
 {
     return intrinsics::coth(x);
 }
@@ -140,7 +140,7 @@ KFR_INTRIN internal::expression_function<fn::coth, E1> coth(E1&& x)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 sinhcosh(const T1& x)
+KFR_INTRIN flt_type<T1> sinhcosh(const T1& x)
 {
     return intrinsics::sinhcosh(x);
 }
@@ -152,7 +152,7 @@ KFR_INTRIN internal::expression_function<fn::sinhcosh, E1> sinhcosh(E1&& x)
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 coshsinh(const T1& x)
+KFR_INTRIN flt_type<T1> coshsinh(const T1& x)
 {
     return intrinsics::coshsinh(x);
 }
