@@ -1299,9 +1299,14 @@ constexpr CMT_INLINE vec<T, N> apply(Fn&& fn)
 }
 
 template <typename T, int N>
-CMT_INLINE vec<T, N> tovec(simd<T, N> x)
+CMT_INLINE vec<T, N> tovec(const simd<T, N>& x)
 {
     return x;
+}
+template <typename T, int N>
+CMT_INLINE vec<T, N> tovec(const mask<T, N>& x)
+{
+    return *x;
 }
 
 #ifdef CMT_ARCH_SSE2
