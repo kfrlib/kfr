@@ -1,5 +1,4 @@
 language: cpp
-
 matrix:
   include:
     - os: linux
@@ -15,15 +14,39 @@ matrix:
             - clang-3.8
             - libmpfr-dev
       env:
-        - CXXCOMPILER=clang++-3.8 CCOMPILER=clang-3.8
+        - TEST=LINUX-X86-64 CMAKEARGS="-DCMAKE_CXX_COMPILER=clang++-3.8 -DCMAKE_C_COMPILER=clang-3.8 -DCMAKE_BUILD_TYPE=Release .."
+    - os: linux
+      compiler: clang
+      sudo: required
+      dist: trusty
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.8
+          packages:
+            - g++-5
+            - clang-3.8
+            - qemu
+            - g++-arm-linux-gnueabihf
+      env:
+        - TEST=LINUX-ARMV7 CMAKEARGS="-DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake -DARCH_FLAGS=-DLIBC_WORKAROUND_GETS=1 .."
     - os: osx
       osx_image: xcode8
+      env:
+        - TEST=XCODE8 CMAKEARGS="-DCMAKE_BUILD_TYPE=Release .."
     - os: osx
       osx_image: xcode7.3
+      env:
+        - TEST=XCODE7.3 CMAKEARGS="-DCMAKE_BUILD_TYPE=Release .."
     - os: osx
       osx_image: xcode7
+      env:
+        - TEST=XCODE7 CMAKEARGS="-DCMAKE_BUILD_TYPE=Release .."
     - os: osx
       osx_image: beta-xcode6.3
+      env:
+        - TEST=XCODE6.3 CMAKEARGS="-DCMAKE_BUILD_TYPE=Release .."
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update ; fi
@@ -33,7 +56,7 @@ before_install:
 script:
   - mkdir build
   - cd build
-  - cmake -DCMAKE_CXX_COMPILER=$CXXCOMPILER -DCMAKE_C_COMPILER=$CCOMPILER -DCMAKE_BUILD_TYPE=Release ..
+  - cmake $CMAKEARGS
   - make -j4
   - cd tests
   - ctest
