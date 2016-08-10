@@ -167,11 +167,11 @@ TEST(vec_conv)
     CHECK(kfr::logn(2, 10) == fbase(0.30102999566398119521373889472449));
     CHECK(kfr::logn(pack(2), pack(10)) == pack(fbase(0.30102999566398119521373889472449)));
 
-    CHECK(kfr::pow(2, 0.9) == fbase(1.8660659830736148319626865322999));
-    CHECK(kfr::pow(pack(2), pack(0.9)) == pack(fbase(1.8660659830736148319626865322999)));
+    CHECK(kfr::pow(2, fbase(0.9)) == fbase(1.8660659830736148319626865322999));
+    CHECK(kfr::pow(pack(2), pack(fbase(0.9))) == pack(fbase(1.8660659830736148319626865322999)));
 
-    CHECK(kfr::root(1.5, 2) == fbase(1.2247448713915890490986420373529));
-    CHECK(kfr::root(pack(1.5), pack(2)) == pack(fbase(1.2247448713915890490986420373529)));
+    CHECK(kfr::root(fbase(1.5), 2) == fbase(1.2247448713915890490986420373529));
+    CHECK(kfr::root(pack(fbase(1.5)), pack(2)) == pack(fbase(1.2247448713915890490986420373529)));
 
     testo::epsilon<float>() *= 10.0;
     testo::epsilon<double>() *= 10.0;
