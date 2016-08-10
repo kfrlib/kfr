@@ -59,29 +59,38 @@ add_executable(complex_test complex_test.cpp ${KFR_SRC})
 add_executable(vec_test vec_test.cpp ${KFR_SRC})
 add_executable(stat_test stat_test.cpp ${KFR_SRC})
 
+if (ARM)
+    find_program(EMULATOR "qemu-arm")
+else ()
+    set(EMULATOR "")
+endif ()
+
 if (NOT IOS)
     enable_testing()
 
     add_test(NAME basic_vector_test
-            COMMAND ${PROJECT_BINARY_DIR}/tests/basic_vector_test)
+            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/basic_vector_test)
     add_test(NAME intrinsic_test
-            COMMAND ${PROJECT_BINARY_DIR}/tests/intrinsic_test)
+            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/intrinsic_test)
     add_test(NAME fracdelay_test
-            COMMAND ${PROJECT_BINARY_DIR}/tests/fracdelay_test)
+            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/fracdelay_test)
     add_test(NAME conv_test
-            COMMAND ${PROJECT_BINARY_DIR}/tests/conv_test)
+            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/conv_test)
     if (MPFR_FOUND)
         add_test(NAME transcendental_test
-                COMMAND ${PROJECT_BINARY_DIR}/tests/transcendental_test)
+                COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/transcendental_test)
     endif ()
     add_test(NAME complex_test
-            COMMAND ${PROJECT_BINARY_DIR}/tests/complex_test)
+            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/complex_test)
     add_test(NAME vec_test
-            COMMAND ${PROJECT_BINARY_DIR}/tests/vec_test)
+            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/vec_test)
     add_test(NAME stat_test
-            COMMAND ${PROJECT_BINARY_DIR}/tests/stat_test)
-    add_test(NAME multiarch
-            COMMAND ${PROJECT_BINARY_DIR}/tests/multiarch)
+            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/stat_test)
+
+    if (NOT ARM)
+        add_test(NAME multiarch
+                COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/multiarch)
+    endif ()
     add_test(NAME dft_test
-            COMMAND ${PROJECT_BINARY_DIR}/tests/dft_test)
+            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/dft_test)
 endif ()
