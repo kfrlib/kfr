@@ -109,19 +109,58 @@ struct univector_base : input_expression, output_expression
         }
         ringbuf_step(cursor, srcsize);
     }
-
+    template <size_t N>
+    void ringbuf_write(size_t& cursor, const vec<T, N>& x)
+    {
+        ringbuf_write(cursor, x.data(), N);
+    }
     void ringbuf_write(size_t& cursor, const T value)
     {
         T* data      = get_data();
         data[cursor] = value;
-
         ringbuf_step(cursor, 1);
     }
-    void ringbuf_step(size_t& cursor, size_t step)
+    void ringbuf_step(size_t& cursor, size_t step) const
     {
         const size_t size = get_size();
         cursor            = cursor + step;
         cursor            = cursor >= size ? cursor - size : cursor;
+    }
+    void ringbuf_read(size_t& cursor, T& value)
+    {
+        T* data = get_data();
+        value   = data[cursor];
+        ringbuf_step(cursor, 1);
+    }
+    template <size_t N>
+    void ringbuf_read(size_t& cursor, vec<T, N>& x)
+    {
+        ringbuf_read(cursor, x.data(), N);
+    }
+    void ringbuf_read(size_t& cursor, T* dest, size_t destsize) const
+    {
+        if (destsize == 0)
+            return;
+        // skip redundant data
+        const size_t size = get_size();
+        const T* data     = get_data();
+        if (destsize > size)
+        {
+            dest     = dest + destsize / size;
+            destsize = destsize % size;
+        }
+        const size_t fsize = size - cursor;
+        // one fragment
+        if (destsize <= fsize)
+        {
+            std::copy_n(data + cursor, destsize, dest);
+        }
+        else // two fragments
+        {
+            std::copy_n(data + cursor, fsize, dest);
+            std::copy_n(data, destsize - fsize, dest + fsize);
+        }
+        ringbuf_step(cursor, destsize);
     }
 
 protected:
