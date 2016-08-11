@@ -27,6 +27,7 @@
 #include "dsp/biquad.hpp"
 #include "dsp/biquad_design.hpp"
 #include "dsp/dcremove.hpp"
+#include "dsp/delay.hpp"
 #include "dsp/fir.hpp"
 #include "dsp/fir_design.hpp"
 #include "dsp/fracdelay.hpp"
