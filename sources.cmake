@@ -66,6 +66,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/biquad.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/biquad_design.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/dcremove.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/dsp/delay.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fir.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fir_design.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fracdelay.hpp

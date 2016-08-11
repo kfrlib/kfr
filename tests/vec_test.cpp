@@ -277,4 +277,22 @@ TEST(vec_pack_expr)
     CHECK(v4[19] == f32x2{ 220, 20 });
 }
 
+TEST(test_delay)
+{
+    const univector<float, 33> v1 = counter() + 100;
+    const univector<float, 33> v2 = delay(v1);
+    CHECK(v2[0] == 0);
+    CHECK(v2[1] == 100);
+    CHECK(v2[2] == 101);
+    CHECK(v2[19] == 118);
+
+    const univector<float, 33> v3 = delay(v1, csize<3>);
+    CHECK(v3[0] == 0);
+    CHECK(v3[1] == 0);
+    CHECK(v3[2] == 0);
+    CHECK(v3[3] == 100);
+    CHECK(v3[4] == 101);
+    CHECK(v3[19] == 116);
+}
+
 int main(int argc, char** argv) { return testo::run_all("", true); }

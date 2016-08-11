@@ -163,18 +163,14 @@ struct sample_rate_converter
             {
                 if (srcindex >= input_position)
                 {
-                    dest[i] = dotproduct(src.slice(size_t(srcindex - input_position), size_t(depth)),
-                                         tap_ptr /*, depth*/);
+                    dest[i] =
+                        dotproduct(src.slice(size_t(srcindex - input_position), size_t(depth)), tap_ptr);
                 }
                 else
                 {
                     const itype prev_count = input_position - srcindex;
-                    dest[i] =
-                        dotproduct(delay.slice(size_t(depth - prev_count)),
-                                   tap_ptr /*, size_t(prev_count)*/) +
-                        dotproduct(
-                            src, tap_ptr.slice(size_t(prev_count),
-                                               size_t(depth - prev_count)) /*, size_t(depth - prev_count)*/);
+                    dest[i]                = dotproduct(delay.slice(size_t(depth - prev_count)), tap_ptr) +
+                              dotproduct(src, tap_ptr.slice(size_t(prev_count), size_t(depth - prev_count)));
                 }
             }
         }
@@ -201,9 +197,117 @@ struct sample_rate_converter
     itype input_position;
     itype output_position;
 };
+
+template <size_t factor, typename E>
+struct expression_upsample;
+
+template <size_t factor, size_t offset, typename E>
+struct expression_downsample;
+
+template <typename E>
+struct expression_upsample<2, E> : expression<E>
+{
+    using expression<E>::expression;
+    template <typename T, size_t N>
+    vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
+    {
+        const vec<T, N / 2> x = this->argument_first(index / 2, vec_t<T, N / 2>());
+        return interleave(x, zerovector(x));
+    }
+    template <typename T>
+    vec<T, 1> operator()(cinput_t, size_t index, vec_t<T, 1>) const
+    {
+        if (index & 1)
+            return 0;
+        else
+            return this->argument_first(index / 2, vec_t<T, 1>());
+    }
+};
+
+template <typename E>
+struct expression_upsample<4, E> : expression<E>
+{
+    using expression<E>::expression;
+    template <typename T, size_t N>
+    vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
+    {
+        const vec<T, N / 4> x  = this->argument_first(index / 4, vec_t<T, N / 4>());
+        const vec<T, N / 2> xx = interleave(x, zerovector(x));
+        return interleave(xx, zerovector(xx));
+    }
+    template <typename T>
+    vec<T, 2> operator()(cinput_t, size_t index, vec_t<T, 2>) const
+    {
+        switch (index & 3)
+        {
+        case 0:
+            return interleave(this->argument_first(index / 4, vec_t<T, 1>()), zerovector<T, 1>());
+        case 3:
+            return interleave(zerovector<T, 1>(), this->argument_first(index / 4, vec_t<T, 1>()));
+        default:
+            return 0;
+        }
+    }
+    template <typename T>
+    vec<T, 1> operator()(cinput_t, size_t index, vec_t<T, 1>) const
+    {
+        if (index & 3)
+            return 0;
+        else
+            return this->argument_first(index / 4, vec_t<T, 1>());
+    }
+};
+
+template <typename E, size_t offset>
+struct expression_downsample<2, offset, E> : expression<E>
+{
+    using expression<E>::expression;
+    template <typename T, size_t N>
+    vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
+    {
+        const vec<T, N* 2> x = this->argument_first(index * 2, vec_t<T, N * 2>());
+        return shufflevector<N, internal::shuffle_index<offset, 2>>(x);
+    }
+};
+
+template <typename E, size_t offset>
+struct expression_downsample<4, offset, E> : expression<E>
+{
+    using expression<E>::expression;
+    template <typename T, size_t N>
+    vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
+    {
+        const vec<T, N* 4> x = this->argument_first(index * 4, vec_t<T, N * 4>());
+        return shufflevector<N, internal::shuffle_index<offset, 4>>(x);
+    }
+};
 }
 
-template <typename T, size_t quality>
+template <typename E1, size_t offset = 0>
+CMT_INLINE internal::expression_downsample<2, offset, E1> downsample2(E1&& e1, csize_t<offset> = csize<0>)
+{
+    return internal::expression_downsample<2, offset, E1>(std::forward<E1>(e1));
+}
+
+template <typename E1, size_t offset = 0>
+CMT_INLINE internal::expression_downsample<4, offset, E1> downsample4(E1&& e1, csize_t<offset> = csize<0>)
+{
+    return internal::expression_downsample<4, offset, E1>(std::forward<E1>(e1));
+}
+
+template <typename E1>
+CMT_INLINE internal::expression_upsample<2, E1> upsample2(E1&& e1)
+{
+    return internal::expression_upsample<2, E1>(std::forward<E1>(e1));
+}
+
+template <typename E1>
+CMT_INLINE internal::expression_upsample<4, E1> upsample4(E1&& e1)
+{
+    return internal::expression_upsample<4, E1>(std::forward<E1>(e1));
+}
+
+template <typename T = fbase, size_t quality>
 inline internal::sample_rate_converter<T, quality> sample_rate_converter(csize_t<quality>,
                                                                          size_t interpolation_factor,
                                                                          size_t decimation_factor,
@@ -215,7 +319,7 @@ inline internal::sample_rate_converter<T, quality> sample_rate_converter(csize_t
 }
 
 // Deprecated in 0.9.2
-template <typename T, size_t quality>
+template <typename T = fbase, size_t quality>
 inline internal::sample_rate_converter<T, quality> resampler(csize_t<quality>, size_t interpolation_factor,
                                                              size_t decimation_factor, T scale = T(1),
                                                              T cutoff = 0.49)

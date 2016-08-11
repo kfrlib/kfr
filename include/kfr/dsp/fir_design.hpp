@@ -143,4 +143,29 @@ CMT_INLINE void fir_bandstop(univector<T, Tag>& taps, identity<T> frequency1, id
 {
     return intrinsics::fir_bandstop(taps.slice(), frequency1, frequency2, window, normalize);
 }
+
+template <typename T>
+CMT_INLINE void fir_lowpass(const univector_ref<T>& taps, identity<T> cutoff,
+                            const expression_pointer<T>& window, bool normalize = true)
+{
+    return intrinsics::fir_lowpass(taps, cutoff, window, normalize);
+}
+template <typename T>
+CMT_INLINE void fir_highpass(const univector_ref<T>& taps, identity<T> cutoff,
+                             const expression_pointer<T>& window, bool normalize = true)
+{
+    return intrinsics::fir_highpass(taps, cutoff, window, normalize);
+}
+template <typename T>
+CMT_INLINE void fir_bandpass(const univector_ref<T>& taps, identity<T> frequency1, identity<T> frequency2,
+                             const expression_pointer<T>& window, bool normalize = true)
+{
+    return intrinsics::fir_bandpass(taps, frequency1, frequency2, window, normalize);
+}
+template <typename T>
+CMT_INLINE void fir_bandstop(const univector_ref<T>& taps, identity<T> frequency1, identity<T> frequency2,
+                             const expression_pointer<T>& window, bool normalize = true)
+{
+    return intrinsics::fir_bandstop(taps, frequency1, frequency2, window, normalize);
+}
 }
