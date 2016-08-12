@@ -107,7 +107,7 @@ template <typename T, size_t TapCount, typename E1>
 CMT_INLINE internal::expression_short_fir<TapCount, T, E1> short_fir(E1&& e1,
                                                                      const univector<T, TapCount>& taps)
 {
-    static_assert(TapCount >= 1 && TapCount < 16, "Use short_fir only for small FIR filters");
+    static_assert(TapCount >= 1 && TapCount <= 32, "Use short_fir only for small FIR filters");
     return internal::expression_short_fir<TapCount, T, E1>(std::forward<E1>(e1), taps.ref());
 }
 }

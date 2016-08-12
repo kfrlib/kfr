@@ -70,7 +70,7 @@ CMT_INLINE auto sequence(T x, Ts... rest)
 {
     const T seq[]      = { x, static_cast<T>(rest)... };
     constexpr size_t N = arraysize(seq);
-    return lambda([=](size_t index) { return seq[index % N]; });
+    return typed<T>(lambda([=](size_t index) { return seq[index % N]; }));
 }
 CMT_INLINE auto zeros()
 {

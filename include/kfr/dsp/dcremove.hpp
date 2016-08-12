@@ -28,7 +28,7 @@
 namespace kfr
 {
 
-template <typename T, typename E1>
+template <typename E1, typename T = flt_type<value_type_of<E1>>>
 CMT_INLINE internal::expression_biquads<1, T, internal::arg<E1>> dcremove(E1&& e1, double cutoff = 0.00025)
 {
     const biquad_params<T> bqs[1] = { biquad_highpass(cutoff, 0.5) };

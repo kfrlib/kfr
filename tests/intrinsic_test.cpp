@@ -8,6 +8,7 @@
 
 #include "testo/testo.hpp"
 #include <kfr/math.hpp>
+#include <kfr/dsp.hpp>
 
 using namespace kfr;
 
@@ -210,6 +211,15 @@ TEST(intrin_round)
 
 TEST(intrin_min_max)
 {
+    testo::assert_is_same<decltype(min(1, 2)), int>();
+    testo::assert_is_same<decltype(min(1, 2u)), unsigned int>();
+    testo::assert_is_same<decltype(min(1, 2)), int>();
+    testo::assert_is_same<decltype(min(pack(1), 2u)), u32x1>();
+    testo::assert_is_same<decltype(min(2u, pack(1))), u32x1>();
+    testo::assert_is_same<decltype(min(pack(1), pack(2u))), u32x1>();
+    testo::assert_is_same<decltype(min(pack(1, 2, 3), pack(1.0, 2.0, 3.0))), f64x3>();
+    testo::assert_is_same<decltype(min(pack(1.0, 2.0, 3.0), pack(1, 2, 3))), f64x3>();
+
     CHECK(min(1, 2) == 1);
     CHECK(min(1, 2u) == 1u);
     CHECK(min(pack(1), 2) == pack(1));
@@ -314,6 +324,75 @@ TEST(intrin_any_all)
         CHECK(all(z) == true);
         CHECK(any(z) == true);
     });
+}
+
+TEST(intrin_math)
+{
+    testo::assert_is_same<decltype(pack(11) * pack(0.5)), f64x1>();
+    testo::assert_is_same<decltype(pack(11) * 0.5), f64x1>();
+    testo::assert_is_same<decltype(kfr::sin(2)), fbase>();
+    testo::assert_is_same<decltype(kfr::sin(pack(2))), vec<fbase, 1>>();
+    testo::assert_is_same<decltype(kfr::sindeg(2)), fbase>();
+    testo::assert_is_same<decltype(kfr::sindeg(pack(2))), vec<fbase, 1>>();
+
+    CHECK(pack(11) * pack(0.5) == 5.5);
+    CHECK(pack(11) * 0.5 == 5.5);
+    CHECK(kfr::sin(2) == fbase(0.90929742682568169539601986591174));
+    CHECK(kfr::sin(pack(2)) == pack(fbase(0.90929742682568169539601986591174)));
+    CHECK(kfr::sindeg(2) == fbase(0.03489949670250097164599518162533));
+    CHECK(kfr::sindeg(pack(2)) == pack(fbase(0.03489949670250097164599518162533)));
+    CHECK(kfr::cos(2) == fbase(-0.41614683654714238699756822950076));
+    CHECK(kfr::cos(pack(2)) == pack(fbase(-0.41614683654714238699756822950076)));
+    CHECK(kfr::cosdeg(2) == fbase(0.99939082701909573000624344004393));
+    CHECK(kfr::cosdeg(pack(2)) == pack(fbase(0.99939082701909573000624344004393)));
+
+    CHECK(kfr::log(2) == fbase(0.6931471805599453));
+    CHECK(kfr::log(pack(2)) == pack(fbase(0.6931471805599453)));
+    CHECK(kfr::log2(2) == fbase(1.0));
+    CHECK(kfr::log2(pack(2)) == pack(fbase(1.0)));
+    CHECK(kfr::log10(2) == fbase(0.30102999566398119521373889472449));
+    CHECK(kfr::log10(pack(2)) == pack(fbase(0.30102999566398119521373889472449)));
+
+    CHECK(kfr::exp(2) == fbase(7.3890560989306502));
+    CHECK(kfr::exp(pack(2)) == pack(fbase(7.3890560989306502)));
+    CHECK(kfr::exp2(2) == fbase(4.0));
+    CHECK(kfr::exp2(pack(2)) == pack(fbase(4.0)));
+
+    CHECK(kfr::logn(2, 10) == fbase(0.30102999566398119521373889472449));
+    CHECK(kfr::logn(pack(2), pack(10)) == pack(fbase(0.30102999566398119521373889472449)));
+
+    CHECK(kfr::pow(2, fbase(0.9)) == fbase(1.8660659830736148319626865322999));
+    CHECK(kfr::pow(pack(2), pack(fbase(0.9))) == pack(fbase(1.8660659830736148319626865322999)));
+
+    CHECK(kfr::root(fbase(1.5), 2) == fbase(1.2247448713915890490986420373529));
+    CHECK(kfr::root(pack(fbase(1.5)), pack(2)) == pack(fbase(1.2247448713915890490986420373529)));
+
+    testo::epsilon<float>() *= 10.0;
+    testo::epsilon<double>() *= 10.0;
+
+    CHECK(kfr::sinh(2) == fbase(3.6268604078470187676682139828013));
+    CHECK(kfr::sinh(pack(2)) == pack(fbase(3.6268604078470187676682139828013)));
+    CHECK(kfr::cosh(2) == fbase(3.7621956910836314595622134777737));
+    CHECK(kfr::cosh(pack(2)) == pack(fbase(3.7621956910836314595622134777737)));
+
+    CHECK(kfr::tanh(2) == fbase(0.96402758007581688394641372410092));
+    CHECK(kfr::tanh(pack(2)) == pack(fbase(0.96402758007581688394641372410092)));
+    CHECK(kfr::coth(2) == fbase(1.0373147207275480958778097647678));
+    CHECK(kfr::coth(pack(2)) == pack(fbase(1.0373147207275480958778097647678)));
+
+    testo::epsilon<float>() *= 10.0;
+    testo::epsilon<double>() *= 10.0;
+
+    CHECK(kfr::tan(2) == fbase(-2.1850398632615189916433061023137));
+    CHECK(kfr::tan(pack(2)) == pack(fbase(-2.1850398632615189916433061023137)));
+    CHECK(kfr::tandeg(2) == fbase(0.03492076949174773050040262577373));
+    CHECK(kfr::tandeg(pack(2)) == pack(fbase(0.03492076949174773050040262577373)));
+
+    testo::epsilon<float>() *= 10.0;
+    testo::epsilon<double>() *= 10.0;
+
+    CHECK(kfr::note_to_hertz(60) == fbase(261.6255653005986346778499935233));
+    CHECK(kfr::note_to_hertz(pack(60)) == pack(fbase(261.6255653005986346778499935233)));
 }
 
 int main(int argc, char** argv) { return testo::run_all("", false); }

@@ -696,6 +696,13 @@ struct expression_pack : expression<E...>, output_expression
         output(index, x, csizeseq<count>);
     }
 
+    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
+    CMT_INLINE expression_pack& operator=(Input&& input)
+    {
+        process<value_type>(*this, std::forward<Input>(input), size());
+        return *this;
+    }
+
 private:
     template <typename U, size_t N, size_t... indices>
     void output(size_t index, const vec<vec<U, count>, N>& x, csizes_t<indices...>)
