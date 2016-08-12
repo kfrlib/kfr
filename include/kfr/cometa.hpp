@@ -1691,9 +1691,9 @@ inline array_ref<T> make_array_ref(Container& cont)
 
 template <typename Container, CMT_ENABLE_IF(has_data_size<Container>::value),
           typename T = remove_pointer<decltype(std::declval<Container>().data())>>
-inline array_ref<T> make_array_ref(const Container& cont)
+inline array_ref<const T> make_array_ref(const Container& cont)
 {
-    return array_ref<T>(cont.data(), cont.size());
+    return array_ref<const T>(cont.data(), cont.size());
 }
 
 template <typename T>

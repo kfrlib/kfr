@@ -47,17 +47,17 @@ namespace intrinsics
 template <typename T>
 KFR_SINTRIN T rawsine(T x)
 {
-    return fastsin(x * c_pi<T, 2>);
+    return intrinsics::fastsin(x * c_pi<T, 2>);
 }
 template <typename T>
 KFR_SINTRIN T sinenorm(T x)
 {
-    return rawsine(fract(x));
+    return intrinsics::rawsine(fract(x));
 }
 template <typename T>
 KFR_SINTRIN T sine(T x)
 {
-    return sinenorm(c_recip_pi<T, 1, 2> * x);
+    return intrinsics::sinenorm(c_recip_pi<T, 1, 2> * x);
 }
 
 template <typename T>
@@ -68,12 +68,12 @@ KFR_SINTRIN T rawsquare(T x)
 template <typename T>
 KFR_SINTRIN T squarenorm(T x)
 {
-    return rawsquare(fract(x));
+    return intrinsics::rawsquare(fract(x));
 }
 template <typename T>
 KFR_SINTRIN T square(T x)
 {
-    return squarenorm(c_recip_pi<T, 1, 2> * x);
+    return intrinsics::squarenorm(c_recip_pi<T, 1, 2> * x);
 }
 
 template <typename T>
@@ -84,12 +84,12 @@ KFR_SINTRIN T rawsawtooth(T x)
 template <typename T>
 KFR_SINTRIN T sawtoothnorm(T x)
 {
-    return rawsawtooth(fract(x));
+    return intrinsics::rawsawtooth(fract(x));
 }
 template <typename T>
 KFR_SINTRIN T sawtooth(T x)
 {
-    return sawtoothnorm(c_recip_pi<T, 1, 2> * x);
+    return intrinsics::sawtoothnorm(c_recip_pi<T, 1, 2> * x);
 }
 
 template <typename T>
@@ -100,7 +100,7 @@ KFR_SINTRIN T isawtoothnorm(T x)
 template <typename T>
 KFR_SINTRIN T isawtooth(T x)
 {
-    return isawtoothnorm(c_recip_pi<T, 1, 2> * x);
+    return intrinsics::isawtoothnorm(c_recip_pi<T, 1, 2> * x);
 }
 
 template <typename T>
@@ -111,12 +111,12 @@ KFR_SINTRIN T rawtriangle(T x)
 template <typename T>
 KFR_SINTRIN T trianglenorm(T x)
 {
-    return rawtriangle(fract(x + 0.25));
+    return intrinsics::rawtriangle(fract(x + 0.25));
 }
 template <typename T>
 KFR_SINTRIN T triangle(T x)
 {
-    return trianglenorm(c_recip_pi<T, 1, 2> * x);
+    return intrinsics::trianglenorm(c_recip_pi<T, 1, 2> * x);
 }
 }
 KFR_I_FN(rawsine)

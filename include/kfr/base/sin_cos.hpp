@@ -198,10 +198,10 @@ KFR_SINTRIN vec<T, N> fastsin(const vec<T, N>& x)
 
     const vec<T, N> pi = c_pi<T>;
 
-    x -= pi;
-    vec<T, N> y = abs(x);
+    vec<T, N> xx = x - pi;
+    vec<T, N> y = abs(xx);
     y = select(y > c_pi<T, 1, 2>, pi - y, y);
-    y = y ^ (msk & ~x);
+    y = y ^ (msk & ~xx);
 
     vec<T, N> y2      = y * y;
     vec<T, N> formula = c6;
