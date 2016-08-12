@@ -7,8 +7,8 @@
 #include <kfr/io/tostring.hpp>
 
 #include "testo/testo.hpp"
-#include <kfr/math.hpp>
 #include <kfr/dsp.hpp>
+#include <kfr/math.hpp>
 
 using namespace kfr;
 

@@ -1,6 +1,10 @@
-# KFR
+# KFR - Fast, modern C++ DSP framework
 
 [![Build Status](https://travis-ci.org/kfrlib/kfr.svg?branch=master)](https://travis-ci.org/kfrlib/kfr)
+
+https://www.kfrlib.com
+
+What's new in release 1.0 - https://www.kfrlib.com/whatsnew
 
 KFR is an open source C++ DSP framework that focuses on high performance (see benchmark results section).
 
@@ -138,4 +142,4 @@ Tested on the following systems:
 
 KFR is dual-licensed, available under both commercial and open-source GPL license.
 
-If you want to use KFR in commercial product or a closed-source project, you need to [purchase a Commercial License](http://kfrlib.com/purchase-license)
+If you want to use KFR in commercial product or a closed-source project, you need to [purchase a Commercial License](https://kfrlib.com/purchase-license)

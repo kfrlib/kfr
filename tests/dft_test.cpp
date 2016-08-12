@@ -14,8 +14,8 @@
 #include <kfr/base/random.hpp>
 #include <kfr/base/reduce.hpp>
 #include <kfr/cometa/string.hpp>
-#include <kfr/dft/fft.hpp>
 #include <kfr/dft/conv.hpp>
+#include <kfr/dft/fft.hpp>
 #include <kfr/dft/reference_dft.hpp>
 #include <kfr/io/tostring.hpp>
 #include <kfr/math.hpp>

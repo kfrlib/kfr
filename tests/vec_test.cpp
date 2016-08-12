@@ -289,7 +289,6 @@ TEST(test_delay)
     CHECK(v3[3] == 100);
     CHECK(v3[4] == 101);
     CHECK(v3[19] == 116);
-
 }
 
 int main(int argc, char** argv) { return testo::run_all("", true); }
