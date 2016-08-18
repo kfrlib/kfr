@@ -1,24 +1,27 @@
-/**
- * Copyright (C) 2016 D Levin (http://www.kfrlib.com)
- * This file is part of KFR
- *
- * KFR is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * KFR is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with KFR.
- *
- * If GPL is not suitable for your project, you must purchase a commercial license to use KFR.
- * Buying a commercial license is mandatory as soon as you develop commercial activities without
- * disclosing the source code of your own applications.
- * See http://www.kfrlib.com for details.
+/** @addtogroup types
+ *  @{
+ */
+/*
+  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  This file is part of KFR
+ 
+  KFR is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+ 
+  KFR is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+ 
+  You should have received a copy of the GNU General Public License
+  along with KFR.
+ 
+  If GPL is not suitable for your project, you must purchase a commercial license to use KFR.
+  Buying a commercial license is mandatory as soon as you develop commercial activities without
+  disclosing the source code of your own applications.
+  See https://www.kfrlib.com for details.
  */
 #pragma once
 #include "kfr.h"
@@ -154,6 +157,7 @@ struct ioratio
     constexpr static size_t output = out;
 };
 
+/// \brief An enumeration representing data type
 enum class datatype : int
 {
     typebits_mask       = 0xFF,
@@ -325,6 +329,7 @@ constexpr inline ptrdiff_t distance(const void* x, const void* y)
     return static_cast<const unsigned char*>(x) - static_cast<const unsigned char*>(y);
 }
 
+/// \brief An enumeration representing cpu instruction set
 enum class cpu_t : int
 {
     common = 0,
@@ -487,6 +492,7 @@ using isubtype = itype<subtype<T>>;
 template <typename T>
 using usubtype = utype<subtype<T>>;
 
+/// \brief Base class for all vector classes
 template <typename T, size_t N>
 struct vec_t
 {
@@ -589,6 +595,7 @@ constexpr inline static T implicit_cast(U&& value)
 
 #pragma clang diagnostic pop
 
+/// \brief Returns name of the cpu instruction set
 __attribute__((unused)) static const char* cpu_name(cpu_t set)
 {
     static const char* names[] = { "sse2", "sse3", "ssse3", "sse41", "sse42", "avx1", "avx2" };
@@ -704,6 +711,7 @@ constexpr size_t native_int_vector_size =
 c == cpu_t::neon ? 16 : common_int_vector_size;
 #endif
 
+/// \brief Base class of all input expressoins
 struct input_expression
 {
     using value_type = generic;
@@ -714,6 +722,7 @@ struct input_expression
     CMT_INLINE void end_block(size_t) const {}
 };
 
+/// \brief Base class of all output expressoins
 struct output_expression
 {
     using value_type = generic;
@@ -724,21 +733,27 @@ struct output_expression
     CMT_INLINE void output_end_block(size_t) const {}
 };
 
+/// \brief Check if the type argument is an input expression
 template <typename E>
 using is_input_expression = std::is_base_of<input_expression, decay<E>>;
 
+/// \brief Check if the type arguments are an input expressions
 template <typename... Es>
 using is_input_expressions = or_t<std::is_base_of<input_expression, decay<Es>>...>;
 
+/// \brief Check if the type argument is an output expression
 template <typename E>
 using is_output_expression = std::is_base_of<output_expression, decay<E>>;
 
+/// \brief Check if the type argument is a number or a vector of numbers
 template <typename T>
 using is_numeric = is_number<deep_subtype<T>>;
 
+/// \brief Check if the type arguments are a numbers or a vectors of numbers
 template <typename... Ts>
 using is_numeric_args = and_t<is_numeric<Ts>...>;
 
+/// \brief SIMD vector width for the given cpu instruction set
 template <typename T, cpu_t c = cpu_t::native>
 constexpr size_t vector_width = const_max(size_t(1), typeclass<T> == datatype::f
                                                          ? native_float_vector_size<c> / sizeof(T)

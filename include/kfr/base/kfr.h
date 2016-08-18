@@ -1,3 +1,6 @@
+/** @addtogroup utility
+ *  @{
+ */
 #pragma once
 
 #include <stddef.h>

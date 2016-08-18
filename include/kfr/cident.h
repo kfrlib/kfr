@@ -1,3 +1,6 @@
+/** @addtogroup cometa
+ *  @{
+ */
 #pragma once
 
 #ifdef LIBC_WORKAROUND_GETS

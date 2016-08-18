@@ -1,3 +1,6 @@
+/** @addtogroup cometa
+ *  @{
+ */
 #pragma once
 
 #include "../cometa.hpp"
