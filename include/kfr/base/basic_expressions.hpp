@@ -307,6 +307,24 @@ protected:
 
     std::array<size_t, base::size + 2> segments;
 };
+
+template <typename Fn, typename E>
+struct expression_adjacent : expression<E>
+{
+    using value_type = value_type_of<E>;
+    expression_adjacent(Fn&& fn, E&& e) : expression<E>(std::forward<E>(e)), fn(std::forward<Fn>(fn)) {}
+
+    template <typename T, size_t N>
+    vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
+    {
+        const vec<T, N> in      = this->argument_first(index, vec_t<T, N>());
+        const vec<T, N> delayed = insertleft(data, in);
+        data = in[N - 1];
+        return this->fn(in, delayed);
+    }
+    Fn fn;
+    mutable value_type data = value_type(0);
+};
 }
 
 template <typename E1>
@@ -338,6 +356,15 @@ CMT_INLINE internal::expression_sequence<decay<E>...> gen_sequence(const size_t 
     return internal::expression_sequence<decay<E>...>(list, std::forward<E>(gens)...);
 }
 KFR_FN(gen_sequence)
+
+/**
+ * @brief Returns template expression that returns the result of calling \f$ fn(x_i, x_{i-1}) \f$
+ */
+template <typename Fn, typename E1>
+CMT_INLINE internal::expression_adjacent<Fn, E1> adjacent(Fn&& fn, E1&& e1)
+{
+    return internal::expression_adjacent<Fn, E1>(std::forward<Fn>(fn), std::forward<E1>(e1));
+}
 
 namespace internal
 {

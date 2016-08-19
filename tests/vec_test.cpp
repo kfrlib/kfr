@@ -291,4 +291,15 @@ TEST(test_delay)
     CHECK(v3[19] == 116);
 }
 
+TEST(test_adjacent)
+{
+    univector<int, 20> v1 = adjacent(fn_mul(), typed<int>(counter()));
+    CHECK(v1[0] == 0);
+    CHECK(v1[1] == 0);
+    CHECK(v1[2] == 2);
+    CHECK(v1[3] == 6);
+    CHECK(v1[4] == 12);
+    CHECK(v1[19] == 342);
+}
+
 int main(int argc, char** argv) { return testo::run_all("", true); }
