@@ -25,7 +25,7 @@
  */
 #pragma once
 
-#include "../base/vec.hpp"
+#include "vec.hpp"
 #include "basic_expressions.hpp"
 #include <memory>
 

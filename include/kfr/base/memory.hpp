@@ -25,8 +25,8 @@
  */
 #pragma once
 
-#include "../base/read_write.hpp"
-#include "../base/types.hpp"
+#include "read_write.hpp"
+#include "types.hpp"
 #include <atomic>
 #include <memory>
 

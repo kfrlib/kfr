@@ -25,10 +25,10 @@
  */
 #pragma once
 
-#include "../base/function.hpp"
-#include "../base/min_max.hpp"
-#include "../base/operators.hpp"
-#include "../base/vec.hpp"
+#include "function.hpp"
+#include "min_max.hpp"
+#include "operators.hpp"
+#include "vec.hpp"
 #include "basic_expressions.hpp"
 
 namespace kfr

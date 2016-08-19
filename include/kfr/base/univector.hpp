@@ -25,10 +25,10 @@
  */
 #pragma once
 
-#include "../base/function.hpp"
-#include "../base/memory.hpp"
-#include "../base/read_write.hpp"
-#include "../base/types.hpp"
+#include "function.hpp"
+#include "memory.hpp"
+#include "read_write.hpp"
+#include "types.hpp"
 
 namespace kfr
 {

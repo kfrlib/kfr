@@ -25,7 +25,7 @@
  */
 #pragma once
 
-#include "../base/types.hpp"
+#include "types.hpp"
 #include <cstring>
 
 namespace kfr

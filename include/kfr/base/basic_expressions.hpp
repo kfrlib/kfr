@@ -25,8 +25,8 @@
  */
 #pragma once
 
-#include "../base/univector.hpp"
-#include "../base/vec.hpp"
+#include "univector.hpp"
+#include "vec.hpp"
 
 namespace kfr
 {

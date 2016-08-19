@@ -25,11 +25,11 @@
  */
 #pragma once
 
-#include "../base/function.hpp"
-#include "../base/log_exp.hpp"
-#include "../base/select.hpp"
-#include "../base/sin_cos.hpp"
-#include "../base/vec.hpp"
+#include "function.hpp"
+#include "log_exp.hpp"
+#include "select.hpp"
+#include "sin_cos.hpp"
+#include "vec.hpp"
 
 namespace kfr
 {

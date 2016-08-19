@@ -26,10 +26,10 @@
 
 #pragma once
 
-#include "../base/basic_expressions.hpp"
-#include "../base/function.hpp"
-#include "../base/operators.hpp"
-#include "../base/vec.hpp"
+#include "basic_expressions.hpp"
+#include "function.hpp"
+#include "operators.hpp"
+#include "vec.hpp"
 
 namespace kfr
 {
