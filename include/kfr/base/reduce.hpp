@@ -4,20 +4,20 @@
 /*
   Copyright (C) 2016 D Levin (https://www.kfrlib.com)
   This file is part of KFR
- 
+
   KFR is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
- 
+
   KFR is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
- 
+
   You should have received a copy of the GNU General Public License
   along with KFR.
- 
+
   If GPL is not suitable for your project, you must purchase a commercial license to use KFR.
   Buying a commercial license is mandatory as soon as you develop commercial activities without
   disclosing the source code of your own applications.
@@ -124,6 +124,14 @@ KFR_SINTRIN T reduce(E1&& e1, ReduceFn&& reducefn, TransformFn&& transformfn = f
 KFR_FN(reduce)
 }
 
+/**
+ * @brief Returns the sum of all the elements in x.
+ *
+ * x must have its size and type specified.
+ * \f[
+ *  x_0 + x_1 + \ldots + x_{N-1}
+ * \f]
+ */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_SINTRIN T sum(E1&& x)
 {
@@ -132,6 +140,14 @@ KFR_SINTRIN T sum(E1&& x)
     return internal::reduce(std::forward<E1>(x), fn_add());
 }
 
+/**
+ * @brief Returns the arithmetic mean of all the elements in x.
+ *
+ * x must have its size and type specified.
+ * \f[
+ *  \frac{1}{N}(x_0 + x_1 + \ldots + x_{N-1})
+ * \f]
+ */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_SINTRIN T mean(E1&& x)
 {
@@ -140,6 +156,11 @@ KFR_SINTRIN T mean(E1&& x)
     return internal::reduce(std::forward<E1>(x), fn_add(), fn_pass_through(), fn_final_mean());
 }
 
+/**
+ * @brief Returns the smallest of all the elements in x.
+ *
+ * x must have its size and type specified.
+ */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_SINTRIN T minof(E1&& x)
 {
@@ -148,6 +169,11 @@ KFR_SINTRIN T minof(E1&& x)
     return internal::reduce(std::forward<E1>(x), fn::min());
 }
 
+/**
+ * @brief Returns the greatest of all the elements in x.
+ *
+ * x must have its size and type specified.
+ */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_SINTRIN T maxof(E1&& x)
 {
@@ -156,6 +182,11 @@ KFR_SINTRIN T maxof(E1&& x)
     return internal::reduce(std::forward<E1>(x), fn::max());
 }
 
+/**
+ * @brief Returns the smallest in magnitude of all the elements in x.
+ *
+ * x must have its size and type specified.
+ */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_SINTRIN T absminof(E1&& x)
 {
@@ -164,6 +195,11 @@ KFR_SINTRIN T absminof(E1&& x)
     return internal::reduce(std::forward<E1>(x), fn::absmin());
 }
 
+/**
+ * @brief Returns the greatest in magnitude of all the elements in x.
+ *
+ * x must have its size and type specified.
+ */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_SINTRIN T absmaxof(E1&& x)
 {
@@ -172,6 +208,14 @@ KFR_SINTRIN T absmaxof(E1&& x)
     return internal::reduce(std::forward<E1>(x), fn::absmax());
 }
 
+/**
+ * @brief Returns the dot product of two vectors.
+ *
+ * x and y must have their sizes and types specified.
+ * \f[
+ *  x_0y_0 + x_1y_1 + \ldots + x_{N-1}y_{N-1}
+ * \f]
+ */
 template <typename E1, typename E2, typename T = value_type_of<E1>,
           KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 KFR_SINTRIN T dotproduct(E1&& x, E2&& y)
@@ -183,6 +227,14 @@ KFR_SINTRIN T dotproduct(E1&& x, E2&& y)
     return internal::reduce(std::move(m), fn_add());
 }
 
+/**
+ * @brief Returns the root mean square of all the elements in x.
+ *
+ * x must have its size and type specified.
+ * \f[
+   \sqrt{\frac{1}{N}( x_0^2 + x_1^2 + \ldots + x_{N-1}^2)}
+   \f]
+ */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_SINTRIN T rms(E1&& x)
 {
@@ -191,6 +243,14 @@ KFR_SINTRIN T rms(E1&& x)
     return internal::reduce(std::forward<E1>(x), fn_add(), fn_sqr(), fn_final_rootmean());
 }
 
+/**
+ * @brief Returns the sum of squares of all the elements in x.
+ *
+ * x must have its size and type specified.
+ * \f[
+    x_0^2 + x_1^2 + \ldots + x_{N-1}^2
+   \f]
+ */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_SINTRIN T sumsqr(E1&& x)
 {
@@ -199,6 +259,14 @@ KFR_SINTRIN T sumsqr(E1&& x)
     return internal::reduce(std::forward<E1>(x), fn_add(), fn_sqr());
 }
 
+/**
+ * @brief Returns the product of all the elements in x.
+ *
+ * x must have its size and type specified.
+ * \f[
+    x_0 \cdot x_1 \cdot \ldots \cdot x_{N-1}
+   \f]
+ */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_SINTRIN T product(E1&& x)
 {
