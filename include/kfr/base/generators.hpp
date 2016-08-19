@@ -215,26 +215,66 @@ protected:
 };
 }
 
+/**
+ * @brief Returns template expression that generates values starting from the start and using the step as the
+ * increment between numbers.
+ *
+ * \f[
+    x_i = start + i \cdot step
+   \f]
+ */
 template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
 KFR_SINTRIN internal::generator_linear<TF> gen_linear(T1 start, T2 step)
 {
     return internal::generator_linear<TF>(start, step);
 }
+
+/**
+ * @brief Returns template expression that generates values using the following formula:
+ * \f[
+    x_i = e^{ start + i \cdot step }
+   \f]
+ */
 template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
 KFR_SINTRIN internal::generator_exp<TF> gen_exp(T1 start, T2 step)
 {
     return internal::generator_exp<TF>(start, step);
 }
+
+/**
+ * @brief Returns template expression that generates values using the following formula:
+ * \f[
+    x_i = 2^{ start + i \cdot step }
+   \f]
+ */
 template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
 KFR_SINTRIN internal::generator_exp2<TF> gen_exp2(T1 start, T2 step)
 {
     return internal::generator_exp2<TF>(start, step);
 }
+
+/**
+ * @brief Returns template expression that generates values using the following formula:
+ * \f[
+    x_i=
+    \begin{cases}
+        \cos(start + i \cdot step),  & \text{if } i \text{ is even}\\
+        \sin(start + i \cdot step),  & \text{otherwise}
+    \end{cases}
+   \f]
+ */
 template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
 KFR_SINTRIN internal::generator_cossin<TF> gen_cossin(T1 start, T2 step)
 {
     return internal::generator_cossin<TF>(start, step);
 }
+
+/**
+ * @brief Returns template expression that generates values using the following formula:
+ * \f[
+    x_i = \sin( start + i \cdot step )
+   \f]
+ */
 template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
 KFR_SINTRIN internal::generator_sin<TF> gen_sin(T1 start, T2 step)
 {
