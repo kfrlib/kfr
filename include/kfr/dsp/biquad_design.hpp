@@ -31,6 +31,12 @@
 namespace kfr
 {
 
+/**
+ * @brief Calculates coefficients for the all-pass biquad filter
+ * @param frequency Normalized frequency (frequency_Hz / samplerate_Hz)
+ * @param Q Q factor
+ * @return Biquad filter coefficients
+ */
 template <typename T = fbase>
 CMT_INLINE biquad_params<T> biquad_allpass(identity<T> frequency, identity<T> Q)
 {
@@ -46,6 +52,12 @@ CMT_INLINE biquad_params<T> biquad_allpass(identity<T> frequency, identity<T> Q)
     return { b0, b1, b2, a0, a1, a2 };
 }
 
+/**
+ * @brief Calculates coefficients for the low-pass biquad filter
+ * @param frequency Normalized frequency (frequency_Hz / samplerate_Hz)
+ * @param Q Q factor
+ * @return Biquad filter coefficients
+ */
 template <typename T = fbase>
 CMT_INLINE biquad_params<T> biquad_lowpass(identity<T> frequency, identity<T> Q)
 {
@@ -60,6 +72,12 @@ CMT_INLINE biquad_params<T> biquad_lowpass(identity<T> frequency, identity<T> Q)
     return { 1.0, b1, b2, a0, a1, a2 };
 }
 
+/**
+ * @brief Calculates coefficients for the high-pass biquad filter
+ * @param frequency Normalized frequency (frequency_Hz / samplerate_Hz)
+ * @param Q Q factor
+ * @return Biquad filter coefficients
+ */
 template <typename T = fbase>
 CMT_INLINE biquad_params<T> biquad_highpass(identity<T> frequency, identity<T> Q)
 {
@@ -74,6 +92,12 @@ CMT_INLINE biquad_params<T> biquad_highpass(identity<T> frequency, identity<T> Q
     return { 1.0, b1, b2, a0, a1, a2 };
 }
 
+/**
+ * @brief Calculates coefficients for the band-pass biquad filter
+ * @param frequency Normalized frequency (frequency_Hz / samplerate_Hz)
+ * @param Q Q factor
+ * @return Biquad filter coefficients
+ */
 template <typename T = fbase>
 CMT_INLINE biquad_params<T> biquad_bandpass(identity<T> frequency, identity<T> Q)
 {
@@ -88,6 +112,12 @@ CMT_INLINE biquad_params<T> biquad_bandpass(identity<T> frequency, identity<T> Q
     return { 1.0, b1, b2, a0, a1, a2 };
 }
 
+/**
+ * @brief Calculates coefficients for the notch biquad filter
+ * @param frequency Normalized frequency (frequency_Hz / samplerate_Hz)
+ * @param Q Q factor
+ * @return Biquad filter coefficients
+ */
 template <typename T = fbase>
 CMT_INLINE biquad_params<T> biquad_notch(identity<T> frequency, identity<T> Q)
 {
@@ -102,6 +132,13 @@ CMT_INLINE biquad_params<T> biquad_notch(identity<T> frequency, identity<T> Q)
     return { 1.0, b1, b2, a0, a1, a2 };
 }
 
+/**
+ * @brief Calculates coefficients for the peak biquad filter
+ * @param frequency Normalized frequency (frequency_Hz / samplerate_Hz)
+ * @param Q Q factor
+ * @param gain Gain in dB
+ * @return Biquad filter coefficients
+ */
 template <typename T = fbase>
 CMT_INLINE biquad_params<T> biquad_peak(identity<T> frequency, identity<T> Q, identity<T> gain)
 {
@@ -133,6 +170,12 @@ CMT_INLINE biquad_params<T> biquad_peak(identity<T> frequency, identity<T> Q, id
     return result;
 }
 
+/**
+ * @brief Calculates coefficients for the low-shelf biquad filter
+ * @param frequency Normalized frequency (frequency_Hz / samplerate_Hz)
+ * @param gain Gain in dB
+ * @return Biquad filter coefficients
+ */
 template <typename T = fbase>
 CMT_INLINE biquad_params<T> biquad_lowshelf(identity<T> frequency, identity<T> gain)
 {
@@ -164,6 +207,12 @@ CMT_INLINE biquad_params<T> biquad_lowshelf(identity<T> frequency, identity<T> g
     return result;
 }
 
+/**
+ * @brief Calculates coefficients for the high-shelf biquad filter
+ * @param frequency Normalized frequency (frequency_Hz / samplerate_Hz)
+ * @param gain Gain in dB
+ * @return Biquad filter coefficients
+ */
 template <typename T = fbase>
 CMT_INLINE biquad_params<T> biquad_highshelf(identity<T> frequency, identity<T> gain)
 {

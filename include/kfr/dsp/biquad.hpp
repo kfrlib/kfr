@@ -44,6 +44,9 @@ enum class biquad_type
     highshelf
 };
 
+/**
+ * @brief Structure for holding biquad filter coefficients.
+ */
 template <typename T>
 struct biquad_params
 {
@@ -162,12 +165,24 @@ struct expression_biquads : public expression<E1>
 };
 }
 
+/**
+ * @brief Returns template expressions that applies biquad filter to the input.
+ * @param bq Biquad coefficients
+ * @param e1 Input expression
+ */
 template <typename T, typename E1>
 CMT_INLINE internal::expression_biquads<1, T, internal::arg<E1>> biquad(const biquad_params<T>& bq, E1&& e1)
 {
     const biquad_params<T> bqs[1] = { bq };
     return internal::expression_biquads<1, T, internal::arg<E1>>(bqs, std::forward<E1>(e1));
 }
+
+/**
+ * @brief Returns template expressions that applies cascade of biquad filters to the input.
+ * @param bq Array of biquad coefficients
+ * @param e1 Input expression
+ * @note The current implementation introduces delay of N - 1 samples, where N is the filter count.
+ */
 template <size_t filters, typename T, typename E1>
 CMT_INLINE internal::expression_biquads<filters, T, internal::arg<E1>> biquad(
     const biquad_params<T> (&bq)[filters], E1&& e1)
