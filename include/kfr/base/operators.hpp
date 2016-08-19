@@ -4,20 +4,20 @@
 /*
   Copyright (C) 2016 D Levin (https://www.kfrlib.com)
   This file is part of KFR
- 
+
   KFR is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
- 
+
   KFR is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
- 
+
   You should have received a copy of the GNU General Public License
   along with KFR.
- 
+
   If GPL is not suitable for your project, you must purchase a commercial license to use KFR.
   Buying a commercial license is mandatory as soon as you develop commercial activities without
   disclosing the source code of your own applications.
@@ -64,6 +64,10 @@ constexpr inline T add(T x)
 {
     return x;
 }
+
+/**
+ * @brief Returns sum of all the arguments passed to a function.
+ */
 template <typename T1, typename T2, typename... Ts>
 constexpr inline common_type<T1, T2, Ts...> add(T1 x, T2 y, Ts... rest)
 {
@@ -76,6 +80,9 @@ constexpr inline T add(initialvalue<T>)
 }
 KFR_FN(add)
 
+/**
+ * @brief Returns template expression that returns sum of all the arguments passed to a function.
+ */
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 CMT_INLINE internal::expression_function<fn_add, E1, E2> add(E1&& x, E2&& y)
 {
@@ -110,6 +117,10 @@ constexpr inline T1 mul(T1 x)
 {
     return x;
 }
+
+/**
+ * @brief Returns product of all the arguments passed to a function.
+ */
 template <typename T1, typename T2, typename... Ts>
 constexpr inline common_type<T1, T2, Ts...> mul(T1 x, T2 y, Ts... rest)
 {
@@ -122,6 +133,10 @@ constexpr inline T mul(initialvalue<T>)
     return T(1);
 }
 KFR_FN(mul)
+
+/**
+ * @brief Returns template expression that returns product of all the arguments passed to a function.
+ */
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 CMT_INLINE internal::expression_function<fn_mul, E1, E2> mul(E1&& x, E2&& y)
 {
@@ -133,18 +148,28 @@ CMT_INLINE internal::expression_function<fn_mul, E1> mul(E1&& x, E2&& y, E3&& z)
     return { fn_mul(), std::forward<E1>(x), std::forward<E2>(y), std::forward<E3>(z) };
 }
 
+/**
+ * @brief Returns square of x.
+ */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 constexpr inline T1 sqr(T1 x)
 {
     return x * x;
 }
 KFR_FN(sqr)
+
+/**
+ * @brief Returns template expression that returns square of x.
+ */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 CMT_INLINE internal::expression_function<fn_sqr, E1> sqr(E1&& x)
 {
     return { fn_sqr(), std::forward<E1>(x) };
 }
 
+/**
+ * @brief Returns cube of x.
+ */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 constexpr inline T1 cub(T1 x)
 {
@@ -152,6 +177,9 @@ constexpr inline T1 cub(T1 x)
 }
 KFR_FN(cub)
 
+/**
+ * @brief Returns template expression that returns cube of x.
+ */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 CMT_INLINE internal::expression_function<fn_cub, E1> cub(E1&& x)
 {
@@ -230,9 +258,7 @@ KFR_FN(ipow)
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 CMT_INLINE internal::expression_function<fn_ipow, E1, E2> ipow(E1&& x, E2&& b)
 {
-    return { fn_ipow(), std::forward<E1>(x), std::forward<E2>(b)
-
-    };
+    return { fn_ipow(), std::forward<E1>(x), std::forward<E2>(b) };
 }
 
 /// Return square of the sum of all arguments
@@ -406,13 +432,13 @@ KFR_FN(greater)
 KFR_FN(lessorequal)
 KFR_FN(greaterorequal)
 
-/// Fused Multiply-Add
+/// @brief Fused Multiply-Add
 template <typename T1, typename T2, typename T3>
 constexpr inline common_type<T1, T2, T3> fmadd(T1 x, T2 y, T3 z)
 {
     return x * y + z;
 }
-/// Fused Multiply-Sub
+/// @brief Fused Multiply-Sub
 template <typename T1, typename T2, typename T3>
 constexpr inline common_type<T1, T2, T3> fmsub(T1 x, T2 y, T3 z)
 {
@@ -421,7 +447,7 @@ constexpr inline common_type<T1, T2, T3> fmsub(T1 x, T2 y, T3 z)
 KFR_FN(fmadd)
 KFR_FN(fmsub)
 
-/// Linear blend of `x` and `y` (`c` must be in the range 0...+1)
+/// @brief Linear blend of `x` and `y` (`c` must be in the range 0...+1)
 /// Returns `x + ( y - x ) * c`
 template <typename T1, typename T2, typename T3>
 constexpr inline common_type<T1, T2, T3> mix(T1 c, T2 x, T3 y)
@@ -429,7 +455,7 @@ constexpr inline common_type<T1, T2, T3> mix(T1 c, T2 x, T3 y)
     return fmadd(c, y - x, x);
 }
 
-/// Linear blend of `x` and `y` (`c` must be in the range -1...+1)
+/// @brief Linear blend of `x` and `y` (`c` must be in the range -1...+1)
 template <typename T1, typename T2, typename T3>
 constexpr inline common_type<T1, T2, T3> mixs(T1 c, T2 x, T3 y)
 {
@@ -454,7 +480,7 @@ constexpr CMT_INLINE T1 horner(T1 x, T2 c0, T3 c1, Ts... values)
 }
 }
 
-/// Calculate polynomial using Horner's method
+/// @brief Calculate polynomial using Horner's method
 ///
 /// ``horner(x, 1, 2, 3)`` is equivalent to \(3x^2 + 2x + 1\)
 template <typename T1, typename... Ts>
@@ -464,7 +490,7 @@ constexpr CMT_INLINE T1 horner(T1 x, Ts... c)
 }
 KFR_FN(horner)
 
-/// Calculate Multiplicative Inverse of `x`
+/// @brief Calculate Multiplicative Inverse of `x`
 /// Returns `1/x`
 template <typename T>
 constexpr CMT_INLINE T reciprocal(T x)
@@ -524,7 +550,7 @@ CMT_INLINE mask<T, N> iszero(const vec<T, N>& x)
     return x == T();
 }
 
-/// Swap byte order
+/// @brief Swap byte order
 template <typename T, size_t N, KFR_ENABLE_IF(sizeof(vec<T, N>) > 8)>
 CMT_INLINE vec<T, N> swapbyteorder(const vec<T, N>& x)
 {
@@ -547,7 +573,7 @@ CMT_INLINE T swapbyteorder(T x)
 }
 KFR_FN(swapbyteorder)
 
-/// Sum all elements of the vector
+/// @brief Sum all elements of the vector
 template <typename T, size_t N>
 CMT_INLINE T hadd(const vec<T, N>& value)
 {
@@ -555,7 +581,7 @@ CMT_INLINE T hadd(const vec<T, N>& value)
 }
 KFR_FN(hadd)
 
-/// Multiply all elements of the vector
+/// @brief Multiply all elements of the vector
 template <typename T, size_t N>
 CMT_INLINE T hmul(const vec<T, N>& value)
 {
@@ -582,7 +608,7 @@ CMT_INLINE T hbitwisexor(const vec<T, N>& value)
 }
 KFR_FN(hbitwisexor)
 
-/// Calculate the Dot-Product of two vectors
+/// @brief Calculate the Dot-Product of two vectors
 template <typename T, size_t N>
 CMT_INLINE T dot(const vec<T, N>& x, const vec<T, N>& y)
 {
@@ -590,7 +616,7 @@ CMT_INLINE T dot(const vec<T, N>& x, const vec<T, N>& y)
 }
 KFR_FN(dot)
 
-/// Calculate the Arithmetic mean of all elements in the vector
+/// @brief Calculate the Arithmetic mean of all elements in the vector
 template <typename T, size_t N>
 CMT_INLINE T avg(const vec<T, N>& value)
 {
@@ -598,7 +624,7 @@ CMT_INLINE T avg(const vec<T, N>& value)
 }
 KFR_FN(avg)
 
-/// Calculate the RMS of all elements in the vector
+/// @brief Calculate the RMS of all elements in the vector
 template <typename T, size_t N>
 CMT_INLINE T rms(const vec<T, N>& value)
 {
