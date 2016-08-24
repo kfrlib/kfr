@@ -155,7 +155,7 @@ CMT_INLINE expression_vtable<T, maxwidth>* make_expression_vtable()
 }
 }
 
-/** \brief Converts the given expression into an opaque object.
+/** @brief Converts the given expression into an opaque object.
  *  This overload takes reference to the expression.
  *  @warning Use with caution with local variables.
  */
@@ -167,7 +167,7 @@ CMT_INLINE expression_pointer<T, maxwidth> to_pointer(E& expr)
                                            internal::make_expression_vtable<T, maxwidth, E>());
 }
 
-/** \brief Converts the given expression into an opaque object.
+/** @brief Converts the given expression into an opaque object.
  *  This overload takes ownership of the expression (Move semantics).
  *  @note Use std::move to force use of this overload.
  */
