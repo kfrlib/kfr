@@ -328,4 +328,17 @@ TEST(test_arg_access)
     CHECK(v2[9] == 10);
 }
 
+TEST(test_arg_replace)
+{
+    univector<float, 10> v1 = counter();
+    univector<float, 10> v2 = -counter();
+    auto e1              = to_pointer(v1) * 10;
+    std::get<0>(e1.args) = to_pointer(v2);
+    univector<float, 10> v3 = e1;
+    CHECK(v3[0] == 0);
+    CHECK(v3[1] == -10);
+    CHECK(v3[2] == -20);
+    CHECK(v3[9] == -90);
+}
+
 int main(int argc, char** argv) { return testo::run_all("", true); }
