@@ -90,19 +90,25 @@ struct biquad_params
 namespace internal
 {
 template <typename T, size_t filters, KFR_ARCH_DEP>
-struct biquad_block
+struct biquad_state
 {
     vec<T, filters> s1;
     vec<T, filters> s2;
+    vec<T, filters> out;
+    constexpr biquad_state() noexcept : s1(0), s2(0), out(0) {}
+};
+
+template <typename T, size_t filters, KFR_ARCH_DEP>
+struct biquad_block
+{
     vec<T, filters> a1;
     vec<T, filters> a2;
     vec<T, filters> b0;
     vec<T, filters> b1;
     vec<T, filters> b2;
 
-    vec<T, filters> out;
-    biquad_block() : s1(0), s2(0), a1(0), a2(0), b0(1), b1(0), b2(0), out(0) {}
-    biquad_block(const biquad_params<T>* bq, size_t count) : s1(0), s2(0), out(0)
+    constexpr biquad_block() noexcept : a1(0), a2(0), b0(1), b1(0), b2(0) {}
+    constexpr biquad_block(const biquad_params<T>* bq, size_t count) noexcept
     {
         count = count > filters ? filters : count;
         for (size_t i = 0; i < count; i++)
@@ -124,7 +130,7 @@ struct biquad_block
     }
 
     template <size_t count>
-    biquad_block(const biquad_params<T> (&bq)[count]) : biquad_block(bq, count)
+    constexpr biquad_block(const biquad_params<T> (&bq)[count]) noexcept : biquad_block(bq, count)
     {
         static_assert(count <= filters, "count > filters");
     }
@@ -148,20 +154,103 @@ struct expression_biquads : public expression<E1>
         CMT_LOOP_UNROLL
         for (size_t i = 0; i < width; i++)
         {
-            bq.out = process(bq, insertleft(in[i], bq.out));
-            out(i) = bq.out[filters - 1];
+            state.out = process(bq, state, insertleft(in[i], state.out));
+            out(i)    = state.out[filters - 1];
         }
 
         return out;
     }
-    KFR_SINTRIN vec<T, filters> process(biquad_block<T, filters>& bq, vec<T, filters> in)
+    KFR_SINTRIN vec<T, filters> process(const biquad_block<T, filters>& bq, biquad_state<T, filters>& state,
+                                        vec<T, filters> in)
     {
-        const vec<T, filters> out = bq.b0 * in + bq.s1;
-        bq.s1 = bq.s2 + bq.b1 * in - bq.a1 * out;
-        bq.s2 = bq.b2 * in - bq.a2 * out;
+        const vec<T, filters> out = bq.b0 * in + state.s1;
+        state.s1 = state.s2 + bq.b1 * in - bq.a1 * out;
+        state.s2 = bq.b2 * in - bq.a2 * out;
         return out;
     }
-    mutable biquad_block<T, filters> bq;
+    biquad_block<T, filters> bq;
+    mutable biquad_state<T, filters> state;
+};
+
+template <size_t filters, typename T, typename E1, KFR_ARCH_DEP>
+struct expression_biquads_zl : expression<E1>
+{
+    using value_type = T;
+
+    expression_biquads_zl(const biquad_block<T, filters>& bq, E1&& e1)
+        : expression<E1>(std::forward<E1>(e1)), bq(bq), block_end(0)
+    {
+    }
+
+    CMT_INLINE void begin_block(size_t size) const
+    {
+        block_end = size;
+        for (size_t i = 0; i < filters - 1; i++)
+        {
+            const vec<T, 1> in = this->argument_first(i, vec_t<T, 1>());
+            state.out = process(bq, state, insertleft(in[i], state.out));
+        }
+    }
+    CMT_INLINE void end_block(size_t) const { state = saved_state; }
+
+    template <size_t width>
+    KFR_INTRIN vec<T, width> operator()(cinput_t, size_t index, vec_t<T, width> t) const
+    {
+        index += filters - 1;
+        vec<T, width> out;
+        if (index + width <= block_end)
+        {
+            const vec<T, width> in = this->argument_first(index, t);
+
+            CMT_LOOP_UNROLL
+            for (size_t i = 0; i < width; i++)
+            {
+                state.out = process(bq, state, insertleft(in[i], state.out));
+                out(i)    = state.out[filters - 1];
+            }
+            if (index + width == block_end)
+                saved_state = state;
+        }
+        else if (index >= block_end)
+        {
+            CMT_LOOP_UNROLL
+            for (size_t i = 0; i < width; i++)
+            {
+                state.out = process(bq, state, insertleft(T(0), state.out));
+                out(i)    = state.out[filters - 1];
+            }
+        }
+        else
+        {
+            size_t i = 0;
+            for (; i < std::min(width, block_end - index); i++)
+            {
+                const vec<T, 1> in = this->argument_first(index + i, vec_t<T, 1>());
+                state.out = process(bq, state, insertleft(in[i], state.out));
+                out(i)    = state.out[filters - 1];
+            }
+            saved_state = state;
+            for (; i < width; i++)
+            {
+                state.out = process(bq, state, insertleft(T(0), state.out));
+                out(i)    = state.out[filters - 1];
+            }
+        }
+        return out;
+    }
+    KFR_SINTRIN vec<T, filters> process(const biquad_block<T, filters>& bq, biquad_state<T, filters>& state,
+                                        vec<T, filters> in)
+    {
+        const vec<T, filters> out = bq.b0 * in + state.s1;
+        state.s1 = state.s2 + bq.b1 * in - bq.a1 * out;
+        state.s2 = bq.b2 * in - bq.a2 * out;
+        return out;
+    }
+    biquad_block<T, filters> bq;
+
+    mutable biquad_state<T, filters> state;
+    mutable biquad_state<T, filters> saved_state;
+    mutable size_t block_end;
 };
 }
 
@@ -181,12 +270,25 @@ CMT_INLINE internal::expression_biquads<1, T, internal::arg<E1>> biquad(const bi
  * @brief Returns template expressions that applies cascade of biquad filters to the input.
  * @param bq Array of biquad coefficients
  * @param e1 Input expression
- * @note The current implementation introduces delay of N - 1 samples, where N is the filter count.
+ * @note This implementation introduces delay of N - 1 samples, where N is the filter count.
  */
 template <size_t filters, typename T, typename E1>
 CMT_INLINE internal::expression_biquads<filters, T, internal::arg<E1>> biquad(
     const biquad_params<T> (&bq)[filters], E1&& e1)
 {
     return internal::expression_biquads<filters, T, internal::arg<E1>>(bq, std::forward<E1>(e1));
+}
+
+/**
+ * @brief Returns template expressions that applies cascade of biquad filters to the input.
+ * @param bq Array of biquad coefficients
+ * @param e1 Input expression
+ * @note This implementation has zero latency
+ */
+template <size_t filters, typename T, typename E1>
+CMT_INLINE internal::expression_biquads_zl<filters, T, internal::arg<E1>> biquad_zl(
+    const biquad_params<T> (&bq)[filters], E1&& e1)
+{
+    return internal::expression_biquads_zl<filters, T, internal::arg<E1>>(bq, std::forward<E1>(e1));
 }
 }
