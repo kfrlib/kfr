@@ -302,4 +302,16 @@ TEST(test_adjacent)
     CHECK(v1[19] == 342);
 }
 
+TEST(test_rebind)
+{
+    auto c_minus_two  = counter() - 2;
+    auto four_minus_c = rebind(c_minus_two, 4, counter());
+    univector<int, 5> v1 = c_minus_two;
+    univector<int, 5> v2 = four_minus_c;
+    CHECK(v1[0] == -2);
+    CHECK(v1[1] == -1);
+    CHECK(v2[0] == 4);
+    CHECK(v2[1] == 3);
+}
+
 int main(int argc, char** argv) { return testo::run_all("", true); }

@@ -186,6 +186,11 @@ struct expression_function : expression<arg<Args>...>
           fn(std::forward<Fn>(fn))
     {
     }
+    expression_function(const Fn& fn, arg<Args>&&... args) noexcept
+        : expression<arg<Args>...>(std::forward<arg<Args>>(args)...),
+          fn(fn)
+    {
+    }
     template <typename T, size_t N>
     CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> x) const
     {
@@ -194,6 +199,8 @@ struct expression_function : expression<arg<Args>...>
                       "Can't cast from value_type to T");
         return this->call(fn, index, x);
     }
+
+    const Fn& get_fn() const noexcept { return fn; }
 
 protected:
     Fn fn;
@@ -235,6 +242,17 @@ CMT_INLINE internal::expression_function<decay<Fn>, internal::arg<Args>...> bind
 {
     return internal::expression_function<decay<Fn>, internal::arg<Args>...>(std::forward<Fn>(fn),
                                                                             std::forward<Args>(args)...);
+}
+/**
+ * @brief Construct a new expression using the same function as in @c e and new arguments
+ * @param e an expression
+ * @param args new arguments for the function
+ */
+template <typename Fn, typename... OldArgs, typename... NewArgs>
+CMT_INLINE internal::expression_function<Fn, NewArgs...> rebind(
+    const internal::expression_function<Fn, OldArgs...>& e, NewArgs&&... args)
+{
+    return internal::expression_function<Fn, NewArgs...>(e.get_fn(), std::forward<NewArgs>(args)...);
 }
 
 template <typename Tout, cpu_t c = cpu_t::native, size_t width = 0, typename OutFn, typename Fn>

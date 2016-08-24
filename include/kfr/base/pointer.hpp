@@ -25,8 +25,8 @@
  */
 #pragma once
 
-#include "vec.hpp"
 #include "basic_expressions.hpp"
+#include "vec.hpp"
 #include <memory>
 
 namespace kfr

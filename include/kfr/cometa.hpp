@@ -175,7 +175,7 @@ template <typename T>
 using deep_subtype = typename compound_type_traits<T>::deep_subtype;
 
 template <typename T, typename SubType>
-using rebind = typename compound_type_traits<T>::template rebind<SubType>;
+using rebind_subtype = typename compound_type_traits<T>::template rebind<SubType>;
 
 template <typename T, typename SubType>
 using deep_rebind = typename compound_type_traits<T>::template deep_rebind<SubType>;
