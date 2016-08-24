@@ -314,4 +314,18 @@ TEST(test_rebind)
     CHECK(v2[1] == 3);
 }
 
+TEST(test_arg_access)
+{
+    univector<float> v1(10);
+    v1                       = counter();
+    auto e1                  = std::move(v1) + 10;
+    std::get<0>(e1.args)[0]  = 100;
+    std::get<1>(e1.args).val = 1;
+    univector<float, 10> v2 = e1;
+    CHECK(v2[0] == 101);
+    CHECK(v2[1] == 2);
+    CHECK(v2[2] == 3);
+    CHECK(v2[9] == 10);
+}
+
 int main(int argc, char** argv) { return testo::run_all("", true); }

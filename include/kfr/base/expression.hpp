@@ -74,9 +74,9 @@ struct expression : input_expression
     CMT_INLINE void begin_block(size_t size) const { begin_block_impl(size, indicesfor_t<Args...>()); }
     CMT_INLINE void end_block(size_t size) const { end_block_impl(size, indicesfor_t<Args...>()); }
 
-protected:
     std::tuple<Args...> args;
 
+protected:
     template <size_t... indices>
     constexpr size_type size_impl(csizes_t<indices...>) const noexcept
     {
@@ -146,7 +146,7 @@ struct expression_scalar : input_expression
     expression_scalar() = delete;
     constexpr expression_scalar(const T& val) noexcept : val(val) {}
     constexpr expression_scalar(const vec<T, width>& val) noexcept : val(val) {}
-    const vec<T, width> val;
+    vec<T, width> val;
 
     template <typename U, size_t N>
     CMT_INLINE vec<U, N> operator()(cinput_t, size_t, vec_t<U, N>) const
