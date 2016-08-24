@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='dspplot',
-      version='0.0.1',
+      version='0.0.2',
       use_2to3=False,
       author='KFRLIB.COM',
       author_email='info@kfrlib.com',

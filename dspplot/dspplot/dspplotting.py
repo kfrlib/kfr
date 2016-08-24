@@ -117,7 +117,8 @@ def plot(data,
          phaseresp=False,
          dots=False,
          segmentsize=512,
-         overlap=8):
+         overlap=8,
+         div_by_N=False):
     if isinstance(data, (list, tuple, np.ndarray)):
         n = len(data)
         num = 1 + freqresp + phaseresp
@@ -146,6 +147,8 @@ def plot(data,
             padwidth = max(padwidth, n)
             Y = np.fft.fft(np.pad(data, (0, padwidth - n), 'constant', constant_values=(0, 0)))
             Y = Y[range(padwidth // 2)]
+            if div_by_N:
+                Y = Y / n
             Yfreq = 20 * np.log10(np.abs(Y))
             Yfreq = np.fmax(-300, Yfreq)
 
