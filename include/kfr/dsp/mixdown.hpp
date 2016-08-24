@@ -29,7 +29,9 @@
 
 namespace kfr
 {
-
+/**
+ * @brief Returns template expression that returns the sum of all the inputs
+ */
 template <typename... E>
 internal::expression_function<fn_add, E...> mixdown(E&&... e)
 {
@@ -57,6 +59,10 @@ struct stereo_matrix
 constexpr f64x2x2 matrix_sum_diff() { return { f64x2{ 1, 1 }, f64x2{ 1, -1 } }; }
 constexpr f64x2x2 matrix_halfsum_halfdiff() { return { f64x2{ 0.5, 0.5 }, f64x2{ 0.5, -0.5 } }; }
 
+/**
+ * @brief Returns template expression that returns the vector of length 2 containing mix of the left and right
+ * channels
+ */
 template <typename Left, typename Right,
           typename Result = internal::expression_function<
               internal::stereo_matrix, internal::expression_pack<internal::arg<Left>, internal::arg<Right>>>>

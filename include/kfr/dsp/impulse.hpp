@@ -30,7 +30,9 @@
 
 namespace kfr
 {
-
+/**
+ * @brief Returns expression template that generates unit impulse
+ */
 inline auto simpleimpulse()
 {
     return lambda([](cinput_t, size_t index, auto x) {

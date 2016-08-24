@@ -101,16 +101,28 @@ struct expression_fir : expression<E1>
 };
 }
 
+/**
+ * @brief Returns template expression that applies FIR filter to the input
+ * @param e1 an input expression
+ * @param taps coefficients for the FIR filter
+ */
 template <typename T, typename E1, size_t Tag>
 CMT_INLINE internal::expression_fir<T, E1> fir(E1&& e1, const univector<T, Tag>& taps)
 {
     return internal::expression_fir<T, E1>(std::forward<E1>(e1), taps.ref());
 }
+
+/**
+ * @brief Returns template expression that applies FIR filter to the input (count of coefficients must be in
+ * range 2..32)
+ * @param e1 an input expression
+ * @param taps coefficients for the FIR filter
+ */
 template <typename T, size_t TapCount, typename E1>
 CMT_INLINE internal::expression_short_fir<TapCount, T, E1> short_fir(E1&& e1,
                                                                      const univector<T, TapCount>& taps)
 {
-    static_assert(TapCount >= 1 && TapCount <= 32, "Use short_fir only for small FIR filters");
+    static_assert(TapCount >= 2 && TapCount <= 32, "Use short_fir only for small FIR filters");
     return internal::expression_short_fir<TapCount, T, E1>(std::forward<E1>(e1), taps.ref());
 }
 }

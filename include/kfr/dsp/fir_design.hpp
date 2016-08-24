@@ -122,24 +122,57 @@ KFR_I_FN(fir_highpass)
 KFR_I_FN(fir_bandpass)
 KFR_I_FN(fir_bandstop)
 
+/**
+ * @brief Calculates coefficients for the low-pass FIR filter
+ * @param taps array where computed coefficients are stored
+ * @param cutoff Normalized frequency (frequency_Hz / samplerate_Hz)
+ * @param window pointer to a window function
+ * @param normalize true for normalized coefficients
+ */
 template <typename T, size_t Tag>
 CMT_INLINE void fir_lowpass(univector<T, Tag>& taps, identity<T> cutoff, const expression_pointer<T>& window,
                             bool normalize = true)
 {
     return intrinsics::fir_lowpass(taps.slice(), cutoff, window, normalize);
 }
+
+/**
+ * @brief Calculates coefficients for the high-pass FIR filter
+ * @param taps array where computed coefficients are stored
+ * @param cutoff Normalized frequency (frequency_Hz / samplerate_Hz)
+ * @param window pointer to a window function
+ * @param normalize true for normalized coefficients
+ */
 template <typename T, size_t Tag>
 CMT_INLINE void fir_highpass(univector<T, Tag>& taps, identity<T> cutoff, const expression_pointer<T>& window,
                              bool normalize = true)
 {
     return intrinsics::fir_highpass(taps.slice(), cutoff, window, normalize);
 }
+
+/**
+ * @brief Calculates coefficients for the band-pass FIR filter
+ * @param taps array where computed coefficients are stored
+ * @param frequency1 Normalized frequency (frequency_Hz / samplerate_Hz)
+ * @param frequency2 Normalized frequency (frequency_Hz / samplerate_Hz)
+ * @param window pointer to a window function
+ * @param normalize true for normalized coefficients
+ */
 template <typename T, size_t Tag>
 CMT_INLINE void fir_bandpass(univector<T, Tag>& taps, identity<T> frequency1, identity<T> frequency2,
                              const expression_pointer<T>& window, bool normalize = true)
 {
     return intrinsics::fir_bandpass(taps.slice(), frequency1, frequency2, window, normalize);
 }
+
+/**
+ * @brief Calculates coefficients for the band-stop FIR filter
+ * @param taps array where computed coefficients are stored
+ * @param frequency1 Normalized frequency (frequency_Hz / samplerate_Hz)
+ * @param frequency2 Normalized frequency (frequency_Hz / samplerate_Hz)
+ * @param window pointer to a window function
+ * @param normalize true for normalized coefficients
+ */
 template <typename T, size_t Tag>
 CMT_INLINE void fir_bandstop(univector<T, Tag>& taps, identity<T> frequency1, identity<T> frequency2,
                              const expression_pointer<T>& window, bool normalize = true)
@@ -147,24 +180,39 @@ CMT_INLINE void fir_bandstop(univector<T, Tag>& taps, identity<T> frequency1, id
     return intrinsics::fir_bandstop(taps.slice(), frequency1, frequency2, window, normalize);
 }
 
+/**
+ * @copydoc kfr::fir_lowpass
+ */
 template <typename T>
 CMT_INLINE void fir_lowpass(const univector_ref<T>& taps, identity<T> cutoff,
                             const expression_pointer<T>& window, bool normalize = true)
 {
     return intrinsics::fir_lowpass(taps, cutoff, window, normalize);
 }
+
+/**
+ * @copydoc kfr::fir_highpass
+ */
 template <typename T>
 CMT_INLINE void fir_highpass(const univector_ref<T>& taps, identity<T> cutoff,
                              const expression_pointer<T>& window, bool normalize = true)
 {
     return intrinsics::fir_highpass(taps, cutoff, window, normalize);
 }
+
+/**
+ * @copydoc kfr::fir_bandpass
+ */
 template <typename T>
 CMT_INLINE void fir_bandpass(const univector_ref<T>& taps, identity<T> frequency1, identity<T> frequency2,
                              const expression_pointer<T>& window, bool normalize = true)
 {
     return intrinsics::fir_bandpass(taps, frequency1, frequency2, window, normalize);
 }
+
+/**
+ * @copydoc kfr::fir_bandstop
+ */
 template <typename T>
 CMT_INLINE void fir_bandstop(const univector_ref<T>& taps, identity<T> frequency1, identity<T> frequency2,
                              const expression_pointer<T>& window, bool normalize = true)

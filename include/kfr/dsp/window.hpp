@@ -468,46 +468,83 @@ KFR_WINDOW_BY_TYPE(lanczos)
 #undef KFR_WINDOW_BY_TYPE
 }
 
+/**
+ * @brief Returns template expression that generates Rrectangular window of length @c size
+ */
 CMT_INLINE internal::expression_rectangular<fbase> window_rectangular(size_t size)
 {
     return internal::expression_rectangular<fbase>(size, fbase());
 }
+
+/**
+ * @brief Returns template expression that generates Triangular window of length @c size
+ */
 template <typename T = fbase>
 CMT_INLINE internal::expression_triangular<T> window_triangular(size_t size, ctype_t<T> = ctype_t<T>())
 {
     return internal::expression_triangular<T>(size);
 }
+
+/**
+ * @brief Returns template expression that generates Bartlett window of length @c size
+ */
 template <typename T = fbase>
 CMT_INLINE internal::expression_bartlett<T> window_bartlett(size_t size, ctype_t<T> = ctype_t<T>())
 {
     return internal::expression_bartlett<T>(size);
 }
+
+/**
+ * @brief Returns template expression that generates Cosine window of length @c size
+ */
 template <typename T = fbase>
 CMT_INLINE internal::expression_cosine<T> window_cosine(size_t size, ctype_t<T> = ctype_t<T>())
 {
     return internal::expression_cosine<T>(size);
 }
+
+/**
+ * @brief Returns template expression that generates Hann window of length @c size
+ */
 template <typename T = fbase>
 CMT_INLINE internal::expression_hann<T> window_hann(size_t size, ctype_t<T> = ctype_t<T>())
 {
     return internal::expression_hann<T>(size);
 }
+
+/**
+ * @brief Returns template expression that generates Bartlett-Hann window of length @c size
+ */
 template <typename T = fbase>
 CMT_INLINE internal::expression_bartlett_hann<T> window_bartlett_hann(size_t size, ctype_t<T> = ctype_t<T>())
 {
     return internal::expression_bartlett_hann<T>(size);
 }
+
+/**
+ * @brief Returns template expression that generates Hamming window of length @c size where &alpha; = @c
+ * alpha
+ */
 template <typename T = fbase>
 CMT_INLINE internal::expression_hamming<T> window_hamming(size_t size, identity<T> alpha = 0.54,
                                                           ctype_t<T> = ctype_t<T>())
 {
     return internal::expression_hamming<T>(size, alpha);
 }
+
+/**
+ * @brief Returns template expression that generates Bohman window of length @c size
+ */
 template <typename T = fbase>
 CMT_INLINE internal::expression_bohman<T> window_bohman(size_t size, ctype_t<T> = ctype_t<T>())
 {
     return internal::expression_bohman<T>(size);
 }
+
+/**
+ * @brief Returns template expression that generates Blackman window of length @c size where &alpha; = @c
+ * alpha
+ */
 template <typename T = fbase>
 CMT_INLINE internal::expression_blackman<T> window_blackman(
     size_t size, identity<T> alpha = 0.16, window_symmetry symmetry = window_symmetry::symmetric,
@@ -515,29 +552,51 @@ CMT_INLINE internal::expression_blackman<T> window_blackman(
 {
     return internal::expression_blackman<T>(size, alpha, symmetry);
 }
+
+/**
+ * @brief Returns template expression that generates Blackman-Harris window of length @c size
+ */
 template <typename T = fbase>
 CMT_INLINE internal::expression_blackman_harris<T> window_blackman_harris(
     size_t size, window_symmetry symmetry = window_symmetry::symmetric, ctype_t<T> = ctype_t<T>())
 {
     return internal::expression_blackman_harris<T>(size, T(), symmetry);
 }
+
+/**
+ * @brief Returns template expression that generates Kaiser window of length @c size where &beta; = @c
+ * beta
+ */
 template <typename T = fbase>
 CMT_INLINE internal::expression_kaiser<T> window_kaiser(size_t size, identity<T> beta = T(0.5),
                                                         ctype_t<T> = ctype_t<T>())
 {
     return internal::expression_kaiser<T>(size, beta);
 }
+
+/**
+ * @brief Returns template expression that generates Flat top window of length @c size
+ */
 template <typename T = fbase>
 CMT_INLINE internal::expression_flattop<T> window_flattop(size_t size, ctype_t<T> = ctype_t<T>())
 {
     return internal::expression_flattop<T>(size);
 }
+
+/**
+ * @brief Returns template expression that generates Gaussian window of length @c size where &alpha; = @c
+ * alpha
+ */
 template <typename T = fbase>
 CMT_INLINE internal::expression_gaussian<T> window_gaussian(size_t size, identity<T> alpha = 2.5,
                                                             ctype_t<T> = ctype_t<T>())
 {
     return internal::expression_gaussian<T>(size, alpha);
 }
+
+/**
+ * @brief Returns template expression that generates Lanczos window of length @c size
+ */
 template <typename T = fbase>
 CMT_INLINE internal::expression_lanczos<T> window_lanczos(size_t size, ctype_t<T> = ctype_t<T>())
 {

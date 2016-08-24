@@ -92,6 +92,15 @@ struct expression_delay<1, E> : expression<E>
 };
 }
 
+/**
+ * @brief Returns template expression that applies delay to the input (uses ring buffer internally)
+ * @param e1 an input expression
+ * @param samples delay in samples (must be a compile time value)
+ * @code
+ * univector<double, 10> v = counter();
+ * auto d = delay(v, csize<4>);
+ * @endcode
+ */
 template <size_t samples = 1, typename E1>
 CMT_INLINE internal::expression_delay<samples, E1> delay(E1&& e1, csize_t<samples> = csize<samples>)
 {
