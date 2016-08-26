@@ -325,5 +325,34 @@ inline internal::expressoin_sized<T, E1> typed(E1&& e1, size_t size)
 {
     return internal::expressoin_sized<T, E1>(std::forward<E1>(e1), size);
 }
+
+template <typename T>
+struct input_expression_base : input_expression
+{
+    virtual ~input_expression_base() {}
+    virtual T input(size_t index) const = 0;
+    template <typename U, size_t N>
+    vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N>) const
+    {
+        vec<U, N> out;
+        for (size_t i = 0; i < N; i++)
+            out(i)    = static_cast<U>(input(index + i));
+        return out;
+    }
+};
+
+template <typename T>
+struct output_expression_base : output_expression
+{
+    virtual ~output_expression_base() {}
+    virtual void output(size_t index, const T& value) = 0;
+
+    template <typename U, size_t N>
+    void operator()(coutput_t, size_t index, const vec<U, N>& value)
+    {
+        for (size_t i = 0; i < N; i++)
+            output(index + i, static_cast<T>(value[i]));
+    }
+};
 }
 #pragma clang diagnostic pop
