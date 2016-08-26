@@ -45,6 +45,18 @@ auto swept(identity<T> magn, size_t size)
         size);
 }
 
+template <typename T = fbase>
+auto phasor(identity<T> frequency)
+{
+    return fract(counter(T(0), frequency));
+}
+
+template <typename T = fbase>
+auto phasor(identity<T> frequency, identity<T> sample_rate)
+{
+    return fract(counter(T(0), frequency / sample_rate));
+}
+
 namespace intrinsics
 {
 template <typename T>
