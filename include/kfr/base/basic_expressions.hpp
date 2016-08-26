@@ -88,32 +88,18 @@ CMT_INLINE auto ones()
 }
 CMT_INLINE auto counter()
 {
-    return lambda([](cinput_t, size_t index, auto x) {
-        using T    = subtype<decltype(x)>;
-        using Tsub = subtype<T>;
-        using TI   = subtype<itype<T>>;
-        return cast<T>(enumerate<Tsub, x.size()>() + cast<Tsub>(cast<TI>(index)));
-    });
+    return lambda([](cinput_t, size_t index, auto x) { return enumerate(x) + index; });
 }
 template <typename T1>
 CMT_INLINE auto counter(T1 start)
 {
-    return lambda([start](cinput_t, size_t index, auto x) {
-        using T    = subtype<decltype(x)>;
-        using Tsub = subtype<T>;
-        using TI   = subtype<itype<T>>;
-        return cast<T>(enumerate<Tsub, x.size()>() + cast<Tsub>(start) + cast<Tsub>(cast<TI>(index)));
-    });
+    return lambda([start](cinput_t, size_t index, auto x) { return enumerate(x) + index + start; });
 }
 template <typename T1, typename T2>
 CMT_INLINE auto counter(T1 start, T2 step)
 {
-    return lambda([start, step](cinput_t, size_t index, auto x) {
-        using T    = subtype<decltype(x)>;
-        using Tsub = subtype<T>;
-        using TI   = subtype<itype<T>>;
-        return cast<T>(enumerate<Tsub, x.size()>() * step + cast<Tsub>(start) + cast<Tsub>(cast<TI>(index)));
-    });
+    return lambda(
+        [start, step](cinput_t, size_t index, auto x) { return (enumerate(x) + index) * step + start; });
 }
 
 template <typename Gen>
