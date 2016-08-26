@@ -39,7 +39,7 @@ int main(int argc, char** argv)
 
     const std::string options = "phaseresp=False";
 
-    univector<fbase> swept_sine = swept<fbase>(0.5, len);
+    univector<fbase> swept_sine = swept(0.5, len);
 
     {
         auto r = resampler<fbase>(resample_quality::high, output_sr, input_sr, 1.0, 0.496);

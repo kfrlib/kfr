@@ -31,14 +31,14 @@
 namespace kfr
 {
 
-template <typename T>
-auto jaehne(T magn, size_t size)
+template <typename T = fbase>
+auto jaehne(identity<T> magn, size_t size)
 {
     return typed<T>(magn * sin(c_pi<T, 1, 2> * sqr(linspace(T(0), T(size), size, false)) / size), size);
 }
 
-template <typename T>
-auto swept(T magn, size_t size)
+template <typename T = fbase>
+auto swept(identity<T> magn, size_t size)
 {
     return typed<T>(
         magn * sin(c_pi<T, 1, 4> * sqr(sqr(linspace(T(0), T(size), size, false)) / sqr(T(size))) * T(size)),
