@@ -734,6 +734,10 @@ using is_input_expressions = or_t<std::is_base_of<input_expression, decay<Es>>..
 template <typename E>
 using is_output_expression = std::is_base_of<output_expression, decay<E>>;
 
+/// @brief Check if the type arguments are an output expressions
+template <typename... Es>
+using is_output_expressions = or_t<std::is_base_of<output_expression, decay<Es>>...>;
+
 /// @brief Check if the type argument is a number or a vector of numbers
 template <typename T>
 using is_numeric = is_number<deep_subtype<T>>;
