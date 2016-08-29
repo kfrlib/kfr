@@ -33,8 +33,7 @@ namespace kfr
 namespace intrinsics
 {
 template <typename T>
-KFR_SINTRIN void fir_lowpass(univector_ref<T> taps, T cutoff, const expression_pointer<T>& window,
-                             bool normalize = true)
+void fir_lowpass(univector_ref<T> taps, T cutoff, const expression_pointer<T>& window, bool normalize = true)
 {
     const T scale = 2.0 * cutoff;
     taps          = bind_expression(fn::sinc(),
@@ -51,8 +50,7 @@ KFR_SINTRIN void fir_lowpass(univector_ref<T> taps, T cutoff, const expression_p
     }
 }
 template <typename T>
-KFR_SINTRIN void fir_highpass(univector_ref<T> taps, T cutoff, const expression_pointer<T>& window,
-                              bool normalize = true)
+void fir_highpass(univector_ref<T> taps, T cutoff, const expression_pointer<T>& window, bool normalize = true)
 {
     const T scale = 2.0 * -cutoff;
     taps          = bind_expression(fn::sinc(),
@@ -70,8 +68,8 @@ KFR_SINTRIN void fir_highpass(univector_ref<T> taps, T cutoff, const expression_
 }
 
 template <typename T>
-KFR_SINTRIN void fir_bandpass(univector_ref<T> taps, T frequency1, T frequency2,
-                              const expression_pointer<T>& window, bool normalize = true)
+void fir_bandpass(univector_ref<T> taps, T frequency1, T frequency2, const expression_pointer<T>& window,
+                  bool normalize = true)
 {
     const T scale1 = 2.0 * frequency1;
     const T scale2 = 2.0 * frequency2;
@@ -94,8 +92,8 @@ KFR_SINTRIN void fir_bandpass(univector_ref<T> taps, T frequency1, T frequency2,
 }
 
 template <typename T>
-KFR_SINTRIN void fir_bandstop(univector_ref<T> taps, T frequency1, T frequency2,
-                              const expression_pointer<T>& window, bool normalize = true)
+void fir_bandstop(univector_ref<T> taps, T frequency1, T frequency2, const expression_pointer<T>& window,
+                  bool normalize = true)
 {
     const T scale1 = 2.0 * frequency1;
     const T scale2 = 2.0 * frequency2;
