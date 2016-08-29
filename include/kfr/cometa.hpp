@@ -162,7 +162,7 @@ struct compound_type_traits
     template <typename U>
     using deep_rebind = U;
 
-    static constexpr const subtype& at(const T& value, size_t /*index*/) { return value; }
+    CMT_INLINE static constexpr const subtype& at(const T& value, size_t /*index*/) { return value; }
 };
 
 template <typename T>
@@ -195,7 +195,7 @@ struct compound_type_traits<std::pair<T, T>>
     template <typename U>
     using deep_rebind = std::pair<cometa::deep_rebind<subtype, U>, cometa::deep_rebind<subtype, U>>;
 
-    static constexpr const subtype& at(const std::pair<subtype, subtype>& value, size_t index)
+    CMT_INLINE static constexpr const subtype& at(const std::pair<subtype, subtype>& value, size_t index)
     {
         return index == 0 ? value.first : value.second;
     }

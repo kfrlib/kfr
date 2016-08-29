@@ -557,12 +557,12 @@ namespace internal
 template <size_t start, size_t stride>
 struct generate_index
 {
-    constexpr size_t operator()(size_t index) const { return start + index * stride; }
+    CMT_INLINE constexpr size_t operator()(size_t index) const { return start + index * stride; }
 };
 template <size_t start, size_t size, int on, int off>
 struct generate_onoff
 {
-    constexpr size_t operator()(size_t index) const
+    CMT_INLINE constexpr size_t operator()(size_t index) const
     {
         return index >= start && index < start + size ? on : off;
     }

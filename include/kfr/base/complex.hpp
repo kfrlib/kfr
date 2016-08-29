@@ -147,15 +147,15 @@ struct vec_op<complex<T>, N> : private vec_op<T, N * 2>
 
     constexpr static size_t w = N * 2;
 
-    constexpr static simd<scalar_type, w> mul(const simd<scalar_type, w>& x,
-                                              const simd<scalar_type, w>& y) noexcept
+    CMT_INLINE constexpr static simd<scalar_type, w> mul(const simd<scalar_type, w>& x,
+                                                         const simd<scalar_type, w>& y) noexcept
     {
         const vec<scalar_type, w> xx = x;
         const vec<scalar_type, w> yy = y;
         return *subadd(xx * dupeven(yy), swap<2>(xx) * dupodd(yy));
     }
-    constexpr static simd<scalar_type, w> div(const simd<scalar_type, w>& x,
-                                              const simd<scalar_type, w>& y) noexcept
+    CMT_INLINE constexpr static simd<scalar_type, w> div(const simd<scalar_type, w>& x,
+                                                         const simd<scalar_type, w>& y) noexcept
     {
         const vec<scalar_type, w> xx = x;
         const vec<scalar_type, w> yy = y;
