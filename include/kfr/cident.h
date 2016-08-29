@@ -233,9 +233,14 @@ extern char* gets(char* __s);
 
 #define CMT_NODEBUG
 // __attribute__((__nodebug__))
-#define CMT_INLINE __inline__ __attribute__((__always_inline__))
+#ifdef NDEBUG
+#define CMT_ALWAYS_INLINE __attribute__((__always_inline__))
+#else
+#define CMT_ALWAYS_INLINE
+#endif
+#define CMT_INLINE __inline__ CMT_ALWAYS_INLINE
 #define CMT_INTRIN CMT_INLINE CMT_NODEBUG
-#define CMT_INLINE_MEMBER __attribute__((__always_inline__))
+#define CMT_INLINE_MEMBER CMT_ALWAYS_INLINE
 #define CMT_INLINE_LAMBDA CMT_INLINE_MEMBER
 #define CMT_NOINLINE __attribute__((__noinline__))
 #define CMT_FLATTEN __attribute__((__flatten__))
