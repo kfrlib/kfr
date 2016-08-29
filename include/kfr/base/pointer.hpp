@@ -76,8 +76,8 @@ struct expression_pointer : input_expression
         : instance(instance), vtable(vtable), resource(std::move(resource))
     {
     }
-    template <typename U, size_t N>
-    CMT_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N>) const
+    template <size_t N>
+    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
     {
         using func_t = simd<T, N> (*)(void*, size_t);
 
@@ -85,7 +85,7 @@ struct expression_pointer : input_expression
         constexpr size_t findex = ilog2(N);
         static_assert(N <= maxwidth, "N is greater than maxwidth");
         func_t func = reinterpret_cast<func_t>((*vtable)[2 + findex]);
-        vec<U, N> result = vec<T, N>(func(instance, index));
+        vec<T, N> result = vec<T, N>(func(instance, index));
         return result;
     }
     CMT_INLINE void begin_block(size_t size) const

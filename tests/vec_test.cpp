@@ -281,7 +281,7 @@ TEST(test_delay)
 
 TEST(test_adjacent)
 {
-    univector<int, 20> v1 = adjacent(fn_mul(), typed<int>(counter()));
+    univector<int, 20> v1 = adjacent(fn_mul(), counter());
     CHECK(v1[0] == 0);
     CHECK(v1[1] == 0);
     CHECK(v1[2] == 2);

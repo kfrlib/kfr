@@ -51,7 +51,7 @@ TEST(fft_accuracy)
                       const size_t size = 1 << log2size;
 
                       univector<complex<float_type>> in =
-                          typed<float_type>(gen_random_range(gen, -1.0, +1.0), size * 2);
+                          slice(gen_random_range<float_type>(gen, -1.0, +1.0), 0, size * 2);
                       univector<complex<float_type>> out    = in;
                       univector<complex<float_type>> refout = out;
                       const dft_plan<float_type> dft(size);

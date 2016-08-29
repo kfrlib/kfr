@@ -83,8 +83,8 @@ template <typename T>
 struct expression_file_writer : expression_file_base, output_expression
 {
     using expression_file_base::expression_file_base;
-    template <typename U, size_t N>
-    void operator()(coutput_t, size_t index, const vec<U, N>& value)
+    template <size_t N>
+    void operator()(coutput_t, size_t index, const vec<T, N>& value)
     {
         if (position != index)
             fseeko(file, static_cast<off_t>(index * sizeof(T)), SEEK_SET);
@@ -99,8 +99,8 @@ template <typename T>
 struct expression_file_reader : expression_file_base, input_expression
 {
     using expression_file_base::expression_file_base;
-    template <typename U, size_t N>
-    vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N>) const
+    template <size_t N>
+    vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
     {
         if (position != index)
             fseeko(file, static_cast<off_t>(index * sizeof(T)), SEEK_SET);

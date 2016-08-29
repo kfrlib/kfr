@@ -37,9 +37,10 @@ template <size_t delay, typename E>
 struct expression_delay : expression<E>
 {
     using value_type = value_type_of<E>;
+    using T          = value_type;
     using expression<E>::expression;
 
-    template <typename T, size_t N, KFR_ENABLE_IF(N <= delay)>
+    template <size_t N, KFR_ENABLE_IF(N <= delay)>
     vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
     {
         vec<T, N> out;
@@ -49,7 +50,6 @@ struct expression_delay : expression<E>
         data.ringbuf_write(cursor, in);
         return out;
     }
-    template <typename T>
     vec<T, 1> operator()(cinput_t, size_t index, vec_t<T, 1>) const
     {
         T out;
@@ -59,7 +59,7 @@ struct expression_delay : expression<E>
         data.ringbuf_write(cursor, in);
         return out;
     }
-    template <typename T, size_t N, KFR_ENABLE_IF(N > delay)>
+    template <size_t N, KFR_ENABLE_IF(N > delay)>
     vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
     {
         vec<T, delay> out;
@@ -78,9 +78,10 @@ template <typename E>
 struct expression_delay<1, E> : expression<E>
 {
     using value_type = value_type_of<E>;
+    using T          = value_type;
     using expression<E>::expression;
 
-    template <typename T, size_t N>
+    template <size_t N>
     vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
     {
         const vec<T, N> in  = this->argument_first(index, vec_t<T, N>());

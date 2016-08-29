@@ -62,7 +62,7 @@ TEST(mixdown_stereo)
     const univector<double, 21> right = counter() * 2 + 100;
     univector<double, 21> mid;
     univector<double, 21> side;
-    pack(mid, side) = mixdown_stereo(left, right, matrix_sum_diff());
+    unpack(mid, side) = mixdown_stereo(left, right, matrix_sum_diff());
 
     CHECK(mid[0] == 100);
     CHECK(side[0] == -100);

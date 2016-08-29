@@ -35,22 +35,23 @@ namespace kfr
 {
 namespace internal
 {
-template <typename From, typename E>
+template <typename To, typename E>
 struct expression_convert : expression<E>
 {
+    using value_type = To;
     CMT_INLINE expression_convert(E&& expr) noexcept : expression<E>(std::forward<E>(expr)) {}
 
-    template <typename T, size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
+    template <size_t N>
+    CMT_INLINE vec<To, N> operator()(cinput_t, size_t index, vec_t<To, N>) const
     {
-        return this->argument_first(index, vec_t<From, N>());
+        return this->argument_first(index, vec_t<To, N>());
     }
 };
 }
 
-template <typename From, typename E>
-CMT_INLINE internal::expression_convert<From, decay<E>> convert(E&& expr)
+template <typename To, typename E>
+CMT_INLINE internal::expression_convert<To, E> convert(E&& expr)
 {
-    return internal::expression_convert<From, decay<E>>(std::forward<E>(expr));
+    return internal::expression_convert<To, E>(std::forward<E>(expr));
 }
 }

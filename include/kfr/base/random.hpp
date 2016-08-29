@@ -128,8 +128,8 @@ struct expression_random_uniform : input_expression
 {
     using value_type = T;
     constexpr expression_random_uniform(const random_bit_generator& gen) noexcept : gen(gen) {}
-    template <typename U, size_t N>
-    vec<U, N> operator()(cinput_t, size_t, vec_t<U, N>) const
+    template <size_t N>
+    vec<T, N> operator()(cinput_t, size_t, vec_t<T, N>) const
     {
         return random_uniform<T, N>(gen);
     }
@@ -146,8 +146,8 @@ struct expression_random_range : input_expression
     {
     }
 
-    template <typename U, size_t N>
-    vec<U, N> operator()(cinput_t, size_t, vec_t<U, N>) const
+    template <size_t N>
+    vec<T, N> operator()(cinput_t, size_t, vec_t<T, N>) const
     {
         return random_range<N, T>(gen, min, max);
     }

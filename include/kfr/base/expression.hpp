@@ -187,6 +187,7 @@ struct expression_function : expression<arg<Args>...>
 
     using value_type =
         subtype<decltype(std::declval<Fn>()(std::declval<vec<value_type_of<arg<Args>>, 1>>()...))>;
+    using T = value_type;
 
     expression_function(Fn&& fn, arg<Args>&&... args) noexcept
         : expression<arg<Args>...>(std::forward<arg<Args>>(args)...),
@@ -198,11 +199,9 @@ struct expression_function : expression<arg<Args>...>
           fn(fn)
     {
     }
-    template <typename T, size_t N>
+    template <size_t N>
     CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> x) const
     {
-        static_assert(is_same<T, value_type_of<expression_function>>::value,
-                      "Can't cast from value_type to T");
         return this->call(fn, index, x);
     }
 
@@ -211,17 +210,6 @@ struct expression_function : expression<arg<Args>...>
 protected:
     Fn fn;
 };
-
-template <typename Tout, typename Tin, size_t width, typename OutFn, typename Fn>
-CMT_INLINE void process_cycle(OutFn&& outfn, const Fn& fn, size_t& i, size_t size)
-{
-    const size_t count = size / width * width;
-    CMT_LOOP_NOUNROLL
-    for (; i < count; i += width)
-    {
-        outfn(coutput, i, fn(cinput, i, vec_t<Tin, width>()));
-    }
-}
 }
 
 template <typename A>
@@ -261,6 +249,21 @@ CMT_INLINE internal::expression_function<Fn, NewArgs...> rebind(
     return internal::expression_function<Fn, NewArgs...>(e.get_fn(), std::forward<NewArgs>(args)...);
 }
 
+namespace internal
+{
+template <size_t width, typename OutputExpr, typename InputExpr>
+CMT_INLINE void process_cycle(OutputExpr&& outfn, const InputExpr& fn, size_t& i, size_t size)
+{
+    using Tin          = value_type_of<InputExpr>;
+    const size_t count = size / width * width;
+    CMT_LOOP_NOUNROLL
+    for (; i < count; i += width)
+    {
+        outfn(coutput, i, fn(cinput, i, vec_t<Tin, width>()));
+    }
+}
+}
+
 template <typename Tout, cpu_t c = cpu_t::native, size_t width = 0, typename OutputExpr, typename InputExpr>
 CMT_INLINE void process(OutputExpr&& out, const InputExpr& in, size_t size)
 {
@@ -271,8 +274,6 @@ CMT_INLINE void process(OutputExpr&& out, const InputExpr& in, size_t size)
     out.output_begin_block(size);
     in.begin_block(size);
 
-    using Tin = value_type_of<InputExpr>;
-
 #ifdef NDEBUG
     constexpr size_t w = width == 0 ? internal::get_vector_width<Tout, c>(2, 4) : width;
 #else
@@ -280,61 +281,11 @@ CMT_INLINE void process(OutputExpr&& out, const InputExpr& in, size_t size)
 #endif
 
     size_t i = 0;
-    internal::process_cycle<Tout, Tin, w>(std::forward<OutputExpr>(out), in, i, size);
-    internal::process_cycle<Tout, Tin, comp>(std::forward<OutputExpr>(out), in, i, size);
+    internal::process_cycle<w>(std::forward<OutputExpr>(out), in, i, size);
+    internal::process_cycle<comp>(std::forward<OutputExpr>(out), in, i, size);
 
     in.end_block(size);
     out.output_end_block(size);
-}
-
-namespace internal
-{
-
-template <typename T, typename E1>
-struct expressoin_typed : input_expression
-{
-    using value_type = T;
-
-    expressoin_typed(E1&& e1) : e1(std::forward<E1>(e1)) {}
-
-    template <typename U, size_t N>
-    CMT_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N>) const
-    {
-        return e1(cinput, index, vec_t<T, N>());
-    }
-    E1 e1;
-};
-
-template <typename T, typename E1>
-struct expressoin_sized : input_expression
-{
-    using value_type = T;
-    using size_type  = size_t;
-
-    expressoin_sized(E1&& e1, size_t size) : e1(std::forward<E1>(e1)), m_size(size) {}
-
-    template <typename U, size_t N>
-    CMT_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N>) const
-    {
-        auto val = e1(cinput, index, vec_t<T, N>());
-        return val;
-    }
-
-    constexpr size_t size() const noexcept { return m_size; }
-    E1 e1;
-    size_t m_size;
-};
-}
-
-template <typename T, typename E1>
-inline internal::expressoin_typed<T, E1> typed(E1&& e1)
-{
-    return internal::expressoin_typed<T, E1>(std::forward<E1>(e1));
-}
-template <typename T, typename E1>
-inline internal::expressoin_sized<T, E1> typed(E1&& e1, size_t size)
-{
-    return internal::expressoin_sized<T, E1>(std::forward<E1>(e1), size);
 }
 
 template <typename T>

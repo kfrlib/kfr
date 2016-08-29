@@ -54,17 +54,17 @@ struct expression_short_fir : expression<E1>
         : expression<E1>(std::forward<E1>(e1)), taps(taps), delayline(0)
     {
     }
-    template <typename U, size_t N>
-    CMT_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x) const
+    template <size_t N>
+    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> x) const
     {
-        vec<T, N> in = cast<T>(this->argument_first(index, x));
+        vec<T, N> in = this->argument_first(index, x);
 
         vec<T, N> out = in * taps[0];
         cfor(csize<1>, csize<tapcount>,
              [&](auto I) { out = out + concat_and_slice<tapcount - 1 - I, N>(delayline, in) * taps[I]; });
         delayline = concat_and_slice<N, tapcount - 1>(delayline, in);
 
-        return cast<U>(out);
+        return out;
     }
     vec<T, tapcount> taps;
     mutable vec<T, tapcount - 1> delayline;
@@ -77,11 +77,11 @@ struct expression_fir : expression<E1>
         : expression<E1>(std::forward<E1>(e1)), taps(taps), delayline(taps.size(), T()), delayline_cursor(0)
     {
     }
-    template <typename U, size_t N>
-    CMT_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x) const
+    template <size_t N>
+    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> x) const
     {
         const size_t tapcount = taps.size();
-        const vec<T, N> input = cast<T>(this->argument_first(index, x));
+        const vec<T, N> input = this->argument_first(index, x);
 
         vec<T, N> output;
         size_t cursor = delayline_cursor;
@@ -93,7 +93,7 @@ struct expression_fir : expression<E1>
                         dotproduct(taps.slice(tapcount - cursor), delayline /*, cursor*/);
         }
         delayline_cursor = cursor;
-        return cast<U>(output);
+        return output;
     }
     univector_dyn<T> taps;
     mutable univector_dyn<T> delayline;

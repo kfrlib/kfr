@@ -73,7 +73,7 @@ CMT_INLINE auto sequence(T x, Ts... rest)
 {
     const T seq[]      = { x, static_cast<T>(rest)... };
     constexpr size_t N = arraysize(seq);
-    return typed<T>(lambda([=](size_t index) { return seq[index % N]; }));
+    return lambda<T>([=](size_t index) { return seq[index % N]; });
 }
 
 template <typename T = int>
@@ -169,27 +169,24 @@ internal::expression_writer<T, E1> writer(E1&& e1)
 namespace internal
 {
 
-template <typename E1, typename = void>
-struct inherit_value_type
-{
-};
-
 template <typename E1>
-struct inherit_value_type<E1, void_t<typename decay<E1>::value_type>>
+struct expression_slice : expression<E1>
 {
-    using value_type = typename decay<E1>::value_type;
-};
-
-template <typename E1>
-struct expression_skip : expression<E1>, inherit_value_type<E1>
-{
-    expression_skip(E1&& e1, size_t count) : expression<E1>(std::forward<E1>(e1)), count(count) {}
-    template <typename T, size_t N>
+    using value_type = value_type_of<E1>;
+    using T          = value_type;
+    expression_slice(E1&& e1, size_t start, size_t size)
+        : expression<E1>(std::forward<E1>(e1)), start(start),
+          new_size(minsize(size, std::get<0>(this->args).size()))
+    {
+    }
+    template <size_t N>
     CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
     {
-        return this->argument_first(index + count, y);
+        return this->argument_first(index + start, y);
     }
-    size_t count;
+    size_t size() const { return new_size; }
+    size_t start;
+    size_t new_size;
 };
 
 template <typename T, bool precise = false>
@@ -210,11 +207,11 @@ struct expression_linspace<T, false> : input_expression
     {
     }
 
-    template <typename U, size_t N>
-    CMT_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x) const
+    template <size_t N>
+    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> x) const
     {
-        using UI = itype<U>;
-        return U(start) + (enumerate(x) + cast<U>(cast<UI>(index))) * U(offset);
+        using TI = itype<T>;
+        return T(start) + (enumerate(x) + cast<T>(cast<TI>(index))) * T(offset);
     }
 
     T start;
@@ -236,11 +233,11 @@ struct expression_linspace<T, true> : input_expression
     {
     }
 
-    template <typename U, size_t N>
-    CMT_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x) const
+    template <size_t N>
+    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> x) const
     {
-        using UI = itype<U>;
-        return mix((enumerate(x) + cast<U>(cast<UI>(index))) * invsize, cast<U>(start), cast<U>(stop));
+        using TI = itype<T>;
+        return mix((enumerate(x) + cast<T>(cast<TI>(index))) * invsize, cast<T>(start), cast<T>(stop));
     }
     template <typename U, size_t N>
     CMT_INLINE static vec<U, N> mix(vec<U, N> t, U x, U y)
@@ -259,6 +256,9 @@ struct expression_sequence : expression<E...>
 public:
     using base = expression<E...>;
 
+    using value_type = common_type<value_type_of<E>...>;
+    using T          = value_type;
+
     template <typename... Expr_>
     CMT_INLINE expression_sequence(const size_t (&segments)[base::size], Expr_&&... expr) noexcept
         : base(std::forward<Expr_>(expr)...)
@@ -268,7 +268,7 @@ public:
         this->segments[base::size + 1] = size_t(-1);
     }
 
-    template <typename T, size_t N>
+    template <size_t N>
     CMT_NOINLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
     {
         std::size_t sindex = size_t(std::upper_bound(std::begin(segments), std::end(segments), index) - 1 -
@@ -290,7 +290,7 @@ public:
     }
 
 protected:
-    template <typename T, size_t N>
+    template <size_t N>
     CMT_NOINLINE vec<T, N> get(size_t index, size_t expr_index, vec_t<T, N> y)
     {
         return cswitch(indicesfor<E...>, expr_index, [&](auto val) { return this->argument(val, index, y); },
@@ -304,9 +304,11 @@ template <typename Fn, typename E>
 struct expression_adjacent : expression<E>
 {
     using value_type = value_type_of<E>;
+    using T          = value_type;
+
     expression_adjacent(Fn&& fn, E&& e) : expression<E>(std::forward<E>(e)), fn(std::forward<Fn>(fn)) {}
 
-    template <typename T, size_t N>
+    template <size_t N>
     vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
     {
         const vec<T, N> in      = this->argument_first(index, vec_t<T, N>());
@@ -320,9 +322,9 @@ struct expression_adjacent : expression<E>
 }
 
 template <typename E1>
-CMT_INLINE internal::expression_skip<E1> skip(E1&& e1, size_t count = 1)
+CMT_INLINE internal::expression_slice<E1> slice(E1&& e1, size_t start, size_t size = infinite_size)
 {
-    return internal::expression_skip<E1>(std::forward<E1>(e1), count);
+    return internal::expression_slice<E1>(std::forward<E1>(e1), start, size);
 }
 
 template <typename T1, typename T2, bool precise = false, typename TF = ftype<common_type<T1, T2>>>

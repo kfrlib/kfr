@@ -211,13 +211,15 @@ template <typename E>
 struct expression_upsample<2, E> : expression<E>
 {
     using expression<E>::expression;
-    template <typename T, size_t N>
+    using value_type = value_type_of<E>;
+    using T          = value_type;
+
+    template <size_t N>
     vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
     {
         const vec<T, N / 2> x = this->argument_first(index / 2, vec_t<T, N / 2>());
         return interleave(x, zerovector(x));
     }
-    template <typename T>
     vec<T, 1> operator()(cinput_t, size_t index, vec_t<T, 1>) const
     {
         if (index & 1)
@@ -231,14 +233,16 @@ template <typename E>
 struct expression_upsample<4, E> : expression<E>
 {
     using expression<E>::expression;
-    template <typename T, size_t N>
+    using value_type = value_type_of<E>;
+    using T          = value_type;
+
+    template <size_t N>
     vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
     {
         const vec<T, N / 4> x  = this->argument_first(index / 4, vec_t<T, N / 4>());
         const vec<T, N / 2> xx = interleave(x, zerovector(x));
         return interleave(xx, zerovector(xx));
     }
-    template <typename T>
     vec<T, 2> operator()(cinput_t, size_t index, vec_t<T, 2>) const
     {
         switch (index & 3)
@@ -265,7 +269,10 @@ template <typename E, size_t offset>
 struct expression_downsample<2, offset, E> : expression<E>
 {
     using expression<E>::expression;
-    template <typename T, size_t N>
+    using value_type = value_type_of<E>;
+    using T          = value_type;
+
+    template <size_t N>
     vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
     {
         const vec<T, N* 2> x = this->argument_first(index * 2, vec_t<T, N * 2>());
@@ -277,7 +284,10 @@ template <typename E, size_t offset>
 struct expression_downsample<4, offset, E> : expression<E>
 {
     using expression<E>::expression;
-    template <typename T, size_t N>
+    using value_type = value_type_of<E>;
+    using T          = value_type;
+
+    template <size_t N>
     vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
     {
         const vec<T, N* 4> x = this->argument_first(index * 4, vec_t<T, N * 4>());
