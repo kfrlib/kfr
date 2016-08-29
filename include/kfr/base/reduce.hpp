@@ -110,7 +110,6 @@ template <typename ReduceFn, typename TransformFn = fn_pass_through, typename Fi
 KFR_SINTRIN T reduce(E1&& e1, ReduceFn&& reducefn, TransformFn&& transformfn = fn_pass_through(),
                      FinalFn&& finalfn = fn_pass_through())
 {
-    static_assert(!is_generic<E1>::value, "e1 must be a typed expression (use typed<T>())");
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use typed<T>())");
     const size_t size = e1.size();
     using reducer_t   = expression_reduce<T, decay<ReduceFn>, decay<TransformFn>, decay<FinalFn>>;
@@ -135,7 +134,6 @@ KFR_FN(reduce)
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_SINTRIN T sum(E1&& x)
 {
-    static_assert(!is_generic<E1>::value, "e1 must be a typed expression (use typed<T>())");
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use typed<T>())");
     return internal::reduce(std::forward<E1>(x), fn_add());
 }
@@ -151,7 +149,6 @@ KFR_SINTRIN T sum(E1&& x)
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_SINTRIN T mean(E1&& x)
 {
-    static_assert(!is_generic<E1>::value, "e1 must be a typed expression (use typed<T>())");
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use typed<T>())");
     return internal::reduce(std::forward<E1>(x), fn_add(), fn_pass_through(), fn_final_mean());
 }
@@ -164,7 +161,6 @@ KFR_SINTRIN T mean(E1&& x)
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_SINTRIN T minof(E1&& x)
 {
-    static_assert(!is_generic<E1>::value, "e1 must be a typed expression (use typed<T>())");
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use typed<T>())");
     return internal::reduce(std::forward<E1>(x), fn::min());
 }
@@ -177,7 +173,6 @@ KFR_SINTRIN T minof(E1&& x)
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_SINTRIN T maxof(E1&& x)
 {
-    static_assert(!is_generic<E1>::value, "e1 must be a typed expression (use typed<T>())");
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use typed<T>())");
     return internal::reduce(std::forward<E1>(x), fn::max());
 }
@@ -190,7 +185,6 @@ KFR_SINTRIN T maxof(E1&& x)
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_SINTRIN T absminof(E1&& x)
 {
-    static_assert(!is_generic<E1>::value, "e1 must be a typed expression (use typed<T>())");
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use typed<T>())");
     return internal::reduce(std::forward<E1>(x), fn::absmin());
 }
@@ -203,7 +197,6 @@ KFR_SINTRIN T absminof(E1&& x)
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_SINTRIN T absmaxof(E1&& x)
 {
-    static_assert(!is_generic<E1>::value, "e1 must be a typed expression (use typed<T>())");
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use typed<T>())");
     return internal::reduce(std::forward<E1>(x), fn::absmax());
 }
@@ -222,7 +215,6 @@ KFR_SINTRIN T dotproduct(E1&& x, E2&& y)
 {
     auto m    = std::forward<E1>(x) * std::forward<E2>(y);
     using E12 = decltype(m);
-    static_assert(!is_generic<E12>::value, "e1 must be a typed expression (use typed<T>())");
     static_assert(!is_infinite<E12>::value, "e1 must be a sized expression (use typed<T>())");
     return internal::reduce(std::move(m), fn_add());
 }
@@ -238,7 +230,6 @@ KFR_SINTRIN T dotproduct(E1&& x, E2&& y)
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_SINTRIN T rms(E1&& x)
 {
-    static_assert(!is_generic<E1>::value, "e1 must be a typed expression (use typed<T>())");
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use typed<T>())");
     return internal::reduce(std::forward<E1>(x), fn_add(), fn_sqr(), fn_final_rootmean());
 }
@@ -254,7 +245,6 @@ KFR_SINTRIN T rms(E1&& x)
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_SINTRIN T sumsqr(E1&& x)
 {
-    static_assert(!is_generic<E1>::value, "e1 must be a typed expression (use typed<T>())");
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use typed<T>())");
     return internal::reduce(std::forward<E1>(x), fn_add(), fn_sqr());
 }
@@ -270,7 +260,6 @@ KFR_SINTRIN T sumsqr(E1&& x)
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_SINTRIN T product(E1&& x)
 {
-    static_assert(!is_generic<E1>::value, "e1 must be a typed expression (use typed<T>())");
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use typed<T>())");
     return internal::reduce(std::forward<E1>(x), fn_mul());
 }

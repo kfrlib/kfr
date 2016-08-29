@@ -87,75 +87,75 @@ struct vec_op
     using utype               = kfr::utype<type>;
     constexpr static size_t w = compound_type_traits<T>::width * N;
 
-    constexpr static simd<type, w> add(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    CMT_INLINE constexpr static simd<type, w> add(const simd<type, w>& x, const simd<type, w>& y) noexcept
     {
         return x + y;
     }
-    constexpr static simd<type, w> sub(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    CMT_INLINE constexpr static simd<type, w> sub(const simd<type, w>& x, const simd<type, w>& y) noexcept
     {
         return x - y;
     }
-    constexpr static simd<type, w> mul(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    CMT_INLINE constexpr static simd<type, w> mul(const simd<type, w>& x, const simd<type, w>& y) noexcept
     {
         return x * y;
     }
-    constexpr static simd<type, w> div(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    CMT_INLINE constexpr static simd<type, w> div(const simd<type, w>& x, const simd<type, w>& y) noexcept
     {
         return x / y;
     }
-    constexpr static simd<type, w> rem(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    CMT_INLINE constexpr static simd<type, w> rem(const simd<type, w>& x, const simd<type, w>& y) noexcept
     {
         return x % y;
     }
-    constexpr static simd<type, w> shl(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    CMT_INLINE constexpr static simd<type, w> shl(const simd<type, w>& x, const simd<type, w>& y) noexcept
     {
         return x << y;
     }
-    constexpr static simd<type, w> shr(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    CMT_INLINE constexpr static simd<type, w> shr(const simd<type, w>& x, const simd<type, w>& y) noexcept
     {
         return x >> y;
     }
-    constexpr static simd<type, w> neg(const simd<type, w>& x) noexcept { return -x; }
-    constexpr static simd<type, w> band(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    CMT_INLINE constexpr static simd<type, w> neg(const simd<type, w>& x) noexcept { return -x; }
+    CMT_INLINE constexpr static simd<type, w> band(const simd<type, w>& x, const simd<type, w>& y) noexcept
     {
         return reinterpret_cast<simd<type, w>>(reinterpret_cast<simd<utype, w>>(x) &
                                                reinterpret_cast<simd<utype, w>>(y));
     }
-    constexpr static simd<type, w> bor(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    CMT_INLINE constexpr static simd<type, w> bor(const simd<type, w>& x, const simd<type, w>& y) noexcept
     {
         return reinterpret_cast<simd<type, w>>(reinterpret_cast<simd<utype, w>>(x) |
                                                reinterpret_cast<simd<utype, w>>(y));
     }
-    constexpr static simd<type, w> bxor(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    CMT_INLINE constexpr static simd<type, w> bxor(const simd<type, w>& x, const simd<type, w>& y) noexcept
     {
         return reinterpret_cast<simd<type, w>>(reinterpret_cast<simd<utype, w>>(x) ^
                                                reinterpret_cast<simd<utype, w>>(y));
     }
-    constexpr static simd<type, w> bnot(const simd<type, w>& x) noexcept
+    CMT_INLINE constexpr static simd<type, w> bnot(const simd<type, w>& x) noexcept
     {
         return reinterpret_cast<simd<type, w>>(~reinterpret_cast<simd<utype, w>>(x));
     }
-    constexpr static simd<type, w> eq(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    CMT_INLINE constexpr static simd<type, w> eq(const simd<type, w>& x, const simd<type, w>& y) noexcept
     {
         return reinterpret_cast<simd<type, w>>(x == y);
     }
-    constexpr static simd<type, w> ne(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    CMT_INLINE constexpr static simd<type, w> ne(const simd<type, w>& x, const simd<type, w>& y) noexcept
     {
         return reinterpret_cast<simd<type, w>>(x != y);
     }
-    constexpr static simd<type, w> lt(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    CMT_INLINE constexpr static simd<type, w> lt(const simd<type, w>& x, const simd<type, w>& y) noexcept
     {
         return reinterpret_cast<simd<type, w>>(x < y);
     }
-    constexpr static simd<type, w> gt(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    CMT_INLINE constexpr static simd<type, w> gt(const simd<type, w>& x, const simd<type, w>& y) noexcept
     {
         return reinterpret_cast<simd<type, w>>(x > y);
     }
-    constexpr static simd<type, w> le(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    CMT_INLINE constexpr static simd<type, w> le(const simd<type, w>& x, const simd<type, w>& y) noexcept
     {
         return reinterpret_cast<simd<type, w>>(x <= y);
     }
-    constexpr static simd<type, w> ge(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    CMT_INLINE constexpr static simd<type, w> ge(const simd<type, w>& x, const simd<type, w>& y) noexcept
     {
         return reinterpret_cast<simd<type, w>>(x >= y);
     }

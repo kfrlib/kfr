@@ -434,13 +434,13 @@ KFR_FN(greaterorequal)
 
 /// @brief Fused Multiply-Add
 template <typename T1, typename T2, typename T3>
-constexpr inline common_type<T1, T2, T3> fmadd(T1 x, T2 y, T3 z)
+KFR_INTRIN constexpr common_type<T1, T2, T3> fmadd(T1 x, T2 y, T3 z)
 {
     return x * y + z;
 }
 /// @brief Fused Multiply-Sub
 template <typename T1, typename T2, typename T3>
-constexpr inline common_type<T1, T2, T3> fmsub(T1 x, T2 y, T3 z)
+KFR_INTRIN constexpr common_type<T1, T2, T3> fmsub(T1 x, T2 y, T3 z)
 {
     return x * y - z;
 }
@@ -450,14 +450,14 @@ KFR_FN(fmsub)
 /// @brief Linear blend of `x` and `y` (`c` must be in the range 0...+1)
 /// Returns `x + ( y - x ) * c`
 template <typename T1, typename T2, typename T3>
-constexpr inline common_type<T1, T2, T3> mix(T1 c, T2 x, T3 y)
+KFR_INTRIN constexpr common_type<T1, T2, T3> mix(T1 c, T2 x, T3 y)
 {
     return fmadd(c, y - x, x);
 }
 
 /// @brief Linear blend of `x` and `y` (`c` must be in the range -1...+1)
 template <typename T1, typename T2, typename T3>
-constexpr inline common_type<T1, T2, T3> mixs(T1 c, T2 x, T3 y)
+KFR_INTRIN constexpr common_type<T1, T2, T3> mixs(T1 c, T2 x, T3 y)
 {
     return mix(fmadd(c, 0.5, 0.5), x, y);
 }
@@ -711,8 +711,8 @@ struct expression_pack : expression<E...>, output_expression
 
     expression_pack(E&&... e) : expression<E...>(std::forward<E>(e)...) {}
     using value_type = vec<common_type<value_type_of<E>...>, count>;
-    using size_type  = typename expression<E...>::size_type;
-    constexpr size_type size() const noexcept { return expression<E...>::size(); }
+
+    using expression<E...>::size;
 
     template <typename U, size_t N>
     CMT_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N> x) const

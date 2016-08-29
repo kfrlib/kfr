@@ -147,9 +147,6 @@ TEST(complex_basic_expressions)
 
 TEST(complex_function_expressions)
 {
-    static_assert(is_generic<decltype(counter())>::value, "");
-    static_assert(is_generic<decltype(sqr(counter()))>::value, "");
-
     const univector<c32, 4> uv1 = sqr(counter());
     CHECK(uv1[0] == c32{ 0, 0 });
     CHECK(uv1[1] == c32{ 1, 0 });

@@ -34,25 +34,45 @@
 namespace kfr
 {
 
-template <typename T>
-using is_generic = is_same<generic, typename decay<T>::value_type>;
+namespace internal
+{
+template <typename T, typename = void>
+struct is_fixed_size_impl : std::false_type
+{
+};
 
 template <typename T>
-using is_infinite = not_t<is_same<size_t, typename decay<T>::size_type>>;
+struct is_fixed_size_impl<T, void_t<decltype(T::size())>> : std::true_type
+{
+};
+
+template <typename T, typename = void>
+struct is_infinite_impl : std::false_type
+{
+};
+
+template <typename T>
+struct is_infinite_impl<T, void_t<decltype(T::size())>>
+    : std::integral_constant<bool, T::size() == infinite_size>
+{
+};
+}
+
+template <typename T>
+using is_fixed_size = typename internal::is_fixed_size_impl<T>::type;
+
+template <typename T>
+using is_infinite = typename internal::is_infinite_impl<T>::type;
 
 namespace internal
 {
 
-template <typename T1>
-constexpr inline T1 minsize(T1 x) noexcept
-{
-    return x;
-}
+constexpr inline size_t minsize(size_t x) noexcept { return x; }
 
-template <typename T1, typename T2, typename... Ts>
-constexpr inline common_type<T1, T2, Ts...> minsize(T1 x, T2 y, Ts... rest) noexcept
+template <typename... Ts>
+constexpr inline size_t minsize(size_t x, size_t y, Ts... rest) noexcept
 {
-    return x < y ? minsize(x, rest...) : minsize(y, rest...);
+    return minsize(x < y ? x : y, rest...);
 }
 
 template <typename... Args>
@@ -60,9 +80,7 @@ struct expression : input_expression
 {
     using value_type = common_type<typename decay<Args>::value_type...>;
 
-    using size_type = common_type<typename decay<Args>::size_type...>;
-
-    constexpr size_type size() const noexcept { return size_impl(indicesfor_t<Args...>()); }
+    constexpr size_t size() const noexcept { return size_impl(indicesfor_t<Args...>()); }
 
     constexpr static size_t count = sizeof...(Args);
     expression()                  = delete;
@@ -78,7 +96,7 @@ struct expression : input_expression
 
 protected:
     template <size_t... indices>
-    constexpr size_type size_impl(csizes_t<indices...>) const noexcept
+    constexpr size_t size_impl(csizes_t<indices...>) const noexcept
     {
         return minsize(std::get<indices>(this->args).size()...);
     }
@@ -88,21 +106,22 @@ protected:
     {
         return call_impl(std::forward<Fn>(fn), indicesfor_t<Args...>(), index, x);
     }
-    template <size_t ArgIndex, typename T, size_t N>
-    CMT_INLINE vec<T, N> argument(csize_t<ArgIndex>, size_t index, vec_t<T, N> x) const
+    template <size_t ArgIndex, typename U, size_t N,
+              typename T = value_type_of<typename details::get_nth_type<ArgIndex, Args...>::type>>
+    CMT_INLINE vec<U, N> argument(csize_t<ArgIndex>, size_t index, vec_t<U, N>) const
     {
         static_assert(ArgIndex < count, "Incorrect ArgIndex");
-        return std::get<ArgIndex>(this->args)(cinput, index, x);
+        return static_cast<vec<U, N>>(std::get<ArgIndex>(this->args)(cinput, index, vec_t<T, N>()));
     }
-    template <typename T, size_t N>
-    CMT_INLINE vec<T, N> argument_first(size_t index, vec_t<T, N> x) const
+    template <typename U, size_t N,
+              typename T = value_type_of<typename details::get_nth_type<0, Args...>::type>>
+    CMT_INLINE vec<U, N> argument_first(size_t index, vec_t<U, N>) const
     {
-        return std::get<0>(this->args)(cinput, index, x);
+        return static_cast<vec<U, N>>(std::get<0>(this->args)(cinput, index, vec_t<T, N>()));
     }
 
 private:
-    template <typename Arg, size_t N, typename Tin,
-              typename Tout = conditional<is_generic<Arg>::value, Tin, value_type_of<Arg>>>
+    template <typename Arg, size_t N, typename Tout = value_type_of<Arg>>
     CMT_INLINE vec_t<Tout, N> vec_t_for() const
     {
         return {};
@@ -112,10 +131,9 @@ private:
     {
         using ratio          = func_ratio<Fn>;
         constexpr size_t Nin = N * ratio::input / ratio::output;
-        using Tout = conditional<is_same<generic, value_type>::value, T, common_type<T, value_type>>;
 
         return fn(std::get<indices>(this->args)(cinput, index * ratio::input / ratio::output,
-                                                vec_t_for<Args, Nin, Tout>())...);
+                                                vec_t_for<Args, Nin>())...);
     }
     template <size_t... indices>
     CMT_INLINE void begin_block_impl(size_t size, csizes_t<indices...>)
@@ -148,10 +166,10 @@ struct expression_scalar : input_expression
     constexpr expression_scalar(const vec<T, width>& val) noexcept : val(val) {}
     vec<T, width> val;
 
-    template <typename U, size_t N>
-    CMT_INLINE vec<U, N> operator()(cinput_t, size_t, vec_t<U, N>) const
+    template <size_t N>
+    CMT_INLINE vec<T, N> operator()(cinput_t, size_t, vec_t<T, N>) const
     {
-        return resize<N>(static_cast<vec<U, width>>(val));
+        return resize<N>(val);
     }
 };
 
@@ -162,24 +180,13 @@ using arg_impl = conditional<is_number<T>::value || is_vec<T>::value,
 template <typename T>
 using arg = internal::arg_impl<T>;
 
-template <typename Fn, typename Args, typename Enable = void>
-struct generic_result
-{
-    using type = generic;
-};
-
-template <typename Fn, typename... Args>
-struct generic_result<Fn, ctypes_t<Args...>, void_t<enable_if<!or_t<is_same<generic, Args>...>::value>>>
-{
-    using type = subtype<decltype(std::declval<Fn>()(std::declval<vec<decay<Args>, 1>>()...))>;
-};
-
 template <typename Fn, typename... Args>
 struct expression_function : expression<arg<Args>...>
 {
     using ratio = func_ratio<Fn>;
 
-    using value_type = typename generic_result<Fn, ctypes_t<value_type_of<arg<Args>>...>>::type;
+    using value_type =
+        subtype<decltype(std::declval<Fn>()(std::declval<vec<value_type_of<arg<Args>>, 1>>()...))>;
 
     expression_function(Fn&& fn, arg<Args>&&... args) noexcept
         : expression<arg<Args>...>(std::forward<arg<Args>>(args)...),
@@ -194,8 +201,7 @@ struct expression_function : expression<arg<Args>...>
     template <typename T, size_t N>
     CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> x) const
     {
-        static_assert(is_same<T, value_type_of<expression_function>>::value ||
-                          is_generic<expression_function>::value,
+        static_assert(is_same<T, value_type_of<expression_function>>::value,
                       "Can't cast from value_type to T");
         return this->call(fn, index, x);
     }
@@ -255,25 +261,30 @@ CMT_INLINE internal::expression_function<Fn, NewArgs...> rebind(
     return internal::expression_function<Fn, NewArgs...>(e.get_fn(), std::forward<NewArgs>(args)...);
 }
 
-template <typename Tout, cpu_t c = cpu_t::native, size_t width = 0, typename OutFn, typename Fn>
-CMT_INLINE void process(OutFn&& outfn, const Fn& fn, size_t size)
+template <typename Tout, cpu_t c = cpu_t::native, size_t width = 0, typename OutputExpr, typename InputExpr>
+CMT_INLINE void process(OutputExpr&& out, const InputExpr& in, size_t size)
 {
-    static_assert(is_output_expression<OutFn>::value, "OutFn must be an expression");
-    static_assert(is_input_expression<Fn>::value, "Fn must be an expression");
-    constexpr size_t comp = lcm(func_ratio<OutFn>::input, func_ratio<Fn>::output);
+    static_assert(is_output_expression<OutputExpr>::value, "OutFn must be an expression");
+    static_assert(is_input_expression<InputExpr>::value, "Fn must be an expression");
+    constexpr size_t comp = lcm(func_ratio<OutputExpr>::input, func_ratio<InputExpr>::output);
     size *= comp;
-    outfn.output_begin_block(size);
-    fn.begin_block(size);
+    out.output_begin_block(size);
+    in.begin_block(size);
 
-    using Tin = conditional<is_generic<Fn>::value, Tout, value_type_of<Fn>>;
+    using Tin = value_type_of<InputExpr>;
+
+#ifdef NDEBUG
+    constexpr size_t w = width == 0 ? internal::get_vector_width<Tout, c>(2, 4) : width;
+#else
+    constexpr size_t w = width == 0 ? internal::get_vector_width<Tout, c>(1, 1) : width;
+#endif
 
     size_t i = 0;
-    internal::process_cycle<Tout, Tin, width == 0 ? internal::get_vector_width<Tout, c>(2, 4) : width>(
-        std::forward<OutFn>(outfn), fn, i, size);
-    internal::process_cycle<Tout, Tin, comp>(std::forward<OutFn>(outfn), fn, i, size);
+    internal::process_cycle<Tout, Tin, w>(std::forward<OutputExpr>(out), in, i, size);
+    internal::process_cycle<Tout, Tin, comp>(std::forward<OutputExpr>(out), in, i, size);
 
-    fn.end_block(size);
-    outfn.output_end_block(size);
+    in.end_block(size);
+    out.output_end_block(size);
 }
 
 namespace internal

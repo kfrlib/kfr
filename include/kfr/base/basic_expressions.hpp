@@ -75,30 +75,34 @@ CMT_INLINE auto sequence(T x, Ts... rest)
     constexpr size_t N = arraysize(seq);
     return typed<T>(lambda([=](size_t index) { return seq[index % N]; }));
 }
+
+template <typename T = int>
 CMT_INLINE auto zeros()
 {
-    return lambda([](cinput_t, size_t, auto x) { return zerovector(x); });
+    return lambda<T>([](cinput_t, size_t, auto x) { return zerovector(x); });
 }
+
+template <typename T = int>
 CMT_INLINE auto ones()
 {
-    return lambda([](cinput_t, size_t, auto x) {
-        using U = subtype<decltype(x)>;
-        return U(1);
-    });
+    return lambda<T>([](cinput_t, size_t, auto x) { return 1; });
 }
+
+template <typename T = int>
 CMT_INLINE auto counter()
 {
-    return lambda([](cinput_t, size_t index, auto x) { return enumerate(x) + index; });
+    return lambda<T>([](cinput_t, size_t index, auto x) { return enumerate(x) + index; });
 }
+
 template <typename T1>
 CMT_INLINE auto counter(T1 start)
 {
-    return lambda([start](cinput_t, size_t index, auto x) { return enumerate(x) + index + start; });
+    return lambda<T1>([start](cinput_t, size_t index, auto x) { return enumerate(x) + index + start; });
 }
 template <typename T1, typename T2>
 CMT_INLINE auto counter(T1 start, T2 step)
 {
-    return lambda(
+    return lambda<common_type<T1, T2>>(
         [start, step](cinput_t, size_t index, auto x) { return (enumerate(x) + index) * step + start; });
 }
 
@@ -220,6 +224,8 @@ struct expression_linspace<T, false> : input_expression
 template <typename T>
 struct expression_linspace<T, true> : input_expression
 {
+    using value_type = T;
+
     expression_linspace(T start, T stop, size_t size, bool endpoint = false)
         : start(start), stop(stop), invsize(1.0 / T(endpoint ? size - 1 : size))
     {

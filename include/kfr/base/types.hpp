@@ -201,15 +201,6 @@ inline datatype operator&(datatype x, datatype y)
     return static_cast<datatype>(static_cast<type>(x) | static_cast<type>(y));
 }
 
-struct generic
-{
-    template <typename T>
-    CMT_INLINE constexpr operator T() const noexcept
-    {
-        return T();
-    }
-};
-
 struct infinite
 {
     template <typename T>
@@ -546,49 +537,49 @@ CMT_INLINE void zeroize(T1& value)
 #endif
 
 template <typename T, typename U>
-constexpr inline static T& ref_cast(U& ptr)
+CMT_INLINE constexpr static T& ref_cast(U& ptr)
 {
     return reinterpret_cast<T&>(ptr);
 }
 
 template <typename T, typename U>
-constexpr inline static const T& ref_cast(const U& ptr)
+CMT_INLINE constexpr static const T& ref_cast(const U& ptr)
 {
     return reinterpret_cast<const T&>(ptr);
 }
 
 template <typename T, typename U>
-constexpr inline static T* ptr_cast(U* ptr)
+CMT_INLINE constexpr static T* ptr_cast(U* ptr)
 {
     return reinterpret_cast<T*>(ptr);
 }
 
 template <typename T, typename U>
-constexpr inline static const T* ptr_cast(const U* ptr)
+CMT_INLINE constexpr static const T* ptr_cast(const U* ptr)
 {
     return reinterpret_cast<const T*>(ptr);
 }
 
 template <typename T, typename U>
-constexpr inline static T* ptr_cast(U* ptr, ptrdiff_t offset)
+CMT_INLINE constexpr static T* ptr_cast(U* ptr, ptrdiff_t offset)
 {
     return ptr_cast<T>(ptr_cast<u8>(ptr) + offset);
 }
 
 template <typename T, typename U>
-constexpr inline static T* derived_cast(U* ptr)
+CMT_INLINE constexpr static T* derived_cast(U* ptr)
 {
     return static_cast<T*>(ptr);
 }
 
 template <typename T, typename U>
-constexpr inline static const T* derived_cast(const U* ptr)
+CMT_INLINE constexpr static const T* derived_cast(const U* ptr)
 {
     return static_cast<const T*>(ptr);
 }
 
 template <typename T, typename U>
-constexpr inline static T implicit_cast(U&& value)
+CMT_INLINE constexpr static T implicit_cast(U&& value)
 {
     return std::forward<T>(value);
 }
@@ -711,12 +702,12 @@ constexpr size_t native_int_vector_size =
 c == cpu_t::neon ? 16 : common_int_vector_size;
 #endif
 
+constexpr size_t infinite_size = static_cast<size_t>(-1);
+
 /// @brief Base class of all input expressoins
 struct input_expression
 {
-    using value_type = generic;
-    using size_type  = infinite;
-    constexpr size_type size() const noexcept { return {}; }
+    constexpr static size_t size() noexcept { return infinite_size; }
 
     CMT_INLINE void begin_block(size_t) const {}
     CMT_INLINE void end_block(size_t) const {}
@@ -725,9 +716,7 @@ struct input_expression
 /// @brief Base class of all output expressoins
 struct output_expression
 {
-    using value_type = generic;
-    using size_type  = infinite;
-    constexpr size_type size() const noexcept { return {}; }
+    constexpr static size_t size() noexcept { return infinite_size; }
 
     CMT_INLINE void output_begin_block(size_t) const {}
     CMT_INLINE void output_end_block(size_t) const {}

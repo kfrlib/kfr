@@ -33,9 +33,10 @@ namespace kfr
 /**
  * @brief Returns expression template that generates unit impulse
  */
+template <typename T = int>
 inline auto simpleimpulse()
 {
-    return lambda([](cinput_t, size_t index, auto x) {
+    return lambda<T>([](cinput_t, size_t index, auto x) {
         if (index == 0)
             return onoff(x);
         else

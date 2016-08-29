@@ -699,7 +699,7 @@ struct vec : vec_t<T, N>, operators::empty
     CMT_INLINE array_t arr() { return ref_cast<array_t>(v); }
 
     template <typename U, KFR_ENABLE_IF(std::is_convertible<T, U>::value && !std::is_same<U, vec>::value)>
-    constexpr operator vec<U, N>() const noexcept
+    CMT_INLINE constexpr operator vec<U, N>() const noexcept
     {
         return internal::conversion<vec<U, N>, vec<T, N>>::cast(*this);
     }
@@ -708,8 +708,8 @@ private:
     struct getter_setter;
 
 public:
-    getter_setter operator()(size_t index) { return { v, index }; }
-    scalar_type operator()(size_t index) const { return v[index]; }
+    CMT_INLINE getter_setter operator()(size_t index) { return { v, index }; }
+    CMT_INLINE scalar_type operator()(size_t index) const { return v[index]; }
 
 protected:
     template <typename U, size_t M>
@@ -1332,18 +1332,19 @@ KFR_FN(high)
 namespace internal
 {
 
-template <typename Fn>
+template <typename T, typename Fn>
 struct expression_lambda : input_expression
 {
+    using value_type = T;
     CMT_INLINE expression_lambda(Fn&& fn) : fn(std::move(fn)) {}
 
-    template <typename T, size_t N, KFR_ENABLE_IF(N&& is_callable<Fn, cinput_t, size_t, vec_t<T, N>>::value)>
+    template <size_t N, KFR_ENABLE_IF(N&& is_callable<Fn, cinput_t, size_t, vec_t<T, N>>::value)>
     CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
     {
         return fn(cinput, index, y);
     }
 
-    template <typename T, size_t N, KFR_ENABLE_IF(N&& is_callable<Fn, size_t>::value)>
+    template <size_t N, KFR_ENABLE_IF(N&& is_callable<Fn, size_t>::value)>
     CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
     {
         vec<T, N> result;
@@ -1353,7 +1354,7 @@ struct expression_lambda : input_expression
         }
         return result;
     }
-    template <typename T, size_t N, KFR_ENABLE_IF(N&& is_callable<Fn>::value)>
+    template <size_t N, KFR_ENABLE_IF(N&& is_callable<Fn>::value)>
     CMT_INLINE vec<T, N> operator()(cinput_t, size_t, vec_t<T, N>) const
     {
         vec<T, N> result;
@@ -1368,10 +1369,10 @@ struct expression_lambda : input_expression
 };
 }
 
-template <typename Fn>
-internal::expression_lambda<decay<Fn>> lambda(Fn&& fn)
+template <typename T, typename Fn>
+internal::expression_lambda<T, decay<Fn>> lambda(Fn&& fn)
 {
-    return internal::expression_lambda<Fn>(std::move(fn));
+    return internal::expression_lambda<T, decay<Fn>>(std::move(fn));
 }
 }
 
@@ -1394,7 +1395,10 @@ struct compound_type_traits<kfr::simd<T, N>>
     template <typename U>
     using deep_rebind = kfr::simd<cometa::deep_rebind<subtype, U>, N>;
 
-    static constexpr const subtype& at(const kfr::simd<T, N>& value, size_t index) { return value[index]; }
+    CMT_INLINE static constexpr const subtype& at(const kfr::simd<T, N>& value, size_t index)
+    {
+        return value[index];
+    }
 };
 #endif
 
@@ -1412,7 +1416,7 @@ struct compound_type_traits<kfr::vec<T, N>>
     template <typename U>
     using deep_rebind = kfr::vec<cometa::deep_rebind<subtype, U>, N>;
 
-    static constexpr subtype at(const kfr::vec<T, N>& value, size_t index) { return value[index]; }
+    CMT_INLINE static constexpr subtype at(const kfr::vec<T, N>& value, size_t index) { return value[index]; }
 };
 
 template <typename T, size_t N>
@@ -1429,7 +1433,10 @@ struct compound_type_traits<kfr::mask<T, N>>
     template <typename U>
     using deep_rebind = kfr::mask<cometa::deep_rebind<subtype, U>, N>;
 
-    static constexpr subtype at(const kfr::mask<T, N>& value, size_t index) { return value[index]; }
+    CMT_INLINE static constexpr subtype at(const kfr::mask<T, N>& value, size_t index)
+    {
+        return value[index];
+    }
 };
 }
 namespace std
