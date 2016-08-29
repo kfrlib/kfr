@@ -15,11 +15,11 @@ using ::cid::arraysize;
 }
 #endif
 
-#define KFR_VERSION_STRING "1.0.0"
+#define KFR_VERSION_STRING "1.2.0"
 #define KFR_VERSION_MAJOR 1
-#define KFR_VERSION_MINOR 0
+#define KFR_VERSION_MINOR 2
 #define KFR_VERSION_BUILD 0
-#define KFR_VERSION 10000
+#define KFR_VERSION 10200
 
 #ifdef __cplusplus
 namespace kfr
