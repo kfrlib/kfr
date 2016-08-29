@@ -44,6 +44,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/saturation.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/select.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/shuffle.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/simd.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/sin_cos.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/small_buffer.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/sort.hpp

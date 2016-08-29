@@ -1287,10 +1287,10 @@ KFR_INTRIN void butterfly_helper(csizes_t<I...>, size_t i, csize_t<width>, csize
 
     swallow{ (inout.get(csize<I>) = cread<width>(in + i + stride * I))... };
 
-    butterfly(cbool<inverse>, inout.get(csize<I>)..., inout.get(csize<I>)...);
+    butterfly(cbool<inverse>, inout.template get<I>()..., inout.template get<I>()...);
 
     swallow{ (cwrite<width>(out + i + stride * I,
-                            mul_tw<I, radix>(cbool<inverse>, inout.get(csize<I>), tw + i * (radix - 1))),
+                            mul_tw<I, radix>(cbool<inverse>, inout.template get<I>(), tw + i * (radix - 1))),
               0)... };
 }
 
@@ -1302,9 +1302,9 @@ KFR_INTRIN void butterfly_helper(csizes_t<I...>, size_t i, csize_t<width>, csize
     carray<cvec<T, width>, radix> inout;
 
     //        swallow{ ( inout.get( csize<I> ) = infn( i, I, cvec<T, width>( ) ) )... };
-    cread_transposed(cbool<true>, in + i * radix, inout.get(csize<I>)...);
+    cread_transposed(cbool<true>, in + i * radix, inout.template get<I>()...);
 
-    butterfly(cbool<inverse>, inout.get(csize<I>)..., inout.get(csize<I>)...);
+    butterfly(cbool<inverse>, inout.template get<I>()..., inout.template get<I>()...);
 
     swallow{ (cwrite<width>(out + i + stride * I, inout.get(csize<I>)), 0)... };
 }

@@ -37,9 +37,6 @@ inline std::string repr(kfr::cpu_t v);
 template <typename T>
 inline std::string repr(const kfr::complex<T>& v);
 
-template <typename T, int N>
-inline std::string repr(kfr::simd<T, N> v);
-
 template <typename T, size_t N>
 inline std::string repr(kfr::vec<T, N> v);
 
@@ -132,12 +129,6 @@ inline std::string repr(const kfr::complex<T>* source, size_t N)
         str += as_string(details::fmtvalue(std::true_type{}, source[i]));
     }
     return str;
-}
-
-template <typename T, int N>
-inline std::string repr(kfr::simd<T, N> v)
-{
-    return repr(tovec(v));
 }
 
 template <typename T, size_t N>

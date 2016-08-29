@@ -994,16 +994,16 @@ struct carray : carray<T, N - 1>
     {
         return carray<T, N - 1>::get(csize<index>);
     }
-    template <size_t index>
-    CMT_INTRIN constexpr T& get() noexcept
-    {
-        return get(csize<index>);
-    }
     CMT_INTRIN constexpr const T& get(csize_t<N - 1>) const noexcept { return val; }
     template <size_t index>
     CMT_INTRIN constexpr const T& get(csize_t<index>) const noexcept
     {
         return carray<T, N - 1>::get(csize<index>);
+    }
+    template <size_t index>
+    CMT_INTRIN constexpr T& get() noexcept
+    {
+        return get(csize<index>);
     }
     template <size_t index>
     CMT_INTRIN constexpr const T& get() const noexcept
@@ -1220,10 +1220,17 @@ CMT_INTRIN void cforeach_tuple_impl(const std::tuple<Ts...>& tuple, Fn&& fn, csi
 {
     swallow{ (fn(std::get<indices>(tuple)), void(), 0)... };
 }
-template <typename T0, typename... types, typename Fn, size_t... indices>
-CMT_INTRIN void cforeach_types_impl(ctypes_t<T0, types...>, Fn&& fn, csizes_t<indices...>)
+
+template <size_t index, typename... types>
+auto get_type_arg(ctypes_t<types...> type_list)
 {
-    swallow{ (fn(ctype<type_of<details::get_nth_type<indices, T0, types...>>>), void(), 0)... };
+    return ctype<type_of<details::get_nth_type<index, types...>>>;
+}
+
+template <typename T0, typename... types, typename Fn, size_t... indices>
+CMT_INTRIN void cforeach_types_impl(ctypes_t<T0, types...> type_list, Fn&& fn, csizes_t<indices...>)
+{
+    swallow{ (fn(get_type_arg<indices>(type_list)), void(), 0)... };
 }
 }
 
@@ -1512,77 +1519,6 @@ CMT_INTRIN NonMemFn make_nonmember(const Fn&)
     return [](Fn* fn, Args... args) -> Ret { return fn->operator()(std::forward<Args>(args)...); };
 }
 
-using type_id_t = const void*;
-
-namespace details
-{
-
-constexpr inline size_t strlen(const char* str) { return *str ? 1 + cometa::details::strlen(str + 1) : 0; }
-
-template <size_t... indices, size_t Nout = 1 + sizeof...(indices)>
-constexpr inline std::array<char, Nout> gettypename_impl(const char* str, csizes_t<indices...>)
-{
-    std::array<char, Nout> arr{ { str[indices]..., 0 } };
-    return arr;
-}
-
-template <typename T>
-constexpr inline const void* typeident_impl() noexcept
-{
-    return type_id_t(&typeident_impl<T>);
-}
-}
-
-/**
- * @brief Gets the fully qualified name of the type, including namespace and template parameters (if any)
- * @tparam T    type
- * @return      name of the type
- */
-template <typename T>
-inline const char* type_name() noexcept
-{
-    constexpr size_t prefix  = details::strlen("const char *cometa::type_name() [T = ");
-    constexpr size_t postfix = details::strlen("]");
-    constexpr size_t length  = sizeof(CMT_FUNC_SIGNATURE) - 1 - prefix - postfix;
-    static const std::array<char, length + 1> name =
-        details::gettypename_impl(CMT_FUNC_SIGNATURE + prefix, csizeseq<length>);
-    return name.data();
-}
-
-/**
- * @brief Gets the fully qualified name of the type, including namespace and template parameters (if any)
- * @param x      value of specific type
- * @return      name of the type
- */
-template <typename T>
-inline const char* type_name(T x) noexcept
-{
-    (void)x;
-    return type_name<T>();
-}
-
-/**
- * @brief Gets unique value associated with the type
- * @tparam T    type
- * @return      value of type that supports operator== and operator!=
- */
-template <typename T>
-constexpr inline type_id_t ctypeid()
-{
-    return details::typeident_impl<T>();
-}
-/**
- * @brief Gets unique value associated with the type
- * @param x     value of specific type
- * @return      value of type that supports operator== and operator!=
- */
-template <typename T>
-constexpr inline type_id_t ctypeid(T x)
-{
-    (void)x;
-    return details::typeident_impl<T>();
-}
-
 template <typename T>
 struct array_ref
 {
@@ -1864,6 +1800,221 @@ struct named
 };
 
 inline named operator""_arg(const char* name, size_t) { return name; }
+
+template <size_t N>
+struct cstring
+{
+    using value_type = char;
+    using size_type  = size_t;
+
+    constexpr const value_type* c_str() const noexcept { return value; }
+    constexpr const value_type* data() const noexcept { return value; }
+
+    const value_type value[N];
+    constexpr size_type length() const noexcept { return N - 1; }
+    constexpr size_type size() const noexcept { return N; }
+
+    constexpr friend bool operator==(const cstring& left, const cstring& right) noexcept
+    {
+        for (size_t i = 0; i < 1; i++)
+            if (left.value[i] != right.value[i])
+                return false;
+        return true;
+    }
+    constexpr friend bool operator!=(const cstring& left, const cstring& right) noexcept
+    {
+        return !(left == right);
+    }
+
+    template <size_t NN>
+    constexpr bool operator==(const cstring<NN>& other) const noexcept
+    {
+        return false;
+    }
+    template <size_t NN>
+    constexpr bool operator!=(const cstring<NN>& other) const noexcept
+    {
+        return true;
+    }
+    constexpr char operator[](size_t index) const noexcept { return value[index]; }
+};
+
+namespace details
+{
+
+template <size_t N, size_t... indices>
+CMT_INLINE constexpr cstring<N> make_cstring_impl(const char (&str)[N], csizes_t<indices...>)
+{
+    return { { str[indices]..., 0 } };
 }
 
-#pragma clang diagnostic pop
+template <size_t N1, size_t N2, size_t... indices>
+CMT_INLINE constexpr cstring<N1 - 1 + N2 - 1 + 1> concat_str_impl(const cstring<N1>& str1,
+                                                                  const cstring<N2>& str2,
+                                                                  csizes_t<indices...>)
+{
+    constexpr size_t L1 = N1 - 1;
+    return { { (indices < L1 ? str1[indices] : str2[indices - L1])..., 0 } };
+}
+template <size_t N1, size_t N2, typename... Args>
+CMT_INLINE constexpr cstring<N1 - 1 + N2 - 1 + 1> concat_str_impl(const cstring<N1>& str1,
+                                                                  const cstring<N2>& str2)
+{
+    return concat_str_impl(str1, str2, csizeseq<N1 - 1 + N2 - 1>);
+}
+template <size_t N1, size_t Nfrom, size_t Nto, size_t... indices>
+cstring<N1 - Nfrom + Nto> str_replace_impl(size_t pos, const cstring<N1>& str, const cstring<Nfrom>&,
+                                           const cstring<Nto>& to, csizes_t<indices...>)
+{
+    if (pos == size_t(-1))
+        stop_constexpr();
+    return { { (indices < pos ? str[indices] : (indices < pos + Nto - 1) ? to[indices - pos]
+                                                                         : str[indices - Nto + Nfrom])...,
+               0 } };
+}
+}
+
+CMT_INLINE constexpr cstring<1> concat_cstring() { return { { 0 } }; }
+
+template <size_t N1>
+CMT_INLINE constexpr cstring<N1> concat_cstring(const cstring<N1>& str1)
+{
+    return str1;
+}
+
+template <size_t N1, size_t N2, typename... Args>
+CMT_INLINE constexpr auto concat_cstring(const cstring<N1>& str1, const cstring<N2>& str2,
+                                         const Args&... args)
+{
+    return details::concat_str_impl(str1, concat_cstring(str2, args...));
+}
+
+template <size_t N>
+CMT_INLINE constexpr cstring<N> make_cstring(const char (&str)[N])
+{
+    return details::make_cstring_impl(str, csizeseq<N - 1>);
+}
+
+template <char... chars>
+CMT_INLINE constexpr cstring<sizeof...(chars) + 1> make_cstring(cchars_t<chars...>)
+{
+    return { { chars..., 0 } };
+}
+
+template <size_t N1, size_t Nneedle>
+size_t str_find(const cstring<N1>& str, const cstring<Nneedle>& needle)
+{
+    size_t count = 0;
+    for (size_t i = 0; i < N1; i++)
+    {
+        if (str[i] == needle[count])
+            count++;
+        else
+            count = 0;
+        if (count == Nneedle - 1)
+            return i + 1 - (Nneedle - 1);
+    }
+    return size_t(-1);
+}
+
+template <size_t N1, size_t Nfrom, size_t Nto>
+cstring<N1 - Nfrom + Nto> str_replace(const cstring<N1>& str, const cstring<Nfrom>& from,
+                                      const cstring<Nto>& to)
+{
+    return details::str_replace_impl(str_find(str, from), str, from, to, csizeseq<N1 - Nfrom + Nto - 1>);
+}
+
+using pconstvoid = const void*;
+
+struct type_id_t
+{
+    constexpr type_id_t(const void* id) noexcept : id(id) {}
+    constexpr bool operator==(type_id_t other) const { return id == other.id; }
+    constexpr bool operator!=(type_id_t other) const { return !(id == other.id); }
+    const void* const id;
+};
+
+namespace details
+{
+
+constexpr inline size_t strlen(const char* str) { return *str ? 1 + cometa::details::strlen(str + 1) : 0; }
+
+template <typename T>
+constexpr inline type_id_t typeident_impl() noexcept
+{
+    return type_id_t(pconstvoid(&typeident_impl<T>));
+}
+
+#ifdef CMT_COMPILER_CLANG
+constexpr size_t typename_prefix  = sizeof("auto cometa::ctype_name() [T = ") - 1;
+constexpr size_t typename_postfix = sizeof("]") - 1;
+#else
+constexpr size_t typename_prefix  = sizeof("constexpr auto cometa::ctype_name() [with T = ") - 1;
+constexpr size_t typename_postfix = sizeof("]") - 1;
+#endif
+
+template <size_t... indices, size_t Nout = 1 + sizeof...(indices)>
+constexpr cstring<Nout> gettypename_impl(const char* str, csizes_t<indices...>) noexcept
+{
+    return cstring<Nout>{ (str[indices])..., 0 };
+}
+}
+
+template <typename T>
+constexpr auto ctype_name() noexcept
+{
+    constexpr size_t length =
+        sizeof(CMT_FUNC_SIGNATURE) - 1 - details::typename_prefix - details::typename_postfix;
+    return details::gettypename_impl(CMT_FUNC_SIGNATURE + details::typename_prefix, csizeseq<length>);
+}
+
+/**
+ * @brief Gets the fully qualified name of the type, including namespace and
+ * template parameters (if any)
+ * @tparam T    type
+ * @return      name of the type
+ */
+template <typename T>
+inline const char* type_name() noexcept
+{
+    static const auto name = ctype_name<T>();
+    return name.c_str();
+}
+
+/**
+ * @brief Gets the fully qualified name of the type, including namespace and
+ * template parameters (if any)
+ * @param x      value of specific type
+ * @return      name of the type
+ */
+template <typename T>
+inline const char* type_name(T x) noexcept
+{
+    (void)x;
+    return type_name<T>();
+}
+
+/**
+ * @brief Gets unique value associated with the type
+ * @tparam T    type
+ * @return      value of type that supports operator== and operator!=
+ */
+template <typename T>
+constexpr inline type_id_t ctypeid()
+{
+    return details::typeident_impl<T>();
+}
+/**
+ * @brief Gets unique value associated with the type
+ * @param x     value of specific type
+ * @return      value of type that supports operator== and operator!=
+ */
+template <typename T>
+constexpr inline type_id_t ctypeid(T x)
+{
+    (void)x;
+    return details::typeident_impl<T>();
+}
+}
+
+#pragma gcc diagnostic pop

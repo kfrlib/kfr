@@ -43,8 +43,7 @@ constexpr seed_from_rdtsc_t seed_from_rdtsc{};
 struct random_bit_generator
 {
     random_bit_generator(seed_from_rdtsc_t) noexcept
-        : state(bitcast<u32>(make_vector(__builtin_readcyclecounter(),
-                                         (__builtin_readcyclecounter() << 11) ^ 0x710686d615e2257bull)))
+        : state(bitcast<u32>(make_vector(__rdtsc(), (__rdtsc() << 11) ^ 0x710686d615e2257bull)))
     {
         (void)operator()();
     }

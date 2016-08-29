@@ -147,18 +147,6 @@ TEST(vec_apply)
     CHECK(apply(fn_sqr(), make_vector(1, 2, 3, 4, 5)) == make_vector(1, 4, 9, 16, 25));
 }
 
-#ifdef CMT_ARCH_SSE
-TEST(vec_tovec)
-{
-    const __m128 x = _mm_set_ps(4.f, 3.f, 2.f, 1.f);
-    CHECK(tovec(x) == vec<f32, 4>(1, 2, 3, 4));
-    const __m128d y = _mm_set_pd(2.0, 1.0);
-    CHECK(tovec(y) == vec<f64, 2>(1, 2));
-    const simd<f64, 7> z{ 1, 2, 3, 4, 5, 6, 7 };
-    CHECK(tovec(z) == vec<f64, 7>(1, 2, 3, 4, 5, 6, 7));
-}
-#endif
-
 TEST(vec_zerovector)
 {
     CHECK(zerovector<f32, 3>() == f32x3{ 0, 0, 0 });

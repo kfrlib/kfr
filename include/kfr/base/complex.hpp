@@ -131,34 +131,35 @@ using c32   = complex<f32>;
 using c64   = complex<f64>;
 using cbase = complex<fbase>;
 
-template <typename T>
-struct vec_op<complex<T>> : private vec_op<T>
+template <typename T, size_t N>
+struct vec_op<complex<T>, N> : private vec_op<T, N * 2>
 {
     using scalar_type = T;
-    using vec_op<scalar_type>::add;
-    using vec_op<scalar_type>::sub;
-    using vec_op<scalar_type>::eq;
-    using vec_op<scalar_type>::ne;
-    using vec_op<scalar_type>::band;
-    using vec_op<scalar_type>::bor;
-    using vec_op<scalar_type>::bxor;
-    using vec_op<scalar_type>::bnot;
-    using vec_op<scalar_type>::neg;
+    using vec_op<scalar_type, N * 2>::add;
+    using vec_op<scalar_type, N * 2>::sub;
+    using vec_op<scalar_type, N * 2>::eq;
+    using vec_op<scalar_type, N * 2>::ne;
+    using vec_op<scalar_type, N * 2>::band;
+    using vec_op<scalar_type, N * 2>::bor;
+    using vec_op<scalar_type, N * 2>::bxor;
+    using vec_op<scalar_type, N * 2>::bnot;
+    using vec_op<scalar_type, N * 2>::neg;
 
-    template <simdindex N>
-    constexpr static simd<scalar_type, N> mul(simd<scalar_type, N> x, simd<scalar_type, N> y) noexcept
+    constexpr static size_t w = N * 2;
+
+    constexpr static simd<scalar_type, w> mul(const simd<scalar_type, w>& x,
+                                              const simd<scalar_type, w>& y) noexcept
     {
-        const vec<scalar_type, N> xx = x;
-        const vec<scalar_type, N> yy = y;
+        const vec<scalar_type, w> xx = x;
+        const vec<scalar_type, w> yy = y;
         return *subadd(xx * dupeven(yy), swap<2>(xx) * dupodd(yy));
     }
-
-    template <simdindex N>
-    constexpr static simd<scalar_type, N> div(simd<scalar_type, N> x, simd<scalar_type, N> y) noexcept
+    constexpr static simd<scalar_type, w> div(const simd<scalar_type, w>& x,
+                                              const simd<scalar_type, w>& y) noexcept
     {
-        const vec<scalar_type, N> xx = x;
-        const vec<scalar_type, N> yy = y;
-        const vec<scalar_type, N> m  = (sqr(dupeven(yy)) + sqr(dupodd(yy)));
+        const vec<scalar_type, w> xx = x;
+        const vec<scalar_type, w> yy = y;
+        const vec<scalar_type, w> m  = (sqr(dupeven(yy)) + sqr(dupodd(yy)));
         return *swap<2>(subadd(swap<2>(xx) * dupeven(yy), xx * dupodd(yy)) / m);
     }
 };
