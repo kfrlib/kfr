@@ -1183,16 +1183,10 @@ using has_data_size = details::has_data_size_impl<decay<T>>;
 template <typename T>
 using value_type_of = typename decay<T>::value_type;
 
-template <typename T, typename Fn>
-CMT_INTRIN void cforeach(cvals_t<T>, Fn&&)
+template <typename T, T... values, typename Fn>
+CMT_INTRIN void cforeach(cvals_t<T, values...>, Fn&& fn)
 {
-}
-
-template <typename T, T v0, T... values, typename Fn>
-CMT_INTRIN void cforeach(cvals_t<T, v0, values...>, Fn&& fn)
-{
-    fn(cval<T, v0>);
-    cforeach(cvals_t<T, values...>(), std::forward<Fn>(fn));
+    swallow{ (fn(cval<T, values>), void(), 0)... };
 }
 
 template <typename T, typename Fn, CMT_ENABLE_IF(has_begin_end<T>::value)>
