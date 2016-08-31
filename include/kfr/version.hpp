@@ -26,14 +26,10 @@
 #pragma once
 
 #include "base/types.hpp"
-#include <string>
 
 namespace kfr
 {
+
 /// Returns string representation of the KFR version (including target architecture)
-static std::string library_version()
-{
-    return "KFR " + std::string(version_string) + " " + CMT_STRINGIFY(CMT_ARCH_NAME) +
-           bitness_const(" 32-bit", " 64-bit");
-}
+inline const char* library_version() { return KFR_VERSION_FULL; }
 }

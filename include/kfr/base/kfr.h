@@ -32,5 +32,11 @@ constexpr int version                 = KFR_VERSION;
 }
 #endif
 
+#ifdef CMT_ARCH_X64
+#define KFR_VERSION_FULL "KFR " KFR_VERSION_STRING " " CMT_STRINGIFY(CMT_ARCH_NAME) " 64-bit"
+#else
+#define KFR_VERSION_FULL "KFR " KFR_VERSION_STRING " " CMT_STRINGIFY(CMT_ARCH_NAME) " 32-bit"
+#endif
+
 #define KFR_INTRIN CMT_INTRIN
 #define KFR_SINTRIN CMT_INTRIN static
