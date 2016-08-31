@@ -4,22 +4,10 @@
  * See LICENSE.txt for details
  */
 
-// library_version()
-#include <kfr/version.hpp>
+#include <kfr/io/tostring.hpp>
 
-// print(), format()
-#include <kfr/cometa/string.hpp>
-
-#include <kfr/math.hpp>
-
-// simpleimpulse()
-#include <kfr/dsp/impulse.hpp>
-
-// biquad
-#include <kfr/dsp/biquad.hpp>
-
-// biquad_*
-#include <kfr/dsp/biquad_design.hpp>
+#include <kfr/base.hpp>
+#include <kfr/dsp.hpp>
 
 // plot_save()
 #include <kfr/io/python_plot.hpp>

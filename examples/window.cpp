@@ -4,19 +4,10 @@
  * See LICENSE.txt for details
  */
 
-// library_version()
-#include <kfr/version.hpp>
+#include <kfr/io/tostring.hpp>
 
-// print(), format()
-#include <kfr/cometa/string.hpp>
-
-#include <kfr/math.hpp>
-
-// simpleimpulse()
-#include <kfr/dsp/oscillators.hpp>
-
-// window*
-#include <kfr/dsp/window.hpp>
+#include <kfr/base.hpp>
+#include <kfr/dsp.hpp>
 
 // plot_save()
 #include <kfr/io/python_plot.hpp>

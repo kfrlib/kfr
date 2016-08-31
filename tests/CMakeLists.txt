@@ -54,8 +54,8 @@ endif ()
 add_executable(dsp_test dsp_test.cpp ${KFR_SRC})
 add_executable(empty_test empty_test.cpp ${KFR_SRC})
 add_executable(complex_test complex_test.cpp ${KFR_SRC})
-add_executable(vec_test vec_test.cpp ${KFR_SRC})
-add_executable(stat_test stat_test.cpp ${KFR_SRC})
+add_executable(base_test base_test.cpp ${KFR_SRC})
+add_executable(expression_test expression_test.cpp ${KFR_SRC})
 
 if (ARM)
     find_program(EMULATOR "qemu-arm")
@@ -66,8 +66,8 @@ endif ()
 if (NOT IOS)
     enable_testing()
 
-    add_test(NAME vec_test
-            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/vec_test)
+    add_test(NAME base_test
+            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/base_test)
     add_test(NAME intrinsic_test
             COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/intrinsic_test)
     add_test(NAME dsp_test
@@ -78,8 +78,8 @@ if (NOT IOS)
     endif ()
     add_test(NAME complex_test
             COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/complex_test)
-    add_test(NAME stat_test
-            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/stat_test)
+    add_test(NAME expression_test
+            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/expression_test)
 
     if (NOT ARM)
         add_test(NAME multiarch

@@ -4,22 +4,14 @@
  * See LICENSE.txt for details
  */
 
-// library_version()
-#include <kfr/version.hpp>
-
-#include <tuple>
+#include <kfr/cometa/string.hpp>
 
 #include "testo/testo.hpp"
-#include <kfr/base/basic_expressions.hpp>
-#include <kfr/base/random.hpp>
-#include <kfr/base/reduce.hpp>
-#include <kfr/cometa/string.hpp>
-#include <kfr/dft/conv.hpp>
-#include <kfr/dft/fft.hpp>
-#include <kfr/dft/reference_dft.hpp>
+#include <kfr/base.hpp>
+#include <kfr/dsp.hpp>
+#include <kfr/dft.hpp>
+
 #include <kfr/io/tostring.hpp>
-#include <kfr/math.hpp>
-#include <kfr/version.hpp>
 
 using namespace kfr;
 

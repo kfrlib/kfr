@@ -12,7 +12,6 @@
 #include <kfr/base/reduce.hpp>
 #include <kfr/cometa/string.hpp>
 #include <kfr/math.hpp>
-#include <kfr/version.hpp>
 
 using namespace kfr;
 using testo::assert_is_same;
@@ -170,10 +169,8 @@ TEST(complex_function_expressions)
     assert_is_same<f32, value_type_of<decltype(real(uv2))>>();
 }
 
-int main(int argc, char** argv)
+TEST(static_tests)
 {
-    println(library_version());
-
 #ifdef CMT_ARCH_SSE2
     static_assert(vector_width<f32, cpu_t::sse2> == 4, "");
     static_assert(vector_width<c32, cpu_t::sse2> == 2, "");
@@ -200,6 +197,11 @@ int main(int argc, char** argv)
     assert_is_same<ftype<complex<i64>>, complex<f64>>();
     assert_is_same<ftype<vec<complex<i32>, 4>>, vec<complex<f32>, 4>>();
     assert_is_same<ftype<vec<complex<i64>, 8>>, vec<complex<f64>, 8>>();
+}
+
+int main(int argc, char** argv)
+{
+    println(library_version());
 
     return testo::run_all("", true);
 }

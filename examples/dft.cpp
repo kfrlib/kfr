@@ -4,22 +4,14 @@
  * See LICENSE.txt for details
  */
 
-// library_version()
-#include <kfr/version.hpp>
-
 #include <kfr/io/tostring.hpp>
 
-// print(), format()
-#include <kfr/cometa/string.hpp>
+#include <kfr/base.hpp>
+#include <kfr/dsp.hpp>
+#include <kfr/dft.hpp>
 
-#include <kfr/base/basic_expressions.hpp>
-#include <kfr/base/random.hpp>
-#include <kfr/base/reduce.hpp>
-#include <kfr/dft/fft.hpp>
-#include <kfr/dft/reference_dft.hpp>
-#include <kfr/dsp/oscillators.hpp>
-#include <kfr/dsp/units.hpp>
-#include <kfr/math.hpp>
+// plot_save()
+#include <kfr/io/python_plot.hpp>
 
 using namespace kfr;
 

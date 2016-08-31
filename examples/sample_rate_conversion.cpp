@@ -4,22 +4,13 @@
  * See LICENSE.txt for details
  */
 
-// library_version()
-#include <kfr/version.hpp>
+#include <kfr/io/tostring.hpp>
 
-// print(), format()
-#include <kfr/cometa/string.hpp>
-
-#include <kfr/math.hpp>
-
-// resample*
-#include <kfr/dsp/sample_rate_conversion.hpp>
+#include <kfr/base.hpp>
+#include <kfr/dsp.hpp>
 
 // file*
 #include <kfr/io/audiofile.hpp>
-
-// swept
-#include <kfr/dsp/oscillators.hpp>
 
 // plot_save()
 #include <kfr/io/python_plot.hpp>

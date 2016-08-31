@@ -80,4 +80,8 @@ TEST(phasor)
     CHECK(rms(v1 - v2) < 1.e-5);
 }
 
-int main(int argc, char** argv) { return testo::run_all("", true); }
+int main(int argc, char** argv)
+{
+    println(library_version());
+    return testo::run_all("", true);
+}

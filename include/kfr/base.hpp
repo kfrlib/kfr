@@ -22,6 +22,7 @@
  */
 #pragma once
 
+#include "version.hpp"
 #include "base/abs.hpp"
 #include "base/asin_acos.hpp"
 #include "base/atan.hpp"

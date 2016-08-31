@@ -6,7 +6,6 @@
 
 #include <kfr/dsp.hpp>
 #include <kfr/io/tostring.hpp>
-#include <kfr/version.hpp>
 
 using namespace kfr;
 

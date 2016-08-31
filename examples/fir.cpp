@@ -4,30 +4,13 @@
  * See LICENSE.txt for details
  */
 
-// library_version()
-#include <kfr/version.hpp>
+#include <kfr/io/tostring.hpp>
 
-// print(), format()
-#include <kfr/cometa/string.hpp>
-
-#include <kfr/math.hpp>
-
-// expression_pointer<>, topointer()
-#include <kfr/base/pointer.hpp>
-
-// simpleimpulse()
-#include <kfr/dsp/oscillators.hpp>
-
-// fir
-#include <kfr/dsp/fir.hpp>
-
-// fir_*
-#include <kfr/dsp/fir_design.hpp>
+#include <kfr/base.hpp>
+#include <kfr/dsp.hpp>
 
 // plot_save()
 #include <kfr/io/python_plot.hpp>
-
-#include <iostream>
 
 using namespace kfr;
 
