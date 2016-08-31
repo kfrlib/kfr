@@ -4,14 +4,12 @@
  * See LICENSE.txt for details
  */
 
-#include <kfr/cometa/string.hpp>
+#include <kfr/io/tostring.hpp>
 
 #include "testo/testo.hpp"
 #include <kfr/base.hpp>
-#include <kfr/dsp.hpp>
 #include <kfr/dft.hpp>
-
-#include <kfr/io/tostring.hpp>
+#include <kfr/dsp.hpp>
 
 using namespace kfr;
 
