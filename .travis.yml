@@ -59,4 +59,4 @@ script:
   - cmake $CMAKEARGS
   - make -j4
   - cd tests
-  - ctest
+  - ctest -V
