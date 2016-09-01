@@ -47,7 +47,7 @@ struct expression_resource
     virtual void* instance() { return nullptr; }
 };
 template <typename E>
-struct alignas(E) expression_resource_impl : expression_resource
+struct alignas(const_max(size_t(8), alignof(E))) expression_resource_impl : expression_resource
 {
     expression_resource_impl(E&& e) noexcept : e(std::move(e)) {}
     virtual ~expression_resource_impl() {}
@@ -118,15 +118,15 @@ CMT_INLINE NonMemFn make_expression_func()
     };
 }
 
-template <typename Fn, typename NonMemFn = void (*)(Fn*, size_t)>
+template <typename Fn, typename NonMemFn = void (*)(void*, size_t)>
 CMT_INLINE NonMemFn make_expression_begin_block()
 {
-    return [](Fn* fn, size_t size) { return fn->begin_block(size); };
+    return [](void* fn, size_t size) { reinterpret_cast<Fn*>(fn)->begin_block(size); };
 }
-template <typename Fn, typename NonMemFn = void (*)(Fn*, size_t)>
+template <typename Fn, typename NonMemFn = void (*)(void*, size_t)>
 CMT_INLINE NonMemFn make_expression_end_block()
 {
-    return [](Fn* fn, size_t size) { return fn->end_block(size); };
+    return [](void* fn, size_t size) { reinterpret_cast<Fn*>(fn)->end_block(size); };
 }
 
 template <typename T, size_t maxwidth, typename E>
@@ -135,8 +135,8 @@ expression_vtable<T, maxwidth> make_expression_vtable_impl()
     expression_vtable<T, maxwidth> result;
     constexpr size_t size = result.size() - 2;
 
-    result[0] = reinterpret_cast<void*>(&internal::make_expression_begin_block<decay<E>>);
-    result[1] = reinterpret_cast<void*>(&internal::make_expression_end_block<decay<E>>);
+    result[0] = reinterpret_cast<void*>(internal::make_expression_begin_block<decay<E>>());
+    result[1] = reinterpret_cast<void*>(internal::make_expression_end_block<decay<E>>());
 
     cforeach(csizeseq<size>, [&](auto u) {
         constexpr size_t N = 1 << val_of(decltype(u)());
