@@ -68,7 +68,7 @@ constexpr inline T add(T x)
 /**
  * @brief Returns sum of all the arguments passed to a function.
  */
-template <typename T1, typename T2, typename... Ts>
+template <typename T1, typename T2, typename... Ts, KFR_ENABLE_IF(is_numeric_args<T1, T2, Ts...>::value)>
 constexpr inline common_type<T1, T2, Ts...> add(T1 x, T2 y, Ts... rest)
 {
     return x + add(std::forward<T2>(y), std::forward<Ts>(rest)...);
@@ -83,15 +83,10 @@ KFR_FN(add)
 /**
  * @brief Returns template expression that returns sum of all the arguments passed to a function.
  */
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-CMT_INLINE internal::expression_function<fn_add, E1, E2> add(E1&& x, E2&& y)
+template <typename... E, KFR_ENABLE_IF(is_input_expressions<E...>::value)>
+CMT_INLINE internal::expression_function<fn_add, E...> add(E&&... x)
 {
-    return { fn_add(), std::forward<E1>(x), std::forward<E2>(y) };
-}
-template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-CMT_INLINE internal::expression_function<fn_add, E1> add(E1&& x, E2&& y, E3&& z)
-{
-    return { fn_add(), std::forward<E1>(x), std::forward<E2>(y), std::forward<E3>(z) };
+    return { fn_add(), std::forward<E>(x)... };
 }
 
 template <typename T1, typename T2>
@@ -186,25 +181,25 @@ CMT_INLINE internal::expression_function<fn_cub, E1> cub(E1&& x)
     return { fn_cub(), std::forward<E1>(x) };
 }
 
-template <typename T>
+template <typename T, KFR_ENABLE_IF(is_numeric_args<T>::value)>
 constexpr inline T pow2(T x)
 {
     return sqr(x);
 }
 
-template <typename T>
+template <typename T, KFR_ENABLE_IF(is_numeric_args<T>::value)>
 constexpr inline T pow3(T x)
 {
     return cub(x);
 }
 
-template <typename T>
+template <typename T, KFR_ENABLE_IF(is_numeric_args<T>::value)>
 constexpr inline T pow4(T x)
 {
     return sqr(sqr(x));
 }
 
-template <typename T>
+template <typename T, KFR_ENABLE_IF(is_numeric_args<T>::value)>
 constexpr inline T pow5(T x)
 {
     return pow4(x) * x;
