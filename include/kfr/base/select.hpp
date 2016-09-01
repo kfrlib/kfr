@@ -198,6 +198,12 @@ KFR_SINTRIN vec<T, N> select(const mask<T, N>& m, const vec<T, N>& x, const vec<
     return y ^ ((x ^ y) & vec<T, N>(*m));
 }
 #endif
+
+template <typename T, size_t N>
+KFR_SINTRIN vec<T, N> select(const vec<T, N>& m, const vec<T, N>& x, const vec<T, N>& y)
+{
+    return select(mask<T, N>(*m), x, y);
+}
 }
 KFR_I_FN(select)
 
