@@ -22,7 +22,6 @@
  */
 #pragma once
 
-#include "version.hpp"
 #include "base/abs.hpp"
 #include "base/asin_acos.hpp"
 #include "base/atan.hpp"
@@ -62,3 +61,4 @@
 #include "base/types.hpp"
 #include "base/univector.hpp"
 #include "base/vec.hpp"
+#include "version.hpp"

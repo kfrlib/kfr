@@ -28,13 +28,10 @@
 
 #include "intrinsics.h"
 
-#include <algorithm>
 #include <cmath>
-#include <tuple>
-#include <type_traits>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
 
 #include "../cometa.hpp"
 
@@ -516,6 +513,16 @@ using enable_if_not_f = enable_if<typeclass<T> != datatype::f, R>;
 
 namespace internal
 {
+#ifdef CMT_COMPILER_CLANG
+#define builtin_addressof(x) __builtin_addressof(x)
+#else
+template <class T>
+inline T* builtin_addressof(T& arg)
+{
+    return reinterpret_cast<T*>(&const_cast<char&>(reinterpret_cast<const volatile char&>(arg)));
+}
+#endif
+
 CMT_INLINE f32 builtin_sqrt(f32 x) { return __builtin_sqrtf(x); }
 CMT_INLINE f64 builtin_sqrt(f64 x) { return __builtin_sqrt(x); }
 CMT_INLINE f80 builtin_sqrt(f80 x) { return __builtin_sqrtl(x); }
@@ -527,7 +534,7 @@ CMT_INLINE void builtin_memset(void* dest, int val, size_t size) { __builtin_mem
 template <typename T1>
 CMT_INLINE void zeroize(T1& value)
 {
-    builtin_memset(static_cast<void*>(std::addressof(value)), 0, sizeof(T1));
+    builtin_memset(static_cast<void*>(builtin_addressof(value)), 0, sizeof(T1));
 }
 }
 
@@ -813,4 +820,4 @@ struct compound_type_traits<kfr::vec_t<T, N>>
 };
 }
 
-#pragma clang diagnostic pop
+#pragma GCC diagnostic pop

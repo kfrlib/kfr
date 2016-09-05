@@ -4,6 +4,9 @@
 #pragma once
 
 #include "../cometa.hpp"
+#include "cstring.hpp"
+#include "ctti.hpp"
+#include "named_arg.hpp"
 #include <array>
 #include <cstdio>
 #include <string>

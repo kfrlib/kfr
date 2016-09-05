@@ -7,8 +7,8 @@
 #include <kfr/io/tostring.hpp>
 
 #include <kfr/base.hpp>
-#include <kfr/dsp.hpp>
 #include <kfr/dft.hpp>
+#include <kfr/dsp.hpp>
 
 // plot_save()
 #include <kfr/io/python_plot.hpp>
