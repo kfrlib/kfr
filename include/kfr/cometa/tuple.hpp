@@ -3,6 +3,8 @@
  */
 #pragma once
 
+#include "../cident.h"
+
 #include <cstdint>
 #include <tuple>
 
