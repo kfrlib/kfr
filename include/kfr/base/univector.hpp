@@ -25,6 +25,8 @@
  */
 #pragma once
 
+#include "../cometa/array.hpp"
+
 #include "function.hpp"
 #include "memory.hpp"
 #include "read_write.hpp"

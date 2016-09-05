@@ -28,6 +28,8 @@
 #include "types.hpp"
 #include "vec.hpp"
 
+#include <tuple>
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
 

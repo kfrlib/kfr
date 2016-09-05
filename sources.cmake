@@ -56,7 +56,15 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/intrinsics.h
     ${PROJECT_SOURCE_DIR}/include/kfr/base/kfr.h
     ${PROJECT_SOURCE_DIR}/include/kfr/base/specializations.i
+    ${PROJECT_SOURCE_DIR}/include/kfr/cometa/array.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/cometa/cstring.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/cometa/ctti.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/cometa/function.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/cometa/named_arg.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/cometa/range.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/cometa/result.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/cometa/string.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/cometa/tuple.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/data/bitrev.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/data/sincos.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/bitrev.hpp

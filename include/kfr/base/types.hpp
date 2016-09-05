@@ -28,13 +28,10 @@
 
 #include "intrinsics.h"
 
-#include <algorithm>
 #include <cmath>
-#include <tuple>
-#include <type_traits>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
 
 #include "../cometa.hpp"
 
@@ -813,4 +810,4 @@ struct compound_type_traits<kfr::vec_t<T, N>>
 };
 }
 
-#pragma clang diagnostic pop
+#pragma GCC diagnostic pop
