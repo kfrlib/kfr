@@ -17,6 +17,10 @@
 
 cmake_minimum_required(VERSION 2.8)
 
+set(TEST_SRC
+    testo/testo.hpp
+)
+
 if (NOT MSVC)
     add_compile_options(-fno-exceptions -fno-rtti -ftemplate-backtrace-limit=0)
     link_libraries(${STD_LIB} pthread m)
@@ -44,18 +48,18 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/tests/cmake/")
 
 find_package(MPFR)
 
-add_executable(intrinsic_test intrinsic_test.cpp ${KFR_SRC})
-add_executable(dft_test dft_test.cpp ${KFR_SRC})
+add_executable(intrinsic_test intrinsic_test.cpp ${KFR_SRC} ${TEST_SRC})
+add_executable(dft_test dft_test.cpp ${KFR_SRC} ${TEST_SRC})
 if (MPFR_FOUND)
     include_directories(${MPFR_INCLUDE_DIR})
-    add_executable(transcendental_test transcendental_test.cpp ${KFR_SRC})
+    add_executable(transcendental_test transcendental_test.cpp ${KFR_SRC} ${TEST_SRC})
     target_link_libraries(transcendental_test ${MPFR_LIBRARIES})
 endif ()
-add_executable(dsp_test dsp_test.cpp ${KFR_SRC})
-add_executable(empty_test empty_test.cpp ${KFR_SRC})
-add_executable(complex_test complex_test.cpp ${KFR_SRC})
-add_executable(base_test base_test.cpp ${KFR_SRC})
-add_executable(expression_test expression_test.cpp ${KFR_SRC})
+add_executable(dsp_test dsp_test.cpp ${KFR_SRC} ${TEST_SRC})
+add_executable(empty_test empty_test.cpp ${KFR_SRC} ${TEST_SRC})
+add_executable(complex_test complex_test.cpp ${KFR_SRC} ${TEST_SRC})
+add_executable(base_test base_test.cpp ${KFR_SRC} ${TEST_SRC})
+add_executable(expression_test expression_test.cpp ${KFR_SRC} ${TEST_SRC})
 
 if (ARM)
     find_program(EMULATOR "qemu-arm")
