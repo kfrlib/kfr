@@ -5,6 +5,7 @@
 
 #include "../cometa.hpp"
 #include <array>
+#include <vector>
 #include <iterator>
 
 namespace cometa
