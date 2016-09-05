@@ -11,14 +11,41 @@
 #include <type_traits>
 #include <vector>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
 
 namespace cometa
 {
 
 using std::size_t;
 using std::ptrdiff_t;
+
+#if __cplusplus >= 201103L || CMT_MSC_VER >= 1900 || CMT_HAS_FEATURE(cxx_constexpr)
+
+template <typename T, size_t N>
+constexpr inline static size_t arraysize(const T (&)[N]) noexcept
+{
+    return N;
+}
+
+template <typename T, size_t N>
+constexpr inline static std::integral_constant<size_t, N> carraysize(const T (&)[N]) noexcept
+{
+    return {};
+}
+
+#define CMT_ARRAYSIZE(arr) decltype(carraysize(arr))::value
+#elif CMT_COMPILER_MSVC
+#define CMT_ARRAYSIZE(arr) _countof(arr)
+#elif __cplusplus >= 199711L &&                                                                              \
+    (defined(__INTEL_COMPILER) || defined(__clang__) ||                                                      \
+     (defined(__GNUC__) && ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 4))))
+template <typename T, size_t N>
+char (&COUNTOF_REQUIRES_ARRAY_ARGUMENT(T (&)[N]))[N];
+#define CMT_ARRAYSIZE(x) sizeof(COUNTOF_REQUIRES_ARRAY_ARGUMENT(x))
+#else
+#define CMT_ARRAYSIZE(arr) sizeof(arr) / sizeof(arr[0])
+#endif
 
 using pvoid = void*;
 
@@ -1454,12 +1481,11 @@ struct function<Result(Args...)>
         fn = temp;
         return *this;
     }
-    CMT_INTRIN Result operator()(Args... args) const
+    CMT_INTRIN Result operator()(Args... args) const { return (*fn)(std::forward<Args>(args)...); }
+    template <typename TResult>
+    CMT_INTRIN Result call(TResult&& default_result, Args... args) const
     {
-        if (fn)
-            return (*fn)(args...);
-        else
-            return details::return_val<Result>();
+        return fn ? (*fn)(std::forward<Args>(args)...) : std::forward<TResult>(default_result);
     }
     CMT_INTRIN explicit operator bool() const noexcept { return !!fn; }
 
@@ -1960,7 +1986,7 @@ constexpr size_t typename_postfix = sizeof("]") - 1;
 template <size_t... indices, size_t Nout = 1 + sizeof...(indices)>
 constexpr cstring<Nout> gettypename_impl(const char* str, csizes_t<indices...>) noexcept
 {
-    return cstring<Nout>{ (str[indices])..., 0 };
+    return cstring<Nout>{ { (str[indices])..., 0 } };
 }
 }
 
@@ -2021,4 +2047,4 @@ constexpr inline type_id_t ctypeid(T x)
 }
 }
 
-#pragma gcc diagnostic pop
+#pragma GCC diagnostic pop

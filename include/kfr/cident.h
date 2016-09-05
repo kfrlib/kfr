@@ -397,31 +397,6 @@ extern char* gets(char* __s);
 #endif
 #endif
 
-#if __cplusplus >= 201103L || CMT_MSC_VER >= 1900 || CMT_HAS_FEATURE(cxx_constexpr)
-
-#include <cstdint>
-namespace cid
-{
-template <typename T, size_t N>
-constexpr inline static size_t arraysize(const T (&)[N]) noexcept
-{
-    return N;
-}
-}
-
-#define CMT_ARRAYSIZE(arr) ::cid::arraysize(arr)
-#elif CMT_COMPILER_MSVC
-#define CMT_ARRAYSIZE(arr) _countof(arr)
-#elif __cplusplus >= 199711L &&                                                                              \
-    (defined(__INTEL_COMPILER) || defined(__clang__) ||                                                      \
-     (defined(__GNUC__) && ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 4))))
-template <typename T, size_t N>
-char (&COUNTOF_REQUIRES_ARRAY_ARGUMENT(T (&)[N]))[N];
-#define CMT_ARRAYSIZE(x) sizeof(COUNTOF_REQUIRES_ARRAY_ARGUMENT(x))
-#else
-#define CMT_ARRAYSIZE(arr) sizeof(arr) / sizeof(arr[0])
-#endif
-
 #ifdef CMT_COMPILER_MSVC
 #define CMT_FUNC_SIGNATURE __FUNCSIG__
 #else

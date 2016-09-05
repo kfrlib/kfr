@@ -9,10 +9,10 @@
 #include <string>
 #include <utility>
 
-#pragma clang diagnostic push
+#pragma GCC diagnostic push
 #if CMT_HAS_WARNING("-Wformat-security")
-#pragma clang diagnostic ignored "-Wformat-security"
-#pragma clang diagnostic ignored "-Wused-but-marked-unused"
+#pragma GCC diagnostic ignored "-Wformat-security"
+#pragma GCC diagnostic ignored "-Wused-but-marked-unused"
 #endif
 
 namespace cometa
@@ -232,8 +232,8 @@ CMT_INLINE details::fmt_t<T, static_cast<char>(-1), width, prec> fmtwidth(const 
     return { value };
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wgnu-string-literal-operator-template"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wgnu-string-literal-operator-template"
 
 constexpr auto build_fmt_str(cchars_t<>, ctypes_t<>) { return make_cstring(""); }
 
@@ -293,7 +293,7 @@ constexpr CMT_INLINE print_t<chars...> operator""_print()
     return {};
 }
 
-#pragma clang diagnostic pop
+#pragma GCC diagnostic pop
 
 template <typename... Args>
 CMT_INLINE void printfmt(const std::string& fmt, const Args&... args)
@@ -405,4 +405,4 @@ inline std::string join(T x, U y, Ts... rest)
 }
 }
 
-#pragma clang diagnostic pop
+#pragma GCC diagnostic pop
