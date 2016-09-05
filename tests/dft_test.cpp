@@ -28,6 +28,12 @@ TEST(test_convolve)
     CHECK(rms(c - univector<fbase>({ 0.25, 1., 2.75, 5., 7.5, 8.5, 7.75, 3.5, 1.25 })) < 0.0001);
 }
 
+#ifdef CMT_ARCH_ARM
+constexpr size_t stopsize = 12;
+#else
+constexpr size_t stopsize = 21;
+#endif
+
 TEST(fft_accuracy)
 {
     testo::active_test()->show_progress = true;
@@ -35,7 +41,7 @@ TEST(fft_accuracy)
 
     testo::matrix(named("type")       = float_types, //
                   named("inverse")    = std::make_tuple(false, true), //
-                  named("log2(size)") = make_range(1, 21), //
+                  named("log2(size)") = make_range(size_t(1), stopsize), //
                   [&gen](auto type, bool inverse, size_t log2size) {
                       using float_type  = type_of<decltype(type)>;
                       const size_t size = 1 << log2size;
