@@ -563,14 +563,6 @@ struct vec : vec_t<T, N>, operators::empty
 
     constexpr CMT_INLINE vec() noexcept {}
     constexpr CMT_INLINE vec(simd_t value) noexcept : v(value) {}
-    constexpr CMT_INLINE vec(const array_ref<T>& value) noexcept
-        : v(*internal_read_write::read<N, false>(value.data()))
-    {
-    }
-    constexpr CMT_INLINE vec(const array_ref<const T>& value) noexcept
-        : v(*internal_read_write::read<N, false>(value.data()))
-    {
-    }
     template <typename U,
               KFR_ENABLE_IF(std::is_convertible<U, T>::value&& compound_type_traits<T>::width > 1)>
     constexpr CMT_INLINE vec(const U& value) noexcept
