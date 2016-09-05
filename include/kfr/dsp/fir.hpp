@@ -47,11 +47,11 @@ struct expression_short_fir : expression<E1>
     static_assert(is_poweroftwo(tapcount), "tapcount must be a power of two");
 
     expression_short_fir(E1&& e1, const array_ref<T>& taps)
-        : expression<E1>(std::forward<E1>(e1)), taps(taps), delayline(0)
+        : expression<E1>(std::forward<E1>(e1)), taps(read<tapcount>(taps.data())), delayline(0)
     {
     }
     expression_short_fir(E1&& e1, const array_ref<const T>& taps)
-        : expression<E1>(std::forward<E1>(e1)), taps(taps), delayline(0)
+        : expression<E1>(std::forward<E1>(e1)), taps(read<tapcount>(taps.data())), delayline(0)
     {
     }
     template <size_t N>
