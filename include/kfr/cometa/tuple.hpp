@@ -3,6 +3,7 @@
  */
 #pragma once
 
+#include <cstdint>
 #include <tuple>
 
 namespace cometa
@@ -19,8 +20,7 @@ struct swallow;
 namespace details
 {
 
-
-template <typename T, size_t Nsize, T Nstart, ptrdiff_t Nstep>
+template <typename T, size_t Nsize, T Nstart, std::ptrdiff_t Nstep>
 struct cvalseq_impl;
 
 template <typename... Ts, typename Fn, size_t... indices>
