@@ -798,6 +798,21 @@ constexpr size_t vector_capacity = native_register_count* vector_width<T, c>;
 
 template <typename T, cpu_t c>
 constexpr size_t maximum_vector_size = const_min(static_cast<size_t>(32), vector_capacity<T, c> / 4);
+
+template <size_t width, typename Fn>
+CMT_INLINE void block_process_impl(size_t& i, size_t size, Fn&& fn)
+{
+    CMT_LOOP_NOUNROLL
+    for (; i < size / width * width; i += width)
+        fn(i, csize<width>);
+}
+}
+
+template <size_t... widths, typename Fn>
+CMT_INLINE void block_process(size_t size, csizes_t<widths...>, Fn&& fn)
+{
+    size_t i = 0;
+    swallow{ (internal::block_process_impl<widths>(i, size, std::forward<Fn>(fn)), 0)... };
 }
 }
 namespace cometa
