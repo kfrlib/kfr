@@ -45,6 +45,7 @@ namespace internal
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
+template <int = 0>
 void python(const std::string& name, const std::string& code)
 {
     std::string filename;
@@ -68,16 +69,17 @@ void python(const std::string& name, const std::string& code)
 #pragma clang diagnostic pop
 }
 
-static std::string concat_args() { return {}; }
+inline std::string concat_args() { return {}; }
 
 template <typename... Ts>
-static std::string concat_args(const std::string& left, const Ts&... rest)
+std::string concat_args(const std::string& left, const Ts&... rest)
 {
     const std::string right = concat_args(rest...);
     return left.empty() ? right : right.empty() ? left : left + ", " + right;
 }
 
-static void plot_show(const std::string& name, const std::string& wavfile, const std::string& options = "")
+template <int = 0>
+void plot_show(const std::string& name, const std::string& wavfile, const std::string& options = "")
 {
     print(name, "...");
     std::string ss;
@@ -90,7 +92,8 @@ static void plot_show(const std::string& name, const std::string& wavfile, const
     print("done\n");
 }
 
-static void plot_show(const std::string& name, const char* x, const std::string& options = "")
+template <int = 0>
+void plot_show(const std::string& name, const char* x, const std::string& options = "")
 {
     plot_show(name, std::string(x), options);
 }

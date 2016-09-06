@@ -28,6 +28,7 @@
 #include "../base/basic_expressions.hpp"
 #include "../base/univector.hpp"
 #include "../base/vec.hpp"
+#include "../cometa/ctti.hpp"
 #include "file.hpp"
 
 namespace kfr

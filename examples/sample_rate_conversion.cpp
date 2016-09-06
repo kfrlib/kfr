@@ -4,18 +4,9 @@
  * See LICENSE.txt for details
  */
 
-#include <kfr/io/tostring.hpp>
-
 #include <kfr/base.hpp>
 #include <kfr/dsp.hpp>
-
-// file*
-#include <kfr/io/audiofile.hpp>
-
-// plot_save()
-#include <kfr/io/python_plot.hpp>
-
-#include <iostream>
+#include <kfr/io.hpp>
 
 using namespace kfr;
 

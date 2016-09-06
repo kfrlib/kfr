@@ -4,8 +4,9 @@
  * See LICENSE.txt for details
  */
 
+#include <kfr/base.hpp>
 #include <kfr/dsp.hpp>
-#include <kfr/io/tostring.hpp>
+#include <kfr/io.hpp>
 
 using namespace kfr;
 

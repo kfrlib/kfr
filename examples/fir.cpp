@@ -4,13 +4,9 @@
  * See LICENSE.txt for details
  */
 
-#include <kfr/io/tostring.hpp>
-
 #include <kfr/base.hpp>
 #include <kfr/dsp.hpp>
-
-// plot_save()
-#include <kfr/io/python_plot.hpp>
+#include <kfr/io.hpp>
 
 using namespace kfr;
 

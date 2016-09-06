@@ -4,14 +4,9 @@
  * See LICENSE.txt for details
  */
 
-#include <kfr/io/tostring.hpp>
-
 #include "testo/testo.hpp"
-#include <kfr/base/basic_expressions.hpp>
-#include <kfr/base/complex.hpp>
-#include <kfr/base/reduce.hpp>
-#include <kfr/cometa/string.hpp>
-#include <kfr/math.hpp>
+#include <kfr/base.hpp>
+#include <kfr/io.hpp>
 
 using namespace kfr;
 using testo::assert_is_same;

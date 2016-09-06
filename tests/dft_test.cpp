@@ -5,11 +5,10 @@
  */
 
 #include "testo/testo.hpp"
-#include <kfr/io/tostring.hpp>
-
 #include <kfr/base.hpp>
 #include <kfr/dft.hpp>
 #include <kfr/dsp.hpp>
+#include <kfr/io.hpp>
 
 using namespace kfr;
 

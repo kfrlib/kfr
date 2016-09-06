@@ -21,29 +21,17 @@
 namespace cometa
 {
 
+template <typename T>
+struct representation
+{
+    static constexpr const T& get(const T& value) noexcept { return value; }
+};
+
+template <typename T>
+using repr_type = decay<decltype(representation<T>::get(std::declval<T>()))>;
+
 template <typename... Args>
 CMT_INLINE std::string as_string(const Args&... args);
-
-template <typename T>
-constexpr inline const T& repr(const T& value)
-{
-    return value;
-}
-
-template <typename T>
-inline std::string repr(const named_arg<T>& value)
-{
-    return std::string(value.name) + " = " + as_string(value.value);
-}
-
-template <typename T1, typename T2>
-inline std::string repr(const std::pair<T1, T2>& value)
-{
-    return "(" + as_string(value.first) + "; " + as_string(value.second) + ")";
-}
-
-template <typename T>
-using repr_type = decay<decltype(repr(std::declval<T>()))>;
 
 namespace details
 {
@@ -158,7 +146,7 @@ CMT_INLINE const char* pack_value(ctype_t<T>)
 template <typename T, char t, int width, int prec>
 CMT_INLINE auto pack_value(const fmt_t<T, t, width, prec>& value)
 {
-    return pack_value(repr(value.value));
+    return pack_value(representation<T>::get(value.value));
 }
 
 template <size_t N1, size_t Nnew, size_t... indices>
@@ -267,7 +255,7 @@ struct format_t
             return result;
         result.resize(size_t(size + 1));
         result.resize(size_t(std::snprintf(&result[0], size_t(size + 1), format_str.data(),
-                                           details::pack_value(repr(args))...)));
+                                           details::pack_value(representation<Args>::get(args))...)));
         return result;
     }
 };
@@ -302,21 +290,22 @@ template <typename... Args>
 CMT_INLINE void printfmt(const std::string& fmt, const Args&... args)
 {
     const auto format_str = details::build_fmt(fmt, ctypes<repr_type<Args>...>);
-    std::printf(format_str.data(), details::pack_value(repr(args))...);
+    std::printf(format_str.data(), details::pack_value(representation<Args>::get(args))...);
 }
 
 template <typename... Args>
 CMT_INLINE void fprintfmt(FILE* f, const std::string& fmt, const Args&... args)
 {
     const auto format_str = details::build_fmt(fmt, ctypes<repr_type<Args>...>);
-    std::fprintf(f, format_str.data(), details::pack_value(repr(args))...);
+    std::fprintf(f, format_str.data(), details::pack_value(representation<Args>::get(args))...);
 }
 
 template <typename... Args>
 CMT_INLINE int snprintfmt(char* str, size_t size, const std::string& fmt, const Args&... args)
 {
     const auto format_str = details::build_fmt(fmt, ctypes<repr_type<Args>...>);
-    return std::snprintf(str, size, format_str.data(), details::pack_value(repr(args))...);
+    return std::snprintf(str, size, format_str.data(),
+                         details::pack_value(representation<Args>::get(args))...);
 }
 
 template <typename... Args>
@@ -324,12 +313,13 @@ CMT_INLINE std::string format(const std::string& fmt, const Args&... args)
 {
     std::string result;
     const auto format_str = details::build_fmt(fmt, ctypes<repr_type<Args>...>);
-    const int size        = std::snprintf(nullptr, 0, format_str.data(), details::pack_value(repr(args))...);
+    const int size =
+        std::snprintf(nullptr, 0, format_str.data(), details::pack_value(representation<Args>::get(args))...);
     if (size <= 0)
         return result;
     result.resize(size_t(size + 1));
-    result.resize(size_t(
-        std::snprintf(&result[0], size_t(size + 1), format_str.data(), details::pack_value(repr(args))...)));
+    result.resize(size_t(std::snprintf(&result[0], size_t(size + 1), format_str.data(),
+                                       details::pack_value(representation<Args>::get(args))...)));
     return result;
 }
 
@@ -346,14 +336,14 @@ template <typename... Args>
 CMT_INLINE void print(const Args&... args)
 {
     constexpr auto format_str = concat_cstring(details::get_value_fmt<Args>()...);
-    std::printf(format_str.data(), details::pack_value(repr(args))...);
+    std::printf(format_str.data(), details::pack_value(representation<Args>::get(args))...);
 }
 
 template <typename... Args>
 CMT_INLINE void println(const Args&... args)
 {
     constexpr auto format_str = concat_cstring(details::get_value_fmt<Args>()..., make_cstring("\n"));
-    std::printf(format_str.data(), details::pack_value(repr(args))...);
+    std::printf(format_str.data(), details::pack_value(representation<Args>::get(args))...);
 }
 
 template <typename... Args>
@@ -362,12 +352,13 @@ CMT_INLINE std::string as_string(const Args&... args)
     std::string result;
     constexpr auto format_str = concat_cstring(details::get_value_fmt<Args>()...);
 
-    const int size = std::snprintf(nullptr, 0, format_str.data(), details::pack_value(repr(args))...);
+    const int size =
+        std::snprintf(nullptr, 0, format_str.data(), details::pack_value(representation<Args>::get(args))...);
     if (size <= 0)
         return result;
     result.resize(size_t(size + 1));
-    result.resize(size_t(
-        std::snprintf(&result[0], size_t(size + 1), format_str.data(), details::pack_value(repr(args))...)));
+    result.resize(size_t(std::snprintf(&result[0], size_t(size + 1), format_str.data(),
+                                       details::pack_value(representation<Args>::get(args))...)));
     return result;
 }
 
@@ -406,6 +397,24 @@ inline std::string join(T x, U y, Ts... rest)
 {
     return format("{}, {}", x, join(std::forward<U>(y), std::forward<Ts>(rest)...));
 }
+
+template <typename T>
+struct representation<named_arg<T>>
+{
+    static std::string get(const named_arg<T>& value)
+    {
+        return std::string(value.name) + " = " + as_string(value.value);
+    }
+};
+
+template <typename T1, typename T2>
+struct representation<std::pair<T1, T2>>
+{
+    static std::string get(const std::pair<T1, T2>& value)
+    {
+        return "(" + as_string(value.first) + "; " + as_string(value.second) + ")";
+    }
+};
 }
 
 #pragma GCC diagnostic pop

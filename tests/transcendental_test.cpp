@@ -4,10 +4,9 @@
  * See LICENSE.txt for details
  */
 
-#include <kfr/io/tostring.hpp>
-
 #include "testo/testo.hpp"
-#include <kfr/math.hpp>
+#include <kfr/base.hpp>
+#include <kfr/io.hpp>
 
 #define MPFR_THREAD_LOCAL
 #include "mpfr/mpfrplus.hpp"

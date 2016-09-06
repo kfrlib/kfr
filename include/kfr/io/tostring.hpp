@@ -28,21 +28,6 @@
 #include "../base/complex.hpp"
 #include "../base/univector.hpp"
 #include "../base/vec.hpp"
-
-namespace cometa
-{
-
-inline std::string repr(kfr::cpu_t v);
-
-template <typename T>
-inline std::string repr(const kfr::complex<T>& v);
-
-template <typename T, size_t N>
-inline std::string repr(kfr::vec<T, N> v);
-
-template <typename T, size_t Tag>
-inline std::string repr(const kfr::univector<T, Tag>& v);
-}
 #include "../cometa/string.hpp"
 #include <cmath>
 
@@ -83,20 +68,11 @@ std::string fmtvalue(std::true_type, const kfr::complex<T>& x)
 template <typename T>
 std::string fmtvalue(std::false_type, const T& x)
 {
-    return as_string(fmtwidth<number_width>(repr(x)));
-}
+    return as_string(fmtwidth<number_width>(representation<T>::get(x)));
 }
 
 template <typename T>
-inline std::string repr(const kfr::complex<T>& v)
-{
-    return as_string(v.real()) + " + " + as_string(v.imag()) + "j";
-}
-
-inline std::string repr(kfr::cpu_t v) { return kfr::cpu_name(v); }
-
-template <typename T>
-inline std::string repr(const T* source, size_t N)
+inline std::string array_to_string(const T* source, size_t N)
 {
     std::string str;
     for (size_t i = 0; i < N; i++)
@@ -114,7 +90,7 @@ inline std::string repr(const T* source, size_t N)
 }
 
 template <typename T>
-inline std::string repr(const kfr::complex<T>* source, size_t N)
+inline std::string array_to_string(const kfr::complex<T>* source, size_t N)
 {
     std::string str;
     for (size_t i = 0; i < N; i++)
@@ -130,16 +106,38 @@ inline std::string repr(const kfr::complex<T>* source, size_t N)
     }
     return str;
 }
+}
+
+template <typename T>
+struct representation<kfr::complex<T>>
+{
+    static std::string get(const kfr::complex<T>& value)
+    {
+        return as_string(value.real()) + " + " + as_string(value.imag()) + "j";
+    }
+};
+
+template <>
+struct representation<kfr::cpu_t>
+{
+    static std::string get(kfr::cpu_t value) { return kfr::cpu_name(value); }
+};
 
 template <typename T, size_t N>
-inline std::string repr(kfr::vec<T, N> v)
+struct representation<kfr::vec<T, N>>
 {
-    return repr(v.data(), v.size());
-}
+    static std::string get(const kfr::vec<T, N>& value)
+    {
+        return details::array_to_string(value.data(), value.size());
+    }
+};
 
 template <typename T, size_t Tag>
-inline std::string repr(const kfr::univector<T, Tag>& v)
+struct representation<kfr::univector<T, Tag>>
 {
-    return repr(v.data(), v.size());
-}
+    static std::string get(const kfr::univector<T, Tag>& value)
+    {
+        return details::array_to_string(value.data(), value.size());
+    }
+};
 }
