@@ -28,6 +28,18 @@ struct cstring
     constexpr size_type length() const noexcept { return N - 1; }
     constexpr size_type size() const noexcept { return N; }
 
+    template <size_t start, size_t count>
+    constexpr cstring<count> slice(csize_t<start>, csize_t<count>) const noexcept
+    {
+        return slice_impl(csizeseq<count, start>);
+    }
+
+    template <size_t start>
+    constexpr cstring<N - start> slice(csize_t<start>) const noexcept
+    {
+        return slice_impl(csizeseq<N - 1 - start, start>);
+    }
+
     constexpr friend bool operator==(const cstring& left, const cstring& right) noexcept
     {
         for (size_t i = 0; i < 1; i++)
@@ -51,6 +63,12 @@ struct cstring
         return true;
     }
     constexpr char operator[](size_t index) const noexcept { return value[index]; }
+private:
+    template <size_t... indices>
+    constexpr cstring<sizeof...(indices) + 1> slice_impl(csizes_t<indices...>) const
+    {
+        return { { value[indices]..., 0 } };
+    }
 };
 
 namespace details
