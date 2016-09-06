@@ -593,4 +593,5 @@ constexpr CMT_INLINE vec<T, N> onoff(vec_t<T, N>, cint_t<on> = cint_t<on>(), cin
 }
 KFR_FN(onoff)
 }
+#define KFR_SHUFFLE_SPECIALIZATIONS 1
 #include "specializations.i"
