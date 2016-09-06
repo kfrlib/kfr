@@ -60,7 +60,7 @@ constexpr auto itoa()
 template <typename T, char t, int width, int prec, CMT_ENABLE_IF(width < 0 && prec >= 0)>
 CMT_INLINE constexpr auto value_fmt_arg(ctype_t<fmt_t<T, t, width, prec>>)
 {
-    return concat_cstring(make_cstring("%."), itoa<prec>());
+    return concat_cstring(make_cstring("."), itoa<prec>());
 }
 template <typename T, char t, int width, int prec, CMT_ENABLE_IF(width >= 0 && prec < 0)>
 CMT_INLINE constexpr auto value_fmt_arg(ctype_t<fmt_t<T, t, width, prec>>)
