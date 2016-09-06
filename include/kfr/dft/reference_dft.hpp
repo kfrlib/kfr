@@ -94,6 +94,41 @@ void reference_fft(complex<T>* out, const complex<T>* in, size_t size, bool inve
 }
 
 template <typename Tnumber = long double, typename T>
+void reference_fft(complex<T>* out, const T* in, size_t size)
+{
+    constexpr bool inversion = false;
+    using Tcmplx = Tnumber(*)[2];
+    if (size < 2)
+        return;
+    std::vector<complex<Tnumber>> datain(size);
+    std::vector<complex<Tnumber>> dataout(size);
+    std::vector<complex<Tnumber>> temp(size);
+    std::copy(in, in + size, datain.begin());
+    const Tnumber pi2 = c_pi<Tnumber, 2, 1>;
+    reference_fft_pass<Tnumber>(pi2, size, 0, 1, inversion ? -1 : +1, Tcmplx(datain.data()),
+                                Tcmplx(dataout.data()), Tcmplx(temp.data()));
+    std::copy(dataout.begin(), dataout.end(), out);
+}
+
+template <typename Tnumber = long double, typename T>
+void reference_fft(T* out, const complex<T>* in, size_t size)
+{
+    constexpr bool inversion = true;
+    using Tcmplx = Tnumber(*)[2];
+    if (size < 2)
+        return;
+    std::vector<complex<Tnumber>> datain(size);
+    std::vector<complex<Tnumber>> dataout(size);
+    std::vector<complex<Tnumber>> temp(size);
+    std::copy(in, in + size, datain.begin());
+    const Tnumber pi2 = c_pi<Tnumber, 2, 1>;
+    reference_fft_pass<Tnumber>(pi2, size, 0, 1, inversion ? -1 : +1, Tcmplx(datain.data()),
+                                Tcmplx(dataout.data()), Tcmplx(temp.data()));
+    for(size_t i = 0; i < size; i++)
+        out[i] = dataout[i].real();
+}
+
+template <typename Tnumber = long double, typename T>
 void reference_dft(complex<T>* out, const complex<T>* in, size_t size, bool inversion = false)
 {
     using std::sin;
