@@ -105,12 +105,12 @@ struct univector_base : input_expression, output_expression
         // one fragment
         if (srcsize <= fsize)
         {
-            std::copy_n(src, srcsize, data + cursor);
+            copy(data + cursor, src, srcsize);
         }
         else // two fragments
         {
-            std::copy_n(src, fsize, data + cursor);
-            std::copy_n(src + fsize, srcsize - fsize, data);
+            copy(data + cursor, src, fsize);
+            copy(data, src + fsize, srcsize - fsize);
         }
         ringbuf_step(cursor, srcsize);
     }
@@ -158,12 +158,12 @@ struct univector_base : input_expression, output_expression
         // one fragment
         if (destsize <= fsize)
         {
-            std::copy_n(data + cursor, destsize, dest);
+            copy(dest, data + cursor, destsize);
         }
         else // two fragments
         {
-            std::copy_n(data + cursor, fsize, dest);
-            std::copy_n(data, destsize - fsize, dest + fsize);
+            copy(dest, data + cursor, fsize);
+            copy(dest + fsize, data, destsize - fsize);
         }
         ringbuf_step(cursor, destsize);
     }
@@ -180,6 +180,12 @@ private:
     CMT_INLINE size_t get_size() const { return derived_cast<Class>(this)->size(); }
     CMT_INLINE const T* get_data() const { return derived_cast<Class>(this)->data(); }
     CMT_INLINE T* get_data() { return derived_cast<Class>(this)->data(); }
+
+    static void copy(T* dest, const T* src, size_t size)
+    {
+        for (size_t i = 0; i < size; ++i)
+            *dest++ = *src++;
+    }
 };
 
 template <typename T, size_t Size>
