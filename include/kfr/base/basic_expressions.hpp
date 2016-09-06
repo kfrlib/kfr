@@ -27,6 +27,7 @@
 
 #include "univector.hpp"
 #include "vec.hpp"
+#include <algorithm>
 
 namespace kfr
 {
