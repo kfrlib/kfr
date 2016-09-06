@@ -35,7 +35,8 @@ void cforeach_tuple_impl(const std::tuple<Ts...>& tuple, Fn&& fn, csizes_t<indic
 template <typename... Ts, typename Fn>
 void cforeach(const std::tuple<Ts...>& tuple, Fn&& fn)
 {
-    details::cforeach_tuple_impl(tuple, std::forward<Fn>(fn), typename details::cvalseq_impl<size_t, sizeof...(Ts), 0, 1>::type());
+    details::cforeach_tuple_impl(tuple, std::forward<Fn>(fn),
+                                 typename details::cvalseq_impl<size_t, sizeof...(Ts), 0, 1>::type());
 }
 }
 

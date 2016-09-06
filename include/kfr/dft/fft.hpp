@@ -881,10 +881,11 @@ struct dft_plan
         execute_dft(inv, out.data(), in.data(), temp.data());
     }
 
-private:
+protected:
     autofree<u8> data;
     size_t data_size;
     std::vector<dft_stage_ptr> stages[2];
+
     template <template <bool inverse> class Stage>
     void add_stage(size_t stage_size, cbools_t<true, true>)
     {

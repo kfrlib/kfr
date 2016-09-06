@@ -1,13 +1,14 @@
 ﻿#pragma once
 
 #include <kfr/cometa/tuple.hpp>
-#include <kfr/cometa.hpp>
-#include <kfr/cometa/string.hpp>
-#include <kfr/cometa/range.hpp>
 
+#include <kfr/cometa.hpp>
+#include <kfr/cometa/range.hpp>
+#include <kfr/cometa/string.hpp>
+
+#include <algorithm>
 #include <ctime>
 #include <functional>
-#include <algorithm>
 #include <sstream>
 #include <utility>
 #include <vector>
