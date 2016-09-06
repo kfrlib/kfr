@@ -114,7 +114,8 @@ CMT_INLINE constexpr auto value_fmt(ctype_t<ctype_t<T>>)
 template <typename T, int width, int prec>
 CMT_INLINE constexpr auto value_fmt(ctype_t<fmt_t<T, static_cast<char>(-1), width, prec>> fmt)
 {
-    return concat_cstring(make_cstring("%"), value_fmt_arg(fmt), value_fmt(ctype<repr_type<T>>));
+    return concat_cstring(make_cstring("%"), value_fmt_arg(fmt),
+                          value_fmt(ctype<repr_type<T>>).slice(csize<1>));
 }
 template <typename T, char t, int width, int prec>
 CMT_INLINE constexpr auto value_fmt(ctype_t<fmt_t<T, t, width, prec>> fmt)
