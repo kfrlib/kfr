@@ -176,7 +176,6 @@ protected:
     }
 
 private:
-    constexpr infinite size() const noexcept = delete;
     CMT_INLINE size_t get_size() const { return derived_cast<Class>(this)->size(); }
     CMT_INLINE const T* get_data() const { return derived_cast<Class>(this)->data(); }
     CMT_INLINE T* get_data() { return derived_cast<Class>(this)->data(); }

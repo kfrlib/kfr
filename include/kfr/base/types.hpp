@@ -198,18 +198,6 @@ inline datatype operator&(datatype x, datatype y)
     return static_cast<datatype>(static_cast<type>(x) | static_cast<type>(y));
 }
 
-struct infinite
-{
-    template <typename T>
-    CMT_INLINE constexpr operator T() const noexcept
-    {
-        return T();
-    }
-    constexpr friend bool operator<(infinite, size_t) noexcept { return false; }
-    constexpr friend bool operator<(size_t, infinite) noexcept { return true; }
-    constexpr friend bool operator<(infinite, infinite) noexcept { return false; }
-};
-
 enum class accuracy : int
 {
     accuracy      = 1,
