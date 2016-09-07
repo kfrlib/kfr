@@ -72,20 +72,20 @@ KFR_FN(cmul)
 template <typename T, size_t N, KFR_ENABLE_IF(N >= 2)>
 CMT_INLINE vec<T, N> cmul_conj(vec<T, N> x, vec<T, N> y)
 {
-    return swap<2>(subadd(swap<2>(x) * cdupreal(y), x * cdupimag(y)));
+    return swap<2>(subadd(swap<2>(x) * dupeven(y), x * dupodd(y)));
 }
 template <typename T, size_t N, KFR_ENABLE_IF(N >= 2)>
 CMT_INLINE vec<T, N> cmul_2conj(vec<T, N> in0, vec<T, N> in1, vec<T, N> tw)
 {
-    return (in0 + in1) * cdupreal(tw) + swap<2>(cnegimag(in0 - in1)) * cdupimag(tw);
+    return (in0 + in1) * dupeven(tw) + swap<2>(cnegimag(in0 - in1)) * dupodd(tw);
 }
 template <typename T, size_t N, KFR_ENABLE_IF(N >= 2)>
 CMT_INLINE void cmul_2conj(vec<T, N>& out0, vec<T, N>& out1, vec<T, 2> in0, vec<T, 2> in1, vec<T, N> tw)
 {
-    const vec<T, N> twr   = cdupreal(tw);
-    const vec<T, N> twi   = cdupimag(tw);
+    const vec<T, N> twr   = dupeven(tw);
+    const vec<T, N> twi   = dupodd(tw);
     const vec<T, 2> sum   = (in0 + in1);
-    const vec<T, 2> dif   = swap<2>(cnegimag(in0 - in1));
+    const vec<T, 2> dif   = swap<2>(negodd(in0 - in1));
     const vec<T, N> sumtw = resize<N>(sum) * twr;
     const vec<T, N> diftw = resize<N>(dif) * twi;
     out0 += sumtw + diftw;
