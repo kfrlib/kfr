@@ -55,7 +55,26 @@ KFR_INTRIN univector<T> convolve(const univector<T, Tag1>& src1, const univector
     plan.execute(src2padded, src2padded, temp);
     src1padded = src1padded * src2padded;
     plan.execute(src1padded, src1padded, temp, true);
-    return truncate(real(src1padded), src1.size() + src2.size() - 1) / T(size);
+    const T invsize = reciprocal<T>(size);
+    return truncate(real(src1padded), src1.size() + src2.size() - 1) * invsize;
+}
+
+template <typename T, size_t Tag1, size_t Tag2>
+KFR_INTRIN univector<T> correlate(const univector<T, Tag1>& src1, const univector<T, Tag2>& src2)
+{
+    const size_t size                = next_poweroftwo(src1.size() + src2.size() - 1);
+    univector<complex<T>> src1padded = src1;
+    univector<complex<T>> src2padded = reverse(src2);
+    src1padded.resize(size, 0);
+    src2padded.resize(size, 0);
+    dft_plan<T> plan(size);
+    univector<u8> temp(plan.temp_size);
+    plan.execute(src1padded, src1padded, temp);
+    plan.execute(src2padded, src2padded, temp);
+    src1padded = src1padded * src2padded;
+    plan.execute(src1padded, src1padded, temp, true);
+    const T invsize = reciprocal<T>(size);
+    return truncate(real(src1padded), src1.size() + src2.size() - 1) * invsize;
 }
 }
 #pragma clang diagnostic pop

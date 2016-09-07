@@ -21,10 +21,19 @@ constexpr ctypes_t<float> float_types{};
 TEST(test_convolve)
 {
     univector<fbase, 5> a({ 1, 2, 3, 4, 5 });
-    univector<fbase, 5> b({ 0.25, 0.5, 1.0, 0.5, 0.25 });
+    univector<fbase, 5> b({ 0.25, 0.5, 1.0, -2.0, 1.5 });
     univector<fbase> c = convolve(a, b);
     CHECK(c.size() == 9);
-    CHECK(rms(c - univector<fbase>({ 0.25, 1., 2.75, 5., 7.5, 8.5, 7.75, 3.5, 1.25 })) < 0.0001);
+    CHECK(rms(c - univector<fbase>({ 0.25, 1., 2.75, 2.5, 3.75, 3.5, 1.5, -4., 7.5 })) < 0.0001);
+}
+
+TEST(test_correlate)
+{
+    univector<fbase, 5> a({ 1, 2, 3, 4, 5 });
+    univector<fbase, 5> b({ 0.25, 0.5, 1.0, -2.0, 1.5 });
+    univector<fbase> c = correlate(a, b);
+    CHECK(c.size() == 9);
+    CHECK(rms(c - univector<fbase>({ 1.5, 1., 1.5, 2.5, 3.75, -4., 7.75, 3.5, 1.25 })) < 0.0001);
 }
 
 #ifdef CMT_ARCH_ARM
