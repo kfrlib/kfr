@@ -30,7 +30,7 @@ TEST(test_convolve)
 #ifdef CMT_ARCH_ARM
 constexpr size_t stopsize = 12;
 #else
-constexpr size_t stopsize = 21;
+constexpr size_t stopsize = 20;
 #endif
 
 TEST(fft_accuracy)
@@ -45,20 +45,41 @@ TEST(fft_accuracy)
                       using float_type  = type_of<decltype(type)>;
                       const size_t size = 1 << log2size;
 
-                      univector<complex<float_type>> in =
-                          slice(gen_random_range<float_type>(gen, -1.0, +1.0), 0, size * 2);
-                      univector<complex<float_type>> out    = in;
-                      univector<complex<float_type>> refout = out;
-                      const dft_plan<float_type> dft(size);
-                      univector<u8> temp(dft.temp_size);
+                      {
+                          univector<complex<float_type>> in =
+                              slice(gen_random_range<float_type>(gen, -1.0, +1.0), 0, size * 2);
+                          univector<complex<float_type>> out    = in;
+                          univector<complex<float_type>> refout = out;
+                          const dft_plan<float_type> dft(size);
+                          univector<u8> temp(dft.temp_size);
 
-                      reference_dft(refout.data(), in.data(), size, inverse);
-                      dft.execute(out, out, temp, inverse);
+                          reference_dft(refout.data(), in.data(), size, inverse);
+                          dft.execute(out, out, temp, inverse);
 
-                      const float_type rms_diff = rms(cabs(refout - out));
-                      const double ops          = log2size * 100;
-                      const double epsilon      = std::numeric_limits<float_type>::epsilon();
-                      CHECK(rms_diff < epsilon * ops);
+                          const float_type rms_diff = rms(cabs(refout - out));
+                          const double ops          = log2size * 100;
+                          const double epsilon      = std::numeric_limits<float_type>::epsilon();
+                          CHECK(rms_diff < epsilon * ops);
+                      }
+
+                      if (size >= 16)
+                      {
+                          univector<float_type> in =
+                              slice(gen_random_range<float_type>(gen, -1.0, +1.0), 0, size);
+
+                          univector<complex<float_type>> out    = slice(scalar(qnan), 0, size);
+                          univector<complex<float_type>> refout = slice(scalar(qnan), 0, size);
+                          const dft_plan_real<float_type> dft(size);
+                          univector<u8> temp(dft.temp_size);
+
+                          reference_fft(refout.data(), in.data(), size);
+                          dft.execute(out, in, temp);
+                          const float_type rms_diff_r =
+                              rms(cabs(refout.slice(0, size / 2 + 1) - out.slice(0, size / 2 + 1)));
+                          const double ops     = log2size * 200;
+                          const double epsilon = std::numeric_limits<float_type>::epsilon();
+                          CHECK(rms_diff_r < epsilon * ops);
+                      }
                   });
 }
 
