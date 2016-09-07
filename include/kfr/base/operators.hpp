@@ -736,7 +736,7 @@ struct expression_unpack : private expression<E...>, output_expression
     CMT_INLINE expression_unpack& operator=(Input&& input)
     {
         using value_type = vec<common_type<value_type_of<E>...>, count>;
-        process<value_type>(*this, std::forward<Input>(input), size());
+        process<value_type>(*this, std::forward<Input>(input));
         return *this;
     }
 

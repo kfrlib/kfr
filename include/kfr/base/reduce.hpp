@@ -113,11 +113,10 @@ KFR_SINTRIN T reduce(E1&& e1, ReduceFn&& reducefn, TransformFn&& transformfn = f
                      FinalFn&& finalfn = fn_pass_through())
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
-    const size_t size = e1.size();
     using reducer_t   = expression_reduce<T, decay<ReduceFn>, decay<TransformFn>, decay<FinalFn>>;
     reducer_t red(std::forward<ReduceFn>(reducefn), std::forward<TransformFn>(transformfn),
                   std::forward<FinalFn>(finalfn));
-    process<T>(red, std::forward<E1>(e1), size);
+    process<T>(red, std::forward<E1>(e1));
 
     return red.get();
 }

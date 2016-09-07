@@ -258,13 +258,13 @@ CMT_INLINE void process_cycle(OutputExpr&& outfn, const InputExpr& fn, size_t& i
 }
 }
 
-template <typename Tout, cpu_t c = cpu_t::native, size_t width = 0, typename OutputExpr, typename InputExpr>
-CMT_INLINE void process(OutputExpr&& out, const InputExpr& in, size_t size)
+template <typename Tout, cpu_t c = cpu_t::native, size_t width = 0, typename OutputExpr, typename InputExpr,
+          size_t groupsize = 1>
+CMT_INLINE size_t process(OutputExpr&& out, const InputExpr& in, csize_t<groupsize> = csize_t<groupsize>())
 {
+    const size_t size = size_min(out.size(), in.size()) * groupsize;
     static_assert(is_output_expression<OutputExpr>::value, "OutFn must be an expression");
     static_assert(is_input_expression<InputExpr>::value, "Fn must be an expression");
-    constexpr size_t comp = lcm(func_ratio<OutputExpr>::input, func_ratio<InputExpr>::output);
-    size *= comp;
     out.output_begin_block(size);
     in.begin_block(size);
 
@@ -276,10 +276,11 @@ CMT_INLINE void process(OutputExpr&& out, const InputExpr& in, size_t size)
 
     size_t i = 0;
     internal::process_cycle<w>(std::forward<OutputExpr>(out), in, i, size);
-    internal::process_cycle<comp>(std::forward<OutputExpr>(out), in, i, size);
+    internal::process_cycle<groupsize>(std::forward<OutputExpr>(out), in, i, size);
 
     in.end_block(size);
     out.output_end_block(size);
+    return size;
 }
 
 template <typename T>

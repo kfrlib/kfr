@@ -184,7 +184,7 @@ protected:
     template <typename Input>
     CMT_INLINE void assign_expr(Input&& input)
     {
-        process<T>(*this, std::forward<Input>(input), get_size());
+        process<T>(*derived_cast<Class>(this), std::forward<Input>(input));
     }
 
 private:

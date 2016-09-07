@@ -38,17 +38,17 @@ template <typename Tout, typename Tin, size_t Tag1, size_t Tag2, typename E1>
 void write_interleaved(E1&& dest, const univector2d<Tin, Tag1, Tag2>& src)
 {
     const size_t channels = src.size();
-    const size_t size     = src[0].size();
     if (channels == 1)
     {
-        process<Tout>(std::forward<E1>(dest), src[0], size);
+        process<Tout>(std::forward<E1>(dest), src[0]);
     }
     else if (channels == 2)
     {
-        process<Tout>(std::forward<E1>(dest), bind_expression(fn_interleave(), src[0], src[1]), size);
+        process<Tout>(std::forward<E1>(dest), pack(src[0], src[1]), csize<2>);
     }
     else
     {
+        const size_t size = src[0].size();
         internal::expression_writer<Tout, E1> wr = writer<Tout>(std::forward<E1>(dest));
         for (size_t i = 0; i < size; i++)
             for (size_t ch = 0; ch < channels; ch++)
