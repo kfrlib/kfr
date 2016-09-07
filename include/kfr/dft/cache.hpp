@@ -96,4 +96,14 @@ univector<complex<T>> dft(const univector<complex<T>, Tag>& input)
     dft->execute(output, input, temp);
     return output;
 }
+
+template <typename T, size_t Tag>
+univector<complex<T>> idft(const univector<complex<T>, Tag>& input)
+{
+    dft_plan_ptr<T> dft = dft_cache::instance().get(ctype<T>, input.size());
+    univector<T> output(input.size());
+    univector<u8> temp(dft->temp_size);
+    dft->execute(output, input, temp, ctrue);
+    return output;
+}
 }
