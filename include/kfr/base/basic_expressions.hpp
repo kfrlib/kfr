@@ -328,6 +328,12 @@ CMT_INLINE internal::expression_slice<E1> slice(E1&& e1, size_t start, size_t si
     return internal::expression_slice<E1>(std::forward<E1>(e1), start, size);
 }
 
+template <typename E1>
+CMT_INLINE internal::expression_slice<E1> truncate(E1&& e1, size_t size)
+{
+    return internal::expression_slice<E1>(std::forward<E1>(e1), 0, size);
+}
+
 template <typename T1, typename T2, bool precise = false, typename TF = ftype<common_type<T1, T2>>>
 CMT_INLINE internal::expression_linspace<TF, precise> linspace(T1 start, T2 stop, size_t size,
                                                                bool endpoint = false)

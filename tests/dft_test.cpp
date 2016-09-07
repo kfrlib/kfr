@@ -47,7 +47,7 @@ TEST(fft_accuracy)
 
                       {
                           univector<complex<float_type>> in =
-                              slice(gen_random_range<float_type>(gen, -1.0, +1.0), 0, size * 2);
+                              truncate(gen_random_range<float_type>(gen, -1.0, +1.0), size);
                           univector<complex<float_type>> out    = in;
                           univector<complex<float_type>> refout = out;
                           const dft_plan<float_type> dft(size);
@@ -65,17 +65,17 @@ TEST(fft_accuracy)
                       if (size >= 16)
                       {
                           univector<float_type> in =
-                              slice(gen_random_range<float_type>(gen, -1.0, +1.0), 0, size);
+                              truncate(gen_random_range<float_type>(gen, -1.0, +1.0), size);
 
-                          univector<complex<float_type>> out    = slice(scalar(qnan), 0, size);
-                          univector<complex<float_type>> refout = slice(scalar(qnan), 0, size);
+                          univector<complex<float_type>> out    = truncate(scalar(qnan), size);
+                          univector<complex<float_type>> refout = truncate(scalar(qnan), size);
                           const dft_plan_real<float_type> dft(size);
                           univector<u8> temp(dft.temp_size);
 
                           reference_fft(refout.data(), in.data(), size);
                           dft.execute(out, in, temp);
                           const float_type rms_diff_r =
-                              rms(cabs(refout.slice(0, size / 2 + 1) - out.slice(0, size / 2 + 1)));
+                              rms(cabs(refout.truncate(size / 2 + 1) - out.truncate(size / 2 + 1)));
                           const double ops     = log2size * 200;
                           const double epsilon = std::numeric_limits<float_type>::epsilon();
                           CHECK(rms_diff_r < epsilon * ops);

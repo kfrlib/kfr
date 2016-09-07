@@ -34,15 +34,15 @@ namespace kfr
 template <typename T = fbase>
 auto jaehne(identity<T> magn, size_t size)
 {
-    return slice(magn * sin(c_pi<T, 1, 2> * sqr(linspace(T(0), T(size), size, false)) / size), 0, size);
+    return truncate(magn * sin(c_pi<T, 1, 2> * sqr(linspace(T(0), T(size), size, false)) / size), size);
 }
 
 template <typename T = fbase>
 auto swept(identity<T> magn, size_t size)
 {
-    return slice(
+    return truncate(
         magn * sin(c_pi<T, 1, 4> * sqr(sqr(linspace(T(0), T(size), size, false)) / sqr(T(size))) * T(size)),
-        0, size);
+        size);
 }
 
 template <typename T = fbase>

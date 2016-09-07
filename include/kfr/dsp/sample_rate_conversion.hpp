@@ -134,8 +134,8 @@ struct sample_rate_converter
         }
         else
         {
-            delay.slice(0, size_t(depth - srcsize)) = delay.slice(size_t(srcsize));
-            delay.slice(size_t(depth - srcsize)) = zeros();
+            delay.truncate(size_t(depth - srcsize)) = delay.slice(size_t(srcsize));
+            delay.slice(size_t(depth - srcsize))    = zeros();
         }
 
         input_position += srcsize;
@@ -183,8 +183,8 @@ struct sample_rate_converter
         }
         else
         {
-            delay.slice(0, size_t(depth - srcsize)) = delay.slice(size_t(srcsize));
-            delay.slice(size_t(depth - srcsize)) = src;
+            delay.truncate(size_t(depth - srcsize)) = delay.slice(size_t(srcsize));
+            delay.slice(size_t(depth - srcsize))    = src;
         }
 
         input_position += srcsize;

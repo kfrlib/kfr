@@ -75,6 +75,18 @@ struct univector_base : input_expression, output_expression
         const size_t this_size = derived_cast<Class>(this)->size();
         return array_ref<const T>(data + start, std::min(size, this_size - start));
     }
+    univector<T, 0> truncate(size_t size = max_size_t)
+    {
+        T* data                = derived_cast<Class>(this)->data();
+        const size_t this_size = derived_cast<Class>(this)->size();
+        return array_ref<T>(data, std::min(size, this_size));
+    }
+    univector<const T, 0> truncate(size_t size = max_size_t) const
+    {
+        const T* data          = derived_cast<Class>(this)->data();
+        const size_t this_size = derived_cast<Class>(this)->size();
+        return array_ref<const T>(data, std::min(size, this_size));
+    }
 
     array_ref<T> ref()
     {

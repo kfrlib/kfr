@@ -29,7 +29,7 @@ int main(int argc, char** argv)
 
         const size_t destsize = r(resampled.data(), swept_sine);
 
-        univector<i32> i32data = clamp(resampled.slice(0, destsize) * i32max, -i32max, +i32max);
+        univector<i32> i32data = clamp(resampled.truncate(destsize) * i32max, -i32max, +i32max);
         univector2d<i32> data  = { i32data };
 
         auto wr = sequential_file_writer("audio_high_quality.wav");
@@ -44,7 +44,7 @@ int main(int argc, char** argv)
 
         const size_t destsize = r(resampled.data(), swept_sine);
 
-        univector<i32> i32data = clamp(resampled.slice(0, destsize) * i32max, -i32max, +i32max);
+        univector<i32> i32data = clamp(resampled.truncate(destsize) * i32max, -i32max, +i32max);
         univector2d<i32> data  = { i32data };
 
         auto wr = sequential_file_writer("audio_normal_quality.wav");
@@ -59,7 +59,7 @@ int main(int argc, char** argv)
 
         const size_t destsize = r(resampled.data(), swept_sine);
 
-        univector<i32> i32data = clamp(resampled.slice(0, destsize) * i32max, -i32max, +i32max);
+        univector<i32> i32data = clamp(resampled.truncate(destsize) * i32max, -i32max, +i32max);
         univector2d<i32> data  = { i32data };
 
         auto wr = sequential_file_writer("audio_low_quality.wav");
@@ -74,7 +74,7 @@ int main(int argc, char** argv)
 
         const size_t destsize = r(resampled.data(), swept_sine);
 
-        univector<i32> i32data = clamp(resampled.slice(0, destsize) * i32max, -i32max, +i32max);
+        univector<i32> i32data = clamp(resampled.truncate(destsize) * i32max, -i32max, +i32max);
         univector2d<i32> data  = { i32data };
 
         auto wr = sequential_file_writer("audio_draft_quality.wav");
