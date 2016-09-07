@@ -190,6 +190,21 @@ struct expression_slice : expression<E1>
     size_t new_size;
 };
 
+template <typename E1>
+struct expression_reverse : expression<E1>
+{
+    using value_type = value_type_of<E1>;
+    using T          = value_type;
+    expression_reverse(E1&& e1) : expression<E1>(std::forward<E1>(e1)), expr_size(e1.size()) {}
+    template <size_t N>
+    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    {
+        return reverse(this->argument_first(expr_size - index - N, y));
+    }
+    size_t size() const { return expr_size; }
+    size_t expr_size;
+};
+
 template <typename T, bool precise = false>
 struct expression_linspace;
 
@@ -332,6 +347,13 @@ template <typename E1>
 CMT_INLINE internal::expression_slice<E1> truncate(E1&& e1, size_t size)
 {
     return internal::expression_slice<E1>(std::forward<E1>(e1), 0, size);
+}
+
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+CMT_INLINE internal::expression_reverse<E1> reverse(E1&& e1)
+{
+    static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
+    return internal::expression_reverse<E1>(std::forward<E1>(e1));
 }
 
 template <typename T1, typename T2, bool precise = false, typename TF = ftype<common_type<T1, T2>>>

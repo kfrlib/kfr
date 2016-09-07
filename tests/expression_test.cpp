@@ -91,6 +91,14 @@ TEST(size_calc)
     CHECK(d.size() == 900);
 }
 
+TEST(reverse)
+{
+    univector<int, 21> a = reverse(truncate(counter(), 21));
+    CHECK(a[0] == 20);
+    CHECK(a[1] == 19);
+    CHECK(a[20] == 0);
+}
+
 int main(int argc, char** argv)
 {
     println(library_version());
