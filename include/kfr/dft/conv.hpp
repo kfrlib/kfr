@@ -31,6 +31,7 @@
 #include "../base/read_write.hpp"
 #include "../base/vec.hpp"
 
+#include "cache.hpp"
 #include "fft.hpp"
 
 #pragma clang diagnostic push
@@ -49,12 +50,13 @@ KFR_INTRIN univector<T> convolve(const univector<T, Tag1>& src1, const univector
     univector<complex<T>> src2padded = src2;
     src1padded.resize(size, 0);
     src2padded.resize(size, 0);
-    dft_plan<T> plan(size);
-    univector<u8> temp(plan.temp_size);
-    plan.execute(src1padded, src1padded, temp);
-    plan.execute(src2padded, src2padded, temp);
+
+    dft_plan_ptr<T> dft = dft_cache::instance().get(ctype<T>, size);
+    univector<u8> temp(dft->temp_size);
+    dft->execute(src1padded, src1padded, temp);
+    dft->execute(src2padded, src2padded, temp);
     src1padded = src1padded * src2padded;
-    plan.execute(src1padded, src1padded, temp, true);
+    dft->execute(src1padded, src1padded, temp, true);
     const T invsize = reciprocal<T>(size);
     return truncate(real(src1padded), src1.size() + src2.size() - 1) * invsize;
 }
@@ -67,12 +69,12 @@ KFR_INTRIN univector<T> correlate(const univector<T, Tag1>& src1, const univecto
     univector<complex<T>> src2padded = reverse(src2);
     src1padded.resize(size, 0);
     src2padded.resize(size, 0);
-    dft_plan<T> plan(size);
-    univector<u8> temp(plan.temp_size);
-    plan.execute(src1padded, src1padded, temp);
-    plan.execute(src2padded, src2padded, temp);
+    dft_plan_ptr<T> dft = dft_cache::instance().get(ctype<T>, size);
+    univector<u8> temp(dft->temp_size);
+    dft->execute(src1padded, src1padded, temp);
+    dft->execute(src2padded, src2padded, temp);
     src1padded = src1padded * src2padded;
-    plan.execute(src1padded, src1padded, temp, true);
+    dft->execute(src1padded, src1padded, temp, true);
     const T invsize = reciprocal<T>(size);
     return truncate(real(src1padded), src1.size() + src2.size() - 1) * invsize;
 }
