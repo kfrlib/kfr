@@ -79,6 +79,18 @@ TEST(test_arg_replace)
     CHECK(v3[9] == -90);
 }
 
+TEST(size_calc)
+{
+    auto a = counter();
+    CHECK(a.size() == infinite_size);
+    auto b = slice(counter(), 100);
+    CHECK(b.size() == infinite_size);
+    auto c = slice(counter(), 100, 1000);
+    CHECK(c.size() == 1000);
+    auto d = slice(c, 100);
+    CHECK(d.size() == 900);
+}
+
 int main(int argc, char** argv)
 {
     println(library_version());

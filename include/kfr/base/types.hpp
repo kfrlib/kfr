@@ -699,6 +699,24 @@ c == cpu_t::neon ? 16 : common_int_vector_size;
 
 constexpr size_t infinite_size = static_cast<size_t>(-1);
 
+constexpr inline size_t size_add(size_t x, size_t y)
+{
+    return (x == infinite_size || y == infinite_size) ? infinite_size : x + y;
+}
+
+constexpr inline size_t size_sub(size_t x, size_t y)
+{
+    return (x == infinite_size || y == infinite_size) ? infinite_size : x - y;
+}
+
+constexpr inline size_t size_min(size_t x) noexcept { return x; }
+
+template <typename... Ts>
+constexpr inline size_t size_min(size_t x, size_t y, Ts... rest) noexcept
+{
+    return size_min(x < y ? x : y, rest...);
+}
+
 /// @brief Base class of all input expressoins
 struct input_expression
 {

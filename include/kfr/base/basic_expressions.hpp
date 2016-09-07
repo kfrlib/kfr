@@ -177,7 +177,7 @@ struct expression_slice : expression<E1>
     using T          = value_type;
     expression_slice(E1&& e1, size_t start, size_t size)
         : expression<E1>(std::forward<E1>(e1)), start(start),
-          new_size(minsize(size, std::get<0>(this->args).size()))
+          new_size(size_min(size, size_sub(std::get<0>(this->args).size(), start)))
     {
     }
     template <size_t N>

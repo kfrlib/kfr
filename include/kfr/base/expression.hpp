@@ -69,14 +69,6 @@ using is_infinite = typename internal::is_infinite_impl<T>::type;
 namespace internal
 {
 
-constexpr inline size_t minsize(size_t x) noexcept { return x; }
-
-template <typename... Ts>
-constexpr inline size_t minsize(size_t x, size_t y, Ts... rest) noexcept
-{
-    return minsize(x < y ? x : y, rest...);
-}
-
 template <typename... Args>
 struct expression : input_expression
 {
@@ -100,7 +92,7 @@ protected:
     template <size_t... indices>
     constexpr size_t size_impl(csizes_t<indices...>) const noexcept
     {
-        return minsize(std::get<indices>(this->args).size()...);
+        return size_min(std::get<indices>(this->args).size()...);
     }
 
     template <typename Fn, typename T, size_t N>
