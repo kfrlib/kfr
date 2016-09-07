@@ -1008,6 +1008,148 @@ protected:
         }
     }
 };
+
+enum class dft_pack_format
+{
+    Perm,
+    CCs
+};
+
+template <typename T>
+struct dft_plan_real : dft_plan<T>
+{
+    template <bool direct = true, bool inverse = true>
+    dft_plan_real(size_t size, cbools_t<direct, inverse> type = dft_type::both)
+        : dft_plan<T>(size / 2, type), rtwiddle(size / 4)
+    {
+        using namespace internal;
+        const size_t csize = size / 2;
+        const size_t count = size / 4;
+
+        constexpr size_t width = vector_width<T> * 2;
+
+        block_process(count, csizes<width, 1>, [=](size_t i, auto w) {
+            constexpr size_t width = val_of(decltype(w)());
+            cwrite<width>(rtwiddle.data() + i,
+                          cossin(dup(-c_pi<T> * ((enumerate<T, width>() + i + count) / csize))));
+        });
+    }
+
+    KFR_INTRIN void execute(complex<T>* out, const T* in, u8* temp,
+                            dft_pack_format fmt = dft_pack_format::CCs) const
+    {
+        this->execute_dft(cfalse, out, ptr_cast<complex<T>>(in), temp);
+        to_fmt(out, fmt);
+    }
+    KFR_INTRIN void execute(T* out, const complex<T>* in, u8* temp,
+                            dft_pack_format fmt = dft_pack_format::CCs) const
+    {
+        complex<T>* outdata = ptr_cast<complex<T>>(out);
+        from_fmt(outdata, in, fmt);
+        this->execute_dft(ctrue, outdata, outdata, temp);
+    }
+
+    template <size_t Tag1, size_t Tag2, size_t Tag3>
+    KFR_INTRIN void execute(univector<complex<T>, Tag1>& out, const univector<T, Tag2>& in,
+                            univector<u8, Tag3>& temp, dft_pack_format fmt = dft_pack_format::CCs) const
+    {
+        this->execute_dft(cfalse, out.data(), ptr_cast<complex<T>>(in.data()), temp.data());
+        to_fmt(out.data(), fmt);
+    }
+    template <size_t Tag1, size_t Tag2, size_t Tag3>
+    KFR_INTRIN void execute(univector<T, Tag1>& out, const univector<complex<T>, Tag2>& in,
+                            univector<u8, Tag3>& temp, dft_pack_format fmt = dft_pack_format::CCs) const
+    {
+        complex<T>* outdata = ptr_cast<complex<T>>(out.data());
+        from_fmt(outdata, in.data(), fmt);
+        this->execute_dft(ctrue, outdata, outdata, temp.data());
+    }
+
+private:
+    univector<complex<T>> rtwiddle;
+
+    void to_fmt(complex<T>* out, dft_pack_format fmt) const
+    {
+        using namespace internal;
+        const size_t csize = this->size; // / 2;
+
+        constexpr size_t width = vector_width<T> * 2;
+        const cvec<T, 1> dc = cread<1>(out);
+        const size_t count = csize / 2;
+
+        block_process(count, csizes<width, 1>, [=](size_t i, auto w) {
+            constexpr size_t width   = val_of(decltype(w)());
+            constexpr size_t widthm1 = width - 1;
+            const cvec<T, width> tw   = cread<width>(rtwiddle.data() + i);
+            const cvec<T, width> fpk  = cread<width>(out + i);
+            const cvec<T, width> fpnk = reverse<2>(negodd(cread<width>(out + csize - i - widthm1)));
+
+            const cvec<T, width> f1k = fpk + fpnk;
+            const cvec<T, width> f2k = fpk - fpnk;
+            const cvec<T, width> t   = cmul(f2k, tw);
+            cwrite<width>(out + i, T(0.5) * (f1k + t));
+            cwrite<width>(out + csize - i - widthm1, reverse<2>(negodd(T(0.5) * (f1k - t))));
+        });
+
+        {
+            size_t k = csize / 2;
+            const cvec<T, 1> fpk  = cread<1>(out + k);
+            const cvec<T, 1> fpnk = negodd(fpk);
+            cwrite<1>(out + k, fpnk);
+        }
+        if (fmt == dft_pack_format::CCs)
+        {
+            cwrite<1>(out, pack(dc[0] + dc[1], 0));
+            cwrite<1>(out + csize, pack(dc[0] - dc[1], 0));
+        }
+        else
+        {
+            cwrite<1>(out, pack(dc[0] + dc[1], dc[0] - dc[1]));
+        }
+    }
+    void from_fmt(complex<T>* out, const complex<T>* in, dft_pack_format fmt) const
+    {
+        using namespace internal;
+
+        const size_t csize = this->size; // / 2;
+
+        cvec<T, 1> dc;
+
+        if (fmt == dft_pack_format::CCs)
+        {
+            dc = pack(in[0].real() + in[csize].real(), in[0].real() - in[csize].real());
+        }
+        else
+        {
+            dc = pack(in[0].real() + in[0].imag(), in[0].real() - in[0].imag());
+        }
+
+        constexpr size_t width = vector_width<T> * 2;
+        const size_t count     = csize / 2;
+
+        block_process(count, csizes<width, 1>, [=](size_t i, auto w) {
+            constexpr size_t width   = val_of(decltype(w)());
+            constexpr size_t widthm1 = width - 1;
+            const cvec<T, width> tw   = cread<width>(rtwiddle.data() + i);
+            const cvec<T, width> fpk  = cread<width>(in + i);
+            const cvec<T, width> fpnk = reverse<2>(negodd(cread<width>(in + csize - i - widthm1)));
+
+            const cvec<T, width> f1k = fpk + fpnk;
+            const cvec<T, width> f2k = fpk - fpnk;
+            const cvec<T, width> t   = cmul_conj(f2k, tw);
+            cwrite<width>(out + i, f1k + t);
+            cwrite<width>(out + csize - i - widthm1, reverse<2>(negodd(f1k - t)));
+        });
+
+        {
+            size_t k = csize / 2;
+            const cvec<T, 1> fpk  = cread<1>(in + k);
+            const cvec<T, 1> fpnk = 2 * negodd(fpk);
+            cwrite<1>(out + k, fpnk);
+        }
+        cwrite<1>(out, dc);
+    }
+};
 }
 
 #pragma clang diagnostic pop
