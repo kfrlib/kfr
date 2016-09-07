@@ -78,5 +78,13 @@ KFR_INTRIN univector<T> correlate(const univector<T, Tag1>& src1, const univecto
     const T invsize = reciprocal<T>(size);
     return truncate(real(src1padded), src1.size() + src2.size() - 1) * invsize;
 }
+
+template <typename T, size_t Tag1>
+KFR_INTRIN univector<T> autocorrelate(const univector<T, Tag1>& src)
+{
+    univector<T> result = correlate(src, src);
+    result              = result.slice(result.size() / 2);
+    return result;
+}
 }
 #pragma clang diagnostic pop
