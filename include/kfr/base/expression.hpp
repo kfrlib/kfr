@@ -37,6 +37,118 @@
 namespace kfr
 {
 
+constexpr size_t infinite_size = static_cast<size_t>(-1);
+
+constexpr inline size_t size_add(size_t x, size_t y)
+{
+    return (x == infinite_size || y == infinite_size) ? infinite_size : x + y;
+}
+
+constexpr inline size_t size_sub(size_t x, size_t y)
+{
+    return (x == infinite_size || y == infinite_size) ? infinite_size : x - y;
+}
+
+constexpr inline size_t size_min(size_t x) noexcept { return x; }
+
+template <typename... Ts>
+constexpr inline size_t size_min(size_t x, size_t y, Ts... rest) noexcept
+{
+    return size_min(x < y ? x : y, rest...);
+}
+
+/// @brief Base class of all input expressoins
+struct input_expression
+{
+    constexpr static size_t size() noexcept { return infinite_size; }
+
+    constexpr static bool is_incremental = false;
+
+    CMT_INLINE void begin_block(size_t) const {}
+    CMT_INLINE void end_block(size_t) const {}
+};
+
+/// @brief Base class of all output expressoins
+struct output_expression
+{
+    constexpr static size_t size() noexcept { return infinite_size; }
+
+    constexpr static bool is_incremental = false;
+
+    CMT_INLINE void output_begin_block(size_t) const {}
+    CMT_INLINE void output_end_block(size_t) const {}
+};
+
+/// @brief Check if the type argument is an input expression
+template <typename E>
+using is_input_expression = std::is_base_of<input_expression, decay<E>>;
+
+/// @brief Check if the type arguments are an input expressions
+template <typename... Es>
+using is_input_expressions = or_t<std::is_base_of<input_expression, decay<Es>>...>;
+
+/// @brief Check if the type argument is an output expression
+template <typename E>
+using is_output_expression = std::is_base_of<output_expression, decay<E>>;
+
+/// @brief Check if the type arguments are an output expressions
+template <typename... Es>
+using is_output_expressions = or_t<std::is_base_of<output_expression, decay<Es>>...>;
+
+/// @brief Check if the type argument is a number or a vector of numbers
+template <typename T>
+using is_numeric = is_number<deep_subtype<T>>;
+
+/// @brief Check if the type arguments are a numbers or a vectors of numbers
+template <typename... Ts>
+using is_numeric_args = and_t<is_numeric<Ts>...>;
+
+namespace internal
+{
+
+template <typename T, typename Fn>
+struct expression_lambda : input_expression
+{
+    using value_type = T;
+    CMT_INLINE expression_lambda(Fn&& fn) : fn(std::move(fn)) {}
+
+    template <size_t N, KFR_ENABLE_IF(N&& is_callable<Fn, cinput_t, size_t, vec_t<T, N>>::value)>
+    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    {
+        return fn(cinput, index, y);
+    }
+
+    template <size_t N, KFR_ENABLE_IF(N&& is_callable<Fn, size_t>::value)>
+    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
+    {
+        vec<T, N> result;
+        for (size_t i = 0; i < N; i++)
+        {
+            result(i) = fn(index + i);
+        }
+        return result;
+    }
+    template <size_t N, KFR_ENABLE_IF(N&& is_callable<Fn>::value)>
+    CMT_INLINE vec<T, N> operator()(cinput_t, size_t, vec_t<T, N>) const
+    {
+        vec<T, N> result;
+        for (size_t i = 0; i < N; i++)
+        {
+            result(i) = fn();
+        }
+        return result;
+    }
+
+    Fn fn;
+};
+}
+
+template <typename T, typename Fn>
+internal::expression_lambda<T, decay<Fn>> lambda(Fn&& fn)
+{
+    return internal::expression_lambda<T, decay<Fn>>(std::move(fn));
+}
+
 namespace internal
 {
 template <typename T, typename = void>

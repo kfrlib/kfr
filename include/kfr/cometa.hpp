@@ -892,6 +892,69 @@ constexpr inline T lcm(T a, T b, T c, Ts... rest)
 
 namespace details
 {
+
+template <size_t bits>
+struct float_type_impl;
+template <size_t bits>
+struct int_type_impl;
+template <size_t bits>
+struct unsigned_type_impl;
+
+template <>
+struct float_type_impl<32>
+{
+    using type = float;
+    static_assert(sizeof(type) * 8 == 32, "float must represent IEEE single precision value");
+};
+template <>
+struct float_type_impl<64>
+{
+    using type = double;
+    static_assert(sizeof(type) * 8 == 64, "double must represent IEEE double precision value");
+};
+
+template <>
+struct int_type_impl<8>
+{
+    using type = std::int8_t;
+};
+template <>
+struct int_type_impl<16>
+{
+    using type = std::int16_t;
+};
+template <>
+struct int_type_impl<32>
+{
+    using type = std::int32_t;
+};
+template <>
+struct int_type_impl<64>
+{
+    using type = std::int64_t;
+};
+
+template <>
+struct unsigned_type_impl<8>
+{
+    using type = std::uint8_t;
+};
+template <>
+struct unsigned_type_impl<16>
+{
+    using type = std::uint16_t;
+};
+template <>
+struct unsigned_type_impl<32>
+{
+    using type = std::uint32_t;
+};
+template <>
+struct unsigned_type_impl<64>
+{
+    using type = std::uint64_t;
+};
+
 template <int64_t min, int64_t max, typename... Types>
 struct findinttype_impl
 {
@@ -913,6 +976,13 @@ using is_number_impl =
     std::integral_constant<bool, ((std::is_integral<T>::value) || (std::is_floating_point<T>::value)) &&
                                      !std::is_same<T, bool>::value>;
 }
+
+template <size_t bits>
+using float_type = typename details::float_type_impl<bits>::type;
+template <size_t bits>
+using int_type = typename details::int_type_impl<bits>::type;
+template <size_t bits>
+using unsigned_type = typename details::unsigned_type_impl<bits>::type;
 
 template <int64_t min, int64_t max>
 using findinttype = typename details::findinttype_impl<min, max, uint8_t, int8_t, uint16_t, int16_t, uint32_t,

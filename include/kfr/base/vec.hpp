@@ -540,7 +540,7 @@ KFR_FN(make_vector)
 
 template <typename Type = void, typename Arg, typename... Args, size_t N = (sizeof...(Args) + 1),
           typename SubType = conditional<is_void<Type>::value, common_type<Arg, Args...>, Type>,
-          KFR_ENABLE_IF(is_numeric<SubType>::value)>
+          KFR_ENABLE_IF(is_number<subtype<SubType>>::value)>
 constexpr CMT_INLINE vec<SubType, N> pack(const Arg& x, const Args&... rest)
 {
     return internal::make_vector_impl<SubType>(csizeseq<N * widthof<SubType>()>, static_cast<SubType>(x),
@@ -1333,51 +1333,6 @@ CMT_INLINE vec_t<T, Nout> high(vec_t<T, N>)
 KFR_FN(low)
 KFR_FN(high)
 
-namespace internal
-{
-
-template <typename T, typename Fn>
-struct expression_lambda : input_expression
-{
-    using value_type = T;
-    CMT_INLINE expression_lambda(Fn&& fn) : fn(std::move(fn)) {}
-
-    template <size_t N, KFR_ENABLE_IF(N&& is_callable<Fn, cinput_t, size_t, vec_t<T, N>>::value)>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
-    {
-        return fn(cinput, index, y);
-    }
-
-    template <size_t N, KFR_ENABLE_IF(N&& is_callable<Fn, size_t>::value)>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
-    {
-        vec<T, N> result;
-        for (size_t i = 0; i < N; i++)
-        {
-            result(i) = fn(index + i);
-        }
-        return result;
-    }
-    template <size_t N, KFR_ENABLE_IF(N&& is_callable<Fn>::value)>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t, vec_t<T, N>) const
-    {
-        vec<T, N> result;
-        for (size_t i = 0; i < N; i++)
-        {
-            result(i) = fn();
-        }
-        return result;
-    }
-
-    Fn fn;
-};
-}
-
-template <typename T, typename Fn>
-internal::expression_lambda<T, decay<Fn>> lambda(Fn&& fn)
-{
-    return internal::expression_lambda<T, decay<Fn>>(std::move(fn));
-}
 }
 
 #pragma clang diagnostic pop
