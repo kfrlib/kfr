@@ -89,12 +89,12 @@ CMT_INLINE internal::expression_iterator<T, E1> to_iterator(E1&& e1)
     return internal::expression_iterator<T, E1>(std::forward<E1>(e1));
 }
 
-template <typename T, typename... Ts>
-CMT_INLINE auto sequence(T x, Ts... rest)
+template <typename... Ts, typename T = common_type<Ts...>>
+inline auto sequence(const Ts&... list)
 {
-    const T seq[]      = { x, static_cast<T>(rest)... };
-    constexpr size_t N = arraysize(seq);
-    return lambda<T>([=](size_t index) { return seq[index % N]; });
+    return lambda<T>([seq = std::array<T, sizeof...(Ts)>{ static_cast<T>(list)... }](size_t index) {
+        return seq[index % seq.size()];
+    });
 }
 
 template <typename T = int>
