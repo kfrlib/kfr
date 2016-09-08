@@ -36,6 +36,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/min_max.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/modzerobessel.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/operators.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/platform.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/pointer.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/random.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/read_write.hpp
