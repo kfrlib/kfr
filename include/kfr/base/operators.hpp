@@ -439,14 +439,14 @@ KFR_FN(fmsub)
 
 /// @brief Linear blend of `x` and `y` (`c` must be in the range 0...+1)
 /// Returns `x + ( y - x ) * c`
-template <typename T1, typename T2, typename T3>
+template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>::value)>
 KFR_INTRIN constexpr common_type<T1, T2, T3> mix(T1 c, T2 x, T3 y)
 {
     return fmadd(c, y - x, x);
 }
 
 /// @brief Linear blend of `x` and `y` (`c` must be in the range -1...+1)
-template <typename T1, typename T2, typename T3>
+template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>::value)>
 KFR_INTRIN constexpr common_type<T1, T2, T3> mixs(T1 c, T2 x, T3 y)
 {
     return mix(fmadd(c, 0.5, 0.5), x, y);
