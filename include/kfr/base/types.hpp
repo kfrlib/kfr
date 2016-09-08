@@ -190,43 +190,6 @@ constexpr coutput_t coutput{};
 constexpr cinput_t cinput{};
 
 template <typename T>
-constexpr inline T align_down(T x, identity<T> alignment)
-{
-    return (x) & ~(alignment - 1);
-}
-template <typename T>
-constexpr inline T* align_down(T* x, size_t alignment)
-{
-    return reinterpret_cast<T*>(align_down(reinterpret_cast<size_t>(x), alignment));
-}
-
-template <typename T>
-constexpr inline T align_up(T x, identity<T> alignment)
-{
-    return (x + alignment - 1) & ~(alignment - 1);
-}
-template <typename T>
-constexpr inline T* align_up(T* x, size_t alignment)
-{
-    return reinterpret_cast<T*>(align_up(reinterpret_cast<size_t>(x), alignment));
-}
-
-template <typename T>
-constexpr inline T* advance(T* x, ptrdiff_t offset)
-{
-    return x + offset;
-}
-constexpr inline void* advance(void* x, ptrdiff_t offset)
-{
-    return advance(static_cast<unsigned char*>(x), offset);
-}
-
-constexpr inline ptrdiff_t distance(const void* x, const void* y)
-{
-    return static_cast<const unsigned char*>(x) - static_cast<const unsigned char*>(y);
-}
-
-template <typename T>
 constexpr datatype typeclass = std::is_floating_point<typename compound_type_traits<T>::subtype>::value
                                    ? datatype::f
                                    : std::is_integral<typename compound_type_traits<T>::subtype>::value
@@ -347,18 +310,6 @@ using isubtype = itype<subtype<T>>;
 template <typename T>
 using usubtype = utype<subtype<T>>;
 
-/// @brief Base class for all vector classes
-template <typename T, size_t N>
-struct vec_t
-{
-    using value_type = T;
-    constexpr static size_t size() noexcept { return N; }
-    constexpr vec_t() noexcept = default;
-
-    using scalar_type = subtype<T>;
-    constexpr static size_t scalar_size() noexcept { return N * compound_type_traits<T>::width; }
-};
-
 template <typename T, typename R = T>
 using enable_if_vec = enable_if<(typebits<T>::width > 0), R>;
 template <typename T, typename R = T>
@@ -405,61 +356,6 @@ CMT_INLINE void zeroize(T1& value)
 }
 }
 
-#pragma clang diagnostic push
-#if CMT_HAS_WARNING("-Wundefined-reinterpret-cast")
-#pragma clang diagnostic ignored "-Wundefined-reinterpret-cast"
-#endif
-
-template <typename T, typename U>
-CMT_INLINE constexpr static T& ref_cast(U& ptr)
-{
-    return reinterpret_cast<T&>(ptr);
-}
-
-template <typename T, typename U>
-CMT_INLINE constexpr static const T& ref_cast(const U& ptr)
-{
-    return reinterpret_cast<const T&>(ptr);
-}
-
-template <typename T, typename U>
-CMT_INLINE constexpr static T* ptr_cast(U* ptr)
-{
-    return reinterpret_cast<T*>(ptr);
-}
-
-template <typename T, typename U>
-CMT_INLINE constexpr static const T* ptr_cast(const U* ptr)
-{
-    return reinterpret_cast<const T*>(ptr);
-}
-
-template <typename T, typename U>
-CMT_INLINE constexpr static T* ptr_cast(U* ptr, ptrdiff_t offset)
-{
-    return ptr_cast<T>(ptr_cast<u8>(ptr) + offset);
-}
-
-template <typename T, typename U>
-CMT_INLINE constexpr static T* derived_cast(U* ptr)
-{
-    return static_cast<T*>(ptr);
-}
-
-template <typename T, typename U>
-CMT_INLINE constexpr static const T* derived_cast(const U* ptr)
-{
-    return static_cast<const T*>(ptr);
-}
-
-template <typename T, typename U>
-CMT_INLINE constexpr static T implicit_cast(U&& value)
-{
-    return std::forward<T>(value);
-}
-
-#pragma clang diagnostic pop
-
 template <typename T>
 struct initialvalue
 {
@@ -492,17 +388,6 @@ constexpr inline T maskbits(bool value)
 {
     return value ? internal::allones<T> : T();
 }
-}
-
-template <typename T>
-constexpr size_t widthof(T)
-{
-    return compound_type_traits<T>::width;
-}
-template <typename T>
-constexpr size_t widthof()
-{
-    return compound_type_traits<T>::width;
 }
 
 constexpr size_t infinite_size = static_cast<size_t>(-1);
@@ -588,25 +473,6 @@ CMT_INLINE void block_process(size_t size, csizes_t<widths...>, Fn&& fn)
     size_t i = 0;
     swallow{ (internal::block_process_impl<widths>(i, size, std::forward<Fn>(fn)), 0)... };
 }
-}
-namespace cometa
-{
-
-template <typename T, size_t N>
-struct compound_type_traits<kfr::vec_t<T, N>>
-{
-    constexpr static size_t width      = N;
-    constexpr static size_t deep_width = width * compound_type_traits<T>::width;
-    using subtype                      = T;
-    using deep_subtype                 = cometa::deep_subtype<T>;
-    constexpr static bool is_scalar    = false;
-    constexpr static size_t depth      = cometa::compound_type_traits<T>::depth + 1;
-
-    template <typename U>
-    using rebind = kfr::vec_t<U, N>;
-    template <typename U>
-    using deep_rebind = kfr::vec_t<cometa::deep_rebind<subtype, U>, N>;
-};
 }
 
 #pragma GCC diagnostic pop

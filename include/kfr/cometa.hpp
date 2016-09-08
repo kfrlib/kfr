@@ -192,6 +192,17 @@ struct compound_type_traits
 };
 
 template <typename T>
+constexpr size_t widthof(T)
+{
+    return compound_type_traits<T>::width;
+}
+template <typename T>
+constexpr size_t widthof()
+{
+    return compound_type_traits<decay<T>>::width;
+}
+
+template <typename T>
 using is_compound = std::integral_constant<bool, !compound_type_traits<decay<T>>::is_scalar>;
 
 template <typename T>
@@ -1452,6 +1463,98 @@ struct signed_type_impl<T, void_t<enable_if<std::is_unsigned<T>::value>>>
 
 template <typename T>
 using signed_type = typename details::signed_type_impl<T>::type;
+
+template <typename T>
+constexpr inline T align_down(T x, identity<T> alignment)
+{
+    return (x) & ~(alignment - 1);
+}
+template <typename T>
+constexpr inline T* align_down(T* x, size_t alignment)
+{
+    return reinterpret_cast<T*>(align_down(reinterpret_cast<size_t>(x), alignment));
+}
+
+template <typename T>
+constexpr inline T align_up(T x, identity<T> alignment)
+{
+    return (x + alignment - 1) & ~(alignment - 1);
+}
+template <typename T>
+constexpr inline T* align_up(T* x, size_t alignment)
+{
+    return reinterpret_cast<T*>(align_up(reinterpret_cast<size_t>(x), alignment));
+}
+
+template <typename T>
+constexpr inline T* advance(T* x, ptrdiff_t offset)
+{
+    return x + offset;
+}
+constexpr inline void* advance(void* x, ptrdiff_t offset)
+{
+    return advance(static_cast<unsigned char*>(x), offset);
+}
+
+constexpr inline ptrdiff_t distance(const void* x, const void* y)
+{
+    return static_cast<const unsigned char*>(x) - static_cast<const unsigned char*>(y);
+}
+
+#pragma GCC diagnostic push
+#if CMT_HAS_WARNING("-Wundefined-reinterpret-cast")
+#pragma GCC diagnostic ignored "-Wundefined-reinterpret-cast"
+#endif
+
+template <typename T, typename U>
+CMT_INLINE constexpr static T& ref_cast(U& ptr)
+{
+    return reinterpret_cast<T&>(ptr);
+}
+
+template <typename T, typename U>
+CMT_INLINE constexpr static const T& ref_cast(const U& ptr)
+{
+    return reinterpret_cast<const T&>(ptr);
+}
+
+template <typename T, typename U>
+CMT_INLINE constexpr static T* ptr_cast(U* ptr)
+{
+    return reinterpret_cast<T*>(ptr);
+}
+
+template <typename T, typename U>
+CMT_INLINE constexpr static const T* ptr_cast(const U* ptr)
+{
+    return reinterpret_cast<const T*>(ptr);
+}
+
+template <typename T, typename U>
+CMT_INLINE constexpr static T* ptr_cast(U* ptr, ptrdiff_t offset)
+{
+    return ptr_cast<T>(ptr_cast<unsigned char>(ptr) + offset);
+}
+
+template <typename T, typename U>
+CMT_INLINE constexpr static T* derived_cast(U* ptr)
+{
+    return static_cast<T*>(ptr);
+}
+
+template <typename T, typename U>
+CMT_INLINE constexpr static const T* derived_cast(const U* ptr)
+{
+    return static_cast<const T*>(ptr);
+}
+
+template <typename T, typename U>
+CMT_INLINE constexpr static T implicit_cast(U&& value)
+{
+    return std::forward<T>(value);
+}
+
+#pragma GCC diagnostic pop
 }
 
 #pragma GCC diagnostic pop

@@ -40,6 +40,18 @@
 namespace kfr
 {
 
+/// @brief Base class for all vector classes
+template <typename T, size_t N>
+struct vec_t
+{
+    using value_type = T;
+    constexpr static size_t size() noexcept { return N; }
+    constexpr vec_t() noexcept = default;
+
+    using scalar_type = subtype<T>;
+    constexpr static size_t scalar_size() noexcept { return N * compound_type_traits<T>::width; }
+};
+
 template <typename T, size_t N>
 struct vec;
 template <typename T, size_t N>
@@ -1372,6 +1384,23 @@ internal::expression_lambda<T, decay<Fn>> lambda(Fn&& fn)
 
 namespace cometa
 {
+
+template <typename T, size_t N>
+struct compound_type_traits<kfr::vec_t<T, N>>
+{
+    constexpr static size_t width      = N;
+    constexpr static size_t deep_width = width * compound_type_traits<T>::width;
+    using subtype                      = T;
+    using deep_subtype                 = cometa::deep_subtype<T>;
+    constexpr static bool is_scalar    = false;
+    constexpr static size_t depth      = cometa::compound_type_traits<T>::depth + 1;
+
+    template <typename U>
+    using rebind = kfr::vec_t<U, N>;
+    template <typename U>
+    using deep_rebind = kfr::vec_t<cometa::deep_rebind<subtype, U>, N>;
+};
+
 #ifdef KFR_SIMD_PARAM_ARE_DEDUCIBLE
 template <typename T, size_t N>
 struct compound_type_traits<kfr::simd<T, N>>
