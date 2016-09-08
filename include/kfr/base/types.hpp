@@ -190,42 +190,6 @@ inline datatype operator&(datatype x, datatype y)
     return static_cast<datatype>(static_cast<type>(x) | static_cast<type>(y));
 }
 
-enum class accuracy : int
-{
-    accuracy      = 1,
-    speed         = 2,
-    _accuracy_min = static_cast<int>(accuracy),
-    _accuracy_max = static_cast<int>(speed)
-};
-
-enum class archendianness : int
-{
-    littleendian        = 1,
-    bigendian           = 2,
-    _archendianness_min = static_cast<int>(littleendian),
-    _archendianness_max = static_cast<int>(bigendian)
-};
-
-typedef void*(CMT_CDECL* func_allocate)(size_t);
-
-typedef void(CMT_CDECL* func_deallocate)(void*);
-
-struct mem_allocator
-{
-    func_allocate allocate;
-    func_deallocate deallocate;
-    size_t granularity;
-    size_t alignment;
-};
-
-struct mem_header
-{
-    size_t size;
-    mem_allocator* allocator;
-    uintptr_t refcount;
-    uintptr_t reserved;
-};
-
 enum class outputinput_t
 {
     output,
