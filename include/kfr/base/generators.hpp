@@ -43,6 +43,8 @@ struct generator : input_expression
     constexpr static size_t width = width_;
     using type                    = T;
 
+    constexpr static bool is_incremental = true;
+
     template <typename U, size_t N>
     CMT_INLINE vec<U, N> operator()(cinput_t, size_t, vec_t<U, N> t) const
     {

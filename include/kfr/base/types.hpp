@@ -722,6 +722,8 @@ struct input_expression
 {
     constexpr static size_t size() noexcept { return infinite_size; }
 
+    constexpr static bool is_incremental = false;
+
     CMT_INLINE void begin_block(size_t) const {}
     CMT_INLINE void end_block(size_t) const {}
 };
@@ -730,6 +732,8 @@ struct input_expression
 struct output_expression
 {
     constexpr static size_t size() noexcept { return infinite_size; }
+
+    constexpr static bool is_incremental = false;
 
     CMT_INLINE void output_begin_block(size_t) const {}
     CMT_INLINE void output_end_block(size_t) const {}
