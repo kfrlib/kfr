@@ -261,6 +261,29 @@ using enable_if_not_f = enable_if<typeclass<T> != datatype::f, R>;
 
 namespace internal
 {
+template <typename T>
+struct flt_type_impl
+{
+    using type = fbase;
+};
+
+template <>
+struct flt_type_impl<float>
+{
+    using type = float;
+};
+template <>
+struct flt_type_impl<double>
+{
+    using type = double;
+};
+}
+
+template <typename T>
+using flt_type = typename internal::flt_type_impl<T>::type;
+
+namespace internal
+{
 #ifdef CMT_COMPILER_CLANG
 #define builtin_addressof(x) __builtin_addressof(x)
 #else

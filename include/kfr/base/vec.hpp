@@ -59,6 +59,13 @@ struct mask;
 
 namespace internal
 {
+
+template <typename T, size_t N>
+struct flt_type_impl<vec<T, N>>
+{
+    using type = vec<typename flt_type_impl<T>::type, N>;
+};
+
 template <typename T>
 struct is_vec_impl : std::false_type
 {
@@ -1332,7 +1339,6 @@ CMT_INLINE vec_t<T, Nout> high(vec_t<T, N>)
 }
 KFR_FN(low)
 KFR_FN(high)
-
 }
 
 #pragma clang diagnostic pop

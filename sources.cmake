@@ -21,7 +21,6 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/compiletime.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/complex.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/constants.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/base/conversion.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/cpuid.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/cpuid_auto.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/digitreverse.hpp

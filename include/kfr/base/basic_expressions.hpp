@@ -34,6 +34,20 @@ namespace kfr
 
 namespace internal
 {
+
+template <typename To, typename E>
+struct expression_convert : expression<E>
+{
+    using value_type = To;
+    CMT_INLINE expression_convert(E&& expr) noexcept : expression<E>(std::forward<E>(expr)) {}
+
+    template <size_t N>
+    CMT_INLINE vec<To, N> operator()(cinput_t, size_t index, vec_t<To, N>) const
+    {
+        return this->argument_first(index, vec_t<To, N>());
+    }
+};
+
 template <typename T, typename E1>
 struct expression_iterator
 {
@@ -61,6 +75,12 @@ struct expression_iterator
     iterator end() const { return { *this, e1.size() }; }
     E1 e1;
 };
+}
+
+template <typename To, typename E>
+CMT_INLINE internal::expression_convert<To, E> convert(E&& expr)
+{
+    return internal::expression_convert<To, E>(std::forward<E>(expr));
 }
 
 template <typename E1, typename T = value_type_of<E1>>
@@ -408,5 +428,67 @@ struct multioutput : output_expression
 
 private:
 };
+
+template <typename... E>
+struct expression_pack : expression<E...>, output_expression
+{
+    constexpr static size_t count = sizeof...(E);
+
+    expression_pack(E&&... e) : expression<E...>(std::forward<E>(e)...) {}
+    using value_type = vec<common_type<value_type_of<E>...>, count>;
+    using T          = value_type;
+
+    using expression<E...>::size;
+
+    template <size_t N>
+    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    {
+        return this->call(fn::packtranspose(), index, y);
+    }
+};
+
+template <typename... E>
+struct expression_unpack : private expression<E...>, output_expression
+{
+    constexpr static size_t count = sizeof...(E);
+
+    expression_unpack(E&&... e) : expression<E...>(std::forward<E>(e)...) {}
+
+    using expression<E...>::size;
+
+    template <typename U, size_t N>
+    CMT_INLINE void operator()(coutput_t, size_t index, const vec<vec<U, count>, N>& x)
+    {
+        output(index, x, csizeseq<count>);
+    }
+
+    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
+    CMT_INLINE expression_unpack& operator=(Input&& input)
+    {
+        using value_type = vec<common_type<value_type_of<E>...>, count>;
+        process<value_type>(*this, std::forward<Input>(input));
+        return *this;
+    }
+
+private:
+    template <typename U, size_t N, size_t... indices>
+    void output(size_t index, const vec<vec<U, count>, N>& x, csizes_t<indices...>)
+    {
+        const vec<vec<U, N>, count> xx = compcast<vec<U, N>>(transpose<count>(flatten(x)));
+        swallow{ (std::get<indices>(this->args)(coutput, index, xx[indices]), void(), 0)... };
+    }
+};
+}
+
+template <typename... E, KFR_ENABLE_IF(is_output_expressions<E...>::value)>
+internal::expression_unpack<internal::arg<E>...> unpack(E&&... e)
+{
+    return internal::expression_unpack<internal::arg<E>...>(std::forward<E>(e)...);
+}
+
+template <typename... E, KFR_ENABLE_IF(is_input_expressions<E...>::value)>
+internal::expression_pack<internal::arg<E>...> pack(E&&... e)
+{
+    return internal::expression_pack<internal::arg<E>...>(std::forward<E>(e)...);
 }
 }
