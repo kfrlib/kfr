@@ -159,7 +159,7 @@ CMT_INLINE vec<T, Nout> even(const vec<T, N>& x)
 {
     return shufflevector<Nout, internal::shuffle_index<0, 2>, groupsize>(x);
 }
-KFR_FNR(even, 2, 1)
+KFR_FN(even)
 
 template <size_t groupsize = 1, typename T, size_t N, size_t Nout = N / 2,
           KFR_ENABLE_IF(N >= 2 && (N & 1) == 0)>
@@ -167,7 +167,7 @@ CMT_INLINE vec<T, Nout> odd(const vec<T, N>& x)
 {
     return shufflevector<Nout, internal::shuffle_index<1, 2>, groupsize>(x);
 }
-KFR_FNR(odd, 2, 1)
+KFR_FN(odd)
 
 namespace internal
 {
@@ -307,7 +307,7 @@ CMT_INLINE vec<T, Nout> dup(const vec<T, N>& x)
 {
     return shufflevector<Nout, internal::shuffle_index_dup1<2>>(x, x);
 }
-KFR_FNR(dup, 1, 2)
+KFR_FN(dup)
 
 namespace internal
 {
@@ -491,12 +491,12 @@ CMT_INLINE vec<T, Nout> interleave(const vec<T, N>& x, const vec<T, N>& y)
     return shufflevector<Nout, internal::shuffle_index_transpose<Nout / groupsize, Nout / groupsize / 2>,
                          groupsize>(x, y);
 }
-KFR_FNR(interleave, 1, 2)
+KFR_FN(interleave)
 
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-CMT_INLINE internal::expression_function<fn_interleave, E1, E2> interleave(E1&& x, E2&& y)
+CMT_INLINE internal::expression_function<fn::interleave, E1, E2> interleave(E1&& x, E2&& y)
 {
-    return { fn_interleave(), std::forward<E1>(x), std::forward<E2>(y) };
+    return { fn::interleave(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 
 template <size_t groupsize = 1, typename T, size_t N>

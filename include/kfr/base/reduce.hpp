@@ -106,14 +106,15 @@ protected:
     FinalFn finalfn;
     mutable vec<T, width> value;
 };
+}
 
-template <typename ReduceFn, typename TransformFn = fn_pass_through, typename FinalFn = fn_pass_through,
+template <typename ReduceFn, typename TransformFn = fn::pass_through, typename FinalFn = fn::pass_through,
           typename E1, typename T = value_type_of<E1>>
-KFR_SINTRIN T reduce(E1&& e1, ReduceFn&& reducefn, TransformFn&& transformfn = fn_pass_through(),
-                     FinalFn&& finalfn = fn_pass_through())
+KFR_SINTRIN T reduce(E1&& e1, ReduceFn&& reducefn, TransformFn&& transformfn = fn::pass_through(),
+                     FinalFn&& finalfn = fn::pass_through())
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
-    using reducer_t   = expression_reduce<T, decay<ReduceFn>, decay<TransformFn>, decay<FinalFn>>;
+    using reducer_t = internal::expression_reduce<T, decay<ReduceFn>, decay<TransformFn>, decay<FinalFn>>;
     reducer_t red(std::forward<ReduceFn>(reducefn), std::forward<TransformFn>(transformfn),
                   std::forward<FinalFn>(finalfn));
     process<T>(red, std::forward<E1>(e1));
@@ -122,7 +123,6 @@ KFR_SINTRIN T reduce(E1&& e1, ReduceFn&& reducefn, TransformFn&& transformfn = f
 }
 
 KFR_FN(reduce)
-}
 
 /**
  * @brief Returns the sum of all the elements in x.
@@ -136,7 +136,7 @@ template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_ex
 KFR_SINTRIN T sum(E1&& x)
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
-    return internal::reduce(std::forward<E1>(x), fn_add());
+    return reduce(std::forward<E1>(x), fn::add());
 }
 
 /**
@@ -151,7 +151,7 @@ template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_ex
 KFR_SINTRIN T mean(E1&& x)
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
-    return internal::reduce(std::forward<E1>(x), fn_add(), fn_pass_through(), fn_final_mean());
+    return reduce(std::forward<E1>(x), fn::add(), fn::pass_through(), fn::final_mean());
 }
 
 /**
@@ -163,7 +163,7 @@ template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_ex
 KFR_SINTRIN T minof(E1&& x)
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
-    return internal::reduce(std::forward<E1>(x), fn::min());
+    return reduce(std::forward<E1>(x), fn::min());
 }
 
 /**
@@ -175,7 +175,7 @@ template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_ex
 KFR_SINTRIN T maxof(E1&& x)
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
-    return internal::reduce(std::forward<E1>(x), fn::max());
+    return reduce(std::forward<E1>(x), fn::max());
 }
 
 /**
@@ -187,7 +187,7 @@ template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_ex
 KFR_SINTRIN T absminof(E1&& x)
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
-    return internal::reduce(std::forward<E1>(x), fn::absmin());
+    return reduce(std::forward<E1>(x), fn::absmin());
 }
 
 /**
@@ -199,7 +199,7 @@ template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_ex
 KFR_SINTRIN T absmaxof(E1&& x)
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
-    return internal::reduce(std::forward<E1>(x), fn::absmax());
+    return reduce(std::forward<E1>(x), fn::absmax());
 }
 
 /**
@@ -217,7 +217,7 @@ KFR_SINTRIN T dotproduct(E1&& x, E2&& y)
     auto m    = std::forward<E1>(x) * std::forward<E2>(y);
     using E12 = decltype(m);
     static_assert(!is_infinite<E12>::value, "e1 must be a sized expression (use slice())");
-    return internal::reduce(std::move(m), fn_add());
+    return reduce(std::move(m), fn::add());
 }
 
 /**
@@ -232,7 +232,7 @@ template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_ex
 KFR_SINTRIN T rms(E1&& x)
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
-    return internal::reduce(std::forward<E1>(x), fn_add(), fn_sqr(), fn_final_rootmean());
+    return reduce(std::forward<E1>(x), fn::add(), fn::sqr(), fn::final_rootmean());
 }
 
 /**
@@ -247,7 +247,7 @@ template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_ex
 KFR_SINTRIN T sumsqr(E1&& x)
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
-    return internal::reduce(std::forward<E1>(x), fn_add(), fn_sqr());
+    return reduce(std::forward<E1>(x), fn::add(), fn::sqr());
 }
 
 /**
@@ -262,6 +262,6 @@ template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_ex
 KFR_SINTRIN T product(E1&& x)
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
-    return internal::reduce(std::forward<E1>(x), fn_mul());
+    return reduce(std::forward<E1>(x), fn::mul());
 }
 }

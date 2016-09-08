@@ -37,15 +37,18 @@
 
 #define KFR_ENABLE_IF CMT_ENABLE_IF
 
-#define KFR_FN(fn)                                                                                           \
-    struct fn_##fn                                                                                           \
+#define KFR_FN(FN)                                                                                           \
+    namespace fn                                                                                             \
+    {                                                                                                        \
+    struct FN                                                                                                \
     {                                                                                                        \
         template <typename... Args>                                                                          \
-        CMT_INLINE_MEMBER decltype(fn(std::declval<Args>()...)) operator()(Args&&... args) const             \
+        CMT_INLINE_MEMBER decltype(::kfr::FN(std::declval<Args>()...)) operator()(Args&&... args) const      \
         {                                                                                                    \
-            return fn(std::forward<Args>(args)...);                                                          \
+            return ::kfr::FN(std::forward<Args>(args)...);                                                   \
         }                                                                                                    \
-    };
+    };                                                                                                       \
+    }
 
 #define KFR_I_FN(FN)                                                                                         \
     namespace fn                                                                                             \
@@ -60,27 +63,6 @@
         }                                                                                                    \
     };                                                                                                       \
     }
-
-#define KFR_FNR(fn, in, out)                                                                                 \
-    struct fn_##fn                                                                                           \
-    {                                                                                                        \
-        template <typename... Args>                                                                          \
-        CMT_INLINE_MEMBER decltype(fn(std::declval<Args>()...)) operator()(Args&&... args) const             \
-        {                                                                                                    \
-            return fn(std::forward<Args>(args)...);                                                          \
-        }                                                                                                    \
-    };
-
-#define KFR_SPEC_FN(tpl, fn)                                                                                 \
-    struct fn_##fn                                                                                           \
-    {                                                                                                        \
-        constexpr fn_##fn() noexcept = default;                                                              \
-        template <typename... Args>                                                                          \
-        CMT_INLINE decltype(fn(std::declval<Args>()...)) operator()(Args&&... args) const                    \
-        {                                                                                                    \
-            return fn(std::forward<Args>(args)...);                                                          \
-        }                                                                                                    \
-    };
 
 namespace kfr
 {
@@ -268,6 +250,18 @@ struct typebits
     constexpr static size_t width = compound_type_traits<T>::is_scalar ? 0 : compound_type_traits<T>::width;
     using subtype                 = typename compound_type_traits<T>::subtype;
 };
+
+namespace fn
+{
+using pass_through = cometa::fn_pass_through;
+using noop         = cometa::fn_noop;
+using get_first    = cometa::fn_get_first;
+using get_second   = cometa::fn_get_second;
+using get_third    = cometa::fn_get_third;
+
+template <typename T>
+using returns = cometa::fn_returns<T>;
+}
 
 namespace internal
 {
@@ -465,19 +459,6 @@ CMT_INLINE constexpr static T implicit_cast(U&& value)
 }
 
 #pragma clang diagnostic pop
-
-#define KFR_FN_S(fn)                                                                                         \
-    template <typename Arg, typename... Args>                                                                \
-    CMT_INLINE enable_if_not_vec<Arg> fn(Arg arg, Args... args)                                              \
-    {                                                                                                        \
-        return fn(make_vector(arg), make_vector(args)...)[0];                                                \
-    }
-#define KFR_FN_S_S(fn)                                                                                       \
-    template <typename Arg, typename... Args, KFR_ENABLE_IF(is_number<Arg>::value)>                          \
-    KFR_SINTRIN enable_if_not_vec<Arg> fn(Arg arg, Args... args)                                             \
-    {                                                                                                        \
-        return fn(make_vector(arg), make_vector(args)...)[0];                                                \
-    }
 
 template <typename T>
 struct initialvalue

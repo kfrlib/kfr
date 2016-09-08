@@ -272,7 +272,7 @@ using realftype = ftype<decltype(kfr::real(std::declval<T>()))>;
 
 KFR_FN(real)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_INLINE internal::expression_function<fn_real, E1> real(E1&& x)
+CMT_INLINE internal::expression_function<fn::real, E1> real(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }
@@ -289,7 +289,7 @@ constexpr CMT_INLINE vec<T, N> imag(const vec<complex<T>, N>& value)
 }
 KFR_FN(imag)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_INLINE internal::expression_function<fn_imag, E1> imag(E1&& x)
+CMT_INLINE internal::expression_function<fn::imag, E1> imag(E1&& x)
 {
     return { {}, std::forward<E1>(x) };
 }

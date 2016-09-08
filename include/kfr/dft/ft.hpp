@@ -67,7 +67,6 @@ CMT_INLINE vec<T, const_max(N1, N2)> cmul(vec<T, N1> x, vec<T, N2> y)
 {
     return internal::cmul_impl(x, y);
 }
-KFR_FN(cmul)
 
 template <typename T, size_t N, KFR_ENABLE_IF(N >= 2)>
 CMT_INLINE vec<T, N> cmul_conj(vec<T, N> x, vec<T, N> y)
@@ -103,8 +102,6 @@ CMT_INLINE vec<T, N> cmul_conj(vec<T, 2> x, vec<T, N> y)
     vec<T, N> xx = resize<N>(x);
     return cmul_conj(xx, y);
 }
-KFR_FN(cmul_conj)
-KFR_FN(cmul_2conj)
 
 template <typename T, size_t N>
 using cvec = vec<T, N * 2>;

@@ -25,9 +25,9 @@
  */
 #pragma once
 
+#include "platform.hpp"
 #include "types.hpp"
 #include "vec.hpp"
-#include "platform.hpp"
 
 #include <tuple>
 

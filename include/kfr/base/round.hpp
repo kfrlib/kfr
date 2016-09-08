@@ -322,13 +322,11 @@ KFR_INTRIN internal::expression_function<fn::itrunc, E1> itrunc(E1&& x)
     return { fn::itrunc(), std::forward<E1>(x) };
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
-CMT_INLINE vec<T, N> fmod(const vec<T, N>& x, const vec<T, N>& y)
+template <typename T, KFR_ENABLE_IF(is_f_class<T>::value)>
+CMT_INLINE T fmod(const T& x, const T& y)
 {
     return x - trunc(x / y) * y;
 }
-
-KFR_FN_S(fmod)
 KFR_FN(fmod)
 
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>

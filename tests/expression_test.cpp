@@ -22,7 +22,7 @@ TEST(pack)
     CHECK(v3[18] == f32x2{ 19, 209 });
     CHECK(v3[19] == f32x2{ 20, 220 });
 
-    const univector<f32x2, 20> v4 = bind_expression(fn_reverse(), v3);
+    const univector<f32x2, 20> v4 = bind_expression(fn::reverse(), v3);
     CHECK(v4[0] == f32x2{ 11, 1 });
     CHECK(v4[1] == f32x2{ 22, 2 });
     CHECK(v4[18] == f32x2{ 209, 19 });
@@ -31,7 +31,7 @@ TEST(pack)
 
 TEST(adjacent)
 {
-    univector<int, 20> v1 = adjacent(fn_mul(), counter());
+    univector<int, 20> v1 = adjacent(fn::mul(), counter());
     CHECK(v1[0] == 0);
     CHECK(v1[1] == 0);
     CHECK(v1[2] == 2);

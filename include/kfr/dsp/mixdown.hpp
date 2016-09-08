@@ -33,9 +33,9 @@ namespace kfr
  * @brief Returns template expression that returns the sum of all the inputs
  */
 template <typename... E>
-internal::expression_function<fn_add, E...> mixdown(E&&... e)
+internal::expression_function<fn::add, E...> mixdown(E&&... e)
 {
-    return internal::expression_function<fn_add, E...>(fn_add(), std::forward<E>(e)...);
+    return internal::expression_function<fn::add, E...>(fn::add(), std::forward<E>(e)...);
 }
 
 namespace internal

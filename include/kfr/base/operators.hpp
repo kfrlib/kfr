@@ -84,9 +84,9 @@ KFR_FN(add)
  * @brief Returns template expression that returns sum of all the arguments passed to a function.
  */
 template <typename... E, KFR_ENABLE_IF(is_input_expressions<E...>::value)>
-CMT_INLINE internal::expression_function<fn_add, E...> add(E&&... x)
+CMT_INLINE internal::expression_function<fn::add, E...> add(E&&... x)
 {
-    return { fn_add(), std::forward<E>(x)... };
+    return { fn::add(), std::forward<E>(x)... };
 }
 
 template <typename T1, typename T2>
@@ -102,9 +102,9 @@ constexpr inline T sub(initialvalue<T>)
 KFR_FN(sub)
 
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-CMT_INLINE internal::expression_function<fn_sub, E1, E2> sub(E1&& x, E2&& y)
+CMT_INLINE internal::expression_function<fn::sub, E1, E2> sub(E1&& x, E2&& y)
 {
-    return { fn_sub(), std::forward<E1>(x), std::forward<E2>(y) };
+    return { fn::sub(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 
 template <typename T1>
@@ -133,14 +133,14 @@ KFR_FN(mul)
  * @brief Returns template expression that returns product of all the arguments passed to a function.
  */
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-CMT_INLINE internal::expression_function<fn_mul, E1, E2> mul(E1&& x, E2&& y)
+CMT_INLINE internal::expression_function<fn::mul, E1, E2> mul(E1&& x, E2&& y)
 {
-    return { fn_mul(), std::forward<E1>(x), std::forward<E2>(y) };
+    return { fn::mul(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-CMT_INLINE internal::expression_function<fn_mul, E1> mul(E1&& x, E2&& y, E3&& z)
+CMT_INLINE internal::expression_function<fn::mul, E1> mul(E1&& x, E2&& y, E3&& z)
 {
-    return { fn_mul(), std::forward<E1>(x), std::forward<E2>(y), std::forward<E3>(z) };
+    return { fn::mul(), std::forward<E1>(x), std::forward<E2>(y), std::forward<E3>(z) };
 }
 
 /**
@@ -157,9 +157,9 @@ KFR_FN(sqr)
  * @brief Returns template expression that returns square of x.
  */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_INLINE internal::expression_function<fn_sqr, E1> sqr(E1&& x)
+CMT_INLINE internal::expression_function<fn::sqr, E1> sqr(E1&& x)
 {
-    return { fn_sqr(), std::forward<E1>(x) };
+    return { fn::sqr(), std::forward<E1>(x) };
 }
 
 /**
@@ -176,9 +176,9 @@ KFR_FN(cub)
  * @brief Returns template expression that returns cube of x.
  */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_INLINE internal::expression_function<fn_cub, E1> cub(E1&& x)
+CMT_INLINE internal::expression_function<fn::cub, E1> cub(E1&& x)
 {
-    return { fn_cub(), std::forward<E1>(x) };
+    return { fn::cub(), std::forward<E1>(x) };
 }
 
 template <typename T, KFR_ENABLE_IF(is_numeric_args<T>::value)>
@@ -210,24 +210,24 @@ KFR_FN(pow4)
 KFR_FN(pow5)
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_INLINE internal::expression_function<fn_pow2, E1> pow2(E1&& x)
+CMT_INLINE internal::expression_function<fn::pow2, E1> pow2(E1&& x)
 {
-    return { fn_pow2(), std::forward<E1>(x) };
+    return { fn::pow2(), std::forward<E1>(x) };
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_INLINE internal::expression_function<fn_pow3, E1> pow3(E1&& x)
+CMT_INLINE internal::expression_function<fn::pow3, E1> pow3(E1&& x)
 {
-    return { fn_pow3(), std::forward<E1>(x) };
+    return { fn::pow3(), std::forward<E1>(x) };
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_INLINE internal::expression_function<fn_pow4, E1> pow4(E1&& x)
+CMT_INLINE internal::expression_function<fn::pow4, E1> pow4(E1&& x)
 {
-    return { fn_pow4(), std::forward<E1>(x) };
+    return { fn::pow4(), std::forward<E1>(x) };
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_INLINE internal::expression_function<fn_pow5, E1> pow5(E1&& x)
+CMT_INLINE internal::expression_function<fn::pow5, E1> pow5(E1&& x)
 {
-    return { fn_pow5(), std::forward<E1>(x) };
+    return { fn::pow5(), std::forward<E1>(x) };
 }
 
 /// Raise x to the power base \f$ x^{base} \f$
@@ -251,9 +251,9 @@ constexpr inline T ipow(T x, int base)
 KFR_FN(ipow)
 
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-CMT_INLINE internal::expression_function<fn_ipow, E1, E2> ipow(E1&& x, E2&& b)
+CMT_INLINE internal::expression_function<fn::ipow, E1, E2> ipow(E1&& x, E2&& b)
 {
-    return { fn_ipow(), std::forward<E1>(x), std::forward<E2>(b) };
+    return { fn::ipow(), std::forward<E1>(x), std::forward<E2>(b) };
 }
 
 /// Return square of the sum of all arguments
@@ -495,12 +495,11 @@ constexpr CMT_INLINE T reciprocal(T x)
 }
 KFR_FN(reciprocal)
 
-template <typename T, size_t N>
-CMT_INLINE vec<T, N> mulsign(const vec<T, N>& x, const vec<T, N>& y)
+template <typename T1, typename T2>
+CMT_INLINE common_type<T1, T2> mulsign(const T1& x, const T2& y)
 {
-    return x ^ (y & internal::highbitmask<T>);
+    return x ^ (y & internal::highbitmask<subtype<T2>>);
 }
-KFR_FN_S(mulsign)
 KFR_FN(mulsign)
 
 template <typename T, size_t N>
@@ -572,7 +571,7 @@ KFR_FN(swapbyteorder)
 template <typename T, size_t N>
 CMT_INLINE T hadd(const vec<T, N>& value)
 {
-    return horizontal(value, fn_add());
+    return horizontal(value, fn::add());
 }
 KFR_FN(hadd)
 
@@ -580,26 +579,26 @@ KFR_FN(hadd)
 template <typename T, size_t N>
 CMT_INLINE T hmul(const vec<T, N>& value)
 {
-    return horizontal(value, fn_mul());
+    return horizontal(value, fn::mul());
 }
 KFR_FN(hmul)
 
 template <typename T, size_t N>
 CMT_INLINE T hbitwiseand(const vec<T, N>& value)
 {
-    return horizontal(value, fn_bitwiseand());
+    return horizontal(value, fn::bitwiseand());
 }
 KFR_FN(hbitwiseand)
 template <typename T, size_t N>
 CMT_INLINE T hbitwiseor(const vec<T, N>& value)
 {
-    return horizontal(value, fn_bitwiseor());
+    return horizontal(value, fn::bitwiseor());
 }
 KFR_FN(hbitwiseor)
 template <typename T, size_t N>
 CMT_INLINE T hbitwisexor(const vec<T, N>& value)
 {
-    return horizontal(value, fn_bitwisexor());
+    return horizontal(value, fn::bitwisexor());
 }
 KFR_FN(hbitwisexor)
 
@@ -666,25 +665,25 @@ CMT_INLINE vec<T, N> negodd(const vec<T, N>& x)
         return bind_expression(fn(), std::forward<A1>(a1), std::forward<A2>(a2));                            \
     }
 
-KFR_EXPR_UNARY(fn_neg, -)
-KFR_EXPR_UNARY(fn_bitwisenot, ~)
+KFR_EXPR_UNARY(fn::neg, -)
+KFR_EXPR_UNARY(fn::bitwisenot, ~)
 
-KFR_EXPR_BINARY(fn_add, +)
-KFR_EXPR_BINARY(fn_sub, -)
-KFR_EXPR_BINARY(fn_mul, *)
-KFR_EXPR_BINARY(fn_div, /)
-KFR_EXPR_BINARY(fn_bitwiseand, &)
-KFR_EXPR_BINARY(fn_bitwiseor, |)
-KFR_EXPR_BINARY(fn_bitwisexor, ^)
-KFR_EXPR_BINARY(fn_shl, <<)
-KFR_EXPR_BINARY(fn_shr, >>)
+KFR_EXPR_BINARY(fn::add, +)
+KFR_EXPR_BINARY(fn::sub, -)
+KFR_EXPR_BINARY(fn::mul, *)
+KFR_EXPR_BINARY(fn::div, /)
+KFR_EXPR_BINARY(fn::bitwiseand, &)
+KFR_EXPR_BINARY(fn::bitwiseor, |)
+KFR_EXPR_BINARY(fn::bitwisexor, ^)
+KFR_EXPR_BINARY(fn::shl, <<)
+KFR_EXPR_BINARY(fn::shr, >>)
 
-KFR_EXPR_BINARY(fn_equal, ==)
-KFR_EXPR_BINARY(fn_notequal, !=)
-KFR_EXPR_BINARY(fn_less, <)
-KFR_EXPR_BINARY(fn_greater, >)
-KFR_EXPR_BINARY(fn_lessorequal, <=)
-KFR_EXPR_BINARY(fn_greaterorequal, >=)
+KFR_EXPR_BINARY(fn::equal, ==)
+KFR_EXPR_BINARY(fn::notequal, !=)
+KFR_EXPR_BINARY(fn::less, <)
+KFR_EXPR_BINARY(fn::greater, >)
+KFR_EXPR_BINARY(fn::lessorequal, <=)
+KFR_EXPR_BINARY(fn::greaterorequal, >=)
 #undef KFR_EXPR_UNARY
 #undef KFR_EXPR_BINARY
 
@@ -713,7 +712,7 @@ struct expression_pack : expression<E...>, output_expression
     template <size_t N>
     CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
     {
-        return this->call(fn_packtranspose(), index, y);
+        return this->call(fn::packtranspose(), index, y);
     }
 };
 

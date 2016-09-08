@@ -614,6 +614,6 @@ CMT_NOINLINE expression_pointer<T> window(size_t size, window_type type, identit
             return to_pointer<T>(
                 typename internal::window_by_type<window>::template type<T>(size, win_param, symmetry));
         },
-        fn_returns<expression_pointer<T>>());
+        fn::returns<expression_pointer<T>>());
 }
 }
