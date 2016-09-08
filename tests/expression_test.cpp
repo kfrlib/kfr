@@ -99,6 +99,17 @@ TEST(reverse)
     CHECK(a[20] == 0);
 }
 
+TEST(mix)
+{
+    univector<float, 21> a = mix(sequence(0, 0.5f, 1, 0.5f), counter(), counter() * 10);
+    CHECK(a[0] == 0);
+    CHECK(a[1] == 5.5);
+    CHECK(a[2] == 20);
+    CHECK(a[3] == 16.5);
+    CHECK(a[4] == 4);
+    CHECK(a[20] == 20);
+}
+
 int main(int argc, char** argv)
 {
     println(library_version());

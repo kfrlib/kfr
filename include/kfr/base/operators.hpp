@@ -454,6 +454,18 @@ KFR_INTRIN constexpr common_type<T1, T2, T3> mixs(T1 c, T2 x, T3 y)
 KFR_FN(mix)
 KFR_FN(mixs)
 
+template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2, E3>::value)>
+CMT_INLINE internal::expression_function<fn::mix, E1, E2, E3> mix(E1&& c, E2&& x, E3&& y)
+{
+    return { fn::mix(), std::forward<E1>(c), std::forward<E2>(x), std::forward<E3>(y) };
+}
+
+template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2, E3>::value)>
+CMT_INLINE internal::expression_function<fn::mixs, E1, E2, E3> mixs(E1&& c, E2&& x, E3&& y)
+{
+    return { fn::mixs(), std::forward<E1>(c), std::forward<E2>(x), std::forward<E3>(y) };
+}
+
 namespace internal
 {
 
