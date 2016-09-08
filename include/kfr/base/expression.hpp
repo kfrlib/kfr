@@ -123,11 +123,7 @@ private:
     template <typename Fn, typename T, size_t N, size_t... indices>
     CMT_INLINE vec<T, N> call_impl(Fn&& fn, csizes_t<indices...>, size_t index, vec_t<T, N>) const
     {
-        using ratio          = func_ratio<Fn>;
-        constexpr size_t Nin = N * ratio::input / ratio::output;
-
-        return fn(std::get<indices>(this->args)(cinput, index * ratio::input / ratio::output,
-                                                vec_t_for<Args, Nin>())...);
+        return fn(std::get<indices>(this->args)(cinput, index, vec_t_for<Args, N>())...);
     }
     template <size_t... indices>
     CMT_INLINE void begin_block_impl(size_t size, csizes_t<indices...>)
@@ -177,8 +173,6 @@ using arg = internal::arg_impl<T>;
 template <typename Fn, typename... Args>
 struct expression_function : expression<arg<Args>...>
 {
-    using ratio = func_ratio<Fn>;
-
     using value_type =
         subtype<decltype(std::declval<Fn>()(std::declval<vec<value_type_of<arg<Args>>, 1>>()...))>;
     using T = value_type;

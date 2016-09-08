@@ -64,7 +64,6 @@
 #define KFR_FNR(fn, in, out)                                                                                 \
     struct fn_##fn                                                                                           \
     {                                                                                                        \
-        using ratio = ioratio<in, out>;                                                                      \
         template <typename... Args>                                                                          \
         CMT_INLINE_MEMBER decltype(fn(std::declval<Args>()...)) operator()(Args&&... args) const             \
         {                                                                                                    \
@@ -145,13 +144,6 @@ struct range
     T1 min;
     T1 max;
     T1 distance() const { return max - min; }
-};
-
-template <size_t in, size_t out>
-struct ioratio
-{
-    constexpr static size_t input  = in;
-    constexpr static size_t output = out;
 };
 
 /// @brief An enumeration representing data type
@@ -250,23 +242,6 @@ using cinput_t  = coutputinput_t<outputinput_t::input>;
 
 constexpr coutput_t coutput{};
 constexpr cinput_t cinput{};
-
-namespace internal
-{
-template <typename Fn, typename enable = void_t<>>
-struct func_ratio_impl
-{
-    using type = ioratio<1, 1>;
-};
-template <typename Fn>
-struct func_ratio_impl<Fn, void_t<typename Fn::ratio>>
-{
-    using type = typename Fn::ratio;
-};
-}
-
-template <typename Fn>
-using func_ratio = typename internal::func_ratio_impl<remove_reference<Fn>>::type;
 
 template <typename T>
 constexpr inline T align_down(T x, identity<T> alignment)
