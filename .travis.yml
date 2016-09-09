@@ -49,7 +49,7 @@ matrix:
         - TEST=XCODE6.3 CMAKEARGS="-DCMAKE_BUILD_TYPE=Release .."
 
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install cmake ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cmake --version || brew install cmake; fi
   - cmake --version
   
 script:
