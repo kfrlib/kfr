@@ -46,7 +46,7 @@ constexpr inline size_t size_add(size_t x, size_t y)
 
 constexpr inline size_t size_sub(size_t x, size_t y)
 {
-    return (x == infinite_size || y == infinite_size) ? infinite_size : x - y;
+    return (x == infinite_size || y == infinite_size) ? infinite_size : (x > y ? x - y : 0);
 }
 
 constexpr inline size_t size_min(size_t x) noexcept { return x; }
@@ -353,12 +353,11 @@ CMT_INLINE internal::expression_function<Fn, NewArgs...> rebind(
 namespace internal
 {
 template <size_t width, typename OutputExpr, typename InputExpr>
-CMT_INLINE void process_cycle(OutputExpr&& outfn, const InputExpr& fn, size_t& i, size_t size)
+CMT_INLINE void process_cycle(OutputExpr&& outfn, const InputExpr& fn, size_t& i, size_t end)
 {
-    using Tin          = value_type_of<InputExpr>;
-    const size_t count = size / width * width;
+    using Tin = value_type_of<InputExpr>;
     CMT_LOOP_NOUNROLL
-    for (; i < count; i += width)
+    for (; i < end / width * width; i += width)
     {
         outfn(coutput, i, fn(cinput, i, vec_t<Tin, width>()));
     }
@@ -367,11 +366,16 @@ CMT_INLINE void process_cycle(OutputExpr&& outfn, const InputExpr& fn, size_t& i
 
 template <typename Tout, cpu_t c = cpu_t::native, size_t width = 0, typename OutputExpr, typename InputExpr,
           size_t groupsize = 1>
-CMT_INLINE size_t process(OutputExpr&& out, const InputExpr& in, csize_t<groupsize> = csize_t<groupsize>())
+CMT_INLINE size_t process(OutputExpr&& out, const InputExpr& in, size_t start = 0,
+                          size_t size = infinite_size, csize_t<groupsize> = csize_t<groupsize>())
 {
-    const size_t size = size_min(out.size(), in.size()) * groupsize;
     static_assert(is_output_expression<OutputExpr>::value, "OutFn must be an expression");
     static_assert(is_input_expression<InputExpr>::value, "Fn must be an expression");
+
+    size             = size_sub(size_min(out.size(), in.size(), size_add(size, start)), start);
+    if (size == 0 || size == infinite_size)
+        return size;
+    const size_t end = start + size;
     out.output_begin_block(size);
     in.begin_block(size);
 
@@ -381,9 +385,9 @@ CMT_INLINE size_t process(OutputExpr&& out, const InputExpr& in, csize_t<groupsi
     constexpr size_t w = width == 0 ? internal::get_vector_width<Tout, c>(1, 1) : width;
 #endif
 
-    size_t i = 0;
-    internal::process_cycle<w>(std::forward<OutputExpr>(out), in, i, size);
-    internal::process_cycle<groupsize>(std::forward<OutputExpr>(out), in, i, size);
+    size_t i = start;
+    internal::process_cycle<w>(std::forward<OutputExpr>(out), in, i, end);
+    internal::process_cycle<groupsize>(std::forward<OutputExpr>(out), in, i, end);
 
     in.end_block(size);
     out.output_end_block(size);
