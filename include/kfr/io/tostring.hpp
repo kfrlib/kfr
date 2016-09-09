@@ -141,3 +141,47 @@ struct representation<kfr::univector<T, Tag>>
     }
 };
 }
+
+namespace kfr
+{
+
+namespace internal
+{
+struct expression_printer : output_expression
+{
+    template <typename T, size_t N>
+    void operator()(coutput_t, size_t index, const vec<T, N>& value)
+    {
+        for (size_t i = 0; i < N; i++)
+        {
+            if (index + i != 0)
+                print(", ");
+            print(value[i]);
+        }
+    }
+    template <typename InputExpr>
+    InputExpr& operator=(const InputExpr& input)
+    {
+        process<value_type_of<InputExpr>>(*this, input);
+        return input;
+    }
+};
+
+struct expression_debug_printer : output_expression
+{
+    template <typename T, size_t N>
+    void operator()(coutput_t, size_t index, const vec<T, N>& value)
+    {
+        println(fmtwidth<7>(index), ": (", value, ")");
+    }
+    template <typename InputExpr>
+    InputExpr& operator=(const InputExpr& input)
+    {
+        process<value_type_of<InputExpr>>(*this, input);
+        return input;
+    }
+};
+}
+inline internal::expression_printer printer() { return internal::expression_printer(); }
+inline internal::expression_debug_printer debug_printer() { return internal::expression_debug_printer(); }
+}
