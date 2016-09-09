@@ -60,7 +60,7 @@ CMT_INLINE T horizontal(const vec<T, N>& value, ReduceFn&& reduce)
 }
 
 template <typename T>
-constexpr inline T add(T x)
+constexpr inline T add(const T& x)
 {
     return x;
 }
@@ -69,9 +69,9 @@ constexpr inline T add(T x)
  * @brief Returns sum of all the arguments passed to a function.
  */
 template <typename T1, typename T2, typename... Ts, KFR_ENABLE_IF(is_numeric_args<T1, T2, Ts...>::value)>
-constexpr inline common_type<T1, T2, Ts...> add(T1 x, T2 y, Ts... rest)
+constexpr inline common_type<T1, T2, Ts...> add(const T1& x, const T2& y, const Ts&... rest)
 {
-    return x + add(std::forward<T2>(y), std::forward<Ts>(rest)...);
+    return x + add(y, rest...);
 }
 template <typename T>
 constexpr inline T add(initialvalue<T>)
@@ -90,7 +90,7 @@ CMT_INLINE internal::expression_function<fn::add, E...> add(E&&... x)
 }
 
 template <typename T1, typename T2>
-constexpr inline common_type<T1, T2> sub(T1 x, T2 y)
+constexpr inline common_type<T1, T2> sub(const T1& x, const T2& y)
 {
     return x - y;
 }
@@ -108,7 +108,7 @@ CMT_INLINE internal::expression_function<fn::sub, E1, E2> sub(E1&& x, E2&& y)
 }
 
 template <typename T1>
-constexpr inline T1 mul(T1 x)
+constexpr inline T1 mul(const T1& x)
 {
     return x;
 }
@@ -117,9 +117,9 @@ constexpr inline T1 mul(T1 x)
  * @brief Returns product of all the arguments passed to a function.
  */
 template <typename T1, typename T2, typename... Ts>
-constexpr inline common_type<T1, T2, Ts...> mul(T1 x, T2 y, Ts... rest)
+constexpr inline common_type<T1, T2, Ts...> mul(const T1& x, const T2& y, const Ts&... rest)
 {
-    return x * mul(std::forward<T2>(y), std::forward<Ts>(rest)...);
+    return x * mul(y, rest...);
 }
 
 template <typename T>
@@ -142,7 +142,7 @@ CMT_INLINE internal::expression_function<fn::mul, E...> mul(E&&... x)
  * @brief Returns square of x.
  */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-constexpr inline T1 sqr(T1 x)
+constexpr inline T1 sqr(const T1& x)
 {
     return x * x;
 }
@@ -161,7 +161,7 @@ CMT_INLINE internal::expression_function<fn::sqr, E1> sqr(E1&& x)
  * @brief Returns cube of x.
  */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-constexpr inline T1 cub(T1 x)
+constexpr inline T1 cub(const T1& x)
 {
     return sqr(x) * x;
 }
@@ -177,25 +177,25 @@ CMT_INLINE internal::expression_function<fn::cub, E1> cub(E1&& x)
 }
 
 template <typename T, KFR_ENABLE_IF(is_numeric_args<T>::value)>
-constexpr inline T pow2(T x)
+constexpr inline T pow2(const T& x)
 {
     return sqr(x);
 }
 
 template <typename T, KFR_ENABLE_IF(is_numeric_args<T>::value)>
-constexpr inline T pow3(T x)
+constexpr inline T pow3(const T& x)
 {
     return cub(x);
 }
 
 template <typename T, KFR_ENABLE_IF(is_numeric_args<T>::value)>
-constexpr inline T pow4(T x)
+constexpr inline T pow4(const T& x)
 {
     return sqr(sqr(x));
 }
 
 template <typename T, KFR_ENABLE_IF(is_numeric_args<T>::value)>
-constexpr inline T pow5(T x)
+constexpr inline T pow5(const T& x)
 {
     return pow4(x) * x;
 }
@@ -231,7 +231,7 @@ CMT_INLINE internal::expression_function<fn::pow5, E1> pow5(E1&& x)
 /// CHECK( ipow( 0.5, 2 ) == 0.25 );
 /// @endcode
 template <typename T>
-constexpr inline T ipow(T x, int base)
+constexpr inline T ipow(const T& x, int base)
 {
     T result = T(1);
     while (base)
@@ -256,13 +256,13 @@ CMT_INLINE internal::expression_function<fn::ipow, E1, E2> ipow(E1&& x, E2&& b)
 ///
 /// CHECK(sqrsum(1,2,3) == 36);
 template <typename T1, typename... Ts>
-constexpr inline common_type<T1, Ts...> sqrsum(T1 x, Ts... rest)
+constexpr inline common_type<T1, Ts...> sqrsum(const T1& x, const Ts&... rest)
 {
-    return sqr(add(x, std::forward<Ts>(rest)...));
+    return sqr(add(x, rest...));
 }
 
 template <typename T1, typename T2>
-constexpr inline common_type<T1, T2> sqrdiff(T1 x, T2 y)
+constexpr inline common_type<T1, T2> sqrdiff(const T1& x, const T2& y)
 {
     return sqr(x - y);
 }
@@ -303,7 +303,7 @@ KFR_FN(bitwisenot)
 
 /// Bitwise And
 template <typename T1, typename T2>
-inline common_type<T1, T2> bitwiseand(T1 x, T2 y)
+inline common_type<T1, T2> bitwiseand(const T1& x, const T2& y)
 {
     return x & y;
 }
@@ -316,7 +316,7 @@ KFR_FN(bitwiseand)
 
 /// Bitwise And-Not
 template <typename T1, typename T2>
-inline common_type<T1, T2> bitwiseandnot(T1 x, T2 y)
+inline common_type<T1, T2> bitwiseandnot(const T1& x, const T2& y)
 {
     return x & ~y;
 }
@@ -329,7 +329,7 @@ KFR_FN(bitwiseandnot)
 
 /// Bitwise Or
 template <typename T1, typename T2>
-inline common_type<T1, T2> bitwiseor(T1 x, T2 y)
+inline common_type<T1, T2> bitwiseor(const T1& x, const T2& y)
 {
     return x | y;
 }
@@ -342,7 +342,7 @@ KFR_FN(bitwiseor)
 
 /// Bitwise Xor (Exclusive Or)
 template <typename T1, typename T2>
-inline common_type<T1, T2> bitwisexor(T1 x, T2 y)
+inline common_type<T1, T2> bitwisexor(const T1& x, const T2& y)
 {
     return x ^ y;
 }
@@ -355,7 +355,7 @@ KFR_FN(bitwisexor)
 
 /// Bitwise Left shift
 template <typename T1, typename T2>
-inline common_type<T1, T2> shl(T1 left, T2 right)
+inline common_type<T1, T2> shl(const T1& left, const T2& right)
 {
     return left << right;
 }
@@ -363,7 +363,7 @@ KFR_FN(shl)
 
 /// Bitwise Right shift
 template <typename T1, typename T2>
-inline common_type<T1, T2> shr(T1 left, T2 right)
+inline common_type<T1, T2> shr(const T1& left, const T2& right)
 {
     return left >> right;
 }
@@ -371,7 +371,7 @@ KFR_FN(shr)
 
 /// Bitwise Left Rotate
 template <typename T1, typename T2>
-inline common_type<T1, T2> rol(T1 left, T2 right)
+inline common_type<T1, T2> rol(const T1& left, const T2& right)
 {
     return shl(left, right) | shr(left, (static_cast<subtype<T1>>(typebits<T1>::bits) - right));
 }
@@ -379,39 +379,39 @@ KFR_FN(rol)
 
 /// Bitwise Right Rotate
 template <typename T1, typename T2>
-inline common_type<T1, T2> ror(T1 left, T2 right)
+inline common_type<T1, T2> ror(const T1& left, const T2& right)
 {
     return shr(left, right) | shl(left, (static_cast<subtype<T1>>(typebits<T1>::bits) - right));
 }
 KFR_FN(ror)
 
 template <typename T1, typename T2>
-inline common_type<T1, T2> equal(T1 x, T2 y)
+inline common_type<T1, T2> equal(const T1& x, const T2& y)
 {
     return bitcast<subtype<common_type<T1, T2>>>(x == y);
 }
 template <typename T1, typename T2>
-inline common_type<T1, T2> notequal(T1 x, T2 y)
+inline common_type<T1, T2> notequal(const T1& x, const T2& y)
 {
     return bitcast<subtype<common_type<T1, T2>>>(x != y);
 }
 template <typename T1, typename T2>
-inline common_type<T1, T2> less(T1 x, T2 y)
+inline common_type<T1, T2> less(const T1& x, const T2& y)
 {
     return bitcast<subtype<common_type<T1, T2>>>(x < y);
 }
 template <typename T1, typename T2>
-inline common_type<T1, T2> greater(T1 x, T2 y)
+inline common_type<T1, T2> greater(const T1& x, const T2& y)
 {
     return bitcast<subtype<common_type<T1, T2>>>(x > y);
 }
 template <typename T1, typename T2>
-inline common_type<T1, T2> lessorequal(T1 x, T2 y)
+inline common_type<T1, T2> lessorequal(const T1& x, const T2& y)
 {
     return bitcast<subtype<common_type<T1, T2>>>(x <= y);
 }
 template <typename T1, typename T2>
-inline common_type<T1, T2> greaterorequal(T1 x, T2 y)
+inline common_type<T1, T2> greaterorequal(const T1& x, const T2& y)
 {
     return bitcast<subtype<common_type<T1, T2>>>(x >= y);
 }
@@ -424,13 +424,13 @@ KFR_FN(greaterorequal)
 
 /// @brief Fused Multiply-Add
 template <typename T1, typename T2, typename T3>
-KFR_INTRIN constexpr common_type<T1, T2, T3> fmadd(T1 x, T2 y, T3 z)
+KFR_INTRIN constexpr common_type<T1, T2, T3> fmadd(const T1& x, const T2& y, const T3& z)
 {
     return x * y + z;
 }
 /// @brief Fused Multiply-Sub
 template <typename T1, typename T2, typename T3>
-KFR_INTRIN constexpr common_type<T1, T2, T3> fmsub(T1 x, T2 y, T3 z)
+KFR_INTRIN constexpr common_type<T1, T2, T3> fmsub(const T1& x, const T2& y, const T3& z)
 {
     return x * y - z;
 }
@@ -440,14 +440,14 @@ KFR_FN(fmsub)
 /// @brief Linear blend of `x` and `y` (`c` must be in the range 0...+1)
 /// Returns `x + ( y - x ) * c`
 template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>::value)>
-KFR_INTRIN constexpr common_type<T1, T2, T3> mix(T1 c, T2 x, T3 y)
+KFR_INTRIN constexpr common_type<T1, T2, T3> mix(const T1& c, const T2& x, const T3& y)
 {
     return fmadd(c, y - x, x);
 }
 
 /// @brief Linear blend of `x` and `y` (`c` must be in the range -1...+1)
 template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>::value)>
-KFR_INTRIN constexpr common_type<T1, T2, T3> mixs(T1 c, T2 x, T3 y)
+KFR_INTRIN constexpr common_type<T1, T2, T3> mixs(const T1& c, const T2& x, const T3& y)
 {
     return mix(fmadd(c, 0.5, 0.5), x, y);
 }
@@ -470,13 +470,14 @@ namespace internal
 {
 
 template <typename T1, typename T2>
-constexpr CMT_INLINE T1 horner(T1, T2 c0)
+constexpr CMT_INLINE common_type<T1, T2> horner(const T1&, const T2& c0)
 {
     return c0;
 }
 
 template <typename T1, typename T2, typename T3, typename... Ts>
-constexpr CMT_INLINE T1 horner(T1 x, T2 c0, T3 c1, Ts... values)
+constexpr CMT_INLINE common_type<T1, T2, T3, Ts...> horner(const T1& x, const T2& c0, const T3& c1,
+                                                           const Ts&... values)
 {
     return fmadd(horner(x, c1, values...), x, c0);
 }
@@ -486,7 +487,7 @@ constexpr CMT_INLINE T1 horner(T1 x, T2 c0, T3 c1, Ts... values)
 ///
 /// ``horner(x, 1, 2, 3)`` is equivalent to \(3x^2 + 2x + 1\)
 template <typename T1, typename... Ts>
-constexpr CMT_INLINE T1 horner(T1 x, Ts... c)
+constexpr CMT_INLINE common_type<T1, Ts...> horner(const T1& x, const Ts&... c)
 {
     return internal::horner(x, c...);
 }
@@ -495,7 +496,7 @@ KFR_FN(horner)
 /// @brief Calculate Multiplicative Inverse of `x`
 /// Returns `1/x`
 template <typename T>
-constexpr CMT_INLINE T reciprocal(T x)
+constexpr CMT_INLINE T reciprocal(const T& x)
 {
     static_assert(std::is_floating_point<subtype<T>>::value, "T must be floating point type");
     return subtype<T>(1) / x;
@@ -558,17 +559,17 @@ CMT_INLINE vec<T, N> swapbyteorder(const vec<T, N>& x)
     return bitcast<T>(swap<sizeof(T)>(bitcast<u8>(x)));
 }
 template <typename T, KFR_ENABLE_IF(sizeof(T) == 8)>
-CMT_INLINE T swapbyteorder(T x)
+CMT_INLINE T swapbyteorder(const T& x)
 {
     return reinterpret_cast<const T&>(__builtin_bswap64(reinterpret_cast<const u64&>(x)));
 }
 template <typename T, KFR_ENABLE_IF(sizeof(T) == 4)>
-CMT_INLINE T swapbyteorder(T x)
+CMT_INLINE T swapbyteorder(const T& x)
 {
     return reinterpret_cast<const T&>(__builtin_bswap32(reinterpret_cast<const u32&>(x)));
 }
 template <typename T, KFR_ENABLE_IF(sizeof(T) == 2)>
-CMT_INLINE T swapbyteorder(T x)
+CMT_INLINE T swapbyteorder(const T& x)
 {
     return reinterpret_cast<const T&>(__builtin_bswap16(reinterpret_cast<const u16&>(x)));
 }
