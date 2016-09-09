@@ -7,6 +7,7 @@
 #include "testo/testo.hpp"
 
 #include <kfr/base.hpp>
+#include <kfr/cometa/function.hpp>
 #include <kfr/dsp.hpp>
 #include <kfr/io.hpp>
 
@@ -108,6 +109,43 @@ TEST(mix)
     CHECK(a[3] == 16.5);
     CHECK(a[4] == 4);
     CHECK(a[20] == 20);
+}
+
+constexpr inline size_t fast_range_sum(size_t stop) { return stop * (stop + 1) / 2; }
+
+TEST(partition)
+{
+    {
+        univector<double, 400> output = zeros();
+        auto result = partition(output, counter(), 5, 1);
+        CHECK(result.count == 5);
+        CHECK(result.chunk_size == 80);
+
+        result(0);
+        CHECK(sum(output) == fast_range_sum(80 - 1));
+        result(1);
+        CHECK(sum(output) == fast_range_sum(160 - 1));
+        result(2);
+        CHECK(sum(output) == fast_range_sum(240 - 1));
+        result(3);
+        CHECK(sum(output) == fast_range_sum(320 - 1));
+        result(4);
+        CHECK(sum(output) == fast_range_sum(400 - 1));
+    }
+
+    {
+        univector<double, 400> output = zeros();
+        auto result = partition(output, counter(), 5, 160);
+        CHECK(result.count == 3);
+        CHECK(result.chunk_size == 160);
+
+        result(0);
+        CHECK(sum(output) == fast_range_sum(160 - 1));
+        result(1);
+        CHECK(sum(output) == fast_range_sum(320 - 1));
+        result(2);
+        CHECK(sum(output) == fast_range_sum(400 - 1));
+    }
 }
 
 int main(int argc, char** argv)
