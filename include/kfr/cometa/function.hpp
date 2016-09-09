@@ -129,14 +129,14 @@ private:
     details::virtual_function<Result, Args...>* fn;
 };
 
-template <typename Ret, typename... Args, typename T, typename Fn, typename DefFn = fn::noop>
+template <typename Ret, typename... Args, typename T, typename Fn, typename DefFn = fn_noop>
 CMT_INLINE function<Ret(Args...)> cdispatch(cvals_t<T>, identity<T>, Fn&&, DefFn&& deffn = DefFn())
 {
     return [=](Args... args) CMT_INLINE_MEMBER -> Ret { return deffn(std::forward<Args>(args)...); };
 }
 
 template <typename Ret, typename... Args, typename T, T v0, T... values, typename Fn,
-          typename DefFn = fn::noop>
+          typename DefFn = fn_noop>
 inline function<Ret(Args...)> cdispatch(cvals_t<T, v0, values...>, identity<T> value, Fn&& fn,
                                         DefFn&& deffn = DefFn())
 {
