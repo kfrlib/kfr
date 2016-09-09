@@ -491,4 +491,41 @@ internal::expression_pack<internal::arg<E>...> pack(E&&... e)
 {
     return internal::expression_pack<internal::arg<E>...>(std::forward<E>(e)...);
 }
+
+template <typename OutExpr, typename InExpr>
+struct task_partition
+{
+    task_partition(OutExpr&& output, InExpr&& input, size_t size, size_t chunk_size, size_t count)
+        : output(std::forward<OutExpr>(output)), input(std::forward<InExpr>(input)), size(size),
+          chunk_size(chunk_size), count(count)
+    {
+    }
+    OutExpr output;
+    InExpr input;
+    size_t size;
+    size_t chunk_size;
+    size_t count;
+    size_t operator()(size_t index)
+    {
+        if (index > count)
+            return 0;
+        using T = value_type_of<InExpr>;
+        return process<T>(output, input, index * chunk_size, chunk_size);
+    }
+};
+
+template <typename OutExpr, typename InExpr, typename T = value_type_of<InExpr>>
+task_partition<OutExpr, InExpr> partition(OutExpr&& output, InExpr&& input, size_t count,
+                                          size_t minimum_size = 0)
+{
+    static_assert(!is_infinite<OutExpr>::value || !is_infinite<InExpr>::value, "");
+
+    minimum_size            = minimum_size == 0 ? vector_width<T> * 8 : minimum_size;
+    const size_t size       = size_min(output.size(), input.size());
+    const size_t chunk_size = align_up(std::max(size / count, minimum_size), vector_width<T>);
+
+    task_partition<OutExpr, InExpr> result(std::forward<OutExpr>(output), std::forward<InExpr>(input), size,
+                                           chunk_size, (size + chunk_size - 1) / chunk_size);
+    return result;
+}
 }
