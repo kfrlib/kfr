@@ -8,11 +8,11 @@
 
 #include "../cident.h"
 
-#define KFR_VERSION_STRING "1.2.0"
+#define KFR_VERSION_STRING "1.3.0"
 #define KFR_VERSION_MAJOR 1
-#define KFR_VERSION_MINOR 2
+#define KFR_VERSION_MINOR 3
 #define KFR_VERSION_BUILD 0
-#define KFR_VERSION 10200
+#define KFR_VERSION (KFR_VERSION_MAJOR * 10000 + KFR_VERSION_MINOR * 100 + KFR_VERSION_BUILD)
 
 #ifdef __cplusplus
 namespace kfr
