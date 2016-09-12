@@ -291,4 +291,22 @@ CMT_INLINE internal::expression_biquads_zl<filters, T, internal::arg<E1>> biquad
 {
     return internal::expression_biquads_zl<filters, T, internal::arg<E1>>(bq, std::forward<E1>(e1));
 }
+
+/**
+ * @brief Returns template expressions that applies cascade of biquad filters to the input.
+ * @param bq Array of biquad coefficients
+ * @param e1 Input expression
+ * @note This implementation has zero latency
+ */
+template <typename T, typename E1>
+CMT_INLINE expression_pointer<T> biquad_zl(const biquad_params<T>* bq, size_t count, E1&& e1)
+{
+    return cswitch(csizes<1, 2, 4, 8, 16, 32, 64>, next_poweroftwo(count),
+                   [&](auto x) {
+                       constexpr size_t filters = x;
+                       return to_pointer(internal::expression_biquads_zl<filters, T, internal::arg<E1>>(
+                           internal::biquad_block<T, filters>(bq, count), std::forward<E1>(e1)));
+                   },
+                   [&] { return to_pointer(zeros<T>()); });
+}
 }
