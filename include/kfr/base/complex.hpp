@@ -254,6 +254,11 @@ constexpr CMT_INLINE vec<T, N * 2> cdecom(const vec<complex<T>, N>& x)
     return compcast<T>(x);
 }
 
+template <typename T, KFR_ENABLE_IF(is_numeric<T>::value)>
+constexpr CMT_INLINE T real(const T& value)
+{
+    return value;
+}
 template <typename T>
 constexpr CMT_INLINE T real(const complex<T>& value)
 {
@@ -414,6 +419,16 @@ KFR_I_CONVERTER(polar)
 KFR_I_CONVERTER(cartesian)
 KFR_I_CONVERTER(csqrt)
 
+template <typename T, size_t N>
+KFR_SINTRIN vec<T, N> cabs(const vec<T, N>& a)
+{
+    return to_scalar(intrinsics::cabs(static_cast<vec<complex<T>, N>>(a)));
+}
+template <typename T, size_t N>
+KFR_SINTRIN vec<T, N> carg(const vec<T, N>& a)
+{
+    return to_scalar(intrinsics::carg(static_cast<vec<complex<T>, N>>(a)));
+}
 template <typename T1>
 KFR_SINTRIN realtype<T1> cabs(const T1& a)
 {

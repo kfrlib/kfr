@@ -372,7 +372,7 @@ CMT_INLINE size_t process(OutputExpr&& out, const InputExpr& in, size_t start = 
     static_assert(is_output_expression<OutputExpr>::value, "OutFn must be an expression");
     static_assert(is_input_expression<InputExpr>::value, "Fn must be an expression");
 
-    size             = size_sub(size_min(out.size(), in.size(), size_add(size, start)), start);
+    size = size_sub(size_min(out.size(), in.size(), size_add(size, start)), start);
     if (size == 0 || size == infinite_size)
         return size;
     const size_t end = start + size;

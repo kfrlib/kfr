@@ -80,6 +80,9 @@ TEST(complex_math)
     CHECK(cabs(c32{ 3.f, 4.f }) == 5.f);
     CHECK(cabs(make_vector(c32{ 3.f, 4.f })) == make_vector(5.f));
 
+    CHECK(cabs(-3.f) == 3.f);
+    CHECK(cabs(make_vector(-3.f)) == make_vector(3.f));
+
     testo::epsilon<f32>() *= 5;
     testo::epsilon<f64>() *= 5;
 
