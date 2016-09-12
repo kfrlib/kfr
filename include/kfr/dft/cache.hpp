@@ -139,4 +139,24 @@ univector<complex<T>> idft(const univector<complex<T>, Tag>& input)
     dft->execute(output, input, temp, ctrue);
     return output;
 }
+
+template <typename T, size_t Tag>
+univector<complex<T>> realdft(const univector<T, Tag>& input)
+{
+    dft_plan_real_ptr<T> dft = dft_cache::instance().getreal(ctype<T>, input.size());
+    univector<complex<T>> output(input.size() / 2 + 1);
+    univector<u8> temp(dft->temp_size);
+    dft->execute(output, input, temp);
+    return output;
+}
+
+template <typename T, size_t Tag>
+univector<T> irealdft(const univector<complex<T>, Tag>& input)
+{
+    dft_plan_real_ptr<T> dft = dft_cache::instance().getreal(ctype<T>, input.size());
+    univector<T> output((input.size() - 1) * 2);
+    univector<u8> temp(dft->temp_size);
+    dft->execute(output, input, temp);
+    return output;
+}
 }
