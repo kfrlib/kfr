@@ -32,8 +32,6 @@
 #include "../base/small_buffer.hpp"
 #include "../base/vec.hpp"
 
-#include "../cometa/string.hpp"
-
 #include "bitrev.hpp"
 #include "ft.hpp"
 
@@ -890,9 +888,9 @@ protected:
     void add_stage(size_t stage_size, cbools_t<true, true>)
     {
         dft_stage<T>* direct_stage  = new Stage<false>(stage_size);
-        direct_stage->name          = type_name<decltype(*direct_stage)>();
+        direct_stage->name          = nullptr;
         dft_stage<T>* inverse_stage = new Stage<true>(stage_size);
-        inverse_stage->name         = type_name<decltype(*inverse_stage)>();
+        inverse_stage->name         = nullptr;
         this->data_size += direct_stage->data_size;
         this->temp_size += direct_stage->temp_size;
         stages[0].push_back(dft_stage_ptr(direct_stage));
@@ -902,7 +900,7 @@ protected:
     void add_stage(size_t stage_size, cbools_t<true, false>)
     {
         dft_stage<T>* direct_stage = new Stage<false>(stage_size);
-        direct_stage->name         = type_name<decltype(*direct_stage)>();
+        direct_stage->name         = nullptr;
         this->data_size += direct_stage->data_size;
         this->temp_size += direct_stage->temp_size;
         stages[0].push_back(dft_stage_ptr(direct_stage));
@@ -911,7 +909,7 @@ protected:
     void add_stage(size_t stage_size, cbools_t<false, true>)
     {
         dft_stage<T>* inverse_stage = new Stage<true>(stage_size);
-        inverse_stage->name         = type_name<decltype(*inverse_stage)>();
+        inverse_stage->name         = nullptr;
         this->data_size += inverse_stage->data_size;
         this->temp_size += inverse_stage->temp_size;
         stages[1].push_back(dft_stage_ptr(inverse_stage));
