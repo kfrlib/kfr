@@ -97,6 +97,48 @@ struct complex
     {
         return (make_vector(x) / make_vector(y))[0];
     }
+
+    template <typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex, U>>
+    KFR_INTRIN friend C operator+(const complex& x, const U& y)
+    {
+        return static_cast<C>(x) + static_cast<C>(y);
+    }
+    template <typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex, U>>
+    KFR_INTRIN friend C operator-(const complex& x, const U& y)
+    {
+        return static_cast<C>(x) - static_cast<C>(y);
+    }
+    template <typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex, U>>
+    KFR_INTRIN friend C operator*(const complex& x, const U& y)
+    {
+        return static_cast<C>(x) * static_cast<C>(y);
+    }
+    template <typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex, U>>
+    KFR_INTRIN friend C operator/(const complex& x, const U& y)
+    {
+        return static_cast<C>(x) / static_cast<C>(y);
+    }
+
+    template <typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex, U>>
+    KFR_INTRIN friend C operator+(const U& x, const complex& y)
+    {
+        return static_cast<C>(x) + static_cast<C>(y);
+    }
+    template <typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex, U>>
+    KFR_INTRIN friend C operator-(const U& x, const complex& y)
+    {
+        return static_cast<C>(x) - static_cast<C>(y);
+    }
+    template <typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex, U>>
+    KFR_INTRIN friend C operator*(const U& x, const complex& y)
+    {
+        return static_cast<C>(x) * static_cast<C>(y);
+    }
+    template <typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex, U>>
+    KFR_INTRIN friend C operator/(const U& x, const complex& y)
+    {
+        return static_cast<C>(x) / static_cast<C>(y);
+    }
     KFR_INTRIN friend complex operator-(const complex& x) { return (-make_vector(x))[0]; }
 };
 #endif
@@ -609,4 +651,23 @@ KFR_INTRIN internal::expression_function<fn::csqrt, E1> csqrt(E1&& x)
 {
     return { fn::csqrt(), std::forward<E1>(x) };
 }
+}
+
+namespace std
+{
+template <typename T1, typename T2>
+struct common_type<kfr::complex<T1>, kfr::complex<T2>>
+{
+    using type = kfr::complex<typename common_type<T1, T2>::type>;
+};
+template <typename T1, typename T2>
+struct common_type<kfr::complex<T1>, T2>
+{
+    using type = kfr::complex<typename common_type<T1, T2>::type>;
+};
+template <typename T1, typename T2>
+struct common_type<T1, kfr::complex<T2>>
+{
+    using type = kfr::complex<typename common_type<T1, T2>::type>;
+};
 }

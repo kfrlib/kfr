@@ -37,6 +37,9 @@
 namespace kfr
 {
 
+template <typename>
+struct complex;
+
 constexpr size_t infinite_size = static_cast<size_t>(-1);
 
 constexpr inline size_t size_add(size_t x, size_t y)
@@ -276,12 +279,32 @@ struct expression_scalar : input_expression
     }
 };
 
-template <typename T>
-using arg_impl = conditional<is_number<T>::value || is_vec<T>::value,
-                             expression_scalar<subtype<decay<T>>, compound_type_traits<decay<T>>::width>, T>;
+template <typename, typename T, typename = void>
+struct arg_impl
+{
+    using type = T;
+};
+
+template <typename T1, typename T2>
+struct arg_impl<T1, T2, void_t<enable_if<is_number<T1>::value>>>
+{
+    using type = expression_scalar<T1>;
+};
+
+template <typename T1, typename T2>
+struct arg_impl<complex<T1>, T2>
+{
+    using type = expression_scalar<complex<T1>>;
+};
+
+template <typename T1, typename T2, size_t N>
+struct arg_impl<vec<T1, N>, T2>
+{
+    using type = expression_scalar<T1, N>;
+};
 
 template <typename T>
-using arg = internal::arg_impl<T>;
+using arg = typename internal::arg_impl<decay<T>, T>::type;
 
 template <typename Fn, typename... Args>
 struct expression_function : expression<arg<Args>...>

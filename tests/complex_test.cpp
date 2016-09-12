@@ -195,6 +195,12 @@ TEST(static_tests)
     assert_is_same<ftype<complex<i64>>, complex<f64>>();
     assert_is_same<ftype<vec<complex<i32>, 4>>, vec<complex<f32>, 4>>();
     assert_is_same<ftype<vec<complex<i64>, 8>>, vec<complex<f64>, 8>>();
+
+    assert_is_same<kfr::internal::arg<int>, kfr::internal::expression_scalar<int, 1>>();
+    assert_is_same<kfr::internal::arg<complex<int>>,
+                   kfr::internal::expression_scalar<kfr::complex<int>, 1>>();
+
+    assert_is_same<common_type<complex<int>, double>, complex<double>>();
 }
 
 int main(int argc, char** argv)
