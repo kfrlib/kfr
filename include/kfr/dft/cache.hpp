@@ -36,6 +36,9 @@ namespace kfr
 template <typename T>
 using dft_plan_ptr = std::shared_ptr<const dft_plan<T>>;
 
+template <typename T>
+using dft_plan_real_ptr = std::shared_ptr<const dft_plan_real<T>>;
+
 struct dft_cache
 {
     static dft_cache& instance()
@@ -57,6 +60,20 @@ struct dft_cache
 #endif
         return get_or_create(cache_f64, size);
     }
+    dft_plan_real_ptr<f32> getreal(ctype_t<f32>, size_t size)
+    {
+#ifndef KFR_SINGLE_THREAD
+        std::lock_guard<std::mutex> guard(mutex);
+#endif
+        return get_or_create(cache_real_f32, size);
+    }
+    dft_plan_real_ptr<f64> getreal(ctype_t<f64>, size_t size)
+    {
+#ifndef KFR_SINGLE_THREAD
+        std::lock_guard<std::mutex> guard(mutex);
+#endif
+        return get_or_create(cache_real_f64, size);
+    }
     void clear()
     {
 #ifndef KFR_SINGLE_THREAD
@@ -64,11 +81,13 @@ struct dft_cache
 #endif
         cache_f32.clear();
         cache_f64.clear();
+        cache_real_f32.clear();
+        cache_real_f64.clear();
     }
 
 private:
     template <typename T>
-    std::shared_ptr<const dft_plan<T>> get_or_create(std::vector<dft_plan_ptr<T>>& cache, size_t size)
+    dft_plan_ptr<T> get_or_create(std::vector<dft_plan_ptr<T>>& cache, size_t size)
     {
         for (dft_plan_ptr<T>& dft : cache)
         {
@@ -79,9 +98,23 @@ private:
         cache.push_back(sh);
         return sh;
     }
+    template <typename T>
+    dft_plan_real_ptr<T> get_or_create(std::vector<dft_plan_real_ptr<T>>& cache, size_t size)
+    {
+        for (dft_plan_real_ptr<T>& dft : cache)
+        {
+            if (dft->size == size)
+                return dft;
+        }
+        dft_plan_real_ptr<T> sh = std::make_shared<dft_plan_real<T>>(size);
+        cache.push_back(sh);
+        return sh;
+    }
 
     std::vector<dft_plan_ptr<f32>> cache_f32;
     std::vector<dft_plan_ptr<f64>> cache_f64;
+    std::vector<dft_plan_real_ptr<f32>> cache_real_f32;
+    std::vector<dft_plan_real_ptr<f64>> cache_real_f64;
 #ifndef KFR_SINGLE_THREAD
     std::mutex mutex;
 #endif
@@ -91,7 +124,7 @@ template <typename T, size_t Tag>
 univector<complex<T>> dft(const univector<complex<T>, Tag>& input)
 {
     dft_plan_ptr<T> dft = dft_cache::instance().get(ctype<T>, input.size());
-    univector<T> output(input.size());
+    univector<complex<T>> output(input.size());
     univector<u8> temp(dft->temp_size);
     dft->execute(output, input, temp);
     return output;
@@ -101,7 +134,7 @@ template <typename T, size_t Tag>
 univector<complex<T>> idft(const univector<complex<T>, Tag>& input)
 {
     dft_plan_ptr<T> dft = dft_cache::instance().get(ctype<T>, input.size());
-    univector<T> output(input.size());
+    univector<complex<T>> output(input.size());
     univector<u8> temp(dft->temp_size);
     dft->execute(output, input, temp, ctrue);
     return output;
