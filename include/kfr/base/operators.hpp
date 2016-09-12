@@ -486,12 +486,18 @@ constexpr CMT_INLINE common_type<T1, T2, T3, Ts...> horner(const T1& x, const T2
 /// @brief Calculate polynomial using Horner's method
 ///
 /// ``horner(x, 1, 2, 3)`` is equivalent to \(3x^2 + 2x + 1\)
-template <typename T1, typename... Ts>
+template <typename T1, typename... Ts, KFR_ENABLE_IF(is_numeric_args<T1, Ts...>::value)>
 constexpr CMT_INLINE common_type<T1, Ts...> horner(const T1& x, const Ts&... c)
 {
     return internal::horner(x, c...);
 }
 KFR_FN(horner)
+
+template <typename... E, KFR_ENABLE_IF(is_input_expressions<E...>::value)>
+CMT_INLINE internal::expression_function<fn::horner, E...> horner(E&&... x)
+{
+    return { fn::horner(), std::forward<E>(x)... };
+}
 
 /// @brief Calculate Multiplicative Inverse of `x`
 /// Returns `1/x`
