@@ -69,6 +69,8 @@ protected:
     random_state state;
 };
 
+static_assert(sizeof(random_state) == 16, "sizeof(random_state) == 16");
+
 template <size_t N, KFR_ENABLE_IF(N <= sizeof(random_state))>
 inline vec<u8, N> random_bits(random_bit_generator& gen)
 {
