@@ -37,8 +37,11 @@ else ()
     set(OPT_TARGET "") # default target
 endif ()
 
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "config types" FORCE)
+
 if (${CMAKE_GENERATOR} STREQUAL "Visual Studio 14 2015")
     set(CMAKE_GENERATOR_TOOLSET LLVM-vs2014)
+    set(CMAKE_SUPPRESS_REGENERATION true)
 endif ()
 set(CMAKE_CXX_FLAGS "${OPT_TARGET} ${OPT_BITNESS} ${OPT_STATIC}" CACHE STRING "compile flags" FORCE)
 set(CMAKE_C_FLAGS "${OPT_TARGET} ${OPT_BITNESS} ${OPT_STATIC}" CACHE STRING "compile flags" FORCE)
