@@ -259,6 +259,13 @@ extern char* gets(char* __s);
 
 #endif
 
+#if defined _MSC_VER && _MSC_VER >= 1900 && defined(__clang__) &&                                            \
+    (__clang_major__ > 3 || (__clang_major__ == 3 && __clang_minor__ >= 9))
+#define CMT_EMPTY_BASES __declspec(empty_bases)
+#else
+#define CMT_EMPTY_BASES
+#endif
+
 #define CMT_INLINE_STATIC CMT_INLINE static
 
 #define CMT_EXTERN_C extern "C"
