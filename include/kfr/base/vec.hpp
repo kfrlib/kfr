@@ -563,7 +563,7 @@ struct empty
 }
 
 template <typename T, size_t N>
-struct vec : vec_t<T, N>, operators::empty
+struct CMT_EMPTY_BASES vec : vec_t<T, N>, operators::empty
 {
     static_assert(N > 0 && N <= 256, "Invalid vector size");
 
