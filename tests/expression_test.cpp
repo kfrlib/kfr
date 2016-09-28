@@ -15,19 +15,21 @@ using namespace kfr;
 
 TEST(pack)
 {
-    const univector<float, 20> v1 = 1 + counter();
-    const univector<float, 20> v2 = v1 * 11;
-    const univector<f32x2, 20> v3 = pack(v1, v2);
+    const univector<float, 21> v1 = 1 + counter();
+    const univector<float, 21> v2 = v1 * 11;
+    const univector<f32x2, 21> v3 = pack(v1, v2);
     CHECK(v3[0] == f32x2{ 1, 11 });
     CHECK(v3[1] == f32x2{ 2, 22 });
     CHECK(v3[18] == f32x2{ 19, 209 });
     CHECK(v3[19] == f32x2{ 20, 220 });
+    CHECK(v3[20] == f32x2{ 21, 231 });
 
-    const univector<f32x2, 20> v4 = bind_expression(fn::reverse(), v3);
+    const univector<f32x2, 21> v4 = bind_expression(fn::reverse(), v3);
     CHECK(v4[0] == f32x2{ 11, 1 });
     CHECK(v4[1] == f32x2{ 22, 2 });
     CHECK(v4[18] == f32x2{ 209, 19 });
     CHECK(v4[19] == f32x2{ 220, 20 });
+    CHECK(v4[20] == f32x2{ 231, 21 });
 }
 
 TEST(adjacent)
