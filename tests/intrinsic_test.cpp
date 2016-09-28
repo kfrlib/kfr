@@ -144,7 +144,6 @@ TEST(intrin_abs)
     testo::matrix(named("type") = signed_types, named("value") = std::vector<int>{ -1, 0, +1 },
                   [](auto type, int value) {
                       using T    = type_of<decltype(type)>;
-                      using Tsub = subtype<T>;
                       const T x(value);
                       CHECK(kfr::abs(x) == apply([](auto x) { return ref_abs(x); }, x));
                   });
@@ -171,7 +170,6 @@ TEST(intrin_sqrt)
     testo::matrix(named("type") = float_types, named("value") = std::vector<int>{ 0, 2, 65536 },
                   [](auto type, int value) {
                       using T    = type_of<decltype(type)>;
-                      using Tsub = subtype<T>;
                       const T x(value);
                       CHECK(kfr::sqrt(x) == apply([](auto x) { return std::sqrt(x); }, x));
                   });
@@ -199,7 +197,6 @@ TEST(intrin_round)
                   named("value") = std::vector<fbase>{ -1.51, -1.49, 0.0, +1.49, +1.51 },
                   [](auto type, fbase value) {
                       using T    = type_of<decltype(type)>;
-                      using Tsub = subtype<T>;
                       const T x(value);
                       CHECK(kfr::floor(x) == apply([](auto x) { return std::floor(x); }, x));
                       CHECK(kfr::ceil(x) == apply([](auto x) { return std::ceil(x); }, x));
@@ -230,7 +227,6 @@ TEST(intrin_min_max)
                   named("value") = std::vector<std::pair<fbase, fbase>>{ { -100, +100 }, { infinity, 0.0 } },
                   [](auto type, std::pair<fbase, fbase> value) {
                       using T    = type_of<decltype(type)>;
-                      using Tsub = subtype<T>;
                       const T x(value.first);
                       const T y(value.second);
                       CHECK(kfr::min(x, y) == apply([](auto x, auto y) { return std::min(x, y); }, x, y));
@@ -244,7 +240,6 @@ TEST(intrin_min_max)
                   named("value") = std::vector<std::pair<int, int>>{ { -100, +100 } },
                   [](auto type, std::pair<int, int> value) {
                       using T    = type_of<decltype(type)>;
-                      using Tsub = subtype<T>;
                       const T x(value.first);
                       const T y(value.second);
                       CHECK(kfr::min(x, y) == apply([](auto x, auto y) { return std::min(x, y); }, x, y));
@@ -258,7 +253,6 @@ TEST(intrin_min_max)
                   named("value") = std::vector<std::pair<unsigned, unsigned>>{ { 0, +200 } },
                   [](auto type, std::pair<unsigned, unsigned> value) {
                       using T    = type_of<decltype(type)>;
-                      using Tsub = subtype<T>;
                       const T x(value.first);
                       const T y(value.second);
                       CHECK(kfr::min(x, y) == apply([](auto x, auto y) { return std::min(x, y); }, x, y));
