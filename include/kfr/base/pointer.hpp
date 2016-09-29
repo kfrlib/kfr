@@ -64,7 +64,7 @@ std::shared_ptr<expression_resource> make_resource(E&& e)
         std::allocate_shared<T>(allocator<T>(), std::move(e)));
 }
 
-template <typename T, size_t maxwidth = maximum_expression_width()>
+template <typename T, size_t maxwidth = maximum_expression_width(), bool enable_resource = true>
 struct expression_pointer : input_expression
 {
     using value_type = T;
@@ -88,13 +88,13 @@ struct expression_pointer : input_expression
         vec<T, N> result = vec<T, N>(func(instance, index));
         return result;
     }
-    CMT_INLINE void begin_block(size_t size) const
+    CMT_INLINE void begin_block(cinput_t, size_t size) const
     {
         using func_t = void (*)(void*, size_t);
         func_t func  = reinterpret_cast<func_t>((*vtable)[0]);
         func(instance, size);
     }
-    CMT_INLINE void end_block(size_t size) const
+    CMT_INLINE void end_block(cinput_t, size_t size) const
     {
         using func_t = void (*)(void*, size_t);
         func_t func  = reinterpret_cast<func_t>((*vtable)[1]);
@@ -105,6 +105,47 @@ private:
     void* instance;
     const expression_vtable<T, maxwidth>* vtable;
     std::shared_ptr<expression_resource> resource;
+};
+
+template <typename T, size_t maxwidth>
+struct expression_pointer<T, maxwidth, false> : input_expression
+{
+    using value_type = T;
+
+    static_assert(is_poweroftwo(maxwidth), "N must be a power of two");
+    expression_pointer() noexcept : instance(nullptr), vtable(nullptr) {}
+    expression_pointer(void* instance, const expression_vtable<T, maxwidth>* vtable)
+        : instance(instance), vtable(vtable)
+    {
+    }
+    template <size_t N>
+    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
+    {
+        using func_t = simd<T, N> (*)(void*, size_t);
+
+        static_assert(is_poweroftwo(N), "N must be a power of two");
+        constexpr size_t findex = ilog2(N);
+        static_assert(N <= maxwidth, "N is greater than maxwidth");
+        func_t func = reinterpret_cast<func_t>((*vtable)[2 + findex]);
+        vec<T, N> result = vec<T, N>(func(instance, index));
+        return result;
+    }
+    CMT_INLINE void begin_block(cinput_t, size_t size) const
+    {
+        using func_t = void (*)(void*, size_t);
+        func_t func  = reinterpret_cast<func_t>((*vtable)[0]);
+        func(instance, size);
+    }
+    CMT_INLINE void end_block(cinput_t, size_t size) const
+    {
+        using func_t = void (*)(void*, size_t);
+        func_t func  = reinterpret_cast<func_t>((*vtable)[1]);
+        func(instance, size);
+    }
+
+private:
+    void* instance;
+    const expression_vtable<T, maxwidth>* vtable;
 };
 
 namespace internal
@@ -121,12 +162,12 @@ CMT_INLINE NonMemFn make_expression_func()
 template <typename Fn, typename NonMemFn = void (*)(void*, size_t)>
 CMT_INLINE NonMemFn make_expression_begin_block()
 {
-    return [](void* fn, size_t size) { reinterpret_cast<Fn*>(fn)->begin_block(size); };
+    return [](void* fn, size_t size) { reinterpret_cast<Fn*>(fn)->begin_block(cinput, size); };
 }
 template <typename Fn, typename NonMemFn = void (*)(void*, size_t)>
 CMT_INLINE NonMemFn make_expression_end_block()
 {
-    return [](void* fn, size_t size) { reinterpret_cast<Fn*>(fn)->end_block(size); };
+    return [](void* fn, size_t size) { reinterpret_cast<Fn*>(fn)->end_block(cinput, size); };
 }
 
 template <typename T, size_t maxwidth, typename E>

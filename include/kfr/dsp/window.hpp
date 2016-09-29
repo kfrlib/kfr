@@ -147,7 +147,7 @@ struct expression_triangular : input_expression
     {
     }
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
     {
         return 1 - abs(linspace(cinput, index, y));
     }
@@ -168,7 +168,7 @@ struct expression_bartlett : input_expression
     {
     }
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
     {
         return 1 - abs(linspace(cinput, index, y));
     }
@@ -189,7 +189,7 @@ struct expression_cosine : input_expression
     {
     }
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
     {
         return sin(c_pi<T> * linspace(cinput, index, y));
     }
@@ -210,7 +210,7 @@ struct expression_hann : input_expression
     {
     }
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
     {
         return T(0.5) * (T(1) - cos(c_pi<T, 2> * linspace(cinput, index, y)));
     }
@@ -231,7 +231,7 @@ struct expression_bartlett_hann : input_expression
     {
     }
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
     {
         const vec<T, N> xx = linspace(cinput, index, y);
         return T(0.62) - T(0.48) * abs(xx - T(0.5)) + T(0.38) * cos(c_pi<T, 2> * (xx - T(0.5)));
@@ -253,7 +253,7 @@ struct expression_hamming : input_expression
     {
     }
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
     {
         return alpha - (1.0 - alpha) * (cos(c_pi<T, 2> * linspace(cinput, index, y)));
     }
@@ -275,7 +275,7 @@ struct expression_bohman : input_expression
     {
     }
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
     {
         const vec<T, N> n = abs(linspace(cinput, index, y));
         return (T(1) - n) * cos(c_pi<T> * n) + (T(1) / c_pi<T>)*sin(c_pi<T> * n);
@@ -297,7 +297,7 @@ struct expression_blackman : input_expression
     {
     }
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
     {
         const vec<T, N> n = linspace(cinput, index, y);
         return a0 - a1 * cos(c_pi<T, 2> * n) + a2 * cos(c_pi<T, 4> * n);
@@ -320,7 +320,7 @@ struct expression_blackman_harris : input_expression
     {
     }
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
     {
         const vec<T, N> n = linspace(cinput, index, y) * c_pi<T, 2>;
         return T(0.35875) - T(0.48829) * cos(n) + T(0.14128) * cos(2 * n) - T(0.01168) * cos(3 * n);
@@ -343,7 +343,7 @@ struct expression_kaiser : input_expression
     {
     }
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
     {
         return modzerobessel(beta * sqrt(1 - sqr(linspace(cinput, index, y)))) * m;
     }
@@ -366,7 +366,7 @@ struct expression_flattop : input_expression
     {
     }
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
     {
         const vec<T, N> n = linspace(cinput, index, y) * c_pi<T, 2>;
         constexpr T a0 = 1;
@@ -393,7 +393,7 @@ struct expression_gaussian : input_expression
     {
     }
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
     {
         return exp(-0.5 * sqr(alpha * linspace(cinput, index, y)));
     }
@@ -415,7 +415,7 @@ struct expression_lanczos : input_expression
     {
     }
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
     {
         return sinc(linspace(cinput, index, y));
     }

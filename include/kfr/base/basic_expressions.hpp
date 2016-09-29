@@ -42,9 +42,9 @@ struct expression_convert : expression<E>
     CMT_INLINE expression_convert(E&& expr) noexcept : expression<E>(std::forward<E>(expr)) {}
 
     template <size_t N>
-    CMT_INLINE vec<To, N> operator()(cinput_t, size_t index, vec_t<To, N>) const
+    CMT_INLINE vec<To, N> operator()(cinput_t input, size_t index, vec_t<To, N>) const
     {
-        return this->argument_first(index, vec_t<To, N>());
+        return this->argument_first(input, index, vec_t<To, N>());
     }
 };
 
@@ -201,9 +201,9 @@ struct expression_slice : expression<E1>
     {
     }
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
     {
-        return this->argument_first(index + start, y);
+        return this->argument_first(cinput, index + start, y);
     }
     size_t size() const { return new_size; }
     size_t start;
@@ -217,9 +217,9 @@ struct expression_reverse : expression<E1>
     using T          = value_type;
     expression_reverse(E1&& e1) : expression<E1>(std::forward<E1>(e1)), expr_size(e1.size()) {}
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
     {
-        return reverse(this->argument_first(expr_size - index - N, y));
+        return reverse(this->argument_first(cinput, expr_size - index - N, y));
     }
     size_t size() const { return expr_size; }
     size_t expr_size;
@@ -305,12 +305,12 @@ public:
     }
 
     template <size_t N>
-    CMT_NOINLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    CMT_NOINLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
     {
         std::size_t sindex = size_t(std::upper_bound(std::begin(segments), std::end(segments), index) - 1 -
                                     std::begin(segments));
         if (segments[sindex + 1] - index >= N)
-            return get(index, sindex - 1, y);
+            return get(cinput, index, sindex - 1, y);
         else
         {
             vec<T, N> result;
@@ -318,7 +318,7 @@ public:
             for (size_t i = 0; i < N; i++)
             {
                 sindex           = segments[sindex + 1] == index ? sindex + 1 : sindex;
-                result.data()[i] = get(index, sindex - 1, vec_t<T, 1>())[0];
+                result.data()[i] = get(cinput, index, sindex - 1, vec_t<T, 1>())[0];
                 index++;
             }
             return result;
@@ -327,9 +327,10 @@ public:
 
 protected:
     template <size_t N>
-    CMT_NOINLINE vec<T, N> get(size_t index, size_t expr_index, vec_t<T, N> y)
+    CMT_NOINLINE vec<T, N> get(cinput_t cinput, size_t index, size_t expr_index, vec_t<T, N> y)
     {
-        return cswitch(indicesfor<E...>, expr_index, [&](auto val) { return this->argument(val, index, y); },
+        return cswitch(indicesfor<E...>, expr_index,
+                       [&](auto val) { return this->argument(cinput, val, index, y); },
                        [&]() { return zerovector(y); });
     }
 
@@ -345,9 +346,9 @@ struct expression_adjacent : expression<E>
     expression_adjacent(Fn&& fn, E&& e) : expression<E>(std::forward<E>(e)), fn(std::forward<Fn>(fn)) {}
 
     template <size_t N>
-    vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
+    vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
     {
-        const vec<T, N> in      = this->argument_first(index, vec_t<T, N>());
+        const vec<T, N> in      = this->argument_first(cinput, index, vec_t<T, N>());
         const vec<T, N> delayed = insertleft(data, in);
         data = in[N - 1];
         return this->fn(in, delayed);
@@ -419,7 +420,7 @@ struct multioutput : output_expression
     {
     }
     template <typename T, size_t N>
-    void operator()(coutput_t, size_t index, const vec<T, N>& x)
+    void operator()(coutput_t coutput, size_t index, const vec<T, N>& x)
     {
         cfor(csize<0>, csize<sizeof...(E)>,
              [&](auto n) { std::get<val_of(decltype(n)())>(outputs)(coutput, index, x); });
@@ -430,7 +431,7 @@ private:
 };
 
 template <typename... E>
-struct expression_pack : expression<E...>, output_expression
+struct expression_pack : expression<E...>
 {
     constexpr static size_t count = sizeof...(E);
 
@@ -441,15 +442,19 @@ struct expression_pack : expression<E...>, output_expression
     using expression<E...>::size;
 
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
     {
-        return this->call(fn::packtranspose(), index, y);
+        return this->call(cinput, fn::packtranspose(), index, y);
     }
 };
 
 template <typename... E>
 struct expression_unpack : private expression<E...>, output_expression
 {
+    using expression<E...>::begin_block;
+    using expression<E...>::end_block;
+    using output_expression::begin_block;
+    using output_expression::end_block;
     constexpr static size_t count = sizeof...(E);
 
     expression_unpack(E&&... e) : expression<E...>(std::forward<E>(e)...) {}
@@ -457,9 +462,9 @@ struct expression_unpack : private expression<E...>, output_expression
     using expression<E...>::size;
 
     template <typename U, size_t N>
-    CMT_INLINE void operator()(coutput_t, size_t index, const vec<vec<U, count>, N>& x)
+    CMT_INLINE void operator()(coutput_t coutput, size_t index, const vec<vec<U, count>, N>& x)
     {
-        output(index, x, csizeseq<count>);
+        output(coutput, index, x, csizeseq<count>);
     }
 
     template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
@@ -472,7 +477,7 @@ struct expression_unpack : private expression<E...>, output_expression
 
 private:
     template <typename U, size_t N, size_t... indices>
-    void output(size_t index, const vec<vec<U, count>, N>& x, csizes_t<indices...>)
+    void output(coutput_t coutput, size_t index, const vec<vec<U, count>, N>& x, csizes_t<indices...>)
     {
         const vec<vec<U, N>, count> xx = compcast<vec<U, N>>(transpose<count>(flatten(x)));
         swallow{ (std::get<indices>(this->args)(coutput, index, xx[indices]), void(), 0)... };

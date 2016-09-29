@@ -41,31 +41,31 @@ struct expression_delay : expression<E>
     using expression<E>::expression;
 
     template <size_t N, KFR_ENABLE_IF(N <= delay)>
-    vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
+    vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
     {
         vec<T, N> out;
         size_t c = cursor;
         data.ringbuf_read(c, out);
-        const vec<T, N> in = this->argument_first(index, vec_t<T, N>());
+        const vec<T, N> in = this->argument_first(cinput, index, vec_t<T, N>());
         data.ringbuf_write(cursor, in);
         return out;
     }
-    vec<T, 1> operator()(cinput_t, size_t index, vec_t<T, 1>) const
+    vec<T, 1> operator()(cinput_t cinput, size_t index, vec_t<T, 1>) const
     {
         T out;
         size_t c = cursor;
         data.ringbuf_read(c, out);
-        const T in = this->argument_first(index, vec_t<T, 1>())[0];
+        const T in = this->argument_first(cinput, index, vec_t<T, 1>())[0];
         data.ringbuf_write(cursor, in);
         return out;
     }
     template <size_t N, KFR_ENABLE_IF(N > delay)>
-    vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
+    vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
     {
         vec<T, delay> out;
         size_t c = cursor;
         data.ringbuf_read(c, out);
-        const vec<T, N> in = this->argument_first(index, vec_t<T, N>());
+        const vec<T, N> in = this->argument_first(cinput, index, vec_t<T, N>());
         data.ringbuf_write(cursor, slice<N - delay, delay>(in));
         return concat_and_slice<0, N>(out, in);
     }
@@ -82,9 +82,9 @@ struct expression_delay<1, E> : expression<E>
     using expression<E>::expression;
 
     template <size_t N>
-    vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
+    vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
     {
-        const vec<T, N> in  = this->argument_first(index, vec_t<T, N>());
+        const vec<T, N> in  = this->argument_first(cinput, index, vec_t<T, N>());
         const vec<T, N> out = insertleft(data, in);
         data = in[N - 1];
         return out;

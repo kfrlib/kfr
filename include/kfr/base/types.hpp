@@ -172,22 +172,23 @@ inline datatype operator&(datatype x, datatype y)
     return static_cast<datatype>(static_cast<type>(x) | static_cast<type>(y));
 }
 
-enum class outputinput_t
+constexpr size_t inout_context_size = 16;
+
+struct coutput_context
 {
-    output,
-    input
+    pconstvoid data[inout_context_size];
 };
-template <outputinput_t p>
-using coutputinput_t = cval_t<outputinput_t, p>;
 
-template <outputinput_t p>
-constexpr coutputinput_t<p> coutputinput{};
+struct cinput_context
+{
+    pconstvoid data[inout_context_size];
+};
 
-using coutput_t = coutputinput_t<outputinput_t::output>;
-using cinput_t  = coutputinput_t<outputinput_t::input>;
+using coutput_t = const coutput_context*;
+using cinput_t  = const cinput_context*;
 
-constexpr coutput_t coutput{};
-constexpr cinput_t cinput{};
+constexpr cinput_t cinput   = nullptr;
+constexpr coutput_t coutput = nullptr;
 
 template <typename T>
 constexpr datatype typeclass = std::is_floating_point<typename compound_type_traits<T>::subtype>::value

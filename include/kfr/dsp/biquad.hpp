@@ -146,9 +146,9 @@ struct expression_biquads : public expression<E1>
     {
     }
     template <size_t width>
-    KFR_INTRIN vec<T, width> operator()(cinput_t, size_t index, vec_t<T, width> t) const
+    KFR_INTRIN vec<T, width> operator()(cinput_t cinput, size_t index, vec_t<T, width> t) const
     {
-        const vec<T, width> in = this->argument_first(index, t);
+        const vec<T, width> in = this->argument_first(cinput, index, t);
         vec<T, width> out;
 
         CMT_LOOP_UNROLL
@@ -182,25 +182,25 @@ struct expression_biquads_zl : expression<E1>
     {
     }
 
-    CMT_INLINE void begin_block(size_t size) const
+    CMT_INLINE void begin_block(cinput_t cinput, size_t size) const
     {
         block_end = size;
         for (size_t i = 0; i < filters - 1; i++)
         {
-            const vec<T, 1> in = this->argument_first(i, vec_t<T, 1>());
+            const vec<T, 1> in = this->argument_first(cinput, i, vec_t<T, 1>());
             state.out = process(bq, state, insertleft(in[i], state.out));
         }
     }
-    CMT_INLINE void end_block(size_t) const { state = saved_state; }
+    CMT_INLINE void end_block(cinput_t cinput, size_t) const { state = saved_state; }
 
     template <size_t width>
-    KFR_INTRIN vec<T, width> operator()(cinput_t, size_t index, vec_t<T, width> t) const
+    KFR_INTRIN vec<T, width> operator()(cinput_t cinput, size_t index, vec_t<T, width> t) const
     {
         index += filters - 1;
         vec<T, width> out;
         if (index + width <= block_end)
         {
-            const vec<T, width> in = this->argument_first(index, t);
+            const vec<T, width> in = this->argument_first(cinput, index, t);
 
             CMT_LOOP_UNROLL
             for (size_t i = 0; i < width; i++)
@@ -225,7 +225,7 @@ struct expression_biquads_zl : expression<E1>
             size_t i = 0;
             for (; i < std::min(width, block_end - index); i++)
             {
-                const vec<T, 1> in = this->argument_first(index + i, vec_t<T, 1>());
+                const vec<T, 1> in = this->argument_first(cinput, index + i, vec_t<T, 1>());
                 state.out = process(bq, state, insertleft(in[i], state.out));
                 out(i)    = state.out[filters - 1];
             }

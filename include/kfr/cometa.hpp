@@ -46,7 +46,8 @@ char (&COUNTOF_REQUIRES_ARRAY_ARGUMENT(T (&)[N]))[N];
 #define CMT_ARRAYSIZE(arr) sizeof(arr) / sizeof(arr[0])
 #endif
 
-using pvoid = void*;
+using pvoid      = void*;
+using pconstvoid = const void*;
 
 template <typename...>
 using void_t = void;

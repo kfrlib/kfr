@@ -67,8 +67,8 @@ struct input_expression
 
     constexpr static bool is_incremental = false;
 
-    CMT_INLINE void begin_block(size_t) const {}
-    CMT_INLINE void end_block(size_t) const {}
+    CMT_INLINE constexpr void begin_block(cinput_t, size_t) const {}
+    CMT_INLINE constexpr void end_block(cinput_t, size_t) const {}
 };
 
 /// @brief Base class of all output expressoins
@@ -78,8 +78,8 @@ struct output_expression
 
     constexpr static bool is_incremental = false;
 
-    CMT_INLINE void output_begin_block(size_t) const {}
-    CMT_INLINE void output_end_block(size_t) const {}
+    CMT_INLINE constexpr void begin_block(coutput_t, size_t) const {}
+    CMT_INLINE constexpr void end_block(coutput_t, size_t) const {}
 };
 
 /// @brief Check if the type argument is an input expression
@@ -116,7 +116,7 @@ struct expression_lambda : input_expression
     CMT_INLINE expression_lambda(Fn&& fn) : fn(std::move(fn)) {}
 
     template <size_t N, KFR_ENABLE_IF(N&& is_callable<Fn, cinput_t, size_t, vec_t<T, N>>::value)>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> y) const
+    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
     {
         return fn(cinput, index, y);
     }
@@ -196,11 +196,23 @@ struct expression : input_expression
     expression()                  = delete;
     constexpr expression(Args&&... args) noexcept : args(std::forward<Args>(args)...) {}
 
-    CMT_INLINE void begin_block(size_t size) { begin_block_impl(size, indicesfor_t<Args...>()); }
-    CMT_INLINE void end_block(size_t size) { end_block_impl(size, indicesfor_t<Args...>()); }
+    CMT_INLINE void begin_block(cinput_t cinput, size_t size)
+    {
+        begin_block_impl(cinput, size, indicesfor_t<Args...>());
+    }
+    CMT_INLINE void end_block(cinput_t cinput, size_t size)
+    {
+        end_block_impl(cinput, size, indicesfor_t<Args...>());
+    }
 
-    CMT_INLINE void begin_block(size_t size) const { begin_block_impl(size, indicesfor_t<Args...>()); }
-    CMT_INLINE void end_block(size_t size) const { end_block_impl(size, indicesfor_t<Args...>()); }
+    CMT_INLINE void begin_block(cinput_t cinput, size_t size) const
+    {
+        begin_block_impl(cinput, size, indicesfor_t<Args...>());
+    }
+    CMT_INLINE void end_block(cinput_t cinput, size_t size) const
+    {
+        end_block_impl(cinput, size, indicesfor_t<Args...>());
+    }
 
     std::tuple<Args...> args;
 
@@ -212,20 +224,20 @@ protected:
     }
 
     template <typename Fn, typename T, size_t N>
-    CMT_INLINE vec<T, N> call(Fn&& fn, size_t index, vec_t<T, N> x) const
+    CMT_INLINE vec<T, N> call(cinput_t cinput, Fn&& fn, size_t index, vec_t<T, N> x) const
     {
-        return call_impl(std::forward<Fn>(fn), indicesfor_t<Args...>(), index, x);
+        return call_impl(cinput, std::forward<Fn>(fn), indicesfor_t<Args...>(), index, x);
     }
     template <size_t ArgIndex, typename U, size_t N,
               typename T = value_type_of<typename details::get_nth_type<ArgIndex, Args...>::type>>
-    CMT_INLINE vec<U, N> argument(csize_t<ArgIndex>, size_t index, vec_t<U, N>) const
+    CMT_INLINE vec<U, N> argument(cinput_t cinput, csize_t<ArgIndex>, size_t index, vec_t<U, N>) const
     {
         static_assert(ArgIndex < count, "Incorrect ArgIndex");
         return static_cast<vec<U, N>>(std::get<ArgIndex>(this->args)(cinput, index, vec_t<T, N>()));
     }
     template <typename U, size_t N,
               typename T = value_type_of<typename details::get_nth_type<0, Args...>::type>>
-    CMT_INLINE vec<U, N> argument_first(size_t index, vec_t<U, N>) const
+    CMT_INLINE vec<U, N> argument_first(cinput_t cinput, size_t index, vec_t<U, N>) const
     {
         return static_cast<vec<U, N>>(std::get<0>(this->args)(cinput, index, vec_t<T, N>()));
     }
@@ -237,29 +249,30 @@ private:
         return {};
     }
     template <typename Fn, typename T, size_t N, size_t... indices>
-    CMT_INLINE vec<T, N> call_impl(Fn&& fn, csizes_t<indices...>, size_t index, vec_t<T, N>) const
+    CMT_INLINE vec<T, N> call_impl(cinput_t cinput, Fn&& fn, csizes_t<indices...>, size_t index,
+                                   vec_t<T, N>) const
     {
         return fn(std::get<indices>(this->args)(cinput, index, vec_t_for<Args, N>())...);
     }
     template <size_t... indices>
-    CMT_INLINE void begin_block_impl(size_t size, csizes_t<indices...>)
+    CMT_INLINE void begin_block_impl(cinput_t cinput, size_t size, csizes_t<indices...>)
     {
-        swallow{ (std::get<indices>(args).begin_block(size), 0)... };
+        swallow{ (std::get<indices>(args).begin_block(cinput, size), 0)... };
     }
     template <size_t... indices>
-    CMT_INLINE void end_block_impl(size_t size, csizes_t<indices...>)
+    CMT_INLINE void end_block_impl(cinput_t cinput, size_t size, csizes_t<indices...>)
     {
-        swallow{ (std::get<indices>(args).end_block(size), 0)... };
+        swallow{ (std::get<indices>(args).end_block(cinput, size), 0)... };
     }
     template <size_t... indices>
-    CMT_INLINE void begin_block_impl(size_t size, csizes_t<indices...>) const
+    CMT_INLINE void begin_block_impl(cinput_t cinput, size_t size, csizes_t<indices...>) const
     {
-        swallow{ (std::get<indices>(args).begin_block(size), 0)... };
+        swallow{ (std::get<indices>(args).begin_block(cinput, size), 0)... };
     }
     template <size_t... indices>
-    CMT_INLINE void end_block_impl(size_t size, csizes_t<indices...>) const
+    CMT_INLINE void end_block_impl(cinput_t cinput, size_t size, csizes_t<indices...>) const
     {
-        swallow{ (std::get<indices>(args).end_block(size), 0)... };
+        swallow{ (std::get<indices>(args).end_block(cinput, size), 0)... };
     }
 };
 
@@ -324,9 +337,9 @@ struct expression_function : expression<arg<Args>...>
     {
     }
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> x) const
+    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> x) const
     {
-        return this->call(fn, index, x);
+        return this->call(cinput, fn, index, x);
     }
 
     const Fn& get_fn() const noexcept { return fn; }
@@ -376,7 +389,8 @@ CMT_INLINE internal::expression_function<Fn, NewArgs...> rebind(
 namespace internal
 {
 template <size_t width, typename OutputExpr, typename InputExpr>
-CMT_INLINE void process_cycle(OutputExpr&& outfn, const InputExpr& fn, size_t& i, size_t end)
+CMT_INLINE void process_cycle(coutput_t coutput, cinput_t cinput, OutputExpr&& outfn, const InputExpr& fn,
+                              size_t& i, size_t end)
 {
     using Tin = value_type_of<InputExpr>;
     CMT_LOOP_NOUNROLL
@@ -390,7 +404,8 @@ CMT_INLINE void process_cycle(OutputExpr&& outfn, const InputExpr& fn, size_t& i
 template <typename Tout, cpu_t c = cpu_t::native, size_t width = 0, typename OutputExpr, typename InputExpr,
           size_t groupsize = 1>
 CMT_INLINE size_t process(OutputExpr&& out, const InputExpr& in, size_t start = 0,
-                          size_t size = infinite_size, csize_t<groupsize> = csize_t<groupsize>())
+                          size_t size = infinite_size, coutput_t coutput = nullptr, cinput_t cinput = nullptr,
+                          csize_t<groupsize> = csize_t<groupsize>())
 {
     static_assert(is_output_expression<OutputExpr>::value, "OutFn must be an expression");
     static_assert(is_input_expression<InputExpr>::value, "Fn must be an expression");
@@ -399,8 +414,8 @@ CMT_INLINE size_t process(OutputExpr&& out, const InputExpr& in, size_t start = 
     if (size == 0 || size == infinite_size)
         return size;
     const size_t end = start + size;
-    out.output_begin_block(size);
-    in.begin_block(size);
+    out.begin_block(coutput, size);
+    in.begin_block(cinput, size);
 
 #ifdef NDEBUG
     constexpr size_t w = width == 0 ? internal::get_vector_width<Tout, c>(2, 4) : width;
@@ -409,11 +424,11 @@ CMT_INLINE size_t process(OutputExpr&& out, const InputExpr& in, size_t start = 
 #endif
 
     size_t i = start;
-    internal::process_cycle<w>(std::forward<OutputExpr>(out), in, i, end);
-    internal::process_cycle<groupsize>(std::forward<OutputExpr>(out), in, i, end);
+    internal::process_cycle<w>(coutput, cinput, std::forward<OutputExpr>(out), in, i, end);
+    internal::process_cycle<groupsize>(coutput, cinput, std::forward<OutputExpr>(out), in, i, end);
 
-    in.end_block(size);
-    out.output_end_block(size);
+    in.end_block(cinput, size);
+    out.end_block(coutput, size);
     return size;
 }
 

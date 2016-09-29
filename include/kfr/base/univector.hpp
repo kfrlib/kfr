@@ -44,6 +44,11 @@ struct univector;
 template <typename T, typename Class>
 struct univector_base : input_expression, output_expression
 {
+    using input_expression::begin_block;
+    using input_expression::end_block;
+    using output_expression::begin_block;
+    using output_expression::end_block;
+
     template <typename U, size_t N>
     CMT_INLINE void operator()(coutput_t, size_t index, const vec<U, N>& value)
     {
@@ -310,20 +315,20 @@ template <typename T, size_t Size1 = tag_dynamic_vector, size_t Size2 = tag_dyna
 using univector3d      = univector<univector<univector<T, Size3>, Size2>, Size1>;
 
 template <cpu_t c = cpu_t::native, size_t Tag, typename T, typename Fn>
-CMT_INLINE void process(univector<T, Tag>& vector, Fn&& fn)
+CMT_INLINE size_t process(univector<T, Tag>& vector, Fn&& fn)
 {
     static_assert(is_input_expression<Fn>::value, "Fn must be an expression");
     return process<T, c>(vector, std::forward<Fn>(fn), vector.size());
 }
 
 template <cpu_t c = cpu_t::native, typename T, size_t Nsize, typename Fn>
-CMT_INLINE void process(T (&dest)[Nsize], Fn&& fn)
+CMT_INLINE size_t process(T (&dest)[Nsize], Fn&& fn)
 {
     static_assert(is_input_expression<Fn>::value, "Fn must be an expression");
     return process<T, c>(univector<T, tag_array_ref>(dest), std::forward<Fn>(fn), Nsize);
 }
 template <cpu_t c = cpu_t::native, typename T, typename Fn>
-CMT_INLINE void process(const array_ref<T>& vector, Fn&& fn)
+CMT_INLINE size_t process(const array_ref<T>& vector, Fn&& fn)
 {
     static_assert(is_input_expression<Fn>::value, "Fn must be an expression");
     return process<T, c>(univector<T, tag_array_ref>(vector), std::forward<Fn>(fn), vector.size());

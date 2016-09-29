@@ -215,17 +215,17 @@ struct expression_upsample<2, E> : expression<E>
     using T          = value_type;
 
     template <size_t N>
-    vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
+    vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
     {
-        const vec<T, N / 2> x = this->argument_first(index / 2, vec_t<T, N / 2>());
+        const vec<T, N / 2> x = this->argument_first(cinput, index / 2, vec_t<T, N / 2>());
         return interleave(x, zerovector(x));
     }
-    vec<T, 1> operator()(cinput_t, size_t index, vec_t<T, 1>) const
+    vec<T, 1> operator()(cinput_t cinput, size_t index, vec_t<T, 1>) const
     {
         if (index & 1)
             return 0;
         else
-            return this->argument_first(index / 2, vec_t<T, 1>());
+            return this->argument_first(cinput, index / 2, vec_t<T, 1>());
     }
 };
 
@@ -237,31 +237,31 @@ struct expression_upsample<4, E> : expression<E>
     using T          = value_type;
 
     template <size_t N>
-    vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
+    vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
     {
-        const vec<T, N / 4> x  = this->argument_first(index / 4, vec_t<T, N / 4>());
+        const vec<T, N / 4> x  = this->argument_first(cinput, index / 4, vec_t<T, N / 4>());
         const vec<T, N / 2> xx = interleave(x, zerovector(x));
         return interleave(xx, zerovector(xx));
     }
-    vec<T, 2> operator()(cinput_t, size_t index, vec_t<T, 2>) const
+    vec<T, 2> operator()(cinput_t cinput, size_t index, vec_t<T, 2>) const
     {
         switch (index & 3)
         {
         case 0:
-            return interleave(this->argument_first(index / 4, vec_t<T, 1>()), zerovector<T, 1>());
+            return interleave(this->argument_first(cinput, index / 4, vec_t<T, 1>()), zerovector<T, 1>());
         case 3:
-            return interleave(zerovector<T, 1>(), this->argument_first(index / 4, vec_t<T, 1>()));
+            return interleave(zerovector<T, 1>(), this->argument_first(cinput, index / 4, vec_t<T, 1>()));
         default:
             return 0;
         }
     }
     template <typename T>
-    vec<T, 1> operator()(cinput_t, size_t index, vec_t<T, 1>) const
+    vec<T, 1> operator()(cinput_t cinput, size_t index, vec_t<T, 1>) const
     {
         if (index & 3)
             return 0;
         else
-            return this->argument_first(index / 4, vec_t<T, 1>());
+            return this->argument_first(cinput, index / 4, vec_t<T, 1>());
     }
 };
 
@@ -273,9 +273,9 @@ struct expression_downsample<2, offset, E> : expression<E>
     using T          = value_type;
 
     template <size_t N>
-    vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
+    vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
     {
-        const vec<T, N* 2> x = this->argument_first(index * 2, vec_t<T, N * 2>());
+        const vec<T, N* 2> x = this->argument_first(cinput, index * 2, vec_t<T, N * 2>());
         return shufflevector<N, internal::shuffle_index<offset, 2>>(x);
     }
 };
@@ -288,9 +288,9 @@ struct expression_downsample<4, offset, E> : expression<E>
     using T          = value_type;
 
     template <size_t N>
-    vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
+    vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
     {
-        const vec<T, N* 4> x = this->argument_first(index * 4, vec_t<T, N * 4>());
+        const vec<T, N* 4> x = this->argument_first(cinput, index * 4, vec_t<T, N * 4>());
         return shufflevector<N, internal::shuffle_index<offset, 4>>(x);
     }
 };

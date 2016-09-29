@@ -55,9 +55,9 @@ struct expression_short_fir : expression<E1>
     {
     }
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> x) const
+    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> x) const
     {
-        vec<T, N> in = this->argument_first(index, x);
+        vec<T, N> in = this->argument_first(cinput, index, x);
 
         vec<T, N> out = in * taps[0];
         cfor(csize<1>, csize<tapcount>,
@@ -78,10 +78,10 @@ struct expression_fir : expression<E1>
     {
     }
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> x) const
+    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> x) const
     {
         const size_t tapcount = taps.size();
-        const vec<T, N> input = this->argument_first(index, x);
+        const vec<T, N> input = this->argument_first(cinput, index, x);
 
         vec<T, N> output;
         size_t cursor = delayline_cursor;
