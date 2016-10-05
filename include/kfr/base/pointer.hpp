@@ -32,10 +32,10 @@
 namespace kfr
 {
 
-constexpr size_t maximum_expression_width() { return bitness_const(16, 32); }
+constexpr size_t maximum_expression_width = bitness_const(16, 32);
 
-template <typename T, size_t maxwidth = maximum_expression_width()>
-using expression_vtable = std::array<void*, 2 + ilog2(maxwidth) + 1>;
+template <typename T>
+using expression_vtable = std::array<void*, 2 + ilog2(maximum_expression_width) + 1>;
 
 struct dummy_content
 {
@@ -64,14 +64,13 @@ std::shared_ptr<expression_resource> make_resource(E&& e)
         std::allocate_shared<T>(allocator<T>(), std::move(e)));
 }
 
-template <typename T, size_t maxwidth = maximum_expression_width(), bool enable_resource = true>
+template <typename T, bool enable_resource = true>
 struct expression_pointer : input_expression
 {
     using value_type = T;
 
-    static_assert(is_poweroftwo(maxwidth), "N must be a power of two");
     expression_pointer() noexcept : instance(nullptr), vtable(nullptr) {}
-    expression_pointer(void* instance, const expression_vtable<T, maxwidth>* vtable,
+    expression_pointer(void* instance, const expression_vtable<T>* vtable,
                        std::shared_ptr<expression_resource> resource = nullptr)
         : instance(instance), vtable(vtable), resource(std::move(resource))
     {
@@ -83,7 +82,7 @@ struct expression_pointer : input_expression
 
         static_assert(is_poweroftwo(N), "N must be a power of two");
         constexpr size_t findex = ilog2(N);
-        static_assert(N <= maxwidth, "N is greater than maxwidth");
+        static_assert(N <= maximum_expression_width, "N is greater than maxwidth");
         func_t func = reinterpret_cast<func_t>((*vtable)[2 + findex]);
         vec<T, N> result = vec<T, N>(func(instance, index));
         return result;
@@ -103,18 +102,17 @@ struct expression_pointer : input_expression
 
 private:
     void* instance;
-    const expression_vtable<T, maxwidth>* vtable;
+    const expression_vtable<T>* vtable;
     std::shared_ptr<expression_resource> resource;
 };
 
-template <typename T, size_t maxwidth>
-struct expression_pointer<T, maxwidth, false> : input_expression
+template <typename T>
+struct expression_pointer<T, false> : input_expression
 {
     using value_type = T;
 
-    static_assert(is_poweroftwo(maxwidth), "N must be a power of two");
     expression_pointer() noexcept : instance(nullptr), vtable(nullptr) {}
-    expression_pointer(void* instance, const expression_vtable<T, maxwidth>* vtable)
+    expression_pointer(void* instance, const expression_vtable<T>* vtable)
         : instance(instance), vtable(vtable)
     {
     }
@@ -125,7 +123,7 @@ struct expression_pointer<T, maxwidth, false> : input_expression
 
         static_assert(is_poweroftwo(N), "N must be a power of two");
         constexpr size_t findex = ilog2(N);
-        static_assert(N <= maxwidth, "N is greater than maxwidth");
+        static_assert(N <= maximum_expression_width, "N is greater than maxwidth");
         func_t func = reinterpret_cast<func_t>((*vtable)[2 + findex]);
         vec<T, N> result = vec<T, N>(func(instance, index));
         return result;
@@ -145,7 +143,7 @@ struct expression_pointer<T, maxwidth, false> : input_expression
 
 private:
     void* instance;
-    const expression_vtable<T, maxwidth>* vtable;
+    const expression_vtable<T>* vtable;
 };
 
 namespace internal
@@ -170,10 +168,10 @@ CMT_INLINE NonMemFn make_expression_end_block()
     return [](void* fn, size_t size) { reinterpret_cast<Fn*>(fn)->end_block(cinput, size); };
 }
 
-template <typename T, size_t maxwidth, typename E>
-expression_vtable<T, maxwidth> make_expression_vtable_impl()
+template <typename T, typename E>
+expression_vtable<T> make_expression_vtable_impl()
 {
-    expression_vtable<T, maxwidth> result;
+    expression_vtable<T> result;
     constexpr size_t size = result.size() - 2;
 
     result[0] = reinterpret_cast<void*>(internal::make_expression_begin_block<decay<E>>());
@@ -187,11 +185,11 @@ expression_vtable<T, maxwidth> make_expression_vtable_impl()
     return result;
 }
 
-template <typename T, size_t maxwidth, typename E>
-CMT_INLINE expression_vtable<T, maxwidth>* make_expression_vtable()
+template <typename T, typename E>
+CMT_INLINE expression_vtable<T>* make_expression_vtable()
 {
     static_assert(is_input_expression<E>::value, "E must be an expression");
-    static expression_vtable<T, maxwidth> vtable = internal::make_expression_vtable_impl<T, maxwidth, E>();
+    static expression_vtable<T> vtable = internal::make_expression_vtable_impl<T, E>();
     return &vtable;
 }
 }
@@ -200,24 +198,22 @@ CMT_INLINE expression_vtable<T, maxwidth>* make_expression_vtable()
  *  This overload takes reference to the expression.
  *  @warning Use with caution with local variables.
  */
-template <typename E, typename T = value_type_of<E>, size_t maxwidth = maximum_expression_width()>
-CMT_INLINE expression_pointer<T, maxwidth> to_pointer(E& expr)
+template <typename E, typename T = value_type_of<E>>
+CMT_INLINE expression_pointer<T> to_pointer(E& expr)
 {
     static_assert(is_input_expression<E>::value, "E must be an expression");
-    return expression_pointer<T, maxwidth>(std::addressof(expr),
-                                           internal::make_expression_vtable<T, maxwidth, E>());
+    return expression_pointer<T>(std::addressof(expr), internal::make_expression_vtable<T, E>());
 }
 
 /** @brief Converts the given expression into an opaque object.
  *  This overload takes ownership of the expression (Move semantics).
  *  @note Use std::move to force use of this overload.
  */
-template <typename E, typename T = value_type_of<E>, size_t maxwidth = maximum_expression_width()>
-CMT_INLINE expression_pointer<T, maxwidth> to_pointer(E&& expr)
+template <typename E, typename T = value_type_of<E>>
+CMT_INLINE expression_pointer<T> to_pointer(E&& expr)
 {
     static_assert(is_input_expression<E>::value, "E must be an expression");
     std::shared_ptr<expression_resource> ptr = make_resource(std::move(expr));
-    return expression_pointer<T, maxwidth>(
-        ptr->instance(), internal::make_expression_vtable<T, maxwidth, E>(), std::move(ptr));
+    return expression_pointer<T>(ptr->instance(), internal::make_expression_vtable<T, E>(), std::move(ptr));
 }
 }
