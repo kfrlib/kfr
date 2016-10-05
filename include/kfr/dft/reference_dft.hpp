@@ -176,4 +176,23 @@ void reference_dft(complex<T>* out, const complex<T>* in, size_t size, bool inve
         }
     }
 }
+
+template <typename T>
+struct reference_dft_plan
+{
+    reference_dft_plan(size_t size) : size(size) {}
+    void execute(complex<T>* out, const complex<T>* in, u8*, bool inverse = false) const
+    {
+        reference_dft(out, in, size, inverse);
+    }
+
+    template <size_t N, size_t N2>
+    void execute(univector<complex<T>, N>& out, const univector<const complex<T>, N>& in, univector<u8, N2>&,
+                 bool inverse = false) const
+    {
+        this->execute(out.data(), in.data(), nullptr, inverse);
+    }
+    static constexpr size_t temp_size = 0;
+    const size_t size;
+};
 }
