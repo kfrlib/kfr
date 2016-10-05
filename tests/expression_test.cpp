@@ -43,6 +43,22 @@ TEST(adjacent)
     CHECK(v1[19] == 342);
 }
 
+TEST(padded)
+{
+    static_assert(is_infinite<decltype(padded(counter()))>::value, "");
+    static_assert(is_infinite<decltype(padded(truncate(counter(), 100)))>::value, "");
+
+    univector<int, 21> v1 = padded(truncate(counter(), 6), -1);
+    CHECK(v1[0] == 0);
+    CHECK(v1[1] == 1);
+    CHECK(v1[2] == 2);
+    CHECK(v1[3] == 3);
+    CHECK(v1[4] == 4);
+    CHECK(v1[5] == 5);
+    CHECK(v1[6] == -1);
+    CHECK(v1[20] == -1);
+}
+
 TEST(rebind)
 {
     auto c_minus_two  = counter() - 2;

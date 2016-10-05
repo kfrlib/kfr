@@ -412,6 +412,59 @@ CMT_INLINE internal::expression_adjacent<Fn, E1> adjacent(Fn&& fn, E1&& e1)
 
 namespace internal
 {
+template <typename E>
+struct expression_padded : expression<E>
+{
+    using value_type = value_type_of<E>;
+
+    CMT_INLINE constexpr static size_t size() noexcept { return infinite_size; }
+
+    expression_padded(value_type fill_value, E&& e)
+        : fill_value(fill_value), input_size(e.size()), expression<E>(std::forward<E>(e))
+    {
+    }
+
+    template <size_t N>
+    vec<value_type, N> operator()(cinput_t cinput, size_t index, vec_t<value_type, N> y) const
+    {
+        if (index >= input_size)
+        {
+            return fill_value;
+        }
+        else if (index + N <= input_size)
+        {
+            return this->argument_first(cinput, index, y);
+        }
+        else
+        {
+            vec<value_type, N> x;
+            for (size_t i = 0; i < N; i++)
+            {
+                if (index + i < input_size)
+                    x.data()[i] = this->argument_first(cinput, index + i, vec_t<value_type, 1>())[0];
+                else
+                    x.data()[i] = fill_value;
+            }
+            return x;
+        }
+    }
+    value_type fill_value;
+    const size_t input_size;
+};
+}
+
+/**
+ * @brief Returns infinite template expression that pads e with fill_value (default value = 0)
+ */
+template <typename E, typename T = value_type_of<E>>
+internal::expression_padded<E> padded(E&& e, const T& fill_value = T(0))
+{
+    static_assert(is_input_expression<E>::value, "E must be an input expression");
+    return internal::expression_padded<E>(fill_value, std::forward<E>(e));
+}
+
+namespace internal
+{
 template <typename... E>
 struct multioutput : output_expression
 {
