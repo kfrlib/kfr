@@ -172,7 +172,6 @@ inline datatype operator&(datatype x, datatype y)
     return static_cast<datatype>(static_cast<type>(x) | static_cast<type>(y));
 }
 
-
 template <typename T>
 constexpr datatype typeclass = std::is_floating_point<typename compound_type_traits<T>::subtype>::value
                                    ? datatype::f
