@@ -44,6 +44,7 @@ namespace internal
 template <size_t tapcount, typename T, typename E1, KFR_ARCH_DEP>
 struct expression_short_fir : expression<E1>
 {
+    using value_type = T;
     static_assert(is_poweroftwo(tapcount), "tapcount must be a power of two");
 
     expression_short_fir(E1&& e1, const array_ref<T>& taps)

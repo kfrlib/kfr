@@ -60,20 +60,20 @@ struct complex;
 
 constexpr size_t infinite_size = static_cast<size_t>(-1);
 
-constexpr inline size_t size_add(size_t x, size_t y)
+CMT_INLINE constexpr size_t size_add(size_t x, size_t y)
 {
     return (x == infinite_size || y == infinite_size) ? infinite_size : x + y;
 }
 
-constexpr inline size_t size_sub(size_t x, size_t y)
+CMT_INLINE constexpr size_t size_sub(size_t x, size_t y)
 {
     return (x == infinite_size || y == infinite_size) ? infinite_size : (x > y ? x - y : 0);
 }
 
-constexpr inline size_t size_min(size_t x) noexcept { return x; }
+CMT_INLINE constexpr size_t size_min(size_t x) noexcept { return x; }
 
 template <typename... Ts>
-constexpr inline size_t size_min(size_t x, size_t y, Ts... rest) noexcept
+CMT_INLINE constexpr size_t size_min(size_t x, size_t y, Ts... rest) noexcept
 {
     return size_min(x < y ? x : y, rest...);
 }
@@ -81,7 +81,7 @@ constexpr inline size_t size_min(size_t x, size_t y, Ts... rest) noexcept
 /// @brief Base class of all input expressoins
 struct input_expression
 {
-    constexpr static size_t size() noexcept { return infinite_size; }
+    CMT_INLINE constexpr static size_t size() noexcept { return infinite_size; }
 
     constexpr static bool is_incremental = false;
 
@@ -92,7 +92,7 @@ struct input_expression
 /// @brief Base class of all output expressoins
 struct output_expression
 {
-    constexpr static size_t size() noexcept { return infinite_size; }
+    CMT_INLINE constexpr static size_t size() noexcept { return infinite_size; }
 
     constexpr static bool is_incremental = false;
 
@@ -172,15 +172,6 @@ internal::expression_lambda<T, decay<Fn>> lambda(Fn&& fn)
 
 namespace internal
 {
-template <typename T, typename = void>
-struct is_fixed_size_impl : std::false_type
-{
-};
-
-template <typename T>
-struct is_fixed_size_impl<T, void_t<decltype(T::size())>> : std::true_type
-{
-};
 
 template <typename T, typename = void>
 struct is_infinite_impl : std::false_type
@@ -195,9 +186,6 @@ struct is_infinite_impl<T, void_t<decltype(T::size())>>
 }
 
 template <typename T>
-using is_fixed_size = typename internal::is_fixed_size_impl<T>::type;
-
-template <typename T>
 using is_infinite = typename internal::is_infinite_impl<T>::type;
 
 namespace internal
@@ -206,9 +194,7 @@ namespace internal
 template <typename... Args>
 struct expression : input_expression
 {
-    using value_type = common_type<typename decay<Args>::value_type...>;
-
-    constexpr size_t size() const noexcept { return size_impl(indicesfor_t<Args...>()); }
+    CMT_INLINE constexpr size_t size() const noexcept { return size_impl(indicesfor_t<Args...>()); }
 
     constexpr static size_t count = sizeof...(Args);
     expression()                  = delete;
@@ -227,7 +213,7 @@ struct expression : input_expression
 
 protected:
     template <size_t... indices>
-    constexpr size_t size_impl(csizes_t<indices...>) const noexcept
+    CMT_INLINE constexpr size_t size_impl(csizes_t<indices...>) const noexcept
     {
         return size_min(std::get<indices>(this->args).size()...);
     }
@@ -433,7 +419,7 @@ struct input_expression_base : input_expression
     virtual ~input_expression_base() {}
     virtual T input(size_t index) const = 0;
     template <typename U, size_t N>
-    vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N>) const
+    CMT_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N>) const
     {
         vec<U, N> out;
         for (size_t i = 0; i < N; i++)
@@ -449,7 +435,7 @@ struct output_expression_base : output_expression
     virtual void output(size_t index, const T& value) = 0;
 
     template <typename U, size_t N>
-    void operator()(coutput_t, size_t index, const vec<U, N>& value)
+    CMT_INLINE void operator()(coutput_t, size_t index, const vec<U, N>& value)
     {
         for (size_t i = 0; i < N; i++)
             output(index + i, static_cast<T>(value[i]));
