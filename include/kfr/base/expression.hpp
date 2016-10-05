@@ -214,15 +214,6 @@ struct expression : input_expression
     expression()                  = delete;
     constexpr expression(Args&&... args) noexcept : args(std::forward<Args>(args)...) {}
 
-    CMT_INLINE void begin_block(cinput_t cinput, size_t size)
-    {
-        begin_block_impl(cinput, size, indicesfor_t<Args...>());
-    }
-    CMT_INLINE void end_block(cinput_t cinput, size_t size)
-    {
-        end_block_impl(cinput, size, indicesfor_t<Args...>());
-    }
-
     CMT_INLINE void begin_block(cinput_t cinput, size_t size) const
     {
         begin_block_impl(cinput, size, indicesfor_t<Args...>());
@@ -261,26 +252,11 @@ protected:
     }
 
 private:
-    template <typename Arg, size_t N, typename Tout = value_type_of<Arg>>
-    CMT_INLINE vec_t<Tout, N> vec_t_for() const
-    {
-        return {};
-    }
     template <typename Fn, typename T, size_t N, size_t... indices>
     CMT_INLINE vec<T, N> call_impl(cinput_t cinput, Fn&& fn, csizes_t<indices...>, size_t index,
                                    vec_t<T, N>) const
     {
-        return fn(std::get<indices>(this->args)(cinput, index, vec_t_for<Args, N>())...);
-    }
-    template <size_t... indices>
-    CMT_INLINE void begin_block_impl(cinput_t cinput, size_t size, csizes_t<indices...>)
-    {
-        swallow{ (std::get<indices>(args).begin_block(cinput, size), 0)... };
-    }
-    template <size_t... indices>
-    CMT_INLINE void end_block_impl(cinput_t cinput, size_t size, csizes_t<indices...>)
-    {
-        swallow{ (std::get<indices>(args).end_block(cinput, size), 0)... };
+        return fn(std::get<indices>(this->args)(cinput, index, vec_t<value_type_of<Args>, N>())...);
     }
     template <size_t... indices>
     CMT_INLINE void begin_block_impl(cinput_t cinput, size_t size, csizes_t<indices...>) const
