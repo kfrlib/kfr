@@ -89,17 +89,33 @@ template <typename T>
 struct is_pod_impl<T, void_t<decltype(T::is_pod)>> : std::integral_constant<bool, T::is_pod>
 {
 };
+
+template <typename... Ts>
+struct or_t_impl: std::false_type
+{
+};
+
+template <typename T, typename... Ts>
+struct or_t_impl<T, Ts...>: std::integral_constant<bool, T::value || or_t_impl<Ts...>::value>
+{
+};
+
+template <typename... Ts>
+struct and_t_impl: std::true_type
+{
+};
+
+template <typename T, typename... Ts>
+struct and_t_impl<T, Ts...>: std::integral_constant<bool, T::value && and_t_impl<Ts...>::value>
+{
+};
 }
 
 template <typename... Ts>
-struct or_t : std::integral_constant<bool, details::args_or(Ts::value...)>
-{
-};
+using or_t = details::or_t_impl<Ts...>;
 
 template <typename... Ts>
-struct and_t : std::integral_constant<bool, details::args_and(Ts::value...)>
-{
-};
+using and_t = details::and_t_impl<Ts...>;
 
 template <typename T>
 struct not_t : std::integral_constant<bool, !T::value>
@@ -794,13 +810,13 @@ struct is_returning_type : details::is_returning_type_impl<Ret, T>
 
 namespace details
 {
-template <typename Fn, CMT_ENABLE_IF(is_callable<Fn()>())>
+template <typename Fn, CMT_ENABLE_IF(is_callable<Fn()>::value)>
 inline auto call_if_callable(Fn&& fn)
 {
     return fn();
 }
 
-template <typename Fn, CMT_ENABLE_IF(!is_callable<Fn()>())>
+template <typename Fn, CMT_ENABLE_IF(!is_callable<Fn()>::value)>
 inline auto call_if_callable(Fn&& fn)
 {
     return std::forward<Fn>(fn);
