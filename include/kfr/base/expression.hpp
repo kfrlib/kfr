@@ -401,12 +401,13 @@ CMT_INLINE void process_cycle(coutput_t coutput, cinput_t cinput, OutputExpr&& o
 }
 }
 
-template <typename Tout, cpu_t c = cpu_t::native, size_t width = 0, typename OutputExpr, typename InputExpr,
+template <cpu_t c = cpu_t::native, size_t width = 0, typename OutputExpr, typename InputExpr,
           size_t groupsize = 1>
 CMT_INLINE size_t process(OutputExpr&& out, const InputExpr& in, size_t start = 0,
                           size_t size = infinite_size, coutput_t coutput = nullptr, cinput_t cinput = nullptr,
                           csize_t<groupsize> = csize_t<groupsize>())
 {
+    using Tin = value_type_of<InputExpr>;
     static_assert(is_output_expression<OutputExpr>::value, "OutFn must be an expression");
     static_assert(is_input_expression<InputExpr>::value, "Fn must be an expression");
 
@@ -418,9 +419,9 @@ CMT_INLINE size_t process(OutputExpr&& out, const InputExpr& in, size_t start = 
     in.begin_block(cinput, size);
 
 #ifdef NDEBUG
-    constexpr size_t w = width == 0 ? internal::get_vector_width<Tout, c>(2, 4) : width;
+    constexpr size_t w = width == 0 ? internal::get_vector_width<Tin, c>(2, 4) : width;
 #else
-    constexpr size_t w = width == 0 ? internal::get_vector_width<Tout, c>(1, 1) : width;
+    constexpr size_t w = width == 0 ? internal::get_vector_width<Tin, c>(1, 1) : width;
 #endif
 
     size_t i = start;

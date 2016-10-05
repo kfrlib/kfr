@@ -162,7 +162,7 @@ struct expression_printer : output_expression
     template <typename InputExpr>
     InputExpr& operator=(const InputExpr& input)
     {
-        process<value_type_of<InputExpr>>(*this, input);
+        process(*this, input);
         return input;
     }
 };
@@ -177,7 +177,7 @@ struct expression_debug_printer : output_expression
     template <typename InputExpr>
     InputExpr& operator=(const InputExpr& input)
     {
-        process<value_type_of<InputExpr>>(*this, input);
+        process(*this, input);
         return input;
     }
 };

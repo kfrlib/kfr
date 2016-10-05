@@ -40,11 +40,11 @@ void write_interleaved(E1&& dest, const univector2d<Tin, Tag1, Tag2>& src)
     const size_t channels = src.size();
     if (channels == 1)
     {
-        process<Tout>(std::forward<E1>(dest), src[0]);
+        process(std::forward<E1>(dest), src[0]);
     }
     else if (channels == 2)
     {
-        process<Tout>(std::forward<E1>(dest), pack(src[0], src[1]), 0, infinite_size, nullptr, nullptr,
+        process(std::forward<E1>(dest), pack(src[0], src[1]), 0, infinite_size, nullptr, nullptr,
                       csize<2>);
     }
     else

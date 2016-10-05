@@ -117,7 +117,7 @@ KFR_SINTRIN T reduce(E1&& e1, ReduceFn&& reducefn, TransformFn&& transformfn = f
     using reducer_t = internal::expression_reduce<T, decay<ReduceFn>, decay<TransformFn>, decay<FinalFn>>;
     reducer_t red(std::forward<ReduceFn>(reducefn), std::forward<TransformFn>(transformfn),
                   std::forward<FinalFn>(finalfn));
-    process<T>(red, std::forward<E1>(e1));
+    process(red, std::forward<E1>(e1));
 
     return red.get();
 }

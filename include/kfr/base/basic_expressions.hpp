@@ -470,8 +470,7 @@ struct expression_unpack : private expression<E...>, output_expression
     template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
     CMT_INLINE expression_unpack& operator=(Input&& input)
     {
-        using value_type = vec<common_type<value_type_of<E>...>, count>;
-        process<value_type>(*this, std::forward<Input>(input));
+        process(*this, std::forward<Input>(input));
         return *this;
     }
 
@@ -514,8 +513,7 @@ struct task_partition
     {
         if (index > count)
             return 0;
-        using T = value_type_of<InExpr>;
-        return process<T>(output, input, index * chunk_size, chunk_size);
+        return process(output, input, index * chunk_size, chunk_size);
     }
 };
 

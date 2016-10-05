@@ -189,7 +189,7 @@ protected:
     template <typename Input>
     CMT_INLINE void assign_expr(Input&& input)
     {
-        process<T>(*derived_cast<Class>(this), std::forward<Input>(input));
+        process(*derived_cast<Class>(this), std::forward<Input>(input));
     }
 
 private:
@@ -313,26 +313,6 @@ using univector2d = univector<univector<T, Size2>, Size1>;
 template <typename T, size_t Size1 = tag_dynamic_vector, size_t Size2 = tag_dynamic_vector,
           size_t Size3 = tag_dynamic_vector>
 using univector3d      = univector<univector<univector<T, Size3>, Size2>, Size1>;
-
-template <cpu_t c = cpu_t::native, size_t Tag, typename T, typename Fn>
-CMT_INLINE size_t process(univector<T, Tag>& vector, Fn&& fn)
-{
-    static_assert(is_input_expression<Fn>::value, "Fn must be an expression");
-    return process<T, c>(vector, std::forward<Fn>(fn), vector.size());
-}
-
-template <cpu_t c = cpu_t::native, typename T, size_t Nsize, typename Fn>
-CMT_INLINE size_t process(T (&dest)[Nsize], Fn&& fn)
-{
-    static_assert(is_input_expression<Fn>::value, "Fn must be an expression");
-    return process<T, c>(univector<T, tag_array_ref>(dest), std::forward<Fn>(fn), Nsize);
-}
-template <cpu_t c = cpu_t::native, typename T, typename Fn>
-CMT_INLINE size_t process(const array_ref<T>& vector, Fn&& fn)
-{
-    static_assert(is_input_expression<Fn>::value, "Fn must be an expression");
-    return process<T, c>(univector<T, tag_array_ref>(vector), std::forward<Fn>(fn), vector.size());
-}
 
 template <typename T>
 CMT_INLINE univector_ref<T> make_univector(T* data, size_t size)
