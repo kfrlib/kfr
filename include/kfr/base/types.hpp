@@ -277,6 +277,7 @@ inline T* builtin_addressof(T& arg)
 }
 #endif
 
+#ifdef CMT_COMPILER_GNU
 CMT_INLINE f32 builtin_sqrt(f32 x) { return __builtin_sqrtf(x); }
 CMT_INLINE f64 builtin_sqrt(f64 x) { return __builtin_sqrt(x); }
 CMT_INLINE f80 builtin_sqrt(f80 x) { return __builtin_sqrtl(x); }
@@ -285,6 +286,18 @@ CMT_INLINE void builtin_memcpy(void* dest, const void* src, size_t size)
     __builtin_memcpy(dest, src, size);
 }
 CMT_INLINE void builtin_memset(void* dest, int val, size_t size) { __builtin_memset(dest, val, size); }
+#else
+
+CMT_INLINE f32 builtin_sqrt(f32 x) { return ::sqrtf(x); }
+CMT_INLINE f64 builtin_sqrt(f64 x) { return ::sqrt(x); }
+CMT_INLINE f80 builtin_sqrt(f80 x) { return ::sqrtl(x); }
+CMT_INLINE void builtin_memcpy(void* dest, const void* src, size_t size)
+{
+    ::memcpy(dest, src, size);
+}
+CMT_INLINE void builtin_memset(void* dest, int val, size_t size) { ::memset(dest, val, size); }
+
+#endif
 template <typename T1>
 CMT_INLINE void zeroize(T1& value)
 {
@@ -297,13 +310,23 @@ struct initialvalue
 {
 };
 
+#if CMT_COMPILER_GNU
 constexpr double infinity = __builtin_inf();
 constexpr double qnan     = __builtin_nan("");
+#else
+constexpr double infinity = HUGE_VAL;
+constexpr double qnan     = NAN;
+#endif
 
 namespace internal
 {
+#if CMT_COMPILER_GNU
 constexpr f32 allones_f32 = -__builtin_nanf("0xFFFFFFFF");
 constexpr f64 allones_f64 = -__builtin_nan("0xFFFFFFFFFFFFFFFF");
+#else
+constexpr f32 allones_f32 = -NAN;
+constexpr f64 allones_f64 = -NAN;
+#endif
 
 template <typename T, typename Tsub = subtype<T>>
 constexpr Tsub allones = choose_const<Tsub>(allones_f32, allones_f64, static_cast<Tsub>(-1));
