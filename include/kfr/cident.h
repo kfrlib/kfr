@@ -427,6 +427,8 @@ extern char* gets(char* __s);
 
 #if defined(CMT_GNU_ATTRIBUTES)
 #define CMT_FAST_CC __attribute__((fastcall))
+#define CMT_UNUSED __attribute__((unused))
 #else
 #define CMT_FAST_CC __fastcall
+#define CMT_UNUSED
 #endif
