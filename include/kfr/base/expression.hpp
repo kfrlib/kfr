@@ -37,6 +37,24 @@
 namespace kfr
 {
 
+constexpr size_t inout_context_size = 16;
+
+struct coutput_context
+{
+    pconstvoid data[inout_context_size];
+};
+
+struct cinput_context
+{
+    pconstvoid data[inout_context_size];
+};
+
+using coutput_t = const coutput_context*;
+using cinput_t  = const cinput_context*;
+
+constexpr cinput_t cinput   = nullptr;
+constexpr coutput_t coutput = nullptr;
+
 template <typename>
 struct complex;
 
