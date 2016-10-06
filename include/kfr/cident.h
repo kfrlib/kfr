@@ -76,12 +76,12 @@ extern char* gets(char* __s);
 #define CMT_ARCH_SSE2 1
 #define CMT_ARCH_SSE 1
 #endif
-#if (defined CMT_ARCH_X64 || defined __SSE2__) && !defined CMT_ARCH_SSE2
+#if (defined CMT_ARCH_X64 || defined __SSE2__ || (defined _M_IX86_FP && _M_IX86_FP == 2)) && !defined CMT_ARCH_SSE2
 #define CMT_ARCH_SSE2 1
 #define CMT_ARCH_SSE 1
 #endif
 
-#if (defined CMT_ARCH_X64 || defined __SSE__) && !defined CMT_ARCH_SSE1
+#if (defined CMT_ARCH_X64 || defined __SSE__ || (defined _M_IX86_FP && _M_IX86_FP == 1)) && !defined CMT_ARCH_SSE
 #define CMT_ARCH_SSE 1
 #endif
 
@@ -428,7 +428,9 @@ extern char* gets(char* __s);
 #if defined(CMT_GNU_ATTRIBUTES)
 #define CMT_FAST_CC __attribute__((fastcall))
 #define CMT_UNUSED __attribute__((unused))
+#define CMT_GNU_CONSTEXPR constexpr
 #else
 #define CMT_FAST_CC __fastcall
 #define CMT_UNUSED
+#define CMT_GNU_CONSTEXPR
 #endif
