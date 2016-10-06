@@ -71,7 +71,7 @@ constexpr cpu_t newer(cpu_t x) { return static_cast<cpu_t>(static_cast<int>(x) +
 
 #ifdef CMT_ARCH_X86
 constexpr auto cpu_list =
-    cvals<cpu_t, cpu_t::avx2, cpu_t::avx1, cpu_t::sse41, cpu_t::ssse3, cpu_t::sse3, cpu_t::sse2>;
+    cvals_t<cpu_t, cpu_t::avx2, cpu_t::avx1, cpu_t::sse41, cpu_t::ssse3, cpu_t::sse3, cpu_t::sse2>();
 #else
 constexpr auto cpu_list = cvals<cpu_t, cpu_t::neon>;
 #endif
@@ -82,10 +82,10 @@ using cpuval_t = cval_t<cpu_t, cpu>;
 template <cpu_t cpu>
 constexpr auto cpuval = cpuval_t<cpu>{};
 
-constexpr auto cpu_all = cfilter(internal::cpu_list, internal::cpu_list >= cpuval<cpu_t::native>);
+constexpr auto cpu_all = cfilter(internal::cpu_list, internal::cpu_list >= cpuval_t<cpu_t::native>());
 
 /// @brief Returns name of the cpu instruction set
-__attribute__((unused)) static const char* cpu_name(cpu_t set)
+CMT_UNUSED static const char* cpu_name(cpu_t set)
 {
     static const char* names[] = { "sse2", "sse3", "ssse3", "sse41", "sse42", "avx1", "avx2" };
     if (set >= cpu_t::lowest && set <= cpu_t::highest)
@@ -105,16 +105,17 @@ constexpr inline const T& bitness_const(const T& x32, const T& x64)
 #endif
 }
 
-constexpr inline const char* bitness_const(const char* x32, const char* x64)
-{
 #ifdef CMT_ARCH_X64
-    (void)x32;
+constexpr inline const char* bitness_const(const char*, const char* x64)
+{
     return x64;
-#else
-    (void)x64;
-    return x32;
-#endif
 }
+#else
+constexpr inline const char* bitness_const(const char* x32, const char*)
+{
+    return x32;
+}
+#endif
 
 constexpr size_t native_cache_alignment        = 64;
 constexpr size_t native_cache_alignment_mask   = native_cache_alignment - 1;
