@@ -76,12 +76,14 @@ extern char* gets(char* __s);
 #define CMT_ARCH_SSE2 1
 #define CMT_ARCH_SSE 1
 #endif
-#if (defined CMT_ARCH_X64 || defined __SSE2__ || (defined _M_IX86_FP && _M_IX86_FP == 2)) && !defined CMT_ARCH_SSE2
+#if (defined CMT_ARCH_X64 || defined __SSE2__ || (defined _M_IX86_FP && _M_IX86_FP == 2)) &&                 \
+    !defined CMT_ARCH_SSE2
 #define CMT_ARCH_SSE2 1
 #define CMT_ARCH_SSE 1
 #endif
 
-#if (defined CMT_ARCH_X64 || defined __SSE__ || (defined _M_IX86_FP && _M_IX86_FP == 1)) && !defined CMT_ARCH_SSE
+#if (defined CMT_ARCH_X64 || defined __SSE__ || (defined _M_IX86_FP && _M_IX86_FP == 1)) &&                  \
+    !defined CMT_ARCH_SSE
 #define CMT_ARCH_SSE 1
 #endif
 

@@ -91,22 +91,22 @@ struct is_pod_impl<T, void_t<decltype(T::is_pod)>> : std::integral_constant<bool
 };
 
 template <typename... Ts>
-struct or_t_impl: std::false_type
+struct or_t_impl : std::false_type
 {
 };
 
 template <typename T, typename... Ts>
-struct or_t_impl<T, Ts...>: std::integral_constant<bool, T::value || or_t_impl<Ts...>::value>
+struct or_t_impl<T, Ts...> : std::integral_constant<bool, T::value || or_t_impl<Ts...>::value>
 {
 };
 
 template <typename... Ts>
-struct and_t_impl: std::true_type
+struct and_t_impl : std::true_type
 {
 };
 
 template <typename T, typename... Ts>
-struct and_t_impl<T, Ts...>: std::integral_constant<bool, T::value && and_t_impl<Ts...>::value>
+struct and_t_impl<T, Ts...> : std::integral_constant<bool, T::value && and_t_impl<Ts...>::value>
 {
 };
 }

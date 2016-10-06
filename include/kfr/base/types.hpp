@@ -291,10 +291,7 @@ CMT_INLINE void builtin_memset(void* dest, int val, size_t size) { __builtin_mem
 CMT_INLINE f32 builtin_sqrt(f32 x) { return ::sqrtf(x); }
 CMT_INLINE f64 builtin_sqrt(f64 x) { return ::sqrt(x); }
 CMT_INLINE f80 builtin_sqrt(f80 x) { return ::sqrtl(x); }
-CMT_INLINE void builtin_memcpy(void* dest, const void* src, size_t size)
-{
-    ::memcpy(dest, src, size);
-}
+CMT_INLINE void builtin_memcpy(void* dest, const void* src, size_t size) { ::memcpy(dest, src, size); }
 CMT_INLINE void builtin_memset(void* dest, int val, size_t size) { ::memset(dest, val, size); }
 
 #endif

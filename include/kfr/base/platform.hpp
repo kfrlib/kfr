@@ -106,15 +106,9 @@ constexpr inline const T& bitness_const(const T& x32, const T& x64)
 }
 
 #ifdef CMT_ARCH_X64
-constexpr inline const char* bitness_const(const char*, const char* x64)
-{
-    return x64;
-}
+constexpr inline const char* bitness_const(const char*, const char* x64) { return x64; }
 #else
-constexpr inline const char* bitness_const(const char* x32, const char*)
-{
-    return x32;
-}
+constexpr inline const char* bitness_const(const char* x32, const char*) { return x32; }
 #endif
 
 constexpr size_t native_cache_alignment        = 64;
