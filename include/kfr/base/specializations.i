@@ -22,6 +22,8 @@
 #include "shuffle.hpp"
 #endif
 
+#ifdef KFR_COMPILER_GNU
+
 namespace kfr
 {
 namespace internal
@@ -104,3 +106,4 @@ inline vec<f32, 32> shufflevector<f32, 32>(
 }
 }
 }
+#endif

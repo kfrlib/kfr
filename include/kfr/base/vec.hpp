@@ -96,7 +96,11 @@ struct struct_with_alignment<T, false>
 {
     T value;
     KFR_INTRIN void operator=(T value) { this->value = value; }
-} __attribute__((__packed__, __may_alias__)); //
+}
+#ifdef CMT_GNU_ATTRIBUTES
+__attribute__((__packed__, __may_alias__)) //
+#endif
+;
 }
 
 template <typename T>
@@ -496,7 +500,11 @@ struct pkd_vec
 private:
     T v[N];
     friend struct vec<T, N>;
-} __attribute__((packed));
+}
+#ifdef CMT_GNU_ATTRIBUTES
+__attribute__((packed))
+#endif
+;
 
 namespace internal
 {
@@ -513,11 +521,11 @@ constexpr CMT_INLINE T make_vector_get_n(const T& arg, const Args&... args)
 }
 
 template <typename T, typename... Args, size_t... indices, size_t N = sizeof...(Args)>
-constexpr CMT_INLINE vec<T, N> make_vector_impl(csizes_t<indices...>, const Args&... args)
+CMT_GNU_CONSTEXPR CMT_INLINE vec<T, N> make_vector_impl(csizes_t<indices...>, const Args&... args)
 {
     constexpr size_t width = compound_type_traits<T>::width;
-    const T list[]         = { args... };
-    using simd_t           = typename vec<T, N>::simd_t;
+    const T list[]                = { args... };
+    using simd_t                  = typename vec<T, N>::simd_t;
     return simd_t{ compound_type_traits<T>::at(list[indices / width], indices % width)... };
 }
 }
@@ -530,8 +538,8 @@ template <typename Type = void, typename Arg, typename... Args, size_t N = (size
           typename SubType = conditional<is_void<Type>::value, common_type<Arg, Args...>, Type>>
 constexpr CMT_INLINE vec<SubType, N> make_vector(const Arg& x, const Args&... rest)
 {
-    return internal::make_vector_impl<SubType>(csizeseq<N * widthof<SubType>()>, static_cast<SubType>(x),
-                                               static_cast<SubType>(rest)...);
+    return internal::make_vector_impl<SubType>(cvalseq_t<size_t, N * widthof<SubType>()>(),
+                                               static_cast<SubType>(x), static_cast<SubType>(rest)...);
 }
 template <typename T, size_t N>
 constexpr CMT_INLINE vec<T, N> make_vector(const vec<T, N>& x)
@@ -574,7 +582,7 @@ struct CMT_EMPTY_BASES vec : vec_t<T, N>, operators::empty
     using value_type  = T;
     using scalar_type = subtype<T>;
     constexpr static size_t scalar_size() noexcept { return N * compound_type_traits<T>::width; }
-    using simd_t = simd<scalar_type, scalar_size()>;
+    using simd_t = simd<scalar_type, N * compound_type_traits<T>::width>;
     using ref    = vec&;
     using cref   = const vec&;
 
@@ -607,78 +615,30 @@ struct CMT_EMPTY_BASES vec : vec_t<T, N>, operators::empty
     }
     constexpr CMT_INLINE vec(const vec&) noexcept = default;
     constexpr CMT_INLINE vec(vec&&) noexcept      = default;
-    constexpr CMT_INLINE vec& operator=(const vec&) noexcept = default;
-    constexpr CMT_INLINE vec& operator=(vec&&) noexcept = default;
+    CMT_INLINE vec& operator=(const vec&) noexcept = default;
+    CMT_INLINE vec& operator=(vec&&) noexcept = default;
 
-    friend constexpr CMT_INLINE vec operator+(const vec& x, const vec& y)
-    {
-        return vec_op<T, N>::add(x.v, y.v);
-    }
-    friend constexpr CMT_INLINE vec operator-(const vec& x, const vec& y)
-    {
-        return vec_op<T, N>::sub(x.v, y.v);
-    }
-    friend constexpr CMT_INLINE vec operator*(const vec& x, const vec& y)
-    {
-        return vec_op<T, N>::mul(x.v, y.v);
-    }
-    friend constexpr CMT_INLINE vec operator/(const vec& x, const vec& y)
-    {
-        return vec_op<T, N>::div(x.v, y.v);
-    }
-    friend constexpr CMT_INLINE vec operator%(const vec& x, const vec& y)
-    {
-        return vec_op<T, N>::rem(x.v, y.v);
-    }
-    friend constexpr CMT_INLINE vec operator-(const vec& x) { return vec_op<T, N>::neg(x.v); }
+    friend CMT_INLINE vec operator+(const vec& x, const vec& y) { return vec_op<T, N>::add(x.v, y.v); }
+    friend CMT_INLINE vec operator-(const vec& x, const vec& y) { return vec_op<T, N>::sub(x.v, y.v); }
+    friend CMT_INLINE vec operator*(const vec& x, const vec& y) { return vec_op<T, N>::mul(x.v, y.v); }
+    friend CMT_INLINE vec operator/(const vec& x, const vec& y) { return vec_op<T, N>::div(x.v, y.v); }
+    friend CMT_INLINE vec operator%(const vec& x, const vec& y) { return vec_op<T, N>::rem(x.v, y.v); }
+    friend CMT_INLINE vec operator-(const vec& x) { return vec_op<T, N>::neg(x.v); }
 
-    friend constexpr CMT_INLINE vec operator&(const vec& x, const vec& y)
-    {
-        return vec_op<T, N>::band(x.v, y.v);
-    }
-    friend constexpr CMT_INLINE vec operator|(const vec& x, const vec& y)
-    {
-        return vec_op<T, N>::bor(x.v, y.v);
-    }
-    friend constexpr CMT_INLINE vec operator^(const vec& x, const vec& y)
-    {
-        return vec_op<T, N>::bxor(x.v, y.v);
-    }
-    friend constexpr CMT_INLINE vec operator~(const vec& x) { return vec_op<T, N>::bnot(x.v); }
+    friend CMT_INLINE vec operator&(const vec& x, const vec& y) { return vec_op<T, N>::band(x.v, y.v); }
+    friend CMT_INLINE vec operator|(const vec& x, const vec& y) { return vec_op<T, N>::bor(x.v, y.v); }
+    friend CMT_INLINE vec operator^(const vec& x, const vec& y) { return vec_op<T, N>::bxor(x.v, y.v); }
+    friend CMT_INLINE vec operator~(const vec& x) { return vec_op<T, N>::bnot(x.v); }
 
-    friend constexpr CMT_INLINE vec operator<<(const vec& x, const vec& y)
-    {
-        return vec_op<T, N>::shl(x.v, y.v);
-    }
-    friend constexpr CMT_INLINE vec operator>>(const vec& x, const vec& y)
-    {
-        return vec_op<T, N>::shr(x.v, y.v);
-    }
+    friend CMT_INLINE vec operator<<(const vec& x, const vec& y) { return vec_op<T, N>::shl(x.v, y.v); }
+    friend CMT_INLINE vec operator>>(const vec& x, const vec& y) { return vec_op<T, N>::shr(x.v, y.v); }
 
-    friend constexpr CMT_INLINE mask<T, N> operator==(const vec& x, const vec& y)
-    {
-        return vec_op<T, N>::eq(x.v, y.v);
-    }
-    friend constexpr CMT_INLINE mask<T, N> operator!=(const vec& x, const vec& y)
-    {
-        return vec_op<T, N>::ne(x.v, y.v);
-    }
-    friend constexpr CMT_INLINE mask<T, N> operator<(const vec& x, const vec& y)
-    {
-        return vec_op<T, N>::lt(x.v, y.v);
-    }
-    friend constexpr CMT_INLINE mask<T, N> operator>(const vec& x, const vec& y)
-    {
-        return vec_op<T, N>::gt(x.v, y.v);
-    }
-    friend constexpr CMT_INLINE mask<T, N> operator<=(const vec& x, const vec& y)
-    {
-        return vec_op<T, N>::le(x.v, y.v);
-    }
-    friend constexpr CMT_INLINE mask<T, N> operator>=(const vec& x, const vec& y)
-    {
-        return vec_op<T, N>::ge(x.v, y.v);
-    }
+    friend CMT_INLINE mask<T, N> operator==(const vec& x, const vec& y) { return vec_op<T, N>::eq(x.v, y.v); }
+    friend CMT_INLINE mask<T, N> operator!=(const vec& x, const vec& y) { return vec_op<T, N>::ne(x.v, y.v); }
+    friend CMT_INLINE mask<T, N> operator<(const vec& x, const vec& y) { return vec_op<T, N>::lt(x.v, y.v); }
+    friend CMT_INLINE mask<T, N> operator>(const vec& x, const vec& y) { return vec_op<T, N>::gt(x.v, y.v); }
+    friend CMT_INLINE mask<T, N> operator<=(const vec& x, const vec& y) { return vec_op<T, N>::le(x.v, y.v); }
+    friend CMT_INLINE mask<T, N> operator>=(const vec& x, const vec& y) { return vec_op<T, N>::ge(x.v, y.v); }
 
 #define KFR_ASGN_OP(aop, op)                                                                                 \
     friend CMT_INLINE vec& operator aop(vec& x, const vec& y)                                                \
@@ -699,7 +659,7 @@ struct CMT_EMPTY_BASES vec : vec_t<T, N>, operators::empty
 #undef KFR_ASGN_OP
 
     constexpr CMT_INLINE const simd_t& operator*() const { return v; }
-    constexpr CMT_INLINE simd_t& operator*() { return v; }
+    CMT_GNU_CONSTEXPR CMT_INLINE simd_t& operator*() { return v; }
     CMT_INLINE mask<T, N>& asmask() { return ref_cast<mask<T, N>>(*this); }
     CMT_INLINE const mask<T, N>& asmask() const { return ref_cast<mask<T, N>>(*this); }
     CMT_INLINE value_type operator[](size_t index) const { return data()[index]; }
@@ -744,7 +704,11 @@ private:
         simd_t& v;
         const size_t index;
     };
-} __attribute__((aligned(next_poweroftwo(sizeof(T) * N))));
+}
+#ifdef CMT_GNU_ATTRIBUTES
+__attribute__((aligned(next_poweroftwo(sizeof(T) * N))))
+#endif
+;
 
 namespace operators
 {
@@ -1263,7 +1227,7 @@ CMT_INLINE vec<T, N> tovec(const mask<T, N>& x)
     return *x;
 }
 
-#ifdef CMT_ARCH_SSE2
+#if defined CMT_ARCH_SSE2 && defined CMT_COMPILER_GNU
 CMT_INLINE f32x4 tovec(__m128 x) { return f32x4(x); }
 CMT_INLINE f64x2 tovec(__m128d x) { return f64x2(x); }
 #endif

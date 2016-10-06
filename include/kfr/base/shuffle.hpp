@@ -276,15 +276,14 @@ namespace internal
 template <typename T, size_t Nout, typename Fn, size_t... Indices>
 constexpr CMT_INLINE vec<T, Nout> generate_vector(csizes_t<Indices...>)
 {
-    constexpr Fn fn{};
-    return make_vector(static_cast<T>(fn(Indices))...);
+    return make_vector(static_cast<T>(Fn()(Indices))...);
 }
 }
 
 template <typename T, size_t Nout, typename Fn>
 constexpr CMT_INLINE vec<T, Nout> generate_vector()
 {
-    return internal::generate_vector<T, Nout, Fn>(csizeseq<Nout>);
+    return internal::generate_vector<T, Nout, Fn>(cvalseq_t<size_t, Nout>());
 }
 KFR_FN(generate_vector)
 
