@@ -524,8 +524,8 @@ template <typename T, typename... Args, size_t... indices, size_t N = sizeof...(
 CMT_GNU_CONSTEXPR CMT_INLINE vec<T, N> make_vector_impl(csizes_t<indices...>, const Args&... args)
 {
     constexpr size_t width = compound_type_traits<T>::width;
-    const T list[]                = { args... };
-    using simd_t                  = typename vec<T, N>::simd_t;
+    const T list[]         = { args... };
+    using simd_t           = typename vec<T, N>::simd_t;
     return simd_t{ compound_type_traits<T>::at(list[indices / width], indices % width)... };
 }
 }
@@ -640,23 +640,56 @@ struct CMT_EMPTY_BASES vec : vec_t<T, N>, operators::empty
     friend CMT_INLINE mask<T, N> operator<=(const vec& x, const vec& y) { return vec_op<T, N>::le(x.v, y.v); }
     friend CMT_INLINE mask<T, N> operator>=(const vec& x, const vec& y) { return vec_op<T, N>::ge(x.v, y.v); }
 
-#define KFR_ASGN_OP(aop, op)                                                                                 \
-    friend CMT_INLINE vec& operator aop(vec& x, const vec& y)                                                \
-    {                                                                                                        \
-        x = x op y;                                                                                          \
-        return x;                                                                                            \
+    friend CMT_INLINE vec& operator+=(vec& x, const vec& y)
+    {
+        x = vec_op<T, N>::add(x.v, y.v);
+        return x;
     }
-    KFR_ASGN_OP(+=, +)
-    KFR_ASGN_OP(-=, -)
-    KFR_ASGN_OP(*=, *)
-    KFR_ASGN_OP(/=, /)
-    KFR_ASGN_OP(%=, %)
-    KFR_ASGN_OP(&=, &)
-    KFR_ASGN_OP(|=, |)
-    KFR_ASGN_OP(^=, ^)
-    KFR_ASGN_OP(<<=, <<)
-    KFR_ASGN_OP(>>=, >>)
-#undef KFR_ASGN_OP
+    friend CMT_INLINE vec& operator-=(vec& x, const vec& y)
+    {
+        x = vec_op<T, N>::sub(x.v, y.v);
+        return x;
+    }
+    friend CMT_INLINE vec& operator*=(vec& x, const vec& y)
+    {
+        x = vec_op<T, N>::mul(x.v, y.v);
+        return x;
+    }
+    friend CMT_INLINE vec& operator/=(vec& x, const vec& y)
+    {
+        x = vec_op<T, N>::div(x.v, y.v);
+        return x;
+    }
+    friend CMT_INLINE vec& operator%=(vec& x, const vec& y)
+    {
+        x = vec_op<T, N>::rem(x.v, y.v);
+        return x;
+    }
+    friend CMT_INLINE vec& operator&=(vec& x, const vec& y)
+    {
+        x = vec_op<T, N>::band(x.v, y.v);
+        return x;
+    }
+    friend CMT_INLINE vec& operator|=(vec& x, const vec& y)
+    {
+        x = vec_op<T, N>::bor(x.v, y.v);
+        return x;
+    }
+    friend CMT_INLINE vec& operator^=(vec& x, const vec& y)
+    {
+        x = vec_op<T, N>::bxor(x.v, y.v);
+        return x;
+    }
+    friend CMT_INLINE vec& operator<<=(vec& x, const vec& y)
+    {
+        x = vec_op<T, N>::shl(x.v, y.v);
+        return x;
+    }
+    friend CMT_INLINE vec& operator>>=(vec& x, const vec& y)
+    {
+        x = vec_op<T, N>::shr(x.v, y.v);
+        return x;
+    }
 
     constexpr CMT_INLINE const simd_t& operator*() const { return v; }
     CMT_GNU_CONSTEXPR CMT_INLINE simd_t& operator*() { return v; }
