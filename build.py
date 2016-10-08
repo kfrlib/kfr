@@ -20,6 +20,7 @@
 from __future__ import print_function
 
 import os
+import multiprocessing
 import subprocess
 import sys
 
@@ -73,7 +74,11 @@ if sys.platform.startswith('win32'):
 else:
     generator = 'Unix Makefiles'
 
+threads = int(multiprocessing.cpu_count() * 1.5)
+
+print('threads = ', threads)
+threads = str(threads)
 
 if subprocess.call(['cmake', '-G', generator, '..'] + options, cwd=build_dir): raise Exception('Can\'t make project')
-if subprocess.call(['cmake', '--build', '.', '--', '-j4'], cwd=build_dir): raise Exception('Can\'t build project')
+if subprocess.call(['cmake', '--build', '.', '--', '-j' + threads], cwd=build_dir): raise Exception('Can\'t build project')
 if subprocess.call(['ctest'], cwd=os.path.join(build_dir, 'tests')): raise Exception('Can\'t test project')
