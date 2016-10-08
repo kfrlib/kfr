@@ -36,7 +36,7 @@ namespace kfr
 namespace intrinsics
 {
 
-#if defined CMT_ARCH_SSE2
+#if defined CMT_ARCH_SSE2 && defined KFR_NATIVE_INTRINSICS
 
 KFR_SINTRIN f32sse min(const f32sse& x, const f32sse& y) { return _mm_min_ps(*x, *y); }
 KFR_SINTRIN f64sse min(const f64sse& x, const f64sse& y) { return _mm_min_pd(*x, *y); }
@@ -106,7 +106,7 @@ KFR_SINTRIN u32sse max(const u32sse& x, const u32sse& y) { return select(x > y, 
 KFR_HANDLE_ALL_SIZES_2(min)
 KFR_HANDLE_ALL_SIZES_2(max)
 
-#elif defined CMT_ARCH_NEON
+#elif defined CMT_ARCH_NEON && defined KFR_NATIVE_INTRINSICS
 
 KFR_SINTRIN i8neon min(const i8neon& x, const i8neon& y) { return vminq_s8(*x, *y); }
 KFR_SINTRIN u8neon min(const u8neon& x, const u8neon& y) { return vminq_u8(*x, *y); }

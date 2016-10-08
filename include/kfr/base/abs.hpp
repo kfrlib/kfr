@@ -35,7 +35,7 @@ namespace kfr
 namespace intrinsics
 {
 
-#if defined CMT_ARCH_SSSE3
+#if defined CMT_ARCH_SSSE3 && defined KFR_NATIVE_INTRINSICS
 
 // floating point
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
@@ -66,7 +66,7 @@ KFR_SINTRIN u8avx abs(const u8avx& x) { return x; }
 
 KFR_HANDLE_ALL_SIZES_NOT_F_1(abs)
 
-#elif defined CMT_ARCH_NEON
+#elif defined CMT_ARCH_NEON && defined KFR_NATIVE_INTRINSICS
 
 KFR_SINTRIN i8neon abs(const i8neon& x) { return vabsq_s8(*x); }
 KFR_SINTRIN i16neon abs(const i16neon& x) { return vabsq_s16(*x); }

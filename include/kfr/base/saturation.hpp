@@ -71,7 +71,7 @@ KFR_SINTRIN vec<T, N> saturated_unsigned_sub(const vec<T, N>& a, const vec<T, N>
     return select(a < b, zerovector(a), a - b);
 }
 
-#if defined CMT_ARCH_SSE2
+#if defined CMT_ARCH_SSE2 && defined KFR_NATIVE_INTRINSICS
 
 KFR_SINTRIN u8sse satadd(const u8sse& x, const u8sse& y) { return _mm_adds_epu8(*x, *y); }
 KFR_SINTRIN i8sse satadd(const i8sse& x, const i8sse& y) { return _mm_adds_epi8(*x, *y); }
@@ -108,7 +108,7 @@ KFR_SINTRIN i16avx satsub(const i16avx& x, const i16avx& y) { return _mm256_subs
 KFR_HANDLE_ALL_SIZES_2(satadd)
 KFR_HANDLE_ALL_SIZES_2(satsub)
 
-#elif defined CMT_ARCH_NEON
+#elif defined CMT_ARCH_NEON && defined KFR_NATIVE_INTRINSICS
 
 KFR_SINTRIN u8neon satadd(const u8neon& x, const u8neon& y) { return vqaddq_u8(*x, *y); }
 KFR_SINTRIN i8neon satadd(const i8neon& x, const i8neon& y) { return vqaddq_s8(*x, *y); }

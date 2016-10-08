@@ -35,6 +35,7 @@ constexpr size_t index_undefined = static_cast<size_t>(-1);
 
 #ifdef CMT_COMPILER_CLANG
 #define KFR_NATIVE_SIMD 1
+#define KFR_NATIVE_INTRINSICS 1
 #endif
 
 #ifdef KFR_NATIVE_SIMD
@@ -100,6 +101,215 @@ CMT_INLINE void simd_write(T* dest, const simd<T, N>& value)
 #define KFR_SIMD_BROADCAST(T, N, X) ((::kfr::simd<T, N>)(X))
 #define KFR_SIMD_SHUFFLE(X, Y, ...) __builtin_shufflevector(X, Y, __VA_ARGS__)
 
-#endif
+#else
 
+namespace internal
+{
+
+template <typename T>
+struct simd_float_ops
+{
+    constexpr static T neg(T x) { return -x; }
+    constexpr static T bnot(T x) { return ~x; }
+
+    constexpr static T add(T x, T y) { return x + y; }
+    constexpr static T sub(T x, T y) { return x - y; }
+    constexpr static T mul(T x, T y) { return x * y; }
+    constexpr static T div(T x, T y) { return x / y; }
+
+    constexpr static T rem(T x, T y) { return std::numeric_limits<T>::quiet_NaN(); }
+    constexpr static T band(T x, T y) { return std::numeric_limits<T>::quiet_NaN(); }
+    constexpr static T bor(T x, T y) { return std::numeric_limits<T>::quiet_NaN(); }
+    constexpr static T bxor(T x, T y) { return std::numeric_limits<T>::quiet_NaN(); }
+    constexpr static T shl(T x, T y) { return std::numeric_limits<T>::quiet_NaN(); }
+    constexpr static T shr(T x, T y) { return std::numeric_limits<T>::quiet_NaN(); }
+
+    constexpr static T eq(T x, T y) { return maskbits<T>(x == y); }
+    constexpr static T ne(T x, T y) { return maskbits<T>(x != y); }
+    constexpr static T lt(T x, T y) { return maskbits<T>(x < y); }
+    constexpr static T gt(T x, T y) { return maskbits<T>(x > y); }
+    constexpr static T le(T x, T y) { return maskbits<T>(x <= y); }
+    constexpr static T ge(T x, T y) { return maskbits<T>(x >= y); }
+};
+template <typename T>
+struct simd_int_ops : simd_float_ops<T>
+{
+    constexpr static T rem(T x, T y) { return x % y; }
+    constexpr static T band(T x, T y) { return x & y; }
+    constexpr static T bor(T x, T y) { return x | y; }
+    constexpr static T bxor(T x, T y) { return x ^ y; }
+    constexpr static T shl(T x, T y) { return x << y; }
+    constexpr static T shr(T x, T y) { return x >> y; }
+};
+}
+
+template <typename T, size_t N>
+struct alignas(next_poweroftwo(N * sizeof(T))) simd
+{
+    using ops =
+        conditional<std::is_floating_point<T>::value, internal::simd_float_ops<T>, internal::simd_int_ops<T>>;
+    constexpr static simd broadcast(T value) { return broadcast_impl(value, csizeseq<N>); }
+    constexpr friend simd operator+(const simd& x) { return x; }
+    constexpr friend simd operator-(const simd& x) { return op_impl<ops::neg>(x, csizeseq<N>); }
+    constexpr friend simd operator~(const simd& x) { return op_impl<ops::bnot>(x, csizeseq<N>); }
+
+    constexpr friend simd operator+(const simd& x, const simd& y)
+    {
+        return op_impl<ops::add>(x, y, csizeseq<N>);
+    }
+    constexpr friend simd operator-(const simd& x, const simd& y)
+    {
+        return op_impl<ops::sub>(x, y, csizeseq<N>);
+    }
+    constexpr friend simd operator*(const simd& x, const simd& y)
+    {
+        return op_impl<ops::mul>(x, y, csizeseq<N>);
+    }
+    constexpr friend simd operator/(const simd& x, const simd& y)
+    {
+        return op_impl<ops::div>(x, y, csizeseq<N>);
+    }
+    constexpr friend simd operator&(const simd& x, const simd& y)
+    {
+        return op_impl<ops::band>(x, y, csizeseq<N>);
+    }
+    constexpr friend simd operator|(const simd& x, const simd& y)
+    {
+        return op_impl<ops::bor>(x, y, csizeseq<N>);
+    }
+    constexpr friend simd operator^(const simd& x, const simd& y)
+    {
+        return op_impl<ops::bxor>(x, y, csizeseq<N>);
+    }
+    constexpr friend simd operator<<(const simd& x, const simd& y)
+    {
+        return op_impl<ops::shl>(x, y, csizeseq<N>);
+    }
+    constexpr friend simd operator>>(const simd& x, const simd& y)
+    {
+        return op_impl<ops::shr>(x, y, csizeseq<N>);
+    }
+    constexpr friend simd operator==(const simd& x, const simd& y)
+    {
+        return op_impl<ops::eq>(x, y, csizeseq<N>);
+    }
+    constexpr friend simd operator!=(const simd& x, const simd& y)
+    {
+        return op_impl<ops::ne>(x, y, csizeseq<N>);
+    }
+    constexpr friend simd operator<(const simd& x, const simd& y)
+    {
+        return op_impl<ops::lt>(x, y, csizeseq<N>);
+    }
+    constexpr friend simd operator>(const simd& x, const simd& y)
+    {
+        return op_impl<ops::gt>(x, y, csizeseq<N>);
+    }
+    constexpr friend simd operator<=(const simd& x, const simd& y)
+    {
+        return op_impl<ops::le>(x, y, csizeseq<N>);
+    }
+    constexpr friend simd operator>=(const simd& x, const simd& y)
+    {
+        return op_impl<ops::ge>(x, y, csizeseq<N>);
+    }
+    constexpr T operator[](size_t index) const { return items[index]; }
+    T& operator[](size_t index) { return items[index]; }
+    T items[N];
+
+    template <typename U>
+    constexpr simd<U, N> cast() const
+    {
+        return cast_impl<U>(*this, csizeseq<N>);
+    }
+
+private:
+    template <typename U, size_t... indices>
+    constexpr static simd<U, N> cast_impl(const simd& x, csizes_t<indices...>)
+    {
+        return simd<U, N>{ static_cast<U>(x.items[indices])... };
+    }
+    template <T (*fn)(T), size_t... indices>
+    constexpr static simd op_impl(const simd& x, csizes_t<indices...>)
+    {
+        return simd{ fn(x.items[indices])... };
+    }
+    template <T (*fn)(T, T), size_t... indices>
+    constexpr static simd op_impl(const simd& x, const simd& y, csizes_t<indices...>)
+    {
+        return simd{ fn(x.items[indices], y.items[indices])... };
+    }
+    template <size_t... indices>
+    constexpr static simd broadcast_impl(T value, csizes_t<indices...>)
+    {
+        return simd{ ((void)indices, value)... };
+    }
+};
+
+template <typename To, typename From, size_t N>
+constexpr CMT_INLINE simd<To, N> simd_cast(const simd<From, N>& value) noexcept
+{
+    return value.template cast<To>();
+}
+
+template <typename T, size_t N, int... indices>
+constexpr CMT_INLINE simd<T, sizeof...(indices)> simd_shuffle(const simd<T, N>& x, const simd<T, N>& y,
+                                                              cints_t<indices...>) noexcept
+{
+    return simd<T, sizeof...(indices)>{ (indices == -1 ? T()
+                                                       : ((indices >= N) ? y[indices - N] : x[indices]))... };
+}
+
+template <typename To, typename From, size_t N, size_t Nout = N * sizeof(From) / sizeof(To)>
+constexpr CMT_INLINE simd<To, Nout> simd_bitcast(const simd<From, N>& value) noexcept
+{
+    union {
+        const simd<From, N> from;
+        const simd<To, Nout> to;
+    } u{ value };
+    return u.to;
+}
+
+template <size_t N, typename T>
+CMT_INLINE simd<T, N> simd_read_impl(const T* src, cfalse_t)
+{
+    simd<T, N> temp;
+    internal::builtin_memcpy(temp.items, src, N * sizeof(T));
+    return temp;
+}
+template <size_t N, typename T>
+CMT_INLINE simd<T, N> simd_read_impl(const T* src, ctrue_t)
+{
+    return *ptr_cast<simd<T, N>>(src);
+}
+
+template <size_t N, typename T>
+CMT_INLINE void simd_write_impl(T* dest, const simd<T, N>& value, cfalse_t)
+{
+    internal::builtin_memcpy(dest, value.items, N * sizeof(T));
+}
+template <size_t N, typename T>
+CMT_INLINE void simd_write_impl(T* dest, const simd<T, N>& value, ctrue_t)
+{
+    *ptr_cast<simd<T, N>>(dest) = value;
+}
+
+template <size_t N, bool A = false, typename T>
+CMT_INLINE simd<T, N> simd_read(const T* src)
+{
+    return simd_read_impl<N>(src, cbool<A>);
+}
+
+template <bool A = false, size_t N, typename T>
+CMT_INLINE void simd_write(T* dest, const simd<T, N>& value)
+{
+    return simd_write_impl<N>(dest, value, cbool<A>);
+}
+
+#define KFR_SIMD_CAST(T, N, X) (::kfr::simd_cast<T>(X))
+#define KFR_SIMD_BITCAST(T, N, X) (::kfr::simd_bitcast<T>(X))
+#define KFR_SIMD_BROADCAST(T, N, X) (::kfr::simd<T, N>::broadcast(X))
+#define KFR_SIMD_SHUFFLE(X, Y, ...) simd_shuffle(X, Y, cints<__VA_ARGS__>)
+
+#endif
 }

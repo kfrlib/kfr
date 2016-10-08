@@ -138,7 +138,7 @@ KFR_SINTRIN vec<f64, N> trig_sincos(const vec<f64, N>& folded, const mask<f64, N
     return formula;
 }
 
-template <typename T, size_t N, typename = u8[N > 1]>
+template <typename T, size_t N, KFR_ENABLE_IF(N > 1)>
 KFR_SINTRIN vec<T, N> sincos_mask(const vec<T, N>& x_full, const mask<T, N>& cosmask)
 {
     vec<itype<T>, N> quadrant;

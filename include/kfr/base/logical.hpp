@@ -49,7 +49,7 @@ struct bitmask
     type value;
 };
 
-#if defined CMT_ARCH_SSE2
+#if defined CMT_ARCH_SSE2 && defined KFR_NATIVE_INTRINSICS
 
 #if defined CMT_ARCH_SSE41
 
@@ -161,7 +161,7 @@ KFR_SINTRIN bool bittestany(const vec<T, N>& a)
     return bittestany(low(a)) || bittestany(high(a));
 }
 
-#elif CMT_ARCH_NEON
+#elif CMT_ARCH_NEON && defined KFR_NATIVE_INTRINSICS
 
 KFR_SINTRIN bool bittestall(const u32neon& a)
 {

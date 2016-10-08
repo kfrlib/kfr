@@ -54,7 +54,7 @@ namespace intrinsics
 #define KFR_mm256_trunc_pd(V) _mm256_round_pd((V), _MM_FROUND_TRUNC)
 #define KFR_mm256_roundnearest_pd(V) _mm256_round_pd((V), _MM_FROUND_NINT)
 
-#if defined CMT_ARCH_SSE41
+#if defined CMT_ARCH_SSE41 && defined KFR_NATIVE_INTRINSICS
 
 KFR_SINTRIN f32sse floor(const f32sse& value) { return _mm_floor_ps(*value); }
 KFR_SINTRIN f32sse ceil(const f32sse& value) { return _mm_ceil_ps(*value); }

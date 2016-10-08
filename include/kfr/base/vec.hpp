@@ -436,21 +436,21 @@ template <typename From, size_t N, typename To = utype<From>,
           size_t Nout = size_of<From>() * N / size_of<To>()>
 constexpr CMT_INLINE vec<To, Nout> ubitcast(const vec<From, N>& value) noexcept
 {
-    return reinterpret_cast<simd<To, Nout>>(*value);
+    return KFR_SIMD_BITCAST(To, Nout, *value);
 }
 
 template <typename From, size_t N, typename To = itype<From>,
           size_t Nout = size_of<From>() * N / size_of<To>()>
 constexpr CMT_INLINE vec<To, Nout> ibitcast(const vec<From, N>& value) noexcept
 {
-    return reinterpret_cast<simd<To, Nout>>(*value);
+    return KFR_SIMD_BITCAST(To, Nout, *value);
 }
 
 template <typename From, size_t N, typename To = ftype<From>,
           size_t Nout = size_of<From>() * N / size_of<To>()>
 constexpr CMT_INLINE vec<To, Nout> fbitcast(const vec<From, N>& value) noexcept
 {
-    return reinterpret_cast<simd<To, Nout>>(*value);
+    return KFR_SIMD_BITCAST(To, Nout, *value);
 }
 
 constexpr CMT_INLINE size_t vector_alignment(size_t size) { return next_poweroftwo(size); }
@@ -1259,7 +1259,7 @@ CMT_INLINE vec<T, N> tovec(const mask<T, N>& x)
     return *x;
 }
 
-#if defined CMT_ARCH_SSE2 && defined CMT_COMPILER_GNU
+#if defined CMT_ARCH_SSE2 && defined KFR_NATIVE_SIMD
 CMT_INLINE f32x4 tovec(__m128 x) { return f32x4(x); }
 CMT_INLINE f64x2 tovec(__m128d x) { return f64x2(x); }
 #endif
