@@ -40,6 +40,85 @@
 namespace kfr
 {
 
+template <typename T, size_t N>
+struct vec_op
+{
+    using type                = subtype<T>;
+    using utype               = kfr::utype<type>;
+    using iutype              = conditional<kfr::is_i_class<T>::value, type, utype>;
+    constexpr static size_t w = compound_type_traits<T>::width * N;
+
+    CMT_INLINE constexpr static simd<type, w> add(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    {
+        return x + y;
+    }
+    CMT_INLINE constexpr static simd<type, w> sub(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    {
+        return x - y;
+    }
+    CMT_INLINE constexpr static simd<type, w> mul(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    {
+        return x * y;
+    }
+    CMT_INLINE constexpr static simd<type, w> div(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    {
+        return x / y;
+    }
+    CMT_INLINE constexpr static simd<type, w> rem(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    {
+        return x % y;
+    }
+    CMT_INLINE constexpr static simd<type, w> shl(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    {
+        return KFR_SIMD_BITCAST(type, w, KFR_SIMD_BITCAST(iutype, w, x) << KFR_SIMD_BITCAST(iutype, w, y));
+    }
+    CMT_INLINE constexpr static simd<type, w> shr(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    {
+        return KFR_SIMD_BITCAST(type, w, KFR_SIMD_BITCAST(iutype, w, x) >> KFR_SIMD_BITCAST(iutype, w, y));
+    }
+    CMT_INLINE constexpr static simd<type, w> neg(const simd<type, w>& x) noexcept { return -x; }
+    CMT_INLINE constexpr static simd<type, w> band(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    {
+        return KFR_SIMD_BITCAST(type, w, KFR_SIMD_BITCAST(utype, w, x) & KFR_SIMD_BITCAST(utype, w, y));
+    }
+    CMT_INLINE constexpr static simd<type, w> bor(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    {
+        return KFR_SIMD_BITCAST(type, w, KFR_SIMD_BITCAST(utype, w, x) | KFR_SIMD_BITCAST(utype, w, y));
+    }
+    CMT_INLINE constexpr static simd<type, w> bxor(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    {
+        return KFR_SIMD_BITCAST(type, w, KFR_SIMD_BITCAST(utype, w, x) ^ KFR_SIMD_BITCAST(utype, w, y));
+    }
+    CMT_INLINE constexpr static simd<type, w> bnot(const simd<type, w>& x) noexcept
+    {
+        return KFR_SIMD_BITCAST(type, w, ~KFR_SIMD_BITCAST(utype, w, x));
+    }
+    CMT_INLINE constexpr static simd<type, w> eq(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    {
+        return KFR_SIMD_BITCAST(type, w, x == y);
+    }
+    CMT_INLINE constexpr static simd<type, w> ne(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    {
+        return KFR_SIMD_BITCAST(type, w, x != y);
+    }
+    CMT_INLINE constexpr static simd<type, w> lt(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    {
+        return KFR_SIMD_BITCAST(type, w, x < y);
+    }
+    CMT_INLINE constexpr static simd<type, w> gt(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    {
+        return KFR_SIMD_BITCAST(type, w, x > y);
+    }
+    CMT_INLINE constexpr static simd<type, w> le(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    {
+        return KFR_SIMD_BITCAST(type, w, x <= y);
+    }
+    CMT_INLINE constexpr static simd<type, w> ge(const simd<type, w>& x, const simd<type, w>& y) noexcept
+    {
+        return KFR_SIMD_BITCAST(type, w, x >= y);
+    }
+};
+
 /// @brief Base class for all vector classes
 template <typename T, size_t N>
 struct vec_t
