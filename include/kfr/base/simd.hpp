@@ -31,52 +31,71 @@
 namespace kfr
 {
 
+constexpr size_t index_undefined = static_cast<size_t>(-1);
+
 #ifdef CMT_COMPILER_CLANG
+#define KFR_NATIVE_SIMD 1
+#endif
 
-using simdindex = int;
+#ifdef KFR_NATIVE_SIMD
 
-template <typename T, simdindex N>
+template <typename T, size_t N>
 using simd = T __attribute__((ext_vector_type(N)));
 
-#define KFT_CONVERT_VECTOR(X, T, N) __builtin_convertvector(X, ::kfr::simd<T, N>)
+template <typename T, size_t N, bool A>
+using simd_storage = internal::struct_with_alignment<simd<T, N>, A>;
 
-#define KFR_SIMD_PARAM_ARE_DEDUCIBLE 1
-#define KFR_SIMD_FROM_SCALAR(X, T, N) (X)
-#define KFR_BUILTIN_SHUFFLEVECTOR(T, N, X, Y, I) __builtin_shufflevector(X, Y, I)
-
-#elif defined CMT_COMPILER_GNU
-
-using simdindex = int;
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wattributes"
-
-template <typename T, simdindex N>
-struct simd_gcc
+template <typename T, size_t N, size_t... indices>
+CMT_INLINE simd<T, sizeof...(indices)> simd_shuffle(const identity<simd<T, N>>& x,
+                                                    const identity<simd<T, N>>& y, csizes_t<indices...>)
 {
-    constexpr static size_t NN = next_poweroftwo(N);
-    typedef __attribute__((vector_size(NN * sizeof(T)))) T simd_type;
-    typedef simd_type type __attribute__((__packed__, __aligned__(sizeof(T))));
-};
-#pragma GCC diagnostic pop
-
-template <typename T, simdindex N>
-using simd = typename simd_gcc<T, N>::type;
-
-#define KFT_CONVERT_VECTOR(X, T, N) static_cast<::kfr::simd<T, N>>(X)
-#define KFR_SIMD_FROM_SCALAR(X, T, N)                                                                        \
-    (__builtin_shuffle(::kfr::simd<T, N>{ X }, ::kfr::simd<int_type<sizeof(T) * 8>, N>{ 0 }))
-#define KFR_BUILTIN_SHUFFLEVECTOR(T, N, X, Y, I) ::kfr::internal::builtin_shufflevector<T, N>(X, Y, I)
-
-namespace internal
-{
-template <typename T, size_t N, typename... Int>
-KFR_INTRIN simd<T, sizeof...(Int)> builtin_shufflevector(const simd<T, N>& x, const simd<T, N>& y,
-                                                         const Int&... indices)
-{
-    return simd<T, sizeof...(Int)>{ (indices < N ? x[indices] : y[indices])... };
+    return __builtin_shufflevector(x, y,
+                                   ((indices == index_undefined) ? -1 : static_cast<intptr_t>(indices))...);
 }
+template <typename T, size_t N, size_t... indices>
+CMT_INLINE simd<T, sizeof...(indices)> simd_shuffle(const identity<simd<T, N>>& x, csizes_t<indices...>)
+{
+    return __builtin_shufflevector(x, x,
+                                   ((indices == index_undefined) ? -1 : static_cast<intptr_t>(indices))...);
 }
+
+template <size_t N, bool A = false, typename T, KFR_ENABLE_IF(is_poweroftwo(N))>
+CMT_INLINE simd<T, N> simd_read(const T* src)
+{
+    return ptr_cast<simd_storage<T, N, A>>(src)->value;
+}
+
+template <size_t N, bool A = false, typename T, KFR_ENABLE_IF(!is_poweroftwo(N)), typename = void>
+CMT_INLINE simd<T, N> simd_read(const T* src)
+{
+    constexpr size_t first        = prev_poweroftwo(N);
+    constexpr size_t rest         = N - first;
+    constexpr auto extend_indices = cconcat(csizeseq<rest>, csizeseq<first - rest, index_undefined, 0>);
+    constexpr auto concat_indices = csizeseq<N>;
+    return simd_shuffle<T, first>(simd_read<first, A>(src),
+                                  simd_shuffle<T, rest>(simd_read<rest, false>(src + first), extend_indices),
+                                  concat_indices);
+}
+
+template <bool A = false, size_t N, typename T, KFR_ENABLE_IF(is_poweroftwo(N))>
+CMT_INLINE void simd_write(T* dest, const identity<simd<T, N>>& value)
+{
+    ptr_cast<simd_storage<T, N, A>>(dest)->value = value;
+}
+
+template <bool A = false, size_t N, typename T, KFR_ENABLE_IF(!is_poweroftwo(N)), typename = void>
+CMT_INLINE void simd_write(T* dest, const identity<simd<T, N>>& value)
+{
+    constexpr size_t first = prev_poweroftwo(N);
+    constexpr size_t rest  = N - first;
+    simd_write<A, first>(dest, simd_shuffle(value, csizeseq<first>));
+    simd_write<false, rest>(dest + first, simd_shuffle(value, csizeseq<rest, first>));
+}
+
+#define KFR_SIMD_CAST(T, N, X) __builtin_convertvector(X, ::kfr::simd<T, N>)
+#define KFR_SIMD_BITCAST(T, N, X) ((::kfr::simd<T, N>)(X))
+#define KFR_SIMD_BROADCAST(T, N, X) ((::kfr::simd<T, N>)(X))
+#define KFR_SIMD_SHUFFLE(X, Y, ...) __builtin_shufflevector(X, Y, __VA_ARGS__)
 
 #endif
 
@@ -85,6 +104,7 @@ struct vec_op
 {
     using type                = subtype<T>;
     using utype               = kfr::utype<type>;
+    using iutype              = conditional<kfr::is_i_class<T>::value, type, utype>;
     constexpr static size_t w = compound_type_traits<T>::width * N;
 
     CMT_INLINE constexpr static simd<type, w> add(const simd<type, w>& x, const simd<type, w>& y) noexcept
@@ -109,11 +129,13 @@ struct vec_op
     }
     CMT_INLINE constexpr static simd<type, w> shl(const simd<type, w>& x, const simd<type, w>& y) noexcept
     {
-        return x << y;
+        return reinterpret_cast<simd<type, w>>(reinterpret_cast<simd<iutype, w>>(x)
+                                               << reinterpret_cast<simd<iutype, w>>(y));
     }
     CMT_INLINE constexpr static simd<type, w> shr(const simd<type, w>& x, const simd<type, w>& y) noexcept
     {
-        return x >> y;
+        return reinterpret_cast<simd<type, w>>(reinterpret_cast<simd<iutype, w>>(x) >>
+                                               reinterpret_cast<simd<iutype, w>>(y));
     }
     CMT_INLINE constexpr static simd<type, w> neg(const simd<type, w>& x) noexcept { return -x; }
     CMT_INLINE constexpr static simd<type, w> band(const simd<type, w>& x, const simd<type, w>& y) noexcept

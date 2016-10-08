@@ -109,13 +109,13 @@ using cvec = vec<T, N * 2>;
 template <size_t N, bool A = false, typename T>
 CMT_INLINE cvec<T, N> cread(const complex<T>* src)
 {
-    return internal_read_write::read<N * 2, A>(ptr_cast<T>(src));
+    return simd_read<N * 2, A>(ptr_cast<T>(src));
 }
 
 template <size_t N, bool A = false, typename T>
 CMT_INLINE void cwrite(complex<T>* dest, cvec<T, N> value)
 {
-    return internal_read_write::write<A>(ptr_cast<T>(dest), value);
+    return simd_write<A, N * 2>(ptr_cast<T>(dest), *value);
 }
 
 template <size_t count, size_t N, size_t stride, bool A, typename T, size_t... indices>
@@ -168,7 +168,7 @@ CMT_INLINE void cwrite_group(complex<T>* dest, size_t stride, cvec<T, count * N>
 template <size_t N, bool A = false, bool split = false, typename T>
 CMT_INLINE cvec<T, N> cread_split(const complex<T>* src)
 {
-    cvec<T, N> temp = internal_read_write::read<N * 2, A>(ptr_cast<T>(src));
+    cvec<T, N> temp = simd_read<N * 2, A>(ptr_cast<T>(src));
     if (split)
         temp = splitpairs(temp);
     return temp;
@@ -179,7 +179,7 @@ CMT_INLINE void cwrite_split(complex<T>* dest, cvec<T, N> value)
 {
     if (split)
         value = interleavehalfs(value);
-    internal_read_write::write<A>(ptr_cast<T>(dest), value);
+    simd_write<A, N * 2>(ptr_cast<T>(dest), *value);
 }
 
 template <>

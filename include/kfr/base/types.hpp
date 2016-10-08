@@ -300,6 +300,29 @@ CMT_INLINE void zeroize(T1& value)
 {
     builtin_memset(static_cast<void*>(builtin_addressof(value)), 0, sizeof(T1));
 }
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wattributes"
+
+template <typename T, bool A>
+struct struct_with_alignment
+{
+    T value;
+    KFR_INTRIN void operator=(T value) { this->value = value; }
+};
+
+template <typename T>
+struct struct_with_alignment<T, false>
+{
+    T value;
+    KFR_INTRIN void operator=(T value) { this->value = value; }
+}
+#ifdef CMT_GNU_ATTRIBUTES
+__attribute__((__packed__, __may_alias__)) //
+#endif
+;
+
+#pragma GCC diagnostic pop
 }
 
 template <typename T>

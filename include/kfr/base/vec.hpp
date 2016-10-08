@@ -80,49 +80,10 @@ template <typename T, size_t N>
 struct is_vec_impl<mask<T, N>> : std::true_type
 {
 };
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wattributes"
-
-template <typename T, bool A>
-struct struct_with_alignment
-{
-    T value;
-    KFR_INTRIN void operator=(T value) { this->value = value; }
-};
-
-template <typename T>
-struct struct_with_alignment<T, false>
-{
-    T value;
-    KFR_INTRIN void operator=(T value) { this->value = value; }
-}
-#ifdef CMT_GNU_ATTRIBUTES
-__attribute__((__packed__, __may_alias__)) //
-#endif
-;
 }
 
 template <typename T>
 using is_vec = internal::is_vec_impl<T>;
-
-template <typename T, size_t N, bool A>
-using vec_algn = internal::struct_with_alignment<simd<T, N>, A>;
-
-#pragma GCC diagnostic pop
-
-template <typename T, size_t N, bool A>
-struct vec_ptr
-{
-    constexpr CMT_INLINE vec_ptr(T* data) noexcept : data(data) {}
-    constexpr CMT_INLINE vec_ptr(const T* data) noexcept : data(const_cast<T*>(data)) {}
-    CMT_INLINE const vec_algn<T, N, A>& operator[](size_t i) const
-    {
-        return *static_cast<vec_algn<T, N, A>*>(data + i);
-    }
-    CMT_INLINE vec_algn<T, N, A>& operator[](size_t i) { return *static_cast<vec_algn<T, N, A>*>(data + i); }
-    T* data;
-};
 
 template <typename To, typename From, size_t N,
           KFR_ENABLE_IF(std::is_same<subtype<From>, subtype<To>>::value),
@@ -151,15 +112,12 @@ get_vec_index(int = 0)
     return fn.template operator()<index>();
 }
 
-constexpr size_t index_undefined = static_cast<size_t>(-1);
-
 template <typename T, size_t N, size_t... Indices, KFR_ENABLE_IF(!is_compound<T>::value)>
 CMT_INLINE vec<T, sizeof...(Indices)> shufflevector(csizes_t<Indices...>, const vec<T, N>& x,
                                                     const vec<T, N>& y)
 {
-    vec<T, sizeof...(Indices)> result = KFR_BUILTIN_SHUFFLEVECTOR(
-        T, N, *x, *y,
-        static_cast<intptr_t>(Indices == index_undefined ? -1 : static_cast<intptr_t>(Indices))...);
+    vec<T, sizeof...(Indices)> result = KFR_SIMD_SHUFFLE(
+        *x, *y, static_cast<intptr_t>(Indices == index_undefined ? -1 : static_cast<intptr_t>(Indices))...);
     return result;
 }
 
@@ -282,7 +240,7 @@ template <typename To, typename From, size_t N, typename Tsub = deep_subtype<To>
           size_t Nout = N* compound_type_traits<To>::deep_width>
 constexpr CMT_INLINE vec<To, N> builtin_convertvector(const vec<From, N>& value) noexcept
 {
-    return KFT_CONVERT_VECTOR(*value, Tsub, Nout);
+    return KFR_SIMD_CAST(Tsub, Nout, *value);
 }
 
 // scalar to scalar
@@ -364,13 +322,17 @@ constexpr CMT_INLINE To bitcast(const From& value) noexcept
 template <typename To, typename From, size_t N, size_t Nout = N* size_of<From>() / size_of<To>()>
 constexpr CMT_INLINE vec<To, Nout> bitcast(const vec<From, N>& value) noexcept
 {
-    return reinterpret_cast<typename vec<To, Nout>::simd_t>(*value);
+    using Tsub             = typename vec<To, Nout>::scalar_type;
+    constexpr size_t width = vec<To, Nout>::scalar_size();
+    return KFR_SIMD_BITCAST(Tsub, width, *value);
 }
 
 template <typename To, typename From, size_t N, size_t Nout = N* size_of<From>() / size_of<To>()>
 constexpr CMT_INLINE mask<To, Nout> bitcast(const mask<From, N>& value) noexcept
 {
-    return reinterpret_cast<typename mask<To, Nout>::simd_t>(*value);
+    using Tsub             = typename mask<To, Nout>::scalar_type;
+    constexpr size_t width = mask<To, Nout>::scalar_size();
+    return KFR_SIMD_BITCAST(Tsub, width, *value);
 }
 
 template <typename From, typename To = utype<From>, KFR_ENABLE_IF(!is_compound<From>::value)>
@@ -450,7 +412,7 @@ constexpr CMT_INLINE vec<T, Nout> resize(const vec<T, N>& x)
     return x;
 }
 KFR_FN(resize)
-
+/*
 namespace internal_read_write
 {
 
@@ -484,13 +446,13 @@ CMT_INLINE void write(T* dest, const vec<T, N>& value)
     internal_read_write::write<false, rest>(dest + first,
                                             shufflevector<rest, internal::shuffle_index<first>>(value));
 }
-}
+}*/
 
 template <typename T, size_t N>
 struct pkd_vec
 {
     constexpr pkd_vec() noexcept {}
-    pkd_vec(const vec<T, N>& value) noexcept { internal_read_write::write(v, value); }
+    pkd_vec(const vec<T, N>& value) noexcept { simd_write<false, vec<T, N>::scalar_size()>(v, *value); }
     template <typename... Ts>
     constexpr pkd_vec(Ts... init) noexcept : v{ static_cast<T>(init)... }
     {
@@ -578,13 +540,13 @@ struct CMT_EMPTY_BASES vec : vec_t<T, N>, operators::empty
     static_assert(!is_vec<T>::value || is_poweroftwo(size_of<T>()),
                   "Inner vector size must be a power of two");
 
+    constexpr static size_t scalar_size() noexcept { return N * compound_type_traits<T>::width; }
     using UT          = utype<T>;
     using value_type  = T;
     using scalar_type = subtype<T>;
-    constexpr static size_t scalar_size() noexcept { return N * compound_type_traits<T>::width; }
-    using simd_t = simd<scalar_type, N * compound_type_traits<T>::width>;
-    using ref    = vec&;
-    using cref   = const vec&;
+    using simd_t      = simd<scalar_type, N * compound_type_traits<T>::width>;
+    using ref         = vec&;
+    using cref        = const vec&;
 
     constexpr static bool is_pod = true;
 
@@ -598,7 +560,7 @@ struct CMT_EMPTY_BASES vec : vec_t<T, N>, operators::empty
     }
     template <typename U,
               KFR_ENABLE_IF(std::is_convertible<U, T>::value&& compound_type_traits<T>::width == 1)>
-    constexpr CMT_INLINE vec(const U& value) noexcept : v(KFR_SIMD_FROM_SCALAR(static_cast<T>(value), T, N))
+    constexpr CMT_INLINE vec(const U& value) noexcept : v(KFR_SIMD_BROADCAST(T, N, static_cast<T>(value)))
     {
     }
     template <typename... Ts>
@@ -618,18 +580,16 @@ struct CMT_EMPTY_BASES vec : vec_t<T, N>, operators::empty
     CMT_INLINE vec& operator=(const vec&) noexcept = default;
     CMT_INLINE vec& operator=(vec&&) noexcept = default;
 
+    friend CMT_INLINE vec operator-(const vec& x) { return vec_op<T, N>::neg(x.v); }
+    friend CMT_INLINE vec operator~(const vec& x) { return vec_op<T, N>::bnot(x.v); }
     friend CMT_INLINE vec operator+(const vec& x, const vec& y) { return vec_op<T, N>::add(x.v, y.v); }
     friend CMT_INLINE vec operator-(const vec& x, const vec& y) { return vec_op<T, N>::sub(x.v, y.v); }
     friend CMT_INLINE vec operator*(const vec& x, const vec& y) { return vec_op<T, N>::mul(x.v, y.v); }
     friend CMT_INLINE vec operator/(const vec& x, const vec& y) { return vec_op<T, N>::div(x.v, y.v); }
     friend CMT_INLINE vec operator%(const vec& x, const vec& y) { return vec_op<T, N>::rem(x.v, y.v); }
-    friend CMT_INLINE vec operator-(const vec& x) { return vec_op<T, N>::neg(x.v); }
-
     friend CMT_INLINE vec operator&(const vec& x, const vec& y) { return vec_op<T, N>::band(x.v, y.v); }
     friend CMT_INLINE vec operator|(const vec& x, const vec& y) { return vec_op<T, N>::bor(x.v, y.v); }
     friend CMT_INLINE vec operator^(const vec& x, const vec& y) { return vec_op<T, N>::bxor(x.v, y.v); }
-    friend CMT_INLINE vec operator~(const vec& x) { return vec_op<T, N>::bnot(x.v); }
-
     friend CMT_INLINE vec operator<<(const vec& x, const vec& y) { return vec_op<T, N>::shl(x.v, y.v); }
     friend CMT_INLINE vec operator>>(const vec& x, const vec& y) { return vec_op<T, N>::shr(x.v, y.v); }
 
@@ -640,56 +600,16 @@ struct CMT_EMPTY_BASES vec : vec_t<T, N>, operators::empty
     friend CMT_INLINE mask<T, N> operator<=(const vec& x, const vec& y) { return vec_op<T, N>::le(x.v, y.v); }
     friend CMT_INLINE mask<T, N> operator>=(const vec& x, const vec& y) { return vec_op<T, N>::ge(x.v, y.v); }
 
-    friend CMT_INLINE vec& operator+=(vec& x, const vec& y)
-    {
-        x = vec_op<T, N>::add(x.v, y.v);
-        return x;
-    }
-    friend CMT_INLINE vec& operator-=(vec& x, const vec& y)
-    {
-        x = vec_op<T, N>::sub(x.v, y.v);
-        return x;
-    }
-    friend CMT_INLINE vec& operator*=(vec& x, const vec& y)
-    {
-        x = vec_op<T, N>::mul(x.v, y.v);
-        return x;
-    }
-    friend CMT_INLINE vec& operator/=(vec& x, const vec& y)
-    {
-        x = vec_op<T, N>::div(x.v, y.v);
-        return x;
-    }
-    friend CMT_INLINE vec& operator%=(vec& x, const vec& y)
-    {
-        x = vec_op<T, N>::rem(x.v, y.v);
-        return x;
-    }
-    friend CMT_INLINE vec& operator&=(vec& x, const vec& y)
-    {
-        x = vec_op<T, N>::band(x.v, y.v);
-        return x;
-    }
-    friend CMT_INLINE vec& operator|=(vec& x, const vec& y)
-    {
-        x = vec_op<T, N>::bor(x.v, y.v);
-        return x;
-    }
-    friend CMT_INLINE vec& operator^=(vec& x, const vec& y)
-    {
-        x = vec_op<T, N>::bxor(x.v, y.v);
-        return x;
-    }
-    friend CMT_INLINE vec& operator<<=(vec& x, const vec& y)
-    {
-        x = vec_op<T, N>::shl(x.v, y.v);
-        return x;
-    }
-    friend CMT_INLINE vec& operator>>=(vec& x, const vec& y)
-    {
-        x = vec_op<T, N>::shr(x.v, y.v);
-        return x;
-    }
+    friend CMT_INLINE vec& operator+=(vec& x, const vec& y) { return x = vec_op<T, N>::add(x.v, y.v); }
+    friend CMT_INLINE vec& operator-=(vec& x, const vec& y) { return x = vec_op<T, N>::sub(x.v, y.v); }
+    friend CMT_INLINE vec& operator*=(vec& x, const vec& y) { return x = vec_op<T, N>::mul(x.v, y.v); }
+    friend CMT_INLINE vec& operator/=(vec& x, const vec& y) { return x = vec_op<T, N>::div(x.v, y.v); }
+    friend CMT_INLINE vec& operator%=(vec& x, const vec& y) { return x = vec_op<T, N>::rem(x.v, y.v); }
+    friend CMT_INLINE vec& operator&=(vec& x, const vec& y) { return x = vec_op<T, N>::band(x.v, y.v); }
+    friend CMT_INLINE vec& operator|=(vec& x, const vec& y) { return x = vec_op<T, N>::bor(x.v, y.v); }
+    friend CMT_INLINE vec& operator^=(vec& x, const vec& y) { return x = vec_op<T, N>::bxor(x.v, y.v); }
+    friend CMT_INLINE vec& operator<<=(vec& x, const vec& y) { return x = vec_op<T, N>::shl(x.v, y.v); }
+    friend CMT_INLINE vec& operator>>=(vec& x, const vec& y) { return x = vec_op<T, N>::shr(x.v, y.v); }
 
     constexpr CMT_INLINE const simd_t& operator*() const { return v; }
     CMT_GNU_CONSTEXPR CMT_INLINE simd_t& operator*() { return v; }
@@ -1358,28 +1278,6 @@ struct compound_type_traits<kfr::vec_t<T, N>>
     template <typename U>
     using deep_rebind = kfr::vec_t<cometa::deep_rebind<subtype, U>, N>;
 };
-
-#ifdef KFR_SIMD_PARAM_ARE_DEDUCIBLE
-template <typename T, size_t N>
-struct compound_type_traits<kfr::simd<T, N>>
-{
-    using subtype                      = T;
-    using deep_subtype                 = cometa::deep_subtype<T>;
-    constexpr static size_t width      = N;
-    constexpr static size_t deep_width = width * compound_type_traits<T>::width;
-    constexpr static bool is_scalar    = false;
-    constexpr static size_t depth      = cometa::compound_type_traits<T>::depth + 1;
-    template <typename U>
-    using rebind = kfr::simd<U, N>;
-    template <typename U>
-    using deep_rebind = kfr::simd<cometa::deep_rebind<subtype, U>, N>;
-
-    CMT_INLINE static constexpr const subtype& at(const kfr::simd<T, N>& value, size_t index)
-    {
-        return value[index];
-    }
-};
-#endif
 
 template <typename T, size_t N>
 struct compound_type_traits<kfr::vec<T, N>>
