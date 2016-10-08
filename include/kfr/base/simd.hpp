@@ -40,20 +40,23 @@ constexpr size_t index_undefined = static_cast<size_t>(-1);
 #ifdef KFR_NATIVE_SIMD
 
 template <typename T, size_t N>
-using simd = T __attribute__((ext_vector_type(N)));
+using internal_simd_type = T __attribute__((ext_vector_type(N)));
+
+template <typename T, size_t N>
+using simd = identity<internal_simd_type<T, N>>;
 
 template <typename T, size_t N, bool A>
 using simd_storage = internal::struct_with_alignment<simd<T, N>, A>;
 
 template <typename T, size_t N, size_t... indices>
-CMT_INLINE simd<T, sizeof...(indices)> simd_shuffle(const identity<simd<T, N>>& x,
-                                                    const identity<simd<T, N>>& y, csizes_t<indices...>)
+CMT_INLINE simd<T, sizeof...(indices)> simd_shuffle(const simd<T, N>& x, const simd<T, N>& y,
+                                                    csizes_t<indices...>)
 {
     return __builtin_shufflevector(x, y,
                                    ((indices == index_undefined) ? -1 : static_cast<intptr_t>(indices))...);
 }
 template <typename T, size_t N, size_t... indices>
-CMT_INLINE simd<T, sizeof...(indices)> simd_shuffle(const identity<simd<T, N>>& x, csizes_t<indices...>)
+CMT_INLINE simd<T, sizeof...(indices)> simd_shuffle(const simd<T, N>& x, csizes_t<indices...>)
 {
     return __builtin_shufflevector(x, x,
                                    ((indices == index_undefined) ? -1 : static_cast<intptr_t>(indices))...);
@@ -78,13 +81,13 @@ CMT_INLINE simd<T, N> simd_read(const T* src)
 }
 
 template <bool A = false, size_t N, typename T, KFR_ENABLE_IF(is_poweroftwo(N))>
-CMT_INLINE void simd_write(T* dest, const identity<simd<T, N>>& value)
+CMT_INLINE void simd_write(T* dest, const simd<T, N>& value)
 {
     ptr_cast<simd_storage<T, N, A>>(dest)->value = value;
 }
 
 template <bool A = false, size_t N, typename T, KFR_ENABLE_IF(!is_poweroftwo(N)), typename = void>
-CMT_INLINE void simd_write(T* dest, const identity<simd<T, N>>& value)
+CMT_INLINE void simd_write(T* dest, const simd<T, N>& value)
 {
     constexpr size_t first = prev_poweroftwo(N);
     constexpr size_t rest  = N - first;
