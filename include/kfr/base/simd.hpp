@@ -33,6 +33,8 @@ CMT_PRAGMA_MSVC(warning(disable : 4324))
 
 namespace kfr
 {
+namespace internal
+{
 
 constexpr size_t index_undefined = static_cast<size_t>(-1);
 
@@ -108,9 +110,6 @@ CMT_INLINE void simd_write(T* dest, const simd<T, N>& value)
 
 #else
 
-namespace internal
-{
-
 template <typename T>
 constexpr inline T maskbits(bool value);
 
@@ -149,7 +148,6 @@ struct simd_int_ops : simd_float_ops<T>
     constexpr static T shl(T x, T y) { return x << y; }
     constexpr static T shr(T x, T y) { return x >> y; }
 };
-}
 
 template <typename T, size_t N>
 struct alignas(const_min(size_t(64), next_poweroftwo(N * sizeof(T)))) simd
@@ -315,12 +313,13 @@ CMT_INLINE void simd_write(T* dest, const simd<T, N>& value)
 }
 
 #define KFR_SIMD_SET(T, ...) (T{ { __VA_ARGS__ } })
-#define KFR_SIMD_CAST(T, N, X) ((void)N, ::kfr::simd_cast<T>(X))
-#define KFR_SIMD_BITCAST(T, N, X) ((void)N, ::kfr::simd_bitcast<T>(X))
-#define KFR_SIMD_BROADCAST(T, N, X) (::kfr::simd<T, N>::broadcast(X))
-#define KFR_SIMD_SHUFFLE(X, Y, ...) simd_shuffle(X, Y, cints_t<__VA_ARGS__>())
+#define KFR_SIMD_CAST(T, N, X) ((void)N, ::kfr::internal::simd_cast<T>(X))
+#define KFR_SIMD_BITCAST(T, N, X) ((void)N, ::kfr::internal::simd_bitcast<T>(X))
+#define KFR_SIMD_BROADCAST(T, N, X) (::kfr::internal::simd<T, N>::broadcast(X))
+#define KFR_SIMD_SHUFFLE(X, Y, ...) (::kfr::internal::simd_shuffle(X, Y, cints_t<__VA_ARGS__>()))
 
 #endif
+}
 }
 
 CMT_PRAGMA_MSVC(warning(pop))

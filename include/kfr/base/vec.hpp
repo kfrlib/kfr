@@ -40,6 +40,8 @@ CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpacked")
 namespace kfr
 {
 
+using internal::simd;
+
 template <typename T, size_t N>
 struct vec_op
 {
@@ -535,7 +537,10 @@ template <typename T, size_t N>
 struct pkd_vec
 {
     constexpr pkd_vec() noexcept {}
-    pkd_vec(const vec<T, N>& value) noexcept { simd_write<false, vec<T, N>::scalar_size()>(v, *value); }
+    pkd_vec(const vec<T, N>& value) noexcept
+    {
+        internal::simd_write<false, vec<T, N>::scalar_size()>(v, *value);
+    }
     template <typename... Ts>
     constexpr pkd_vec(Ts... init) noexcept : v{ static_cast<T>(init)... }
     {
