@@ -34,9 +34,9 @@
 #include "cache.hpp"
 #include "fft.hpp"
 
-#pragma clang diagnostic push
+CMT_PRAGMA_GNU(GCC diagnostic push)
 #if CMT_HAS_WARNING("-Wshadow")
-#pragma clang diagnostic ignored "-Wshadow"
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
 #endif
 
 namespace kfr
@@ -51,7 +51,7 @@ KFR_INTRIN univector<T> convolve(const univector<T, Tag1>& src1, const univector
     src1padded.resize(size, 0);
     src2padded.resize(size, 0);
 
-    dft_plan_ptr<T> dft = dft_cache::instance().get(ctype<T>, size);
+    dft_plan_ptr<T> dft = dft_cache::instance().get(ctype_t<T>(), size);
     univector<u8> temp(dft->temp_size);
     dft->execute(src1padded, src1padded, temp);
     dft->execute(src2padded, src2padded, temp);
@@ -69,7 +69,7 @@ KFR_INTRIN univector<T> correlate(const univector<T, Tag1>& src1, const univecto
     univector<complex<T>> src2padded = reverse(src2);
     src1padded.resize(size, 0);
     src2padded.resize(size, 0);
-    dft_plan_ptr<T> dft = dft_cache::instance().get(ctype<T>, size);
+    dft_plan_ptr<T> dft = dft_cache::instance().get(ctype_t<T>(), size);
     univector<u8> temp(dft->temp_size);
     dft->execute(src1padded, src1padded, temp);
     dft->execute(src2padded, src2padded, temp);
@@ -87,4 +87,4 @@ KFR_INTRIN univector<T> autocorrelate(const univector<T, Tag1>& src)
     return result;
 }
 }
-#pragma clang diagnostic pop
+CMT_PRAGMA_GNU(GCC diagnostic pop)

@@ -297,13 +297,13 @@ struct expression_downsample<4, offset, E> : expression<E>
 }
 
 template <typename E1, size_t offset = 0>
-CMT_INLINE internal::expression_downsample<2, offset, E1> downsample2(E1&& e1, csize_t<offset> = csize<0>)
+CMT_INLINE internal::expression_downsample<2, offset, E1> downsample2(E1&& e1, csize_t<offset> = csize_t<0>())
 {
     return internal::expression_downsample<2, offset, E1>(std::forward<E1>(e1));
 }
 
 template <typename E1, size_t offset = 0>
-CMT_INLINE internal::expression_downsample<4, offset, E1> downsample4(E1&& e1, csize_t<offset> = csize<0>)
+CMT_INLINE internal::expression_downsample<4, offset, E1> downsample4(E1&& e1, csize_t<offset> = csize_t<0>())
 {
     return internal::expression_downsample<4, offset, E1>(std::forward<E1>(e1));
 }

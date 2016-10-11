@@ -10,7 +10,7 @@
 
 using namespace kfr;
 
-int main(int argc, char** argv)
+int main()
 {
     println(library_version());
 

@@ -61,7 +61,7 @@ struct expression_short_fir : expression<E1>
         vec<T, N> in = this->argument_first(cinput, index, x);
 
         vec<T, N> out = in * taps[0];
-        cfor(csize<1>, csize<tapcount>,
+        cfor(csize_t<1>(), csize_t<tapcount>(),
              [&](auto I) { out = out + concat_and_slice<tapcount - 1 - I, N>(delayline, in) * taps[I]; });
         delayline = concat_and_slice<N, tapcount - 1>(delayline, in);
 

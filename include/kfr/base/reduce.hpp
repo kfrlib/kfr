@@ -61,10 +61,10 @@ CMT_INLINE auto reduce_call_final(FinalFn&& finalfn, size_t, T value)
     return finalfn(value);
 }
 
-template <typename T, typename ReduceFn, typename TransformFn, typename FinalFn, cpu_t cpu = cpu_t::native>
+template <typename T, typename ReduceFn, typename TransformFn, typename FinalFn, KFR_ARCH_DEP>
 struct expression_reduce : output_expression
 {
-    constexpr static size_t width = vector_width<T, cpu> * bitness_const(1, 2);
+    constexpr static size_t width = platform<T>::vector_width * bitness_const(1, 2);
 
     using value_type = T;
 
@@ -85,16 +85,16 @@ struct expression_reduce : output_expression
 
 protected:
     void reset() { counter = 0; }
-    CMT_INLINE void process(vec<T, width> x) const { value = reducefn(transformfn(x), value); }
+    CMT_INLINE void process(const vec<T, width>& x) const { value = reducefn(transformfn(x), value); }
 
     template <size_t N, KFR_ENABLE_IF(N < width)>
-    CMT_INLINE void process(vec<T, N> x) const
+    CMT_INLINE void process(const vec<T, N>& x) const
     {
         value = combine(value, reducefn(transformfn(x), narrow<N>(value)));
     }
 
     template <size_t N, KFR_ENABLE_IF(N > width)>
-    CMT_INLINE void process(vec<T, N> x) const
+    CMT_INLINE void process(const vec<T, N>& x) const
     {
         process(low(x));
         process(high(x));
@@ -110,14 +110,14 @@ protected:
 
 template <typename ReduceFn, typename TransformFn = fn::pass_through, typename FinalFn = fn::pass_through,
           typename E1, typename T = value_type_of<E1>>
-KFR_SINTRIN T reduce(E1&& e1, ReduceFn&& reducefn, TransformFn&& transformfn = fn::pass_through(),
+KFR_SINTRIN T reduce(const E1& e1, ReduceFn&& reducefn, TransformFn&& transformfn = fn::pass_through(),
                      FinalFn&& finalfn = fn::pass_through())
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
     using reducer_t = internal::expression_reduce<T, decay<ReduceFn>, decay<TransformFn>, decay<FinalFn>>;
     reducer_t red(std::forward<ReduceFn>(reducefn), std::forward<TransformFn>(transformfn),
                   std::forward<FinalFn>(finalfn));
-    process(red, std::forward<E1>(e1));
+    process(red, e1);
 
     return red.get();
 }
@@ -133,10 +133,10 @@ KFR_FN(reduce)
  * \f]
  */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_SINTRIN T sum(E1&& x)
+KFR_SINTRIN T sum(const E1& x)
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
-    return reduce(std::forward<E1>(x), fn::add());
+    return reduce(x, fn::add());
 }
 
 /**
@@ -148,10 +148,10 @@ KFR_SINTRIN T sum(E1&& x)
  * \f]
  */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_SINTRIN T mean(E1&& x)
+KFR_SINTRIN T mean(const E1& x)
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
-    return reduce(std::forward<E1>(x), fn::add(), fn::pass_through(), fn::final_mean());
+    return reduce(x, fn::add(), fn::pass_through(), fn::final_mean());
 }
 
 /**
@@ -160,10 +160,10 @@ KFR_SINTRIN T mean(E1&& x)
  * x must have its size and type specified.
  */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_SINTRIN T minof(E1&& x)
+KFR_SINTRIN T minof(const E1& x)
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
-    return reduce(std::forward<E1>(x), fn::min());
+    return reduce(x, fn::min());
 }
 
 /**
@@ -172,10 +172,10 @@ KFR_SINTRIN T minof(E1&& x)
  * x must have its size and type specified.
  */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_SINTRIN T maxof(E1&& x)
+KFR_SINTRIN T maxof(const E1& x)
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
-    return reduce(std::forward<E1>(x), fn::max());
+    return reduce(x, fn::max());
 }
 
 /**
@@ -184,10 +184,10 @@ KFR_SINTRIN T maxof(E1&& x)
  * x must have its size and type specified.
  */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_SINTRIN T absminof(E1&& x)
+KFR_SINTRIN T absminof(const E1& x)
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
-    return reduce(std::forward<E1>(x), fn::absmin());
+    return reduce(x, fn::absmin());
 }
 
 /**
@@ -196,10 +196,10 @@ KFR_SINTRIN T absminof(E1&& x)
  * x must have its size and type specified.
  */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_SINTRIN T absmaxof(E1&& x)
+KFR_SINTRIN T absmaxof(const E1& x)
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
-    return reduce(std::forward<E1>(x), fn::absmax());
+    return reduce(x, fn::absmax());
 }
 
 /**
@@ -229,10 +229,10 @@ KFR_SINTRIN T dotproduct(E1&& x, E2&& y)
    \f]
  */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_SINTRIN T rms(E1&& x)
+KFR_SINTRIN T rms(const E1& x)
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
-    return reduce(std::forward<E1>(x), fn::add(), fn::sqr(), fn::final_rootmean());
+    return reduce(x, fn::add(), fn::sqr(), fn::final_rootmean());
 }
 
 /**
@@ -244,10 +244,10 @@ KFR_SINTRIN T rms(E1&& x)
    \f]
  */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_SINTRIN T sumsqr(E1&& x)
+KFR_SINTRIN T sumsqr(const E1& x)
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
-    return reduce(std::forward<E1>(x), fn::add(), fn::sqr());
+    return reduce(x, fn::add(), fn::sqr());
 }
 
 /**
@@ -259,9 +259,9 @@ KFR_SINTRIN T sumsqr(E1&& x)
    \f]
  */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_SINTRIN T product(E1&& x)
+KFR_SINTRIN T product(const E1& x)
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
-    return reduce(std::forward<E1>(x), fn::mul());
+    return reduce(x, fn::mul());
 }
 }

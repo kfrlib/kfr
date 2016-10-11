@@ -139,23 +139,23 @@ KFR_SINTRIN bool bittestall(const i32sse& x) { return !_mm_movemask_epi8(*~x); }
 KFR_SINTRIN bool bittestall(const i64sse& x) { return !_mm_movemask_epi8(*~x); }
 #endif
 
-template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T, cpu_t::native>)>
+template <typename T, size_t N, KFR_ENABLE_IF(N < platform<T>::vector_width)>
 KFR_SINTRIN bool bittestall(const vec<T, N>& a)
 {
     return bittestall(expand_simd(a, internal::maskbits<T>(true)));
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N >= vector_width<T, cpu_t::native>), typename = void>
+template <typename T, size_t N, KFR_ENABLE_IF(N >= platform<T>::vector_width), typename = void>
 KFR_SINTRIN bool bittestall(const vec<T, N>& a)
 {
     return bittestall(low(a)) && bittestall(high(a));
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T, cpu_t::native>)>
+template <typename T, size_t N, KFR_ENABLE_IF(N < platform<T>::vector_width)>
 KFR_SINTRIN bool bittestany(const vec<T, N>& a)
 {
     return bittestany(expand_simd(a, internal::maskbits<T>(false)));
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N >= vector_width<T, cpu_t::native>), typename = void>
+template <typename T, size_t N, KFR_ENABLE_IF(N >= platform<T>::vector_width), typename = void>
 KFR_SINTRIN bool bittestany(const vec<T, N>& a)
 {
     return bittestany(low(a)) || bittestany(high(a));
@@ -192,23 +192,23 @@ KFR_SINTRIN bool bittestall(const i64neon& a) { return bittestall(bitcast<u32>(a
 KFR_SINTRIN bool bittestall(const f32neon& a) { return bittestall(bitcast<u32>(a)); }
 KFR_SINTRIN bool bittestall(const f64neon& a) { return bittestall(bitcast<u32>(a)); }
 
-template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T, cpu_t::native>)>
+template <typename T, size_t N, KFR_ENABLE_IF(N < platform<T>::vector_width)>
 KFR_SINTRIN bool bittestall(const vec<T, N>& a)
 {
     return bittestall(expand_simd(a, internal::maskbits<T>(true)));
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N >= vector_width<T, cpu_t::native>), typename = void>
+template <typename T, size_t N, KFR_ENABLE_IF(N >= platform<T>::vector_width), typename = void>
 KFR_SINTRIN bool bittestall(const vec<T, N>& a)
 {
     return bittestall(low(a)) && bittestall(high(a));
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T, cpu_t::native>)>
+template <typename T, size_t N, KFR_ENABLE_IF(N < platform<T>::vector_width)>
 KFR_SINTRIN bool bittestany(const vec<T, N>& a)
 {
     return bittestany(expand_simd(a, internal::maskbits<T>(false)));
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N >= vector_width<T, cpu_t::native>), typename = void>
+template <typename T, size_t N, KFR_ENABLE_IF(N >= platform<T>::vector_width), typename = void>
 KFR_SINTRIN bool bittestany(const vec<T, N>& a)
 {
     return bittestany(low(a)) || bittestany(high(a));

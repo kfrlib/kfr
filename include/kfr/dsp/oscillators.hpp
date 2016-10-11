@@ -34,7 +34,8 @@ namespace kfr
 template <typename T = fbase>
 auto jaehne(identity<T> magn, size_t size)
 {
-    return truncate(magn * sin(c_pi<T, 1, 2> * sqr(linspace(T(0), T(size), size, false)) / size), size);
+    return truncate(magn * sin(constants<T>::pi_s(1, 2) * sqr(linspace(T(0), T(size), size, false)) / size),
+                    size);
 }
 
 template <typename T = fbase>
@@ -60,78 +61,78 @@ auto phasor(identity<T> frequency, identity<T> sample_rate)
 namespace intrinsics
 {
 template <typename T>
-KFR_SINTRIN T rawsine(T x)
+KFR_SINTRIN T rawsine(const T& x)
 {
-    return intrinsics::fastsin(x * c_pi<T, 2>);
+    return intrinsics::fastsin(x * constants<T>::pi_s(2));
 }
 template <typename T>
-KFR_SINTRIN T sinenorm(T x)
+KFR_SINTRIN T sinenorm(const T& x)
 {
     return intrinsics::rawsine(fract(x));
 }
 template <typename T>
-KFR_SINTRIN T sine(T x)
+KFR_SINTRIN T sine(const T& x)
 {
-    return intrinsics::sinenorm(c_recip_pi<T, 1, 2> * x);
+    return intrinsics::sinenorm(constants<T>::recip_pi_s(1, 2) * x);
 }
 
 template <typename T>
-KFR_SINTRIN T rawsquare(T x)
+KFR_SINTRIN T rawsquare(const T& x)
 {
     return select(x < T(0.5), T(1), -T(1));
 }
 template <typename T>
-KFR_SINTRIN T squarenorm(T x)
+KFR_SINTRIN T squarenorm(const T& x)
 {
     return intrinsics::rawsquare(fract(x));
 }
 template <typename T>
-KFR_SINTRIN T square(T x)
+KFR_SINTRIN T square(const T& x)
 {
-    return intrinsics::squarenorm(c_recip_pi<T, 1, 2> * x);
+    return intrinsics::squarenorm(constants<T>::recip_pi_s(1, 2) * x);
 }
 
 template <typename T>
-KFR_SINTRIN T rawsawtooth(T x)
+KFR_SINTRIN T rawsawtooth(const T& x)
 {
     return T(1) - 2 * x;
 }
 template <typename T>
-KFR_SINTRIN T sawtoothnorm(T x)
+KFR_SINTRIN T sawtoothnorm(const T& x)
 {
     return intrinsics::rawsawtooth(fract(x));
 }
 template <typename T>
-KFR_SINTRIN T sawtooth(T x)
+KFR_SINTRIN T sawtooth(const T& x)
 {
-    return intrinsics::sawtoothnorm(c_recip_pi<T, 1, 2> * x);
+    return intrinsics::sawtoothnorm(constants<T>::recip_pi_s(1, 2) * x);
 }
 
 template <typename T>
-KFR_SINTRIN T isawtoothnorm(T x)
+KFR_SINTRIN T isawtoothnorm(const T& x)
 {
     return T(-1) + 2 * fract(x + 0.5);
 }
 template <typename T>
-KFR_SINTRIN T isawtooth(T x)
+KFR_SINTRIN T isawtooth(const T& x)
 {
-    return intrinsics::isawtoothnorm(c_recip_pi<T, 1, 2> * x);
+    return intrinsics::isawtoothnorm(constants<T>::recip_pi_s(1, 2) * x);
 }
 
 template <typename T>
-KFR_SINTRIN T rawtriangle(T x)
+KFR_SINTRIN T rawtriangle(const T& x)
 {
     return 1 - abs(4 * x - 2);
 }
 template <typename T>
-KFR_SINTRIN T trianglenorm(T x)
+KFR_SINTRIN T trianglenorm(const T& x)
 {
     return intrinsics::rawtriangle(fract(x + 0.25));
 }
 template <typename T>
-KFR_SINTRIN T triangle(T x)
+KFR_SINTRIN T triangle(const T& x)
 {
-    return intrinsics::trianglenorm(c_recip_pi<T, 1, 2> * x);
+    return intrinsics::trianglenorm(constants<T>::recip_pi_s(1, 2) * x);
 }
 }
 KFR_I_FN(rawsine)

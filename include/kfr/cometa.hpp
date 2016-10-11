@@ -10,8 +10,11 @@
 #include <type_traits>
 #include <utility>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
+CMT_PRAGMA_GNU(GCC diagnostic push)
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
+
+CMT_PRAGMA_MSVC(warning(push))
+CMT_PRAGMA_MSVC(warning(disable : 4814))
 
 namespace cometa
 {
@@ -228,11 +231,12 @@ using subtype = typename compound_type_traits<T>::subtype;
 template <typename T>
 using deep_subtype = typename compound_type_traits<T>::deep_subtype;
 
-template <typename T, typename SubType>
+/*template <typename T, typename SubType>
 using rebind_subtype = typename compound_type_traits<T>::template rebind<SubType>;
 
 template <typename T, typename SubType>
 using deep_rebind = typename compound_type_traits<T>::template deep_rebind<SubType>;
+ */
 
 template <typename T>
 struct compound_type_traits<std::pair<T, T>>
@@ -247,7 +251,8 @@ struct compound_type_traits<std::pair<T, T>>
     template <typename U>
     using rebind = std::pair<U, U>;
     template <typename U>
-    using deep_rebind = std::pair<cometa::deep_rebind<subtype, U>, cometa::deep_rebind<subtype, U>>;
+    using deep_rebind = std::pair<typename compound_type_traits<subtype>::template deep_rebind<U>,
+                                  typename compound_type_traits<subtype>::template deep_rebind<U>>;
 
     CMT_INLINE static constexpr const subtype& at(const std::pair<subtype, subtype>& value, size_t index)
     {
@@ -346,26 +351,11 @@ using cuint_t = cval_t<unsigned, val>;
 template <size_t val>
 using csize_t = cval_t<size_t, val>;
 
-template <typename T, T val>
-constexpr cval_t<T, val> cval{};
-
-template <bool val>
-constexpr cbool_t<val> cbool{};
-
 using cfalse_t = cbool_t<false>;
 using ctrue_t  = cbool_t<true>;
 
 constexpr ctrue_t ctrue{};
 constexpr cfalse_t cfalse{};
-
-template <int val>
-constexpr cint_t<val> cint{};
-
-template <unsigned val>
-constexpr cuint_t<val> cuint{};
-
-template <size_t val>
-constexpr csize_t<val> csize{};
 
 namespace details
 {
@@ -406,17 +396,17 @@ struct cvals_t : ops::empty
     using type = cvals_t<T, values...>;
     constexpr static size_t size() { return sizeof...(values); }
     template <size_t index>
-    constexpr T operator[](csize_t<index>)
+    constexpr T operator[](csize_t<index>) const
     {
-        return get(csize<index>);
+        return get(csize_t<index>());
     }
     template <size_t index>
     constexpr static T get(csize_t<index> = csize_t<index>())
     {
         return details::get_nth<index, T, values...>::value;
     }
-    constexpr static T front() { return get(csize<0>); }
-    constexpr static T back() { return get(csize<size() - 1>); }
+    constexpr static T front() { return get(csize_t<0>()); }
+    constexpr static T back() { return get(csize_t<size() - 1>()); }
 
     static const T* begin() { return array(); }
     static const T* end() { return array() + size(); }
@@ -444,6 +434,8 @@ struct cvals_t<T> : ops::empty
 template <bool... values>
 using cbools_t = cvals_t<bool, values...>;
 
+constexpr cbools_t<false, true> cfalse_true{};
+
 template <int... values>
 using cints_t = cvals_t<int, values...>;
 
@@ -459,39 +451,16 @@ using csizes_t = cvals_t<size_t, values...>;
 template <size_t... values>
 using elements_t = cvals_t<size_t, values...>;
 
-template <typename T, T... values>
-constexpr cvals_t<T, values...> cvals{};
-
-template <bool... vals>
-constexpr cbools_t<vals...> cbools{};
-
-constexpr cbools_t<false, true> cfalse_true{};
-
-template <int... vals>
-constexpr cints_t<vals...> cints{};
-
-template <char... vals>
-constexpr cchars_t<vals...> cchars{};
-
-template <unsigned... vals>
-constexpr cuints_t<vals...> cuints{};
-
-template <size_t... vals>
-constexpr csizes_t<vals...> csizes{};
-
-template <size_t... vals>
-constexpr elements_t<vals...> elements{};
-
 template <typename T>
-constexpr inline T csum(cvals_t<T>)
+constexpr inline T csum(cvals_t<T> = cvals_t<T>())
 {
     return 0;
 }
 
 template <typename T, T first, T... rest>
-constexpr inline T csum(cvals_t<T, first, rest...>)
+constexpr inline T csum(cvals_t<T, first, rest...> = cvals_t<T, first, rest...>())
 {
-    return first + csum(cvals<T, rest...>);
+    return first + csum(cvals_t<T, rest...>());
 }
 
 template <typename T>
@@ -503,7 +472,7 @@ constexpr inline T cprod(cvals_t<T>)
 template <typename T, T first, T... rest>
 constexpr inline T cprod(cvals_t<T, first, rest...>)
 {
-    return first * cprod(cvals<T, rest...>);
+    return first * cprod(cvals_t<T, rest...>());
 }
 
 template <typename T>
@@ -514,9 +483,6 @@ struct ctype_t
 
 template <typename T>
 using type_of = typename T::type;
-
-template <typename T>
-constexpr ctype_t<T> ctype{};
 
 template <typename... Types>
 struct ctypes_t
@@ -533,8 +499,6 @@ struct ctypes_t
     }
 };
 
-template <typename... Ts>
-constexpr ctypes_t<Ts...> ctypes{};
 namespace details
 {
 template <typename T1, typename T2>
@@ -711,35 +675,11 @@ struct cvalseq_impl<T, 1, Nstart, Nstep> : cvals_t<T, static_cast<T>(Nstart)>
 template <typename T, size_t size, T start = T(), ptrdiff_t step = 1>
 using cvalseq_t = typename details::cvalseq_impl<T, size, start, step>::type;
 
-template <typename T, T begin, T end>
-constexpr cvalseq_t<T, end - begin, begin> cvalrange{};
-
-template <size_t begin, size_t end>
-constexpr cvalseq_t<size_t, end - begin, begin> csizerange{};
-
-template <int begin, int end>
-constexpr cvalseq_t<int, end - begin, begin> cintrange{};
-
-template <unsigned begin, unsigned end>
-constexpr cvalseq_t<unsigned, end - begin, begin> cuintrange{};
-
-template <typename T, size_t size, T start = T(), ptrdiff_t step = 1>
-constexpr cvalseq_t<T, size, start, step> cvalseq{};
-
 template <size_t size, size_t start = 0, ptrdiff_t step = 1>
-constexpr cvalseq_t<size_t, size, start, step> csizeseq{};
-
-template <size_t size, int start = 0, ptrdiff_t step = 1>
-constexpr cvalseq_t<int, size, start, step> cintseq{};
-
-template <size_t size, unsigned start = 0, ptrdiff_t step = 1>
-constexpr cvalseq_t<unsigned, size, start, step> cuintseq{};
+using csizeseq_t = cvalseq_t<size_t, size, start, step>;
 
 template <typename... List>
 using indicesfor_t = cvalseq_t<size_t, sizeof...(List), 0>;
-
-template <typename... List>
-constexpr indicesfor_t<List...> indicesfor{};
 
 namespace details
 {
@@ -775,21 +715,27 @@ struct is_enabled_impl<Fn, void_t<decltype(Fn::disabled)>> : std::integral_const
 {
 };
 
-template <size_t N>
+template <int N>
 struct unique_enum_impl
 {
-    enum class type : size_t
+    enum type : int
     {
         value = N
     };
 };
-template <size_t N>
-using unique_enum = typename unique_enum_impl<N>::type;
 
+#ifdef CMT_COMPILER_MSVC
 #define CMT_ENABLE_IF_IMPL(N, ...)                                                                           \
-    typename ::std::enable_if<(__VA_ARGS__), ::cometa::details::unique_enum<N>>::type =                      \
-        ::cometa::details::unique_enum<N>::value
+    bool enable_ = (__VA_ARGS__), typename enabled_ = ::std::enable_if<enable_>::type,                       \
+         typename cometa::details::unique_enum_impl<N>::type dummy_ =                                        \
+             ::cometa::details::unique_enum_impl<N>::value
 
+#else
+#define CMT_ENABLE_IF_IMPL(N, ...)                                                                           \
+    typename ::std::enable_if<(__VA_ARGS__), typename ::cometa::details::unique_enum_impl<N>::type>::type =  \
+        ::cometa::details::unique_enum_impl<N>::value
+
+#endif
 #define CMT_ENABLE_IF(...) CMT_ENABLE_IF_IMPL(__LINE__, __VA_ARGS__)
 }
 
@@ -1020,10 +966,16 @@ struct identity_impl
 };
 
 template <typename T>
-constexpr size_t elementsize = sizeof(T);
+constexpr size_t elementsize()
+{
+    return sizeof(T);
+}
 
 template <>
-constexpr size_t elementsize<void> = 1;
+constexpr size_t elementsize<void>()
+{
+    return 1;
+};
 }
 
 template <typename T>
@@ -1048,7 +1000,7 @@ struct carray<T, 1>
 
     template <typename Fn, size_t index = 0, CMT_ENABLE_IF(is_callable<Fn, csize_t<index>>::value)>
     CMT_INTRIN constexpr carray(Fn&& fn, csize_t<index> = csize_t<index>{}) noexcept
-        : val(static_cast<T>(fn(csize<index>)))
+        : val(static_cast<T>(fn(csize_t<index>())))
     {
     }
 
@@ -1071,12 +1023,12 @@ struct carray<T, 1>
     template <size_t index>
     CMT_INTRIN constexpr T& get() noexcept
     {
-        return get(csize<index>);
+        return get(csize_t<index>());
     }
     template <size_t index>
     CMT_INTRIN constexpr const T& get() const noexcept
     {
-        return get(csize<index>);
+        return get(csize_t<index>());
     }
     CMT_INTRIN constexpr const T* front() const noexcept { return val; }
     CMT_INTRIN constexpr T* front() noexcept { return val; }
@@ -1103,8 +1055,8 @@ struct carray : carray<T, N - 1>
 
     template <typename Fn, size_t index = N - 1>
     CMT_INTRIN constexpr carray(Fn&& fn, csize_t<index> = csize_t<index>{}) noexcept
-        : carray<T, N - 1>(std::forward<Fn>(fn), csize<index - 1>),
-          val(static_cast<T>(fn(csize<index>)))
+        : carray<T, N - 1>(std::forward<Fn>(fn), csize_t<index - 1>()),
+          val(static_cast<T>(fn(csize_t<index>())))
     {
     }
 
@@ -1116,23 +1068,23 @@ struct carray : carray<T, N - 1>
     template <size_t index>
     CMT_INTRIN constexpr T& get(csize_t<index>) noexcept
     {
-        return carray<T, N - 1>::get(csize<index>);
+        return carray<T, N - 1>::get(csize_t<index>());
     }
     CMT_INTRIN constexpr const T& get(csize_t<N - 1>) const noexcept { return val; }
     template <size_t index>
     CMT_INTRIN constexpr const T& get(csize_t<index>) const noexcept
     {
-        return carray<T, N - 1>::get(csize<index>);
+        return carray<T, N - 1>::get(csize_t<index>());
     }
     template <size_t index>
     CMT_INTRIN constexpr T& get() noexcept
     {
-        return get(csize<index>);
+        return get(csize_t<index>());
     }
     template <size_t index>
     CMT_INTRIN constexpr const T& get() const noexcept
     {
-        return get(csize<index>);
+        return get(csize_t<index>());
     }
     CMT_INTRIN constexpr const T* front() const noexcept { return carray<T, N - 1>::front(); }
     CMT_INTRIN constexpr T* front() noexcept { return carray<T, N - 1>::front(); }
@@ -1307,10 +1259,25 @@ using has_data_size = details::has_data_size_impl<decay<T>>;
 template <typename T>
 using value_type_of = typename decay<T>::value_type;
 
+#ifndef CMT_COMPILER_CLANG
+namespace details
+{
+template <typename T, T value, typename Fn>
+void cforeach_impl(Fn&& fn)
+{
+    fn(cval_t<T, value>());
+}
+}
+#endif
+
 template <typename T, T... values, typename Fn>
 CMT_INTRIN void cforeach(cvals_t<T, values...>, Fn&& fn)
 {
-    swallow{ (fn(cval<T, values>), void(), 0)... };
+#ifdef CMT_COMPILER_CLANG
+    swallow{ (fn(cval_t<T, values>()), void(), 0)... };
+#else
+    swallow{ (details::cforeach_impl<T, values>(std::forward<Fn>(fn)), void(), 0)... };
+#endif
 }
 
 template <typename T, typename Fn, CMT_ENABLE_IF(has_begin_end<T>::value)>
@@ -1335,9 +1302,9 @@ namespace details
 {
 
 template <size_t index, typename... types>
-CMT_INTRIN auto get_type_arg(ctypes_t<types...> type_list)
+CMT_INTRIN auto get_type_arg(ctypes_t<types...>)
 {
-    return ctype<type_of<details::get_nth_type<index, types...>>>;
+    return ctype_t<type_of<details::get_nth_type<index, types...>>>();
 }
 
 template <typename T0, typename... types, typename Fn, size_t... indices>
@@ -1350,7 +1317,7 @@ CMT_INTRIN void cforeach_types_impl(ctypes_t<T0, types...> type_list, Fn&& fn, c
 template <typename... Ts, typename Fn>
 CMT_INTRIN void cforeach(ctypes_t<Ts...> types, Fn&& fn)
 {
-    details::cforeach_types_impl(types, std::forward<Fn>(fn), csizeseq<sizeof...(Ts)>);
+    details::cforeach_types_impl(types, std::forward<Fn>(fn), csizeseq_t<sizeof...(Ts)>());
 }
 
 template <typename A0, typename A1, typename Fn>
@@ -1371,26 +1338,26 @@ CMT_INTRIN void cforeach(A0&& a0, A1&& a1, A2&& a2, Fn&& fn)
 template <typename TrueFn, typename FalseFn = fn_noop>
 CMT_INTRIN decltype(auto) cif(cbool_t<true>, TrueFn&& truefn, FalseFn&& = FalseFn())
 {
-    return truefn(cbool<true>);
+    return truefn(ctrue);
 }
 
 template <typename TrueFn, typename FalseFn = fn_noop>
 CMT_INTRIN decltype(auto) cif(cbool_t<false>, TrueFn&&, FalseFn&& falsefn = FalseFn())
 {
-    return falsefn(cbool<false>);
+    return falsefn(cfalse);
 }
 
 template <typename T, T start, T stop, typename BodyFn>
 CMT_INTRIN decltype(auto) cfor(cval_t<T, start>, cval_t<T, stop>, BodyFn&& bodyfn)
 {
-    return cforeach(cvalrange<T, start, stop>, std::forward<BodyFn>(bodyfn));
+    return cforeach(cvalseq_t<T, stop - start, start>(), std::forward<BodyFn>(bodyfn));
 }
 
 template <typename T, T... vs, typename U, typename Function, typename Fallback = fn_noop>
 void cswitch(cvals_t<T, vs...>, const U& value, Function&& function, Fallback&& fallback = Fallback())
 {
     bool result = false;
-    swallow{ (result = result || ((vs == value) ? (function(cval<T, vs>), void(), true) : false), void(),
+    swallow{ (result = result || ((vs == value) ? (function(cval_t<T, vs>()), void(), true) : false), void(),
               0)... };
     if (!result)
         fallback();
@@ -1408,7 +1375,7 @@ CMT_INTRIN decltype(auto) cswitch(cvals_t<T, v0, values...>, identity<T> value, 
 {
     if (cmpfn(value, v0))
     {
-        return fn(cval<T, v0>);
+        return fn(cval_t<T, v0>());
     }
     else
     {
@@ -1442,7 +1409,7 @@ inline decltype(auto) cmatch_impl(T&& value, Fn1&& first, Fn2&& second, Fns&&...
 {
     using first_arg        = typename function_arguments<Fn1>::template nth<0>;
     constexpr bool is_same = std::is_same<decay<T>, decay<first_arg>>::value;
-    return cmatch_impl2(cbool<is_same>, std::forward<T>(value), std::forward<Fn1>(first),
+    return cmatch_impl2(cbool_t<is_same>(), std::forward<T>(value), std::forward<Fn1>(first),
                         std::forward<Fn2>(second), std::forward<Fns>(rest)...);
 }
 
@@ -1588,9 +1555,9 @@ constexpr inline ptrdiff_t distance(const void* x, const void* y)
     return static_cast<const unsigned char*>(x) - static_cast<const unsigned char*>(y);
 }
 
-#pragma GCC diagnostic push
+CMT_PRAGMA_GNU(GCC diagnostic push)
 #if CMT_HAS_WARNING("-Wundefined-reinterpret-cast")
-#pragma GCC diagnostic ignored "-Wundefined-reinterpret-cast"
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wundefined-reinterpret-cast")
 #endif
 
 template <typename T, typename U>
@@ -1641,7 +1608,80 @@ CMT_INLINE constexpr static T implicit_cast(U&& value)
     return std::forward<T>(value);
 }
 
-#pragma GCC diagnostic pop
+#ifdef CMT_COMPILER_GNU
+
+template <typename T, T val>
+constexpr cval_t<T, val> cval{};
+
+template <bool val>
+constexpr cbool_t<val> cbool{};
+
+template <int val>
+constexpr cint_t<val> cint{};
+
+template <unsigned val>
+constexpr cuint_t<val> cuint{};
+
+template <size_t val>
+constexpr csize_t<val> csize{};
+
+template <typename T, T... values>
+constexpr cvals_t<T, values...> cvals{};
+
+template <bool... vals>
+constexpr cbools_t<vals...> cbools{};
+
+template <int... vals>
+constexpr cints_t<vals...> cints{};
+
+template <char... vals>
+constexpr cchars_t<vals...> cchars{};
+
+template <unsigned... vals>
+constexpr cuints_t<vals...> cuints{};
+
+template <size_t... vals>
+constexpr csizes_t<vals...> csizes{};
+
+template <size_t... vals>
+constexpr elements_t<vals...> elements{};
+
+template <typename T>
+constexpr ctype_t<T> ctype{};
+
+template <typename... Ts>
+constexpr ctypes_t<Ts...> ctypes{};
+
+template <typename T, T begin, T end>
+constexpr cvalseq_t<T, end - begin, begin> cvalrange{};
+
+template <size_t begin, size_t end>
+constexpr cvalseq_t<size_t, end - begin, begin> csizerange{};
+
+template <int begin, int end>
+constexpr cvalseq_t<int, end - begin, begin> cintrange{};
+
+template <unsigned begin, unsigned end>
+constexpr cvalseq_t<unsigned, end - begin, begin> cuintrange{};
+
+template <typename T, size_t size, T start = T(), ptrdiff_t step = 1>
+constexpr cvalseq_t<T, size, start, step> cvalseq{};
+
+template <size_t size, size_t start = 0, ptrdiff_t step = 1>
+constexpr cvalseq_t<size_t, size, start, step> csizeseq{};
+
+template <size_t size, int start = 0, ptrdiff_t step = 1>
+constexpr cvalseq_t<int, size, start, step> cintseq{};
+
+template <size_t size, unsigned start = 0, ptrdiff_t step = 1>
+constexpr cvalseq_t<unsigned, size, start, step> cuintseq{};
+template <typename... List>
+constexpr indicesfor_t<List...> indicesfor{};
+#endif
+
+CMT_PRAGMA_GNU(GCC diagnostic pop)
 }
 
-#pragma GCC diagnostic pop
+CMT_PRAGMA_GNU(GCC diagnostic pop)
+
+CMT_PRAGMA_MSVC(warning(pop))

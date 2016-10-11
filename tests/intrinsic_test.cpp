@@ -70,7 +70,7 @@ inline T ref_abs(T x)
 template <typename T>
 bool builtin_add_overflow(T x, T y, T* r)
 {
-#if __has_builtin(__builtin_add_overflow)
+#if CMT_HAS_BUILTIN(__builtin_add_overflow) || defined CMT_COMPILER_GCC
     return __builtin_add_overflow(x, y, r);
 #else
     *r = x + y;
@@ -80,17 +80,27 @@ bool builtin_add_overflow(T x, T y, T* r)
 template <>
 bool builtin_add_overflow<u64>(u64 x, u64 y, u64* r)
 {
+#if CMT_HAS_BUILTIN(__builtin_uaddll_overflow) || defined CMT_COMPILER_GCC
     return __builtin_uaddll_overflow(x, y, reinterpret_cast<unsigned long long*>(r));
+#else
+    *r = x + y;
+    return x > 0xFFFFFFFFFFFFFFFFull - y;
+#endif
 }
 template <>
 bool builtin_add_overflow<i64>(i64 x, i64 y, i64* r)
 {
+#if CMT_HAS_BUILTIN(__builtin_saddll_overflow) || defined CMT_COMPILER_GCC
     return __builtin_saddll_overflow(x, y, reinterpret_cast<long long*>(r));
+#else
+    *r = x + y;
+    return !((x ^ y) & 0x8000000000000000ull) && ((*r ^ x) & 0x8000000000000000ull);
+#endif
 }
 template <typename T>
 bool builtin_sub_overflow(T x, T y, T* r)
 {
-#if __has_builtin(__builtin_sub_overflow)
+#if CMT_HAS_BUILTIN(__builtin_sub_overflow) || defined CMT_COMPILER_GCC
     return __builtin_sub_overflow(x, y, r);
 #else
     *r = x - y;
@@ -100,12 +110,22 @@ bool builtin_sub_overflow(T x, T y, T* r)
 template <>
 bool builtin_sub_overflow<u64>(u64 x, u64 y, u64* r)
 {
+#if CMT_HAS_BUILTIN(__builtin_usubll_overflow) || defined CMT_COMPILER_GCC
     return __builtin_usubll_overflow(x, y, reinterpret_cast<unsigned long long*>(r));
+#else
+    *r = x - y;
+    return x < y;
+#endif
 }
 template <>
 bool builtin_sub_overflow<i64>(i64 x, i64 y, i64* r)
 {
+#if CMT_HAS_BUILTIN(__builtin_ssubll_overflow) || defined CMT_COMPILER_GCC
     return __builtin_ssubll_overflow(x, y, reinterpret_cast<long long*>(r));
+#else
+    *r = x - y;
+    return ((x ^ y) & 0x8000000000000000ull) && ((*r ^ x) & 0x8000000000000000ull);
+#endif
 }
 //#endif
 template <typename T>
@@ -152,7 +172,7 @@ TEST(intrin_abs)
                       using T    = type_of<decltype(type)>;
                       using Tsub = subtype<T>;
                       const T x(value);
-                      CHECK(kfr::abs(x) == apply([](auto x) { return Tsub(std::abs(x)); }, x));
+                      CHECK(kfr::abs(x) == apply([](auto x) { return ref_abs(x); }, x));
                   });
 }
 
@@ -389,4 +409,4 @@ TEST(intrin_math)
     CHECK(kfr::note_to_hertz(pack(60)) == pack(fbase(261.6255653005986346778499935233)));
 }
 
-int main(int argc, char** argv) { return testo::run_all("", false); }
+int main() { return testo::run_all("", false); }

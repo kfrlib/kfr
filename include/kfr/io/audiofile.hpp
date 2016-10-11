@@ -44,7 +44,8 @@ void write_interleaved(E1&& dest, const univector2d<Tin, Tag1, Tag2>& src)
     }
     else if (channels == 2)
     {
-        process(std::forward<E1>(dest), pack(src[0], src[1]), 0, infinite_size, nullptr, nullptr, csize<2>);
+        process(std::forward<E1>(dest), pack(src[0], src[1]), 0, infinite_size, nullptr, nullptr,
+                csize_t<2>());
     }
     else
     {
@@ -89,7 +90,8 @@ constexpr range<fmax> audio_range<f64>()
 
 inline size_t get_audiobitdepth(audiodatatype type)
 {
-    return (size_t[]){ 0, 16, 24, 24, 32, 32, 64 }[static_cast<int>(type)];
+    constexpr size_t bits[]{ 0, 16, 24, 24, 32, 32, 64 };
+    return static_cast<size_t>(type) < 7 ? bits[static_cast<size_t>(type)] : 0;
 }
 
 template <typename T>
@@ -130,49 +132,6 @@ static constexpr u32 FourCC(const char (&ch)[5])
     return u32(u8(ch[0])) | u32(u8(ch[1])) << 8 | u32(u8(ch[2])) << 16 | u32(u8(ch[3])) << 24;
 }
 
-struct WAV_FMT
-{
-    i32 fId; // 'fmt '
-    i32 pcmHeaderLength;
-    i16 wFormatTag;
-    i16 numChannels;
-    i32 nSamplesPerSec;
-    i32 nAvgBytesPerSec;
-    i16 numBlockAlingn;
-    i16 numBitsPerSample;
-} __attribute__((packed));
-
-struct WAV_DATA
-{
-    i32 dId; // 'data' or 'fact'
-    i32 dLen;
-    u8 data[1];
-} __attribute__((packed));
-
-struct WAV_DATA_HDR
-{
-    i32 dId; // 'data' or 'fact'
-    i32 dLen;
-} __attribute__((packed));
-
-struct AIFF_FMT
-{
-    i32 chunkID;
-    i32 chunkLen;
-    i16 channels;
-    u32 frames;
-    i16 bitsPerSample;
-    f80 sampleRate;
-    i32 compression;
-} __attribute__((packed));
-
-struct AIFF_DATA
-{
-    i32 chunkID;
-    i32 chunkLen;
-    u32 offset;
-} __attribute__((packed));
-
 constexpr u32 cWAVE_FORMAT_PCM  = 1;
 constexpr u32 cWAVE_FORMAT_IEEE = 3;
 
@@ -189,28 +148,75 @@ constexpr u32 ccSSND = FourCC("SSND");
 constexpr u32 ccNONE = FourCC("NONE");
 constexpr u32 ccsowt = FourCC("sowt");
 
+CMT_PRAGMA_PACK_PUSH_1
+
+struct WAV_FMT
+{
+    i32 fId; // 'fmt '
+    i32 pcmHeaderLength;
+    i16 wFormatTag;
+    i16 numChannels;
+    i32 nSamplesPerSec;
+    i32 nAvgBytesPerSec;
+    i16 numBlockAlingn;
+    i16 numBitsPerSample;
+} CMT_GNU_PACKED;
+
+struct WAV_DATA
+{
+    i32 dId; // 'data' or 'fact'
+    i32 dLen;
+    u8 data[1];
+} CMT_GNU_PACKED;
+
+struct WAV_DATA_HDR
+{
+    i32 dId; // 'data' or 'fact'
+    i32 dLen;
+} CMT_GNU_PACKED;
+
+struct AIFF_FMT
+{
+    i32 chunkID;
+    i32 chunkLen;
+    i16 channels;
+    u32 frames;
+    i16 bitsPerSample;
+    f80 sampleRate;
+    i32 compression;
+} CMT_GNU_PACKED;
+
+struct AIFF_DATA
+{
+    i32 chunkID;
+    i32 chunkLen;
+    u32 offset;
+} CMT_GNU_PACKED;
+
 struct RIFF_HDR
 {
     i32 riffID; // 'RIFF' or 'COMM'
     i32 fileLen;
     i32 formatID; // 'WAVE' or 'AIFF'
-} __attribute__((packed));
+} CMT_GNU_PACKED;
 
 struct WAV_HEADER
 {
     RIFF_HDR riff;
     WAV_FMT fmt;
     WAV_DATA_HDR data;
-
-} __attribute__((packed));
+} CMT_GNU_PACKED;
 
 struct CHUNK_HDR
 {
     i32 chunkID;
     i32 chunkLen;
-} __attribute__((packed));
+} CMT_GNU_PACKED;
 
-static bool audio_test_wav(const array_ref<u8>& rawbytes)
+CMT_PRAGMA_PACK_POP
+
+template <size_t = 0>
+bool audio_test_wav(const array_ref<u8>& rawbytes)
 {
     if (rawbytes.size() < sizeof(RIFF_HDR))
     {
@@ -228,7 +234,8 @@ static bool audio_test_wav(const array_ref<u8>& rawbytes)
     return true;
 }
 
-static bool audio_test_aiff(const array_ref<u8>& rawbytes)
+template <size_t = 0>
+bool audio_test_aiff(const array_ref<u8>& rawbytes)
 {
     if (rawbytes.size() < sizeof(RIFF_HDR))
     {
@@ -255,7 +262,8 @@ enum class file_status
     unsupported_bit_format
 };
 
-static file_status audio_info_wav(audioformat& info, const array_ref<u8>& rawbytes)
+template <size_t = 0>
+file_status audio_info_wav(audioformat& info, const array_ref<u8>& rawbytes)
 {
     const CHUNK_HDR* chunk  = ptr_cast<CHUNK_HDR>(rawbytes.data() + 12);
     const void* end         = ptr_cast<char>(rawbytes.end());
@@ -324,7 +332,8 @@ static file_status audio_info_wav(audioformat& info, const array_ref<u8>& rawbyt
     return file_status::ok;
 }
 
-static file_status audio_info(audioformat& info, const array_ref<u8>& file_bytes)
+template <size_t = 0>
+file_status audio_info(audioformat& info, const array_ref<u8>& file_bytes)
 {
     if (audio_test_wav(file_bytes))
         return audio_info_wav(info, file_bytes);

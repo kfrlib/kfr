@@ -15,7 +15,7 @@ constexpr size_t output_sr = 44100;
 constexpr size_t len       = 96000 * 6;
 constexpr fbase i32max     = 2147483647.0;
 
-int main(int argc, char** argv)
+int main()
 {
     println(library_version());
 

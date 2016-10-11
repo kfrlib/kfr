@@ -45,7 +45,7 @@ struct stereo_matrix
     template <typename T, size_t N>
     CMT_INLINE vec<vec<T, 2>, N> operator()(const vec<vec<T, 2>, N>& x) const
     {
-        return process(x, csizeseq<N>);
+        return process(x, csizeseq_t<N>());
     }
     template <typename T, size_t N, size_t... indices>
     CMT_INLINE vec<vec<T, 2>, N> process(const vec<vec<T, 2>, N>& x, csizes_t<indices...>) const
@@ -56,8 +56,16 @@ struct stereo_matrix
 };
 }
 
-constexpr f64x2x2 matrix_sum_diff() { return { f64x2{ 1, 1 }, f64x2{ 1, -1 } }; }
-constexpr f64x2x2 matrix_halfsum_halfdiff() { return { f64x2{ 0.5, 0.5 }, f64x2{ 0.5, -0.5 } }; }
+template <int = 0>
+CMT_GNU_CONSTEXPR f64x2x2 matrix_sum_diff()
+{
+    return { f64x2{ 1, 1 }, f64x2{ 1, -1 } };
+}
+template <int = 0>
+CMT_GNU_CONSTEXPR f64x2x2 matrix_halfsum_halfdiff()
+{
+    return { f64x2{ 0.5, 0.5 }, f64x2{ 0.5, -0.5 } };
+}
 
 /**
  * @brief Returns template expression that returns the vector of length 2 containing mix of the left and right

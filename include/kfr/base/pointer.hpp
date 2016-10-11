@@ -34,8 +34,10 @@ namespace kfr
 
 constexpr size_t maximum_expression_width = bitness_const(16, 32);
 
+constexpr size_t expression_vtable_size = 2 + ilog2(maximum_expression_width) + 1;
+
 template <typename T>
-using expression_vtable = std::array<void*, 2 + ilog2(maximum_expression_width) + 1>;
+using expression_vtable = std::array<void*, expression_vtable_size>;
 
 struct dummy_content
 {
@@ -172,12 +174,11 @@ template <typename T, typename E>
 expression_vtable<T> make_expression_vtable_impl()
 {
     expression_vtable<T> result;
-    constexpr size_t size = result.size() - 2;
 
     result[0] = reinterpret_cast<void*>(internal::make_expression_begin_block<decay<E>>());
     result[1] = reinterpret_cast<void*>(internal::make_expression_end_block<decay<E>>());
 
-    cforeach(csizeseq<size>, [&](auto u) {
+    cforeach(csizeseq_t<expression_vtable_size - 2>(), [&](auto u) {
         constexpr size_t N = 1 << val_of(decltype(u)());
         result[2 + val_of(decltype(u)())] =
             reinterpret_cast<void*>(internal::make_expression_func<T, N, decay<E>>());

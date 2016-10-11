@@ -5,6 +5,9 @@
 
 #include "../cometa.hpp"
 
+CMT_PRAGMA_MSVC(warning(push))
+CMT_PRAGMA_MSVC(warning(disable : 4814))
+
 namespace cometa
 {
 template <typename T>
@@ -28,3 +31,5 @@ struct named
 
 inline named operator""_arg(const char* name, size_t) { return name; }
 }
+
+CMT_PRAGMA_MSVC(warning(pop))

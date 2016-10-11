@@ -76,16 +76,17 @@ TEST(test_basic)
     CHECK(even(numbers2) == vec<int, 4>{ 100, 102, 104, 106 });
 
     // * The following command pairs are equivalent:
-    CHECK(permute(numbers1, elements<0, 2, 1, 3, 4, 6, 5, 7>) == vec<int, 8>{ 0, 2, 1, 3, 4, 6, 5, 7 });
-    CHECK(permute(numbers1, elements<0, 2, 1, 3>) == vec<int, 8>{ 0, 2, 1, 3, 4, 6, 5, 7 });
+    CHECK(permute(numbers1, elements_t<0, 2, 1, 3, 4, 6, 5, 7>()) == vec<int, 8>{ 0, 2, 1, 3, 4, 6, 5, 7 });
+    CHECK(permute(numbers1, elements_t<0, 2, 1, 3>()) == vec<int, 8>{ 0, 2, 1, 3, 4, 6, 5, 7 });
 
-    CHECK(shuffle(numbers1, numbers2, elements<0, 8, 2, 10, 4, 12, 6, 14>) ==
+    CHECK(shuffle(numbers1, numbers2, elements_t<0, 8, 2, 10, 4, 12, 6, 14>()) ==
           vec<int, 8>{ 0, 100, 2, 102, 4, 104, 6, 106 });
-    CHECK(shuffle(numbers1, numbers2, elements<0, 8>) == vec<int, 8>{ 0, 100, 2, 102, 4, 104, 6, 106 });
+    CHECK(shuffle(numbers1, numbers2, elements_t<0, 8>()) == vec<int, 8>{ 0, 100, 2, 102, 4, 104, 6, 106 });
 
-    CHECK(blend(numbers1, numbers2, elements<0, 1, 1, 0, 1, 1, 0, 1>) ==
+    CHECK(blend(numbers1, numbers2, elements_t<0, 1, 1, 0, 1, 1, 0, 1>()) ==
           vec<int, 8>{ 0, 101, 102, 3, 104, 105, 6, 107 });
-    CHECK(blend(numbers1, numbers2, elements<0, 1, 1>) == vec<int, 8>{ 0, 101, 102, 3, 104, 105, 6, 107 });
+    CHECK(blend(numbers1, numbers2, elements_t<0, 1, 1>()) ==
+          vec<int, 8>{ 0, 101, 102, 3, 104, 105, 6, 107 });
 
     // * Transpose matrix:
     const auto sixteen = enumerate<float, 16>();
@@ -154,6 +155,9 @@ TEST(vec_zerovector)
 
 TEST(vec_allonesvector)
 {
+    CHECK(bitcast<u32>(constants<f32>::allones()) == 0xFFFFFFFFu);
+    CHECK(bitcast<u64>(constants<f64>::allones()) == 0xFFFFFFFFFFFFFFFFull);
+
     CHECK(~allonesvector<f32, 3>() == f32x3{ 0, 0, 0 });
     CHECK(allonesvector<i16, 3>() == i16x3{ -1, -1, -1 });
     CHECK(allonesvector<u8, 3>() == u8x3{ 255, 255, 255 });
@@ -221,6 +225,10 @@ TEST(vec_is_convertible)
     static_assert(std::is_convertible<vec<complex<float>, 2>, vec<complex<double>, 2>>::value, "");
     static_assert(std::is_convertible<vec<vec<float, 4>, 2>, vec<vec<double, 4>, 2>>::value, "");
 
+    testo::assert_is_same<i32x4, common_type<i32x4>>();
+    testo::assert_is_same<u32x4, common_type<i32x4, u32x4>>();
+    testo::assert_is_same<f64x4, common_type<i32x4, u32x4, f64x4>>();
+
     CHECK(static_cast<f32x4>(4.f) == f32x4{ 4.f, 4.f, 4.f, 4.f });
     CHECK(static_cast<f64x8>(4.f) == f64x8{ 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0 });
     CHECK(static_cast<u8x3>(4.f) == u8x3{ 4, 4, 4 });
@@ -282,7 +290,7 @@ TEST(test_stat)
     }
 }
 
-int main(int argc, char** argv)
+int main()
 {
     println(library_version());
     return testo::run_all("", true);

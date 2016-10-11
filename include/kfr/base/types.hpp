@@ -30,8 +30,8 @@
 
 #include <cmath>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
+CMT_PRAGMA_GNU(GCC diagnostic push)
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
 
 #include "../cometa.hpp"
 
@@ -210,11 +210,14 @@ using returns = cometa::fn_returns<T>;
 }
 
 template <typename T>
-using ftype = deep_rebind<T, float_type<typebits<deep_subtype<T>>::bits>>;
+using ftype =
+    typename compound_type_traits<T>::template deep_rebind<float_type<typebits<deep_subtype<T>>::bits>>;
 template <typename T>
-using itype = deep_rebind<T, int_type<typebits<deep_subtype<T>>::bits>>;
+using itype =
+    typename compound_type_traits<T>::template deep_rebind<int_type<typebits<deep_subtype<T>>::bits>>;
 template <typename T>
-using utype = deep_rebind<T, unsigned_type<typebits<deep_subtype<T>>::bits>>;
+using utype =
+    typename compound_type_traits<T>::template deep_rebind<unsigned_type<typebits<deep_subtype<T>>::bits>>;
 
 template <typename T>
 using fsubtype = ftype<subtype<T>>;
@@ -301,8 +304,8 @@ CMT_INLINE void zeroize(T1& value)
     builtin_memset(static_cast<void*>(builtin_addressof(value)), 0, sizeof(T1));
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wattributes"
+CMT_PRAGMA_GNU(GCC diagnostic push)
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wattributes")
 
 template <typename T, bool A>
 struct struct_with_alignment
@@ -322,52 +325,13 @@ __attribute__((__packed__, __may_alias__)) //
 #endif
 ;
 
-#pragma GCC diagnostic pop
+CMT_PRAGMA_GNU(GCC diagnostic pop)
 }
 
 template <typename T>
 struct initialvalue
 {
 };
-
-#if CMT_COMPILER_GNU
-constexpr double infinity = __builtin_inf();
-constexpr double qnan     = __builtin_nan("");
-#else
-constexpr double infinity = HUGE_VAL;
-constexpr double qnan     = NAN;
-#endif
-
-namespace internal
-{
-#if CMT_COMPILER_GNU
-constexpr f32 allones_f32 = -__builtin_nanf("0xFFFFFFFF");
-constexpr f64 allones_f64 = -__builtin_nan("0xFFFFFFFFFFFFFFFF");
-#else
-constexpr f32 allones_f32 = -NAN;
-constexpr f64 allones_f64 = -NAN;
-#endif
-
-template <typename T, typename Tsub = subtype<T>>
-constexpr Tsub allones = choose_const<Tsub>(allones_f32, allones_f64, static_cast<Tsub>(-1));
-
-template <typename T, typename Tsub = subtype<T>>
-constexpr Tsub allzeros = Tsub();
-
-template <typename T, typename Tsub = subtype<T>>
-constexpr Tsub highbitmask = choose_const<Tsub>(-0.f, -0.0, 1ull << (typebits<T>::bits - 1));
-
-template <typename T, typename Tsub = subtype<T>>
-constexpr Tsub invhighbitmask = choose_const<Tsub>(__builtin_nanf("0xFFFFFFFF"),
-                                                   __builtin_nan("0xFFFFFFFFFFFFFFFF"),
-                                                   ~(1ull << (typebits<T>::bits - 1)));
-
-template <typename T>
-constexpr inline T maskbits(bool value)
-{
-    return value ? internal::allones<T> : T();
-}
-}
 
 namespace internal
 {
@@ -376,7 +340,7 @@ CMT_INLINE void block_process_impl(size_t& i, size_t size, Fn&& fn)
 {
     CMT_LOOP_NOUNROLL
     for (; i < size / width * width; i += width)
-        fn(i, csize<width>);
+        fn(i, csize_t<width>());
 }
 }
 
@@ -388,4 +352,4 @@ CMT_INLINE void block_process(size_t size, csizes_t<widths...>, Fn&& fn)
 }
 }
 
-#pragma GCC diagnostic pop
+CMT_PRAGMA_GNU(GCC diagnostic pop)

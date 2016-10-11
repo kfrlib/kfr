@@ -27,9 +27,9 @@
 #include "function.hpp"
 #include "log_exp.hpp"
 
-#pragma clang diagnostic push
+CMT_PRAGMA_GNU(GCC diagnostic push)
 #if CMT_HAS_WARNING("-Wc99-extensions")
-#pragma clang diagnostic ignored "-Wc99-extensions"
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wc99-extensions")
 #endif
 
 namespace kfr
@@ -92,4 +92,4 @@ KFR_INTRIN internal::expression_function<fn::factorial_approx, E1> factorial_app
 }
 }
 
-#pragma clang diagnostic pop
+CMT_PRAGMA_GNU(GCC diagnostic pop)

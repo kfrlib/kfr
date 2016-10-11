@@ -56,6 +56,9 @@ set(CMAKE_C_FLAGS "${OPT_TARGET} ${OPT_BITNESS} ${OPT_STATIC}" CACHE STRING "com
 
 project(kfr)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${PROJECT_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${PROJECT_BINARY_DIR}/bin/Debug)
+
 include(sources.cmake)
 
 set(ALL_WARNINGS -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-c99-extensions -Wno-padded)

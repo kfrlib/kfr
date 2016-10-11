@@ -103,7 +103,7 @@ struct expression_delay<1, E> : expression<E>
  * @endcode
  */
 template <size_t samples = 1, typename E1>
-CMT_INLINE internal::expression_delay<samples, E1> delay(E1&& e1, csize_t<samples> = csize<samples>)
+CMT_INLINE internal::expression_delay<samples, E1> delay(E1&& e1, csize_t<samples> = csize_t<samples>())
 {
     static_assert(samples >= 1 && samples < 1024, "");
     return internal::expression_delay<samples, E1>(std::forward<E1>(e1));

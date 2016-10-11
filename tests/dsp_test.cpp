@@ -6,7 +6,6 @@
 
 #include "testo/testo.hpp"
 #include <kfr/base.hpp>
-#include <kfr/dft.hpp>
 #include <kfr/dsp.hpp>
 #include <kfr/io.hpp>
 
@@ -21,7 +20,7 @@ TEST(delay)
     CHECK(v2[2] == 101);
     CHECK(v2[19] == 118);
 
-    const univector<float, 33> v3 = delay(v1, csize<3>);
+    const univector<float, 33> v3 = delay(v1, csize_t<3>());
     CHECK(v3[0] == 0);
     CHECK(v3[1] == 0);
     CHECK(v3[2] == 0);
@@ -34,16 +33,16 @@ TEST(fracdelay)
 {
     univector<double, 5> a({ 1, 2, 3, 4, 5 });
     univector<double, 5> b = fracdelay(a, 0.5);
-    CHECK(rms(b - univector<double>({ 0.5, 1.5, 2.5, 3.5, 4.5 })) < c_epsilon<double> * 5);
+    CHECK(rms(b - univector<double>({ 0.5, 1.5, 2.5, 3.5, 4.5 })) < constants<double>::epsilon * 5);
 
     b = fracdelay(a, 0.1);
-    CHECK(rms(b - univector<double>({ 0.9, 1.9, 2.9, 3.9, 4.9 })) < c_epsilon<double> * 5);
+    CHECK(rms(b - univector<double>({ 0.9, 1.9, 2.9, 3.9, 4.9 })) < constants<double>::epsilon * 5);
 
     b = fracdelay(a, 0.0);
-    CHECK(rms(b - univector<double>({ 1, 2, 3, 4, 5 })) < c_epsilon<double> * 5);
+    CHECK(rms(b - univector<double>({ 1, 2, 3, 4, 5 })) < constants<double>::epsilon * 5);
 
     b = fracdelay(a, 1.0);
-    CHECK(rms(b - univector<double>({ 0, 1, 2, 3, 4 })) < c_epsilon<double> * 5);
+    CHECK(rms(b - univector<double>({ 0, 1, 2, 3, 4 })) < constants<double>::epsilon * 5);
 }
 
 TEST(mixdown)
@@ -80,7 +79,7 @@ TEST(phasor)
     CHECK(rms(v1 - v2) < 1.e-5);
 }
 
-int main(int argc, char** argv)
+int main()
 {
     println(library_version());
     return testo::run_all("", true);

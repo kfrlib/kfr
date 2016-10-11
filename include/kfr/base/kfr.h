@@ -14,6 +14,14 @@
 #define KFR_VERSION_BUILD 0
 #define KFR_VERSION (KFR_VERSION_MAJOR * 10000 + KFR_VERSION_MINOR * 100 + KFR_VERSION_BUILD)
 
+#ifdef CMT_ARCH_X64
+#define KFR_VERSION_FULL                                                                                     \
+    "KFR " KFR_VERSION_STRING " " CMT_STRINGIFY(CMT_ARCH_NAME) " 64-bit (" CMT_COMPIER_NAME ")"
+#else
+#define KFR_VERSION_FULL                                                                                     \
+    "KFR " KFR_VERSION_STRING " " CMT_STRINGIFY(CMT_ARCH_NAME) " 32-bit (" CMT_COMPIER_NAME ")"
+#endif
+
 #ifdef __cplusplus
 namespace kfr
 {
@@ -22,13 +30,8 @@ constexpr int version_major           = KFR_VERSION_MAJOR;
 constexpr int version_minor           = KFR_VERSION_MINOR;
 constexpr int version_build           = KFR_VERSION_BUILD;
 constexpr int version                 = KFR_VERSION;
+constexpr const char version_full[]   = KFR_VERSION_FULL;
 }
-#endif
-
-#ifdef CMT_ARCH_X64
-#define KFR_VERSION_FULL "KFR " KFR_VERSION_STRING " " CMT_STRINGIFY(CMT_ARCH_NAME) " 64-bit"
-#else
-#define KFR_VERSION_FULL "KFR " KFR_VERSION_STRING " " CMT_STRINGIFY(CMT_ARCH_NAME) " 32-bit"
 #endif
 
 #define KFR_INTRIN CMT_INTRIN

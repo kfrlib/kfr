@@ -604,10 +604,10 @@ CMT_NOINLINE expression_pointer<T> window(size_t size, window_type type, identit
                                           ctype_t<T>               = ctype_t<T>())
 {
     return cswitch(
-        cvals<window_type, window_type::rectangular, window_type::triangular, window_type::bartlett,
-              window_type::cosine, window_type::hann, window_type::bartlett_hann, window_type::hamming,
-              window_type::bohman, window_type::blackman, window_type::blackman_harris, window_type::kaiser,
-              window_type::flattop, window_type::gaussian, window_type::lanczos>,
+        cvals_t<window_type, window_type::rectangular, window_type::triangular, window_type::bartlett,
+                window_type::cosine, window_type::hann, window_type::bartlett_hann, window_type::hamming,
+                window_type::bohman, window_type::blackman, window_type::blackman_harris, window_type::kaiser,
+                window_type::flattop, window_type::gaussian, window_type::lanczos>(),
         type,
         [=](auto win) {
             constexpr window_type window = val_of(decltype(win)());

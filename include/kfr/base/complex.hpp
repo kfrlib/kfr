@@ -40,6 +40,9 @@
 #include <complex>
 #endif
 
+CMT_PRAGMA_MSVC(warning(push))
+CMT_PRAGMA_MSVC(warning(disable : 4814))
+
 namespace kfr
 {
 #ifdef KFR_STD_COMPLEX
@@ -72,8 +75,13 @@ struct complex
     constexpr complex(complex<U>&& other) noexcept : re(std::move(other.re)), im(std::move(other.im))
     {
     }
+#ifdef CMT_COMPILER_GNU
     constexpr complex& operator=(const complex&) noexcept = default;
     constexpr complex& operator=(complex&&) noexcept = default;
+#else
+    complex& operator=(const complex&) = default;
+    complex& operator=(complex&&) = default;
+#endif
     constexpr const T& real() const noexcept { return re; }
     constexpr const T& imag() const noexcept { return im; }
     constexpr void real(T value) noexcept { re = value; }
@@ -158,7 +166,7 @@ struct compound_type_traits<kfr::complex<T>>
     template <typename U>
     using rebind = kfr::complex<U>;
     template <typename U>
-    using deep_rebind = kfr::complex<cometa::deep_rebind<subtype, U>>;
+    using deep_rebind = kfr::complex<typename compound_type_traits<subtype>::template deep_rebind<U>>;
 
     static constexpr subtype at(const kfr::complex<T>& value, size_t index)
     {
@@ -189,15 +197,15 @@ struct vec_op<complex<T>, N> : private vec_op<T, N * 2>
 
     constexpr static size_t w = N * 2;
 
-    CMT_INLINE constexpr static simd<scalar_type, w> mul(const simd<scalar_type, w>& x,
-                                                         const simd<scalar_type, w>& y) noexcept
+    CMT_INLINE static simd<scalar_type, w> mul(const simd<scalar_type, w>& x,
+                                               const simd<scalar_type, w>& y) noexcept
     {
         const vec<scalar_type, w> xx = x;
         const vec<scalar_type, w> yy = y;
         return *subadd(xx * dupeven(yy), swap<2>(xx) * dupodd(yy));
     }
-    CMT_INLINE constexpr static simd<scalar_type, w> div(const simd<scalar_type, w>& x,
-                                                         const simd<scalar_type, w>& y) noexcept
+    CMT_INLINE static simd<scalar_type, w> div(const simd<scalar_type, w>& x,
+                                               const simd<scalar_type, w>& y) noexcept
     {
         const vec<scalar_type, w> xx = x;
         const vec<scalar_type, w> yy = y;
@@ -670,4 +678,26 @@ struct common_type<T1, kfr::complex<T2>>
 {
     using type = kfr::complex<typename common_type<T1, T2>::type>;
 };
+template <typename T1, typename T2, size_t N>
+struct common_type<kfr::complex<T1>, kfr::vec<kfr::complex<T2>, N>>
+{
+    using type = kfr::vec<kfr::complex<typename common_type<T1, T2>::type>, N>;
+};
+template <typename T1, typename T2, size_t N>
+struct common_type<kfr::vec<kfr::complex<T1>, N>, kfr::complex<T2>>
+{
+    using type = kfr::vec<kfr::complex<typename common_type<T1, T2>::type>, N>;
+};
+template <typename T1, typename T2, size_t N>
+struct common_type<kfr::complex<T1>, kfr::vec<T2, N>>
+{
+    using type = kfr::vec<kfr::complex<typename common_type<T1, T2>::type>, N>;
+};
+template <typename T1, typename T2, size_t N>
+struct common_type<kfr::vec<T1, N>, kfr::complex<T2>>
+{
+    using type = kfr::vec<kfr::complex<typename common_type<T1, T2>::type>, N>;
+};
 }
+
+CMT_PRAGMA_MSVC(warning(pop))

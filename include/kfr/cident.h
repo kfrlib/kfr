@@ -205,6 +205,11 @@ extern char* gets(char* __s);
 
 #if defined(__GNUC__) || defined(__clang__) // GCC, Clang
 #define CMT_COMPILER_GNU 1
+
+#if !defined(__clang__) // GCC only
+#define CMT_COMPILER_GCC 1
+#endif
+
 #define CMT_GNU_ATTRIBUTES 1
 #define CMT_GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)
 #if __cplusplus >= 201103L || defined __GXX_EXPERIMENTAL_CXX0X__
@@ -261,8 +266,9 @@ extern char* gets(char* __s);
 
 #endif
 
-#if defined _MSC_VER && _MSC_VER >= 1900 && defined(__clang__) &&                                            \
-    (__clang_major__ > 3 || (__clang_major__ == 3 && __clang_minor__ >= 9))
+#if defined _MSC_VER && _MSC_VER >= 1900 &&                                                                  \
+    (!defined(__clang__) ||                                                                                  \
+     (defined(__clang__) && (__clang_major__ > 3 || (__clang_major__ == 3 && __clang_minor__ >= 9))))
 #define CMT_EMPTY_BASES __declspec(empty_bases)
 #else
 #define CMT_EMPTY_BASES
@@ -389,9 +395,11 @@ extern char* gets(char* __s);
 #define CMT_HAS_EXCEPTIONS 1
 #endif
 
+#if defined __has_include
 #if __has_include(<assert.h>)
 #include <assert.h>
 #define CMT_HAS_ASSERT_H 1
+#endif
 #endif
 
 #ifndef CMT_THROW
@@ -431,8 +439,46 @@ extern char* gets(char* __s);
 #define CMT_FAST_CC __attribute__((fastcall))
 #define CMT_UNUSED __attribute__((unused))
 #define CMT_GNU_CONSTEXPR constexpr
+#define CMT_GNU_PACKED __attribute__((packed))
+#define CMT_PRAGMA_PACK_PUSH_1
+#define CMT_PRAGMA_PACK_POP
+#define CMT_FP(h, d) h
+#define CMT_PRAGMA_GNU(...) _Pragma(#__VA_ARGS__)
+#ifdef CMT_COMPILER_CLANG
+#define CMT_PRAGMA_CLANG(...) _Pragma(#__VA_ARGS__)
+#else
+#define CMT_PRAGMA_CLANG(...)
+#endif
+#ifdef CMT_COMPILER_CLANG
+#define CMT_PRAGMA_GCC(...) _Pragma(#__VA_ARGS__)
+#else
+#define CMT_PRAGMA_GCC(...)
+#endif
+#define CMT_PRAGMA_MSVC(...)
 #else
 #define CMT_FAST_CC __fastcall
 #define CMT_UNUSED
 #define CMT_GNU_CONSTEXPR
+#define CMT_GNU_PACKED
+#define CMT_PRAGMA_PACK_PUSH_1 __pragma(pack(push, 1))
+#define CMT_PRAGMA_PACK_POP __pragma(pack(pop))
+#define CMT_FP(h, d) d
+#define CMT_PRAGMA_GNU(...)
+#define CMT_PRAGMA_CLANG(...)
+#define CMT_PRAGMA_GCC(...)
+#define CMT_PRAGMA_MSVC(...) __pragma(__VA_ARGS__)
+#endif
+
+#if defined CMT_COMPILER_CLANG
+#if defined _MSC_VER
+#define CMT_COMPIER_NAME "clang-msvc"
+#else
+#define CMT_COMPIER_NAME "clang"
+#endif
+#elif defined CMT_COMPILER_GCC
+#define CMT_COMPIER_NAME "gcc"
+#elif defined CMT_COMPILER_MSVC
+#define CMT_COMPIER_NAME "msvc"
+#else
+#define CMT_COMPIER_NAME "unknown"
 #endif

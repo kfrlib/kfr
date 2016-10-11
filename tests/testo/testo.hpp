@@ -99,7 +99,7 @@ struct comparison
 
     comparison(L&& left, R&& right) : left(std::forward<L>(left)), right(std::forward<R>(right)) {}
 
-    bool operator()() { return cmp(left, right); }
+    bool operator()() const { return cmp(left, right); }
 };
 
 template <typename Left, typename Right>
@@ -120,8 +120,8 @@ struct equality_comparer
     bool operator()(const L& l, const R& r) const { return l == r; }
 };
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wfloat-equal"
+CMT_PRAGMA_GNU(GCC diagnostic push)
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wfloat-equal")
 
 template <typename T>
 inline T& epsilon()
@@ -149,7 +149,7 @@ struct equality_comparer<long double, long double>
     }
 };
 
-#pragma clang diagnostic pop
+CMT_PRAGMA_GNU(GCC diagnostic pop)
 
 template <typename L, typename R>
 struct equality_comparer<L, R, void_t<enable_if<!compound_type_traits<L>::is_scalar>>>
@@ -179,7 +179,7 @@ struct cmp_eq
     static const char* op() { return "=="; }
 
     template <typename L, typename R>
-    bool operator()(L&& left, R&& right)
+    bool operator()(L&& left, R&& right) const
     {
         equality_comparer<decay<L>, decay<R>> eq;
         return eq(left, right);
@@ -191,7 +191,7 @@ struct cmp_ne
     static const char* op() { return "!="; }
 
     template <typename L, typename R>
-    bool operator()(L&& left, R&& right)
+    bool operator()(L&& left, R&& right) const
     {
         return !cmp_eq()(left, right);
     }
@@ -202,7 +202,7 @@ struct cmp_lt
     static const char* op() { return "<"; }
 
     template <typename L, typename R>
-    bool operator()(L&& left, R&& right)
+    bool operator()(L&& left, R&& right) const
     {
         return left < right;
     }
@@ -213,7 +213,7 @@ struct cmp_gt
     static const char* op() { return ">"; }
 
     template <typename L, typename R>
-    bool operator()(L&& left, R&& right)
+    bool operator()(L&& left, R&& right) const
     {
         return left > right;
     }
@@ -224,7 +224,7 @@ struct cmp_le
     static const char* op() { return "<="; }
 
     template <typename L, typename R>
-    bool operator()(L&& left, R&& right)
+    bool operator()(L&& left, R&& right) const
     {
         return left <= right;
     }
@@ -235,7 +235,7 @@ struct cmp_ge
     static const char* op() { return ">="; }
 
     template <typename L, typename R>
-    bool operator()(L&& left, R&& right)
+    bool operator()(L&& left, R&& right) const
     {
         return left >= right;
     }
@@ -394,14 +394,14 @@ struct test_case
     }
 
     template <typename Op, typename L, typename R>
-    void check(comparison<Op, L, R> comparison, const char* expr)
+    void check(const comparison<Op, L, R>& comparison, const char* expr)
     {
         bool result = comparison();
         check(result, as_string(comparison.left, " ", Op::op(), " ", comparison.right), expr);
     }
 
     template <typename L>
-    void check(half_comparison<L> comparison, const char* expr)
+    void check(const half_comparison<L>& comparison, const char* expr)
     {
         bool result = comparison.left ? true : false;
         check(result, as_string(comparison.left), expr);

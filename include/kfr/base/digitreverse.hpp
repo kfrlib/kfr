@@ -48,13 +48,14 @@ constexpr inline u32 bit_permute_step_simple(u32 x, u32 m, u32 shift)
     return ((x & m) << shift) | ((x >> shift) & m);
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshift-count-overflow"
-#pragma GCC diagnostic ignored "-Wshift-count-negative"
+CMT_PRAGMA_GNU(GCC diagnostic push)
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshift-count-overflow")
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshift-count-negative")
 
 template <size_t radix, size_t bits>
 constexpr enable_if<radix == 4, u32> digitreverse(u32 x)
 {
+#ifdef CMT_COMPILER_GNU
     if (bits <= 2)
         return x;
     if (bits <= 4)
@@ -84,9 +85,16 @@ constexpr enable_if<radix == 4, u32> digitreverse(u32 x)
         return x >> (32 - bits);
     }
     return x;
+#else
+    x = bit_permute_step_simple(x, 0x33333333, 2); // Bit index complement 1      regroups 4 bits
+    x = bit_permute_step_simple(x, 0x0f0f0f0f, 4); // Bit index complement 2      regroups 8 bits
+    x = bit_permute_step_simple(x, 0x00ff00ff, 8); // Bit index complement 3      regroups 16 bits
+    x = bit_permute_step_simple(x, 0x0000ffff, 16); // Bit index complement 4     regroups 32 bits
+    return x >> (32 - bits);
+#endif
 }
 
-#pragma GCC diagnostic pop
+CMT_PRAGMA_GNU(GCC diagnostic pop)
 
 template <size_t radix, size_t bits>
 struct shuffle_index_digitreverse

@@ -57,7 +57,11 @@ struct mem_header
     u8 reserved1;
     u8 reserved2;
     size_t size;
-} __attribute__((__packed__));
+}
+#ifdef CMT_GNU_ATTRIBUTES
+__attribute__((__packed__))
+#endif
+;
 
 inline mem_header* aligned_header(void* ptr) { return ptr_cast<mem_header>(ptr) - 1; }
 
@@ -85,11 +89,12 @@ inline void aligned_free(void* ptr)
 }
 }
 
-template <typename T = void, size_t alignment = native_cache_alignment>
+template <typename T = void, size_t alignment = platform<>::native_cache_alignment>
 CMT_INLINE T* aligned_allocate(size_t size = 1)
 {
     T* ptr = static_cast<T*>(CMT_ASSUME_ALIGNED(
-        internal::aligned_malloc(std::max(alignment, size * details::elementsize<T>), alignment), alignment));
+        internal::aligned_malloc(std::max(alignment, size * details::elementsize<T>()), alignment),
+        alignment));
     return ptr;
 }
 

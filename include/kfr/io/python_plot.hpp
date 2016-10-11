@@ -40,9 +40,9 @@ namespace kfr
 {
 namespace internal
 {
-#pragma clang diagnostic push
+CMT_PRAGMA_GNU(GCC diagnostic push)
 #if CMT_HAS_WARNING("-Wdeprecated-declarations")
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wdeprecated-declarations")
 #endif
 
 template <int = 0>
@@ -66,7 +66,7 @@ void python(const std::string& name, const std::string& code)
     fclose(f);
     std::system(("python \"" + filename + "\"").c_str());
 }
-#pragma clang diagnostic pop
+CMT_PRAGMA_GNU(GCC diagnostic pop)
 }
 
 inline std::string concat_args() { return {}; }

@@ -11,7 +11,7 @@
 
 using namespace kfr;
 
-int main(int argc, char** argv)
+int main()
 {
     println(library_version());
 
@@ -45,7 +45,5 @@ int main(int argc, char** argv)
     println(in);
     println();
     println(dB);
-    (void)argc;
-    (void)argv;
     return 0;
 }

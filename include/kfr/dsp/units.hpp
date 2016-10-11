@@ -37,28 +37,28 @@ using sample_rate_t = double;
 namespace intrinsics
 {
 template <typename T, typename TF = flt_type<T>>
-KFR_SINTRIN TF amp_to_dB(T amp)
+KFR_SINTRIN TF amp_to_dB(const T& amp)
 {
     return log(static_cast<TF>(amp)) * subtype<TF>(8.6858896380650365530225783783322);
     // return T( 20.0 ) * log10( level );
 }
 
 template <typename T, typename TF = flt_type<T>>
-KFR_SINTRIN TF dB_to_amp(T dB)
+KFR_SINTRIN TF dB_to_amp(const T& dB)
 {
     return exp(dB * subtype<TF>(0.11512925464970228420089957273422));
     // return exp10( dB / 20 );
 }
 
 template <typename T, typename TF = flt_type<T>>
-KFR_SINTRIN TF amp_to_dB(T amp, T offset)
+KFR_SINTRIN TF amp_to_dB(const T& amp, const T& offset)
 {
     return log_fmadd(amp, subtype<TF>(8.6858896380650365530225783783322), offset);
     // return T( 20.0 ) * log10( level );
 }
 
 template <typename T, typename TF = flt_type<T>>
-KFR_SINTRIN TF dB_to_amp(T dB, T offset)
+KFR_SINTRIN TF dB_to_amp(const T& dB, const T& offset)
 {
     auto offs = -subtype<TF>(0.11512925464970228420089957273422) * offset;
     return exp_fmadd(dB, subtype<TF>(0.11512925464970228420089957273422), offs);
@@ -66,13 +66,13 @@ KFR_SINTRIN TF dB_to_amp(T dB, T offset)
 }
 
 template <typename T, typename Tout = flt_type<T>>
-KFR_SINTRIN Tout power_to_dB(T x)
+KFR_SINTRIN Tout power_to_dB(const T& x)
 {
     return log(x) * (10 * c_recip_log_10<Tout>);
 }
 
 template <typename T, typename Tout = flt_type<T>>
-KFR_SINTRIN Tout dB_to_power(T x)
+KFR_SINTRIN Tout dB_to_power(const T& x)
 {
     if (x == -c_infinity<Tout>)
         return 0.0;
@@ -81,7 +81,7 @@ KFR_SINTRIN Tout dB_to_power(T x)
 }
 
 template <typename T, typename TF = flt_type<T>>
-KFR_SINTRIN TF note_to_hertz(T note)
+KFR_SINTRIN TF note_to_hertz(const T& note)
 {
     const subtype<TF> offset = 2.1011784386926213177653145771814;
 
@@ -89,7 +89,7 @@ KFR_SINTRIN TF note_to_hertz(T note)
 }
 
 template <typename T, typename TF = flt_type<T>>
-KFR_SINTRIN TF hertz_to_note(T hertz)
+KFR_SINTRIN TF hertz_to_note(const T& hertz)
 {
     const subtype<TF> offset = -36.376316562295915248836189714583;
 
@@ -97,7 +97,7 @@ KFR_SINTRIN TF hertz_to_note(T hertz)
 }
 
 template <typename T1, typename T2, typename T3, typename Tc = flt_type<common_type<T1, T2, T3, f32>>>
-KFR_SINTRIN Tc note_to_hertz(T1 note, T2 tunenote, T3 tunehertz)
+KFR_SINTRIN Tc note_to_hertz(const T1& note, const T2& tunenote, const T3& tunehertz)
 {
     const Tc offset = log(tunehertz) - tunenote * subtype<Tc>(0.05776226504666210911810267678818);
 
@@ -105,7 +105,7 @@ KFR_SINTRIN Tc note_to_hertz(T1 note, T2 tunenote, T3 tunehertz)
 }
 
 template <typename T1, typename T2, typename T3, typename Tc = flt_type<common_type<T1, T2, T3, f32>>>
-KFR_SINTRIN Tc hertz_to_note(T1 hertz, T2 tunenote, T3 tunehertz)
+KFR_SINTRIN Tc hertz_to_note(const T1& hertz, const T2& tunenote, const T3& tunehertz)
 {
     const Tc offset = tunenote - log(tunehertz) * subtype<Tc>(17.312340490667560888319096172023);
 

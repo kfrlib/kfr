@@ -26,7 +26,8 @@ double ulps(T test, const mpfr::number& ref)
 
 TEST(test_sin_cos)
 {
-    testo::matrix(named("type") = ctypes<f32, f64>, named("value") = make_range(0.0, +c_pi<f64, 2>, 0.05),
+    testo::matrix(named("type")  = ctypes_t<f32, f64>(),
+                  named("value") = make_range(0.0, +constants<f64>::pi * 2, 0.05),
                   [](auto type, double value) {
                       using T = type_of<decltype(type)>;
                       const T x(value);
@@ -37,7 +38,7 @@ TEST(test_sin_cos)
 
 TEST(test_log)
 {
-    testo::matrix(named("type") = ctypes<f32, f64>, named("value") = make_range(0.0, 100.0, 0.5),
+    testo::matrix(named("type") = ctypes_t<f32, f64>(), named("value") = make_range(0.0, 100.0, 0.5),
                   [](auto type, double value) {
                       using T = type_of<decltype(type)>;
                       const T x(value);
@@ -47,7 +48,7 @@ TEST(test_log)
 
 TEST(test_log2)
 {
-    testo::matrix(named("type") = ctypes<f32, f64>, named("value") = make_range(0.0, 100.0, 0.5),
+    testo::matrix(named("type") = ctypes_t<f32, f64>(), named("value") = make_range(0.0, 100.0, 0.5),
                   [](auto type, double value) {
                       using T = type_of<decltype(type)>;
                       const T x(value);
@@ -57,7 +58,7 @@ TEST(test_log2)
 
 TEST(test_log10)
 {
-    testo::matrix(named("type") = ctypes<f32, f64>, named("value") = make_range(0.0, 100.0, 0.5),
+    testo::matrix(named("type") = ctypes_t<f32, f64>(), named("value") = make_range(0.0, 100.0, 0.5),
                   [](auto type, double value) {
                       using T = type_of<decltype(type)>;
                       const T x(value);
@@ -67,7 +68,7 @@ TEST(test_log10)
 
 TEST(test_exp)
 {
-    testo::matrix(named("type") = ctypes<f32, f64>, named("value") = make_range(-10, +10, 0.05),
+    testo::matrix(named("type") = ctypes_t<f32, f64>(), named("value") = make_range(-10, +10, 0.05),
                   [](auto type, double value) {
                       using T = type_of<decltype(type)>;
                       const T x(value);
@@ -77,7 +78,7 @@ TEST(test_exp)
 
 TEST(test_exp2)
 {
-    testo::matrix(named("type") = ctypes<f32, f64>, named("value") = make_range(-10, +10, 0.05),
+    testo::matrix(named("type") = ctypes_t<f32, f64>(), named("value") = make_range(-10, +10, 0.05),
                   [](auto type, double value) {
                       using T = type_of<decltype(type)>;
                       const T x(value);
@@ -87,7 +88,7 @@ TEST(test_exp2)
 
 TEST(test_exp10)
 {
-    testo::matrix(named("type") = ctypes<f32, f64>, named("value") = make_range(-10, +10, 0.05),
+    testo::matrix(named("type") = ctypes_t<f32, f64>(), named("value") = make_range(-10, +10, 0.05),
                   [](auto type, double value) {
                       using T = type_of<decltype(type)>;
                       const T x(value);
@@ -95,7 +96,7 @@ TEST(test_exp10)
                   });
 }
 
-int main(int argc, char** argv)
+int main()
 {
     mpfr::scoped_precision p(128);
     return testo::run_all("");

@@ -92,7 +92,7 @@ TEST(fft_accuracy)
                   });
 }
 
-int main(int argc, char** argv)
+int main()
 {
     println(library_version());
 

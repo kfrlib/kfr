@@ -40,27 +40,33 @@ struct seed_from_rdtsc_t
 
 constexpr seed_from_rdtsc_t seed_from_rdtsc{};
 
+#ifdef CMT_COMPILER_CLANG
+#define KFR_builtin_readcyclecounter() __builtin_readcyclecounter()
+#else
+#define KFR_builtin_readcyclecounter() __rdtsc()
+#endif
+
 struct random_bit_generator
 {
     random_bit_generator(seed_from_rdtsc_t) noexcept
-        : state(bitcast<u32>(make_vector(__builtin_readcyclecounter(),
-                                         (__builtin_readcyclecounter() << 11) ^ 0x710686d615e2257bull)))
+        : state(bitcast<u32>(make_vector(KFR_builtin_readcyclecounter(),
+                                         (KFR_builtin_readcyclecounter() << 11) ^ 0x710686d615e2257bull)))
     {
         (void)operator()();
     }
-    constexpr random_bit_generator(u32 x0, u32 x1, u32 x2, u32 x3) noexcept : state(x0, x1, x2, x3)
+    random_bit_generator(u32 x0, u32 x1, u32 x2, u32 x3) noexcept : state(x0, x1, x2, x3)
     {
         (void)operator()();
     }
-    constexpr random_bit_generator(u64 x0, u64 x1) noexcept : state(bitcast<u32>(make_vector(x0, x1)))
+    random_bit_generator(u64 x0, u64 x1) noexcept : state(bitcast<u32>(make_vector(x0, x1)))
     {
         (void)operator()();
     }
 
     inline random_state operator()()
     {
-        constexpr static random_state mul{ 214013u, 17405u, 214013u, 69069u };
-        constexpr static random_state add{ 2531011u, 10395331u, 13737667u, 1u };
+        CMT_GNU_CONSTEXPR static random_state mul{ 214013u, 17405u, 214013u, 69069u };
+        CMT_GNU_CONSTEXPR static random_state add{ 2531011u, 10395331u, 13737667u, 1u };
         state = bitcast<u32>(rotateright<3>(bitcast<u8>(fmadd(state, mul, add))));
         return state;
     }

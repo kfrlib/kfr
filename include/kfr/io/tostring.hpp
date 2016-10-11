@@ -111,6 +111,7 @@ inline std::string array_to_string(const kfr::complex<T>* source, size_t N)
 template <typename T>
 struct representation<kfr::complex<T>>
 {
+    using type = std::string;
     static std::string get(const kfr::complex<T>& value)
     {
         return as_string(value.real()) + " + " + as_string(value.imag()) + "j";
@@ -120,12 +121,14 @@ struct representation<kfr::complex<T>>
 template <>
 struct representation<kfr::cpu_t>
 {
+    using type = std::string;
     static std::string get(kfr::cpu_t value) { return kfr::cpu_name(value); }
 };
 
 template <typename T, size_t N>
 struct representation<kfr::vec<T, N>>
 {
+    using type = std::string;
     static std::string get(const kfr::vec<T, N>& value)
     {
         return details::array_to_string(value.data(), value.size());
@@ -135,6 +138,7 @@ struct representation<kfr::vec<T, N>>
 template <typename T, size_t Tag>
 struct representation<kfr::univector<T, Tag>>
 {
+    using type = std::string;
     static std::string get(const kfr::univector<T, Tag>& value)
     {
         return details::array_to_string(value.data(), value.size());

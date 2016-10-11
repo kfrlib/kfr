@@ -143,7 +143,7 @@ inline function<Ret(Args...)> cdispatch(cvals_t<T, v0, values...>, identity<T> v
     if (value == v0)
     {
         return [=](Args... args)
-                   CMT_INLINE_MEMBER -> Ret { return fn(cval<T, v0>, std::forward<Args>(args)...); };
+                   CMT_INLINE_MEMBER -> Ret { return fn(cval_t<T, v0>(), std::forward<Args>(args)...); };
     }
     else
     {

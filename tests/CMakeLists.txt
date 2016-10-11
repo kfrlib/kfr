@@ -67,28 +67,33 @@ else ()
     set(EMULATOR "")
 endif ()
 
+#get_cmake_property(_variableNames VARIABLES)
+#foreach (_variableName ${_variableNames})
+#    message(STATUS "${_variableName}=${${_variableName}}")
+#endforeach()
+
 if (NOT IOS)
     enable_testing()
 
     add_test(NAME base_test
-            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/base_test)
+            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/base_test)
     add_test(NAME intrinsic_test
-            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/intrinsic_test)
+            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/intrinsic_test)
     add_test(NAME dsp_test
-            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/dsp_test)
+            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/dsp_test)
     if (MPFR_FOUND)
         add_test(NAME transcendental_test
-                COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/transcendental_test)
+                COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/transcendental_test)
     endif ()
     add_test(NAME complex_test
-            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/complex_test)
+            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/complex_test)
     add_test(NAME expression_test
-            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/expression_test)
+            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/expression_test)
 
     if (NOT ARM)
         add_test(NAME multiarch
-                COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/multiarch)
+                COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/multiarch)
     endif ()
     add_test(NAME dft_test
-            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/tests/dft_test)
+            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/dft_test)
 endif ()

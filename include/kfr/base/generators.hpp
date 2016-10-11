@@ -58,7 +58,7 @@ protected:
     template <size_t N>
     void call_shift(csize_t<N>) const
     {
-        ptr_cast<Class>(this)->shift(csize<N>);
+        ptr_cast<Class>(this)->shift(csize_t<N>());
     }
 
     template <size_t N>
@@ -81,7 +81,7 @@ protected:
     CMT_INLINE vec<T, N> generate(vec_t<T, N>) const
     {
         const vec<T, N> result = narrow<N>(value);
-        shift(csize<N>);
+        shift(csize_t<N>());
         return result;
     }
 
@@ -96,7 +96,7 @@ protected:
     mutable vec<T, width> value;
 };
 
-template <typename T, size_t width = get_vector_width<T, cpu_t::native>(1, 2)>
+template <typename T, size_t width = platform<T>::vector_width* bitness_const(1, 2)>
 struct generator_linear : generator<T, width, generator_linear<T, width>>
 {
     constexpr generator_linear(T start, T step) noexcept : step(step), vstep(step* width)
@@ -113,7 +113,7 @@ protected:
     T vstep;
 };
 
-template <typename T, size_t width = get_vector_width<T, cpu_t::native>(1, 2), KFR_ARCH_DEP>
+template <typename T, size_t width = platform<T>::vector_width* bitness_const(1, 2), KFR_ARCH_DEP>
 struct generator_exp : generator<T, width, generator_exp<T, width>>
 {
     generator_exp(T start, T step) noexcept : step(step), vstep(exp(make_vector(step* width))[0] - 1)
@@ -130,7 +130,7 @@ protected:
     T vstep;
 };
 
-template <typename T, size_t width = get_vector_width<T, cpu_t::native>(1, 2), KFR_ARCH_DEP>
+template <typename T, size_t width = platform<T>::vector_width* bitness_const(1, 2), KFR_ARCH_DEP>
 struct generator_exp2 : generator<T, width, generator_exp2<T, width>>
 {
     generator_exp2(T start, T step) noexcept : step(step), vstep(exp2(make_vector(step* width))[0] - 1)
@@ -147,7 +147,7 @@ protected:
     T vstep;
 };
 
-template <typename T, size_t width = get_vector_width<T, cpu_t::native>(1, 2), KFR_ARCH_DEP>
+template <typename T, size_t width = platform<T>::vector_width* bitness_const(1, 2), KFR_ARCH_DEP>
 struct generator_cossin : generator<T, width, generator_cossin<T, width>>
 {
     generator_cossin(T start, T step)
@@ -172,7 +172,7 @@ protected:
     }
 };
 
-template <typename T, size_t width = get_vector_width<T, cpu_t::native>(2, 4), KFR_ARCH_DEP>
+template <typename T, size_t width = platform<T>::vector_width* bitness_const(2, 4), KFR_ARCH_DEP>
 struct generator_sin : generator<T, width, generator_sin<T, width>>
 {
     generator_sin(T start, T step)

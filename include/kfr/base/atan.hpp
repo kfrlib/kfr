@@ -36,8 +36,9 @@ namespace kfr
 namespace intrinsics
 {
 template <size_t N>
-KFR_SINTRIN vec<f32, N> atan2k(vec<f32, N> y, vec<f32, N> x)
+KFR_SINTRIN vec<f32, N> atan2k(const vec<f32, N>& yy, const vec<f32, N>& xx)
 {
+    vec<f32, N> x = xx, y = yy;
     vec<f32, N> s, t, u;
     vec<i32, N> q;
     q = select(x < 0, -2, 0);
@@ -64,8 +65,9 @@ KFR_SINTRIN vec<f32, N> atan2k(vec<f32, N> y, vec<f32, N> x)
 }
 
 template <size_t N>
-KFR_SINTRIN vec<f64, N> atan2k(vec<f64, N> y, vec<f64, N> x)
+KFR_SINTRIN vec<f64, N> atan2k(const vec<f64, N>& yy, const vec<f64, N>& xx)
 {
+    vec<f64, N> x = xx, y = yy;
     vec<f64, N> s, t, u;
     vec<i64, N> q;
     q = select(x < 0, i64(-2), i64(0));

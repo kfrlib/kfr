@@ -43,7 +43,7 @@ namespace internal
 constexpr bool fft_reorder_aligned = false;
 
 template <size_t Bits>
-constexpr inline u32 bitrev_using_table(u32 x)
+CMT_GNU_CONSTEXPR inline u32 bitrev_using_table(u32 x)
 {
     constexpr size_t bitrev_table_log2N = ilog2(arraysize(data::bitrev_table));
     if (Bits > bitrev_table_log2N)
@@ -52,7 +52,7 @@ constexpr inline u32 bitrev_using_table(u32 x)
     return data::bitrev_table[x] >> (bitrev_table_log2N - Bits);
 }
 
-constexpr inline u32 bitrev_using_table(u32 x, size_t bits)
+CMT_GNU_CONSTEXPR inline u32 bitrev_using_table(u32 x, size_t bits)
 {
     constexpr size_t bitrev_table_log2N = ilog2(arraysize(data::bitrev_table));
     if (bits > bitrev_table_log2N)
@@ -61,7 +61,7 @@ constexpr inline u32 bitrev_using_table(u32 x, size_t bits)
     return data::bitrev_table[x] >> (bitrev_table_log2N - bits);
 }
 
-constexpr inline u32 dig4rev_using_table(u32 x, size_t bits)
+CMT_GNU_CONSTEXPR inline u32 dig4rev_using_table(u32 x, size_t bits)
 {
     constexpr size_t bitrev_table_log2N = ilog2(arraysize(data::bitrev_table));
     if (bits > bitrev_table_log2N)
@@ -253,10 +253,10 @@ KFR_INTRIN void fft_reorder(complex<T>* inout, csize_t<9>)
 }
 
 template <typename T, bool use_br2>
-void cwrite_reordered(T* out, cvec<T, 16> value, size_t N4, cbool_t<use_br2>)
+void cwrite_reordered(T* out, const cvec<T, 16>& value, size_t N4, cbool_t<use_br2>)
 {
-    value = digitreverse < use_br2 ? 2 : 4, 2 > (value);
-    cwrite_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(out), N4, value);
+    cwrite_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(out), N4,
+                                            digitreverse<(use_br2 ? 2 : 4), 2>(value));
 }
 
 template <typename T, bool use_br2>
@@ -265,8 +265,8 @@ KFR_INTRIN void fft_reorder_swap_n4(T* inout, size_t i, size_t j, size_t N4, cbo
     CMT_ASSUME(i != j);
     const cvec<T, 16> vi = cread_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + i), N4);
     const cvec<T, 16> vj = cread_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + j), N4);
-    cwrite_reordered(inout + j, vi, N4, cbool<use_br2>);
-    cwrite_reordered(inout + i, vj, N4, cbool<use_br2>);
+    cwrite_reordered(inout + j, vi, N4, cbool_t<use_br2>());
+    cwrite_reordered(inout + i, vj, N4, cbool_t<use_br2>());
 }
 
 template <typename T>
@@ -316,7 +316,7 @@ KFR_INTRIN void fft_reorder(complex<T>* inout, size_t log2n, cfalse_t use_br2)
     T* io                  = ptr_cast<T>(inout);
 
     size_t i = 0;
-#pragma clang loop unroll_count(2)
+    CMT_PRAGMA_CLANG(clang loop unroll_count(2))
     for (; i < iend;)
     {
         size_t j = dig4rev_using_table(static_cast<u32>(i >> 3), log2n - 4) << 3;
@@ -326,7 +326,7 @@ KFR_INTRIN void fft_reorder(complex<T>* inout, size_t log2n, cfalse_t use_br2)
         i += istep * 4;
     }
     iend += N16;
-#pragma clang loop unroll_count(2)
+    CMT_PRAGMA_CLANG(clang loop unroll_count(2))
     for (; i < iend;)
     {
         size_t j = dig4rev_using_table(static_cast<u32>(i >> 3), log2n - 4) << 3;
@@ -341,7 +341,7 @@ KFR_INTRIN void fft_reorder(complex<T>* inout, size_t log2n, cfalse_t use_br2)
         i += istep * 3;
     }
     iend += N16;
-#pragma clang loop unroll_count(2)
+    CMT_PRAGMA_CLANG(clang loop unroll_count(2))
     for (; i < iend;)
     {
         size_t j = dig4rev_using_table(static_cast<u32>(i >> 3), log2n - 4) << 3;
@@ -361,7 +361,7 @@ KFR_INTRIN void fft_reorder(complex<T>* inout, size_t log2n, cfalse_t use_br2)
         i += istep * 2;
     }
     iend += N16;
-#pragma clang loop unroll_count(2)
+    CMT_PRAGMA_CLANG(clang loop unroll_count(2))
     for (; i < iend;)
     {
         size_t j = dig4rev_using_table(static_cast<u32>(i >> 3), log2n - 4) << 3;

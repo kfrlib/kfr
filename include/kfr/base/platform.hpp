@@ -93,94 +93,81 @@ CMT_UNUSED static const char* cpu_name(cpu_t set)
     return "-";
 }
 
-template <typename T>
-constexpr inline const T& bitness_const(const T& x32, const T& x64)
-{
 #ifdef CMT_ARCH_X64
-    (void)x32;
+template <int = 0>
+constexpr inline const char* bitness_const(const char*, const char* x64)
+{
     return x64;
+}
+template <typename T>
+constexpr inline const T& bitness_const(const T&, const T& x64)
+{
+    return x64;
+}
 #else
-    (void)x64;
+template <int           = 0>
+constexpr inline const char* bitness_const(const char* x32, const char*)
+{
     return x32;
-#endif
 }
-
-#ifdef CMT_ARCH_X64
-constexpr inline const char* bitness_const(const char*, const char* x64) { return x64; }
-#else
-constexpr inline const char* bitness_const(const char* x32, const char*) { return x32; }
+template <typename T>
+constexpr inline const T& bitness_const(const T& x32, const T&)
+{
+    return x32;
+}
 #endif
 
-constexpr size_t native_cache_alignment        = 64;
-constexpr size_t native_cache_alignment_mask   = native_cache_alignment - 1;
-constexpr size_t maximum_vector_alignment      = 32;
-constexpr size_t maximum_vector_alignment_mask = maximum_vector_alignment - 1;
-constexpr size_t native_register_count         = bitness_const(8, 16);
-
-constexpr size_t common_float_vector_size = 16;
-constexpr size_t common_int_vector_size   = 16;
-
-template <cpu_t c>
-constexpr size_t native_float_vector_size =
+template <typename T = i32, cpu_t c = cpu_t::native>
+struct platform
+{
+    constexpr static size_t native_cache_alignment        = 64;
+    constexpr static size_t native_cache_alignment_mask   = native_cache_alignment - 1;
+    constexpr static size_t maximum_vector_alignment      = 32;
+    constexpr static size_t maximum_vector_alignment_mask = maximum_vector_alignment - 1;
 #ifdef CMT_ARCH_X86
-    c >= cpu_t::avx1 ? 32 : c >= cpu_t::sse2 ? 16 : common_float_vector_size;
+    constexpr static size_t simd_register_count = bitness_const(8, 16);
 #endif
 #ifdef CMT_ARCH_ARM
-c == cpu_t::neon ? 16 : common_float_vector_size;
+    constexpr static size_t simd_register_count = 16;
 #endif
-template <cpu_t c>
-constexpr size_t native_int_vector_size =
+
+    constexpr static size_t common_float_vector_size = 16;
+    constexpr static size_t common_int_vector_size   = 16;
+
 #ifdef CMT_ARCH_X86
-    c >= cpu_t::avx2 ? 32 : c >= cpu_t::sse2 ? 16 : common_int_vector_size;
+    constexpr static size_t native_float_vector_size =
+        c >= cpu_t::avx1 ? 32 : c >= cpu_t::sse2 ? 16 : common_float_vector_size;
 #endif
 #ifdef CMT_ARCH_ARM
-c == cpu_t::neon ? 16 : common_int_vector_size;
+    constexpr static size_t native_float_vector_size = c == cpu_t::neon ? 16 : common_float_vector_size;
 #endif
-
-/// @brief SIMD vector width for the given cpu instruction set
-template <typename T, cpu_t c = cpu_t::native>
-constexpr size_t vector_width = const_max(size_t(1), typeclass<T> == datatype::f
-                                                         ? native_float_vector_size<c> / sizeof(T)
-                                                         : native_int_vector_size<c> / sizeof(T));
-
-template <cpu_t c>
-constexpr size_t vector_width<void, c> = 0;
-
-namespace internal
-{
-
-template <cpu_t c>
-constexpr size_t native_vector_alignment = const_max(native_float_vector_size<c>, native_int_vector_size<c>);
-
-template <cpu_t c>
-constexpr bool fast_unaligned =
 #ifdef CMT_ARCH_X86
-    c >= cpu_t::avx1;
-#else
-    false;
+    constexpr static size_t native_int_vector_size =
+        c >= cpu_t::avx2 ? 32 : c >= cpu_t::sse2 ? 16 : common_int_vector_size;
+#endif
+#ifdef CMT_ARCH_ARM
+    constexpr static size_t native_int_vector_size = c == cpu_t::neon ? 16 : common_int_vector_size;
 #endif
 
-template <cpu_t c>
-constexpr size_t native_vector_alignment_mask = native_vector_alignment<c> - 1;
+    /// @brief SIMD vector width for the given cpu instruction set
+    constexpr static size_t vector_width =
+        (const_max(size_t(1), typeclass<T> == datatype::f ? native_float_vector_size / sizeof(T)
+                                                          : native_int_vector_size / sizeof(T)));
 
-template <typename T, cpu_t c>
-constexpr inline size_t get_vector_width(size_t scale = 1)
-{
-    return scale * vector_width<T, c>;
-}
-template <typename T, cpu_t c>
-constexpr inline size_t get_vector_width(size_t x32scale, size_t x64scale)
-{
-    return bitness_const(x32scale, x64scale) * vector_width<T, c>;
-}
+    constexpr static size_t vector_capacity = simd_register_count * vector_width;
 
-template <typename T, cpu_t c>
-constexpr auto vector_width_range = csize<1> << csizeseq<ilog2(vector_width<T, c>) + 1>;
+    constexpr static size_t maximum_vector_size = const_min(static_cast<size_t>(32), vector_capacity / 4);
 
-template <typename T, cpu_t c>
-constexpr size_t vector_capacity = native_register_count* vector_width<T, c>;
+    constexpr static size_t native_vector_alignment =
+        const_max(native_float_vector_size, native_int_vector_size);
 
-template <typename T, cpu_t c>
-constexpr size_t maximum_vector_size = const_min(static_cast<size_t>(32), vector_capacity<T, c> / 4);
-}
+    constexpr static bool fast_unaligned =
+#ifdef CMT_ARCH_X86
+        c >= cpu_t::avx1;
+#else
+        false;
+#endif
+
+    constexpr static size_t native_vector_alignment_mask = native_vector_alignment - 1;
+};
 }

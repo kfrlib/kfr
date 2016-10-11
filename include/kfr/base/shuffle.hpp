@@ -40,7 +40,7 @@ namespace internal
 template <size_t index, typename T>
 constexpr CMT_INLINE T broadcast_get_nth()
 {
-    return c_qnan<T>;
+    return constants<T>::qnan;
 }
 
 template <size_t index, typename T, typename... Ts>
@@ -51,17 +51,17 @@ constexpr CMT_INLINE T broadcast_get_nth(T x, Ts... rest)
 
 template <typename T, typename... Ts, size_t... indices, size_t Nin = 1 + sizeof...(Ts),
           size_t Nout = sizeof...(indices)>
-CMT_INLINE constexpr vec<T, Nout> broadcast_helper(csizes_t<indices...>, T x, Ts... rest)
+CMT_GNU_CONSTEXPR CMT_INLINE vec<T, Nout> broadcast_helper(csizes_t<indices...>, T x, Ts... rest)
 {
-    simd<T, Nout> result{ broadcast_get_nth<indices % Nin>(x, rest...)... };
-    return result;
+    using simd_t = simd<T, Nout>;
+    return KFR_SIMD_SET(simd_t, broadcast_get_nth<indices % Nin>(x, rest...)...);
 }
 }
 
 template <size_t Nout, typename T, typename... Ts>
-constexpr CMT_INLINE vec<T, Nout> broadcast(T x, T y, Ts... rest)
+CMT_GNU_CONSTEXPR CMT_INLINE vec<T, Nout> broadcast(T x, T y, Ts... rest)
 {
-    return internal::broadcast_helper(csizeseq<Nout>, x, y, rest...);
+    return internal::broadcast_helper(csizeseq_t<Nout>(), x, y, rest...);
 }
 KFR_FN(broadcast)
 
@@ -215,10 +215,9 @@ struct shuffle_index_shuffle
     constexpr static size_t indexcount = sizeof...(Indices);
 
     template <size_t index>
-    constexpr inline size_t operator()() const
+    constexpr inline size_t operator()(csize_t<index>) const
     {
-        constexpr int result = csizes_t<Indices...>::get(csize<index % indexcount>);
-        return result + index / indexcount * indexcount;
+        return csizes_t<Indices...>::get(csize_t<index % indexcount>()) + index / indexcount * indexcount;
     }
 };
 }
@@ -247,11 +246,9 @@ struct shuffle_index_permute
     constexpr static size_t indexcount = sizeof...(Indices);
 
     template <size_t index>
-    constexpr inline size_t operator()() const
+    constexpr inline size_t operator()(csize_t<index>) const
     {
-        constexpr size_t result = csizes_t<Indices...>::get(csize<index % indexcount>);
-        static_assert(result < size, "result < size");
-        return result + index / indexcount * indexcount;
+        return csizes_t<Indices...>::get(csize_t<index % indexcount>()) + index / indexcount * indexcount;
     }
 };
 }
@@ -341,9 +338,9 @@ struct shuffle_index_blend
     constexpr static size_t indexcount = sizeof...(Indices);
 
     template <size_t index>
-    constexpr inline size_t operator()() const
+    constexpr inline size_t operator()(csize_t<index>) const
     {
-        return (elements_t<Indices...>::get(csize<index % indexcount>) ? size : 0) + index % size;
+        return (elements_t<Indices...>::get(csize_t<index % indexcount>()) ? size : 0) + index % size;
     }
 };
 }
@@ -434,8 +431,7 @@ struct shuffle_index_transpose
 {
     constexpr inline size_t operator()(size_t index) const
     {
-        constexpr size_t side2 = size / side1;
-        return index % side2 * side1 + index / side2;
+        return index % (size / side1) * side1 + index / (size / side1);
     }
 };
 }

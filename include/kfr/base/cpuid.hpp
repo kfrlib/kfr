@@ -25,6 +25,10 @@
  */
 #pragma once
 
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
+
 #include "types.hpp"
 #include <cstring>
 
@@ -121,8 +125,20 @@ CMT_INLINE void cpuid(u32* ptr, u32 func, u32 subfunc = 0)
 CMT_INLINE u32 get_xcr0()
 {
     u32 xcr0;
-    __asm__("xgetbv" : "=a"(xcr0) : "c"(0) : "%edx");
+    __asm__ __volatile__("xgetbv" : "=a"(xcr0) : "c"(0) : "%edx");
     return xcr0;
+}
+#elif defined CMT_COMPILER_MSVC
+
+CMT_INLINE void cpuid(u32* ptr, u32 func, u32 subfunc = 0) { __cpuidex((int*)ptr, (int)func, (int)subfunc); }
+CMT_INLINE u32 get_xcr0()
+{
+#ifdef _XCR_XFEATURE_ENABLED_MASK
+    unsigned long long Result = _xgetbv(_XCR_XFEATURE_ENABLED_MASK);
+    return (u32)Result;
+#else
+    return 0;
+#endif
 }
 #endif
 

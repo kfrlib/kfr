@@ -85,19 +85,19 @@ CMT_INLINE vec<T, Nout> gather_stride_s(const T* base, size_t stride, csizes_t<I
 template <typename T, size_t N>
 CMT_INLINE vec<T, N> gather(const T* base, const vec<u32, N>& indices)
 {
-    return internal::gather(base, indices, csizeseq<N>);
+    return internal::gather(base, indices, csizeseq_t<N>());
 }
 
 template <size_t Nout, typename T>
 CMT_INLINE vec<T, Nout> gather_stride(const T* base, size_t stride)
 {
-    return internal::gather_stride_s<Nout>(base, stride, csizeseq<Nout>);
+    return internal::gather_stride_s<Nout>(base, stride, csizeseq_t<Nout>());
 }
 
 template <size_t Nout, size_t Stride, typename T>
 CMT_INLINE vec<T, Nout> gather_stride(const T* base)
 {
-    return internal::gather_stride<Nout, Stride>(base, csizeseq<Nout>);
+    return internal::gather_stride<Nout, Stride>(base, csizeseq_t<Nout>());
 }
 
 template <size_t groupsize, typename T, size_t N, typename IT, size_t... Indices>
@@ -108,7 +108,7 @@ CMT_INLINE vec<T, N * groupsize> gather_helper(const T* base, const vec<IT, N>& 
 template <size_t groupsize = 1, typename T, size_t N, typename IT>
 CMT_INLINE vec<T, N * groupsize> gather(const T* base, const vec<IT, N>& offset)
 {
-    return gather_helper<groupsize>(base, offset, csizeseq<N>);
+    return gather_helper<groupsize>(base, offset, csizeseq_t<N>());
 }
 
 template <size_t groupsize, typename T, size_t N, size_t Nout = N* groupsize, typename IT, size_t... Indices>
@@ -121,42 +121,42 @@ CMT_INLINE void scatter_helper(T* base, const vec<IT, N>& offset, const vec<T, N
 template <size_t groupsize = 1, typename T, size_t N, size_t Nout = N* groupsize, typename IT>
 CMT_INLINE void scatter(T* base, const vec<IT, N>& offset, const vec<T, Nout>& value)
 {
-    return scatter_helper<groupsize>(base, offset, value, csizeseq<N>);
+    return scatter_helper<groupsize>(base, offset, value, csizeseq_t<N>());
 }
 
 template <typename T>
-constexpr T partial_masks[] = { internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
-                                internal::allones<T>,
+constexpr T partial_masks[] = { constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
+                                constants<T>::allones(),
                                 T(),
                                 T(),
                                 T(),

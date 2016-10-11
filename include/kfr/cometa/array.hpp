@@ -30,8 +30,13 @@ public:
     constexpr array_ref() noexcept : m_data(nullptr), m_size(0) {}
     constexpr array_ref(const array_ref&) noexcept = default;
     constexpr array_ref(array_ref&&) noexcept      = default;
+#ifdef CMT_COMPILER_GNU
     constexpr array_ref& operator=(const array_ref&) noexcept = default;
     constexpr array_ref& operator=(array_ref&&) noexcept = default;
+#else
+    array_ref& operator=(const array_ref&) = default;
+    array_ref& operator=(array_ref&&) = default;
+#endif
 
     template <size_t N>
     constexpr array_ref(value_type (&arr)[N]) noexcept : m_data(arr), m_size(N)

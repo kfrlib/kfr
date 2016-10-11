@@ -32,6 +32,9 @@
 #include "read_write.hpp"
 #include "types.hpp"
 
+CMT_PRAGMA_MSVC(warning(push))
+CMT_PRAGMA_MSVC(warning(disable : 4324))
+
 namespace kfr
 {
 
@@ -136,7 +139,7 @@ struct univector_base : input_expression, output_expression
     {
         ringbuf_write(cursor, x.data(), N);
     }
-    void ringbuf_write(size_t& cursor, const T value)
+    void ringbuf_write(size_t& cursor, const T& value)
     {
         T* data      = get_data();
         data[cursor] = value;
@@ -205,8 +208,8 @@ private:
 };
 
 template <typename T, size_t Size>
-struct alignas(maximum_vector_alignment) univector : std::array<T, Size>,
-                                                     univector_base<T, univector<T, Size>>
+struct alignas(platform<>::maximum_vector_alignment) univector : std::array<T, Size>,
+                                                                 univector_base<T, univector<T, Size>>
 {
     using std::array<T, Size>::size;
     using size_type = size_t;
@@ -216,7 +219,8 @@ struct alignas(maximum_vector_alignment) univector : std::array<T, Size>,
         this->assign_expr(std::forward<Input>(input));
     }
     template <typename... Args>
-    constexpr univector(T x, Args... args) noexcept : std::array<T, Size>{ { x, static_cast<T>(args)... } }
+    constexpr univector(const T& x, const Args&... args) noexcept
+        : std::array<T, Size>{ { x, static_cast<T>(args)... } }
     {
     }
 
@@ -344,3 +348,5 @@ CMT_INLINE univector<T> render(Expr&& expr, size_t size)
     return result;
 }
 }
+
+CMT_PRAGMA_MSVC(warning(pop))

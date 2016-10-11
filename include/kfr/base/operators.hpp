@@ -83,7 +83,7 @@ KFR_FN(add)
 /**
  * @brief Returns template expression that returns sum of all the arguments passed to a function.
  */
-template <typename... E, KFR_ENABLE_IF(is_input_expressions<E...>::value)>
+template <typename... E, KFR_ENABLE_IF((is_input_expressions<E...>::value) && true)>
 CMT_INLINE internal::expression_function<fn::add, E...> add(E&&... x)
 {
     return { fn::add(), std::forward<E>(x)... };
@@ -310,7 +310,7 @@ inline common_type<T1, T2> bitwiseand(const T1& x, const T2& y)
 template <typename T>
 constexpr inline T bitwiseand(initialvalue<T>)
 {
-    return internal::allones<subtype<T>>;
+    return constants<T>::allones();
 }
 KFR_FN(bitwiseand)
 
@@ -323,7 +323,7 @@ inline common_type<T1, T2> bitwiseandnot(const T1& x, const T2& y)
 template <typename T>
 constexpr inline T bitwiseandnot(initialvalue<T>)
 {
-    return internal::allones<subtype<T>>;
+    return constants<T>::allones();
 }
 KFR_FN(bitwiseandnot)
 
@@ -336,7 +336,7 @@ inline common_type<T1, T2> bitwiseor(const T1& x, const T2& y)
 template <typename T>
 constexpr inline T bitwiseor(initialvalue<T>)
 {
-    return subtype<T>();
+    return subtype<T>(0);
 }
 KFR_FN(bitwiseor)
 
@@ -512,14 +512,14 @@ KFR_FN(reciprocal)
 template <typename T1, typename T2>
 CMT_INLINE common_type<T1, T2> mulsign(const T1& x, const T2& y)
 {
-    return x ^ (y & internal::highbitmask<subtype<T2>>);
+    return x ^ (y & constants<T2>::highbitmask());
 }
 KFR_FN(mulsign)
 
 template <typename T, size_t N>
 constexpr CMT_INLINE vec<T, N> copysign(const vec<T, N>& x, const vec<T, N>& y)
 {
-    return (x & internal::highbitmask<T>) | (y & internal::highbitmask<T>);
+    return (x & constants<T>::highbitmask()) | (y & constants<T>::highbitmask());
 }
 
 template <typename T, size_t N>
@@ -531,7 +531,7 @@ CMT_INLINE mask<T, N> isnan(const vec<T, N>& x)
 template <typename T, size_t N>
 CMT_INLINE mask<T, N> isinf(const vec<T, N>& x)
 {
-    return x == c_infinity<T> || x == -c_infinity<T>;
+    return x == constants<T>::infinity || x == -constants<T>::infinity;
 }
 
 template <typename T, size_t N>
@@ -543,7 +543,7 @@ CMT_INLINE mask<T, N> isfinite(const vec<T, N>& x)
 template <typename T, size_t N>
 CMT_INLINE mask<T, N> isnegative(const vec<T, N>& x)
 {
-    return (x & internal::highbitmask<T>) != 0;
+    return (x & constants<T>::highbitmask()) != 0;
 }
 
 template <typename T, size_t N>

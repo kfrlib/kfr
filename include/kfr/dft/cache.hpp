@@ -39,11 +39,12 @@ using dft_plan_ptr = std::shared_ptr<const dft_plan<T>>;
 template <typename T>
 using dft_plan_real_ptr = std::shared_ptr<const dft_plan_real<T>>;
 
-struct dft_cache
+template <int = 0>
+struct dft_cache_impl
 {
-    static dft_cache& instance()
+    static dft_cache_impl& instance()
     {
-        static dft_cache cache;
+        static dft_cache_impl cache;
         return cache;
     }
     dft_plan_ptr<f32> get(ctype_t<f32>, size_t size)
@@ -120,10 +121,12 @@ private:
 #endif
 };
 
+using dft_cache = dft_cache_impl<>;
+
 template <typename T, size_t Tag>
 univector<complex<T>> dft(const univector<complex<T>, Tag>& input)
 {
-    dft_plan_ptr<T> dft = dft_cache::instance().get(ctype<T>, input.size());
+    dft_plan_ptr<T> dft = dft_cache::instance().get(ctype_t<T>(), input.size());
     univector<complex<T>> output(input.size());
     univector<u8> temp(dft->temp_size);
     dft->execute(output, input, temp);
@@ -133,7 +136,7 @@ univector<complex<T>> dft(const univector<complex<T>, Tag>& input)
 template <typename T, size_t Tag>
 univector<complex<T>> idft(const univector<complex<T>, Tag>& input)
 {
-    dft_plan_ptr<T> dft = dft_cache::instance().get(ctype<T>, input.size());
+    dft_plan_ptr<T> dft = dft_cache::instance().get(ctype_t<T>(), input.size());
     univector<complex<T>> output(input.size());
     univector<u8> temp(dft->temp_size);
     dft->execute(output, input, temp, ctrue);
@@ -143,7 +146,7 @@ univector<complex<T>> idft(const univector<complex<T>, Tag>& input)
 template <typename T, size_t Tag>
 univector<complex<T>> realdft(const univector<T, Tag>& input)
 {
-    dft_plan_real_ptr<T> dft = dft_cache::instance().getreal(ctype<T>, input.size());
+    dft_plan_real_ptr<T> dft = dft_cache::instance().getreal(ctype_t<T>(), input.size());
     univector<complex<T>> output(input.size() / 2 + 1);
     univector<u8> temp(dft->temp_size);
     dft->execute(output, input, temp);
@@ -153,7 +156,7 @@ univector<complex<T>> realdft(const univector<T, Tag>& input)
 template <typename T, size_t Tag>
 univector<T> irealdft(const univector<complex<T>, Tag>& input)
 {
-    dft_plan_real_ptr<T> dft = dft_cache::instance().getreal(ctype<T>, input.size());
+    dft_plan_real_ptr<T> dft = dft_cache::instance().getreal(ctype_t<T>(), input.size());
     univector<T> output((input.size() - 1) * 2);
     univector<u8> temp(dft->temp_size);
     dft->execute(output, input, temp);

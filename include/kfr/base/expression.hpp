@@ -31,8 +31,8 @@
 
 #include <tuple>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
+CMT_PRAGMA_GNU(GCC diagnostic push)
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
 
 namespace kfr
 {
@@ -399,9 +399,9 @@ CMT_INLINE size_t process(OutputExpr&& out, const InputExpr& in, size_t start = 
     in.begin_block(cinput, size);
 
 #ifdef NDEBUG
-    constexpr size_t w = width == 0 ? internal::get_vector_width<Tin, c>(2, 4) : width;
+    constexpr size_t w = width == 0 ? platform<Tin, c>::vector_width * bitness_const(2, 4) : width;
 #else
-    constexpr size_t w = width == 0 ? internal::get_vector_width<Tin, c>(1, 1) : width;
+    constexpr size_t w = width == 0 ? platform<Tin, c>::vector_width * bitness_const(1, 1) : width;
 #endif
 
     size_t i = start;
@@ -442,4 +442,5 @@ struct output_expression_base : output_expression
     }
 };
 }
-#pragma clang diagnostic pop
+
+CMT_PRAGMA_GNU(GCC diagnostic pop)

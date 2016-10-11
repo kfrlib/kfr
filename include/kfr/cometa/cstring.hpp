@@ -31,13 +31,13 @@ struct cstring
     template <size_t start, size_t count>
     constexpr cstring<count> slice(csize_t<start>, csize_t<count>) const noexcept
     {
-        return slice_impl(csizeseq<count, start>);
+        return slice_impl(csizeseq_t<count, start>());
     }
 
     template <size_t start>
     constexpr cstring<N - start> slice(csize_t<start>) const noexcept
     {
-        return slice_impl(csizeseq<N - 1 - start, start>);
+        return slice_impl(csizeseq_t<N - 1 - start, start>());
     }
 
     constexpr friend bool operator==(const cstring& left, const cstring& right) noexcept
@@ -85,14 +85,13 @@ CMT_INLINE constexpr cstring<N1 - 1 + N2 - 1 + 1> concat_str_impl(const cstring<
                                                                   const cstring<N2>& str2,
                                                                   csizes_t<indices...>)
 {
-    constexpr size_t L1 = N1 - 1;
-    return { { (indices < L1 ? str1[indices] : str2[indices - L1])..., 0 } };
+    return { { (indices < (N1 - 1) ? str1[indices] : str2[indices - (N1 - 1)])..., 0 } };
 }
 template <size_t N1, size_t N2, typename... Args>
 CMT_INLINE constexpr cstring<N1 - 1 + N2 - 1 + 1> concat_str_impl(const cstring<N1>& str1,
                                                                   const cstring<N2>& str2)
 {
-    return concat_str_impl(str1, str2, csizeseq<N1 - 1 + N2 - 1>);
+    return concat_str_impl(str1, str2, cvalseq_t<size_t, N1 - 1 + N2 - 1>());
 }
 template <size_t N1, size_t Nfrom, size_t Nto, size_t... indices>
 CMT_INTRIN cstring<N1 - Nfrom + Nto> str_replace_impl(size_t pos, const cstring<N1>& str,
@@ -125,7 +124,7 @@ CMT_INTRIN constexpr auto concat_cstring(const cstring<N1>& str1, const cstring<
 template <size_t N>
 CMT_INTRIN constexpr cstring<N> make_cstring(const char (&str)[N])
 {
-    return details::make_cstring_impl(str, csizeseq<N - 1>);
+    return details::make_cstring_impl(str, cvalseq_t<size_t, N - 1>());
 }
 
 template <char... chars>
@@ -154,6 +153,7 @@ template <size_t N1, size_t Nfrom, size_t Nto>
 CMT_INTRIN cstring<N1 - Nfrom + Nto> str_replace(const cstring<N1>& str, const cstring<Nfrom>& from,
                                                  const cstring<Nto>& to)
 {
-    return details::str_replace_impl(str_find(str, from), str, from, to, csizeseq<N1 - Nfrom + Nto - 1>);
+    return details::str_replace_impl(str_find(str, from), str, from, to,
+                                     cvalseq_t<size_t, N1 - Nfrom + Nto - 1>());
 }
 }

@@ -64,19 +64,19 @@ KFR_SINTRIN vec<f32, N> tan(const vec<f32, N>& x_full)
     mask<f32, N> inverse;
     const vec<f32, N> x = trig_fold_simple(x_full, inverse);
 
-    constexpr f32 tan_c2  = 0x5.555378p-4;
-    constexpr f32 tan_c4  = 0x2.225bb8p-4;
-    constexpr f32 tan_c6  = 0xd.ac3fep-8;
-    constexpr f32 tan_c8  = 0x6.41644p-8;
-    constexpr f32 tan_c10 = 0xc.bfe7ep-12;
-    constexpr f32 tan_c12 = 0x2.6754dp-8;
+    constexpr f32 tan_c2  = CMT_FP(0x5.555378p-4, 3.333315551280975342e-01);
+    constexpr f32 tan_c4  = CMT_FP(0x2.225bb8p-4, 1.333882510662078857e-01);
+    constexpr f32 tan_c6  = CMT_FP(0xd.ac3fep-8, 5.340956896543502808e-02);
+    constexpr f32 tan_c8  = CMT_FP(0x6.41644p-8, 2.443529665470123291e-02);
+    constexpr f32 tan_c10 = CMT_FP(0xc.bfe7ep-12, 3.112703096121549606e-03);
+    constexpr f32 tan_c12 = CMT_FP(0x2.6754dp-8, 9.389210492372512817e-03);
 
-    constexpr f32 cot_c2  = -0x5.555558p-4;
-    constexpr f32 cot_c4  = -0x5.b0581p-8;
-    constexpr f32 cot_c6  = -0x8.ac5ccp-12;
-    constexpr f32 cot_c8  = -0xd.aaa01p-16;
-    constexpr f32 cot_c10 = -0x1.a9a9b4p-16;
-    constexpr f32 cot_c12 = -0x6.f7d4dp-24;
+    constexpr f32 cot_c2  = CMT_FP(-0x5.555558p-4, -3.333333432674407959e-01);
+    constexpr f32 cot_c4  = CMT_FP(-0x5.b0581p-8, -2.222204580903053284e-02);
+    constexpr f32 cot_c6  = CMT_FP(-0x8.ac5ccp-12, -2.117502503097057343e-03);
+    constexpr f32 cot_c8  = CMT_FP(-0xd.aaa01p-16, -2.085343148792162538e-04);
+    constexpr f32 cot_c10 = CMT_FP(-0x1.a9a9b4p-16, -2.537148611736483872e-05);
+    constexpr f32 cot_c12 = CMT_FP(-0x6.f7d4dp-24, -4.153305894760705996e-07);
 
     const vec<f32, N> x2  = x * x;
     const vec<f32, N> val = trig_horner(x2, inverse, 1.0f, 1.0f, cot_c2, tan_c2, cot_c4, tan_c4, cot_c6,
@@ -92,27 +92,27 @@ KFR_SINTRIN vec<f64, N> tan(const vec<f64, N>& x_full)
     mask<f64, N> inverse;
     const vec<f64, N> x = trig_fold_simple(x_full, inverse);
 
-    constexpr f64 tan_c2  = 0x5.5555554d8e5b8p-4;
-    constexpr f64 tan_c4  = 0x2.222224820264p-4;
-    constexpr f64 tan_c6  = 0xd.d0d90de32b3e8p-8;
-    constexpr f64 tan_c8  = 0x5.99723bdcf5cacp-8;
-    constexpr f64 tan_c10 = 0x2.434a142e413ap-8;
-    constexpr f64 tan_c12 = 0xf.2b59061305efp-12;
-    constexpr f64 tan_c14 = 0x4.a12565071a664p-12;
-    constexpr f64 tan_c16 = 0x4.dada3797ac1bcp-12;
-    constexpr f64 tan_c18 = -0x1.a74976b6ea3f3p-12;
-    constexpr f64 tan_c20 = 0x1.d06a5ae5e4a74p-12;
+    constexpr f64 tan_c2  = CMT_FP(0x5.5555554d8e5b8p-4, 3.333333332201594557e-01);
+    constexpr f64 tan_c4  = CMT_FP(0x2.222224820264p-4, 1.333333421790934281e-01);
+    constexpr f64 tan_c6  = CMT_FP(0xd.d0d90de32b3e8p-8, 5.396801556632355862e-02);
+    constexpr f64 tan_c8  = CMT_FP(0x5.99723bdcf5cacp-8, 2.187265359403693307e-02);
+    constexpr f64 tan_c10 = CMT_FP(0x2.434a142e413ap-8, 8.839254309582239566e-03);
+    constexpr f64 tan_c12 = CMT_FP(0xf.2b59061305efp-12, 3.703449009834865711e-03);
+    constexpr f64 tan_c14 = CMT_FP(0x4.a12565071a664p-12, 1.130243370829653185e-03);
+    constexpr f64 tan_c16 = CMT_FP(0x4.dada3797ac1bcp-12, 1.185276423238536747e-03);
+    constexpr f64 tan_c18 = CMT_FP(-0x1.a74976b6ea3f3p-12, -4.036779095551438937e-04);
+    constexpr f64 tan_c20 = CMT_FP(0x1.d06a5ae5e4a74p-12, 4.429010863244216712e-04);
 
-    constexpr f64 cot_c2  = -0x5.5555555555554p-4;
-    constexpr f64 cot_c4  = -0x5.b05b05b05b758p-8;
-    constexpr f64 cot_c6  = -0x8.ab355dffc79a8p-12;
-    constexpr f64 cot_c8  = -0xd.debbca405c9f8p-16;
-    constexpr f64 cot_c10 = -0x1.66a8edb99b15p-16;
-    constexpr f64 cot_c12 = -0x2.450239be0ee92p-20;
-    constexpr f64 cot_c14 = -0x3.ad6ddb4719438p-24;
-    constexpr f64 cot_c16 = -0x5.ff4c42741356p-28;
-    constexpr f64 cot_c18 = -0x9.06881bcdf3108p-32;
-    constexpr f64 cot_c20 = -0x1.644abedc113cap-32;
+    constexpr f64 cot_c2  = CMT_FP(-0x5.5555555555554p-4, -3.333333333333333148e-01);
+    constexpr f64 cot_c4  = CMT_FP(-0x5.b05b05b05b758p-8, -2.222222222222377391e-02);
+    constexpr f64 cot_c6  = CMT_FP(-0x8.ab355dffc79a8p-12, -2.116402116358796163e-03);
+    constexpr f64 cot_c8  = CMT_FP(-0xd.debbca405c9f8p-16, -2.116402122295888289e-04);
+    constexpr f64 cot_c10 = CMT_FP(-0x1.66a8edb99b15p-16, -2.137779458737224013e-05);
+    constexpr f64 cot_c12 = CMT_FP(-0x2.450239be0ee92p-20, -2.164426049513111728e-06);
+    constexpr f64 cot_c14 = CMT_FP(-0x3.ad6ddb4719438p-24, -2.191935496317727080e-07);
+    constexpr f64 cot_c16 = CMT_FP(-0x5.ff4c42741356p-28, -2.234152473099993830e-08);
+    constexpr f64 cot_c18 = CMT_FP(-0x9.06881bcdf3108p-32, -2.101416316020595077e-09);
+    constexpr f64 cot_c20 = CMT_FP(-0x1.644abedc113cap-32, -3.240456633529511097e-10);
 
     const vec<f64, N> x2  = x * x;
     const vec<f64, N> val = trig_horner(x2, inverse, 1.0, 1.0, cot_c2, tan_c2, cot_c4, tan_c4, cot_c6, tan_c6,

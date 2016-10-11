@@ -54,4 +54,4 @@ TEST(test_fir_avx)
     }
 }
 
-int main(int argc, char** argv) { return testo::run_all("", true); }
+int main() { return testo::run_all("", true); }

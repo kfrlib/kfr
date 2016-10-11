@@ -9,7 +9,6 @@
 #include <kfr/io.hpp>
 
 using namespace kfr;
-using testo::assert_is_same;
 
 TEST(complex_vector)
 {
@@ -67,7 +66,7 @@ TEST(complex_math)
     CHECK(a - b == make_vector(c32{ -2, -2 }));
     CHECK(a * b == make_vector(c32{ -5, 10 }));
     CHECK(a * 2 == make_vector(c32{ 2, 4 }));
-    CHECK(a / b == make_vector(c32{ 0.44, 0.08 }));
+    CHECK(a / b == make_vector(c32{ 0.44f, 0.08f }));
     CHECK(-a == make_vector(c32{ -1, -2 }));
 
     CHECK(real(a) == make_vector(1.f));
@@ -86,26 +85,26 @@ TEST(complex_math)
     testo::epsilon<f32>() *= 5;
     testo::epsilon<f64>() *= 5;
 
-    CHECK(csin(c32{ 1.f, 1.f }) == c32{ 1.2984575814159773, 0.634963914784736 });
-    CHECK(ccos(c32{ 1.f, 1.f }) == c32{ 0.8337300251311489, -0.9888977057628651 });
-    CHECK(csinh(c32{ 1.f, 1.f }) == c32{ 0.634963914784736, 1.2984575814159773 });
-    CHECK(ccosh(c32{ 1.f, 1.f }) == c32{ 0.8337300251311489, 0.9888977057628651 });
+    CHECK(csin(c32{ 1.f, 1.f }) == c32{ 1.2984575814159773f, 0.634963914784736f });
+    CHECK(ccos(c32{ 1.f, 1.f }) == c32{ 0.8337300251311489f, -0.9888977057628651f });
+    CHECK(csinh(c32{ 1.f, 1.f }) == c32{ 0.634963914784736f, 1.2984575814159773f });
+    CHECK(ccosh(c32{ 1.f, 1.f }) == c32{ 0.8337300251311489f, 0.9888977057628651f });
 
-    CHECK(clog(c32{ 1.f, 1.f }) == c32{ 0.34657359027997264, 0.7853981633974483 });
-    CHECK(clog2(c32{ 1.f, 1.f }) == c32{ 0.5, 1.1330900354567983 });
-    CHECK(clog10(c32{ 1.f, 1.f }) == c32{ 0.15051499783199057, 0.3410940884604603 });
+    CHECK(clog(c32{ 1.f, 1.f }) == c32{ 0.34657359027997264f, 0.7853981633974483f });
+    CHECK(clog2(c32{ 1.f, 1.f }) == c32{ 0.5f, 1.1330900354567983f });
+    CHECK(clog10(c32{ 1.f, 1.f }) == c32{ 0.15051499783199057f, 0.3410940884604603f });
 
-    CHECK(cexp(c32{ 1.f, 1.f }) == c32{ 1.4686939399158849, 2.2873552871788423 });
-    CHECK(cexp2(c32{ 1.f, 1.f }) == c32{ 1.5384778027279442, 1.2779225526272695 });
-    CHECK(cexp10(c32{ 1.f, 1.f }) == c32{ -6.682015101903131, 7.439803369574931 });
+    CHECK(cexp(c32{ 1.f, 1.f }) == c32{ 1.4686939399158849f, 2.2873552871788423f });
+    CHECK(cexp2(c32{ 1.f, 1.f }) == c32{ 1.5384778027279442f, 1.2779225526272695f });
+    CHECK(cexp10(c32{ 1.f, 1.f }) == c32{ -6.682015101903131f, 7.439803369574931f });
 
 #ifdef KFR_NATIVE_F64
-    CHECK(csin(c64{ 1.f, 1.f }) == c64{ 1.2984575814159773, 0.634963914784736 });
-    CHECK(ccos(c64{ 1.f, 1.f }) == c64{ 0.8337300251311489, -0.9888977057628651 });
-    CHECK(csinh(c64{ 1.f, 1.f }) == c64{ 0.634963914784736, 1.2984575814159773 });
-    CHECK(ccosh(c64{ 1.f, 1.f }) == c64{ 0.8337300251311489, 0.9888977057628651 });
-    CHECK(clog(c64{ 1.f, 1.f }) == c64{ 0.34657359027997264, 0.7853981633974483 });
-    CHECK(cexp(c64{ 1.f, 1.f }) == c64{ 1.4686939399158849, 2.2873552871788423 });
+    CHECK(csin(c64{ 1.0, 1.0 }) == c64{ 1.2984575814159773, 0.634963914784736 });
+    CHECK(ccos(c64{ 1.0, 1.0 }) == c64{ 0.8337300251311489, -0.9888977057628651 });
+    CHECK(csinh(c64{ 1.0, 1.0 }) == c64{ 0.634963914784736, 1.2984575814159773 });
+    CHECK(ccosh(c64{ 1.0, 1.0 }) == c64{ 0.8337300251311489, 0.9888977057628651 });
+    CHECK(clog(c64{ 1.0, 1.0 }) == c64{ 0.34657359027997264, 0.7853981633974483 });
+    CHECK(cexp(c64{ 1.0, 1.0 }) == c64{ 1.4686939399158849, 2.2873552871788423 });
 #endif
 }
 
@@ -161,19 +160,18 @@ TEST(complex_function_expressions)
     CHECK(uv3[1] == 2.f);
     CHECK(uv3[2] == 8.f);
     CHECK(uv3[3] == 18.f);
-
-    assert_is_same<c32, value_type_of<decltype(uv2)>>();
-    assert_is_same<f32, value_type_of<decltype(uv3)>>();
-    assert_is_same<f32, value_type_of<decltype(real(uv2))>>();
+    testo::assert_is_same<c32, value_type_of<decltype(uv2)>>();
+    testo::assert_is_same<f32, value_type_of<decltype(uv3)>>();
+    testo::assert_is_same<f32, value_type_of<decltype(real(uv2))>>();
 }
 
 TEST(static_tests)
 {
 #ifdef CMT_ARCH_SSE2
-    static_assert(vector_width<f32, cpu_t::sse2> == 4, "");
-    static_assert(vector_width<c32, cpu_t::sse2> == 2, "");
-    static_assert(vector_width<i32, cpu_t::sse2> == 4, "");
-    static_assert(vector_width<complex<i32>, cpu_t::sse2> == 2, "");
+    static_assert(platform<f32, cpu_t::sse2>::vector_width == 4, "");
+    static_assert(platform<c32, cpu_t::sse2>::vector_width == 2, "");
+    static_assert(platform<i32, cpu_t::sse2>::vector_width == 4, "");
+    static_assert(platform<complex<i32>, cpu_t::sse2>::vector_width == 2, "");
 #endif
 
     static_assert(is_numeric<vec<complex<float>, 4>>::value, "");
@@ -184,26 +182,26 @@ TEST(static_tests)
     static_assert(vec<c32, 4>::size() == 4, "");
     static_assert(vec<f32, 4>::scalar_size() == 4, "");
     static_assert(vec<c32, 4>::scalar_size() == 8, "");
-    assert_is_same<subtype<complex<i32>>, i32>();
-    assert_is_same<vec<c32, 4>::value_type, c32>();
-    assert_is_same<vec<c32, 4>::scalar_type, f32>();
-    assert_is_same<vec<f32, 4>::value_type, f32>();
-    assert_is_same<vec<f32, 4>::scalar_type, f32>();
-    assert_is_same<vec<c32, 1>, decltype(make_vector(c32{ 0, 0 }))>();
-    assert_is_same<vec<c32, 2>, decltype(make_vector(c32{ 0, 0 }, 4))>();
-    assert_is_same<ftype<complex<i32>>, complex<f32>>();
-    assert_is_same<ftype<complex<i64>>, complex<f64>>();
-    assert_is_same<ftype<vec<complex<i32>, 4>>, vec<complex<f32>, 4>>();
-    assert_is_same<ftype<vec<complex<i64>, 8>>, vec<complex<f64>, 8>>();
+    testo::assert_is_same<subtype<complex<i32>>, i32>();
+    testo::assert_is_same<vec<c32, 4>::value_type, c32>();
+    testo::assert_is_same<vec<c32, 4>::scalar_type, f32>();
+    testo::assert_is_same<vec<f32, 4>::value_type, f32>();
+    testo::assert_is_same<vec<f32, 4>::scalar_type, f32>();
+    testo::assert_is_same<vec<c32, 1>, decltype(make_vector(c32{ 0, 0 }))>();
+    testo::assert_is_same<vec<c32, 2>, decltype(make_vector(c32{ 0, 0 }, 4))>();
+    testo::assert_is_same<ftype<complex<i32>>, complex<f32>>();
+    testo::assert_is_same<ftype<complex<i64>>, complex<f64>>();
+    testo::assert_is_same<ftype<vec<complex<i32>, 4>>, vec<complex<f32>, 4>>();
+    testo::assert_is_same<ftype<vec<complex<i64>, 8>>, vec<complex<f64>, 8>>();
 
-    assert_is_same<kfr::internal::arg<int>, kfr::internal::expression_scalar<int, 1>>();
-    assert_is_same<kfr::internal::arg<complex<int>>,
-                   kfr::internal::expression_scalar<kfr::complex<int>, 1>>();
+    testo::assert_is_same<kfr::internal::arg<int>, kfr::internal::expression_scalar<int, 1>>();
+    testo::assert_is_same<kfr::internal::arg<complex<int>>,
+                          kfr::internal::expression_scalar<kfr::complex<int>, 1>>();
 
-    assert_is_same<common_type<complex<int>, double>, complex<double>>();
+    testo::assert_is_same<common_type<complex<int>, double>, complex<double>>();
 }
 
-int main(int argc, char** argv)
+int main()
 {
     println(library_version());
 

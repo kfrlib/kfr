@@ -121,12 +121,12 @@ KFR_SINTRIN i64avx select(const mi64avx& m, const i64avx& x, const i64avx& y)
 }
 #endif
 
-template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T, cpu_t::native>)>
+template <typename T, size_t N, KFR_ENABLE_IF(N < platform<T>::vector_width)>
 KFR_SINTRIN vec<T, N> select(const mask<T, N>& a, const vec<T, N>& b, const vec<T, N>& c)
 {
     return slice<0, N>(select(expand_simd(a).asmask(), expand_simd(b), expand_simd(c)));
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N >= vector_width<T, cpu_t::native>), typename = void>
+template <typename T, size_t N, KFR_ENABLE_IF(N >= platform<T>::vector_width), typename = void>
 KFR_SINTRIN vec<T, N> select(const mask<T, N>& a, const vec<T, N>& b, const vec<T, N>& c)
 {
     return concat(select(low(a).asmask(), low(b), low(c)), select(high(a).asmask(), high(b), high(c)));
@@ -178,12 +178,12 @@ KFR_SINTRIN f64neon select(const mf64neon& m, const f64neon& x, const f64neon& y
 }
 #endif
 
-template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T, cpu_t::native>)>
+template <typename T, size_t N, KFR_ENABLE_IF(N < platform<T>::vector_width)>
 KFR_SINTRIN vec<T, N> select(const mask<T, N>& a, const vec<T, N>& b, const vec<T, N>& c)
 {
     return slice<0, N>(select(expand_simd(a).asmask(), expand_simd(b), expand_simd(c)));
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N >= vector_width<T, cpu_t::native>), typename = void>
+template <typename T, size_t N, KFR_ENABLE_IF(N >= platform<T>::vector_width), typename = void>
 KFR_SINTRIN vec<T, N> select(const mask<T, N>& a, const vec<T, N>& b, const vec<T, N>& c)
 {
     return concat(select(low(a).asmask(), low(b), low(c)), select(high(a).asmask(), high(b), high(c)));

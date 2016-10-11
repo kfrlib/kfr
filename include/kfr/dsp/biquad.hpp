@@ -108,7 +108,7 @@ struct biquad_block
     vec<T, filters> b2;
 
     constexpr biquad_block() noexcept : a1(0), a2(0), b0(1), b1(0), b2(0) {}
-    constexpr biquad_block(const biquad_params<T>* bq, size_t count) noexcept
+    CMT_GNU_CONSTEXPR biquad_block(const biquad_params<T>* bq, size_t count) noexcept
     {
         count = count > filters ? filters : count;
         for (size_t i = 0; i < count; i++)
@@ -161,7 +161,7 @@ struct expression_biquads : public expression<E1>
         return out;
     }
     KFR_SINTRIN vec<T, filters> process(const biquad_block<T, filters>& bq, biquad_state<T, filters>& state,
-                                        vec<T, filters> in)
+                                        const vec<T, filters>& in)
     {
         const vec<T, filters> out = bq.b0 * in + state.s1;
         state.s1 = state.s2 + bq.b1 * in - bq.a1 * out;
@@ -301,7 +301,7 @@ CMT_INLINE internal::expression_biquads_zl<filters, T, internal::arg<E1>> biquad
 template <typename T, typename E1>
 CMT_INLINE expression_pointer<T> biquad_zl(const biquad_params<T>* bq, size_t count, E1&& e1)
 {
-    return cswitch(csizes<1, 2, 4, 8, 16, 32, 64>, next_poweroftwo(count),
+    return cswitch(csizes_t<1, 2, 4, 8, 16, 32, 64>(), next_poweroftwo(count),
                    [&](auto x) {
                        constexpr size_t filters = x;
                        return to_pointer(internal::expression_biquads_zl<filters, T, internal::arg<E1>>(

@@ -276,7 +276,7 @@ struct expression_linspace<T, true> : input_expression
         return mix((enumerate(x) + cast<T>(cast<TI>(index))) * invsize, cast<T>(start), cast<T>(stop));
     }
     template <typename U, size_t N>
-    CMT_INLINE static vec<U, N> mix(vec<U, N> t, U x, U y)
+    CMT_INLINE static vec<U, N> mix(const vec<U, N>& t, U x, U y)
     {
         return (U(1.0) - t) * x + t * y;
     }
@@ -296,12 +296,12 @@ public:
     using T          = value_type;
 
     template <typename... Expr_>
-    CMT_INLINE expression_sequence(const size_t (&segments)[base::size], Expr_&&... expr) noexcept
+    CMT_INLINE expression_sequence(const size_t (&segments)[base::count], Expr_&&... expr) noexcept
         : base(std::forward<Expr_>(expr)...)
     {
         std::copy(std::begin(segments), std::end(segments), this->segments.begin() + 1);
-        this->segments[0]              = 0;
-        this->segments[base::size + 1] = size_t(-1);
+        this->segments[0]               = 0;
+        this->segments[base::count + 1] = size_t(-1);
     }
 
     template <size_t N>
@@ -314,7 +314,7 @@ public:
         else
         {
             vec<T, N> result;
-#pragma clang loop unroll_count(4)
+            CMT_PRAGMA_CLANG(clang loop unroll_count(4))
             for (size_t i = 0; i < N; i++)
             {
                 sindex           = segments[sindex + 1] == index ? sindex + 1 : sindex;
@@ -329,12 +329,12 @@ protected:
     template <size_t N>
     CMT_NOINLINE vec<T, N> get(cinput_t cinput, size_t index, size_t expr_index, vec_t<T, N> y)
     {
-        return cswitch(indicesfor<E...>, expr_index,
+        return cswitch(indicesfor_t<E...>(), expr_index,
                        [&](auto val) { return this->argument(cinput, val, index, y); },
                        [&]() { return zerovector(y); });
     }
 
-    std::array<size_t, base::size + 2> segments;
+    std::array<size_t, base::count + 2> segments;
 };
 
 template <typename Fn, typename E>
@@ -475,7 +475,7 @@ struct multioutput : output_expression
     template <typename T, size_t N>
     void operator()(coutput_t coutput, size_t index, const vec<T, N>& x)
     {
-        cfor(csize<0>, csize<sizeof...(E)>,
+        cfor(csize_t<0>(), csize_t<sizeof...(E)>(),
              [&](auto n) { std::get<val_of(decltype(n)())>(outputs)(coutput, index, x); });
     }
     std::tuple<E...> outputs;
@@ -517,7 +517,7 @@ struct expression_unpack : private expression<E...>, output_expression
     template <typename U, size_t N>
     CMT_INLINE void operator()(coutput_t coutput, size_t index, const vec<vec<U, count>, N>& x)
     {
-        output(coutput, index, x, csizeseq<count>);
+        output(coutput, index, x, csizeseq_t<count>());
     }
 
     template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
@@ -576,9 +576,9 @@ task_partition<OutExpr, InExpr> partition(OutExpr&& output, InExpr&& input, size
 {
     static_assert(!is_infinite<OutExpr>::value || !is_infinite<InExpr>::value, "");
 
-    minimum_size            = minimum_size == 0 ? vector_width<T> * 8 : minimum_size;
+    minimum_size            = minimum_size == 0 ? platform<T>::vector_width * 8 : minimum_size;
     const size_t size       = size_min(output.size(), input.size());
-    const size_t chunk_size = align_up(std::max(size / count, minimum_size), vector_width<T>);
+    const size_t chunk_size = align_up(std::max(size / count, minimum_size), platform<T>::vector_width);
 
     task_partition<OutExpr, InExpr> result(std::forward<OutExpr>(output), std::forward<InExpr>(input), size,
                                            chunk_size, (size + chunk_size - 1) / chunk_size);

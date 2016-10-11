@@ -35,10 +35,13 @@
 #include "bitrev.hpp"
 #include "ft.hpp"
 
-#pragma clang diagnostic push
+CMT_PRAGMA_GNU(GCC diagnostic push)
 #if CMT_HAS_WARNING("-Wshadow")
-#pragma clang diagnostic ignored "-Wshadow"
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
 #endif
+
+CMT_PRAGMA_MSVC(warning(push))
+CMT_PRAGMA_MSVC(warning(disable : 4100))
 
 namespace kfr
 {
@@ -65,9 +68,9 @@ protected:
     virtual void do_execute(complex<T>*, const complex<T>*, u8* temp) = 0;
 };
 
-#pragma clang diagnostic push
+CMT_PRAGMA_GNU(GCC diagnostic push)
 #if CMT_HAS_WARNING("-Wassume")
-#pragma clang diagnostic ignored "-Wassume"
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wassume")
 #endif
 
 namespace internal
@@ -75,15 +78,17 @@ namespace internal
 
 template <size_t width, bool inverse, typename T>
 KFR_SINTRIN cvec<T, width> radix4_apply_twiddle(csize_t<width>, cfalse_t /*split_format*/, cbool_t<inverse>,
-                                                cvec<T, width> w, cvec<T, width> tw)
+                                                const cvec<T, width>& w, const cvec<T, width>& tw)
 {
-    cvec<T, width> b1 = w * dupeven(tw);
-    w = swap<2>(w);
+    cvec<T, width> ww  = w;
+    cvec<T, width> tw_ = tw;
+    cvec<T, width> b1  = ww * dupeven(tw_);
+    ww = swap<2>(ww);
 
     if (inverse)
-        tw = -(tw);
-    w      = subadd(b1, w * dupodd(tw));
-    return w;
+        tw_ = -(tw_);
+    ww      = subadd(b1, ww * dupodd(tw_));
+    return ww;
 }
 
 template <size_t width, bool use_br2, bool inverse, bool aligned, typename T>
@@ -107,9 +112,9 @@ KFR_SINTRIN void radix4_body(size_t N, csize_t<width>, cfalse_t, cfalse_t, cfals
 
     cwrite<width, aligned>(out, sum02 + sum13);
     w2 = sum02 - sum13;
-    cwrite<width, aligned>(
-        out + N4 * (use_br2 ? 1 : 2),
-        radix4_apply_twiddle(csize<width>, cfalse, cbool<inverse>, w2, cread<width, true>(twiddle + width)));
+    cwrite<width, aligned>(out + N4 * (use_br2 ? 1 : 2),
+                           radix4_apply_twiddle(csize_t<width>(), cfalse, cbool_t<inverse>(), w2,
+                                                cread<width, true>(twiddle + width)));
     diff02 = a0 - a2;
     diff13 = a1 - a3;
     if (inverse)
@@ -125,17 +130,17 @@ KFR_SINTRIN void radix4_body(size_t N, csize_t<width>, cfalse_t, cfalse_t, cfals
 
     w1 = diff02 + diff13;
 
-    cwrite<width, aligned>(
-        out + N4 * (use_br2 ? 2 : 1),
-        radix4_apply_twiddle(csize<width>, cfalse, cbool<inverse>, w1, cread<width, true>(twiddle + 0)));
+    cwrite<width, aligned>(out + N4 * (use_br2 ? 2 : 1),
+                           radix4_apply_twiddle(csize_t<width>(), cfalse, cbool_t<inverse>(), w1,
+                                                cread<width, true>(twiddle + 0)));
     w3 = diff02 - diff13;
-    cwrite<width, aligned>(out + N4 * 3, radix4_apply_twiddle(csize<width>, cfalse, cbool<inverse>, w3,
-                                                              cread<width, true>(twiddle + width * 2)));
+    cwrite<width, aligned>(out + N4 * 3, radix4_apply_twiddle(csize_t<width>(), cfalse, cbool_t<inverse>(),
+                                                              w3, cread<width, true>(twiddle + width * 2)));
 }
 
 template <size_t width, bool inverse, typename T>
 KFR_SINTRIN cvec<T, width> radix4_apply_twiddle(csize_t<width>, ctrue_t /*split_format*/, cbool_t<inverse>,
-                                                cvec<T, width> w, cvec<T, width> tw)
+                                                const cvec<T, width>& w, const cvec<T, width>& tw)
 {
     vec<T, width> re1, im1, twre, twim;
     split(w, re1, im1);
@@ -144,10 +149,9 @@ KFR_SINTRIN cvec<T, width> radix4_apply_twiddle(csize_t<width>, ctrue_t /*split_
     const vec<T, width> b1re = re1 * twre;
     const vec<T, width> b1im = im1 * twre;
     if (inverse)
-        w = concat(b1re + im1 * twim, b1im - re1 * twim);
+        return concat(b1re + im1 * twim, b1im - re1 * twim);
     else
-        w = concat(b1re - im1 * twim, b1im + re1 * twim);
-    return w;
+        return concat(b1re - im1 * twim, b1im + re1 * twim);
 }
 
 template <size_t width, bool splitout, bool splitin, bool use_br2, bool inverse, bool aligned, typename T>
@@ -175,8 +179,8 @@ KFR_SINTRIN void radix4_body(size_t N, csize_t<width>, ctrue_t, cbool_t<splitout
     cwrite_split<width, aligned, write_split>(out, concat(sum02re + sum13re, sum02im + sum13im));
     w2 = concat(sum02re - sum13re, sum02im - sum13im);
     cwrite_split<width, aligned, write_split>(
-        out + N4 * (use_br2 ? 1 : 2),
-        radix4_apply_twiddle(csize<width>, ctrue, cbool<inverse>, w2, cread<width, true>(twiddle + width)));
+        out + N4 * (use_br2 ? 1 : 2), radix4_apply_twiddle(csize_t<width>(), ctrue, cbool_t<inverse>(), w2,
+                                                           cread<width, true>(twiddle + width)));
 
     const vec<T, width> diff02re = re0 - re2;
     const vec<T, width> diff02im = im0 - im2;
@@ -187,11 +191,11 @@ KFR_SINTRIN void radix4_body(size_t N, csize_t<width>, ctrue_t, cbool_t<splitout
     (inverse ? w3 : w1) = concat(diff02re + diff13im, diff02im - diff13re);
 
     cwrite_split<width, aligned, write_split>(
-        out + N4 * (use_br2 ? 2 : 1),
-        radix4_apply_twiddle(csize<width>, ctrue, cbool<inverse>, w1, cread<width, true>(twiddle + 0)));
-    cwrite_split<width, aligned, write_split>(out + N4 * 3,
-                                              radix4_apply_twiddle(csize<width>, ctrue, cbool<inverse>, w3,
-                                                                   cread<width, true>(twiddle + width * 2)));
+        out + N4 * (use_br2 ? 2 : 1), radix4_apply_twiddle(csize_t<width>(), ctrue, cbool_t<inverse>(), w1,
+                                                           cread<width, true>(twiddle + 0)));
+    cwrite_split<width, aligned, write_split>(
+        out + N4 * 3, radix4_apply_twiddle(csize_t<width>(), ctrue, cbool_t<inverse>(), w3,
+                                           cread<width, true>(twiddle + width * 2)));
 }
 
 template <typename T>
@@ -254,30 +258,29 @@ CMT_NOINLINE void initialize_twiddles(complex<T>*& twiddle, size_t stage_size, s
     }
 }
 
+#ifdef CMT_ARCH_X86
+#ifdef CMT_COMPILER_GNU
+#define KFR_PREFETCH(addr) __builtin_prefetch(::kfr::ptr_cast<void>(addr), 0, _MM_HINT_T0);
+#else
+#define KFR_PREFETCH(addr) _mm_prefetch(::kfr::ptr_cast<char>(addr), _MM_HINT_T0);
+#endif
+#else
+#define KFR_PREFETCH(addr) __builtin_prefetch(::kfr::ptr_cast<void>(addr));
+#endif
+
 template <typename T>
 KFR_SINTRIN void prefetch_one(const complex<T>* in)
 {
-#ifdef CMT_ARCH_X86
-    __builtin_prefetch(ptr_cast<void>(in), 0, _MM_HINT_T0);
-#else
-    __builtin_prefetch(ptr_cast<void>(in));
-#endif
+    KFR_PREFETCH(in);
 }
 
 template <typename T>
 KFR_SINTRIN void prefetch_four(size_t stride, const complex<T>* in)
 {
-#ifdef CMT_ARCH_X86
-    __builtin_prefetch(ptr_cast<void>(in), 0, _MM_HINT_T0);
-    __builtin_prefetch(ptr_cast<void>(in + stride), 0, _MM_HINT_T0);
-    __builtin_prefetch(ptr_cast<void>(in + stride * 2), 0, _MM_HINT_T0);
-    __builtin_prefetch(ptr_cast<void>(in + stride * 3), 0, _MM_HINT_T0);
-#else
-    __builtin_prefetch(ptr_cast<void>(in));
-    __builtin_prefetch(ptr_cast<void>(in + stride));
-    __builtin_prefetch(ptr_cast<void>(in + stride * 2));
-    __builtin_prefetch(ptr_cast<void>(in + stride * 3));
-#endif
+    KFR_PREFETCH(in);
+    KFR_PREFETCH(in + stride);
+    KFR_PREFETCH(in + stride * 2);
+    KFR_PREFETCH(in + stride * 3);
 }
 
 template <typename Ntype, size_t width, bool splitout, bool splitin, bool prefetch, bool use_br2,
@@ -287,20 +290,21 @@ KFR_SINTRIN cfalse_t radix4_pass(Ntype N, size_t blocks, csize_t<width>, cbool_t
                                  complex<T>* out, const complex<T>* in, const complex<T>*& twiddle)
 {
     constexpr static size_t prefetch_offset = width * 8;
-    const auto N4                           = N / csize<4>;
-    const auto N43                          = N4 * csize<3>;
+    const auto N4                           = N / csize_t<4>();
+    const auto N43                          = N4 * csize_t<3>();
     CMT_ASSUME(blocks > 0);
     CMT_ASSUME(N > 0);
     CMT_ASSUME(N4 > 0);
     CMT_LOOP_NOUNROLL for (size_t b = 0; b < blocks; b++)
     {
-#pragma clang loop unroll_count(2)
+        CMT_PRAGMA_CLANG(clang loop unroll_count(2))
         for (size_t n2 = 0; n2 < N4; n2 += width)
         {
             if (prefetch)
                 prefetch_four(N4, in + prefetch_offset);
-            radix4_body(N, csize<width>, cbool < splitout || splitin >, cbool<splitout>, cbool<splitin>,
-                        cbool<use_br2>, cbool<inverse>, cbool<aligned>, out, in, twiddle + n2 * 3);
+            radix4_body(N, csize_t<width>(), cbool_t<(splitout || splitin)>(), cbool_t<splitout>(),
+                        cbool_t<splitin>(), cbool_t<use_br2>(), cbool_t<inverse>(), cbool_t<aligned>(), out,
+                        in, twiddle + n2 * 3);
             in += width;
             out += width;
         }
@@ -321,7 +325,7 @@ KFR_SINTRIN ctrue_t radix4_pass(csize_t<32>, size_t blocks, csize_t<width>, cfal
     for (size_t b = 0; b < blocks; b++)
     {
         if (prefetch)
-            prefetch_four(csize<64>, out + prefetch_offset);
+            prefetch_four(csize_t<64>(), out + prefetch_offset);
         cvec<T, 4> w0, w1, w2, w3, w4, w5, w6, w7;
         split(cread<8, aligned>(out + 0), w0, w1);
         split(cread<8, aligned>(out + 8), w2, w3);
@@ -330,13 +334,13 @@ KFR_SINTRIN ctrue_t radix4_pass(csize_t<32>, size_t blocks, csize_t<width>, cfal
 
         butterfly8<4, inverse>(w0, w1, w2, w3, w4, w5, w6, w7);
 
-        w1 = cmul(w1, fixed_twiddle<T, 4, 32, 0, 1, inverse>);
-        w2 = cmul(w2, fixed_twiddle<T, 4, 32, 0, 2, inverse>);
-        w3 = cmul(w3, fixed_twiddle<T, 4, 32, 0, 3, inverse>);
-        w4 = cmul(w4, fixed_twiddle<T, 4, 32, 0, 4, inverse>);
-        w5 = cmul(w5, fixed_twiddle<T, 4, 32, 0, 5, inverse>);
-        w6 = cmul(w6, fixed_twiddle<T, 4, 32, 0, 6, inverse>);
-        w7 = cmul(w7, fixed_twiddle<T, 4, 32, 0, 7, inverse>);
+        w1 = cmul(w1, fixed_twiddle<T, 4, 32, 0, 1, inverse>());
+        w2 = cmul(w2, fixed_twiddle<T, 4, 32, 0, 2, inverse>());
+        w3 = cmul(w3, fixed_twiddle<T, 4, 32, 0, 3, inverse>());
+        w4 = cmul(w4, fixed_twiddle<T, 4, 32, 0, 4, inverse>());
+        w5 = cmul(w5, fixed_twiddle<T, 4, 32, 0, 5, inverse>());
+        w6 = cmul(w6, fixed_twiddle<T, 4, 32, 0, 6, inverse>());
+        w7 = cmul(w7, fixed_twiddle<T, 4, 32, 0, 7, inverse>());
 
         cvec<T, 8> z0, z1, z2, z3;
         transpose4x8(w0, w1, w2, w3, w4, w5, w6, w7, z0, z1, z2, z3);
@@ -380,7 +384,7 @@ KFR_SINTRIN ctrue_t radix4_pass(csize_t<16>, size_t blocks, csize_t<width>, cfal
 {
     CMT_ASSUME(blocks > 0);
     constexpr static size_t prefetch_offset = width * 4;
-#pragma clang loop unroll_count(2)
+    CMT_PRAGMA_CLANG(clang loop unroll_count(2))
     for (size_t b = 0; b < blocks; b += 2)
     {
         if (prefetch)
@@ -434,13 +438,14 @@ struct fft_stage_impl : dft_stage<T>
         this->stage_size = stage_size;
         this->repeats    = 4;
         this->recursion  = true;
-        this->data_size  = align_up(sizeof(complex<T>) * stage_size / 4 * 3, native_cache_alignment);
+        this->data_size =
+            align_up(sizeof(complex<T>) * stage_size / 4 * 3, platform<>::native_cache_alignment);
     }
 
 protected:
     constexpr static bool prefetch = true;
     constexpr static bool aligned  = false;
-    constexpr static size_t width  = vector_width<T, cpu_t::native>;
+    constexpr static size_t width  = platform<T>::vector_width;
 
     virtual void do_initialize(size_t size) override final
     {
@@ -452,12 +457,12 @@ protected:
     {
         const complex<T>* twiddle = ptr_cast<complex<T>>(this->data);
         if (splitin)
-            in                  = out;
-        const size_t stage_size = this->stage_size;
-        CMT_ASSUME(stage_size >= 2048);
-        CMT_ASSUME(stage_size % 2048 == 0);
-        radix4_pass(stage_size, 1, csize<width>, ctrue, cbool<splitin>, cbool<!is_even>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, in, twiddle);
+            in                = out;
+        const size_t stg_size = this->stage_size;
+        CMT_ASSUME(stg_size >= 2048);
+        CMT_ASSUME(stg_size % 2048 == 0);
+        radix4_pass(stg_size, 1, csize_t<width>(), ctrue, cbool_t<splitin>(), cbool_t<!is_even>(),
+                    cbool_t<prefetch>(), cbool_t<inverse>(), cbool_t<aligned>(), out, in, twiddle);
     }
 };
 
@@ -470,11 +475,11 @@ struct fft_final_stage_impl : dft_stage<T>
         this->out_offset = size;
         this->repeats    = 4;
         this->recursion  = true;
-        this->data_size  = align_up(sizeof(complex<T>) * size * 3 / 2, native_cache_alignment);
+        this->data_size  = align_up(sizeof(complex<T>) * size * 3 / 2, platform<>::native_cache_alignment);
     }
 
 protected:
-    constexpr static size_t width  = vector_width<T, cpu_t::native>;
+    constexpr static size_t width  = platform<T>::vector_width;
     constexpr static bool is_even  = cometa::is_even(ilog2(size));
     constexpr static bool use_br2  = !is_even;
     constexpr static bool aligned  = false;
@@ -483,11 +488,11 @@ protected:
     virtual void do_initialize(size_t total_size) override final
     {
         complex<T>* twiddle = ptr_cast<complex<T>>(this->data);
-        size_t stage_size   = this->stage_size;
-        while (stage_size > 4)
+        size_t stg_size     = this->stage_size;
+        while (stg_size > 4)
         {
-            initialize_twiddles<T, width>(twiddle, stage_size, total_size, true);
-            stage_size /= 4;
+            initialize_twiddles<T, width>(twiddle, stg_size, total_size, true);
+            stg_size /= 4;
         }
     }
 
@@ -496,55 +501,55 @@ protected:
         constexpr bool is_double    = sizeof(T) == 8;
         constexpr size_t final_size = is_even ? (is_double ? 4 : 16) : (is_double ? 8 : 32);
         const complex<T>* twiddle   = ptr_cast<complex<T>>(this->data);
-        final_pass(csize<final_size>, out, in, twiddle);
+        final_pass(csize_t<final_size>(), out, in, twiddle);
     }
 
     KFR_INTRIN void final_pass(csize_t<8>, complex<T>* out, const complex<T>* in, const complex<T>* twiddle)
     {
-        radix4_pass(512, 1, csize<width>, ctrue, cbool<splitin>, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, in, twiddle);
-        radix4_pass(128, 4, csize<width>, ctrue, ctrue, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
-                    cbool<aligned>, out, out, twiddle);
-        radix4_pass(32, 16, csize<width>, cfalse, ctrue, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
-                    cbool<aligned>, out, out, twiddle);
-        radix4_pass(csize<8>, 64, csize<width>, cfalse, cfalse, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, out, twiddle);
+        radix4_pass(512, 1, csize_t<width>(), ctrue, cbool_t<splitin>(), cbool_t<use_br2>(),
+                    cbool_t<prefetch>(), cbool_t<inverse>(), cbool_t<aligned>(), out, in, twiddle);
+        radix4_pass(128, 4, csize_t<width>(), ctrue, ctrue, cbool_t<use_br2>(), cbool_t<prefetch>(),
+                    cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
+        radix4_pass(32, 16, csize_t<width>(), cfalse, ctrue, cbool_t<use_br2>(), cbool_t<prefetch>(),
+                    cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
+        radix4_pass(csize_t<8>(), 64, csize_t<width>(), cfalse, cfalse, cbool_t<use_br2>(),
+                    cbool_t<prefetch>(), cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
     }
 
     KFR_INTRIN void final_pass(csize_t<32>, complex<T>* out, const complex<T>* in, const complex<T>* twiddle)
     {
-        radix4_pass(512, 1, csize<width>, ctrue, cbool<splitin>, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, in, twiddle);
-        radix4_pass(128, 4, csize<width>, cfalse, ctrue, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
-                    cbool<aligned>, out, out, twiddle);
-        radix4_pass(csize<32>, 16, csize<width>, cfalse, cfalse, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, out, twiddle);
+        radix4_pass(512, 1, csize_t<width>(), ctrue, cbool_t<splitin>(), cbool_t<use_br2>(),
+                    cbool_t<prefetch>(), cbool_t<inverse>(), cbool_t<aligned>(), out, in, twiddle);
+        radix4_pass(128, 4, csize_t<width>(), cfalse, ctrue, cbool_t<use_br2>(), cbool_t<prefetch>(),
+                    cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
+        radix4_pass(csize_t<32>(), 16, csize_t<width>(), cfalse, cfalse, cbool_t<use_br2>(),
+                    cbool_t<prefetch>(), cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
     }
 
     KFR_INTRIN void final_pass(csize_t<4>, complex<T>* out, const complex<T>* in, const complex<T>* twiddle)
     {
-        radix4_pass(1024, 1, csize<width>, ctrue, cbool<splitin>, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, in, twiddle);
-        radix4_pass(256, 4, csize<width>, ctrue, ctrue, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
-                    cbool<aligned>, out, out, twiddle);
-        radix4_pass(64, 16, csize<width>, ctrue, ctrue, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
-                    cbool<aligned>, out, out, twiddle);
-        radix4_pass(16, 64, csize<width>, cfalse, ctrue, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
-                    cbool<aligned>, out, out, twiddle);
-        radix4_pass(csize<4>, 256, csize<width>, cfalse, cfalse, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, out, twiddle);
+        radix4_pass(1024, 1, csize_t<width>(), ctrue, cbool_t<splitin>(), cbool_t<use_br2>(),
+                    cbool_t<prefetch>(), cbool_t<inverse>(), cbool_t<aligned>(), out, in, twiddle);
+        radix4_pass(256, 4, csize_t<width>(), ctrue, ctrue, cbool_t<use_br2>(), cbool_t<prefetch>(),
+                    cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
+        radix4_pass(64, 16, csize_t<width>(), ctrue, ctrue, cbool_t<use_br2>(), cbool_t<prefetch>(),
+                    cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
+        radix4_pass(16, 64, csize_t<width>(), cfalse, ctrue, cbool_t<use_br2>(), cbool_t<prefetch>(),
+                    cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
+        radix4_pass(csize_t<4>(), 256, csize_t<width>(), cfalse, cfalse, cbool_t<use_br2>(),
+                    cbool_t<prefetch>(), cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
     }
 
     KFR_INTRIN void final_pass(csize_t<16>, complex<T>* out, const complex<T>* in, const complex<T>* twiddle)
     {
-        radix4_pass(1024, 1, csize<width>, ctrue, cbool<splitin>, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, in, twiddle);
-        radix4_pass(256, 4, csize<width>, ctrue, ctrue, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
-                    cbool<aligned>, out, out, twiddle);
-        radix4_pass(64, 16, csize<width>, cfalse, ctrue, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
-                    cbool<aligned>, out, out, twiddle);
-        radix4_pass(csize<16>, 64, csize<width>, cfalse, cfalse, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, out, twiddle);
+        radix4_pass(1024, 1, csize_t<width>(), ctrue, cbool_t<splitin>(), cbool_t<use_br2>(),
+                    cbool_t<prefetch>(), cbool_t<inverse>(), cbool_t<aligned>(), out, in, twiddle);
+        radix4_pass(256, 4, csize_t<width>(), ctrue, ctrue, cbool_t<use_br2>(), cbool_t<prefetch>(),
+                    cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
+        radix4_pass(64, 16, csize_t<width>(), cfalse, ctrue, cbool_t<use_br2>(), cbool_t<prefetch>(),
+                    cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
+        radix4_pass(csize_t<16>(), 64, csize_t<width>(), cfalse, cfalse, cbool_t<use_br2>(),
+                    cbool_t<prefetch>(), cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
     }
 };
 
@@ -565,7 +570,7 @@ protected:
 
     virtual void do_execute(complex<T>* out, const complex<T>*, u8* /*temp*/) override final
     {
-        fft_reorder(out, log2n, cbool<!is_even>);
+        fft_reorder(out, log2n, cbool_t<!is_even>());
     }
 };
 
@@ -596,7 +601,7 @@ protected:
     {
         cvec<T, 1> a0, a1, a2, a3;
         split(cread<4>(in), a0, a1, a2, a3);
-        butterfly(cbool<inverse>, a0, a1, a2, a3, a0, a1, a2, a3);
+        butterfly(cbool_t<inverse>(), a0, a1, a2, a3, a0, a1, a2, a3);
         cwrite<4>(out, concat(a0, a1, a2, a3));
     }
 };
@@ -651,7 +656,7 @@ protected:
     constexpr static bool aligned = false;
     virtual void do_execute(complex<T>* out, const complex<T>* in, u8*) override final
     {
-        butterfly64(cbool<inverse>, cbool<aligned>, out, in);
+        butterfly64(cbool_t<inverse>(), cbool_t<aligned>(), out, in);
     }
 };
 
@@ -661,12 +666,12 @@ struct fft_specialization<T, 7, inverse> : dft_stage<T>
     fft_specialization(size_t)
     {
         this->stage_size = 128;
-        this->data_size  = align_up(sizeof(complex<T>) * 128 * 3 / 2, native_cache_alignment);
+        this->data_size  = align_up(sizeof(complex<T>) * 128 * 3 / 2, platform<>::native_cache_alignment);
     }
 
 protected:
     constexpr static bool aligned        = false;
-    constexpr static size_t width        = vector_width<T, cpu_t::native>;
+    constexpr static size_t width        = platform<T>::vector_width;
     constexpr static bool use_br2        = true;
     constexpr static bool prefetch       = false;
     constexpr static bool is_double      = sizeof(T) == 8;
@@ -684,26 +689,26 @@ protected:
     virtual void do_execute(complex<T>* out, const complex<T>* in, u8* /*temp*/) override final
     {
         const complex<T>* twiddle = ptr_cast<complex<T>>(this->data);
-        final_pass(csize<final_size>, out, in, twiddle);
-        fft_reorder(out, csize<7>);
+        final_pass(csize_t<final_size>(), out, in, twiddle);
+        fft_reorder(out, csize_t<7>());
     }
 
     KFR_INTRIN void final_pass(csize_t<8>, complex<T>* out, const complex<T>* in, const complex<T>* twiddle)
     {
-        radix4_pass(128, 1, csize<width>, ctrue, cfalse, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
-                    cbool<aligned>, out, in, twiddle);
-        radix4_pass(32, 4, csize<width>, cfalse, ctrue, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
-                    cbool<aligned>, out, out, twiddle);
-        radix4_pass(csize<8>, 16, csize<width>, cfalse, cfalse, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, out, twiddle);
+        radix4_pass(128, 1, csize_t<width>(), ctrue, cfalse, cbool_t<use_br2>(), cbool_t<prefetch>(),
+                    cbool_t<inverse>(), cbool_t<aligned>(), out, in, twiddle);
+        radix4_pass(32, 4, csize_t<width>(), cfalse, ctrue, cbool_t<use_br2>(), cbool_t<prefetch>(),
+                    cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
+        radix4_pass(csize_t<8>(), 16, csize_t<width>(), cfalse, cfalse, cbool_t<use_br2>(),
+                    cbool_t<prefetch>(), cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
     }
 
     KFR_INTRIN void final_pass(csize_t<32>, complex<T>* out, const complex<T>* in, const complex<T>* twiddle)
     {
-        radix4_pass(128, 1, csize<width>, cfalse, cfalse, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
-                    cbool<aligned>, out, in, twiddle);
-        radix4_pass(csize<32>, 4, csize<width>, cfalse, cfalse, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, out, twiddle);
+        radix4_pass(128, 1, csize_t<width>(), cfalse, cfalse, cbool_t<use_br2>(), cbool_t<prefetch>(),
+                    cbool_t<inverse>(), cbool_t<aligned>(), out, in, twiddle);
+        radix4_pass(csize_t<32>(), 4, csize_t<width>(), cfalse, cfalse, cbool_t<use_br2>(),
+                    cbool_t<prefetch>(), cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
     }
 };
 
@@ -749,12 +754,12 @@ struct fft_specialization<double, 8, inverse> : dft_stage<double>
     fft_specialization(size_t)
     {
         this->stage_size = 256;
-        this->data_size  = align_up(sizeof(complex<T>) * 256 * 3 / 2, native_cache_alignment);
+        this->data_size  = align_up(sizeof(complex<T>) * 256 * 3 / 2, platform<>::native_cache_alignment);
     }
 
 protected:
     constexpr static bool aligned        = false;
-    constexpr static size_t width        = vector_width<T, cpu_t::native>;
+    constexpr static size_t width        = platform<T>::vector_width;
     constexpr static bool use_br2        = false;
     constexpr static bool prefetch       = false;
     constexpr static size_t split_format = true;
@@ -770,20 +775,20 @@ protected:
     virtual void do_execute(complex<T>* out, const complex<T>* in, u8* /*temp*/) override final
     {
         const complex<T>* twiddle = ptr_cast<complex<T>>(this->data);
-        final_pass(csize<4>, out, in, twiddle);
-        fft_reorder(out, csize<8>);
+        final_pass(csize_t<4>(), out, in, twiddle);
+        fft_reorder(out, csize_t<8>());
     }
 
     KFR_INTRIN void final_pass(csize_t<4>, complex<T>* out, const complex<T>* in, const complex<T>* twiddle)
     {
-        radix4_pass(256, 1, csize<width>, ctrue, cfalse, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
-                    cbool<aligned>, out, in, twiddle);
-        radix4_pass(64, 4, csize<width>, ctrue, ctrue, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
-                    cbool<aligned>, out, out, twiddle);
-        radix4_pass(16, 16, csize<width>, cfalse, ctrue, cbool<use_br2>, cbool<prefetch>, cbool<inverse>,
-                    cbool<aligned>, out, out, twiddle);
-        radix4_pass(csize<4>, 64, csize<width>, cfalse, cfalse, cbool<use_br2>, cbool<prefetch>,
-                    cbool<inverse>, cbool<aligned>, out, out, twiddle);
+        radix4_pass(256, 1, csize_t<width>(), ctrue, cfalse, cbool_t<use_br2>(), cbool_t<prefetch>(),
+                    cbool_t<inverse>(), cbool_t<aligned>(), out, in, twiddle);
+        radix4_pass(64, 4, csize_t<width>(), ctrue, ctrue, cbool_t<use_br2>(), cbool_t<prefetch>(),
+                    cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
+        radix4_pass(16, 16, csize_t<width>(), cfalse, ctrue, cbool_t<use_br2>(), cbool_t<prefetch>(),
+                    cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
+        radix4_pass(csize_t<4>(), 64, csize_t<width>(), cfalse, cfalse, cbool_t<use_br2>(),
+                    cbool_t<prefetch>(), cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
     }
 };
 
@@ -835,15 +840,16 @@ struct dft_plan
         if (is_poweroftwo(size))
         {
             const size_t log2n = ilog2(size);
-            cswitch(csizes<1, 2, 3, 4, 5, 6, 7, 8>, log2n,
+            cswitch(csizes_t<1, 2, 3, 4, 5, 6, 7, 8>(), log2n,
                     [&](auto log2n) {
-                        add_stage<internal::fft_specialization_t<T, val_of(decltype(log2n)()),
-                                                                 false>::template type>(size, type);
+                        (void)log2n;
+                        this->add_stage<internal::fft_specialization_t<T, val_of(decltype(log2n)()),
+                                                                       false>::template type>(size, type);
                     },
                     [&]() {
                         cswitch(cfalse_true, is_even(log2n), [&](auto is_even) {
-                            make_fft(size, type, is_even, ctrue);
-                            add_stage<internal::fft_reorder_stage_impl_t<
+                            this->make_fft(size, type, is_even, ctrue);
+                            this->add_stage<internal::fft_reorder_stage_impl_t<
                                 T, val_of(decltype(is_even)())>::template type>(size, type);
                         });
                     });
@@ -927,7 +933,7 @@ protected:
         {
             add_stage<fft_stage_impl_t::template type>(stage_size, type);
 
-            make_fft(stage_size / 4, cbools<direct, inverse>, cbool<is_even>, cfalse);
+            make_fft(stage_size / 4, cbools_t<direct, inverse>(), cbool_t<is_even>(), cfalse);
         }
         else
         {
@@ -1021,15 +1027,13 @@ struct dft_plan_real : dft_plan<T>
         : dft_plan<T>(size / 2, type), rtwiddle(size / 4)
     {
         using namespace internal;
-        const size_t csize = size / 2;
-        const size_t count = size / 4;
 
-        constexpr size_t width = vector_width<T> * 2;
+        constexpr size_t width = platform<T>::vector_width * 2;
 
-        block_process(count, csizes<width, 1>, [=](size_t i, auto w) {
+        block_process(size / 4, csizes_t<width, 1>(), [=](size_t i, auto w) {
             constexpr size_t width = val_of(decltype(w)());
             cwrite<width>(rtwiddle.data() + i,
-                          cossin(dup(-c_pi<T> * ((enumerate<T, width>() + i + count) / csize))));
+                          cossin(dup(-c_pi<T> * ((enumerate<T, width>() + i + size / 4) / (size / 2)))));
         });
     }
 
@@ -1069,13 +1073,13 @@ private:
     void to_fmt(complex<T>* out, dft_pack_format fmt) const
     {
         using namespace internal;
-        const size_t csize = this->size; // / 2;
+        size_t csize = this->size; // const size_t causes internal compiler error: in tsubst_copy in GCC 5.2
 
-        constexpr size_t width = vector_width<T> * 2;
+        constexpr size_t width = platform<T>::vector_width * 2;
         const cvec<T, 1> dc = cread<1>(out);
         const size_t count = csize / 2;
 
-        block_process(count, csizes<width, 1>, [=](size_t i, auto w) {
+        block_process(count, csizes_t<width, 1>(), [=](size_t i, auto w) {
             constexpr size_t width   = val_of(decltype(w)());
             constexpr size_t widthm1 = width - 1;
             const cvec<T, width> tw   = cread<width>(rtwiddle.data() + i);
@@ -1122,10 +1126,10 @@ private:
             dc = pack(in[0].real() + in[0].imag(), in[0].real() - in[0].imag());
         }
 
-        constexpr size_t width = vector_width<T> * 2;
+        constexpr size_t width = platform<T>::vector_width * 2;
         const size_t count     = csize / 2;
 
-        block_process(count, csizes<width, 1>, [=](size_t i, auto w) {
+        block_process(count, csizes_t<width, 1>(), [=](size_t i, auto w) {
             constexpr size_t width   = val_of(decltype(w)());
             constexpr size_t widthm1 = width - 1;
             const cvec<T, width> tw   = cread<width>(rtwiddle.data() + i);
@@ -1150,4 +1154,6 @@ private:
 };
 }
 
-#pragma clang diagnostic pop
+CMT_PRAGMA_GNU(GCC diagnostic pop)
+
+CMT_PRAGMA_MSVC(warning(pop))

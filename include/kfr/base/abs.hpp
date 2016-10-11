@@ -41,7 +41,7 @@ namespace intrinsics
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
 KFR_SINTRIN vec<T, N> abs(const vec<T, N>& x)
 {
-    return x & internal::invhighbitmask<T>;
+    return x & constants<T>::invhighbitmask();
 }
 
 KFR_SINTRIN i64sse abs(const i64sse& x) { return select(x >= 0, x, -x); }
@@ -86,7 +86,7 @@ KFR_SINTRIN f32neon abs(const f32neon& x) { return vabsq_f32(*x); }
 #if defined CMT_ARCH_NEON64
 KFR_SINTRIN f64neon abs(const f64neon& x) { return vabsq_f64(*x); }
 #else
-KFR_SINTRIN f64neon abs(const f64neon& x) { return x & internal::invhighbitmask<f64>; }
+KFR_SINTRIN f64neon abs(const f64neon& x) { return x & constants<f64>::invhighbitmask(); }
 #endif
 
 KFR_HANDLE_ALL_SIZES_1(abs)
@@ -97,14 +97,14 @@ KFR_HANDLE_ALL_SIZES_1(abs)
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
 KFR_SINTRIN vec<T, N> abs(const vec<T, N>& x)
 {
-    return x & internal::invhighbitmask<T>;
+    return x & constants<T>::invhighbitmask();
 }
 
 // fallback
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
 KFR_SINTRIN vec<T, N> abs(const vec<T, N>& x)
 {
-    return select(x >= T(), x, -x);
+    return select(x >= T(0), x, -x);
 }
 #endif
 KFR_I_CONVERTER(abs)
