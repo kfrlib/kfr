@@ -187,7 +187,7 @@ private:
     bool owns;
 
 public:
-    inline number() : owns(true) { mpfr_init2(val, internal::precision()); }
+    inline number() noexcept : owns(true) { mpfr_init2(val, internal::precision()); }
     inline ~number()
     {
         if (owns)
