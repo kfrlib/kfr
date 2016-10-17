@@ -131,7 +131,7 @@ struct representation<kfr::vec<T, N>>
     using type = std::string;
     static std::string get(const kfr::vec<T, N>& value)
     {
-        return details::array_to_string(value.data(), value.size());
+        return details::array_to_string(ptr_cast<T>(&value), value.size());
     }
 };
 
@@ -188,4 +188,20 @@ struct expression_debug_printer : output_expression
 }
 inline internal::expression_printer printer() { return internal::expression_printer(); }
 inline internal::expression_debug_printer debug_printer() { return internal::expression_debug_printer(); }
+
+template <typename T>
+std::string dB_to_string(const T& value, double minimum = -140.0)
+{
+    if (value <= minimum)
+        return "-oo dB";
+    return as_string(fmtwidth<0, 2>(value), " dB");
+}
+
+template <typename T>
+std::string dB_to_utf8string(const T& value, double minimum = -140.0)
+{
+    if (value <= minimum)
+        return "-\xE2\x88\x9E dB"; // infinity symbol
+    return as_string(fmtwidth<0, 2>(value), " dB");
+}
 }
