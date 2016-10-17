@@ -422,6 +422,13 @@ struct cvals_t : ops::empty
     {
         return {};
     }
+
+    // MSVC requires static_cast<T> here:
+    template <typename Fn>
+    constexpr auto map(Fn&& fn) -> cvals_t<T, static_cast<T>(Fn()(values))...>
+    {
+        return {};
+    }
 };
 
 template <typename T>
@@ -681,6 +688,12 @@ using csizeseq_t = cvalseq_t<size_t, size, start, step>;
 template <typename... List>
 using indicesfor_t = cvalseq_t<size_t, sizeof...(List), 0>;
 
+template <size_t group, size_t... indices, size_t N = group * sizeof...(indices)>
+constexpr inline auto scale(csizes_t<indices...> i) noexcept
+{
+    return i[csizeseq_t<N>() / csize_t<group>()] * csize_t<group>() + csizeseq_t<N>() % csize_t<group>();
+}
+
 namespace details
 {
 
@@ -724,9 +737,9 @@ struct unique_enum_impl
     };
 };
 
-#ifdef CMT_COMPILER_MSVC
+#if defined CMT_COMPILER_MSVC && !defined CMT_COMPILER_CLANG
 #define CMT_ENABLE_IF_IMPL(N, ...)                                                                           \
-    bool enable_ = (__VA_ARGS__), typename enabled_ = ::std::enable_if<enable_>::type,                       \
+    bool enable_ = (__VA_ARGS__), typename enabled_ = typename ::std::enable_if<enable_>::type,              \
          typename cometa::details::unique_enum_impl<N>::type dummy_ =                                        \
              ::cometa::details::unique_enum_impl<N>::value
 
