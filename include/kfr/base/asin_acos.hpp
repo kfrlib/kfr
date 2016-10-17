@@ -47,7 +47,7 @@ template <typename T, size_t N, typename Tout = flt_type<T>>
 KFR_SINTRIN vec<Tout, N> acos(const vec<T, N>& x)
 {
     const vec<Tout, N> xx = x;
-    return atan2(sqrt(Tout(1) - xx * xx), xx);
+    return -atan2(xx, sqrt(Tout(1) - xx * xx)) + constants<Tout>::pi * 0.5;
 }
 KFR_I_FLT_CONVERTER(asin)
 KFR_I_FLT_CONVERTER(acos)
