@@ -74,9 +74,12 @@ struct expression_short_fir : expression<E1>
 template <typename T, typename E1, KFR_ARCH_DEP>
 struct expression_fir : expression<E1>
 {
+    using value_type = T;
     expression_fir(E1&& e1, const array_ref<const T>& taps)
-        : expression<E1>(std::forward<E1>(e1)), taps(taps), delayline(taps.size(), T()), delayline_cursor(0)
+        : expression<E1>(std::forward<E1>(e1)), taps(taps.size()), delayline(taps.size(), T(0)),
+          delayline_cursor(0)
     {
+        this->taps = reverse(make_univector(taps.data(), taps.size()));
     }
     template <size_t N>
     CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> x) const
