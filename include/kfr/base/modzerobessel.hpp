@@ -100,13 +100,13 @@ KFR_I_CONVERTER(modzerobessel)
 KFR_I_FN(modzerobessel)
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 modzerobessel(const T1& x)
+CMT_FUNC T1 modzerobessel(const T1& x)
 {
     return intrinsics::modzerobessel(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::modzerobessel, E1> modzerobessel(E1&& x)
+CMT_FUNC internal::expression_function<fn::modzerobessel, E1> modzerobessel(E1&& x)
 {
     return { fn::modzerobessel(), std::forward<E1>(x) };
 }
