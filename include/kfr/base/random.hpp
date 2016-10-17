@@ -65,8 +65,8 @@ struct random_bit_generator
 
     inline random_state operator()()
     {
-        CMT_GNU_CONSTEXPR static random_state mul{ 214013u, 17405u, 214013u, 69069u };
-        CMT_GNU_CONSTEXPR static random_state add{ 2531011u, 10395331u, 13737667u, 1u };
+        const static random_state mul{ 214013u, 17405u, 214013u, 69069u };
+        const static random_state add{ 2531011u, 10395331u, 13737667u, 1u };
         state = bitcast<u32>(rotateright<3>(bitcast<u8>(fmadd(state, mul, add))));
         return state;
     }
