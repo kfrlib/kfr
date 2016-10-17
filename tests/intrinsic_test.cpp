@@ -40,27 +40,6 @@ constexpr ctypes_t<f32x1, f32x2, f32x4, f32x8, f32x16, f32x3 //
                    >
     float_types{};
 
-constexpr ctypes_t<i8x1, i8x2, i8x4, i8x8, i8x16, i8x3, //
-                   i16x1, i16x2, i16x4, i16x8, i16x16, i16x3, //
-                   i32x1, i32x2, i32x4, i32x8, i32x16, i32x3, //
-#ifdef KFR_NATIVE_I64
-
-                   i64x1, i64x2, i64x4, i64x8, i64x16, i64x3, //
-#endif
-                   u8x1, u8x2, u8x4, u8x8, u8x16, u8x3, //
-                   u16x1, u16x2, u16x4, u16x8, u16x16, u16x3, //
-                   u32x1, u32x2, u32x4, u32x8, u32x16, u32x3, //
-#ifdef KFR_NATIVE_I64
-                   u64x1, u64x2, u64x4, u64x8, u64x16, u64x3, //
-#endif
-                   f32x1, f32x2, f32x4, f32x8, f32x16, f32x3 //
-#ifdef KFR_NATIVE_F64
-                   ,
-                   f64x1, f64x2, f64x4, f64x8, f64x16, f64x3 //
-#endif
-                   >
-    all_types{};
-
 template <typename T>
 inline T ref_abs(T x)
 {
@@ -169,8 +148,7 @@ TEST(intrin_abs)
                   });
     testo::matrix(named("type") = float_types, named("value") = std::vector<int>{ -1, 0, +1 },
                   [](auto type, int value) {
-                      using T    = type_of<decltype(type)>;
-                      using Tsub = subtype<T>;
+                      using T = type_of<decltype(type)>;
                       const T x(value);
                       CHECK(kfr::abs(x) == apply([](auto x) { return ref_abs(x); }, x));
                   });
