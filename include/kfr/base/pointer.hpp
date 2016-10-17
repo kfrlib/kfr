@@ -80,14 +80,13 @@ struct expression_pointer : input_expression
     template <size_t N>
     CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
     {
-        using func_t = simd<T, N> (*)(void*, size_t);
+        using func_t = vec<T, N> (*)(void*, size_t);
 
         static_assert(is_poweroftwo(N), "N must be a power of two");
         constexpr size_t findex = ilog2(N);
         static_assert(N <= maximum_expression_width, "N is greater than maxwidth");
         func_t func = reinterpret_cast<func_t>((*vtable)[2 + findex]);
-        vec<T, N> result = vec<T, N>(func(instance, index));
-        return result;
+        return func(instance, index);
     }
     CMT_INLINE void begin_block(cinput_t, size_t size) const
     {
@@ -121,14 +120,13 @@ struct expression_pointer<T, false> : input_expression
     template <size_t N>
     CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
     {
-        using func_t = simd<T, N> (*)(void*, size_t);
+        using func_t = vec<T, N> (*)(void*, size_t);
 
         static_assert(is_poweroftwo(N), "N must be a power of two");
         constexpr size_t findex = ilog2(N);
         static_assert(N <= maximum_expression_width, "N is greater than maxwidth");
         func_t func = reinterpret_cast<func_t>((*vtable)[2 + findex]);
-        vec<T, N> result = vec<T, N>(func(instance, index));
-        return result;
+        return func(instance, index);
     }
     CMT_INLINE void begin_block(cinput_t, size_t size) const
     {
@@ -150,12 +148,12 @@ private:
 
 namespace internal
 {
-template <typename T, size_t N, typename Fn, typename Ret = simd<T, N>,
+template <typename T, size_t N, typename Fn, typename Ret = vec<T, N>,
           typename NonMemFn = Ret (*)(void*, size_t)>
 CMT_INLINE NonMemFn make_expression_func()
 {
     return [](void* fn, size_t index) -> Ret {
-        return *(reinterpret_cast<Fn*>(fn)->operator()(cinput, index, vec_t<T, N>()));
+        return (reinterpret_cast<Fn*>(fn)->operator()(cinput, index, vec_t<T, N>()));
     };
 }
 
