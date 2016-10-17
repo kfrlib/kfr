@@ -252,6 +252,7 @@ extern char* gets(char* __s);
 #define CMT_NOINLINE __attribute__((__noinline__))
 #define CMT_FLATTEN __attribute__((__flatten__))
 #define CMT_RESTRICT __restrict__
+#define CMT_FUNC __inline__
 
 #elif defined(CMT_MSVC_ATTRIBUTES)
 
@@ -263,6 +264,7 @@ extern char* gets(char* __s);
 #define CMT_NOINLINE __declspec(noinline)
 #define CMT_FLATTEN
 #define CMT_RESTRICT __restrict
+#define CMT_FUNC inline
 
 #endif
 
@@ -439,6 +441,7 @@ extern char* gets(char* __s);
 #define CMT_FAST_CC __attribute__((fastcall))
 #define CMT_UNUSED __attribute__((unused))
 #define CMT_GNU_CONSTEXPR constexpr
+#define CMT_GNU_NOEXCEPT noexcept
 #define CMT_GNU_PACKED __attribute__((packed))
 #define CMT_PRAGMA_PACK_PUSH_1
 #define CMT_PRAGMA_PACK_POP
@@ -459,6 +462,7 @@ extern char* gets(char* __s);
 #define CMT_FAST_CC __fastcall
 #define CMT_UNUSED
 #define CMT_GNU_CONSTEXPR
+#define CMT_GNU_NOEXCEPT
 #define CMT_GNU_PACKED
 #define CMT_PRAGMA_PACK_PUSH_1 __pragma(pack(push, 1))
 #define CMT_PRAGMA_PACK_POP __pragma(pack(pop))
