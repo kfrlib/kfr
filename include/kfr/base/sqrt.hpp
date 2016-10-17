@@ -35,10 +35,10 @@ namespace intrinsics
 
 #if defined CMT_ARCH_SSE2 && defined KFR_NATIVE_INTRINSICS
 
-KFR_SINTRIN f32x1 sqrt(const f32x1& x) { return slice<0, 1>(tovec(_mm_sqrt_ss(*extend<4>(x)))); }
+KFR_SINTRIN f32x1 sqrt(const f32x1& x) { return slice<0, 1>(f32x4(_mm_sqrt_ss(*extend<4>(x)))); }
 KFR_SINTRIN f64x1 sqrt(const f64x1& x)
 {
-    return slice<0, 1>(tovec(_mm_sqrt_sd(_mm_setzero_pd(), *extend<2>(x))));
+    return slice<0, 1>(f64x2(_mm_sqrt_sd(_mm_setzero_pd(), *extend<2>(x))));
 }
 KFR_SINTRIN f32sse sqrt(const f32sse& x) { return _mm_sqrt_ps(*x); }
 KFR_SINTRIN f64sse sqrt(const f64sse& x) { return _mm_sqrt_pd(*x); }
