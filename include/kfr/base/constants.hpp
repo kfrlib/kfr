@@ -79,6 +79,9 @@ public:
 
 #if CMT_COMPILER_GNU
 
+CMT_PRAGMA_GNU(GCC diagnostic push)
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Woverflow")
+
     constexpr static Tsub allones()
     {
         if (is_same<Tsub, f32>::value)
@@ -128,6 +131,7 @@ public:
             return static_cast<Tsub>((1ull << (sizeof(Tsub) * 8 - 1)) - 1);
         }
     }
+CMT_PRAGMA_GNU(GCC diagnostic pop)
 #else
 
     static Tsub allones()
