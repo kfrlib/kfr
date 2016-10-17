@@ -13,10 +13,11 @@
 #include <utility>
 
 CMT_PRAGMA_GNU(GCC diagnostic push)
-#if CMT_HAS_WARNING("-Wformat-security")
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpragmas")
+#if CMT_HAS_WARNING("-Wformat-security") || defined CMT_COMPILER_GCC
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wformat-security")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wused-but-marked-unused")
 #endif
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wused-but-marked-unused")
 
 namespace cometa
 {
