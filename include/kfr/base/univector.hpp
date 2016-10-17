@@ -137,7 +137,7 @@ struct univector_base : input_expression, output_expression
     template <size_t N>
     void ringbuf_write(size_t& cursor, const vec<T, N>& x)
     {
-        ringbuf_write(cursor, x.data(), N);
+        ringbuf_write(cursor, ptr_cast<T>(&x), N);
     }
     void ringbuf_write(size_t& cursor, const T& value)
     {
@@ -160,7 +160,7 @@ struct univector_base : input_expression, output_expression
     template <size_t N>
     void ringbuf_read(size_t& cursor, vec<T, N>& x)
     {
-        ringbuf_read(cursor, x.data(), N);
+        ringbuf_read(cursor, ptr_cast<T>(&x), N);
     }
     void ringbuf_read(size_t& cursor, T* dest, size_t destsize) const
     {
