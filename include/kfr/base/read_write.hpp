@@ -35,13 +35,13 @@ namespace kfr
 template <size_t N, bool A = false, typename T>
 CMT_INLINE vec<T, N> read(const T* src)
 {
-    return internal::simd_read<N * compound_type_traits<T>::width, A>(ptr_cast<subtype<T>>(src));
+    return vec<T, N>(src, cbool_t<A>());
 }
 
 template <bool A = false, size_t N, typename T>
 CMT_INLINE void write(T* dest, const vec<T, N>& value)
 {
-    internal::simd_write<A, N * compound_type_traits<T>::width>(ptr_cast<subtype<T>>(dest), *value);
+    value.write(dest, cbool_t<A>());
 }
 
 template <typename... Indices, typename T, size_t Nout = 1 + sizeof...(Indices)>

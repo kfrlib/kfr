@@ -181,37 +181,189 @@ using c32   = complex<f32>;
 using c64   = complex<f64>;
 using cbase = complex<fbase>;
 
-template <typename T, size_t N>
-struct vec_op<complex<T>, N> : private vec_op<T, N * 2>
+namespace internal
 {
+template <typename T>
+constexpr inline vec<T, 2> vcomplex(const complex<T>& v)
+{
+    return vec<T, 2>(v.real(), v.imag());
+}
+}
+
+template <typename T, size_t N>
+struct vec<complex<T>, N> : private vec<T, 2 * N>
+{
+    using base = vec<T, 2 * N>;
+
+    using value_type = complex<T>;
+    constexpr static size_t size() noexcept { return N; }
+
     using scalar_type = T;
-    using vec_op<scalar_type, N * 2>::add;
-    using vec_op<scalar_type, N * 2>::sub;
-    using vec_op<scalar_type, N * 2>::eq;
-    using vec_op<scalar_type, N * 2>::ne;
-    using vec_op<scalar_type, N * 2>::band;
-    using vec_op<scalar_type, N * 2>::bor;
-    using vec_op<scalar_type, N * 2>::bxor;
-    using vec_op<scalar_type, N * 2>::bnot;
-    using vec_op<scalar_type, N * 2>::neg;
+    constexpr static size_t scalar_size() noexcept { return 2 * N; }
 
-    constexpr static size_t w = N * 2;
+    using simd_type = typename base::simd_type;
 
-    CMT_INLINE static simd<scalar_type, w> mul(const simd<scalar_type, w>& x,
-                                               const simd<scalar_type, w>& y) noexcept
+    constexpr vec() noexcept           = default;
+    constexpr vec(const vec&) noexcept = default;
+    CMT_GNU_CONSTEXPR vec& operator=(const vec&) CMT_GNU_NOEXCEPT = default;
+    template <int                                                 = 0>
+    constexpr vec(const simd_type& simd) noexcept : base(simd)
     {
-        const vec<scalar_type, w> xx = x;
-        const vec<scalar_type, w> yy = y;
-        return *subadd(xx * dupeven(yy), swap<2>(xx) * dupodd(yy));
     }
-    CMT_INLINE static simd<scalar_type, w> div(const simd<scalar_type, w>& x,
-                                               const simd<scalar_type, w>& y) noexcept
+    KFR_I_CE vec(czeros_t) noexcept : base(czeros) {}
+    KFR_I_CE vec(cones_t) noexcept : base(cones) {}
+    KFR_I_CE vec(const value_type& s) noexcept : base(repeat<N>(vec<T, 2>(s.real(), s.imag()))) {}
+
+    template <typename U>
+    KFR_I_CE vec(const complex<U>& s) noexcept
+        : base(repeat<N>(vec<T, 2>(static_cast<T>(s.real()), static_cast<T>(s.imag()))))
     {
-        const vec<scalar_type, w> xx = x;
-        const vec<scalar_type, w> yy = y;
-        const vec<scalar_type, w> m  = (sqr(dupeven(yy)) + sqr(dupodd(yy)));
-        return *swap<2>(subadd(swap<2>(xx) * dupeven(yy), xx * dupodd(yy)) / m);
     }
+    template <typename U>
+    KFR_I_CE vec(const vec<complex<U>, N>& v) noexcept : base(static_cast<vec<T, N * 2>>(v.flatten()))
+    {
+    }
+
+    explicit KFR_I_CE vec(const vec<T, N * 2>& v) noexcept : base(v) {}
+
+    // from real
+    KFR_I_CE vec(const T& r) noexcept : base(interleave(vec<T, N>(r), vec<T, N>(czeros))) {}
+    // from real
+    template <typename U, typename = enable_if<std::is_convertible<U, T>::value>>
+    KFR_I_CE vec(const vec<U, N>& r) noexcept : base(interleave(vec<T, N>(r), vec<T, N>(czeros)))
+    {
+    }
+
+    // from list of vectors
+    template <typename... Us>
+    KFR_I_CE vec(const value_type& s0, const value_type& s1, const Us&... rest) noexcept
+        : base(internal::vcomplex(s0), internal::vcomplex(s1),
+               internal::vcomplex(static_cast<value_type>(rest))...)
+    {
+    }
+
+    template <typename U, size_t M, KFR_ENABLE_IF(sizeof(U) * M == sizeof(value_type) * N)>
+    KFR_I_CE static vec frombits(const vec<U, M>& v) noexcept
+    {
+        return vec(vec<T, scalar_size()>::frombits(v.flatten()));
+    }
+
+#define KFR_B(x) static_cast<const base&>(x)
+    // math / bitwise / comparison operators
+    KFR_I_CE friend vec operator+(const vec& x) noexcept { return x; }
+    KFR_I_CE friend vec operator-(const vec& x) noexcept { return vec(-KFR_B(x)); }
+    KFR_I_CE friend vec operator~(const vec& x) noexcept { return vec(~KFR_B(x)); }
+
+    KFR_I_CE friend vec operator+(const vec& x, const vec& y) noexcept { return vec(KFR_B(x) + KFR_B(y)); }
+    KFR_I_CE friend vec operator-(const vec& x, const vec& y) noexcept { return vec(KFR_B(x) - KFR_B(y)); }
+    CMT_GNU_CONSTEXPR friend vec operator*(const vec& x, const vec& y) noexcept
+    {
+        const vec<scalar_type, N* 2> xx = x;
+        const vec<scalar_type, N* 2> yy = y;
+        return vec(subadd(xx * dupeven(yy), swap<2>(xx) * dupodd(yy)));
+    }
+    CMT_GNU_CONSTEXPR friend vec operator/(const vec& x, const vec& y) noexcept
+    {
+        const vec<scalar_type, N* 2> xx = x;
+        const vec<scalar_type, N* 2> yy = y;
+        const vec<scalar_type, N* 2> m  = (sqr(dupeven(yy)) + sqr(dupodd(yy)));
+        return vec(swap<2>(subadd(swap<2>(xx) * dupeven(yy), xx * dupodd(yy)) / m));
+    }
+
+    KFR_I_CE friend vec operator&(const vec& x, const vec& y) noexcept { return vec(KFR_B(x) & KFR_B(y)); }
+    KFR_I_CE friend vec operator|(const vec& x, const vec& y) noexcept { return vec(KFR_B(x) | KFR_B(y)); }
+    KFR_I_CE friend vec operator^(const vec& x, const vec& y) noexcept { return vec(KFR_B(x) ^ KFR_B(y)); }
+
+    KFR_I_CE friend vec& operator+=(vec& x, const vec& y) noexcept { return x = x + y; }
+    KFR_I_CE friend vec& operator-=(vec& x, const vec& y) noexcept { return x = x - y; }
+    KFR_I_CE friend vec& operator*=(vec& x, const vec& y) noexcept { return x = x * y; }
+    KFR_I_CE friend vec& operator/=(vec& x, const vec& y) noexcept { return x = x / y; }
+
+    KFR_I_CE friend vec& operator&=(vec& x, const vec& y) noexcept { return x = x & y; }
+    KFR_I_CE friend vec& operator|=(vec& x, const vec& y) noexcept { return x = x | y; }
+    KFR_I_CE friend vec& operator^=(vec& x, const vec& y) noexcept { return x = x ^ y; }
+
+    KFR_I_CE friend vec& operator++(vec& x) noexcept { return x = x + vec(1); }
+    KFR_I_CE friend vec& operator--(vec& x) noexcept { return x = x - vec(1); }
+    KFR_I_CE friend vec operator++(vec& x, int)noexcept
+    {
+        const vec z = x;
+        ++x;
+        return z;
+    }
+    KFR_I_CE friend vec operator--(vec& x, int)noexcept
+    {
+        const vec z = x;
+        --x;
+        return z;
+    }
+
+    // shuffle
+    template <size_t... indices>
+    KFR_I_CE vec<value_type, sizeof...(indices)> shuffle(csizes_t<indices...>) const noexcept
+    {
+        return *base::shuffle(scale<2, indices...>());
+    }
+    template <size_t... indices>
+    KFR_I_CE vec<value_type, sizeof...(indices)> shuffle(const vec& y, csizes_t<indices...>) const noexcept
+    {
+        return *base::shuffle(y, scale<2, indices...>());
+    }
+
+    // element access
+    struct element;
+    KFR_I_CE value_type operator[](size_t index) const noexcept { return get(index); }
+    KFR_I_CE element operator[](size_t index) noexcept { return { *this, index }; }
+
+    KFR_I_CE value_type get(size_t index) const noexcept
+    {
+        return reinterpret_cast<const value_type(&)[N]>(*this)[index];
+    }
+    KFR_I_CE void set(size_t index, const value_type& s) noexcept
+    {
+        reinterpret_cast<value_type(&)[N]>(*this)[index] = s;
+    }
+    template <size_t index>
+    KFR_I_CE value_type get(csize_t<index>) const noexcept
+    {
+        return static_cast<const base&>(*this).shuffle(csizeseq_t<2, index * 2>());
+    }
+    template <size_t index>
+    KFR_I_CE void set(csize_t<index>, const value_type& s) noexcept
+    {
+        *this = vec(static_cast<const base&>(*this))
+                    .shuffle(s, csizeseq_t<N>() +
+                                    (csizeseq_t<N>() >= csize_t<index * 2>() &&
+                                     csizeseq_t<N>() < csize_t<(index + 1) * 2>()) *
+                                        N);
+    }
+    struct element
+    {
+        KFR_I_CE operator value_type() const noexcept { return v.get(index); }
+        element& operator=(const value_type& s) noexcept
+        {
+            v.set(index, s);
+            return *this;
+        }
+        vec& v;
+        size_t index;
+    };
+
+    template <bool aligned = false>
+    explicit KFR_I_CE vec(const value_type* src, cbool_t<aligned> = cbool_t<aligned>()) noexcept
+        : base(ptr_cast<T>(src), cbool_t<aligned>())
+    {
+    }
+    template <bool aligned = false>
+    const vec& write(value_type* dest, cbool_t<aligned> = cbool_t<aligned>()) const noexcept
+    {
+        base::write(ptr_cast<T>(dest), cbool_t<aligned>());
+        return *this;
+    }
+
+    const base& flatten() const noexcept { return *this; }
+    simd_type operator*() const noexcept { return base::operator*(); }
+    simd_type& operator*() noexcept { return base::operator*(); }
 };
 
 template <typename T, size_t N>
@@ -510,152 +662,152 @@ KFR_I_FN(cartesian)
 KFR_I_FN(csqrt)
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 csin(const T1& x)
+CMT_FUNC T1 csin(const T1& x)
 {
     return intrinsics::csin(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::csin, E1> csin(E1&& x)
+CMT_FUNC internal::expression_function<fn::csin, E1> csin(E1&& x)
 {
     return { fn::csin(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 csinh(const T1& x)
+CMT_FUNC T1 csinh(const T1& x)
 {
     return intrinsics::csinh(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::csinh, E1> csinh(E1&& x)
+CMT_FUNC internal::expression_function<fn::csinh, E1> csinh(E1&& x)
 {
     return { fn::csinh(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 ccos(const T1& x)
+CMT_FUNC T1 ccos(const T1& x)
 {
     return intrinsics::ccos(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::ccos, E1> ccos(E1&& x)
+CMT_FUNC internal::expression_function<fn::ccos, E1> ccos(E1&& x)
 {
     return { fn::ccos(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 ccosh(const T1& x)
+CMT_FUNC T1 ccosh(const T1& x)
 {
     return intrinsics::ccosh(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::ccosh, E1> ccosh(E1&& x)
+CMT_FUNC internal::expression_function<fn::ccosh, E1> ccosh(E1&& x)
 {
     return { fn::ccosh(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN realtype<T1> cabs(const T1& x)
+CMT_FUNC realtype<T1> cabs(const T1& x)
 {
     return intrinsics::cabs(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::cabs, E1> cabs(E1&& x)
+CMT_FUNC internal::expression_function<fn::cabs, E1> cabs(E1&& x)
 {
     return { fn::cabs(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN realtype<T1> carg(const T1& x)
+CMT_FUNC realtype<T1> carg(const T1& x)
 {
     return intrinsics::carg(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::carg, E1> carg(E1&& x)
+CMT_FUNC internal::expression_function<fn::carg, E1> carg(E1&& x)
 {
     return { fn::carg(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 clog(const T1& x)
+CMT_FUNC T1 clog(const T1& x)
 {
     return intrinsics::clog(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::clog, E1> clog(E1&& x)
+CMT_FUNC internal::expression_function<fn::clog, E1> clog(E1&& x)
 {
     return { fn::clog(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 clog2(const T1& x)
+CMT_FUNC T1 clog2(const T1& x)
 {
     return intrinsics::clog2(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::clog2, E1> clog2(E1&& x)
+CMT_FUNC internal::expression_function<fn::clog2, E1> clog2(E1&& x)
 {
     return { fn::clog2(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 clog10(const T1& x)
+CMT_FUNC T1 clog10(const T1& x)
 {
     return intrinsics::clog10(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::clog10, E1> clog10(E1&& x)
+CMT_FUNC internal::expression_function<fn::clog10, E1> clog10(E1&& x)
 {
     return { fn::clog10(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 cexp(const T1& x)
+CMT_FUNC T1 cexp(const T1& x)
 {
     return intrinsics::cexp(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::cexp, E1> cexp(E1&& x)
+CMT_FUNC internal::expression_function<fn::cexp, E1> cexp(E1&& x)
 {
     return { fn::cexp(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 cexp2(const T1& x)
+CMT_FUNC T1 cexp2(const T1& x)
 {
     return intrinsics::cexp2(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::cexp2, E1> cexp2(E1&& x)
+CMT_FUNC internal::expression_function<fn::cexp2, E1> cexp2(E1&& x)
 {
     return { fn::cexp2(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 cexp10(const T1& x)
+CMT_FUNC T1 cexp10(const T1& x)
 {
     return intrinsics::cexp10(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::cexp10, E1> cexp10(E1&& x)
+CMT_FUNC internal::expression_function<fn::cexp10, E1> cexp10(E1&& x)
 {
     return { fn::cexp10(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 polar(const T1& x)
+CMT_FUNC T1 polar(const T1& x)
 {
     return intrinsics::polar(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::polar, E1> polar(E1&& x)
+CMT_FUNC internal::expression_function<fn::polar, E1> polar(E1&& x)
 {
     return { fn::polar(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 cartesian(const T1& x)
+CMT_FUNC T1 cartesian(const T1& x)
 {
     return intrinsics::cartesian(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::cartesian, E1> cartesian(E1&& x)
+CMT_FUNC internal::expression_function<fn::cartesian, E1> cartesian(E1&& x)
 {
     return { fn::cartesian(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN T1 csqrt(const T1& x)
+CMT_FUNC T1 csqrt(const T1& x)
 {
     return intrinsics::csqrt(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::csqrt, E1> csqrt(E1&& x)
+CMT_FUNC internal::expression_function<fn::csqrt, E1> csqrt(E1&& x)
 {
     return { fn::csqrt(), std::forward<E1>(x) };
 }

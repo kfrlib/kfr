@@ -55,6 +55,7 @@ TEST(mixdown)
     CHECK(mix[19] == 157);
 }
 
+#ifdef CMT_COMPILER_CLANG
 TEST(mixdown_stereo)
 {
     const univector<double, 21> left  = counter();
@@ -70,6 +71,7 @@ TEST(mixdown_stereo)
     CHECK(mid[20] == 160);
     CHECK(side[20] == -120);
 }
+#endif
 
 TEST(phasor)
 {

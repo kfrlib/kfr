@@ -67,17 +67,6 @@ using u16sse = vec<u16, 8>;
 using u32sse = vec<u32, 4>;
 using u64sse = vec<u64, 2>;
 
-using mf32sse = mask<f32, 4>;
-using mf64sse = mask<f64, 2>;
-using mi8sse  = mask<i8, 16>;
-using mi16sse = mask<i16, 8>;
-using mi32sse = mask<i32, 4>;
-using mi64sse = mask<i64, 2>;
-using mu8sse  = mask<u8, 16>;
-using mu16sse = mask<u16, 8>;
-using mu32sse = mask<u32, 4>;
-using mu64sse = mask<u64, 2>;
-
 using f32avx = vec<f32, 8>;
 using f64avx = vec<f64, 4>;
 using i8avx  = vec<i8, 32>;
@@ -89,16 +78,6 @@ using u16avx = vec<u16, 16>;
 using u32avx = vec<u32, 8>;
 using u64avx = vec<u64, 4>;
 
-using mf32avx = mask<f32, 8>;
-using mf64avx = mask<f64, 4>;
-using mi8avx  = mask<i8, 32>;
-using mi16avx = mask<i16, 16>;
-using mi32avx = mask<i32, 8>;
-using mi64avx = mask<i64, 4>;
-using mu8avx  = mask<u8, 32>;
-using mu16avx = mask<u16, 16>;
-using mu32avx = mask<u32, 8>;
-using mu64avx = mask<u64, 4>;
 #else
 using f32neon = vec<f32, 4>;
 using f64neon = vec<f64, 2>;
@@ -110,17 +89,6 @@ using u8neon  = vec<u8, 16>;
 using u16neon = vec<u16, 8>;
 using u32neon = vec<u32, 4>;
 using u64neon = vec<u64, 2>;
-
-using mf32neon = mask<f32, 4>;
-using mf64neon = mask<f64, 2>;
-using mi8neon  = mask<i8, 16>;
-using mi16neon = mask<i16, 8>;
-using mi32neon = mask<i32, 4>;
-using mi64neon = mask<i64, 2>;
-using mu8neon  = mask<u8, 16>;
-using mu16neon = mask<u16, 8>;
-using mu32neon = mask<u32, 4>;
-using mu64neon = mask<u64, 2>;
 #endif
 
 template <cpu_t c, typename T>

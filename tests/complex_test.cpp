@@ -13,45 +13,51 @@ using namespace kfr;
 TEST(complex_vector)
 {
     const vec<c32, 1> c32x1{ c32{ 0, 1 } };
-    CHECK(c32x1(0) == 0.0f);
-    CHECK(c32x1(1) == 1.0f);
+    CHECK(c32x1.flatten()[0] == 0.0f);
+    CHECK(c32x1.flatten()[1] == 1.0f);
 
     const vec<c32, 2> c32x2{ c32{ 0, 1 }, c32{ 2, 3 } };
-    CHECK(c32x2(0) == 0.0f);
-    CHECK(c32x2(1) == 1.0f);
-    CHECK(c32x2(2) == 2.0f);
-    CHECK(c32x2(3) == 3.0f);
+    CHECK(c32x2.flatten()[0] == 0.0f);
+    CHECK(c32x2.flatten()[1] == 1.0f);
+    CHECK(c32x2.flatten()[2] == 2.0f);
+    CHECK(c32x2.flatten()[3] == 3.0f);
 
     const vec<c32, 3> c32x3{ c32{ 0, 1 }, c32{ 2, 3 }, c32{ 4, 5 } };
-    CHECK(c32x3(0) == 0.0f);
-    CHECK(c32x3(1) == 1.0f);
-    CHECK(c32x3(2) == 2.0f);
-    CHECK(c32x3(3) == 3.0f);
-    CHECK(c32x3(4) == 4.0f);
-    CHECK(c32x3(5) == 5.0f);
+    CHECK(c32x3.flatten()[0] == 0.0f);
+    CHECK(c32x3.flatten()[1] == 1.0f);
+    CHECK(c32x3.flatten()[2] == 2.0f);
+    CHECK(c32x3.flatten()[3] == 3.0f);
+    CHECK(c32x3.flatten()[4] == 4.0f);
+    CHECK(c32x3.flatten()[5] == 5.0f);
 
     const vec<c32, 1> c32s = 2;
-    CHECK(c32s(0) == 2.f);
-    CHECK(c32s(1) == 0.f);
+    CHECK(c32s.flatten()[0] == 2.f);
+    CHECK(c32s.flatten()[1] == 0.f);
 }
 
 TEST(complex_cast)
 {
     const vec<f32, 4> v1 = bitcast<f32>(make_vector(c32{ 0, 1 }, c32{ 2, 3 }));
-    CHECK(v1(0) == 0.f);
-    CHECK(v1(1) == 1.f);
-    CHECK(v1(2) == 2.f);
-    CHECK(v1(3) == 3.f);
+    CHECK(v1.flatten()[0] == 0.f);
+    CHECK(v1.flatten()[1] == 1.f);
+    CHECK(v1.flatten()[2] == 2.f);
+    CHECK(v1.flatten()[3] == 3.f);
 
     const vec<c32, 1> v2 = bitcast<c32>(make_vector(1.f, 2.f));
-    CHECK(v2(0) == 1.f);
-    CHECK(v2(1) == 2.f);
+    CHECK(v2.flatten()[0] == 1.f);
+    CHECK(v2.flatten()[1] == 2.f);
 
     const vec<c32, 2> v3 = make_vector(1.f, 2.f);
-    CHECK(v3(0) == 1.f);
-    CHECK(v3(1) == 0.f);
-    CHECK(v3(2) == 2.f);
-    CHECK(v3(3) == 0.f);
+    CHECK(v3.flatten()[0] == 1.f);
+    CHECK(v3.flatten()[1] == 0.f);
+    CHECK(v3.flatten()[2] == 2.f);
+    CHECK(v3.flatten()[3] == 0.f);
+
+    const vec<c32, 2> v4 = make_vector(1, 2);
+    CHECK(v4.flatten()[0] == 1.f);
+    CHECK(v4.flatten()[1] == 0.f);
+    CHECK(v4.flatten()[2] == 2.f);
+    CHECK(v4.flatten()[3] == 0.f);
 
     CHECK(zerovector<c32, 4>() == make_vector(c32{ 0, 0 }, c32{ 0, 0 }, c32{ 0, 0 }, c32{ 0, 0 }));
     CHECK(enumerate<c32, 4>() == make_vector(c32{ 0, 0 }, c32{ 1, 0 }, c32{ 2, 0 }, c32{ 3, 0 }));
@@ -61,7 +67,6 @@ TEST(complex_math)
 {
     const vec<c32, 1> a{ c32{ 1, 2 } };
     const vec<c32, 1> b{ c32{ 3, 4 } };
-    const vec<c32, 1> c = a + b;
     CHECK(a + b == make_vector(c32{ 4, 6 }));
     CHECK(a - b == make_vector(c32{ -2, -2 }));
     CHECK(a * b == make_vector(c32{ -5, 10 }));
@@ -127,18 +132,21 @@ TEST(complex_shuffle)
 
 TEST(complex_basic_expressions)
 {
-    const univector<c32, 3> uv1 = zeros();
+    const univector<c32, 15> uv1 = zeros();
     CHECK(uv1[0] == c32{ 0, 0 });
     CHECK(uv1[1] == c32{ 0, 0 });
     CHECK(uv1[2] == c32{ 0, 0 });
-    const univector<c32, 3> uv2 = ones();
+    CHECK(uv1[14] == c32{ 0, 0 });
+    const univector<c32, 15> uv2 = ones();
     CHECK(uv2[0] == c32{ 1, 0 });
     CHECK(uv2[1] == c32{ 1, 0 });
     CHECK(uv2[2] == c32{ 1, 0 });
-    const univector<c32, 3> uv3 = counter();
+    CHECK(uv2[14] == c32{ 1, 0 });
+    const univector<c32, 15> uv3 = counter();
     CHECK(uv3[0] == c32{ 0, 0 });
     CHECK(uv3[1] == c32{ 1, 0 });
     CHECK(uv3[2] == c32{ 2, 0 });
+    CHECK(uv3[14] == c32{ 14, 0 });
 }
 
 TEST(complex_function_expressions)

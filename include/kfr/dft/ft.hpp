@@ -113,13 +113,13 @@ using cvec = vec<T, N * 2>;
 template <size_t N, bool A = false, typename T>
 CMT_INLINE cvec<T, N> cread(const complex<T>* src)
 {
-    return simd_read<N * 2, A>(ptr_cast<T>(src));
+    return cvec<T, N>(ptr_cast<T>(src), cbool_t<A>());
 }
 
 template <size_t N, bool A = false, typename T>
 CMT_INLINE void cwrite(complex<T>* dest, const cvec<T, N>& value)
 {
-    return simd_write<A, N * 2>(ptr_cast<T>(dest), *value);
+    value.write(ptr_cast<T>(dest));
 }
 
 template <size_t count, size_t N, size_t stride, bool A, typename T, size_t... indices>
@@ -172,7 +172,7 @@ CMT_INLINE void cwrite_group(complex<T>* dest, size_t stride, const cvec<T, coun
 template <size_t N, bool A = false, bool split = false, typename T>
 CMT_INLINE cvec<T, N> cread_split(const complex<T>* src)
 {
-    cvec<T, N> temp = simd_read<N * 2, A>(ptr_cast<T>(src));
+    cvec<T, N> temp = cvec<T, N>(ptr_cast<T>(src), cbool_t<A>());
     if (split)
         temp = splitpairs(temp);
     return temp;
@@ -184,7 +184,7 @@ CMT_INLINE void cwrite_split(complex<T>* dest, const cvec<T, N>& value)
     cvec<T, N> v = value;
     if (split)
         v = interleavehalfs(v);
-    simd_write<A, N * 2>(ptr_cast<T>(dest), *v);
+    v.write(ptr_cast<T>(dest), cbool_t<A>());
 }
 
 template <>
@@ -496,11 +496,11 @@ CMT_NOINLINE static vec<T, N> cossin_conj(const vec<T, N>& x)
     return cconj(cossin(x));
 }
 
-template <size_t k, size_t size, bool inverse = false, typename T, size_t width>
+template <size_t k, size_t size, bool inverse = false, typename T, size_t width,
+          size_t kk = (inverse ? size - k : k) % size>
 KFR_INTRIN vec<T, width> cmul_by_twiddle(const vec<T, width>& x)
 {
-    constexpr size_t kk = (inverse ? size - k : k) % size;
-    constexpr T isqrt2  = static_cast<T>(0.70710678118654752440084436210485);
+    constexpr T isqrt2 = static_cast<T>(0.70710678118654752440084436210485);
     if (kk == 0)
     {
         return x;

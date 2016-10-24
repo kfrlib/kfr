@@ -276,7 +276,7 @@ struct expression_downsample<2, offset, E> : expression<E>
     vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
     {
         const vec<T, N* 2> x = this->argument_first(cinput, index * 2, vec_t<T, N * 2>());
-        return shufflevector<N, internal::shuffle_index<offset, 2>>(x);
+        return x.shuffle(csizeseq_t<N, offset, 2>());
     }
 };
 
@@ -291,7 +291,7 @@ struct expression_downsample<4, offset, E> : expression<E>
     vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
     {
         const vec<T, N* 4> x = this->argument_first(cinput, index * 4, vec_t<T, N * 4>());
-        return shufflevector<N, internal::shuffle_index<offset, 4>>(x);
+        return x.shuffle(csizeseq_t<N, offset, 4>());
     }
 };
 }

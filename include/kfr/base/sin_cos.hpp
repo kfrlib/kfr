@@ -65,7 +65,7 @@ KFR_SINTRIN vec<T, N> trig_fold(const vec<T, N>& x, vec<itype<T>, N>& quadrant)
     vec<T, N> y = floor(xabs / div);
     quadrant = cast<itype<T>>(y - floor(y * T(1.0 / 16.0)) * T(16.0));
 
-    const mask<T, N> msk = bitcast<T>((quadrant & 1) != 0);
+    const mask<T, N> msk = (quadrant & 1) != 0;
     quadrant = kfr::select(msk, quadrant + 1, quadrant);
     y        = select(msk, y + T(1.0), y);
     quadrant = quadrant & 7;
@@ -134,7 +134,7 @@ KFR_SINTRIN vec<T, N> sincos_mask(const vec<T, N>& x_full, const mask<T, N>& cos
     vec<itype<T>, N> quadrant;
     vec<T, N> folded = trig_fold(x_full, quadrant);
 
-    mask<T, N> flip_sign = select(cosmask, (quadrant == 2) || (quadrant == 4), quadrant >= 4);
+    mask<T, N> flip_sign = kfr::select(cosmask, (quadrant == 2) || (quadrant == 4), quadrant >= 4);
 
     mask<T, N> usecos = (quadrant == 2) || (quadrant == 6);
     usecos = usecos ^ cosmask;
@@ -160,7 +160,7 @@ KFR_SINTRIN vec<T, N> sin(const vec<T, N>& x)
 
     vec<T, N> formula = trig_sincos(folded, usecos);
 
-    formula = select(flip_sign ^ x.asmask(), -formula, formula);
+    formula = select(flip_sign ^ x, -formula, formula);
     return formula;
 }
 
@@ -183,7 +183,7 @@ KFR_SINTRIN vec<T, N> cos(const vec<T, N>& x)
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
 KFR_SINTRIN vec<T, N> fastsin(const vec<T, N>& x)
 {
-    CMT_GNU_CONSTEXPR vec<T, N> msk = broadcast<N>(constants<T>::highbitmask());
+    const vec<T, N> msk = broadcast<N>(constants<T>::highbitmask());
 
     constexpr static T c2 = -0.16665853559970855712890625;
     constexpr static T c4 = +8.31427983939647674560546875e-3;
@@ -338,7 +338,7 @@ KFR_I_FN(sinc)
  * @brief Returns the trigonometric sine of x.
  */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN flt_type<T1> sin(const T1& x)
+CMT_FUNC flt_type<T1> sin(const T1& x)
 {
     return intrinsics::sin(x);
 }
@@ -347,7 +347,7 @@ KFR_INTRIN flt_type<T1> sin(const T1& x)
  * @brief Returns template expression that returns the trigonometric sine of x.
  */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::sin, E1> sin(E1&& x)
+CMT_FUNC internal::expression_function<fn::sin, E1> sin(E1&& x)
 {
     return { fn::sin(), std::forward<E1>(x) };
 }
@@ -356,7 +356,7 @@ KFR_INTRIN internal::expression_function<fn::sin, E1> sin(E1&& x)
  * @brief Returns the trigonometric cosine of x.
  */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN flt_type<T1> cos(const T1& x)
+CMT_FUNC flt_type<T1> cos(const T1& x)
 {
     return intrinsics::cos(x);
 }
@@ -365,7 +365,7 @@ KFR_INTRIN flt_type<T1> cos(const T1& x)
  * @brief Returns template expression that returns the trigonometric cosine of x.
  */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::cos, E1> cos(E1&& x)
+CMT_FUNC internal::expression_function<fn::cos, E1> cos(E1&& x)
 {
     return { fn::cos(), std::forward<E1>(x) };
 }
@@ -374,7 +374,7 @@ KFR_INTRIN internal::expression_function<fn::cos, E1> cos(E1&& x)
  * @brief Returns an approximation of the trigonometric sine of x.
  */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN flt_type<T1> fastsin(const T1& x)
+CMT_FUNC flt_type<T1> fastsin(const T1& x)
 {
     return intrinsics::fastsin(x);
 }
@@ -383,7 +383,7 @@ KFR_INTRIN flt_type<T1> fastsin(const T1& x)
  * @brief Returns template expression that returns an approximation of the trigonometric sine of x.
  */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::fastsin, E1> fastsin(E1&& x)
+CMT_FUNC internal::expression_function<fn::fastsin, E1> fastsin(E1&& x)
 {
     return { fn::fastsin(), std::forward<E1>(x) };
 }
@@ -392,7 +392,7 @@ KFR_INTRIN internal::expression_function<fn::fastsin, E1> fastsin(E1&& x)
  * @brief Returns an approximation of the trigonometric cosine of x.
  */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN flt_type<T1> fastcos(const T1& x)
+CMT_FUNC flt_type<T1> fastcos(const T1& x)
 {
     return intrinsics::fastcos(x);
 }
@@ -401,7 +401,7 @@ KFR_INTRIN flt_type<T1> fastcos(const T1& x)
  * @brief Returns template expression that returns an approximation of the trigonometric cosine of x.
  */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::fastcos, E1> fastcos(E1&& x)
+CMT_FUNC internal::expression_function<fn::fastcos, E1> fastcos(E1&& x)
 {
     return { fn::fastcos(), std::forward<E1>(x) };
 }
@@ -411,7 +411,7 @@ KFR_INTRIN internal::expression_function<fn::fastcos, E1> fastcos(E1&& x)
  * be a vector.
  */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN flt_type<T1> sincos(const T1& x)
+CMT_FUNC flt_type<T1> sincos(const T1& x)
 {
     return intrinsics::sincos(x);
 }
@@ -421,7 +421,7 @@ KFR_INTRIN flt_type<T1> sincos(const T1& x)
  * cosine of the odd elements. x must be a vector.
  */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::sincos, E1> sincos(E1&& x)
+CMT_FUNC internal::expression_function<fn::sincos, E1> sincos(E1&& x)
 {
     return { fn::sincos(), std::forward<E1>(x) };
 }
@@ -431,7 +431,7 @@ KFR_INTRIN internal::expression_function<fn::sincos, E1> sincos(E1&& x)
  * be a vector.
  */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN flt_type<T1> cossin(const T1& x)
+CMT_FUNC flt_type<T1> cossin(const T1& x)
 {
     return intrinsics::cossin(x);
 }
@@ -441,7 +441,7 @@ KFR_INTRIN flt_type<T1> cossin(const T1& x)
  * sine of the odd elements. x must be a vector.
  */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::cossin, E1> cossin(E1&& x)
+CMT_FUNC internal::expression_function<fn::cossin, E1> cossin(E1&& x)
 {
     return { fn::cossin(), std::forward<E1>(x) };
 }
@@ -450,7 +450,7 @@ KFR_INTRIN internal::expression_function<fn::cossin, E1> cossin(E1&& x)
  * @brief Returns the trigonometric sine of the x (expressed in degrees).
  */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN flt_type<T1> sindeg(const T1& x)
+CMT_FUNC flt_type<T1> sindeg(const T1& x)
 {
     return intrinsics::sindeg(x);
 }
@@ -459,7 +459,7 @@ KFR_INTRIN flt_type<T1> sindeg(const T1& x)
  * @brief Returns template expression that returns the trigonometric sine of the x (expressed in degrees).
  */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::sindeg, E1> sindeg(E1&& x)
+CMT_FUNC internal::expression_function<fn::sindeg, E1> sindeg(E1&& x)
 {
     return { fn::sindeg(), std::forward<E1>(x) };
 }
@@ -468,7 +468,7 @@ KFR_INTRIN internal::expression_function<fn::sindeg, E1> sindeg(E1&& x)
  * @brief Returns the trigonometric cosine of the x (expressed in degrees).
  */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN flt_type<T1> cosdeg(const T1& x)
+CMT_FUNC flt_type<T1> cosdeg(const T1& x)
 {
     return intrinsics::cosdeg(x);
 }
@@ -477,7 +477,7 @@ KFR_INTRIN flt_type<T1> cosdeg(const T1& x)
  * @brief Returns template expression that returns the trigonometric cosine of the x (expressed in degrees).
  */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::cosdeg, E1> cosdeg(E1&& x)
+CMT_FUNC internal::expression_function<fn::cosdeg, E1> cosdeg(E1&& x)
 {
     return { fn::cosdeg(), std::forward<E1>(x) };
 }
@@ -486,7 +486,7 @@ KFR_INTRIN internal::expression_function<fn::cosdeg, E1> cosdeg(E1&& x)
  * @brief Returns an approximation of the trigonometric sine of the x (expressed in degrees).
  */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN flt_type<T1> fastsindeg(const T1& x)
+CMT_FUNC flt_type<T1> fastsindeg(const T1& x)
 {
     return intrinsics::fastsindeg(x);
 }
@@ -496,7 +496,7 @@ KFR_INTRIN flt_type<T1> fastsindeg(const T1& x)
  * (expressed in degrees).
  */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::fastsindeg, E1> fastsindeg(E1&& x)
+CMT_FUNC internal::expression_function<fn::fastsindeg, E1> fastsindeg(E1&& x)
 {
     return { fn::fastsindeg(), std::forward<E1>(x) };
 }
@@ -505,7 +505,7 @@ KFR_INTRIN internal::expression_function<fn::fastsindeg, E1> fastsindeg(E1&& x)
  * @brief Returns an approximation of the trigonometric cosine of the x (expressed in degrees).
  */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN flt_type<T1> fastcosdeg(const T1& x)
+CMT_FUNC flt_type<T1> fastcosdeg(const T1& x)
 {
     return intrinsics::fastcosdeg(x);
 }
@@ -515,7 +515,7 @@ KFR_INTRIN flt_type<T1> fastcosdeg(const T1& x)
  * (expressed in degrees).
  */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::fastcosdeg, E1> fastcosdeg(E1&& x)
+CMT_FUNC internal::expression_function<fn::fastcosdeg, E1> fastcosdeg(E1&& x)
 {
     return { fn::fastcosdeg(), std::forward<E1>(x) };
 }
@@ -525,7 +525,7 @@ KFR_INTRIN internal::expression_function<fn::fastcosdeg, E1> fastcosdeg(E1&& x)
  * be a vector and expressed in degrees.
  */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN flt_type<T1> sincosdeg(const T1& x)
+CMT_FUNC flt_type<T1> sincosdeg(const T1& x)
 {
     return intrinsics::sincosdeg(x);
 }
@@ -535,7 +535,7 @@ KFR_INTRIN flt_type<T1> sincosdeg(const T1& x)
  * cosine of the odd elements. x must be expressed in degrees.
  */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::sincosdeg, E1> sincosdeg(E1&& x)
+CMT_FUNC internal::expression_function<fn::sincosdeg, E1> sincosdeg(E1&& x)
 {
     return { fn::sincosdeg(), std::forward<E1>(x) };
 }
@@ -545,7 +545,7 @@ KFR_INTRIN internal::expression_function<fn::sincosdeg, E1> sincosdeg(E1&& x)
  * be a vector and expressed in degrees.
  */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN flt_type<T1> cossindeg(const T1& x)
+CMT_FUNC flt_type<T1> cossindeg(const T1& x)
 {
     return intrinsics::cossindeg(x);
 }
@@ -555,7 +555,7 @@ KFR_INTRIN flt_type<T1> cossindeg(const T1& x)
  * sine of the odd elements. x must be expressed in degrees.
  */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::cossindeg, E1> cossindeg(E1&& x)
+CMT_FUNC internal::expression_function<fn::cossindeg, E1> cossindeg(E1&& x)
 {
     return { fn::cossindeg(), std::forward<E1>(x) };
 }
@@ -567,7 +567,7 @@ KFR_INTRIN internal::expression_function<fn::cossindeg, E1> cossindeg(E1&& x)
  * \f]
  */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN flt_type<T1> sinc(const T1& x)
+CMT_FUNC flt_type<T1> sinc(const T1& x)
 {
     return intrinsics::sinc(x);
 }
@@ -576,7 +576,7 @@ KFR_INTRIN flt_type<T1> sinc(const T1& x)
  * @brief Returns template expression that returns the sinc function of x.
  */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::sinc, E1> sinc(E1&& x)
+CMT_FUNC internal::expression_function<fn::sinc, E1> sinc(E1&& x)
 {
     return { fn::sinc(), std::forward<E1>(x) };
 }

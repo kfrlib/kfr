@@ -114,8 +114,8 @@ KFR_SINTRIN vec<f32, N> atan2(const vec<f32, N>& y, const vec<f32, N>& x)
     r                       = mulsign(r, x);
     r = select(isinf(x) || x == 0.0f, pi_over_2 - select(x.asmask(), mulsign(pi_over_2, x), 0.0f), r);
     r = select(isinf(y), pi_over_2 - select(x.asmask(), mulsign(pi_over_4, x), 0.0f), r);
-    r = select(y == 0.0f, fbitcast(ibitcast(x < 0) & ibitcast(pi)), r);
-    r = fbitcast(ibitcast(isnan(x) || isnan(y)) | ibitcast(mulsign(r, y)));
+    r = select(y == 0.0f, (x < 0) & pi, r);
+    r = (isnan(x) || isnan(y)) | mulsign(r, y);
     return r;
 }
 
@@ -129,18 +129,18 @@ KFR_SINTRIN vec<f64, N> atan2(const vec<f64, N>& y, const vec<f64, N>& x)
     r                       = mulsign(r, x);
     r = select(isinf(x) || x == 0.0, pi_over_2 - select(x.asmask(), mulsign(pi_over_2, x), 0.0), r);
     r = select(isinf(y), pi_over_2 - select(x.asmask(), mulsign(pi_over_4, x), 0.0), r);
-    r = select(y == 0.0, fbitcast(ibitcast(x < 0) & ibitcast(pi)), r);
-    r = fbitcast(ibitcast(isnan(x) || isnan(y)) | ibitcast(mulsign(r, y)));
+    r = select(y == 0.0, (x < 0) & pi, r);
+    r = (isnan(x) || isnan(y)) | mulsign(r, y);
     return r;
 }
 
 template <size_t N>
-KFR_SINTRIN vec<f32, N> atan(const vec<f32, N>& s)
+KFR_SINTRIN vec<f32, N> atan(const vec<f32, N>& x)
 {
     vec<f32, N> t, u;
     vec<i32, N> q;
-    q = select(s < 0.f, 2, 0);
-    s = select(s < 0.f, -s, s);
+    q = select(x < 0.f, 2, 0);
+    vec<f32, N> s = select(x < 0.f, -x, x);
     q = select(s > 1.f, q | 1, q);
     s = select(s > 1.f, 1.0f / s, s);
     t = s * s;
@@ -159,12 +159,12 @@ KFR_SINTRIN vec<f32, N> atan(const vec<f32, N>& s)
 }
 
 template <size_t N>
-KFR_SINTRIN vec<f64, N> atan(const vec<f64, N>& s)
+KFR_SINTRIN vec<f64, N> atan(const vec<f64, N>& x)
 {
     vec<f64, N> t, u;
     vec<i64, N> q;
-    q = select(s < 0.0, i64(2), i64(0));
-    s = select(s < 0.0, -s, s);
+    q = select(x < 0.0, i64(2), i64(0));
+    vec<f64, N> s = select(x < 0.0, -x, x);
     q = select(s > 1.0, q | 1, q);
     s = select(s > 1.0, 1.0 / s, s);
     t = s * s;
@@ -232,7 +232,7 @@ KFR_I_FN(atan2deg)
  * \f$\pi/2\f$.
  */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN flt_type<T1> atan(const T1& x)
+CMT_FUNC flt_type<T1> atan(const T1& x)
 {
     return intrinsics::atan(x);
 }
@@ -241,7 +241,7 @@ KFR_INTRIN flt_type<T1> atan(const T1& x)
  * @brief Returns template expression that returns the arc tangent of x.
  */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::atan, E1> atan(E1&& x)
+CMT_FUNC internal::expression_function<fn::atan, E1> atan(E1&& x)
 {
     return { fn::atan(), std::forward<E1>(x) };
 }
@@ -251,7 +251,7 @@ KFR_INTRIN internal::expression_function<fn::atan, E1> atan(E1&& x)
  * through 90.
  */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-KFR_INTRIN flt_type<T1> atandeg(const T1& x)
+CMT_FUNC flt_type<T1> atandeg(const T1& x)
 {
     return intrinsics::atandeg(x);
 }
@@ -260,7 +260,7 @@ KFR_INTRIN flt_type<T1> atandeg(const T1& x)
  * @brief Returns template expression that returns the arc tangent of the x, expressed in degrees.
  */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-KFR_INTRIN internal::expression_function<fn::atandeg, E1> atandeg(E1&& x)
+CMT_FUNC internal::expression_function<fn::atandeg, E1> atandeg(E1&& x)
 {
     return { fn::atandeg(), std::forward<E1>(x) };
 }
@@ -269,7 +269,7 @@ KFR_INTRIN internal::expression_function<fn::atandeg, E1> atandeg(E1&& x)
  * @brief Returns the arc tangent of y/x using the signs of arguments to determine the correct quadrant.
  */
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INTRIN common_type<T1, T2> atan2(const T1& x, const T2& y)
+CMT_FUNC common_type<T1, T2> atan2(const T1& x, const T2& y)
 {
     return intrinsics::atan2(x, y);
 }
@@ -278,7 +278,7 @@ KFR_INTRIN common_type<T1, T2> atan2(const T1& x, const T2& y)
  * @brief Returns template expression that returns the arc tangent of y/x.
  */
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INTRIN internal::expression_function<fn::atan2, E1, E2> atan2(E1&& x, E2&& y)
+CMT_FUNC internal::expression_function<fn::atan2, E1, E2> atan2(E1&& x, E2&& y)
 {
     return { fn::atan2(), std::forward<E1>(x), std::forward<E2>(y) };
 }
@@ -288,7 +288,7 @@ KFR_INTRIN internal::expression_function<fn::atan2, E1, E2> atan2(E1&& x, E2&& y
  * correct quadrant.
  */
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-KFR_INTRIN common_type<T1, T2> atan2deg(const T1& x, const T2& y)
+CMT_FUNC common_type<T1, T2> atan2deg(const T1& x, const T2& y)
 {
     return intrinsics::atan2deg(x, y);
 }
@@ -297,7 +297,7 @@ KFR_INTRIN common_type<T1, T2> atan2deg(const T1& x, const T2& y)
  * @brief Returns template expression that returns the arc tangent of y/x (expressed in degrees).
  */
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-KFR_INTRIN internal::expression_function<fn::atan2deg, E1, E2> atan2deg(E1&& x, E2&& y)
+CMT_FUNC internal::expression_function<fn::atan2deg, E1, E2> atan2deg(E1&& x, E2&& y)
 {
     return { fn::atan2deg(), std::forward<E1>(x), std::forward<E2>(y) };
 }

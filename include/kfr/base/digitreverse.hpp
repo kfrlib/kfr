@@ -33,65 +33,33 @@ namespace kfr
 namespace internal
 {
 
-template <size_t radix, size_t bits>
-constexpr enable_if<radix == 2, u32> digitreverse(u32 x)
-{
-    x = (((x & 0xaaaaaaaa) >> 1) | ((x & 0x55555555) << 1));
-    x = (((x & 0xcccccccc) >> 2) | ((x & 0x33333333) << 2));
-    x = (((x & 0xf0f0f0f0) >> 4) | ((x & 0x0f0f0f0f) << 4));
-    x = (((x & 0xff00ff00) >> 8) | ((x & 0x00ff00ff) << 8));
-    return ((x >> 16) | (x << 16)) >> (32 - bits);
-}
-
-constexpr inline u32 bit_permute_step_simple(u32 x, u32 m, u32 shift)
-{
-    return ((x & m) << shift) | ((x >> shift) & m);
-}
-
 CMT_PRAGMA_GNU(GCC diagnostic push)
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshift-count-overflow")
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshift-count-negative")
 
-template <size_t radix, size_t bits>
-constexpr enable_if<radix == 4, u32> digitreverse(u32 x)
+constexpr inline u32 bit_permute_step_impl(u32 x, cvals_t<u32>) { return x; }
+
+template <u32 m, u32 shift, u32... values>
+constexpr inline u32 bit_permute_step_impl(u32 x, cvals_t<u32, m, shift, values...>)
 {
-#ifdef CMT_COMPILER_GNU
-    if (bits <= 2)
-        return x;
-    if (bits <= 4)
-    {
-        x = bit_permute_step_simple(x, 0x33333333, 2); // Bit index complement 1      regroups 4 bits
-        return x >> (4 - bits);
-    }
-    if (bits <= 8)
-    {
-        x = bit_permute_step_simple(x, 0x33333333, 2); // Bit index complement 1      regroups 4 bits
-        x = bit_permute_step_simple(x, 0x0f0f0f0f, 4); // Bit index complement 2      regroups 8 bits
-        return x >> (8 - bits);
-    }
-    if (bits <= 16)
-    {
-        x = bit_permute_step_simple(x, 0x33333333, 2); // Bit index complement 1      regroups 4 bits
-        x = bit_permute_step_simple(x, 0x0f0f0f0f, 4); // Bit index complement 2      regroups 8 bits
-        x = bit_permute_step_simple(x, 0x00ff00ff, 8); // Bit index complement 3      regroups 16 bits
-        return x >> (16 - bits);
-    }
-    if (bits <= 32)
-    {
-        x = bit_permute_step_simple(x, 0x33333333, 2); // Bit index complement 1      regroups 4 bits
-        x = bit_permute_step_simple(x, 0x0f0f0f0f, 4); // Bit index complement 2      regroups 8 bits
-        x = bit_permute_step_simple(x, 0x00ff00ff, 8); // Bit index complement 3      regroups 16 bits
-        x = bit_permute_step_simple(x, 0x0000ffff, 16); // Bit index complement 4     regroups 32 bits
-        return x >> (32 - bits);
-    }
-    return x;
-#else
-    x = bit_permute_step_simple(x, 0x33333333, 2); // Bit index complement 1      regroups 4 bits
-    x = bit_permute_step_simple(x, 0x0f0f0f0f, 4); // Bit index complement 2      regroups 8 bits
-    x = bit_permute_step_simple(x, 0x00ff00ff, 8); // Bit index complement 3      regroups 16 bits
-    x = bit_permute_step_simple(x, 0x0000ffff, 16); // Bit index complement 4     regroups 32 bits
-    return x >> (32 - bits);
-#endif
+    return bit_permute_step_impl(((x & m) << shift) | ((x >> shift) & m), cvals_t<u32, values...>());
+}
+
+template <size_t bits>
+constexpr inline u32 digitreverse_impl(u32 x, csize_t<2>)
+{
+    return bit_permute_step_impl(
+               x,
+               cvals_t<u32, 0x55555555, 1, 0x33333333, 2, 0x0f0f0f0f, 4, 0x00ff00ff, 8, 0x0000ffff, 16>()) >>
+           (32 - bits);
+}
+
+template <size_t bits>
+constexpr inline u32 digitreverse_impl(u32 x, csize_t<4>)
+{
+    return bit_permute_step_impl(
+               x, cvals_t<u32, 0x33333333, 2, 0x0f0f0f0f, 4, 0x00ff00ff, 8, 0x0000ffff, 16>()) >>
+           (32 - bits);
 }
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)
@@ -99,17 +67,18 @@ CMT_PRAGMA_GNU(GCC diagnostic pop)
 template <size_t radix, size_t bits>
 struct shuffle_index_digitreverse
 {
-    constexpr inline size_t operator()(size_t index) const
+    constexpr inline size_t operator()(size_t index) const noexcept
     {
-        return digitreverse<radix, bits>(static_cast<u32>(index));
+        return digitreverse_impl<bits>(static_cast<u32>(index), csize_t<radix>());
     }
 };
 }
 
-template <size_t radix, size_t groupsize = 1, typename T, size_t N>
+template <size_t radix, size_t group = 1, typename T, size_t N>
 CMT_INLINE vec<T, N> digitreverse(const vec<T, N>& x)
 {
-    return shufflevector<N, internal::shuffle_index_digitreverse<radix, ilog2(N / groupsize)>, groupsize>(x);
+    return x.shuffle(scale<group>(
+        csizeseq_t<N / group>().map(internal::shuffle_index_digitreverse<radix, ilog2(N / group)>())));
 }
 
 template <size_t groupsize = 1, typename T, size_t N>
@@ -127,12 +96,12 @@ CMT_INLINE vec<T, N> digitreverse4(const vec<T, N>& x)
 template <size_t bits>
 constexpr inline u32 bitreverse(u32 x)
 {
-    return internal::digitreverse<2, bits>(x);
+    return internal::digitreverse_impl<bits>(x, csize_t<2>());
 }
 
 template <size_t bits>
 constexpr inline u32 digitreverse4(u32 x)
 {
-    return internal::digitreverse<4, bits>(x);
+    return internal::digitreverse_impl<bits>(x, csize_t<4>());
 }
 }

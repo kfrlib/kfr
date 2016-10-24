@@ -37,52 +37,40 @@ namespace kfr
 namespace internal
 {
 
-template <size_t index, typename T>
-constexpr CMT_INLINE T broadcast_get_nth()
-{
-    return constants<T>::qnan;
-}
-
-template <size_t index, typename T, typename... Ts>
-constexpr CMT_INLINE T broadcast_get_nth(T x, Ts... rest)
-{
-    return index == 0 ? x : broadcast_get_nth<index - 1, T>(rest...);
-}
-
-template <typename T, typename... Ts, size_t... indices, size_t Nin = 1 + sizeof...(Ts),
+template <typename T, typename... Ts, size_t... indices, size_t Nin = sizeof...(Ts),
           size_t Nout = sizeof...(indices)>
-CMT_GNU_CONSTEXPR CMT_INLINE vec<T, Nout> broadcast_helper(csizes_t<indices...>, T x, Ts... rest)
+CMT_GNU_CONSTEXPR CMT_INLINE vec<T, Nout> broadcast_helper(csizes_t<indices...>, const Ts&... values)
 {
-    using simd_t = simd<T, Nout>;
-    return KFR_SIMD_SET(simd_t, broadcast_get_nth<indices % Nin>(x, rest...)...);
+    const std::tuple<Ts...> tup(values...);
+    return vec<T, Nout>(std::get<indices % Nin>(tup)...);
 }
 }
 
-template <size_t Nout, typename T, typename... Ts>
-CMT_GNU_CONSTEXPR CMT_INLINE vec<T, Nout> broadcast(T x, T y, Ts... rest)
+template <size_t Nout, typename... Ts, typename C = typename std::common_type<Ts...>::type>
+CMT_GNU_CONSTEXPR CMT_INLINE vec<C, Nout> broadcast(const Ts&... values)
 {
-    return internal::broadcast_helper(csizeseq_t<Nout>(), x, y, rest...);
+    return internal::broadcast_helper<C>(csizeseq_t<Nout>(), values...);
 }
 KFR_FN(broadcast)
 
 template <size_t Ncount, typename T, size_t N>
 CMT_INLINE vec<T, N + Ncount> padhigh(const vec<T, N>& x)
 {
-    return shufflevector<N + Ncount, internal::shuffle_index_extend<0, N>>(x);
+    return x.shuffle(csizeseq_t<N + Ncount>());
 }
 KFR_FN(padhigh)
 
 template <size_t Ncount, typename T, size_t N>
 CMT_INLINE vec<T, N + Ncount> padlow(const vec<T, N>& x)
 {
-    return shufflevector<N + Ncount, internal::shuffle_index_extend<Ncount, N>>(x);
+    return x.shuffle(csizeseq_t<N + Ncount, 0 - Ncount>());
 }
 KFR_FN(padlow)
 
 template <size_t Nout, typename T, size_t N, KFR_ENABLE_IF(N != Nout)>
 CMT_INLINE vec<T, Nout> extend(const vec<T, N>& x)
 {
-    return shufflevector<Nout, internal::shuffle_index_extend<0, N>>(x);
+    return x.shuffle(csizeseq_t<Nout>());
 }
 template <size_t Nout, typename T, size_t N, KFR_ENABLE_IF(N == Nout)>
 constexpr CMT_INLINE vec<T, Nout> extend(const vec<T, N>& x)
@@ -94,16 +82,23 @@ KFR_FN(extend)
 template <size_t start, size_t count, typename T, size_t N>
 CMT_INLINE vec<T, count> slice(const vec<T, N>& x)
 {
-    static_assert(start + count <= N, "start + count <= N");
-    return shufflevector<count, internal::shuffle_index<start>>(x);
+    return x.shuffle(csizeseq_t<count, start>());
 }
 template <size_t start, size_t count, typename T, size_t N>
 CMT_INLINE vec<T, count> slice(const vec<T, N>& x, const vec<T, N>& y)
 {
-    static_assert(start + count <= N * 2, "start + count <= N * 2");
-    return shufflevector<count, internal::shuffle_index<start>>(x, y);
+    return x.shuffle(y, csizeseq_t<count, start>());
 }
 KFR_FN(slice)
+
+template <size_t start, size_t count, typename T, size_t N>
+CMT_INLINE vec<T, N> replace(const vec<T, N>& x, const vec<T, N>& y)
+{
+    return x.shuffle(
+        y, csizeseq_t<N>() +
+               (csizeseq_t<N>() >= csize_t<start>() && csizeseq_t<N>() < csize_t<start + count>()) * N);
+}
+KFR_FN(replace)
 
 template <size_t, typename T, size_t N>
 CMT_INLINE void split(const vec<T, N>&)
@@ -115,21 +110,51 @@ CMT_INLINE void split(const vec<T, N>& x, vec<T, Nout>& out, Args&&... args)
     out = slice<start, Nout>(x);
     split<start + Nout>(x, std::forward<Args>(args)...);
 }
+template <typename T, size_t N>
+CMT_INLINE void split(const vec<T, N>& x, vec<T, N / 2>& low, vec<T, N / 2>& high)
+{
+    low  = x.shuffle(csizeseq_t<N / 2, 0>());
+    high = x.shuffle(csizeseq_t<N / 2, N / 2>());
+}
+template <typename T, size_t N>
+CMT_INLINE void split(const vec<T, N>& x, vec<T, N / 4>& w0, vec<T, N / 4>& w1, vec<T, N / 4>& w2,
+                      vec<T, N / 4>& w3)
+{
+    w0 = x.shuffle(csizeseq_t<N / 4, 0>());
+    w1 = x.shuffle(csizeseq_t<N / 4, N / 4>());
+    w2 = x.shuffle(csizeseq_t<N / 4, 2 * N / 4>());
+    w3 = x.shuffle(csizeseq_t<N / 4, 3 * N / 4>());
+}
 KFR_FN(split)
 
 template <size_t total, size_t number, typename T, size_t N, size_t Nout = N / total>
 CMT_INLINE vec<T, Nout> part(const vec<T, N>& x)
 {
     static_assert(N % total == 0, "N % total == 0");
-    return shufflevector<Nout, internal::shuffle_index<number * Nout>>(x);
+    return x.shuffle(csizeseq_t<Nout, number * Nout>());
 }
 KFR_FN(part)
 
-template <size_t start, size_t count, typename T, size_t N1, size_t N2>
+template <size_t start, size_t count, typename T, size_t N>
+CMT_INLINE vec<T, count> concat_and_slice(const vec<T, N>& x, const vec<T, N>& y)
+{
+    return x.shuffle(y, csizeseq_t<count, start>());
+}
+
+template <size_t start, size_t count, typename T, size_t N1, size_t N2, KFR_ENABLE_IF(N1 > N2)>
 CMT_INLINE vec<T, count> concat_and_slice(const vec<T, N1>& x, const vec<T, N2>& y)
 {
-    return internal::concattwo<start, count>(x, y);
+    return x.shuffle(y.shuffle(csizeseq_t<N1>()), csizeseq_t<N1 * 2>()).shuffle(csizeseq_t<count, start>());
 }
+
+template <size_t start, size_t count, typename T, size_t N1, size_t N2, KFR_ENABLE_IF(N1 < N2)>
+CMT_INLINE vec<T, count> concat_and_slice(const vec<T, N1>& x, const vec<T, N2>& y)
+{
+    return x.shuffle(csizeseq_t<N2, -(N2 - N1)>())
+        .shuffle(y, csizeseq_t<N2 * 2>())
+        .shuffle(csizeseq_t<count, N2 - N1 + start>());
+}
+
 KFR_FN(concat_and_slice)
 
 template <size_t Nout, typename T, size_t N>
@@ -153,19 +178,17 @@ CMT_INLINE vec<T, Nout> narrow(const vec<T, N>& x)
 }
 KFR_FN(narrow)
 
-template <size_t groupsize = 1, typename T, size_t N, size_t Nout = N / 2,
-          KFR_ENABLE_IF(N >= 2 && (N & 1) == 0)>
+template <size_t group = 1, typename T, size_t N, size_t Nout = N / 2, KFR_ENABLE_IF(N >= 2 && (N & 1) == 0)>
 CMT_INLINE vec<T, Nout> even(const vec<T, N>& x)
 {
-    return shufflevector<Nout, internal::shuffle_index<0, 2>, groupsize>(x);
+    return x.shuffle(scale<group>(csizeseq_t<Nout / group, 0, 2>()));
 }
 KFR_FN(even)
 
-template <size_t groupsize = 1, typename T, size_t N, size_t Nout = N / 2,
-          KFR_ENABLE_IF(N >= 2 && (N & 1) == 0)>
+template <size_t group = 1, typename T, size_t N, size_t Nout = N / 2, KFR_ENABLE_IF(N >= 2 && (N & 1) == 0)>
 CMT_INLINE vec<T, Nout> odd(const vec<T, N>& x)
 {
-    return shufflevector<Nout, internal::shuffle_index<1, 2>, groupsize>(x);
+    return x.shuffle(scale<group>(csizeseq_t<Nout / group, 1, 2>()));
 }
 KFR_FN(odd)
 
@@ -188,7 +211,7 @@ template <typename T, size_t N>
 CMT_INLINE vec<T, N> dupeven(const vec<T, N>& x)
 {
     static_assert(N % 2 == 0, "N must be even");
-    return shufflevector<N, internal::shuffle_index_dup<2, 0>>(x);
+    return x.shuffle(csizeseq_t<N, 0, 1>() & ~csize_t<1>());
 }
 KFR_FN(dupeven)
 
@@ -196,14 +219,14 @@ template <typename T, size_t N>
 CMT_INLINE vec<T, N> dupodd(const vec<T, N>& x)
 {
     static_assert(N % 2 == 0, "N must be even");
-    return shufflevector<N, internal::shuffle_index_dup<2, 1>>(x);
+    return x.shuffle(csizeseq_t<N, 0, 1>() | csize_t<1>());
 }
 KFR_FN(dupodd)
 
 template <typename T, size_t N>
 CMT_INLINE vec<T, N * 2> duphalfs(const vec<T, N>& x)
 {
-    return concat(x, x);
+    return x.shuffle(csizeseq_t<N * 2>() % csize_t<N>());
 }
 KFR_FN(duphalfs)
 
@@ -222,19 +245,21 @@ struct shuffle_index_shuffle
 };
 }
 
-template <size_t... Indices, typename T, size_t N>
+template <size_t... Indices, typename T, size_t N, size_t count = sizeof...(Indices)>
 CMT_INLINE vec<T, N> shuffle(const vec<T, N>& x, const vec<T, N>& y,
-                             elements_t<Indices...> = elements_t<Indices...>())
+                             elements_t<Indices...> i = elements_t<Indices...>())
 {
-    return shufflevector<N, internal::shuffle_index_shuffle<N, Indices...>>(x, y);
+    return x.shuffle(y, i[csizeseq_t<N>() % csize_t<sizeof...(Indices)>()] +
+                            csizeseq_t<N>() / csize_t<count>() * csize_t<count>());
 }
 KFR_FN(shuffle)
 
-template <size_t groupsize, size_t... Indices, typename T, size_t N>
+template <size_t group, size_t... Indices, typename T, size_t N, size_t count = sizeof...(Indices)>
 CMT_INLINE vec<T, N> shufflegroups(const vec<T, N>& x, const vec<T, N>& y,
-                                   elements_t<Indices...> = elements_t<Indices...>())
+                                   elements_t<Indices...> i = elements_t<Indices...>())
 {
-    return shufflevector<N, internal::shuffle_index_shuffle<N, Indices...>, groupsize>(x, y);
+    return x.shuffle(y, scale<group>(i[csizeseq_t<N / group>() % csize_t<sizeof...(Indices)>()] +
+                                     csizeseq_t<N / group>() / csize_t<count>() * csize_t<count>()));
 }
 KFR_FN(shufflegroups)
 
@@ -253,17 +278,19 @@ struct shuffle_index_permute
 };
 }
 
-template <size_t... Indices, typename T, size_t N>
-CMT_INLINE vec<T, N> permute(const vec<T, N>& x, elements_t<Indices...> = elements_t<Indices...>())
+template <size_t... Indices, typename T, size_t N, size_t count = sizeof...(Indices)>
+CMT_INLINE vec<T, N> permute(const vec<T, N>& x, elements_t<Indices...> i = elements_t<Indices...>())
 {
-    return shufflevector<N, internal::shuffle_index_permute<N, Indices...>>(x);
+    return x.shuffle(i[csizeseq_t<N>() % csize_t<count>()] +
+                     csizeseq_t<N>() / csize_t<count>() * csize_t<count>());
 }
 KFR_FN(permute)
 
-template <size_t groupsize, size_t... Indices, typename T, size_t N>
-CMT_INLINE vec<T, N> permutegroups(const vec<T, N>& x, elements_t<Indices...> = elements_t<Indices...>())
+template <size_t group, size_t... Indices, typename T, size_t N, size_t count = sizeof...(Indices)>
+CMT_INLINE vec<T, N> permutegroups(const vec<T, N>& x, elements_t<Indices...> i = elements_t<Indices...>())
 {
-    return shufflevector<N, internal::shuffle_index_permute<N, Indices...>, groupsize>(x);
+    return x.shuffle(scale<group>(i[csizeseq_t<N / group>() % csize_t<sizeof...(Indices)>()] +
+                                  csizeseq_t<N / group>() / csize_t<count>() * csize_t<count>()));
 }
 KFR_FN(permutegroups)
 
@@ -301,7 +328,7 @@ constexpr CMT_INLINE mask<T, N> oddmask()
 template <typename T, size_t N, size_t Nout = N * 2>
 CMT_INLINE vec<T, Nout> dup(const vec<T, N>& x)
 {
-    return shufflevector<Nout, internal::shuffle_index_dup1<2>>(x, x);
+    return x.shuffle(csizeseq_t<Nout>() / csize_t<2>());
 }
 KFR_FN(dup)
 
@@ -317,16 +344,14 @@ struct shuffle_index_duphalf
 template <typename T, size_t N>
 CMT_INLINE vec<T, N> duplow(const vec<T, N>& x)
 {
-    static_assert(N % 2 == 0, "N must be even");
-    return shufflevector<N, internal::shuffle_index_duphalf<N / 2, 0>>(x);
+    return x.shuffle(csizeseq_t<N>() % csize_t<N / 2>());
 }
 KFR_FN(duplow)
 
 template <typename T, size_t N>
-CMT_INLINE vec<T, N> duphigh(vec<T, N> x)
+CMT_INLINE vec<T, N> duphigh(const vec<T, N>& x)
 {
-    static_assert(N % 2 == 0, "N must be even");
-    return shufflevector<N, internal::shuffle_index_duphalf<N / 2, N / 2>>(x);
+    return x.shuffle(csizeseq_t<N>() % csize_t<N / 2>() + csize_t<N - N / 2>());
 }
 KFR_FN(duphigh)
 
@@ -347,9 +372,9 @@ struct shuffle_index_blend
 
 template <size_t... Indices, typename T, size_t N>
 CMT_INLINE vec<T, N> blend(const vec<T, N>& x, const vec<T, N>& y,
-                           elements_t<Indices...> = elements_t<Indices...>())
+                           elements_t<Indices...> i = elements_t<Indices...>())
 {
-    return shufflevector<N, internal::shuffle_index_blend<N, Indices...>, 1>(x, y);
+    return x.shuffle(y, i[csizeseq_t<N>() % csize_t<sizeof...(Indices)>()] * csize_t<N>() + csizeseq_t<N>());
 }
 KFR_FN(blend)
 
@@ -374,24 +399,24 @@ struct shuffle_index_outputright
 };
 }
 
-template <size_t elements, typename T, size_t N>
+template <size_t elements = 2, typename T, size_t N>
 CMT_INLINE vec<T, N> swap(const vec<T, N>& x)
 {
-    return shufflevector<N, internal::shuffle_index_swap<elements>>(x);
+    return x.shuffle(csizeseq_t<N>() ^ csize_t<elements - 1>());
 }
 CMT_FN_TPL((size_t elements), (elements), swap)
 
 template <size_t shift, typename T, size_t N>
 CMT_INLINE vec<T, N> rotatetwo(const vec<T, N>& lo, const vec<T, N>& hi)
 {
-    return shift == 0 ? lo : (shift == N ? hi : shufflevector<N, internal::shuffle_index<N - shift>>(hi, lo));
+    return shift == 0 ? lo : (shift == N ? hi : hi.shuffle(lo, csizeseq_t<N, N - shift>()));
 }
 
 template <size_t amount, typename T, size_t N>
 CMT_INLINE vec<T, N> rotateright(const vec<T, N>& x, csize_t<amount> = csize_t<amount>())
 {
     static_assert(amount >= 0 && amount < N, "amount >= 0 && amount < N");
-    return shufflevector<N, internal::shuffle_index_wrap<N, N - amount>>(x);
+    return x.shuffle(csizeseq_t<N, N - amount>() % csize_t<N>());
 }
 KFR_FN(rotateright)
 
@@ -399,7 +424,7 @@ template <size_t amount, typename T, size_t N>
 CMT_INLINE vec<T, N> rotateleft(const vec<T, N>& x, csize_t<amount> = csize_t<amount>())
 {
     static_assert(amount >= 0 && amount < N, "amount >= 0 && amount < N");
-    return shufflevector<N, internal::shuffle_index_wrap<N, amount>>(x);
+    return x.shuffle(csizeseq_t<N, amount>() % csize_t<N>());
 }
 KFR_FN(rotateleft)
 
@@ -417,12 +442,12 @@ CMT_INLINE vec<T, N> insertleft(T x, const vec<T, N>& y)
 }
 KFR_FN(insertleft)
 
-template <typename T, size_t N, size_t N2>
-CMT_INLINE vec<T, N> outputright(const vec<T, N>& x, const vec<T, N2>& y)
-{
-    return shufflevector<N, internal::shuffle_index_outputright<N2, N>>(x, extend<N>(y));
-}
-KFR_FN(outputright)
+// template <typename T, size_t N, size_t N2>
+// CMT_INLINE vec<T, N> outputright(const vec<T, N>& x, const vec<T, N2>& y)
+//{
+//    return shufflevector<N, internal::shuffle_index_outputright<N2, N>>(x, extend<N>(y));
+//}
+// KFR_FN(outputright)
 
 namespace internal
 {
@@ -436,12 +461,14 @@ struct shuffle_index_transpose
 };
 }
 
-template <size_t side, size_t groupsize = 1, typename T, size_t N, KFR_ENABLE_IF(N / groupsize > 3)>
+template <size_t side1, size_t group = 1, typename T, size_t N, size_t size = N / group,
+          size_t side2 = size / side1, KFR_ENABLE_IF(size > 3)>
 CMT_INLINE vec<T, N> transpose(const vec<T, N>& x)
 {
-    return shufflevector<N, internal::shuffle_index_transpose<N / groupsize, side>, groupsize>(x);
+    return x.shuffle(scale<group>(csizeseq_t<size>() % csize_t<side2>() * csize_t<side1>() +
+                                  csizeseq_t<size>() / csize_t<side2>()));
 }
-template <size_t side, size_t groupsize = 1, typename T, size_t N, KFR_ENABLE_IF(N / groupsize <= 3)>
+template <size_t side, size_t group = 1, typename T, size_t N, KFR_ENABLE_IF(N / group <= 3)>
 CMT_INLINE vec<T, N> transpose(const vec<T, N>& x)
 {
     return x;
@@ -449,15 +476,16 @@ CMT_INLINE vec<T, N> transpose(const vec<T, N>& x)
 template <typename T, size_t N>
 CMT_INLINE vec<vec<T, N>, N> transpose(const vec<vec<T, N>, N>& x)
 {
-    return *transpose<2>(flatten(x));
+    return vec<vec<T, N>, N>(transpose<2>(x.flatten()));
 }
 KFR_FN(transpose)
 
-template <size_t side, size_t groupsize = 1, typename T, size_t N, KFR_ENABLE_IF(N / groupsize > 3)>
+template <size_t side2, size_t group = 1, typename T, size_t N, size_t size = N / group,
+          size_t side1 = size / side2, KFR_ENABLE_IF(size > 3)>
 CMT_INLINE vec<T, N> transposeinverse(const vec<T, N>& x)
 {
-    return shufflevector<N, internal::shuffle_index_transpose<N / groupsize, N / groupsize / side>,
-                         groupsize>(x);
+    return x.shuffle(scale<group>(csizeseq_t<size>() % csize_t<side2>() * csize_t<side1>() +
+                                  csizeseq_t<size>() / csize_t<side2>()));
 }
 template <size_t side, size_t groupsize = 1, typename T, size_t N, KFR_ENABLE_IF(N / groupsize <= 3)>
 CMT_INLINE vec<T, N> transposeinverse(const vec<T, N>& x)
@@ -480,11 +508,12 @@ CMT_INLINE vec<T, N> ctransposeinverse(const vec<T, N>& x)
 }
 KFR_FN(ctransposeinverse)
 
-template <size_t groupsize = 1, typename T, size_t N, size_t Nout = N * 2>
+template <size_t group = 1, typename T, size_t N, size_t Nout = N * 2, size_t size = Nout / group,
+          size_t side2 = 2, size_t side1 = size / side2>
 CMT_INLINE vec<T, Nout> interleave(const vec<T, N>& x, const vec<T, N>& y)
 {
-    return shufflevector<Nout, internal::shuffle_index_transpose<Nout / groupsize, Nout / groupsize / 2>,
-                         groupsize>(x, y);
+    return x.shuffle(y, scale<group>(csizeseq_t<size>() % csize_t<side2>() * csize_t<side1>() +
+                                     csizeseq_t<size>() / csize_t<side2>()));
 }
 KFR_FN(interleave)
 
@@ -494,18 +523,21 @@ CMT_INLINE internal::expression_function<fn::interleave, E1, E2> interleave(E1&&
     return { fn::interleave(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 
-template <size_t groupsize = 1, typename T, size_t N>
+template <size_t group = 1, typename T, size_t N, size_t size = N / group, size_t side2 = 2,
+          size_t side1 = size / side2>
 CMT_INLINE vec<T, N> interleavehalfs(const vec<T, N>& x)
 {
-    return shufflevector<N, internal::shuffle_index_transpose<N / groupsize, N / groupsize / 2>, groupsize>(
-        x);
+    return x.shuffle(scale<group>(csizeseq_t<size>() % csize_t<side2>() * csize_t<side1>() +
+                                  csizeseq_t<size>() / csize_t<side2>()));
 }
 KFR_FN(interleavehalfs)
 
-template <size_t groupsize = 1, typename T, size_t N>
+template <size_t group = 1, typename T, size_t N, size_t size = N / group, size_t side1 = 2,
+          size_t side2 = size / side1>
 CMT_INLINE vec<T, N> splitpairs(const vec<T, N>& x)
 {
-    return shufflevector<N, internal::shuffle_index_transpose<N / groupsize, 2>, groupsize>(x);
+    return x.shuffle(scale<group>(csizeseq_t<size>() % csize_t<side2>() * csize_t<side1>() +
+                                  csizeseq_t<size>() / csize_t<side2>()));
 }
 KFR_FN(splitpairs)
 
@@ -518,15 +550,15 @@ struct shuffle_index_reverse
 };
 }
 
-template <size_t groupsize = 1, typename T, size_t N>
+template <size_t group = 1, typename T, size_t N, size_t size = N / group>
 CMT_INLINE vec<T, N> reverse(const vec<T, N>& x)
 {
-    return shufflevector<N, internal::shuffle_index_reverse<N / groupsize>, groupsize>(x);
+    return x.shuffle(scale<group>(csizeseq_t<size, size - 1, -1>()));
 }
 template <typename T, size_t N1, size_t N2>
 CMT_INLINE vec<vec<T, N1>, N2> reverse(const vec<vec<T, N1>, N2>& x)
 {
-    return *swap<N1>(flatten(x));
+    return vec<vec<T, N1>, N2>(swap<N1>(x.flatten()));
 }
 KFR_FN(reverse)
 
@@ -543,7 +575,8 @@ template <typename T, size_t N1, size_t N2>
 CMT_INLINE vec<T, N1> combine(const vec<T, N1>& x, const vec<T, N2>& y)
 {
     static_assert(N2 <= N1, "N2 <= N1");
-    return shufflevector<N1, internal::shuffle_index_combine<N1, N2>>(x, extend<N1>(y));
+    return x.shuffle(extend<N1>(y), (csizeseq_t<N1>() < csize_t<N2>()) * csize_t<N1>() + csizeseq_t<N1>());
+    //    return shufflevector<N1, internal::shuffle_index_combine<N1, N2>>(x, extend<N1>(y));
 }
 KFR_FN(combine)
 

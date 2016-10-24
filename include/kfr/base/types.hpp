@@ -350,6 +350,61 @@ CMT_INLINE void block_process(size_t size, csizes_t<widths...>, Fn&& fn)
     size_t i = 0;
     swallow{ (internal::block_process_impl<widths>(i, size, std::forward<Fn>(fn)), 0)... };
 }
+
+template <typename T>
+struct is_simd_type
+    : std::integral_constant<
+          bool, std::is_same<T, float>::value || std::is_same<T, double>::value ||
+                    std::is_same<T, signed char>::value || std::is_same<T, unsigned char>::value ||
+                    std::is_same<T, short>::value || std::is_same<T, unsigned short>::value ||
+                    std::is_same<T, int>::value || std::is_same<T, unsigned int>::value ||
+                    std::is_same<T, long>::value || std::is_same<T, unsigned long>::value ||
+                    std::is_same<T, long long>::value || std::is_same<T, unsigned long long>::value>
+{
+};
+
+template <typename T, size_t N>
+struct vec_t
+{
+    static_assert(N > 0 && N <= 256, "Invalid vector size");
+
+    static_assert(is_simd_type<T>::value || !compound_type_traits<T>::is_scalar, "Invalid vector type");
+
+    using value_type = T;
+    constexpr static size_t size() noexcept { return N; }
+    constexpr vec_t() noexcept = default;
+
+    using scalar_type = subtype<T>;
+    constexpr static size_t scalar_size() noexcept { return N * compound_type_traits<T>::width; }
+};
+
+template <typename T, size_t N>
+struct vec;
+template <typename T, size_t N>
+struct mask;
+
+constexpr size_t index_undefined = static_cast<size_t>(-1);
+
+struct czeros_t
+{
+};
+struct cones_t
+{
+};
+constexpr czeros_t czeros{};
+constexpr cones_t cones{};
+
+using caligned_t   = cbool_t<true>;
+using cunaligned_t = cbool_t<false>;
+
+constexpr caligned_t caligned{};
+constexpr cunaligned_t cunaligned{};
+
+#ifdef CMT_INTRINSICS_IS_CONSTEXPR
+#define KFR_I_CE constexpr
+#else
+#define KFR_I_CE
+#endif
 }
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)

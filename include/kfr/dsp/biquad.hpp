@@ -113,19 +113,19 @@ struct biquad_block
         count = count > filters ? filters : count;
         for (size_t i = 0; i < count; i++)
         {
-            a1(i) = bq[i].a1;
-            a2(i) = bq[i].a2;
-            b0(i) = bq[i].b0;
-            b1(i) = bq[i].b1;
-            b2(i) = bq[i].b2;
+            a1[i] = bq[i].a1;
+            a2[i] = bq[i].a2;
+            b0[i] = bq[i].b0;
+            b1[i] = bq[i].b1;
+            b2[i] = bq[i].b2;
         }
         for (size_t i = count; i < filters; i++)
         {
-            a1(i) = T(0);
-            a2(i) = T(0);
-            b0(i) = T(1);
-            b1(i) = T(0);
-            b2(i) = T(0);
+            a1[i] = T(0);
+            a2[i] = T(0);
+            b0[i] = T(1);
+            b1[i] = T(0);
+            b2[i] = T(0);
         }
     }
 
@@ -155,7 +155,7 @@ struct expression_biquads : public expression<E1>
         for (size_t i = 0; i < width; i++)
         {
             state.out = process(bq, state, insertleft(in[i], state.out));
-            out(i)    = state.out[filters - 1];
+            out[i]    = state.out[filters - 1];
         }
 
         return out;

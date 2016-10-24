@@ -92,7 +92,7 @@ CMT_INLINE internal::expression_iterator<T, E1> to_iterator(E1&& e1)
 template <typename... Ts, typename T = common_type<Ts...>>
 inline auto sequence(const Ts&... list)
 {
-    return lambda<T>([seq = std::array<T, sizeof...(Ts)>{ static_cast<T>(list)... }](size_t index) {
+    return lambda<T>([seq = std::array<T, sizeof...(Ts)>{ { static_cast<T>(list)... } }](size_t index) {
         return seq[index % seq.size()];
     });
 }
@@ -420,7 +420,7 @@ struct expression_padded : expression<E>
     CMT_INLINE constexpr static size_t size() noexcept { return infinite_size; }
 
     expression_padded(value_type fill_value, E&& e)
-        : fill_value(fill_value), input_size(e.size()), expression<E>(std::forward<E>(e))
+        : expression<E>(std::forward<E>(e)), fill_value(fill_value), input_size(e.size())
     {
     }
 
@@ -441,9 +441,9 @@ struct expression_padded : expression<E>
             for (size_t i = 0; i < N; i++)
             {
                 if (index + i < input_size)
-                    x.data()[i] = this->argument_first(cinput, index + i, vec_t<value_type, 1>())[0];
+                    x[i] = this->argument_first(cinput, index + i, vec_t<value_type, 1>())[0];
                 else
-                    x.data()[i] = fill_value;
+                    x[i] = fill_value;
             }
             return x;
         }

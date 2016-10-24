@@ -93,7 +93,7 @@ struct expression_fir : expression<E1>
         for (size_t i = 0; i < N; i++)
         {
             delayline.ringbuf_write(cursor, input[i]);
-            output(i) = dotproduct(taps, delayline.slice(cursor) /*, tapcount - cursor*/) +
+            output[i] = dotproduct(taps, delayline.slice(cursor) /*, tapcount - cursor*/) +
                         dotproduct(taps.slice(tapcount - cursor), delayline /*, cursor*/);
         }
         delayline_cursor = cursor;

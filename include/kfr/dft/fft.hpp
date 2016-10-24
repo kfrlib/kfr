@@ -235,8 +235,8 @@ KFR_SINTRIN void initialize_twiddles_impl(complex<T>*& twiddle, size_t nn, size_
     for (size_t i = 0; i < width; i++)
     {
         const cvec<T, 1> r = calculate_twiddle<T>(nn + nnstep * i, size);
-        result(i * 2)     = r[0];
-        result(i * 2 + 1) = r[1];
+        result[i * 2]     = r[0];
+        result[i * 2 + 1] = r[1];
     }
     if (split_format)
         ref_cast<cvec<T, width>>(twiddle[0]) = splitpairs(result);
@@ -1022,9 +1022,10 @@ enum class dft_pack_format
 template <typename T>
 struct dft_plan_real : dft_plan<T>
 {
+    size_t size;
     template <bool direct = true, bool inverse = true>
     dft_plan_real(size_t size, cbools_t<direct, inverse> type = dft_type::both)
-        : dft_plan<T>(size / 2, type), rtwiddle(size / 4)
+        : dft_plan<T>(size / 2, type), size(size), rtwiddle(size / 4)
     {
         using namespace internal;
 
@@ -1032,8 +1033,9 @@ struct dft_plan_real : dft_plan<T>
 
         block_process(size / 4, csizes_t<width, 1>(), [=](size_t i, auto w) {
             constexpr size_t width = val_of(decltype(w)());
-            cwrite<width>(rtwiddle.data() + i,
-                          cossin(dup(-c_pi<T> * ((enumerate<T, width>() + i + size / 4) / (size / 2)))));
+            cwrite<width>(
+                rtwiddle.data() + i,
+                cossin(dup(-constants<T>::pi * ((enumerate<T, width>() + i + size / 4) / (size / 2)))));
         });
     }
 
@@ -1073,7 +1075,8 @@ private:
     void to_fmt(complex<T>* out, dft_pack_format fmt) const
     {
         using namespace internal;
-        size_t csize = this->size; // const size_t causes internal compiler error: in tsubst_copy in GCC 5.2
+        size_t csize =
+            this->size / 2; // const size_t causes internal compiler error: in tsubst_copy in GCC 5.2
 
         constexpr size_t width = platform<T>::vector_width * 2;
         const cvec<T, 1> dc = cread<1>(out);
@@ -1113,7 +1116,7 @@ private:
     {
         using namespace internal;
 
-        const size_t csize = this->size; // / 2;
+        const size_t csize = this->size / 2;
 
         cvec<T, 1> dc;
 
@@ -1152,6 +1155,45 @@ private:
         cwrite<1>(out, dc);
     }
 };
+
+template <typename T, size_t Tag1, size_t Tag2, size_t Tag3>
+void fft_multiply(univector<complex<T>, Tag1>& dest, const univector<complex<T>, Tag2>& src1,
+                  const univector<complex<T>, Tag3>& src2, dft_pack_format fmt = dft_pack_format::CCs)
+{
+    const complex<T> f0(src1[0].real() * src2[0].real(), src1[0].imag() * src2[0].imag());
+
+    dest = src1 * src2;
+
+    if (fmt == dft_pack_format::Perm)
+        dest[0] = f0;
+}
+
+template <typename T, size_t Tag1, size_t Tag2, size_t Tag3>
+void fft_multiply_accumulate(univector<complex<T>, Tag1>& dest, const univector<complex<T>, Tag2>& src1,
+                             const univector<complex<T>, Tag3>& src2,
+                             dft_pack_format fmt = dft_pack_format::CCs)
+{
+    const complex<T> f0(dest[0].real() + src1[0].real() * src2[0].real(),
+                        dest[0].imag() + src1[0].imag() * src2[0].imag());
+
+    dest = dest + src1 * src2;
+
+    if (fmt == dft_pack_format::Perm)
+        dest[0] = f0;
+}
+template <typename T, size_t Tag1, size_t Tag2, size_t Tag3, size_t Tag4>
+void fft_multiply_accumulate(univector<complex<T>, Tag1>& dest, const univector<complex<T>, Tag2>& src1,
+                             const univector<complex<T>, Tag3>& src2, const univector<complex<T>, Tag4>& src3,
+                             dft_pack_format fmt = dft_pack_format::CCs)
+{
+    const complex<T> f0(src1[0].real() + src2[0].real() * src3[0].real(),
+                        src1[0].imag() + src2[0].imag() * src3[0].imag());
+
+    dest = src1 + src2 * src3;
+
+    if (fmt == dft_pack_format::Perm)
+        dest[0] = f0;
+}
 }
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)

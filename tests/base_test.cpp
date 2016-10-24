@@ -88,9 +88,43 @@ TEST(test_basic)
     CHECK(blend(numbers1, numbers2, elements_t<0, 1, 1>()) ==
           vec<int, 8>{ 0, 101, 102, 3, 104, 105, 6, 107 });
 
+    CHECK(splitpairs(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(0, 2, 4, 6, 1, 3, 5, 7));
+    CHECK(splitpairs<2>(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(0, 1, 4, 5, 2, 3, 6, 7));
+
+    CHECK(interleavehalfs(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(0, 4, 1, 5, 2, 6, 3, 7));
+    CHECK(interleavehalfs<2>(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(0, 1, 4, 5, 2, 3, 6, 7));
+
+    CHECK(subadd(pack(0, 1, 2, 3, 4, 5, 6, 7), pack(10, 10, 10, 10, 10, 10, 10, 10)) ==
+          pack(-10, 11, -8, 13, -6, 15, -4, 17));
+    CHECK(addsub(pack(0, 1, 2, 3, 4, 5, 6, 7), pack(10, 10, 10, 10, 10, 10, 10, 10)) ==
+          pack(10, -9, 12, -7, 14, -5, 16, -3));
+
+    CHECK(broadcast<8>(1) == pack(1, 1, 1, 1, 1, 1, 1, 1));
+    CHECK(broadcast<8>(1, 2) == pack(1, 2, 1, 2, 1, 2, 1, 2));
+    CHECK(broadcast<8>(1, 2, 3, 4) == pack(1, 2, 3, 4, 1, 2, 3, 4));
+    CHECK(broadcast<8>(1, 2, 3, 4, 5, 6, 7, 8) == pack(1, 2, 3, 4, 5, 6, 7, 8));
+
+    CHECK(even(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(0, 2, 4, 6));
+    CHECK(odd(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(1, 3, 5, 7));
+
+    CHECK(even<2>(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(0, 1, 4, 5));
+    CHECK(odd<2>(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(2, 3, 6, 7));
+
+    CHECK(reverse(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(7, 6, 5, 4, 3, 2, 1, 0));
+    CHECK(reverse<2>(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(6, 7, 4, 5, 2, 3, 0, 1));
+    CHECK(reverse<4>(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(4, 5, 6, 7, 0, 1, 2, 3));
+
+    CHECK(digitreverse4(pack(0.f, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)) ==
+          pack(0.f, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15));
+
+    CHECK(dup(pack(0, 1, 2, 3)) == pack(0, 0, 1, 1, 2, 2, 3, 3));
+    CHECK(duphalfs(pack(0, 1, 2, 3)) == pack(0, 1, 2, 3, 0, 1, 2, 3));
+    CHECK(dupeven(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(0, 0, 2, 2, 4, 4, 6, 6));
+    CHECK(dupodd(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(1, 1, 3, 3, 5, 5, 7, 7));
+
     // * Transpose matrix:
     const auto sixteen = enumerate<float, 16>();
-    CHECK(transpose<4>(sixteen) == vec<float, 16>{ 0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15 });
+    CHECK(transpose<4>(sixteen) == vec<float, 16>(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15));
 }
 
 TEST(vec_concat)
@@ -187,6 +221,7 @@ TEST(vec_low_high)
     CHECK(high(vec<u8, 2>(1, 2)) == vec<u8, 1>(2));
 }
 
+#ifdef CMT_COMPILER_CLANG
 TEST(vec_matrix)
 {
     using i32x2x2 = vec<vec<int, 2>, 2>;
@@ -204,6 +239,7 @@ TEST(vec_matrix)
     xy2 = hadd(transpose(xy2 * m));
     CHECK(xy2 == i32x2{ 50, 110 });
 }
+#endif
 
 TEST(vec_is_convertible)
 {
@@ -248,6 +284,45 @@ TEST(vec_is_convertible)
     CHECK(static_cast<vec<vec<double, 4>, 2>>(vec<vec<float, 4>, 2>{
               vec<float, 4>{ 1.f, 2.f, 3.f, 4.f }, vec<float, 4>{ 11.f, 22.f, 33.f, 44.f } }) ==
           vec<vec<double, 4>, 2>{ vec<double, 4>{ 1., 2., 3., 4. }, vec<double, 4>{ 11., 22., 33., 44. } });
+}
+
+TEST(transcendental)
+{
+    CHECK(kfr::sin(1.0f) == 0.8414709848078965066525023216303f);
+    CHECK(kfr::sin(1.0) == 0.8414709848078965066525023216303);
+
+    CHECK(kfr::cos(1.0f) == 0.54030230586813971740093660744298f);
+    CHECK(kfr::cos(1.0) == 0.54030230586813971740093660744298);
+
+    CHECK(kfr::tan(1.0f) == 1.5574077246549022305069748074584f);
+    CHECK(kfr::tan(1.0) == 1.5574077246549022305069748074584);
+
+    CHECK(kfr::asin(0.45f) == 0.46676533904729636185033976030414f);
+    CHECK(kfr::asin(0.45) == 0.46676533904729636185033976030414);
+
+    CHECK(kfr::acos(0.45f) == 1.1040309877476002573809819313356f);
+    CHECK(kfr::acos(0.45) == 1.1040309877476002573809819313356);
+
+    CHECK(kfr::atan(0.45f) == 0.42285392613294071296648279098114f);
+    CHECK(kfr::atan(0.45) == 0.42285392613294071296648279098114);
+
+    CHECK(kfr::sinh(1.0f) == 1.1752011936438014568823818505956f);
+    CHECK(kfr::sinh(1.0) == 1.1752011936438014568823818505956);
+
+    CHECK(kfr::cosh(1.0f) == 1.5430806348152437784779056207571f);
+    CHECK(kfr::cosh(1.0) == 1.5430806348152437784779056207571);
+
+    CHECK(kfr::tanh(1.0f) == 0.76159415595576488811945828260479f);
+    CHECK(kfr::tanh(1.0) == 0.76159415595576488811945828260479);
+
+    CHECK(kfr::exp(0.75f) == 2.1170000166126746685453698198371f);
+    CHECK(kfr::exp(0.75) == 2.1170000166126746685453698198371);
+
+    CHECK(kfr::exp(-0.75f) == 0.47236655274101470713804655094327f);
+    CHECK(kfr::exp(-0.75) == 0.47236655274101470713804655094327);
+
+    CHECK(kfr::log(2.45f) == 0.89608802455663561677548191074382f);
+    CHECK(kfr::log(2.45) == 0.89608802455663561677548191074382);
 }
 
 TEST(test_stat)

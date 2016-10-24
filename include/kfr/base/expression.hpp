@@ -145,7 +145,7 @@ struct expression_lambda : input_expression
         vec<T, N> result;
         for (size_t i = 0; i < N; i++)
         {
-            result(i) = fn(index + i);
+            result[i] = fn(index + i);
         }
         return result;
     }
@@ -155,7 +155,7 @@ struct expression_lambda : input_expression
         vec<T, N> result;
         for (size_t i = 0; i < N; i++)
         {
-            result(i) = fn();
+            result[i] = fn();
         }
         return result;
     }
