@@ -140,13 +140,13 @@ TEST(partition)
         CHECK(result.chunk_size == 80);
 
         result(0);
-        CHECK(sum(output) == fast_range_sum(80 - 1));
+        CHECK(sum(output) >= fast_range_sum(80 - 1));
         result(1);
-        CHECK(sum(output) == fast_range_sum(160 - 1));
+        CHECK(sum(output) >= fast_range_sum(160 - 1));
         result(2);
-        CHECK(sum(output) == fast_range_sum(240 - 1));
+        CHECK(sum(output) >= fast_range_sum(240 - 1));
         result(3);
-        CHECK(sum(output) == fast_range_sum(320 - 1));
+        CHECK(sum(output) >= fast_range_sum(320 - 1));
         result(4);
         CHECK(sum(output) == fast_range_sum(400 - 1));
     }
@@ -158,9 +158,9 @@ TEST(partition)
         CHECK(result.chunk_size == 160);
 
         result(0);
-        CHECK(sum(output) == fast_range_sum(160 - 1));
+        CHECK(sum(output) >= fast_range_sum(160 - 1));
         result(1);
-        CHECK(sum(output) == fast_range_sum(320 - 1));
+        CHECK(sum(output) >= fast_range_sum(320 - 1));
         result(2);
         CHECK(sum(output) == fast_range_sum(400 - 1));
     }
