@@ -45,7 +45,7 @@ def smooth_colormap(colors, name='cmap1'):
     plt.register_cmap(name=name, cmap=cmap)
     return cmap
 
-def wavplot(wavfile, title='Title', file=None, segmentsize=512, overlap=8):
+def wavplot(data, title='Title', file=None, segmentsize=512, overlap=8, Fs=48000, vmin=-160, vmax=0, normalize=False):
     cmap = smooth_colormap([
         (0	, '#000000'),
         (1/9, '#010325'),
@@ -57,12 +57,18 @@ def wavplot(wavfile, title='Title', file=None, segmentsize=512, overlap=8):
         (7/9, '#fdc967'),
         (8/9, '#f3fab8'),
         (1  , '#ffffff')
-        ])
-        
-    w = wave.open(wavfile, 'rb')
+        ])        
 
-    sr = w.getframerate()
-    data = np.fromstring(w.readframes(w.getnframes()), dtype=np.int32)/2147483647.0
+    if not isinstance(data, (list, tuple, np.ndarray)):
+        w = wave.open(data, 'rb')
+        Fs = w.getframerate()
+        data = np.fromstring(w.readframes(w.getnframes()), dtype=np.int32)/2147483647.0  
+    data = np.array(data)
+    if normalize:
+        maxitem = max(abs(np.max(data)), abs(np.min(data)))
+        if maxitem > 0:
+            data = data / maxitem
+        
     datalen = len(data)
 
     def fast_resample(data, newlen):    
@@ -96,7 +102,7 @@ def wavplot(wavfile, title='Title', file=None, segmentsize=512, overlap=8):
         
     im = np.transpose(im)
 
-    plt.imshow(im,cmap=cmap, aspect='auto', vmin=-160, vmax=0, origin='lower', extent=[0, datalen / sr, 0, sr / 2 ], interpolation='bicubic')
+    plt.imshow(im,cmap=cmap, aspect='auto', vmin=vmin, vmax=vmax, origin='lower', extent=[0, datalen / Fs, 0, Fs / 2 ], interpolation='bicubic')
     plt.colorbar()
     
     if not file:
@@ -118,8 +124,16 @@ def plot(data,
          dots=False,
          segmentsize=512,
          overlap=8,
-         div_by_N=False):
-    if isinstance(data, (list, tuple, np.ndarray)):
+         div_by_N=False,
+         spectrogram=False,
+         vmin=-160,
+         vmax=0,
+         normalize=False):
+    if isinstance(data, (list, tuple, np.ndarray)) and not spectrogram:
+        if normalize:
+            maxitem = max(abs(np.max(data)), abs(np.min(data)))
+            if maxitem > 0:
+                data = data / maxitem
         n = len(data)
         num = 1 + freqresp + phaseresp
         figsize = (10 if horizontal else 6 * num, 5 * num if horizontal else 6)
@@ -194,7 +208,7 @@ def plot(data,
         else:
             plt.savefig(file)
     else:
-        wavplot(data, title=title, file=file, segmentsize=segmentsize, overlap=overlap)
+        wavplot(data, title=title, file=file, segmentsize=segmentsize, overlap=overlap, Fs=Fs, vmin=vmin, vmax=vmax, normalize=normalize)
 
         
 def perfplot(data, labels, title='Speed', xlabel='X', units='ms', file=None):
