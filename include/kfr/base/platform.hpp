@@ -87,7 +87,7 @@ constexpr auto cpu_all = cfilter(internal::cpu_list, internal::cpu_list >= cpuva
 /// @brief Returns name of the cpu instruction set
 CMT_UNUSED static const char* cpu_name(cpu_t set)
 {
-    static const char* names[] = { "sse2", "sse3", "ssse3", "sse41", "sse42", "avx1", "avx2" };
+    static const char* names[] = { "common", "sse2", "sse3", "ssse3", "sse41", "sse42", "avx1", "avx2" };
     if (set >= cpu_t::lowest && set <= cpu_t::highest)
         return names[static_cast<size_t>(set)];
     return "-";
