@@ -23,6 +23,7 @@ import os
 import multiprocessing
 import subprocess
 import sys
+from timeit import default_timer as timer
 
 path = os.path.dirname(os.path.realpath(__file__))
 build_dir = os.path.join(path, 'build')
@@ -35,50 +36,20 @@ except:
 options = [
     '-DCMAKE_BUILD_TYPE=Release',
     ]
-    
-CMAKE_C_COMPILER = ''
-CMAKE_CXX_COMPILER = ''
-    
-for v in ('clang-3.9', 'clang-3.8', 'clang-3.7', 'clang'):
-    print('Checking ', v, '...', end=' ')
-    try:
-        if subprocess.call([v, '--version'], stdout=subprocess.PIPE) == 0:
-            CMAKE_C_COMPILER = v
-            break
-    except:
-        pass
-        
-if not CMAKE_C_COMPILER:
-    raise Exception('clang is not on your PATH')
-print('ok')
-        
-for v in ('clang++-3.9', 'clang++-3.8', 'clang++-3.7', 'clang++'):
-    print('Checking ', v, '...', end=' ')
-    try:
-        if subprocess.call([v, '--version'], stdout=subprocess.PIPE) == 0:
-            CMAKE_CXX_COMPILER = v
-            break
-    except:
-        pass
-        
-if not CMAKE_CXX_COMPILER:
-    raise Exception('clang++ is not on your PATH')
-    
-print('ok')
-        
-options.append('-DCMAKE_C_COMPILER='+CMAKE_C_COMPILER)
-options.append('-DCMAKE_CXX_COMPILER='+CMAKE_CXX_COMPILER)
 
 if sys.platform.startswith('win32'):
     generator = 'MinGW Makefiles'    
 else:
     generator = 'Unix Makefiles'
 
-threads = int(multiprocessing.cpu_count() * 1.5)
+threads = int(multiprocessing.cpu_count() * 1.2)
 
 print('threads = ', threads)
 threads = str(threads)
 
 if subprocess.call(['cmake', '-G', generator, '..'] + options, cwd=build_dir): raise Exception('Can\'t make project')
+start = timer()
 if subprocess.call(['cmake', '--build', '.', '--', '-j' + threads], cwd=build_dir): raise Exception('Can\'t build project')
+end = timer()
+print('Project building time: ', end - start)
 if subprocess.call(['ctest'], cwd=os.path.join(build_dir, 'tests')): raise Exception('Can\'t test project')

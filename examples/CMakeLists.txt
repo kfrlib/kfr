@@ -17,18 +17,6 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-if (NOT MSVC)
-    add_compile_options(-fno-exceptions -fno-rtti)
-    if (NOT ARCH_FLAGS)
-        add_compile_options(-march=native)
-    else ()
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ARCH_FLAGS}")
-    endif ()
-    link_libraries(${STD_LIB} pthread)
-else ()
-    add_compile_options(/arch:AVX)
-endif ()
-
 include_directories(../include)
 
 add_executable(biquads biquads.cpp ${KFR_SRC})

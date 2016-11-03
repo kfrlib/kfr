@@ -39,6 +39,10 @@ CTestTestfile.cmake
 
 # build directory
 build/
+build32/
+build64/
+cmake-build-debug/
+cmake-build-release/
 
 # test directory
 svg/

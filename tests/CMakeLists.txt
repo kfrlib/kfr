@@ -21,30 +21,19 @@ set(TEST_SRC
     testo/testo.hpp
 )
 
-if (NOT MSVC)
-    add_compile_options(-fno-exceptions -fno-rtti -ftemplate-backtrace-limit=0)
-    link_libraries(${STD_LIB} pthread m)
-endif ()
-
 include_directories(../include)
 
 if (NOT ARM)
-    add_executable(multiarch multiarch.cpp multiarch_fir_sse2.cpp multiarch_fir_avx.cpp ${KFR_SRC})
-    set_source_files_properties(multiarch_fir_sse2.cpp PROPERTIES COMPILE_FLAGS "-mno-avx -mno-sse3 -msse2")
-    set_source_files_properties(multiarch_fir_avx.cpp PROPERTIES COMPILE_FLAGS -mavx)
+    if(MSVC)
+        add_executable(multiarch multiarch.cpp multiarch_fir_sse2.cpp multiarch_fir_avx.cpp ${KFR_SRC})
+        set_source_files_properties(multiarch_fir_sse2.cpp PROPERTIES COMPILE_FLAGS /arch:SSE2)
+        set_source_files_properties(multiarch_fir_avx.cpp PROPERTIES COMPILE_FLAGS /arch:AVX)
+    else()
+        add_executable(multiarch multiarch.cpp multiarch_fir_sse2.cpp multiarch_fir_avx.cpp ${KFR_SRC})
+        set_source_files_properties(multiarch_fir_sse2.cpp PROPERTIES COMPILE_FLAGS "-mno-avx -mno-sse3 -msse2")
+        set_source_files_properties(multiarch_fir_avx.cpp PROPERTIES COMPILE_FLAGS "-mavx -mno-avx2")
+    endif()
 endif ()
-
-if (NOT MSVC)
-    if (NOT ARCH_FLAGS)
-        add_compile_options(-march=native)
-    else ()
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ARCH_FLAGS}")
-    endif ()
-else ()
-    add_compile_options(/arch:AVX)
-endif ()
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/tests/cmake/")
 
 find_package(MPFR)
 
@@ -66,11 +55,6 @@ if (ARM)
 else ()
     set(EMULATOR "")
 endif ()
-
-#get_cmake_property(_variableNames VARIABLES)
-#foreach (_variableName ${_variableNames})
-#    message(STATUS "${_variableName}=${${_variableName}}")
-#endforeach()
 
 if (NOT IOS)
     enable_testing()

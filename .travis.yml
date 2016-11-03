@@ -3,7 +3,8 @@ matrix:
   include:
     - os: linux
       compiler: clang
-      sudo: false
+      sudo: required
+      dist: trusty
       addons:
         apt:
           sources:
@@ -14,7 +15,7 @@ matrix:
             - clang-3.8
             - libmpfr-dev
       env:
-        - TEST=LINUX-X86-64 CMAKEARGS="-DCMAKE_CXX_COMPILER=clang++-3.8 -DCMAKE_C_COMPILER=clang-3.8 -DCMAKE_BUILD_TYPE=Release .."
+        - TEST=LINUX-X86-64 CMAKEARGS="-DCMAKE_CXX_COMPILER=clang++-3.8 -DCMAKE_BUILD_TYPE=Release .."
     - os: linux
       compiler: clang
       sudo: required
@@ -25,7 +26,6 @@ matrix:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise-3.8
           packages:
-            - g++-5
             - clang-3.8
             - qemu
             - g++-arm-linux-gnueabihf
