@@ -206,7 +206,7 @@ struct expression_biquads_zl : expression<E1>
             for (size_t i = 0; i < width; i++)
             {
                 state.out = process(bq, state, insertleft(in[i], state.out));
-                out(i)    = state.out[filters - 1];
+                out[i]    = state.out[filters - 1];
             }
             if (index + width == block_end)
                 saved_state = state;
@@ -217,7 +217,7 @@ struct expression_biquads_zl : expression<E1>
             for (size_t i = 0; i < width; i++)
             {
                 state.out = process(bq, state, insertleft(T(0), state.out));
-                out(i)    = state.out[filters - 1];
+                out[i]    = state.out[filters - 1];
             }
         }
         else
@@ -227,13 +227,13 @@ struct expression_biquads_zl : expression<E1>
             {
                 const vec<T, 1> in = this->argument_first(cinput, index + i, vec_t<T, 1>());
                 state.out = process(bq, state, insertleft(in[i], state.out));
-                out(i)    = state.out[filters - 1];
+                out[i]    = state.out[filters - 1];
             }
             saved_state = state;
             for (; i < width; i++)
             {
                 state.out = process(bq, state, insertleft(T(0), state.out));
-                out(i)    = state.out[filters - 1];
+                out[i]    = state.out[filters - 1];
             }
         }
         return out;
