@@ -33,13 +33,13 @@ namespace kfr
 {
 
 template <size_t N, bool A = false, typename T>
-CMT_INLINE vec<T, N> read(const T* src)
+CMT_INLINE static vec<T, N> read(const T* src)
 {
     return vec<T, N>(src, cbool_t<A>());
 }
 
 template <bool A = false, size_t N, typename T>
-CMT_INLINE void write(T* dest, const vec<T, N>& value)
+CMT_INLINE static void write(T* dest, const vec<T, N>& value)
 {
     value.write(dest, cbool_t<A>());
 }
