@@ -31,5 +31,5 @@ namespace kfr
 {
 
 /// Returns string representation of the KFR version (including target architecture)
-inline const char* library_version() { return KFR_VERSION_FULL; }
+inline static const char* library_version() { return KFR_VERSION_FULL; }
 }
