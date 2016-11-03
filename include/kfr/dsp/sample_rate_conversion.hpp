@@ -214,6 +214,8 @@ struct expression_upsample<2, E> : expression<E>
     using value_type = value_type_of<E>;
     using T          = value_type;
 
+    size_t size() const noexcept { return expression<E>::size() * 2; }
+
     template <size_t N>
     vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
     {
@@ -236,6 +238,8 @@ struct expression_upsample<4, E> : expression<E>
     using value_type = value_type_of<E>;
     using T          = value_type;
 
+    size_t size() const noexcept { return expression<E>::size() * 4; }
+
     template <size_t N>
     vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
     {
@@ -255,7 +259,6 @@ struct expression_upsample<4, E> : expression<E>
             return 0;
         }
     }
-    template <typename T>
     vec<T, 1> operator()(cinput_t cinput, size_t index, vec_t<T, 1>) const
     {
         if (index & 3)
@@ -272,6 +275,8 @@ struct expression_downsample<2, offset, E> : expression<E>
     using value_type = value_type_of<E>;
     using T          = value_type;
 
+    size_t size() const noexcept { return expression<E>::size() / 2; }
+
     template <size_t N>
     vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
     {
@@ -286,6 +291,8 @@ struct expression_downsample<4, offset, E> : expression<E>
     using expression<E>::expression;
     using value_type = value_type_of<E>;
     using T          = value_type;
+
+    size_t size() const noexcept { return expression<E>::size() / 4; }
 
     template <size_t N>
     vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
