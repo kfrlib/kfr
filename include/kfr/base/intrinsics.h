@@ -12,3 +12,7 @@
 #ifdef CMT_ARCH_NEON
 #include <arm_neon.h>
 #endif
+
+#if defined CMT_COMPILER_GCC && defined CMT_ARCH_X86
+#include <x86intrin.h>
+#endif
