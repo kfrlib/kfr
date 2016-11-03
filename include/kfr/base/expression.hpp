@@ -366,26 +366,11 @@ CMT_INLINE internal::expression_function<Fn, NewArgs...> rebind(
     return internal::expression_function<Fn, NewArgs...>(e.get_fn(), std::forward<NewArgs>(args)...);
 }
 
-namespace internal
-{
-template <size_t width, typename OutputExpr, typename InputExpr>
-CMT_INLINE void process_cycle(coutput_t coutput, cinput_t cinput, OutputExpr&& outfn, const InputExpr& fn,
-                              size_t& i, size_t end)
-{
-    using Tin = value_type_of<InputExpr>;
-    CMT_LOOP_NOUNROLL
-    for (; i < end / width * width; i += width)
-    {
-        outfn(coutput, i, fn(cinput, i, vec_t<Tin, width>()));
-    }
-}
-}
-
 template <cpu_t c = cpu_t::native, size_t width = 0, typename OutputExpr, typename InputExpr,
           size_t groupsize = 1>
-CMT_INLINE size_t process(OutputExpr&& out, const InputExpr& in, size_t start = 0,
-                          size_t size = infinite_size, coutput_t coutput = nullptr, cinput_t cinput = nullptr,
-                          csize_t<groupsize> = csize_t<groupsize>())
+CMT_INLINE static size_t process(OutputExpr&& out, const InputExpr& in, size_t start = 0,
+                                 size_t size = infinite_size, coutput_t coutput = nullptr,
+                                 cinput_t cinput = nullptr, csize_t<groupsize> = csize_t<groupsize>())
 {
     using Tin = value_type_of<InputExpr>;
     static_assert(is_output_expression<OutputExpr>::value, "OutFn must be an expression");
@@ -405,8 +390,13 @@ CMT_INLINE size_t process(OutputExpr&& out, const InputExpr& in, size_t start = 
 #endif
 
     size_t i = start;
-    internal::process_cycle<w>(coutput, cinput, std::forward<OutputExpr>(out), in, i, end);
-    internal::process_cycle<groupsize>(coutput, cinput, std::forward<OutputExpr>(out), in, i, end);
+
+    CMT_LOOP_NOUNROLL
+    for (; i < end / w * w; i += w)
+        out(coutput, i, in(cinput, i, vec_t<Tin, w>()));
+    CMT_LOOP_NOUNROLL
+    for (; i < end / groupsize * groupsize; i += groupsize)
+        out(coutput, i, in(cinput, i, vec_t<Tin, groupsize>()));
 
     in.end_block(cinput, size);
     out.end_block(coutput, size);
@@ -423,7 +413,7 @@ struct input_expression_base : input_expression
     {
         vec<U, N> out;
         for (size_t i = 0; i < N; i++)
-            out(i)    = static_cast<U>(input(index + i));
+            out[i]    = static_cast<U>(input(index + i));
         return out;
     }
 };
