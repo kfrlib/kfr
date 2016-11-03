@@ -28,6 +28,17 @@
 #include "kfr.h"
 
 #include "constants.hpp"
+#include "types.hpp"
+
+namespace kfr
+{
+
+template <typename T, size_t N, size_t Nout = prev_poweroftwo(N - 1)>
+CMT_INLINE vec<T, Nout> low(const vec<T, N>& x);
+template <typename T, size_t N, size_t Nout = N - prev_poweroftwo(N - 1)>
+CMT_INLINE vec<T, Nout> high(const vec<T, N>& x);
+}
+
 #ifdef CMT_COMPILER_CLANG
 #include "simd_clang.hpp"
 #else
@@ -36,7 +47,6 @@
 #include "simd_x86.hpp"
 #endif
 #endif
-#include "types.hpp"
 
 CMT_PRAGMA_GNU(GCC diagnostic push)
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpragmas")
@@ -1002,7 +1012,7 @@ constexpr CMT_INLINE vec<T, N> undefinedvector(vec_t<T, N>)
 }
 KFR_FN(undefinedvector)
 
-template <typename T, size_t N, size_t Nout = prev_poweroftwo(N - 1)>
+template <typename T, size_t N, size_t Nout /*= prev_poweroftwo(N - 1)*/>
 CMT_INLINE vec<T, Nout> low(const vec<T, N>& x)
 {
     return x.shuffle(csizeseq_t<Nout>());
@@ -1014,7 +1024,7 @@ CMT_INLINE vec_t<T, Nout> low(vec_t<T, N>)
     return {};
 }
 
-template <typename T, size_t N, size_t Nout = N - prev_poweroftwo(N - 1)>
+template <typename T, size_t N, size_t Nout /*= N - prev_poweroftwo(N - 1)*/>
 CMT_INLINE vec<T, Nout> high(const vec<T, N>& x)
 {
     return x.shuffle(csizeseq_t<Nout, prev_poweroftwo(N - 1)>());
@@ -1028,7 +1038,6 @@ CMT_INLINE vec_t<T, Nout> high(vec_t<T, N>)
 KFR_FN(low)
 KFR_FN(high)
 }
-
 
 namespace cometa
 {
