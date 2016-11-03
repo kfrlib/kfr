@@ -197,7 +197,7 @@ struct alignas(const_min(platform<>::maximum_vector_alignment, sizeof(T) * next_
         : vs{ s0, s1, static_cast<value_type>(rest)... }
     {
     }
-    template <size_t N1, size_t... Ns, typename = enable_if<csum<size_t, N1, Ns...>() == N>>
+    template <size_t N1, size_t... Ns, typename = enable_if<(csum<size_t, N1, Ns...>() == N)>>
     KFR_I_CE vec(const vec<T, N1>& v0, const vec<T, Ns>&... vecs) noexcept : simd(*concat(v0, vecs...))
     {
     }
@@ -322,7 +322,7 @@ struct alignas(const_min(platform<>::maximum_vector_alignment, sizeof(T) * next_
     simd_type operator*() const noexcept { return simd; }
     simd_type& operator*() noexcept { return simd; }
 protected:
-    template <typename U, size_t M>
+    template <typename, size_t>
     friend struct vec;
 
     union {
