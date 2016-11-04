@@ -170,4 +170,9 @@ struct platform
 
     constexpr static size_t native_vector_alignment_mask = native_vector_alignment - 1;
 };
+
+template <typename T, size_t N = platform<T>::vector_width>
+struct vec;
+template <typename T, size_t N = platform<T>::vector_width>
+struct mask;
 }

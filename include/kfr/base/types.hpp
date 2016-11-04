@@ -378,11 +378,6 @@ struct vec_t
     constexpr static size_t scalar_size() noexcept { return N * compound_type_traits<T>::width; }
 };
 
-template <typename, size_t>
-struct vec;
-template <typename, size_t>
-struct mask;
-
 constexpr size_t index_undefined = static_cast<size_t>(-1);
 
 struct czeros_t
