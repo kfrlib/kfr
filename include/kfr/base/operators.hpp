@@ -558,6 +558,12 @@ CMT_INLINE mask<T, N> iszero(const vec<T, N>& x)
     return x == T();
 }
 
+template <typename T1, typename T2, typename T3>
+KFR_SINTRIN maskfor<common_type<T1, T2, T3>> inrange(const T1& x, const T2& min, const T3& max)
+{
+    return x >= min && x <= max;
+}
+
 /// @brief Swap byte order
 template <typename T, size_t N, KFR_ENABLE_IF(sizeof(vec<T, N>) > 8)>
 CMT_INLINE vec<T, N> swapbyteorder(const vec<T, N>& x)
