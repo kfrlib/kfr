@@ -135,6 +135,19 @@ struct representation<kfr::vec<T, N>>
     }
 };
 
+template <typename T, size_t N>
+struct representation<kfr::mask<T, N>>
+{
+    using type = std::string;
+    static std::string get(const kfr::mask<T, N>& value)
+    {
+        bool values[N];
+        for(size_t i = 0; i < N; i++)
+            values[i] = value[i];
+        return details::array_to_string(values, N);
+    }
+};
+
 template <typename T, size_t Tag>
 struct representation<kfr::univector<T, Tag>>
 {
