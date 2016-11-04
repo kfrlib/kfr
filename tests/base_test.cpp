@@ -122,6 +122,10 @@ TEST(test_basic)
     CHECK(dupeven(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(0, 0, 2, 2, 4, 4, 6, 6));
     CHECK(dupodd(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(1, 1, 3, 3, 5, 5, 7, 7));
 
+    CHECK(inrange(pack(1, 2, 3), 1, 3) == make_mask<int>(true, true, true));
+    CHECK(inrange(pack(1, 2, 3), 1, 2) == make_mask<int>(true, true, false));
+    CHECK(inrange(pack(1, 2, 3), 1, 1) == make_mask<int>(true, false, false));
+
     // * Transpose matrix:
     const auto sixteen = enumerate<float, 16>();
     CHECK(transpose<4>(sixteen) == vec<float, 16>(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15));
