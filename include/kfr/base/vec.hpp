@@ -98,6 +98,8 @@ struct mask : vec<T, N>
     }
     KFR_I_CE mask operator^(const base& y) const noexcept { return static_cast<const base&>(*this) ^ y; }
 
+    bool operator[](size_t index) const noexcept;
+
     constexpr base asvec() const noexcept { return static_cast<const base&>(*this); }
 };
 
@@ -499,6 +501,12 @@ template <typename From, size_t N, typename To = ftype<From>,
 constexpr CMT_INLINE vec<To, Nout> fbitcast(const vec<From, N>& value) noexcept
 {
     return vec<To, Nout>::frombits(value);
+}
+
+template <typename T, size_t N>
+inline bool mask<T, N>::operator[](size_t index) const noexcept
+{
+    return ibitcast(base::operator[](index)) < 0;
 }
 
 constexpr CMT_INLINE size_t vector_alignment(size_t size) { return next_poweroftwo(size); }
@@ -969,7 +977,7 @@ CMT_INLINE f64x2 tovec(__m128d x) { return f64x2(x); }
 #endif
 
 template <typename T, typename... Args, size_t Nout = (sizeof...(Args) + 1)>
-constexpr CMT_INLINE vec<T, Nout> make_mask(bool arg, Args... args)
+constexpr CMT_INLINE mask<T, Nout> make_mask(bool arg, Args... args)
 {
     return vec<T, Nout>(internal::maskbits<T>(arg), internal::maskbits<T>(static_cast<bool>(args))...);
 }
