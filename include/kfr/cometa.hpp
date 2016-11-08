@@ -991,9 +991,11 @@ constexpr size_t elementsize<void>()
 };
 }
 
+/// @brief Utility typedef used to disable type deduction
 template <typename T>
 using identity = typename details::identity_impl<T>::type;
 
+/// @brief Utility class to use in list-initialization context
 struct swallow
 {
     template <typename... T>
@@ -1138,36 +1140,43 @@ private:
         }                                                                                                    \
     };
 
+/// @brief Function that returns its first argument
 template <typename T>
-CMT_INTRIN auto pass_through(T&& x) noexcept
+CMT_INTRIN constexpr T&& pass_through(T&& x) noexcept
 {
-    return x;
+    return std::forward<T>(x);
 }
 
+/// @brief Function that returns void and ignores all its arguments
 template <typename... Ts>
-CMT_INTRIN void noop(Ts...) noexcept
+CMT_INTRIN constexpr void noop(Ts&&...) noexcept
 {
 }
 
+/// @brief Function that returns its first argument and ignores all other arguments
 template <typename T1, typename... Ts>
-CMT_INTRIN constexpr T1&& get_first(T1&& x, Ts...) noexcept
+CMT_INTRIN constexpr T1&& get_first(T1&& x, Ts&&...) noexcept
 {
     return std::forward<T1>(x);
 }
 
+/// @brief Function that returns its second argument and ignores all other arguments
 template <typename T1, typename T2, typename... Ts>
-CMT_INTRIN constexpr T2&& get_second(T1, T2&& x, Ts...) noexcept
+CMT_INTRIN constexpr T2&& get_second(T1, T2&& x, Ts&&...) noexcept
 {
     return std::forward<T2>(x);
 }
 
+/// @brief Function that returns its third argument and ignores all other arguments
 template <typename T1, typename T2, typename T3, typename... Ts>
-CMT_INTRIN constexpr T3&& get_third(T1, T2, T3&& x, Ts...) noexcept
+CMT_INTRIN constexpr T3&& get_third(T1&&, T2&&, T3&& x, Ts&&...) noexcept
 {
     return std::forward<T3>(x);
 }
+
+/// @brief Function that returns value-initialization of type T and ignores all its arguments
 template <typename T, typename... Ts>
-CMT_INTRIN constexpr T returns(Ts...)
+CMT_INTRIN constexpr T returns(Ts&&...)
 {
     return T();
 }
