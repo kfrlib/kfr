@@ -157,7 +157,7 @@ CMT_INLINE vec<T, count> concat_and_slice(const vec<T, N1>& x, const vec<T, N2>&
 
 KFR_FN(concat_and_slice)
 
-template <size_t Nout, typename T, size_t N>
+template <size_t Nout, typename T, size_t N, KFR_ENABLE_IF(Nout > N)>
 CMT_INLINE vec<T, Nout> widen(const vec<T, N>& x, identity<T> newvalue = T())
 {
     static_assert(Nout > N, "Nout > N");
