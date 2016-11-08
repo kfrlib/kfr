@@ -255,7 +255,7 @@ struct expression_hamming : input_expression
     template <size_t N>
     CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
     {
-        return alpha - (1.0 - alpha) * (cos(c_pi<T, 2> * linspace(cinput, index, y)));
+        return alpha - (T(1.0) - alpha) * (cos(c_pi<T, 2> * linspace(cinput, index, y)));
     }
     size_t size() const { return m_size; }
 
@@ -395,7 +395,7 @@ struct expression_gaussian : input_expression
     template <size_t N>
     CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
     {
-        return exp(-0.5 * sqr(alpha * linspace(cinput, index, y)));
+        return exp(T(-0.5) * sqr(alpha * linspace(cinput, index, y)));
     }
 
     size_t size() const { return m_size; }
