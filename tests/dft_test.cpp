@@ -4,7 +4,8 @@
  * See LICENSE.txt for details
  */
 
-#include "testo/testo.hpp"
+#include <kfr/testo/testo.hpp>
+
 #include <kfr/base.hpp>
 #include <kfr/dft.hpp>
 #include <kfr/dsp.hpp>

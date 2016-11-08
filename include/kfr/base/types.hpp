@@ -33,10 +33,17 @@
 CMT_PRAGMA_GNU(GCC diagnostic push)
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
 
+#ifdef KFR_TESTING
+#include "../testo/testo.hpp"
+#endif
+
 #include "../cometa.hpp"
 
 #define KFR_ENABLE_IF CMT_ENABLE_IF
 
+/**
+ *  @brief Internal macro for functions
+ */
 #define KFR_FN(FN)                                                                                           \
     namespace fn                                                                                             \
     {                                                                                                        \
@@ -50,6 +57,9 @@ CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
     };                                                                                                       \
     }
 
+/**
+ *  @brief Internal macro for functions
+ */
 #define KFR_I_FN(FN)                                                                                         \
     namespace fn                                                                                             \
     {                                                                                                        \
@@ -66,8 +76,10 @@ CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
 
 namespace kfr
 {
+// Include all from CoMeta library
 using namespace cometa;
 
+/// @brief Short names for common types
 using f32  = float;
 using f64  = double;
 using i8   = int8_t;
@@ -84,8 +96,10 @@ using fmax = double;
 using f80  = long double;
 
 #if defined(KFR_BASETYPE_F32) || defined(KFR_NO_NATIVE_F64)
+/// @brief Floating point type used by default
 using fbase = f32;
 #else
+/// @brief Floating point type used by default
 using fbase = f64;
 #endif
 
@@ -120,6 +134,7 @@ struct f16
     u16 raw;
 };
 
+/// @brief An enumeration representing data type
 template <typename T1>
 struct range
 {
@@ -199,12 +214,22 @@ struct typebits
 
 namespace fn
 {
+///@copybrief cometa::pass_through
 using pass_through = cometa::fn_pass_through;
-using noop         = cometa::fn_noop;
-using get_first    = cometa::fn_get_first;
-using get_second   = cometa::fn_get_second;
-using get_third    = cometa::fn_get_third;
 
+///@copybrief cometa::noop
+using noop = cometa::fn_noop;
+
+///@copybrief cometa::get_first
+using get_first = cometa::fn_get_first;
+
+///@copybrief cometa::get_second
+using get_second = cometa::fn_get_second;
+
+///@copybrief cometa::get_third
+using get_third = cometa::fn_get_third;
+
+///@copybrief cometa::returns
 template <typename T>
 using returns = cometa::fn_returns<T>;
 }
@@ -225,25 +250,6 @@ template <typename T>
 using isubtype = itype<subtype<T>>;
 template <typename T>
 using usubtype = utype<subtype<T>>;
-
-template <typename T, typename R = T>
-using enable_if_vec = enable_if<(typebits<T>::width > 0), R>;
-template <typename T, typename R = T>
-using enable_if_not_vec = enable_if<(typebits<T>::width == 0), R>;
-
-template <typename T, typename R = T>
-using enable_if_i = enable_if<typeclass<T> == datatype::i, R>;
-template <typename T, typename R = T>
-using enable_if_u = enable_if<typeclass<T> == datatype::u, R>;
-template <typename T, typename R = T>
-using enable_if_f = enable_if<typeclass<T> == datatype::f, R>;
-
-template <typename T, typename R = T>
-using enable_if_not_i = enable_if<typeclass<T> != datatype::i, R>;
-template <typename T, typename R = T>
-using enable_if_not_u = enable_if<typeclass<T> != datatype::u, R>;
-template <typename T, typename R = T>
-using enable_if_not_f = enable_if<typeclass<T> != datatype::f, R>;
 
 namespace internal
 {
@@ -298,11 +304,6 @@ CMT_INLINE void builtin_memcpy(void* dest, const void* src, size_t size) { ::mem
 CMT_INLINE void builtin_memset(void* dest, int val, size_t size) { ::memset(dest, val, size); }
 
 #endif
-template <typename T1>
-CMT_INLINE void zeroize(T1& value)
-{
-    builtin_memset(static_cast<void*>(builtin_addressof(value)), 0, sizeof(T1));
-}
 
 CMT_PRAGMA_GNU(GCC diagnostic push)
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wattributes")
@@ -328,6 +329,14 @@ __attribute__((__packed__, __may_alias__)) //
 CMT_PRAGMA_GNU(GCC diagnostic pop)
 }
 
+/// @brief Fills a value with zeros
+template <typename T1>
+CMT_INLINE void zeroize(T1& value)
+{
+    internal::builtin_memset(static_cast<void*>(builtin_addressof(value)), 0, sizeof(T1));
+}
+
+/// @brief Used to determine the initial value for reduce functions
 template <typename T>
 struct initialvalue
 {

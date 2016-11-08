@@ -4,7 +4,8 @@
  * See LICENSE.txt for details
  */
 
-#include "testo/testo.hpp"
+#include <kfr/testo/testo.hpp>
+
 #include <kfr/base.hpp>
 #include <kfr/io.hpp>
 
@@ -131,13 +132,13 @@ TEST(test_basic)
     CHECK(transpose<4>(sixteen) == vec<float, 16>(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15));
 }
 
-TEST(vec_concat)
+TEST(concat)
 {
     CHECK(concat(vec<f32, 1>{ 1 }, vec<f32, 2>{ 2, 3 }, vec<f32, 1>{ 4 }, vec<f32, 3>{ 5, 6, 7 }) //
           == vec<f32, 7>{ 1, 2, 3, 4, 5, 6, 7 });
 }
 
-TEST(vec_split)
+TEST(split)
 {
     vec<f32, 1> a1;
     vec<f32, 2> a23;
@@ -150,21 +151,21 @@ TEST(vec_split)
     CHECK(a567 == vec<f32, 3>{ 5, 6, 7 });
 }
 
-TEST(vec_broadcast)
+TEST(broadcast)
 {
     CHECK(broadcast<5>(3.f) == vec<f32, 5>{ 3, 3, 3, 3, 3 });
     CHECK(broadcast<6>(1.f, 2.f) == vec<f32, 6>{ 1, 2, 1, 2, 1, 2 });
     CHECK(broadcast<6>(1.f, 2.f, 3.f) == vec<f32, 6>{ 1, 2, 3, 1, 2, 3 });
 }
 
-TEST(vec_resize)
+TEST(resize)
 {
     CHECK(resize<5>(make_vector(3.f)) == vec<f32, 5>{ 3, 3, 3, 3, 3 });
     CHECK(resize<6>(make_vector(1.f, 2.f)) == vec<f32, 6>{ 1, 2, 1, 2, 1, 2 });
     CHECK(resize<6>(make_vector(1.f, 2.f, 3.f)) == vec<f32, 6>{ 1, 2, 3, 1, 2, 3 });
 }
 
-TEST(vec_make_vector)
+TEST(make_vector)
 {
     const signed char ch = -1;
     CHECK(make_vector(1, 2, ch) == vec<i32, 3>{ 1, 2, -1 });
@@ -178,20 +179,20 @@ TEST(vec_make_vector)
     CHECK(make_vector(1.f, f32x2{ 10, 20 }) == vec<vec<f32, 2>, 2>{ f32x2{ 1, 1 }, f32x2{ 10, 20 } });
 }
 
-TEST(vec_apply)
+TEST(apply)
 {
     CHECK(apply([](int x) { return x + 1; }, make_vector(1, 2, 3, 4, 5)) == make_vector(2, 3, 4, 5, 6));
     CHECK(apply(fn::sqr(), make_vector(1, 2, 3, 4, 5)) == make_vector(1, 4, 9, 16, 25));
 }
 
-TEST(vec_zerovector)
+TEST(zerovector)
 {
     CHECK(zerovector<f32, 3>() == f32x3{ 0, 0, 0 });
     // CHECK(zerovector<i16, 3>() == i16x3{ 0, 0, 0 }); // clang 3.9 (trunk) crashes here
     CHECK(zerovector(f64x8{}) == f64x8{ 0, 0, 0, 0, 0, 0, 0, 0 });
 }
 
-TEST(vec_allonesvector)
+TEST(allonesvector)
 {
     CHECK(bitcast<u32>(constants<f32>::allones()) == 0xFFFFFFFFu);
     CHECK(bitcast<u64>(constants<f64>::allones()) == 0xFFFFFFFFFFFFFFFFull);
@@ -201,7 +202,7 @@ TEST(vec_allonesvector)
     CHECK(allonesvector<u8, 3>() == u8x3{ 255, 255, 255 });
 }
 
-TEST(vec_low_high)
+TEST(low_high)
 {
     CHECK(low(vec<u8, 8>(1, 2, 3, 4, 5, 6, 7, 8)) == vec<u8, 4>(1, 2, 3, 4));
     CHECK(high(vec<u8, 8>(1, 2, 3, 4, 5, 6, 7, 8)) == vec<u8, 4>(5, 6, 7, 8));
@@ -226,7 +227,7 @@ TEST(vec_low_high)
 }
 
 #ifdef CMT_COMPILER_CLANG
-TEST(vec_matrix)
+TEST(matrix)
 {
     using i32x2x2 = vec<vec<int, 2>, 2>;
     const i32x2x2 m22{ i32x2{ 1, 2 }, i32x2{ 3, 4 } };
@@ -245,7 +246,7 @@ TEST(vec_matrix)
 }
 #endif
 
-TEST(vec_is_convertible)
+TEST(is_convertible)
 {
     static_assert(std::is_convertible<float, f32x4>::value, "");
     static_assert(std::is_convertible<float, f64x8>::value, "");
@@ -327,6 +328,13 @@ TEST(transcendental)
 
     CHECK(kfr::log(2.45f) == 0.89608802455663561677548191074382f);
     CHECK(kfr::log(2.45) == 0.89608802455663561677548191074382);
+}
+
+TEST(horner)
+{
+    CHECK(horner(pack(0, 1, 2, 3), 1, 2, 3) == pack(1, 6, 17, 34));
+    CHECK(horner_odd(pack(0, 1, 2, 3), 1, 2, 3) == pack(0, 6, 114, 786));
+    CHECK(horner_even(pack(0, 1, 2, 3), 1, 2, 3) == pack(1, 6, 57, 262));
 }
 
 TEST(test_stat)

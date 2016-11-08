@@ -4,7 +4,8 @@
  * See LICENSE.txt for details
  */
 
-#include "testo/testo.hpp"
+#include <kfr/testo/testo.hpp>
+
 #include <kfr/base.hpp>
 #include <kfr/dsp.hpp>
 #include <kfr/io.hpp>
@@ -14,19 +15,9 @@ using namespace kfr;
 TEST(delay)
 {
     const univector<float, 33> v1 = counter() + 100;
-    const univector<float, 33> v2 = delay(v1);
-    CHECK(v2[0] == 0);
-    CHECK(v2[1] == 100);
-    CHECK(v2[2] == 101);
-    CHECK(v2[19] == 118);
+    CHECK_EXPRESSION(delay(v1), 33, [](size_t i) { return i < 1 ? 0.f : (i - 1) + 100.f; });
 
-    const univector<float, 33> v3 = delay(v1, csize_t<3>());
-    CHECK(v3[0] == 0);
-    CHECK(v3[1] == 0);
-    CHECK(v3[2] == 0);
-    CHECK(v3[3] == 100);
-    CHECK(v3[4] == 101);
-    CHECK(v3[19] == 116);
+    CHECK_EXPRESSION(delay<3>(v1), 33, [](size_t i) { return i < 3 ? 0.f : (i - 3) + 100.f; });
 }
 
 TEST(fracdelay)
@@ -47,12 +38,8 @@ TEST(fracdelay)
 
 TEST(mixdown)
 {
-    univector<double, 20> ch1 = counter();
-    univector<double, 20> ch2 = counter() * 2 + 100;
-    univector<double, 20> mix = mixdown(ch1, ch2);
-    CHECK(mix[0] == 100);
-    CHECK(mix[1] == 103);
-    CHECK(mix[19] == 157);
+    CHECK_EXPRESSION(mixdown(counter(), counter() * 2 + 100), infinite_size,
+                     [](size_t i) { return i + i * 2 + 100; });
 }
 
 #ifdef CMT_COMPILER_CLANG
@@ -64,12 +51,8 @@ TEST(mixdown_stereo)
     univector<double, 21> side;
     unpack(mid, side) = mixdown_stereo(left, right, matrix_sum_diff());
 
-    CHECK(mid[0] == 100);
-    CHECK(side[0] == -100);
-    CHECK(mid[1] == 103);
-    CHECK(side[1] == -101);
-    CHECK(mid[20] == 160);
-    CHECK(side[20] == -120);
+    CHECK_EXPRESSION(mid, 21, [](size_t i) { return i + i * 2.0 + 100.0; });
+    CHECK_EXPRESSION(side, 21, [](size_t i) { return i - (i * 2.0 + 100.0); });
 }
 #endif
 
@@ -77,7 +60,7 @@ TEST(phasor)
 {
     constexpr fbase sr = 44100.0;
     univector<fbase, 100> v1 = sinenorm(phasor(15000, sr));
-    univector<fbase, 100> v2 = sin(c_pi<fbase, 2> * counter(0, 15000 / sr));
+    univector<fbase, 100> v2 = sin(constants<fbase>::pi_s(2) * counter(0, 15000 / sr));
     CHECK(rms(v1 - v2) < 1.e-5);
 }
 

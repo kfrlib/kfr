@@ -18,8 +18,9 @@
 cmake_minimum_required(VERSION 2.8)
 
 set(TEST_SRC
-    testo/testo.hpp
 )
+
+add_definitions(-DKFR_TESTING=1)
 
 include_directories(../include)
 

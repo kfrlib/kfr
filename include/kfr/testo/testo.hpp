@@ -1,10 +1,10 @@
 ﻿#pragma once
 
-#include <kfr/cometa/tuple.hpp>
+#include "../cometa/tuple.hpp"
 
-#include <kfr/cometa.hpp>
-#include <kfr/cometa/range.hpp>
-#include <kfr/cometa/string.hpp>
+#include "../cometa.hpp"
+#include "../cometa/range.hpp"
+#include "../cometa/string.hpp"
 
 #include <algorithm>
 #include <ctime>
@@ -16,7 +16,7 @@
 #include <mpfr/mpfr.hpp>
 #include <mpfr/mpfr_tostring.hpp>
 #endif
-#include "print_colored.hpp"
+#include "../ext/console_colors.hpp"
 #include <chrono>
 #include <cmath>
 
@@ -88,7 +88,7 @@ inline double ulp_distance(long double reference, T test)
 }
 #endif
 
-using namespace print_colored;
+using namespace console_colors;
 
 template <typename Fn, typename L, typename R>
 struct comparison
@@ -547,13 +547,13 @@ void assert_is_same_decay()
     } while (0)
 
 #define TESTO_TEST(name)                                                                                     \
-    void test_function_##name();                                                                             \
+    static void test_function_##name();                                                                      \
     ::testo::test_case test_case_##name(&test_function_##name, #name);                                       \
-    void CMT_NOINLINE test_function_##name()
+    static void CMT_NOINLINE test_function_##name()
 
 #define TESTO_DTEST(name)                                                                                    \
     template <typename>                                                                                      \
-    void disabled_test_function_##name()
+    static void disabled_test_function_##name()
 
 #ifndef TESTO_NO_SHORT_MACROS
 #define CHECK TESTO_CHECK

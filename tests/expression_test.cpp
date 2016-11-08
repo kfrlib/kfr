@@ -4,7 +4,7 @@
  * See LICENSE.txt for details
  */
 
-#include "testo/testo.hpp"
+#include <kfr/testo/testo.hpp>
 
 #include <kfr/base.hpp>
 #include <kfr/cometa/function.hpp>
@@ -17,30 +17,18 @@ TEST(pack)
 {
     const univector<float, 21> v1 = 1 + counter();
     const univector<float, 21> v2 = v1 * 11;
-    const univector<f32x2, 21> v3 = pack(v1, v2);
-    CHECK(v3[0] == f32x2{ 1, 11 });
-    CHECK(v3[1] == f32x2{ 2, 22 });
-    CHECK(v3[18] == f32x2{ 19, 209 });
-    CHECK(v3[19] == f32x2{ 20, 220 });
-    CHECK(v3[20] == f32x2{ 21, 231 });
 
-    const univector<f32x2, 21> v4 = bind_expression(fn::reverse(), v3);
-    CHECK(v4[0] == f32x2{ 11, 1 });
-    CHECK(v4[1] == f32x2{ 22, 2 });
-    CHECK(v4[18] == f32x2{ 209, 19 });
-    CHECK(v4[19] == f32x2{ 220, 20 });
-    CHECK(v4[20] == f32x2{ 231, 21 });
+    CHECK_EXPRESSION(pack(v1, v2), 21, [](size_t i) { return f32x2{ 1 + i, (1 + i) * 11 }; });
+
+    CHECK_EXPRESSION(bind_expression(fn::reverse(), pack(v1, v2)), 21, [](size_t i) {
+        return f32x2{ (1 + i) * 11, 1 + i };
+    });
 }
 
 TEST(adjacent)
 {
-    univector<int, 20> v1 = adjacent(fn::mul(), counter());
-    CHECK(v1[0] == 0);
-    CHECK(v1[1] == 0);
-    CHECK(v1[2] == 2);
-    CHECK(v1[3] == 6);
-    CHECK(v1[4] == 12);
-    CHECK(v1[19] == 342);
+    CHECK_EXPRESSION(adjacent(fn::mul(), counter()), infinite_size,
+                     [](size_t i) { return i > 0 ? i * (i - 1) : 0; });
 }
 
 TEST(padded)
@@ -48,27 +36,16 @@ TEST(padded)
     static_assert(is_infinite<decltype(padded(counter()))>::value, "");
     static_assert(is_infinite<decltype(padded(truncate(counter(), 100)))>::value, "");
 
-    univector<int, 21> v1 = padded(truncate(counter(), 6), -1);
-    CHECK(v1[0] == 0);
-    CHECK(v1[1] == 1);
-    CHECK(v1[2] == 2);
-    CHECK(v1[3] == 3);
-    CHECK(v1[4] == 4);
-    CHECK(v1[5] == 5);
-    CHECK(v1[6] == -1);
-    CHECK(v1[20] == -1);
+    CHECK_EXPRESSION(padded(truncate(counter(), 6), -1), infinite_size,
+                     [](size_t i) { return i >= 6 ? -1 : i; });
 }
 
 TEST(rebind)
 {
     auto c_minus_two  = counter() - 2;
     auto four_minus_c = rebind(c_minus_two, 4, counter());
-    univector<int, 5> v1 = c_minus_two;
-    univector<int, 5> v2 = four_minus_c;
-    CHECK(v1[0] == -2);
-    CHECK(v1[1] == -1);
-    CHECK(v2[0] == 4);
-    CHECK(v2[1] == 3);
+    CHECK_EXPRESSION(c_minus_two, infinite_size, [](size_t i) { return i - 2; });
+    CHECK_EXPRESSION(four_minus_c, infinite_size, [](size_t i) { return 4 - i; });
 }
 
 TEST(test_arg_access)
@@ -78,11 +55,8 @@ TEST(test_arg_access)
     auto e1                  = std::move(v1) + 10;
     std::get<0>(e1.args)[0]  = 100;
     std::get<1>(e1.args).val = 1;
-    univector<float, 10> v2 = e1;
-    CHECK(v2[0] == 101);
-    CHECK(v2[1] == 2);
-    CHECK(v2[2] == 3);
-    CHECK(v2[9] == 10);
+
+    CHECK_EXPRESSION(e1, 10, [](size_t i) { return (i == 0 ? 100 : i) + 1; });
 }
 
 TEST(test_arg_replace)
@@ -91,11 +65,8 @@ TEST(test_arg_replace)
     univector<float, 10> v2 = -counter();
     auto e1              = to_pointer(v1) * 10;
     std::get<0>(e1.args) = to_pointer(v2);
-    univector<float, 10> v3 = e1;
-    CHECK(v3[0] == 0);
-    CHECK(v3[1] == -10);
-    CHECK(v3[2] == -20);
-    CHECK(v3[9] == -90);
+
+    CHECK_EXPRESSION(e1, 10, [](size_t i) { return i * -10.0; });
 }
 
 TEST(size_calc)
@@ -112,21 +83,14 @@ TEST(size_calc)
 
 TEST(reverse)
 {
-    univector<int, 21> a = reverse(truncate(counter(), 21));
-    CHECK(a[0] == 20);
-    CHECK(a[1] == 19);
-    CHECK(a[20] == 0);
+    CHECK_EXPRESSION(reverse(truncate(counter(), 21)), 21, [](size_t i) { return 20 - i; });
 }
 
 TEST(mix)
 {
-    univector<float, 21> a = mix(sequence(0, 0.5f, 1, 0.5f), counter(), counter() * 10);
-    CHECK(a[0] == 0);
-    CHECK(a[1] == 5.5);
-    CHECK(a[2] == 20);
-    CHECK(a[3] == 16.5);
-    CHECK(a[4] == 4);
-    CHECK(a[20] == 20);
+    CHECK_EXPRESSION(mix(sequence(0, 0.5f, 1, 0.5f), counter(), counter() * 10), infinite_size, [](size_t i) {
+        return mix(std::array<float, 4>{ 0, 0.5f, 1, 0.5f }[i % 4], i, i * 10);
+    });
 }
 
 constexpr inline size_t fast_range_sum(size_t stop) { return stop * (stop + 1) / 2; }

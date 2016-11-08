@@ -129,7 +129,8 @@ KFR_SINTRIN vec<T, N> select(const mask<T, N>& a, const vec<T, N>& b, const vec<
 template <typename T, size_t N, KFR_ENABLE_IF(N >= platform<T>::vector_width), typename = void>
 KFR_SINTRIN vec<T, N> select(const mask<T, N>& a, const vec<T, N>& b, const vec<T, N>& c)
 {
-    return concat(select(low(a.asvec()).asmask(), low(b), low(c)), select(high(a.asvec()).asmask(), high(b), high(c)));
+    return concat(select(low(a.asvec()).asmask(), low(b), low(c)),
+                  select(high(a.asvec()).asmask(), high(b), high(c)));
 }
 
 #elif defined CMT_ARCH_NEON && defined KFR_NATIVE_INTRINSICS
@@ -139,8 +140,14 @@ KFR_SINTRIN f32neon select(const maskfor<f32neon>& m, const f32neon& x, const f3
     return vbslq_f32(*m, *x, *y);
 }
 
-KFR_SINTRIN i8neon select(const maskfor<i8neon>& m, const i8neon& x, const i8neon& y) { return vbslq_s8(*m, *x, *y); }
-KFR_SINTRIN u8neon select(const maskfor<u8neon>& m, const u8neon& x, const u8neon& y) { return vbslq_u8(*m, *x, *y); }
+KFR_SINTRIN i8neon select(const maskfor<i8neon>& m, const i8neon& x, const i8neon& y)
+{
+    return vbslq_s8(*m, *x, *y);
+}
+KFR_SINTRIN u8neon select(const maskfor<u8neon>& m, const u8neon& x, const u8neon& y)
+{
+    return vbslq_u8(*m, *x, *y);
+}
 KFR_SINTRIN i16neon select(const maskfor<i16neon>& m, const i16neon& x, const i16neon& y)
 {
     return vbslq_s16(*m, *x, *y);
@@ -218,7 +225,8 @@ template <typename T1, size_t N, typename T2, typename T3, KFR_ENABLE_IF(is_nume
 KFR_INTRIN vec<Tout, N> select(const mask<T1, N>& m, const T2& x, const T3& y)
 {
     static_assert(sizeof(T1) == sizeof(Tout), "select: incompatible types");
-    return intrinsics::select(bitcast<Tout>(m.asvec()).asmask(), static_cast<vec<Tout, N>>(x), static_cast<vec<Tout, N>>(y));
+    return intrinsics::select(bitcast<Tout>(m.asvec()).asmask(), static_cast<vec<Tout, N>>(x),
+                              static_cast<vec<Tout, N>>(y));
 }
 
 /**
