@@ -473,6 +473,20 @@ extern char* gets(char* __s);
 #define CMT_PRAGMA_MSVC(...) __pragma(__VA_ARGS__)
 #endif
 
+#if defined CMT_OS_IOS
+#define CMT_OS_NAME "ios"
+#elif defined CMT_OS_MAC
+#define CMT_OS_NAME "macos"
+#elif defined CMT_OS_ANDROIS
+#define CMT_OS_NAME "android"
+#elif defined CMT_OS_LINUX
+#define CMT_OS_NAME "linux"
+#elif defined CMT_OS_WIN
+#define CMT_OS_NAME "windows"
+#else
+#define CMT_OS_NAME "unknown"
+#endif
+
 #if defined CMT_COMPILER_CLANG
 #if defined _MSC_VER
 #define CMT_COMPIER_NAME "clang-msvc"
