@@ -41,6 +41,23 @@ namespace kfr
 constexpr size_t tag_array_ref      = 0;
 constexpr size_t tag_dynamic_vector = max_size_t;
 
+/**
+ * @brief Class that represent data in KFR. Many KFR functions can take this class as an argument.
+ * Can inherit from std::vector, std::array or keep only reference to data and its size.
+ *
+ * univector<float> is inherited from std::vector<float>
+ * univector<float, 10> is inherited from std::array<float, 10>
+ * univector<float, 0> contains only reference to data
+ *
+ * To convert a plain pointer to univector, call make_univector:
+ * @code
+ * double* buffer;
+ * size_t size;
+ * univector<double, 0> v = make_univector(buffer, size);
+ * // or pass result vector directly to a function:
+ * some_function(make_univector(buffer, size));
+ * @endcode
+ */
 template <typename T, size_t Size = tag_dynamic_vector>
 struct univector;
 
@@ -234,6 +251,10 @@ struct alignas(platform<>::maximum_vector_alignment) univector : std::array<T, S
     constexpr static bool is_pod       = kfr::is_pod<T>::value;
     using value_type                   = T;
 
+    value_type get(size_t index, value_type fallback_value) const noexcept
+    {
+        return index < this->size() ? this->operator[](index) : fallback_value;
+    }
     using univector_base<T, univector>::operator=;
 };
 
@@ -262,6 +283,7 @@ struct univector<T, tag_array_ref> : array_ref<T>, univector_base<T, univector<T
     constexpr univector(univector<U, Tag>& other) : array_ref<T>(other.data(), other.size())
     {
     }
+    void resize(size_t) noexcept {}
     constexpr static bool size_known   = false;
     constexpr static bool is_array     = false;
     constexpr static bool is_array_ref = true;
@@ -269,6 +291,10 @@ struct univector<T, tag_array_ref> : array_ref<T>, univector_base<T, univector<T
     constexpr static bool is_aligned   = false;
     using value_type                   = remove_const<T>;
 
+    value_type get(size_t index, value_type fallback_value) const noexcept
+    {
+        return index < this->size() ? this->operator[](index) : fallback_value;
+    }
     using univector_base<T, univector>::operator=;
 };
 
@@ -302,6 +328,10 @@ struct univector<T, tag_dynamic_vector> : std::vector<T, allocator<T>>,
     constexpr static bool is_aligned   = true;
     using value_type                   = T;
 
+    value_type get(size_t index, value_type fallback_value) const noexcept
+    {
+        return index < this->size() ? this->operator[](index) : fallback_value;
+    }
     using univector_base<T, univector>::operator=;
 };
 
@@ -318,27 +348,33 @@ template <typename T, size_t Size1 = tag_dynamic_vector, size_t Size2 = tag_dyna
           size_t Size3 = tag_dynamic_vector>
 using univector3d      = univector<univector<univector<T, Size3>, Size2>, Size1>;
 
+/// @brief Creates univector from data and size
 template <typename T>
 CMT_INLINE univector_ref<T> make_univector(T* data, size_t size)
 {
     return univector_ref<T>(data, size);
 }
 
+/// @brief Creates univector from data and size
 template <typename T>
 CMT_INLINE univector_ref<const T> make_univector(const T* data, size_t size)
 {
     return univector_ref<const T>(data, size);
 }
 
+/// @brief Converts an expression to univector
 template <typename Expr, typename T = value_type_of<Expr>>
 CMT_INLINE univector<T> render(Expr&& expr)
 {
+    static_assert(!is_infinite<Expr>::value,
+                  "render: Can't process infinite expressions. Pass size as a second argument to render.");
     univector<T> result;
     result.resize(expr.size());
     result = expr;
     return result;
 }
 
+/// @brief Converts an expression to univector
 template <typename Expr, typename T = value_type_of<Expr>>
 CMT_INLINE univector<T> render(Expr&& expr, size_t size)
 {
