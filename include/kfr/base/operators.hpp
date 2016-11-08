@@ -293,6 +293,17 @@ inline T1 neg(const T1& x)
 }
 KFR_FN(neg)
 
+inline float bitwisenot(const float& x) { return fbitcast(~ubitcast(x)); }
+inline float bitwiseor(const float& x, const float& y) { return fbitcast(ubitcast(x) | ubitcast(y)); }
+inline float bitwiseand(const float& x, const float& y) { return fbitcast(ubitcast(x) & ubitcast(y)); }
+inline float bitwiseandnot(const float& x, const float& y) { return fbitcast(ubitcast(x) & ~ubitcast(y)); }
+inline float bitwisexor(const float& x, const float& y) { return fbitcast(ubitcast(x) ^ ubitcast(y)); }
+inline double bitwisenot(const double& x) { return fbitcast(~ubitcast(x)); }
+inline double bitwiseor(const double& x, const double& y) { return fbitcast(ubitcast(x) | ubitcast(y)); }
+inline double bitwiseand(const double& x, const double& y) { return fbitcast(ubitcast(x) & ubitcast(y)); }
+inline double bitwiseandnot(const double& x, const double& y) { return fbitcast(ubitcast(x) & ~ubitcast(y)); }
+inline double bitwisexor(const double& x, const double& y) { return fbitcast(ubitcast(x) ^ ubitcast(y)); }
+
 /// Bitwise Not
 template <typename T1>
 inline T1 bitwisenot(const T1& x)
@@ -386,34 +397,34 @@ inline common_type<T1, T2> ror(const T1& left, const T2& right)
 KFR_FN(ror)
 
 template <typename T1, typename T2>
-inline common_type<T1, T2> equal(const T1& x, const T2& y)
+inline maskfor<common_type<T1, T2>> equal(const T1& x, const T2& y)
 {
-    return bitcast<subtype<common_type<T1, T2>>>(x == y);
+    return x == y;
 }
 template <typename T1, typename T2>
-inline common_type<T1, T2> notequal(const T1& x, const T2& y)
+inline maskfor<common_type<T1, T2>> notequal(const T1& x, const T2& y)
 {
-    return bitcast<subtype<common_type<T1, T2>>>(x != y);
+    return x != y;
 }
 template <typename T1, typename T2>
-inline common_type<T1, T2> less(const T1& x, const T2& y)
+inline maskfor<common_type<T1, T2>> less(const T1& x, const T2& y)
 {
-    return bitcast<subtype<common_type<T1, T2>>>(x < y);
+    return x < y;
 }
 template <typename T1, typename T2>
-inline common_type<T1, T2> greater(const T1& x, const T2& y)
+inline maskfor<common_type<T1, T2>> greater(const T1& x, const T2& y)
 {
-    return bitcast<subtype<common_type<T1, T2>>>(x > y);
+    return x > y;
 }
 template <typename T1, typename T2>
-inline common_type<T1, T2> lessorequal(const T1& x, const T2& y)
+inline maskfor<common_type<T1, T2>> lessorequal(const T1& x, const T2& y)
 {
-    return bitcast<subtype<common_type<T1, T2>>>(x <= y);
+    return x <= y;
 }
 template <typename T1, typename T2>
-inline common_type<T1, T2> greaterorequal(const T1& x, const T2& y)
+inline maskfor<common_type<T1, T2>> greaterorequal(const T1& x, const T2& y)
 {
-    return bitcast<subtype<common_type<T1, T2>>>(x >= y);
+    return x >= y;
 }
 KFR_FN(equal)
 KFR_FN(notequal)
@@ -512,7 +523,7 @@ KFR_FN(reciprocal)
 template <typename T1, typename T2>
 CMT_INLINE common_type<T1, T2> mulsign(const T1& x, const T2& y)
 {
-    return x ^ (y & constants<T2>::highbitmask());
+    return bitwisexor(x, bitwiseand(y, constants<T2>::highbitmask()));
 }
 KFR_FN(mulsign)
 
