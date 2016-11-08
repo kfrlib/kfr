@@ -492,6 +492,34 @@ constexpr CMT_INLINE common_type<T1, T2, T3, Ts...> horner(const T1& x, const T2
 {
     return fmadd(horner(x, c1, values...), x, c0);
 }
+
+template <typename T1, typename T2>
+constexpr CMT_INLINE common_type<T1, T2> horner_even(const T1&, const T2& c0)
+{
+    return c0;
+}
+
+template <typename T1, typename T2, typename T3, typename... Ts>
+constexpr CMT_INLINE common_type<T1, T2, T3, Ts...> horner_even(const T1& x, const T2& c0, const T3& c2,
+                                                                const Ts&... values)
+{
+    const T1 x2 = x * x;
+    return fmadd(horner(x2, c2, values...), x2, c0);
+}
+
+template <typename T1, typename T2>
+constexpr CMT_INLINE common_type<T1, T2> horner_odd(const T1& x, const T2& c1)
+{
+    return c1 * x;
+}
+
+template <typename T1, typename T2, typename T3, typename... Ts>
+constexpr CMT_INLINE common_type<T1, T2, T3, Ts...> horner_odd(const T1& x, const T2& c1, const T3& c3,
+                                                               const Ts&... values)
+{
+    const T1 x2 = x * x;
+    return fmadd(horner(x2, c3, values...), x2, c1) * x;
+}
 }
 
 /// @brief Calculate polynomial using Horner's method
@@ -508,6 +536,38 @@ template <typename... E, KFR_ENABLE_IF(is_input_expressions<E...>::value)>
 CMT_INLINE internal::expression_function<fn::horner, E...> horner(E&&... x)
 {
     return { fn::horner(), std::forward<E>(x)... };
+}
+
+/// @brief Calculate polynomial using Horner's method (even powers)
+///
+/// ``horner_even(x, 1, 2, 3)`` is equivalent to \(3x^4 + 2x^2 + 1\)
+template <typename T1, typename... Ts, KFR_ENABLE_IF(is_numeric_args<T1, Ts...>::value)>
+constexpr CMT_INLINE common_type<T1, Ts...> horner_even(const T1& x, const Ts&... c)
+{
+    return internal::horner_even(x, c...);
+}
+KFR_FN(horner_even)
+
+template <typename... E, KFR_ENABLE_IF(is_input_expressions<E...>::value)>
+CMT_INLINE internal::expression_function<fn::horner_even, E...> horner_even(E&&... x)
+{
+    return { fn::horner_even(), std::forward<E>(x)... };
+}
+
+/// @brief Calculate polynomial using Horner's method (odd powers)
+///
+/// ``horner_odd(x, 1, 2, 3)`` is equivalent to \(3x^5 + 2x^3 + 1x\)
+template <typename T1, typename... Ts, KFR_ENABLE_IF(is_numeric_args<T1, Ts...>::value)>
+constexpr CMT_INLINE common_type<T1, Ts...> horner_odd(const T1& x, const Ts&... c)
+{
+    return internal::horner_odd(x, c...);
+}
+KFR_FN(horner_odd)
+
+template <typename... E, KFR_ENABLE_IF(is_input_expressions<E...>::value)>
+CMT_INLINE internal::expression_function<fn::horner_odd, E...> horner_odd(E&&... x)
+{
+    return { fn::horner_odd(), std::forward<E>(x)... };
 }
 
 /// @brief Calculate Multiplicative Inverse of `x`
