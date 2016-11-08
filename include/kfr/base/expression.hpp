@@ -124,6 +124,70 @@ using is_numeric = is_number<deep_subtype<T>>;
 template <typename... Ts>
 using is_numeric_args = and_t<is_numeric<Ts>...>;
 
+#ifdef KFR_TESTING
+namespace internal
+{
+template <typename T, size_t N, typename Fn>
+static vec<T, N> get_fn_value(size_t index, Fn&& fn)
+{
+    vec<T, N> x;
+    for (size_t i = 0; i < N; i++)
+        x[i]      = fn(index + i);
+    return x;
+}
+}
+
+template <typename E, typename Fn>
+static void test_expression(const E& expr, size_t size, Fn&& fn, const char* expression = nullptr)
+{
+    using T                  = value_type_of<E>;
+    ::testo::test_case* test = ::testo::active_test();
+    auto&& c                 = ::testo::make_comparison();
+    test->check(c <= expr.size() == size, expression);
+    if (expr.size() != size)
+        return;
+    size = size_min(size, 100);
+    for (size_t i = 0; i < size;)
+    {
+        const size_t next_size =
+            std::min(prev_poweroftwo(size - i), static_cast<size_t>(1) << (std::rand() % 6));
+        switch (next_size)
+        {
+        case 1:
+            test->check(c <= expr(cinput, i, vec_t<T, 1>()) == internal::get_fn_value<T, 1>(i, fn),
+                        expression);
+            break;
+        case 2:
+            test->check(c <= expr(cinput, i, vec_t<T, 2>()) == internal::get_fn_value<T, 2>(i, fn),
+                        expression);
+            break;
+        case 4:
+            test->check(c <= expr(cinput, i, vec_t<T, 4>()) == internal::get_fn_value<T, 4>(i, fn),
+                        expression);
+            break;
+        case 8:
+            test->check(c <= expr(cinput, i, vec_t<T, 8>()) == internal::get_fn_value<T, 8>(i, fn),
+                        expression);
+            break;
+        case 16:
+            test->check(c <= expr(cinput, i, vec_t<T, 16>()) == internal::get_fn_value<T, 16>(i, fn),
+                        expression);
+            break;
+        case 32:
+            test->check(c <= expr(cinput, i, vec_t<T, 32>()) == internal::get_fn_value<T, 32>(i, fn),
+                        expression);
+            break;
+        }
+        i += next_size;
+    }
+}
+#define TESTO_CHECK_EXPRESSION(expr, size, ...) ::kfr::test_expression(expr, size, __VA_ARGS__, #expr)
+
+#ifndef TESTO_NO_SHORT_MACROS
+#define CHECK_EXPRESSION TESTO_CHECK_EXPRESSION
+#endif
+#endif
+
 namespace internal
 {
 
