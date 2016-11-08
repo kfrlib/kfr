@@ -32,9 +32,9 @@
 namespace kfr
 {
 
-constexpr size_t maximum_expression_width = bitness_const(16, 32);
+constexpr size_t maximum_expression_width = platform<float>::vector_capacity / 4;
 
-constexpr size_t expression_vtable_size = 2 + ilog2(maximum_expression_width) + 1;
+constexpr size_t expression_vtable_size = 3 + ilog2(maximum_expression_width) + 1;
 
 template <typename T>
 using expression_vtable = std::array<void*, expression_vtable_size>;
@@ -77,18 +77,23 @@ struct expression_pointer : input_expression
         : instance(instance), vtable(vtable), resource(std::move(resource))
     {
     }
-    template <size_t N>
+    template <size_t N, KFR_ENABLE_IF(N <= maximum_expression_width)>
     CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
     {
         using func_t = void (*)(void*, size_t, vec<T, N>&);
 
         static_assert(is_poweroftwo(N), "N must be a power of two");
         constexpr size_t findex = ilog2(N);
-        static_assert(N <= maximum_expression_width, "N is greater than maxwidth");
-        func_t func = reinterpret_cast<func_t>((*vtable)[2 + findex]);
+        func_t func             = reinterpret_cast<func_t>((*vtable)[3 + findex]);
         vec<T, N> result;
         func(instance, index, result);
         return result;
+    }
+    template <size_t N, KFR_ENABLE_IF(N > maximum_expression_width)>
+    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
+    {
+        return concat(operator()(cinput, index, vec_t<T, N / 2>()),
+                      operator()(cinput, index + N / 2, vec_t<T, N / 2>()));
     }
     CMT_INLINE void begin_block(cinput_t, size_t size) const
     {
@@ -101,6 +106,12 @@ struct expression_pointer : input_expression
         using func_t = void (*)(void*, size_t);
         func_t func  = reinterpret_cast<func_t>((*vtable)[1]);
         func(instance, size);
+    }
+    CMT_INLINE size_t size() const
+    {
+        using func_t = size_t (*)(void*);
+        func_t func  = reinterpret_cast<func_t>((*vtable)[2]);
+        return func(instance);
     }
 
 private:
@@ -119,18 +130,23 @@ struct expression_pointer<T, false> : input_expression
         : instance(instance), vtable(vtable)
     {
     }
-    template <size_t N>
+    template <size_t N, KFR_ENABLE_IF(N <= maximum_expression_width)>
     CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
     {
         using func_t = void (*)(void*, size_t, vec<T, N>&);
 
         static_assert(is_poweroftwo(N), "N must be a power of two");
         constexpr size_t findex = ilog2(N);
-        static_assert(N <= maximum_expression_width, "N is greater than maxwidth");
-        func_t func = reinterpret_cast<func_t>((*vtable)[2 + findex]);
+        func_t func             = reinterpret_cast<func_t>((*vtable)[3 + findex]);
         vec<T, N> result;
         func(instance, index, result);
         return result;
+    }
+    template <size_t N, KFR_ENABLE_IF(N > maximum_expression_width)>
+    CMT_INLINE vec<T, N> operator()(cinput_t input, size_t index, vec_t<T, N>) const
+    {
+        return concat(operator()(cinput, index, vec_t<T, N / 2>()),
+                      operator()(cinput, index + N / 2, vec_t<T, N / 2>()));
     }
     CMT_INLINE void begin_block(cinput_t, size_t size) const
     {
@@ -143,6 +159,12 @@ struct expression_pointer<T, false> : input_expression
         using func_t = void (*)(void*, size_t);
         func_t func  = reinterpret_cast<func_t>((*vtable)[1]);
         func(instance, size);
+    }
+    CMT_INLINE size_t size() const
+    {
+        using func_t = size_t (*)(void*);
+        func_t func  = reinterpret_cast<func_t>((*vtable)[2]);
+        return func(instance);
     }
 
 private:
@@ -171,6 +193,11 @@ CMT_INLINE NonMemFn make_expression_end_block()
 {
     return [](void* fn, size_t size) { reinterpret_cast<Fn*>(fn)->end_block(cinput, size); };
 }
+template <typename Fn, typename NonMemFn = size_t (*)(void*)>
+CMT_INLINE NonMemFn make_expression_size()
+{
+    return [](void* fn) -> size_t { return reinterpret_cast<Fn*>(fn)->size(); };
+}
 
 template <typename T, typename E>
 expression_vtable<T> make_expression_vtable_impl()
@@ -179,10 +206,11 @@ expression_vtable<T> make_expression_vtable_impl()
 
     result[0] = reinterpret_cast<void*>(internal::make_expression_begin_block<decay<E>>());
     result[1] = reinterpret_cast<void*>(internal::make_expression_end_block<decay<E>>());
+    result[2] = reinterpret_cast<void*>(internal::make_expression_size<decay<E>>());
 
-    cforeach(csizeseq_t<expression_vtable_size - 2>(), [&](auto u) {
+    cforeach(csizeseq_t<expression_vtable_size - 3>(), [&](auto u) {
         constexpr size_t N = 1 << val_of(decltype(u)());
-        result[2 + val_of(decltype(u)())] =
+        result[3 + val_of(decltype(u)())] =
             reinterpret_cast<void*>(internal::make_expression_func<T, N, decay<E>>());
     });
     return result;
