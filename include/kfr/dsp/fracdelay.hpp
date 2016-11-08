@@ -36,6 +36,6 @@ CMT_INLINE internal::expression_short_fir<2, T, E1> fracdelay(E1&& e1, T delay)
     if (delay < 0)
         delay = 0;
     univector<T, 2> taps({ 1 - delay, delay });
-    return internal::expression_short_fir<2, T, E1>(std::forward<E1>(e1), taps.ref());
+    return internal::expression_short_fir<2, T, E1>(std::forward<E1>(e1), taps);
 }
 }
