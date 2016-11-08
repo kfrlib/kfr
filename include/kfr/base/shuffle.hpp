@@ -107,7 +107,7 @@ CMT_INLINE void split(const vec<T, N>&)
 template <size_t start = 0, typename T, size_t N, size_t Nout, typename... Args>
 CMT_INLINE void split(const vec<T, N>& x, vec<T, Nout>& out, Args&&... args)
 {
-    out = slice<start, Nout>(x);
+    out = x.shuffle(csizeseq_t<Nout, start>());
     split<start + Nout>(x, std::forward<Args>(args)...);
 }
 template <typename T, size_t N>
