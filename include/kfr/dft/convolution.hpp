@@ -43,7 +43,7 @@ namespace kfr
 {
 
 template <typename T, size_t Tag1, size_t Tag2>
-KFR_INTRIN univector<T> convolve(const univector<T, Tag1>& src1, const univector<T, Tag2>& src2)
+CMT_FUNC univector<T> convolve(const univector<T, Tag1>& src1, const univector<T, Tag2>& src2)
 {
     const size_t size                = next_poweroftwo(src1.size() + src2.size() - 1);
     univector<complex<T>> src1padded = src1;
@@ -62,7 +62,7 @@ KFR_INTRIN univector<T> convolve(const univector<T, Tag1>& src1, const univector
 }
 
 template <typename T, size_t Tag1, size_t Tag2>
-KFR_INTRIN univector<T> correlate(const univector<T, Tag1>& src1, const univector<T, Tag2>& src2)
+CMT_FUNC univector<T> correlate(const univector<T, Tag1>& src1, const univector<T, Tag2>& src2)
 {
     const size_t size                = next_poweroftwo(src1.size() + src2.size() - 1);
     univector<complex<T>> src1padded = src1;
@@ -80,11 +80,12 @@ KFR_INTRIN univector<T> correlate(const univector<T, Tag1>& src1, const univecto
 }
 
 template <typename T, size_t Tag1>
-KFR_INTRIN univector<T> autocorrelate(const univector<T, Tag1>& src)
+CMT_FUNC univector<T> autocorrelate(const univector<T, Tag1>& src)
 {
     univector<T> result = correlate(src, src);
     result              = result.slice(result.size() / 2);
     return result;
 }
+
 }
 CMT_PRAGMA_GNU(GCC diagnostic pop)

@@ -71,7 +71,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/data/sincos.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/bitrev.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/cache.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/conv.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/dft/convolution.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/fft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/ft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/reference_dft.hpp
