@@ -93,8 +93,11 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/waveshaper.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/weighting.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/window.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/ext/console_colors.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/ext/double_double.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/audiofile.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/file.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/python_plot.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/tostring.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/testo/testo.hpp
 )
