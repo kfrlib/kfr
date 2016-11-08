@@ -67,6 +67,12 @@ void python(const std::string& name, const std::string& code)
     std::system(("python \"" + filename + "\"").c_str());
 }
 CMT_PRAGMA_GNU(GCC diagnostic pop)
+
+template <typename T>
+inline T flush_to_zero(T value)
+{
+    return std::isfinite(value) ? value : 0;
+}
 }
 
 inline std::string concat_args() { return {}; }
@@ -108,7 +114,7 @@ void plot_show(const std::string& name, T&& x, const std::string& options = "")
           "import dspplot\n\n"
           "data = [\n";
     for (size_t i = 0; i < array.size(); i++)
-        ss += as_string(fmt<'g', 20, 17>(array[i]), ",\n");
+        ss += as_string(fmt<'g', 20, 17>(internal::flush_to_zero(array[i])), ",\n");
     ss += "]\n";
 
     ss += "dspplot.plot(" + concat_args("data", options) + ")\n";
