@@ -27,6 +27,7 @@
 
 #include "../base/clamp.hpp"
 #include "../base/hyperbolic.hpp"
+#include "../base/operators.hpp"
 
 namespace kfr
 {
@@ -40,5 +41,51 @@ template <typename E1>
 inline auto waveshaper_tanh(E1&& input, double saturation)
 {
     return tanh(saturation * input) * (coth(saturation));
+}
+
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+CMT_FUNC flt_type<T1> saturate_I(const T1& x)
+{
+    const flt_type<T1> xx = -1 / (abs(static_cast<flt_type<T1>>(x)) + 1) + 1;
+    return mulsign(xx, static_cast<flt_type<T1>>(x));
+}
+KFR_FN(saturate_I)
+
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+CMT_FUNC flt_type<T1> saturate_II(const T1& x)
+{
+    const flt_type<T1> xx = sqr(abs(static_cast<flt_type<T1>>(x)) + 1);
+    return mulsign((xx - 1) / (xx + 1), static_cast<flt_type<T1>>(x));
+}
+KFR_FN(saturate_II)
+
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+CMT_FUNC internal::expression_function<fn::saturate_II, E1> saturate_I(E1&& x)
+{
+    return { fn::saturate_I(), std::forward<E1>(x) };
+}
+
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+CMT_FUNC internal::expression_function<fn::saturate_II, E1> saturate_II(E1&& x)
+{
+    return { fn::saturate_II(), std::forward<E1>(x) };
+}
+
+template <typename E1>
+inline auto waveshaper_saturate_I(E1&& input, double saturation)
+{
+    return saturate_I(saturation * input) / (saturate_I(saturation));
+}
+
+template <typename E1>
+inline auto waveshaper_saturate_II(E1&& input, double saturation)
+{
+    return saturate_II(saturation * input) / (saturate_II(saturation));
+}
+
+template <typename E1, typename... Cs>
+inline auto waveshaper_poly(E1&& input, fbase c1, fbase c3, Cs... cs)
+{
+    return horner_odd(input, c1, c3, static_cast<fbase>(cs)...);
 }
 }
