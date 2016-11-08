@@ -64,6 +64,26 @@ TEST(phasor)
     CHECK(rms(v1 - v2) < 1.e-5);
 }
 
+TEST(fir)
+{
+    const univector<double, 100> data = counter() + sequence(1, 2, -10, 100) + sequence(0, -7, 0.5);
+    const univector<double, 7> taps{ 1, 2, -2, 0.5, 0.0625, 4, -8 };
+
+    CHECK_EXPRESSION(fir(data, taps), 100, [&](size_t index) -> double {
+        double result = 0.0;
+        for (size_t i = 0; i < taps.size(); i++)
+            result += data.get(index - i, 0.0) * taps[i];
+        return result;
+    });
+
+    CHECK_EXPRESSION(short_fir(data, taps), 100, [&](size_t index) -> double {
+        double result = 0.0;
+        for (size_t i = 0; i < taps.size(); i++)
+            result += data.get(index - i, 0.0) * taps[i];
+        return result;
+    });
+}
+
 int main()
 {
     println(library_version());
