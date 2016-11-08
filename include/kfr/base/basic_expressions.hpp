@@ -538,9 +538,9 @@ private:
 }
 
 template <typename... E, KFR_ENABLE_IF(is_output_expressions<E...>::value)>
-internal::expression_unpack<internal::arg<E>...> unpack(E&&... e)
+internal::expression_unpack<E...> unpack(E&&... e)
 {
-    return internal::expression_unpack<internal::arg<E>...>(std::forward<E>(e)...);
+    return internal::expression_unpack<E...>(std::forward<E>(e)...);
 }
 
 template <typename... E, KFR_ENABLE_IF(is_input_expressions<E...>::value)>

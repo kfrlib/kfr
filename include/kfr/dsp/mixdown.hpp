@@ -71,9 +71,8 @@ CMT_GNU_CONSTEXPR f64x2x2 matrix_halfsum_halfdiff()
  * @brief Returns template expression that returns the vector of length 2 containing mix of the left and right
  * channels
  */
-template <typename Left, typename Right,
-          typename Result = internal::expression_function<
-              internal::stereo_matrix, internal::expression_pack<internal::arg<Left>, internal::arg<Right>>>>
+template <typename Left, typename Right, typename Result = internal::expression_function<
+                                             internal::stereo_matrix, internal::expression_pack<Left, Right>>>
 Result mixdown_stereo(Left&& left, Right&& right, const f64x2x2& matrix)
 {
     return Result(internal::stereo_matrix{ matrix },
