@@ -384,9 +384,9 @@ CMT_INLINE static size_t process(OutputExpr&& out, const InputExpr& in, size_t s
     in.begin_block(cinput, size);
 
 #ifdef NDEBUG
-    constexpr size_t w = width == 0 ? platform<Tin, c>::vector_width * bitness_const(2, 4) : width;
+    constexpr size_t w = width == 0 ? platform<Tin, c>::vector_capacity / 4 : width;
 #else
-    constexpr size_t w = width == 0 ? platform<Tin, c>::vector_width * bitness_const(1, 1) : width;
+    constexpr size_t w = width == 0 ? platform<Tin, c>::vector_width : width;
 #endif
 
     size_t i = start;
