@@ -232,7 +232,7 @@ KFR_I_FN(atan2deg)
  * \f$\pi/2\f$.
  */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-CMT_FUNC flt_type<T1> atan(const T1& x)
+KFR_FUNC flt_type<T1> atan(const T1& x)
 {
     return intrinsics::atan(x);
 }
@@ -241,7 +241,7 @@ CMT_FUNC flt_type<T1> atan(const T1& x)
  * @brief Returns template expression that returns the arc tangent of x.
  */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_FUNC internal::expression_function<fn::atan, E1> atan(E1&& x)
+KFR_FUNC internal::expression_function<fn::atan, E1> atan(E1&& x)
 {
     return { fn::atan(), std::forward<E1>(x) };
 }
@@ -251,7 +251,7 @@ CMT_FUNC internal::expression_function<fn::atan, E1> atan(E1&& x)
  * through 90.
  */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-CMT_FUNC flt_type<T1> atandeg(const T1& x)
+KFR_FUNC flt_type<T1> atandeg(const T1& x)
 {
     return intrinsics::atandeg(x);
 }
@@ -260,7 +260,7 @@ CMT_FUNC flt_type<T1> atandeg(const T1& x)
  * @brief Returns template expression that returns the arc tangent of the x, expressed in degrees.
  */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_FUNC internal::expression_function<fn::atandeg, E1> atandeg(E1&& x)
+KFR_FUNC internal::expression_function<fn::atandeg, E1> atandeg(E1&& x)
 {
     return { fn::atandeg(), std::forward<E1>(x) };
 }
@@ -269,7 +269,7 @@ CMT_FUNC internal::expression_function<fn::atandeg, E1> atandeg(E1&& x)
  * @brief Returns the arc tangent of y/x using the signs of arguments to determine the correct quadrant.
  */
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-CMT_FUNC common_type<T1, T2> atan2(const T1& x, const T2& y)
+KFR_FUNC common_type<T1, T2> atan2(const T1& x, const T2& y)
 {
     return intrinsics::atan2(x, y);
 }
@@ -278,7 +278,7 @@ CMT_FUNC common_type<T1, T2> atan2(const T1& x, const T2& y)
  * @brief Returns template expression that returns the arc tangent of y/x.
  */
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-CMT_FUNC internal::expression_function<fn::atan2, E1, E2> atan2(E1&& x, E2&& y)
+KFR_FUNC internal::expression_function<fn::atan2, E1, E2> atan2(E1&& x, E2&& y)
 {
     return { fn::atan2(), std::forward<E1>(x), std::forward<E2>(y) };
 }
@@ -288,7 +288,7 @@ CMT_FUNC internal::expression_function<fn::atan2, E1, E2> atan2(E1&& x, E2&& y)
  * correct quadrant.
  */
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>::value)>
-CMT_FUNC common_type<T1, T2> atan2deg(const T1& x, const T2& y)
+KFR_FUNC common_type<T1, T2> atan2deg(const T1& x, const T2& y)
 {
     return intrinsics::atan2deg(x, y);
 }
@@ -297,7 +297,7 @@ CMT_FUNC common_type<T1, T2> atan2deg(const T1& x, const T2& y)
  * @brief Returns template expression that returns the arc tangent of y/x (expressed in degrees).
  */
 template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
-CMT_FUNC internal::expression_function<fn::atan2deg, E1, E2> atan2deg(E1&& x, E2&& y)
+KFR_FUNC internal::expression_function<fn::atan2deg, E1, E2> atan2deg(E1&& x, E2&& y)
 {
     return { fn::atan2deg(), std::forward<E1>(x), std::forward<E2>(y) };
 }

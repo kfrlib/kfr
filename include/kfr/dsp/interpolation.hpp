@@ -33,25 +33,25 @@ namespace kfr
 {
 
 template <typename T, typename M>
-KFR_SINTRIN T nearest(M mu, T x1, T x2)
+KFR_FUNC T nearest(M mu, T x1, T x2)
 {
     return select(mu < M(0.5), x1, x2);
 }
 
 template <typename T, typename M>
-KFR_SINTRIN T linear(M mu, T x1, T x2)
+KFR_FUNC T linear(M mu, T x1, T x2)
 {
     return mix(mu, x1, x2);
 }
 
 template <typename T, typename M>
-KFR_SINTRIN T cosine(M mu, T x1, T x2)
+KFR_FUNC T cosine(M mu, T x1, T x2)
 {
     return mix((M(1) - fastcos(mu * c_pi<T>)) * M(0.5), x1, x2);
 }
 
 template <typename T, typename M>
-KFR_SINTRIN T cubic(M mu, T x0, T x1, T x2, T x3)
+KFR_FUNC T cubic(M mu, T x0, T x1, T x2, T x3)
 {
     const T a0 = x3 - x2 - x0 + x1;
     const T a1 = x0 - x1 - a0;
@@ -61,7 +61,7 @@ KFR_SINTRIN T cubic(M mu, T x0, T x1, T x2, T x3)
 }
 
 template <typename T, typename M>
-KFR_SINTRIN T catmullrom(M mu, T x0, T x1, T x2, T x3)
+KFR_FUNC T catmullrom(M mu, T x0, T x1, T x2, T x3)
 {
     const T a0 = T(0.5) * (x3 - x0) - T(1.5) * (x2 - x1);
     const T a1 = x0 - T(2.5) * x1 + T(2) * x2 - T(0.5) * x3;

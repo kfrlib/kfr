@@ -662,152 +662,152 @@ KFR_I_FN(cartesian)
 KFR_I_FN(csqrt)
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-CMT_FUNC T1 csin(const T1& x)
+KFR_FUNC T1 csin(const T1& x)
 {
     return intrinsics::csin(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_FUNC internal::expression_function<fn::csin, E1> csin(E1&& x)
+KFR_FUNC internal::expression_function<fn::csin, E1> csin(E1&& x)
 {
     return { fn::csin(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-CMT_FUNC T1 csinh(const T1& x)
+KFR_FUNC T1 csinh(const T1& x)
 {
     return intrinsics::csinh(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_FUNC internal::expression_function<fn::csinh, E1> csinh(E1&& x)
+KFR_FUNC internal::expression_function<fn::csinh, E1> csinh(E1&& x)
 {
     return { fn::csinh(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-CMT_FUNC T1 ccos(const T1& x)
+KFR_FUNC T1 ccos(const T1& x)
 {
     return intrinsics::ccos(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_FUNC internal::expression_function<fn::ccos, E1> ccos(E1&& x)
+KFR_FUNC internal::expression_function<fn::ccos, E1> ccos(E1&& x)
 {
     return { fn::ccos(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-CMT_FUNC T1 ccosh(const T1& x)
+KFR_FUNC T1 ccosh(const T1& x)
 {
     return intrinsics::ccosh(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_FUNC internal::expression_function<fn::ccosh, E1> ccosh(E1&& x)
+KFR_FUNC internal::expression_function<fn::ccosh, E1> ccosh(E1&& x)
 {
     return { fn::ccosh(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-CMT_FUNC realtype<T1> cabs(const T1& x)
+KFR_FUNC realtype<T1> cabs(const T1& x)
 {
     return intrinsics::cabs(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_FUNC internal::expression_function<fn::cabs, E1> cabs(E1&& x)
+KFR_FUNC internal::expression_function<fn::cabs, E1> cabs(E1&& x)
 {
     return { fn::cabs(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-CMT_FUNC realtype<T1> carg(const T1& x)
+KFR_FUNC realtype<T1> carg(const T1& x)
 {
     return intrinsics::carg(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_FUNC internal::expression_function<fn::carg, E1> carg(E1&& x)
+KFR_FUNC internal::expression_function<fn::carg, E1> carg(E1&& x)
 {
     return { fn::carg(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-CMT_FUNC T1 clog(const T1& x)
+KFR_FUNC T1 clog(const T1& x)
 {
     return intrinsics::clog(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_FUNC internal::expression_function<fn::clog, E1> clog(E1&& x)
+KFR_FUNC internal::expression_function<fn::clog, E1> clog(E1&& x)
 {
     return { fn::clog(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-CMT_FUNC T1 clog2(const T1& x)
+KFR_FUNC T1 clog2(const T1& x)
 {
     return intrinsics::clog2(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_FUNC internal::expression_function<fn::clog2, E1> clog2(E1&& x)
+KFR_FUNC internal::expression_function<fn::clog2, E1> clog2(E1&& x)
 {
     return { fn::clog2(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-CMT_FUNC T1 clog10(const T1& x)
+KFR_FUNC T1 clog10(const T1& x)
 {
     return intrinsics::clog10(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_FUNC internal::expression_function<fn::clog10, E1> clog10(E1&& x)
+KFR_FUNC internal::expression_function<fn::clog10, E1> clog10(E1&& x)
 {
     return { fn::clog10(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-CMT_FUNC T1 cexp(const T1& x)
+KFR_FUNC T1 cexp(const T1& x)
 {
     return intrinsics::cexp(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_FUNC internal::expression_function<fn::cexp, E1> cexp(E1&& x)
+KFR_FUNC internal::expression_function<fn::cexp, E1> cexp(E1&& x)
 {
     return { fn::cexp(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-CMT_FUNC T1 cexp2(const T1& x)
+KFR_FUNC T1 cexp2(const T1& x)
 {
     return intrinsics::cexp2(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_FUNC internal::expression_function<fn::cexp2, E1> cexp2(E1&& x)
+KFR_FUNC internal::expression_function<fn::cexp2, E1> cexp2(E1&& x)
 {
     return { fn::cexp2(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-CMT_FUNC T1 cexp10(const T1& x)
+KFR_FUNC T1 cexp10(const T1& x)
 {
     return intrinsics::cexp10(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_FUNC internal::expression_function<fn::cexp10, E1> cexp10(E1&& x)
+KFR_FUNC internal::expression_function<fn::cexp10, E1> cexp10(E1&& x)
 {
     return { fn::cexp10(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-CMT_FUNC T1 polar(const T1& x)
+KFR_FUNC T1 polar(const T1& x)
 {
     return intrinsics::polar(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_FUNC internal::expression_function<fn::polar, E1> polar(E1&& x)
+KFR_FUNC internal::expression_function<fn::polar, E1> polar(E1&& x)
 {
     return { fn::polar(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-CMT_FUNC T1 cartesian(const T1& x)
+KFR_FUNC T1 cartesian(const T1& x)
 {
     return intrinsics::cartesian(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_FUNC internal::expression_function<fn::cartesian, E1> cartesian(E1&& x)
+KFR_FUNC internal::expression_function<fn::cartesian, E1> cartesian(E1&& x)
 {
     return { fn::cartesian(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-CMT_FUNC T1 csqrt(const T1& x)
+KFR_FUNC T1 csqrt(const T1& x)
 {
     return intrinsics::csqrt(x);
 }
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_FUNC internal::expression_function<fn::csqrt, E1> csqrt(E1&& x)
+KFR_FUNC internal::expression_function<fn::csqrt, E1> csqrt(E1&& x)
 {
     return { fn::csqrt(), std::forward<E1>(x) };
 }

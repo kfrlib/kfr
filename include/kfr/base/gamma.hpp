@@ -68,25 +68,25 @@ KFR_I_FN(gamma)
 KFR_I_FN(factorial_approx)
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-CMT_FUNC flt_type<T1> gamma(const T1& x)
+KFR_FUNC flt_type<T1> gamma(const T1& x)
 {
     return intrinsics::gamma(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_FUNC internal::expression_function<fn::gamma, E1> gamma(E1&& x)
+KFR_FUNC internal::expression_function<fn::gamma, E1> gamma(E1&& x)
 {
     return { fn::gamma(), std::forward<E1>(x) };
 }
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
-CMT_FUNC flt_type<T1> factorial_approx(const T1& x)
+KFR_FUNC flt_type<T1> factorial_approx(const T1& x)
 {
     return intrinsics::factorial_approx(x);
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_FUNC internal::expression_function<fn::factorial_approx, E1> factorial_approx(E1&& x)
+KFR_FUNC internal::expression_function<fn::factorial_approx, E1> factorial_approx(E1&& x)
 {
     return { fn::factorial_approx(), std::forward<E1>(x) };
 }

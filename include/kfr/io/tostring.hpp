@@ -142,7 +142,7 @@ struct representation<kfr::mask<T, N>>
     static std::string get(const kfr::mask<T, N>& value)
     {
         bool values[N];
-        for(size_t i = 0; i < N; i++)
+        for (size_t i = 0; i < N; i++)
             values[i] = value[i];
         return details::array_to_string(values, N);
     }
