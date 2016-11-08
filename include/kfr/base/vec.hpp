@@ -741,6 +741,9 @@ constexpr vec<T, Nout> partial_mask()
 }
 }
 
+template <typename T>
+using optvec = vec<T, platform<T>::vector_capacity / 4>;
+
 using f32x1  = vec<f32, 1>;
 using f32x2  = vec<f32, 2>;
 using f32x3  = vec<f32, 3>;
