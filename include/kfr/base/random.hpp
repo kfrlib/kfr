@@ -107,20 +107,20 @@ inline vec<f64, N> randommantissa(random_bit_generator& gen)
     return bitcast<f64>((random_uniform<u64, N>(gen) & 0x000FFFFFFFFFFFFFull) | 0x3FF0000000000000ull) + 0.0;
 }
 
-template <typename T, size_t N>
-inline enable_if_f<vec<T, N>> random_uniform(random_bit_generator& gen)
+template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
+inline vec<T, N> random_uniform(random_bit_generator& gen)
 {
     return randommantissa<T, N>(gen) - 1.f;
 }
 
-template <size_t N, typename T>
-inline enable_if_f<vec<T, N>> random_range(random_bit_generator& gen, T min, T max)
+template <size_t N, typename T, KFR_ENABLE_IF(is_f_class<T>::value)>
+inline vec<T, N> random_range(random_bit_generator& gen, T min, T max)
 {
     return mix(random_uniform<T, N>(gen), min, max);
 }
 
-template <size_t N, typename T>
-inline enable_if_not_f<vec<T, N>> random_range(random_bit_generator& gen, T min, T max)
+template <size_t N, typename T, KFR_ENABLE_IF(!is_f_class<T>::value)>
+inline vec<T, N> random_range(random_bit_generator& gen, T min, T max)
 {
     using big_type = findinttype<sqr(std::numeric_limits<T>::min()), sqr(std::numeric_limits<T>::max())>;
 
