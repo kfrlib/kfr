@@ -26,15 +26,16 @@
 #pragma once
 
 #include "../base/basic_expressions.hpp"
+#include "../base/operators.hpp"
 #include "../base/vec.hpp"
 
 namespace kfr
 {
 /**
- * @brief Returns expression template that generates unit impulse
+ * @brief Returns expression template that generates a unit impulse
  */
 template <typename T = int>
-inline auto simpleimpulse()
+static auto unitimpulse()
 {
     return lambda<T>([](cinput_t, size_t index, auto x) {
         if (index == 0)
@@ -42,5 +43,39 @@ inline auto simpleimpulse()
         else
             return zerovector(x);
     });
+}
+
+template <typename T = fbase>
+static auto jaehne_arg(size_t size)
+{
+    return truncate(constants<T>::pi_s(1, 2) * sqr(linspace(T(0), T(size), size, false)) / size, size);
+}
+
+/**
+ * @brief Returns expression template that generates a jaehne vector
+ * Generates the sine with linearly increasing frequency from 0hz to nyquist frequency.
+ */
+template <typename T = fbase>
+static auto jaehne(identity<T> magn, size_t size)
+{
+    return magn * sin(jaehne_arg<T>(size));
+}
+
+template <typename T = fbase>
+static auto swept_arg(size_t size)
+{
+    return truncate(constants<T>::pi_s(1, 4) * sqr(sqr(linspace(T(0), T(size), size, false)) / sqr(T(size))) *
+                        T(size),
+                    size);
+}
+
+/**
+ * @brief Returns expression template that generates a jaehne vector
+ * Generates the sine with logarithmically increasing frequency from 0hz to nyquist frequency.
+ */
+template <typename T = fbase>
+static auto swept(identity<T> magn, size_t size)
+{
+    return magn * sin(swept_arg<T>(size));
 }
 }

@@ -32,22 +32,7 @@ namespace kfr
 {
 
 template <typename T = fbase>
-KFR_FUNC auto jaehne(identity<T> magn, size_t size)
-{
-    return truncate(magn * sin(constants<T>::pi_s(1, 2) * sqr(linspace(T(0), T(size), size, false)) / size),
-                    size);
-}
-
-template <typename T = fbase>
-KFR_FUNC auto swept(identity<T> magn, size_t size)
-{
-    return truncate(
-        magn * sin(c_pi<T, 1, 4> * sqr(sqr(linspace(T(0), T(size), size, false)) / sqr(T(size))) * T(size)),
-        size);
-}
-
-template <typename T = fbase>
-KFR_FUNC auto phasor(identity<T> frequency)
+KFR_FUNC static auto phasor(identity<T> frequency)
 {
     return fract(counter(T(0), frequency));
 }

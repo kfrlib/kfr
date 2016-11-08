@@ -83,13 +83,13 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fir_design.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fracdelay.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/goertzel.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dsp/impulse.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/interpolation.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/mixdown.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/oscillators.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/resample.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/sample_rate_conversion.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/speaker.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/dsp/special.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/units.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/waveshaper.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/weighting.hpp
