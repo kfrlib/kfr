@@ -555,18 +555,18 @@ CMT_INLINE vec<T, N> negodd(const vec<T, N>& x)
 }
 
 #define KFR_EXPR_UNARY(fn, op)                                                                               \
-    template <typename A1, KFR_ENABLE_IF(is_input_expression<A1>::value)>                                    \
-    CMT_INLINE auto operator op(A1&& a1)->decltype(bind_expression(fn(), std::forward<A1>(a1)))              \
+    template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>                                    \
+    CMT_INLINE internal::expression_function<fn, E1> operator op(E1&& e1)                                    \
     {                                                                                                        \
-        return bind_expression(fn(), std::forward<A1>(a1));                                                  \
+        return { fn(), std::forward<E1>(e1) };                                                               \
     }
 
 #define KFR_EXPR_BINARY(fn, op)                                                                              \
-    template <typename A1, typename A2, KFR_ENABLE_IF(is_input_expressions<A1, A2>::value)>                  \
-    CMT_INLINE auto operator op(A1&& a1, A2&& a2)                                                            \
-        ->decltype(bind_expression(fn(), std::forward<A1>(a1), std::forward<A2>(a2)))                        \
+    template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>                  \
+    CMT_INLINE internal::expression_function<fn, E1, E2> operator op(E1&& e1, E2&& e2)                       \
+                                                                                                             \
     {                                                                                                        \
-        return bind_expression(fn(), std::forward<A1>(a1), std::forward<A2>(a2));                            \
+        return { fn(), std::forward<E1>(e1), std::forward<E2>(e2) };                                         \
     }
 
 KFR_EXPR_UNARY(fn::neg, -)
