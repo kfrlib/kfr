@@ -35,6 +35,7 @@
 #include "base/function.hpp"
 #include "base/gamma.hpp"
 #include "base/generators.hpp"
+#include "base/horizontal.hpp"
 #include "base/hyperbolic.hpp"
 #include "base/log_exp.hpp"
 #include "base/logical.hpp"

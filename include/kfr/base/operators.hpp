@@ -25,39 +25,13 @@
  */
 #pragma once
 
+#include "bitwise.hpp"
 #include "function.hpp"
 #include <algorithm>
 #include <utility>
 
 namespace kfr
 {
-namespace internal
-{
-
-template <typename T, typename ReduceFn>
-CMT_INLINE T horizontal_impl(const vec<T, 1>& value, ReduceFn&&)
-{
-    return T(value[0]);
-}
-
-template <typename T, size_t N, typename ReduceFn, KFR_ENABLE_IF(N > 1 && is_poweroftwo(N))>
-CMT_INLINE T horizontal_impl(const vec<T, N>& value, ReduceFn&& reduce)
-{
-    return horizontal_impl(reduce(low(value), high(value)), std::forward<ReduceFn>(reduce));
-}
-template <typename T, size_t N, typename ReduceFn, KFR_ENABLE_IF(N > 1 && !is_poweroftwo(N))>
-CMT_INLINE T horizontal_impl(const vec<T, N>& value, ReduceFn&& reduce)
-{
-    const T initial = reduce(initialvalue<T>());
-    return horizontal_impl(widen<next_poweroftwo(N)>(value, initial), std::forward<ReduceFn>(reduce));
-}
-}
-
-template <typename T, size_t N, typename ReduceFn>
-CMT_INLINE T horizontal(const vec<T, N>& value, ReduceFn&& reduce)
-{
-    return internal::horizontal_impl(value, std::forward<ReduceFn>(reduce));
-}
 
 template <typename T>
 constexpr inline T add(const T& x)
@@ -177,25 +151,25 @@ CMT_INLINE internal::expression_function<fn::cub, E1> cub(E1&& x)
 }
 
 template <typename T, KFR_ENABLE_IF(is_numeric_args<T>::value)>
-constexpr inline T pow2(const T& x)
+constexpr CMT_INLINE T pow2(const T& x)
 {
     return sqr(x);
 }
 
 template <typename T, KFR_ENABLE_IF(is_numeric_args<T>::value)>
-constexpr inline T pow3(const T& x)
+constexpr CMT_INLINE T pow3(const T& x)
 {
     return cub(x);
 }
 
 template <typename T, KFR_ENABLE_IF(is_numeric_args<T>::value)>
-constexpr inline T pow4(const T& x)
+constexpr CMT_INLINE T pow4(const T& x)
 {
     return sqr(sqr(x));
 }
 
 template <typename T, KFR_ENABLE_IF(is_numeric_args<T>::value)>
-constexpr inline T pow5(const T& x)
+constexpr CMT_INLINE T pow5(const T& x)
 {
     return pow4(x) * x;
 }
@@ -233,13 +207,14 @@ CMT_INLINE internal::expression_function<fn::pow5, E1> pow5(E1&& x)
 template <typename T>
 constexpr inline T ipow(const T& x, int base)
 {
+    T xx     = x;
     T result = T(1);
     while (base)
     {
         if (base & 1)
-            result *= x;
+            result *= xx;
         base >>= 1;
-        x *= x;
+        xx *= xx;
     }
     return result;
 }
@@ -271,7 +246,7 @@ KFR_FN(sqrdiff)
 
 /// Division
 template <typename T1, typename T2, typename Tout = common_type<T1, T2>>
-inline Tout div(const T1& x, const T2& y)
+CMT_INLINE Tout div(const T1& x, const T2& y)
 {
     return static_cast<Tout>(x) / static_cast<Tout>(y);
 }
@@ -279,7 +254,7 @@ KFR_FN(div)
 
 /// Remainder
 template <typename T1, typename T2, typename Tout = common_type<T1, T2>>
-inline Tout rem(const T1& x, const T2& y)
+CMT_INLINE Tout rem(const T1& x, const T2& y)
 {
     return static_cast<Tout>(x) % static_cast<Tout>(y);
 }
@@ -292,109 +267,6 @@ inline T1 neg(const T1& x)
     return -x;
 }
 KFR_FN(neg)
-
-inline float bitwisenot(const float& x) { return fbitcast(~ubitcast(x)); }
-inline float bitwiseor(const float& x, const float& y) { return fbitcast(ubitcast(x) | ubitcast(y)); }
-inline float bitwiseand(const float& x, const float& y) { return fbitcast(ubitcast(x) & ubitcast(y)); }
-inline float bitwiseandnot(const float& x, const float& y) { return fbitcast(ubitcast(x) & ~ubitcast(y)); }
-inline float bitwisexor(const float& x, const float& y) { return fbitcast(ubitcast(x) ^ ubitcast(y)); }
-inline double bitwisenot(const double& x) { return fbitcast(~ubitcast(x)); }
-inline double bitwiseor(const double& x, const double& y) { return fbitcast(ubitcast(x) | ubitcast(y)); }
-inline double bitwiseand(const double& x, const double& y) { return fbitcast(ubitcast(x) & ubitcast(y)); }
-inline double bitwiseandnot(const double& x, const double& y) { return fbitcast(ubitcast(x) & ~ubitcast(y)); }
-inline double bitwisexor(const double& x, const double& y) { return fbitcast(ubitcast(x) ^ ubitcast(y)); }
-
-/// Bitwise Not
-template <typename T1>
-inline T1 bitwisenot(const T1& x)
-{
-    return ~x;
-}
-KFR_FN(bitwisenot)
-
-/// Bitwise And
-template <typename T1, typename T2>
-inline common_type<T1, T2> bitwiseand(const T1& x, const T2& y)
-{
-    return x & y;
-}
-template <typename T>
-constexpr inline T bitwiseand(initialvalue<T>)
-{
-    return constants<T>::allones();
-}
-KFR_FN(bitwiseand)
-
-/// Bitwise And-Not
-template <typename T1, typename T2>
-inline common_type<T1, T2> bitwiseandnot(const T1& x, const T2& y)
-{
-    return x & ~y;
-}
-template <typename T>
-constexpr inline T bitwiseandnot(initialvalue<T>)
-{
-    return constants<T>::allones();
-}
-KFR_FN(bitwiseandnot)
-
-/// Bitwise Or
-template <typename T1, typename T2>
-inline common_type<T1, T2> bitwiseor(const T1& x, const T2& y)
-{
-    return x | y;
-}
-template <typename T>
-constexpr inline T bitwiseor(initialvalue<T>)
-{
-    return subtype<T>(0);
-}
-KFR_FN(bitwiseor)
-
-/// Bitwise Xor (Exclusive Or)
-template <typename T1, typename T2>
-inline common_type<T1, T2> bitwisexor(const T1& x, const T2& y)
-{
-    return x ^ y;
-}
-template <typename T>
-constexpr inline T bitwisexor(initialvalue<T>)
-{
-    return subtype<T>();
-}
-KFR_FN(bitwisexor)
-
-/// Bitwise Left shift
-template <typename T1, typename T2>
-inline common_type<T1, T2> shl(const T1& left, const T2& right)
-{
-    return left << right;
-}
-KFR_FN(shl)
-
-/// Bitwise Right shift
-template <typename T1, typename T2>
-inline common_type<T1, T2> shr(const T1& left, const T2& right)
-{
-    return left >> right;
-}
-KFR_FN(shr)
-
-/// Bitwise Left Rotate
-template <typename T1, typename T2>
-inline common_type<T1, T2> rol(const T1& left, const T2& right)
-{
-    return shl(left, right) | shr(left, (static_cast<subtype<T1>>(typebits<T1>::bits) - right));
-}
-KFR_FN(rol)
-
-/// Bitwise Right Rotate
-template <typename T1, typename T2>
-inline common_type<T1, T2> ror(const T1& left, const T2& right)
-{
-    return shr(left, right) | shl(left, (static_cast<subtype<T1>>(typebits<T1>::bits) - right));
-}
-KFR_FN(ror)
 
 template <typename T1, typename T2>
 inline maskfor<common_type<T1, T2>> equal(const T1& x, const T2& y)
@@ -657,65 +529,6 @@ CMT_INLINE T swapbyteorder(const T& x)
     return reinterpret_cast<const T&>(__builtin_bswap16(reinterpret_cast<const u16&>(x)));
 }
 KFR_FN(swapbyteorder)
-
-/// @brief Sum all elements of the vector
-template <typename T, size_t N>
-CMT_INLINE T hadd(const vec<T, N>& value)
-{
-    return horizontal(value, fn::add());
-}
-KFR_FN(hadd)
-
-/// @brief Multiply all elements of the vector
-template <typename T, size_t N>
-CMT_INLINE T hmul(const vec<T, N>& value)
-{
-    return horizontal(value, fn::mul());
-}
-KFR_FN(hmul)
-
-template <typename T, size_t N>
-CMT_INLINE T hbitwiseand(const vec<T, N>& value)
-{
-    return horizontal(value, fn::bitwiseand());
-}
-KFR_FN(hbitwiseand)
-template <typename T, size_t N>
-CMT_INLINE T hbitwiseor(const vec<T, N>& value)
-{
-    return horizontal(value, fn::bitwiseor());
-}
-KFR_FN(hbitwiseor)
-template <typename T, size_t N>
-CMT_INLINE T hbitwisexor(const vec<T, N>& value)
-{
-    return horizontal(value, fn::bitwisexor());
-}
-KFR_FN(hbitwisexor)
-
-/// @brief Calculate the Dot-Product of two vectors
-template <typename T, size_t N>
-CMT_INLINE T dot(const vec<T, N>& x, const vec<T, N>& y)
-{
-    return hadd(x * y);
-}
-KFR_FN(dot)
-
-/// @brief Calculate the Arithmetic mean of all elements in the vector
-template <typename T, size_t N>
-CMT_INLINE T avg(const vec<T, N>& value)
-{
-    return hadd(value) / N;
-}
-KFR_FN(avg)
-
-/// @brief Calculate the RMS of all elements in the vector
-template <typename T, size_t N>
-CMT_INLINE T rms(const vec<T, N>& value)
-{
-    return internal::builtin_sqrt(hadd(value * value) / N);
-}
-KFR_FN(rms)
 
 template <typename T, size_t N, KFR_ENABLE_IF(N >= 2)>
 CMT_INLINE vec<T, N> subadd(const vec<T, N>& a, const vec<T, N>& b)

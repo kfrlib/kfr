@@ -18,6 +18,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/asin_acos.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/atan.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/basic_expressions.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/bitwise.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/clamp.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/compiletime.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/complex.hpp
@@ -27,6 +28,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/function.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/gamma.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/generators.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/horizontal.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/hyperbolic.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/logical.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/log_exp.hpp
