@@ -39,6 +39,18 @@ public:
     virtual ~filter() {}
     virtual void reset() {}
 
+    template <size_t Size>
+    void apply(T (&buffer)[Size])
+    {
+        process_buffer(buffer, buffer, Size);
+    }
+
+    template <size_t Size>
+    void apply(T (&dest)[Size], T (&src)[Size])
+    {
+        process_buffer(dest, src, Size);
+    }
+
     template <size_t Tag>
     void apply(univector<T, Tag>& buffer)
     {
@@ -78,7 +90,7 @@ public:
         process_expression(dest, to_pointer(src), size_min(size, src.size()));
     }
 
-private:
+protected:
     virtual void process_buffer(T* dest, const T* src, size_t size)                         = 0;
     virtual void process_expression(T* dest, const expression_pointer<T>& src, size_t size) = 0;
 };
