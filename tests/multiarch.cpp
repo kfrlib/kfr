@@ -7,6 +7,7 @@
 #include <kfr/testo/testo.hpp>
 
 #include <kfr/base.hpp>
+#include <kfr/cpuid.hpp>
 #include <kfr/dsp.hpp>
 #include <kfr/io.hpp>
 

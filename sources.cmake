@@ -7,6 +7,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/all.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/cometa.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/cpuid.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io.hpp
@@ -21,8 +22,6 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/compiletime.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/complex.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/constants.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/base/cpuid.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/base/cpuid_auto.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/digitreverse.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/expression.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/function.hpp
@@ -67,6 +66,8 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/cometa/result.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/cometa/string.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/cometa/tuple.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/cpuid/cpuid.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/cpuid/cpuid_auto.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/data/bitrev.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/data/sincos.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/bitrev.hpp

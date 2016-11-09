@@ -29,7 +29,7 @@
 #include <intrin.h>
 #endif
 
-#include "types.hpp"
+#include "../base/types.hpp"
 #include <cstring>
 
 namespace kfr

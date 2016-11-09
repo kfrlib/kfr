@@ -30,8 +30,6 @@
 #include "base/compiletime.hpp"
 #include "base/complex.hpp"
 #include "base/constants.hpp"
-#include "base/cpuid.hpp"
-#include "base/cpuid_auto.hpp"
 #include "base/digitreverse.hpp"
 #include "base/expression.hpp"
 #include "base/function.hpp"
