@@ -174,18 +174,20 @@ constexpr inline T sin_using_table_256(size_t k);
 template <>
 constexpr inline f32 sin_using_table_256<f32>(size_t k)
 {
-    return (k == 0 || k == 128) ? 0.f : (k == 64) ? 1.f : (k > 128)
-                                                              ? -sin_using_table_256<f32>(k - 128)
-                                                              : (k > 64) ? sin_using_table_256<f32>(128 - k)
-                                                                         : data::c_sin_table_f32[k];
+    return (k == 0 || k == 128) ? 0.f
+                                : (k == 64) ? 1.f
+                                            : (k > 128) ? -sin_using_table_256<f32>(k - 128)
+                                                        : (k > 64) ? sin_using_table_256<f32>(128 - k)
+                                                                   : data::c_sin_table_f32[k];
 }
 template <>
 constexpr inline f64 sin_using_table_256<f64>(size_t k)
 {
-    return (k == 0 || k == 128) ? 0.0 : (k == 64) ? 1.0 : (k > 128)
-                                                              ? -sin_using_table_256<f64>(k - 128)
-                                                              : (k > 64) ? sin_using_table_256<f64>(128 - k)
-                                                                         : data::c_sin_table_f64[k];
+    return (k == 0 || k == 128) ? 0.0
+                                : (k == 64) ? 1.0
+                                            : (k > 128) ? -sin_using_table_256<f64>(k - 128)
+                                                        : (k > 64) ? sin_using_table_256<f64>(128 - k)
+                                                                   : data::c_sin_table_f64[k];
 }
 
 template <typename T>

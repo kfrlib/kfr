@@ -55,8 +55,8 @@ public:
     {
     }
     template <typename... Ts, CMT_ENABLE_IF(sizeof...(Ts), is_const<T>::value)>
-    constexpr array_ref(const std::vector<remove_const<T>, Ts...>& vec) noexcept : m_data(vec.data()),
-                                                                                   m_size(vec.size())
+    constexpr array_ref(const std::vector<remove_const<T>, Ts...>& vec) noexcept
+        : m_data(vec.data()), m_size(vec.size())
     {
     }
     template <typename... Ts>
@@ -64,8 +64,8 @@ public:
     {
     }
     template <typename InputIter>
-    constexpr array_ref(InputIter first, InputIter last) noexcept : m_data(std::addressof(*first)),
-                                                                    m_size(std::distance(first, last))
+    constexpr array_ref(InputIter first, InputIter last) noexcept
+        : m_data(std::addressof(*first)), m_size(std::distance(first, last))
     {
     }
     constexpr array_ref(T* data, size_type size) noexcept : m_data(data), m_size(size) {}

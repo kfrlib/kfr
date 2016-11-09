@@ -17,9 +17,8 @@ struct range
     using const_pointer   = const T*;
     using diff_type       = decltype(std::declval<T>() - std::declval<T>());
 
-    constexpr range(value_type begin, value_type end, diff_type step) noexcept : value_begin(begin),
-                                                                                 value_end(end),
-                                                                                 step(step)
+    constexpr range(value_type begin, value_type end, diff_type step) noexcept
+        : value_begin(begin), value_end(end), step(step)
     {
     }
 

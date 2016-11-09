@@ -67,8 +67,8 @@ struct complex
     constexpr complex(const complex&) noexcept = default;
     constexpr complex(complex&&) noexcept      = default;
     template <typename U>
-    constexpr complex(const complex<U>& other) noexcept : re(static_cast<T>(other.re)),
-                                                          im(static_cast<T>(other.im))
+    constexpr complex(const complex<U>& other) noexcept
+        : re(static_cast<T>(other.re)), im(static_cast<T>(other.im))
     {
     }
     template <typename U>

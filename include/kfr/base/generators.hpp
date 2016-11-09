@@ -99,7 +99,7 @@ protected:
 template <typename T, size_t width = platform<T>::vector_width* bitness_const(1, 2)>
 struct generator_linear : generator<T, width, generator_linear<T, width>>
 {
-    constexpr generator_linear(T start, T step) noexcept : step(step), vstep(step* width)
+    constexpr generator_linear(T start, T step) noexcept : step(step), vstep(step * width)
     {
         this->resync(start);
     }
@@ -116,7 +116,7 @@ protected:
 template <typename T, size_t width = platform<T>::vector_width* bitness_const(1, 2), KFR_ARCH_DEP>
 struct generator_exp : generator<T, width, generator_exp<T, width>>
 {
-    generator_exp(T start, T step) noexcept : step(step), vstep(exp(make_vector(step* width))[0] - 1)
+    generator_exp(T start, T step) noexcept : step(step), vstep(exp(make_vector(step * width))[0] - 1)
     {
         this->resync(start);
     }
@@ -133,7 +133,7 @@ protected:
 template <typename T, size_t width = platform<T>::vector_width* bitness_const(1, 2), KFR_ARCH_DEP>
 struct generator_exp2 : generator<T, width, generator_exp2<T, width>>
 {
-    generator_exp2(T start, T step) noexcept : step(step), vstep(exp2(make_vector(step* width))[0] - 1)
+    generator_exp2(T start, T step) noexcept : step(step), vstep(exp2(make_vector(step * width))[0] - 1)
     {
         this->resync(start);
     }

@@ -148,9 +148,8 @@ template <typename T>
 struct expression_random_range : input_expression
 {
     using value_type = T;
-    constexpr expression_random_range(const random_bit_generator& gen, T min, T max) noexcept : gen(gen),
-                                                                                                min(min),
-                                                                                                max(max)
+    constexpr expression_random_range(const random_bit_generator& gen, T min, T max) noexcept
+        : gen(gen), min(min), max(max)
     {
     }
 

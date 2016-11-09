@@ -128,7 +128,7 @@ constexpr inline auto scale_impl(csizes_t<indices...> ind, csizes_t<counter...> 
 template <size_t groupsize, size_t... indices>
 constexpr inline auto scale() noexcept
 {
-    return internal::scale_impl(csizes_t<indices...>(), csizeseq_t<sizeof...(indices)*groupsize>());
+    return internal::scale_impl(csizes_t<indices...>(), csizeseq_t<sizeof...(indices) * groupsize>());
 }
 
 template <typename T, size_t Nin, size_t N>

@@ -51,24 +51,17 @@ template <typename T>
 struct biquad_params
 {
     template <typename U>
-    constexpr biquad_params(const biquad_params<U>& bq) noexcept : a0(static_cast<T>(bq.a0)),
-                                                                   a1(static_cast<T>(bq.a1)),
-                                                                   a2(static_cast<T>(bq.a2)),
-                                                                   b0(static_cast<T>(bq.b0)),
-                                                                   b1(static_cast<T>(bq.b1)),
-                                                                   b2(static_cast<T>(bq.b2))
+    constexpr biquad_params(const biquad_params<U>& bq) noexcept
+        : a0(static_cast<T>(bq.a0)), a1(static_cast<T>(bq.a1)), a2(static_cast<T>(bq.a2)),
+          b0(static_cast<T>(bq.b0)), b1(static_cast<T>(bq.b1)), b2(static_cast<T>(bq.b2))
     {
     }
     constexpr static bool is_pod = true;
 
     static_assert(std::is_floating_point<T>::value, "T must be a floating point type");
     constexpr biquad_params() noexcept : a0(1), a1(0), a2(0), b0(1), b1(0), b2(0) {}
-    constexpr biquad_params(T a0, T a1, T a2, T b0, T b1, T b2) noexcept : a0(a0),
-                                                                           a1(a1),
-                                                                           a2(a2),
-                                                                           b0(b0),
-                                                                           b1(b1),
-                                                                           b2(b2)
+    constexpr biquad_params(T a0, T a1, T a2, T b0, T b1, T b2) noexcept
+        : a0(a0), a1(a1), a2(a2), b0(b0), b1(b1), b2(b2)
     {
     }
     T a0;

@@ -234,7 +234,7 @@ struct vec : public vec_t<T, N>
 
     // element access
     struct element;
-    constexpr value_type operator[](size_t index) const& noexcept { return get(index); }
+    constexpr value_type operator[](size_t index) const & noexcept { return get(index); }
     constexpr value_type operator[](size_t index) && noexcept { return get(index); }
     constexpr element operator[](size_t index) & noexcept { return { *this, index }; }
 

@@ -100,8 +100,9 @@ CMT_INTRIN cstring<N1 - Nfrom + Nto> str_replace_impl(size_t pos, const cstring<
 {
     if (pos == size_t(-1))
         stop_constexpr();
-    return { { (indices < pos ? str[indices] : (indices < pos + Nto - 1) ? to[indices - pos]
-                                                                         : str[indices - Nto + Nfrom])...,
+    return { { (indices < pos
+                    ? str[indices]
+                    : (indices < pos + Nto - 1) ? to[indices - pos] : str[indices - Nto + Nfrom])...,
                0 } };
 }
 }
