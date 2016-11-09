@@ -181,4 +181,32 @@ CMT_INLINE internal::expression_short_fir<next_poweroftwo(TapCount), T, E1> shor
     static_assert(TapCount >= 2 && TapCount <= 32, "Use short_fir only for small FIR filters");
     return internal::expression_short_fir<next_poweroftwo(TapCount), T, E1>(std::forward<E1>(e1), taps);
 }
+
+template <typename T>
+class filter_fir : public filter<T>
+{
+public:
+    filter_fir(const array_ref<const T>& taps) : state(taps) {}
+
+    void set_taps(const array_ref<const T>& taps) { state = fir_state<T>(taps); }
+
+    void reset() final
+    {
+        state.delayline.fill(0);
+        state.delayline_cursor = 0;
+    }
+
+protected:
+    void process_buffer(T* dest, const T* src, size_t size) final
+    {
+        make_univector(dest, size) = fir(state, make_univector(src, size));
+    }
+    void process_expression(T* dest, const expression_pointer<T>& src, size_t size) final
+    {
+        make_univector(dest, size) = fir(state, src);
+    }
+
+private:
+    fir_state<T> state;
+};
 }
