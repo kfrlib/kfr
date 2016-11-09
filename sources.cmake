@@ -20,6 +20,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/basic_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/bitwise.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/clamp.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/comparison.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/compiletime.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/complex.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/constants.hpp

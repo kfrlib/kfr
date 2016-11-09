@@ -268,43 +268,6 @@ inline T1 neg(const T1& x)
 }
 KFR_FN(neg)
 
-template <typename T1, typename T2>
-inline maskfor<common_type<T1, T2>> equal(const T1& x, const T2& y)
-{
-    return x == y;
-}
-template <typename T1, typename T2>
-inline maskfor<common_type<T1, T2>> notequal(const T1& x, const T2& y)
-{
-    return x != y;
-}
-template <typename T1, typename T2>
-inline maskfor<common_type<T1, T2>> less(const T1& x, const T2& y)
-{
-    return x < y;
-}
-template <typename T1, typename T2>
-inline maskfor<common_type<T1, T2>> greater(const T1& x, const T2& y)
-{
-    return x > y;
-}
-template <typename T1, typename T2>
-inline maskfor<common_type<T1, T2>> lessorequal(const T1& x, const T2& y)
-{
-    return x <= y;
-}
-template <typename T1, typename T2>
-inline maskfor<common_type<T1, T2>> greaterorequal(const T1& x, const T2& y)
-{
-    return x >= y;
-}
-KFR_FN(equal)
-KFR_FN(notequal)
-KFR_FN(less)
-KFR_FN(greater)
-KFR_FN(lessorequal)
-KFR_FN(greaterorequal)
-
 /// @brief Fused Multiply-Add
 template <typename T1, typename T2, typename T3>
 KFR_INTRIN constexpr common_type<T1, T2, T3> fmadd(const T1& x, const T2& y, const T3& z)
@@ -465,48 +428,6 @@ constexpr CMT_INLINE vec<T, N> copysign(const vec<T, N>& x, const vec<T, N>& y)
     return (x & constants<T>::highbitmask()) | (y & constants<T>::highbitmask());
 }
 
-template <typename T, size_t N>
-CMT_INLINE mask<T, N> isnan(const vec<T, N>& x)
-{
-    return x != x;
-}
-
-template <typename T, size_t N>
-CMT_INLINE mask<T, N> isinf(const vec<T, N>& x)
-{
-    return x == constants<T>::infinity || x == -constants<T>::infinity;
-}
-
-template <typename T, size_t N>
-CMT_INLINE mask<T, N> isfinite(const vec<T, N>& x)
-{
-    return !isnan(x) && !isinf(x);
-}
-
-template <typename T, size_t N>
-CMT_INLINE mask<T, N> isnegative(const vec<T, N>& x)
-{
-    return (x & constants<T>::highbitmask()) != 0;
-}
-
-template <typename T, size_t N>
-CMT_INLINE mask<T, N> ispositive(const vec<T, N>& x)
-{
-    return !isnegative(x);
-}
-
-template <typename T, size_t N>
-CMT_INLINE mask<T, N> iszero(const vec<T, N>& x)
-{
-    return x == T();
-}
-
-template <typename T1, typename T2, typename T3>
-KFR_SINTRIN maskfor<common_type<T1, T2, T3>> inrange(const T1& x, const T2& min, const T3& max)
-{
-    return x >= min && x <= max;
-}
-
 /// @brief Swap byte order
 template <typename T, size_t N, KFR_ENABLE_IF(sizeof(vec<T, N>) > 8)>
 CMT_INLINE vec<T, N> swapbyteorder(const vec<T, N>& x)
@@ -554,42 +475,71 @@ CMT_INLINE vec<T, N> negodd(const vec<T, N>& x)
     return x ^ broadcast<N>(T(), -T());
 }
 
-#define KFR_EXPR_UNARY(fn, op)                                                                               \
-    template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>                                    \
-    CMT_INLINE internal::expression_function<fn, E1> operator op(E1&& e1)                                    \
-    {                                                                                                        \
-        return { fn(), std::forward<E1>(e1) };                                                               \
-    }
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+CMT_INLINE internal::expression_function<fn::neg, E1> operator-(E1&& e1)
+{
+    return { fn::neg(), std::forward<E1>(e1) };
+}
 
-#define KFR_EXPR_BINARY(fn, op)                                                                              \
-    template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>                  \
-    CMT_INLINE internal::expression_function<fn, E1, E2> operator op(E1&& e1, E2&& e2)                       \
-                                                                                                             \
-    {                                                                                                        \
-        return { fn(), std::forward<E1>(e1), std::forward<E2>(e2) };                                         \
-    }
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+CMT_INLINE internal::expression_function<fn::bitwisenot, E1> operator~(E1&& e1)
+{
+    return { fn::bitwisenot(), std::forward<E1>(e1) };
+}
 
-KFR_EXPR_UNARY(fn::neg, -)
-KFR_EXPR_UNARY(fn::bitwisenot, ~)
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
+CMT_INLINE internal::expression_function<fn::add, E1, E2> operator+(E1&& e1, E2&& e2)
+{
+    return { fn::add(), std::forward<E1>(e1), std::forward<E2>(e2) };
+}
 
-KFR_EXPR_BINARY(fn::add, +)
-KFR_EXPR_BINARY(fn::sub, -)
-KFR_EXPR_BINARY(fn::mul, *)
-KFR_EXPR_BINARY(fn::div, /)
-KFR_EXPR_BINARY(fn::bitwiseand, &)
-KFR_EXPR_BINARY(fn::bitwiseor, |)
-KFR_EXPR_BINARY(fn::bitwisexor, ^)
-KFR_EXPR_BINARY(fn::shl, <<)
-KFR_EXPR_BINARY(fn::shr, >>)
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
+CMT_INLINE internal::expression_function<fn::sub, E1, E2> operator-(E1&& e1, E2&& e2)
+{
+    return { fn::sub(), std::forward<E1>(e1), std::forward<E2>(e2) };
+}
 
-KFR_EXPR_BINARY(fn::equal, ==)
-KFR_EXPR_BINARY(fn::notequal, !=)
-KFR_EXPR_BINARY(fn::less, <)
-KFR_EXPR_BINARY(fn::greater, >)
-KFR_EXPR_BINARY(fn::lessorequal, <=)
-KFR_EXPR_BINARY(fn::greaterorequal, >=)
-#undef KFR_EXPR_UNARY
-#undef KFR_EXPR_BINARY
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
+CMT_INLINE internal::expression_function<fn::mul, E1, E2> operator*(E1&& e1, E2&& e2)
+{
+    return { fn::mul(), std::forward<E1>(e1), std::forward<E2>(e2) };
+}
+
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
+CMT_INLINE internal::expression_function<fn::div, E1, E2> operator/(E1&& e1, E2&& e2)
+{
+    return { fn::div(), std::forward<E1>(e1), std::forward<E2>(e2) };
+}
+
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
+CMT_INLINE internal::expression_function<fn::bitwiseand, E1, E2> operator&(E1&& e1, E2&& e2)
+{
+    return { fn::bitwiseand(), std::forward<E1>(e1), std::forward<E2>(e2) };
+}
+
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
+CMT_INLINE internal::expression_function<fn::bitwiseor, E1, E2> operator|(E1&& e1, E2&& e2)
+{
+    return { fn::bitwiseor(), std::forward<E1>(e1), std::forward<E2>(e2) };
+}
+
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
+CMT_INLINE internal::expression_function<fn::bitwisexor, E1, E2> operator^(E1&& e1, E2&& e2)
+{
+    return { fn::bitwisexor(), std::forward<E1>(e1), std::forward<E2>(e2) };
+}
+
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
+CMT_INLINE internal::expression_function<fn::shl, E1, E2> operator<<(E1&& e1, E2&& e2)
+{
+    return { fn::shl(), std::forward<E1>(e1), std::forward<E2>(e2) };
+}
+
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
+CMT_INLINE internal::expression_function<fn::shr, E1, E2> operator>>(E1&& e1, E2&& e2)
+{
+    return { fn::shr(), std::forward<E1>(e1), std::forward<E2>(e2) };
+}
 
 template <typename T, size_t N1, size_t... Ns>
 vec<vec<T, sizeof...(Ns) + 1>, N1> packtranspose(const vec<T, N1>& x, const vec<T, Ns>&... rest)

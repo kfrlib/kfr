@@ -27,6 +27,7 @@
 #include "base/atan.hpp"
 #include "base/basic_expressions.hpp"
 #include "base/clamp.hpp"
+#include "base/comparison.hpp"
 #include "base/compiletime.hpp"
 #include "base/complex.hpp"
 #include "base/constants.hpp"
