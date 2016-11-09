@@ -28,6 +28,16 @@ TEST(test_convolve)
     CHECK(rms(c - univector<fbase>({ 0.25, 1., 2.75, 2.5, 3.75, 3.5, 1.5, -4., 7.5 })) < 0.0001);
 }
 
+TEST(test_fft_convolve)
+{
+    univector<fbase, 5> a({ 1, 2, 3, 4, 5 });
+    univector<fbase, 5> b({ 0.25, 0.5, 1.0, -2.0, 1.5 });
+    univector<fbase, 5> dest;
+    convolve_filter<fbase> filter(a);
+    filter.apply(dest, b);
+    CHECK(rms(dest - univector<fbase>({ 0.25, 1., 2.75, 2.5, 3.75 })) < 0.0001);
+}
+
 TEST(test_correlate)
 {
     univector<fbase, 5> a({ 1, 2, 3, 4, 5 });
