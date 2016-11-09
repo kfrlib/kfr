@@ -36,10 +36,10 @@ namespace internal
 {
 
 template <typename To, typename E>
-struct expression_convert : expression<E>
+struct expression_convert : expression_base<E>
 {
     using value_type = To;
-    CMT_INLINE expression_convert(E&& expr) noexcept : expression<E>(std::forward<E>(expr)) {}
+    CMT_INLINE expression_convert(E&& expr) noexcept : expression_base<E>(std::forward<E>(expr)) {}
 
     template <size_t N>
     CMT_INLINE vec<To, N> operator()(cinput_t input, size_t index, vec_t<To, N>) const
@@ -191,12 +191,12 @@ namespace internal
 {
 
 template <typename E1>
-struct expression_slice : expression<E1>
+struct expression_slice : expression_base<E1>
 {
     using value_type = value_type_of<E1>;
     using T          = value_type;
     expression_slice(E1&& e1, size_t start, size_t size)
-        : expression<E1>(std::forward<E1>(e1)), start(start),
+        : expression_base<E1>(std::forward<E1>(e1)), start(start),
           new_size(size_min(size, size_sub(std::get<0>(this->args).size(), start)))
     {
     }
@@ -211,11 +211,11 @@ struct expression_slice : expression<E1>
 };
 
 template <typename E1>
-struct expression_reverse : expression<E1>
+struct expression_reverse : expression_base<E1>
 {
     using value_type = value_type_of<E1>;
     using T          = value_type;
-    expression_reverse(E1&& e1) : expression<E1>(std::forward<E1>(e1)), expr_size(e1.size()) {}
+    expression_reverse(E1&& e1) : expression_base<E1>(std::forward<E1>(e1)), expr_size(e1.size()) {}
     template <size_t N>
     CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
     {
@@ -287,10 +287,10 @@ struct expression_linspace<T, true> : input_expression
 };
 
 template <typename... E>
-struct expression_sequence : expression<E...>
+struct expression_sequence : expression_base<E...>
 {
 public:
-    using base = expression<E...>;
+    using base = expression_base<E...>;
 
     using value_type = common_type<value_type_of<E>...>;
     using T          = value_type;
@@ -338,12 +338,12 @@ protected:
 };
 
 template <typename Fn, typename E>
-struct expression_adjacent : expression<E>
+struct expression_adjacent : expression_base<E>
 {
     using value_type = value_type_of<E>;
     using T          = value_type;
 
-    expression_adjacent(Fn&& fn, E&& e) : expression<E>(std::forward<E>(e)), fn(std::forward<Fn>(fn)) {}
+    expression_adjacent(Fn&& fn, E&& e) : expression_base<E>(std::forward<E>(e)), fn(std::forward<Fn>(fn)) {}
 
     template <size_t N>
     vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
@@ -413,14 +413,14 @@ CMT_INLINE internal::expression_adjacent<Fn, E1> adjacent(Fn&& fn, E1&& e1)
 namespace internal
 {
 template <typename E>
-struct expression_padded : expression<E>
+struct expression_padded : expression_base<E>
 {
     using value_type = value_type_of<E>;
 
     CMT_INLINE constexpr static size_t size() noexcept { return infinite_size; }
 
     expression_padded(value_type fill_value, E&& e)
-        : expression<E>(std::forward<E>(e)), fill_value(fill_value), input_size(e.size())
+        : expression_base<E>(std::forward<E>(e)), fill_value(fill_value), input_size(e.size())
     {
     }
 
@@ -484,15 +484,15 @@ private:
 };
 
 template <typename... E>
-struct expression_pack : expression<E...>
+struct expression_pack : expression_base<E...>
 {
     constexpr static size_t count = sizeof...(E);
 
-    expression_pack(E&&... e) : expression<E...>(std::forward<E>(e)...) {}
+    expression_pack(E&&... e) : expression_base<E...>(std::forward<E>(e)...) {}
     using value_type = vec<common_type<value_type_of<E>...>, count>;
     using T          = value_type;
 
-    using expression<E...>::size;
+    using expression_base<E...>::size;
 
     template <size_t N>
     CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
@@ -502,17 +502,17 @@ struct expression_pack : expression<E...>
 };
 
 template <typename... E>
-struct expression_unpack : private expression<E...>, output_expression
+struct expression_unpack : private expression_base<E...>, output_expression
 {
-    using expression<E...>::begin_block;
-    using expression<E...>::end_block;
+    using expression_base<E...>::begin_block;
+    using expression_base<E...>::end_block;
     using output_expression::begin_block;
     using output_expression::end_block;
     constexpr static size_t count = sizeof...(E);
 
-    expression_unpack(E&&... e) : expression<E...>(std::forward<E>(e)...) {}
+    expression_unpack(E&&... e) : expression_base<E...>(std::forward<E>(e)...) {}
 
-    using expression<E...>::size;
+    using expression_base<E...>::size;
 
     template <typename U, size_t N>
     CMT_INLINE void operator()(coutput_t coutput, size_t index, const vec<vec<U, count>, N>& x)

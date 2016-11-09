@@ -91,12 +91,12 @@ struct state_holder<T, true>
 };
 
 template <size_t tapcount, typename T, typename E1, bool stateless = false, KFR_ARCH_DEP>
-struct expression_short_fir : expression<E1>
+struct expression_short_fir : expression_base<E1>
 {
     using value_type = T;
 
     expression_short_fir(E1&& e1, const short_fir_state<tapcount, T>& state)
-        : expression<E1>(std::forward<E1>(e1)), state(state)
+        : expression_base<E1>(std::forward<E1>(e1)), state(state)
     {
     }
     template <size_t N>
@@ -116,10 +116,13 @@ struct expression_short_fir : expression<E1>
 };
 
 template <typename T, typename E1, bool stateless = false, KFR_ARCH_DEP>
-struct expression_fir : expression<E1>
+struct expression_fir : expression_base<E1>
 {
     using value_type = T;
-    expression_fir(E1&& e1, const fir_state<T>& state) : expression<E1>(std::forward<E1>(e1)), state(state) {}
+    expression_fir(E1&& e1, const fir_state<T>& state)
+        : expression_base<E1>(std::forward<E1>(e1)), state(state)
+    {
+    }
 
     template <size_t N>
     CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> x) const

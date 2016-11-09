@@ -86,6 +86,5 @@ CMT_FUNC univector<T> autocorrelate(const univector<T, Tag1>& src)
     result              = result.slice(result.size() / 2);
     return result;
 }
-
 }
 CMT_PRAGMA_GNU(GCC diagnostic pop)

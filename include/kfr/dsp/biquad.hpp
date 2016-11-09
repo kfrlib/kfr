@@ -137,12 +137,12 @@ struct biquad_block
 };
 
 template <size_t filters, typename T, typename E1, KFR_ARCH_DEP>
-struct expression_biquads : public expression<E1>
+struct expression_biquads : public expression_base<E1>
 {
     using value_type = T;
 
     expression_biquads(const biquad_block<T, filters>& bq, E1&& e1)
-        : expression<E1>(std::forward<E1>(e1)), bq(bq)
+        : expression_base<E1>(std::forward<E1>(e1)), bq(bq)
     {
     }
     template <size_t width>
@@ -173,12 +173,12 @@ struct expression_biquads : public expression<E1>
 };
 
 template <size_t filters, typename T, typename E1, KFR_ARCH_DEP>
-struct expression_biquads_zl : expression<E1>
+struct expression_biquads_zl : expression_base<E1>
 {
     using value_type = T;
 
     expression_biquads_zl(const biquad_block<T, filters>& bq, E1&& e1)
-        : expression<E1>(std::forward<E1>(e1)), bq(bq), block_end(0)
+        : expression_base<E1>(std::forward<E1>(e1)), bq(bq), block_end(0)
     {
     }
 

@@ -256,13 +256,13 @@ namespace internal
 {
 
 template <typename... Args>
-struct expression : input_expression
+struct expression_base : input_expression
 {
     CMT_INLINE constexpr size_t size() const noexcept { return size_impl(indicesfor_t<Args...>()); }
 
     constexpr static size_t count = sizeof...(Args);
-    expression()                  = delete;
-    constexpr expression(Args&&... args) noexcept : args(std::forward<Args>(args)...) {}
+    expression_base()             = delete;
+    constexpr expression_base(Args&&... args) noexcept : args(std::forward<Args>(args)...) {}
 
     CMT_INLINE void begin_block(cinput_t cinput, size_t size) const
     {
@@ -364,19 +364,19 @@ template <typename T>
 using arg = typename internal::arg_impl<decay<T>, T>::type;
 
 template <typename Fn, typename... Args>
-struct expression_function : expression<arg<Args>...>
+struct expression_function : expression_base<arg<Args>...>
 {
     using value_type =
         subtype<decltype(std::declval<Fn>()(std::declval<vec<value_type_of<arg<Args>>, 1>>()...))>;
     using T = value_type;
 
     expression_function(Fn&& fn, arg<Args>&&... args) noexcept
-        : expression<arg<Args>...>(std::forward<arg<Args>>(args)...),
+        : expression_base<arg<Args>...>(std::forward<arg<Args>>(args)...),
           fn(std::forward<Fn>(fn))
     {
     }
     expression_function(const Fn& fn, arg<Args>&&... args) noexcept
-        : expression<arg<Args>...>(std::forward<arg<Args>>(args)...),
+        : expression_base<arg<Args>...>(std::forward<arg<Args>>(args)...),
           fn(fn)
     {
     }

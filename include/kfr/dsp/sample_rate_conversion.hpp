@@ -208,13 +208,13 @@ template <size_t factor, size_t offset, typename E>
 struct expression_downsample;
 
 template <typename E>
-struct expression_upsample<2, E> : expression<E>
+struct expression_upsample<2, E> : expression_base<E>
 {
-    using expression<E>::expression;
+    using expression_base<E>::expression_base;
     using value_type = value_type_of<E>;
     using T          = value_type;
 
-    size_t size() const noexcept { return expression<E>::size() * 2; }
+    size_t size() const noexcept { return expression_base<E>::size() * 2; }
 
     template <size_t N>
     vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
@@ -232,13 +232,13 @@ struct expression_upsample<2, E> : expression<E>
 };
 
 template <typename E>
-struct expression_upsample<4, E> : expression<E>
+struct expression_upsample<4, E> : expression_base<E>
 {
-    using expression<E>::expression;
+    using expression_base<E>::expression_base;
     using value_type = value_type_of<E>;
     using T          = value_type;
 
-    size_t size() const noexcept { return expression<E>::size() * 4; }
+    size_t size() const noexcept { return expression_base<E>::size() * 4; }
 
     template <size_t N>
     vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
@@ -269,13 +269,13 @@ struct expression_upsample<4, E> : expression<E>
 };
 
 template <typename E, size_t offset>
-struct expression_downsample<2, offset, E> : expression<E>
+struct expression_downsample<2, offset, E> : expression_base<E>
 {
-    using expression<E>::expression;
+    using expression_base<E>::expression_base;
     using value_type = value_type_of<E>;
     using T          = value_type;
 
-    size_t size() const noexcept { return expression<E>::size() / 2; }
+    size_t size() const noexcept { return expression_base<E>::size() / 2; }
 
     template <size_t N>
     vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
@@ -286,13 +286,13 @@ struct expression_downsample<2, offset, E> : expression<E>
 };
 
 template <typename E, size_t offset>
-struct expression_downsample<4, offset, E> : expression<E>
+struct expression_downsample<4, offset, E> : expression_base<E>
 {
-    using expression<E>::expression;
+    using expression_base<E>::expression_base;
     using value_type = value_type_of<E>;
     using T          = value_type;
 
-    size_t size() const noexcept { return expression<E>::size() / 4; }
+    size_t size() const noexcept { return expression_base<E>::size() / 4; }
 
     template <size_t N>
     vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const

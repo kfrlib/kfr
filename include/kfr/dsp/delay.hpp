@@ -34,11 +34,11 @@ namespace kfr
 namespace internal
 {
 template <size_t delay, typename E>
-struct expression_delay : expression<E>
+struct expression_delay : expression_base<E>
 {
     using value_type = value_type_of<E>;
     using T          = value_type;
-    using expression<E>::expression;
+    using expression_base<E>::expression_base;
 
     template <size_t N, KFR_ENABLE_IF(N <= delay)>
     vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
@@ -75,11 +75,11 @@ struct expression_delay : expression<E>
 };
 
 template <typename E>
-struct expression_delay<1, E> : expression<E>
+struct expression_delay<1, E> : expression_base<E>
 {
     using value_type = value_type_of<E>;
     using T          = value_type;
-    using expression<E>::expression;
+    using expression_base<E>::expression_base;
 
     template <size_t N>
     vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
