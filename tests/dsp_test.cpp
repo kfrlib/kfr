@@ -67,7 +67,7 @@ TEST(phasor)
 TEST(fir)
 {
     const univector<double, 100> data = counter() + sequence(1, 2, -10, 100) + sequence(0, -7, 0.5);
-    const univector<double, 7> taps{ 1, 2, -2, 0.5, 0.0625, 4, -8 };
+    const univector<double, 6> taps{ 1, 2, -2, 0.5, 0.0625, 4 };
 
     CHECK_EXPRESSION(fir(data, taps), 100, [&](size_t index) -> double {
         double result = 0.0;

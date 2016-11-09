@@ -33,6 +33,7 @@
 #include "base/constants.hpp"
 #include "base/digitreverse.hpp"
 #include "base/expression.hpp"
+#include "base/filter.hpp"
 #include "base/function.hpp"
 #include "base/gamma.hpp"
 #include "base/generators.hpp"

@@ -26,6 +26,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/constants.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/digitreverse.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/expression.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/filter.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/function.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/gamma.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/generators.hpp
