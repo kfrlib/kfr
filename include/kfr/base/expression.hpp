@@ -371,13 +371,11 @@ struct expression_function : expression_base<arg<Args>...>
     using T = value_type;
 
     expression_function(Fn&& fn, arg<Args>&&... args) noexcept
-        : expression_base<arg<Args>...>(std::forward<arg<Args>>(args)...),
-          fn(std::forward<Fn>(fn))
+        : expression_base<arg<Args>...>(std::forward<arg<Args>>(args)...), fn(std::forward<Fn>(fn))
     {
     }
     expression_function(const Fn& fn, arg<Args>&&... args) noexcept
-        : expression_base<arg<Args>...>(std::forward<arg<Args>>(args)...),
-          fn(fn)
+        : expression_base<arg<Args>...>(std::forward<arg<Args>>(args)...), fn(fn)
     {
     }
     template <size_t N>
@@ -412,11 +410,10 @@ CMT_INLINE internal::expression_scalar<T, N> scalar(const vec<T, N>& val)
 }
 
 template <typename Fn, typename... Args>
-CMT_INLINE internal::expression_function<decay<Fn>, internal::arg<Args>...> bind_expression(Fn&& fn,
-                                                                                            Args&&... args)
+CMT_INLINE internal::expression_function<decay<Fn>, Args...> bind_expression(Fn&& fn, Args&&... args)
 {
-    return internal::expression_function<decay<Fn>, internal::arg<Args>...>(std::forward<Fn>(fn),
-                                                                            std::forward<Args>(args)...);
+    return internal::expression_function<decay<Fn>, Args...>(std::forward<Fn>(fn),
+                                                             std::forward<Args>(args)...);
 }
 /**
  * @brief Construct a new expression using the same function as in @c e and new arguments
