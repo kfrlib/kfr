@@ -181,7 +181,7 @@ struct expression_biquads : expression_base<E1>
         for (size_t i = 0; i < filters - 1; i++)
         {
             const vec<T, 1> in = this->argument_first(cinput, i, vec_t<T, 1>());
-            state.out = process(bq, state, insertleft(in[i], state.out));
+            state.out = process(bq, state, insertleft(in[0], state.out));
         }
     }
     CMT_INLINE void end_block(cinput_t cinput, size_t) const { state = saved_state; }
@@ -219,7 +219,7 @@ struct expression_biquads : expression_base<E1>
             for (; i < std::min(width, block_end - index); i++)
             {
                 const vec<T, 1> in = this->argument_first(cinput, index + i, vec_t<T, 1>());
-                state.out = process(bq, state, insertleft(in[i], state.out));
+                state.out = process(bq, state, insertleft(in[0], state.out));
                 out[i]    = state.out[filters - 1];
             }
             saved_state = state;
