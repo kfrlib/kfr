@@ -1630,6 +1630,27 @@ CMT_INLINE constexpr static T implicit_cast(U&& value)
     return std::forward<T>(value);
 }
 
+namespace details
+{
+template <size_t start, size_t count>
+constexpr std::true_type test_sequence(csizeseq_t<count, start>)
+{
+    return {};
+}
+
+template <size_t, size_t>
+constexpr std::false_type test_sequence(...)
+{
+    return {};
+}
+}
+
+template <size_t number, size_t... numbers>
+constexpr bool is_sequence(csizes_t<number, numbers...>)
+{
+    return details::test_sequence<number, 1 + sizeof...(numbers)>(csizes_t<number, numbers...>()).value;
+}
+
 #ifdef CMT_COMPILER_GNU
 
 template <typename T, T val>
