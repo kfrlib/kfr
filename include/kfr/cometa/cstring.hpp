@@ -7,6 +7,9 @@
 #include <string>
 #include <utility>
 
+CMT_PRAGMA_MSVC(warning(push))
+CMT_PRAGMA_MSVC(warning(disable : 4100))
+
 namespace cometa
 {
 
@@ -158,3 +161,5 @@ CMT_INTRIN cstring<N1 - Nfrom + Nto> str_replace(const cstring<N1>& str, const c
                                      cvalseq_t<size_t, N1 - Nfrom + Nto - 1>());
 }
 }
+
+CMT_PRAGMA_MSVC(warning(pop))
