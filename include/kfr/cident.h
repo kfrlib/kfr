@@ -257,7 +257,7 @@ extern char* gets(char* __s);
 #elif defined(CMT_MSVC_ATTRIBUTES)
 
 #define CMT_NODEBUG
-#define CMT_INLINE inline __forceinline
+#define CMT_INLINE /*inline*/ __forceinline
 #define CMT_INTRIN CMT_INLINE CMT_NODEBUG
 #define CMT_INLINE_MEMBER __forceinline
 #define CMT_INLINE_LAMBDA
