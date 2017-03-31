@@ -39,14 +39,6 @@ matrix:
       osx_image: xcode7.3
       env:
         - TEST=XCODE7.3 CMAKEARGS="-DCMAKE_BUILD_TYPE=Release .."
-    - os: osx
-      osx_image: xcode7
-      env:
-        - TEST=XCODE7 CMAKEARGS="-DCMAKE_BUILD_TYPE=Release .."
-    - os: osx
-      osx_image: beta-xcode6.3
-      env:
-        - TEST=XCODE6.3 CMAKEARGS="-DCMAKE_BUILD_TYPE=Release .."
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cmake --version || brew install cmake; fi
