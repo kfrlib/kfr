@@ -9,6 +9,7 @@
 #include "named_arg.hpp"
 #include <array>
 #include <cstdio>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -125,17 +126,35 @@ CMT_INLINE constexpr auto value_fmt(ctype_t<fmt_t<T, t, width, prec>> fmt)
     return concat_cstring(make_cstring("%"), value_fmt_arg(fmt), cstring<2>{ { t, 0 } });
 }
 
+template <typename T>
+CMT_INLINE constexpr auto value_fmt(ctype_t<T>)
+{
+    return make_cstring("%s");
+}
+
 template <char... chars>
 CMT_INLINE const char* pack_value(const cchars_t<chars...>&)
 {
     return "";
 }
 
-template <typename Arg>
-CMT_INLINE const Arg& pack_value(const Arg& value)
-{
-    return value;
-}
+#define CMT_STANDARD_PACK(type)                                                                              \
+    CMT_INLINE type pack_value(type value) { return value; }
+
+CMT_STANDARD_PACK(char)
+CMT_STANDARD_PACK(signed char)
+CMT_STANDARD_PACK(unsigned char)
+CMT_STANDARD_PACK(signed short)
+CMT_STANDARD_PACK(unsigned short)
+CMT_STANDARD_PACK(signed int)
+CMT_STANDARD_PACK(unsigned int)
+CMT_STANDARD_PACK(signed long)
+CMT_STANDARD_PACK(unsigned long)
+CMT_STANDARD_PACK(signed long long)
+CMT_STANDARD_PACK(unsigned long long)
+CMT_STANDARD_PACK(double)
+CMT_STANDARD_PACK(const char*)
+
 CMT_INLINE double pack_value(float value) { return static_cast<double>(value); }
 CMT_INLINE auto pack_value(bool value) { return value ? "true" : "false"; }
 CMT_INLINE auto pack_value(const std::string& value) { return value.c_str(); }
@@ -150,6 +169,12 @@ template <typename T, char t, int width, int prec>
 CMT_INLINE auto pack_value(const fmt_t<T, t, width, prec>& value)
 {
     return pack_value(representation<T>::get(value.value));
+}
+
+template <typename T>
+CMT_INLINE auto pack_value(const T& value)
+{
+    return pack_value(type_name<T>());
 }
 
 template <size_t N1, size_t Nnew, size_t... indices>
@@ -358,6 +383,22 @@ CMT_INLINE void println(const Args&... args)
 }
 
 template <typename... Args>
+CMT_INLINE void error(const Args&... args)
+{
+    constexpr const auto format_str = concat_cstring(details::get_value_fmt<Args>()...);
+    const char* str                 = format_str.data();
+    std::fprintf(stderr, str, details::pack_value(representation<Args>::get(args))...);
+}
+
+template <typename... Args>
+CMT_INLINE void errorln(const Args&... args)
+{
+    constexpr const auto format_str = concat_cstring(details::get_value_fmt<Args>()..., make_cstring("\n"));
+    const char* str                 = format_str.data();
+    std::fprintf(stderr, str, details::pack_value(representation<Args>::get(args))...);
+}
+
+template <typename... Args>
 CMT_INLINE std::string as_string(const Args&... args)
 {
     std::string result;
@@ -426,6 +467,46 @@ struct representation<std::pair<T1, T2>>
     static std::string get(const std::pair<T1, T2>& value)
     {
         return "(" + as_string(value.first) + "; " + as_string(value.second) + ")";
+    }
+};
+
+template <typename T1>
+struct representation<std::unique_ptr<T1>>
+{
+    using type = std::string;
+    static std::string get(const std::unique_ptr<T1>& value)
+    {
+        if (value)
+            return as_string(type_name<std::unique_ptr<T1>>(), "(", *value.get(), ")");
+        else
+            return as_string(type_name<std::unique_ptr<T1>>(), "(nullptr)");
+    }
+};
+
+template <typename T1>
+struct representation<std::weak_ptr<T1>>
+{
+    using type = std::string;
+    static std::string get(const std::weak_ptr<T1>& value)
+    {
+        std::shared_ptr<T1> sh = value.lock();
+        if (sh)
+            return as_string(type_name<std::weak_ptr<T1>>(), "(", *sh.get(), ")");
+        else
+            return as_string(type_name<std::weak_ptr<T1>>(), "(nullptr)");
+    }
+};
+
+template <typename T1>
+struct representation<std::shared_ptr<T1>>
+{
+    using type = std::string;
+    static std::string get(const std::shared_ptr<T1>& value)
+    {
+        if (value)
+            return as_string(type_name<std::shared_ptr<T1>>(), "(", *value.get(), ")");
+        else
+            return as_string(type_name<std::shared_ptr<T1>>(), "(nullptr)");
     }
 };
 }
