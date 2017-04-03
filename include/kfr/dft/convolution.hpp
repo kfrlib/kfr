@@ -92,12 +92,12 @@ class convolve_filter : public filter<T>
 {
 public:
     explicit convolve_filter(size_t size, size_t block_size = 1024)
-        : size(size), block_size(block_size), fft(2 * next_poweroftwo(block_size)), temp(fft.temp_size),
+        : fft(2 * next_poweroftwo(block_size)), size(size), block_size(block_size), temp(fft.temp_size),
           segments((size + block_size - 1) / block_size)
     {
     }
     explicit convolve_filter(const univector<T>& data, size_t block_size = 1024)
-        : size(data.size()), block_size(next_poweroftwo(block_size)), fft(2 * next_poweroftwo(block_size)),
+        : fft(2 * next_poweroftwo(block_size)), size(data.size()), block_size(next_poweroftwo(block_size)),
           temp(fft.temp_size),
           segments((data.size() + next_poweroftwo(block_size) - 1) / next_poweroftwo(block_size)),
           ir_segments((data.size() + next_poweroftwo(block_size) - 1) / next_poweroftwo(block_size)),
