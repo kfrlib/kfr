@@ -56,8 +56,10 @@ struct mem_header
     u8 alignment;
     u8 reserved1;
     u8 reserved2;
-    std::atomic_uint references;
+    unsigned int references_uint;
     size_t size;
+
+    CMT_INLINE std::atomic_uint& references() { return reinterpret_cast<std::atomic_uint&>(references_uint); }
 }
 #ifdef CMT_GNU_ATTRIBUTES
 __attribute__((__packed__))
@@ -75,29 +77,31 @@ inline void* aligned_malloc(size_t size, size_t alignment)
     void* ptr = malloc(size + (alignment - 1) + sizeof(mem_header));
     if (ptr == nullptr)
         return nullptr;
-    void* aligned_ptr                       = advance(ptr, sizeof(mem_header));
-    aligned_ptr                             = align_up(aligned_ptr, alignment);
-    aligned_header(aligned_ptr)->alignment  = static_cast<u8>(alignment > 255 ? 255 : alignment);
-    aligned_header(aligned_ptr)->offset     = static_cast<u8>(distance(aligned_ptr, ptr));
-    aligned_header(aligned_ptr)->references = 1;
-    aligned_header(aligned_ptr)->size       = size;
+    void* aligned_ptr                         = advance(ptr, sizeof(mem_header));
+    aligned_ptr                               = align_up(aligned_ptr, alignment);
+    aligned_header(aligned_ptr)->alignment    = static_cast<u8>(alignment > 255 ? 255 : alignment);
+    aligned_header(aligned_ptr)->offset       = static_cast<u8>(distance(aligned_ptr, ptr));
+    aligned_header(aligned_ptr)->references() = 1;
+    aligned_header(aligned_ptr)->size         = size;
     return aligned_ptr;
 }
 
-inline void aligned_free(void* ptr)
+inline void aligned_force_free(void* ptr)
 {
     get_memory_statistics().deallocation_count++;
     get_memory_statistics().deallocation_size += aligned_size(ptr);
     free(advance(ptr, -static_cast<ptrdiff_t>(aligned_header(ptr)->offset)));
 }
 
-inline void aligned_add_ref(void* ptr) { aligned_header(ptr)->references++; }
+inline void aligned_add_ref(void* ptr) { aligned_header(ptr)->references()++; }
 
-inline void aligned_release(void* ptr)
+inline void aligned_free(void* ptr)
 {
-    if (--aligned_header(ptr)->references == 0)
-        aligned_free(ptr);
+    if (--aligned_header(ptr)->references() == 0)
+        aligned_force_free(ptr);
 }
+
+inline void aligned_release(void* ptr) { aligned_free(ptr); }
 }
 
 template <typename T = void, size_t alignment = platform<>::native_cache_alignment>
