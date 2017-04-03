@@ -203,6 +203,18 @@ KFR_SINTRIN vec<T, Nout> expand_simd(const vec<T, N>& x, identity<T> value)
         return concat(fn(low(a), low(b)), fn(high(a), high(b)));                                             \
     }
 
+#define KFR_HANDLE_ALL_SIZES_2_INT(fn)                                                                       \
+    template <typename T, size_t N, KFR_ENABLE_IF(N < platform<T>::vector_width)>                            \
+    KFR_SINTRIN vec<T, N> fn(const vec<T, N>& a, int b)                                                      \
+    {                                                                                                        \
+        return slice<0, N>(fn(expand_simd(a), b));                                                           \
+    }                                                                                                        \
+    template <typename T, size_t N, KFR_ENABLE_IF(N >= platform<T>::vector_width), typename = void>          \
+    KFR_SINTRIN vec<T, N> fn(const vec<T, N>& a, int b)                                                      \
+    {                                                                                                        \
+        return concat(fn(low(a), b), fn(high(a), b));                                                        \
+    }
+
 #define KFR_HANDLE_ALL_SIZES_3(fn)                                                                           \
     template <typename T, size_t N, KFR_ENABLE_IF(N < platform<T>::vector_width)>                            \
     KFR_SINTRIN vec<T, N> fn(const vec<T, N>& a, const vec<T, N>& b, const vec<T, N>& c)                     \
