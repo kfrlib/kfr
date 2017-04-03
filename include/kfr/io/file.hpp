@@ -113,20 +113,26 @@ struct expression_file_reader : expression_file_base, input_expression
 };
 }
 
+/// @brief Creates an expression that returns values from the given file (sequential access)
 inline internal::expression_sequential_file_reader sequential_file_reader(const std::string& file_name)
 {
     return internal::expression_sequential_file_reader(fopen(file_name.c_str(), "rb"));
 }
+
+/// @brief Creates an output expression that writes values to the given file (sequential access)
 inline internal::expression_sequential_file_writer sequential_file_writer(const std::string& file_name)
 {
     return internal::expression_sequential_file_writer(fopen(file_name.c_str(), "wb"));
 }
 
+/// @brief Creates an expression that returns values from the given file (random access)
 template <typename T = u8>
 internal::expression_file_reader<T> file_reader(const std::string& file_name)
 {
     return internal::expression_file_reader<T>(fopen(file_name.c_str(), "rb"));
 }
+
+/// @brief Creates an output expression that writes values to the given file (random access)
 template <typename T = u8>
 internal::expression_file_writer<T> file_writer(const std::string& file_name)
 {

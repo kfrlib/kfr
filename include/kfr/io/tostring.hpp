@@ -199,9 +199,14 @@ struct expression_debug_printer : output_expression
     }
 };
 }
+
+/// @brief Returns an output expression that prints the values
 inline internal::expression_printer printer() { return internal::expression_printer(); }
+
+/// @brief Returns an output expression that prints the values with their types (used for debug)
 inline internal::expression_debug_printer debug_printer() { return internal::expression_debug_printer(); }
 
+/// @brief Converts dB value to string (uses oo for infinity symbol)
 template <typename T>
 std::string dB_to_string(const T& value, double minimum = -140.0)
 {
@@ -210,6 +215,7 @@ std::string dB_to_string(const T& value, double minimum = -140.0)
     return as_string(fmtwidth<0, 2>(value), " dB");
 }
 
+/// @brief Converts dB value to string (uses infinity symbol in utf-8 encoding)
 template <typename T>
 std::string dB_to_utf8string(const T& value, double minimum = -140.0)
 {

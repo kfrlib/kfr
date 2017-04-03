@@ -42,7 +42,7 @@ CMT_INLINE double bitwiseand(double x, double y) { return fbitcast(ubitcast(x) &
 CMT_INLINE double bitwiseandnot(double x, double y) { return fbitcast(ubitcast(x) & ~ubitcast(y)); }
 CMT_INLINE double bitwisexor(double x, double y) { return fbitcast(ubitcast(x) ^ ubitcast(y)); }
 
-/// Bitwise Not
+/// @brief Bitwise Not
 template <typename T1>
 CMT_INLINE T1 bitwisenot(const T1& x)
 {
@@ -50,7 +50,7 @@ CMT_INLINE T1 bitwisenot(const T1& x)
 }
 KFR_FN(bitwisenot)
 
-/// Bitwise And
+/// @brief Bitwise And
 template <typename T1, typename T2>
 CMT_INLINE common_type<T1, T2> bitwiseand(const T1& x, const T2& y)
 {
@@ -63,7 +63,7 @@ constexpr CMT_INLINE T bitwiseand(initialvalue<T>)
 }
 KFR_FN(bitwiseand)
 
-/// Bitwise And-Not
+/// @brief Bitwise And-Not
 template <typename T1, typename T2>
 CMT_INLINE common_type<T1, T2> bitwiseandnot(const T1& x, const T2& y)
 {
@@ -76,7 +76,7 @@ constexpr inline T bitwiseandnot(initialvalue<T>)
 }
 KFR_FN(bitwiseandnot)
 
-/// Bitwise Or
+/// @brief Bitwise Or
 template <typename T1, typename T2>
 CMT_INLINE common_type<T1, T2> bitwiseor(const T1& x, const T2& y)
 {
@@ -89,7 +89,7 @@ constexpr CMT_INLINE T bitwiseor(initialvalue<T>)
 }
 KFR_FN(bitwiseor)
 
-/// Bitwise Xor (Exclusive Or)
+/// @brief Bitwise Xor (Exclusive Or)
 template <typename T1, typename T2>
 CMT_INLINE common_type<T1, T2> bitwisexor(const T1& x, const T2& y)
 {
@@ -102,7 +102,7 @@ constexpr CMT_INLINE T bitwisexor(initialvalue<T>)
 }
 KFR_FN(bitwisexor)
 
-/// Bitwise Left shift
+/// @brief Bitwise Left shift
 template <typename T1, typename T2>
 CMT_INLINE common_type<T1, T2> shl(const T1& left, const T2& right)
 {
@@ -110,7 +110,7 @@ CMT_INLINE common_type<T1, T2> shl(const T1& left, const T2& right)
 }
 KFR_FN(shl)
 
-/// Bitwise Right shift
+/// @brief Bitwise Right shift
 template <typename T1, typename T2>
 CMT_INLINE common_type<T1, T2> shr(const T1& left, const T2& right)
 {
@@ -118,7 +118,7 @@ CMT_INLINE common_type<T1, T2> shr(const T1& left, const T2& right)
 }
 KFR_FN(shr)
 
-/// Bitwise Left Rotate
+/// @brief Bitwise Left Rotate
 template <typename T1, typename T2>
 CMT_INLINE common_type<T1, T2> rol(const T1& left, const T2& right)
 {
@@ -126,7 +126,7 @@ CMT_INLINE common_type<T1, T2> rol(const T1& left, const T2& right)
 }
 KFR_FN(rol)
 
-/// Bitwise Right Rotate
+/// @brief Bitwise Right Rotate
 template <typename T1, typename T2>
 CMT_INLINE common_type<T1, T2> ror(const T1& left, const T2& right)
 {

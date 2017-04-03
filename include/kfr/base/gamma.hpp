@@ -67,24 +67,28 @@ KFR_I_FLT_CONVERTER(factorial_approx)
 KFR_I_FN(gamma)
 KFR_I_FN(factorial_approx)
 
+/// @brief Returns the approximate gamma function of an argument
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_FUNC flt_type<T1> gamma(const T1& x)
 {
     return intrinsics::gamma(x);
 }
 
+/// @brief Creates expression that returns the approximate gamma function of an argument
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_FUNC internal::expression_function<fn::gamma, E1> gamma(E1&& x)
 {
     return { fn::gamma(), std::forward<E1>(x) };
 }
 
+/// @brief Returns the approximate factorial of an argument
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_FUNC flt_type<T1> factorial_approx(const T1& x)
 {
     return intrinsics::factorial_approx(x);
 }
 
+/// @brief Creates expression that returns the approximate factorial of an argument
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_FUNC internal::expression_function<fn::factorial_approx, E1> factorial_approx(E1&& x)
 {

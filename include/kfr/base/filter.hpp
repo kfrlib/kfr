@@ -32,31 +32,38 @@
 namespace kfr
 {
 
+/// @brief Abstract base class for filters with one argument. Mainly for DSP
 template <typename T>
 class filter
 {
 public:
     virtual ~filter() {}
+
+    /// @brief Resets internal state (such as delay line)
     virtual void reset() {}
 
+    /// @brief Applies filter to a static array
     template <size_t Size>
     void apply(T (&buffer)[Size])
     {
         process_buffer(buffer, buffer, Size);
     }
 
+    /// @brief Applies filter to a static array and writes the result to another array
     template <size_t Size>
     void apply(T (&dest)[Size], T (&src)[Size])
     {
         process_buffer(dest, src, Size);
     }
 
+    /// @brief Applies filter to a univector
     template <size_t Tag>
     void apply(univector<T, Tag>& buffer)
     {
         process_buffer(buffer.data(), buffer.data(), buffer.size());
     }
 
+    /// @brief Applies filter to a univector and write the result to another univector
     template <size_t Tag1, size_t Tag2>
     void apply(univector<T, Tag1>& dest, const univector<T, Tag2>& src)
     {
