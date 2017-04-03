@@ -35,7 +35,7 @@ except:
     
 options = [
     '-DCMAKE_BUILD_TYPE=Release',
-    ]
+    ] + sys.argv[1:]
 
 if sys.platform.startswith('win32'):
     generator = 'MinGW Makefiles'    
