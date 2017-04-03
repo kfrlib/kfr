@@ -239,21 +239,21 @@ struct vec<vec<T, Nin>, N> : private vec<T, Nin * N>
     CMT_GNU_CONSTEXPR value_type operator[](size_t index) const noexcept { return get(index); }
     CMT_GNU_CONSTEXPR element operator[](size_t index) noexcept { return { *this, index }; }
 
-    constexpr value_type get(size_t index) const noexcept
+    CMT_GNU_CONSTEXPR value_type get(size_t index) const noexcept
     {
         return reinterpret_cast<const value_type(&)[N]>(*this)[index];
     }
-    constexpr void set(size_t index, const value_type& s) noexcept
+    CMT_GNU_CONSTEXPR void set(size_t index, const value_type& s) noexcept
     {
         reinterpret_cast<value_type(&)[N]>(*this)[index] = s;
     }
     template <size_t index>
-    constexpr value_type get(csize_t<index>) const noexcept
+    CMT_GNU_CONSTEXPR value_type get(csize_t<index>) const noexcept
     {
         return static_cast<const base&>(*this).shuffle(csizeseq_t<Nin, index * Nin>());
     }
     template <size_t index>
-    constexpr void set(csize_t<index>, const value_type& s) noexcept
+    CMT_GNU_CONSTEXPR void set(csize_t<index>, const value_type& s) noexcept
     {
         *this = vec(static_cast<const base&>(*this))
                     .shuffle(s, csizeseq_t<N>() +
