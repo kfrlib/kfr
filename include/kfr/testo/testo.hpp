@@ -287,7 +287,7 @@ void matrix(named_arg<Arg0>&& arg0, named_arg<Arg1>&& arg1, named_arg<Arg2>&& ar
         println();
 }
 
-static int run_all(const std::string& name = std::string(), bool show_successful = false)
+CMT_UNUSED static int run_all(const std::string& name = std::string(), bool show_successful = false)
 {
     std::vector<test_case*> success;
     std::vector<test_case*> failed;
