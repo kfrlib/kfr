@@ -153,7 +153,10 @@ CMT_STANDARD_PACK(unsigned long)
 CMT_STANDARD_PACK(signed long long)
 CMT_STANDARD_PACK(unsigned long long)
 CMT_STANDARD_PACK(double)
+CMT_STANDARD_PACK(char*)
 CMT_STANDARD_PACK(const char*)
+CMT_STANDARD_PACK(void*)
+CMT_STANDARD_PACK(const void*)
 
 CMT_INLINE double pack_value(float value) { return static_cast<double>(value); }
 CMT_INLINE auto pack_value(bool value) { return value ? "true" : "false"; }
