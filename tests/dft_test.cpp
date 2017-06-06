@@ -53,6 +53,19 @@ constexpr size_t stopsize = 12;
 constexpr size_t stopsize = 20;
 #endif
 
+TEST(fft_real)
+{
+    using float_type = double;
+    random_bit_generator gen(2247448713, 915890490, 864203735, 2982561);
+
+    constexpr size_t size = 64;
+
+    kfr::univector<float_type, size> in = gen_random_range<float_type>(gen, -1.0, +1.0);
+    kfr::univector<kfr::complex<float_type>, size / 2 + 1> out = realdft(in);
+    kfr::univector<float_type, size> rev = irealdft(out) / size;
+    CHECK(rms(rev - in) <= 0.00001f);
+}
+
 TEST(fft_accuracy)
 {
     testo::active_test()->show_progress = true;
@@ -99,6 +112,12 @@ TEST(fft_accuracy)
                           const double ops     = log2size * 200;
                           const double epsilon = std::numeric_limits<float_type>::epsilon();
                           CHECK(rms_diff_r < epsilon * ops);
+
+                          univector<float_type> out2(size, 0.f);
+                          dft.execute(out2, out, temp);
+                          out2 = out2 / size;
+                          const float_type rms_diff_r2 = rms(in - out2);
+                          CHECK(rms_diff_r2 < epsilon * ops);
                       }
                   });
 }
