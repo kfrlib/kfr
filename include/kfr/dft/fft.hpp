@@ -1133,6 +1133,7 @@ private:
         const size_t count     = csize / 2;
 
         block_process(count, csizes_t<width, 1>(), [=](size_t i, auto w) {
+            i++;
             constexpr size_t width   = val_of(decltype(w)());
             constexpr size_t widthm1 = width - 1;
             const cvec<T, width> tw   = cread<width>(rtwiddle.data() + i);
