@@ -18,9 +18,9 @@ TEST(pack)
     const univector<float, 21> v1 = 1 + counter();
     const univector<float, 21> v2 = v1 * 11;
 
-    CHECK_EXPRESSION(pack(v1, v2), 21, [](size_t i) { return f32x2{ 1 + i, (1 + i) * 11 }; });
+    CHECK_EXPRESSION(pack(v1, v2), 21, [](float i) { return f32x2{ 1 + i, (1 + i) * 11 }; });
 
-    CHECK_EXPRESSION(bind_expression(fn::reverse(), pack(v1, v2)), 21, [](size_t i) {
+    CHECK_EXPRESSION(bind_expression(fn::reverse(), pack(v1, v2)), 21, [](float i) {
         return f32x2{ (1 + i) * 11, 1 + i };
     });
 }
