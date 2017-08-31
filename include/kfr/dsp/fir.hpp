@@ -162,7 +162,7 @@ CMT_INLINE internal::expression_fir<T, E1> fir(E1&& e1, const univector<T, Tag>&
  * @param state FIR filter state
  * @param e1 an input expression
  */
-template <typename T, typename E1, size_t Tag>
+template <typename T, typename E1>
 CMT_INLINE internal::expression_fir<T, E1, true> fir(fir_state<T>& state, E1&& e1)
 {
     return internal::expression_fir<T, E1, true>(std::forward<E1>(e1), state);
