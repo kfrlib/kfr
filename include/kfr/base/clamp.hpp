@@ -33,6 +33,12 @@ namespace kfr
 namespace intrinsics
 {
 
+template <typename T>
+KFR_SINTRIN T clamp(const T& x, const T& lo, const T& hi)
+{
+    return max(min(x, hi), lo);
+}
+
 template <typename T, size_t N>
 KFR_SINTRIN vec<T, N> clamp(const vec<T, N>& x, const vec<T, N>& lo, const vec<T, N>& hi)
 {

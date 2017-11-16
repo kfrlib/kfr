@@ -239,7 +239,7 @@ KFR_SINTRIN vec<T, N> pow(const vec<T, N>& a, const vec<T, N>& b)
     const vec<T, N> t       = exp(b * log(abs(a)));
     const mask<T, N> isint  = floor(b) == b;
     const mask<T, N> iseven = (cast<itype<T>>(b) & 1) == 0;
-    return select(a > T(), t, select(a == T(), T(1),
+    return select(a > T(), t, select(a == T(), T(),
                                      select(isint, select(iseven, t, -t), broadcast<N>(constants<T>::qnan))));
 }
 
