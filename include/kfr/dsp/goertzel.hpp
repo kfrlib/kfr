@@ -96,7 +96,7 @@ struct expression_parallel_goertzel : output_expression
             q1 = q0;
         }
     }
-    complex<T> result[];
+    complex<T>* result;
     const vec<T, width> omega;
     const vec<T, width> coeff;
     vec<T, width> q0;
