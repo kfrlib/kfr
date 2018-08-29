@@ -36,7 +36,7 @@
 namespace kfr
 {
 
-template <typename Tnumber = long double>
+template <typename Tnumber = double>
 void reference_fft_pass(Tnumber pi2, size_t N, size_t offset, size_t delta, int flag, Tnumber (*x)[2],
                         Tnumber (*X)[2], Tnumber (*XX)[2])
 {
@@ -77,7 +77,7 @@ void reference_fft_pass(Tnumber pi2, size_t N, size_t offset, size_t delta, int 
     }
 }
 
-template <typename Tnumber = long double, typename T>
+template <typename Tnumber = double, typename T>
 void reference_fft(complex<T>* out, const complex<T>* in, size_t size, bool inversion = false)
 {
     using Tcmplx = Tnumber(*)[2];
@@ -93,7 +93,7 @@ void reference_fft(complex<T>* out, const complex<T>* in, size_t size, bool inve
     std::copy(dataout.begin(), dataout.end(), out);
 }
 
-template <typename Tnumber = long double, typename T>
+template <typename Tnumber = double, typename T>
 void reference_fft(complex<T>* out, const T* in, size_t size)
 {
     constexpr bool inversion = false;
@@ -110,7 +110,7 @@ void reference_fft(complex<T>* out, const T* in, size_t size)
     std::copy(dataout.begin(), dataout.end(), out);
 }
 
-template <typename Tnumber = long double, typename T>
+template <typename Tnumber = double, typename T>
 void reference_fft(T* out, const complex<T>* in, size_t size)
 {
     constexpr bool inversion = true;
@@ -128,7 +128,7 @@ void reference_fft(T* out, const complex<T>* in, size_t size)
         out[i]    = dataout[i].real();
 }
 
-template <typename Tnumber = long double, typename T>
+template <typename Tnumber = double, typename T>
 void reference_dft(complex<T>* out, const complex<T>* in, size_t size, bool inversion = false)
 {
     using std::sin;
