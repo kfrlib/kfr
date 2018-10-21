@@ -241,7 +241,7 @@ namespace internal
 {
 template <typename... Args, typename T, size_t key, size_t... indices>
 KFR_SINTRIN bool substitute(internal::expression_base<Args...>& expr, expression_pointer<T>&& new_pointer,
-                            csize_t<key>, std::index_sequence<indices...>);
+                            csize_t<key>, csizes_t<indices...>);
 
 }
 
@@ -258,7 +258,7 @@ KFR_SINTRIN bool substitute(internal::expression_base<Args...>& expr, expression
                             csize_t<key> = csize_t<key>{})
 {
     return internal::substitute(expr, std::move(new_pointer), csize_t<key>{},
-                                std::index_sequence_for<Args...>{});
+                                indicesfor_t<Args...>{});
 }
 
 template <typename T, size_t key = 0>
@@ -281,7 +281,7 @@ KFR_SINTRIN bool var_or(bool b, Args... args)
 
 template <typename... Args, typename T, size_t key, size_t... indices>
 KFR_SINTRIN bool substitute(internal::expression_base<Args...>& expr, expression_pointer<T>&& new_pointer,
-                            csize_t<key>, std::index_sequence<indices...>)
+                            csize_t<key>, csizes_t<indices...>)
 {
     return var_or(substitute(std::get<indices>(expr.args), std::move(new_pointer), csize_t<key>())...);
 }
