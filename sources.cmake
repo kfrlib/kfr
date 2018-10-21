@@ -84,6 +84,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/biquad_design.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/dcremove.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/delay.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/dsp/ebu.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fir.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fir_design.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fracdelay.hpp
@@ -104,7 +105,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/io/file.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/python_plot.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/tostring.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/testo/testo.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/testo/assert.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/testo/comparison.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/testo/testo.hpp
 )

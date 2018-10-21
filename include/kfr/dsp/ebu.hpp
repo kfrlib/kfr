@@ -1,0 +1,329 @@
+#pragma once
+
+#include <vector>
+
+#include "../base.hpp"
+#include "../testo/assert.hpp"
+#include "biquad.hpp"
+#include "biquad_design.hpp"
+#include "speaker.hpp"
+#include "units.hpp"
+
+#pragma clang diagnostic push
+#if __has_warning("-Winaccessible-base")
+#pragma clang diagnostic ignored "-Winaccessible-base"
+#endif
+
+namespace kfr
+{
+
+template <typename T>
+KFR_SINTRIN T energy_to_loudness(T energy)
+{
+    return T(10) * log(energy) / c_log_10<T> - T(0.691);
+}
+
+template <typename T>
+struct integrated_vec : public std::vector<T>
+{
+private:
+    void compute() const
+    {
+        T z_total = 0;
+        for (T v : *this)
+        {
+            z_total += v;
+        }
+        z_total /= this->size();
+        T relative_gate = energy_to_loudness(z_total) - 10;
+
+        T z        = 0;
+        size_t num = 0;
+        for (T v : *this)
+        {
+            T lk = energy_to_loudness(v);
+            if (lk >= relative_gate)
+            {
+                z += v;
+                num++;
+            }
+        }
+        z /= num;
+        if (num >= 1)
+        {
+            m_integrated = energy_to_loudness(z);
+        }
+        else
+        {
+            m_integrated = -c_infinity<T>;
+        }
+
+        m_integrated_cached = true;
+    }
+
+public:
+    integrated_vec() : m_integrated(-c_infinity<T>), m_integrated_cached(false) {}
+    void push(T mean_square)
+    {
+        T lk = energy_to_loudness(mean_square);
+        if (lk >= T(-70.))
+        {
+            this->push_back(mean_square);
+            m_integrated_cached = false;
+        }
+    }
+    void clear()
+    {
+        m_integrated_cached = false;
+        std::vector<T>::clear();
+    }
+    T get() const
+    {
+        if (!m_integrated_cached)
+        {
+            compute();
+        }
+        return m_integrated;
+    }
+
+private:
+    mutable bool m_integrated_cached;
+    mutable T m_integrated;
+};
+
+template <typename T>
+struct lra_vec : public std::vector<T>
+{
+private:
+    void compute() const
+    {
+        static const T PRC_LOW  = 0.10;
+        static const T PRC_HIGH = 0.95;
+
+        T z_total = 0;
+        for (const T v : *this)
+        {
+            z_total += v;
+        }
+        z_total /= this->size();
+        const T relative_gate = energy_to_loudness(z_total) - 20;
+
+        std::vector<T> temp;
+        temp.reserve(this->size());
+        for (const T v : *this)
+        {
+            T lk = energy_to_loudness(v);
+            if (lk >= relative_gate)
+                temp.push_back(lk);
+        }
+        if (temp.size() < 2)
+        {
+            m_range_high = -70.0;
+            m_range_low  = -70.0;
+        }
+        else
+        {
+            std::sort(temp.begin(), temp.end());
+            const size_t low_index  = static_cast<size_t>(std::llround((temp.size() - 1) * PRC_LOW));
+            const size_t high_index = static_cast<size_t>(std::llround((temp.size() - 1) * PRC_HIGH));
+            m_range_low             = temp[low_index];
+            m_range_high            = temp[high_index];
+        }
+
+        m_lra_cached = true;
+    }
+
+public:
+    lra_vec() : m_range_low(-70), m_range_high(-70), m_lra_cached(false) {}
+    void push(T mean_square)
+    {
+        const T lk = energy_to_loudness(mean_square);
+        if (lk >= -70)
+        {
+            this->push_back(mean_square);
+            m_lra_cached = false;
+        }
+    }
+    void clear()
+    {
+        m_lra_cached = false;
+        std::vector<T>::clear();
+    }
+    void get(T& low, T& high) const
+    {
+        if (!m_lra_cached)
+            compute();
+        low  = m_range_low;
+        high = m_range_high;
+    }
+
+private:
+    mutable bool m_lra_cached;
+    mutable T m_range_low;
+    mutable T m_range_high;
+};
+
+template <typename T>
+KFR_SINTRIN expression_pointer<T> make_kfilter(int samplerate)
+{
+    const biquad_params<T> bq[] = {
+        biquad_highshelf(T(1681.81 / samplerate), T(+4.0)),
+        biquad_highpass(T(38.1106678246655 / samplerate), T(0.5)).normalized_all()
+    };
+    return to_pointer(biquad(bq, placeholder<T>()));
+}
+
+template <typename T>
+struct ebu_r128;
+
+template <typename T>
+struct ebu_channel
+{
+public:
+    friend struct ebu_r128<T>;
+    ebu_channel(int sample_rate, Speaker speaker, int packet_size_factor = 1, T input_gain = 1)
+        : m_sample_rate(sample_rate), m_speaker(speaker), m_input_gain(input_gain),
+          m_packet_size(sample_rate / 10 / packet_size_factor), m_kfilter(make_kfilter<T>(sample_rate)),
+          m_short_sum_of_squares(3000 / 100 * packet_size_factor),
+          m_momentary_sum_of_squares(400 / 100 * packet_size_factor), m_output_energy_gain(1.0),
+          m_buffer_cursor(0), m_short_sum_of_squares_cursor(0), m_momentary_sum_of_squares_cursor(0)
+    {
+        switch (speaker)
+        {
+        case Speaker::Lfe:
+        case Speaker::Lfe2:
+            m_output_energy_gain = 0.0;
+            break;
+        case Speaker::LeftSurround:
+        case Speaker::RightSurround:
+            m_output_energy_gain = dB_to_power(+1.5);
+            break;
+        default:
+            break;
+        }
+        reset();
+    }
+
+    void reset()
+    {
+        std::fill(m_short_sum_of_squares.begin(), m_short_sum_of_squares.end(), 0);
+        std::fill(m_momentary_sum_of_squares.begin(), m_momentary_sum_of_squares.end(), 0);
+    }
+
+    void process_packet(const T* src)
+    {
+        substitute(m_kfilter, to_pointer(make_univector(src, m_packet_size) * m_input_gain));
+        const T filtered_sum_of_squares = sumsqr(truncate(m_kfilter, m_packet_size));
+
+        m_short_sum_of_squares.ringbuf_write(m_short_sum_of_squares_cursor, filtered_sum_of_squares);
+        m_momentary_sum_of_squares.ringbuf_write(m_momentary_sum_of_squares_cursor, filtered_sum_of_squares);
+    }
+    Speaker get_speaker() const { return m_speaker; }
+
+private:
+    const Speaker m_speaker;
+    const T m_input_gain;
+    const int m_sample_rate;
+    const size_t m_packet_size;
+    expression_pointer<T> m_kfilter;
+    T m_output_energy_gain;
+    univector<T> m_buffer;
+    univector<T> m_short_sum_of_squares;
+    univector<T> m_momentary_sum_of_squares;
+    size_t m_buffer_cursor;
+    size_t m_short_sum_of_squares_cursor;
+    size_t m_momentary_sum_of_squares_cursor;
+};
+
+template <typename T>
+struct ebu_r128
+{
+public:
+    // Correct values for packet_size_factor: 1 (10Hz refresh rate), 2 (20Hz), 3 (30Hz)
+    ebu_r128(int sample_rate, const std::vector<Speaker>& channels, int packet_size_factor = 1)
+        : m_sample_rate(sample_rate), m_running(true), m_need_reset(false),
+          m_packet_size(sample_rate / 10 / packet_size_factor)
+    {
+        for (Speaker sp : channels)
+        {
+            m_channels.emplace_back(sample_rate, sp, packet_size_factor, 1);
+        }
+    }
+
+    int sample_rate() const { return m_sample_rate; }
+
+    size_t packet_size() const { return m_packet_size; }
+
+    void get_values(T& loudness_momentary, T& loudness_short, T& loudness_intergrated, T& loudness_range_low,
+                    T& loudness_range_high)
+    {
+        T sum_of_mean_square_momentary = 0;
+        T sum_of_mean_square_short     = 0;
+        for (size_t ch = 0; ch < m_channels.size(); ch++)
+        {
+            sum_of_mean_square_momentary += mean(m_channels[ch].m_momentary_sum_of_squares) / m_packet_size *
+                                            m_channels[ch].m_output_energy_gain;
+            sum_of_mean_square_short += mean(m_channels[ch].m_short_sum_of_squares) / m_packet_size *
+                                        m_channels[ch].m_output_energy_gain;
+        }
+        loudness_momentary   = energy_to_loudness(sum_of_mean_square_momentary);
+        loudness_short       = energy_to_loudness(sum_of_mean_square_short);
+        loudness_intergrated = m_integrated_buffer.get();
+        m_lra_buffer.get(loudness_range_low, loudness_range_high);
+    }
+
+    const ebu_channel<T>& operator[](size_t index) const { return m_channels[index]; }
+    size_t count() const { return m_channels.size(); }
+
+    void process_packet(const std::initializer_list<univector_dyn<T>>& source)
+    {
+        process_packet<tag_dynamic_vector>(source);
+    }
+    void process_packet(const std::initializer_list<univector_ref<T>>& source)
+    {
+        process_packet<tag_array_ref>(source);
+    }
+
+    template <size_t Tag>
+    void process_packet(const std::vector<univector<T, Tag>>& source)
+    {
+        T momentary = 0;
+        T shortterm = 0;
+        for (size_t ch = 0; ch < m_channels.size(); ch++)
+        {
+            TESTO_ASSERT(source[ch].size() == m_packet_size);
+            ebu_channel<T>& chan = m_channels[ch];
+            chan.process_packet(source[ch].data());
+            if (m_running)
+            {
+                momentary += mean(m_channels[ch].m_momentary_sum_of_squares) / m_packet_size *
+                             m_channels[ch].m_output_energy_gain;
+                shortterm += mean(m_channels[ch].m_short_sum_of_squares) / m_packet_size *
+                             m_channels[ch].m_output_energy_gain;
+            }
+        }
+
+        if (m_running)
+        {
+            m_integrated_buffer.push(momentary);
+            m_lra_buffer.push(shortterm);
+        }
+    }
+
+    void start() { m_running = true; }
+    void stop() { m_running = false; }
+    void reset() { m_need_reset = true; }
+
+private:
+    int m_sample_rate;
+    bool m_running;
+    bool m_need_reset;
+    size_t m_packet_size;
+    std::vector<ebu_channel<T>> m_channels;
+    integrated_vec<T> m_integrated_buffer;
+    lra_vec<T> m_lra_buffer;
+};
+
+} // namespace kfr
+
+#pragma clang diagnostic pop
