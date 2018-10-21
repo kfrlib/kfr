@@ -26,6 +26,7 @@
 #pragma once
 
 #include "basic_expressions.hpp"
+#include "expression.hpp"
 #include "pointer.hpp"
 #include "univector.hpp"
 
@@ -101,4 +102,43 @@ protected:
     virtual void process_buffer(T* dest, const T* src, size_t size)                         = 0;
     virtual void process_expression(T* dest, const expression_pointer<T>& src, size_t size) = 0;
 };
+
+template <typename T>
+class expression_filter : public filter<T>
+{
+public:
+    template <typename... Args>
+    explicit expression_filter(expression_pointer<T>&& filter_expr) : filter_expr(std::move(filter_expr))
+    {
+    }
+
+protected:
+    void process_buffer(T* dest, const T* src, size_t size) override
+    {
+        substitute(filter_expr, to_pointer(make_univector(src, size)));
+        process(make_univector(dest, size), filter_expr, 0, size);
+    }
+    void process_expression(T* dest, const expression_pointer<T>& src, size_t size) override
+    {
+        substitute(filter_expr, src);
+        process(make_univector(dest, size), filter_expr, 0, size);
+    }
+
+    expression_pointer<T> filter_expr;
+};
+
+/// @brief Converts expression with placeholder to filter. Placeholder and filter must have the same type
+template <typename E, typename T = value_type_of<E>>
+KFR_SINTRIN expression_filter<T> to_filter(E&& e)
+{
+    return expression_filter<T>(to_pointer(std::move(e)));
 }
+
+/// @brief Converts expression with placeholder to filter. Placeholder and filter must have the same type
+template <typename T, typename E>
+KFR_SINTRIN expression_filter<T> to_filter(expression_pointer<T>&& e)
+{
+    return expression_filter<T>(std::move(e));
+}
+
+} // namespace kfr
