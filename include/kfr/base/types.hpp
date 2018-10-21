@@ -184,7 +184,7 @@ inline datatype operator|(datatype x, datatype y)
 inline datatype operator&(datatype x, datatype y)
 {
     using type = underlying_type<datatype>;
-    return static_cast<datatype>(static_cast<type>(x) | static_cast<type>(y));
+    return static_cast<datatype>(static_cast<type>(x) & static_cast<type>(y));
 }
 
 template <typename T>
