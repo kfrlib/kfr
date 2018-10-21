@@ -78,7 +78,7 @@ inline T flush_to_zero(T value)
 {
     return static_cast<double>(value);
 }
-}
+} // namespace internal
 
 inline std::string concat_args() { return {}; }
 
@@ -89,15 +89,22 @@ std::string concat_args(const std::string& left, const Ts&... rest)
     return left.empty() ? right : right.empty() ? left : left + ", " + right;
 }
 
+inline std::string python_prologue()
+{
+    return "#!/usr/bin/env python\n"
+           "import sys\n"
+           "import os\n"
+           "sys.path.append(os.path.abspath(__file__ + '/../../../../dspplot/dspplot'))\n"
+           "sys.path.append(os.path.abspath(__file__ + '/../../../dspplot/dspplot'))\n"
+           "import dspplotting as dspplot\n\n";
+}
+
 template <int = 0>
 void plot_show(const std::string& name, const std::string& wavfile, const std::string& options = "")
 {
     print(name, "...");
     std::string ss;
-    ss += "#!/usr/bin/env python\n"
-          "import dspplot\n\n"
-          "dspplot.plot(" +
-          concat_args("r'" + wavfile + "'", options) + ")\n";
+    ss += python_prologue() + "dspplot.plot(" + concat_args("r'" + wavfile + "'", options) + ")\n";
 
     internal::python(name, ss);
     print("done\n");
@@ -115,9 +122,7 @@ void plot_show(const std::string& name, T&& x, const std::string& options = "")
     print(name, "...");
     auto array = make_array_ref(std::forward<T>(x));
     std::string ss;
-    ss += "#!/usr/bin/env python\n"
-          "import dspplot\n\n"
-          "data = [\n";
+    ss += python_prologue() + "data = [\n";
     for (size_t i = 0; i < array.size(); i++)
         ss += as_string(fmt<'g', 20, 17>(internal::flush_to_zero(array[i])), ",\n");
     ss += "]\n";
@@ -141,8 +146,7 @@ void perfplot_show(const std::string& name, T1&& data, T2&& labels, const std::s
     auto array        = make_array_ref(std::forward<T1>(data));
     auto labels_array = make_array_ref(std::forward<T2>(labels));
     std::string ss;
-    ss += "#!/usr/bin/env python\n";
-    ss += "import dspplot\n\n";
+    ss += python_prologue();
     ss += "data = [\n";
     for (size_t i = 0; i < array.size(); i++)
     {
@@ -174,4 +178,4 @@ void perfplot_save(const std::string& name, T1&& data, T2&& labels, const std::s
     perfplot_show(name, std::forward<T1>(data), std::forward<T2>(labels),
                   concat_args(options, "file='../perf/" + name + ".svg'"));
 }
-}
+} // namespace kfr
