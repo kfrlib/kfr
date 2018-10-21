@@ -157,8 +157,8 @@ struct expression_biquads_l : public expression_base<E1>
                                         const vec<T, filters>& in)
     {
         const vec<T, filters> out = bq.b0 * in + state.s1;
-        state.s1 = state.s2 + bq.b1 * in - bq.a1 * out;
-        state.s2 = bq.b2 * in - bq.a2 * out;
+        state.s1                  = state.s2 + bq.b1 * in - bq.a1 * out;
+        state.s2                  = bq.b2 * in - bq.a2 * out;
         return out;
     }
     biquad_block<T, filters> bq;
@@ -181,7 +181,7 @@ struct expression_biquads : expression_base<E1>
         for (size_t i = 0; i < filters - 1; i++)
         {
             const vec<T, 1> in = i < size ? this->argument_first(cinput, i, vec_t<T, 1>()) : 0;
-            state.out = process(bq, state, insertleft(in[0], state.out));
+            state.out          = process(bq, state, insertleft(in[0], state.out));
         }
     }
     CMT_INLINE void end_block(cinput_t cinput, size_t) const { state = saved_state; }
@@ -219,8 +219,8 @@ struct expression_biquads : expression_base<E1>
             for (; i < std::min(width, block_end - index); i++)
             {
                 const vec<T, 1> in = this->argument_first(cinput, index + i, vec_t<T, 1>());
-                state.out = process(bq, state, insertleft(in[0], state.out));
-                out[i]    = state.out[filters - 1];
+                state.out          = process(bq, state, insertleft(in[0], state.out));
+                out[i]             = state.out[filters - 1];
             }
             saved_state = state;
             for (; i < width; i++)
@@ -235,8 +235,8 @@ struct expression_biquads : expression_base<E1>
                                         vec<T, filters> in)
     {
         const vec<T, filters> out = bq.b0 * in + state.s1;
-        state.s1 = state.s2 + bq.b1 * in - bq.a1 * out;
-        state.s2 = bq.b2 * in - bq.a2 * out;
+        state.s1                  = state.s2 + bq.b1 * in - bq.a1 * out;
+        state.s2                  = bq.b2 * in - bq.a2 * out;
         return out;
     }
     biquad_block<T, filters> bq;
@@ -245,7 +245,7 @@ struct expression_biquads : expression_base<E1>
     mutable biquad_state<T, filters> saved_state;
     mutable size_t block_end;
 };
-}
+} // namespace internal
 
 /**
  * @brief Returns template expressions that applies biquad filter to the input.
@@ -301,4 +301,19 @@ CMT_INLINE expression_pointer<T> biquad(const biquad_params<T>* bq, size_t count
                    },
                    [&] { return to_pointer(zeros<T>()); });
 }
-}
+
+template <typename T>
+class biquad_filter : public expression_filter<T>
+{
+public:
+    biquad_filter(const biquad_params<T>* bq, size_t count)
+        : expression_filter<T>(to_pointer(biquad(bq, count, placeholder<T>())))
+    {
+    }
+
+    template <size_t N>
+    biquad_filter(const biquad_params<T> (&bq)[N]) : biquad_filter(bq, N)
+    {
+    }
+};
+} // namespace kfr

@@ -77,8 +77,22 @@ int main()
         // apply filter
         filter.apply(output);
     }
+    plot_save("biquad_custom_filter_lowpass", output,
+              options + ", title='Biquad Low pass filter (0.2, 0.9) (using expression_filter)'");
+
+    {
+        // filter initialization
+        biquad_params<fbase> bq[] = { biquad_lowpass(0.2, 0.9) };
+        biquad_filter<fbase> filter(bq);
+
+        // prepare data
+        output = unitimpulse();
+
+        // apply filter
+        filter.apply(output);
+    }
     plot_save("biquad_filter_lowpass", output,
-              options + ", title='Biquad Low pass filter (0.2, 0.9) (using filter)'");
+              options + ", title='Biquad Low pass filter (0.2, 0.9) (using biquad_filter)'");
 
     return 0;
 }
