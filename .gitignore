@@ -76,5 +76,10 @@ docs/
 # CLion
 .idea/
 
+# VSCode
+.vs-code/
+
+# CLion
+cmake-*
 
 *.TMP
