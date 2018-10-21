@@ -43,11 +43,15 @@ matrix:
       osx_image: xcode9.4
       env:
         - TEST=XCODE9.4 CMAKEARGS="-DCMAKE_BUILD_TYPE=Release .."
+    - os: osx
+      osx_image: xcode10
+      env:
+        - TEST=XCODE10.0 CMAKEARGS="-DCMAKE_BUILD_TYPE=Release .."
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cmake --version || brew install cmake; fi
   - cmake --version
-  
+
 script:
   - mkdir build
   - cd build

@@ -20,7 +20,7 @@ int main()
     {
         biquad_params<fbase> bq[] = { biquad_notch(0.1, 0.5), biquad_notch(0.2, 0.5), biquad_notch(0.3, 0.5),
                                       biquad_notch(0.4, 0.5) };
-        output = biquad(bq, unitimpulse());
+        output                    = biquad(bq, unitimpulse());
     }
     plot_save("biquad_notch", output, options + ", title='Four Biquad Notch filters'");
 
@@ -65,6 +65,34 @@ int main()
         output                    = biquad(bq, unitimpulse());
     }
     plot_save("biquad_bandpass", output, options + ", title='Biquad band pass (0.25, 0.2)'");
+
+    {
+        // filter initialization
+        biquad_params<fbase> bq[]       = { biquad_lowpass(0.2, 0.9) };
+        expression_filter<fbase> filter = to_filter(biquad(bq, placeholder<fbase>()));
+
+        // prepare data
+        output = unitimpulse();
+
+        // apply filter
+        filter.apply(output);
+    }
+    plot_save("biquad_custom_filter_lowpass", output,
+              options + ", title='Biquad Low pass filter (0.2, 0.9) (using expression_filter)'");
+
+    {
+        // filter initialization
+        biquad_params<fbase> bq[] = { biquad_lowpass(0.2, 0.9) };
+        biquad_filter<fbase> filter(bq);
+
+        // prepare data
+        output = unitimpulse();
+
+        // apply filter
+        filter.apply(output);
+    }
+    plot_save("biquad_filter_lowpass", output,
+              options + ", title='Biquad Low pass filter (0.2, 0.9) (using biquad_filter)'");
 
     return 0;
 }
