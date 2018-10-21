@@ -63,10 +63,26 @@ TEST(test_arg_replace)
 {
     univector<float, 10> v1 = counter();
     univector<float, 10> v2 = -counter();
-    auto e1              = to_pointer(v1) * 10;
-    std::get<0>(e1.args) = to_pointer(v2);
+    auto e1                 = to_pointer(v1) * 10;
+    std::get<0>(e1.args)    = to_pointer(v2);
 
     CHECK_EXPRESSION(e1, 10, [](size_t i) { return i * -10.0; });
+}
+
+TEST(placeholders)
+{
+    auto expr = 100 * placeholder<float>();
+    CHECK_EXPRESSION(expr, infinite_size, [](size_t) { return 0.f; });
+    substitute(expr, to_pointer(counter<float>()));
+    CHECK_EXPRESSION(expr, infinite_size, [](size_t i) { return 100.f * i; });
+}
+
+TEST(placeholders_pointer)
+{
+    expression_pointer<float> expr = to_pointer(10 * placeholder<float>());
+    CHECK_EXPRESSION(expr, infinite_size, [](size_t) { return 0.f; });
+    substitute(expr, to_pointer(counter<float>()));
+    CHECK_EXPRESSION(expr, infinite_size, [](size_t i) { return 10.f * i; });
 }
 
 TEST(size_calc)
@@ -99,7 +115,7 @@ TEST(partition)
 {
     {
         univector<double, 400> output = zeros();
-        auto result = partition(output, counter(), 5, 1);
+        auto result                   = partition(output, counter(), 5, 1);
         CHECK(result.count == 5);
         CHECK(result.chunk_size == 80);
 
@@ -117,7 +133,7 @@ TEST(partition)
 
     {
         univector<double, 400> output = zeros();
-        auto result = partition(output, counter(), 5, 160);
+        auto result                   = partition(output, counter(), 5, 160);
         CHECK(result.count == 3);
         CHECK(result.chunk_size == 160);
 
