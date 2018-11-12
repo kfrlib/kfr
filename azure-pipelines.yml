@@ -4,30 +4,36 @@ jobs:
     vmImage: 'ubuntu-16.04'
   steps:
   - script: |
-      apt-get install -y ninja-build
-      mkdir build
-      cd build
-      cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
-      ninja
+     sudo apt-get install -y ninja-build
+     mkdir build
+     cd build
+     cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
+     ninja
+     cd tests
+     ctest
 
 - job: macOS
   pool:
     vmImage: 'macOS-10.13'
   steps:
   - script: |
-      brew install ninja
-      mkdir build
-      cd build
-      cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
-      ninja
+     brew install ninja
+     mkdir build
+     cd build
+     cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
+     ninja
+     cd tests
+     ctest
 
 - job: Windows
   pool:
     vmImage: 'vs2017-win2016'
   steps:
   - script: |
-      choco install llvm ninja
-      mkdir build
-      cd build
-      cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
-      ninja
+     choco install llvm ninja
+     mkdir build
+     cd build
+     cmake -GNinja -DCMAKE_CXX_COMPILER=clang -DCMAKE_BUILD_TYPE=Release ..
+     ninja
+     cd tests
+     ctest
