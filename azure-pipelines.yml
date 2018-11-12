@@ -3,7 +3,7 @@ jobs:
   pool:
     vmImage: 'ubuntu-16.04'
   steps:
-  - script: |
+  - bash: |
      sudo apt-get install -y ninja-build
      mkdir build
      cd build
@@ -12,11 +12,24 @@ jobs:
      cd tests
      ctest -V
 
-- job: macOS
+- job: macOS-
+  strategy:
+    matrix:
+      xcode10.3:
+        XCODE_VER: Xcode_10.3
+      xcode10:
+        XCODE_VER: Xcode_10
+      xcode9.4.1:
+        XCODE_VER: Xcode_9.4.1
+      xcode9.0.1:
+        XCODE_VER: Xcode_9.0.1
+      xcode8.3.3:
+        XCODE_VER: Xcode_8.3.3
   pool:
     vmImage: 'macOS-10.13'
   steps:
-  - script: |
+  - bash: |
+     /bin/bash -c "sudo xcode-select -s /Applications/Xcode_$(variables.XCODE_VER).app/Contents/Developer"
      brew install ninja
      mkdir build
      cd build
@@ -25,11 +38,11 @@ jobs:
      cd tests
      ctest -V
 
-- job: Windows
+- job: Windows-MinGW
   pool:
     vmImage: 'vs2017-win2016'
   steps:
-  - script: |
+  - bash: |
      choco install llvm ninja
      mkdir build
      cd build
