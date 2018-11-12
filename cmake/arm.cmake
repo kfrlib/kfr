@@ -5,8 +5,8 @@ set (ARM True)
 set (CMAKE_SYSTEM_PROCESSOR arm)
 
 include (CMakeForceCompiler)
-CMAKE_FORCE_CXX_COMPILER (/usr/bin/clang++-3.8 Clang)
-CMAKE_FORCE_C_COMPILER (/usr/bin/clang-3.8 Clang)
+CMAKE_FORCE_CXX_COMPILER (/usr/bin/clang++ Clang)
+CMAKE_FORCE_C_COMPILER (/usr/bin/clang Clang)
 set (CMAKE_CXX_COMPILER_WORKS TRUE)
 set (CMAKE_C_COMPILER_WORKS TRUE)
 
