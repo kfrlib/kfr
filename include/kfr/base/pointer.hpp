@@ -208,7 +208,8 @@ CMT_INLINE expression_pointer<T> to_pointer(E&& expr)
 {
     static_assert(is_input_expression<E>::value, "E must be an expression");
     std::shared_ptr<expression_resource> ptr = make_resource(std::move(expr));
-    return expression_pointer<T>(ptr->instance(), internal::make_expression_vtable<T, E>(), std::move(ptr));
+    void* instance                           = ptr->instance();
+    return expression_pointer<T>(instance, internal::make_expression_vtable<T, E>(), std::move(ptr));
 }
 
 template <typename T, size_t key>
