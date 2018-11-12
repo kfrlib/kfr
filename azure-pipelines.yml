@@ -16,15 +16,15 @@ jobs:
   strategy:
     matrix:
       xcode10.3:
-        XCODE_VER: Xcode_10.3
+        XCODE_VER: 10.3
       xcode10:
-        XCODE_VER: Xcode_10
+        XCODE_VER: 10
       xcode9.4.1:
-        XCODE_VER: Xcode_9.4.1
+        XCODE_VER: 9.4.1
       xcode9.0.1:
-        XCODE_VER: Xcode_9.0.1
+        XCODE_VER: 9.0.1
       xcode8.3.3:
-        XCODE_VER: Xcode_8.3.3
+        XCODE_VER: 8.3.3
   pool:
     vmImage: 'macOS-10.13'
   steps:
@@ -46,6 +46,20 @@ jobs:
      choco install llvm ninja
      mkdir build
      cd build
+     cmake -GNinja -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCMAKE_BUILD_TYPE=Release ..
+     ninja
+     cd tests
+     ctest -V
+
+- job: Windows_MSVC
+  pool:
+    vmImage: 'vs2017-win2016'
+  steps:
+  - bash: |
+     choco install llvm ninja
+     mkdir build
+     cd build
+     "/c/Program Files (x86)/Microsoft Visual Studio/2017/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
      cmake -GNinja -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCMAKE_BUILD_TYPE=Release ..
      ninja
      cd tests
