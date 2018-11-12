@@ -12,7 +12,7 @@ jobs:
      cd tests
      ctest -V
 
-- job: macOS-
+- job: macOS
   strategy:
     matrix:
       xcode10.3:
@@ -38,7 +38,7 @@ jobs:
      cd tests
      ctest -V
 
-- job: Windows-MinGW
+- job: Windows_MinGW
   pool:
     vmImage: 'vs2017-win2016'
   steps:
