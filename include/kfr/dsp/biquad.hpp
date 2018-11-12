@@ -307,7 +307,7 @@ class biquad_filter : public expression_filter<T>
 {
 public:
     biquad_filter(const biquad_params<T>* bq, size_t count)
-        : expression_filter<T>(to_pointer(biquad(bq, count, placeholder<T>())))
+        : expression_filter<T>(biquad(bq, count, placeholder<T>()))
     {
     }
 

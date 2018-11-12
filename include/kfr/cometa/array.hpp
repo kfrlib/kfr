@@ -63,6 +63,10 @@ public:
     constexpr array_ref(std::vector<T, Ts...>& vec) noexcept : m_data(vec.data()), m_size(vec.size())
     {
     }
+    constexpr array_ref(const std::initializer_list<T>& vec) noexcept
+        : m_data(vec.begin()), m_size(vec.size())
+    {
+    }
     template <typename InputIter>
     constexpr array_ref(InputIter first, InputIter last) noexcept
         : m_data(std::addressof(*first)), m_size(std::distance(first, last))
@@ -122,4 +126,4 @@ inline array_ref<const T> make_array_ref(const std::vector<T>& cont)
 {
     return array_ref<const T>(cont.data(), cont.size());
 }
-}
+} // namespace cometa

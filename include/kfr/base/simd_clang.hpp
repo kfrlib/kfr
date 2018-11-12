@@ -96,7 +96,7 @@ CMT_INLINE void simd_write(T* dest, const simd_type<T, N>& value)
 }
 
 template <typename T, size_t N>
-struct vec : public vec_t<T, N>
+struct alignas(alignof(internal::simd_type<T, N>)) vec : public vec_t<T, N>
 {
     static_assert(is_simd_type<T>::value || !compound_type_traits<T>::is_scalar, "Invalid vector type");
 
@@ -222,12 +222,12 @@ struct vec : public vec_t<T, N>
 
     // shuffle
     template <size_t... indices>
-    constexpr vec<value_type, sizeof...(indices)> shuffle(csizes_t<indices...>) const noexcept
+    vec<value_type, sizeof...(indices)> shuffle(csizes_t<indices...>) const noexcept
     {
         return __builtin_shufflevector(simd, simd, (indices >= N ? -1 : int(indices))...);
     }
     template <size_t... indices>
-    constexpr vec<value_type, sizeof...(indices)> shuffle(const vec& y, csizes_t<indices...>) const noexcept
+    vec<value_type, sizeof...(indices)> shuffle(const vec& y, csizes_t<indices...>) const noexcept
     {
         return __builtin_shufflevector(simd, y.simd, (indices >= N * 2 ? -1 : int(indices))...);
     }

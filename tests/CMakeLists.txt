@@ -54,6 +54,8 @@ add_executable(complex_test complex_test.cpp ${KFR_SRC} ${TEST_SRC})
 add_executable(base_test base_test.cpp ${KFR_SRC} ${TEST_SRC})
 add_executable(expression_test expression_test.cpp ${KFR_SRC} ${TEST_SRC})
 
+add_executable(ebu_test ebu_test.cpp ${KFR_SRC} ${TEST_SRC})
+
 if (ARM)
     find_program(EMULATOR "qemu-arm")
 else ()

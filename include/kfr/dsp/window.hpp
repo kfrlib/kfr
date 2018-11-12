@@ -127,7 +127,7 @@ struct expression_rectangular : input_expression
     template <size_t N>
     CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
     {
-        using TI = utype<T>;
+        using TI           = utype<T>;
         const vec<TI, N> i = enumerate(vec<TI, N>()) + cast<TI>(index);
         return select(i < cast<TI>(m_size), T(1), T(0));
     }
@@ -369,11 +369,11 @@ struct expression_flattop : input_expression
     CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
     {
         const vec<T, N> n = linspace(cinput, index, y) * c_pi<T, 2>;
-        constexpr T a0 = 1;
-        constexpr T a1 = 1.93;
-        constexpr T a2 = 1.29;
-        constexpr T a3 = 0.388;
-        constexpr T a4 = 0.028;
+        constexpr T a0    = 1;
+        constexpr T a1    = 1.93;
+        constexpr T a2    = 1.29;
+        constexpr T a3    = 0.388;
+        constexpr T a4    = 0.028;
         return a0 - a1 * cos(n) + a2 * cos(2 * n) - a3 * cos(3 * n) + a4 * cos(4 * n);
     }
     size_t size() const { return m_size; }
@@ -399,6 +399,7 @@ struct expression_gaussian : input_expression
     }
 
     size_t size() const { return m_size; }
+
 private:
     window_linspace_m1_1_trunc<T> linspace;
     T alpha;
@@ -452,7 +453,7 @@ KFR_WINDOW_BY_TYPE(flattop)
 KFR_WINDOW_BY_TYPE(gaussian)
 KFR_WINDOW_BY_TYPE(lanczos)
 #undef KFR_WINDOW_BY_TYPE
-}
+} // namespace internal
 
 /**
  * @brief Returns template expression that generates Rrectangular window of length @c size
@@ -609,11 +610,11 @@ CMT_NOINLINE expression_pointer<T> window(size_t size, window_type type, identit
                 window_type::bohman, window_type::blackman, window_type::blackman_harris, window_type::kaiser,
                 window_type::flattop, window_type::gaussian, window_type::lanczos>(),
         type,
-        [=](auto win) {
+        [size, win_param, symmetry](auto win) {
             constexpr window_type window = val_of(decltype(win)());
-            return to_pointer<T>(
+            return to_pointer(
                 typename internal::window_by_type<window>::template type<T>(size, win_param, symmetry));
         },
         fn::returns<expression_pointer<T>>());
 }
-}
+} // namespace kfr

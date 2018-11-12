@@ -21,7 +21,10 @@ inline void assertion_failed(const std::string& string, const char* file, int li
     errorln("Assertion failed at ", file, ":", line);
     errorln(string);
     errorln();
+    std::fflush(stderr);
 }
+
+bool check_assertion(...);
 
 template <typename Op, typename L, typename R>
 bool check_assertion(const comparison<Op, L, R>& comparison, const char* expr, const char* file, int line)
@@ -44,7 +47,7 @@ bool check_assertion(const half_comparison<L>& comparison, const char* expr, con
     {
         assertion_failed(as_string(padleft(22, expr), " | ", comparison.left), file, line);
     }
-    return false;
+    return result;
 }
 
 #if defined(TESTO_ASSERTION_ON) || !(defined(NDEBUG) || defined(TESTO_ASSERTION_OFF))
@@ -67,4 +70,35 @@ bool check_assertion(const half_comparison<L>& comparison, const char* expr, con
 #ifndef TESTO_NO_SHORT_MACROS
 #define ASSERT TESTO_ASSERT
 #endif
+
+template <typename OutType, typename InType>
+inline OutType safe_cast(const InType& val)
+{
+    static_assert(std::is_integral<InType>::value && std::is_integral<OutType>::value,
+                  "safe_cast is for numeric types only");
+    if (std::is_signed<InType>::value && std::is_signed<OutType>::value) // S->S
+    {
+        ASSERT(val >= std::numeric_limits<OutType>::min());
+        ASSERT(val <= std::numeric_limits<OutType>::max());
+    }
+    else if (!std::is_signed<InType>::value && !std::is_signed<OutType>::value) // U->U
+    {
+        ASSERT(val <= std::numeric_limits<OutType>::max());
+    }
+    else if (std::is_signed<InType>::value && !std::is_signed<OutType>::value) // S->U
+    {
+        ASSERT(val >= 0);
+        ASSERT(val <= std::numeric_limits<OutType>::max());
+        // val will be converted to an unsigned number for the above comparison.
+        // it's safe because we've already checked that it is positive
+    }
+    else // U->S
+    {
+        ASSERT(val <= std::numeric_limits<OutType>::max());
+        // std::numeric_limits<OutType>::max() will be converted to an unsigned number for the above
+        // comparison. it's also safe here
+    }
+    return static_cast<OutType>(val);
 }
+
+} // namespace testo

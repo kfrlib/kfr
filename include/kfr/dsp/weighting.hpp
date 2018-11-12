@@ -43,7 +43,7 @@ KFR_SINTRIN T weight_a_unnorm(T f)
 }
 
 template <typename T>
-constexpr static T weight_a_gain = reciprocal(weight_a_unnorm(T(1000.0)));
+const static T weight_a_gain = reciprocal(weight_a_unnorm(T(1000.0)));
 
 template <typename T>
 KFR_SINTRIN T aweighting(T f)
@@ -62,7 +62,7 @@ KFR_SINTRIN T weight_b_unnorm(T f)
 }
 
 template <typename T>
-constexpr static T weight_b_gain = reciprocal(weight_b_unnorm(T(1000.0)));
+const static T weight_b_gain = reciprocal(weight_b_unnorm(T(1000.0)));
 
 template <typename T>
 KFR_SINTRIN T bweighting(T f)
@@ -81,7 +81,7 @@ KFR_SINTRIN T weight_c_unnorm(T f)
 }
 
 template <typename T>
-constexpr static T weight_c_gain = reciprocal(weight_c_unnorm(T(1000.0)));
+const static T weight_c_gain = reciprocal(weight_c_unnorm(T(1000.0)));
 
 template <typename T>
 KFR_SINTRIN T cweighting(T f)
