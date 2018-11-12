@@ -20,21 +20,22 @@ namespace kfr
 template <typename T>
 KFR_SINTRIN T energy_to_loudness(T energy)
 {
-    return T(10) * log(energy) / c_log_10<T> - T(0.691);
+    return T(10) * log10(energy) - T(0.691);
 }
 
 template <typename T>
-struct integrated_vec : public std::vector<T>
+KFR_SINTRIN T loudness_to_energy(T loudness)
+{
+    return exp10((loudness + T(0.691)) * T(0.1));
+}
+
+template <typename T>
+struct integrated_vec : public univector<T>
 {
 private:
     void compute() const
     {
-        T z_total = 0;
-        for (T v : *this)
-        {
-            z_total += v;
-        }
-        z_total /= this->size();
+        const T z_total = mean(*this);
         T relative_gate = energy_to_loudness(z_total) - 10;
 
         T z        = 0;
@@ -72,10 +73,10 @@ public:
             m_integrated_cached = false;
         }
     }
-    void clear()
+    void reset()
     {
         m_integrated_cached = false;
-        std::vector<T>::clear();
+        this->clear();
     }
     T get() const
     {
@@ -92,43 +93,34 @@ private:
 };
 
 template <typename T>
-struct lra_vec : public std::vector<T>
+struct lra_vec : public univector<T>
 {
 private:
     void compute() const
     {
+        m_range_high            = -70.0;
+        m_range_low             = -70.0;
         static const T PRC_LOW  = 0.10;
         static const T PRC_HIGH = 0.95;
 
-        T z_total = 0;
-        for (const T v : *this)
-        {
-            z_total += v;
-        }
-        z_total /= this->size();
+        const T z_total       = mean(*this);
         const T relative_gate = energy_to_loudness(z_total) - 20;
 
-        std::vector<T> temp;
-        temp.reserve(this->size());
-        for (const T v : *this)
-        {
-            T lk = energy_to_loudness(v);
-            if (lk >= relative_gate)
-                temp.push_back(lk);
-        }
-        if (temp.size() < 2)
-        {
-            m_range_high = -70.0;
-            m_range_low  = -70.0;
-        }
-        else
-        {
-            std::sort(temp.begin(), temp.end());
-            const size_t low_index  = static_cast<size_t>(std::llround((temp.size() - 1) * PRC_LOW));
-            const size_t high_index = static_cast<size_t>(std::llround((temp.size() - 1) * PRC_HIGH));
-            m_range_low             = temp[low_index];
-            m_range_high            = temp[high_index];
-        }
+        if (this->size() < 2)
+            return;
+
+        const size_t start_index =
+            std::upper_bound(this->begin(), this->end(), loudness_to_energy(relative_gate)) - this->begin();
+        if (this->size() - start_index < 2)
+            return;
+        const size_t end_index = this->size() - 1;
+
+        const size_t low_index =
+            static_cast<size_t>(std::llround(start_index + (end_index - start_index) * PRC_LOW));
+        const size_t high_index =
+            static_cast<size_t>(std::llround(start_index + (end_index - start_index) * PRC_HIGH));
+        m_range_low  = energy_to_loudness((*this)[low_index]);
+        m_range_high = energy_to_loudness((*this)[high_index]);
 
         m_lra_cached = true;
     }
@@ -140,14 +132,15 @@ public:
         const T lk = energy_to_loudness(mean_square);
         if (lk >= -70)
         {
-            this->push_back(mean_square);
+            auto it = std::upper_bound(this->begin(), this->end(), mean_square);
+            this->insert(it, mean_square);
             m_lra_cached = false;
         }
     }
-    void clear()
+    void reset()
     {
         m_lra_cached = false;
-        std::vector<T>::clear();
+        this->clear();
     }
     void get(T& low, T& high) const
     {
@@ -303,6 +296,16 @@ public:
             }
         }
 
+        if (m_need_reset)
+        {
+            m_need_reset = false;
+            for (size_t ch = 0; ch < m_channels.size(); ch++)
+            {
+                m_channels[ch].reset();
+            }
+            m_integrated_buffer.reset();
+            m_lra_buffer.reset();
+        }
         if (m_running)
         {
             m_integrated_buffer.push(momentary);
