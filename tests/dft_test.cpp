@@ -124,7 +124,7 @@ TEST(fft_accuracy)
 
 int main()
 {
-    println(library_version());
+    println(library_version(), " running on ", cpu_runtime());
 
     return testo::run_all("", true);
 }

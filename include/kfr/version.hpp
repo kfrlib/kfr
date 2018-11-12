@@ -26,10 +26,12 @@
 #pragma once
 
 #include "base/types.hpp"
+#include "cpuid/cpuid_auto.hpp"
 
 namespace kfr
 {
 
 /// @brief Returns string representation of the KFR version (including target architecture)
 inline static const char* library_version() { return KFR_VERSION_FULL; }
+inline static const char* cpu_runtime() { return cpu_name(get_cpu()); }
 }

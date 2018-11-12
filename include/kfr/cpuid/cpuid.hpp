@@ -57,6 +57,7 @@ struct cpu_features
     u32 hasAVX512DQ : 1;
     u32 hasAVX512PF : 1;
     u32 hasAVX512BW : 1;
+    u32 hasAVX512VL : 1;
     u32 hasBMI1 : 1;
     u32 hasBMI2 : 1;
     u32 hasCLFSH : 1;
@@ -248,6 +249,7 @@ cpu_t detect_cpu()
     c.hasAVX512CD    = f_7_EBX >> 28 & 1;
     c.hasSHA         = f_7_EBX >> 29 & 1;
     c.hasAVX512BW    = f_7_EBX >> 30 & 1;
+    c.hasAVX512VL    = f_7_EBX >> 31 & 1;
     c.hasPREFETCHWT1 = f_7_ECX >> 0 & 1;
     c.hasLAHF        = f_81_ECX >> 0 & 1;
     c.hasLZCNT       = c.isIntel && f_81_ECX >> 5 & 1;
@@ -264,6 +266,9 @@ cpu_t detect_cpu()
     c.hasAVXOSSUPPORT    = c.hasAVX && c.hasOSXSAVE && (get_xcr0() & 0x06) == 0x06;
     c.hasAVX512OSSUPPORT = c.hasAVXOSSUPPORT && c.hasAVX512F && c.hasOSXSAVE && (get_xcr0() & 0xE0) == 0xE0;
 
+    if (c.hasAVX512F && c.hasAVX512CD && c.hasAVX512VL && c.hasAVX512BW && c.hasAVX512DQ &&
+        c.hasAVX512OSSUPPORT)
+        return cpu_t::avx512;
     if (c.hasAVX2 && c.hasAVXOSSUPPORT)
         return cpu_t::avx2;
     if (c.hasAVX && c.hasAVXOSSUPPORT)
@@ -278,7 +283,7 @@ cpu_t detect_cpu()
         return cpu_t::sse2;
     return cpu_t::lowest;
 }
-}
+} // namespace internal
 #else
 
 template <size_t = 0>
@@ -288,4 +293,4 @@ cpu_t detect_cpu()
 }
 
 #endif
-}
+} // namespace kfr

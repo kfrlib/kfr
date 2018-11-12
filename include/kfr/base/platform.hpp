@@ -42,9 +42,10 @@ enum class cpu_t : int
     sse42   = 5,
     avx1    = 6,
     avx2    = 7,
+    avx512  = 8, // F, CD, VL, DQ and BW
     avx     = static_cast<int>(avx1),
     lowest  = static_cast<int>(sse2),
-    highest = static_cast<int>(avx2),
+    highest = static_cast<int>(avx512),
 #endif
 #ifdef CMT_ARCH_ARM
     neon    = 1,
@@ -70,12 +71,12 @@ constexpr cpu_t older(cpu_t x) { return static_cast<cpu_t>(static_cast<int>(x) -
 constexpr cpu_t newer(cpu_t x) { return static_cast<cpu_t>(static_cast<int>(x) + 1); }
 
 #ifdef CMT_ARCH_X86
-constexpr auto cpu_list =
-    cvals_t<cpu_t, cpu_t::avx2, cpu_t::avx1, cpu_t::sse41, cpu_t::ssse3, cpu_t::sse3, cpu_t::sse2>();
+constexpr auto cpu_list = cvals_t<cpu_t, cpu_t::avx512, cpu_t::avx2, cpu_t::avx1, cpu_t::sse41, cpu_t::ssse3,
+                                  cpu_t::sse3, cpu_t::sse2>();
 #else
 constexpr auto cpu_list = cvals<cpu_t, cpu_t::neon>;
 #endif
-}
+} // namespace internal
 
 template <cpu_t cpu>
 using cpuval_t = cval_t<cpu_t, cpu>;
@@ -87,7 +88,7 @@ constexpr auto cpu_all = cfilter(internal::cpu_list, internal::cpu_list >= cpuva
 /// @brief Returns name of the cpu instruction set
 CMT_UNUSED static const char* cpu_name(cpu_t set)
 {
-    static const char* names[] = { "common", "sse2", "sse3", "ssse3", "sse41", "sse42", "avx1", "avx2" };
+    static const char* names[] = { "common", "sse2", "sse3", "ssse3", "sse41", "sse42", "avx1", "avx2", "avx512" };
     if (set >= cpu_t::lowest && set <= cpu_t::highest)
         return names[static_cast<size_t>(set)];
     return "-";
@@ -105,7 +106,7 @@ constexpr inline const T& bitness_const(const T&, const T& x64)
     return x64;
 }
 #else
-template <int           = 0>
+template <int = 0>
 constexpr inline const char* bitness_const(const char* x32, const char*)
 {
     return x32;
@@ -125,7 +126,8 @@ struct platform
     constexpr static size_t maximum_vector_alignment      = 32;
     constexpr static size_t maximum_vector_alignment_mask = maximum_vector_alignment - 1;
 #ifdef CMT_ARCH_X86
-    constexpr static size_t simd_register_count = bitness_const(8, 16);
+    constexpr static size_t simd_register_count =
+          c >= cpu_t::avx512 ? bitness_const(8, 32) : bitness_const(8, 16);
 #endif
 #ifdef CMT_ARCH_ARM
     constexpr static size_t simd_register_count = 16;
@@ -136,14 +138,20 @@ struct platform
 
 #ifdef CMT_ARCH_X86
     constexpr static size_t native_float_vector_size =
-        c >= cpu_t::avx1 ? 32 : c >= cpu_t::sse2 ? 16 : common_float_vector_size;
+        c >= cpu_t::avx512 ? 64 :
+        c >= cpu_t::avx1 ? 32 :
+        c >= cpu_t::sse2 ? 16 :
+        common_float_vector_size;
 #endif
 #ifdef CMT_ARCH_ARM
     constexpr static size_t native_float_vector_size = c == cpu_t::neon ? 16 : common_float_vector_size;
 #endif
 #ifdef CMT_ARCH_X86
     constexpr static size_t native_int_vector_size =
-        c >= cpu_t::avx2 ? 32 : c >= cpu_t::sse2 ? 16 : common_int_vector_size;
+        c >= cpu_t::avx512 ? 64 :
+        c >= cpu_t::avx2 ? 32 :
+        c >= cpu_t::sse2 ? 16 :
+        common_int_vector_size;
 #endif
 #ifdef CMT_ARCH_ARM
     constexpr static size_t native_int_vector_size = c == cpu_t::neon ? 16 : common_int_vector_size;
@@ -175,4 +183,4 @@ template <typename T, size_t N = platform<T>::vector_width>
 struct vec;
 template <typename T, size_t N = platform<T>::vector_width>
 struct mask;
-}
+} // namespace kfr
