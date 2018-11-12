@@ -87,7 +87,7 @@ jobs:
      mkdir build
      cd build
      "/c/Program Files (x86)/Microsoft Visual Studio/2017/Enterprise/VC/Auxiliary/Build/vcvars32.bat"
-     cmake -GNinja -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCMAKE_BUILD_TYPE=Release ..
+     cmake -GNinja -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Release ..
      ninja
      cd tests
      ctest -V
