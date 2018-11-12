@@ -10,7 +10,7 @@ jobs:
      cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
      ninja
      cd tests
-     ctest
+     ctest -V
 
 - job: macOS
   pool:
@@ -23,7 +23,7 @@ jobs:
      cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
      ninja
      cd tests
-     ctest
+     ctest -V
 
 - job: Windows
   pool:
@@ -33,7 +33,7 @@ jobs:
      choco install llvm ninja
      mkdir build
      cd build
-     cmake -GNinja -DCMAKE_CXX_COMPILER=clang -DCMAKE_BUILD_TYPE=Release ..
+     cmake -GNinja -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCMAKE_BUILD_TYPE=Release ..
      ninja
      cd tests
-     ctest
+     ctest -V
