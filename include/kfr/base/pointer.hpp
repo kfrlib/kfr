@@ -116,7 +116,7 @@ struct expression_resource
 };
 
 template <typename E>
-struct alignas(const_max(size_t(8), alignof(E))) expression_resource_impl : expression_resource
+struct expression_resource_impl : expression_resource
 {
     expression_resource_impl(E&& e) noexcept : e(std::move(e)) {}
     virtual ~expression_resource_impl() {}

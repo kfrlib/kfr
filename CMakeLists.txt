@@ -36,6 +36,13 @@ if(NOT CMAKE_CXX_COMPILER)
         # If clang is not found, leave default compiler (usually GCC)
 
         if(NOT DISABLE_CLANG)
+            find_program(CLANG_CXX_PATH clang++-8)
+            find_program(CLANG_CXX_PATH clang++-7)
+            find_program(CLANG_CXX_PATH clang++-8.0)
+            find_program(CLANG_CXX_PATH clang++-7.0)
+            find_program(CLANG_CXX_PATH clang++-6.0)
+            find_program(CLANG_CXX_PATH clang++-5.0)
+            find_program(CLANG_CXX_PATH clang++-4.0)
             find_program(CLANG_CXX_PATH clang++-4.0)
             find_program(CLANG_CXX_PATH clang++-3.9)
             find_program(CLANG_CXX_PATH clang++-3.8)
@@ -85,7 +92,7 @@ if (${CMAKE_GENERATOR} STREQUAL "MinGW Makefiles"
     OR ${CMAKE_GENERATOR} STREQUAL "Unix Makefiles"
     OR ${CMAKE_GENERATOR} STREQUAL "Ninja")
     
-    if (CMAKE_CXX_COMPILER MATCHES "clang")
+    if (CMAKE_CXX_COMPILER MATCHES "clang" AND NOT CMAKE_CXX_COMPILER MATCHES "clang-cl")
         if (WIN32)
             # On windows, clang requires --target
             set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --target=x86_64-w64-windows-gnu"  CACHE STRING "cxx compile flags" FORCE)
@@ -110,6 +117,12 @@ project(kfr CXX)
 
 message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} ${CMAKE_CXX_COMPILER} ")
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(CLANG 1)
+else()
+    set(CLANG 0)
+endif()
+
 # Binary output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${PROJECT_BINARY_DIR}/bin/Debug)
@@ -123,7 +136,11 @@ else ()
     set(STD_LIB stdc++)
 endif ()
 
-if (NOT MSVC)
+add_definitions(-D_ENABLE_EXTENDED_ALIGNED_STORAGE)
+
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+
+if (NOT MSVC OR CLANG)
     # Enable C++14, disable exceptions and rtti
     add_compile_options(-std=c++1y -fno-exceptions -fno-rtti )
     if (NOT ARCH_FLAGS)
@@ -134,7 +151,9 @@ if (NOT MSVC)
     else ()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ARCH_FLAGS}")
     endif ()
-    link_libraries(${STD_LIB} pthread m)
+    if(NOT MSVC)
+        link_libraries(${STD_LIB} pthread m)
+    endif()
 else ()
     # Disable exceptions
     add_compile_options(/EHsc /D_HAS_EXCEPTIONS=0 /D_CRT_SECURE_NO_WARNINGS=1)
