@@ -114,7 +114,7 @@ constexpr inline size_t fast_range_sum(size_t stop) { return stop * (stop + 1) /
 TEST(partition)
 {
     {
-        univector<double, 400> output = zeros();
+        univector<double, 371> output = zeros();
         auto result                   = partition(output, counter(), 5, 1);
         CHECK(result.count == 5);
         CHECK(result.chunk_size == 80);
@@ -128,11 +128,11 @@ TEST(partition)
         result(3);
         CHECK(sum(output) >= fast_range_sum(320 - 1));
         result(4);
-        CHECK(sum(output) == fast_range_sum(400 - 1));
+        CHECK(sum(output) == fast_range_sum(371 - 1));
     }
 
     {
-        univector<double, 400> output = zeros();
+        univector<double, 371> output = zeros();
         auto result                   = partition(output, counter(), 5, 160);
         CHECK(result.count == 3);
         CHECK(result.chunk_size == 160);
@@ -142,7 +142,7 @@ TEST(partition)
         result(1);
         CHECK(sum(output) >= fast_range_sum(320 - 1));
         result(2);
-        CHECK(sum(output) == fast_range_sum(400 - 1));
+        CHECK(sum(output) == fast_range_sum(371 - 1));
     }
 }
 
