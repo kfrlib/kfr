@@ -25,7 +25,7 @@ add_definitions(-DKFR_TESTING=1)
 include_directories(../include)
 
 if (NOT ARM)
-    if(MSVC)
+    if(MSVC AND NOT CLANG)
         add_executable(multiarch multiarch.cpp multiarch_fir_sse2.cpp multiarch_fir_avx.cpp ${KFR_SRC})
         set_source_files_properties(multiarch_fir_sse2.cpp PROPERTIES COMPILE_FLAGS /arch:SSE2)
         set_source_files_properties(multiarch_fir_avx.cpp PROPERTIES COMPILE_FLAGS /arch:AVX)
