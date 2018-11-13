@@ -79,7 +79,23 @@ jobs:
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
       set PATH=%PATH:C:\tools\mingw64\bin;=%
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
-      cmake -GNinja -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe"  -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release ..
+      cmake -GNinja -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DARCH_FLAGS=-mavx -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release ..
+      ninja
+      cd tests
+      ctest -V
+
+- job: Windows_MSVC32
+  pool:
+    vmImage: 'vs2017-win2016'
+  steps:
+  - script: |
+      choco install llvm ninja
+      mkdir build
+      cd build
+      call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+      set PATH=%PATH:C:\tools\mingw64\bin;=%
+      set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
+      cmake -GNinja -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DARCH_FLAGS=-mavx -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Release ..
       ninja
       cd tests
       ctest -V
