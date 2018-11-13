@@ -87,6 +87,11 @@ KFR_SINTRIN i64avx min(const i64avx& x, const i64avx& y) { return _mm256_min_epi
 KFR_SINTRIN u64avx min(const u64avx& x, const u64avx& y) { return _mm256_min_epu64(*x, *y); }
 KFR_SINTRIN i64avx max(const i64avx& x, const i64avx& y) { return _mm256_max_epi64(*x, *y); }
 KFR_SINTRIN u64avx max(const u64avx& x, const u64avx& y) { return _mm256_max_epu64(*x, *y); }
+
+KFR_SINTRIN i64sse min(const i64sse& x, const i64sse& y) { return _mm_min_epi64(*x, *y); }
+KFR_SINTRIN u64sse min(const u64sse& x, const u64sse& y) { return _mm_min_epu64(*x, *y); }
+KFR_SINTRIN i64sse max(const i64sse& x, const i64sse& y) { return _mm_max_epi64(*x, *y); }
+KFR_SINTRIN u64sse max(const u64sse& x, const u64sse& y) { return _mm_max_epu64(*x, *y); }
 #else
 KFR_SINTRIN i64sse min(const i64sse& x, const i64sse& y) { return select(x < y, x, y); }
 KFR_SINTRIN u64sse min(const u64sse& x, const u64sse& y) { return select(x < y, x, y); }

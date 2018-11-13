@@ -109,28 +109,28 @@ KFR_SINTRIN bool bittestall(const i64avx& x) { return _mm256_testc_si256(*x, *al
 
 #if defined CMT_ARCH_AVX512
 // horizontal OR
-KFR_SINTRIN bool bittestany(const f32avx512& x) { return !_mm512_test_epi32_mask(*x, *x); }
-KFR_SINTRIN bool bittestany(const f64avx512& x) { return !_mm512_test_epi64_mask(*x, *x); }
-KFR_SINTRIN bool bittestany(const u8avx512& x) { return !_mm512_test_epi8_mask(*x, *x); }
-KFR_SINTRIN bool bittestany(const u16avx512& x) { return !_mm512_test_epi16_mask(*x, *x); }
-KFR_SINTRIN bool bittestany(const u32avx512& x) { return !_mm512_test_epi32_mask(*x, *x); }
-KFR_SINTRIN bool bittestany(const u64avx512& x) { return !_mm512_test_epi64_mask(*x, *x); }
-KFR_SINTRIN bool bittestany(const i8avx512& x) { return !_mm512_test_epi8_mask(*x, *x); }
-KFR_SINTRIN bool bittestany(const i16avx512& x) { return !_mm512_test_epi16_mask(*x, *x); }
-KFR_SINTRIN bool bittestany(const i32avx512& x) { return !_mm512_test_epi32_mask(*x, *x); }
-KFR_SINTRIN bool bittestany(const i64avx512& x) { return !_mm512_test_epi64_mask(*x, *x); }
+KFR_SINTRIN bool bittestany(const f32avx512& x) { return _mm512_test_epi32_mask(*x, *x); }
+KFR_SINTRIN bool bittestany(const f64avx512& x) { return _mm512_test_epi64_mask(*x, *x); }
+KFR_SINTRIN bool bittestany(const u8avx512& x) { return _mm512_test_epi8_mask(*x, *x); }
+KFR_SINTRIN bool bittestany(const u16avx512& x) { return _mm512_test_epi16_mask(*x, *x); }
+KFR_SINTRIN bool bittestany(const u32avx512& x) { return _mm512_test_epi32_mask(*x, *x); }
+KFR_SINTRIN bool bittestany(const u64avx512& x) { return _mm512_test_epi64_mask(*x, *x); }
+KFR_SINTRIN bool bittestany(const i8avx512& x) { return _mm512_test_epi8_mask(*x, *x); }
+KFR_SINTRIN bool bittestany(const i16avx512& x) { return _mm512_test_epi16_mask(*x, *x); }
+KFR_SINTRIN bool bittestany(const i32avx512& x) { return _mm512_test_epi32_mask(*x, *x); }
+KFR_SINTRIN bool bittestany(const i64avx512& x) { return _mm512_test_epi64_mask(*x, *x); }
 
 // horizontal AND
-KFR_SINTRIN bool bittestall(const f32avx512& x) { return ~bittestany(~x); }
-KFR_SINTRIN bool bittestall(const f64avx512& x) { return ~bittestany(~x); }
-KFR_SINTRIN bool bittestall(const u8avx512& x) { return ~bittestany(~x); }
-KFR_SINTRIN bool bittestall(const u16avx512& x) { return ~bittestany(~x); }
-KFR_SINTRIN bool bittestall(const u32avx512& x) { return ~bittestany(~x); }
-KFR_SINTRIN bool bittestall(const u64avx512& x) { return ~bittestany(~x); }
-KFR_SINTRIN bool bittestall(const i8avx512& x) { return ~bittestany(~x); }
-KFR_SINTRIN bool bittestall(const i16avx512& x) { return ~bittestany(~x); }
-KFR_SINTRIN bool bittestall(const i32avx512& x) { return ~bittestany(~x); }
-KFR_SINTRIN bool bittestall(const i64avx512& x) { return ~bittestany(~x); }
+KFR_SINTRIN bool bittestall(const f32avx512& x) { return !bittestany(~x); }
+KFR_SINTRIN bool bittestall(const f64avx512& x) { return !bittestany(~x); }
+KFR_SINTRIN bool bittestall(const u8avx512& x) { return !bittestany(~x); }
+KFR_SINTRIN bool bittestall(const u16avx512& x) { return !bittestany(~x); }
+KFR_SINTRIN bool bittestall(const u32avx512& x) { return !bittestany(~x); }
+KFR_SINTRIN bool bittestall(const u64avx512& x) { return !bittestany(~x); }
+KFR_SINTRIN bool bittestall(const i8avx512& x) { return !bittestany(~x); }
+KFR_SINTRIN bool bittestall(const i16avx512& x) { return !bittestany(~x); }
+KFR_SINTRIN bool bittestall(const i32avx512& x) { return !bittestany(~x); }
+KFR_SINTRIN bool bittestall(const i64avx512& x) { return !bittestany(~x); }
 
 #endif
 

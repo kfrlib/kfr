@@ -103,6 +103,16 @@ KFR_SINTRIN u8avx satsub(const u8avx& x, const u8avx& y) { return _mm256_subs_ep
 KFR_SINTRIN i8avx satsub(const i8avx& x, const i8avx& y) { return _mm256_subs_epi8(*x, *y); }
 KFR_SINTRIN u16avx satsub(const u16avx& x, const u16avx& y) { return _mm256_subs_epu16(*x, *y); }
 KFR_SINTRIN i16avx satsub(const i16avx& x, const i16avx& y) { return _mm256_subs_epi16(*x, *y); }
+
+KFR_SINTRIN i32avx satadd(const i32avx& a, const i32avx& b) { return saturated_signed_add(a, b); }
+KFR_SINTRIN i64avx satadd(const i64avx& a, const i64avx& b) { return saturated_signed_add(a, b); }
+KFR_SINTRIN u32avx satadd(const u32avx& a, const u32avx& b) { return saturated_unsigned_add(a, b); }
+KFR_SINTRIN u64avx satadd(const u64avx& a, const u64avx& b) { return saturated_unsigned_add(a, b); }
+
+KFR_SINTRIN i32avx satsub(const i32avx& a, const i32avx& b) { return saturated_signed_sub(a, b); }
+KFR_SINTRIN i64avx satsub(const i64avx& a, const i64avx& b) { return saturated_signed_sub(a, b); }
+KFR_SINTRIN u32avx satsub(const u32avx& a, const u32avx& b) { return saturated_unsigned_sub(a, b); }
+KFR_SINTRIN u64avx satsub(const u64avx& a, const u64avx& b) { return saturated_unsigned_sub(a, b); }
 #endif
 
 #if defined CMT_ARCH_AVX512
@@ -114,6 +124,15 @@ KFR_SINTRIN u8avx512 satsub(const u8avx512& x, const u8avx512& y) { return _mm51
 KFR_SINTRIN i8avx512 satsub(const i8avx512& x, const i8avx512& y) { return _mm512_subs_epi8(*x, *y); }
 KFR_SINTRIN u16avx512 satsub(const u16avx512& x, const u16avx512& y) { return _mm512_subs_epu16(*x, *y); }
 KFR_SINTRIN i16avx512 satsub(const i16avx512& x, const i16avx512& y) { return _mm512_subs_epi16(*x, *y); }
+
+KFR_SINTRIN i32avx512 satadd(const i32avx512& a, const i32avx512& b) { return saturated_signed_add(a, b); }
+KFR_SINTRIN i64avx512 satadd(const i64avx512& a, const i64avx512& b) { return saturated_signed_add(a, b); }
+KFR_SINTRIN u32avx512 satadd(const u32avx512& a, const u32avx512& b) { return saturated_unsigned_add(a, b); }
+KFR_SINTRIN u64avx512 satadd(const u64avx512& a, const u64avx512& b) { return saturated_unsigned_add(a, b); }
+KFR_SINTRIN i32avx512 satsub(const i32avx512& a, const i32avx512& b) { return saturated_signed_sub(a, b); }
+KFR_SINTRIN i64avx512 satsub(const i64avx512& a, const i64avx512& b) { return saturated_signed_sub(a, b); }
+KFR_SINTRIN u32avx512 satsub(const u32avx512& a, const u32avx512& b) { return saturated_unsigned_sub(a, b); }
+KFR_SINTRIN u64avx512 satsub(const u64avx512& a, const u64avx512& b) { return saturated_unsigned_sub(a, b); }
 #endif
 
 KFR_HANDLE_ALL_SIZES_2(satadd)
