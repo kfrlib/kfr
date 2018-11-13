@@ -4,26 +4,28 @@ jobs:
     vmImage: 'ubuntu-16.04'
   steps:
   - bash: |
-     sudo apt-get install -y ninja-build libmpfr-dev
-     mkdir build
-     cd build
-     cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
-     ninja
-     cd tests
-     ctest -V
+    set -e
+    sudo apt-get install -y ninja-build libmpfr-dev
+    mkdir build
+    cd build
+    cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
+    ninja
+    cd tests
+    ctest -V
 
 - job: Linux_ARM
   pool:
     vmImage: 'ubuntu-16.04'
   steps:
   - bash: |
-     sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf qemu
-     mkdir build
-     cd build
-     cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake -DARCH_FLAGS=-DLIBC_WORKAROUND_GETS=1 ..
-     ninja
-     cd tests
-     ctest -V
+    set -e
+    sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf qemu
+    mkdir build
+    cd build
+    cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake -DARCH_FLAGS=-DLIBC_WORKAROUND_GETS=1 ..
+    ninja
+    cd tests
+    ctest -V
 
 - job: macOS
   strategy:
@@ -42,26 +44,26 @@ jobs:
     vmImage: 'macOS-10.13'
   steps:
   - bash: |
-     /bin/bash -c "sudo xcode-select -s /Applications/Xcode_$(XCODE_VER).app/Contents/Developer"
-     brew install ninja
-     mkdir build
-     cd build
-     cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
-     ninja
-     cd tests
-     ctest -V
+    set -e
+    /bin/bash -c "sudo xcode-select -s /Applications/Xcode_$(XCODE_VER).app/Contents/Developer"
+    brew install ninja
+    mkdir build
+    cd build
+    cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
+    ninja
+    cd tests
+    ctest -V
 
 - job: Windows_MinGW
   pool:
     vmImage: 'vs2017-win2016'
   steps:
   - bash: |
-     choco install llvm ninja
-     mkdir build
-     cd build
-     cmake -GNinja -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCMAKE_BUILD_TYPE=Release ..
-     ninja
-     cd tests
-     ctest -V
-
-
+    set -e
+    choco install llvm ninja
+    mkdir build
+    cd build
+    cmake -GNinja -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCMAKE_BUILD_TYPE=Release ..
+    ninja
+    cd tests
+    ctest -V
