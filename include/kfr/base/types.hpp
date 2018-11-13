@@ -375,7 +375,7 @@ struct is_simd_type
 template <typename T, size_t N>
 struct vec_t
 {
-    static_assert(N > 0 && N <= 256, "Invalid vector size");
+    static_assert(N > 0 && N <= 1024, "Invalid vector size");
 
     static_assert(is_simd_type<T>::value || !compound_type_traits<T>::is_scalar, "Invalid vector type");
 

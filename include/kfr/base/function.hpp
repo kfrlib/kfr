@@ -78,6 +78,17 @@ using u16avx = vec<u16, 16>;
 using u32avx = vec<u32, 8>;
 using u64avx = vec<u64, 4>;
 
+using f32avx512 = vec<f32, 16>;
+using f64avx512 = vec<f64, 8>;
+using i8avx512  = vec<i8, 64>;
+using i16avx512 = vec<i16, 32>;
+using i32avx512 = vec<i32, 16>;
+using i64avx512 = vec<i64, 8>;
+using u8avx512  = vec<u8, 64>;
+using u16avx512 = vec<u16, 32>;
+using u32avx512 = vec<u32, 16>;
+using u64avx512 = vec<u64, 8>;
+
 #else
 using f32neon = vec<f32, 4>;
 using f64neon = vec<f64, 2>;
@@ -252,6 +263,6 @@ inline T to_scalar(const vec<T, 1>& value)
 {
     return value[0];
 }
-}
-}
+} // namespace intrinsics
+} // namespace kfr
 CMT_PRAGMA_GNU(GCC diagnostic pop)

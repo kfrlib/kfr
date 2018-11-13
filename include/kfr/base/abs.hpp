@@ -64,6 +64,17 @@ KFR_SINTRIN u16avx abs(const u16avx& x) { return x; }
 KFR_SINTRIN u8avx abs(const u8avx& x) { return x; }
 #endif
 
+#if defined CMT_ARCH_AVX512
+KFR_SINTRIN i64avx512 abs(const i64avx512& x) { return select(x >= 0, x, -x); }
+KFR_SINTRIN i32avx512 abs(const i32avx512& x) { return _mm512_abs_epi32(*x); }
+KFR_SINTRIN i16avx512 abs(const i16avx512& x) { return _mm512_abs_epi16(*x); }
+KFR_SINTRIN i8avx512 abs(const i8avx512& x) { return _mm512_abs_epi8(*x); }
+KFR_SINTRIN u64avx512 abs(const u64avx512& x) { return x; }
+KFR_SINTRIN u32avx512 abs(const u32avx512& x) { return x; }
+KFR_SINTRIN u16avx512 abs(const u16avx512& x) { return x; }
+KFR_SINTRIN u8avx512 abs(const u8avx512& x) { return x; }
+#endif
+
 KFR_HANDLE_ALL_SIZES_NOT_F_1(abs)
 
 #elif defined CMT_ARCH_NEON && defined KFR_NATIVE_INTRINSICS
@@ -108,7 +119,7 @@ KFR_SINTRIN vec<T, N> abs(const vec<T, N>& x)
 }
 #endif
 KFR_I_CONVERTER(abs)
-}
+} // namespace intrinsics
 
 KFR_I_FN(abs)
 /**
@@ -128,4 +139,4 @@ KFR_INTRIN internal::expression_function<fn::abs, E1> abs(E1&& x)
 {
     return { fn::abs(), std::forward<E1>(x) };
 }
-}
+} // namespace kfr

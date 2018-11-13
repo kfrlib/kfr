@@ -53,6 +53,7 @@ struct bitmask
 
 #if defined CMT_ARCH_SSE41
 
+// horizontal OR
 KFR_SINTRIN bool bittestany(const u8sse& x) { return !_mm_testz_si128(*x, *x); }
 KFR_SINTRIN bool bittestany(const u16sse& x) { return !_mm_testz_si128(*x, *x); }
 KFR_SINTRIN bool bittestany(const u32sse& x) { return !_mm_testz_si128(*x, *x); }
@@ -62,6 +63,7 @@ KFR_SINTRIN bool bittestany(const i16sse& x) { return !_mm_testz_si128(*x, *x); 
 KFR_SINTRIN bool bittestany(const i32sse& x) { return !_mm_testz_si128(*x, *x); }
 KFR_SINTRIN bool bittestany(const i64sse& x) { return !_mm_testz_si128(*x, *x); }
 
+// horizontal AND
 KFR_SINTRIN bool bittestall(const u8sse& x) { return _mm_testc_si128(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(const u16sse& x) { return _mm_testc_si128(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(const u32sse& x) { return _mm_testc_si128(*x, *allonesvector(x)); }
@@ -73,16 +75,12 @@ KFR_SINTRIN bool bittestall(const i64sse& x) { return _mm_testc_si128(*x, *allon
 #endif
 
 #if defined CMT_ARCH_AVX
+// horizontal OR
 KFR_SINTRIN bool bittestany(const f32sse& x) { return !_mm_testz_ps(*x, *x); }
 KFR_SINTRIN bool bittestany(const f64sse& x) { return !_mm_testz_pd(*x, *x); }
-KFR_SINTRIN bool bittestall(const f32sse& x) { return _mm_testc_ps(*x, *allonesvector(x)); }
-KFR_SINTRIN bool bittestall(const f64sse& x) { return _mm_testc_pd(*x, *allonesvector(x)); }
 
 KFR_SINTRIN bool bittestany(const f32avx& x) { return !_mm256_testz_ps(*x, *x); }
 KFR_SINTRIN bool bittestany(const f64avx& x) { return !_mm256_testz_pd(*x, *x); }
-
-KFR_SINTRIN bool bittestnall(const f32avx& x) { return _mm256_testc_ps(*x, *allonesvector(x)); }
-KFR_SINTRIN bool bittestnall(const f64avx& x) { return _mm256_testc_pd(*x, *allonesvector(x)); }
 
 KFR_SINTRIN bool bittestany(const u8avx& x) { return !_mm256_testz_si256(*x, *x); }
 KFR_SINTRIN bool bittestany(const u16avx& x) { return !_mm256_testz_si256(*x, *x); }
@@ -93,6 +91,13 @@ KFR_SINTRIN bool bittestany(const i16avx& x) { return !_mm256_testz_si256(*x, *x
 KFR_SINTRIN bool bittestany(const i32avx& x) { return !_mm256_testz_si256(*x, *x); }
 KFR_SINTRIN bool bittestany(const i64avx& x) { return !_mm256_testz_si256(*x, *x); }
 
+// horizontal AND
+KFR_SINTRIN bool bittestall(const f32sse& x) { return _mm_testc_ps(*x, *allonesvector(x)); }
+KFR_SINTRIN bool bittestall(const f64sse& x) { return _mm_testc_pd(*x, *allonesvector(x)); }
+
+KFR_SINTRIN bool bittestall(const f32avx& x) { return _mm256_testc_ps(*x, *allonesvector(x)); }
+KFR_SINTRIN bool bittestall(const f64avx& x) { return _mm256_testc_pd(*x, *allonesvector(x)); }
+
 KFR_SINTRIN bool bittestall(const u8avx& x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(const u16avx& x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(const u32avx& x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
@@ -101,6 +106,34 @@ KFR_SINTRIN bool bittestall(const i8avx& x) { return _mm256_testc_si256(*x, *all
 KFR_SINTRIN bool bittestall(const i16avx& x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(const i32avx& x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
 KFR_SINTRIN bool bittestall(const i64avx& x) { return _mm256_testc_si256(*x, *allonesvector(x)); }
+
+#if defined CMT_ARCH_AVX512
+// horizontal OR
+KFR_SINTRIN bool bittestany(const f32avx512& x) { return !_mm512_test_epi32_mask(*x, *x); }
+KFR_SINTRIN bool bittestany(const f64avx512& x) { return !_mm512_test_epi64_mask(*x, *x); }
+KFR_SINTRIN bool bittestany(const u8avx512& x) { return !_mm512_test_epi8_mask(*x, *x); }
+KFR_SINTRIN bool bittestany(const u16avx512& x) { return !_mm512_test_epi16_mask(*x, *x); }
+KFR_SINTRIN bool bittestany(const u32avx512& x) { return !_mm512_test_epi32_mask(*x, *x); }
+KFR_SINTRIN bool bittestany(const u64avx512& x) { return !_mm512_test_epi64_mask(*x, *x); }
+KFR_SINTRIN bool bittestany(const i8avx512& x) { return !_mm512_test_epi8_mask(*x, *x); }
+KFR_SINTRIN bool bittestany(const i16avx512& x) { return !_mm512_test_epi16_mask(*x, *x); }
+KFR_SINTRIN bool bittestany(const i32avx512& x) { return !_mm512_test_epi32_mask(*x, *x); }
+KFR_SINTRIN bool bittestany(const i64avx512& x) { return !_mm512_test_epi64_mask(*x, *x); }
+
+// horizontal AND
+KFR_SINTRIN bool bittestall(const f32avx512& x) { return ~bittestany(~x); }
+KFR_SINTRIN bool bittestall(const f64avx512& x) { return ~bittestany(~x); }
+KFR_SINTRIN bool bittestall(const u8avx512& x) { return ~bittestany(~x); }
+KFR_SINTRIN bool bittestall(const u16avx512& x) { return ~bittestany(~x); }
+KFR_SINTRIN bool bittestall(const u32avx512& x) { return ~bittestany(~x); }
+KFR_SINTRIN bool bittestall(const u64avx512& x) { return ~bittestany(~x); }
+KFR_SINTRIN bool bittestall(const i8avx512& x) { return ~bittestany(~x); }
+KFR_SINTRIN bool bittestall(const i16avx512& x) { return ~bittestany(~x); }
+KFR_SINTRIN bool bittestall(const i32avx512& x) { return ~bittestany(~x); }
+KFR_SINTRIN bool bittestall(const i64avx512& x) { return ~bittestany(~x); }
+
+#endif
+
 #elif defined CMT_ARCH_SSE41
 KFR_SINTRIN bool bittestany(const f32sse& x) { return !_mm_testz_si128(*bitcast<u8>(x), *bitcast<u8>(x)); }
 KFR_SINTRIN bool bittestany(const f64sse& x) { return !_mm_testz_si128(*bitcast<u8>(x), *bitcast<u8>(x)); }
@@ -249,7 +282,7 @@ KFR_SINTRIN bool bittestall(const vec<T, N>& x, const vec<T, N>& y)
     return !bittestany(~x & y);
 }
 #endif
-}
+} // namespace intrinsics
 
 /**
  * @brief Returns x[0] && x[1] && ... && x[N-1]
@@ -268,4 +301,4 @@ KFR_SINTRIN bool any(const mask<T, N>& x)
 {
     return intrinsics::bittestany(x.asvec());
 }
-}
+} // namespace kfr
