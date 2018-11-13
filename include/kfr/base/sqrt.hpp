@@ -48,6 +48,11 @@ KFR_SINTRIN f32avx sqrt(const f32avx& x) { return _mm256_sqrt_ps(*x); }
 KFR_SINTRIN f64avx sqrt(const f64avx& x) { return _mm256_sqrt_pd(*x); }
 #endif
 
+#if defined CMT_ARCH_AVX512
+KFR_SINTRIN f32avx512 sqrt(const f32avx512& x) { return _mm512_sqrt_ps(*x); }
+KFR_SINTRIN f64avx512 sqrt(const f64avx512& x) { return _mm512_sqrt_pd(*x); }
+#endif
+
 KFR_HANDLE_ALL_SIZES_FLT_1(sqrt)
 
 #else

@@ -40,10 +40,10 @@ KFR_SINTRIN vec<T, N> saturated_signed_add(const vec<T, N>& a, const vec<T, N>& 
 {
     using UT               = utype<T>;
     constexpr size_t shift = typebits<UT>::bits - 1;
-    vec<UT, N> aa        = bitcast<UT>(a);
-    vec<UT, N> bb        = bitcast<UT>(b);
-    const vec<UT, N> sum = aa + bb;
-    aa = (aa >> shift) + static_cast<UT>(std::numeric_limits<T>::max());
+    vec<UT, N> aa          = bitcast<UT>(a);
+    vec<UT, N> bb          = bitcast<UT>(b);
+    const vec<UT, N> sum   = aa + bb;
+    aa                     = (aa >> shift) + static_cast<UT>(std::numeric_limits<T>::max());
 
     return select(bitcast<T>((aa ^ bb) | ~(bb ^ sum)) >= 0, a, bitcast<T>(sum));
 }
@@ -52,10 +52,10 @@ KFR_SINTRIN vec<T, N> saturated_signed_sub(const vec<T, N>& a, const vec<T, N>& 
 {
     using UT               = utype<T>;
     constexpr size_t shift = typebits<UT>::bits - 1;
-    vec<UT, N> aa         = bitcast<UT>(a);
-    vec<UT, N> bb         = bitcast<UT>(b);
-    const vec<UT, N> diff = aa - bb;
-    aa = (aa >> shift) + static_cast<UT>(std::numeric_limits<T>::max());
+    vec<UT, N> aa          = bitcast<UT>(a);
+    vec<UT, N> bb          = bitcast<UT>(b);
+    const vec<UT, N> diff  = aa - bb;
+    aa                     = (aa >> shift) + static_cast<UT>(std::numeric_limits<T>::max());
 
     return select(bitcast<T>((aa ^ bb) & (aa ^ diff)) < 0, a, bitcast<T>(diff));
 }
@@ -103,6 +103,17 @@ KFR_SINTRIN u8avx satsub(const u8avx& x, const u8avx& y) { return _mm256_subs_ep
 KFR_SINTRIN i8avx satsub(const i8avx& x, const i8avx& y) { return _mm256_subs_epi8(*x, *y); }
 KFR_SINTRIN u16avx satsub(const u16avx& x, const u16avx& y) { return _mm256_subs_epu16(*x, *y); }
 KFR_SINTRIN i16avx satsub(const i16avx& x, const i16avx& y) { return _mm256_subs_epi16(*x, *y); }
+#endif
+
+#if defined CMT_ARCH_AVX512
+KFR_SINTRIN u8avx512 satadd(const u8avx512& x, const u8avx512& y) { return _mm512_adds_epu8(*x, *y); }
+KFR_SINTRIN i8avx512 satadd(const i8avx512& x, const i8avx512& y) { return _mm512_adds_epi8(*x, *y); }
+KFR_SINTRIN u16avx512 satadd(const u16avx512& x, const u16avx512& y) { return _mm512_adds_epu16(*x, *y); }
+KFR_SINTRIN i16avx512 satadd(const i16avx512& x, const i16avx512& y) { return _mm512_adds_epi16(*x, *y); }
+KFR_SINTRIN u8avx512 satsub(const u8avx512& x, const u8avx512& y) { return _mm512_subs_epu8(*x, *y); }
+KFR_SINTRIN i8avx512 satsub(const i8avx512& x, const i8avx512& y) { return _mm512_subs_epi8(*x, *y); }
+KFR_SINTRIN u16avx512 satsub(const u16avx512& x, const u16avx512& y) { return _mm512_subs_epu16(*x, *y); }
+KFR_SINTRIN i16avx512 satsub(const i16avx512& x, const i16avx512& y) { return _mm512_subs_epi16(*x, *y); }
 #endif
 
 KFR_HANDLE_ALL_SIZES_2(satadd)
@@ -156,7 +167,7 @@ KFR_SINTRIN vec<T, N> satsub(const vec<T, N>& a, const vec<T, N>& b)
 #endif
 KFR_I_CONVERTER(satadd)
 KFR_I_CONVERTER(satsub)
-}
+} // namespace intrinsics
 KFR_I_FN(satadd)
 KFR_I_FN(satsub)
 
@@ -189,4 +200,4 @@ KFR_INTRIN internal::expression_function<fn::satsub, E1, E2> satsub(E1&& x, E2&&
 {
     return { fn::satsub(), std::forward<E1>(x), std::forward<E2>(y) };
 }
-}
+} // namespace kfr

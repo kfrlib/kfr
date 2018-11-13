@@ -34,25 +34,32 @@ namespace kfr
 namespace intrinsics
 {
 
-#define KFR_mm_trunc_ps(V) _mm_round_ps((V), _MM_FROUND_TRUNC)
-#define KFR_mm_roundnearest_ps(V) _mm_round_ps((V), _MM_FROUND_NINT)
-#define KFR_mm_trunc_pd(V) _mm_round_pd((V), _MM_FROUND_TRUNC)
-#define KFR_mm_roundnearest_pd(V) _mm_round_pd((V), _MM_FROUND_NINT)
+#define KFR_mm_trunc_ps(V) _mm_round_ps((V), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC)
+#define KFR_mm_roundnearest_ps(V) _mm_round_ps((V), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)
+#define KFR_mm_trunc_pd(V) _mm_round_pd((V), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC)
+#define KFR_mm_roundnearest_pd(V) _mm_round_pd((V), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)
 
-#define KFR_mm_trunc_ss(V) _mm_round_ss(_mm_setzero_ps(), (V), _MM_FROUND_TRUNC)
-#define KFR_mm_roundnearest_ss(V) _mm_round_ss(_mm_setzero_ps(), (V), _MM_FROUND_NINT)
-#define KFR_mm_trunc_sd(V) _mm_round_sd(_mm_setzero_pd(), (V), _MM_FROUND_TRUNC)
-#define KFR_mm_roundnearest_sd(V) _mm_round_sd(_mm_setzero_pd(), (V), _MM_FROUND_NINT)
+#define KFR_mm_trunc_ss(V) _mm_round_ss(_mm_setzero_ps(), (V), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC)
+#define KFR_mm_roundnearest_ss(V)                                                                            \
+    _mm_round_ss(_mm_setzero_ps(), (V), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)
+#define KFR_mm_trunc_sd(V) _mm_round_sd(_mm_setzero_pd(), (V), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC)
+#define KFR_mm_roundnearest_sd(V)                                                                            \
+    _mm_round_sd(_mm_setzero_pd(), (V), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)
 
 #define KFR_mm_floor_ss(V) _mm_floor_ss(_mm_setzero_ps(), (V))
 #define KFR_mm_floor_sd(V) _mm_floor_sd(_mm_setzero_pd(), (V))
 #define KFR_mm_ceil_ss(V) _mm_ceil_ss(_mm_setzero_ps(), (V))
 #define KFR_mm_ceil_sd(V) _mm_ceil_sd(_mm_setzero_pd(), (V))
 
-#define KFR_mm256_trunc_ps(V) _mm256_round_ps((V), _MM_FROUND_TRUNC)
-#define KFR_mm256_roundnearest_ps(V) _mm256_round_ps((V), _MM_FROUND_NINT)
-#define KFR_mm256_trunc_pd(V) _mm256_round_pd((V), _MM_FROUND_TRUNC)
-#define KFR_mm256_roundnearest_pd(V) _mm256_round_pd((V), _MM_FROUND_NINT)
+#define KFR_mm256_trunc_ps(V) _mm256_round_ps((V), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC)
+#define KFR_mm256_roundnearest_ps(V) _mm256_round_ps((V), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)
+#define KFR_mm256_trunc_pd(V) _mm256_round_pd((V), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC)
+#define KFR_mm256_roundnearest_pd(V) _mm256_round_pd((V), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)
+
+#define KFR_mm512_trunc_ps(V) _mm512_roundscale_ps((V), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC)
+#define KFR_mm512_roundnearest_ps(V) _mm512_roundscale_ps((V), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)
+#define KFR_mm512_trunc_pd(V) _mm512_roundscale_pd((V), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC)
+#define KFR_mm512_roundnearest_pd(V) _mm512_roundscale_pd((V), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)
 
 #if defined CMT_ARCH_SSE41 && defined KFR_NATIVE_INTRINSICS
 
@@ -79,6 +86,20 @@ KFR_SINTRIN f64avx trunc(const f64avx& value) { return KFR_mm256_trunc_pd(*value
 KFR_SINTRIN f64avx round(const f64avx& value) { return KFR_mm256_roundnearest_pd(*value); }
 KFR_SINTRIN f32avx fract(const f32avx& x) { return x - floor(x); }
 KFR_SINTRIN f64avx fract(const f64avx& x) { return x - floor(x); }
+#endif
+
+#if defined CMT_ARCH_AVX512
+
+KFR_SINTRIN f32avx512 floor(const f32avx512& value) { return _mm512_floor_ps(*value); }
+KFR_SINTRIN f32avx512 ceil(const f32avx512& value) { return _mm512_ceil_ps(*value); }
+KFR_SINTRIN f32avx512 trunc(const f32avx512& value) { return KFR_mm512_trunc_ps(*value); }
+KFR_SINTRIN f32avx512 round(const f32avx512& value) { return KFR_mm512_roundnearest_ps(*value); }
+KFR_SINTRIN f64avx512 floor(const f64avx512& value) { return _mm512_floor_pd(*value); }
+KFR_SINTRIN f64avx512 ceil(const f64avx512& value) { return _mm512_ceil_pd(*value); }
+KFR_SINTRIN f64avx512 trunc(const f64avx512& value) { return KFR_mm512_trunc_pd(*value); }
+KFR_SINTRIN f64avx512 round(const f64avx512& value) { return KFR_mm512_roundnearest_pd(*value); }
+KFR_SINTRIN f32avx512 fract(const f32avx512& x) { return x - floor(x); }
+KFR_SINTRIN f64avx512 fract(const f64avx512& x) { return x - floor(x); }
 #endif
 
 KFR_HANDLE_ALL_SIZES_F_1(floor)
@@ -203,7 +224,7 @@ KFR_I_CONVERTER(ifloor)
 KFR_I_CONVERTER(iceil)
 KFR_I_CONVERTER(iround)
 KFR_I_CONVERTER(itrunc)
-}
+} // namespace intrinsics
 KFR_I_FN(floor)
 KFR_I_FN(ceil)
 KFR_I_FN(round)
@@ -339,7 +360,7 @@ CMT_INLINE vec<T, N> rem(const vec<T, N>& x, const vec<T, N>& y)
 {
     return fmod(x, y);
 }
-}
+} // namespace kfr
 
 #undef KFR_mm_trunc_ps
 #undef KFR_mm_roundnearest_ps
