@@ -58,15 +58,19 @@ bool check_assertion(const half_comparison<L>& comparison, const char* expr, con
             TESTO_BREAKPOINT;                                                                                \
     } while (0)
 
+#define TESTO_ASSERT_INACTIVE(...)                                                                                  \
+   do                                                                                                       \
+    {                                                                                                        \
+    } while (false && (__VA_ARGS__))
+
 #if defined(TESTO_ASSERTION_ON) || !(defined(NDEBUG) || defined(TESTO_ASSERTION_OFF))
 
 #define TESTO_ASSERT TESTO_ASSERT_ACTIVE
 
 #else
-#define TESTO_ASSERT(...)                                                                                    \
-    do                                                                                                       \
-    {                                                                                                        \
-    } while (false && (__VA_ARGS__))
+
+#define TESTO_ASSERT TESTO_ASSERT_INACTIVE
+
 #endif
 
 #ifndef TESTO_NO_SHORT_MACROS

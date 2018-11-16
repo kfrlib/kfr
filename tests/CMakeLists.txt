@@ -39,7 +39,7 @@ endif ()
 find_package(MPFR)
 
 add_executable(intrinsic_test intrinsic_test.cpp ${KFR_SRC} ${TEST_SRC})
-add_executable(dft_test dft_test.cpp ${KFR_SRC} ${TEST_SRC})
+add_executable(dft_test dft_test.cpp ${KFR_SRC} ${TEST_SRC} ../include/kfr/dft/dft-src.cpp)
 if (MPFR_FOUND)
     include_directories(${MPFR_INCLUDE_DIR})
     add_executable(transcendental_test transcendental_test.cpp ${KFR_SRC} ${TEST_SRC})
