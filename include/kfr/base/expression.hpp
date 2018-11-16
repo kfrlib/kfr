@@ -453,10 +453,10 @@ CMT_INLINE static size_t process(OutputExpr&& out, const InputExpr& in, size_t s
     size_t i = start;
 
     CMT_LOOP_NOUNROLL
-    for (; i < end / w * w; i += w)
+    for (; i < start + size / w * w; i += w)
         out(coutput, i, in(cinput, i, vec_t<Tin, w>()));
     CMT_LOOP_NOUNROLL
-    for (; i < end / groupsize * groupsize; i += groupsize)
+    for (; i < start + size / groupsize * groupsize; i += groupsize)
         out(coutput, i, in(cinput, i, vec_t<Tin, groupsize>()));
 
     in.end_block(cinput, size);
