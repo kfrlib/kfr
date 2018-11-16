@@ -91,6 +91,19 @@ KFR_SIMD_SPEC_TYPE(f32, 8, __m256);
 KFR_SIMD_SPEC_TYPE(f64, 4, __m256d);
 #endif
 
+#ifdef CMT_ARCH_AVX512
+KFR_SIMD_SPEC_TYPE(u8, 64, __m512i);
+KFR_SIMD_SPEC_TYPE(u16, 32, __m512i);
+KFR_SIMD_SPEC_TYPE(u32, 16, __m512i);
+KFR_SIMD_SPEC_TYPE(u64, 8, __m512i);
+KFR_SIMD_SPEC_TYPE(i8, 64, __m512i);
+KFR_SIMD_SPEC_TYPE(i16, 32, __m512i);
+KFR_SIMD_SPEC_TYPE(i32, 16, __m512i);
+KFR_SIMD_SPEC_TYPE(i64, 8, __m512i);
+KFR_SIMD_SPEC_TYPE(f32, 16, __m512);
+KFR_SIMD_SPEC_TYPE(f64, 8, __m512d);
+#endif
+
 #ifdef CMT_ARCH_NEON
 KFR_SIMD_SPEC_TYPE(u8, 16, uint8x16_t);
 KFR_SIMD_SPEC_TYPE(u16, 8, uint16x8_t);
@@ -118,17 +131,17 @@ struct raw_bytes
 
 #define KFR_C_CYCLE(...)                                                                                     \
     for (size_t i = 0; i < N; i++)                                                                           \
-    vs[i]         = __VA_ARGS__
+    vs[i] = __VA_ARGS__
 
 #define KFR_R_CYCLE(...)                                                                                     \
     vec<T, N> result;                                                                                        \
-    for (size_t i    = 0; i < N; i++)                                                                        \
+    for (size_t i = 0; i < N; i++)                                                                           \
         result.vs[i] = __VA_ARGS__;                                                                          \
     return result
 
 #define KFR_B_CYCLE(...)                                                                                     \
     vec<T, N> result;                                                                                        \
-    for (size_t i    = 0; i < N; i++)                                                                        \
+    for (size_t i = 0; i < N; i++)                                                                           \
         result.vs[i] = (__VA_ARGS__) ? constants<value_type>::allones() : value_type(0);                     \
     return result
 
@@ -282,13 +295,13 @@ struct alignas(const_min(platform<>::maximum_vector_alignment, sizeof(T) * next_
 
     KFR_I_CE vec& operator++() noexcept { return *this = *this + vec(1); }
     KFR_I_CE vec& operator--() noexcept { return *this = *this - vec(1); }
-    KFR_I_CE vec operator++(int)noexcept
+    KFR_I_CE vec operator++(int) noexcept
     {
         const vec z = *this;
         ++*this;
         return z;
     }
-    KFR_I_CE vec operator--(int)noexcept
+    KFR_I_CE vec operator--(int) noexcept
     {
         const vec z = *this;
         --*this;
@@ -321,6 +334,7 @@ struct alignas(const_min(platform<>::maximum_vector_alignment, sizeof(T) * next_
     const vec& flatten() const noexcept { return *this; }
     simd_type operator*() const noexcept { return simd; }
     simd_type& operator*() noexcept { return simd; }
+
 protected:
     template <typename, size_t>
     friend struct vec;
@@ -366,13 +380,13 @@ CMT_INLINE vec<T, csum<size_t, N1, N2, Sizes...>()> concat_impl(const vec<T, N1>
 {
     return concat_impl(concat_impl(x, y), args...);
 }
-}
+} // namespace internal
 
 template <typename T, size_t... Ns>
 constexpr inline vec<T, csum<size_t, Ns...>()> concat(const vec<T, Ns>&... vs) noexcept
 {
     return internal::concat_impl(vs...);
 }
-}
+} // namespace kfr
 
 CMT_PRAGMA_MSVC(warning(pop))

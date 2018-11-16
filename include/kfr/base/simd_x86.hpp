@@ -181,4 +181,92 @@ KFR_I_CE CMT_INLINE vec<f64, 4> vec<f64, 4>::operator^(const vec<f64, 4>& y) con
 
 #endif // CMT_ARCH_AVX
 
-} // namespace kf
+#ifdef CMT_ARCH_AVX512
+
+template <>
+KFR_I_CE CMT_INLINE vec<f32, 16> vec<f32, 16>::operator+(const vec<f32, 16>& y) const noexcept
+{
+    return _mm512_add_ps(simd, y.simd);
+}
+
+template <>
+KFR_I_CE CMT_INLINE vec<f32, 16> vec<f32, 16>::operator-(const vec<f32, 16>& y) const noexcept
+{
+    return _mm512_sub_ps(simd, y.simd);
+}
+
+template <>
+KFR_I_CE CMT_INLINE vec<f32, 16> vec<f32, 16>::operator*(const vec<f32, 16>& y) const noexcept
+{
+    return _mm512_mul_ps(simd, y.simd);
+}
+
+template <>
+KFR_I_CE CMT_INLINE vec<f32, 16> vec<f32, 16>::operator/(const vec<f32, 16>& y) const noexcept
+{
+    return _mm512_div_ps(simd, y.simd);
+}
+
+template <>
+KFR_I_CE CMT_INLINE vec<f32, 16> vec<f32, 16>::operator&(const vec<f32, 16>& y) const noexcept
+{
+    return _mm512_and_ps(simd, y.simd);
+}
+
+template <>
+KFR_I_CE CMT_INLINE vec<f32, 16> vec<f32, 16>::operator|(const vec<f32, 16>& y) const noexcept
+{
+    return _mm512_or_ps(simd, y.simd);
+}
+
+template <>
+KFR_I_CE CMT_INLINE vec<f32, 16> vec<f32, 16>::operator^(const vec<f32, 16>& y) const noexcept
+{
+    return _mm512_xor_ps(simd, y.simd);
+}
+
+template <>
+KFR_I_CE CMT_INLINE vec<f64, 8> vec<f64, 8>::operator+(const vec<f64, 8>& y) const noexcept
+{
+    return _mm512_add_pd(simd, y.simd);
+}
+
+template <>
+KFR_I_CE CMT_INLINE vec<f64, 8> vec<f64, 8>::operator-(const vec<f64, 8>& y) const noexcept
+{
+    return _mm512_sub_pd(simd, y.simd);
+}
+
+template <>
+KFR_I_CE CMT_INLINE vec<f64, 8> vec<f64, 8>::operator*(const vec<f64, 8>& y) const noexcept
+{
+    return _mm512_mul_pd(simd, y.simd);
+}
+
+template <>
+KFR_I_CE CMT_INLINE vec<f64, 8> vec<f64, 8>::operator/(const vec<f64, 8>& y) const noexcept
+{
+    return _mm512_div_pd(simd, y.simd);
+}
+
+template <>
+KFR_I_CE CMT_INLINE vec<f64, 8> vec<f64, 8>::operator&(const vec<f64, 8>& y) const noexcept
+{
+    return _mm512_and_pd(simd, y.simd);
+}
+
+template <>
+KFR_I_CE CMT_INLINE vec<f64, 8> vec<f64, 8>::operator|(const vec<f64, 8>& y) const noexcept
+{
+    return _mm512_or_pd(simd, y.simd);
+}
+
+template <>
+KFR_I_CE CMT_INLINE vec<f64, 8> vec<f64, 8>::operator^(const vec<f64, 8>& y) const noexcept
+{
+    return _mm512_xor_pd(simd, y.simd);
+}
+
+#endif // CMT_ARCH_AVX
+
+} // namespace kfr

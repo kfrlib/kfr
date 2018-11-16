@@ -121,6 +121,49 @@ KFR_SINTRIN i64avx select(const maskfor<i64avx>& m, const i64avx& x, const i64av
 }
 #endif
 
+#if defined CMT_ARCH_AVX512
+KFR_SINTRIN f64avx512 select(const maskfor<f64avx512>& m, const f64avx512& x, const f64avx512& y)
+{
+    return _mm512_mask_blend_pd(_mm512_test_epi64_mask(*m, *m), *y, *x);
+}
+KFR_SINTRIN f32avx512 select(const maskfor<f32avx512>& m, const f32avx512& x, const f32avx512& y)
+{
+    return _mm512_mask_blend_ps(_mm512_test_epi32_mask(*m, *m), *y, *x);
+}
+KFR_SINTRIN u8avx512 select(const maskfor<u8avx512>& m, const u8avx512& x, const u8avx512& y)
+{
+    return _mm512_mask_blend_epi8(_mm512_test_epi8_mask(*m, *m), *y, *x);
+}
+KFR_SINTRIN u16avx512 select(const maskfor<u16avx512>& m, const u16avx512& x, const u16avx512& y)
+{
+    return _mm512_mask_blend_epi16(_mm512_test_epi16_mask(*m, *m), *y, *x);
+}
+KFR_SINTRIN u32avx512 select(const maskfor<u32avx512>& m, const u32avx512& x, const u32avx512& y)
+{
+    return _mm512_mask_blend_epi32(_mm512_test_epi32_mask(*m, *m), *y, *x);
+}
+KFR_SINTRIN u64avx512 select(const maskfor<u64avx512>& m, const u64avx512& x, const u64avx512& y)
+{
+    return _mm512_mask_blend_epi64(_mm512_test_epi64_mask(*m, *m), *y, *x);
+}
+KFR_SINTRIN i8avx512 select(const maskfor<i8avx512>& m, const i8avx512& x, const i8avx512& y)
+{
+    return _mm512_mask_blend_epi8(_mm512_test_epi8_mask(*m, *m), *y, *x);
+}
+KFR_SINTRIN i16avx512 select(const maskfor<i16avx512>& m, const i16avx512& x, const i16avx512& y)
+{
+    return _mm512_mask_blend_epi16(_mm512_test_epi16_mask(*m, *m), *y, *x);
+}
+KFR_SINTRIN i32avx512 select(const maskfor<i32avx512>& m, const i32avx512& x, const i32avx512& y)
+{
+    return _mm512_mask_blend_epi32(_mm512_test_epi32_mask(*m, *m), *y, *x);
+}
+KFR_SINTRIN i64avx512 select(const maskfor<i64avx512>& m, const i64avx512& x, const i64avx512& y)
+{
+    return _mm512_mask_blend_epi64(_mm512_test_epi64_mask(*m, *m), *y, *x);
+}
+#endif
+
 template <typename T, size_t N, KFR_ENABLE_IF(N < platform<T>::vector_width)>
 KFR_SINTRIN vec<T, N> select(const mask<T, N>& a, const vec<T, N>& b, const vec<T, N>& c)
 {
@@ -211,7 +254,7 @@ KFR_SINTRIN vec<T, N> select(const vec<T, N>& m, const vec<T, N>& x, const vec<T
 {
     return select(m.asmask(), x, y);
 }
-}
+} // namespace intrinsics
 KFR_I_FN(select)
 
 /**
@@ -238,4 +281,4 @@ KFR_INTRIN internal::expression_function<fn::select, E1, E2, E3> select(E1&& m, 
 {
     return { fn::select(), std::forward<E1>(m), std::forward<E2>(x), std::forward<E3>(y) };
 }
-}
+} // namespace kfr

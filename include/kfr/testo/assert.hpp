@@ -50,15 +50,17 @@ bool check_assertion(const half_comparison<L>& comparison, const char* expr, con
     return result;
 }
 
-#if defined(TESTO_ASSERTION_ON) || !(defined(NDEBUG) || defined(TESTO_ASSERTION_OFF))
-
-#define TESTO_ASSERT(...)                                                                                    \
+#define TESTO_ASSERT_ACTIVE(...)                                                                                  \
     do                                                                                                       \
     {                                                                                                        \
         if (!::testo::check_assertion(::testo::make_comparison() <= __VA_ARGS__, #__VA_ARGS__, __FILE__,     \
                                       __LINE__))                                                             \
             TESTO_BREAKPOINT;                                                                                \
     } while (0)
+
+#if defined(TESTO_ASSERTION_ON) || !(defined(NDEBUG) || defined(TESTO_ASSERTION_OFF))
+
+#define TESTO_ASSERT TESTO_ASSERT_ACTIVE
 
 #else
 #define TESTO_ASSERT(...)                                                                                    \

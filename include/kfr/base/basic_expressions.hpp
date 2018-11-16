@@ -75,7 +75,7 @@ struct expression_iterator
     iterator end() const { return { *this, e1.size() }; }
     E1 e1;
 };
-}
+} // namespace internal
 
 template <typename To, typename E>
 CMT_INLINE internal::expression_convert<To, E> convert(E&& expr)
@@ -171,7 +171,7 @@ struct expression_writer
     size_t m_position = 0;
     E1 e1;
 };
-}
+} // namespace internal
 
 template <typename T, typename E1>
 internal::expression_reader<T, E1> reader(E1&& e1)
@@ -350,13 +350,13 @@ struct expression_adjacent : expression_base<E>
     {
         const vec<T, N> in      = this->argument_first(cinput, index, vec_t<T, N>());
         const vec<T, N> delayed = insertleft(data, in);
-        data = in[N - 1];
+        data                    = in[N - 1];
         return this->fn(in, delayed);
     }
     Fn fn;
     mutable value_type data = value_type(0);
 };
-}
+} // namespace internal
 
 template <typename E1>
 CMT_INLINE internal::expression_slice<E1> slice(E1&& e1, size_t start, size_t size = infinite_size)
@@ -451,7 +451,7 @@ struct expression_padded : expression_base<E>
     value_type fill_value;
     const size_t input_size;
 };
-}
+} // namespace internal
 
 /**
  * @brief Returns infinite template expression that pads e with fill_value (default value = 0)
@@ -535,7 +535,7 @@ private:
         swallow{ (std::get<indices>(this->args)(coutput, index, xx[indices]), void(), 0)... };
     }
 };
-}
+} // namespace internal
 
 template <typename... E, KFR_ENABLE_IF(is_output_expressions<E...>::value)>
 internal::expression_unpack<E...> unpack(E&&... e)
@@ -564,9 +564,10 @@ struct task_partition
     size_t count;
     size_t operator()(size_t index)
     {
-        if (index > count)
+        if (index >= count)
             return 0;
-        return process(output, input, index * chunk_size, chunk_size);
+        return process(output, input, index * chunk_size,
+                       index == count - 1 ? size - (count - 1) * chunk_size : chunk_size);
     }
 };
 
