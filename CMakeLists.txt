@@ -37,6 +37,13 @@ endif()
 # Include list of source files
 include(sources.cmake)
 
+add_library(kfr INTERFACE)
+target_sources(kfr INTERFACE ${KFR_SRC})
+target_include_directories(kfr INTERFACE include)
+
+add_library(kfr_dft include/kfr/dft/dft-src.cpp)
+target_link_libraries(kfr_dft kfr)
+
 add_definitions(-D_ENABLE_EXTENDED_ALIGNED_STORAGE)
 
 option(ENABLE_TESTS "Enable tests and examples. This changes many compiler flags" OFF)
