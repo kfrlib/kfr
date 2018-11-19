@@ -83,10 +83,7 @@ endfunction()
 
 message(STATUS CMAKE_SYSTEM_PROCESSOR = ${CMAKE_SYSTEM_PROCESSOR})
 
-set(ARCH_TESTS 0)
-
-if (CLANG AND CMAKE_SYSTEM_PROCESSOR MATCHES "([aA][mM][dD]64)")
-    set(ARCH_TESTS 1)
+if (ARCH_TESTS)
     add_x86_test(generic "-march=x86-64 -mno-avx -DCMT_FORCE_GENERIC_CPU")
     add_x86_test(sse2 "-march=x86-64 -msse2")
     add_x86_test(sse3 "-march=x86-64 -msse3 -mno-avx")

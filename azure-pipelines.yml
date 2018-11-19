@@ -107,7 +107,7 @@ jobs:
       mkdir build
       cd build
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
-      cmake -GNinja -DCMAKE_CXX_COMPILER="C:/LLVM/bin/clang-cl.exe" -DARCH_FLAGS="-mavx512f -mavx512cd -mavx512bw -mavx512dq -mavx512vl" -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release ..
+      cmake -GNinja -DARCH_TESTS=ON -DCMAKE_CXX_COMPILER="C:/LLVM/bin/clang-cl.exe" -DARCH_FLAGS="-mavx512f -mavx512cd -mavx512bw -mavx512dq -mavx512vl" -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release ..
       ninja
       cd tests
       ctest -V
