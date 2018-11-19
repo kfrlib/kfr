@@ -17,12 +17,11 @@
 
 cmake_minimum_required(VERSION 3.0)
 
-set(TEST_SRC
-)
-
 add_definitions(-DKFR_TESTING=1)
 
 include_directories(../include)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/tests/cmake/")
 
 if (NOT ARM)
     if(MSVC AND NOT CLANG)
@@ -37,6 +36,7 @@ if (NOT ARM)
 endif ()
 
 find_package(MPFR)
+find_package(GMP)
 
 set(ALL_TESTS_CPP
     all_tests.cpp
@@ -47,38 +47,33 @@ set(ALL_TESTS_CPP
     expression_test.cpp
     intrinsic_test.cpp)
 
-if (MPFR_FOUND)
+if (MPFR_FOUND AND GMP_FOUND)
     list(APPEND ALL_TESTS_CPP transcendental_test.cpp)
+else ()
+    message(STATUS "MPFR is not found. Skipping transcendental_test")
 endif ()
 
-add_executable(all_tests ${ALL_TESTS_CPP} ${KFR_SRC} ${TEST_SRC} ../include/kfr/dft/dft-src.cpp)
+add_executable(all_tests ${ALL_TESTS_CPP} ${KFR_SRC}  ../include/kfr/dft/dft-src.cpp)
 target_compile_definitions(all_tests PRIVATE KFR_NO_MAIN)
 
-add_executable(intrinsic_test intrinsic_test.cpp ${KFR_SRC} ${TEST_SRC})
-add_executable(dft_test dft_test.cpp ${KFR_SRC} ${TEST_SRC} ../include/kfr/dft/dft-src.cpp)
-if (MPFR_FOUND)
+add_executable(intrinsic_test intrinsic_test.cpp ${KFR_SRC} )
+add_executable(dft_test dft_test.cpp ${KFR_SRC}  ../include/kfr/dft/dft-src.cpp)
+if (MPFR_FOUND AND GMP_FOUND)
     add_definitions(-DHAVE_MPFR)
-    include_directories(${MPFR_INCLUDE_DIR})
-    add_executable(transcendental_test transcendental_test.cpp ${KFR_SRC} ${TEST_SRC})
-    target_link_libraries(all_tests ${MPFR_LIBRARIES})
-    target_link_libraries(transcendental_test ${MPFR_LIBRARIES})
-    if (WIN32)
-        target_link_libraries(transcendental_test gmp) # for MSYS
-        target_link_libraries(all_tests gmp) # for MSYS
-    endif()
+    include_directories(${MPFR_INCLUDE_DIR} ${GMP_INCLUDE_DIR})
+    add_executable(transcendental_test transcendental_test.cpp ${KFR_SRC} )
+    target_link_libraries(all_tests ${MPFR_LIBRARIES} ${GMP_LIBRARIES})
+    target_link_libraries(transcendental_test ${MPFR_LIBRARIES} ${GMP_LIBRARIES})
 endif ()
 
 function(add_x86_test NAME FLAGS)
     separate_arguments(FLAGS)
-    add_executable(all_tests_${NAME} ${ALL_TESTS_CPP} ${KFR_SRC} ${TEST_SRC} ../include/kfr/dft/dft-src.cpp)
+    add_executable(all_tests_${NAME} ${ALL_TESTS_CPP} ${KFR_SRC}  ../include/kfr/dft/dft-src.cpp)
     target_compile_options(all_tests_${NAME} PRIVATE ${FLAGS})
     target_compile_definitions(all_tests_${NAME} PRIVATE KFR_NO_MAIN)
-    if(MPFR_FOUND)
-        target_link_libraries(all_tests_${NAME} ${MPFR_LIBRARIES})
-        if (WIN32)
-            target_link_libraries(all_tests_${NAME} gmp) # for MSYS
-        endif()
-    endif()
+    if (MPFR_FOUND AND GMP_FOUND)
+        target_link_libraries(all_tests_${NAME} ${MPFR_LIBRARIES} ${GMP_LIBRARIES})
+    endif ()
 endfunction()
 
 message(STATUS CMAKE_SYSTEM_PROCESSOR = ${CMAKE_SYSTEM_PROCESSOR})
@@ -94,13 +89,13 @@ if (ARCH_TESTS)
     add_x86_test(avx512 "-march=x86-64 -msse4.1 -mavx2 -mfma -mavx512f -mavx512cd -mavx512bw -mavx512dq -mavx512vl")
 endif()
 
-add_executable(dsp_test dsp_test.cpp ${KFR_SRC} ${TEST_SRC})
-add_executable(empty_test empty_test.cpp ${KFR_SRC} ${TEST_SRC})
-add_executable(complex_test complex_test.cpp ${KFR_SRC} ${TEST_SRC})
-add_executable(base_test base_test.cpp ${KFR_SRC} ${TEST_SRC})
-add_executable(expression_test expression_test.cpp ${KFR_SRC} ${TEST_SRC})
+add_executable(dsp_test dsp_test.cpp ${KFR_SRC} )
+add_executable(empty_test empty_test.cpp ${KFR_SRC} )
+add_executable(complex_test complex_test.cpp ${KFR_SRC} )
+add_executable(base_test base_test.cpp ${KFR_SRC} )
+add_executable(expression_test expression_test.cpp ${KFR_SRC} )
 
-add_executable(ebu_test ebu_test.cpp ${KFR_SRC} ${TEST_SRC})
+add_executable(ebu_test ebu_test.cpp ${KFR_SRC} )
 
 if(USE_SDE)
     find_program(EMULATOR "sde")
@@ -121,7 +116,7 @@ if (NOT IOS)
             COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/intrinsic_test)
     add_test(NAME dsp_test
             COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/dsp_test)
-    if (MPFR_FOUND)
+    if (MPFR_FOUND AND GMP_FOUND)
         add_test(NAME transcendental_test
                 COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/transcendental_test)
     endif ()
@@ -137,7 +132,7 @@ if (NOT IOS)
     add_test(NAME dft_test
             COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/dft_test)
 
-    if(ARCH_TESTS)
+    if (ARCH_TESTS)
         add_test(NAME generic COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_generic )
         add_test(NAME sse2    COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_sse2    )
         add_test(NAME sse3    COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_sse3    )
@@ -146,5 +141,5 @@ if (NOT IOS)
         add_test(NAME avx     COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_avx     )
         add_test(NAME avx2    COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_avx2    )
         add_test(NAME avx512  COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_avx512  )
-    endif()
+    endif ()
 endif ()

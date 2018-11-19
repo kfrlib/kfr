@@ -1065,7 +1065,7 @@ void dft_plan_real<T>::from_fmt(complex<T>* out, const complex<T>* in, dft_pack_
 }
 
 template <typename T>
-dft_plan<T>::~dft_plan() = default;
+dft_plan<T>::~dft_plan() {}
 
 namespace internal
 {

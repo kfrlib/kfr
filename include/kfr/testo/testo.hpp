@@ -17,6 +17,7 @@
 #include <cmath>
 
 CMT_PRAGMA_GNU(GCC diagnostic push)
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpragmas")
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wexit-time-destructors")
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpadded")
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")

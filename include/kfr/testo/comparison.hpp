@@ -8,7 +8,9 @@
 #include <cmath>
 
 CMT_PRAGMA_GNU(GCC diagnostic push)
+#if CMT_HAS_WARNING("-Wexit-time-destructors")
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wexit-time-destructors")
+#endif
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpadded")
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
 

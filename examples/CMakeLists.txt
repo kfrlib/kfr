@@ -17,6 +17,8 @@
 
 cmake_minimum_required(VERSION 3.0)
 
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/svg)
+
 include_directories(../include)
 
 add_executable(biquads biquads.cpp ${KFR_SRC})

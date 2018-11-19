@@ -9,9 +9,9 @@
 #include "speaker.hpp"
 #include "units.hpp"
 
-#pragma clang diagnostic push
-#if __has_warning("-Winaccessible-base")
-#pragma clang diagnostic ignored "-Winaccessible-base"
+CMT_PRAGMA_GNU(GCC diagnostic push)
+#if CMT_HAS_WARNING("-Winaccessible-base")
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Winaccessible-base")
 #endif
 
 namespace kfr
@@ -329,4 +329,4 @@ private:
 
 } // namespace kfr
 
-#pragma clang diagnostic pop
+CMT_PRAGMA_GNU(GCC diagnostic pop)

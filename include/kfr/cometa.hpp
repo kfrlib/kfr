@@ -55,18 +55,6 @@ using pconstvoid = const void*;
 template <typename...>
 using void_t = void;
 
-// Workaround for GCC 4.8
-template <typename T>
-constexpr const T& const_max(const T& x, const T& y)
-{
-    return x > y ? x : y;
-}
-template <typename T>
-constexpr const T& const_min(const T& x, const T& y)
-{
-    return x < y ? x : y;
-}
-
 namespace details
 {
 constexpr inline bool args_or() { return false; }
@@ -1721,6 +1709,18 @@ constexpr cvalseq_t<unsigned, size, start, step> cuintseq{};
 template <typename... List>
 constexpr indicesfor_t<List...> indicesfor{};
 #endif
+
+// Workaround for GCC 4.8
+template <typename T>
+constexpr conditional<std::is_scalar<T>::value, T, const T &> const_max(const T& x, const T& y)
+{
+    return x > y ? x : y;
+}
+template <typename T>
+constexpr conditional<std::is_scalar<T>::value, T, const T &> const_min(const T& x, const T& y)
+{
+    return x < y ? x : y;
+}
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)
 }

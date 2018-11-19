@@ -8,7 +8,7 @@ jobs:
       sudo apt-get install -y ninja-build libmpfr-dev
       mkdir build
       cd build
-      cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
+      cmake -GNinja -DENABLE_TESTS=ON -DCMAKE_BUILD_TYPE=Release ..
       ninja
       cd tests
       ctest -V
@@ -22,7 +22,7 @@ jobs:
       sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf qemu
       mkdir build
       cd build
-      cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake -DARCH_FLAGS=-DLIBC_WORKAROUND_GETS=1 ..
+      cmake -GNinja -DENABLE_TESTS=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake -DARCH_FLAGS=-DLIBC_WORKAROUND_GETS=1 ..
       ninja
       cd tests
       ctest -V
@@ -49,7 +49,7 @@ jobs:
       brew install ninja
       mkdir build
       cd build
-      cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
+      cmake -GNinja -DENABLE_TESTS=ON -DCMAKE_BUILD_TYPE=Release ..
       ninja
       cd tests
       ctest -V
@@ -63,7 +63,7 @@ jobs:
       choco install llvm ninja
       mkdir build
       cd build
-      cmake -GNinja -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCMAKE_BUILD_TYPE=Release ..
+      cmake -GNinja -DENABLE_TESTS=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCMAKE_CXX_FLAGS=--target=x86_64-w64-windows-gnu -DCMAKE_BUILD_TYPE=Release ..
       ninja
       cd tests
       ctest -V
@@ -79,7 +79,7 @@ jobs:
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
       set PATH=%PATH:C:\tools\mingw64\bin;=%
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
-      cmake -GNinja -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DARCH_FLAGS=-mavx -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release ..
+      cmake -GNinja -DENABLE_TESTS=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DARCH_FLAGS=-mavx -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release ..
       ninja
       cd tests
       ctest -V
@@ -95,7 +95,7 @@ jobs:
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
       set PATH=%PATH:C:\tools\mingw64\bin;=%
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
-      cmake -GNinja -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DARCH_FLAGS=-mavx -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Release ..
+      cmake -GNinja -DENABLE_TESTS=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DARCH_FLAGS=-mavx -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Release ..
       ninja
       cd tests
       ctest -V
@@ -107,7 +107,7 @@ jobs:
       mkdir build
       cd build
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
-      cmake -GNinja -DARCH_TESTS=ON -DCMAKE_CXX_COMPILER="C:/LLVM/bin/clang-cl.exe" -DARCH_FLAGS="-mavx512f -mavx512cd -mavx512bw -mavx512dq -mavx512vl" -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release ..
+      cmake -GNinja -DENABLE_TESTS=ON -DARCH_TESTS=ON -DCMAKE_CXX_COMPILER="C:/LLVM/bin/clang-cl.exe" -DARCH_FLAGS="-mavx512f -mavx512cd -mavx512bw -mavx512dq -mavx512vl" -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release ..
       ninja
       cd tests
       ctest -V
