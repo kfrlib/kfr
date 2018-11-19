@@ -104,6 +104,7 @@ jobs:
   pool: WIN-AVX512
   steps:
   - script: |
+      rmdir /s /q build
       mkdir build
       cd build
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"

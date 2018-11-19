@@ -17,9 +17,16 @@
 
 cmake_minimum_required(VERSION 3.0)
 
+set(CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS}" CACHE STRING "compile flags" FORCE)
+
 project(kfr CXX)
 
 message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} ${CMAKE_CXX_COMPILER} ")
+
+message(STATUS CMAKE_SYSTEM_PROCESSOR = ${CMAKE_SYSTEM_PROCESSOR})
+if (MSVC)
+    message(STATUS MSVC)
+endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CLANG 1)
@@ -58,6 +65,7 @@ if (ENABLE_TESTS)
         add_compile_options(-fno-exceptions -fno-rtti )
         if (NOT ARCH_FLAGS)
             add_compile_options(-march=native)
+            message(STATUS "Building for native cpu")
             if(WIN32)
                 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mstackrealign -fno-asynchronous-unwind-tables")
             endif()
