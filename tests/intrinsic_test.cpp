@@ -12,8 +12,8 @@
 
 using namespace kfr;
 
-constexpr ctypes_t<i8x1, i8x2, i8x4, i8x8, i8x16, i8x3, //
-                   i16x1, i16x2, i16x4, i16x8, i16x16, i16x3, //
+constexpr ctypes_t<i8x1, i8x2, i8x4, i8x8, i8x16, i8x32, i8x64, i8x3, //
+                   i16x1, i16x2, i16x4, i16x8, i16x16, i16x32, i16x3, //
                    i32x1, i32x2, i32x4, i32x8, i32x16, i32x3 //
 #ifdef KFR_NATIVE_I64
                    ,
@@ -22,8 +22,8 @@ constexpr ctypes_t<i8x1, i8x2, i8x4, i8x8, i8x16, i8x3, //
                    >
     signed_types{};
 
-constexpr ctypes_t<u8x1, u8x2, u8x4, u8x8, u8x16, u8x3, //
-                   u16x1, u16x2, u16x4, u16x8, u16x16, u16x3, //
+constexpr ctypes_t<u8x1, u8x2, u8x4, u8x8, u8x16, u8x32, u8x64, u8x3, //
+                   u16x1, u16x2, u16x4, u16x8, u16x16, u16x32, u16x3, //
                    u32x1, u32x2, u32x4, u32x8, u32x16, u32x3 //
 #ifdef KFR_NATIVE_I64
                    ,
@@ -125,6 +125,16 @@ inline T ref_satsub(T x, T y)
         return x < y ? std::numeric_limits<T>::min() : std::numeric_limits<T>::max();
     else
         return result;
+}
+
+TEST(intrin_select)
+{
+    testo::matrix(named("type") = cconcat(signed_types, cconcat(unsigned_types, float_types)), [](auto type) {
+        using Tvec = type_of<decltype(type)>;
+        using T    = subtype<Tvec>;
+        CHECK(kfr::select(make_mask<T>(false), make_vector<T>(1), make_vector<T>(2)) == make_vector<T>(2));
+        CHECK(kfr::select(make_mask<T>(true), make_vector<T>(1), make_vector<T>(2)) == make_vector<T>(1));
+    });
 }
 
 TEST(intrin_abs)
@@ -387,4 +397,10 @@ TEST(intrin_math)
     CHECK(kfr::note_to_hertz(pack(60)) == pack(fbase(261.6255653005986346778499935233)));
 }
 
-int main() { return testo::run_all("", false); }
+#ifndef KFR_NO_MAIN
+int main()
+{
+    println(library_version(), " running on ", cpu_runtime());
+    return testo::run_all("", false);
+}
+#endif

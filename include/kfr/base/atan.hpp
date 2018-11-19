@@ -114,8 +114,8 @@ KFR_SINTRIN vec<f32, N> atan2(const vec<f32, N>& y, const vec<f32, N>& x)
     r                       = mulsign(r, x);
     r = select(isinf(x) || x == 0.0f, pi_over_2 - select(x.asmask(), mulsign(pi_over_2, x), 0.0f), r);
     r = select(isinf(y), pi_over_2 - select(x.asmask(), mulsign(pi_over_4, x), 0.0f), r);
-    r = select(y == 0.0f, (x < 0) & pi, r);
-    r = (isnan(x) || isnan(y)) | mulsign(r, y);
+    r = select(y == 0.0f, select(x < 0.f, pi, 0.f), r);
+    r = (isnan(x) || isnan(y)).asvec() | mulsign(r, y);
     return r;
 }
 
@@ -129,8 +129,8 @@ KFR_SINTRIN vec<f64, N> atan2(const vec<f64, N>& y, const vec<f64, N>& x)
     r                       = mulsign(r, x);
     r = select(isinf(x) || x == 0.0, pi_over_2 - select(x.asmask(), mulsign(pi_over_2, x), 0.0), r);
     r = select(isinf(y), pi_over_2 - select(x.asmask(), mulsign(pi_over_4, x), 0.0), r);
-    r = select(y == 0.0, (x < 0) & pi, r);
-    r = (isnan(x) || isnan(y)) | mulsign(r, y);
+    r = select(y == 0.0, select(x < 0., pi, 0.), r);
+    r = (isnan(x) || isnan(y)).asvec() | mulsign(r, y);
     return r;
 }
 

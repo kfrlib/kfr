@@ -14,9 +14,9 @@
 using namespace kfr;
 
 #ifdef KFR_NATIVE_F64
-constexpr ctypes_t<float, double> float_types{};
+constexpr ctypes_t<float, double> dft_float_types{};
 #else
-constexpr ctypes_t<float> float_types{};
+constexpr ctypes_t<float> dft_float_types{};
 #endif
 
 TEST(test_convolve)
@@ -62,7 +62,7 @@ TEST(fft_real)
 
     kfr::univector<float_type, size> in = gen_random_range<float_type>(gen, -1.0, +1.0);
     kfr::univector<kfr::complex<float_type>, size / 2 + 1> out = realdft(in);
-    kfr::univector<float_type, size> rev = irealdft(out) / size;
+    kfr::univector<float_type, size> rev                       = irealdft(out) / size;
     CHECK(rms(rev - in) <= 0.00001f);
 }
 
@@ -71,7 +71,7 @@ TEST(fft_accuracy)
     testo::active_test()->show_progress = true;
     random_bit_generator gen(2247448713, 915890490, 864203735, 2982561);
 
-    testo::matrix(named("type")       = float_types, //
+    testo::matrix(named("type")       = dft_float_types, //
                   named("inverse")    = std::make_tuple(false, true), //
                   named("log2(size)") = make_range(size_t(1), stopsize), //
                   [&gen](auto type, bool inverse, size_t log2size) {
@@ -115,16 +115,18 @@ TEST(fft_accuracy)
 
                           univector<float_type> out2(size, 0.f);
                           dft.execute(out2, out, temp);
-                          out2 = out2 / size;
+                          out2                         = out2 / size;
                           const float_type rms_diff_r2 = rms(in - out2);
                           CHECK(rms_diff_r2 < epsilon * ops);
                       }
                   });
 }
 
+#ifndef KFR_NO_MAIN
 int main()
 {
     println(library_version(), " running on ", cpu_runtime());
 
     return testo::run_all("", true);
 }
+#endif

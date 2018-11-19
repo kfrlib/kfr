@@ -15,7 +15,7 @@
 # along with KFR.
 
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
 
 set(TEST_SRC
 )
@@ -38,16 +38,65 @@ endif ()
 
 find_package(MPFR)
 
+set(ALL_TESTS_CPP
+    all_tests.cpp
+    base_test.cpp
+    complex_test.cpp
+    dft_test.cpp
+    dsp_test.cpp
+    expression_test.cpp
+    intrinsic_test.cpp)
+
+if (MPFR_FOUND)
+    list(APPEND ALL_TESTS_CPP transcendental_test.cpp)
+endif ()
+
+add_executable(all_tests ${ALL_TESTS_CPP} ${KFR_SRC} ${TEST_SRC} ../include/kfr/dft/dft-src.cpp)
+target_compile_definitions(all_tests PRIVATE KFR_NO_MAIN)
+
 add_executable(intrinsic_test intrinsic_test.cpp ${KFR_SRC} ${TEST_SRC})
 add_executable(dft_test dft_test.cpp ${KFR_SRC} ${TEST_SRC} ../include/kfr/dft/dft-src.cpp)
 if (MPFR_FOUND)
+    add_definitions(-DHAVE_MPFR)
     include_directories(${MPFR_INCLUDE_DIR})
     add_executable(transcendental_test transcendental_test.cpp ${KFR_SRC} ${TEST_SRC})
+    target_link_libraries(all_tests ${MPFR_LIBRARIES})
     target_link_libraries(transcendental_test ${MPFR_LIBRARIES})
     if (WIN32)
         target_link_libraries(transcendental_test gmp) # for MSYS
+        target_link_libraries(all_tests gmp) # for MSYS
     endif()
 endif ()
+
+function(add_x86_test NAME FLAGS)
+    separate_arguments(FLAGS)
+    add_executable(all_tests_${NAME} ${ALL_TESTS_CPP} ${KFR_SRC} ${TEST_SRC} ../include/kfr/dft/dft-src.cpp)
+    target_compile_options(all_tests_${NAME} PRIVATE ${FLAGS})
+    target_compile_definitions(all_tests_${NAME} PRIVATE KFR_NO_MAIN)
+    if(MPFR_FOUND)
+        target_link_libraries(all_tests_${NAME} ${MPFR_LIBRARIES})
+        if (WIN32)
+            target_link_libraries(all_tests_${NAME} gmp) # for MSYS
+        endif()
+    endif()
+endfunction()
+
+message(STATUS CMAKE_SYSTEM_PROCESSOR = ${CMAKE_SYSTEM_PROCESSOR})
+
+set(ARCH_TESTS 0)
+
+if (CLANG AND CMAKE_SYSTEM_PROCESSOR MATCHES "([aA][mM][dD]64)")
+    set(ARCH_TESTS 1)
+    add_x86_test(generic "-march=x86-64 -mno-avx -DCMT_FORCE_GENERIC_CPU")
+    add_x86_test(sse2 "-march=x86-64 -msse2")
+    add_x86_test(sse3 "-march=x86-64 -msse3 -mno-avx")
+    add_x86_test(ssse3 "-march=x86-64 -mssse3 -mno-avx")
+    add_x86_test(sse41 "-march=x86-64 -msse4.1 -mno-avx")
+    add_x86_test(avx "-march=x86-64 -msse4.1 -mavx")
+    add_x86_test(avx2 "-march=x86-64 -msse4.1 -mavx2 -mfma")
+    add_x86_test(avx512 "-march=x86-64 -msse4.1 -mavx2 -mfma -mavx512f -mavx512cd -mavx512bw -mavx512dq -mavx512vl")
+endif()
+
 add_executable(dsp_test dsp_test.cpp ${KFR_SRC} ${TEST_SRC})
 add_executable(empty_test empty_test.cpp ${KFR_SRC} ${TEST_SRC})
 add_executable(complex_test complex_test.cpp ${KFR_SRC} ${TEST_SRC})
@@ -56,7 +105,11 @@ add_executable(expression_test expression_test.cpp ${KFR_SRC} ${TEST_SRC})
 
 add_executable(ebu_test ebu_test.cpp ${KFR_SRC} ${TEST_SRC})
 
-if (ARM)
+if(USE_SDE)
+    find_program(EMULATOR "sde")
+    list(APPEND EMULATOR "-skx")
+    list(APPEND EMULATOR "--")
+elseif (ARM)
     find_program(EMULATOR "qemu-arm")
 else ()
     set(EMULATOR "")
@@ -86,4 +139,15 @@ if (NOT IOS)
     endif ()
     add_test(NAME dft_test
             COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/dft_test)
+
+    if(ARCH_TESTS)
+        add_test(NAME generic COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_generic )
+        add_test(NAME sse2    COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_sse2    )
+        add_test(NAME sse3    COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_sse3    )
+        add_test(NAME ssse3   COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_ssse3   )
+        add_test(NAME sse41   COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_sse41   )
+        add_test(NAME avx     COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_avx     )
+        add_test(NAME avx2    COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_avx2    )
+        add_test(NAME avx512  COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_avx512  )
+    endif()
 endif ()

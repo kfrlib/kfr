@@ -210,9 +210,11 @@ TEST(static_tests)
     testo::assert_is_same<common_type<complex<int>, double>, complex<double>>();
 }
 
+#ifndef KFR_NO_MAIN
 int main()
 {
     println(library_version());
 
     return testo::run_all("", true);
 }
+#endif

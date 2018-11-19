@@ -82,11 +82,14 @@ inline vec<u8, N> random_bits(random_bit_generator& gen)
 {
     return narrow<N>(bitcast<u8>(gen()));
 }
+
 template <size_t N, KFR_ENABLE_IF(N > sizeof(random_state))>
 inline vec<u8, N> random_bits(random_bit_generator& gen)
 {
-    constexpr size_t N2 = prev_poweroftwo(N - 1);
-    return concat(random_bits<N2>(gen), random_bits<N - N2>(gen));
+    constexpr size_t N2         = prev_poweroftwo(N - 1);
+    const vec<u8, N2> bits1     = random_bits<N2>(gen);
+    const vec<u8, N - N2> bits2 = random_bits<N - N2>(gen);
+    return concat(bits1, bits2);
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(std::is_integral<T>::value)>
@@ -162,7 +165,7 @@ struct expression_random_range : input_expression
     const T min;
     const T max;
 };
-}
+} // namespace internal
 
 template <typename T>
 inline internal::expression_random_uniform<T> gen_random_uniform(const random_bit_generator& gen)
@@ -187,4 +190,4 @@ inline internal::expression_random_range<T> gen_random_range(T min, T max)
 {
     return internal::expression_random_range<T>(random_bit_generator(seed_from_rdtsc), min, max);
 }
-}
+} // namespace kfr

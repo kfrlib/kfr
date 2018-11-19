@@ -146,9 +146,11 @@ TEST(partition)
     }
 }
 
+#ifndef KFR_NO_MAIN
 int main()
 {
     println(library_version());
 
     return testo::run_all("", true);
 }
+#endif

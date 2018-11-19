@@ -51,10 +51,10 @@ KFR_SINTRIN vec<T, N> trig_fold_simple(const vec<T, N>& x_full, mask<T, N>& inve
     vec<T, N> x = y - k_real * pi_14;
 
     mask<T, N> need_offset = (k & 1) != 0;
-    x = select(need_offset, x - pi_14, x);
+    x                      = select(need_offset, x - pi_14, x);
 
     vec<IT, N> k_mod4 = k & 3;
-    inverse = (k_mod4 == 1) || (k_mod4 == 2);
+    inverse           = (k_mod4 == 1) || (k_mod4 == 2);
     return x;
 }
 
@@ -62,7 +62,9 @@ template <size_t N>
 KFR_SINTRIN vec<f32, N> tan(const vec<f32, N>& x_full)
 {
     mask<f32, N> inverse;
-    const vec<f32, N> x = trig_fold_simple(x_full, inverse);
+    vec<i32, N> quad;
+    const vec<f32, N> x = trig_fold(x_full, quad); // trig_fold_simple(x_full, inverse);
+    inverse             = quad == 2 || quad == 6;
 
     constexpr f32 tan_c2  = CMT_FP(0x5.555378p-4, 3.333315551280975342e-01);
     constexpr f32 tan_c4  = CMT_FP(0x2.225bb8p-4, 1.333882510662078857e-01);
@@ -90,7 +92,9 @@ template <size_t N>
 KFR_SINTRIN vec<f64, N> tan(const vec<f64, N>& x_full)
 {
     mask<f64, N> inverse;
-    const vec<f64, N> x = trig_fold_simple(x_full, inverse);
+    vec<i64, N> quad;
+    const vec<f64, N> x = trig_fold(x_full, quad); // trig_fold_simple(x_full, inverse);
+    inverse             = quad == 2 || quad == 6;
 
     constexpr f64 tan_c2  = CMT_FP(0x5.5555554d8e5b8p-4, 3.333333332201594557e-01);
     constexpr f64 tan_c4  = CMT_FP(0x2.222224820264p-4, 1.333333421790934281e-01);
@@ -129,7 +133,7 @@ KFR_SINTRIN flt_type<T> tandeg(const T& x)
 {
     return tan(x * c_degtorad<flt_type<T>>);
 }
-}
+} // namespace intrinsics
 KFR_I_FN(tan)
 KFR_I_FN(tandeg)
 
@@ -156,4 +160,4 @@ KFR_FUNC internal::expression_function<fn::tandeg, E1> tandeg(E1&& x)
 {
     return { fn::tandeg(), std::forward<E1>(x) };
 }
-}
+} // namespace kfr

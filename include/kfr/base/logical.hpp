@@ -37,7 +37,8 @@ namespace intrinsics
 template <size_t bits>
 struct bitmask
 {
-    using type = findinttype<0, (1ull << bits) - 1>;
+    using type = conditional<(bits > 32), uint64_t,
+                             conditional<(bits > 16), uint32_t, conditional<(bits > 8), uint16_t, uint8_t>>>;
 
     bitmask(type val) : value(val) {}
 

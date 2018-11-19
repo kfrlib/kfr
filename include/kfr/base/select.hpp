@@ -167,7 +167,7 @@ KFR_SINTRIN i64avx512 select(const maskfor<i64avx512>& m, const i64avx512& x, co
 template <typename T, size_t N, KFR_ENABLE_IF(N < platform<T>::vector_width)>
 KFR_SINTRIN vec<T, N> select(const mask<T, N>& a, const vec<T, N>& b, const vec<T, N>& c)
 {
-    return slice<0, N>(select(expand_simd(a).asmask(), expand_simd(b), expand_simd(c)));
+    return slice<0, N>(select(expand_simd(a.asvec()).asmask(), expand_simd(b), expand_simd(c)));
 }
 template <typename T, size_t N, KFR_ENABLE_IF(N >= platform<T>::vector_width), typename = void>
 KFR_SINTRIN vec<T, N> select(const mask<T, N>& a, const vec<T, N>& b, const vec<T, N>& c)

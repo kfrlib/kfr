@@ -37,7 +37,7 @@ template <typename T, size_t N, size_t Nout = prev_poweroftwo(N - 1)>
 CMT_INLINE vec<T, Nout> low(const vec<T, N>& x);
 template <typename T, size_t N, size_t Nout = N - prev_poweroftwo(N - 1)>
 CMT_INLINE vec<T, Nout> high(const vec<T, N>& x);
-}
+} // namespace kfr
 
 #ifdef CMT_COMPILER_CLANG
 #include "simd_clang.hpp"
@@ -65,7 +65,7 @@ template <typename T>
 using maskfor = typename T::mask_t;
 
 template <typename T, size_t N>
-struct mask : vec<T, N>
+struct mask : protected vec<T, N>
 {
     using base                          = vec<T, N>;
     KFR_I_CE mask() noexcept            = default;
@@ -73,16 +73,30 @@ struct mask : vec<T, N>
     KFR_I_CE mask& operator=(const mask&) noexcept = default;
     using simd_type                                = typename base::simd_type;
 
-    KFR_I_CE mask(const base& v) noexcept : base(v) {}
+    simd_type operator*() const noexcept { return this->simd; }
+    simd_type& operator*() noexcept { return this->simd; }
+
+    KFR_I_CE mask(const base& v) noexcept
+        : base(base::frombits((vec<itype<T>, N>::frombits(v) < itype<T>(0)).asvec()))
+    {
+    }
 
     KFR_I_CE mask(const simd_type& simd) : base(simd) {}
     template <typename U, KFR_ENABLE_IF(sizeof(T) == sizeof(U))>
-    KFR_I_CE mask(const mask<U, N>& m) : base(base::frombits(m))
+    KFR_I_CE mask(const mask<U, N>& m) : base(base::frombits(m.asvec()))
     {
     }
     template <typename U, KFR_ENABLE_IF(sizeof(T) == sizeof(U))>
     KFR_I_CE mask(const vec<U, N>& m) : base(base::frombits(m))
     {
+    }
+    KFR_I_CE mask operator&(const mask& y) const noexcept
+    {
+        return static_cast<const base&>(*this) & static_cast<const base&>(y);
+    }
+    KFR_I_CE mask operator|(const mask& y) const noexcept
+    {
+        return static_cast<const base&>(*this) | static_cast<const base&>(y);
     }
     KFR_I_CE mask operator&&(const mask& y) const noexcept
     {
@@ -96,7 +110,7 @@ struct mask : vec<T, N>
     {
         return static_cast<const base&>(*this) ^ static_cast<const base&>(y);
     }
-    KFR_I_CE mask operator^(const base& y) const noexcept { return static_cast<const base&>(*this) ^ y; }
+    KFR_I_CE mask operator~() const noexcept { return ~static_cast<const base&>(*this); }
 
     bool operator[](size_t index) const noexcept;
 
@@ -123,7 +137,7 @@ constexpr inline auto scale_impl(csizes_t<indices...> ind, csizes_t<counter...> 
 {
     return {};
 }
-}
+} // namespace internal
 
 template <size_t groupsize, size_t... indices>
 constexpr inline auto scale() noexcept
@@ -209,13 +223,13 @@ struct vec<vec<T, Nin>, N> : private vec<T, Nin * N>
 
     constexpr friend vec& operator++(vec& x) noexcept { return x = x + vec(1); }
     constexpr friend vec& operator--(vec& x) noexcept { return x = x - vec(1); }
-    constexpr friend vec operator++(vec& x, int)noexcept
+    constexpr friend vec operator++(vec& x, int) noexcept
     {
         const vec z = x;
         ++x;
         return z;
     }
-    constexpr friend vec operator--(vec& x, int)noexcept
+    constexpr friend vec operator--(vec& x, int) noexcept
     {
         const vec z = x;
         --x;
@@ -256,10 +270,9 @@ struct vec<vec<T, Nin>, N> : private vec<T, Nin * N>
     CMT_GNU_CONSTEXPR void set(csize_t<index>, const value_type& s) noexcept
     {
         *this = vec(static_cast<const base&>(*this))
-                    .shuffle(s, csizeseq_t<N>() +
-                                    (csizeseq_t<N>() >= csize_t<index * Nin>() &&
-                                     csizeseq_t<N>() < csize_t<(index + 1) * Nin>()) *
-                                        N);
+                    .shuffle(s, csizeseq_t<N>() + (csizeseq_t<N>() >= csize_t<index * Nin>() &&
+                                                   csizeseq_t<N>() < csize_t<(index + 1) * Nin>()) *
+                                                      N);
     }
     struct element
     {
@@ -314,7 +327,7 @@ template <typename T, size_t N>
 struct is_vec_impl<vec<T, N>> : std::true_type
 {
 };
-}
+} // namespace internal
 
 template <typename T>
 using is_vec = internal::is_vec_impl<T>;
@@ -365,7 +378,7 @@ constexpr swiz<12> s12{};
 constexpr swiz<13> s13{};
 constexpr swiz<14> s14{};
 constexpr swiz<15> s15{};
-}
+} // namespace swizzle
 #endif
 
 CMT_PRAGMA_GNU(GCC diagnostic push)
@@ -425,7 +438,7 @@ struct conversion<vec<To, N>, From>
     static_assert(std::is_convertible<From, To>::value, "");
     static vec<To, N> cast(const From& value) { return broadcast<N>(static_cast<To>(value)); }
 };
-}
+} // namespace internal
 
 template <typename T>
 constexpr size_t size_of() noexcept
@@ -524,7 +537,7 @@ struct shuffle_index_wrap
 {
     constexpr inline size_t operator()(size_t index) const { return (start + index * stride) % count; }
 };
-}
+} // namespace internal
 
 template <size_t count, typename T, size_t N, size_t Nout = N* count>
 CMT_INLINE vec<T, Nout> repeat(const vec<T, N>& x)
@@ -585,7 +598,7 @@ CMT_GNU_CONSTEXPR CMT_INLINE vec<T, N> make_vector_impl(csizes_t<indices...>, co
     const T list[] = { static_cast<T>(args)... };
     return vec<T, N>(list[indices]...);
 }
-}
+} // namespace internal
 
 /// Create vector from scalar values
 /// @code
@@ -710,7 +723,7 @@ constexpr CMT_INLINE vec<T1, N> operator^(const T1& x, const vec<T1, N>& y)
 {
     return static_cast<vec<T1, N>>(x) ^ y;
 }
-}
+} // namespace operators
 
 using namespace operators;
 
@@ -739,7 +752,7 @@ constexpr vec<T, Nout> partial_mask()
 {
     return internal::partial_mask_helper<T, Nout, N1>(csizeseq_t<Nout>());
 }
-}
+} // namespace internal
 
 template <typename T>
 using optvec = vec<T, platform<T>::vector_capacity / 4>;
@@ -751,6 +764,7 @@ using f32x4  = vec<f32, 4>;
 using f32x8  = vec<f32, 8>;
 using f32x16 = vec<f32, 16>;
 using f32x32 = vec<f32, 32>;
+using f32x64 = vec<f32, 64>;
 using f64x1  = vec<f64, 1>;
 using f64x2  = vec<f64, 2>;
 using f64x3  = vec<f64, 3>;
@@ -758,6 +772,7 @@ using f64x4  = vec<f64, 4>;
 using f64x8  = vec<f64, 8>;
 using f64x16 = vec<f64, 16>;
 using f64x32 = vec<f64, 32>;
+using f64x64 = vec<f64, 64>;
 using i8x1   = vec<i8, 1>;
 using i8x2   = vec<i8, 2>;
 using i8x3   = vec<i8, 3>;
@@ -765,6 +780,7 @@ using i8x4   = vec<i8, 4>;
 using i8x8   = vec<i8, 8>;
 using i8x16  = vec<i8, 16>;
 using i8x32  = vec<i8, 32>;
+using i8x64  = vec<i8, 64>;
 using i16x1  = vec<i16, 1>;
 using i16x2  = vec<i16, 2>;
 using i16x3  = vec<i16, 3>;
@@ -772,6 +788,7 @@ using i16x4  = vec<i16, 4>;
 using i16x8  = vec<i16, 8>;
 using i16x16 = vec<i16, 16>;
 using i16x32 = vec<i16, 32>;
+using i16x64 = vec<i16, 64>;
 using i32x1  = vec<i32, 1>;
 using i32x2  = vec<i32, 2>;
 using i32x3  = vec<i32, 3>;
@@ -779,6 +796,7 @@ using i32x4  = vec<i32, 4>;
 using i32x8  = vec<i32, 8>;
 using i32x16 = vec<i32, 16>;
 using i32x32 = vec<i32, 32>;
+using i32x64 = vec<i32, 64>;
 using i64x1  = vec<i64, 1>;
 using i64x2  = vec<i64, 2>;
 using i64x3  = vec<i64, 3>;
@@ -786,6 +804,7 @@ using i64x4  = vec<i64, 4>;
 using i64x8  = vec<i64, 8>;
 using i64x16 = vec<i64, 16>;
 using i64x32 = vec<i64, 32>;
+using i64x64 = vec<i64, 64>;
 using u8x1   = vec<u8, 1>;
 using u8x2   = vec<u8, 2>;
 using u8x3   = vec<u8, 3>;
@@ -793,6 +812,7 @@ using u8x4   = vec<u8, 4>;
 using u8x8   = vec<u8, 8>;
 using u8x16  = vec<u8, 16>;
 using u8x32  = vec<u8, 32>;
+using u8x64  = vec<u8, 64>;
 using u16x1  = vec<u16, 1>;
 using u16x2  = vec<u16, 2>;
 using u16x3  = vec<u16, 3>;
@@ -800,6 +820,7 @@ using u16x4  = vec<u16, 4>;
 using u16x8  = vec<u16, 8>;
 using u16x16 = vec<u16, 16>;
 using u16x32 = vec<u16, 32>;
+using u16x64 = vec<u16, 64>;
 using u32x1  = vec<u32, 1>;
 using u32x2  = vec<u32, 2>;
 using u32x3  = vec<u32, 3>;
@@ -807,6 +828,7 @@ using u32x4  = vec<u32, 4>;
 using u32x8  = vec<u32, 8>;
 using u32x16 = vec<u32, 16>;
 using u32x32 = vec<u32, 32>;
+using u32x64 = vec<u32, 64>;
 using u64x1  = vec<u64, 1>;
 using u64x2  = vec<u64, 2>;
 using u64x3  = vec<u64, 3>;
@@ -814,6 +836,7 @@ using u64x4  = vec<u64, 4>;
 using u64x8  = vec<u64, 8>;
 using u64x16 = vec<u64, 16>;
 using u64x32 = vec<u64, 32>;
+using u64x64 = vec<u64, 64>;
 
 using u8x2x2  = vec<vec<u8, 2>, 2>;
 using i8x2x2  = vec<vec<i8, 2>, 2>;
@@ -851,7 +874,7 @@ using ivec4 = i32x4;
 using uvec2 = u32x2;
 using uvec3 = u32x3;
 using uvec4 = u32x4;
-}
+} // namespace glsl_names
 namespace opencl_names
 {
 using char2   = i8x2;
@@ -909,7 +932,7 @@ using double3  = f64x3;
 using double4  = f64x4;
 using double8  = f64x8;
 using double16 = f64x16;
-}
+} // namespace opencl_names
 
 namespace internal
 {
@@ -958,7 +981,7 @@ constexpr CMT_INLINE vec<T, N> apply0_helper(Fn&& fn, csizes_t<Indices...>)
 {
     return make_vector(((void)Indices, void(), fn())...);
 }
-}
+} // namespace internal
 
 template <typename T, size_t N, typename Fn, typename... Args,
           typename Tout = result_of<Fn(T, subtype<decay<Args>>...)>>
@@ -1048,7 +1071,7 @@ CMT_INLINE vec_t<T, Nout> high(vec_t<T, N>)
 }
 KFR_FN(low)
 KFR_FN(high)
-}
+} // namespace kfr
 
 namespace cometa
 {
@@ -1105,7 +1128,7 @@ struct compound_type_traits<kfr::mask<T, N>>
         return value[index];
     }
 };
-}
+} // namespace cometa
 
 namespace std
 {
@@ -1140,7 +1163,7 @@ struct common_type<kfr::mask<T1, N>, kfr::mask<T2, N>>
 {
     using type = kfr::mask<typename common_type<T1, T2>::type, N>;
 };
-}
+} // namespace std
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)
 CMT_PRAGMA_MSVC(warning(pop))

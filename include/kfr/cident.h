@@ -20,6 +20,8 @@ extern char* gets(char* __s);
 #define CMT_ARCH_X32 1
 #endif
 
+#ifndef CMT_FORCE_GENERIC_CPU
+
 #if defined __AVX512F__ && !defined CMT_ARCH_AVX512
 #define CMT_ARCH_AVX512 1
 #define CMT_ARCH_AVX2 1
@@ -106,6 +108,8 @@ extern char* gets(char* __s);
 #if defined __LZCNT__ && !defined CMT_ARCH_LZCNT
 #define CMT_ARCH_LZCNT 1
 #endif
+
+#endif // CMT_FORCE_GENERIC_CPU
 
 #if defined CMT_ARCH_AVX512
 #define CMT_ARCH_NAME avx512

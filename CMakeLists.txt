@@ -15,13 +15,7 @@
 # along with KFR.
 
 
-cmake_minimum_required(VERSION 2.8)
-
-if (CMAKE_VERSION VERSION_LESS "2.8.12")
-    function(add_compile_options)
-        add_definitions(${ARGN})
-    endfunction(add_compile_options)
-endif ()
+cmake_minimum_required(VERSION 3.0)
 
 #set(DISABLE_CLANG 1)
 
@@ -91,7 +85,7 @@ if (${CMAKE_GENERATOR} STREQUAL "MinGW Makefiles"
     OR ${CMAKE_GENERATOR} STREQUAL "MSYS Makefiles"
     OR ${CMAKE_GENERATOR} STREQUAL "Unix Makefiles"
     OR ${CMAKE_GENERATOR} STREQUAL "Ninja")
-    
+
     if (CMAKE_CXX_COMPILER MATCHES "clang" AND NOT CMAKE_CXX_COMPILER MATCHES "clang-cl")
         if (WIN32)
             # On windows, clang requires --target

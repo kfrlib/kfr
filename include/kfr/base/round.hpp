@@ -116,25 +116,25 @@ template <size_t N>
 KFR_SINTRIN vec<f32, N> floor(const vec<f32, N>& x)
 {
     vec<f32, N> t = cast<f32>(cast<i32>(x));
-    return t - ((x < t) & 1.f);
+    return t - select(x < t, 1.f, 0.f);
 }
 template <size_t N>
 KFR_SINTRIN vec<f64, N> floor(const vec<f64, N>& x)
 {
     vec<f64, N> t = cast<f64>(cast<i64>(x));
-    return t - ((x < t) & 1.0);
+    return t - select(x < t, 1., 0.);
 }
 template <size_t N>
 KFR_SINTRIN vec<f32, N> ceil(const vec<f32, N>& x)
 {
     vec<f32, N> t = cast<f32>(cast<i32>(x));
-    return t + ((x > t) & 1.f);
+    return t + select(x > t, 1.f, 0.f);
 }
 template <size_t N>
 KFR_SINTRIN vec<f64, N> ceil(const vec<f64, N>& x)
 {
     vec<f64, N> t = cast<f64>(cast<i64>(x));
-    return t + ((x > t) & 1.0);
+    return t + select(x > t, 1., 0.);
 }
 template <size_t N>
 KFR_SINTRIN vec<f32, N> round(const vec<f32, N>& x)

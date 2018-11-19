@@ -189,7 +189,7 @@ struct alignas(alignof(internal::simd_type<T, N>)) vec : public vec_t<T, N>
     constexpr friend mask_t operator<=(const vec& x, const vec& y) noexcept { return KFR_S(*x <= *y); }
     constexpr friend mask_t operator>=(const vec& x, const vec& y) noexcept { return KFR_S(*x >= *y); }
 
-    constexpr mask_t asmask() const noexcept { return mask_t(*this); }
+    constexpr mask_t asmask() const noexcept { return mask_t(simd); }
 
 #undef KFR_S
 #undef KFR_U

@@ -61,14 +61,14 @@ template <typename T, size_t N, typename Tprecise = f64>
 KFR_SINTRIN vec<T, N> trig_fold(const vec<T, N>& x, vec<itype<T>, N>& quadrant)
 {
     const vec<T, N> xabs = abs(x);
-    constexpr T div = constants<T>::fold_constant_div;
-    vec<T, N> y = floor(xabs / div);
-    quadrant = cast<itype<T>>(y - floor(y * T(1.0 / 16.0)) * T(16.0));
+    constexpr T div      = constants<T>::fold_constant_div;
+    vec<T, N> y          = floor(xabs / div);
+    quadrant             = cast<itype<T>>(y - floor(y * T(1.0 / 16.0)) * T(16.0));
 
     const mask<T, N> msk = (quadrant & 1) != 0;
-    quadrant = kfr::select(msk, quadrant + 1, quadrant);
-    y        = select(msk, y + T(1.0), y);
-    quadrant = quadrant & 7;
+    quadrant             = kfr::select(msk, quadrant + 1, quadrant);
+    y                    = select(msk, y + T(1.0), y);
+    quadrant             = quadrant & 7;
 
     constexpr Tprecise hi = cast<Tprecise>(constants<T>::fold_constant_hi);
     constexpr T rem1      = constants<T>::fold_constant_rem1;
@@ -134,10 +134,11 @@ KFR_SINTRIN vec<T, N> sincos_mask(const vec<T, N>& x_full, const mask<T, N>& cos
     vec<itype<T>, N> quadrant;
     vec<T, N> folded = trig_fold(x_full, quadrant);
 
-    mask<T, N> flip_sign = kfr::select(cosmask, (quadrant == 2) || (quadrant == 4), quadrant >= 4);
+    mask<T, N> flip_sign =
+        kfr::select(cosmask, ((quadrant == 2) || (quadrant == 4)).asvec(), (quadrant >= 4).asvec()).asmask();
 
     mask<T, N> usecos = (quadrant == 2) || (quadrant == 6);
-    usecos = usecos ^ cosmask;
+    usecos            = usecos ^ cosmask;
 
     vec<T, N> formula = trig_sincos(folded, usecos);
 
@@ -160,7 +161,7 @@ KFR_SINTRIN vec<T, N> sin(const vec<T, N>& x)
 
     vec<T, N> formula = trig_sincos(folded, usecos);
 
-    formula = select(flip_sign ^ x, -formula, formula);
+    formula = select(flip_sign ^ mask<T, N>(x), -formula, formula);
     return formula;
 }
 
@@ -193,15 +194,15 @@ KFR_SINTRIN vec<T, N> fastsin(const vec<T, N>& x)
 
     vec<T, N> xx = x - pi;
     vec<T, N> y  = abs(xx);
-    y = select(y > c_pi<T, 1, 2>, pi - y, y);
-    y = y ^ (msk & ~xx);
+    y            = select(y > c_pi<T, 1, 2>, pi - y, y);
+    y            = y ^ (msk & ~xx);
 
     vec<T, N> y2      = y * y;
     vec<T, N> formula = c6;
     vec<T, N> y3      = y2 * y;
-    formula = fmadd(formula, y2, c4);
-    formula = fmadd(formula, y2, c2);
-    formula = formula * y3 + y;
+    formula           = fmadd(formula, y2, c4);
+    formula           = fmadd(formula, y2, c2);
+    formula           = formula * y3 + y;
     return formula;
 }
 
@@ -316,7 +317,7 @@ KFR_SINTRIN Tout cossindeg(const T& x)
 {
     return cossin(x * constants<Tout>::degtorad);
 }
-}
+} // namespace intrinsics
 
 KFR_I_FN(sin)
 KFR_I_FN(cos)
@@ -616,4 +617,4 @@ KFR_SINTRIN T cos3x(const T& sinx, const T& cosx)
 {
     return cosx * (1 - 4 * sqr(sinx));
 }
-}
+} // namespace kfr
