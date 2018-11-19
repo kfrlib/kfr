@@ -25,26 +25,32 @@
  */
 #pragma once
 
-#include "impl/logical.hpp"
+#include "../min_max.hpp"
 
 namespace kfr
 {
 
-/**
- * @brief Returns x[0] && x[1] && ... && x[N-1]
- */
-template <typename T, size_t N>
-KFR_SINTRIN bool all(const mask<T, N>& x)
+namespace intrinsics
 {
-    return intrinsics::bittestall(x.asvec());
+
+template <typename T>
+KFR_SINTRIN T clamp(const T& x, const T& lo, const T& hi)
+{
+    return max(min(x, hi), lo);
 }
 
-/**
- * @brief Returns x[0] || x[1] || ... || x[N-1]
- */
 template <typename T, size_t N>
-KFR_SINTRIN bool any(const mask<T, N>& x)
+KFR_SINTRIN vec<T, N> clamp(const vec<T, N>& x, const vec<T, N>& lo, const vec<T, N>& hi)
 {
-    return intrinsics::bittestany(x.asvec());
+    return max(min(x, hi), lo);
 }
-} // namespace kfr
+
+template <typename T, size_t N>
+KFR_SINTRIN vec<T, N> clamp(const vec<T, N>& x, const vec<T, N>& hi)
+{
+    return max(min(x, hi), zerovector<T, N>());
+}
+}
+KFR_I_FN(clamp)
+
+}

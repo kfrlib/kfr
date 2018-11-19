@@ -25,33 +25,10 @@
  */
 #pragma once
 
-#include "min_max.hpp"
+#include "impl/clamp.hpp"
 
 namespace kfr
 {
-
-namespace intrinsics
-{
-
-template <typename T>
-KFR_SINTRIN T clamp(const T& x, const T& lo, const T& hi)
-{
-    return max(min(x, hi), lo);
-}
-
-template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> clamp(const vec<T, N>& x, const vec<T, N>& lo, const vec<T, N>& hi)
-{
-    return max(min(x, hi), lo);
-}
-
-template <typename T, size_t N>
-KFR_SINTRIN vec<T, N> clamp(const vec<T, N>& x, const vec<T, N>& hi)
-{
-    return max(min(x, hi), zerovector<T, N>());
-}
-}
-KFR_I_FN(clamp)
 
 /// @brief Returns the first argument clamped to a range [lo, hi]
 template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>::value),
@@ -82,4 +59,4 @@ KFR_INTRIN internal::expression_function<fn::clamp, E1, E2> clamp(E1&& x, E2&& h
 {
     return { fn::clamp(), std::forward<E1>(x), std::forward<E2>(hi) };
 }
-}
+} // namespace kfr

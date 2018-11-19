@@ -25,35 +25,10 @@
  */
 #pragma once
 
-#include "atan.hpp"
-#include "function.hpp"
-#include "select.hpp"
-#include "sqrt.hpp"
+#include "impl/asin_acos.hpp"
 
 namespace kfr
 {
-
-namespace intrinsics
-{
-
-template <typename T, size_t N, typename Tout = flt_type<T>>
-KFR_SINTRIN vec<Tout, N> asin(const vec<T, N>& x)
-{
-    const vec<Tout, N> xx = x;
-    return atan2(xx, sqrt(Tout(1) - xx * xx));
-}
-
-template <typename T, size_t N, typename Tout = flt_type<T>>
-KFR_SINTRIN vec<Tout, N> acos(const vec<T, N>& x)
-{
-    const vec<Tout, N> xx = x;
-    return -atan2(xx, sqrt(Tout(1) - xx * xx)) + constants<Tout>::pi * 0.5;
-}
-KFR_I_FLT_CONVERTER(asin)
-KFR_I_FLT_CONVERTER(acos)
-}
-KFR_I_FN(asin)
-KFR_I_FN(acos)
 
 /**
  * @brief Returns the arc sine of x. The returned angle is in the range \f$-\pi/2\f$ through \f$\pi/2\f$.

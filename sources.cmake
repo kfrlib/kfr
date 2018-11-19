@@ -61,6 +61,22 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/intrinsics.h
     ${PROJECT_SOURCE_DIR}/include/kfr/base/kfr.h
     ${PROJECT_SOURCE_DIR}/include/kfr/base/specializations.i
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/abs.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/asin_acos.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/atan.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/clamp.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/gamma.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/hyperbolic.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/logical.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/log_exp.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/min_max.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/modzerobessel.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/round.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/saturation.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/select.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/sin_cos.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/sqrt.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/tan.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/cometa/array.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/cometa/cstring.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/cometa/ctti.hpp

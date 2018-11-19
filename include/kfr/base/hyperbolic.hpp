@@ -24,77 +24,11 @@
   See https://www.kfrlib.com for details.
  */
 #pragma once
-#include "abs.hpp"
-#include "constants.hpp"
-#include "function.hpp"
-#include "log_exp.hpp"
-#include "min_max.hpp"
-#include "operators.hpp"
-#include "select.hpp"
+
+#include "impl/hyperbolic.hpp"
 
 namespace kfr
 {
-
-namespace intrinsics
-{
-
-template <typename T, size_t N, typename Tout = flt_type<T>>
-KFR_SINTRIN vec<Tout, N> sinh(const vec<T, N>& x)
-{
-    const vec<Tout, N> xx = static_cast<vec<Tout, N>>(x);
-    return (exp(xx) - exp(-xx)) * Tout(0.5);
-}
-
-template <typename T, size_t N, typename Tout = flt_type<T>>
-KFR_SINTRIN vec<Tout, N> cosh(const vec<T, N>& x)
-{
-    const vec<Tout, N> xx = static_cast<vec<Tout, N>>(x);
-    return (exp(xx) + exp(-xx)) * Tout(0.5);
-}
-
-template <typename T, size_t N, typename Tout = flt_type<T>>
-KFR_SINTRIN vec<Tout, N> tanh(const vec<T, N>& x)
-{
-    const vec<Tout, N> a = exp(2 * x);
-    return (a - 1) / (a + 1);
-}
-
-template <typename T, size_t N, typename Tout = flt_type<T>>
-KFR_SINTRIN vec<Tout, N> coth(const vec<T, N>& x)
-{
-    const vec<Tout, N> a = exp(2 * x);
-    return (a + 1) / (a - 1);
-}
-
-template <typename T, size_t N, typename Tout = flt_type<T>>
-KFR_SINTRIN vec<Tout, N> sinhcosh(const vec<T, N>& x)
-{
-    const vec<Tout, N> a = exp(x);
-    const vec<Tout, N> b = exp(-x);
-    return subadd(a, b) * Tout(0.5);
-}
-
-template <typename T, size_t N, typename Tout = flt_type<T>>
-KFR_SINTRIN vec<Tout, N> coshsinh(const vec<T, N>& x)
-{
-    const vec<Tout, N> a = exp(x);
-    const vec<Tout, N> b = exp(-x);
-    return addsub(a, b) * Tout(0.5);
-}
-
-KFR_I_FLT_CONVERTER(sinh)
-KFR_I_FLT_CONVERTER(cosh)
-KFR_I_FLT_CONVERTER(tanh)
-KFR_I_FLT_CONVERTER(coth)
-KFR_I_FLT_CONVERTER(sinhcosh)
-KFR_I_FLT_CONVERTER(coshsinh)
-}
-KFR_I_FN(sinh)
-KFR_I_FN(cosh)
-KFR_I_FN(tanh)
-KFR_I_FN(coth)
-KFR_I_FN(sinhcosh)
-KFR_I_FN(coshsinh)
 
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_FUNC flt_type<T1> sinh(const T1& x)

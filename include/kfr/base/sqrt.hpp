@@ -25,48 +25,10 @@
  */
 #pragma once
 
-#include "function.hpp"
+#include "impl/sqrt.hpp"
 
 namespace kfr
 {
-
-namespace intrinsics
-{
-
-#if defined CMT_ARCH_SSE2 && defined KFR_NATIVE_INTRINSICS
-
-KFR_SINTRIN f32x1 sqrt(const f32x1& x) { return slice<0, 1>(f32x4(_mm_sqrt_ss(*extend<4>(x)))); }
-KFR_SINTRIN f64x1 sqrt(const f64x1& x)
-{
-    return slice<0, 1>(f64x2(_mm_sqrt_sd(_mm_setzero_pd(), *extend<2>(x))));
-}
-KFR_SINTRIN f32sse sqrt(const f32sse& x) { return _mm_sqrt_ps(*x); }
-KFR_SINTRIN f64sse sqrt(const f64sse& x) { return _mm_sqrt_pd(*x); }
-
-#if defined CMT_ARCH_AVX
-KFR_SINTRIN f32avx sqrt(const f32avx& x) { return _mm256_sqrt_ps(*x); }
-KFR_SINTRIN f64avx sqrt(const f64avx& x) { return _mm256_sqrt_pd(*x); }
-#endif
-
-#if defined CMT_ARCH_AVX512
-KFR_SINTRIN f32avx512 sqrt(const f32avx512& x) { return _mm512_sqrt_ps(*x); }
-KFR_SINTRIN f64avx512 sqrt(const f64avx512& x) { return _mm512_sqrt_pd(*x); }
-#endif
-
-KFR_HANDLE_ALL_SIZES_FLT_1(sqrt)
-
-#else
-
-// fallback
-template <typename T, size_t N, typename Tout = flt_type<T>>
-KFR_SINTRIN vec<Tout, N> sqrt(const vec<T, N>& x)
-{
-    return apply([](Tout x) { return std::sqrt(x); }, cast<Tout>(x));
-}
-#endif
-KFR_I_FLT_CONVERTER(sqrt)
-}
-KFR_I_FN(sqrt)
 
 /**
  * @brief Returns the positive square root of the x. \f$\sqrt{x}\f$

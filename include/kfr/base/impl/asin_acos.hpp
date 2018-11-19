@@ -25,26 +25,34 @@
  */
 #pragma once
 
-#include "impl/logical.hpp"
+#include "../atan.hpp"
+#include "../function.hpp"
+#include "../select.hpp"
+#include "../sqrt.hpp"
 
 namespace kfr
 {
 
-/**
- * @brief Returns x[0] && x[1] && ... && x[N-1]
- */
-template <typename T, size_t N>
-KFR_SINTRIN bool all(const mask<T, N>& x)
+namespace intrinsics
 {
-    return intrinsics::bittestall(x.asvec());
+
+template <typename T, size_t N, typename Tout = flt_type<T>>
+KFR_SINTRIN vec<Tout, N> asin(const vec<T, N>& x)
+{
+    const vec<Tout, N> xx = x;
+    return atan2(xx, sqrt(Tout(1) - xx * xx));
 }
 
-/**
- * @brief Returns x[0] || x[1] || ... || x[N-1]
- */
-template <typename T, size_t N>
-KFR_SINTRIN bool any(const mask<T, N>& x)
+template <typename T, size_t N, typename Tout = flt_type<T>>
+KFR_SINTRIN vec<Tout, N> acos(const vec<T, N>& x)
 {
-    return intrinsics::bittestany(x.asvec());
+    const vec<Tout, N> xx = x;
+    return -atan2(xx, sqrt(Tout(1) - xx * xx)) + constants<Tout>::pi * 0.5;
 }
-} // namespace kfr
+KFR_I_FLT_CONVERTER(asin)
+KFR_I_FLT_CONVERTER(acos)
+}
+KFR_I_FN(asin)
+KFR_I_FN(acos)
+
+}
