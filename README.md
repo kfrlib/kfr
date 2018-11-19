@@ -4,15 +4,22 @@
 
 https://www.kfrlib.com
 
-What's new in release 1.0 - https://www.kfrlib.com/whatsnew
-
 KFR is an open source C++ DSP framework that focuses on high performance (see benchmark results section).
 
-KFR is a header-only and has no external dependencies.
+KFR is a header-only library (except DFT) and has no external dependencies.
+
+## What's new in KFR 3.0
+
+* Full AVX-512 support
+* EBU R128
+* Non-power of two DFT (coming soon)
+* TruePeak (coming soon)
+* Number of automatic tests has been increased
+* GPL version changed from 3 to 2
 
 ## Features
 
-* All code in the library is optimized for Intel, AMD (SSE2, SSE3, SSE4.x, AVX and AVX2) and ARM (NEON) processors
+* All code in the library is optimized for Intel, AMD (SSE2, SSE3, SSE4.x, AVX and AVX2 and AVX512) and ARM (NEON) processors
 * Mathematical and statistical functions
 * Template expressions (See examples)
 * All data types are supported including complex numbers
@@ -39,6 +46,7 @@ Included DSP/audio algorithms:
 * Ring (Circular) buffer
 * Waveshaper
 * Fast incremental sine/cosine generation
+* EBU R128
 
 ## Benchmark results
 ### FFT
@@ -54,25 +62,24 @@ See [fft benchmark](https://github.com/kfrlib/fft-benchmark) for details about b
     
 ## Prerequisites
 
-* macOS: XCode 6.3, 6.4, 7.x, 8.x
+* macOS: XCode 8.x, 9.x or 10.x
 * Windows
-  * MinGW 5.2 and Clang 3.7 or newer (MinGW 4.8 is also supported, but MinGW 5.x is recommended)
-  * Visual Studio 2015 update 2 and latest Clang 3.9.0
-* Ubuntu: GCC 5.1 and Clang 3.7 or newer
+  * MinGW 5.4 and Clang 4.0 or newer
+  * Visual Studio 2017 and latest Clang (LLVM toolkit)
+* Ubuntu: GCC 5.4 and Clang 4.0 or newer
 * CoMeta metaprogramming library (already included)
 
-KFR is a header-only so just `#include <kfr/math.hpp>` to start using it
+KFR is a header-only so just `#include <kfr/all.hpp>` to start using it
 
 The following tools are required to build the examples:
 
-* CMake 2.8 or newer
+* CMake 3.0 or newer
 
 To build the tests:
 
 * Testo - C++14 testing micro framework (included)
 * Python 2.7 with the following modules:
 
-  * dspplot (included, see Installation)
   * matplotlib
   * numpy
   * scipy
@@ -92,7 +99,6 @@ pip install matplotlib # or download prebuilt package for windows
 pip install numpy # or download prebuilt package for windows
 pip install scipy # or download prebuilt package for windows
 ```
-Install dspplot using `python setup.py install` inside dspplot directory
 
 ## Tests
 
@@ -132,7 +138,6 @@ Tested on the following systems:
 
 ## Planned for future versions
 
-* DFT for any lengths (not only powers of two)
 * Parallel execution of algorithms
 * Serialization/Deserialization of any expression
 * More formats for audio file reading/writing
@@ -140,6 +145,6 @@ Tested on the following systems:
 
 ## License
 
-KFR is dual-licensed, available under both commercial and open-source GPL license.
+KFR is dual-licensed, available under both commercial and open-source GPL 2+ license.
 
 If you want to use KFR in commercial product or a closed-source project, you need to [purchase a Commercial License](https://kfrlib.com/purchase-license)
