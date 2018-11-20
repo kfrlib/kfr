@@ -18,7 +18,7 @@ KFR is a header-only library (except DFT) and has no external dependencies.
 * Non-power of two DFT (coming soon)
 * TruePeak (coming soon)
 * Number of automatic tests has been increased
-* GPL version changed from 3 to 2
+* GPL version changed from 3 to 2+
 
 ## All features
 
