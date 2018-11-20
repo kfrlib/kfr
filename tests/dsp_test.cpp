@@ -307,6 +307,7 @@ TEST(fir)
     });
 }
 
+#ifdef KFR_NATIVE_F64
 TEST(fir_different)
 {
     const univector<float, 100> data = counter() + sequence(1, 2, -10, 100) + sequence(0, -7, 0.5f);
@@ -326,7 +327,20 @@ TEST(fir_different)
         return float(result);
     });
 }
+#endif
 
+#ifdef KFR_STD_COMPLEX
+template <typename T>
+inline std::complex<T> to_std(const std::complex<T>& c)
+{
+    return c;
+}
+template <typename T>
+inline std::complex<T> from_std(const std::complex<T>& c)
+{
+    return c;
+}
+#else
 template <typename T>
 inline std::complex<T> to_std(const kfr::complex<T>& c)
 {
@@ -338,6 +352,7 @@ inline kfr::complex<T> from_std(const std::complex<T>& c)
 {
     return { c.real(), c.imag() };
 }
+#endif
 
 TEST(fir_complex)
 {

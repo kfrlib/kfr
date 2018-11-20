@@ -30,6 +30,9 @@
 #include "vec.hpp"
 
 #include <tuple>
+#ifdef KFR_STD_COMPLEX
+#include <complex>
+#endif
 
 CMT_PRAGMA_GNU(GCC diagnostic push)
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
@@ -55,8 +58,18 @@ using cinput_t  = const cinput_context*;
 constexpr cinput_t cinput   = nullptr;
 constexpr coutput_t coutput = nullptr;
 
+#ifdef KFR_STD_COMPLEX
+
+template <typename T>
+using complex = std::complex<T>;
+
+#else
+#ifndef KFR_CUSTOM_COMPLEX
+
 template <typename>
 struct complex;
+#endif
+#endif
 
 constexpr size_t infinite_size = static_cast<size_t>(-1);
 
