@@ -10,6 +10,7 @@
 #include <kfr/dsp.hpp>
 #include <kfr/io.hpp>
 
+#include <complex>
 #include <numeric>
 
 using namespace kfr;
@@ -303,6 +304,59 @@ TEST(fir)
         for (size_t i = 0; i < taps.size(); i++)
             result += data.get(index - i, 0.0) * taps[i];
         return result;
+    });
+}
+
+TEST(fir_different)
+{
+    const univector<float, 100> data = counter() + sequence(1, 2, -10, 100) + sequence(0, -7, 0.5f);
+    const univector<double, 6> taps{ 1, 2, -2, 0.5, 0.0625, 4 };
+
+    CHECK_EXPRESSION(fir(data, taps), 100, [&](size_t index) -> float {
+        double result = 0.0;
+        for (size_t i = 0; i < taps.size(); i++)
+            result += data.get(index - i, 0.0) * taps[i];
+        return float(result);
+    });
+
+    CHECK_EXPRESSION(short_fir(data, taps), 100, [&](size_t index) -> float {
+        double result = 0.0;
+        for (size_t i = 0; i < taps.size(); i++)
+            result += data.get(index - i, 0.0) * taps[i];
+        return float(result);
+    });
+}
+
+template <typename T>
+inline std::complex<T> to_std(const kfr::complex<T>& c)
+{
+    return { c.re, c.im };
+}
+
+template <typename T>
+inline kfr::complex<T> from_std(const std::complex<T>& c)
+{
+    return { c.real(), c.imag() };
+}
+
+TEST(fir_complex)
+{
+    const univector<complex<float>, 100> data =
+        counter() * complex<float>{ 0.f, 1.f } + sequence(1, 2, -10, 100) + sequence(0, -7, 0.5f);
+    const univector<float, 6> taps{ 1, 2, -2, 0.5, 0.0625, 4 };
+
+    CHECK_EXPRESSION(fir(data, taps), 100, [&](size_t index) -> complex<float> {
+        std::complex<float> result = 0.0;
+        for (size_t i = 0; i < taps.size(); i++)
+            result = result + to_std(data.get(index - i, 0.0)) * taps[i];
+        return from_std(result);
+    });
+
+    CHECK_EXPRESSION(short_fir(data, taps), 100, [&](size_t index) -> complex<float> {
+        std::complex<float> result = 0.0;
+        for (size_t i = 0; i < taps.size(); i++)
+            result = result + to_std(data.get(index - i, 0.0)) * taps[i];
+        return from_std(result);
     });
 }
 
