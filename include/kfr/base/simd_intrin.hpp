@@ -143,7 +143,7 @@ struct raw_bytes
     vec<T, N> result;                                                                                        \
     for (size_t i = 0; i < N; i++)                                                                           \
         result.vs[i] = (__VA_ARGS__) ? constants<value_type>::allones() : value_type(0);                     \
-    return result
+    return result.asmask()
 
 template <typename T, size_t N>
 struct alignas(const_min(platform<>::maximum_vector_alignment, sizeof(T) * next_poweroftwo(N))) vec
@@ -281,7 +281,7 @@ struct alignas(const_min(platform<>::maximum_vector_alignment, sizeof(T) * next_
     KFR_I_CE mask_t operator<=(const vec& y) const noexcept { KFR_B_CYCLE(this->vs[i] <= y.vs[i]); }
     KFR_I_CE mask_t operator>=(const vec& y) const noexcept { KFR_B_CYCLE(this->vs[i] >= y.vs[i]); }
 
-    constexpr mask_t asmask() const noexcept { return mask_t(*this); }
+    constexpr mask_t asmask() const noexcept { return mask_t(simd); }
 
     KFR_I_CE vec& operator+=(const vec& y) noexcept { return *this = *this + y; }
     KFR_I_CE vec& operator-=(const vec& y) noexcept { return *this = *this - y; }

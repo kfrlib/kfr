@@ -72,15 +72,21 @@ TEST(test_tan)
                   });
 }
 
+#ifdef __clang__
+#define ARCFN_ULP 2.0
+#else
+#define ARCFN_ULP 2.5
+#endif
+
 TEST(test_asin_acos_atan)
 {
     testo::matrix(named("type") = vector_types(), named("value") = make_range(-1.0, 1.0, 0.05),
                   [](auto type, double value) {
                       using T = type_of<decltype(type)>;
                       const T x(value);
-                      CHECK(ulps(kfr::asin(x), mpfr::asin(subtype<T>(value))) < 2.0);
-                      CHECK(ulps(kfr::acos(x), mpfr::acos(subtype<T>(value))) < 2.0);
-                      CHECK(ulps(kfr::atan(x), mpfr::atan(subtype<T>(value))) < 2.0);
+                      CHECK(ulps(kfr::asin(x), mpfr::asin(subtype<T>(value))) < ARCFN_ULP);
+                      CHECK(ulps(kfr::acos(x), mpfr::acos(subtype<T>(value))) < ARCFN_ULP);
+                      CHECK(ulps(kfr::atan(x), mpfr::atan(subtype<T>(value))) < ARCFN_ULP);
                   });
 }
 
@@ -92,7 +98,7 @@ TEST(test_atan2)
                       const T x(value1);
                       const T y(value2);
                       CHECK(ulps(kfr::atan2(x, y), mpfr::atan2(subtype<T>(value1), subtype<T>(value2))) <
-                            2.0);
+                            ARCFN_ULP);
                   });
 }
 

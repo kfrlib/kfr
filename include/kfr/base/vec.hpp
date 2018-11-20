@@ -77,8 +77,9 @@ struct mask : protected vec<T, N>
     simd_type& operator*() noexcept { return this->simd; }
 
     KFR_I_CE mask(const base& v) noexcept
-        : base(base::frombits((vec<itype<T>, N>::frombits(v) < itype<T>(0)).asvec()))
+        //: base(base::frombits((vec<itype<T>, N>::frombits(v) < itype<T>(0)).asvec()))
     {
+        this->simd = *base::frombits((vec<itype<T>, N>::frombits(v) < itype<T>(0)).asvec());
     }
 
     KFR_I_CE mask(const simd_type& simd) : base(simd) {}
@@ -114,7 +115,7 @@ struct mask : protected vec<T, N>
 
     bool operator[](size_t index) const noexcept;
 
-    constexpr base asvec() const noexcept { return static_cast<const base&>(*this); }
+    constexpr base asvec() const noexcept { return reinterpret_cast<const base&>(*this); }
 };
 
 namespace internal
