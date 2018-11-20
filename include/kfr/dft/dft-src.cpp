@@ -805,44 +805,21 @@ struct fft_specialization_t
 
 template <typename T>
 template <template <bool inverse> class Stage>
-void dft_plan<T>::add_stage(size_t stage_size, cbools_t<true, true>)
-{
-    dft_stage<T>* direct_stage  = new Stage<false>(stage_size);
-    direct_stage->name          = nullptr;
-    dft_stage<T>* inverse_stage = new Stage<true>(stage_size);
-    inverse_stage->name         = nullptr;
-    this->data_size += direct_stage->data_size;
-    this->temp_size += direct_stage->temp_size;
-    stages[0].push_back(dft_stage_ptr(direct_stage));
-    stages[1].push_back(dft_stage_ptr(inverse_stage));
-}
-
-template <typename T>
-template <template <bool inverse> class Stage>
-void dft_plan<T>::add_stage(size_t stage_size, cbools_t<true, false>)
+void dft_plan<T>::add_stage(size_t stage_size)
 {
     dft_stage<T>* direct_stage = new Stage<false>(stage_size);
     direct_stage->name         = nullptr;
     this->data_size += direct_stage->data_size;
     this->temp_size += direct_stage->temp_size;
     stages[0].push_back(dft_stage_ptr(direct_stage));
-}
-
-template <typename T>
-template <template <bool inverse> class Stage>
-void dft_plan<T>::add_stage(size_t stage_size, cbools_t<false, true>)
-{
     dft_stage<T>* inverse_stage = new Stage<true>(stage_size);
     inverse_stage->name         = nullptr;
-    this->data_size += inverse_stage->data_size;
-    this->temp_size += inverse_stage->temp_size;
     stages[1].push_back(dft_stage_ptr(inverse_stage));
 }
 
 template <typename T>
-template <bool direct, bool inverse, bool is_even, bool first>
-void dft_plan<T>::make_fft(size_t stage_size, cbools_t<direct, inverse> type, cbool_t<is_even>,
-                           cbool_t<first>)
+template <bool is_even, bool first>
+void dft_plan<T>::make_fft(size_t stage_size, cbool_t<is_even>, cbool_t<first>)
 {
     constexpr size_t final_size = is_even ? 1024 : 512;
 
@@ -851,41 +828,32 @@ void dft_plan<T>::make_fft(size_t stage_size, cbools_t<direct, inverse> type, cb
 
     if (stage_size >= 2048)
     {
-        add_stage<fft_stage_impl_t::template type>(stage_size, type);
+        add_stage<fft_stage_impl_t::template type>(stage_size);
 
-        make_fft(stage_size / 4, cbools_t<direct, inverse>(), cbool_t<is_even>(), cfalse);
+        make_fft(stage_size / 4, cbool_t<is_even>(), cfalse);
     }
     else
     {
-        add_stage<fft_final_stage_impl_t::template type>(final_size, type);
+        add_stage<fft_final_stage_impl_t::template type>(final_size);
     }
 }
 
 template <typename T>
-template <bool direct, bool inverse>
-void dft_plan<T>::initialize(cbools_t<direct, inverse>)
+void dft_plan<T>::initialize()
 {
-    data = autofree<u8>(data_size);
-    if (direct)
+    data          = autofree<u8>(data_size);
+    size_t offset = 0;
+    for (dft_stage_ptr& stage : stages[0])
     {
-        size_t offset = 0;
-        for (dft_stage_ptr& stage : stages[0])
-        {
-            stage->data = data.data() + offset;
-            stage->initialize(this->size);
-            offset += stage->data_size;
-        }
+        stage->data = data.data() + offset;
+        stage->initialize(this->size);
+        offset += stage->data_size;
     }
-    if (inverse)
+    offset = 0;
+    for (dft_stage_ptr& stage : stages[1])
     {
-        size_t offset = 0;
-        for (dft_stage_ptr& stage : stages[1])
-        {
-            stage->data = data.data() + offset;
-            if (!direct)
-                stage->initialize(this->size);
-            offset += stage->data_size;
-        }
+        stage->data = data.data() + offset;
+        offset += stage->data_size;
     }
 }
 
@@ -935,9 +903,10 @@ void dft_plan<T>::execute_dft(cbool_t<inverse>, complex<T>* out, const complex<T
     }
 }
 
+constexpr csizes_t<2, 3, 4, 5, 6, 8, 10> dft_radices{};
+
 template <typename T>
-template <bool direct, bool inverse>
-dft_plan<T>::dft_plan(size_t size, cbools_t<direct, inverse> type) : size(size), temp_size(0), data_size(0)
+dft_plan<T>::dft_plan(size_t size, dft_type) : size(size), temp_size(0), data_size(0)
 {
     if (is_poweroftwo(size))
     {
@@ -947,24 +916,57 @@ dft_plan<T>::dft_plan(size_t size, cbools_t<direct, inverse> type) : size(size),
             [&](auto log2n) {
                 (void)log2n;
                 this->add_stage<
-                    internal::fft_specialization_t<T, val_of(decltype(log2n)()), false>::template type>(size,
-                                                                                                        type);
+                    internal::fft_specialization_t<T, val_of(decltype(log2n)()), false>::template type>(size);
             },
             [&]() {
                 cswitch(cfalse_true, is_even(log2n), [&](auto is_even) {
-                    this->make_fft(size, type, is_even, ctrue);
+                    this->make_fft(size, is_even, ctrue);
                     this->add_stage<
                         internal::fft_reorder_stage_impl_t<T, val_of(decltype(is_even)())>::template type>(
-                        size, type);
+                        size);
                 });
             });
-        initialize(type);
     }
+#if 0
+    else
+    {
+        size_t cur_size                = size;
+        constexpr size_t radices_count = dft_radices.back() + 1;
+        u8 count[radices_count]        = { 0 };
+
+        cforeach(dft_radices, [&](auto radix) {
+            while (cur_size && cur_size % val_of(radix) == 0)
+            {
+                count[val_of(radix)]++;
+                cur_size /= val_of(radix);
+            }
+        });
+
+        size_t blocks     = 1;
+        size_t iterations = size;
+
+        for (size_t r = dft_radices.front(); r <= dft_radices.back(); r++)
+        {
+            for (size_t i = 0; i < count[r]; i++)
+            {
+                iterations /= r;
+                this->add_dft_stage(r, iterations, blocks, fft_vector_width<T>, type);
+                blocks *= r;
+            }
+        }
+
+        if (cur_size > 1)
+        {
+            iterations /= cur_size;
+            this->add_dft_stage(cur_size, iterations, blocks, fft_vector_width<T>);
+        }
+    }
+#endif
+    initialize();
 }
 
 template <typename T>
-template <bool direct, bool inverse>
-dft_plan_real<T>::dft_plan_real(size_t size, cbools_t<direct, inverse> type)
+dft_plan_real<T>::dft_plan_real(size_t size, dft_type type)
     : dft_plan<T>(size / 2, type), size(size), rtwiddle(size / 4)
 {
     using namespace internal;
@@ -1065,7 +1067,9 @@ void dft_plan_real<T>::from_fmt(complex<T>* out, const complex<T>* in, dft_pack_
 }
 
 template <typename T>
-dft_plan<T>::~dft_plan() {}
+dft_plan<T>::~dft_plan()
+{
+}
 
 namespace internal
 {
@@ -1225,32 +1229,24 @@ template void convolve_filter<double>::set_data(const univector<double>&);
 template void convolve_filter<float>::process_buffer(float* output, const float* input, size_t size);
 template void convolve_filter<double>::process_buffer(double* output, const double* input, size_t size);
 
-template dft_plan<float>::dft_plan(size_t, cbools_t<false, true>);
-template dft_plan<float>::dft_plan(size_t, cbools_t<true, false>);
-template dft_plan<float>::dft_plan(size_t, cbools_t<true, true>);
+template dft_plan<float>::dft_plan(size_t, dft_type);
 template dft_plan<float>::~dft_plan();
 template void dft_plan<float>::execute_dft(cometa::cbool_t<false>, kfr::complex<float>* out,
                                            const kfr::complex<float>* in, kfr::u8* temp) const;
 template void dft_plan<float>::execute_dft(cometa::cbool_t<true>, kfr::complex<float>* out,
                                            const kfr::complex<float>* in, kfr::u8* temp) const;
-template dft_plan_real<float>::dft_plan_real(size_t, cbools_t<false, true>);
-template dft_plan_real<float>::dft_plan_real(size_t, cbools_t<true, false>);
-template dft_plan_real<float>::dft_plan_real(size_t, cbools_t<true, true>);
+template dft_plan_real<float>::dft_plan_real(size_t, dft_type);
 template void dft_plan_real<float>::from_fmt(kfr::complex<float>* out, const kfr::complex<float>* in,
                                              kfr::dft_pack_format fmt) const;
 template void dft_plan_real<float>::to_fmt(kfr::complex<float>* out, kfr::dft_pack_format fmt) const;
 
-template dft_plan<double>::dft_plan(size_t, cbools_t<false, true>);
-template dft_plan<double>::dft_plan(size_t, cbools_t<true, false>);
-template dft_plan<double>::dft_plan(size_t, cbools_t<true, true>);
+template dft_plan<double>::dft_plan(size_t, dft_type);
 template dft_plan<double>::~dft_plan();
 template void dft_plan<double>::execute_dft(cometa::cbool_t<false>, kfr::complex<double>* out,
                                             const kfr::complex<double>* in, kfr::u8* temp) const;
 template void dft_plan<double>::execute_dft(cometa::cbool_t<true>, kfr::complex<double>* out,
                                             const kfr::complex<double>* in, kfr::u8* temp) const;
-template dft_plan_real<double>::dft_plan_real(size_t, cbools_t<false, true>);
-template dft_plan_real<double>::dft_plan_real(size_t, cbools_t<true, false>);
-template dft_plan_real<double>::dft_plan_real(size_t, cbools_t<true, true>);
+template dft_plan_real<double>::dft_plan_real(size_t, dft_type);
 template void dft_plan_real<double>::from_fmt(kfr::complex<double>* out, const kfr::complex<double>* in,
                                               kfr::dft_pack_format fmt) const;
 template void dft_plan_real<double>::to_fmt(kfr::complex<double>* out, kfr::dft_pack_format fmt) const;

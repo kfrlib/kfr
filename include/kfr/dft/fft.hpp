@@ -46,12 +46,12 @@ CMT_PRAGMA_MSVC(warning(disable : 4100))
 namespace kfr
 {
 
-namespace dft_type
+enum class dft_type
 {
-constexpr cbools_t<true, true> both{};
-constexpr cbools_t<true, false> direct{};
-constexpr cbools_t<false, true> inverse{};
-} // namespace dft_type
+    both,
+    direct,
+    inverse
+};
 
 template <typename T>
 struct dft_stage;
@@ -64,8 +64,7 @@ struct dft_plan
     size_t size;
     size_t temp_size;
 
-    template <bool direct = true, bool inverse = true>
-    dft_plan(size_t size, cbools_t<direct, inverse> type = dft_type::both);
+    dft_plan(size_t size, dft_type = dft_type::both);
 
     KFR_INTRIN void execute(complex<T>* out, const complex<T>* in, u8* temp, bool inverse = false) const
     {
@@ -103,17 +102,12 @@ protected:
     std::vector<dft_stage_ptr> stages[2];
 
     template <template <bool inverse> class Stage>
-    void add_stage(size_t stage_size, cbools_t<true, true>);
-    template <template <bool inverse> class Stage>
-    void add_stage(size_t stage_size, cbools_t<true, false>);
-    template <template <bool inverse> class Stage>
-    void add_stage(size_t stage_size, cbools_t<false, true>);
+    void add_stage(size_t stage_size);
 
-    template <bool direct, bool inverse, bool is_even, bool first>
-    void make_fft(size_t stage_size, cbools_t<direct, inverse> type, cbool_t<is_even>, cbool_t<first>);
+    template <bool is_even, bool first>
+    void make_fft(size_t stage_size, cbool_t<is_even>, cbool_t<first>);
 
-    template <bool direct, bool inverse>
-    void initialize(cbools_t<direct, inverse>);
+    void initialize();
     template <bool inverse>
     void execute_dft(cbool_t<inverse>, complex<T>* out, const complex<T>* in, u8* temp) const;
 };
@@ -128,8 +122,7 @@ template <typename T>
 struct dft_plan_real : dft_plan<T>
 {
     size_t size;
-    template <bool direct = true, bool inverse = true>
-    dft_plan_real(size_t size, cbools_t<direct, inverse> type = dft_type::both);
+    dft_plan_real(size_t size, dft_type = dft_type::both);
 
     KFR_INTRIN void execute(complex<T>* out, const T* in, u8* temp,
                             dft_pack_format fmt = dft_pack_format::CCs) const
