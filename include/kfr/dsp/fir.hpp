@@ -37,7 +37,7 @@ namespace kfr
 template <typename T, size_t Size>
 using fir_taps = univector<T, Size>;
 
-template <size_t tapcount, typename T>
+template <size_t tapcount, typename T, typename U = T>
 struct short_fir_state
 {
     template <size_t N>
@@ -51,19 +51,19 @@ struct short_fir_state
     {
     }
     vec<T, tapcount> taps;
-    mutable vec<T, tapcount - 1> delayline;
+    mutable vec<U, tapcount - 1> delayline;
 };
 
-template <typename T>
+template <typename T, typename U = T>
 struct fir_state
 {
     fir_state(const array_ref<const T>& taps)
-        : taps(taps.size()), delayline(taps.size(), T(0)), delayline_cursor(0)
+        : taps(taps.size()), delayline(taps.size(), U(0)), delayline_cursor(0)
     {
         this->taps = reverse(make_univector(taps.data(), taps.size()));
     }
     univector_dyn<T> taps;
-    mutable univector_dyn<T> delayline;
+    mutable univector_dyn<U> delayline;
     mutable size_t delayline_cursor;
 };
 
@@ -90,21 +90,22 @@ struct state_holder<T, true>
     const T& s;
 };
 
-template <size_t tapcount, typename T, typename E1, bool stateless = false, KFR_ARCH_DEP>
+template <size_t tapcount, typename T, typename U, typename E1, bool stateless = false, KFR_ARCH_DEP>
 struct expression_short_fir : expression_base<E1>
 {
-    using value_type = T;
+    using value_type = U;
 
-    expression_short_fir(E1&& e1, const short_fir_state<tapcount, T>& state)
+    expression_short_fir(E1&& e1, const short_fir_state<tapcount, T, U>& state)
         : expression_base<E1>(std::forward<E1>(e1)), state(state)
     {
     }
-    template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> x) const
-    {
-        vec<T, N> in = this->argument_first(cinput, index, x);
 
-        vec<T, N> out = in * state.s.taps[0];
+    template <size_t N>
+    CMT_INLINE vec<U, N> operator()(cinput_t cinput, size_t index, vec_t<U, N> x) const
+    {
+        vec<U, N> in = this->argument_first(cinput, index, x);
+
+        vec<U, N> out = in * state.s.taps[0];
         cforeach(csizeseq_t<tapcount - 1, 1>(), [&](auto I) {
             out = out + concat_and_slice<tapcount - 1 - I, N>(state.s.delayline, in) * state.s.taps[I];
         });
@@ -112,25 +113,26 @@ struct expression_short_fir : expression_base<E1>
 
         return out;
     }
-    state_holder<short_fir_state<tapcount, T>, stateless> state;
+    state_holder<short_fir_state<tapcount, T, U>, stateless> state;
 };
 
-template <typename T, typename E1, bool stateless = false, KFR_ARCH_DEP>
+template <typename T, typename U, typename E1, bool stateless = false, KFR_ARCH_DEP>
 struct expression_fir : expression_base<E1>
 {
-    using value_type = T;
-    expression_fir(E1&& e1, const fir_state<T>& state)
+    using value_type = U;
+
+    expression_fir(E1&& e1, const fir_state<T, U>& state)
         : expression_base<E1>(std::forward<E1>(e1)), state(state)
     {
     }
 
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> x) const
+    CMT_INLINE vec<U, N> operator()(cinput_t cinput, size_t index, vec_t<U, N> x) const
     {
         const size_t tapcount = state.s.taps.size();
-        const vec<T, N> input = this->argument_first(cinput, index, x);
+        const vec<U, N> input = this->argument_first(cinput, index, x);
 
-        vec<T, N> output;
+        vec<U, N> output;
         size_t cursor = state.s.delayline_cursor;
         CMT_LOOP_NOUNROLL
         for (size_t i = 0; i < N; i++)
@@ -142,7 +144,7 @@ struct expression_fir : expression_base<E1>
         state.s.delayline_cursor = cursor;
         return output;
     }
-    state_holder<fir_state<T>, stateless> state;
+    state_holder<fir_state<T, U>, stateless> state;
 };
 }
 
@@ -152,9 +154,9 @@ struct expression_fir : expression_base<E1>
  * @param taps coefficients for the FIR filter
  */
 template <typename T, typename E1, size_t Tag>
-CMT_INLINE internal::expression_fir<T, E1> fir(E1&& e1, const univector<T, Tag>& taps)
+CMT_INLINE internal::expression_fir<T, value_type_of<E1>, E1> fir(E1&& e1, const univector<T, Tag>& taps)
 {
-    return internal::expression_fir<T, E1>(std::forward<E1>(e1), taps.ref());
+    return internal::expression_fir<T, value_type_of<E1>, E1>(std::forward<E1>(e1), taps.ref());
 }
 
 /**
@@ -162,10 +164,10 @@ CMT_INLINE internal::expression_fir<T, E1> fir(E1&& e1, const univector<T, Tag>&
  * @param state FIR filter state
  * @param e1 an input expression
  */
-template <typename T, typename E1>
-CMT_INLINE internal::expression_fir<T, E1, true> fir(fir_state<T>& state, E1&& e1)
+template <typename T, typename U, typename E1>
+CMT_INLINE internal::expression_fir<T, U, E1, true> fir(fir_state<T, U>& state, E1&& e1)
 {
-    return internal::expression_fir<T, E1, true>(std::forward<E1>(e1), state);
+    return internal::expression_fir<T, U, E1, true>(std::forward<E1>(e1), state);
 }
 
 /**
@@ -175,20 +177,20 @@ CMT_INLINE internal::expression_fir<T, E1, true> fir(fir_state<T>& state, E1&& e
  * @param taps coefficients for the FIR filter
  */
 template <typename T, size_t TapCount, typename E1>
-CMT_INLINE internal::expression_short_fir<next_poweroftwo(TapCount), T, E1> short_fir(
+CMT_INLINE internal::expression_short_fir<next_poweroftwo(TapCount), T, value_type_of<E1>, E1> short_fir(
     E1&& e1, const univector<T, TapCount>& taps)
 {
     static_assert(TapCount >= 2 && TapCount <= 32, "Use short_fir only for small FIR filters");
-    return internal::expression_short_fir<next_poweroftwo(TapCount), T, E1>(std::forward<E1>(e1), taps);
+    return internal::expression_short_fir<next_poweroftwo(TapCount), T, value_type_of<E1>, E1>(std::forward<E1>(e1), taps);
 }
 
-template <typename T>
-class filter_fir : public filter<T>
+template <typename T, typename U = T>
+class filter_fir : public filter<U>
 {
 public:
     filter_fir(const array_ref<const T>& taps) : state(taps) {}
 
-    void set_taps(const array_ref<const T>& taps) { state = fir_state<T>(taps); }
+    void set_taps(const array_ref<const T>& taps) { state = fir_state<T, U>(taps); }
 
     void reset() final
     {
@@ -197,16 +199,16 @@ public:
     }
 
 protected:
-    void process_buffer(T* dest, const T* src, size_t size) final
+    void process_buffer(U* dest, const U* src, size_t size) final
     {
         make_univector(dest, size) = fir(state, make_univector(src, size));
     }
-    void process_expression(T* dest, const expression_pointer<T>& src, size_t size) final
+    void process_expression(U* dest, const expression_pointer<U>& src, size_t size) final
     {
         make_univector(dest, size) = fir(state, src);
     }
 
 private:
-    fir_state<T> state;
+    fir_state<T, U> state;
 };
 }

@@ -31,11 +31,11 @@ namespace kfr
 {
 
 template <typename T, typename E1>
-CMT_INLINE internal::expression_short_fir<2, T, E1> fracdelay(E1&& e1, T delay)
+CMT_INLINE internal::expression_short_fir<2, T, value_type_of<E1>, E1> fracdelay(E1&& e1, T delay)
 {
     if (delay < 0)
         delay = 0;
     univector<T, 2> taps({ 1 - delay, delay });
-    return internal::expression_short_fir<2, T, E1>(std::forward<E1>(e1), taps);
+    return internal::expression_short_fir<2, T, value_type_of<E1>, E1>(std::forward<E1>(e1), taps);
 }
 }

@@ -210,7 +210,9 @@ KFR_SINTRIN T absmaxof(const E1& x)
  *  x_0y_0 + x_1y_1 + \ldots + x_{N-1}y_{N-1}
  * \f]
  */
-template <typename E1, typename E2, typename T = value_type_of<E1>,
+template <typename E1, typename E2,
+          typename T = value_type_of<decltype(std::declval<E1>()*
+                                              std::declval<E2>())>,
           KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 KFR_SINTRIN T dotproduct(E1&& x, E2&& y)
 {
