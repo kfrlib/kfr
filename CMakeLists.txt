@@ -89,5 +89,5 @@ add_library(kfr INTERFACE)
 target_sources(kfr INTERFACE ${KFR_SRC})
 target_include_directories(kfr INTERFACE include)
 
-add_library(kfr_dft include/kfr/dft/dft-src.cpp)
+add_library(kfr_dft include/kfr/dft/dft-src.cpp include/kfr/dft/dft_c.h)
 target_link_libraries(kfr_dft kfr)

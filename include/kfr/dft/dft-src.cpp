@@ -24,6 +24,8 @@
   See https://www.kfrlib.com for details.
  */
 
+#include "dft_c.h"
+
 #include "../base/basic_expressions.hpp"
 #include "../testo/assert.hpp"
 #include "bitrev.hpp"
@@ -1252,6 +1254,105 @@ template void dft_plan_real<double>::from_fmt(kfr::complex<double>* out, const k
 template void dft_plan_real<double>::to_fmt(kfr::complex<double>* out, kfr::dft_pack_format fmt) const;
 
 } // namespace kfr
+
+extern "C"
+{
+
+    KFR_DFT_PLAN_F32* kfr_dft_create_plan_f32(size_t size)
+    {
+        return reinterpret_cast<KFR_DFT_PLAN_F32*>(new kfr::dft_plan<float>(size));
+    }
+    KFR_DFT_PLAN_F64* kfr_dft_create_plan_f64(size_t size)
+    {
+        return reinterpret_cast<KFR_DFT_PLAN_F64*>(new kfr::dft_plan<double>(size));
+    }
+
+    void kfr_dft_execute_f32(KFR_DFT_PLAN_F32* plan, size_t size, float* out, const float* in, uint8_t* temp)
+    {
+        reinterpret_cast<kfr::dft_plan<float>*>(plan)->execute(
+            reinterpret_cast<kfr::complex<float>*>(out), reinterpret_cast<const kfr::complex<float>*>(in),
+            temp, kfr::cfalse);
+    }
+    void kfr_dft_execute_f64(KFR_DFT_PLAN_F64* plan, size_t size, double* out, const double* in,
+                             uint8_t* temp)
+    {
+        reinterpret_cast<kfr::dft_plan<double>*>(plan)->execute(
+            reinterpret_cast<kfr::complex<double>*>(out), reinterpret_cast<const kfr::complex<double>*>(in),
+            temp, kfr::cfalse);
+    }
+    void kfr_dft_execute_inverse_f32(KFR_DFT_PLAN_F32* plan, size_t size, float* out, const float* in,
+                                     uint8_t* temp)
+    {
+        reinterpret_cast<kfr::dft_plan<float>*>(plan)->execute(
+            reinterpret_cast<kfr::complex<float>*>(out), reinterpret_cast<const kfr::complex<float>*>(in),
+            temp, kfr::ctrue);
+    }
+    void kfr_dft_execute_inverse_f64(KFR_DFT_PLAN_F64* plan, size_t size, double* out, const double* in,
+                                     uint8_t* temp)
+    {
+        reinterpret_cast<kfr::dft_plan<double>*>(plan)->execute(
+            reinterpret_cast<kfr::complex<double>*>(out), reinterpret_cast<const kfr::complex<double>*>(in),
+            temp, kfr::ctrue);
+    }
+
+    void kfr_dft_delete_plan_f32(KFR_DFT_PLAN_F32* plan)
+    {
+        delete reinterpret_cast<kfr::dft_plan<float>*>(plan);
+    }
+    void kfr_dft_delete_plan_f64(KFR_DFT_PLAN_F64* plan)
+    {
+        delete reinterpret_cast<kfr::dft_plan<double>*>(plan);
+    }
+
+    // Real DFT plans
+
+    KFR_DFT_REAL_PLAN_F32* kfr_dft_create_real_plan_f32(size_t size)
+    {
+        return reinterpret_cast<KFR_DFT_REAL_PLAN_F32*>(new kfr::dft_plan_real<float>(size));
+    }
+    KFR_DFT_REAL_PLAN_F64* kfr_dft_create_real_plan_f64(size_t size)
+    {
+        return reinterpret_cast<KFR_DFT_REAL_PLAN_F64*>(new kfr::dft_plan_real<double>(size));
+    }
+
+    void kfr_dft_execute_real_f32(KFR_DFT_REAL_PLAN_F32* plan, size_t size, float* out, const float* in,
+                                  uint8_t* temp)
+    {
+        reinterpret_cast<kfr::dft_plan<float>*>(plan)->execute(
+            reinterpret_cast<kfr::complex<float>*>(out), reinterpret_cast<const kfr::complex<float>*>(in),
+            temp, kfr::cfalse);
+    }
+    void kfr_dft_execute_real_f64(KFR_DFT_REAL_PLAN_F64* plan, size_t size, double* out, const double* in,
+                                  uint8_t* temp)
+    {
+        reinterpret_cast<kfr::dft_plan<double>*>(plan)->execute(
+            reinterpret_cast<kfr::complex<double>*>(out), reinterpret_cast<const kfr::complex<double>*>(in),
+            temp, kfr::cfalse);
+    }
+    void kfr_dft_execute_real_inverse_f32(KFR_DFT_REAL_PLAN_F32* plan, size_t size, float* out,
+                                          const float* in, uint8_t* temp)
+    {
+        reinterpret_cast<kfr::dft_plan<float>*>(plan)->execute(
+            reinterpret_cast<kfr::complex<float>*>(out), reinterpret_cast<const kfr::complex<float>*>(in),
+            temp, kfr::ctrue);
+    }
+    void kfr_dft_execute_real_inverse__f64(KFR_DFT_REAL_PLAN_F64* plan, size_t size, double* out,
+                                           const double* in, uint8_t* temp)
+    {
+        reinterpret_cast<kfr::dft_plan<double>*>(plan)->execute(
+            reinterpret_cast<kfr::complex<double>*>(out), reinterpret_cast<const kfr::complex<double>*>(in),
+            temp, kfr::ctrue);
+    }
+
+    void kfr_dft_delete_real_plan_f32(KFR_DFT_REAL_PLAN_F32* plan)
+    {
+        delete reinterpret_cast<kfr::dft_plan_real<float>*>(plan);
+    }
+    void kfr_dft_delete_real_plan_f64(KFR_DFT_REAL_PLAN_F64* plan)
+    {
+        delete reinterpret_cast<kfr::dft_plan_real<double>*>(plan);
+    }
+}
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)
 
