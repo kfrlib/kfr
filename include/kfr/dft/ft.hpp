@@ -376,16 +376,16 @@ KFR_INTRIN void transpose4x8(const cvec<T, 8>& z0, const cvec<T, 8>& z1, const c
 {
     cvec<T, 16> a = concat(low(z0), low(z1), low(z2), low(z3));
     cvec<T, 16> b = concat(high(z0), high(z1), high(z2), high(z3));
-    a  = digitreverse4<2>(a);
-    b  = digitreverse4<2>(b);
-    w0 = part<4, 0>(a);
-    w1 = part<4, 1>(a);
-    w2 = part<4, 2>(a);
-    w3 = part<4, 3>(a);
-    w4 = part<4, 0>(b);
-    w5 = part<4, 1>(b);
-    w6 = part<4, 2>(b);
-    w7 = part<4, 3>(b);
+    a             = digitreverse4<2>(a);
+    b             = digitreverse4<2>(b);
+    w0            = part<4, 0>(a);
+    w1            = part<4, 1>(a);
+    w2            = part<4, 2>(a);
+    w3            = part<4, 3>(a);
+    w4            = part<4, 0>(b);
+    w5            = part<4, 1>(b);
+    w6            = part<4, 2>(b);
+    w7            = part<4, 3>(b);
 }
 
 template <typename T>
@@ -396,12 +396,12 @@ KFR_INTRIN void transpose4x8(const cvec<T, 4>& w0, const cvec<T, 4>& w1, const c
 {
     cvec<T, 16> a = concat(w0, w1, w2, w3);
     cvec<T, 16> b = concat(w4, w5, w6, w7);
-    a  = digitreverse4<2>(a);
-    b  = digitreverse4<2>(b);
-    z0 = concat(part<4, 0>(a), part<4, 0>(b));
-    z1 = concat(part<4, 1>(a), part<4, 1>(b));
-    z2 = concat(part<4, 2>(a), part<4, 2>(b));
-    z3 = concat(part<4, 3>(a), part<4, 3>(b));
+    a             = digitreverse4<2>(a);
+    b             = digitreverse4<2>(b);
+    z0            = concat(part<4, 0>(a), part<4, 0>(b));
+    z1            = concat(part<4, 1>(a), part<4, 1>(b));
+    z2            = concat(part<4, 2>(a), part<4, 2>(b));
+    z3            = concat(part<4, 3>(a), part<4, 3>(b));
 }
 
 template <typename T>
@@ -493,7 +493,7 @@ CMT_PRAGMA_GNU(GCC diagnostic pop)
 template <typename T, size_t N>
 CMT_NOINLINE static vec<T, N> cossin_conj(const vec<T, N>& x)
 {
-    return cconj(cossin(x));
+    return negodd(cossin(x));
 }
 
 template <size_t k, size_t size, bool inverse = false, typename T, size_t width,
@@ -743,7 +743,7 @@ KFR_INTRIN void apply_twiddle(const cvec<T, N>& a1, const cvec<T, N>& tw1, cvec<
         cvec<T, N> tw1_ = tw1;
         if (inverse)
             tw1_ = -(tw1_);
-        w1       = subadd(b1, a1_ * dupodd(tw1_));
+        w1 = subadd(b1, a1_ * dupodd(tw1_));
     }
 }
 
@@ -1020,13 +1020,13 @@ template <size_t N, bool inverse = false, typename T>
 KFR_INTRIN void butterfly3(const cvec<T, N>& a00, const cvec<T, N>& a01, const cvec<T, N>& a02,
                            cvec<T, N>& w00, cvec<T, N>& w01, cvec<T, N>& w02)
 {
-    constexpr cvec<T, N> tw3r1 = static_cast<T>(-0.5);
-    constexpr cvec<T, N> tw3i1 =
+    const static cvec<T, N> tw3r1 = static_cast<T>(-0.5 - 1.0);
+    const static cvec<T, N> tw3i1 =
         static_cast<T>(0.86602540378443864676372317075) * twiddleimagmask<T, N, inverse>();
 
     const cvec<T, N> sum1 = a01 + a02;
     const cvec<T, N> dif1 = swap<2>(a01 - a02);
-    w00 = a00 + sum1;
+    w00                   = a00 + sum1;
 
     const cvec<T, N> s1 = w00 + sum1 * tw3r1;
 
@@ -1055,7 +1055,7 @@ KFR_INTRIN void butterfly6(const cvec<T, N>& a0, const cvec<T, N>& a1, const cve
     split(a03, t0, t1);
     split(a25, t2, t3);
     split(a41, t4, t5);
-    t3 = -t3;
+    t3                = -t3;
     cvec<T, N* 2> a04 = concat(t0, t4);
     cvec<T, N* 2> a15 = concat(t1, t5);
     cvec<T, N * 2> w02, w35;
@@ -1079,14 +1079,14 @@ KFR_INTRIN void butterfly7(const cvec<T, N>& a00, const cvec<T, N>& a01, const c
                            const cvec<T, N>& a06, cvec<T, N>& w00, cvec<T, N>& w01, cvec<T, N>& w02,
                            cvec<T, N>& w03, cvec<T, N>& w04, cvec<T, N>& w05, cvec<T, N>& w06)
 {
-    constexpr cvec<T, N> tw7r1 = static_cast<T>(0.623489801858733530525004884);
-    constexpr cvec<T, N> tw7i1 =
+    const static cvec<T, N> tw7r1 = static_cast<T>(0.623489801858733530525004884 - 1.0);
+    const static cvec<T, N> tw7i1 =
         static_cast<T>(0.78183148246802980870844452667) * twiddleimagmask<T, N, inverse>();
-    constexpr cvec<T, N> tw7r2 = static_cast<T>(-0.2225209339563144042889025645);
-    constexpr cvec<T, N> tw7i2 =
+    const static cvec<T, N> tw7r2 = static_cast<T>(-0.2225209339563144042889025645 - 1.0);
+    const static cvec<T, N> tw7i2 =
         static_cast<T>(0.97492791218182360701813168299) * twiddleimagmask<T, N, inverse>();
-    constexpr cvec<T, N> tw7r3 = static_cast<T>(-0.90096886790241912623610231951);
-    constexpr cvec<T, N> tw7i3 =
+    const static cvec<T, N> tw7r3 = static_cast<T>(-0.90096886790241912623610231951 - 1.0);
+    const static cvec<T, N> tw7i3 =
         static_cast<T>(0.43388373911755812047576833285) * twiddleimagmask<T, N, inverse>();
 
     const cvec<T, N> sum1 = a01 + a06;
@@ -1095,7 +1095,7 @@ KFR_INTRIN void butterfly7(const cvec<T, N>& a00, const cvec<T, N>& a01, const c
     const cvec<T, N> dif2 = swap<2>(a02 - a05);
     const cvec<T, N> sum3 = a03 + a04;
     const cvec<T, N> dif3 = swap<2>(a03 - a04);
-    w00 = a00 + sum1 + sum2 + sum3;
+    w00                   = a00 + sum1 + sum2 + sum3;
 
     const cvec<T, N> s1 = w00 + sum1 * tw7r1 + sum2 * tw7r2 + sum3 * tw7r3;
     const cvec<T, N> s2 = w00 + sum1 * tw7r2 + sum2 * tw7r3 + sum3 * tw7r1;
@@ -1125,18 +1125,18 @@ KFR_INTRIN void butterfly5(const cvec<T, N>& a00, const cvec<T, N>& a01, const c
                            const cvec<T, N>& a03, const cvec<T, N>& a04, cvec<T, N>& w00, cvec<T, N>& w01,
                            cvec<T, N>& w02, cvec<T, N>& w03, cvec<T, N>& w04)
 {
-    constexpr cvec<T, N> tw5r1 = static_cast<T>(0.30901699437494742410229341718);
-    constexpr cvec<T, N> tw5i1 =
+    const static cvec<T, N> tw5r1 = static_cast<T>(0.30901699437494742410229341718 - 1.0);
+    const static cvec<T, N> tw5i1 =
         static_cast<T>(0.95105651629515357211643933338) * twiddleimagmask<T, N, inverse>();
-    constexpr cvec<T, N> tw5r2 = static_cast<T>(-0.80901699437494742410229341718);
-    constexpr cvec<T, N> tw5i2 =
+    const static cvec<T, N> tw5r2 = static_cast<T>(-0.80901699437494742410229341718 - 1.0);
+    const static cvec<T, N> tw5i2 =
         static_cast<T>(0.58778525229247312916870595464) * twiddleimagmask<T, N, inverse>();
 
     const cvec<T, N> sum1 = a01 + a04;
     const cvec<T, N> dif1 = swap<2>(a01 - a04);
     const cvec<T, N> sum2 = a02 + a03;
     const cvec<T, N> dif2 = swap<2>(a02 - a03);
-    w00 = a00 + sum1 + sum2;
+    w00                   = a00 + sum1 + sum2;
 
     const cvec<T, N> s1 = w00 + sum1 * tw5r1 + sum2 * tw5r2;
     const cvec<T, N> s2 = w00 + sum1 * tw5r2 + sum2 * tw5r1;
@@ -1268,7 +1268,7 @@ KFR_INTRIN void cread_transposed(cbool_t<true>, const complex<f32>* ptr, cvec<f3
 {
     cvec<f32, 4> w3;
     cvec<f32, 16> v16 = concat(cread<4>(ptr), cread<4>(ptr + 3), cread<4>(ptr + 6), cread<4>(ptr + 9));
-    v16 = digitreverse4<2>(v16);
+    v16               = digitreverse4<2>(v16);
     split(v16, w0, w1, w2, w3);
 }
 
@@ -1276,7 +1276,7 @@ KFR_INTRIN void cread_transposed(cbool_t<true>, const complex<f32>* ptr, cvec<f3
                                  cvec<f32, 4>& w2, cvec<f32, 4>& w3, cvec<f32, 4>& w4)
 {
     cvec<f32, 16> v16 = concat(cread<4>(ptr), cread<4>(ptr + 5), cread<4>(ptr + 10), cread<4>(ptr + 15));
-    v16 = digitreverse4<2>(v16);
+    v16               = digitreverse4<2>(v16);
     split(v16, w0, w1, w2, w3);
     w4 = cgather<4, 5>(ptr + 4);
 }
@@ -1384,12 +1384,15 @@ KFR_INTRIN void generic_butterfly_cycle(csize_t<width>, size_t radix, cbool_t<in
             const cvec<T, 1> inb = cread<1>(in + radix - (j + 1));
             cvec<T, width> tw    = cread<width>(twiddle);
             if (inverse)
-                tw = cconj(tw);
+                tw = negodd /*cconj*/ (tw);
 
             cmul_2conj(sum0, sum1, ina, inb, tw);
             twiddle += halfradix;
         }
         twiddle = twiddle - halfradix_sqr + width;
+
+        //        if (inverse)
+        //            std::swap(sum0, sum1);
 
         if (is_constant_val(ostride))
         {
@@ -1407,6 +1410,17 @@ KFR_INTRIN void generic_butterfly_cycle(csize_t<width>, size_t radix, cbool_t<in
                             halfradix_sqr, twiddle, i);
 }
 
+template <typename T>
+KFR_SINTRIN vec<T, 2> hcadd(vec<T, 2> value)
+{
+    return value;
+}
+template <typename T, size_t N, KFR_ENABLE_IF(N >= 4)>
+KFR_SINTRIN vec<T, 2> hcadd(vec<T, N> value)
+{
+    return hcadd(low(value) + high(value));
+}
+
 template <size_t width, typename T, bool inverse, typename Tstride = csize_t<1>>
 KFR_INTRIN void generic_butterfly_w(size_t radix, cbool_t<inverse>, complex<T>* out, const complex<T>* in,
                                     const complex<T>* twiddle, Tstride ostride = Tstride{})
@@ -1414,7 +1428,7 @@ KFR_INTRIN void generic_butterfly_w(size_t radix, cbool_t<inverse>, complex<T>* 
     CMT_ASSUME(radix > 0);
     {
         cvec<T, width> sum = T();
-        size_t j = 0;
+        size_t j           = 0;
         CMT_LOOP_NOUNROLL
         for (; j < radix / width * width; j += width)
         {
@@ -1448,13 +1462,14 @@ KFR_INTRIN void generic_butterfly(size_t radix, cbool_t<inverse>, complex<T>* ou
     }
     constexpr size_t width = platform<T>::vector_width;
 
-    cswitch(csizes_t<11>(), radix,
+    generic_butterfly_w<width>(radix, cbool_t<inverse>(), out, in, twiddle, ostride);
+    /*cswitch(csizes_t<11>(), radix,
             [&](auto radix_) CMT_INLINE_LAMBDA {
                 generic_butterfly_w<width>(decltype(radix_)(), cbool_t<inverse>(), out, in, twiddle, ostride);
             },
             [&]() CMT_INLINE_LAMBDA {
                 generic_butterfly_w<width>(radix, cbool_t<inverse>(), out, in, twiddle, ostride);
-            });
+            });*/
 }
 
 template <typename T, size_t N>
@@ -1521,7 +1536,7 @@ KFR_INTRIN void cdigitreverse4_write<false, f64, 32>(complex<f64>* dest, const v
     cwrite<1>(dest + 15, part<16, 15>(x));
 }
 #endif
-}
-}
+} // namespace internal
+} // namespace kfr
 
 CMT_PRAGMA_MSVC(warning(pop))

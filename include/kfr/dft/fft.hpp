@@ -99,10 +99,13 @@ struct dft_plan
 protected:
     autofree<u8> data;
     size_t data_size;
-    std::vector<dft_stage_ptr> stages[2];
+    std::vector<dft_stage_ptr> stages;
 
-    template <template <bool inverse> class Stage>
-    void add_stage(size_t stage_size);
+    template <typename Stage, typename... Args>
+    void add_stage(Args... args);
+
+    template <bool is_final>
+    void prepare_dft_stage(size_t radix, size_t iterations, size_t blocks, cbool_t<is_final>);
 
     template <bool is_even, bool first>
     void make_fft(size_t stage_size, cbool_t<is_even>, cbool_t<first>);
@@ -110,6 +113,9 @@ protected:
     void initialize();
     template <bool inverse>
     void execute_dft(cbool_t<inverse>, complex<T>* out, const complex<T>* in, u8* temp) const;
+
+    const complex<T>* select_in(size_t stage, const complex<T>* out, const complex<T>* in, const complex<T>* scratch) const;
+    complex<T>* select_out(size_t stage, complex<T>* out, complex<T>* scratch) const;
 };
 
 enum class dft_pack_format
