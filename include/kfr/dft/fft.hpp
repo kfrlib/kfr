@@ -114,8 +114,8 @@ protected:
 
 enum class dft_pack_format
 {
-    Perm,
-    CCs
+    Perm, // {X[0].r, X[N].r}, ... {X[i].r, X[i].i}, ... {X[N-1].r, X[N-1].i}
+    CCs // {X[0].r, 0}, ... {X[i].r, X[i].i}, ... {X[N-1].r, X[N-1].i},  {X[N].r, 0}
 };
 
 template <typename T>

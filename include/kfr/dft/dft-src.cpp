@@ -1044,7 +1044,7 @@ void dft_plan_real<T>::from_fmt(complex<T>* out, const complex<T>* in, dft_pack_
     constexpr size_t width = platform<T>::vector_width * 2;
     const size_t count     = csize / 2;
 
-    block_process(count, csizes_t<width, 1>(), [=](size_t i, auto w) {
+    block_process(count - 1, csizes_t<width, 1>(), [&](size_t i, auto w) {
         i++;
         constexpr size_t width    = val_of(decltype(w)());
         constexpr size_t widthm1  = width - 1;
