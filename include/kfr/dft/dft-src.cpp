@@ -992,7 +992,8 @@ void dft_plan_real<T>::to_fmt(complex<T>* out, dft_pack_format fmt) const
     const cvec<T, 1> dc    = cread<1>(out);
     const size_t count     = csize / 2;
 
-    block_process(count, csizes_t<width, 1>(), [=](size_t i, auto w) {
+    block_process(count - 1, csizes_t<width, 1>(), [&](size_t i, auto w) {
+        i++;
         constexpr size_t width    = val_of(decltype(w)());
         constexpr size_t widthm1  = width - 1;
         const cvec<T, width> tw   = cread<width>(rtwiddle.data() + i);
