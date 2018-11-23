@@ -7,6 +7,7 @@ jobs:
       set -e
       sudo apt-get install -y ninja-build libmpfr-dev
       ci/run.sh build-release -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release
+      ci/run.sh build-debug   -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Debug
 
 - job: Linux_ARM
   pool:
@@ -16,6 +17,7 @@ jobs:
       set -e
       sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf qemu
       ci/run.sh build-release -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake -DARCH_FLAGS=-DLIBC_WORKAROUND_GETS=1
+      ci/run.sh build-debug   -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake -DARCH_FLAGS=-DLIBC_WORKAROUND_GETS=1
 
 - job: macOS
   strategy:
@@ -38,6 +40,7 @@ jobs:
       /bin/bash -c "sudo xcode-select -s /Applications/Xcode_$(XCODE_VER).app/Contents/Developer"
       brew install ninja
       ci/run.sh build-release -DCMAKE_BUILD_TYPE=Release
+      ci/run.sh build-debug   -DCMAKE_BUILD_TYPE=Debug
 
 - job: Windows_MinGW
   pool:
@@ -47,6 +50,7 @@ jobs:
       set -e
       choco install llvm ninja
       ci/run.sh build-release -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCMAKE_CXX_FLAGS=--target=x86_64-w64-windows-gnu -DCMAKE_BUILD_TYPE=Release
+      ci/run.sh build-debug   -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCMAKE_CXX_FLAGS=--target=x86_64-w64-windows-gnu -DCMAKE_BUILD_TYPE=Debug
 
 - job: Windows_MSVC64
   pool:
@@ -58,6 +62,7 @@ jobs:
       set PATH=%PATH:C:\tools\mingw64\bin;=%
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
       ci\run.cmd build-release -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DARCH_FLAGS=-mavx -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release
+      ci\run.cmd build-debug   -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DARCH_FLAGS=-mavx -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Debug
 
 - job: Windows_MSVC32
   pool:
@@ -69,6 +74,7 @@ jobs:
       set PATH=%PATH:C:\tools\mingw64\bin;=%
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
       ci\run.cmd build-release -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DARCH_FLAGS=-mavx -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Release
+      ci\run.cmd build-debug   -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DARCH_FLAGS=-mavx -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Debug
 
 - job: Windows_AVX512
   pool: WIN-AVX512
@@ -76,3 +82,4 @@ jobs:
   - script: |
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
       ci\run.cmd build-release -DARCH_TESTS=ON -DCMAKE_CXX_COMPILER="C:/LLVM/bin/clang-cl.exe" -DARCH_FLAGS="-mavx512f -mavx512cd -mavx512bw -mavx512dq -mavx512vl" -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release
+      ci\run.cmd build-debug   -DARCH_TESTS=ON -DCMAKE_CXX_COMPILER="C:/LLVM/bin/clang-cl.exe" -DARCH_FLAGS="-mavx512f -mavx512cd -mavx512bw -mavx512dq -mavx512vl" -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Debug
