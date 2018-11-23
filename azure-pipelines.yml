@@ -7,7 +7,10 @@ jobs:
       set -e
       sudo apt-get install -y ninja-build libmpfr-dev
       ci/run.sh build-release -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release
+    displayName: Release
+    bash: |
       ci/run.sh build-debug   -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Debug
+    displayName: Debug
 
 - job: Linux_ARM
   pool:
@@ -17,7 +20,10 @@ jobs:
       set -e
       sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf qemu
       ci/run.sh build-release -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake -DARCH_FLAGS=-DLIBC_WORKAROUND_GETS=1
+    displayName: Release
+    bash: |
       ci/run.sh build-debug   -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake -DARCH_FLAGS=-DLIBC_WORKAROUND_GETS=1
+    displayName: Debug
 
 - job: macOS
   strategy:
