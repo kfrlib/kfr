@@ -43,6 +43,7 @@ build32/
 build64/
 cmake-build-debug/
 cmake-build-release/
+build-*/
 
 # test directory
 svg/
