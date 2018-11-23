@@ -124,6 +124,19 @@ struct dft_plan_real : dft_plan<T>
     size_t size;
     dft_plan_real(size_t size, dft_type = dft_type::both);
 
+    void execute(complex<T>*, const complex<T>*, u8*, bool = false) const = delete;
+
+    template <bool inverse>
+    void execute(complex<T>*, const complex<T>*, u8*, cbool_t<inverse>) const = delete;
+
+    template <size_t Tag1, size_t Tag2, size_t Tag3>
+    void execute(univector<complex<T>, Tag1>&, const univector<complex<T>, Tag2>&, univector<u8, Tag3>&,
+                 bool = false) const = delete;
+
+    template <bool inverse, size_t Tag1, size_t Tag2, size_t Tag3>
+    void execute(univector<complex<T>, Tag1>&, const univector<complex<T>, Tag2>&, univector<u8, Tag3>&,
+                 cbool_t<inverse>) const = delete;
+
     KFR_INTRIN void execute(complex<T>* out, const T* in, u8* temp,
                             dft_pack_format fmt = dft_pack_format::CCs) const
     {

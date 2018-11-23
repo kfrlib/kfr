@@ -25,8 +25,8 @@
  */
 #pragma once
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -57,6 +57,12 @@ extern "C"
         size_t size;
     } KFR_DFT_REAL_PLAN_F64;
 
+    enum KFR_DFT_PACK_FORMAT
+    {
+        Perm = 0,
+        CCs  = 1
+    };
+
     // Complex DFT plans
 
     KFR_DFT_PLAN_F32* kfr_dft_create_plan_f32(size_t size);
@@ -80,14 +86,14 @@ extern "C"
     KFR_DFT_REAL_PLAN_F64* kfr_dft_create_real_plan_f64(size_t size);
 
     void kfr_dft_execute_real_f32(KFR_DFT_REAL_PLAN_F32* plan, size_t size, float* out, const float* in,
-                                  uint8_t* temp);
+                                  uint8_t* temp, KFR_DFT_PACK_FORMAT pack_format);
     void kfr_dft_execute_real_f64(KFR_DFT_REAL_PLAN_F64* plan, size_t size, double* out, const double* in,
-                                  uint8_t* temp);
+                                  uint8_t* temp, KFR_DFT_PACK_FORMAT pack_format);
 
     void kfr_dft_execute_real_inverse_f32(KFR_DFT_REAL_PLAN_F32* plan, size_t size, float* out,
-                                          const float* in, uint8_t* temp);
+                                          const float* in, uint8_t* temp, KFR_DFT_PACK_FORMAT pack_format);
     void kfr_dft_execute_real_inverse_f64(KFR_DFT_REAL_PLAN_F64* plan, size_t size, double* out,
-                                          const double* in, uint8_t* temp);
+                                          const double* in, uint8_t* temp, KFR_DFT_PACK_FORMAT pack_format);
 
     void kfr_dft_delete_real_plan_f32(KFR_DFT_REAL_PLAN_F32* plan);
     void kfr_dft_delete_real_plan_f64(KFR_DFT_REAL_PLAN_F64* plan);
