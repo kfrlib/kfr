@@ -1,5 +1,5 @@
 jobs:
-- job: Linux
+- job: Linux_x86_64_Clang
   pool:
     vmImage: 'ubuntu-16.04'
   steps:
@@ -7,12 +7,17 @@ jobs:
       set -e
       sudo apt-get install -y ninja-build libmpfr-dev
       ci/run.sh build-release -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release
-    displayName: Release
-  - bash: |
-      ci/run.sh build-debug   -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Debug
-    displayName: Debug
 
-- job: Linux_ARM
+- job: Linux_x86_64_Clang_Debug
+  pool:
+    vmImage: 'ubuntu-16.04'
+  steps:
+  - bash: |
+      set -e
+      sudo apt-get install -y ninja-build libmpfr-dev
+      ci/run.sh build-debug   -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Debug
+
+- job: Linux_ARM_Clang_Release
   pool:
     vmImage: 'ubuntu-16.04'
   steps:
@@ -20,12 +25,17 @@ jobs:
       set -e
       sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf qemu
       ci/run.sh build-release -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake -DARCH_FLAGS=-DLIBC_WORKAROUND_GETS=1
-    displayName: Release
-  - bash: |
-      ci/run.sh build-debug   -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake -DARCH_FLAGS=-DLIBC_WORKAROUND_GETS=1
-    displayName: Debug
 
-- job: macOS
+- job: Linux_ARM_Clang_Debug
+  pool:
+    vmImage: 'ubuntu-16.04'
+  steps:
+  - bash: |
+      set -e
+      sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf qemu
+      ci/run.sh build-debug -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake -DARCH_FLAGS=-DLIBC_WORKAROUND_GETS=1
+
+- job: macOS_x86_64_Clang_Release
   strategy:
     matrix:
       xcode10.1:
@@ -46,9 +56,24 @@ jobs:
       /bin/bash -c "sudo xcode-select -s /Applications/Xcode_$(XCODE_VER).app/Contents/Developer"
       brew install ninja
       ci/run.sh build-release -DCMAKE_BUILD_TYPE=Release
-      ci/run.sh build-debug   -DCMAKE_BUILD_TYPE=Debug
+      
+- job: macOS_x86_64_Clang_Debug
+  strategy:
+    matrix:
+      xcode10.1:
+        XCODE_VER: 10.1
+      xcode10:
+        XCODE_VER: 10
+  pool:
+    vmImage: 'macOS-10.13'
+  steps:
+  - bash: |
+      set -e
+      /bin/bash -c "sudo xcode-select -s /Applications/Xcode_$(XCODE_VER).app/Contents/Developer"
+      brew install ninja
+      ci/run.sh build-release -DCMAKE_BUILD_TYPE=Release
 
-- job: Windows_MinGW
+- job: Windows_MinGW_x86_64_Clang_Release
   pool:
     vmImage: 'vs2017-win2016'
   steps:
@@ -56,9 +81,17 @@ jobs:
       set -e
       choco install llvm ninja
       ci/run.sh build-release -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCMAKE_CXX_FLAGS=--target=x86_64-w64-windows-gnu -DCMAKE_BUILD_TYPE=Release
+      
+- job: Windows_MinGW_x86_64_Clang_Debug
+  pool:
+    vmImage: 'vs2017-win2016'
+  steps:
+  - bash: |
+      set -e
+      choco install llvm ninja
       ci/run.sh build-debug   -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCMAKE_CXX_FLAGS=--target=x86_64-w64-windows-gnu -DCMAKE_BUILD_TYPE=Debug
 
-- job: Windows_MSVC64
+- job: Windows_MSVC_x86_64_Clang_Release
   pool:
     vmImage: 'vs2017-win2016'
   steps:
@@ -67,10 +100,9 @@ jobs:
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
       set PATH=%PATH:C:\tools\mingw64\bin;=%
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
-      ci\run.cmd build-release -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DARCH_FLAGS=-mavx -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release
-      ci\run.cmd build-debug   -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DARCH_FLAGS=-mavx -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Debug
+      ci\run.cmd build-release -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DARCH_FLAGS=-mavx -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release      
 
-- job: Windows_MSVC32
+- job: Windows_MSVC_x86_Clang_Release
   pool:
     vmImage: 'vs2017-win2016'
   steps:
@@ -80,12 +112,28 @@ jobs:
       set PATH=%PATH:C:\tools\mingw64\bin;=%
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
       ci\run.cmd build-release -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DARCH_FLAGS=-mavx -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Release
-      ci\run.cmd build-debug   -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DARCH_FLAGS=-mavx -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Debug
 
-- job: Windows_AVX512
+- job: Windows_MSVC_x86_Clang_Debug
+  pool:
+    vmImage: 'vs2017-win2016'
+  steps:
+  - script: |
+      choco install llvm ninja
+      call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+      set PATH=%PATH:C:\tools\mingw64\bin;=%
+      set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
+      ci\run.cmd build-debug -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DARCH_FLAGS=-mavx -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Debug
+
+- job: Windows_MSVC_x86_64_AVX512_Clang_Release
   pool: WIN-AVX512
   steps:
   - script: |
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
       ci\run.cmd build-release -DARCH_TESTS=ON -DCMAKE_CXX_COMPILER="C:/LLVM/bin/clang-cl.exe" -DARCH_FLAGS="-mavx512f -mavx512cd -mavx512bw -mavx512dq -mavx512vl" -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release
+
+- job: Windows_MSVC_x86_64_AVX512_Clang_Debug
+  pool: WIN-AVX512
+  steps:
+  - script: |
+      call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
       ci\run.cmd build-debug   -DARCH_TESTS=ON -DCMAKE_CXX_COMPILER="C:/LLVM/bin/clang-cl.exe" -DARCH_FLAGS="-mavx512f -mavx512cd -mavx512bw -mavx512dq -mavx512vl" -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Debug
