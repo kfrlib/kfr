@@ -127,7 +127,7 @@ template <typename T, size_t Tag>
 univector<complex<T>> dft(const univector<complex<T>, Tag>& input)
 {
     dft_plan_ptr<T> dft = dft_cache::instance().get(ctype_t<T>(), input.size());
-    univector<complex<T>> output(input.size());
+    univector<complex<T>> output(input.size(), std::numeric_limits<T>::quiet_NaN());
     univector<u8> temp(dft->temp_size);
     dft->execute(output, input, temp);
     return output;
@@ -137,7 +137,7 @@ template <typename T, size_t Tag>
 univector<complex<T>> idft(const univector<complex<T>, Tag>& input)
 {
     dft_plan_ptr<T> dft = dft_cache::instance().get(ctype_t<T>(), input.size());
-    univector<complex<T>> output(input.size());
+    univector<complex<T>> output(input.size(), std::numeric_limits<T>::quiet_NaN());
     univector<u8> temp(dft->temp_size);
     dft->execute(output, input, temp, ctrue);
     return output;
@@ -147,7 +147,7 @@ template <typename T, size_t Tag>
 univector<complex<T>> realdft(const univector<T, Tag>& input)
 {
     dft_plan_real_ptr<T> dft = dft_cache::instance().getreal(ctype_t<T>(), input.size());
-    univector<complex<T>> output(input.size() / 2 + 1);
+    univector<complex<T>> output(input.size() / 2 + 1, std::numeric_limits<T>::quiet_NaN());
     univector<u8> temp(dft->temp_size);
     dft->execute(output, input, temp);
     return output;
@@ -157,7 +157,7 @@ template <typename T, size_t Tag>
 univector<T> irealdft(const univector<complex<T>, Tag>& input)
 {
     dft_plan_real_ptr<T> dft = dft_cache::instance().getreal(ctype_t<T>(), (input.size() - 1) * 2);
-    univector<T> output((input.size() - 1) * 2);
+    univector<T> output((input.size() - 1) * 2, std::numeric_limits<T>::quiet_NaN());
     univector<u8> temp(dft->temp_size);
     dft->execute(output, input, temp);
     return output;

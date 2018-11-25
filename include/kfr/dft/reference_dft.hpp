@@ -41,8 +41,8 @@ void reference_fft_pass(Tnumber pi2, size_t N, size_t offset, size_t delta, int 
                         Tnumber (*X)[2], Tnumber (*XX)[2])
 {
     const size_t N2 = N / 2;
-    using std::sin;
     using std::cos;
+    using std::sin;
 
     if (N != 2)
     {
@@ -125,14 +125,14 @@ void reference_fft(T* out, const complex<T>* in, size_t size)
     reference_fft_pass<Tnumber>(pi2, size, 0, 1, inversion ? -1 : +1, Tcmplx(datain.data()),
                                 Tcmplx(dataout.data()), Tcmplx(temp.data()));
     for (size_t i = 0; i < size; i++)
-        out[i]    = dataout[i].real();
+        out[i] = dataout[i].real();
 }
 
 template <typename Tnumber = double, typename T>
 void reference_dft(complex<T>* out, const complex<T>* in, size_t size, bool inversion = false)
 {
-    using std::sin;
     using std::cos;
+    using std::sin;
     if (is_poweroftwo(size))
     {
         return reference_fft<Tnumber>(out, in, size, inversion);
@@ -177,6 +177,14 @@ void reference_dft(complex<T>* out, const complex<T>* in, size_t size, bool inve
     }
 }
 
+template <typename Tnumber = double, typename T>
+inline univector<complex<T>> reference_dft(const univector<complex<T>>& in, bool inversion = false)
+{
+    univector<complex<T>> out(in.size());
+    reference_dft(&out[0], &in[0], in.size(), inversion);
+    return out;
+}
+
 template <typename T>
 struct reference_dft_plan
 {
@@ -195,4 +203,4 @@ struct reference_dft_plan
     static constexpr size_t temp_size = 0;
     const size_t size;
 };
-}
+} // namespace kfr
