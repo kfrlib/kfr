@@ -519,19 +519,21 @@ protected:
         final_stage(csize<size>, 1, cbool<splitin>, out, in, twiddle);
     }
 
-    //    KFR_INTRIN void final_stage(csize_t<32>, size_t invN, cfalse_t, complex<T>* out, const complex<T>*,
-    //                                const complex<T>*& twiddle)
-    //    {
-    //        radix4_pass(csize_t<32>(), invN, csize_t<width>(), cfalse, cfalse, cbool_t<use_br2>(),
-    //                    cbool_t<prefetch>(), cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
-    //    }
-    //
-    //    KFR_INTRIN void final_stage(csize_t<16>, size_t invN, cfalse_t, complex<T>* out, const complex<T>*,
-    //                                const complex<T>*& twiddle)
-    //    {
-    //        radix4_pass(csize_t<16>(), invN, csize_t<width>(), cfalse, cfalse, cbool_t<use_br2>(),
-    //                    cbool_t<prefetch>(), cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
-    //    }
+    template <typename U = T, KFR_ENABLE_IF(is_same<U, float>::value)>
+    KFR_INTRIN void final_stage(csize_t<32>, size_t invN, cfalse_t, complex<T>* out, const complex<T>*,
+                                const complex<T>*& twiddle)
+    {
+        radix4_pass(csize_t<32>(), invN, csize_t<width>(), cfalse, cfalse, cbool_t<use_br2>(),
+                    cbool_t<prefetch>(), cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
+    }
+
+    template <typename U = T, KFR_ENABLE_IF(is_same<U, float>::value)>
+    KFR_INTRIN void final_stage(csize_t<16>, size_t invN, cfalse_t, complex<T>* out, const complex<T>*,
+                                const complex<T>*& twiddle)
+    {
+        radix4_pass(csize_t<16>(), invN, csize_t<width>(), cfalse, cfalse, cbool_t<use_br2>(),
+                    cbool_t<prefetch>(), cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
+    }
 
     KFR_INTRIN void final_stage(csize_t<8>, size_t invN, cfalse_t, complex<T>* out, const complex<T>*,
                                 const complex<T>*& twiddle)

@@ -30,6 +30,7 @@
 #include "../base/memory.hpp"
 #include "../base/read_write.hpp"
 #include "../base/small_buffer.hpp"
+#include "../base/univector.hpp"
 #include "../base/vec.hpp"
 
 CMT_PRAGMA_GNU(GCC diagnostic push)
