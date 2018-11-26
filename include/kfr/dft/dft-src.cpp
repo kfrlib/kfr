@@ -350,8 +350,8 @@ KFR_SINTRIN cfalse_t radix4_pass(Ntype N, size_t blocks, csize_t<width>, cbool_t
     return {};
 }
 
-template <size_t width, bool prefetch, bool use_br2, bool inverse, bool aligned, typename T>
-KFR_SINTRIN ctrue_t radix4_pass(csize_t<32>, size_t blocks, csize_t<width>, cfalse_t, cfalse_t,
+template <bool splitin, bool prefetch, bool use_br2, bool inverse, bool aligned, typename T>
+KFR_SINTRIN ctrue_t radix4_pass(csize_t<32>, size_t blocks, csize_t<8>, cfalse_t, cbool_t<splitin>,
                                 cbool_t<use_br2>, cbool_t<prefetch>, cbool_t<inverse>, cbool_t<aligned>,
                                 complex<T>* out, const complex<T>*, const complex<T>*& /*twiddle*/)
 {
@@ -362,10 +362,10 @@ KFR_SINTRIN ctrue_t radix4_pass(csize_t<32>, size_t blocks, csize_t<width>, cfal
         if (prefetch)
             prefetch_four(csize_t<64>(), out + prefetch_offset);
         cvec<T, 4> w0, w1, w2, w3, w4, w5, w6, w7;
-        split(cread<8, aligned>(out + 0), w0, w1);
-        split(cread<8, aligned>(out + 8), w2, w3);
-        split(cread<8, aligned>(out + 16), w4, w5);
-        split(cread<8, aligned>(out + 24), w6, w7);
+        split(cread_split<8, aligned, splitin>(out + 0), w0, w1);
+        split(cread_split<8, aligned, splitin>(out + 8), w2, w3);
+        split(cread_split<8, aligned, splitin>(out + 16), w4, w5);
+        split(cread_split<8, aligned, splitin>(out + 24), w6, w7);
 
         butterfly8<4, inverse>(w0, w1, w2, w3, w4, w5, w6, w7);
 
@@ -516,7 +516,7 @@ protected:
 
     DFT_STAGE_FN
     template <bool inverse>
-    void do_execute(complex<T>* out, const complex<T>* in, u8*)
+    KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
         const size_t Nord         = this->repeats;
         const complex<T>* twiddle = ptr_cast<complex<T>>(this->data);
@@ -546,7 +546,7 @@ struct dft_stage_fixed_final_impl : dft_stage<T>
     constexpr static size_t width = fft_vector_width<T>;
     DFT_STAGE_FN
     template <bool inverse>
-    void do_execute(complex<T>* out, const complex<T>* in, u8*)
+    KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
         const size_t b    = this->blocks;
         const size_t size = b * radix;
@@ -588,7 +588,7 @@ protected:
 
     DFT_STAGE_FN
     template <bool inverse>
-    void do_execute(complex<T>* out, const complex<T>* in, u8* temp)
+    KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8* temp)
     {
         const complex<T>* twiddle = ptr_cast<complex<T>>(this->data);
         const size_t bl           = this->blocks;
@@ -669,7 +669,8 @@ struct dft_reorder_stage_impl : dft_stage<T>
     {
         this->can_inplace = false;
         this->data_size   = 0;
-        std::copy(std::make_reverse_iterator(radices + count), std::make_reverse_iterator(radices), this->radices);
+        std::copy(std::make_reverse_iterator(radices + count), std::make_reverse_iterator(radices),
+                  this->radices);
         this->inner_size = 1;
         this->size       = 1;
         for (size_t r = 0; r < count; r++)
@@ -689,7 +690,7 @@ protected:
 
     DFT_STAGE_FN
     template <bool inverse>
-    void do_execute(complex<T>* out, const complex<T>* in, u8*)
+    KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
         //        std::copy(in, in + this->size, out);
         //        return;
@@ -751,7 +752,7 @@ protected:
 
     DFT_STAGE_FN
     template <bool inverse>
-    void do_execute(complex<T>* out, const complex<T>* in, u8*)
+    KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
         const complex<T>* twiddle = ptr_cast<complex<T>>(this->data);
         if (splitin)
@@ -803,7 +804,7 @@ protected:
 
     DFT_STAGE_FN
     template <bool inverse>
-    void do_execute(complex<T>* out, const complex<T>* in, u8*)
+    KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
         const complex<T>* twiddle = ptr_cast<complex<T>>(this->data);
         final_stage<inverse>(csize<size>, 1, cbool<splitin>, out, in, twiddle);
@@ -874,7 +875,7 @@ protected:
 
     DFT_STAGE_FN
     template <bool inverse>
-    void do_execute(complex<T>* out, const complex<T>* in, u8*)
+    KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
         fft_reorder(out, log2n, cbool_t<!is_even>());
     }
@@ -893,7 +894,7 @@ protected:
     DFT_STAGE_FN
 
     template <bool inverse>
-    void do_execute(complex<T>* out, const complex<T>* in, u8*)
+    KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
         cvec<T, 1> a0, a1;
         split(cread<2, aligned>(in), a0, a1);
@@ -910,7 +911,7 @@ protected:
     constexpr static bool aligned = false;
     DFT_STAGE_FN
     template <bool inverse>
-    void do_execute(complex<T>* out, const complex<T>* in, u8*)
+    KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
         cvec<T, 1> a0, a1, a2, a3;
         split(cread<4>(in), a0, a1, a2, a3);
@@ -928,7 +929,7 @@ protected:
     constexpr static bool aligned = false;
     DFT_STAGE_FN
     template <bool inverse>
-    void do_execute(complex<T>* out, const complex<T>* in, u8*)
+    KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
         cvec<T, 8> v8 = cread<8, aligned>(in);
         butterfly8<inverse>(v8);
@@ -945,7 +946,7 @@ protected:
     constexpr static bool aligned = false;
     DFT_STAGE_FN
     template <bool inverse>
-    void do_execute(complex<T>* out, const complex<T>* in, u8*)
+    KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
         cvec<T, 16> v16 = cread<16, aligned>(in);
         butterfly16<inverse>(v16);
@@ -962,7 +963,7 @@ protected:
     constexpr static bool aligned = false;
     DFT_STAGE_FN
     template <bool inverse>
-    void do_execute(complex<T>* out, const complex<T>* in, u8*)
+    KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
         cvec<T, 32> v32 = cread<32, aligned>(in);
         butterfly32<inverse>(v32);
@@ -979,7 +980,7 @@ protected:
     constexpr static bool aligned = false;
     DFT_STAGE_FN
     template <bool inverse>
-    void do_execute(complex<T>* out, const complex<T>* in, u8*)
+    KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
         butterfly64(cbool_t<inverse>(), cbool_t<aligned>(), out, in);
     }
@@ -1013,7 +1014,7 @@ protected:
 
     DFT_STAGE_FN
     template <bool inverse>
-    void do_execute(complex<T>* out, const complex<T>* in, u8*)
+    KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
         const complex<T>* twiddle = ptr_cast<complex<T>>(this->data);
         final_pass<inverse>(csize_t<final_size>(), out, in, twiddle);
@@ -1050,7 +1051,7 @@ protected:
     using T = float;
     DFT_STAGE_FN
     template <bool inverse>
-    void do_execute(complex<T>* out, const complex<T>* in, u8* temp)
+    KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8* temp)
     {
         complex<float>* scratch = ptr_cast<complex<float>>(temp);
         if (out == in)
@@ -1088,12 +1089,41 @@ struct fft_specialization<double, 8> : fft_final_stage_impl<double, false, 256>
 
     DFT_STAGE_FN
     template <bool inverse>
-    void do_execute(complex<T>* out, const complex<T>* in, u8*)
+    KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
         fft_final_stage_impl<double, false, 256>::template do_execute<inverse>(out, in, nullptr);
         fft_reorder(out, csize_t<8>());
     }
 };
+
+template <typename T>
+struct fft_specialization<T, 9> : fft_final_stage_impl<T, false, 512>
+{
+    using fft_final_stage_impl<T, false, 512>::fft_final_stage_impl;
+
+    DFT_STAGE_FN
+    template <bool inverse>
+    KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8*)
+    {
+        fft_final_stage_impl<T, false, 512>::template do_execute<inverse>(out, in, nullptr);
+        fft_reorder(out, csize_t<9>());
+    }
+};
+
+template <typename T>
+struct fft_specialization<T, 10> : fft_final_stage_impl<T, false, 1024>
+{
+    using fft_final_stage_impl<T, false, 1024>::fft_final_stage_impl;
+
+    DFT_STAGE_FN
+    template <bool inverse>
+    KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8*)
+    {
+        fft_final_stage_impl<T, false, 1024>::template do_execute<inverse>(out, in, nullptr);
+        fft_reorder(out, 10, cfalse);
+    }
+};
+
 } // namespace internal
 
 //
@@ -1263,7 +1293,7 @@ dft_plan<T>::dft_plan(size_t size, dft_type) : size(size), temp_size(0), data_si
     if (is_poweroftwo(size))
     {
         const size_t log2n = ilog2(size);
-        cswitch(csizes_t<1, 2, 3, 4, 5, 6, 7, 8>(), log2n,
+        cswitch(csizes_t<1, 2, 3, 4, 5, 6, 7, 8, 9, 10>(), log2n,
                 [&](auto log2n) {
                     (void)log2n;
                     constexpr size_t log2nv = val_of(decltype(log2n)());
