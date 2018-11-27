@@ -234,8 +234,11 @@ struct expression_linspace<T, false> : input_expression
 {
     using value_type = T;
 
-    expression_linspace(T start, T stop, size_t size, bool endpoint = false)
-        : start(start), offset((stop - start) / T(endpoint ? size - 1 : size))
+    CMT_INLINE constexpr size_t size() const noexcept { return truncate_size; }
+
+    expression_linspace(T start, T stop, size_t size, bool endpoint = false, bool truncate = false)
+        : start(start), offset((stop - start) / T(endpoint ? size - 1 : size)),
+          truncate_size(truncate ? size : infinite_size)
     {
     }
 
@@ -253,6 +256,7 @@ struct expression_linspace<T, false> : input_expression
 
     T start;
     T offset;
+    size_t truncate_size;
 };
 
 template <typename T>
@@ -260,8 +264,11 @@ struct expression_linspace<T, true> : input_expression
 {
     using value_type = T;
 
-    expression_linspace(T start, T stop, size_t size, bool endpoint = false)
-        : start(start), stop(stop), invsize(1.0 / T(endpoint ? size - 1 : size))
+    CMT_INLINE constexpr size_t size() const noexcept { return truncate_size; }
+
+    expression_linspace(T start, T stop, size_t size, bool endpoint = false, bool truncate = false)
+        : start(start), stop(stop), invsize(1.0 / T(endpoint ? size - 1 : size)),
+          truncate_size(truncate ? size : infinite_size)
     {
     }
 
@@ -285,6 +292,7 @@ struct expression_linspace<T, true> : input_expression
     T start;
     T stop;
     T invsize;
+    size_t truncate_size;
 };
 
 template <typename... E>
@@ -380,9 +388,9 @@ CMT_INLINE internal::expression_reverse<E1> reverse(E1&& e1)
 
 template <typename T1, typename T2, bool precise = false, typename TF = ftype<common_type<T1, T2>>>
 CMT_INLINE internal::expression_linspace<TF, precise> linspace(T1 start, T2 stop, size_t size,
-                                                               bool endpoint = false)
+                                                               bool endpoint = false, bool truncate = false)
 {
-    return internal::expression_linspace<TF, precise>(start, stop, size, endpoint);
+    return internal::expression_linspace<TF, precise>(start, stop, size, endpoint, truncate);
 }
 KFR_FN(linspace)
 
@@ -586,4 +594,4 @@ task_partition<OutExpr, InExpr> partition(OutExpr&& output, InExpr&& input, size
                                            chunk_size, (size + chunk_size - 1) / chunk_size);
     return result;
 }
-}
+} // namespace kfr
