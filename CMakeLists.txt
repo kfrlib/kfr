@@ -41,6 +41,13 @@ add_definitions(-D_ENABLE_EXTENDED_ALIGNED_STORAGE)
 
 option(ENABLE_TESTS "Enable tests and examples. This changes many compiler flags" OFF)
 
+set(KFR_DFT_SRC
+        ${CMAKE_SOURCE_DIR}/include/kfr/dft/impl/dft-src.cpp
+        ${CMAKE_SOURCE_DIR}/include/kfr/dft/dft_c.h
+        ${CMAKE_SOURCE_DIR}/include/kfr/dft/impl/dft-impl-f32.cpp
+        ${CMAKE_SOURCE_DIR}/include/kfr/dft/impl/dft-impl-f64.cpp
+        ${CMAKE_SOURCE_DIR}/include/kfr/dft/impl/convolution-impl.cpp)
+
 if (ENABLE_TESTS)
 
     if (IOS)
@@ -89,5 +96,5 @@ add_library(kfr INTERFACE)
 target_sources(kfr INTERFACE ${KFR_SRC})
 target_include_directories(kfr INTERFACE include)
 
-add_library(kfr_dft include/kfr/dft/dft-src.cpp include/kfr/dft/dft_c.h)
+add_library(kfr_dft ${KFR_DFT_SRC})
 target_link_libraries(kfr_dft kfr)

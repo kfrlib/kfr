@@ -21,8 +21,17 @@ file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/svg)
 
 include_directories(../include)
 
-add_executable(biquads biquads.cpp ${KFR_SRC})
-add_executable(window window.cpp ${KFR_SRC})
-add_executable(fir fir.cpp ${KFR_SRC})
-add_executable(sample_rate_conversion sample_rate_conversion.cpp ${KFR_SRC})
-add_executable(dft dft.cpp ${KFR_SRC} ${DFT_SRC} ../include/kfr/dft/dft-src.cpp)
+add_executable(biquads biquads.cpp)
+target_link_libraries(biquads kfr)
+
+add_executable(window window.cpp)
+target_link_libraries(window kfr)
+
+add_executable(fir fir.cpp)
+target_link_libraries(fir kfr)
+
+add_executable(sample_rate_conversion sample_rate_conversion.cpp)
+target_link_libraries(sample_rate_conversion kfr)
+
+add_executable(dft dft.cpp)
+target_link_libraries(dft kfr kfr_dft)

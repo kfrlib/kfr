@@ -25,12 +25,12 @@
  */
 #pragma once
 
-#include "../base/complex.hpp"
-#include "../base/constants.hpp"
-#include "../base/digitreverse.hpp"
-#include "../base/vec.hpp"
+#include "../../base/complex.hpp"
+#include "../../base/constants.hpp"
+#include "../../base/digitreverse.hpp"
+#include "../../base/vec.hpp"
 
-#include "../data/bitrev.hpp"
+#include "../../data/bitrev.hpp"
 
 #include "ft.hpp"
 

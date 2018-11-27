@@ -25,17 +25,17 @@
  */
 #pragma once
 
-#include "../base/complex.hpp"
-#include "../base/constants.hpp"
-#include "../base/digitreverse.hpp"
-#include "../base/read_write.hpp"
-#include "../base/sin_cos.hpp"
-#include "../base/small_buffer.hpp"
-#include "../base/univector.hpp"
-#include "../base/vec.hpp"
+#include "../../base/complex.hpp"
+#include "../../base/constants.hpp"
+#include "../../base/digitreverse.hpp"
+#include "../../base/read_write.hpp"
+#include "../../base/sin_cos.hpp"
+#include "../../base/small_buffer.hpp"
+#include "../../base/univector.hpp"
+#include "../../base/vec.hpp"
 
-#include "../base/memory.hpp"
-#include "../data/sincos.hpp"
+#include "../../base/memory.hpp"
+#include "../../data/sincos.hpp"
 
 CMT_PRAGMA_MSVC(warning(push))
 CMT_PRAGMA_MSVC(warning(disable : 4127))

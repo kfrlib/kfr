@@ -91,13 +91,15 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/cpuid/cpuid_auto.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/data/bitrev.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/data/sincos.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/bitrev.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/cache.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/convolution.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/fft.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/ft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/reference_dft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/dft_c.h
+    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/bitrev.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/dft-impl.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/dft-templates.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/ft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/biquad.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/biquad_design.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/dcremove.hpp
