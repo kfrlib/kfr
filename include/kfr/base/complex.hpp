@@ -60,6 +60,7 @@ using complex = std::complex<T>;
 template <typename T>
 struct complex
 {
+    static_assert(is_simd_type<T>::value, "Incorrect type for complex");
     constexpr static bool is_pod = true;
     constexpr complex() noexcept = default;
     constexpr complex(T re) noexcept : re(re), im(0) {}
@@ -151,7 +152,7 @@ struct complex
 };
 #endif
 #endif
-}
+} // namespace kfr
 namespace cometa
 {
 template <typename T>
@@ -173,7 +174,7 @@ struct compound_type_traits<kfr::complex<T>>
         return index == 0 ? value.real() : value.imag();
     }
 };
-}
+} // namespace cometa
 namespace kfr
 {
 
@@ -188,7 +189,7 @@ constexpr inline vec<T, 2> vcomplex(const complex<T>& v)
 {
     return vec<T, 2>(v.real(), v.imag());
 }
-}
+} // namespace internal
 
 template <typename T, size_t N>
 struct vec<complex<T>, N> : private vec<T, 2 * N>
@@ -206,7 +207,7 @@ struct vec<complex<T>, N> : private vec<T, 2 * N>
     constexpr vec() noexcept           = default;
     constexpr vec(const vec&) noexcept = default;
     CMT_GNU_CONSTEXPR vec& operator=(const vec&) CMT_GNU_NOEXCEPT = default;
-    template <int                                                 = 0>
+    template <int = 0>
     constexpr vec(const simd_type& simd) noexcept : base(simd)
     {
     }
@@ -285,13 +286,13 @@ struct vec<complex<T>, N> : private vec<T, 2 * N>
 
     KFR_I_CE friend vec& operator++(vec& x) noexcept { return x = x + vec(1); }
     KFR_I_CE friend vec& operator--(vec& x) noexcept { return x = x - vec(1); }
-    KFR_I_CE friend vec operator++(vec& x, int)noexcept
+    KFR_I_CE friend vec operator++(vec& x, int) noexcept
     {
         const vec z = x;
         ++x;
         return z;
     }
-    KFR_I_CE friend vec operator--(vec& x, int)noexcept
+    KFR_I_CE friend vec operator--(vec& x, int) noexcept
     {
         const vec z = x;
         --x;
@@ -332,10 +333,9 @@ struct vec<complex<T>, N> : private vec<T, 2 * N>
     KFR_I_CE void set(csize_t<index>, const value_type& s) noexcept
     {
         *this = vec(static_cast<const base&>(*this))
-                    .shuffle(s, csizeseq_t<N>() +
-                                    (csizeseq_t<N>() >= csize_t<index * 2>() &&
-                                     csizeseq_t<N>() < csize_t<(index + 1) * 2>()) *
-                                        N);
+                    .shuffle(s, csizeseq_t<N>() + (csizeseq_t<N>() >= csize_t<index * 2>() &&
+                                                   csizeseq_t<N>() < csize_t<(index + 1) * 2>()) *
+                                                      N);
     }
     struct element
     {
@@ -345,6 +345,19 @@ struct vec<complex<T>, N> : private vec<T, 2 * N>
             v.set(index, s);
             return *this;
         }
+
+        element& operator=(const element& s) noexcept
+        {
+            v.set(index, static_cast<value_type>(s));
+            return *this;
+        }
+        template <typename U, size_t M>
+        element& operator=(const typename vec<U, M>::element& s) noexcept
+        {
+            v.set(index, static_cast<value_type>(static_cast<U>(s)));
+            return *this;
+        }
+
         vec& v;
         size_t index;
     };
@@ -400,12 +413,6 @@ CMT_INLINE vec<complex<T>, N> cnegimag(const vec<complex<T>, N>& x)
 }
 KFR_FN(cnegimag)
 
-template <typename T, size_t N>
-CMT_INLINE vec<complex<T>, N> cconj(const vec<complex<T>, N>& x)
-{
-    return cnegimag(x);
-}
-KFR_FN(cconj)
 
 namespace internal
 {
@@ -442,7 +449,8 @@ struct conversion<vec<complex<To>, N>, vec<From, N>>
         return *interleave(casted, zerovector(casted));
     }
 };
-}
+
+} // namespace internal
 
 template <typename T, size_t N>
 constexpr CMT_INLINE vec<complex<T>, N / 2> ccomp(const vec<T, N>& x)
@@ -515,7 +523,11 @@ constexpr CMT_INLINE complex<T> make_complex(T1 real, T2 imag = T2(0))
 
 namespace intrinsics
 {
-
+template <typename T, size_t N>
+CMT_INLINE vec<complex<T>, N> cconj(const vec<complex<T>, N>& x)
+{
+    return cnegimag(x);
+}
 template <typename T, size_t N>
 KFR_SINTRIN vec<complex<T>, N> csin(const vec<complex<T>, N>& x)
 {
@@ -607,6 +619,7 @@ KFR_SINTRIN vec<complex<T>, N> csqrt(const vec<complex<T>, N>& x)
     return ccomp(select(dupodd(x) < T(), cdecom(cnegimag(ccomp(t))), t));
 }
 
+KFR_I_CONVERTER(cconj)
 KFR_I_CONVERTER(csin)
 KFR_I_CONVERTER(csinh)
 KFR_I_CONVERTER(ccos)
@@ -643,8 +656,9 @@ KFR_SINTRIN realtype<T1> carg(const T1& a)
     using vecout = vec1<T1>;
     return to_scalar(intrinsics::carg(vecout(a)));
 }
-}
+} // namespace intrinsics
 
+KFR_I_FN(cconj)
 KFR_I_FN(csin)
 KFR_I_FN(csinh)
 KFR_I_FN(ccos)
@@ -720,6 +734,16 @@ template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_FUNC internal::expression_function<fn::carg, E1> carg(E1&& x)
 {
     return { fn::carg(), std::forward<E1>(x) };
+}
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_FUNC T1 cconj(const T1& x)
+{
+    return intrinsics::cconj(x);
+}
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_FUNC internal::expression_function<fn::cconj, E1> cconj(E1&& x)
+{
+    return { fn::cconj(), std::forward<E1>(x) };
 }
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
 KFR_FUNC T1 clog(const T1& x)
@@ -811,7 +835,7 @@ KFR_FUNC internal::expression_function<fn::csqrt, E1> csqrt(E1&& x)
 {
     return { fn::csqrt(), std::forward<E1>(x) };
 }
-}
+} // namespace kfr
 
 namespace std
 {
@@ -850,6 +874,6 @@ struct common_type<kfr::vec<T1, N>, kfr::complex<T2>>
 {
     using type = kfr::vec<kfr::complex<typename common_type<T1, T2>::type>, N>;
 };
-}
+} // namespace std
 
 CMT_PRAGMA_MSVC(warning(pop))
