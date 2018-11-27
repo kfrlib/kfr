@@ -27,6 +27,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/digitreverse.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/expression.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/filter.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/fraction.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/function.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/gamma.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/generators.hpp
@@ -96,6 +97,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/fft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/ft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/reference_dft.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/dft/dft_c.h
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/biquad.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/biquad_design.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/dcremove.hpp
