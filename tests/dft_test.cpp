@@ -10,6 +10,7 @@
 #include <kfr/dft.hpp>
 #include <kfr/dsp.hpp>
 #include <kfr/io.hpp>
+#include <set>
 
 using namespace kfr;
 
@@ -70,56 +71,71 @@ TEST(fft_accuracy)
 {
     testo::active_test()->show_progress = true;
     random_bit_generator gen(2247448713, 915890490, 864203735, 2982561);
+    std::set<size_t> size_set;
+    univector<size_t> sizes = truncate(1 + counter(), stopsize - 1);
+    sizes                   = round(pow(2.0, sizes));
 
-    testo::matrix(named("type")       = dft_float_types, //
-                  named("inverse")    = std::make_tuple(false, true), //
-                  named("log2(size)") = make_range(size_t(1), stopsize), //
-                  [&gen](auto type, bool inverse, size_t log2size) {
-                      using float_type  = type_of<decltype(type)>;
-                      const size_t size = 1 << log2size;
+#ifndef KFR_DFT_NO_NPo2
+    univector<size_t> sizes2 = truncate(2 + counter(), 1024);
+    for (size_t s : sizes2)
+    {
+        if (std::find(sizes.begin(), sizes.end(), s) == sizes.end())
+            sizes.push_back(s);
+    }
+#endif
+    println(sizes);
 
-                      {
-                          univector<complex<float_type>> in =
-                              truncate(gen_random_range<float_type>(gen, -1.0, +1.0), size);
-                          univector<complex<float_type>> out    = in;
-                          univector<complex<float_type>> refout = out;
-                          const dft_plan<float_type> dft(size);
-                          univector<u8> temp(dft.temp_size);
+    testo::matrix(
+        named("type") = dft_float_types, //
+        named("size") = sizes, //
+        [&gen](auto type, size_t size) {
+            using float_type      = type_of<decltype(type)>;
+            const double min_prec = 0.000001 * std::log(size) * size;
 
-                          reference_dft(refout.data(), in.data(), size, inverse);
-                          dft.execute(out, out, temp, inverse);
+            for (bool inverse : { false, true })
+            {
+                testo::active_test()->append_comment(inverse ? "complex-inverse" : "complex-direct");
+                univector<complex<float_type>> in =
+                    truncate(gen_random_range<float_type>(gen, -1.0, +1.0), size);
+                univector<complex<float_type>> out    = in;
+                univector<complex<float_type>> refout = out;
+                univector<complex<float_type>> outo   = in;
+                const dft_plan<float_type> dft(size);
+                univector<u8> temp(dft.temp_size);
 
-                          const float_type rms_diff = rms(cabs(refout - out));
-                          const double ops          = log2size * 100;
-                          const double epsilon      = std::numeric_limits<float_type>::epsilon();
-                          CHECK(rms_diff < epsilon * ops);
-                      }
+                reference_dft(refout.data(), in.data(), size, inverse);
+                dft.execute(outo, in, temp, inverse);
+                dft.execute(out, out, temp, inverse);
 
-                      if (size >= 16)
-                      {
-                          univector<float_type> in =
-                              truncate(gen_random_range<float_type>(gen, -1.0, +1.0), size);
+                const float_type rms_diff_inplace = rms(cabs(refout - out));
+                CHECK(rms_diff_inplace < min_prec);
+                const float_type rms_diff_outofplace = rms(cabs(refout - outo));
+                CHECK(rms_diff_outofplace < min_prec);
+            }
 
-                          univector<complex<float_type>> out    = truncate(scalar(qnan), size);
-                          univector<complex<float_type>> refout = truncate(scalar(qnan), size);
-                          const dft_plan_real<float_type> dft(size);
-                          univector<u8> temp(dft.temp_size);
+            if (size >= 4 && is_poweroftwo(size))
+            {
+                univector<float_type> in = truncate(gen_random_range<float_type>(gen, -1.0, +1.0), size);
 
-                          reference_fft(refout.data(), in.data(), size);
-                          dft.execute(out, in, temp);
-                          const float_type rms_diff_r =
-                              rms(cabs(refout.truncate(size / 2 + 1) - out.truncate(size / 2 + 1)));
-                          const double ops     = log2size * 200;
-                          const double epsilon = std::numeric_limits<float_type>::epsilon();
-                          CHECK(rms_diff_r < epsilon * ops);
+                univector<complex<float_type>> out    = truncate(scalar(qnan), size);
+                univector<complex<float_type>> refout = truncate(scalar(qnan), size);
+                const dft_plan_real<float_type> dft(size);
+                univector<u8> temp(dft.temp_size);
 
-                          univector<float_type> out2(size, 0.f);
-                          dft.execute(out2, out, temp);
-                          out2                         = out2 / size;
-                          const float_type rms_diff_r2 = rms(in - out2);
-                          CHECK(rms_diff_r2 < epsilon * ops);
-                      }
-                  });
+                testo::active_test()->append_comment("real-direct");
+                reference_fft(refout.data(), in.data(), size);
+                dft.execute(out, in, temp);
+                float_type rms_diff = rms(cabs(refout.truncate(size / 2 + 1) - out.truncate(size / 2 + 1)));
+                CHECK(rms_diff < min_prec);
+
+                univector<float_type> out2(size, 0.f);
+                testo::active_test()->append_comment("real-inverse");
+                dft.execute(out2, out, temp);
+                out2     = out2 / size;
+                rms_diff = rms(in - out2);
+                CHECK(rms_diff < min_prec);
+            }
+        });
 }
 
 #ifndef KFR_NO_MAIN
@@ -127,6 +143,6 @@ int main()
 {
     println(library_version(), " running on ", cpu_runtime());
 
-    return testo::run_all("", true);
+    return testo::run_all("", false);
 }
 #endif

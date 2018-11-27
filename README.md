@@ -15,7 +15,7 @@ KFR is a header-only library (except DFT) and has no external dependencies.
 
 * Full AVX-512 support
 * EBU R128
-* Non-power of two DFT (coming soon)
+* Non-power of two DFT
 * TruePeak (coming soon)
 * Number of automatic tests has been increased
 * GPL version changed from 3 to 2+

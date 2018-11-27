@@ -45,7 +45,7 @@ CMT_PRAGMA_MSVC(warning(disable : 4100))
 namespace kfr
 {
 
-constexpr csizes_t<2, 3, 4, 5, 6, 7, 8, 10> dft_radices{};
+constexpr csizes_t<2, 3, 4, 5, 6, 7, 8, 9, 10> dft_radices{};
 
 #define DFT_ASSERT TESTO_ASSERT_INACTIVE
 
@@ -58,21 +58,29 @@ using cinvert_t = ctrue_t;
 template <typename T>
 struct dft_stage
 {
+    size_t radix      = 0;
     size_t stage_size = 0;
     size_t data_size  = 0;
     size_t temp_size  = 0;
     u8* data          = nullptr;
     size_t repeats    = 1;
     size_t out_offset = 0;
-    size_t width      = 0;
     size_t blocks     = 0;
-    const char* name;
-    bool recursion   = false;
-    bool can_inplace = true;
-    bool inplace     = false;
-    bool to_scratch  = false;
+    const char* name  = nullptr;
+    bool recursion    = false;
+    bool can_inplace  = true;
+    bool inplace      = false;
+    bool to_scratch   = false;
+    bool need_reorder = true;
 
     void initialize(size_t size) { do_initialize(size); }
+
+    virtual void dump() const
+    {
+        printf("%s: \n\t%5zu,%5zu,%5zu,%5zu,%5zu,%5zu,%5zu, %d, %d, %d, %d\n", name ? name : "unnamed", radix,
+               stage_size, data_size, temp_size, repeats, out_offset, blocks, recursion, can_inplace, inplace,
+               to_scratch);
+    }
 
     KFR_INTRIN void execute(cdirect_t, complex<T>* out, const complex<T>* in, u8* temp)
     {
@@ -472,7 +480,7 @@ template <typename T>
 static void dft_stage_fixed_initialize(dft_stage<T>* stage, size_t width)
 {
     complex<T>* twiddle = ptr_cast<complex<T>>(stage->data);
-    const size_t N      = stage->repeats * stage->stage_size;
+    const size_t N      = stage->repeats * stage->radix;
     const size_t Nord   = stage->repeats;
     size_t i            = 0;
 
@@ -482,7 +490,7 @@ static void dft_stage_fixed_initialize(dft_stage<T>* stage, size_t width)
         for (; i < Nord / width * width; i += width)
         {
             CMT_LOOP_NOUNROLL
-            for (size_t j = 1; j < stage->stage_size; j++)
+            for (size_t j = 1; j < stage->radix; j++)
             {
                 CMT_LOOP_NOUNROLL
                 for (size_t k = 0; k < width; k++)
@@ -502,16 +510,17 @@ struct dft_stage_fixed_impl : dft_stage<T>
 {
     dft_stage_fixed_impl(size_t radix_, size_t iterations, size_t blocks)
     {
-        this->stage_size = radix;
-        this->blocks     = blocks;
-        this->repeats    = iterations;
-        this->recursion  = false; // true;
+        this->name      = type_name<decltype(*this)>();
+        this->radix     = radix;
+        this->blocks    = blocks;
+        this->repeats   = iterations;
+        this->recursion = false; // true;
         this->data_size =
             align_up((this->repeats * (radix - 1)) * sizeof(complex<T>), platform<>::native_cache_alignment);
     }
 
-protected:
-    constexpr static size_t width = fft_vector_width<T>;
+    constexpr static size_t width =
+        radix >= 7 ? fft_vector_width<T> / 2 : radix >= 4 ? fft_vector_width<T> : fft_vector_width<T> * 2;
     virtual void do_initialize(size_t size) override final { dft_stage_fixed_initialize(this, width); }
 
     DFT_STAGE_FN
@@ -521,7 +530,7 @@ protected:
         const size_t Nord         = this->repeats;
         const complex<T>* twiddle = ptr_cast<complex<T>>(this->data);
 
-        const size_t N = Nord * this->stage_size;
+        const size_t N = Nord * this->radix;
         CMT_LOOP_NOUNROLL
         for (size_t b = 0; b < this->blocks; b++)
         {
@@ -537,13 +546,16 @@ struct dft_stage_fixed_final_impl : dft_stage<T>
 {
     dft_stage_fixed_final_impl(size_t radix_, size_t iterations, size_t blocks)
     {
-        this->stage_size  = radix;
+        this->name        = type_name<decltype(*this)>();
+        this->radix       = radix;
         this->blocks      = blocks;
         this->repeats     = iterations;
-        this->recursion   = false; // true;
+        this->recursion   = false;
         this->can_inplace = false;
     }
-    constexpr static size_t width = fft_vector_width<T>;
+    constexpr static size_t width =
+        radix >= 7 ? fft_vector_width<T> / 2 : radix >= 4 ? fft_vector_width<T> : fft_vector_width<T> * 2;
+
     DFT_STAGE_FN
     template <bool inverse>
     KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8*)
@@ -555,19 +567,163 @@ struct dft_stage_fixed_final_impl : dft_stage<T>
     }
 };
 
+template <typename E>
+inline E& apply_conj(E& e, cfalse_t)
+{
+    return e;
+}
+
+template <typename E>
+inline auto apply_conj(E& e, ctrue_t)
+{
+    return cconj(e);
+}
+
+/// [0, N - 1, N - 2, N - 3, ..., 3, 2, 1]
+template <typename E>
+struct fft_inverse : expression_base<E>
+{
+    using value_type = value_type_of<E>;
+
+    CMT_INLINE fft_inverse(E&& expr) noexcept : expression_base<E>(std::forward<E>(expr)) {}
+
+    CMT_INLINE vec<value_type, 1> operator()(cinput_t input, size_t index, vec_t<value_type, 1>) const
+    {
+        return this->argument_first(input, index == 0 ? 0 : this->size() - index, vec_t<value_type, 1>());
+    }
+
+    template <size_t N>
+    CMT_INLINE vec<value_type, N> operator()(cinput_t input, size_t index, vec_t<value_type, N>) const
+    {
+        if (index == 0)
+        {
+            return concat(
+                this->argument_first(input, index, vec_t<value_type, 1>()),
+                reverse(this->argument_first(input, this->size() - (N - 1), vec_t<value_type, N - 1>())));
+        }
+        return reverse(this->argument_first(input, this->size() - index - (N - 1), vec_t<value_type, N>()));
+    }
+};
+
+template <typename E>
+inline auto apply_fft_inverse(E&& e)
+{
+    return fft_inverse<E>(std::forward<E>(e));
+}
+
+template <typename T>
+struct dft_arblen_stage_impl : dft_stage<T>
+{
+    dft_arblen_stage_impl(size_t size)
+        : fftsize(next_poweroftwo(size) * 2), plan(fftsize, dft_order::internal), size(size)
+    {
+        this->name        = type_name<decltype(*this)>();
+        this->radix       = size;
+        this->blocks      = 1;
+        this->repeats     = 1;
+        this->recursion   = false;
+        this->can_inplace = false;
+        this->temp_size   = plan.temp_size;
+
+        chirp_ = render(cexp(sqr(linspace(T(1) - size, size - T(1), size * 2 - 1, true, true)) *
+                             complex<T>(0, -1) * c_pi<T> / size));
+
+        ichirpp_ = render(truncate(padded(1 / slice(chirp_, 0, 2 * size - 1)), fftsize));
+
+        univector<u8> temp(plan.temp_size);
+        plan.execute(ichirpp_, ichirpp_, temp);
+        xp.resize(fftsize, 0);
+        xp_fft.resize(fftsize);
+        invN2 = T(1) / fftsize;
+    }
+
+    DFT_STAGE_FN
+    template <bool inverse>
+    KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8* temp)
+    {
+        const size_t n  = this->size;
+        const size_t N2 = this->fftsize;
+
+        auto&& chirp = apply_conj(chirp_, cbool<inverse>);
+
+        xp.slice(0, n) = make_univector(in, n) * slice(chirp, n - 1);
+
+        plan.execute(xp_fft.data(), xp.data(), temp);
+
+        if (inverse)
+            xp_fft = xp_fft * cconj(apply_fft_inverse(ichirpp_));
+        else
+            xp_fft = xp_fft * ichirpp_;
+        plan.execute(xp_fft.data(), xp_fft.data(), temp, ctrue);
+
+        make_univector(out, n) = xp_fft.slice(n - 1) * slice(chirp, n - 1) * invN2;
+    }
+
+    const size_t size;
+    const size_t fftsize;
+    T invN2;
+    dft_plan<T> plan;
+    univector<complex<T>> chirp_;
+    univector<complex<T>> ichirpp_;
+    univector<complex<T>> xp;
+    univector<complex<T>> xp_fft;
+};
+
+template <typename T, size_t radix1, size_t radix2, size_t size = radix1* radix2>
+struct dft_special_stage_impl : dft_stage<T>
+{
+    dft_special_stage_impl() : stage1(radix1, size / radix1, 1), stage2(radix2, 1, size / radix2)
+    {
+        this->name        = type_name<decltype(*this)>();
+        this->radix       = size;
+        this->blocks      = 1;
+        this->repeats     = 1;
+        this->recursion   = false;
+        this->can_inplace = false;
+        this->temp_size   = stage1.temp_size + stage2.temp_size + sizeof(complex<T>) * size;
+        this->data_size   = stage1.data_size + stage2.data_size;
+    }
+    void dump() const override
+    {
+        dft_stage<T>::dump();
+        printf("    ");
+        stage1.dump();
+        printf("    ");
+        stage2.dump();
+    }
+    void do_initialize(size_t stage_size) override
+    {
+        stage1.data = this->data;
+        stage2.data = this->data + stage1.data_size;
+        stage1.initialize(stage_size);
+        stage2.initialize(stage_size);
+    }
+    DFT_STAGE_FN
+    template <bool inverse>
+    KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8* temp)
+    {
+        complex<T>* scratch = ptr_cast<complex<T>>(temp + stage1.temp_size + stage2.temp_size);
+        stage1.do_execute(cbool<inverse>, scratch, in, temp);
+        stage2.do_execute(cbool<inverse>, out, scratch, temp + stage1.temp_size);
+    }
+    dft_stage_fixed_impl<T, radix1> stage1;
+    dft_stage_fixed_final_impl<T, radix2> stage2;
+};
+
 template <typename T, bool final>
 struct dft_stage_generic_impl : dft_stage<T>
 {
     dft_stage_generic_impl(size_t radix, size_t iterations, size_t blocks)
     {
-        this->stage_size  = radix;
+        this->name        = type_name<decltype(*this)>();
+        this->radix       = radix;
         this->blocks      = blocks;
         this->repeats     = iterations;
         this->recursion   = false; // true;
         this->can_inplace = false;
         this->temp_size   = align_up(sizeof(complex<T>) * radix, platform<>::native_cache_alignment);
         this->data_size =
-            align_up(sizeof(complex<T>) * sqr(this->stage_size / 2), platform<>::native_cache_alignment);
+            align_up(sizeof(complex<T>) * sqr(this->radix / 2), platform<>::native_cache_alignment);
     }
 
 protected:
@@ -575,13 +731,12 @@ protected:
     {
         complex<T>* twiddle = ptr_cast<complex<T>>(this->data);
         CMT_LOOP_NOUNROLL
-        for (size_t i = 0; i < this->stage_size / 2; i++)
+        for (size_t i = 0; i < this->radix / 2; i++)
         {
             CMT_LOOP_NOUNROLL
-            for (size_t j = 0; j < this->stage_size / 2; j++)
+            for (size_t j = 0; j < this->radix / 2; j++)
             {
-                cwrite<1>(twiddle++,
-                          cossin_conj(broadcast<2>((i + 1) * (j + 1) * c_pi<T, 2> / this->stage_size)));
+                cwrite<1>(twiddle++, cossin_conj(broadcast<2>((i + 1) * (j + 1) * c_pi<T, 2> / this->radix)));
             }
         }
     }
@@ -593,17 +748,17 @@ protected:
         const complex<T>* twiddle = ptr_cast<complex<T>>(this->data);
         const size_t bl           = this->blocks;
         const size_t Nord         = this->repeats;
-        const size_t N            = Nord * this->stage_size;
+        const size_t N            = Nord * this->radix;
 
         CMT_LOOP_NOUNROLL
         for (size_t b = 0; b < bl; b++)
-            generic_butterfly(this->stage_size, cbool<inverse>, out + b, in + b * this->stage_size,
+            generic_butterfly(this->radix, cbool<inverse>, out + b, in + b * this->radix,
                               ptr_cast<complex<T>>(temp), twiddle, bl);
     }
 };
 
 template <typename T, typename Tr2>
-inline void dft_permute(complex<T>* out, const complex<T>* in, size_t r0, size_t r1, Tr2 r2)
+inline void dft_permute(complex<T>* out, const complex<T>* in, size_t r0, size_t r1, Tr2 first_radix)
 {
     CMT_ASSUME(r0 > 1);
     CMT_ASSUME(r1 > 1);
@@ -617,20 +772,20 @@ inline void dft_permute(complex<T>* out, const complex<T>* in, size_t r0, size_t
         {
             const complex<T>* in2 = in1;
             CMT_LOOP_UNROLL
-            for (size_t j = 0; j < r2; j++)
+            for (size_t j = 0; j < first_radix; j++)
             {
                 *out++ = *in2;
                 in2 += r1;
             }
             in1++;
-            in += r2;
+            in += first_radix;
         }
     }
 }
 
-template <typename T>
+template <typename T, typename Tr2>
 inline void dft_permute_deep(complex<T>*& out, const complex<T>* in, const size_t* radices, size_t count,
-                             size_t index, size_t inscale, size_t inner_size)
+                             size_t index, size_t inscale, size_t inner_size, Tr2 first_radix)
 {
     const bool b       = index == 1;
     const size_t radix = radices[index];
@@ -641,7 +796,7 @@ inline void dft_permute_deep(complex<T>*& out, const complex<T>* in, const size_
         {
             const complex<T>* in1 = in;
             CMT_LOOP_UNROLL
-            for (size_t j = 0; j < radices[0]; j++)
+            for (size_t j = 0; j < first_radix; j++)
             {
                 *out++ = *in1;
                 in1 += inner_size;
@@ -656,7 +811,7 @@ inline void dft_permute_deep(complex<T>*& out, const complex<T>* in, const size_
         CMT_LOOP_NOUNROLL
         for (size_t i = 0; i < steps; i++)
         {
-            dft_permute_deep(out, in, radices, count, index - 1, inscale_next, inner_size);
+            dft_permute_deep(out, in, radices, count, index - 1, inscale_next, inner_size, first_radix);
             in += inscale;
         }
     }
@@ -667,15 +822,15 @@ struct dft_reorder_stage_impl : dft_stage<T>
 {
     dft_reorder_stage_impl(const int* radices, size_t count) : count(count)
     {
+        this->name        = type_name<decltype(*this)>();
         this->can_inplace = false;
         this->data_size   = 0;
-        std::copy(std::make_reverse_iterator(radices + count), std::make_reverse_iterator(radices),
-                  this->radices);
+        std::copy(radices, radices + count, this->radices);
         this->inner_size = 1;
         this->size       = 1;
         for (size_t r = 0; r < count; r++)
         {
-            if (r != 0 && r != count - 2)
+            if (r != 0 && r != count - 1)
                 this->inner_size *= radices[r];
             this->size *= radices[r];
         }
@@ -692,38 +847,37 @@ protected:
     template <bool inverse>
     KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
-        //        std::copy(in, in + this->size, out);
-        //        return;
-        if (count == 3)
-        {
-            dft_permute(out, in, radices[2], radices[1], radices[0]);
-        }
-        else
-        {
-            const size_t rlast = radices[count - 1];
-            for (size_t p = 0; p < rlast; p++)
-            {
-                dft_permute_deep(out, in, radices, count, count - 2, 1, inner_size);
-                in += size / rlast;
-            }
-        }
-        //        if (count == 1)
-        //        {
-        //            cswitch(dft_radices, radices[0], [&](auto rfirst) { dft_permute3(out, in, 1, 1, rfirst);
-        //            },
-        //                    [&]() { dft_permute3(out, in, 1, 1, radices[0]); });
-        //        }
-
-        //        const size_t rlast = radices[count - 1];
-        //        const size_t size  = this->size / rlast;
-        //
-        //        cswitch(dft_radices, radices[0], [&](auto rfirst) {
-        //            for (size_t p = 0; p < rlast; p++)
-        //            {
-        //                reorder_impl(out, in, index, 1, rfirst);
-        //                in += size;
-        //            }
-        //        });
+        cswitch(dft_radices, radices[0],
+                [&](auto first_radix) {
+                    if (count == 3)
+                    {
+                        dft_permute(out, in, radices[2], radices[1], first_radix);
+                    }
+                    else
+                    {
+                        const size_t rlast = radices[count - 1];
+                        for (size_t p = 0; p < rlast; p++)
+                        {
+                            dft_permute_deep(out, in, radices, count, count - 2, 1, inner_size, first_radix);
+                            in += size / rlast;
+                        }
+                    }
+                },
+                [&]() {
+                    if (count == 3)
+                    {
+                        dft_permute(out, in, radices[2], radices[1], radices[0]);
+                    }
+                    else
+                    {
+                        const size_t rlast = radices[count - 1];
+                        for (size_t p = 0; p < rlast; p++)
+                        {
+                            dft_permute_deep(out, in, radices, count, count - 2, 1, inner_size, radices[0]);
+                            in += size / rlast;
+                        }
+                    }
+                });
     }
 };
 
@@ -732,6 +886,8 @@ struct fft_stage_impl : dft_stage<T>
 {
     fft_stage_impl(size_t stage_size)
     {
+        this->name       = type_name<decltype(*this)>();
+        this->radix      = 4;
         this->stage_size = stage_size;
         this->repeats    = 4;
         this->recursion  = true;
@@ -770,6 +926,8 @@ struct fft_final_stage_impl : dft_stage<T>
 {
     fft_final_stage_impl(size_t)
     {
+        this->name       = type_name<decltype(*this)>();
+        this->radix      = size;
         this->stage_size = size;
         this->out_offset = size;
         this->repeats    = 4;
@@ -863,6 +1021,7 @@ struct fft_reorder_stage_impl : dft_stage<T>
 {
     fft_reorder_stage_impl(size_t stage_size)
     {
+        this->name       = type_name<decltype(*this)>();
         this->stage_size = stage_size;
         log2n            = ilog2(stage_size);
         this->data_size  = 0;
@@ -887,7 +1046,7 @@ struct fft_specialization;
 template <typename T>
 struct fft_specialization<T, 1> : dft_stage<T>
 {
-    fft_specialization(size_t) {}
+    fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
 
 protected:
     constexpr static bool aligned = false;
@@ -905,7 +1064,7 @@ protected:
 template <typename T>
 struct fft_specialization<T, 2> : dft_stage<T>
 {
-    fft_specialization(size_t) {}
+    fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
 
 protected:
     constexpr static bool aligned = false;
@@ -923,7 +1082,7 @@ protected:
 template <typename T>
 struct fft_specialization<T, 3> : dft_stage<T>
 {
-    fft_specialization(size_t) {}
+    fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
 
 protected:
     constexpr static bool aligned = false;
@@ -940,7 +1099,7 @@ protected:
 template <typename T>
 struct fft_specialization<T, 4> : dft_stage<T>
 {
-    fft_specialization(size_t) {}
+    fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
 
 protected:
     constexpr static bool aligned = false;
@@ -957,7 +1116,7 @@ protected:
 template <typename T>
 struct fft_specialization<T, 5> : dft_stage<T>
 {
-    fft_specialization(size_t) {}
+    fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
 
 protected:
     constexpr static bool aligned = false;
@@ -974,7 +1133,7 @@ protected:
 template <typename T>
 struct fft_specialization<T, 6> : dft_stage<T>
 {
-    fft_specialization(size_t) {}
+    fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
 
 protected:
     constexpr static bool aligned = false;
@@ -991,6 +1150,7 @@ struct fft_specialization<T, 7> : dft_stage<T>
 {
     fft_specialization(size_t)
     {
+        this->name       = type_name<decltype(*this)>();
         this->stage_size = 128;
         this->data_size  = align_up(sizeof(complex<T>) * 128 * 3 / 2, platform<>::native_cache_alignment);
     }
@@ -1018,7 +1178,8 @@ protected:
     {
         const complex<T>* twiddle = ptr_cast<complex<T>>(this->data);
         final_pass<inverse>(csize_t<final_size>(), out, in, twiddle);
-        fft_reorder(out, csize_t<7>());
+        if (this->need_reorder)
+            fft_reorder(out, csize_t<7>());
     }
 
     template <bool inverse>
@@ -1045,7 +1206,11 @@ protected:
 template <>
 struct fft_specialization<float, 8> : dft_stage<float>
 {
-    fft_specialization(size_t) { this->temp_size = sizeof(complex<float>) * 256; }
+    fft_specialization(size_t)
+    {
+        this->name      = type_name<decltype(*this)>();
+        this->temp_size = sizeof(complex<float>) * 256;
+    }
 
 protected:
     using T = float;
@@ -1085,42 +1250,54 @@ template <>
 struct fft_specialization<double, 8> : fft_final_stage_impl<double, false, 256>
 {
     using T = double;
-    using fft_final_stage_impl<double, false, 256>::fft_final_stage_impl;
+    fft_specialization(size_t stage_size) : fft_final_stage_impl<double, false, 256>(stage_size)
+    {
+        this->name = type_name<decltype(*this)>();
+    }
 
     DFT_STAGE_FN
     template <bool inverse>
     KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
         fft_final_stage_impl<double, false, 256>::template do_execute<inverse>(out, in, nullptr);
-        fft_reorder(out, csize_t<8>());
+        if (this->need_reorder)
+            fft_reorder(out, csize_t<8>());
     }
 };
 
 template <typename T>
 struct fft_specialization<T, 9> : fft_final_stage_impl<T, false, 512>
 {
-    using fft_final_stage_impl<T, false, 512>::fft_final_stage_impl;
+    fft_specialization(size_t stage_size) : fft_final_stage_impl<T, false, 512>(stage_size)
+    {
+        this->name = type_name<decltype(*this)>();
+    }
 
     DFT_STAGE_FN
     template <bool inverse>
     KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
         fft_final_stage_impl<T, false, 512>::template do_execute<inverse>(out, in, nullptr);
-        fft_reorder(out, csize_t<9>());
+        if (this->need_reorder)
+            fft_reorder(out, csize_t<9>());
     }
 };
 
 template <typename T>
 struct fft_specialization<T, 10> : fft_final_stage_impl<T, false, 1024>
 {
-    using fft_final_stage_impl<T, false, 1024>::fft_final_stage_impl;
+    fft_specialization(size_t stage_size) : fft_final_stage_impl<T, false, 1024>(stage_size)
+    {
+        this->name = type_name<decltype(*this)>();
+    }
 
     DFT_STAGE_FN
     template <bool inverse>
     KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
         fft_final_stage_impl<T, false, 1024>::template do_execute<inverse>(out, in, nullptr);
-        fft_reorder(out, 10, cfalse);
+        if (this->need_reorder)
+            fft_reorder(out, 10, cfalse);
     }
 };
 
@@ -1133,7 +1310,7 @@ template <typename Stage, typename... Args>
 void dft_plan<T>::add_stage(Args... args)
 {
     dft_stage<T>* stage = new Stage(args...);
-    stage->name         = nullptr;
+    stage->need_reorder = need_reorder;
     this->data_size += stage->data_size;
     this->temp_size += stage->temp_size;
     stages.push_back(dft_stage_ptr(stage));
@@ -1207,12 +1384,13 @@ void dft_plan<T>::initialize()
         offset += stage->data_size;
     }
 
-    bool to_scratch = false;
+    bool to_scratch     = false;
+    bool scratch_needed = false;
     for (dft_stage_ptr& stage : reversed(stages))
     {
         if (to_scratch)
         {
-            this->temp_size += align_up(sizeof(complex<T>) * this->size, platform<>::native_cache_alignment);
+            scratch_needed = true;
         }
         stage->to_scratch = to_scratch;
         if (!stage->can_inplace)
@@ -1220,14 +1398,16 @@ void dft_plan<T>::initialize()
             to_scratch = !to_scratch;
         }
     }
+    if (scratch_needed || !stages[0]->can_inplace)
+        this->temp_size += align_up(sizeof(complex<T>) * this->size, platform<>::native_cache_alignment);
 }
 
 template <typename T>
 const complex<T>* dft_plan<T>::select_in(size_t stage, const complex<T>* out, const complex<T>* in,
-                                         const complex<T>* scratch) const
+                                         const complex<T>* scratch, bool in_scratch) const
 {
     if (stage == 0)
-        return in;
+        return in_scratch ? scratch : in;
     return stages[stage - 1]->to_scratch ? scratch : out;
 }
 
@@ -1241,11 +1421,21 @@ template <typename T>
 template <bool inverse>
 void dft_plan<T>::execute_dft(cbool_t<inverse>, complex<T>* out, const complex<T>* in, u8* temp) const
 {
+    if (stages.size() == 1 && (stages[0]->can_inplace || in != out))
+    {
+        return stages[0]->execute(cbool<inverse>, out, in, temp);
+    }
     size_t stack[32] = { 0 };
 
     complex<T>* scratch =
         ptr_cast<complex<T>>(temp + this->temp_size -
                              align_up(sizeof(complex<T>) * this->size, platform<>::native_cache_alignment));
+
+    bool in_scratch = !stages[0]->can_inplace && in == out;
+    if (in_scratch)
+    {
+        internal::builtin_memcpy(scratch, in, sizeof(complex<T>) * this->size);
+    }
 
     const size_t count = stages.size();
 
@@ -1266,7 +1456,7 @@ void dft_plan<T>::execute_dft(cbool_t<inverse>, complex<T>* out, const complex<T
                 else
                 {
                     complex<T>* rout      = select_out(rdepth, out, scratch);
-                    const complex<T>* rin = select_in(rdepth, out, in, scratch);
+                    const complex<T>* rin = select_in(rdepth, out, in, scratch, in_scratch);
                     stages[rdepth]->execute(cbool<inverse>, rout + offset, rin + offset, temp);
                     offset += stages[rdepth]->out_offset;
                     stack[rdepth]++;
@@ -1281,15 +1471,16 @@ void dft_plan<T>::execute_dft(cbool_t<inverse>, complex<T>* out, const complex<T
         else
         {
             stages[depth]->execute(cbool<inverse>, select_out(depth, out, scratch),
-                                   select_in(depth, out, in, scratch), temp);
+                                   select_in(depth, out, in, scratch, in_scratch), temp);
             depth++;
         }
     }
 }
 
 template <typename T>
-dft_plan<T>::dft_plan(size_t size, dft_type) : size(size), temp_size(0), data_size(0)
+dft_plan<T>::dft_plan(size_t size, dft_order order) : size(size), temp_size(0), data_size(0)
 {
+    need_reorder = true;
     if (is_poweroftwo(size))
     {
         const size_t log2n = ilog2(size);
@@ -1303,62 +1494,82 @@ dft_plan<T>::dft_plan(size_t size, dft_type) : size(size), temp_size(0), data_si
                     cswitch(cfalse_true, is_even(log2n), [&](auto is_even) {
                         this->make_fft(size, is_even, ctrue);
                         constexpr size_t is_evenv = val_of(decltype(is_even)());
-                        this->add_stage<internal::fft_reorder_stage_impl<T, is_evenv>>(size);
+                        if (need_reorder)
+                            this->add_stage<internal::fft_reorder_stage_impl<T, is_evenv>>(size);
                     });
                 });
     }
+#ifndef KFR_DFT_NO_NPo2
     else
     {
-        size_t cur_size                = size;
-        constexpr size_t radices_count = dft_radices.back() + 1;
-        u8 count[radices_count]        = { 0 };
-        int radices[32]                = { 0 };
-        size_t radices_size            = 0;
-
-        cforeach(dft_radices[csizeseq<dft_radices.size(), dft_radices.size() - 1, -1>], [&](auto radix) {
-            while (cur_size && cur_size % val_of(radix) == 0)
-            {
-                count[val_of(radix)]++;
-                cur_size /= val_of(radix);
-            }
-        });
-
-        size_t blocks     = 1;
-        size_t iterations = size;
-
-        for (size_t r = dft_radices.front(); r <= dft_radices.back(); r++)
+        if (size == 60)
         {
-            for (size_t i = 0; i < count[r]; i++)
-            {
-                iterations /= r;
-                radices[radices_size++] = r;
-                if (iterations == 1)
-                    this->prepare_dft_stage(r, iterations, blocks, ctrue);
-                else
-                    this->prepare_dft_stage(r, iterations, blocks, cfalse);
-                blocks *= r;
-            }
+            this->add_stage<internal::dft_special_stage_impl<T, 6, 10>>();
         }
-
-        if (cur_size > 1)
+        else if (size == 48)
         {
-            iterations /= cur_size;
-            radices[radices_size++] = cur_size;
-            if (iterations == 1)
-                this->prepare_dft_stage(cur_size, iterations, blocks, ctrue);
+            this->add_stage<internal::dft_special_stage_impl<T, 6, 8>>();
+        }
+        else
+        {
+            size_t cur_size                = size;
+            constexpr size_t radices_count = dft_radices.back() + 1;
+            u8 count[radices_count]        = { 0 };
+            int radices[32]                = { 0 };
+            size_t radices_size            = 0;
+
+            cforeach(dft_radices[csizeseq<dft_radices.size(), dft_radices.size() - 1, -1>], [&](auto radix) {
+                while (cur_size && cur_size % val_of(radix) == 0)
+                {
+                    count[val_of(radix)]++;
+                    cur_size /= val_of(radix);
+                }
+            });
+
+            if (cur_size >= 101)
+            {
+                this->add_stage<internal::dft_arblen_stage_impl<T>>(size);
+            }
             else
-                this->prepare_dft_stage(cur_size, iterations, blocks, cfalse);
-        }
+            {
+                size_t blocks     = 1;
+                size_t iterations = size;
 
-        if (stages.size() > 2)
-            this->add_stage<internal::dft_reorder_stage_impl<T>>(radices, radices_size);
+                for (size_t r = dft_radices.front(); r <= dft_radices.back(); r++)
+                {
+                    for (size_t i = 0; i < count[r]; i++)
+                    {
+                        iterations /= r;
+                        radices[radices_size++] = r;
+                        if (iterations == 1)
+                            this->prepare_dft_stage(r, iterations, blocks, ctrue);
+                        else
+                            this->prepare_dft_stage(r, iterations, blocks, cfalse);
+                        blocks *= r;
+                    }
+                }
+
+                if (cur_size > 1)
+                {
+                    iterations /= cur_size;
+                    radices[radices_size++] = cur_size;
+                    if (iterations == 1)
+                        this->prepare_dft_stage(cur_size, iterations, blocks, ctrue);
+                    else
+                        this->prepare_dft_stage(cur_size, iterations, blocks, cfalse);
+                }
+
+                if (stages.size() > 2)
+                    this->add_stage<internal::dft_reorder_stage_impl<T>>(radices, radices_size);
+            }
+        }
     }
+#endif
     initialize();
 }
 
 template <typename T>
-dft_plan_real<T>::dft_plan_real(size_t size, dft_type type)
-    : dft_plan<T>(size / 2, type), size(size), rtwiddle(size / 4)
+dft_plan_real<T>::dft_plan_real(size_t size) : dft_plan<T>(size / 2), size(size), rtwiddle(size / 4)
 {
     using namespace internal;
 
@@ -1461,6 +1672,15 @@ void dft_plan_real<T>::from_fmt(complex<T>* out, const complex<T>* in, dft_pack_
 template <typename T>
 dft_plan<T>::~dft_plan()
 {
+}
+
+template <typename T>
+void dft_plan<T>::dump() const
+{
+    for (const dft_stage_ptr& s : stages)
+    {
+        s->dump();
+    }
 }
 
 namespace internal
@@ -1621,24 +1841,26 @@ template void convolve_filter<double>::set_data(const univector<double>&);
 template void convolve_filter<float>::process_buffer(float* output, const float* input, size_t size);
 template void convolve_filter<double>::process_buffer(double* output, const double* input, size_t size);
 
-template dft_plan<float>::dft_plan(size_t, dft_type);
+template dft_plan<float>::dft_plan(size_t, dft_order);
 template dft_plan<float>::~dft_plan();
+template void dft_plan<float>::dump() const;
 template void dft_plan<float>::execute_dft(cometa::cbool_t<false>, kfr::complex<float>* out,
                                            const kfr::complex<float>* in, kfr::u8* temp) const;
 template void dft_plan<float>::execute_dft(cometa::cbool_t<true>, kfr::complex<float>* out,
                                            const kfr::complex<float>* in, kfr::u8* temp) const;
-template dft_plan_real<float>::dft_plan_real(size_t, dft_type);
+template dft_plan_real<float>::dft_plan_real(size_t);
 template void dft_plan_real<float>::from_fmt(kfr::complex<float>* out, const kfr::complex<float>* in,
                                              kfr::dft_pack_format fmt) const;
 template void dft_plan_real<float>::to_fmt(kfr::complex<float>* out, kfr::dft_pack_format fmt) const;
 
-template dft_plan<double>::dft_plan(size_t, dft_type);
+template dft_plan<double>::dft_plan(size_t, dft_order);
 template dft_plan<double>::~dft_plan();
+template void dft_plan<double>::dump() const;
 template void dft_plan<double>::execute_dft(cometa::cbool_t<false>, kfr::complex<double>* out,
                                             const kfr::complex<double>* in, kfr::u8* temp) const;
 template void dft_plan<double>::execute_dft(cometa::cbool_t<true>, kfr::complex<double>* out,
                                             const kfr::complex<double>* in, kfr::u8* temp) const;
-template dft_plan_real<double>::dft_plan_real(size_t, dft_type);
+template dft_plan_real<double>::dft_plan_real(size_t);
 template void dft_plan_real<double>::from_fmt(kfr::complex<double>* out, const kfr::complex<double>* in,
                                               kfr::dft_pack_format fmt) const;
 template void dft_plan_real<double>::to_fmt(kfr::complex<double>* out, kfr::dft_pack_format fmt) const;

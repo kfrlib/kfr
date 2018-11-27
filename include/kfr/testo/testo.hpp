@@ -191,13 +191,23 @@ struct test_case
         check(result, as_string(comparison.left), expr);
     }
 
+    void append_comment(const std::string& text)
+    {
+        comment += text;
+        if (show_progress)
+        {
+            println();
+            println(text, ":");
+        }
+    }
+
     void set_comment(const std::string& text)
     {
         comment = text;
         if (show_progress)
         {
             println();
-            println(comment, ":");
+            println(text, ":");
         }
     }
 
@@ -344,6 +354,6 @@ void assert_is_same_decay()
 #define TEST TESTO_TEST
 #define DTEST TESTO_DTEST
 #endif
-}
+} // namespace testo
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)

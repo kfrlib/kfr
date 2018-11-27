@@ -54,6 +54,12 @@ enum class dft_type
     inverse
 };
 
+enum class dft_order
+{
+    normal,
+    internal, // possibly bit/digit-reversed, implementation-defined, faster
+};
+
 template <typename T>
 struct dft_stage;
 
@@ -65,7 +71,9 @@ struct dft_plan
     size_t size;
     size_t temp_size;
 
-    dft_plan(size_t size, dft_type = dft_type::both);
+    dft_plan(size_t size, dft_order order = dft_order::normal);
+
+    void dump() const;
 
     KFR_INTRIN void execute(complex<T>* out, const complex<T>* in, u8* temp, bool inverse = false) const
     {
@@ -101,6 +109,7 @@ protected:
     autofree<u8> data;
     size_t data_size;
     std::vector<dft_stage_ptr> stages;
+    bool need_reorder;
 
     template <typename Stage, typename... Args>
     void add_stage(Args... args);
@@ -115,7 +124,8 @@ protected:
     template <bool inverse>
     void execute_dft(cbool_t<inverse>, complex<T>* out, const complex<T>* in, u8* temp) const;
 
-    const complex<T>* select_in(size_t stage, const complex<T>* out, const complex<T>* in, const complex<T>* scratch) const;
+    const complex<T>* select_in(size_t stage, const complex<T>* out, const complex<T>* in,
+                                const complex<T>* scratch, bool in_scratch) const;
     complex<T>* select_out(size_t stage, complex<T>* out, complex<T>* scratch) const;
 };
 
@@ -129,7 +139,7 @@ template <typename T>
 struct dft_plan_real : dft_plan<T>
 {
     size_t size;
-    dft_plan_real(size_t size, dft_type = dft_type::both);
+    dft_plan_real(size_t size);
 
     void execute(complex<T>*, const complex<T>*, u8*, bool = false) const = delete;
 
