@@ -49,9 +49,11 @@ TEST(test_correlate)
 }
 
 #ifdef CMT_ARCH_ARM
-constexpr size_t stopsize = 12;
+constexpr size_t fft_stopsize = 12;
+constexpr size_t dft_stopsize = 101;
 #else
-constexpr size_t stopsize = 20;
+constexpr size_t fft_stopsize = 20;
+constexpr size_t dft_stopsize = 257;
 #endif
 
 TEST(fft_real)
@@ -72,11 +74,11 @@ TEST(fft_accuracy)
     testo::active_test()->show_progress = true;
     random_bit_generator gen(2247448713, 915890490, 864203735, 2982561);
     std::set<size_t> size_set;
-    univector<size_t> sizes = truncate(1 + counter(), stopsize - 1);
+    univector<size_t> sizes = truncate(1 + counter(), fft_stopsize - 1);
     sizes                   = round(pow(2.0, sizes));
 
 #ifndef KFR_DFT_NO_NPo2
-    univector<size_t> sizes2 = truncate(2 + counter(), 1024);
+    univector<size_t> sizes2 = truncate(2 + counter(), dft_stopsize - 2);
     for (size_t s : sizes2)
     {
         if (std::find(sizes.begin(), sizes.end(), s) == sizes.end())
