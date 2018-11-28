@@ -58,29 +58,34 @@ KFR is a header-only library (except DFT) and has no external dependencies.
 
 ### KFR 3.0.1
 
-Powers of 2, from 16 to 16777216
+Powers of 2, from 16 to 16777216 (*Higher is better*)
 
 ![FFT Performance](img/powers2_double_16_16777216.png)
 
-Prime numbers from 17 to 127
+Prime numbers from 17 to 127 (*Higher is better*)
 
 ![DFT Performance](img/primes_double_17_127.png)
 
-Small numbers from 18 to 119
+Small numbers from 18 to 119 (*Higher is better*)
 
 ![DFT Performance](img/composite_double_18_119.png)
 
-Random sizes from 120 to 30720000
+Random sizes from 120 to 30720000 (*Higher is better*)
 
 ![DFT Performance](img/extra_double_120_30720000.png)
 
 ### KFR 0.9.1
+
+ (*Higher is better*)
+
 ![DFT Performance](img/fft_performance.png)
 
 See [fft benchmark](https://github.com/kfrlib/fft-benchmark) for details about benchmarking process.
 
 
 ## Biquad
+
+ (*Higher is better*)
 
 ![Biquad Performance](img/biquad.svg)
     
