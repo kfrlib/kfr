@@ -26,15 +26,6 @@ jobs:
       sudo apt-get update && sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf qemu
       ci/run.sh build-release -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake -DARCH_FLAGS=-DLIBC_WORKAROUND_GETS=1
 
-- job: Linux_ARM_Clang_Debug
-  pool:
-    vmImage: 'ubuntu-16.04'
-  steps:
-  - bash: |
-      set -e
-      sudo apt-get update && sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf qemu
-      ci/run.sh build-debug -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake -DARCH_FLAGS=-DLIBC_WORKAROUND_GETS=1
-
 - job: macOS_x86_64_Clang_Release
   strategy:
     matrix:
