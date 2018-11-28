@@ -5,7 +5,7 @@ jobs:
   steps:
   - bash: |
       set -e
-      sudo apt-get install -y ninja-build libmpfr-dev
+      sudo apt-get update && sudo apt-get install -y ninja-build libmpfr-dev
       ci/run.sh build-release -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release
 
 - job: Linux_x86_64_Clang_Debug
@@ -14,7 +14,7 @@ jobs:
   steps:
   - bash: |
       set -e
-      sudo apt-get install -y ninja-build libmpfr-dev
+      sudo apt-get update && sudo apt-get install -y ninja-build libmpfr-dev
       ci/run.sh build-debug   -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Debug
 
 - job: Linux_ARM_Clang_Release
@@ -23,7 +23,7 @@ jobs:
   steps:
   - bash: |
       set -e
-      sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf qemu
+      sudo apt-get update && sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf qemu
       ci/run.sh build-release -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake -DARCH_FLAGS=-DLIBC_WORKAROUND_GETS=1
 
 - job: Linux_ARM_Clang_Debug
@@ -32,7 +32,7 @@ jobs:
   steps:
   - bash: |
       set -e
-      sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf qemu
+      sudo apt-get update && sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf qemu
       ci/run.sh build-debug -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake -DARCH_FLAGS=-DLIBC_WORKAROUND_GETS=1
 
 - job: macOS_x86_64_Clang_Release
@@ -56,7 +56,7 @@ jobs:
       /bin/bash -c "sudo xcode-select -s /Applications/Xcode_$(XCODE_VER).app/Contents/Developer"
       brew install ninja
       ci/run.sh build-release -DCMAKE_BUILD_TYPE=Release
-      
+
 - job: macOS_x86_64_Clang_Debug
   strategy:
     matrix:
@@ -81,7 +81,7 @@ jobs:
       set -e
       choco install llvm ninja
       ci/run.sh build-release -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCMAKE_CXX_FLAGS=--target=x86_64-w64-windows-gnu -DCMAKE_BUILD_TYPE=Release
-      
+
 - job: Windows_MinGW_x86_64_Clang_Debug
   pool:
     vmImage: 'vs2017-win2016'
@@ -100,7 +100,7 @@ jobs:
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
       set PATH=%PATH:C:\tools\mingw64\bin;=%
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
-      ci\run.cmd build-release -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DARCH_FLAGS=-mavx -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release      
+      ci\run.cmd build-release -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DARCH_FLAGS=-mavx -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release
 
 - job: Windows_MSVC_x86_Clang_Release
   pool:
