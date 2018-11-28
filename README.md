@@ -13,11 +13,13 @@ KFR is a header-only library (except DFT) and has no external dependencies.
 
 ## What's new in KFR 3.0
 
+* Optimized non-power of two DFT implementation
 * Full AVX-512 support
 * EBU R128
-* Non-power of two DFT
-* TruePeak (coming soon)
+* Ability to include KFR as a subdirectory in cmake project
 * Number of automatic tests has been increased
+* C API for DFT
+* Partial GCC 8.x support
 * GPL version changed from 3 to 2+
 
 ## All features
@@ -52,25 +54,42 @@ KFR is a header-only library (except DFT) and has no external dependencies.
 * EBU R128
 
 # Benchmark results
-## FFT
+## DFT
 
-FFT (double precision, sizes from 1024 to 16777216)
+### KFR 3.0.1
+
+Powers of 2, from 16 to 16777216
+
+![FFT Performance](img/powers2_double_16_16777216.png)
+
+Prime numbers from 17 to 127
+
+![DFT Performance](img/primes_double_17_127.png)
+
+Small numbers from 18 to 119
+
+![DFT Performance](img/composite_double_18_119.png)
+
+Random sizes from 120 to 30720000
+
+![DFT Performance](img/extra_double_120_30720000.png)
+
+### KFR 0.9.1
+![DFT Performance](img/fft_performance.png)
+
 See [fft benchmark](https://github.com/kfrlib/fft-benchmark) for details about benchmarking process.
 
-![FFT Performance](img/fft_performance.png)
 
 ## Biquad
 
-[Biquad performance](https://github.com/kfrlib/biquad-benchmark/blob/master/bq.svg)
+![Biquad Performance](img/biquad.svg)
     
 # Usage
-
-
 
 ## Common prerequisites
 
 * CMake 3.0 or newer for building tests and examples
-* Python 2.7 or 3.x for building examples
+* Python 2.7 or 3.x for running examples
 * (Optional) Ninja (https://ninja-build.org/)
 
 For running examples and plotting frequency responses of filters the following python packages are required:
