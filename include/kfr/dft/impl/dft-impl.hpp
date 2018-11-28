@@ -28,9 +28,9 @@
 
 #include "../../base/basic_expressions.hpp"
 #include "../../testo/assert.hpp"
-#include "bitrev.hpp"
 #include "../cache.hpp"
 #include "../fft.hpp"
+#include "bitrev.hpp"
 #include "ft.hpp"
 
 CMT_PRAGMA_GNU(GCC diagnostic push)
@@ -357,8 +357,8 @@ KFR_SINTRIN cfalse_t radix4_pass(Ntype N, size_t blocks, csize_t<width>, cbool_t
     return {};
 }
 
-template <bool splitin, bool prefetch, bool use_br2, bool inverse, bool aligned, typename T>
-KFR_SINTRIN ctrue_t radix4_pass(csize_t<32>, size_t blocks, csize_t<8>, cfalse_t, cbool_t<splitin>,
+template <bool splitin, size_t width, bool prefetch, bool use_br2, bool inverse, bool aligned, typename T>
+KFR_SINTRIN ctrue_t radix4_pass(csize_t<32>, size_t blocks, csize_t<width>, cfalse_t, cbool_t<splitin>,
                                 cbool_t<use_br2>, cbool_t<prefetch>, cbool_t<inverse>, cbool_t<aligned>,
                                 complex<T>* out, const complex<T>*, const complex<T>*& /*twiddle*/)
 {
