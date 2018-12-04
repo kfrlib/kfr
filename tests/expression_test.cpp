@@ -85,6 +85,16 @@ TEST(placeholders_pointer)
     CHECK_EXPRESSION(expr, infinite_size, [](size_t i) { return 10.f * i; });
 }
 
+TEST(univector_assignment)
+{
+    univector<int> x = truncate(counter(), 10);
+    CHECK(x.size() == 10);
+
+    univector<int> y;
+    y = truncate(counter(), 10);
+    CHECK(y.size() == 10);
+}
+
 TEST(size_calc)
 {
     auto a = counter();

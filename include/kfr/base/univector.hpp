@@ -332,7 +332,14 @@ struct univector<T, tag_dynamic_vector> : std::vector<T, allocator<T>>,
     {
         return index < this->size() ? this->operator[](index) : fallback_value;
     }
-    using univector_base<T, univector>::operator=;
+    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
+    CMT_INLINE univector& operator=(Input&& input)
+    {
+        if (this->empty())
+            this->resize(input.size());
+        this->assign_expr(std::forward<Input>(input));
+        return *this;
+    }
 };
 
 template <typename T>
