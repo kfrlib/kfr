@@ -127,6 +127,21 @@ struct u24
 struct i24
 {
     u8 raw[3];
+
+    i24(i32 x)
+    {
+        raw[0] = x & 0xFF;
+        raw[1] = (x >> 8) & 0xFF;
+        raw[2] = (x >> 16) & 0xFF;
+    }
+
+    i32 as_int() const
+    {
+        return static_cast<i32>(raw[0]) | static_cast<i32>(raw[1] << 8) |
+               (static_cast<i32>(raw[2] << 24) >> 8);
+    }
+
+    operator int() const { return as_int(); }
 };
 
 struct f16
@@ -232,7 +247,7 @@ using get_third = cometa::fn_get_third;
 ///@copybrief cometa::returns
 template <typename T>
 using returns = cometa::fn_returns<T>;
-}
+} // namespace fn
 
 template <typename T>
 using ftype =
@@ -269,7 +284,7 @@ struct flt_type_impl<double>
 {
     using type = double;
 };
-}
+} // namespace internal
 
 template <typename T>
 using flt_type = typename internal::flt_type_impl<T>::type;
@@ -327,7 +342,7 @@ __attribute__((__packed__, __may_alias__)) //
 ;
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)
-}
+} // namespace internal
 
 /// @brief Fills a value with zeros
 template <typename T1>
@@ -351,7 +366,7 @@ CMT_INLINE void block_process_impl(size_t& i, size_t size, Fn&& fn)
     for (; i < size / width * width; i += width)
         fn(i, csize_t<width>());
 }
-}
+} // namespace internal
 
 template <size_t... widths, typename Fn>
 CMT_INLINE void block_process(size_t size, csizes_t<widths...>, Fn&& fn)
@@ -409,6 +424,6 @@ constexpr cunaligned_t cunaligned{};
 #else
 #define KFR_I_CE
 #endif
-}
+} // namespace kfr
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)

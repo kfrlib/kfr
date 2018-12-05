@@ -31,6 +31,7 @@
 #include "base/compiletime.hpp"
 #include "base/complex.hpp"
 #include "base/constants.hpp"
+#include "base/conversion.hpp"
 #include "base/digitreverse.hpp"
 #include "base/expression.hpp"
 #include "base/filter.hpp"

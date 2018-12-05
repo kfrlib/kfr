@@ -24,6 +24,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/compiletime.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/complex.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/constants.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/conversion.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/digitreverse.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/expression.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/filter.hpp
