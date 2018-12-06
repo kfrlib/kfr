@@ -44,7 +44,7 @@ set(ALL_TESTS_CPP
     dft_test.cpp
     dsp_test.cpp
     expression_test.cpp
-    intrinsic_test.cpp)
+    intrinsic_test.cpp io_test.cpp)
 
 if (MPFR_FOUND AND GMP_FOUND)
     list(APPEND ALL_TESTS_CPP transcendental_test.cpp)
@@ -55,6 +55,7 @@ endif ()
 add_executable(all_tests ${ALL_TESTS_CPP})
 target_compile_definitions(all_tests PRIVATE KFR_NO_MAIN)
 target_link_libraries(all_tests kfr kfr_dft)
+target_link_libraries(all_tests kfr kfr_dft kfr_io)
 
 add_executable(intrinsic_test intrinsic_test.cpp)
 target_link_libraries(intrinsic_test kfr)
@@ -72,10 +73,11 @@ endif ()
 
 function(add_x86_test NAME FLAGS)
     separate_arguments(FLAGS)
-    add_executable(all_tests_${NAME} ${ALL_TESTS_CPP}  ${KFR_DFT_SRC})
+    add_executable(all_tests_${NAME} ${ALL_TESTS_CPP}  ${KFR_DFT_SRC} ${KFR_IO_SRC})
     target_compile_options(all_tests_${NAME} PRIVATE ${FLAGS})
     target_compile_definitions(all_tests_${NAME} PRIVATE KFR_NO_MAIN)
     target_link_libraries(all_tests_${NAME} kfr)
+    target_compile_definitions(all_tests_${NAME} PUBLIC KFR_ENABLE_FLAC=1)
     if (MPFR_FOUND AND GMP_FOUND)
         target_link_libraries(all_tests_${NAME} ${MPFR_LIBRARIES} ${GMP_LIBRARIES})
     endif ()
@@ -111,6 +113,10 @@ target_link_libraries(expression_test kfr)
 add_executable(ebu_test ebu_test.cpp)
 target_link_libraries(ebu_test kfr)
 
+add_executable(io_test io_test.cpp)
+target_link_libraries(io_test kfr kfr_io)
+target_compile_definitions(io_test PUBLIC KFR_ENABLE_FLAC=1)
+
 if(USE_SDE)
     find_program(EMULATOR "sde")
     list(APPEND EMULATOR "-skx")
@@ -138,6 +144,8 @@ if (NOT IOS)
             COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/complex_test)
     add_test(NAME expression_test
             COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/expression_test)
+    add_test(NAME io_test
+            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/io_test)
 
     if (NOT ARM)
         add_test(NAME multiarch

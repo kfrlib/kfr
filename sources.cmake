@@ -126,6 +126,8 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/io/file.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/python_plot.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/tostring.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/io/dr/dr_flac.h
+    ${PROJECT_SOURCE_DIR}/include/kfr/io/dr/dr_wav.h
     ${PROJECT_SOURCE_DIR}/include/kfr/testo/assert.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/testo/comparison.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/testo/testo.hpp

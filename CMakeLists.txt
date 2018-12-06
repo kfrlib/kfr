@@ -48,6 +48,9 @@ set(KFR_DFT_SRC
         ${CMAKE_SOURCE_DIR}/include/kfr/dft/impl/dft-impl-f64.cpp
         ${CMAKE_SOURCE_DIR}/include/kfr/dft/impl/convolution-impl.cpp)
 
+set(KFR_IO_SRC
+        ${CMAKE_SOURCE_DIR}/include/kfr/io/impl/audiofile-impl.cpp)
+
 if (ENABLE_TESTS)
 
     if (IOS)
@@ -98,3 +101,7 @@ target_include_directories(kfr INTERFACE include)
 
 add_library(kfr_dft ${KFR_DFT_SRC})
 target_link_libraries(kfr_dft kfr)
+
+add_library(kfr_io ${KFR_IO_SRC})
+target_link_libraries(kfr_io kfr)
+target_compile_definitions(kfr_io PUBLIC KFR_ENABLE_FLAC=1)

@@ -425,9 +425,9 @@ TEST(sample_interleave_deinterleave)
 
     deinterleave((float*[]){ in[0].data(), in[1].data(), in[2].data() }, out.data(), 3, size);
 
-    CHECK(maxof(in[0] - render(counter() * 3.f + 0.f, size)) == 0);
-    CHECK(maxof(in[1] - render(counter() * 3.f + 1.f, size)) == 0);
-    CHECK(maxof(in[2] - render(counter() * 3.f + 2.f, size)) == 0);
+    CHECK(absmaxof(in[0] - render(counter() * 3.f + 0.f, size)) == 0);
+    CHECK(absmaxof(in[1] - render(counter() * 3.f + 1.f, size)) == 0);
+    CHECK(absmaxof(in[2] - render(counter() * 3.f + 2.f, size)) == 0);
 }
 
 #ifndef KFR_NO_MAIN

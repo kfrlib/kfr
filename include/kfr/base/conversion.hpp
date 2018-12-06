@@ -31,49 +31,137 @@
 namespace kfr
 {
 
+enum class audio_sample_type
+{
+    unknown,
+    i8,
+    i16,
+    i24,
+    i32,
+    i64,
+    f32,
+    f64,
+
+    first_float = f32
+};
+
+inline constexpr size_t audio_sample_sizeof(audio_sample_type type)
+{
+    switch (type)
+    {
+    case audio_sample_type::i8:
+        return 1;
+    case audio_sample_type::i16:
+        return 2;
+    case audio_sample_type::i32:
+    case audio_sample_type::f32:
+        return 4;
+    case audio_sample_type::i64:
+    case audio_sample_type::f64:
+        return 8;
+    default:
+        return 0;
+    }
+}
+
+inline constexpr size_t audio_sample_bit_depth(audio_sample_type type)
+{
+    return audio_sample_sizeof(type) * 8;
+}
+
+using audio_sample_type_clist =
+    cvals_t<audio_sample_type, audio_sample_type::i8, audio_sample_type::i16, audio_sample_type::i24,
+            audio_sample_type::i32, audio_sample_type::i64, audio_sample_type::f32, audio_sample_type::f64>;
+
+template <audio_sample_type type>
+struct audio_sample_get_type;
+
+template <>
+struct audio_sample_get_type<audio_sample_type::i8>
+{
+    using type = i8;
+};
+template <>
+struct audio_sample_get_type<audio_sample_type::i16>
+{
+    using type = i16;
+};
+template <>
+struct audio_sample_get_type<audio_sample_type::i24>
+{
+    using type = i24;
+};
+template <>
+struct audio_sample_get_type<audio_sample_type::i32>
+{
+    using type = i32;
+};
+template <>
+struct audio_sample_get_type<audio_sample_type::i64>
+{
+    using type = i64;
+};
+template <>
+struct audio_sample_get_type<audio_sample_type::f32>
+{
+    using type = f32;
+};
+template <>
+struct audio_sample_get_type<audio_sample_type::f64>
+{
+    using type = f64;
+};
+
 template <typename T>
 struct audio_sample_traits;
 
 template <>
 struct audio_sample_traits<i8>
 {
-    constexpr static f32 scale = 127.f;
+    constexpr static f32 scale              = 127.f;
+    constexpr static audio_sample_type type = audio_sample_type::i8;
 };
 
 template <>
 struct audio_sample_traits<i16>
 {
-    constexpr static f32 scale = 32767.f;
+    constexpr static f32 scale              = 32767.f;
+    constexpr static audio_sample_type type = audio_sample_type::i16;
 };
 
 template <>
 struct audio_sample_traits<i24>
 {
-    constexpr static f32 scale = 8388607.f;
+    constexpr static f32 scale              = 8388607.f;
+    constexpr static audio_sample_type type = audio_sample_type::i24;
 };
 
 template <>
 struct audio_sample_traits<i32>
 {
-    constexpr static f64 scale = 2147483647.0;
+    constexpr static f64 scale              = 2147483647.0;
+    constexpr static audio_sample_type type = audio_sample_type::i32;
 };
 
 template <>
 struct audio_sample_traits<i64>
 {
-    constexpr static f64 scale = 9223372036854775807.0;
+    constexpr static f64 scale              = 9223372036854775807.0;
+    constexpr static audio_sample_type type = audio_sample_type::i64;
 };
 
 template <>
 struct audio_sample_traits<f32>
 {
-    constexpr static f32 scale = 1;
+    constexpr static f32 scale              = 1;
+    constexpr static audio_sample_type type = audio_sample_type::f32;
 };
 
 template <>
 struct audio_sample_traits<f64>
 {
-    constexpr static f64 scale = 1;
+    constexpr static f64 scale              = 1;
+    constexpr static audio_sample_type type = audio_sample_type::f64;
 };
 
 template <typename Tout, typename Tin, typename Tout_traits = audio_sample_traits<Tout>,
@@ -121,5 +209,23 @@ void convert(Tout* out, const Tin* in, size_t size)
     {
         out[i] = convert_sample<Tout, Tin, Tout_traits, Tin_traits>(in[i]);
     }
+}
+
+template <typename Tout, typename Tout_traits = audio_sample_traits<Tout>>
+void convert(Tout* out, const void* in, audio_sample_type in_type, size_t size)
+{
+    cswitch(audio_sample_type_clist{}, in_type, [&](auto t) {
+        using type = typename audio_sample_get_type<val_of(t)>::type;
+        convert(out, reinterpret_cast<const type*>(in), size);
+    });
+}
+
+template <typename Tin, typename Tin_traits = audio_sample_traits<Tin>>
+void convert(void* out, audio_sample_type out_type, const Tin* in, size_t size)
+{
+    cswitch(audio_sample_type_clist{}, out_type, [&](auto t) {
+        using type = typename audio_sample_get_type<val_of(t)>::type;
+        convert(reinterpret_cast<type*>(out), in, size);
+    });
 }
 } // namespace kfr

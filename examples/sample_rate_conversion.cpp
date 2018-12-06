@@ -30,10 +30,11 @@ int main()
         const size_t destsize = r(resampled.data(), swept_sine);
 
         univector<i32> i32data = clamp(resampled.truncate(destsize) * i32max, -i32max, +i32max);
-        univector2d<i32> data  = { i32data };
-
-        auto wr = sequential_file_writer("audio_high_quality.wav");
-        audio_encode(wr, data, audioformat(data, output_sr));
+        {
+            audio_writer_wav<i32> writer(open_file_for_writing(KFR_FILEPATH("audio_high_quality.wav")),
+                                         audio_format{ 2, audio_sample_type::i32, output_sr });
+            writer.write(i32data.data(), i32data.size());
+        }
 
         plot_save("audio_high_quality", "audio_high_quality.wav", "");
     }
@@ -45,10 +46,11 @@ int main()
         const size_t destsize = r(resampled.data(), swept_sine);
 
         univector<i32> i32data = clamp(resampled.truncate(destsize) * i32max, -i32max, +i32max);
-        univector2d<i32> data  = { i32data };
-
-        auto wr = sequential_file_writer("audio_normal_quality.wav");
-        audio_encode(wr, data, audioformat(data, output_sr));
+        {
+            audio_writer_wav<i32> writer(open_file_for_writing(KFR_FILEPATH("audio_normal_quality.wav")),
+                                         audio_format{ 2, audio_sample_type::i32, output_sr });
+            writer.write(i32data.data(), i32data.size());
+        }
 
         plot_save("audio_normal_quality", "audio_normal_quality.wav", "");
     }
@@ -60,10 +62,11 @@ int main()
         const size_t destsize = r(resampled.data(), swept_sine);
 
         univector<i32> i32data = clamp(resampled.truncate(destsize) * i32max, -i32max, +i32max);
-        univector2d<i32> data  = { i32data };
-
-        auto wr = sequential_file_writer("audio_low_quality.wav");
-        audio_encode(wr, data, audioformat(data, output_sr));
+        {
+            audio_writer_wav<i32> writer(open_file_for_writing(KFR_FILEPATH("audio_low_quality.wav")),
+                                         audio_format{ 2, audio_sample_type::i32, output_sr });
+            writer.write(i32data.data(), i32data.size());
+        }
 
         plot_save("audio_low_quality", "audio_low_quality.wav", "");
     }
@@ -75,10 +78,11 @@ int main()
         const size_t destsize = r(resampled.data(), swept_sine);
 
         univector<i32> i32data = clamp(resampled.truncate(destsize) * i32max, -i32max, +i32max);
-        univector2d<i32> data  = { i32data };
-
-        auto wr = sequential_file_writer("audio_draft_quality.wav");
-        audio_encode(wr, data, audioformat(data, output_sr));
+        {
+            audio_writer_wav<i32> writer(open_file_for_writing(KFR_FILEPATH("audio_draft_quality.wav")),
+                                         audio_format{ 2, audio_sample_type::i32, output_sr });
+            writer.write(i32data.data(), i32data.size());
+        }
 
         plot_save("audio_draft_quality", "audio_draft_quality.wav", "");
     }

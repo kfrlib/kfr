@@ -34,6 +34,183 @@
 namespace kfr
 {
 
+#ifdef CMT_OS_WIN
+using filepath_char = wchar_t;
+#define KFR_FILEPATH_PREFIX_CONCAT(x, y) x##y
+#define KFR_FILEPATH(s) KFR_FILEPATH_PREFIX_CONCAT(L, s)
+#else
+using filepath_char = char;
+#define KFR_FILEPATH(s) s
+#endif
+
+using filepath = std::basic_string<filepath_char>;
+
+#if defined _MSC_VER // MSVC
+#define IO_SEEK_64 _fseeki64
+#define IO_TELL_64 _ftelli64
+#elif defined _WIN32 // MingW
+#define IO_SEEK_64 fseeko64
+#define IO_TELL_64 ftello64
+#else // macOS, Linux
+#define IO_SEEK_64 fseeko
+#define IO_TELL_64 ftello
+#endif
+
+inline FILE* fopen_portable(const filepath_char* path, const filepath_char* mode)
+{
+#ifdef CMT_OS_WIN
+    FILE* f   = nullptr;
+    errno_t e = _wfopen_s(&f, path, mode);
+    return f;
+#else
+    return fopen(path, mode);
+#endif
+}
+
+template <typename T = void>
+constexpr inline size_t element_size()
+{
+    return sizeof(T);
+}
+template <>
+constexpr inline size_t element_size<void>()
+{
+    return 1;
+}
+
+enum class seek_origin : int
+{
+    current = SEEK_CUR,
+    begin   = SEEK_SET,
+    end     = SEEK_END,
+};
+
+template <typename T = void>
+struct abstract_stream
+{
+    virtual ~abstract_stream() {}
+    virtual imax tell() const                          = 0;
+    virtual bool seek(imax offset, seek_origin origin) = 0;
+    bool seek(imax offset, int origin) { return seek(offset, static_cast<seek_origin>(origin)); }
+};
+
+template <typename T = void>
+struct abstract_reader : abstract_stream<T>
+{
+    virtual size_t read(T* data, size_t size) = 0;
+};
+
+template <typename T = void>
+struct abstract_writer : abstract_stream<T>
+{
+    virtual size_t write(const T* data, size_t size) = 0;
+};
+
+template <typename From, typename To = void>
+struct reader_adapter : abstract_reader<To>
+{
+    static_assert(element_size<From>() % element_size<To>() == 0 ||
+                      element_size<To>() % element_size<From>() == 0,
+                  "From and To sizes must be compatible");
+    reader_adapter(std::shared_ptr<abstract_reader<From>>&& reader) : reader(std::move(reader)) {}
+    virtual size_t read(To* data, size_t size) final
+    {
+        return reader->read(reinterpret_cast<From*>(data), size * element_size<From>() / element_size<To>()) *
+               element_size<To>() / element_size<From>();
+    }
+    std::shared_ptr<abstract_reader<From>> reader;
+};
+
+template <typename From, typename To = void>
+struct writer_adapter : abstract_writer<To>
+{
+    static_assert(element_size<From>() % element_size<To>() == 0 ||
+                      element_size<To>() % element_size<From>() == 0,
+                  "From and To sizes must be compatible");
+    writer_adapter(std::shared_ptr<abstract_writer<From>>&& writer) : writer(std::move(writer)) {}
+    virtual size_t write(const To* data, size_t size) final
+    {
+        return writer->write(reinterpret_cast<const From*>(data),
+                             size * element_size<From>() / element_size<To>()) *
+               element_size<To>() / element_size<From>();
+    }
+    std::shared_ptr<abstract_writer<From>> writer;
+};
+
+using binary_reader = abstract_reader<>;
+using binary_writer = abstract_writer<>;
+using byte_reader   = abstract_reader<u8>;
+using byte_writer   = abstract_writer<u8>;
+using f32_reader    = abstract_reader<f32>;
+using f32_writer    = abstract_writer<f32>;
+
+struct file_handle
+{
+    file_handle(FILE* file) : file(file) {}
+    file_handle()                   = delete;
+    file_handle(const file_handle&) = delete;
+    file_handle(file_handle&& handle) : file(nullptr) { swap(handle); }
+    ~file_handle()
+    {
+        if (file)
+        {
+            fclose(file);
+        }
+    }
+    FILE* file;
+    void swap(file_handle& handle) { std::swap(file, handle.file); }
+};
+
+template <typename T = void>
+struct file_reader : abstract_reader<T>
+{
+    file_reader(file_handle&& handle) : handle(std::move(handle)) {}
+    ~file_reader() override {}
+    size_t read(T* data, size_t size) final { return fread(data, element_size<T>(), size, handle.file); }
+
+    imax tell() const final { return IO_TELL_64(handle.file); }
+    bool seek(imax offset, seek_origin origin) final
+    {
+        return !IO_SEEK_64(handle.file, offset, static_cast<int>(origin));
+    }
+    file_handle handle;
+};
+
+template <typename T = void>
+struct file_writer : abstract_writer<T>
+{
+    file_writer(file_handle&& handle) : handle(std::move(handle)) {}
+    ~file_writer() override {}
+    size_t write(const T* data, size_t size) final
+    {
+        return fwrite(data, element_size<T>(), size, handle.file);
+    }
+    imax tell() const final { return IO_TELL_64(handle.file); }
+    bool seek(imax offset, seek_origin origin) final
+    {
+        return !IO_SEEK_64(handle.file, offset, static_cast<int>(origin));
+    }
+    file_handle handle;
+};
+
+template <typename T = void>
+inline std::shared_ptr<file_reader<T>> open_file_for_reading(const filepath& path)
+{
+    return std::make_shared<file_reader<T>>(fopen_portable(path.c_str(), KFR_FILEPATH("rb")));
+}
+
+template <typename T = void>
+inline std::shared_ptr<file_writer<T>> open_file_for_writing(const filepath& path)
+{
+    return std::make_shared<file_writer<T>>(fopen_portable(path.c_str(), KFR_FILEPATH("wb")));
+}
+
+template <typename T = void>
+inline std::shared_ptr<file_writer<T>> open_file_for_appending(const filepath& path)
+{
+    return std::make_shared<file_writer<T>>(fopen_portable(path.c_str(), KFR_FILEPATH("ab")));
+}
+
 namespace internal
 {
 struct expression_file_base
@@ -58,7 +235,12 @@ struct expression_sequential_file_writer : expression_file_base, output_expressi
     template <typename U>
     void write(const U& value)
     {
-        fwrite(std::addressof(value), 1, sizeof(U), file);
+        write(&value, 1);
+    }
+    template <typename U>
+    void write(const U* value, size_t size)
+    {
+        fwrite(value, 1, sizeof(U) * size, file);
     }
 };
 
@@ -111,31 +293,6 @@ struct expression_file_reader : expression_file_base, input_expression
     }
     mutable size_t position = 0;
 };
-}
+} // namespace internal
 
-/// @brief Creates an expression that returns values from the given file (sequential access)
-inline internal::expression_sequential_file_reader sequential_file_reader(const std::string& file_name)
-{
-    return internal::expression_sequential_file_reader(fopen(file_name.c_str(), "rb"));
-}
-
-/// @brief Creates an output expression that writes values to the given file (sequential access)
-inline internal::expression_sequential_file_writer sequential_file_writer(const std::string& file_name)
-{
-    return internal::expression_sequential_file_writer(fopen(file_name.c_str(), "wb"));
-}
-
-/// @brief Creates an expression that returns values from the given file (random access)
-template <typename T = u8>
-internal::expression_file_reader<T> file_reader(const std::string& file_name)
-{
-    return internal::expression_file_reader<T>(fopen(file_name.c_str(), "rb"));
-}
-
-/// @brief Creates an output expression that writes values to the given file (random access)
-template <typename T = u8>
-internal::expression_file_writer<T> file_writer(const std::string& file_name)
-{
-    return internal::expression_file_writer<T>(fopen(file_name.c_str(), "wb"));
-}
-}
+} // namespace kfr
