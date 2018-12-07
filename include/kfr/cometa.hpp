@@ -855,17 +855,6 @@ constexpr inline T lcm(T a, T b, T c, Ts... rest)
     return lcm(a, lcm(b, c, rest...));
 }
 
-inline std::div_t floor_div(int a, int b)
-{
-    std::div_t d = std::div(a, b);
-    if (d.rem < 0)
-    {
-        d.rem += b;
-        --d.quot;
-    }
-    return d;
-}
-
 inline std::lldiv_t floor_div(long long a, long long b)
 {
     std::lldiv_t d = std::lldiv(a, b);
