@@ -39,7 +39,7 @@ constexpr csize_t<4> draft{};
 constexpr csize_t<6> low{};
 constexpr csize_t<8> normal{};
 constexpr csize_t<10> high{};
-}
+} // namespace sample_rate_conversion_quality
 
 namespace resample_quality = sample_rate_conversion_quality;
 
@@ -95,102 +95,105 @@ struct sample_rate_converter
         const T s = reciprocal(sum(filter)) * interpolation_factor;
         filter    = filter * s;
     }
-    CMT_INLINE size_t operator()(T* dest, size_t zerosize)
+
+    itype input_position_to_intermediate(itype in_pos) const { return in_pos * interpolation_factor; }
+    itype output_position_to_intermediate(itype out_pos) const { return out_pos * decimation_factor; }
+
+    itype input_position_to_output(itype in_pos) const
     {
-        size_t outputsize   = 0;
-        const itype srcsize = itype(zerosize);
+        return floor_div(input_position_to_intermediate(in_pos), decimation_factor).quot;
+    }
+    itype output_position_to_input(itype out_pos) const
+    {
+        return floor_div(output_position_to_intermediate(out_pos), interpolation_factor).quot;
+    }
 
-        for (size_t i = 0;; i++)
+    itype output_size_for_input(itype input_size) const
+    {
+        return input_position_to_output(input_position + input_size - 1) -
+               input_position_to_output(input_position - 1);
+    }
+
+    itype input_size_for_output(itype output_size) const
+    {
+        return output_position_to_input(output_position + output_size - 1) -
+               output_position_to_input(output_position - 1);
+    }
+
+    size_t skip(size_t output_size, univector_ref<const T> input)
+    {
+        const itype required_input_size = input_size_for_output(output_size);
+
+        if (required_input_size >= depth)
         {
-            const itype ii                 = itype(i) + output_position;
-            const itype workindex          = ii * (decimation_factor);
-            const itype workindex_rem      = workindex % (interpolation_factor);
-            const itype start              = workindex_rem ? (interpolation_factor)-workindex_rem : 0;
-            itype srcindex                 = workindex / (interpolation_factor);
-            srcindex                       = workindex_rem ? srcindex + 1 : srcindex;
-            const univector_ref<T> tap_ptr = filter.slice(static_cast<size_t>(start * depth));
-            srcindex                       = srcindex - (depth - 1);
-
-            if (srcindex + depth >= input_position + srcsize)
-                break;
-            outputsize++;
-
-            if (dest)
-            {
-                if (srcindex >= input_position)
-                {
-                    dest[i] = T(0);
-                }
-                else
-                {
-                    const itype prev_count = input_position - srcindex;
-                    dest[i]                = dotproduct(delay.slice(size_t(depth - prev_count)), tap_ptr);
-                }
-            }
-        }
-        if (srcsize >= depth)
-        {
-            delay = zeros();
+            delay.slice(0, delay.size()) = padded(input.slice(size_t(required_input_size - depth)));
         }
         else
         {
-            delay.truncate(size_t(depth - srcsize)) = delay.slice(size_t(srcsize));
-            delay.slice(size_t(depth - srcsize))    = zeros();
+            delay.truncate(size_t(depth - required_input_size)) = delay.slice(size_t(required_input_size));
+            delay.slice(size_t(depth - required_input_size))    = padded(input);
         }
 
-        input_position += srcsize;
-        output_position += outputsize;
-        return outputsize;
+        input_position += required_input_size;
+        output_position += output_size;
+
+        return required_input_size;
     }
-    CMT_INLINE size_t operator()(T* dest, univector_ref<const T> src)
+
+    /// @brief Writes output.size() samples to output reading at most input.size(), then consuming zeros as
+    /// input.
+    /// @returns Number of processed input samples (may be less than input.size()).
+    template <size_t Tag>
+    size_t process(univector<T, Tag>& output, univector_ref<const T> input)
     {
-        size_t outputsize   = 0;
-        const itype srcsize = itype(src.size());
+        const itype required_input_size = input_size_for_output(output.size());
 
-        for (size_t i = 0;; i++)
+        const itype input_size = input.size();
+        for (size_t i = 0; i < output.size(); i++)
         {
-            const itype ii                 = itype(i) + output_position;
-            const itype workindex          = ii * (decimation_factor);
-            const itype workindex_rem      = workindex % (interpolation_factor);
-            const itype start              = workindex_rem ? (interpolation_factor)-workindex_rem : 0;
-            itype srcindex                 = workindex / (interpolation_factor);
-            srcindex                       = workindex_rem ? srcindex + 1 : srcindex;
-            const univector_ref<T> tap_ptr = filter.slice(static_cast<size_t>(start * depth));
-            srcindex                       = srcindex - (depth - 1);
+            const itype intermediate_index =
+                output_position_to_intermediate(static_cast<itype>(i) + output_position);
+            const itype intermediate_start = intermediate_index - taps + 1;
+            const std::lldiv_t input_pos =
+                floor_div(intermediate_start + interpolation_factor - 1, interpolation_factor);
+            const itype input_start        = input_pos.quot; // first input sample
+            const itype input_end          = input_start + depth;
+            const itype tap_start          = interpolation_factor - 1 - input_pos.rem;
+            const univector_ref<T> tap_ptr = filter.slice(static_cast<size_t>(tap_start * depth));
 
-            if (srcindex + depth >= input_position + srcsize)
-                break;
-            outputsize++;
-
-            if (dest)
+            if (input_start >= input_position + input_size)
             {
-                if (srcindex >= input_position)
-                {
-                    dest[i] =
-                        dotproduct(src.slice(size_t(srcindex - input_position), size_t(depth)), tap_ptr);
-                }
-                else
-                {
-                    const itype prev_count = input_position - srcindex;
-                    dest[i]                = dotproduct(delay.slice(size_t(depth - prev_count)), tap_ptr) +
-                              dotproduct(src, tap_ptr.slice(size_t(prev_count), size_t(depth - prev_count)));
-                }
+                output[i] = T(0);
+            }
+            else if (input_start >= input_position)
+            {
+                output[i] = dotproduct(input.slice(input_start - input_position, depth), tap_ptr);
+            }
+            else
+            {
+                const itype prev_count = input_position - input_start;
+                output[i]              = dotproduct(delay.slice(size_t(depth - prev_count)), tap_ptr) +
+                            dotproduct(input.slice(0, size_t(depth - prev_count)),
+                                       tap_ptr.slice(size_t(prev_count), size_t(depth - prev_count)));
             }
         }
-        if (srcsize >= depth)
+
+        if (required_input_size >= depth)
         {
-            delay = src.slice(size_t(srcsize - depth));
+            delay.slice(0, delay.size()) = padded(input.slice(size_t(required_input_size - depth)));
         }
         else
         {
-            delay.truncate(size_t(depth - srcsize)) = delay.slice(size_t(srcsize));
-            delay.slice(size_t(depth - srcsize))    = src;
+            delay.truncate(size_t(depth - required_input_size)) = delay.slice(size_t(required_input_size));
+            delay.slice(size_t(depth - required_input_size))    = padded(input);
         }
 
-        input_position += srcsize;
-        output_position += outputsize;
-        return outputsize;
+        input_position += required_input_size;
+        output_position += output.size();
+
+        return required_input_size;
     }
+    size_t get_delay() const { return depth / 2 * interpolation_factor / decimation_factor; }
     itype taps;
     size_t order;
     itype interpolation_factor;
@@ -301,7 +304,7 @@ struct expression_downsample<4, offset, E> : expression_base<E>
         return x.shuffle(csizeseq_t<N, offset, 4>());
     }
 };
-}
+} // namespace internal
 
 template <typename E1, size_t offset = 0>
 CMT_INLINE internal::expression_downsample<2, offset, E1> downsample2(E1&& e1, csize_t<offset> = csize_t<0>())
@@ -348,4 +351,4 @@ inline internal::sample_rate_converter<T, quality> resampler(csize_t<quality>, s
     return internal::sample_rate_converter<T, quality>(itype(interpolation_factor), itype(decimation_factor),
                                                        scale, cutoff);
 }
-}
+} // namespace kfr

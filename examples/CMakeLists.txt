@@ -33,5 +33,8 @@ target_link_libraries(fir kfr)
 add_executable(sample_rate_conversion sample_rate_conversion.cpp)
 target_link_libraries(sample_rate_conversion kfr kfr_io)
 
+add_executable(sample_rate_converter sample_rate_converter.cpp)
+target_link_libraries(sample_rate_converter kfr kfr_io)
+
 add_executable(dft dft.cpp)
 target_link_libraries(dft kfr kfr_dft)

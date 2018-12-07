@@ -211,6 +211,26 @@ inline std::shared_ptr<file_writer<T>> open_file_for_appending(const filepath& p
     return std::make_shared<file_writer<T>>(fopen_portable(path.c_str(), KFR_FILEPATH("ab")));
 }
 
+#ifdef CMT_OS_WIN
+template <typename T = void>
+inline std::shared_ptr<file_reader<T>> open_file_for_reading(const std::string& path)
+{
+    return std::make_shared<file_reader<T>>(fopen(path.c_str(), "rb"));
+}
+
+template <typename T = void>
+inline std::shared_ptr<file_writer<T>> open_file_for_writing(const std::string& path)
+{
+    return std::make_shared<file_writer<T>>(fopen(path.c_str(), "wb"));
+}
+
+template <typename T = void>
+inline std::shared_ptr<file_writer<T>> open_file_for_appending(const std::string& path)
+{
+    return std::make_shared<file_writer<T>>(fopen(path.c_str(), "ab"));
+}
+#endif
+
 namespace internal
 {
 struct expression_file_base

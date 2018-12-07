@@ -19,8 +19,8 @@ CMT_PRAGMA_MSVC(warning(disable : 4814))
 namespace cometa
 {
 
-using std::size_t;
 using std::ptrdiff_t;
+using std::size_t;
 
 #if __cplusplus >= 201103L || CMT_MSC_VER >= 1900 || CMT_HAS_FEATURE(cxx_constexpr)
 
@@ -100,7 +100,7 @@ template <typename T, typename... Ts>
 struct and_t_impl<T, Ts...> : std::integral_constant<bool, T::value && and_t_impl<Ts...>::value>
 {
 };
-}
+} // namespace details
 
 template <typename... Ts>
 using or_t = details::or_t_impl<Ts...>;
@@ -253,7 +253,7 @@ namespace ops
 struct empty
 {
 };
-}
+} // namespace ops
 
 template <typename T, T val>
 struct cval_t : ops::empty
@@ -319,7 +319,7 @@ template <typename T, T val>
 struct is_val_impl<cval_t<T, val>> : std::true_type
 {
 };
-}
+} // namespace details
 
 template <typename T>
 using is_inheritable = typename details::is_inheritable_impl<T>::type;
@@ -376,7 +376,7 @@ template <size_t index>
 struct get_nth_type<index>
 {
 };
-}
+} // namespace details
 
 template <typename T, T... values>
 struct cvals_t : ops::empty
@@ -509,7 +509,7 @@ struct concat_impl<ctypes_t<types1...>, ctypes_t<types2...>>
 {
     using type = ctypes_t<types1..., types2...>;
 };
-}
+} // namespace details
 template <typename T1, typename T2>
 using concat_lists = typename details::concat_impl<T1, T2>::type;
 
@@ -561,7 +561,7 @@ struct filter_impl<cvals_t<T, value, values...>, cvals_t<bool, flag, flags...>>
     using filtered = typename filter_impl<cvals_t<T, values...>, cvals_t<bool, flags...>>::type;
     using type     = conditional<flag, concat_lists<cvals_t<T, value>, filtered>, filtered>;
 };
-}
+} // namespace details
 
 template <typename Fn>
 using function_arguments = typename details::function_arguments_impl<decltype(&Fn::operator())>::args;
@@ -641,7 +641,7 @@ CMT_BIN_OP(&)
 CMT_BIN_OP(|)
 CMT_BIN_OP(^)
 // clang-format on
-}
+} // namespace ops
 
 namespace details
 {
@@ -665,7 +665,7 @@ template <typename T, T Nstart, ptrdiff_t Nstep>
 struct cvalseq_impl<T, 1, Nstart, Nstep> : cvals_t<T, static_cast<T>(Nstart)>
 {
 };
-}
+} // namespace details
 
 template <typename T, size_t size, T start = T(), ptrdiff_t step = 1>
 using cvalseq_t = typename details::cvalseq_impl<T, size, start, step>::type;
@@ -738,7 +738,7 @@ struct unique_enum_impl
 
 #endif
 #define CMT_ENABLE_IF(...) CMT_ENABLE_IF_IMPL(__LINE__, __VA_ARGS__)
-}
+} // namespace details
 
 template <typename T>
 struct is_enabled : details::is_enabled_impl<T>
@@ -768,7 +768,7 @@ inline auto call_if_callable(Fn&& fn)
 {
     return std::forward<Fn>(fn);
 }
-}
+} // namespace details
 
 template <typename Fn, typename... Args>
 inline auto bind_func(Fn&& fn, Args&&... args)
@@ -852,6 +852,28 @@ template <typename T, typename... Ts>
 constexpr inline T lcm(T a, T b, T c, Ts... rest)
 {
     return lcm(a, lcm(b, c, rest...));
+}
+
+inline std::div_t floor_div(int a, int b)
+{
+    std::div_t d = std::div(a, b);
+    if (d.rem < 0)
+    {
+        d.rem += b;
+        --d.quot;
+    }
+    return d;
+}
+
+inline std::lldiv_t floor_div(long long a, long long b)
+{
+    std::lldiv_t d = std::lldiv(a, b);
+    if (d.rem < 0)
+    {
+        d.rem += b;
+        --d.quot;
+    }
+    return d;
 }
 
 namespace details
@@ -939,7 +961,7 @@ template <typename T>
 using is_number_impl =
     std::integral_constant<bool, ((std::is_integral<T>::value) || (std::is_floating_point<T>::value)) &&
                                      !std::is_same<T, bool>::value>;
-}
+} // namespace details
 
 template <size_t bits>
 using float_type = typename details::float_type_impl<bits>::type;
@@ -977,7 +999,7 @@ constexpr size_t elementsize<void>()
 {
     return 1;
 };
-}
+} // namespace details
 
 /// @brief Utility typedef used to disable type deduction
 template <typename T>
@@ -1100,6 +1122,7 @@ struct carray : carray<T, N - 1>
     CMT_INTRIN constexpr const T* data() const noexcept { return begin(); }
     CMT_INTRIN constexpr T* data() noexcept { return begin(); }
     CMT_INTRIN constexpr bool empty() const noexcept { return false; }
+
 private:
     T val;
 };
@@ -1258,7 +1281,7 @@ struct value_type_impl<T, Fallback, void_t<typename T::value_type>>
 {
     using type = typename T::value_type;
 };
-}
+} // namespace details
 
 template <typename T>
 using has_begin_end = details::has_begin_end_impl<decay<T>>;
@@ -1277,7 +1300,7 @@ void cforeach_impl(Fn&& fn)
 {
     fn(cval_t<T, value>());
 }
-}
+} // namespace details
 #endif
 
 template <typename T, T... values, typename Fn>
@@ -1322,7 +1345,7 @@ CMT_INTRIN void cforeach_types_impl(ctypes_t<T0, types...> type_list, Fn&& fn, c
 {
     swallow{ (fn(get_type_arg<indices>(type_list)), void(), 0)... };
 }
-}
+} // namespace details
 
 template <typename... Ts, typename Fn>
 CMT_INTRIN void cforeach(ctypes_t<Ts...> types, Fn&& fn)
@@ -1428,7 +1451,7 @@ inline decltype(auto) cmatch_impl(T&& value, Fn&& last)
 {
     return last(std::forward<T>(value));
 }
-}
+} // namespace details
 
 template <typename T, typename Fn, typename... Args>
 inline decltype(auto) cmatch(T&& value, Fn&& fn, Args... args)
@@ -1523,7 +1546,7 @@ struct signed_type_impl<T, void_t<enable_if<std::is_unsigned<T>::value>>>
 {
     using type = findinttype<std::numeric_limits<T>::min(), std::numeric_limits<T>::max()>;
 };
-}
+} // namespace details
 
 template <typename T>
 using signed_type = typename details::signed_type_impl<T>::type;
@@ -1631,7 +1654,7 @@ constexpr std::false_type test_sequence(...)
 {
     return {};
 }
-}
+} // namespace details
 
 template <size_t number, size_t... numbers>
 constexpr bool is_sequence(csizes_t<number, numbers...>)
@@ -1712,18 +1735,18 @@ constexpr indicesfor_t<List...> indicesfor{};
 
 // Workaround for GCC 4.8
 template <typename T>
-constexpr conditional<std::is_scalar<T>::value, T, const T &> const_max(const T& x, const T& y)
+constexpr conditional<std::is_scalar<T>::value, T, const T&> const_max(const T& x, const T& y)
 {
     return x > y ? x : y;
 }
 template <typename T>
-constexpr conditional<std::is_scalar<T>::value, T, const T &> const_min(const T& x, const T& y)
+constexpr conditional<std::is_scalar<T>::value, T, const T&> const_min(const T& x, const T& y)
 {
     return x < y ? x : y;
 }
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)
-}
+} // namespace cometa
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)
 

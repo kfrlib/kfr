@@ -190,6 +190,19 @@ void deinterleave(Tout* out[], const Tin* in, size_t channels, size_t size)
     }
 }
 
+template <typename Tout, size_t Tag1, size_t Tag2, typename Tin, size_t Tag3>
+void deinterleave(univector2d<Tout, Tag1, Tag2>& out, const univector<Tin, Tag3>& in)
+{
+    if (in.empty() || out.empty())
+        return;
+    std::vector<Tout*> ptrs(out.size());
+    for (size_t i = 0; i < out.size(); ++i)
+    {
+        ptrs[i] = out[i].data();
+    }
+    return deinterleave(ptrs.data(), in.data(), out.size(), in.size() / out.size());
+}
+
 template <typename Tout, typename Tin, typename Tout_traits = audio_sample_traits<Tout>,
           typename Tin_traits = audio_sample_traits<Tin>>
 void interleave(Tout* out, const Tin* in[], size_t channels, size_t size)
@@ -199,6 +212,29 @@ void interleave(Tout* out, const Tin* in[], size_t channels, size_t size)
         for (size_t ch = 0; ch < channels; ++ch)
             out[i * channels + ch] = convert_sample<Tout, Tin, Tout_traits, Tin_traits>(in[ch][i]);
     }
+}
+
+template <typename Tout, size_t Tag1, typename Tin, size_t Tag2, size_t Tag3>
+void interleave(univector<Tout, Tag1>& out, const univector2d<Tin, Tag2, Tag3>& in)
+{
+    if (in.empty() || out.empty())
+        return;
+    std::vector<const Tin*> ptrs(in.size());
+    for (size_t i = 0; i < in.size(); ++i)
+    {
+        ptrs[i] = in[i].data();
+    }
+    return interleave(out.data(), ptrs.data(), in.size(), out.size() / in.size());
+}
+
+template <typename Tin, size_t Tag1, size_t Tag2>
+univector<Tin> interleave(const univector2d<Tin, Tag1, Tag2>& in)
+{
+    if (in.empty())
+        return {};
+    univector<Tin> result(in.size() * in[0].size());
+    interleave(result, in);
+    return result;
 }
 
 template <typename Tout, typename Tin, typename Tout_traits = audio_sample_traits<Tout>,

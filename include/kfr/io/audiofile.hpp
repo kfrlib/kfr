@@ -125,10 +125,12 @@ struct audio_writer_wav : audio_writer<T>
         f = drwav_open_write(&wav_fmt, (drwav_write_proc)&internal::drwav_writer_write_proc,
                              (drwav_seek_proc)&internal::drwav_writer_seek_proc, this->writer.get());
     }
-    ~audio_writer_wav() { drwav_close(f); }
+    ~audio_writer_wav() { close(); }
 
     size_t write(const T* data, size_t size)
     {
+        if (!f)
+            return 0;
         if (fmt.type == audio_sample_type::unknown)
             return 0;
         if (fmt.type == audio_sample_traits<T>::type)
@@ -145,6 +147,12 @@ struct audio_writer_wav : audio_writer<T>
             fmt.length += sz / fmt.channels;
             return sz;
         }
+    }
+    void close()
+    {
+        drwav_close(f);
+        f = nullptr;
+        writer.reset();
     }
     const audio_format_and_length& format() const { return fmt; }
     imax tell() const { return fmt.length; }

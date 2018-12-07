@@ -92,13 +92,13 @@ struct univector_base : input_expression, output_expression
     {
         T* data                = derived_cast<Class>(this)->data();
         const size_t this_size = derived_cast<Class>(this)->size();
-        return array_ref<T>(data + start, std::min(size, this_size - start));
+        return array_ref<T>(data + start, std::min(size, start < this_size ? this_size - start : 0));
     }
     univector<const T, 0> slice(size_t start = 0, size_t size = max_size_t) const
     {
         const T* data          = derived_cast<Class>(this)->data();
         const size_t this_size = derived_cast<Class>(this)->size();
-        return array_ref<const T>(data + start, std::min(size, this_size - start));
+        return array_ref<const T>(data + start, std::min(size, start < this_size ? this_size - start : 0));
     }
     univector<T, 0> truncate(size_t size = max_size_t)
     {
@@ -296,6 +296,8 @@ struct univector<T, tag_array_ref> : array_ref<T>, univector_base<T, univector<T
         return index < this->size() ? this->operator[](index) : fallback_value;
     }
     using univector_base<T, univector>::operator=;
+
+    univector<T, tag_array_ref>& ref() && { return *this; }
 };
 
 template <typename T>
@@ -335,7 +337,7 @@ struct univector<T, tag_dynamic_vector> : std::vector<T, allocator<T>>,
     template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
     CMT_INLINE univector& operator=(Input&& input)
     {
-        if (this->empty())
+        if (input.size() != infinite_size)
             this->resize(input.size());
         this->assign_expr(std::forward<Input>(input));
         return *this;
@@ -353,7 +355,7 @@ using univector2d = univector<univector<T, Size2>, Size1>;
 
 template <typename T, size_t Size1 = tag_dynamic_vector, size_t Size2 = tag_dynamic_vector,
           size_t Size3 = tag_dynamic_vector>
-using univector3d      = univector<univector<univector<T, Size3>, Size2>, Size1>;
+using univector3d = univector<univector<univector<T, Size3>, Size2>, Size1>;
 
 /// @brief Creates univector from data and size
 template <typename T>
@@ -455,6 +457,6 @@ private:
     char cacheline_filler[64 - sizeof(std::atomic<size_t>)];
     std::atomic<size_t> tail;
 };
-}
+} // namespace kfr
 
 CMT_PRAGMA_MSVC(warning(pop))

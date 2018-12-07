@@ -126,4 +126,62 @@ inline array_ref<const T> make_array_ref(const std::vector<T>& cont)
 {
     return array_ref<const T>(cont.data(), cont.size());
 }
+
+template <typename C>
+constexpr auto datatype(C& c)
+{
+    return c[0];
+}
+template <typename C>
+constexpr auto datatype(const C& c)
+{
+    return c[0];
+}
+template <typename E>
+constexpr E datatype(const std::initializer_list<E>& il)
+{
+    return {};
+}
+template <typename T, std::size_t N>
+constexpr T datatype(T (&array)[N])
+{
+    return {};
+}
+
+template <typename C>
+constexpr auto data(C& c) -> decltype(c.data())
+{
+    return c.data();
+}
+template <typename C>
+constexpr auto data(const C& c) -> decltype(c.data())
+{
+    return c.data();
+}
+template <typename T, std::size_t N>
+constexpr T* data(T (&array)[N]) noexcept
+{
+    return array;
+}
+template <typename T>
+constexpr T* data(T* array) noexcept
+{
+    return array;
+}
+template <typename E>
+constexpr const E* data(const std::initializer_list<E>& il) noexcept
+{
+    return il.begin();
+}
+
+template <typename C>
+constexpr auto size(const C& c) -> decltype(c.size())
+{
+    return c.size();
+}
+template <typename T, std::size_t N>
+constexpr std::size_t size(const T (&array)[N]) noexcept
+{
+    return N;
+}
 } // namespace cometa
