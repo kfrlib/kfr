@@ -28,6 +28,7 @@
 #include "kfr.h"
 
 #include "constants.hpp"
+#include "platform.hpp"
 #include "types.hpp"
 
 namespace kfr
@@ -77,7 +78,7 @@ struct mask : protected vec<T, N>
     simd_type& operator*() noexcept { return this->simd; }
 
     KFR_I_CE mask(const base& v) noexcept
-        //: base(base::frombits((vec<itype<T>, N>::frombits(v) < itype<T>(0)).asvec()))
+    //: base(base::frombits((vec<itype<T>, N>::frombits(v) < itype<T>(0)).asvec()))
     {
         this->simd = *base::frombits((vec<itype<T>, N>::frombits(v) < itype<T>(0)).asvec());
     }
