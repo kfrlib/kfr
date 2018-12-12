@@ -229,33 +229,33 @@ constexpr subtype<T> constants<T>::neginfinity;
 template <typename T>
 constexpr subtype<T> constants<T>::qnan;
 
-// π (pi)
-// c_pi<f64, 4>      = 4pi
-// c_pi<f64, 3, 4>   = 3/4pi
+/// π (pi)
+/// c_pi<f64, 4>      = 4pi
+/// c_pi<f64, 3, 4>   = 3/4pi
 template <typename T, int m = 1, int d = 1>
 constexpr subtype<T> c_pi = subtype<T>(3.1415926535897932384626433832795 * m / d);
 
-// π² (pi²)
-// c_sqr_pi<f64, 4>      = 4pi²
-// c_sqr_pi<f64, 3, 4>   = 3/4pi²
+/// π² (pi²)
+/// c_sqr_pi<f64, 4>      = 4pi²
+/// c_sqr_pi<f64, 3, 4>   = 3/4pi²
 template <typename T, int m = 1, int d = 1>
 constexpr subtype<T> c_sqr_pi = subtype<T>(9.8696044010893586188344909998762 * m / d);
 
-// 1/π (1/pi)
-// c_recip_pi<f64>       1/pi
-// c_recip_pi<f64, 4>    4/pi
+/// 1/π (1/pi)
+/// c_recip_pi<f64>       1/pi
+/// c_recip_pi<f64, 4>    4/pi
 template <typename T, int m = 1, int d = 1>
 constexpr subtype<T> c_recip_pi = subtype<T>(0.31830988618379067153776752674503 * m / d);
 
-// degree to radian conversion factor
+/// degree to radian conversion factor
 template <typename T>
 constexpr subtype<T> c_degtorad = c_pi<T, 1, 180>;
 
-// radian to degree conversion factor
+/// radian to degree conversion factor
 template <typename T>
 constexpr subtype<T> c_radtodeg = c_recip_pi<T, 180>;
 
-// e, Euler's number
+/// e, Euler's number
 template <typename T, int m = 1, int d = 1>
 constexpr subtype<T> c_e = subtype<T>(2.718281828459045235360287471352662 * m / d);
 
@@ -268,12 +268,15 @@ constexpr subtype<T> c_mantissa_mask = (subtype<T>(1) << c_mantissa_bits<T>)-1;
 template <typename T>
 constexpr subtype<T> c_epsilon = (std::numeric_limits<subtype<T>>::epsilon());
 
+/// infinity
 template <typename T>
 constexpr subtype<T> c_infinity = std::numeric_limits<subtype<T>>::infinity();
 
+/// -infinity
 template <typename T>
 constexpr subtype<T> c_neginfinity = -std::numeric_limits<subtype<T>>::infinity();
 
+/// Quiet NaN
 template <typename T>
 constexpr subtype<T> c_qnan = std::numeric_limits<subtype<T>>::quiet_NaN();
 

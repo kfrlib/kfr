@@ -116,6 +116,7 @@ void plot_show(const std::string& name, const char* x, const std::string& option
     plot_show(name, std::string(x), options);
 }
 
+/// @brief Plot data using python
 template <typename T>
 void plot_show(const std::string& name, T&& x, const std::string& options = "")
 {
@@ -133,6 +134,7 @@ void plot_show(const std::string& name, T&& x, const std::string& options = "")
     print("done\n");
 }
 
+/// @brief Plot data using python and save to file
 template <typename T>
 void plot_save(const std::string& name, T&& x, const std::string& options = "")
 {

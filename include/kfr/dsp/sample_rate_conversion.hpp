@@ -55,6 +55,7 @@ KFR_SINTRIN T1 sample_rate_converter_blackman(T1 n, T2 a)
     return a0 - a1 * cos(n) + a2 * cos(2 * n);
 }
 
+/// @brief Sample Rate converter
 template <typename T, size_t quality, KFR_ARCH_DEP>
 struct sample_rate_converter
 {

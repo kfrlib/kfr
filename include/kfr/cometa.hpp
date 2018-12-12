@@ -819,36 +819,42 @@ constexpr inline bool is_divisible(T x, T divisor)
     return x % divisor == 0;
 }
 
+/// @brief Greatest common divisor
 template <typename T>
 constexpr inline T gcd(T a)
 {
     return a;
 }
 
+/// @brief Greatest common divisor
 template <typename T>
 constexpr inline T gcd(T a, T b)
 {
     return a < b ? gcd(b, a) : ((a % b == 0) ? b : gcd(b, a % b));
 }
 
+/// @brief Greatest common divisor
 template <typename T, typename... Ts>
 constexpr inline T gcd(T a, T b, T c, Ts... rest)
 {
     return gcd(a, gcd(b, c, rest...));
 }
 
+/// @brief Least common multiple
 template <typename T>
 constexpr inline T lcm(T a)
 {
     return a;
 }
 
+/// @brief Least common multiple
 template <typename T>
 constexpr inline T lcm(T a, T b)
 {
     return a * b / gcd(a, b);
 }
 
+/// @brief Least common multiple
 template <typename T, typename... Ts>
 constexpr inline T lcm(T a, T b, T c, Ts... rest)
 {

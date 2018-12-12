@@ -192,6 +192,7 @@ public:
 
     void set_taps(const array_ref<const T>& taps) { state = fir_state<T, U>(taps); }
 
+    /// Reset internal filter state
     void reset() final
     {
         state.delayline.fill(0);

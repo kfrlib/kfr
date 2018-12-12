@@ -63,6 +63,7 @@ enum class dft_order
 template <typename T>
 struct dft_stage;
 
+/// @brief Class for performing DFT/FFT
 template <typename T>
 struct dft_plan
 {

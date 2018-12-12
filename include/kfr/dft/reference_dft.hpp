@@ -77,6 +77,7 @@ void reference_fft_pass(Tnumber pi2, size_t N, size_t offset, size_t delta, int 
     }
 }
 
+/// @brief Performs Complex FFT using reference implementation (slow, used for testing)
 template <typename Tnumber = double, typename T>
 void reference_fft(complex<T>* out, const complex<T>* in, size_t size, bool inversion = false)
 {
@@ -93,6 +94,7 @@ void reference_fft(complex<T>* out, const complex<T>* in, size_t size, bool inve
     std::copy(dataout.begin(), dataout.end(), out);
 }
 
+/// @brief Performs Direct Real FFT using reference implementation (slow, used for testing)
 template <typename Tnumber = double, typename T>
 void reference_fft(complex<T>* out, const T* in, size_t size)
 {
@@ -110,6 +112,7 @@ void reference_fft(complex<T>* out, const T* in, size_t size)
     std::copy(dataout.begin(), dataout.end(), out);
 }
 
+/// @brief Performs Inverse Real FFT using reference implementation (slow, used for testing)
 template <typename Tnumber = double, typename T>
 void reference_fft(T* out, const complex<T>* in, size_t size)
 {
@@ -128,6 +131,7 @@ void reference_fft(T* out, const complex<T>* in, size_t size)
         out[i] = dataout[i].real();
 }
 
+/// @brief Performs Complex DFT using reference implementation (slow, used for testing)
 template <typename Tnumber = double, typename T>
 void reference_dft(complex<T>* out, const complex<T>* in, size_t size, bool inversion = false)
 {
@@ -177,6 +181,7 @@ void reference_dft(complex<T>* out, const complex<T>* in, size_t size, bool inve
     }
 }
 
+/// @brief Performs DFT using reference implementation (slow, used for testing)
 template <typename Tnumber = double, typename T>
 inline univector<complex<T>> reference_dft(const univector<complex<T>>& in, bool inversion = false)
 {

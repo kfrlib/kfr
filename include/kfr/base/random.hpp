@@ -167,24 +167,28 @@ struct expression_random_range : input_expression
 };
 } // namespace internal
 
+/// @brief Returns expression that returns pseudo random values
 template <typename T>
 inline internal::expression_random_uniform<T> gen_random_uniform(const random_bit_generator& gen)
 {
     return internal::expression_random_uniform<T>(gen);
 }
 
-template <typename T>
-inline internal::expression_random_range<T> gen_random_range(const random_bit_generator& gen, T min, T max)
-{
-    return internal::expression_random_range<T>(gen, min, max);
-}
-
+/// @brief Returns expression that returns pseudo random values
 template <typename T>
 inline internal::expression_random_uniform<T> gen_random_uniform()
 {
     return internal::expression_random_uniform<T>(random_bit_generator(seed_from_rdtsc));
 }
 
+/// @brief Returns expression that returns pseudo random values of the given range
+template <typename T>
+inline internal::expression_random_range<T> gen_random_range(const random_bit_generator& gen, T min, T max)
+{
+    return internal::expression_random_range<T>(gen, min, max);
+}
+
+/// @brief Returns expression that returns pseudo random values of the given range
 template <typename T>
 inline internal::expression_random_range<T> gen_random_range(T min, T max)
 {

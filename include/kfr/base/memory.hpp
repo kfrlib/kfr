@@ -104,6 +104,7 @@ inline void aligned_free(void* ptr)
 inline void aligned_release(void* ptr) { aligned_free(ptr); }
 }
 
+/// @brief Allocates aligned memory
 template <typename T = void, size_t alignment = platform<>::native_cache_alignment>
 CMT_INLINE T* aligned_allocate(size_t size = 1)
 {
@@ -113,6 +114,7 @@ CMT_INLINE T* aligned_allocate(size_t size = 1)
     return ptr;
 }
 
+/// @brief Deallocates aligned memory
 template <typename T = void>
 CMT_INLINE void aligned_deallocate(T* ptr)
 {
@@ -154,6 +156,7 @@ struct autofree
     std::unique_ptr<T[], internal::aligned_deleter<T>> ptr;
 };
 
+/// @brief Aligned allocator
 template <typename T>
 struct allocator
 {

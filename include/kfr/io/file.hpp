@@ -56,6 +56,7 @@ using filepath = std::basic_string<filepath_char>;
 #define IO_TELL_64 ftello
 #endif
 
+/// @brief Opens file using portable path (char* on posix, wchar_t* on windows)
 inline FILE* fopen_portable(const filepath_char* path, const filepath_char* mode)
 {
 #ifdef CMT_OS_WIN
@@ -78,13 +79,15 @@ constexpr inline size_t element_size<void>()
     return 1;
 }
 
+/// @brief Seek origin
 enum class seek_origin : int
 {
-    current = SEEK_CUR,
-    begin   = SEEK_SET,
-    end     = SEEK_END,
+    current = SEEK_CUR, ///< From the current position
+    begin   = SEEK_SET, ///< From the beginning
+    end     = SEEK_END, ///< From the end
 };
 
+/// @brief Base class for all typed readers and writer
 template <typename T = void>
 struct abstract_stream
 {
@@ -94,12 +97,14 @@ struct abstract_stream
     bool seek(imax offset, int origin) { return seek(offset, static_cast<seek_origin>(origin)); }
 };
 
+/// @brief Base class for all typed readers
 template <typename T = void>
 struct abstract_reader : abstract_stream<T>
 {
     virtual size_t read(T* data, size_t size) = 0;
 };
 
+/// @brief Base class for all typed writers
 template <typename T = void>
 struct abstract_writer : abstract_stream<T>
 {
@@ -137,11 +142,22 @@ struct writer_adapter : abstract_writer<To>
     std::shared_ptr<abstract_writer<From>> writer;
 };
 
+/// @brief Binary reader
 using binary_reader = abstract_reader<>;
+
+/// @brief Binary writer
 using binary_writer = abstract_writer<>;
+
+/// @brief Byte reader
 using byte_reader   = abstract_reader<u8>;
+
+/// @brief Byte writer
 using byte_writer   = abstract_writer<u8>;
+
+/// @brief float reader
 using f32_reader    = abstract_reader<f32>;
+
+/// @brief float writer
 using f32_writer    = abstract_writer<f32>;
 
 struct file_handle
@@ -161,6 +177,7 @@ struct file_handle
     void swap(file_handle& handle) { std::swap(file, handle.file); }
 };
 
+/// @brief Typed file reader
 template <typename T = void>
 struct file_reader : abstract_reader<T>
 {
@@ -176,6 +193,7 @@ struct file_reader : abstract_reader<T>
     file_handle handle;
 };
 
+/// @brief Typed file writer
 template <typename T = void>
 struct file_writer : abstract_writer<T>
 {
@@ -193,18 +211,21 @@ struct file_writer : abstract_writer<T>
     file_handle handle;
 };
 
+/// @brief Opens typed file for reading
 template <typename T = void>
 inline std::shared_ptr<file_reader<T>> open_file_for_reading(const filepath& path)
 {
     return std::make_shared<file_reader<T>>(fopen_portable(path.c_str(), KFR_FILEPATH("rb")));
 }
 
+/// @brief Opens typed file for writing
 template <typename T = void>
 inline std::shared_ptr<file_writer<T>> open_file_for_writing(const filepath& path)
 {
     return std::make_shared<file_writer<T>>(fopen_portable(path.c_str(), KFR_FILEPATH("wb")));
 }
 
+/// @brief Opens typed file for appending
 template <typename T = void>
 inline std::shared_ptr<file_writer<T>> open_file_for_appending(const filepath& path)
 {
@@ -212,107 +233,26 @@ inline std::shared_ptr<file_writer<T>> open_file_for_appending(const filepath& p
 }
 
 #ifdef CMT_OS_WIN
+/// @brief Opens typed file for reading
 template <typename T = void>
 inline std::shared_ptr<file_reader<T>> open_file_for_reading(const std::string& path)
 {
     return std::make_shared<file_reader<T>>(fopen(path.c_str(), "rb"));
 }
 
+/// @brief Opens typed file for writing
 template <typename T = void>
 inline std::shared_ptr<file_writer<T>> open_file_for_writing(const std::string& path)
 {
     return std::make_shared<file_writer<T>>(fopen(path.c_str(), "wb"));
 }
 
+/// @brief Opens typed file for appending
 template <typename T = void>
 inline std::shared_ptr<file_writer<T>> open_file_for_appending(const std::string& path)
 {
     return std::make_shared<file_writer<T>>(fopen(path.c_str(), "ab"));
 }
 #endif
-
-namespace internal
-{
-struct expression_file_base
-{
-    expression_file_base()                            = delete;
-    expression_file_base(const expression_file_base&) = delete;
-    expression_file_base(expression_file_base&&)      = default;
-    expression_file_base(FILE* file) : file(file) {}
-    ~expression_file_base() { fclose(file); }
-    bool ok() const { return file != nullptr; }
-    FILE* file;
-};
-
-struct expression_sequential_file_writer : expression_file_base, output_expression
-{
-    using expression_file_base::expression_file_base;
-    template <typename U, size_t N>
-    void operator()(coutput_t, size_t, const vec<U, N>& value)
-    {
-        write(value);
-    }
-    template <typename U>
-    void write(const U& value)
-    {
-        write(&value, 1);
-    }
-    template <typename U>
-    void write(const U* value, size_t size)
-    {
-        fwrite(value, 1, sizeof(U) * size, file);
-    }
-};
-
-struct expression_sequential_file_reader : expression_file_base, input_expression
-{
-    using expression_file_base::expression_file_base;
-    template <typename U, size_t N>
-    vec<U, N> operator()(cinput_t, size_t, vec_t<U, N>) const
-    {
-        vec<U, N> input = qnan;
-        read(input);
-        return input;
-    }
-    template <typename U>
-    void read(U& value) const
-    {
-        fread(std::addressof(value), 1, sizeof(U), file);
-    }
-};
-
-template <typename T>
-struct expression_file_writer : expression_file_base, output_expression
-{
-    using expression_file_base::expression_file_base;
-    template <size_t N>
-    void operator()(coutput_t, size_t index, const vec<T, N>& value)
-    {
-        if (position != index)
-            fseeko(file, static_cast<off_t>(index * sizeof(T)), SEEK_SET);
-        const vec<T, N> output = value;
-        fwrite(output.data(), sizeof(T), output.size(), file);
-        position = index + N;
-    }
-    size_t position = 0;
-};
-
-template <typename T>
-struct expression_file_reader : expression_file_base, input_expression
-{
-    using expression_file_base::expression_file_base;
-    template <size_t N>
-    vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N>) const
-    {
-        if (position != index)
-            fseeko(file, static_cast<off_t>(index * sizeof(T)), SEEK_SET);
-        vec<T, N> input = qnan;
-        fread(input.data(), sizeof(T), input.size(), file);
-        position = index + N;
-        return input;
-    }
-    mutable size_t position = 0;
-};
-} // namespace internal
 
 } // namespace kfr

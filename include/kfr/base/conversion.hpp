@@ -179,6 +179,7 @@ inline Tout convert_sample(const Tin& in)
     return cast<Tout>(in * scale);
 }
 
+/// @brief Deinterleaves and converts audio samples
 template <typename Tout, typename Tin, typename Tout_traits = audio_sample_traits<Tout>,
           typename Tin_traits = audio_sample_traits<Tin>>
 void deinterleave(Tout* out[], const Tin* in, size_t channels, size_t size)
@@ -190,6 +191,7 @@ void deinterleave(Tout* out[], const Tin* in, size_t channels, size_t size)
     }
 }
 
+/// @brief Deinterleaves and converts audio samples
 template <typename Tout, size_t Tag1, size_t Tag2, typename Tin, size_t Tag3>
 void deinterleave(univector2d<Tout, Tag1, Tag2>& out, const univector<Tin, Tag3>& in)
 {
@@ -203,6 +205,7 @@ void deinterleave(univector2d<Tout, Tag1, Tag2>& out, const univector<Tin, Tag3>
     return deinterleave(ptrs.data(), in.data(), out.size(), in.size() / out.size());
 }
 
+/// @brief Interleaves and converts audio samples
 template <typename Tout, typename Tin, typename Tout_traits = audio_sample_traits<Tout>,
           typename Tin_traits = audio_sample_traits<Tin>>
 void interleave(Tout* out, const Tin* in[], size_t channels, size_t size)
@@ -214,6 +217,7 @@ void interleave(Tout* out, const Tin* in[], size_t channels, size_t size)
     }
 }
 
+/// @brief Interleaves and converts audio samples
 template <typename Tout, size_t Tag1, typename Tin, size_t Tag2, size_t Tag3>
 void interleave(univector<Tout, Tag1>& out, const univector2d<Tin, Tag2, Tag3>& in)
 {
@@ -227,6 +231,7 @@ void interleave(univector<Tout, Tag1>& out, const univector2d<Tin, Tag2, Tag3>& 
     return interleave(out.data(), ptrs.data(), in.size(), out.size() / in.size());
 }
 
+/// @brief Interleaves and converts audio samples
 template <typename Tin, size_t Tag1, size_t Tag2>
 univector<Tin> interleave(const univector2d<Tin, Tag1, Tag2>& in)
 {
@@ -237,6 +242,7 @@ univector<Tin> interleave(const univector2d<Tin, Tag1, Tag2>& in)
     return result;
 }
 
+/// @brief Converts audio samples (both formats are known at compile time)
 template <typename Tout, typename Tin, typename Tout_traits = audio_sample_traits<Tout>,
           typename Tin_traits = audio_sample_traits<Tin>>
 void convert(Tout* out, const Tin* in, size_t size)
@@ -247,6 +253,7 @@ void convert(Tout* out, const Tin* in, size_t size)
     }
 }
 
+/// @brief Converts audio samples (input format is known at runtime)
 template <typename Tout, typename Tout_traits = audio_sample_traits<Tout>>
 void convert(Tout* out, const void* in, audio_sample_type in_type, size_t size)
 {
@@ -256,6 +263,7 @@ void convert(Tout* out, const void* in, audio_sample_type in_type, size_t size)
     });
 }
 
+/// @brief Converts audio samples (output format is known at runtime)
 template <typename Tin, typename Tin_traits = audio_sample_traits<Tin>>
 void convert(void* out, audio_sample_type out_type, const Tin* in, size_t size)
 {

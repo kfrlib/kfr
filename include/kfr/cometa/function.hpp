@@ -66,7 +66,7 @@ struct function;
  * @code
  * function<int( float )> f = []( float x ){ return static_cast<int>( x ); };
  * CHECK( f( 3.4f ) == 3 )
- * @encode
+ * @endcode
  */
 template <typename Result, typename... Args>
 struct function<Result(Args...)>

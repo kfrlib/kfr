@@ -53,24 +53,28 @@ template <typename T>
 univector<T> autocorrelate(const univector_ref<const T>& src1);
 } // namespace internal
 
+/// @brief Convolution
 template <typename T, size_t Tag1, size_t Tag2>
 univector<T> convolve(const univector<T, Tag1>& src1, const univector<T, Tag2>& src2)
 {
     return internal::convolve(src1.slice(), src2.slice());
 }
 
+/// @brief Correlation
 template <typename T, size_t Tag1, size_t Tag2>
 univector<T> correlate(const univector<T, Tag1>& src1, const univector<T, Tag2>& src2)
 {
     return internal::correlate(src1.slice(), src2.slice());
 }
 
+/// @brief Auto-correlation
 template <typename T, size_t Tag1>
 univector<T> autocorrelate(const univector<T, Tag1>& src)
 {
     return internal::autocorrelate(src.slice());
 }
 
+/// @brief Convolution using Filter API
 template <typename T>
 class convolve_filter : public filter<T>
 {

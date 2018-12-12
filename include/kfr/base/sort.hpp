@@ -32,7 +32,7 @@
 namespace kfr
 {
 /**
- * Sort the elements in the vector in ascending order
+ * @brief Sort the elements in the vector in ascending order
  * @param x input vector
  * @return sorted vector
  * @code
@@ -65,7 +65,7 @@ CMT_INLINE vec<T, N> sort(const vec<T, N>& x)
 }
 
 /**
- * Sort the elements in the vector in descending order
+ * @brief Sort the elements in the vector in descending order
  * @param x input vector
  * @return sorted vector
  * @code

@@ -7,6 +7,8 @@
 
 namespace cometa
 {
+
+/// @brief Iterable range
 template <typename T>
 struct range
 {
@@ -51,12 +53,14 @@ struct range
     iterator end() const { return iterator{ value_end, step }; }
 };
 
+/// @brief Make iterable range object
 template <typename T>
 range<T> make_range(T begin, T end)
 {
     return range<T>(begin, end, end > begin ? 1 : -1);
 }
 
+/// @brief Make iterable range object with step
 template <typename T, typename diff_type = decltype(std::declval<T>() - std::declval<T>())>
 range<T> make_range(T begin, T end, diff_type step)
 {

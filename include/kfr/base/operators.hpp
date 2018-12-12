@@ -227,9 +227,9 @@ CMT_INLINE internal::expression_function<fn::ipow, E1, E2> ipow(E1&& x, E2&& b)
 }
 
 /// Return square of the sum of all arguments
-/// *Example*::
-///
+/// @code
 /// CHECK(sqrsum(1,2,3) == 36);
+/// @endcode
 template <typename T1, typename... Ts>
 constexpr inline common_type<T1, Ts...> sqrsum(const T1& x, const Ts&... rest)
 {

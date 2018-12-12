@@ -25,9 +25,9 @@
  */
 #pragma once
 
+#include "operators.hpp"
 #include "univector.hpp"
 #include "vec.hpp"
-#include "operators.hpp"
 #include <algorithm>
 
 namespace kfr
@@ -367,18 +367,24 @@ struct expression_adjacent : expression_base<E>
 };
 } // namespace internal
 
+/** @brief Returns the subrange of the given expression
+ */
 template <typename E1>
 CMT_INLINE internal::expression_slice<E1> slice(E1&& e1, size_t start, size_t size = infinite_size)
 {
     return internal::expression_slice<E1>(std::forward<E1>(e1), start, size);
 }
 
+/** @brief Returns the expression truncated to the given size
+ */
 template <typename E1>
 CMT_INLINE internal::expression_slice<E1> truncate(E1&& e1, size_t size)
 {
     return internal::expression_slice<E1>(std::forward<E1>(e1), 0, size);
 }
 
+/** @brief Returns reversed expression
+ */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 CMT_INLINE internal::expression_reverse<E1> reverse(E1&& e1)
 {
@@ -386,6 +392,14 @@ CMT_INLINE internal::expression_reverse<E1> reverse(E1&& e1)
     return internal::expression_reverse<E1>(std::forward<E1>(e1));
 }
 
+/** @brief Returns evenly spaced numbers over a specified interval.
+ *
+ * @param start The starting value of the sequence
+ * @param stop The end value of the sequence. if ``endpoint`` is ``false``, the last value is excluded
+ * @param size Number of samples to generate
+ * @param endpoint If ``true``, ``stop`` is the last sample. Otherwise, it is not included
+ * @param truncate If ``true``, linspace returns exactly size elements, otherwise, returns infinite sequence
+ */
 template <typename T1, typename T2, bool precise = false, typename TF = ftype<common_type<T1, T2>>>
 CMT_INLINE internal::expression_linspace<TF, precise> linspace(T1 start, T2 stop, size_t size,
                                                                bool endpoint = false, bool truncate = false)

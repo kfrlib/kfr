@@ -123,6 +123,7 @@ private:
 
 using dft_cache = dft_cache_impl<>;
 
+/// @brief Performs Direct DFT using cached plan
 template <typename T, size_t Tag>
 univector<complex<T>> dft(const univector<complex<T>, Tag>& input)
 {
@@ -133,6 +134,7 @@ univector<complex<T>> dft(const univector<complex<T>, Tag>& input)
     return output;
 }
 
+/// @brief Performs Inverse DFT using cached plan
 template <typename T, size_t Tag>
 univector<complex<T>> idft(const univector<complex<T>, Tag>& input)
 {
@@ -143,6 +145,7 @@ univector<complex<T>> idft(const univector<complex<T>, Tag>& input)
     return output;
 }
 
+/// @brief Performs Real Direct DFT using cached plan
 template <typename T, size_t Tag>
 univector<complex<T>> realdft(const univector<T, Tag>& input)
 {
@@ -153,6 +156,7 @@ univector<complex<T>> realdft(const univector<T, Tag>& input)
     return output;
 }
 
+/// @brief Permorms Real Inverse DFT using cached plan
 template <typename T, size_t Tag>
 univector<T> irealdft(const univector<complex<T>, Tag>& input)
 {

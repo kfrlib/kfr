@@ -61,6 +61,7 @@ constexpr size_t tag_dynamic_vector = max_size_t;
 template <typename T, size_t Size = tag_dynamic_vector>
 struct univector;
 
+/// @brief Base class for all univector specializations.
 template <typename T, typename Class>
 struct univector_base : input_expression, output_expression
 {
@@ -88,24 +89,38 @@ struct univector_base : input_expression, output_expression
         assign_expr(std::forward<Input>(input));
         return *derived_cast<Class>(this);
     }
+
+    /// @brief Returns subrange of the vector.
+    /// If start is greater or equal to this->size, returns empty univector
+    /// If requested size is greater than this->size, returns only available elements
     univector<T, 0> slice(size_t start = 0, size_t size = max_size_t)
     {
         T* data                = derived_cast<Class>(this)->data();
         const size_t this_size = derived_cast<Class>(this)->size();
         return array_ref<T>(data + start, std::min(size, start < this_size ? this_size - start : 0));
     }
+
+    /// @brief Returns subrange of the vector.
+    /// If start is greater or equal to this->size, returns empty univector
+    /// If requested size is greater than this->size, returns only available elements
     univector<const T, 0> slice(size_t start = 0, size_t size = max_size_t) const
     {
         const T* data          = derived_cast<Class>(this)->data();
         const size_t this_size = derived_cast<Class>(this)->size();
         return array_ref<const T>(data + start, std::min(size, start < this_size ? this_size - start : 0));
     }
+
+    /// @brief Returns subrange of the vector starting from 0.
+    /// If requested size is greater than this->size, returns only available elements
     univector<T, 0> truncate(size_t size = max_size_t)
     {
         T* data                = derived_cast<Class>(this)->data();
         const size_t this_size = derived_cast<Class>(this)->size();
         return array_ref<T>(data, std::min(size, this_size));
     }
+
+    /// @brief Returns subrange of the vector starting from 0.
+    /// If requested size is greater than this->size, returns only available elements
     univector<const T, 0> truncate(size_t size = max_size_t) const
     {
         const T* data          = derived_cast<Class>(this)->data();
@@ -344,9 +359,11 @@ struct univector<T, tag_dynamic_vector> : std::vector<T, allocator<T>>,
     }
 };
 
+/// @brief Alias for ``univector<T, tag_array_ref>``;
 template <typename T>
 using univector_ref = univector<T, tag_array_ref>;
 
+/// @brief Alias for ``univector<T, tag_dynamic_vector>``;
 template <typename T>
 using univector_dyn = univector<T, tag_dynamic_vector>;
 

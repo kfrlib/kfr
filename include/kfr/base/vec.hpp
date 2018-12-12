@@ -604,7 +604,7 @@ CMT_GNU_CONSTEXPR CMT_INLINE vec<T, N> make_vector_impl(csizes_t<indices...>, co
 /// Create vector from scalar values
 /// @code
 /// CHECK( make_vector( 1, 2, 3, 4 ) == i32x4{1, 2, 3, 4} );
-/// @encode
+/// @endcode
 template <typename Type = void, typename Arg, typename... Args, size_t N = (sizeof...(Args) + 1),
           typename SubType = conditional<is_void<Type>::value, common_type<Arg, Args...>, Type>>
 constexpr CMT_INLINE vec<SubType, N> make_vector(const Arg& x, const Args&... rest)

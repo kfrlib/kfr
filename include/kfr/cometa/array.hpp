@@ -11,6 +11,7 @@
 namespace cometa
 {
 
+/// @brief Reference to array
 template <typename T>
 struct array_ref
 {

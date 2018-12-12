@@ -109,9 +109,11 @@ static drflac_bool32 drflac_reader_seek_proc(abstract_reader<void>* file, int of
 } // namespace internal
 
 #if KFR_ENABLE_WAV
+/// @brief WAV format writer
 template <typename T>
 struct audio_writer_wav : audio_writer<T>
 {
+    /// @brief Constructs WAV writer using target writer and format
     audio_writer_wav(std::shared_ptr<abstract_writer<>>&& writer, const audio_format& fmt)
         : writer(std::move(writer)), f(nullptr), fmt(fmt)
     {
@@ -127,6 +129,7 @@ struct audio_writer_wav : audio_writer<T>
     }
     ~audio_writer_wav() { close(); }
 
+    /// @brief Write data to underlying binary writer
     size_t write(const T* data, size_t size)
     {
         if (!f)
@@ -148,14 +151,21 @@ struct audio_writer_wav : audio_writer<T>
             return sz;
         }
     }
+
+    /// @brief Finishes writing and closes underlying writer
     void close()
     {
         drwav_close(f);
         f = nullptr;
         writer.reset();
     }
+
+    /// @brief Returns format description
     const audio_format_and_length& format() const { return fmt; }
+
+    /// @brief Returns current position
     imax tell() const { return fmt.length; }
+
     bool seek(imax position, seek_origin origin) { return false; }
 
 private:
@@ -164,9 +174,11 @@ private:
     audio_format_and_length fmt;
 };
 
+/// @brief WAV format reader
 template <typename T>
 struct audio_reader_wav : audio_reader<T>
 {
+    /// @brief Constructs WAV reader
     audio_reader_wav(std::shared_ptr<abstract_reader<>>&& reader) : reader(std::move(reader))
     {
         f              = drwav_open((drwav_read_proc)&internal::drwav_reader_read_proc,
@@ -217,8 +229,10 @@ struct audio_reader_wav : audio_reader<T>
     }
     ~audio_reader_wav() { drwav_close(f); }
 
+    /// @brief Returns audio format description
     const audio_format_and_length& format() const { return fmt; }
 
+    /// @brief Reads and decodes audio data
     size_t read(T* data, size_t size)
     {
         if (fmt.type == audio_sample_type::unknown)
@@ -235,7 +249,11 @@ struct audio_reader_wav : audio_reader<T>
             return sz;
         }
     }
+
+    /// @brief Returns current position
     imax tell() const { return position; }
+
+    /// @brief Seeks to specific sample
     bool seek(imax offset, seek_origin origin)
     {
         switch (origin)
@@ -260,9 +278,12 @@ private:
 #endif
 
 #if KFR_ENABLE_FLAC
+
+/// @brief FLAC format reader
 template <typename T>
 struct audio_reader_flac : audio_reader<T>
 {
+    /// @brief Constructs FLAC reader
     audio_reader_flac(std::shared_ptr<abstract_reader<>>&& reader) : reader(std::move(reader))
     {
         f              = drflac_open((drflac_read_proc)&internal::drflac_reader_read_proc,
@@ -274,8 +295,10 @@ struct audio_reader_flac : audio_reader<T>
     }
     ~audio_reader_flac() { drflac_close(f); }
 
+    /// @brief Returns audio format description
     const audio_format_and_length& format() const { return fmt; }
 
+    /// @brief Reads and decodes audio data
     size_t read(T* data, size_t size)
     {
         if (fmt.type == audio_sample_type::unknown)
@@ -292,7 +315,11 @@ struct audio_reader_flac : audio_reader<T>
             return sz;
         }
     }
+
+    /// @brief Returns current position
     imax tell() const { return position; }
+
+    /// @brief Seeks to specific sample
     bool seek(imax offset, seek_origin origin)
     {
         switch (origin)
