@@ -29,6 +29,7 @@
 #include "function.hpp"
 #include "min_max.hpp"
 #include "operators.hpp"
+#include "horizontal.hpp"
 #include "vec.hpp"
 
 namespace kfr

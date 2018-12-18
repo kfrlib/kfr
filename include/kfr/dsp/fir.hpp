@@ -153,7 +153,7 @@ struct expression_fir : expression_base<E1>
  * @param e1 an input expression
  * @param taps coefficients for the FIR filter
  */
-template <typename T, typename E1, size_t Tag>
+template <typename T, typename E1, univector_tag Tag>
 CMT_INLINE internal::expression_fir<T, value_type_of<E1>, E1> fir(E1&& e1, const univector<T, Tag>& taps)
 {
     return internal::expression_fir<T, value_type_of<E1>, E1>(std::forward<E1>(e1), taps.ref());

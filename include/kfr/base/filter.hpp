@@ -58,14 +58,14 @@ public:
     }
 
     /// @brief Applies filter to a univector
-    template <size_t Tag>
+    template <univector_tag Tag>
     void apply(univector<T, Tag>& buffer)
     {
         process_buffer(buffer.data(), buffer.data(), buffer.size());
     }
 
     /// @brief Applies filter to a univector and write the result to another univector
-    template <size_t Tag1, size_t Tag2>
+    template <univector_tag Tag1, univector_tag Tag2>
     void apply(univector<T, Tag1>& dest, const univector<T, Tag2>& src)
     {
         process_buffer(dest.data(), src.data(), std::min(dest.size(), src.size()));
@@ -75,7 +75,7 @@ public:
 
     void apply(T* dest, const T* src, size_t size) { process_buffer(dest, src, size); }
 
-    template <size_t Tag>
+    template <univector_tag Tag>
     void apply(univector<T, Tag>& dest, const expression_pointer<T>& src)
     {
         process_expression(dest.data(), src, size_min(dest.size(), src.size()));
@@ -86,7 +86,7 @@ public:
         process_expression(dest, src, size_min(size, src.size()));
     }
 
-    template <size_t Tag, typename Expr, KFR_ENABLE_IF(is_input_expression<Expr>::value)>
+    template <univector_tag Tag, typename Expr, KFR_ENABLE_IF(is_input_expression<Expr>::value)>
     void apply(univector<T, Tag>& dest, const Expr& src)
     {
         process_expression(dest.data(), to_pointer(src), size_min(dest.size(), src.size()));

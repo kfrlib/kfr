@@ -148,7 +148,7 @@ struct representation<kfr::mask<T, N>>
     }
 };
 
-template <typename T, size_t Tag>
+template <typename T, kfr::univector_tag Tag>
 struct representation<kfr::univector<T, Tag>>
 {
     using type = std::string;

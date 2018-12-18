@@ -277,7 +277,7 @@ public:
         process_packet<tag_array_ref>(source);
     }
 
-    template <size_t Tag>
+    template <univector_tag Tag>
     void process_packet(const std::vector<univector<T, Tag>>& source)
     {
         T momentary = 0;

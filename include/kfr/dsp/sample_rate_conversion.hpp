@@ -144,7 +144,7 @@ struct sample_rate_converter
     /// @brief Writes output.size() samples to output reading at most input.size(), then consuming zeros as
     /// input.
     /// @returns Number of processed input samples (may be less than input.size()).
-    template <size_t Tag>
+    template <univector_tag Tag>
     size_t process(univector<T, Tag>& output, univector_ref<const T> input)
     {
         const itype required_input_size = input_size_for_output(output.size());

@@ -90,7 +90,7 @@ struct dft_plan
         execute_dft(inv, out, in, temp);
     }
 
-    template <size_t Tag1, size_t Tag2, size_t Tag3>
+    template <univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
     KFR_INTRIN void execute(univector<complex<T>, Tag1>& out, const univector<complex<T>, Tag2>& in,
                             univector<u8, Tag3>& temp, bool inverse = false) const
     {
@@ -99,7 +99,7 @@ struct dft_plan
         else
             execute_dft(cfalse, out.data(), in.data(), temp.data());
     }
-    template <bool inverse, size_t Tag1, size_t Tag2, size_t Tag3>
+    template <bool inverse, univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
     KFR_INTRIN void execute(univector<complex<T>, Tag1>& out, const univector<complex<T>, Tag2>& in,
                             univector<u8, Tag3>& temp, cbool_t<inverse> inv) const
     {
@@ -147,11 +147,11 @@ struct dft_plan_real : dft_plan<T>
     template <bool inverse>
     void execute(complex<T>*, const complex<T>*, u8*, cbool_t<inverse>) const = delete;
 
-    template <size_t Tag1, size_t Tag2, size_t Tag3>
+    template <univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
     void execute(univector<complex<T>, Tag1>&, const univector<complex<T>, Tag2>&, univector<u8, Tag3>&,
                  bool = false) const = delete;
 
-    template <bool inverse, size_t Tag1, size_t Tag2, size_t Tag3>
+    template <bool inverse, univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
     void execute(univector<complex<T>, Tag1>&, const univector<complex<T>, Tag2>&, univector<u8, Tag3>&,
                  cbool_t<inverse>) const = delete;
 
@@ -169,14 +169,14 @@ struct dft_plan_real : dft_plan<T>
         this->execute_dft(ctrue, outdata, outdata, temp);
     }
 
-    template <size_t Tag1, size_t Tag2, size_t Tag3>
+    template <univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
     KFR_INTRIN void execute(univector<complex<T>, Tag1>& out, const univector<T, Tag2>& in,
                             univector<u8, Tag3>& temp, dft_pack_format fmt = dft_pack_format::CCs) const
     {
         this->execute_dft(cfalse, out.data(), ptr_cast<complex<T>>(in.data()), temp.data());
         to_fmt(out.data(), fmt);
     }
-    template <size_t Tag1, size_t Tag2, size_t Tag3>
+    template <univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
     KFR_INTRIN void execute(univector<T, Tag1>& out, const univector<complex<T>, Tag2>& in,
                             univector<u8, Tag3>& temp, dft_pack_format fmt = dft_pack_format::CCs) const
     {
@@ -192,7 +192,7 @@ private:
     void from_fmt(complex<T>* out, const complex<T>* in, dft_pack_format fmt) const;
 };
 
-template <typename T, size_t Tag1, size_t Tag2, size_t Tag3>
+template <typename T, univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
 void fft_multiply(univector<complex<T>, Tag1>& dest, const univector<complex<T>, Tag2>& src1,
                   const univector<complex<T>, Tag3>& src2, dft_pack_format fmt = dft_pack_format::CCs)
 {
@@ -204,7 +204,7 @@ void fft_multiply(univector<complex<T>, Tag1>& dest, const univector<complex<T>,
         dest[0] = f0;
 }
 
-template <typename T, size_t Tag1, size_t Tag2, size_t Tag3>
+template <typename T, univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
 void fft_multiply_accumulate(univector<complex<T>, Tag1>& dest, const univector<complex<T>, Tag2>& src1,
                              const univector<complex<T>, Tag3>& src2,
                              dft_pack_format fmt = dft_pack_format::CCs)
@@ -217,7 +217,7 @@ void fft_multiply_accumulate(univector<complex<T>, Tag1>& dest, const univector<
     if (fmt == dft_pack_format::Perm)
         dest[0] = f0;
 }
-template <typename T, size_t Tag1, size_t Tag2, size_t Tag3, size_t Tag4>
+template <typename T, univector_tag Tag1, univector_tag Tag2, univector_tag Tag3, univector_tag Tag4>
 void fft_multiply_accumulate(univector<complex<T>, Tag1>& dest, const univector<complex<T>, Tag2>& src1,
                              const univector<complex<T>, Tag3>& src2, const univector<complex<T>, Tag4>& src3,
                              dft_pack_format fmt = dft_pack_format::CCs)

@@ -192,7 +192,7 @@ void deinterleave(Tout* out[], const Tin* in, size_t channels, size_t size)
 }
 
 /// @brief Deinterleaves and converts audio samples
-template <typename Tout, size_t Tag1, size_t Tag2, typename Tin, size_t Tag3>
+template <typename Tout, univector_tag Tag1, univector_tag Tag2, typename Tin, univector_tag Tag3>
 void deinterleave(univector2d<Tout, Tag1, Tag2>& out, const univector<Tin, Tag3>& in)
 {
     if (in.empty() || out.empty())
@@ -218,7 +218,7 @@ void interleave(Tout* out, const Tin* in[], size_t channels, size_t size)
 }
 
 /// @brief Interleaves and converts audio samples
-template <typename Tout, size_t Tag1, typename Tin, size_t Tag2, size_t Tag3>
+template <typename Tout, univector_tag Tag1, typename Tin, univector_tag Tag2, univector_tag Tag3>
 void interleave(univector<Tout, Tag1>& out, const univector2d<Tin, Tag2, Tag3>& in)
 {
     if (in.empty() || out.empty())
@@ -232,7 +232,7 @@ void interleave(univector<Tout, Tag1>& out, const univector2d<Tin, Tag2, Tag3>& 
 }
 
 /// @brief Interleaves and converts audio samples
-template <typename Tin, size_t Tag1, size_t Tag2>
+template <typename Tin, univector_tag Tag1, univector_tag Tag2>
 univector<Tin> interleave(const univector2d<Tin, Tag1, Tag2>& in)
 {
     if (in.empty())

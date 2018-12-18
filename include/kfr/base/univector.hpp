@@ -38,8 +38,13 @@ CMT_PRAGMA_MSVC(warning(disable : 4324))
 namespace kfr
 {
 
-constexpr size_t tag_array_ref      = 0;
-constexpr size_t tag_dynamic_vector = max_size_t;
+using univector_tag = size_t;
+
+enum : size_t
+{
+    tag_array_ref      = 0,
+    tag_dynamic_vector = max_size_t,
+};
 
 /**
  * @brief Class that represent data in KFR. Many KFR functions can take this class as an argument.
@@ -58,7 +63,7 @@ constexpr size_t tag_dynamic_vector = max_size_t;
  * some_function(make_univector(buffer, size));
  * @endcode
  */
-template <typename T, size_t Size = tag_dynamic_vector>
+template <typename T, univector_tag Tag = tag_dynamic_vector>
 struct univector;
 
 /// @brief Base class for all univector specializations.
@@ -282,19 +287,21 @@ struct univector<T, tag_array_ref> : array_ref<T>, univector_base<T, univector<T
     constexpr univector(const array_ref<T>& other) : array_ref<T>(other) {}
     constexpr univector(array_ref<T>&& other) : array_ref<T>(std::move(other)) {}
 
-    template <size_t Tag>
+    template <univector_tag Tag>
     constexpr univector(const univector<T, Tag>& other) : array_ref<T>(other.data(), other.size())
     {
     }
-    template <size_t Tag>
+    template <univector_tag Tag>
     constexpr univector(univector<T, Tag>& other) : array_ref<T>(other.data(), other.size())
     {
     }
-    template <typename U, size_t Tag, KFR_ENABLE_IF(is_same<remove_const<T>, U>::value&& is_const<T>::value)>
+    template <typename U, univector_tag Tag,
+              KFR_ENABLE_IF(is_same<remove_const<T>, U>::value&& is_const<T>::value)>
     constexpr univector(const univector<U, Tag>& other) : array_ref<T>(other.data(), other.size())
     {
     }
-    template <typename U, size_t Tag, KFR_ENABLE_IF(is_same<remove_const<T>, U>::value&& is_const<T>::value)>
+    template <typename U, univector_tag Tag,
+              KFR_ENABLE_IF(is_same<remove_const<T>, U>::value&& is_const<T>::value)>
     constexpr univector(univector<U, Tag>& other) : array_ref<T>(other.data(), other.size())
     {
     }
@@ -421,7 +428,7 @@ struct lockfree_ring_buffer
         return tail.load(std::memory_order_relaxed) - front.load(std::memory_order_relaxed);
     }
 
-    template <size_t Tag>
+    template <univector_tag Tag>
     size_t try_enqueue(const T* source, size_t size, univector<T, Tag>& buffer, bool partial = false)
     {
         const size_t cur_tail   = tail.load(std::memory_order_relaxed);
@@ -445,7 +452,7 @@ struct lockfree_ring_buffer
         return size;
     }
 
-    template <size_t Tag>
+    template <univector_tag Tag>
     size_t try_dequeue(T* dest, size_t size, const univector<T, Tag>& buffer, bool partial = false)
     {
         const size_t cur_front  = front.load(std::memory_order_relaxed);

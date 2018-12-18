@@ -127,7 +127,7 @@ KFR_I_FN(fir_bandstop)
  * @param window pointer to a window function
  * @param normalize true for normalized coefficients
  */
-template <typename T, size_t Tag>
+template <typename T, univector_tag Tag>
 CMT_INLINE void fir_lowpass(univector<T, Tag>& taps, identity<T> cutoff, const expression_pointer<T>& window,
                             bool normalize = true)
 {
@@ -141,7 +141,7 @@ CMT_INLINE void fir_lowpass(univector<T, Tag>& taps, identity<T> cutoff, const e
  * @param window pointer to a window function
  * @param normalize true for normalized coefficients
  */
-template <typename T, size_t Tag>
+template <typename T, univector_tag Tag>
 CMT_INLINE void fir_highpass(univector<T, Tag>& taps, identity<T> cutoff, const expression_pointer<T>& window,
                              bool normalize = true)
 {
@@ -156,7 +156,7 @@ CMT_INLINE void fir_highpass(univector<T, Tag>& taps, identity<T> cutoff, const 
  * @param window pointer to a window function
  * @param normalize true for normalized coefficients
  */
-template <typename T, size_t Tag>
+template <typename T, univector_tag Tag>
 CMT_INLINE void fir_bandpass(univector<T, Tag>& taps, identity<T> frequency1, identity<T> frequency2,
                              const expression_pointer<T>& window, bool normalize = true)
 {
@@ -171,7 +171,7 @@ CMT_INLINE void fir_bandpass(univector<T, Tag>& taps, identity<T> frequency1, id
  * @param window pointer to a window function
  * @param normalize true for normalized coefficients
  */
-template <typename T, size_t Tag>
+template <typename T, univector_tag Tag>
 CMT_INLINE void fir_bandstop(univector<T, Tag>& taps, identity<T> frequency1, identity<T> frequency2,
                              const expression_pointer<T>& window, bool normalize = true)
 {

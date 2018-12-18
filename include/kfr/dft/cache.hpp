@@ -124,7 +124,7 @@ private:
 using dft_cache = dft_cache_impl<>;
 
 /// @brief Performs Direct DFT using cached plan
-template <typename T, size_t Tag>
+template <typename T, univector_tag Tag>
 univector<complex<T>> dft(const univector<complex<T>, Tag>& input)
 {
     dft_plan_ptr<T> dft = dft_cache::instance().get(ctype_t<T>(), input.size());
@@ -135,7 +135,7 @@ univector<complex<T>> dft(const univector<complex<T>, Tag>& input)
 }
 
 /// @brief Performs Inverse DFT using cached plan
-template <typename T, size_t Tag>
+template <typename T, univector_tag Tag>
 univector<complex<T>> idft(const univector<complex<T>, Tag>& input)
 {
     dft_plan_ptr<T> dft = dft_cache::instance().get(ctype_t<T>(), input.size());
@@ -146,7 +146,7 @@ univector<complex<T>> idft(const univector<complex<T>, Tag>& input)
 }
 
 /// @brief Performs Real Direct DFT using cached plan
-template <typename T, size_t Tag>
+template <typename T, univector_tag Tag>
 univector<complex<T>> realdft(const univector<T, Tag>& input)
 {
     dft_plan_real_ptr<T> dft = dft_cache::instance().getreal(ctype_t<T>(), input.size());
@@ -157,7 +157,7 @@ univector<complex<T>> realdft(const univector<T, Tag>& input)
 }
 
 /// @brief Permorms Real Inverse DFT using cached plan
-template <typename T, size_t Tag>
+template <typename T, univector_tag Tag>
 univector<T> irealdft(const univector<complex<T>, Tag>& input)
 {
     dft_plan_real_ptr<T> dft = dft_cache::instance().getreal(ctype_t<T>(), (input.size() - 1) * 2);
