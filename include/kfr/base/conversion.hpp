@@ -178,7 +178,7 @@ template <typename Tout, typename Tin, typename Tout_traits = audio_sample_trait
 inline Tout convert_sample(const Tin& in)
 {
     constexpr auto scale = Tout_traits::scale / Tin_traits::scale;
-    return cast<Tout>(clamp(in * scale, -Tout_traits::scale, Tout_traits::scale));
+    return cast<Tout>(clamp(in * scale, -Tout_traits::scale, +Tout_traits::scale));
 }
 
 /// @brief Deinterleaves and converts audio samples
