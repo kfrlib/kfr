@@ -211,6 +211,9 @@ struct audio_reader_wav : audio_reader<T>
             case 16:
                 fmt.type = audio_sample_type::i16;
                 break;
+            case 24:
+                fmt.type = audio_sample_type::i24;
+                break;
             case 32:
                 fmt.type = audio_sample_type::i32;
                 break;

@@ -53,6 +53,8 @@ inline constexpr size_t audio_sample_sizeof(audio_sample_type type)
         return 1;
     case audio_sample_type::i16:
         return 2;
+    case audio_sample_type::i24:
+        return 3;
     case audio_sample_type::i32:
     case audio_sample_type::f32:
         return 4;
@@ -176,7 +178,7 @@ template <typename Tout, typename Tin, typename Tout_traits = audio_sample_trait
 inline Tout convert_sample(const Tin& in)
 {
     constexpr auto scale = Tout_traits::scale / Tin_traits::scale;
-    return cast<Tout>(in * scale);
+    return cast<Tout>(clamp(in * scale, -Tout_traits::scale, Tout_traits::scale));
 }
 
 /// @brief Deinterleaves and converts audio samples
