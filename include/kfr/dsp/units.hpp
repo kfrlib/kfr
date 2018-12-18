@@ -27,6 +27,7 @@
 
 #include "../base/basic_expressions.hpp"
 #include "../base/log_exp.hpp"
+#include "../base/abs.hpp"
 #include "../base/vec.hpp"
 
 namespace kfr
@@ -39,7 +40,7 @@ namespace intrinsics
 template <typename T, typename TF = flt_type<T>>
 KFR_SINTRIN TF amp_to_dB(const T& amp)
 {
-    return log(static_cast<TF>(amp)) * subtype<TF>(8.6858896380650365530225783783322);
+    return log(static_cast<TF>(abs(amp))) * subtype<TF>(8.6858896380650365530225783783322);
     // return T( 20.0 ) * log10( level );
 }
 
@@ -53,7 +54,7 @@ KFR_SINTRIN TF dB_to_amp(const T& dB)
 template <typename T, typename TF = flt_type<T>>
 KFR_SINTRIN TF amp_to_dB(const T& amp, const T& offset)
 {
-    return log_fmadd(amp, subtype<TF>(8.6858896380650365530225783783322), offset);
+    return log_fmadd(static_cast<TF>(abs(amp)), subtype<TF>(8.6858896380650365530225783783322), offset);
     // return T( 20.0 ) * log10( level );
 }
 
@@ -68,7 +69,7 @@ KFR_SINTRIN TF dB_to_amp(const T& dB, const T& offset)
 template <typename T, typename Tout = flt_type<T>>
 KFR_SINTRIN Tout power_to_dB(const T& x)
 {
-    return log(x) * (10 * c_recip_log_10<Tout>);
+    return log(static_cast<Tout>(abs(x))) * (10 * c_recip_log_10<Tout>);
 }
 
 template <typename T, typename Tout = flt_type<T>>
