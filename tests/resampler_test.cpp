@@ -24,7 +24,7 @@ TEST(resampler_test)
         out_sr / 10);
     resampler.process(out, in);
 
-    ASSERT(rms(slice(out - ref, ceil(delay * 2))) < 0.0001);
+    CHECK(rms(slice(out - ref, ceil(delay * 2))) < 0.005f);
 }
 
 #ifndef KFR_NO_MAIN
