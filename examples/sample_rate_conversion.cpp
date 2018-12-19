@@ -18,12 +18,10 @@ int main()
 {
     println(library_version());
 
-    const std::string options = "phaseresp=False";
-
     univector<fbase> swept_sine = swept(0.5, len);
 
     {
-        auto r = resampler<fbase>(resample_quality::high, output_sr, input_sr, 1.0, 0.496);
+        auto r = resampler<fbase>(resample_quality::high, output_sr, input_sr);
         univector<fbase> resampled(len * output_sr / input_sr + r.get_delay());
         r.process(resampled, swept_sine);
 
@@ -36,7 +34,7 @@ int main()
     }
 
     {
-        auto r = resampler<fbase>(resample_quality::normal, output_sr, input_sr, 1.0, 0.496);
+        auto r = resampler<fbase>(resample_quality::normal, output_sr, input_sr);
         univector<fbase> resampled(len * output_sr / input_sr + r.get_delay());
         r.process(resampled, swept_sine);
 
@@ -49,7 +47,7 @@ int main()
     }
 
     {
-        auto r = resampler<fbase>(resample_quality::low, output_sr, input_sr, 1.0, 0.496);
+        auto r = resampler<fbase>(resample_quality::low, output_sr, input_sr);
         univector<fbase> resampled(len * output_sr / input_sr + r.get_delay());
         r.process(resampled, swept_sine);
 
@@ -62,7 +60,7 @@ int main()
     }
 
     {
-        auto r = resampler<fbase>(resample_quality::draft, output_sr, input_sr, 1.0, 0.496);
+        auto r = resampler<fbase>(resample_quality::draft, output_sr, input_sr);
         univector<fbase> resampled(len * output_sr / input_sr + r.get_delay());
         r.process(resampled, swept_sine);
 

@@ -145,6 +145,12 @@ struct univector_base : input_expression, output_expression
         const size_t size = get_size();
         return array_ref<const T>(data, size);
     }
+    array_ref<const T> cref() const
+    {
+        const T* data     = get_data();
+        const size_t size = get_size();
+        return array_ref<const T>(data, size);
+    }
 
     void ringbuf_write(size_t& cursor, const T* src, size_t srcsize)
     {
@@ -276,6 +282,8 @@ struct alignas(platform<>::maximum_vector_alignment) univector : std::array<T, S
         return index < this->size() ? this->operator[](index) : fallback_value;
     }
     using univector_base<T, univector>::operator=;
+
+    void resize(size_t) noexcept {}
 };
 
 template <typename T>
@@ -409,11 +417,11 @@ CMT_INLINE univector<T> render(Expr&& expr)
 
 /// @brief Converts an expression to univector
 template <typename Expr, typename T = value_type_of<Expr>>
-CMT_INLINE univector<T> render(Expr&& expr, size_t size)
+CMT_INLINE univector<T> render(Expr&& expr, size_t size, size_t offset = 0)
 {
     univector<T> result;
     result.resize(size);
-    result = expr;
+    result = slice(expr, offset, size);
     return result;
 }
 

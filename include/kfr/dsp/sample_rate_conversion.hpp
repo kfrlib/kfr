@@ -33,39 +33,63 @@
 
 namespace kfr
 {
-namespace sample_rate_conversion_quality
+enum class sample_rate_conversion_quality : int
 {
-constexpr csize_t<4> draft{};
-constexpr csize_t<6> low{};
-constexpr csize_t<8> normal{};
-constexpr csize_t<10> high{};
-} // namespace sample_rate_conversion_quality
+    draft   = 4,
+    low     = 6,
+    normal  = 8,
+    high    = 10,
+    perfect = 12,
+};
 
-namespace resample_quality = sample_rate_conversion_quality;
-
-namespace internal
-{
-template <typename T1, typename T2>
-KFR_SINTRIN T1 sample_rate_converter_blackman(T1 n, T2 a)
-{
-    const T1 a0 = (1 - a) * 0.5;
-    const T1 a1 = 0.5;
-    const T1 a2 = a * 0.5;
-    n           = n * c_pi<T1, 2>;
-    return a0 - a1 * cos(n) + a2 * cos(2 * n);
-}
+using resample_quality = sample_rate_conversion_quality;
 
 /// @brief Sample Rate converter
-template <typename T, size_t quality, KFR_ARCH_DEP>
-struct sample_rate_converter
+template <typename T, KFR_ARCH_DEP>
+struct samplerate_converter
 {
     using itype = i64;
 
-    constexpr static itype depth = static_cast<itype>(1 << (quality + 1));
+private:
+    KFR_INTRIN T window(T n) const
+    {
+        return modzerobessel(kaiser_beta * sqrt(1 - sqr(2 * n - 1))) * reciprocal(modzerobessel(kaiser_beta));
+    }
+    KFR_INTRIN T sidelobe_att() const { return kaiser_beta / 0.1102 + 8.7; }
+    KFR_INTRIN T transition_width() const { return (sidelobe_att() - 8) / (depth - 1) / 2.285; }
 
-    sample_rate_converter(itype interpolation_factor, itype decimation_factor, T scale = T(1),
-                          T cutoff = 0.49)
-        : input_position(0), output_position(0)
+public:
+    static KFR_INTRIN size_t filter_order(sample_rate_conversion_quality quality)
+    {
+        return 1 << (static_cast<int>(quality) + 1);
+    }
+
+    /// @brief Returns sidelobe attenuation for the given quality (in dB)
+    static KFR_INTRIN T sidelobe_attenuation(sample_rate_conversion_quality quality)
+    {
+        return (static_cast<int>(quality) - 3) * T(20);
+    }
+
+    /// @brief Returns transition width for the given quality (in rad)
+    static KFR_INTRIN T transition_width(sample_rate_conversion_quality quality)
+    {
+        return (sidelobe_attenuation(quality) - 8) / (filter_order(quality) - 1) / T(2.285);
+    }
+
+    static KFR_INTRIN T window_param(sample_rate_conversion_quality quality)
+    {
+        const T att = sidelobe_attenuation(quality);
+        if (att > 50)
+            return T(0.1102) * (att - T(8.7));
+        if (att >= 21)
+            return T(0.5842) * pow(att - 21, T(0.4)) + T(0.07886) * (att - 21);
+        return 0;
+    }
+
+    samplerate_converter(sample_rate_conversion_quality quality, itype interpolation_factor,
+                         itype decimation_factor, T scale = T(1), T cutoff = 0.5f)
+        : kaiser_beta(window_param(quality)), depth(static_cast<itype>(filter_order(quality))),
+          input_position(0), output_position(0)
     {
         const i64 gcf = gcd(interpolation_factor, decimation_factor);
         interpolation_factor /= gcf;
@@ -81,19 +105,19 @@ struct sample_rate_converter
         filter               = univector<T>(size_t(taps), T());
         delay                = univector<T>(size_t(depth), T());
 
+        cutoff = cutoff - transition_width() / c_pi<T, 4>;
+
         cutoff = cutoff / std::max(decimation_factor, interpolation_factor);
 
         for (itype j = 0, jj = 0; j < taps; j++)
         {
-            filter[size_t(j)] = scale * 2 * interpolation_factor * cutoff *
-                                sinc((jj - halftaps) * cutoff * c_pi<T, 2>) *
-                                sample_rate_converter_blackman(T(jj) / T(taps - 1), T(0.16));
+            filter[size_t(j)] = sinc((jj - halftaps) * cutoff * c_pi<T, 2>) * window(T(jj) / T(taps - 1));
             jj += size_t(interpolation_factor);
             if (jj >= taps)
                 jj = jj - taps + 1;
         }
 
-        const T s = reciprocal(sum(filter)) * interpolation_factor;
+        const T s = reciprocal(sum(filter)) * interpolation_factor * scale;
         filter    = filter * s;
     }
 
@@ -194,7 +218,11 @@ struct sample_rate_converter
 
         return required_input_size;
     }
-    size_t get_delay() const { return depth / 2 * interpolation_factor / decimation_factor; }
+    double get_fractional_delay() const { return (taps - 1) * 0.5 / decimation_factor; }
+    size_t get_delay() const { return static_cast<size_t>(get_fractional_delay()); }
+
+    T kaiser_beta;
+    itype depth;
     itype taps;
     size_t order;
     itype interpolation_factor;
@@ -204,6 +232,9 @@ struct sample_rate_converter
     itype input_position;
     itype output_position;
 };
+
+namespace internal
+{
 
 template <size_t factor, typename E>
 struct expression_upsample;
@@ -331,25 +362,23 @@ CMT_INLINE internal::expression_upsample<4, E1> upsample4(E1&& e1)
     return internal::expression_upsample<4, E1>(std::forward<E1>(e1));
 }
 
-template <typename T = fbase, size_t quality>
-inline internal::sample_rate_converter<T, quality> sample_rate_converter(csize_t<quality>,
-                                                                         size_t interpolation_factor,
-                                                                         size_t decimation_factor,
-                                                                         T scale = T(1), T cutoff = 0.49)
+template <typename T = fbase>
+inline samplerate_converter<T> sample_rate_converter(sample_rate_conversion_quality quality,
+                                                     size_t interpolation_factor, size_t decimation_factor,
+                                                     T scale = T(1), T cutoff = 0.5f)
 {
-    using itype = typename internal::sample_rate_converter<T, quality>::itype;
-    return internal::sample_rate_converter<T, quality>(itype(interpolation_factor), itype(decimation_factor),
-                                                       scale, cutoff);
+    using itype = typename samplerate_converter<T>::itype;
+    return samplerate_converter<T>(quality, itype(interpolation_factor), itype(decimation_factor), scale,
+                                   cutoff);
 }
 
 // Deprecated in 0.9.2
-template <typename T = fbase, size_t quality>
-inline internal::sample_rate_converter<T, quality> resampler(csize_t<quality>, size_t interpolation_factor,
-                                                             size_t decimation_factor, T scale = T(1),
-                                                             T cutoff = 0.49)
+template <typename T = fbase>
+inline samplerate_converter<T> resampler(sample_rate_conversion_quality quality, size_t interpolation_factor,
+                                         size_t decimation_factor, T scale = T(1), T cutoff = 0.5f)
 {
-    using itype = typename internal::sample_rate_converter<T, quality>::itype;
-    return internal::sample_rate_converter<T, quality>(itype(interpolation_factor), itype(decimation_factor),
-                                                       scale, cutoff);
+    using itype = typename samplerate_converter<T>::itype;
+    return samplerate_converter<T>(quality, itype(interpolation_factor), itype(decimation_factor), scale,
+                                   cutoff);
 }
 } // namespace kfr

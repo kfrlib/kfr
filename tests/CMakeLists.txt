@@ -44,7 +44,7 @@ set(ALL_TESTS_CPP
     dft_test.cpp
     dsp_test.cpp
     expression_test.cpp
-    intrinsic_test.cpp io_test.cpp)
+    intrinsic_test.cpp io_test.cpp resampler_test.cpp)
 
 if (MPFR_FOUND AND GMP_FOUND)
     list(APPEND ALL_TESTS_CPP transcendental_test.cpp)
@@ -57,18 +57,10 @@ target_compile_definitions(all_tests PRIVATE KFR_NO_MAIN)
 target_link_libraries(all_tests kfr kfr_dft)
 target_link_libraries(all_tests kfr kfr_dft kfr_io)
 
-add_executable(intrinsic_test intrinsic_test.cpp)
-target_link_libraries(intrinsic_test kfr)
-add_executable(dft_test dft_test.cpp)
-target_link_libraries(dft_test kfr kfr_dft)
-
 if (MPFR_FOUND AND GMP_FOUND)
     add_definitions(-DHAVE_MPFR)
     include_directories(${MPFR_INCLUDE_DIR} ${GMP_INCLUDE_DIR})
-    add_executable(transcendental_test transcendental_test.cpp)
     target_link_libraries(all_tests ${MPFR_LIBRARIES} ${GMP_LIBRARIES})
-    target_link_libraries(transcendental_test ${MPFR_LIBRARIES} ${GMP_LIBRARIES})
-    target_link_libraries(transcendental_test kfr)
 endif ()
 
 function(add_x86_test NAME FLAGS)
@@ -95,28 +87,6 @@ if (ARCH_TESTS)
     add_x86_test(avx512 "${ARCH_RESET} -msse4.1 -mavx2 -mfma -mavx512f -mavx512cd -mavx512bw -mavx512dq -mavx512vl")
 endif()
 
-add_executable(dsp_test dsp_test.cpp)
-target_link_libraries(dsp_test kfr)
-
-add_executable(empty_test empty_test.cpp)
-target_link_libraries(empty_test kfr)
-
-add_executable(complex_test complex_test.cpp)
-target_link_libraries(complex_test kfr)
-
-add_executable(base_test base_test.cpp)
-target_link_libraries(base_test kfr)
-
-add_executable(expression_test expression_test.cpp)
-target_link_libraries(expression_test kfr)
-
-add_executable(ebu_test ebu_test.cpp)
-target_link_libraries(ebu_test kfr)
-
-add_executable(io_test io_test.cpp)
-target_link_libraries(io_test kfr kfr_io)
-target_compile_definitions(io_test PUBLIC KFR_ENABLE_FLAC=1)
-
 if(USE_SDE)
     find_program(EMULATOR "sde")
     list(APPEND EMULATOR "-skx")
@@ -130,29 +100,13 @@ endif ()
 if (NOT IOS)
     enable_testing()
 
-    add_test(NAME base_test
-            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/base_test)
-    add_test(NAME intrinsic_test
-            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/intrinsic_test)
-    add_test(NAME dsp_test
-            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/dsp_test)
-    if (MPFR_FOUND AND GMP_FOUND)
-        add_test(NAME transcendental_test
-                COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/transcendental_test)
-    endif ()
-    add_test(NAME complex_test
-            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/complex_test)
-    add_test(NAME expression_test
-            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/expression_test)
-    add_test(NAME io_test
-            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/io_test)
-
     if (NOT ARM)
         add_test(NAME multiarch
                 COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/multiarch)
     endif ()
-    add_test(NAME dft_test
-            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/dft_test)
+
+    add_test(NAME all_tests
+            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests)
 
     if (ARCH_TESTS)
         add_test(NAME generic COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_generic )

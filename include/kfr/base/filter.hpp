@@ -68,6 +68,8 @@ public:
     template <univector_tag Tag1, univector_tag Tag2>
     void apply(univector<T, Tag1>& dest, const univector<T, Tag2>& src)
     {
+        if (dest.empty())
+            dest.resize(src.size());
         process_buffer(dest.data(), src.data(), std::min(dest.size(), src.size()));
     }
 

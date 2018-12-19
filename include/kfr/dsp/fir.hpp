@@ -62,8 +62,8 @@ struct fir_state
     {
         this->taps = reverse(make_univector(taps.data(), taps.size()));
     }
-    univector_dyn<T> taps;
-    mutable univector_dyn<U> delayline;
+    univector<T> taps;
+    mutable univector<U> delayline;
     mutable size_t delayline_cursor;
 };
 
@@ -146,7 +146,7 @@ struct expression_fir : expression_base<E1>
     }
     state_holder<fir_state<T, U>, stateless> state;
 };
-}
+} // namespace internal
 
 /**
  * @brief Returns template expression that applies FIR filter to the input
@@ -181,7 +181,8 @@ CMT_INLINE internal::expression_short_fir<next_poweroftwo(TapCount), T, value_ty
     E1&& e1, const univector<T, TapCount>& taps)
 {
     static_assert(TapCount >= 2 && TapCount <= 32, "Use short_fir only for small FIR filters");
-    return internal::expression_short_fir<next_poweroftwo(TapCount), T, value_type_of<E1>, E1>(std::forward<E1>(e1), taps);
+    return internal::expression_short_fir<next_poweroftwo(TapCount), T, value_type_of<E1>, E1>(
+        std::forward<E1>(e1), taps);
 }
 
 template <typename T, typename U = T>
@@ -195,7 +196,7 @@ public:
     /// Reset internal filter state
     void reset() final
     {
-        state.delayline.fill(0);
+        state.delayline        = scalar(0);
         state.delayline_cursor = 0;
     }
 
@@ -212,4 +213,4 @@ protected:
 private:
     fir_state<T, U> state;
 };
-}
+} // namespace kfr

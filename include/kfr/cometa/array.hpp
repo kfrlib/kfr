@@ -55,15 +55,12 @@ public:
     constexpr array_ref(const std::vector<T, Ts...>& vec) noexcept : m_data(vec.data()), m_size(vec.size())
     {
     }
-    template <typename... Ts, CMT_ENABLE_IF(sizeof...(Ts), is_const<T>::value)>
-    constexpr array_ref(const std::vector<remove_const<T>, Ts...>& vec) noexcept
-        : m_data(vec.data()), m_size(vec.size())
+
+    template <typename Container, CMT_ENABLE_IF(has_data_size<Container>::value)>
+    array_ref(Container& cont) : array_ref(cont.data(), cont.size())
     {
     }
-    template <typename... Ts>
-    constexpr array_ref(std::vector<T, Ts...>& vec) noexcept : m_data(vec.data()), m_size(vec.size())
-    {
-    }
+
     constexpr array_ref(const std::initializer_list<T>& vec) noexcept
         : m_data(vec.begin()), m_size(vec.size())
     {

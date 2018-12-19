@@ -32,15 +32,15 @@ namespace kfr
 {
 
 template <typename T = fbase>
-KFR_FUNC static auto phasor(identity<T> frequency)
+KFR_FUNC static auto phasor(identity<T> frequency, identity<T> sample_rate, identity<T> phase = 0)
 {
-    return fract(counter(T(0), frequency));
+    return fract(counter(phase, frequency / sample_rate));
 }
 
 template <typename T = fbase>
-KFR_FUNC static auto phasor(identity<T> frequency, identity<T> sample_rate)
+KFR_FUNC static auto phasor(identity<T> frequency)
 {
-    return fract(counter(T(0), frequency / sample_rate));
+    return phasor(frequency, 1, 0);
 }
 
 namespace intrinsics
@@ -119,7 +119,7 @@ KFR_FUNC T triangle(const T& x)
 {
     return intrinsics::trianglenorm(constants<T>::recip_pi_s(1, 2) * x);
 }
-}
+} // namespace intrinsics
 KFR_I_FN(rawsine)
 KFR_I_FN(sine)
 KFR_I_FN(sinenorm)
@@ -275,4 +275,4 @@ KFR_FUNC internal::expression_function<fn::isawtoothnorm, E1> isawtoothnorm(E1&&
 {
     return { fn::isawtoothnorm(), std::forward<E1>(x) };
 }
-}
+} // namespace kfr

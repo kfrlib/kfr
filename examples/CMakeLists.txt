@@ -28,7 +28,7 @@ add_executable(window window.cpp)
 target_link_libraries(window kfr)
 
 add_executable(fir fir.cpp)
-target_link_libraries(fir kfr)
+target_link_libraries(fir kfr kfr_dft)
 
 add_executable(sample_rate_conversion sample_rate_conversion.cpp)
 target_link_libraries(sample_rate_conversion kfr kfr_io)

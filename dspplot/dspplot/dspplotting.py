@@ -29,7 +29,7 @@ def gen_tick_labels(stop, start=10):
         yield ''
     for t in gen_tick_labels(stop, start * 10):
         yield t
-        
+
 def smooth_colormap(colors, name='cmap1'):
     to_rgb = clr.ColorConverter().to_rgb
     colors = [(p, to_rgb(c)) for p, c in colors]
@@ -57,21 +57,21 @@ def wavplot(data, title='Title', file=None, segmentsize=512, overlap=8, Fs=48000
         (7/9, '#fdc967'),
         (8/9, '#f3fab8'),
         (1  , '#ffffff')
-        ])        
+        ])
 
     if not isinstance(data, (list, tuple, np.ndarray)):
         w = wave.open(data, 'rb')
         Fs = w.getframerate()
-        data = np.fromstring(w.readframes(w.getnframes()), dtype=np.int32)/2147483647.0  
+        data = np.fromstring(w.readframes(w.getnframes()), dtype=np.int32)/2147483647.0
     data = np.array(data)
     if normalize:
         maxitem = max(abs(np.max(data)), abs(np.min(data)))
         if maxitem > 0:
             data = data / maxitem
-        
+
     datalen = len(data)
 
-    def fast_resample(data, newlen):    
+    def fast_resample(data, newlen):
         oldlen=len(data)
         result=[]
         for i in range(newlen):
@@ -92,24 +92,24 @@ def wavplot(data, title='Title', file=None, segmentsize=512, overlap=8, Fs=48000
         r = range(segm*datalen//segments, segm*datalen//segments+segmentsize*overlap)
         subdata = data[r]
         subdata = subdata * window
-        n = len(subdata)    
+        n = len(subdata)
         Y = np.fft.fft(subdata)/n
         Y = Y[range(len(Y) // 2)]
         Yfreq = 20 * np.log10(np.absolute(Y))
         Yfreq = signal.resample(Yfreq, 512)
         Yfreq = np.fmax(-300, Yfreq)
         im.append(Yfreq)
-        
+
     im = np.transpose(im)
 
     plt.imshow(im,cmap=cmap, aspect='auto', vmin=vmin, vmax=vmax, origin='lower', extent=[0, datalen / Fs, 0, Fs / 2 ], interpolation='bicubic')
     plt.colorbar()
-    
+
     if not file:
         plt.show()
     else:
         plt.savefig(file)
-    
+
 
 def plot(data,
          title='Title',
@@ -128,7 +128,15 @@ def plot(data,
          spectrogram=False,
          vmin=-160,
          vmax=0,
-         normalize=False):
+         normalize=False,
+         freqticks=[],
+         freq_lim=None,
+         freq_dB_lim=None,
+         phasearg=None):
+
+    if phasearg == 'auto':
+        phasearg = (len(data) - 1) * 0.5
+
     if isinstance(data, (list, tuple, np.ndarray)) and not spectrogram:
         if normalize:
             maxitem = max(abs(np.max(data)), abs(np.min(data)))
@@ -154,7 +162,7 @@ def plot(data,
         dataplot.set_autoscalex_on(False)
         dataplot.set_xlim([0, n - 1])
         dataplot.set_ylim(bottom=np.min(data))
-        
+
         np.seterr(all='ignore')
 
         if freqresp or phaseresp:
@@ -180,11 +188,17 @@ def plot(data,
                         a.set_xticks(list(gen_ticks(Fs / 2)))
                         a.set_xticklabels(list(gen_tick_labels(Fs / 2)))
                     X = np.linspace(0, Fs / 2, len(Y), False)
-                    a.set_xlim([10, Fs / 2])
+                    if freq_lim is not None:
+                        a.set_xlim(freq_lim)
+                    else:
+                        a.set_xlim([10, Fs / 2])
+                    a.set_xticks(list(a.get_xticks()) + freqticks)
                 return X
 
             if freqresp:
                 freqplot = a[1]
+                if freq_dB_lim is not None:
+                    freqplot.set_ylim(freq_dB_lim)
                 X = set_freq(freqplot)
                 freqplot.set_ylabel('Gain (dB)')
                 freqplot.grid(True, **grid_style)
@@ -193,12 +207,15 @@ def plot(data,
 
             if phaseresp:
                 phaseplot = a[1 + freqresp]
-                Yphase = np.angle(Y, deg=True);
+                if phasearg is not None:
+                    Y = Y / 1j ** np.linspace(0, -(phasearg * 2), len(Y), endpoint=False)
+                Yphase = np.angle(Y, deg=True)
+                Yphase = np.select([Yphase < -179, True], [Yphase + 360, Yphase])
                 X = set_freq(phaseplot)
                 phaseplot.grid(True, **grid_style)
-                phaseplot.set_ylabel(r'Phase (${\circ}$)')
+                phaseplot.set_ylabel(r'Phase (${\circ}$)' if phasearg is None else r'Phase shift (${\circ}$)')
                 phaseplot.set_autoscaley_on(False)
-                phaseplot.set_ylim([-180, +180])
+                phaseplot.set_ylim([-190, +190])
                 phaseplot.plot(X, Yphase, **style)
 
         plt.tight_layout(rect=[0, 0.0, 1, 0.94])
@@ -210,15 +227,15 @@ def plot(data,
     else:
         wavplot(data, title=title, file=file, segmentsize=segmentsize, overlap=overlap, Fs=Fs, vmin=vmin, vmax=vmax, normalize=normalize)
 
-        
+
 def perfplot(data, labels, title='Speed', xlabel='X', units='ms', file=None):
-    
+
     styles = [
         {'color': '#F6511D', 'linestyle': '-', 'marker': 'o', 'markersize': 10.0, 'markeredgecolor': '#FFFFFF'},
         {'color': '#00A6ED', 'linestyle': '-', 'marker': 'o', 'markersize': 10.0, 'markeredgecolor': '#FFFFFF'},
         {'color': '#FFB400', 'linestyle': '-', 'marker': 'o', 'markersize': 10.0, 'markeredgecolor': '#FFFFFF'},
         {'color': '#7FB800', 'linestyle': '-', 'marker': 'o', 'markersize': 10.0, 'markeredgecolor': '#FFFFFF'},
-        {'color': '#0D2C54', 'linestyle': '-', 'marker': 'o', 'markersize': 10.0, 'markeredgecolor': '#FFFFFF'},        
+        {'color': '#0D2C54', 'linestyle': '-', 'marker': 'o', 'markersize': 10.0, 'markeredgecolor': '#FFFFFF'},
         ]
     grid_style = {'color': '#777777'}
     fig, ax = plt.subplots()
@@ -230,14 +247,14 @@ def perfplot(data, labels, title='Speed', xlabel='X', units='ms', file=None):
         ax.set_xlabel(xlabel)
         ax.set_ylabel(units)
         x = np.linspace(0,len(d),len(d), False)
-        ax.plot(x, d, linewidth=1.6, label=l, **s)   
-        
+        ax.plot(x, d, linewidth=1.6, label=l, **s)
+
     ax.set_ylim(bottom=0.0)
     legend = ax.legend(loc='lower center', shadow=True)
-                
+
     plt.xticks(x, ticks, rotation='vertical')
     plt.tight_layout(rect=[0, 0.0, 1, 0.94])
-        
+
     if not file:
         plt.show()
     else:

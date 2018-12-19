@@ -118,10 +118,10 @@ void plot_show(const std::string& name, const char* x, const std::string& option
 
 /// @brief Plot data using python
 template <typename T>
-void plot_show(const std::string& name, T&& x, const std::string& options = "")
+void plot_show(const std::string& name, const T& x, const std::string& options = "")
 {
     print(name, "...");
-    auto array = make_array_ref(std::forward<T>(x));
+    auto array = make_array_ref(x);
     std::string ss;
     ss += python_prologue() + "data = [\n";
     for (size_t i = 0; i < array.size(); i++)
@@ -136,9 +136,9 @@ void plot_show(const std::string& name, T&& x, const std::string& options = "")
 
 /// @brief Plot data using python and save to file
 template <typename T>
-void plot_save(const std::string& name, T&& x, const std::string& options = "")
+void plot_save(const std::string& name, const T& x, const std::string& options = "")
 {
-    plot_show(name, std::forward<T>(x), concat_args(options, "file='../svg/" + name + ".svg'"));
+    plot_show(name, x, concat_args(options, "file='../svg/" + name + ".svg'"));
 }
 
 template <typename T1, typename T2>
