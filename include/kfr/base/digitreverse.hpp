@@ -72,7 +72,7 @@ struct shuffle_index_digitreverse
         return digitreverse_impl<bits>(static_cast<u32>(index), csize_t<radix>());
     }
 };
-}
+} // namespace internal
 
 template <size_t radix, size_t group = 1, typename T, size_t N>
 CMT_INLINE vec<T, N> digitreverse(const vec<T, N>& x)
@@ -104,4 +104,4 @@ constexpr inline u32 digitreverse4(u32 x)
 {
     return internal::digitreverse_impl<bits>(x, csize_t<4>());
 }
-}
+} // namespace kfr

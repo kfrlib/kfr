@@ -6,10 +6,10 @@
 #include "cident.h"
 
 #include <cstdint>
+#include <cstdlib>
 #include <limits>
 #include <type_traits>
 #include <utility>
-#include <cstdlib>
 
 CMT_PRAGMA_GNU(GCC diagnostic push)
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")

@@ -26,6 +26,7 @@
 #pragma once
 
 #include "../base/basic_expressions.hpp"
+#include "../base/filter.hpp"
 #include "../base/memory.hpp"
 #include "../base/reduce.hpp"
 #include "../base/univector.hpp"

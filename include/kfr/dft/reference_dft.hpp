@@ -30,8 +30,10 @@
 #include "../base/memory.hpp"
 #include "../base/read_write.hpp"
 #include "../base/small_buffer.hpp"
+#include "../base/univector.hpp"
 #include "../base/vec.hpp"
 #include <cmath>
+#include <vector>
 
 namespace kfr
 {

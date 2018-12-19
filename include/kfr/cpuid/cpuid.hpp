@@ -29,6 +29,7 @@
 #include <intrin.h>
 #endif
 
+#include "../base/platform.hpp"
 #include "../base/types.hpp"
 #include <cstring>
 

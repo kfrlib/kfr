@@ -113,4 +113,4 @@ protected:
     std::size_t m_size;
     T* m_data;
 };
-}
+} // namespace kfr

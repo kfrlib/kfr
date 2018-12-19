@@ -80,5 +80,5 @@ constexpr inline T cos(T x)
 {
     return sin(x + c_pi<T, 1, 2>);
 }
-}
-}
+} // namespace compiletime
+} // namespace kfr

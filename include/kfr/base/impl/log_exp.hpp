@@ -46,7 +46,7 @@ KFR_SINTRIN vec<i32, N> vilogbp1(const vec<f32, N>& d)
 {
     mask<i32, N> m = d < 5.421010862427522E-20f;
     vec<i32, N> q  = (ibitcast(select(m, 1.8446744073709552E19f * d, d)) >> 23) & 0xff;
-    q = select(m, q - (64 + 0x7e), q - 0x7e);
+    q              = select(m, q - (64 + 0x7e), q - 0x7e);
     return q;
 }
 
@@ -55,29 +55,29 @@ KFR_SINTRIN vec<i64, N> vilogbp1(const vec<f64, N>& d)
 {
     mask<i64, N> m = d < 4.9090934652977266E-91;
     vec<i64, N> q  = (ibitcast(select(m, 2.037035976334486E90 * d, d)) >> 52) & 0x7ff;
-    q = select(m, q - (300 + 0x03fe), q - 0x03fe);
+    q              = select(m, q - (300 + 0x03fe), q - 0x03fe);
     return q;
 }
 
 template <size_t N>
 KFR_SINTRIN vec<f32, N> vldexpk(const vec<f32, N>& x, const vec<i32, N>& q)
 {
-    vec<i32, N> m = q >> 31;
-    m = (((m + q) >> 6) - m) << 4;
+    vec<i32, N> m        = q >> 31;
+    m                    = (((m + q) >> 6) - m) << 4;
     const vec<i32, N> qq = q - (m << 2);
-    m = clamp(m + 0x7f, vec<i32, N>(0xff));
-    vec<f32, N> u = pow4(bitcast<f32>(cast<i32>(m) << 23));
+    m                    = clamp(m + 0x7f, vec<i32, N>(0xff));
+    vec<f32, N> u        = pow4(bitcast<f32>(cast<i32>(m) << 23));
     return x * u * bitcast<f32>((cast<i32>(qq + 0x7f)) << 23);
 }
 
 template <size_t N>
 KFR_SINTRIN vec<f64, N> vldexpk(const vec<f64, N>& x, const vec<i64, N>& q)
 {
-    vec<i64, N> m = q >> 31;
-    m = (((m + q) >> 9) - m) << 7;
+    vec<i64, N> m        = q >> 31;
+    m                    = (((m + q) >> 9) - m) << 7;
     const vec<i64, N> qq = q - (m << 2);
-    m = clamp(m + 0x3ff, i64(0x7ff));
-    vec<f64, N> u = pow4(bitcast<f64>(cast<i64>(m) << 52));
+    m                    = clamp(m + 0x3ff, i64(0x7ff));
+    vec<f64, N> u        = pow4(bitcast<f64>(cast<i64>(m) << 52));
     return x * u * bitcast<f64>((cast<i64>(qq + 0x3ff)) << 52);
 }
 
@@ -99,10 +99,10 @@ KFR_SINTRIN vec<f32, N> log(const vec<f32, N>& d)
     vec<f32, N> sp = select(d < 0, constants<f32>::qnan, constants<f32>::neginfinity);
 
     vec<f32, N> t = 0.2371599674224853515625f;
-    t = fmadd(t, x2, 0.285279005765914916992188f);
-    t = fmadd(t, x2, 0.400005519390106201171875f);
-    t = fmadd(t, x2, 0.666666567325592041015625f);
-    t = fmadd(t, x2, 2.0f);
+    t             = fmadd(t, x2, 0.285279005765914916992188f);
+    t             = fmadd(t, x2, 0.400005519390106201171875f);
+    t             = fmadd(t, x2, 0.666666567325592041015625f);
+    t             = fmadd(t, x2, 2.0f);
 
     x = x * t + c_log_2<f32> * cast<f32>(e);
     x = select(d > 0, x, sp);
@@ -122,13 +122,13 @@ KFR_SINTRIN vec<f64, N> log(const vec<f64, N>& d)
     vec<f64, N> sp = select(d < 0, constants<f64>::qnan, constants<f64>::neginfinity);
 
     vec<f64, N> t = 0.148197055177935105296783;
-    t = fmadd(t, x2, 0.153108178020442575739679);
-    t = fmadd(t, x2, 0.181837339521549679055568);
-    t = fmadd(t, x2, 0.22222194152736701733275);
-    t = fmadd(t, x2, 0.285714288030134544449368);
-    t = fmadd(t, x2, 0.399999999989941956712869);
-    t = fmadd(t, x2, 0.666666666666685503450651);
-    t = fmadd(t, x2, 2);
+    t             = fmadd(t, x2, 0.153108178020442575739679);
+    t             = fmadd(t, x2, 0.181837339521549679055568);
+    t             = fmadd(t, x2, 0.22222194152736701733275);
+    t             = fmadd(t, x2, 0.285714288030134544449368);
+    t             = fmadd(t, x2, 0.399999999989941956712869);
+    t             = fmadd(t, x2, 0.666666666666685503450651);
+    t             = fmadd(t, x2, 2);
 
     x = x * t + constants<f64>::log_2 * cast<f64>(e);
     x = select(d > 0, x, sp);
@@ -239,8 +239,9 @@ KFR_SINTRIN vec<T, N> pow(const vec<T, N>& a, const vec<T, N>& b)
     const vec<T, N> t       = exp(b * log(abs(a)));
     const mask<T, N> isint  = floor(b) == b;
     const mask<T, N> iseven = (cast<itype<T>>(b) & 1) == 0;
-    return select(a > T(), t, select(a == T(), T(),
-                                     select(isint, select(iseven, t, -t), broadcast<N>(constants<T>::qnan))));
+    return select(
+        a > T(), t,
+        select(a == T(), T(), select(isint, select(iseven, t, -t), broadcast<N>(constants<T>::qnan))));
 }
 
 template <typename T, size_t N>
@@ -295,7 +296,7 @@ KFR_SINTRIN flt_type<common_type<T1, T2, T3>> log_fmadd(const T1& x, const T2& m
 {
     return fmadd(log(x), m, a);
 }
-}
+} // namespace intrinsics
 KFR_I_FN(exp)
 KFR_I_FN(exp2)
 KFR_I_FN(exp10)
@@ -311,4 +312,4 @@ KFR_I_FN(pow)
 KFR_I_FN(root)
 KFR_I_FN(cbrt)
 
-}
+} // namespace kfr

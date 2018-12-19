@@ -50,7 +50,7 @@ bool check_assertion(const half_comparison<L>& comparison, const char* expr, con
     return result;
 }
 
-#define TESTO_ASSERT_ACTIVE(...)                                                                                  \
+#define TESTO_ASSERT_ACTIVE(...)                                                                             \
     do                                                                                                       \
     {                                                                                                        \
         if (!::testo::check_assertion(::testo::make_comparison() <= __VA_ARGS__, #__VA_ARGS__, __FILE__,     \
@@ -58,8 +58,8 @@ bool check_assertion(const half_comparison<L>& comparison, const char* expr, con
             TESTO_BREAKPOINT;                                                                                \
     } while (0)
 
-#define TESTO_ASSERT_INACTIVE(...)                                                                                  \
-   do                                                                                                       \
+#define TESTO_ASSERT_INACTIVE(...)                                                                           \
+    do                                                                                                       \
     {                                                                                                        \
     } while (false && (__VA_ARGS__))
 

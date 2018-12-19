@@ -78,4 +78,4 @@ static auto swept(identity<T> magn, size_t size)
 {
     return magn * sin(swept_arg<T>(size));
 }
-}
+} // namespace kfr

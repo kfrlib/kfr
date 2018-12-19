@@ -30,6 +30,6 @@ struct named
 };
 
 inline named operator""_arg(const char* name, size_t) { return name; }
-}
+} // namespace cometa
 
 CMT_PRAGMA_MSVC(warning(pop))

@@ -50,7 +50,7 @@ KFR_SINTRIN vec<T, N> clamp(const vec<T, N>& x, const vec<T, N>& hi)
 {
     return max(min(x, hi), zerovector<T, N>());
 }
-}
+} // namespace intrinsics
 KFR_I_FN(clamp)
 
-}
+} // namespace kfr

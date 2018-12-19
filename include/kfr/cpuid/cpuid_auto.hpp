@@ -51,10 +51,10 @@ CMT_INLINE char init_dummyvar()
 }
 
 static char dummyvar = init_dummyvar();
-}
+} // namespace internal
 
 /**
  * @brief Returns cpu instruction set detected at runtime.
  */
 CMT_INLINE cpu_t get_cpu() { return internal::cpu_v(); }
-}
+} // namespace kfr

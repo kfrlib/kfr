@@ -243,4 +243,4 @@ biquad_params<T> biquad_highshelf(identity<T> frequency, identity<T> gain)
     }
     return result;
 }
-}
+} // namespace kfr

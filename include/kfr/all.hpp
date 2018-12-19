@@ -28,41 +28,41 @@
 #include "io.hpp"
 
 /** @defgroup cometa Cometa
-* @brief Metaprogramming
-*/
+ * @brief Metaprogramming
+ */
 
 /** @defgroup types Types
-* @brief Core types
-*/
+ * @brief Core types
+ */
 
 /** @defgroup expressions Expressions
-* @brief Expressions
-*/
+ * @brief Expressions
+ */
 
 /** @defgroup shuffle Shuffle
-* @brief Vector shuffle functions
-*/
+ * @brief Vector shuffle functions
+ */
 
 /** @defgroup utility Utility
-* @brief Utility classes and functions
-*/
+ * @brief Utility classes and functions
+ */
 
 /** @defgroup dft DFT
-* @brief Fast Fourier Transform & Direct Fourier Transform
-*/
+ * @brief Fast Fourier Transform & Direct Fourier Transform
+ */
 
 /** @defgroup dsp DSP
-* @brief Filters and other DSP-related functions
-*/
+ * @brief Filters and other DSP-related functions
+ */
 
 /** @defgroup io IO
-* @brief Input & Output
-*/
+ * @brief Input & Output
+ */
 
 /** @defgroup math Math
-* @brief Mathematical functions
-*/
+ * @brief Mathematical functions
+ */
 
 /** @defgroup cpuid CPUID
-* @brief CPU detection
-*/
+ * @brief CPU detection
+ */

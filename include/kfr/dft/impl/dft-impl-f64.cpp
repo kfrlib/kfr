@@ -27,4 +27,3 @@
 
 #define FLOAT double
 #include "dft-templates.hpp"
-

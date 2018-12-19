@@ -23,6 +23,7 @@
 #pragma once
 
 #include "../base/kfr.h"
+#include "../base/types.hpp"
 #include <cstdint>
 
 namespace kfr

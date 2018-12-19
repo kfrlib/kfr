@@ -27,9 +27,9 @@
 
 #include "basic_expressions.hpp"
 #include "function.hpp"
+#include "horizontal.hpp"
 #include "min_max.hpp"
 #include "operators.hpp"
-#include "horizontal.hpp"
 #include "vec.hpp"
 
 namespace kfr
@@ -107,7 +107,7 @@ protected:
     FinalFn finalfn;
     mutable vec<T, width> value;
 };
-}
+} // namespace internal
 
 template <typename ReduceFn, typename TransformFn = fn::pass_through, typename FinalFn = fn::pass_through,
           typename E1, typename T = value_type_of<E1>>
@@ -212,8 +212,7 @@ KFR_SINTRIN T absmaxof(const E1& x)
  * \f]
  */
 template <typename E1, typename E2,
-          typename T = value_type_of<decltype(std::declval<E1>()*
-                                              std::declval<E2>())>,
+          typename T = value_type_of<decltype(std::declval<E1>() * std::declval<E2>())>,
           KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
 KFR_SINTRIN T dotproduct(E1&& x, E2&& y)
 {
@@ -267,4 +266,4 @@ KFR_SINTRIN T product(const E1& x)
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
     return reduce(x, fn::mul());
 }
-}
+} // namespace kfr

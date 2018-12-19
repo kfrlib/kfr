@@ -166,4 +166,4 @@ univector<T> irealdft(const univector<complex<T>, Tag>& input)
     dft->execute(output, input, temp);
     return output;
 }
-}
+} // namespace kfr

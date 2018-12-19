@@ -88,7 +88,7 @@ KFR_SINTRIN T cweighting(T f)
 {
     return weight_c_unnorm(f) * weight_c_gain<subtype<T>>;
 }
-}
+} // namespace intrinsics
 KFR_I_FN(aweighting)
 KFR_I_FN(bweighting)
 KFR_I_FN(cweighting)
@@ -128,4 +128,4 @@ KFR_INTRIN internal::expression_function<fn::cweighting, E1> cweighting(E1&& x)
 {
     return { fn::cweighting(), std::forward<E1>(x) };
 }
-}
+} // namespace kfr

@@ -106,7 +106,7 @@ inline std::string array_to_string(const kfr::complex<T>* source, size_t N)
     }
     return str;
 }
-}
+} // namespace details
 
 template <typename T>
 struct representation<kfr::complex<T>>
@@ -157,7 +157,7 @@ struct representation<kfr::univector<T, Tag>>
         return details::array_to_string(value.data(), value.size());
     }
 };
-}
+} // namespace cometa
 
 namespace kfr
 {
@@ -198,7 +198,7 @@ struct expression_debug_printer : output_expression
         return input;
     }
 };
-}
+} // namespace internal
 
 /// @brief Returns an output expression that prints the values
 inline internal::expression_printer printer() { return internal::expression_printer(); }
@@ -223,4 +223,4 @@ std::string dB_to_utf8string(const T& value, double minimum = -140.0)
         return "-\xE2\x88\x9E dB"; // infinity symbol
     return as_string(fmtwidth<0, 2>(value), " dB");
 }
-}
+} // namespace kfr

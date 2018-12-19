@@ -102,7 +102,7 @@ inline void aligned_free(void* ptr)
 }
 
 inline void aligned_release(void* ptr) { aligned_free(ptr); }
-}
+} // namespace internal
 
 /// @brief Allocates aligned memory
 template <typename T = void, size_t alignment = platform<>::native_cache_alignment>
@@ -128,7 +128,7 @@ struct aligned_deleter
 {
     CMT_INLINE void operator()(T* ptr) const { aligned_deallocate(ptr); }
 };
-}
+} // namespace internal
 
 template <typename T>
 struct autofree
@@ -220,7 +220,7 @@ struct aligned_new
 };
 
 #define KFR_CLASS_REFCOUNT(cl)                                                                               \
-    \
+                                                                                                             \
 public:                                                                                                      \
     void addref() const { m_refcount++; }                                                                    \
     void release() const                                                                                     \
@@ -230,7 +230,7 @@ public:                                                                         
             delete this;                                                                                     \
         }                                                                                                    \
     }                                                                                                        \
-    \
+                                                                                                             \
 private:                                                                                                     \
     mutable std::atomic_uintptr_t m_refcount = ATOMIC_VAR_INIT(0);
-}
+} // namespace kfr

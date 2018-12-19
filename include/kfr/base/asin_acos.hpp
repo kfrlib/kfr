@@ -64,4 +64,4 @@ KFR_INTRIN internal::expression_function<fn::acos, E1> acos(E1&& x)
 {
     return { fn::acos(), std::forward<E1>(x) };
 }
-}
+} // namespace kfr

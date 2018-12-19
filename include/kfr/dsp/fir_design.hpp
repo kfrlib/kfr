@@ -25,6 +25,7 @@
  */
 #pragma once
 
+#include "../base/sin_cos.hpp"
 #include "fir.hpp"
 
 namespace kfr
@@ -114,7 +115,7 @@ void fir_bandstop(univector_ref<T> taps, T frequency1, T frequency2, const expre
         taps           = taps * invsum;
     }
 }
-}
+} // namespace intrinsics
 KFR_I_FN(fir_lowpass)
 KFR_I_FN(fir_highpass)
 KFR_I_FN(fir_bandpass)
@@ -217,4 +218,4 @@ CMT_INLINE void fir_bandstop(const univector_ref<T>& taps, identity<T> frequency
 {
     return intrinsics::fir_bandstop(taps, frequency1, frequency2, window, normalize);
 }
-}
+} // namespace kfr

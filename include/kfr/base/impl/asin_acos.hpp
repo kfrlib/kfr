@@ -51,8 +51,8 @@ KFR_SINTRIN vec<Tout, N> acos(const vec<T, N>& x)
 }
 KFR_I_FLT_CONVERTER(asin)
 KFR_I_FLT_CONVERTER(acos)
-}
+} // namespace intrinsics
 KFR_I_FN(asin)
 KFR_I_FN(acos)
 
-}
+} // namespace kfr

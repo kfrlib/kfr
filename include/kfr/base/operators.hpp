@@ -355,7 +355,7 @@ constexpr CMT_INLINE common_type<T1, T2, T3, Ts...> horner_odd(const T1& x, cons
     const T1 x2 = x * x;
     return fmadd(horner(x2, c3, values...), x2, c1) * x;
 }
-}
+} // namespace internal
 
 /// @brief Calculate polynomial using Horner's method
 ///
@@ -549,4 +549,4 @@ vec<vec<T, sizeof...(Ns) + 1>, N1> packtranspose(const vec<T, N1>& x, const vec<
 }
 
 KFR_FN(packtranspose)
-}
+} // namespace kfr

@@ -240,7 +240,7 @@ CMT_INLINE auto build_fmt(const std::string& str, ctypes_t<Arg, Args...>)
     constexpr auto fmt = value_fmt(ctype_t<decay<Arg>>());
     return build_fmt(replace_one(str, "{}", std::string(fmt.data())), ctypes_t<Args...>());
 }
-}
+} // namespace details
 
 template <char t, int width = -1, int prec = -1, typename T>
 CMT_INLINE details::fmt_t<T, t, width, prec> fmt(const T& value)
@@ -367,7 +367,7 @@ constexpr auto get_value_fmt()
 {
     return details::value_fmt(ctype_t<decay<repr_type<T>>>());
 }
-}
+} // namespace details
 
 template <typename... Args>
 CMT_INLINE void print(const Args&... args)
@@ -512,6 +512,6 @@ struct representation<std::shared_ptr<T1>>
             return as_string(type_name<std::shared_ptr<T1>>(), "(nullptr)");
     }
 };
-}
+} // namespace cometa
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)

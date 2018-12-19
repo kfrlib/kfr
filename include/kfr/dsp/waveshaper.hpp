@@ -88,4 +88,4 @@ inline auto waveshaper_poly(E1&& input, fbase c1, fbase c3, Cs... cs)
 {
     return horner_odd(input, c1, c3, static_cast<fbase>(cs)...);
 }
-}
+} // namespace kfr

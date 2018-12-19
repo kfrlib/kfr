@@ -89,7 +89,7 @@ KFR_I_FLT_CONVERTER(tanh)
 KFR_I_FLT_CONVERTER(coth)
 KFR_I_FLT_CONVERTER(sinhcosh)
 KFR_I_FLT_CONVERTER(coshsinh)
-}
+} // namespace intrinsics
 KFR_I_FN(sinh)
 KFR_I_FN(cosh)
 KFR_I_FN(tanh)
@@ -97,4 +97,4 @@ KFR_I_FN(coth)
 KFR_I_FN(sinhcosh)
 KFR_I_FN(coshsinh)
 
-}
+} // namespace kfr

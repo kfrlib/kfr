@@ -146,4 +146,4 @@ KFR_SINTRIN maskfor<common_type<T1, T2, T3>> inrange(const T1& x, const T2& min,
 {
     return x >= min && x <= max;
 }
-}
+} // namespace kfr

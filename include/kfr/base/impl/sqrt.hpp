@@ -65,7 +65,7 @@ KFR_SINTRIN vec<Tout, N> sqrt(const vec<T, N>& x)
 }
 #endif
 KFR_I_FLT_CONVERTER(sqrt)
-}
+} // namespace intrinsics
 KFR_I_FN(sqrt)
 
-}
+} // namespace kfr

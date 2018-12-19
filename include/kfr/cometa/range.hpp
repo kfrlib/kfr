@@ -66,4 +66,4 @@ range<T> make_range(T begin, T end, diff_type step)
 {
     return range<T>(begin, end, step);
 }
-}
+} // namespace cometa

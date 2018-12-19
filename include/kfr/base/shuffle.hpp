@@ -44,7 +44,7 @@ CMT_GNU_CONSTEXPR CMT_INLINE vec<T, Nout> broadcast_helper(csizes_t<indices...>,
     const std::tuple<Ts...> tup(values...);
     return vec<T, Nout>(std::get<indices % Nin>(tup)...);
 }
-}
+} // namespace internal
 
 template <size_t Nout, typename... Ts, typename C = typename std::common_type<Ts...>::type>
 CMT_GNU_CONSTEXPR CMT_INLINE vec<C, Nout> broadcast(const Ts&... values)
@@ -205,7 +205,7 @@ struct shuffle_index_dup
 {
     constexpr inline size_t operator()(size_t index) const { return start + index / groupsize * groupsize; }
 };
-}
+} // namespace internal
 
 template <typename T, size_t N>
 CMT_INLINE vec<T, N> dupeven(const vec<T, N>& x)
@@ -243,7 +243,7 @@ struct shuffle_index_shuffle
         return csizes_t<Indices...>::get(csize_t<index % indexcount>()) + index / indexcount * indexcount;
     }
 };
-}
+} // namespace internal
 
 template <size_t... Indices, typename T, size_t N, size_t count = sizeof...(Indices)>
 CMT_INLINE vec<T, N> shuffle(const vec<T, N>& x, const vec<T, N>& y,
@@ -276,7 +276,7 @@ struct shuffle_index_permute
         return csizes_t<Indices...>::get(csize_t<index % indexcount>()) + index / indexcount * indexcount;
     }
 };
-}
+} // namespace internal
 
 template <size_t... Indices, typename T, size_t N, size_t count = sizeof...(Indices)>
 CMT_INLINE vec<T, N> permute(const vec<T, N>& x, elements_t<Indices...> i = elements_t<Indices...>())
@@ -302,7 +302,7 @@ constexpr CMT_INLINE vec<T, Nout> generate_vector(csizes_t<Indices...>)
 {
     return make_vector(static_cast<T>(Fn()(Indices))...);
 }
-}
+} // namespace internal
 
 template <typename T, size_t Nout, typename Fn>
 constexpr CMT_INLINE vec<T, Nout> generate_vector()
@@ -323,7 +323,7 @@ constexpr CMT_INLINE mask<T, N> oddmask()
 {
     return broadcast<N, T>(maskbits<T>(false), maskbits<T>(true));
 }
-}
+} // namespace internal
 
 template <typename T, size_t N, size_t Nout = N * 2>
 CMT_INLINE vec<T, Nout> dup(const vec<T, N>& x)
@@ -339,7 +339,7 @@ struct shuffle_index_duphalf
 {
     constexpr inline size_t operator()(size_t index) const { return start + (index) % count; }
 };
-}
+} // namespace internal
 
 template <typename T, size_t N>
 CMT_INLINE vec<T, N> duplow(const vec<T, N>& x)
@@ -368,7 +368,7 @@ struct shuffle_index_blend
         return (elements_t<Indices...>::get(csize_t<index % indexcount>()) ? size : 0) + index % size;
     }
 };
-}
+} // namespace internal
 
 template <size_t... Indices, typename T, size_t N>
 CMT_INLINE vec<T, N> blend(const vec<T, N>& x, const vec<T, N>& y,
@@ -397,7 +397,7 @@ struct shuffle_index_outputright
         return index < N - amount ? index : index + amount;
     }
 };
-}
+} // namespace internal
 
 template <size_t elements = 2, typename T, size_t N>
 CMT_INLINE vec<T, N> swap(const vec<T, N>& x)
@@ -459,7 +459,7 @@ struct shuffle_index_transpose
         return index % (size / side1) * side1 + index / (size / side1);
     }
 };
-}
+} // namespace internal
 
 template <size_t side1, size_t group = 1, typename T, size_t N, size_t size = N / group,
           size_t side2 = size / side1, KFR_ENABLE_IF(size > 3)>
@@ -548,7 +548,7 @@ struct shuffle_index_reverse
 {
     constexpr inline size_t operator()(size_t index) const { return size - 1 - index; }
 };
-}
+} // namespace internal
 
 template <size_t group = 1, typename T, size_t N, size_t size = N / group>
 CMT_INLINE vec<T, N> reverse(const vec<T, N>& x)
@@ -569,7 +569,7 @@ struct shuffle_index_combine
 {
     constexpr inline size_t operator()(size_t index) const { return index >= N2 ? index : N1 + index; }
 };
-}
+} // namespace internal
 
 template <typename T, size_t N1, size_t N2>
 CMT_INLINE vec<T, N1> combine(const vec<T, N1>& x, const vec<T, N2>& y)
@@ -595,7 +595,7 @@ struct generate_onoff
         return index >= start && index < start + size ? on : off;
     }
 };
-}
+} // namespace internal
 
 template <typename T, size_t N, size_t start = 0, size_t stride = 1>
 constexpr CMT_INLINE vec<T, N> enumerate()
@@ -620,6 +620,6 @@ constexpr CMT_INLINE vec<T, N> onoff(vec_t<T, N>, cint_t<on> = cint_t<on>(), cin
     return generate_vector<T, N, internal::generate_onoff<start, size, on, off>>();
 }
 KFR_FN(onoff)
-}
+} // namespace kfr
 #define KFR_SHUFFLE_SPECIALIZATIONS 1
 #include "specializations.i"

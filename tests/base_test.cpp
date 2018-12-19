@@ -420,10 +420,10 @@ TEST(sample_interleave_deinterleave)
     in.push_back(truncate(counter() * 3.f + 1.f, size));
     in.push_back(truncate(counter() * 3.f + 2.f, size));
     univector<float> out(size * 3);
-    interleave(out.data(), (const float*[]){ in[0].data(), in[1].data(), in[2].data() }, 3, size);
+    interleave(out.data(), (const float* []){ in[0].data(), in[1].data(), in[2].data() }, 3, size);
     CHECK(maxof(out - render(counter() * 1.f, out.size())) == 0);
 
-    deinterleave((float*[]){ in[0].data(), in[1].data(), in[2].data() }, out.data(), 3, size);
+    deinterleave((float* []){ in[0].data(), in[1].data(), in[2].data() }, out.data(), 3, size);
 
     CHECK(absmaxof(in[0] - render(counter() * 3.f + 0.f, size)) == 0);
     CHECK(absmaxof(in[1] - render(counter() * 3.f + 1.f, size)) == 0);

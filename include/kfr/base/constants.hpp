@@ -294,6 +294,6 @@ constexpr subtype<T> c_log_10 = subtype<T>(2.3025850929940456840179914546844);
 
 template <typename T, int m = 1, int d = 1>
 constexpr subtype<T> c_sqrt_2 = subtype<T>(1.4142135623730950488016887242097 * m / d);
-}
+} // namespace kfr
 
 CMT_PRAGMA_MSVC(warning(pop))

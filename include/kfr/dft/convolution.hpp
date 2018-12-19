@@ -26,8 +26,8 @@
 #pragma once
 
 #include "../base/complex.hpp"
-#include "../base/filter.hpp"
 #include "../base/constants.hpp"
+#include "../base/filter.hpp"
 #include "../base/memory.hpp"
 #include "../base/read_write.hpp"
 #include "../base/vec.hpp"

@@ -50,7 +50,7 @@ CMT_INLINE T horizontal_impl(const vec<T, N>& value, ReduceFn&& reduce)
     const T initial = reduce(initialvalue<T>());
     return horizontal_impl(widen<next_poweroftwo(N)>(value, initial), std::forward<ReduceFn>(reduce));
 }
-}
+} // namespace internal
 
 template <typename T, size_t N, typename ReduceFn>
 CMT_INLINE T horizontal(const vec<T, N>& value, ReduceFn&& reduce)
@@ -116,4 +116,4 @@ CMT_INLINE T rms(const vec<T, N>& value)
     return internal::builtin_sqrt(hadd(value * value) / N);
 }
 KFR_FN(rms)
-}
+} // namespace kfr

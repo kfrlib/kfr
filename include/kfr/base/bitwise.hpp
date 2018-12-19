@@ -133,4 +133,4 @@ CMT_INLINE common_type<T1, T2> ror(const T1& left, const T2& right)
     return shr(left, right) | shl(left, (static_cast<subtype<T1>>(typebits<T1>::bits) - right));
 }
 KFR_FN(ror)
-}
+} // namespace kfr

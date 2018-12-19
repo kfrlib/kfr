@@ -222,6 +222,6 @@ struct make_comparison
         return half_comparison<L>(std::forward<L>(left));
     }
 };
-}
+} // namespace testo
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)

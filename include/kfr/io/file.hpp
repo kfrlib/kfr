@@ -149,16 +149,16 @@ using binary_reader = abstract_reader<>;
 using binary_writer = abstract_writer<>;
 
 /// @brief Byte reader
-using byte_reader   = abstract_reader<u8>;
+using byte_reader = abstract_reader<u8>;
 
 /// @brief Byte writer
-using byte_writer   = abstract_writer<u8>;
+using byte_writer = abstract_writer<u8>;
 
 /// @brief float reader
-using f32_reader    = abstract_reader<f32>;
+using f32_reader = abstract_reader<f32>;
 
 /// @brief float writer
-using f32_writer    = abstract_writer<f32>;
+using f32_writer = abstract_writer<f32>;
 
 struct file_handle
 {

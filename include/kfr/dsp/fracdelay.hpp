@@ -38,4 +38,4 @@ CMT_INLINE internal::expression_short_fir<2, T, value_type_of<E1>, E1> fracdelay
     univector<T, 2> taps({ 1 - delay, delay });
     return internal::expression_short_fir<2, T, value_type_of<E1>, E1>(std::forward<E1>(e1), taps);
 }
-}
+} // namespace kfr

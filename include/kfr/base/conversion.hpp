@@ -26,6 +26,7 @@
 #pragma once
 
 #include "types.hpp"
+#include "univector.hpp"
 #include "vec.hpp"
 
 namespace kfr

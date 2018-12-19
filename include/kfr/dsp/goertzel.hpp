@@ -103,7 +103,7 @@ struct expression_parallel_goertzel : output_expression
     vec<T, width> q1;
     vec<T, width> q2;
 };
-};
+}; // namespace internal
 
 template <typename T>
 KFR_SINTRIN internal::expression_goertzel<T> goertzel(complex<T>& result, identity<T> omega)
@@ -117,4 +117,4 @@ KFR_SINTRIN internal::expression_parallel_goertzel<T, width> goertzel(complex<T>
 {
     return internal::expression_parallel_goertzel<T, width>(result, read<width>(omega));
 }
-}
+} // namespace kfr

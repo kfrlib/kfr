@@ -43,7 +43,6 @@ namespace internal
 template <typename Expression, typename T, size_t key = 0>
 KFR_SINTRIN bool invoke_substitute(Expression& expr, expression_pointer<T>&& new_pointer,
                                    csize_t<key> = csize_t<key>{});
-
 }
 
 template <typename T, size_t N = maximum_expression_width>
@@ -243,7 +242,6 @@ namespace internal
 template <typename... Args, typename T, size_t key, size_t... indices>
 KFR_SINTRIN bool substitute(internal::expression_base<Args...>& expr, expression_pointer<T>&& new_pointer,
                             csize_t<key>, csizes_t<indices...>);
-
 }
 
 template <typename T, size_t key = 0>
@@ -258,8 +256,7 @@ template <typename... Args, typename T, size_t key = 0>
 KFR_SINTRIN bool substitute(internal::expression_base<Args...>& expr, expression_pointer<T>&& new_pointer,
                             csize_t<key> = csize_t<key>{})
 {
-    return internal::substitute(expr, std::move(new_pointer), csize_t<key>{},
-                                indicesfor_t<Args...>{});
+    return internal::substitute(expr, std::move(new_pointer), csize_t<key>{}, indicesfor_t<Args...>{});
 }
 
 template <typename T, size_t key = 0>

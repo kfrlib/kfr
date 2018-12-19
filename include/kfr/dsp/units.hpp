@@ -25,9 +25,9 @@
  */
 #pragma once
 
+#include "../base/abs.hpp"
 #include "../base/basic_expressions.hpp"
 #include "../base/log_exp.hpp"
-#include "../base/abs.hpp"
 #include "../base/vec.hpp"
 
 namespace kfr
@@ -112,7 +112,7 @@ KFR_SINTRIN Tc hertz_to_note(const T1& hertz, const T2& tunenote, const T3& tune
 
     return intrinsics::log_fmadd(hertz, subtype<Tc>(17.312340490667560888319096172023), offset);
 }
-}
+} // namespace intrinsics
 KFR_I_FN(note_to_hertz)
 KFR_I_FN(hertz_to_note)
 KFR_I_FN(amp_to_dB)
@@ -191,4 +191,4 @@ KFR_INTRIN internal::expression_function<fn::dB_to_power, E1> dB_to_power(E1&& x
 {
     return { fn::dB_to_power(), std::forward<E1>(x) };
 }
-}
+} // namespace kfr

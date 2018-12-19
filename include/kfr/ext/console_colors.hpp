@@ -27,12 +27,13 @@ typedef short SHORT;
 typedef unsigned short WORD;
 typedef int WINBOOL;
 
-extern "C" {
-WIN32_LITE_DECLSPEC_IMPORT HANDLE WIN32_LITE_WINAPI GetStdHandle(DWORD nStdHandle);
-WIN32_LITE_DECLSPEC_IMPORT WINBOOL WIN32_LITE_WINAPI SetConsoleTextAttribute(HANDLE hConsoleOutput,
-                                                                             WORD wAttributes);
+extern "C"
+{
+    WIN32_LITE_DECLSPEC_IMPORT HANDLE WIN32_LITE_WINAPI GetStdHandle(DWORD nStdHandle);
+    WIN32_LITE_DECLSPEC_IMPORT WINBOOL WIN32_LITE_WINAPI SetConsoleTextAttribute(HANDLE hConsoleOutput,
+                                                                                 WORD wAttributes);
 }
-}
+} // namespace win32_lite
 
 #endif
 
@@ -158,4 +159,4 @@ typedef console_color_tpl<Red> red_text;
 typedef console_color_tpl<Magenta> magenta_text;
 typedef console_color_tpl<Yellow> yellow_text;
 typedef console_color_tpl<White> white_text;
-}
+} // namespace console_colors

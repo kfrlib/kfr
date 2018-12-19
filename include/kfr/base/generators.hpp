@@ -183,8 +183,8 @@ struct generator_sin : generator<T, width, generator_sin<T, width>>
     CMT_INLINE void sync(T start) const noexcept
     {
         const vec<T, width* 2> cs = splitpairs(cossin(dup(start + enumerate<T, width>() * step)));
-        this->cos_value = low(cs);
-        this->value     = high(cs);
+        this->cos_value           = low(cs);
+        this->value               = high(cs);
     }
 
     CMT_INLINE void next() const noexcept
@@ -215,7 +215,7 @@ protected:
     T beta;
     mutable vec<T, width> cos_value;
 };
-}
+} // namespace internal
 
 /**
  * @brief Returns template expression that generates values starting from the start and using the step as the
@@ -282,4 +282,4 @@ KFR_SINTRIN internal::generator_sin<TF> gen_sin(T1 start, T2 step)
 {
     return internal::generator_sin<TF>(start, step);
 }
-}
+} // namespace kfr

@@ -47,4 +47,4 @@ KFR_INTRIN internal::expression_function<fn::sqrt, E1> sqrt(E1&& x)
 {
     return { fn::sqrt(), std::forward<E1>(x) };
 }
-}
+} // namespace kfr

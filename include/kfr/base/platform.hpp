@@ -89,7 +89,8 @@ constexpr auto cpu_all = cfilter(internal::cpu_list, internal::cpu_list >= cpuva
 CMT_UNUSED static const char* cpu_name(cpu_t set)
 {
 #ifdef CMT_ARCH_X86
-    static const char* names[] = { "common", "sse2", "sse3", "ssse3", "sse41", "sse42", "avx1", "avx2", "avx512" };
+    static const char* names[] = { "common", "sse2", "sse3", "ssse3", "sse41",
+                                   "sse42",  "avx1", "avx2", "avx512" };
 #endif
 #ifdef CMT_ARCH_ARM
     static const char* names[] = { "common", "neon", "neon64" };
@@ -132,7 +133,7 @@ struct platform
     constexpr static size_t maximum_vector_alignment_mask = maximum_vector_alignment - 1;
 #ifdef CMT_ARCH_X86
     constexpr static size_t simd_register_count =
-          c >= cpu_t::avx512 ? bitness_const(8, 32) : bitness_const(8, 16);
+        c >= cpu_t::avx512 ? bitness_const(8, 32) : bitness_const(8, 16);
 #endif
 #ifdef CMT_ARCH_ARM
     constexpr static size_t simd_register_count = 16;
@@ -143,20 +144,14 @@ struct platform
 
 #ifdef CMT_ARCH_X86
     constexpr static size_t native_float_vector_size =
-        c >= cpu_t::avx512 ? 64 :
-        c >= cpu_t::avx1 ? 32 :
-        c >= cpu_t::sse2 ? 16 :
-        common_float_vector_size;
+        c >= cpu_t::avx512 ? 64 : c >= cpu_t::avx1 ? 32 : c >= cpu_t::sse2 ? 16 : common_float_vector_size;
 #endif
 #ifdef CMT_ARCH_ARM
     constexpr static size_t native_float_vector_size = c == cpu_t::neon ? 16 : common_float_vector_size;
 #endif
 #ifdef CMT_ARCH_X86
     constexpr static size_t native_int_vector_size =
-        c >= cpu_t::avx512 ? 64 :
-        c >= cpu_t::avx2 ? 32 :
-        c >= cpu_t::sse2 ? 16 :
-        common_int_vector_size;
+        c >= cpu_t::avx512 ? 64 : c >= cpu_t::avx2 ? 32 : c >= cpu_t::sse2 ? 16 : common_int_vector_size;
 #endif
 #ifdef CMT_ARCH_ARM
     constexpr static size_t native_int_vector_size = c == cpu_t::neon ? 16 : common_int_vector_size;

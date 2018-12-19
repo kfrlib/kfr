@@ -40,7 +40,7 @@ constexpr cstring<Nout> gettypename_impl(const char* str, csizes_t<indices...>) 
 {
     return cstring<Nout>{ { (str[indices])..., 0 } };
 }
-}
+} // namespace details
 
 template <typename T>
 constexpr auto ctype_name() noexcept
@@ -97,4 +97,4 @@ constexpr inline type_id_t ctypeid(T x)
     (void)x;
     return details::typeident_impl<T>();
 }
-}
+} // namespace cometa

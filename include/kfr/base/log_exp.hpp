@@ -121,7 +121,8 @@ KFR_FUNC flt_type<T1> logb(const T1& x)
     return intrinsics::logb(x);
 }
 
-/// @brief Returns the rounded binary (base-2) logarithm of the x. Version that accepts and returns expressions.
+/// @brief Returns the rounded binary (base-2) logarithm of the x. Version that accepts and returns
+/// expressions.
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_FUNC internal::expression_function<fn::logb, E1> logb(E1&& x)
 {

@@ -37,4 +37,4 @@ CMT_INLINE internal::expression_biquads<1, T, E1> dcremove(E1&& e1, double cutof
     const biquad_params<T> bqs[1] = { biquad_highpass(cutoff, 0.5) };
     return internal::expression_biquads<1, T, E1>(bqs, std::forward<E1>(e1));
 }
-}
+} // namespace kfr

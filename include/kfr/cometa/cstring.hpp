@@ -16,7 +16,7 @@ namespace cometa
 namespace details
 {
 constexpr inline size_t strlen(const char* str) { return *str ? 1 + cometa::details::strlen(str + 1) : 0; }
-}
+} // namespace details
 
 template <size_t N>
 struct cstring
@@ -66,6 +66,7 @@ struct cstring
         return true;
     }
     constexpr char operator[](size_t index) const noexcept { return value[index]; }
+
 private:
     template <size_t... indices>
     constexpr cstring<sizeof...(indices) + 1> slice_impl(csizes_t<indices...>) const
@@ -108,7 +109,7 @@ CMT_INTRIN cstring<N1 - Nfrom + Nto> str_replace_impl(size_t pos, const cstring<
                     : (indices < pos + Nto - 1) ? to[indices - pos] : str[indices - Nto + Nfrom])...,
                0 } };
 }
-}
+} // namespace details
 
 CMT_INTRIN constexpr cstring<1> concat_cstring() { return { { 0 } }; }
 
@@ -160,6 +161,6 @@ CMT_INTRIN cstring<N1 - Nfrom + Nto> str_replace(const cstring<N1>& str, const c
     return details::str_replace_impl(str_find(str, from), str, from, to,
                                      cvalseq_t<size_t, N1 - Nfrom + Nto - 1>());
 }
-}
+} // namespace cometa
 
 CMT_PRAGMA_MSVC(warning(pop))

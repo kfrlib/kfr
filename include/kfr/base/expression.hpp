@@ -145,10 +145,10 @@ static vec<T, N> get_fn_value(size_t index, Fn&& fn)
 {
     vec<T, N> x;
     for (size_t i = 0; i < N; i++)
-        x[i]      = fn(index + i);
+        x[i] = fn(index + i);
     return x;
 }
-}
+} // namespace internal
 
 template <typename E, typename Fn>
 static void test_expression(const E& expr, size_t size, Fn&& fn, const char* expression = nullptr)
@@ -239,7 +239,7 @@ struct expression_lambda : input_expression
 
     Fn fn;
 };
-}
+} // namespace internal
 
 template <typename T, typename Fn>
 internal::expression_lambda<T, decay<Fn>> lambda(Fn&& fn)
@@ -260,7 +260,7 @@ struct is_infinite_impl<T, void_t<decltype(T::size())>>
     : std::integral_constant<bool, T::size() == infinite_size>
 {
 };
-}
+} // namespace internal
 
 template <typename T>
 using is_infinite = typename internal::is_infinite_impl<T>::type;
@@ -402,7 +402,7 @@ struct expression_function : expression_base<arg<Args>...>
 protected:
     Fn fn;
 };
-}
+} // namespace internal
 
 template <typename A>
 CMT_INLINE internal::arg<A> e(A&& a)
@@ -487,7 +487,7 @@ struct input_expression_base : input_expression
     {
         vec<U, N> out;
         for (size_t i = 0; i < N; i++)
-            out[i]    = static_cast<U>(input(index + i));
+            out[i] = static_cast<U>(input(index + i));
         return out;
     }
 };
@@ -505,6 +505,6 @@ struct output_expression_base : output_expression
             output(index + i, static_cast<T>(value[i]));
     }
 };
-}
+} // namespace kfr
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)

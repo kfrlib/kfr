@@ -69,4 +69,4 @@ KFR_FUNC T catmullrom(M mu, T x0, T x1, T x2, T x3)
     const T a3 = x1;
     return horner(mu, a0, a1, a2, a3);
 }
-}
+} // namespace kfr

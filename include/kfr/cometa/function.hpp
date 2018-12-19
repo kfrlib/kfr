@@ -56,7 +56,7 @@ template <>
 constexpr CMT_INTRIN void return_val<void>() noexcept
 {
 }
-}
+} // namespace details
 
 template <typename>
 struct function;
@@ -125,6 +125,7 @@ struct function<Result(Args...)>
     CMT_INTRIN explicit operator bool() const noexcept { return !!fn; }
 
     CMT_INTRIN ~function() { delete fn; }
+
 private:
     details::virtual_function<Result, Args...>* fn;
 };
@@ -151,4 +152,4 @@ inline function<Ret(Args...)> cdispatch(cvals_t<T, v0, values...>, identity<T> v
                                        std::forward<DefFn>(deffn));
     }
 }
-}
+} // namespace cometa

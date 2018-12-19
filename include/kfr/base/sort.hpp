@@ -43,9 +43,9 @@ template <typename T, size_t N>
 CMT_INLINE vec<T, N> sort(const vec<T, N>& x)
 {
     constexpr size_t Nhalf = N / 2;
-    vec<T, Nhalf> e = low(x);
-    vec<T, Nhalf> o = high(x);
-    constexpr auto blend0 = cconcat(csizes_t<1>(), csizeseq_t<Nhalf - 1, 0, 0>());
+    vec<T, Nhalf> e        = low(x);
+    vec<T, Nhalf> o        = high(x);
+    constexpr auto blend0  = cconcat(csizes_t<1>(), csizeseq_t<Nhalf - 1, 0, 0>());
     for (size_t i = 0; i < Nhalf; i++)
     {
         vec<T, Nhalf> t;
@@ -76,9 +76,9 @@ template <typename T, size_t N>
 CMT_INLINE vec<T, N> sortdesc(const vec<T, N>& x)
 {
     constexpr size_t Nhalf = N / 2;
-    vec<T, Nhalf> e = low(x);
-    vec<T, Nhalf> o = high(x);
-    constexpr auto blend0 = cconcat(csizes_t<1>(), csizeseq_t<Nhalf - 1, 0, 0>());
+    vec<T, Nhalf> e        = low(x);
+    vec<T, Nhalf> o        = high(x);
+    constexpr auto blend0  = cconcat(csizes_t<1>(), csizeseq_t<Nhalf - 1, 0, 0>());
     for (size_t i = 0; i < Nhalf; i++)
     {
         vec<T, Nhalf> t;
@@ -96,4 +96,4 @@ CMT_INLINE vec<T, N> sortdesc(const vec<T, N>& x)
     }
     return interleavehalfs(concat(e, o));
 }
-}
+} // namespace kfr

@@ -43,7 +43,7 @@ struct with_precision_t
 };
 
 constexpr with_precision_t with_precision{};
-}
+} // namespace internal
 
 namespace internal
 {
@@ -60,7 +60,7 @@ static mpfr_rnd_t& rounding_mode()
     static MPFR_THREAD_LOCAL mpfr_rnd_t rnd = mpfr_get_default_rounding_mode();
     return rnd;
 }
-}
+} // namespace internal
 
 /// Temporarily sets the precision
 struct scoped_precision
@@ -707,7 +707,7 @@ MPFR_FN(infinity)
 MPFR_FN(zero)
 MPFR_FN(fraction)
 MPFR_FN(reciprocal)
-}
+} // namespace mpfr
 
 #undef MPFR_CXX_UNARY
 #undef MPFR_CXX_UNARY_RND

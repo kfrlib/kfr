@@ -25,8 +25,10 @@
  */
 #pragma once
 
+#include "../base/filter.hpp"
 #include "../base/function.hpp"
 #include "../base/operators.hpp"
+#include "../base/pointer.hpp"
 #include "../base/vec.hpp"
 
 namespace kfr

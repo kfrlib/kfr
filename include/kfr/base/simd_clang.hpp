@@ -93,7 +93,7 @@ CMT_INLINE void simd_write(T* dest, const simd_type<T, N>& value)
     simd_write<A, first>(dest, simd_shuffle(value, csizeseq_t<first>()));
     simd_write<false, rest>(dest + first, simd_shuffle(value, csizeseq_t<rest, first>()));
 }
-}
+} // namespace internal
 
 template <typename T, size_t N>
 struct alignas(alignof(internal::simd_type<T, N>)) vec : public vec_t<T, N>
@@ -207,13 +207,13 @@ struct alignas(alignof(internal::simd_type<T, N>)) vec : public vec_t<T, N>
 
     constexpr friend vec& operator++(vec& x) noexcept { return x = x + vec(1); }
     constexpr friend vec& operator--(vec& x) noexcept { return x = x - vec(1); }
-    constexpr friend vec operator++(vec& x, int)noexcept
+    constexpr friend vec operator++(vec& x, int) noexcept
     {
         const vec z = x;
         ++x;
         return z;
     }
-    constexpr friend vec operator--(vec& x, int)noexcept
+    constexpr friend vec operator--(vec& x, int) noexcept
     {
         const vec z = x;
         --x;
@@ -234,7 +234,7 @@ struct alignas(alignof(internal::simd_type<T, N>)) vec : public vec_t<T, N>
 
     // element access
     struct element;
-    constexpr value_type operator[](size_t index) const & noexcept { return get(index); }
+    constexpr value_type operator[](size_t index) const& noexcept { return get(index); }
     constexpr value_type operator[](size_t index) && noexcept { return get(index); }
     constexpr element operator[](size_t index) & noexcept { return { *this, index }; }
 
@@ -334,13 +334,13 @@ CMT_INLINE vec<T, csum<size_t, N1, N2, Sizes...>()> concat_impl(const vec<T, N1>
 {
     return concat_impl(concat_impl(x, y), args...);
 }
-}
+} // namespace internal
 
 template <typename T, size_t... Ns>
 constexpr inline vec<T, csum<size_t, Ns...>()> concat(const vec<T, Ns>&... vs) noexcept
 {
     return internal::concat_impl(vs...);
 }
-}
+} // namespace kfr
 
 CMT_PRAGMA_MSVC(warning(pop))

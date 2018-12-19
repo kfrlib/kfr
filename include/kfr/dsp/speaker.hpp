@@ -93,4 +93,4 @@ enum class SpeakerArrangement : int
     Music81        = 27,
     Arr102         = 28
 };
-}
+} // namespace kfr

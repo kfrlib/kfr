@@ -71,7 +71,7 @@ struct expression_delay : expression_base<E>
     }
 
     mutable univector<value_type, delay> data = scalar(value_type(0));
-    mutable size_t cursor = 0;
+    mutable size_t cursor                     = 0;
 };
 
 template <typename E>
@@ -86,12 +86,12 @@ struct expression_delay<1, E> : expression_base<E>
     {
         const vec<T, N> in  = this->argument_first(cinput, index, vec_t<T, N>());
         const vec<T, N> out = insertleft(data, in);
-        data = in[N - 1];
+        data                = in[N - 1];
         return out;
     }
     mutable value_type data = value_type(0);
 };
-}
+} // namespace internal
 
 /**
  * @brief Returns template expression that applies delay to the input (uses ring buffer internally)
@@ -108,4 +108,4 @@ CMT_INLINE internal::expression_delay<samples, E1> delay(E1&& e1, csize_t<sample
     static_assert(samples >= 1 && samples < 1024, "");
     return internal::expression_delay<samples, E1>(std::forward<E1>(e1));
 }
-}
+} // namespace kfr

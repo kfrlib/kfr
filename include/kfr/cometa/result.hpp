@@ -43,8 +43,9 @@ struct result
     constexpr reference value() { return m_value; }
     constexpr ErrEnum error() const { return m_error; }
     constexpr bool ok() const { return m_error == OkValue; }
+
 private:
     Type m_value;
     ErrEnum m_error;
 };
-}
+} // namespace cometa

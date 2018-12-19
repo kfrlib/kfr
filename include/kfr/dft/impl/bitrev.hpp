@@ -386,5 +386,5 @@ KFR_INTRIN void fft_reorder(complex<T>* inout, size_t log2n, cfalse_t use_br2)
         i += istep;
     }
 }
-}
-}
+} // namespace internal
+} // namespace kfr
