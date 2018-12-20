@@ -46,6 +46,27 @@ enum : size_t
     tag_dynamic_vector = max_size_t,
 };
 
+template <typename T, univector_tag Tag = tag_dynamic_vector>
+struct abstract_vector;
+
+template <typename T, univector_tag Size>
+struct abstract_vector : std::array<T, Size>
+{
+    using std::array<T, Size>::array;
+};
+
+template <typename T>
+struct abstract_vector<T, tag_dynamic_vector> : std::vector<T, allocator<T>>
+{
+    using std::vector<T, allocator<T>>::vector;
+};
+
+template <typename T>
+struct abstract_vector<T, tag_array_ref> : array_ref<T>
+{
+    using array_ref<T>::array_ref;
+};
+
 /**
  * @brief Class that represent data in KFR. Many KFR functions can take this class as an argument.
  * Can inherit from std::vector, std::array or keep only reference to data and its size.
@@ -382,12 +403,12 @@ using univector_ref = univector<T, tag_array_ref>;
 template <typename T>
 using univector_dyn = univector<T, tag_dynamic_vector>;
 
-template <typename T, size_t Size1 = tag_dynamic_vector, size_t Size2 = tag_dynamic_vector>
-using univector2d = univector<univector<T, Size2>, Size1>;
+template <typename T, univector_tag Size1 = tag_dynamic_vector, univector_tag Size2 = tag_dynamic_vector>
+using univector2d = abstract_vector<univector<T, Size2>, Size1>;
 
-template <typename T, size_t Size1 = tag_dynamic_vector, size_t Size2 = tag_dynamic_vector,
-          size_t Size3 = tag_dynamic_vector>
-using univector3d = univector<univector<univector<T, Size3>, Size2>, Size1>;
+template <typename T, univector_tag Size1 = tag_dynamic_vector, univector_tag Size2 = tag_dynamic_vector,
+          univector_tag Size3 = tag_dynamic_vector>
+using univector3d = abstract_vector<abstract_vector<univector<T, Size3>, Size2>, Size1>;
 
 /// @brief Creates univector from data and size
 template <typename T>
