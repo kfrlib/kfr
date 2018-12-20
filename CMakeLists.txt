@@ -42,14 +42,14 @@ add_definitions(-D_ENABLE_EXTENDED_ALIGNED_STORAGE)
 option(ENABLE_TESTS "Enable tests and examples. This changes many compiler flags" OFF)
 
 set(KFR_DFT_SRC
-        ${CMAKE_SOURCE_DIR}/include/kfr/dft/impl/dft-src.cpp
-        ${CMAKE_SOURCE_DIR}/include/kfr/dft/dft_c.h
-        ${CMAKE_SOURCE_DIR}/include/kfr/dft/impl/dft-impl-f32.cpp
-        ${CMAKE_SOURCE_DIR}/include/kfr/dft/impl/dft-impl-f64.cpp
-        ${CMAKE_SOURCE_DIR}/include/kfr/dft/impl/convolution-impl.cpp)
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/kfr/dft/impl/dft-src.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/kfr/dft/dft_c.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/kfr/dft/impl/dft-impl-f32.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/kfr/dft/impl/dft-impl-f64.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/kfr/dft/impl/convolution-impl.cpp)
 
 set(KFR_IO_SRC
-        ${CMAKE_SOURCE_DIR}/include/kfr/io/impl/audiofile-impl.cpp)
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/kfr/io/impl/audiofile-impl.cpp)
 
 if (ENABLE_TESTS)
 
