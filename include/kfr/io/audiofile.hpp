@@ -70,9 +70,23 @@ struct audio_format_and_length : audio_format
 };
 
 template <typename T>
-using audio_reader = abstract_reader<T>;
+struct audio_reader : public abstract_reader<T>
+{
+
+    /// @brief Returns audio format description
+    virtual const audio_format_and_length& format() const = 0;
+};
+
 template <typename T>
-using audio_writer = abstract_writer<T>;
+struct audio_writer : public abstract_writer<T>
+{
+
+    /// @brief Returns audio format description
+    virtual const audio_format_and_length& format() const = 0;
+
+    /// @brief Finishes writing and closes underlying writer
+    virtual void close() = 0;
+};
 
 namespace internal
 {
@@ -130,7 +144,7 @@ struct audio_writer_wav : audio_writer<T>
     ~audio_writer_wav() { close(); }
 
     /// @brief Write data to underlying binary writer
-    size_t write(const T* data, size_t size)
+    size_t write(const T* data, size_t size) override
     {
         if (!f)
             return 0;
@@ -152,21 +166,18 @@ struct audio_writer_wav : audio_writer<T>
         }
     }
 
-    /// @brief Finishes writing and closes underlying writer
-    void close()
+    void close() override
     {
         drwav_close(f);
         f = nullptr;
         writer.reset();
     }
 
-    /// @brief Returns format description
-    const audio_format_and_length& format() const { return fmt; }
+    const audio_format_and_length& format() const override { return fmt; }
 
-    /// @brief Returns current position
-    imax tell() const { return fmt.length; }
+    imax tell() const override { return fmt.length; }
 
-    bool seek(imax position, seek_origin origin) { return false; }
+    bool seek(imax position, seek_origin origin) override { return false; }
 
 private:
     std::shared_ptr<abstract_writer<>> writer;
@@ -233,10 +244,10 @@ struct audio_reader_wav : audio_reader<T>
     ~audio_reader_wav() { drwav_close(f); }
 
     /// @brief Returns audio format description
-    const audio_format_and_length& format() const { return fmt; }
+    const audio_format_and_length& format() const override { return fmt; }
 
     /// @brief Reads and decodes audio data
-    size_t read(T* data, size_t size)
+    size_t read(T* data, size_t size) override
     {
         if (fmt.type == audio_sample_type::unknown)
             return 0;
@@ -254,10 +265,10 @@ struct audio_reader_wav : audio_reader<T>
     }
 
     /// @brief Returns current position
-    imax tell() const { return position; }
+    imax tell() const override { return position; }
 
     /// @brief Seeks to specific sample
-    bool seek(imax offset, seek_origin origin)
+    bool seek(imax offset, seek_origin origin) override
     {
         switch (origin)
         {
@@ -299,10 +310,10 @@ struct audio_reader_flac : audio_reader<T>
     ~audio_reader_flac() { drflac_close(f); }
 
     /// @brief Returns audio format description
-    const audio_format_and_length& format() const { return fmt; }
+    const audio_format_and_length& format() const override { return fmt; }
 
     /// @brief Reads and decodes audio data
-    size_t read(T* data, size_t size)
+    size_t read(T* data, size_t size) override
     {
         if (fmt.type == audio_sample_type::unknown)
             return 0;
@@ -320,10 +331,10 @@ struct audio_reader_flac : audio_reader<T>
     }
 
     /// @brief Returns current position
-    imax tell() const { return position; }
+    imax tell() const override { return position; }
 
     /// @brief Seeks to specific sample
-    bool seek(imax offset, seek_origin origin)
+    bool seek(imax offset, seek_origin origin) override
     {
         switch (origin)
         {
