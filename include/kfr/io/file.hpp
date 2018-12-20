@@ -30,6 +30,7 @@
 #include "../base/vec.hpp"
 #include <cstdio>
 #include <string>
+#include <vector>
 
 namespace kfr
 {
@@ -102,6 +103,20 @@ template <typename T = void>
 struct abstract_reader : abstract_stream<T>
 {
     virtual size_t read(T* data, size_t size) = 0;
+
+    template <univector_tag Tag>
+    size_t read(univector<T, Tag>& data)
+    {
+        return read(data.data(), data.size());
+    }
+    size_t read(univector_ref<T>&& data) { return read(data.data(), data.size()); }
+
+    univector<T> read(size_t size)
+    {
+        univector<T> result(size);
+        this->read(result);
+        return result;
+    }
 };
 
 /// @brief Base class for all typed writers
@@ -109,6 +124,13 @@ template <typename T = void>
 struct abstract_writer : abstract_stream<T>
 {
     virtual size_t write(const T* data, size_t size) = 0;
+
+    template <univector_tag Tag>
+    size_t write(const univector<T, Tag>& data)
+    {
+        return write(data.data(), data.size());
+    }
+    size_t write(univector_ref<const T>&& data) { return write(data.data(), data.size()); }
 };
 
 template <typename From, typename To = void>

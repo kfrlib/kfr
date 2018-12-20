@@ -72,6 +72,8 @@ struct audio_format_and_length : audio_format
 template <typename T>
 struct audio_reader : public abstract_reader<T>
 {
+    /// @brief Reads interleaved audio
+    using abstract_reader<T>::read;
 
     /// @brief Returns audio format description
     virtual const audio_format_and_length& format() const = 0;
@@ -80,6 +82,8 @@ struct audio_reader : public abstract_reader<T>
 template <typename T>
 struct audio_writer : public abstract_writer<T>
 {
+    /// @brief Writes interleaved audio
+    using abstract_writer<T>::writer;
 
     /// @brief Returns audio format description
     virtual const audio_format_and_length& format() const = 0;
