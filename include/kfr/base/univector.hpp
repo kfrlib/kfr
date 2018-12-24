@@ -365,8 +365,8 @@ struct univector<T, tag_dynamic_vector> : std::vector<T, allocator<T>>,
         this->assign_expr(std::forward<Input>(input));
     }
     constexpr univector() noexcept(noexcept(std::vector<T, allocator<T>>())) = default;
-    constexpr univector(const std::vector<T>& other) : std::vector<T, allocator<T>>(other) {}
-    constexpr univector(std::vector<T>&& other) : std::vector<T, allocator<T>>(std::move(other)) {}
+    constexpr univector(const std::vector<T, allocator<T>>& other) : std::vector<T, allocator<T>>(other) {}
+    constexpr univector(std::vector<T, allocator<T>>&& other) : std::vector<T, allocator<T>>(std::move(other)) {}
     constexpr univector(const array_ref<T>& other) : std::vector<T, allocator<T>>(other.begin(), other.end())
     {
     }

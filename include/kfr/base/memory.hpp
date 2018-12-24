@@ -156,6 +156,13 @@ struct autofree
     std::unique_ptr<T[], internal::aligned_deleter<T>> ptr;
 };
 
+#ifdef KFR_USE_STD_ALLOCATION
+
+template <typename T>
+using allocator = std::allocator<T>;
+
+#else
+
 /// @brief Aligned allocator
 template <typename T>
 struct allocator
@@ -212,6 +219,8 @@ constexpr inline bool operator!=(const allocator<T1>&, const allocator<T2>&) noe
 {
     return false;
 }
+
+#endif
 
 struct aligned_new
 {
