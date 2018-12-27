@@ -5,7 +5,9 @@
  */
 
 #include <kfr/base.hpp>
+#ifdef HAVE_DFT
 #include <kfr/dft.hpp>
+#endif
 #include <kfr/dsp.hpp>
 #include <kfr/io.hpp>
 
@@ -128,6 +130,7 @@ int main()
     plot_save("filtered_noise2", filtered_noise2, "title='Filtered noise 2', div_by_N=True");
 #endif
 
+#ifdef HAVE_DFT
     // --------------------------------------------------------------------------------------
     // ---------------------- Convolution filter (optimized using DFT) ----------------------
     // --------------------------------------------------------------------------------------
@@ -142,6 +145,7 @@ int main()
 #if PYTHON_IS_INSTALLED
     // Plot results, same as filtered_noise2
     plot_save("filtered_noise3", filtered_noise3, "title='Filtered noise 3', div_by_N=True");
+#endif
 #endif
 
     return 0;

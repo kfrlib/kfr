@@ -128,14 +128,14 @@ constexpr inline size_t scale_get_index(size_t counter, size_t groupsize, size_t
 }
 
 template <size_t counter, size_t groupsize, size_t... indices>
-constexpr inline size_t scale_get_index()
+constexpr inline size_t scale_get_index(csizes_t<indices...>)
 {
     return scale_get_index(counter, groupsize, csizes_t<indices...>().get(csize_t<counter / groupsize>()));
 }
 
 template <size_t... indices, size_t... counter, size_t groupsize = sizeof...(counter) / sizeof...(indices)>
 constexpr inline auto scale_impl(csizes_t<indices...> ind, csizes_t<counter...> cnt) noexcept
-    -> csizes_t<scale_get_index<counter, groupsize, indices...>()...>
+    -> csizes_t<scale_get_index<counter, groupsize>(ind)...>
 {
     return {};
 }

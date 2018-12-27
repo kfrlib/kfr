@@ -253,14 +253,15 @@ namespace ops
 {
 struct empty
 {
+    constexpr empty() noexcept {}
 };
 } // namespace ops
 
 template <typename T, T val>
 struct cval_t : ops::empty
 {
-    constexpr static T value                 = val;
-    constexpr cval_t() noexcept              = default;
+    constexpr static T value = val;
+    constexpr cval_t() noexcept {}
     constexpr cval_t(const cval_t&) noexcept = default;
     constexpr cval_t(cval_t&&) noexcept      = default;
     typedef T value_type;
@@ -359,6 +360,9 @@ struct get_nth<0, T, first, rest...>
     constexpr static T value = first;
 };
 
+template <size_t index, typename T>
+struct get_nth_e;
+
 template <size_t index, typename... Types>
 struct get_nth_type;
 
@@ -406,7 +410,7 @@ struct cvals_t : ops::empty
         return &arr[0];
     }
     template <size_t... indices>
-    constexpr cvals_t<T, details::get_nth<indices, T, values...>::value...> operator[](
+    constexpr cvals_t<T, details::get_nth_e<indices, type>::value...> operator[](
         cvals_t<size_t, indices...>) const
     {
         return {};
@@ -426,6 +430,15 @@ struct cvals_t<T> : ops::empty
     using type = cvals_t<T>;
     constexpr static size_t size() { return 0; }
 };
+
+namespace details
+{
+template <size_t index, typename T, T... vals>
+struct get_nth_e<index, cvals_t<T, vals...>>
+{
+    constexpr static T value = get_nth<index, T, vals...>::value;
+};
+} // namespace details
 
 template <bool... values>
 using cbools_t = cvals_t<bool, values...>;
@@ -1658,8 +1671,6 @@ constexpr bool is_sequence(csizes_t<number, numbers...>)
     return details::test_sequence<number, 1 + sizeof...(numbers)>(csizes_t<number, numbers...>()).value;
 }
 
-#ifdef CMT_COMPILER_GNU
-
 template <typename T, T val>
 constexpr cval_t<T, val> cval{};
 
@@ -1727,7 +1738,6 @@ template <size_t size, unsigned start = 0, ptrdiff_t step = 1>
 constexpr cvalseq_t<unsigned, size, start, step> cuintseq{};
 template <typename... List>
 constexpr indicesfor_t<List...> indicesfor{};
-#endif
 
 // Workaround for GCC 4.8
 template <typename T>

@@ -28,7 +28,12 @@ add_executable(window window.cpp)
 target_link_libraries(window kfr)
 
 add_executable(fir fir.cpp)
-target_link_libraries(fir kfr kfr_dft)
+
+target_link_libraries(fir kfr)
+if (ENABLE_DFT)
+    target_link_libraries(fir kfr_dft)
+    target_compile_definitions(fir PRIVATE -DHAVE_DFT)
+endif ()
 
 add_executable(sample_rate_conversion sample_rate_conversion.cpp)
 target_link_libraries(sample_rate_conversion kfr kfr_io)
@@ -36,5 +41,7 @@ target_link_libraries(sample_rate_conversion kfr kfr_io)
 add_executable(sample_rate_converter sample_rate_converter.cpp)
 target_link_libraries(sample_rate_converter kfr kfr_io)
 
-add_executable(dft dft.cpp)
-target_link_libraries(dft kfr kfr_dft)
+if (ENABLE_DFT)
+    add_executable(dft dft.cpp)
+    target_link_libraries(dft kfr kfr_dft)
+endif ()

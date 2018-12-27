@@ -42,7 +42,7 @@ namespace internal
 
 template <typename Expression, typename T, size_t key = 0>
 KFR_SINTRIN bool invoke_substitute(Expression& expr, expression_pointer<T>&& new_pointer,
-                                   csize_t<key> = csize_t<key>{});
+                                   csize_t<key> = {});
 }
 
 template <typename T, size_t N = maximum_expression_width>

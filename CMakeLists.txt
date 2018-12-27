@@ -40,6 +40,7 @@ include(sources.cmake)
 add_definitions(-D_ENABLE_EXTENDED_ALIGNED_STORAGE)
 
 option(ENABLE_TESTS "Enable tests and examples. This changes many compiler flags" OFF)
+option(ENABLE_DFT "Enable DFT and related algorithms" ON)
 
 set(KFR_DFT_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/include/kfr/dft/impl/dft-src.cpp
@@ -99,8 +100,10 @@ add_library(kfr INTERFACE)
 target_sources(kfr INTERFACE ${KFR_SRC})
 target_include_directories(kfr INTERFACE include)
 
-add_library(kfr_dft ${KFR_DFT_SRC})
-target_link_libraries(kfr_dft kfr)
+if (ENABLE_DFT)
+    add_library(kfr_dft ${KFR_DFT_SRC})
+    target_link_libraries(kfr_dft kfr)
+endif()
 
 add_library(kfr_io ${KFR_IO_SRC})
 target_link_libraries(kfr_io kfr)

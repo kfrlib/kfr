@@ -27,6 +27,7 @@
 
 #include "read_write.hpp"
 #include "types.hpp"
+#include <algorithm>
 #include <atomic>
 #include <memory>
 

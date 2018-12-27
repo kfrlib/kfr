@@ -64,6 +64,9 @@ struct audio_format
 struct audio_format_and_length : audio_format
 {
     using audio_format::audio_format;
+#ifdef CMT_COMPILER_MSVC
+    audio_format_and_length() noexcept {}
+#endif
     audio_format_and_length(const audio_format& fmt) : audio_format(fmt) {}
 
     imax length = 0; // in samples

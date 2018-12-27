@@ -38,10 +38,17 @@ struct double_double
         const double cc       = ((((x.hi - u.hi) - u.lo) + x.lo) - c * y.lo) / y.hi;
         return { c, cc };
     }
-    constexpr bool isinf() const noexcept { return std::isinf(hi); }
-    constexpr bool isnan() const noexcept { return std::isnan(hi) || std::isnan(lo); }
 
-    constexpr double ulp(float value) const noexcept
+#if defined _MSC_VER && !defined __clang__
+#define DOUBLEDOUBLE_CONSTEXPR
+#else
+#define DOUBLEDOUBLE_CONSTEXPR constexpr
+#endif
+
+    DOUBLEDOUBLE_CONSTEXPR bool isinf() const noexcept { return std::isinf(hi); }
+    DOUBLEDOUBLE_CONSTEXPR bool isnan() const noexcept { return std::isnan(hi) || std::isnan(lo); }
+
+    DOUBLEDOUBLE_CONSTEXPR double ulp(float value) const noexcept
     {
         if (std::isnan(value) && isnan())
             return 0.0;
@@ -51,7 +58,7 @@ struct double_double
             return 1.0;
         return (double_double(value) - *this) / double_double(std::nexttoward(value, 0.0));
     }
-    constexpr double ulp(double value) const noexcept
+    DOUBLEDOUBLE_CONSTEXPR double ulp(double value) const noexcept
     {
         if (std::isnan(value) && isnan())
             return 0.0;

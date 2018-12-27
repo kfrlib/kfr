@@ -51,8 +51,8 @@ public:
     constexpr array_ref(std::array<T, N>& arr) noexcept : m_data(arr.data()), m_size(N)
     {
     }
-    template <typename... Ts>
-    constexpr array_ref(const std::vector<T, Ts...>& vec) noexcept : m_data(vec.data()), m_size(vec.size())
+    template <typename Alloc>
+    constexpr array_ref(const std::vector<T, Alloc>& vec) noexcept : m_data(vec.data()), m_size(vec.size())
     {
     }
 

@@ -41,10 +41,15 @@ set(ALL_TESTS_CPP
     all_tests.cpp
     base_test.cpp
     complex_test.cpp
-    dft_test.cpp
     dsp_test.cpp
     expression_test.cpp
-    intrinsic_test.cpp io_test.cpp resampler_test.cpp)
+    intrinsic_test.cpp
+    io_test.cpp
+    resampler_test.cpp)
+
+if (ENABLE_DFT)
+    list(APPEND ALL_TESTS_CPP dft_test.cpp)
+endif ()
 
 if (MPFR_FOUND AND GMP_FOUND)
     list(APPEND ALL_TESTS_CPP transcendental_test.cpp)
@@ -54,8 +59,10 @@ endif ()
 
 add_executable(all_tests ${ALL_TESTS_CPP})
 target_compile_definitions(all_tests PRIVATE KFR_NO_MAIN)
-target_link_libraries(all_tests kfr kfr_dft)
-target_link_libraries(all_tests kfr kfr_dft kfr_io)
+if (ENABLE_DFT)
+    target_link_libraries(all_tests kfr kfr_dft)
+endif ()
+target_link_libraries(all_tests kfr kfr_io)
 
 if (MPFR_FOUND AND GMP_FOUND)
     add_definitions(-DHAVE_MPFR)
@@ -65,7 +72,10 @@ endif ()
 
 function(add_x86_test NAME FLAGS)
     separate_arguments(FLAGS)
-    add_executable(all_tests_${NAME} ${ALL_TESTS_CPP}  ${KFR_DFT_SRC} ${KFR_IO_SRC})
+    add_executable(all_tests_${NAME} ${ALL_TESTS_CPP}  ${KFR_IO_SRC})
+    if (ENABLE_DFT)
+        target_sources(all_tests_${NAME} PRIVATE ${KFR_DFT_SRC})
+    endif ()
     target_compile_options(all_tests_${NAME} PRIVATE ${FLAGS})
     target_compile_definitions(all_tests_${NAME} PRIVATE KFR_NO_MAIN)
     target_link_libraries(all_tests_${NAME} kfr)

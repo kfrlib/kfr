@@ -504,22 +504,25 @@ static void dft_stage_fixed_initialize(dft_stage<T>* stage, size_t width)
     }
 }
 
-template <typename T, size_t radix>
+template <typename T, size_t fixed_radix>
 struct dft_stage_fixed_impl : dft_stage<T>
 {
     dft_stage_fixed_impl(size_t radix_, size_t iterations, size_t blocks)
     {
         this->name      = type_name<decltype(*this)>();
-        this->radix     = radix;
+        this->radix     = fixed_radix;
         this->blocks    = blocks;
         this->repeats   = iterations;
         this->recursion = false; // true;
-        this->data_size =
-            align_up((this->repeats * (radix - 1)) * sizeof(complex<T>), platform<>::native_cache_alignment);
+        this->data_size = align_up((this->repeats * (fixed_radix - 1)) * sizeof(complex<T>),
+                                   platform<>::native_cache_alignment);
     }
 
-    constexpr static size_t width =
-        radix >= 7 ? fft_vector_width<T> / 2 : radix >= 4 ? fft_vector_width<T> : fft_vector_width<T> * 2;
+    constexpr static size_t rradix = fixed_radix;
+
+    constexpr static size_t width = fixed_radix >= 7
+                                        ? fft_vector_width<T> / 2
+                                        : fixed_radix >= 4 ? fft_vector_width<T> : fft_vector_width<T> * 2;
     virtual void do_initialize(size_t size) override final { dft_stage_fixed_initialize(this, width); }
 
     DFT_STAGE_FN
@@ -529,40 +532,41 @@ struct dft_stage_fixed_impl : dft_stage<T>
         const size_t Nord         = this->repeats;
         const complex<T>* twiddle = ptr_cast<complex<T>>(this->data);
 
-        const size_t N = Nord * this->radix;
+        const size_t N = Nord * fixed_radix;
         CMT_LOOP_NOUNROLL
         for (size_t b = 0; b < this->blocks; b++)
         {
-            butterflies(Nord, csize<width>, csize<radix>, cbool<inverse>, out, in, twiddle, Nord);
+            butterflies(Nord, csize<width>, csize<fixed_radix>, cbool<inverse>, out, in, twiddle, Nord);
             in += N;
             out += N;
         }
     }
 };
 
-template <typename T, size_t radix>
+template <typename T, size_t fixed_radix>
 struct dft_stage_fixed_final_impl : dft_stage<T>
 {
     dft_stage_fixed_final_impl(size_t radix_, size_t iterations, size_t blocks)
     {
         this->name        = type_name<decltype(*this)>();
-        this->radix       = radix;
+        this->radix       = fixed_radix;
         this->blocks      = blocks;
         this->repeats     = iterations;
         this->recursion   = false;
         this->can_inplace = false;
     }
-    constexpr static size_t width =
-        radix >= 7 ? fft_vector_width<T> / 2 : radix >= 4 ? fft_vector_width<T> : fft_vector_width<T> * 2;
+    constexpr static size_t width = fixed_radix >= 7
+                                        ? fft_vector_width<T> / 2
+                                        : fixed_radix >= 4 ? fft_vector_width<T> : fft_vector_width<T> * 2;
 
     DFT_STAGE_FN
     template <bool inverse>
     KFR_INTRIN void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
         const size_t b    = this->blocks;
-        const size_t size = b * radix;
+        const size_t size = b * fixed_radix;
 
-        butterflies(b, csize<width>, csize<radix>, cbool<inverse>, out, in, b);
+        butterflies(b, csize<width>, csize<fixed_radix>, cbool<inverse>, out, in, b);
     }
 };
 

@@ -29,6 +29,8 @@
 #include "platform.hpp"
 #include "types.hpp"
 
+#if CMT_COMPILER_CLANG
+
 CMT_PRAGMA_MSVC(warning(push))
 CMT_PRAGMA_MSVC(warning(disable : 4324))
 
@@ -344,3 +346,5 @@ constexpr inline vec<T, csum<size_t, Ns...>()> concat(const vec<T, Ns>&... vs) n
 } // namespace kfr
 
 CMT_PRAGMA_MSVC(warning(pop))
+
+#endif

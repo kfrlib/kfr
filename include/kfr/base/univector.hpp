@@ -374,6 +374,10 @@ struct univector<T, tag_dynamic_vector> : std::vector<T, allocator<T>>,
         : std::vector<T, allocator<T>>(other.begin(), other.end())
     {
     }
+    template <typename Allocator>
+    constexpr univector(const std::vector<T, Allocator>&) = delete;
+    template <typename Allocator>
+    constexpr univector(std::vector<T, Allocator>&&) = delete;
     constexpr static bool size_known   = false;
     constexpr static bool is_array     = false;
     constexpr static bool is_array_ref = false;

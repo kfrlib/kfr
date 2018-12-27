@@ -24,6 +24,7 @@
   See https://www.kfrlib.com for details.
  */
 
+#ifdef FLOAT
 #include "../fft.hpp"
 
 namespace kfr
@@ -42,3 +43,5 @@ template void dft_plan_real<FLOAT>::from_fmt(kfr::complex<FLOAT>* out, const kfr
 template void dft_plan_real<FLOAT>::to_fmt(kfr::complex<FLOAT>* out, kfr::dft_pack_format fmt) const;
 
 } // namespace kfr
+
+#endif
