@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.0.3
+## 3.0.4
 
 2019-01-08
 
@@ -11,6 +11,22 @@
 - KFR_READCYCLECOUNTER may be redefined to point to any function returning (pseudo-)random value
 
 #### Fixed
+
+## 3.0.3
+
+2018-12-27
+
+#### Added
+
+- Partial compatibility for Visual Studio 2017
+- Support for KFR_USE_STD_ALLOCATION
+- univector support for abstract_reader/abstract_writer
+
+#### Changed
+
+#### Fixed
+
+- Paths in CMakeLists.txt
 
 ## 3.0.2
 
