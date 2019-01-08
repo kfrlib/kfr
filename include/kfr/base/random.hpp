@@ -34,26 +34,35 @@ namespace kfr
 
 using random_state = u32x4;
 
+#ifndef KFR_DISABLE_READCYCLECOUNTER
+
 struct seed_from_rdtsc_t
 {
 };
 
 constexpr seed_from_rdtsc_t seed_from_rdtsc{};
 
+#ifndef KFR_READCYCLECOUNTER
 #ifdef CMT_COMPILER_CLANG
-#define KFR_builtin_readcyclecounter() __builtin_readcyclecounter()
+#define KFR_READCYCLECOUNTER() __builtin_readcyclecounter()
 #else
-#define KFR_builtin_readcyclecounter() __rdtsc()
+#define KFR_READCYCLECOUNTER() __rdtsc()
+#endif
+#endif
+
 #endif
 
 struct random_bit_generator
 {
+
+#ifndef KFR_DISABLE_READCYCLECOUNTER
     random_bit_generator(seed_from_rdtsc_t) noexcept
-        : state(bitcast<u32>(make_vector(KFR_builtin_readcyclecounter(),
-                                         (KFR_builtin_readcyclecounter() << 11) ^ 0x710686d615e2257bull)))
+        : state(bitcast<u32>(
+              make_vector(KFR_READCYCLECOUNTER(), (KFR_READCYCLECOUNTER() << 11) ^ 0x710686d615e2257bull)))
     {
         (void)operator()();
     }
+#endif
     random_bit_generator(u32 x0, u32 x1, u32 x2, u32 x3) noexcept : state(x0, x1, x2, x3)
     {
         (void)operator()();
@@ -174,12 +183,15 @@ inline internal::expression_random_uniform<T> gen_random_uniform(const random_bi
     return internal::expression_random_uniform<T>(gen);
 }
 
+
+#ifndef KFR_DISABLE_READCYCLECOUNTER
 /// @brief Returns expression that returns pseudo random values
 template <typename T>
 inline internal::expression_random_uniform<T> gen_random_uniform()
 {
     return internal::expression_random_uniform<T>(random_bit_generator(seed_from_rdtsc));
 }
+#endif
 
 /// @brief Returns expression that returns pseudo random values of the given range
 template <typename T>
@@ -188,10 +200,13 @@ inline internal::expression_random_range<T> gen_random_range(const random_bit_ge
     return internal::expression_random_range<T>(gen, min, max);
 }
 
+
+#ifndef KFR_DISABLE_READCYCLECOUNTER
 /// @brief Returns expression that returns pseudo random values of the given range
 template <typename T>
 inline internal::expression_random_range<T> gen_random_range(T min, T max)
 {
     return internal::expression_random_range<T>(random_bit_generator(seed_from_rdtsc), min, max);
 }
+#endif
 } // namespace kfr

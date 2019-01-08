@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.0.3
+
+2019-01-08
+
+#### Added
+
+#### Changed
+
+- KFR_READCYCLECOUNTER may be redefined to point to any function returning (pseudo-)random value
+
+#### Fixed
+
 ## 3.0.2
 
 2018-12-19
