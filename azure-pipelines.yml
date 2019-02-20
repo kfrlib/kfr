@@ -70,7 +70,7 @@ jobs:
   steps:
   - bash: |
       set -e
-      choco install llvm ninja
+      choco install llvm ninja msys2
       ci/run.sh build-release -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCMAKE_CXX_FLAGS=--target=x86_64-w64-windows-gnu -DCMAKE_BUILD_TYPE=Release
 
 - job: Windows_MinGW_x86_64_Clang_Debug
@@ -79,7 +79,7 @@ jobs:
   steps:
   - bash: |
       set -e
-      choco install llvm ninja
+      choco install llvm ninja msys2
       ci/run.sh build-debug   -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCMAKE_CXX_FLAGS=--target=x86_64-w64-windows-gnu -DCMAKE_BUILD_TYPE=Debug
 
 - job: Windows_MSVC_x86_64_Clang_Release

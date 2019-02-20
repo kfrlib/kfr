@@ -79,12 +79,15 @@ venv/
 
 # Sphinx documentation
 docs/
+mkdocs/
 
 # CLion
 .idea/
 
 # VSCode
 .vs-code/
+.vs/
+*.code-workspace
 
 # CLion
 cmake-*
