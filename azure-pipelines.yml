@@ -64,30 +64,6 @@ jobs:
       brew install ninja
       ci/run.sh build-release -DCMAKE_BUILD_TYPE=Release
 
-- job: Windows_MinGW_x86_64_Clang_Release
-  pool:
-    vmImage: 'vs2017-win2016'
-  steps:
-  - script: |
-      pushd .
-      choco install llvm ninja msys2
-      set PATH=C:\tools\msys64\usr\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem
-      pacman --noconfirm --needed -S git base-devel mingw-w64-x86_64-toolchain
-      popd
-      bash -lc "ci/run.sh build-release -DCMAKE_CXX_COMPILER='C:/Program Files/LLVM/bin/clang++.exe' -DCMAKE_CXX_FLAGS=--target=x86_64-w64-windows-gnu -DCMAKE_BUILD_TYPE=Release"
-
-- job: Windows_MinGW_x86_64_Clang_Debug
-  pool:
-    vmImage: 'vs2017-win2016'
-  steps:
-  - script: |
-      pushd .
-      choco install llvm ninja msys2
-      set PATH=C:\tools\msys64\usr\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem
-      pacman --noconfirm --needed -S git base-devel mingw-w64-i686-toolchain
-      popd
-      bash -lc "ci/run.sh build-debug   -DCMAKE_CXX_COMPILER='C:/Program Files/LLVM/bin/clang++.exe' -DCMAKE_CXX_FLAGS=--target=x86_64-w64-windows-gnu -DCMAKE_BUILD_TYPE=Debug"
-
 - job: Windows_MSVC_x86_64_Clang_Release
   pool:
     vmImage: 'vs2017-win2016'
@@ -121,6 +97,20 @@ jobs:
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
       ci\run.cmd build-debug -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DARCH_FLAGS=-mavx -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Debug
 
+- job: Windows_MinGW_x86_64_AVX512_Clang_Release
+  pool: WIN-AVX512
+  steps:
+  - script: |
+      set PATH=C:\msys64\mingw64\bin;C:\msys64\usr\local\bin;C:\msys64\usr\bin;%PATH%
+      bash -c "ci/run.sh build-release -DCMAKE_CXX_COMPILER=/c/LLVM/bin/clang++.exe -DCMAKE_CXX_FLAGS=--target=x86_64-w64-windows-gnu -DCMAKE_BUILD_TYPE=Release"
+
+- job: Windows_MinGW_x86_64_AVX512_Clang_Debug
+  pool: WIN-AVX512
+  steps:
+  - script: |
+      set PATH=C:\msys64\mingw64\bin;C:\msys64\usr\local\bin;C:\msys64\usr\bin;%PATH%
+      bash -c "ci/run.sh build-debug   -DCMAKE_CXX_COMPILER=/c/LLVM/bin/clang++.exe -DCMAKE_CXX_FLAGS=--target=x86_64-w64-windows-gnu -DCMAKE_BUILD_TYPE=Debug"
+      
 - job: Windows_MSVC_x86_64_AVX512_Clang_Release
   pool: WIN-AVX512
   steps:
