@@ -71,6 +71,8 @@ jobs:
   - bash: |
       set -e
       choco install llvm ninja msys2
+      set PATH=C:\tools\msys64\usr\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem
+      pacman --noconfirm --needed -S git base-devel mingw-w64-x86_64-toolchain
       ci/run.sh build-release -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCMAKE_CXX_FLAGS=--target=x86_64-w64-windows-gnu -DCMAKE_BUILD_TYPE=Release
 
 - job: Windows_MinGW_x86_64_Clang_Debug
@@ -80,6 +82,8 @@ jobs:
   - bash: |
       set -e
       choco install llvm ninja msys2
+      set PATH=C:\tools\msys64\usr\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem
+      pacman --noconfirm --needed -S git base-devel mingw-w64-i686-toolchain
       ci/run.sh build-debug   -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCMAKE_CXX_FLAGS=--target=x86_64-w64-windows-gnu -DCMAKE_BUILD_TYPE=Debug
 
 - job: Windows_MSVC_x86_64_Clang_Release
