@@ -264,7 +264,7 @@ template <typename Tout, typename Tout_traits = audio_sample_traits<Tout>>
 void convert(Tout* out, const void* in, audio_sample_type in_type, size_t size)
 {
     cswitch(audio_sample_type_clist{}, in_type, [&](auto t) {
-        using type = typename audio_sample_get_type<val_of(t)>::type;
+        using type = typename audio_sample_get_type<val_of(decltype(t)())>::type;
         convert(out, reinterpret_cast<const type*>(in), size);
     });
 }
@@ -274,7 +274,7 @@ template <typename Tin, typename Tin_traits = audio_sample_traits<Tin>>
 void convert(void* out, audio_sample_type out_type, const Tin* in, size_t size)
 {
     cswitch(audio_sample_type_clist{}, out_type, [&](auto t) {
-        using type = typename audio_sample_get_type<val_of(t)>::type;
+        using type = typename audio_sample_get_type<val_of(decltype(t)())>::type;
         convert(reinterpret_cast<type*>(out), in, size);
     });
 }

@@ -51,7 +51,7 @@ TEST(test_correlate)
     CHECK(rms(c - univector<fbase>({ 1.5, 1., 1.5, 2.5, 3.75, -4., 7.75, 3.5, 1.25 })) < 0.0001);
 }
 
-#ifdef CMT_ARCH_ARM
+#if defined CMT_ARCH_ARM || !defined NDEBUG
 constexpr size_t fft_stopsize = 12;
 constexpr size_t dft_stopsize = 101;
 #else
