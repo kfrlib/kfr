@@ -16,20 +16,20 @@ struct virtual_function
 {
     virtual Result operator()(Args... args)     = 0;
     virtual virtual_function* make_copy() const = 0;
-    CMT_INTRIN virtual ~virtual_function()      = default;
+    virtual ~virtual_function()                 = default;
 };
 
 template <typename Fn, typename Result, typename... Args>
 struct virtual_function_impl : virtual_function<Result, Args...>
 {
 public:
-    CMT_INTRIN virtual_function_impl(const Fn& fn) : fn(fn) {}
-    CMT_INTRIN Result operator()(Args... args) override final { return fn(args...); }
-    CMT_INTRIN virtual_function<Result, Args...>* make_copy() const override final
+    CMT_MEM_INTRINSIC virtual_function_impl(const Fn& fn) : fn(fn) {}
+    CMT_MEM_INTRINSIC Result operator()(Args... args) final { return fn(args...); }
+    CMT_MEM_INTRINSIC virtual_function<Result, Args...>* make_copy() const final
     {
         return new virtual_function_impl{ fn };
     }
-    CMT_INTRIN ~virtual_function_impl() {}
+    CMT_MEM_INTRINSIC ~virtual_function_impl() {}
 
 private:
     Fn fn;
@@ -47,13 +47,13 @@ struct func_filter<Result(Args...)>
 };
 
 template <typename T>
-constexpr CMT_INTRIN T return_val() noexcept
+constexpr CMT_INTRINSIC T return_val() CMT_NOEXCEPT
 {
     return {};
 }
 
 template <>
-constexpr CMT_INTRIN void return_val<void>() noexcept
+constexpr CMT_INTRINSIC void return_val<void>() CMT_NOEXCEPT
 {
 }
 } // namespace details
@@ -81,16 +81,16 @@ struct function<Result(Args...)>
         return *this;
     }
 
-    CMT_INTRIN function() : fn(nullptr) {}
-    CMT_INTRIN function(std::nullptr_t) : fn(nullptr) {}
+    CMT_MEM_INTRINSIC function() : fn(nullptr) {}
+    CMT_MEM_INTRINSIC function(std::nullptr_t) : fn(nullptr) {}
     template <typename Func>
-    CMT_INTRIN function(const Func& x)
+    CMT_MEM_INTRINSIC function(const Func& x)
         : fn(new details::virtual_function_impl<typename details::func_filter<Func>::type, Result, Args...>(
               x))
     {
     }
     function(const this_t& other) : fn(other.fn ? other.fn->make_copy() : nullptr) {}
-    CMT_INTRIN function& operator=(const this_t& other)
+    CMT_MEM_INTRINSIC function& operator=(const this_t& other)
     {
         if ((&other != this) && (other.fn))
         {
@@ -100,14 +100,14 @@ struct function<Result(Args...)>
         }
         return *this;
     }
-    CMT_INTRIN function& operator=(std::nullptr_t)
+    CMT_MEM_INTRINSIC function& operator=(std::nullptr_t)
     {
         delete fn;
         fn = nullptr;
         return *this;
     }
     template <typename Fn>
-    CMT_INTRIN function& operator=(const Fn& x)
+    CMT_MEM_INTRINSIC function& operator=(const Fn& x)
     {
         using FnImpl =
             details::virtual_function_impl<typename details::func_filter<Fn>::type, Result, Args...>;
@@ -116,15 +116,15 @@ struct function<Result(Args...)>
         fn = temp;
         return *this;
     }
-    CMT_INTRIN Result operator()(Args... args) const { return (*fn)(std::forward<Args>(args)...); }
+    CMT_MEM_INTRINSIC Result operator()(Args... args) const { return (*fn)(std::forward<Args>(args)...); }
     template <typename TResult>
-    CMT_INTRIN Result call(TResult&& default_result, Args... args) const
+    CMT_MEM_INTRINSIC Result call(TResult&& default_result, Args... args) const
     {
         return fn ? (*fn)(std::forward<Args>(args)...) : std::forward<TResult>(default_result);
     }
-    CMT_INTRIN explicit operator bool() const noexcept { return !!fn; }
+    CMT_MEM_INTRINSIC explicit operator bool() const CMT_NOEXCEPT { return !!fn; }
 
-    CMT_INTRIN ~function() { delete fn; }
+    CMT_MEM_INTRINSIC ~function() { delete fn; }
 
 private:
     details::virtual_function<Result, Args...>* fn;

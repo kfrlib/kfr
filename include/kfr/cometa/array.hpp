@@ -28,31 +28,32 @@ public:
     using size_type              = std::size_t;
     using difference_type        = std::ptrdiff_t;
 
-    constexpr array_ref() noexcept : m_data(nullptr), m_size(0) {}
-    constexpr array_ref(const array_ref&) noexcept = default;
-    constexpr array_ref(array_ref&&) noexcept      = default;
+    constexpr array_ref() CMT_NOEXCEPT : m_data(nullptr), m_size(0) {}
+    constexpr array_ref(const array_ref&) CMT_NOEXCEPT = default;
+    constexpr array_ref(array_ref&&) CMT_NOEXCEPT      = default;
 #ifdef CMT_COMPILER_GNU
-    constexpr array_ref& operator=(const array_ref&) noexcept = default;
-    constexpr array_ref& operator=(array_ref&&) noexcept = default;
+    constexpr array_ref& operator=(const array_ref&) CMT_NOEXCEPT = default;
+    constexpr array_ref& operator=(array_ref&&) CMT_NOEXCEPT = default;
 #else
     array_ref& operator=(const array_ref&) = default;
     array_ref& operator=(array_ref&&) = default;
 #endif
 
     template <size_t N>
-    constexpr array_ref(value_type (&arr)[N]) noexcept : m_data(arr), m_size(N)
+    constexpr array_ref(value_type (&arr)[N]) CMT_NOEXCEPT : m_data(arr), m_size(N)
     {
     }
     template <size_t N>
-    constexpr array_ref(const std::array<T, N>& arr) noexcept : m_data(arr.data()), m_size(N)
+    constexpr array_ref(const std::array<T, N>& arr) CMT_NOEXCEPT : m_data(arr.data()), m_size(N)
     {
     }
     template <size_t N>
-    constexpr array_ref(std::array<T, N>& arr) noexcept : m_data(arr.data()), m_size(N)
+    constexpr array_ref(std::array<T, N>& arr) CMT_NOEXCEPT : m_data(arr.data()), m_size(N)
     {
     }
     template <typename Alloc>
-    constexpr array_ref(const std::vector<T, Alloc>& vec) noexcept : m_data(vec.data()), m_size(vec.size())
+    constexpr array_ref(const std::vector<T, Alloc>& vec) CMT_NOEXCEPT : m_data(vec.data()),
+                                                                         m_size(vec.size())
     {
     }
 
@@ -61,26 +62,26 @@ public:
     {
     }
 
-    constexpr array_ref(const std::initializer_list<T>& vec) noexcept
-        : m_data(vec.begin()), m_size(vec.size())
+    constexpr array_ref(const std::initializer_list<T>& vec) CMT_NOEXCEPT : m_data(vec.begin()),
+                                                                            m_size(vec.size())
     {
     }
     template <typename InputIter>
-    constexpr array_ref(InputIter first, InputIter last) noexcept
-        : m_data(std::addressof(*first)), m_size(std::distance(first, last))
+    constexpr array_ref(InputIter first, InputIter last) CMT_NOEXCEPT : m_data(std::addressof(*first)),
+                                                                        m_size(std::distance(first, last))
     {
     }
-    constexpr array_ref(T* data, size_type size) noexcept : m_data(data), m_size(size) {}
+    constexpr array_ref(T* data, size_type size) CMT_NOEXCEPT : m_data(data), m_size(size) {}
 
-    constexpr reference front() const noexcept { return m_data[0]; }
-    constexpr reference back() const noexcept { return m_data[m_size - 1]; }
-    constexpr iterator begin() const noexcept { return m_data; }
-    constexpr iterator end() const noexcept { return m_data + m_size; }
-    constexpr const_iterator cbegin() const noexcept { return m_data; }
-    constexpr const_iterator cend() const noexcept { return m_data + m_size; }
-    constexpr pointer data() const noexcept { return m_data; }
-    constexpr std::size_t size() const noexcept { return m_size; }
-    constexpr bool empty() const noexcept { return !m_size; }
+    constexpr reference front() const CMT_NOEXCEPT { return m_data[0]; }
+    constexpr reference back() const CMT_NOEXCEPT { return m_data[m_size - 1]; }
+    constexpr iterator begin() const CMT_NOEXCEPT { return m_data; }
+    constexpr iterator end() const CMT_NOEXCEPT { return m_data + m_size; }
+    constexpr const_iterator cbegin() const CMT_NOEXCEPT { return m_data; }
+    constexpr const_iterator cend() const CMT_NOEXCEPT { return m_data + m_size; }
+    constexpr pointer data() const CMT_NOEXCEPT { return m_data; }
+    constexpr std::size_t size() const CMT_NOEXCEPT { return m_size; }
+    constexpr bool empty() const CMT_NOEXCEPT { return !m_size; }
     constexpr reference operator[](std::size_t index) const { return m_data[index]; }
 
 private:
@@ -126,22 +127,22 @@ inline array_ref<const T> make_array_ref(const std::vector<T>& cont)
 }
 
 template <typename C>
-constexpr auto datatype(C& c)
+constexpr auto elementtype(C& c)
 {
     return c[0];
 }
 template <typename C>
-constexpr auto datatype(const C& c)
+constexpr auto elementtype(const C& c)
 {
     return c[0];
 }
 template <typename E>
-constexpr E datatype(const std::initializer_list<E>& il)
+constexpr E elementtype(const std::initializer_list<E>&)
 {
     return {};
 }
 template <typename T, std::size_t N>
-constexpr T datatype(T (&array)[N])
+constexpr T elementtype(T (&)[N])
 {
     return {};
 }
@@ -157,17 +158,17 @@ constexpr auto data(const C& c) -> decltype(c.data())
     return c.data();
 }
 template <typename T, std::size_t N>
-constexpr T* data(T (&array)[N]) noexcept
+constexpr T* data(T (&array)[N]) CMT_NOEXCEPT
 {
     return array;
 }
 template <typename T>
-constexpr T* data(T* array) noexcept
+constexpr T* data(T* array) CMT_NOEXCEPT
 {
     return array;
 }
 template <typename E>
-constexpr const E* data(const std::initializer_list<E>& il) noexcept
+constexpr const E* data(const std::initializer_list<E>& il) CMT_NOEXCEPT
 {
     return il.begin();
 }
@@ -178,7 +179,7 @@ constexpr auto size(const C& c) -> decltype(c.size())
     return c.size();
 }
 template <typename T, std::size_t N>
-constexpr std::size_t size(const T (&array)[N]) noexcept
+constexpr std::size_t size(const T (&)[N]) CMT_NOEXCEPT
 {
     return N;
 }

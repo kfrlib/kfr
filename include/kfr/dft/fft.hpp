@@ -25,13 +25,13 @@
  */
 #pragma once
 
-#include "../base/complex.hpp"
-#include "../base/constants.hpp"
 #include "../base/memory.hpp"
-#include "../base/read_write.hpp"
 #include "../base/small_buffer.hpp"
 #include "../base/univector.hpp"
-#include "../base/vec.hpp"
+#include "../simd/complex.hpp"
+#include "../simd/constants.hpp"
+#include "../simd/read_write.hpp"
+#include "../simd/vec.hpp"
 
 CMT_PRAGMA_GNU(GCC diagnostic push)
 #if CMT_HAS_WARNING("-Wshadow")
@@ -57,8 +57,11 @@ enum class dft_type
 enum class dft_order
 {
     normal,
-    internal, // possibly bit/digit-reversed, implementation-defined, faster
+    internal, // possibly bit/digit-reversed, implementation-defined, faster to compute
 };
+
+inline namespace CMT_ARCH_NAME
+{
 
 template <typename T>
 struct dft_stage;
@@ -76,7 +79,8 @@ struct dft_plan
 
     void dump() const;
 
-    KFR_INTRIN void execute(complex<T>* out, const complex<T>* in, u8* temp, bool inverse = false) const
+    KFR_MEM_INTRINSIC void execute(complex<T>* out, const complex<T>* in, u8* temp,
+                                   bool inverse = false) const
     {
         if (inverse)
             execute_dft(ctrue, out, in, temp);
@@ -85,14 +89,15 @@ struct dft_plan
     }
     ~dft_plan();
     template <bool inverse>
-    KFR_INTRIN void execute(complex<T>* out, const complex<T>* in, u8* temp, cbool_t<inverse> inv) const
+    KFR_MEM_INTRINSIC void execute(complex<T>* out, const complex<T>* in, u8* temp,
+                                   cbool_t<inverse> inv) const
     {
         execute_dft(inv, out, in, temp);
     }
 
     template <univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
-    KFR_INTRIN void execute(univector<complex<T>, Tag1>& out, const univector<complex<T>, Tag2>& in,
-                            univector<u8, Tag3>& temp, bool inverse = false) const
+    KFR_MEM_INTRINSIC void execute(univector<complex<T>, Tag1>& out, const univector<complex<T>, Tag2>& in,
+                                   univector<u8, Tag3>& temp, bool inverse = false) const
     {
         if (inverse)
             execute_dft(ctrue, out.data(), in.data(), temp.data());
@@ -100,8 +105,8 @@ struct dft_plan
             execute_dft(cfalse, out.data(), in.data(), temp.data());
     }
     template <bool inverse, univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
-    KFR_INTRIN void execute(univector<complex<T>, Tag1>& out, const univector<complex<T>, Tag2>& in,
-                            univector<u8, Tag3>& temp, cbool_t<inverse> inv) const
+    KFR_MEM_INTRINSIC void execute(univector<complex<T>, Tag1>& out, const univector<complex<T>, Tag2>& in,
+                                   univector<u8, Tag3>& temp, cbool_t<inverse> inv) const
     {
         execute_dft(inv, out.data(), in.data(), temp.data());
     }
@@ -128,6 +133,9 @@ protected:
     const complex<T>* select_in(size_t stage, const complex<T>* out, const complex<T>* in,
                                 const complex<T>* scratch, bool in_scratch) const;
     complex<T>* select_out(size_t stage, complex<T>* out, complex<T>* scratch) const;
+
+    void init_dft(size_t size, dft_order order);
+    void init_fft(size_t size, dft_order order);
 };
 
 enum class dft_pack_format
@@ -155,14 +163,14 @@ struct dft_plan_real : dft_plan<T>
     void execute(univector<complex<T>, Tag1>&, const univector<complex<T>, Tag2>&, univector<u8, Tag3>&,
                  cbool_t<inverse>) const = delete;
 
-    KFR_INTRIN void execute(complex<T>* out, const T* in, u8* temp,
-                            dft_pack_format fmt = dft_pack_format::CCs) const
+    KFR_MEM_INTRINSIC void execute(complex<T>* out, const T* in, u8* temp,
+                                   dft_pack_format fmt = dft_pack_format::CCs) const
     {
         this->execute_dft(cfalse, out, ptr_cast<complex<T>>(in), temp);
         to_fmt(out, fmt);
     }
-    KFR_INTRIN void execute(T* out, const complex<T>* in, u8* temp,
-                            dft_pack_format fmt = dft_pack_format::CCs) const
+    KFR_MEM_INTRINSIC void execute(T* out, const complex<T>* in, u8* temp,
+                                   dft_pack_format fmt = dft_pack_format::CCs) const
     {
         complex<T>* outdata = ptr_cast<complex<T>>(out);
         from_fmt(outdata, in, fmt);
@@ -170,15 +178,17 @@ struct dft_plan_real : dft_plan<T>
     }
 
     template <univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
-    KFR_INTRIN void execute(univector<complex<T>, Tag1>& out, const univector<T, Tag2>& in,
-                            univector<u8, Tag3>& temp, dft_pack_format fmt = dft_pack_format::CCs) const
+    KFR_MEM_INTRINSIC void execute(univector<complex<T>, Tag1>& out, const univector<T, Tag2>& in,
+                                   univector<u8, Tag3>& temp,
+                                   dft_pack_format fmt = dft_pack_format::CCs) const
     {
         this->execute_dft(cfalse, out.data(), ptr_cast<complex<T>>(in.data()), temp.data());
         to_fmt(out.data(), fmt);
     }
     template <univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
-    KFR_INTRIN void execute(univector<T, Tag1>& out, const univector<complex<T>, Tag2>& in,
-                            univector<u8, Tag3>& temp, dft_pack_format fmt = dft_pack_format::CCs) const
+    KFR_MEM_INTRINSIC void execute(univector<T, Tag1>& out, const univector<complex<T>, Tag2>& in,
+                                   univector<u8, Tag3>& temp,
+                                   dft_pack_format fmt = dft_pack_format::CCs) const
     {
         complex<T>* outdata = ptr_cast<complex<T>>(out.data());
         from_fmt(outdata, in.data(), fmt);
@@ -230,6 +240,7 @@ void fft_multiply_accumulate(univector<complex<T>, Tag1>& dest, const univector<
     if (fmt == dft_pack_format::Perm)
         dest[0] = f0;
 }
+} // namespace CMT_ARCH_NAME
 } // namespace kfr
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)

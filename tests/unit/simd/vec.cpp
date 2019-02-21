@@ -1,0 +1,114 @@
+#include <kfr/simd/vec.hpp>
+
+#include <kfr/io/tostring.hpp>
+
+namespace kfr
+{
+inline namespace CMT_ARCH_NAME
+{
+TEST(cones)
+{
+    CHECK(vec<int, 2>(cones) == vec<int, 2>(-1, -1));
+    CHECK(vec<float, 2>(cones) == vec<f32, 2>(bitcast<f32>(-1), bitcast<f32>(-1)));
+}
+TEST(vec_broadcast)
+{
+    CHECK(static_cast<f32x4>(4.f) == f32x4{ 4.f, 4.f, 4.f, 4.f });
+    CHECK(static_cast<f64x8>(4.f) == f64x8{ 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0 });
+    CHECK(static_cast<u8x3>(4.f) == u8x3{ 4, 4, 4 });
+}
+template <typename Tout, typename Tin>
+bool is_in_range_of(Tin x)
+{
+    return (is_f_class<Tin>::value && is_f_class<Tout>::value) || static_cast<Tin>(static_cast<Tout>(x)) == x;
+}
+
+TEST(cast)
+{
+    testo::assert_is_same<i32x4, kfr::common_type<i32x4>>();
+    testo::assert_is_same<u32x4, kfr::common_type<i32x4, u32x4>>();
+    testo::assert_is_same<f64x4, kfr::common_type<i32x4, u32x4, f64x4>>();
+
+    CHECK(static_cast<i32x4>(u16x4{ 1, 2, 3, 4 }) == i32x4{ 1, 2, 3, 4 });
+
+    CHECK(static_cast<vec<vec<double, 4>, 2>>(vec<vec<float, 4>, 2>{
+              vec<float, 4>{ 1.f, 2.f, 3.f, 4.f }, vec<float, 4>{ 11.f, 22.f, 33.f, 44.f } }) ==
+          vec<vec<double, 4>, 2>{ vec<double, 4>{ 1., 2., 3., 4. }, vec<double, 4>{ 11., 22., 33., 44. } });
+
+    static_assert(std::is_convertible<float, f32x4>::value, "");
+    static_assert(std::is_convertible<float, f64x8>::value, "");
+    static_assert(std::is_convertible<float, u8x3>::value, "");
+
+    static_assert(std::is_convertible<u16x4, i32x4>::value, "");
+    static_assert(!std::is_convertible<u16x4, i32x3>::value, "");
+    static_assert(!std::is_convertible<u16x1, u16x16>::value, "");
+
+    static_assert(is_same<decltype(innercast<f64>(f32x4x4(1))), f64x4x4>::value, "");
+    static_assert(is_same<decltype(innercast<f64>(f32x4(1))), f64x4>::value, "");
+    static_assert(is_same<decltype(innercast<f64>(f32(1))), f64>::value, "");
+
+    // N/A static_assert(is_same<decltype(innercast<f64x4>(f32x4x4(1))), f64x4x4>::value, "");
+    static_assert(is_same<decltype(innercast<f64x4>(f32x4(1))), f64x4x4>::value, "");
+    static_assert(is_same<decltype(innercast<f64x4>(f32(1))), f64x4>::value, "");
+
+    // N/A static_assert(is_same<decltype(elemcast<f64>(f32x4x4(1))), f64x4>::value, "");
+    static_assert(is_same<decltype(elemcast<f64>(f32x4(1))), f64x4>::value, "");
+
+    static_assert(is_same<decltype(elemcast<f64x4>(f32x4x4(1))), f64x4x4>::value, "");
+    static_assert(is_same<decltype(elemcast<f64x4>(f32x4(1))), f64x4x4>::value, "");
+
+    testo::scope s("");
+    s.text = ("target_type = u8");
+    test_function1(
+        test_catogories::all, [](auto x) { return kfr::innercast<u8>(x); },
+        [](auto x) -> u8 { return static_cast<u8>(x); },
+        [](auto t, special_value x) { return is_in_range_of<u8>(x.get<subtype<type_of<decltype(t)>>>()); });
+    s.text = ("target_type = i8");
+    test_function1(
+        test_catogories::all, [](auto x) { return kfr::innercast<i8>(x); },
+        [](auto x) -> i8 { return static_cast<i8>(x); },
+        [](auto t, special_value x) { return is_in_range_of<i8>(x.get<subtype<type_of<decltype(t)>>>()); });
+    s.text = ("target_type = u16");
+    test_function1(
+        test_catogories::all, [](auto x) { return kfr::innercast<u16>(x); },
+        [](auto x) -> u16 { return static_cast<u16>(x); },
+        [](auto t, special_value x) { return is_in_range_of<u16>(x.get<subtype<type_of<decltype(t)>>>()); });
+    s.text = ("target_type = i16");
+    test_function1(
+        test_catogories::all, [](auto x) { return kfr::innercast<i16>(x); },
+        [](auto x) -> i16 { return static_cast<i16>(x); },
+        [](auto t, special_value x) { return is_in_range_of<i16>(x.get<subtype<type_of<decltype(t)>>>()); });
+    s.text = ("target_type = u32");
+    test_function1(
+        test_catogories::all, [](auto x) { return kfr::innercast<u32>(x); },
+        [](auto x) -> u32 { return static_cast<u32>(x); },
+        [](auto t, special_value x) { return is_in_range_of<u32>(x.get<subtype<type_of<decltype(t)>>>()); });
+    s.text = ("target_type = i32");
+    test_function1(
+        test_catogories::all, [](auto x) { return kfr::innercast<i32>(x); },
+        [](auto x) -> i32 { return static_cast<i32>(x); },
+        [](auto t, special_value x) { return is_in_range_of<i32>(x.get<subtype<type_of<decltype(t)>>>()); });
+    s.text = ("target_type = u64");
+    test_function1(
+        test_catogories::all, [](auto x) { return kfr::innercast<u64>(x); },
+        [](auto x) -> u64 { return static_cast<u64>(x); },
+        [](auto t, special_value x) { return is_in_range_of<u64>(x.get<subtype<type_of<decltype(t)>>>()); });
+    s.text = ("target_type = i64");
+    test_function1(
+        test_catogories::all, [](auto x) { return kfr::innercast<i64>(x); },
+        [](auto x) -> i64 { return static_cast<i64>(x); },
+        [](auto t, special_value x) { return is_in_range_of<i64>(x.get<subtype<type_of<decltype(t)>>>()); });
+    s.text = ("target_type = f32");
+    test_function1(
+        test_catogories::all, [](auto x) { return kfr::innercast<f32>(x); },
+        [](auto x) -> f32 { return static_cast<f32>(x); },
+        [](auto t, special_value x) { return is_in_range_of<f32>(x.get<subtype<type_of<decltype(t)>>>()); });
+    s.text = ("target_type = f64");
+    test_function1(
+        test_catogories::all, [](auto x) { return kfr::innercast<f64>(x); },
+        [](auto x) -> f64 { return static_cast<f64>(x); },
+        [](auto t, special_value x) { return is_in_range_of<f64>(x.get<subtype<type_of<decltype(t)>>>()); });
+}
+
+} // namespace CMT_ARCH_NAME
+} // namespace kfr

@@ -7,6 +7,24 @@
 
 using namespace kfr;
 
+#ifdef KFR_MULTI_ARCH
+
+#define FORCE_LINK(arch)                                                                                     \
+    namespace arch                                                                                           \
+    {                                                                                                        \
+    extern void force_link();                                                                                \
+    void (*p)() = &force_link;                                                                               \
+    }
+
+FORCE_LINK(sse2)
+FORCE_LINK(sse3)
+FORCE_LINK(ssse3)
+FORCE_LINK(sse41)
+FORCE_LINK(avx)
+FORCE_LINK(avx2)
+// FORCE_LINK(avx512)
+#endif
+
 int main()
 {
     println(library_version(), " running on ", cpu_runtime());
@@ -16,7 +34,7 @@ int main()
         return -1;
     }
 #ifdef HAVE_MPFR
-    mpfr::scoped_precision p(128);
+    mpfr::scoped_precision p(64);
 #endif
     return testo::run_all("");
 }

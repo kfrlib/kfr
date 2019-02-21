@@ -1,4 +1,7 @@
-﻿#pragma once
+﻿/** @addtogroup testo
+ *  @{
+ */
+#pragma once
 
 #include "../cometa/tuple.hpp"
 
@@ -26,7 +29,7 @@ struct comparison
     R right;
     Fn cmp;
 
-    comparison(L&& left, R&& right) : left(std::forward<L>(left)), right(std::forward<R>(right)) {}
+    comparison(L&& left, R&& right) : left(std::forward<L>(left)), right(std::forward<R>(right)), cmp() {}
 
     bool operator()() const { return cmp(left, right); }
 };
@@ -53,28 +56,51 @@ CMT_PRAGMA_GNU(GCC diagnostic push)
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wfloat-equal")
 
 template <typename T>
-inline T& epsilon()
+inline T& current_epsilon()
 {
     static T value = std::numeric_limits<T>::epsilon();
     return value;
 }
 
+template <typename T>
+struct eplison_scope
+{
+    eplison_scope(T scale) { current_epsilon<T>() = std::numeric_limits<T>::epsilon() * scale; }
+    ~eplison_scope() { current_epsilon<T>() = saved; }
+    T saved = current_epsilon<T>();
+};
+
+template <>
+struct eplison_scope<void>
+{
+    eplison_scope(float scale) : f(scale), d(scale), ld(scale) {}
+    eplison_scope<float> f;
+    eplison_scope<double> d;
+    eplison_scope<long double> ld;
+};
+
 template <>
 struct equality_comparer<float, float>
 {
-    bool operator()(const float& l, const float& r) const { return !(std::abs(l - r) > epsilon<float>()); }
+    bool operator()(const float& l, const float& r) const
+    {
+        return !(std::abs(l - r) > current_epsilon<float>());
+    }
 };
 template <>
 struct equality_comparer<double, double>
 {
-    bool operator()(const double& l, const double& r) const { return !(std::abs(l - r) > epsilon<double>()); }
+    bool operator()(const double& l, const double& r) const
+    {
+        return !(std::abs(l - r) > current_epsilon<double>());
+    }
 };
 template <>
 struct equality_comparer<long double, long double>
 {
     bool operator()(const long double& l, const long double& r) const
     {
-        return !(std::abs(l - r) > epsilon<long double>());
+        return !(std::abs(l - r) > current_epsilon<long double>());
     }
 };
 

@@ -1,4 +1,7 @@
-﻿#pragma once
+﻿/** @addtogroup testo
+ *  @{
+ */
+#pragma once
 
 #include "comparison.hpp"
 
@@ -12,7 +15,8 @@
 #include <mpfr/mpfr.hpp>
 #include <mpfr/mpfr_tostring.hpp>
 #endif
-#include "../ext/console_colors.hpp"
+#include "console_colors.hpp"
+#include <cassert>
 #include <chrono>
 #include <cmath>
 
@@ -21,6 +25,7 @@ CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpragmas")
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wexit-time-destructors")
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpadded")
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wparentheses")
 
 namespace testo
 {
@@ -101,6 +106,15 @@ inline test_case*& active_test()
     return instance;
 }
 
+struct scope
+{
+    std::string text;
+    test_case* current_test;
+    scope* parent;
+    scope(std::string text);
+    ~scope();
+};
+
 struct test_case
 {
     using test_func = void (*)();
@@ -155,12 +169,14 @@ struct test_case
             }
             console_color cc(White);
         }
+        subtests.clear();
         return !failed;
     }
 
     void check(bool result, const std::string& value, const char* expr)
     {
-        subtests.push_back(subtest{ result, as_string(padleft(22, expr), " | ", value), comment });
+        subtests.push_back(
+            subtest{ result, as_string(padleft(22, expr), " | ", value), current_scope_text() });
         result ? success++ : failed++;
         if (show_progress)
         {
@@ -191,26 +207,6 @@ struct test_case
         check(result, as_string(comparison.left), expr);
     }
 
-    void append_comment(const std::string& text)
-    {
-        comment += text;
-        if (show_progress)
-        {
-            println();
-            println(text, ":");
-        }
-    }
-
-    void set_comment(const std::string& text)
-    {
-        comment = text;
-        if (show_progress)
-        {
-            println();
-            println(text, ":");
-        }
-    }
-
     struct subtest
     {
         bool success;
@@ -218,15 +214,51 @@ struct test_case
         std::string comment;
     };
 
+    void scope_changed()
+    {
+        if (show_progress)
+        {
+            println();
+            println(current_scope_text(), ":");
+        }
+    }
+    std::string current_scope_text() const
+    {
+        scope* s = this->current_scope;
+        std::string result;
+        while (s)
+        {
+            if (!result.empty())
+                result = "; " + result;
+            result = s->text + result;
+            s      = s->parent;
+        }
+        return result;
+    }
+
     test_func func;
     const char* name;
     std::vector<subtest> subtests;
-    std::string comment;
     int success;
     int failed;
     double time;
     bool show_progress;
+    scope* current_scope = nullptr;
 };
+
+inline scope::scope(std::string text)
+    : text(std::move(text)), current_test(active_test()), parent(current_test->current_scope)
+{
+    current_test->current_scope = this;
+    current_test->scope_changed();
+}
+
+inline scope::~scope()
+{
+    assert(active_test() == current_test);
+    assert(current_test->current_scope == this);
+    current_test->current_scope = parent;
+}
 
 template <typename Number>
 struct statistics
@@ -267,10 +299,10 @@ template <typename Arg0, typename Fn>
 void matrix(named_arg<Arg0>&& arg0, Fn&& fn)
 {
     cforeach(std::forward<Arg0>(arg0.value), [&](auto v0) {
-        active_test()->set_comment(as_string(arg0.name, " = ", v0));
+        scope s(as_string(arg0.name, " = ", v0));
         fn(v0);
     });
-    if (active_test()->show_progress)
+    if (active_test() && active_test()->show_progress)
         println();
 }
 
@@ -278,7 +310,7 @@ template <typename Arg0, typename Arg1, typename Fn>
 void matrix(named_arg<Arg0>&& arg0, named_arg<Arg1>&& arg1, Fn&& fn)
 {
     cforeach(std::forward<Arg0>(arg0.value), std::forward<Arg1>(arg1.value), [&](auto v0, auto v1) {
-        active_test()->set_comment(as_string(arg0.name, " = ", v0, ", ", arg1.name, " = ", v1));
+        scope s(as_string(arg0.name, " = ", v0, ", ", arg1.name, " = ", v1));
         fn(v0, v1);
     });
     if (active_test()->show_progress)
@@ -290,9 +322,23 @@ void matrix(named_arg<Arg0>&& arg0, named_arg<Arg1>&& arg1, named_arg<Arg2>&& ar
 {
     cforeach(std::forward<Arg0>(arg0.value), std::forward<Arg1>(arg1.value), std::forward<Arg2>(arg2.value),
              [&](auto v0, auto v1, auto v2) {
-                 active_test()->set_comment(
+                 scope s(
                      as_string(arg0.name, " = ", v0, ", ", arg1.name, " = ", v1, ", ", arg2.name, " = ", v2));
                  fn(v0, v1, v2);
+             });
+    if (active_test()->show_progress)
+        println();
+}
+
+template <typename Arg0, typename Arg1, typename Arg2, typename Arg3, typename Fn>
+void matrix(named_arg<Arg0>&& arg0, named_arg<Arg1>&& arg1, named_arg<Arg2>&& arg2, named_arg<Arg3>&& arg3,
+            Fn&& fn)
+{
+    cforeach(std::forward<Arg0>(arg0.value), std::forward<Arg1>(arg1.value), std::forward<Arg2>(arg2.value),
+             std::forward<Arg3>(arg3.value), [&](auto v0, auto v1, auto v2, auto v3) {
+                 scope s(as_string(arg0.name, " = ", v0, ", ", arg1.name, " = ", v1, ", ", arg2.name, " = ",
+                                   v2, arg3.name, " = ", v3));
+                 fn(v0, v1, v2, v3);
              });
     if (active_test()->show_progress)
         println();
@@ -302,23 +348,35 @@ CMT_UNUSED static int run_all(const std::string& name = std::string(), bool show
 {
     std::vector<test_case*> success;
     std::vector<test_case*> failed;
+    int success_checks = 0;
+    int failed_checks  = 0;
     for (test_case* t : test_case::tests())
     {
         if (name.empty() || t->name == name)
+        {
             t->run(show_successful) ? success.push_back(t) : failed.push_back(t);
+            success_checks += t->success;
+            failed_checks += t->failed;
+        }
     }
     printfmt("{}\n", std::string(79, '='));
     if (!success.empty())
     {
         console_color cc(Green);
         printfmt("[{}]", padcenter(11, "SUCCESS", '-'));
-        printfmt(" {} tests\n", success.size());
+        printfmt(" {}/{} tests {}/{} checks\n", success.size(), success.size() + failed.size(),
+                 success_checks, success_checks + failed_checks);
     }
     if (!failed.empty())
     {
         console_color cc(Red);
         printfmt("[{}]", padcenter(11, "ERROR", '-'));
-        printfmt(" {} tests\n", failed.size());
+        printfmt(" {}/{} tests {}/{} checks\n", failed.size(), success.size() + failed.size(), failed_checks,
+                 success_checks + failed_checks);
+        for (test_case* t : failed)
+        {
+            print("              ", t->name, "\n");
+        }
     }
     return static_cast<int>(failed.size());
 }
@@ -333,6 +391,13 @@ void assert_is_same_decay()
 {
     static_assert(std::is_same<cometa::decay<T1>, cometa::decay<T2>>::value, "");
 }
+
+template <typename T, size_t NArgs>
+struct test_data_entry
+{
+    T arguments[NArgs];
+    T result;
+};
 
 #define TESTO_CHECK(...)                                                                                     \
     do                                                                                                       \
@@ -354,6 +419,7 @@ void assert_is_same_decay()
 #define TEST TESTO_TEST
 #define DTEST TESTO_DTEST
 #endif
+
 } // namespace testo
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)

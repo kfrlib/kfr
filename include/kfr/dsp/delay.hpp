@@ -1,4 +1,4 @@
-/** @addtogroup dsp
+/** @addtogroup fir
  *  @{
  */
 /*
@@ -30,43 +30,48 @@
 
 namespace kfr
 {
+inline namespace CMT_ARCH_NAME
+{
 
 namespace internal
 {
 template <size_t delay, typename E>
-struct expression_delay : expression_base<E>
+struct expression_delay : expression_with_arguments<E>
 {
     using value_type = value_type_of<E>;
     using T          = value_type;
-    using expression_base<E>::expression_base;
+    using expression_with_arguments<E>::expression_with_arguments;
 
     template <size_t N, KFR_ENABLE_IF(N <= delay)>
-    vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
+    friend KFR_INTRINSIC vec<T, N> get_elements(const expression_delay& self, cinput_t cinput, size_t index,
+                                  vec_shape<T, N>)
     {
         vec<T, N> out;
-        size_t c = cursor;
-        data.ringbuf_read(c, out);
-        const vec<T, N> in = this->argument_first(cinput, index, vec_t<T, N>());
-        data.ringbuf_write(cursor, in);
+        size_t c = self.cursor;
+        self.data.ringbuf_read(c, out);
+        const vec<T, N> in = self.argument_first(cinput, index, vec_shape<T, N>());
+        self.data.ringbuf_write(self.cursor, in);
         return out;
     }
-    vec<T, 1> operator()(cinput_t cinput, size_t index, vec_t<T, 1>) const
+    friend vec<T, 1> get_elements(const expression_delay& self, cinput_t cinput, size_t index,
+                                  vec_shape<T, 1>)
     {
         T out;
-        size_t c = cursor;
-        data.ringbuf_read(c, out);
-        const T in = this->argument_first(cinput, index, vec_t<T, 1>())[0];
-        data.ringbuf_write(cursor, in);
+        size_t c = self.cursor;
+        self.data.ringbuf_read(c, out);
+        const T in = self.argument_first(cinput, index, vec_shape<T, 1>())[0];
+        self.data.ringbuf_write(self.cursor, in);
         return out;
     }
     template <size_t N, KFR_ENABLE_IF(N > delay)>
-    vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
+    friend vec<T, N> get_elements(const expression_delay& self, cinput_t cinput, size_t index,
+                                  vec_shape<T, N>)
     {
         vec<T, delay> out;
-        size_t c = cursor;
-        data.ringbuf_read(c, out);
-        const vec<T, N> in = this->argument_first(cinput, index, vec_t<T, N>());
-        data.ringbuf_write(cursor, slice<N - delay, delay>(in));
+        size_t c = self.cursor;
+        self.data.ringbuf_read(c, out);
+        const vec<T, N> in = self.argument_first(cinput, index, vec_shape<T, N>());
+        self.data.ringbuf_write(self.cursor, slice<N - delay, delay>(in));
         return concat_and_slice<0, N>(out, in);
     }
 
@@ -75,18 +80,19 @@ struct expression_delay : expression_base<E>
 };
 
 template <typename E>
-struct expression_delay<1, E> : expression_base<E>
+struct expression_delay<1, E> : expression_with_arguments<E>
 {
     using value_type = value_type_of<E>;
     using T          = value_type;
-    using expression_base<E>::expression_base;
+    using expression_with_arguments<E>::expression_with_arguments;
 
     template <size_t N>
-    vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
+    friend KFR_INTRINSIC vec<T, N> get_elements(const expression_delay& self, cinput_t cinput, size_t index,
+                                  vec_shape<T, N>)
     {
-        const vec<T, N> in  = this->argument_first(cinput, index, vec_t<T, N>());
-        const vec<T, N> out = insertleft(data, in);
-        data                = in[N - 1];
+        const vec<T, N> in  = self.argument_first(cinput, index, vec_shape<T, N>());
+        const vec<T, N> out = insertleft(self.data, in);
+        self.data           = in[N - 1];
         return out;
     }
     mutable value_type data = value_type(0);
@@ -103,9 +109,10 @@ struct expression_delay<1, E> : expression_base<E>
  * @endcode
  */
 template <size_t samples = 1, typename E1>
-CMT_INLINE internal::expression_delay<samples, E1> delay(E1&& e1, csize_t<samples> = csize_t<samples>())
+KFR_INTRINSIC internal::expression_delay<samples, E1> delay(E1&& e1, csize_t<samples> = csize_t<samples>())
 {
     static_assert(samples >= 1 && samples < 1024, "");
     return internal::expression_delay<samples, E1>(std::forward<E1>(e1));
 }
+} // namespace CMT_ARCH_NAME
 } // namespace kfr

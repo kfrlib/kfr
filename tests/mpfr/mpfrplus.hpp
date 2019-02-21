@@ -18,6 +18,7 @@ MPFR_DIAG_PRAGMA(ignored "-Wsign-conversion")
 MPFR_DIAG_PRAGMA(pop)
 #include <cmath>
 #include <limits>
+#include <string>
 #include <type_traits>
 
 namespace mpfr
@@ -47,17 +48,14 @@ constexpr with_precision_t with_precision{};
 
 namespace internal
 {
-#ifndef MPFR_THREAD_LOCAL
-#define MPFR_THREAD_LOCAL thread_local
-#endif
-static mpfr_prec_t& precision()
+inline mpfr_prec_t& precision()
 {
-    static MPFR_THREAD_LOCAL mpfr_prec_t prec = mpfr_get_default_prec();
+    static mpfr_prec_t prec = mpfr_get_default_prec();
     return prec;
 }
-static mpfr_rnd_t& rounding_mode()
+inline mpfr_rnd_t& rounding_mode()
 {
-    static MPFR_THREAD_LOCAL mpfr_rnd_t rnd = mpfr_get_default_rounding_mode();
+    static mpfr_rnd_t rnd = mpfr_get_default_rounding_mode();
     return rnd;
 }
 } // namespace internal
@@ -241,7 +239,7 @@ public:
     MPFR_CXX_CTOR_T(mpfr_set_ui, unsigned int)
     MPFR_CXX_CTOR_T(mpfr_set_si, long int)
     MPFR_CXX_CTOR_T(mpfr_set_ui, unsigned long int)
-#if __INTMAX_MAX__ != __LONG_MAX__
+#ifdef _MPFR_H_HAVE_INTMAX_T
     MPFR_CXX_CTOR_T(mpfr_set_sj, intmax_t)
     MPFR_CXX_CTOR_T(mpfr_set_uj, uintmax_t)
 #endif
@@ -253,7 +251,7 @@ public:
     MPFR_CXX_ASGN_T(mpfr_set_ui, unsigned int)
     MPFR_CXX_ASGN_T(mpfr_set_si, long int)
     MPFR_CXX_ASGN_T(mpfr_set_ui, unsigned long int)
-#if __INTMAX_MAX__ != __LONG_MAX__
+#ifdef _MPFR_H_HAVE_INTMAX_T
     MPFR_CXX_ASGN_T(mpfr_set_sj, intmax_t)
     MPFR_CXX_ASGN_T(mpfr_set_uj, uintmax_t)
 #endif
@@ -299,6 +297,15 @@ public:
     inline explicit operator long double() const noexcept
     {
         return mpfr_get_ld(val, internal::rounding_mode());
+    }
+
+    std::string to_string() const
+    {
+        char* str;
+        mpfr_asprintf(&str, "%.*Rg", prec(), val);
+        std::string result = str;
+        mpfr_free_str(str);
+        return result;
     }
 };
 

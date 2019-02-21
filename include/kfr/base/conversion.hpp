@@ -1,4 +1,4 @@
-/** @addtogroup math
+/** @addtogroup conversion
  *  @{
  */
 /*
@@ -25,11 +25,14 @@
  */
 #pragma once
 
-#include "types.hpp"
+#include "../math/clamp.hpp"
+#include "../simd/types.hpp"
+#include "../simd/vec.hpp"
 #include "univector.hpp"
-#include "vec.hpp"
 
 namespace kfr
+{
+inline namespace CMT_ARCH_NAME
 {
 
 enum class audio_sample_type
@@ -179,7 +182,7 @@ template <typename Tout, typename Tin, typename Tout_traits = audio_sample_trait
 inline Tout convert_sample(const Tin& in)
 {
     constexpr auto scale = Tout_traits::scale / Tin_traits::scale;
-    return cast<Tout>(clamp(in * scale, -Tout_traits::scale, +Tout_traits::scale));
+    return innercast<Tout>(clamp(in * scale, -Tout_traits::scale, +Tout_traits::scale));
 }
 
 /// @brief Deinterleaves and converts audio samples
@@ -275,4 +278,5 @@ void convert(void* out, audio_sample_type out_type, const Tin* in, size_t size)
         convert(reinterpret_cast<type*>(out), in, size);
     });
 }
+} // namespace CMT_ARCH_NAME
 } // namespace kfr

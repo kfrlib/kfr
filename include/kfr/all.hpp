@@ -22,7 +22,6 @@
  */
 
 #include "base.hpp"
-#include "cpuid.hpp"
 #include "dft.hpp"
 #include "dsp.hpp"
 #include "io.hpp"

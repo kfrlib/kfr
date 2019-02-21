@@ -1,4 +1,4 @@
-/** @addtogroup io
+/** @addtogroup binary_io
  *  @{
  */
 /*
@@ -25,9 +25,9 @@
  */
 #pragma once
 
-#include "../base/function.hpp"
 #include "../base/univector.hpp"
-#include "../base/vec.hpp"
+#include "../simd/impl/function.hpp"
+#include "../simd/vec.hpp"
 #include <cstdio>
 #include <string>
 #include <vector>
@@ -63,6 +63,7 @@ inline FILE* fopen_portable(const filepath_char* path, const filepath_char* mode
 #ifdef CMT_OS_WIN
     FILE* f   = nullptr;
     errno_t e = _wfopen_s(&f, path, mode);
+    (void)e;
     return f;
 #else
     return fopen(path, mode);
@@ -98,6 +99,14 @@ struct abstract_stream
     bool seek(imax offset, int origin) { return seek(offset, static_cast<seek_origin>(origin)); }
 };
 
+namespace internal_generic
+{
+struct empty
+{
+};
+
+} // namespace internal_generic
+
 /// @brief Base class for all typed readers
 template <typename T = void>
 struct abstract_reader : abstract_stream<T>
@@ -117,6 +126,10 @@ struct abstract_reader : abstract_stream<T>
         this->read(result);
         return result;
     }
+    bool read(conditional<is_void<T>::value, internal_generic::empty, T>& data)
+    {
+        return read(&data, 1) == 1;
+    }
 };
 
 /// @brief Base class for all typed writers
@@ -131,6 +144,10 @@ struct abstract_writer : abstract_stream<T>
         return write(data.data(), data.size());
     }
     size_t write(univector_ref<const T>&& data) { return write(data.data(), data.size()); }
+    bool write(const conditional<is_void<T>::value, internal_generic::empty, T>& data)
+    {
+        return write(&data, 1) == 1;
+    }
 };
 
 template <typename From, typename To = void>
@@ -207,6 +224,8 @@ struct file_reader : abstract_reader<T>
     ~file_reader() override {}
     size_t read(T* data, size_t size) final { return fread(data, element_size<T>(), size, handle.file); }
 
+    using abstract_reader<T>::read;
+
     imax tell() const final { return IO_TELL_64(handle.file); }
     bool seek(imax offset, seek_origin origin) final
     {
@@ -221,6 +240,8 @@ struct file_writer : abstract_writer<T>
 {
     file_writer(file_handle&& handle) : handle(std::move(handle)) {}
     ~file_writer() override {}
+
+    using abstract_writer<T>::write;
     size_t write(const T* data, size_t size) final
     {
         return fwrite(data, element_size<T>(), size, handle.file);

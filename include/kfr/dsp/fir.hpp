@@ -1,4 +1,4 @@
-/** @addtogroup dsp
+/** @addtogroup fir
  *  @{
  */
 /*
@@ -30,9 +30,11 @@
 #include "../base/memory.hpp"
 #include "../base/reduce.hpp"
 #include "../base/univector.hpp"
-#include "../base/vec.hpp"
+#include "../simd/vec.hpp"
 
 namespace kfr
+{
+inline namespace CMT_ARCH_NAME
 {
 
 template <typename T, size_t Size>
@@ -77,7 +79,7 @@ struct state_holder
     state_holder()                    = delete;
     state_holder(const state_holder&) = default;
     state_holder(state_holder&&)      = default;
-    constexpr state_holder(const T& state) noexcept : s(state) {}
+    constexpr state_holder(const T& state) CMT_NOEXCEPT : s(state) {}
     T s;
 };
 
@@ -87,30 +89,32 @@ struct state_holder<T, true>
     state_holder()                    = delete;
     state_holder(const state_holder&) = default;
     state_holder(state_holder&&)      = default;
-    constexpr state_holder(const T& state) noexcept : s(state) {}
+    constexpr state_holder(const T& state) CMT_NOEXCEPT : s(state) {}
     const T& s;
 };
 
 template <size_t tapcount, typename T, typename U, typename E1, bool stateless = false, KFR_ARCH_DEP>
-struct expression_short_fir : expression_base<E1>
+struct expression_short_fir : expression_with_arguments<E1>
 {
     using value_type = U;
 
     expression_short_fir(E1&& e1, const short_fir_state<tapcount, T, U>& state)
-        : expression_base<E1>(std::forward<E1>(e1)), state(state)
+        : expression_with_arguments<E1>(std::forward<E1>(e1)), state(state)
     {
     }
 
     template <size_t N>
-    CMT_INLINE vec<U, N> operator()(cinput_t cinput, size_t index, vec_t<U, N> x) const
+    KFR_INTRINSIC friend vec<U, N> get_elements(const expression_short_fir& self, cinput_t cinput,
+                                                    size_t index, vec_shape<U, N> x)
     {
-        vec<U, N> in = this->argument_first(cinput, index, x);
+        vec<U, N> in = self.argument_first(cinput, index, x);
 
-        vec<U, N> out = in * state.s.taps[0];
-        cforeach(csizeseq_t<tapcount - 1, 1>(), [&](auto I) {
-            out = out + concat_and_slice<tapcount - 1 - I, N>(state.s.delayline, in) * state.s.taps[I];
+        vec<U, N> out = in * self.state.s.taps.front();
+        cforeach(csizeseq<tapcount - 1, 1>, [&](auto I) {
+            out = out +
+                  concat_and_slice<tapcount - 1 - I, N>(self.state.s.delayline, in) * self.state.s.taps[I];
         });
-        state.s.delayline = concat_and_slice<N, tapcount - 1>(state.s.delayline, in);
+        self.state.s.delayline = concat_and_slice<N, tapcount - 1>(self.state.s.delayline, in);
 
         return out;
     }
@@ -118,31 +122,33 @@ struct expression_short_fir : expression_base<E1>
 };
 
 template <typename T, typename U, typename E1, bool stateless = false, KFR_ARCH_DEP>
-struct expression_fir : expression_base<E1>
+struct expression_fir : expression_with_arguments<E1>
 {
     using value_type = U;
 
     expression_fir(E1&& e1, const fir_state<T, U>& state)
-        : expression_base<E1>(std::forward<E1>(e1)), state(state)
+        : expression_with_arguments<E1>(std::forward<E1>(e1)), state(state)
     {
     }
 
     template <size_t N>
-    CMT_INLINE vec<U, N> operator()(cinput_t cinput, size_t index, vec_t<U, N> x) const
+    KFR_INTRINSIC friend vec<U, N> get_elements(const expression_fir& self, cinput_t cinput, size_t index,
+                                                    vec_shape<U, N> x)
     {
-        const size_t tapcount = state.s.taps.size();
-        const vec<U, N> input = this->argument_first(cinput, index, x);
+        const size_t tapcount = self.state.s.taps.size();
+        const vec<U, N> input = self.argument_first(cinput, index, x);
 
         vec<U, N> output;
-        size_t cursor = state.s.delayline_cursor;
+        size_t cursor = self.state.s.delayline_cursor;
         CMT_LOOP_NOUNROLL
         for (size_t i = 0; i < N; i++)
         {
-            state.s.delayline.ringbuf_write(cursor, input[i]);
-            output[i] = dotproduct(state.s.taps, state.s.delayline.slice(cursor) /*, tapcount - cursor*/) +
-                        dotproduct(state.s.taps.slice(tapcount - cursor), state.s.delayline /*, cursor*/);
+            self.state.s.delayline.ringbuf_write(cursor, input[i]);
+            output[i] =
+                dotproduct(self.state.s.taps, self.state.s.delayline.slice(cursor) /*, tapcount - cursor*/) +
+                dotproduct(self.state.s.taps.slice(tapcount - cursor), self.state.s.delayline /*, cursor*/);
         }
-        state.s.delayline_cursor = cursor;
+        self.state.s.delayline_cursor = cursor;
         return output;
     }
     state_holder<fir_state<T, U>, stateless> state;
@@ -155,7 +161,7 @@ struct expression_fir : expression_base<E1>
  * @param taps coefficients for the FIR filter
  */
 template <typename T, typename E1, univector_tag Tag>
-CMT_INLINE internal::expression_fir<T, value_type_of<E1>, E1> fir(E1&& e1, const univector<T, Tag>& taps)
+KFR_INTRINSIC internal::expression_fir<T, value_type_of<E1>, E1> fir(E1&& e1, const univector<T, Tag>& taps)
 {
     return internal::expression_fir<T, value_type_of<E1>, E1>(std::forward<E1>(e1), taps.ref());
 }
@@ -166,7 +172,7 @@ CMT_INLINE internal::expression_fir<T, value_type_of<E1>, E1> fir(E1&& e1, const
  * @param e1 an input expression
  */
 template <typename T, typename U, typename E1>
-CMT_INLINE internal::expression_fir<T, U, E1, true> fir(fir_state<T, U>& state, E1&& e1)
+KFR_INTRINSIC internal::expression_fir<T, U, E1, true> fir(fir_state<T, U>& state, E1&& e1)
 {
     return internal::expression_fir<T, U, E1, true>(std::forward<E1>(e1), state);
 }
@@ -178,7 +184,7 @@ CMT_INLINE internal::expression_fir<T, U, E1, true> fir(fir_state<T, U>& state, 
  * @param taps coefficients for the FIR filter
  */
 template <typename T, size_t TapCount, typename E1>
-CMT_INLINE internal::expression_short_fir<next_poweroftwo(TapCount), T, value_type_of<E1>, E1> short_fir(
+KFR_INTRINSIC internal::expression_short_fir<next_poweroftwo(TapCount), T, value_type_of<E1>, E1> short_fir(
     E1&& e1, const univector<T, TapCount>& taps)
 {
     static_assert(TapCount >= 2 && TapCount <= 32, "Use short_fir only for small FIR filters");
@@ -214,4 +220,5 @@ protected:
 private:
     fir_state<T, U> state;
 };
+} // namespace CMT_ARCH_NAME
 } // namespace kfr

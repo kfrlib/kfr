@@ -25,12 +25,15 @@
  */
 #pragma once
 
-#include "min_max.hpp"
-#include "shuffle.hpp"
-#include "vec.hpp"
+#include "../math/min_max.hpp"
+#include "../simd/shuffle.hpp"
+#include "../simd/vec.hpp"
 
 namespace kfr
 {
+inline namespace CMT_ARCH_NAME
+{
+
 /**
  * @brief Sort the elements in the vector in ascending order
  * @param x input vector
@@ -40,12 +43,12 @@ namespace kfr
  * @endcode
  */
 template <typename T, size_t N>
-CMT_INLINE vec<T, N> sort(const vec<T, N>& x)
+KFR_INTRINSIC vec<T, N> sort(const vec<T, N>& x)
 {
     constexpr size_t Nhalf = N / 2;
     vec<T, Nhalf> e        = low(x);
     vec<T, Nhalf> o        = high(x);
-    constexpr auto blend0  = cconcat(csizes_t<1>(), csizeseq_t<Nhalf - 1, 0, 0>());
+    constexpr auto blend0  = cconcat(csizes<1>, csizeseq<Nhalf - 1, 0, 0>);
     for (size_t i = 0; i < Nhalf; i++)
     {
         vec<T, Nhalf> t;
@@ -73,12 +76,12 @@ CMT_INLINE vec<T, N> sort(const vec<T, N>& x)
  * @endcode
  */
 template <typename T, size_t N>
-CMT_INLINE vec<T, N> sortdesc(const vec<T, N>& x)
+KFR_INTRINSIC vec<T, N> sortdesc(const vec<T, N>& x)
 {
     constexpr size_t Nhalf = N / 2;
     vec<T, Nhalf> e        = low(x);
     vec<T, Nhalf> o        = high(x);
-    constexpr auto blend0  = cconcat(csizes_t<1>(), csizeseq_t<Nhalf - 1, 0, 0>());
+    constexpr auto blend0  = cconcat(csizes<1>, csizeseq<Nhalf - 1, 0, 0>);
     for (size_t i = 0; i < Nhalf; i++)
     {
         vec<T, Nhalf> t;
@@ -96,4 +99,5 @@ CMT_INLINE vec<T, N> sortdesc(const vec<T, N>& x)
     }
     return interleavehalfs(concat(e, o));
 }
+} // namespace CMT_ARCH_NAME
 } // namespace kfr

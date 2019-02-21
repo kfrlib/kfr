@@ -1,4 +1,4 @@
-/** @addtogroup expressions
+/** @addtogroup generators
  *  @{
  */
 /*
@@ -25,13 +25,15 @@
  */
 #pragma once
 
-#include "function.hpp"
-#include "log_exp.hpp"
-#include "select.hpp"
-#include "sin_cos.hpp"
-#include "vec.hpp"
+#include "../math/log_exp.hpp"
+#include "../math/select.hpp"
+#include "../math/sin_cos.hpp"
+#include "../simd/impl/function.hpp"
+#include "../simd/vec.hpp"
 
 namespace kfr
+{
+inline namespace CMT_ARCH_NAME
 {
 
 namespace internal
@@ -41,14 +43,15 @@ template <typename T, size_t width_, typename Class>
 struct generator : input_expression
 {
     constexpr static size_t width = width_;
-    using value_type                    = T;
+    using value_type              = T;
 
     constexpr static bool is_incremental = true;
 
     template <typename U, size_t N>
-    CMT_INLINE vec<U, N> operator()(cinput_t, size_t, vec_t<U, N> t) const
+    friend KFR_INTRINSIC vec<U, N> get_elements(const generator& self, cinput_t, size_t,
+                                                    vec_shape<U, N> t)
     {
-        return generate(t);
+        return self.generate(t);
     }
 
     void resync(T start) const { ptr_cast<Class>(this)->sync(start); }
@@ -70,7 +73,7 @@ protected:
     }
 
     template <size_t N, KFR_ENABLE_IF(N == width)>
-    CMT_INLINE vec<T, N> generate(vec_t<T, N>) const
+    KFR_MEM_INTRINSIC vec<T, N> generate(vec_shape<T, N>) const
     {
         const vec<T, N> result = value;
         call_next();
@@ -78,7 +81,7 @@ protected:
     }
 
     template <size_t N, KFR_ENABLE_IF(N < width)>
-    CMT_INLINE vec<T, N> generate(vec_t<T, N>) const
+    KFR_MEM_INTRINSIC vec<T, N> generate(vec_shape<T, N>) const
     {
         const vec<T, N> result = narrow<N>(value);
         shift(csize_t<N>());
@@ -86,7 +89,7 @@ protected:
     }
 
     template <size_t N, KFR_ENABLE_IF(N > width)>
-    CMT_INLINE vec<T, N> generate(vec_t<T, N> x) const
+    KFR_MEM_INTRINSIC vec<T, N> generate(vec_shape<T, N> x) const
     {
         const auto lo = generate(low(x));
         const auto hi = generate(high(x));
@@ -96,58 +99,64 @@ protected:
     mutable vec<T, width> value;
 };
 
-template <typename T, size_t width = platform<T>::vector_width* bitness_const(1, 2)>
+template <typename T, size_t width = vector_width<T>* bitness_const(1, 2)>
 struct generator_linear : generator<T, width, generator_linear<T, width>>
 {
-    constexpr generator_linear(T start, T step) noexcept : step(step), vstep(step * width)
+    generator_linear(T start, T step) CMT_NOEXCEPT : step(step), vstep(step* width) { this->resync(start); }
+
+    KFR_MEM_INTRINSIC void sync(T start) const CMT_NOEXCEPT
     {
-        this->resync(start);
+        this->value = start + enumerate<T, width>() * step;
     }
 
-    CMT_INLINE void sync(T start) const noexcept { this->value = start + enumerate<T, width>() * step; }
-
-    CMT_INLINE void next() const noexcept { this->value += vstep; }
+    KFR_MEM_INTRINSIC void next() const CMT_NOEXCEPT { this->value += vstep; }
 
 protected:
     T step;
     T vstep;
 };
 
-template <typename T, size_t width = platform<T>::vector_width* bitness_const(1, 2), KFR_ARCH_DEP>
+template <typename T, size_t width = vector_width<T>* bitness_const(1, 2), KFR_ARCH_DEP>
 struct generator_exp : generator<T, width, generator_exp<T, width>>
 {
-    generator_exp(T start, T step) noexcept : step(step), vstep(exp(make_vector(step * width))[0] - 1)
+    generator_exp(T start, T step) CMT_NOEXCEPT : step(step), vstep(exp(make_vector(step* width))[0] - 1)
     {
         this->resync(start);
     }
 
-    CMT_INLINE void sync(T start) const noexcept { this->value = exp(start + enumerate<T, width>() * step); }
+    KFR_MEM_INTRINSIC void sync(T start) const CMT_NOEXCEPT
+    {
+        this->value = exp(start + enumerate<T, width>() * step);
+    }
 
-    CMT_INLINE void next() const noexcept { this->value += this->value * vstep; }
+    KFR_MEM_INTRINSIC void next() const CMT_NOEXCEPT { this->value += this->value * vstep; }
 
 protected:
     T step;
     T vstep;
 };
 
-template <typename T, size_t width = platform<T>::vector_width* bitness_const(1, 2), KFR_ARCH_DEP>
+template <typename T, size_t width = vector_width<T>* bitness_const(1, 2), KFR_ARCH_DEP>
 struct generator_exp2 : generator<T, width, generator_exp2<T, width>>
 {
-    generator_exp2(T start, T step) noexcept : step(step), vstep(exp2(make_vector(step * width))[0] - 1)
+    generator_exp2(T start, T step) CMT_NOEXCEPT : step(step), vstep(exp2(make_vector(step* width))[0] - 1)
     {
         this->resync(start);
     }
 
-    CMT_INLINE void sync(T start) const noexcept { this->value = exp2(start + enumerate<T, width>() * step); }
+    KFR_MEM_INTRINSIC void sync(T start) const CMT_NOEXCEPT
+    {
+        this->value = exp2(start + enumerate<T, width>() * step);
+    }
 
-    CMT_INLINE void next() const noexcept { this->value += this->value * vstep; }
+    KFR_MEM_INTRINSIC void next() const CMT_NOEXCEPT { this->value += this->value * vstep; }
 
 protected:
     T step;
     T vstep;
 };
 
-template <typename T, size_t width = platform<T>::vector_width* bitness_const(1, 2), KFR_ARCH_DEP>
+template <typename T, size_t width = vector_width<T>* bitness_const(1, 2), KFR_ARCH_DEP>
 struct generator_cossin : generator<T, width, generator_cossin<T, width>>
 {
     generator_cossin(T start, T step)
@@ -155,9 +164,9 @@ struct generator_cossin : generator<T, width, generator_cossin<T, width>>
     {
         this->resync(start);
     }
-    CMT_INLINE void sync(T start) const noexcept { this->value = init_cossin(step, start); }
+    KFR_MEM_INTRINSIC void sync(T start) const CMT_NOEXCEPT { this->value = init_cossin(step, start); }
 
-    CMT_INLINE void next() const noexcept
+    KFR_MEM_INTRINSIC void next() const CMT_NOEXCEPT
     {
         this->value = this->value - subadd(alpha * this->value, beta * swap<2>(this->value));
     }
@@ -172,7 +181,7 @@ protected:
     }
 };
 
-template <typename T, size_t width = platform<T>::vector_width* bitness_const(2, 4), KFR_ARCH_DEP>
+template <typename T, size_t width = vector_width<T>* bitness_const(2, 4), KFR_ARCH_DEP>
 struct generator_sin : generator<T, width, generator_sin<T, width>>
 {
     generator_sin(T start, T step)
@@ -180,14 +189,14 @@ struct generator_sin : generator<T, width, generator_sin<T, width>>
     {
         this->resync(start);
     }
-    CMT_INLINE void sync(T start) const noexcept
+    KFR_MEM_INTRINSIC void sync(T start) const CMT_NOEXCEPT
     {
         const vec<T, width* 2> cs = splitpairs(cossin(dup(start + enumerate<T, width>() * step)));
         this->cos_value           = low(cs);
         this->value               = high(cs);
     }
 
-    CMT_INLINE void next() const noexcept
+    KFR_MEM_INTRINSIC void next() const CMT_NOEXCEPT
     {
         const vec<T, width> c = this->cos_value;
         const vec<T, width> s = this->value;
@@ -200,7 +209,7 @@ struct generator_sin : generator<T, width, generator_sin<T, width>>
     }
 
     template <size_t N>
-    void shift(csize_t<N>) const noexcept
+    void shift(csize_t<N>) const CMT_NOEXCEPT
     {
         const vec<T, width> oldvalue    = this->value;
         const vec<T, width> oldcosvalue = this->cos_value;
@@ -226,7 +235,7 @@ protected:
    \f]
  */
 template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
-KFR_SINTRIN internal::generator_linear<TF> gen_linear(T1 start, T2 step)
+KFR_FUNCTION internal::generator_linear<TF> gen_linear(T1 start, T2 step)
 {
     return internal::generator_linear<TF>(start, step);
 }
@@ -238,7 +247,7 @@ KFR_SINTRIN internal::generator_linear<TF> gen_linear(T1 start, T2 step)
    \f]
  */
 template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
-KFR_SINTRIN internal::generator_exp<TF> gen_exp(T1 start, T2 step)
+KFR_FUNCTION internal::generator_exp<TF> gen_exp(T1 start, T2 step)
 {
     return internal::generator_exp<TF>(start, step);
 }
@@ -250,7 +259,7 @@ KFR_SINTRIN internal::generator_exp<TF> gen_exp(T1 start, T2 step)
    \f]
  */
 template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
-KFR_SINTRIN internal::generator_exp2<TF> gen_exp2(T1 start, T2 step)
+KFR_FUNCTION internal::generator_exp2<TF> gen_exp2(T1 start, T2 step)
 {
     return internal::generator_exp2<TF>(start, step);
 }
@@ -266,7 +275,7 @@ KFR_SINTRIN internal::generator_exp2<TF> gen_exp2(T1 start, T2 step)
    \f]
  */
 template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
-KFR_SINTRIN internal::generator_cossin<TF> gen_cossin(T1 start, T2 step)
+KFR_FUNCTION internal::generator_cossin<TF> gen_cossin(T1 start, T2 step)
 {
     return internal::generator_cossin<TF>(start, step);
 }
@@ -278,8 +287,9 @@ KFR_SINTRIN internal::generator_cossin<TF> gen_cossin(T1 start, T2 step)
    \f]
  */
 template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
-KFR_SINTRIN internal::generator_sin<TF> gen_sin(T1 start, T2 step)
+KFR_FUNCTION internal::generator_sin<TF> gen_sin(T1 start, T2 step)
 {
     return internal::generator_sin<TF>(start, step);
 }
+} // namespace CMT_ARCH_NAME
 } // namespace kfr

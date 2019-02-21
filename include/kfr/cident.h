@@ -16,8 +16,10 @@ extern char* gets(char* __s);
 #ifdef CMT_ARCH_X86
 #if defined(_M_X64) || defined(__x86_64__)
 #define CMT_ARCH_X64 1
+#define CMT_ARCH_BITNESS_NAME "64-bit"
 #else
 #define CMT_ARCH_X32 1
+#define CMT_ARCH_BITNESS_NAME "32-bit"
 #endif
 
 #ifndef CMT_FORCE_GENERIC_CPU
@@ -133,8 +135,10 @@ extern char* gets(char* __s);
 
 #if defined(__aarch64__)
 #define CMT_ARCH_X64 1
+#define CMT_ARCH_BITNESS_NAME "64-bit"
 #else
 #define CMT_ARCH_X32 1
+#define CMT_ARCH_BITNESS_NAME "32-bit"
 #endif
 
 #ifdef __ARM_NEON__
@@ -146,22 +150,22 @@ extern char* gets(char* __s);
 #else
 #define CMT_ARCH_NEON 1
 #define CMT_ARCH_NAME neon
-#define KFR_NO_NATIVE_F64 1
+#define CMT_NO_NATIVE_F64 1
 #endif
 #endif
 
 #endif
 
 #ifndef CMT_ARCH_NAME
-#define CMT_ARCH_NAME common
+#define CMT_ARCH_NAME generic
 #endif
 
-#ifndef KFR_NO_NATIVE_F64
-#define KFR_NATIVE_F64 1
+#ifndef CMT_NO_NATIVE_F64
+#define CMT_NATIVE_F64 1
 #endif
 
-#ifndef KFR_NO_NATIVE_I64
-#define KFR_NATIVE_I64 1
+#ifndef CMT_NO_NATIVE_I64
+#define CMT_NATIVE_I64 1
 #endif
 
 #define CMT_STRINGIFY2(x) #x
@@ -250,27 +254,28 @@ extern char* gets(char* __s);
 #define CMT_ALWAYS_INLINE
 #endif
 #define CMT_INLINE __inline__ CMT_ALWAYS_INLINE
-#define CMT_INTRIN CMT_INLINE CMT_NODEBUG
 #define CMT_INLINE_MEMBER CMT_ALWAYS_INLINE
 #define CMT_INLINE_LAMBDA CMT_INLINE_MEMBER
 #define CMT_NOINLINE __attribute__((__noinline__))
 #define CMT_FLATTEN __attribute__((__flatten__))
 #define CMT_RESTRICT __restrict__
-#define CMT_FUNC __inline__
 
 #elif defined(CMT_MSVC_ATTRIBUTES)
 
+#define CMT_ALWAYS_INLINE __forceinline
 #define CMT_NODEBUG
 #define CMT_INLINE /*inline*/ __forceinline
-#define CMT_INTRIN CMT_INLINE CMT_NODEBUG
 #define CMT_INLINE_MEMBER __forceinline
 #define CMT_INLINE_LAMBDA
 #define CMT_NOINLINE __declspec(noinline)
 #define CMT_FLATTEN
 #define CMT_RESTRICT __restrict
-#define CMT_FUNC inline
 
 #endif
+
+#define CMT_INTRINSIC CMT_INLINE CMT_NODEBUG
+#define CMT_MEM_INTRINSIC CMT_INLINE CMT_NODEBUG
+#define CMT_FUNCTION inline
 
 #if defined _MSC_VER && _MSC_VER >= 1900 &&                                                                  \
     (!defined(__clang__) ||                                                                                  \
@@ -386,8 +391,10 @@ extern char* gets(char* __s);
 
 #if CMT_HAS_NOEXCEPT
 #define CMT_NOEXCEPT noexcept
+#define CMT_NOEXCEPT_SPEC(...) noexcept(__VA_ARGS__)
 #else
 #define CMT_NOEXCEPT
+#define CMT_NOEXCEPT_SPEC(...)
 #endif
 
 #if CMT_COMPILER_GNU && !defined(__EXCEPTIONS)
@@ -491,16 +498,55 @@ extern char* gets(char* __s);
 #define CMT_OS_NAME "unknown"
 #endif
 
-#if defined CMT_COMPILER_CLANG
+#if defined CMT_COMPILER_INTEL
 #if defined _MSC_VER
-#define CMT_COMPIER_NAME "clang-msvc"
+#define CMT_COMPILER_NAME "intel-msvc"
+#define CMT_COMPILER_FULL_NAME                                                                               \
+    "clang-msvc-" CMT_STRINGIFY(__ICL) "." CMT_STRINGIFY(__INTEL_COMPILER_UPDATE) "." CMT_STRINGIFY(         \
+        __INTEL_COMPILER_BUILD_DATE)
 #else
-#define CMT_COMPIER_NAME "clang"
+#define CMT_COMPILER_NAME "intel"
+#ifdef __INTEL_CLANG_COMPILER
+#define CMT_COMPILER_INTEL_SPEC "-clang"
+#ifdef __INTEL_LLVM_COMPILER
+#define CMT_COMPILER_INTEL_SPEC "-clang-llvm"
+#endif
+#else
+#ifdef __INTEL_LLVM_COMPILER
+#define CMT_COMPILER_INTEL_SPEC "-llvm"
+#else
+#define CMT_COMPILER_INTEL_SPEC ""
+#endif
+#endif
+#define CMT_COMPILER_FULL_NAME                                                                               \
+    "intel-" CMT_STRINGIFY(__INTEL_COMPILER) CMT_COMPILER_INTEL_SPEC                                         \
+        "." CMT_STRINGIFY(__INTEL_COMPILER_UPDATE) "." CMT_STRINGIFY(__INTEL_COMPILER_BUILD_DATE)
+#endif
+#elif defined CMT_COMPILER_CLANG
+#if defined _MSC_VER
+#define CMT_COMPILER_NAME "clang-msvc"
+#define CMT_COMPILER_FULL_NAME                                                                               \
+    "clang-msvc-" CMT_STRINGIFY(__clang_major__) "." CMT_STRINGIFY(__clang_minor__) "." CMT_STRINGIFY(       \
+        __clang_patchlevel__)
+#else
+#define CMT_COMPILER_NAME "clang"
+#define CMT_COMPILER_FULL_NAME                                                                               \
+    "clang-" CMT_STRINGIFY(__clang_major__) "." CMT_STRINGIFY(__clang_minor__) "." CMT_STRINGIFY(            \
+        __clang_patchlevel__)
 #endif
 #elif defined CMT_COMPILER_GCC
-#define CMT_COMPIER_NAME "gcc"
+#define CMT_COMPILER_NAME "gcc"
+#define CMT_COMPILER_FULL_NAME                                                                               \
+    "gcc-" CMT_STRINGIFY(__GNUC__) "." CMT_STRINGIFY(__GNUC_MINOR__) "." CMT_STRINGIFY(__GNUC_PATCHLEVEL__)
 #elif defined CMT_COMPILER_MSVC
-#define CMT_COMPIER_NAME "msvc"
+#define CMT_COMPILER_NAME "msvc"
+#define CMT_COMPILER_FULL_NAME "msvc-" CMT_STRINGIFY(_MSC_VER) "." CMT_STRINGIFY(_MSC_FULL_VER)
 #else
-#define CMT_COMPIER_NAME "unknown"
+#define CMT_COMPILER_NAME "unknown"
+#define CMT_COMPILER_FULL_NAME "unknown"
 #endif
+
+#define CMT_CONCAT(a, b) a##b
+
+#define CMT_NARGS2(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, ...) _10
+#define CMT_NARGS(...) CMT_NARGS2(__VA_ARGS__, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)

@@ -1,5 +1,26 @@
 # Changelog
 
+## 3.0.5
+
+2019-02-21
+
+#### Added
+
+- DFT speeds have been improved by up to 15% on most modern cpus
+- Support for MSVC 2017
+- Support for GCC 7.3
+- Support for GCC 8.2
+- Support for resampling complex vectors (Thanks to https://github.com/ermito)
+- Tests for various math functions no longer depend on MPFR
+
+#### Changed
+
+- Testo now allocates much less memory during long tests (x3 less than previously)
+
+#### Fixed
+
+- Building generators (Thanks to https://github.com/ermito)
+
 ## 3.0.4
 
 2019-01-08
@@ -9,6 +30,7 @@
 #### Changed
 
 - KFR_READCYCLECOUNTER may be redefined to point to any function returning (pseudo-)random value
+- Ability to disable random number initialization functions
 
 #### Fixed
 

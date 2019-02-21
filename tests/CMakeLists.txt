@@ -15,11 +15,25 @@
 # along with KFR.
 
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.1)
 
 add_definitions(-DKFR_TESTING=1)
+add_definitions(-DKFR_SRC_DIR=\"${CMAKE_SOURCE_DIR}\")
+
+# Binary output directories
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${PROJECT_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${PROJECT_BINARY_DIR}/bin)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/tests/cmake/")
+
+if (ENABLE_ASMTEST)
+    add_executable(asm_test asm_test.cpp)
+    target_link_libraries(asm_test kfr)
+    target_set_arch(asm_test PRIVATE avx)
+    target_compile_definitions(asm_test PRIVATE KFR_SHOW_NOT_OPTIMIZED)
+
+    add_custom_command(TARGET asm_test POST_BUILD COMMAND objconv -fyasm $<TARGET_FILE:asm_test>)
+endif()
 
 if (NOT ARM)
     if(MSVC AND NOT CLANG)
@@ -34,67 +48,96 @@ if (NOT ARM)
     target_link_libraries(multiarch kfr)
 endif ()
 
-find_package(MPFR)
-find_package(GMP)
-
 set(ALL_TESTS_CPP
-    all_tests.cpp
-    base_test.cpp
-    complex_test.cpp
-    dsp_test.cpp
-    expression_test.cpp
-    intrinsic_test.cpp
-    io_test.cpp
-    resampler_test.cpp)
+        base_test.cpp
+        complex_test.cpp
+        dsp_test.cpp
+        expression_test.cpp
+        intrinsic_test.cpp
+        io_test.cpp
+        ${KFR_UNITTEST_SRC})
+
+# set(ALL_TESTS_MERGED_CPP all_tests_merged.cpp)
 
 if (ENABLE_DFT)
     list(APPEND ALL_TESTS_CPP dft_test.cpp)
 endif ()
 
+find_package(MPFR)
+find_package(GMP)
+
 if (MPFR_FOUND AND GMP_FOUND)
-    list(APPEND ALL_TESTS_CPP transcendental_test.cpp)
-else ()
-    message(STATUS "MPFR is not found. Skipping transcendental_test")
+    message(STATUS "MPFR is found")
+    add_executable(generate_data generate_data.cpp)
+    target_link_libraries(generate_data kfr)
+    target_include_directories(generate_data PRIVATE ${MPFR_INCLUDE_DIR} ${GMP_INCLUDE_DIR})
+    target_link_libraries(generate_data ${MPFR_LIBRARIES} ${GMP_LIBRARIES})
+    if (REGENERATE_TESTS)
+        add_custom_command(TARGET generate_data POST_BUILD
+                COMMENT "Generating tests..."
+                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/data
+                COMMAND generate_data)
+    endif ()
 endif ()
 
-add_executable(all_tests ${ALL_TESTS_CPP})
+add_executable(all_tests all_tests.cpp ${ALL_TESTS_CPP})
 target_compile_definitions(all_tests PRIVATE KFR_NO_MAIN)
+target_link_libraries(all_tests kfr use_arch)
 if (ENABLE_DFT)
-    target_link_libraries(all_tests kfr kfr_dft)
+    target_link_libraries(all_tests kfr_dft)
 endif ()
-target_link_libraries(all_tests kfr kfr_io)
+target_link_libraries(all_tests kfr_io)
 
-if (MPFR_FOUND AND GMP_FOUND)
-    add_definitions(-DHAVE_MPFR)
-    include_directories(${MPFR_INCLUDE_DIR} ${GMP_INCLUDE_DIR})
-    target_link_libraries(all_tests ${MPFR_LIBRARIES} ${GMP_LIBRARIES})
-endif ()
+function(add_x86_test ARCH)
+    set(NAME ${ARCH})
 
-function(add_x86_test NAME FLAGS)
-    separate_arguments(FLAGS)
-    add_executable(all_tests_${NAME} ${ALL_TESTS_CPP}  ${KFR_IO_SRC})
+    add_executable(all_tests_${NAME} all_tests.cpp ${ALL_TESTS_CPP}  ${KFR_IO_SRC})
     if (ENABLE_DFT)
         target_sources(all_tests_${NAME} PRIVATE ${KFR_DFT_SRC})
     endif ()
-    target_compile_options(all_tests_${NAME} PRIVATE ${FLAGS})
-    target_compile_definitions(all_tests_${NAME} PRIVATE KFR_NO_MAIN)
     target_link_libraries(all_tests_${NAME} kfr)
+    target_set_arch(all_tests_${NAME} PRIVATE ${ARCH})
+    target_compile_definitions(all_tests_${NAME} PRIVATE KFR_NO_MAIN)
     target_compile_definitions(all_tests_${NAME} PUBLIC KFR_ENABLE_FLAC=1)
-    if (MPFR_FOUND AND GMP_FOUND)
-        target_link_libraries(all_tests_${NAME} ${MPFR_LIBRARIES} ${GMP_LIBRARIES})
+
+    if (ARCH_TESTS_MULTI)
+        add_library(all_tests_multiarch_${NAME} STATIC ${ALL_TESTS_MERGED_CPP}  ${KFR_IO_SRC})
+        if (ENABLE_DFT)
+            target_sources(all_tests_multiarch_${NAME} PRIVATE ${KFR_DFT_SRC})
+        endif ()
+        target_link_libraries(all_tests_multiarch_${NAME} kfr)
+        target_set_arch(all_tests_multiarch_${NAME} PRIVATE ${ARCH})
+        target_compile_definitions(all_tests_multiarch_${NAME} PRIVATE KFR_NO_MAIN)
+        target_compile_definitions(all_tests_multiarch_${NAME} PUBLIC KFR_ENABLE_FLAC=1)
     endif ()
+
 endfunction()
 
 if (ARCH_TESTS)
-    set (ARCH_RESET "-march=x86-64 -mno-sse3 -mno-ssse3 -mno-sse4.1 -mno-sse4.2 -mno-avx -mno-avx2 -mno-fma -mno-avx512f -mno-avx512cd -mno-avx512bw -mno-avx512dq -mno-avx512vl")
-    add_x86_test(generic "${ARCH_RESET} -DCMT_FORCE_GENERIC_CPU")
-    add_x86_test(sse2 "${ARCH_RESET} -msse2")
-    add_x86_test(sse3 "${ARCH_RESET} -msse3 -mno-avx")
-    add_x86_test(ssse3 "${ARCH_RESET} -mssse3 -mno-avx")
-    add_x86_test(sse41 "${ARCH_RESET} -msse4.1 -mno-avx")
-    add_x86_test(avx "${ARCH_RESET} -msse4.1 -mavx")
-    add_x86_test(avx2 "${ARCH_RESET} -msse4.1 -mavx2 -mfma")
-    add_x86_test(avx512 "${ARCH_RESET} -msse4.1 -mavx2 -mfma -mavx512f -mavx512cd -mavx512bw -mavx512dq -mavx512vl")
+    if (NOT MSVC OR CLANG)
+        add_x86_test(generic)
+    endif ()
+    add_x86_test(sse2)
+    add_x86_test(sse3)
+    add_x86_test(ssse3)
+    add_x86_test(sse41)
+    add_x86_test(avx)
+    add_x86_test(avx2)
+    add_x86_test(avx512)
+
+    if (ARCH_TESTS_MULTI)
+        add_executable(all_tests_multiarch all_tests.cpp)
+        target_compile_definitions(all_tests_multiarch PRIVATE KFR_MULTI_ARCH)
+        target_link_libraries(all_tests_multiarch
+                all_tests_multiarch_sse2
+                all_tests_multiarch_sse3
+                all_tests_multiarch_ssse3
+                all_tests_multiarch_sse41
+                all_tests_multiarch_avx
+                all_tests_multiarch_avx2
+                all_tests_multiarch_avx512
+                )
+    endif ()
 endif()
 
 if(USE_SDE)

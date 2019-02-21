@@ -1,3 +1,28 @@
+/** @addtogroup ebu
+ *  @{
+ */
+/*
+  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  This file is part of KFR
+
+  KFR is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  KFR is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with KFR.
+
+  If GPL is not suitable for your project, you must purchase a commercial license to use KFR.
+  Buying a commercial license is mandatory as soon as you develop commercial activities without
+  disclosing the source code of your own applications.
+  See https://www.kfrlib.com for details.
+ */
 #pragma once
 
 #include <vector>
@@ -16,15 +41,17 @@ CMT_PRAGMA_GNU(GCC diagnostic ignored "-Winaccessible-base")
 
 namespace kfr
 {
+inline namespace CMT_ARCH_NAME
+{
 
 template <typename T>
-KFR_SINTRIN T energy_to_loudness(T energy)
+KFR_INTRINSIC T energy_to_loudness(T energy)
 {
     return T(10) * log10(energy) - T(0.691);
 }
 
 template <typename T>
-KFR_SINTRIN T loudness_to_energy(T loudness)
+KFR_INTRINSIC T loudness_to_energy(T loudness)
 {
     return exp10((loudness + T(0.691)) * T(0.1));
 }
@@ -88,8 +115,8 @@ public:
     }
 
 private:
-    mutable bool m_integrated_cached;
     mutable T m_integrated;
+    mutable bool m_integrated_cached;
 };
 
 template <typename T>
@@ -98,10 +125,10 @@ struct lra_vec : public univector<T>
 private:
     void compute() const
     {
-        m_range_high            = -70.0;
-        m_range_low             = -70.0;
-        static const T PRC_LOW  = 0.10;
-        static const T PRC_HIGH = 0.95;
+        m_range_high            = -70;
+        m_range_low             = -70;
+        static const T PRC_LOW  = T(0.10);
+        static const T PRC_HIGH = T(0.95);
 
         const T z_total       = mean(*this);
         const T relative_gate = energy_to_loudness(z_total) - 20;
@@ -151,13 +178,13 @@ public:
     }
 
 private:
-    mutable bool m_lra_cached;
     mutable T m_range_low;
     mutable T m_range_high;
+    mutable bool m_lra_cached;
 };
 
 template <typename T>
-KFR_SINTRIN expression_pointer<T> make_kfilter(int samplerate)
+KFR_INTRINSIC expression_pointer<T> make_kfilter(int samplerate)
 {
     const biquad_params<T> bq[] = {
         biquad_highshelf(T(1681.81 / samplerate), T(+4.0)),
@@ -199,8 +226,8 @@ public:
 
     void reset()
     {
-        std::fill(m_short_sum_of_squares.begin(), m_short_sum_of_squares.end(), 0);
-        std::fill(m_momentary_sum_of_squares.begin(), m_momentary_sum_of_squares.end(), 0);
+        std::fill(m_short_sum_of_squares.begin(), m_short_sum_of_squares.end(), T(0));
+        std::fill(m_momentary_sum_of_squares.begin(), m_momentary_sum_of_squares.end(), T(0));
     }
 
     void process_packet(const T* src)
@@ -214,15 +241,15 @@ public:
     Speaker get_speaker() const { return m_speaker; }
 
 private:
+    const int m_sample_rate;
     const Speaker m_speaker;
     const T m_input_gain;
-    const int m_sample_rate;
     const size_t m_packet_size;
     expression_pointer<T> m_kfilter;
-    T m_output_energy_gain;
-    univector<T> m_buffer;
     univector<T> m_short_sum_of_squares;
     univector<T> m_momentary_sum_of_squares;
+    T m_output_energy_gain;
+    univector<T> m_buffer;
     size_t m_buffer_cursor;
     size_t m_short_sum_of_squares_cursor;
     size_t m_momentary_sum_of_squares_cursor;
@@ -239,7 +266,7 @@ public:
     {
         for (Speaker sp : channels)
         {
-            m_channels.emplace_back(sample_rate, sp, packet_size_factor, 1);
+            m_channels.emplace_back(sample_rate, sp, packet_size_factor, T(1));
         }
     }
 
@@ -327,6 +354,7 @@ private:
     lra_vec<T> m_lra_buffer;
 };
 
+} // namespace CMT_ARCH_NAME
 } // namespace kfr
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)

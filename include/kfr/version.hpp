@@ -25,8 +25,7 @@
  */
 #pragma once
 
-#include "base/types.hpp"
-#include "cpuid/cpuid_auto.hpp"
+#include "runtime/cpuid_auto.hpp"
 
 namespace kfr
 {

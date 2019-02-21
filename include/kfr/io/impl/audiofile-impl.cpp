@@ -25,6 +25,8 @@
  */
 
 #include "../audiofile.hpp"
+CMT_PRAGMA_GNU(GCC diagnostic push)
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wimplicit-fallthrough")
 
 #if defined(KFR_ENABLE_WAV) && KFR_ENABLE_WAV
 #define DR_WAV_NO_STDIO
@@ -37,3 +39,5 @@
 #define DR_FLAC_NO_STDIO
 #include "../dr/dr_flac.h"
 #endif
+
+CMT_PRAGMA_GNU(GCC diagnostic pop)

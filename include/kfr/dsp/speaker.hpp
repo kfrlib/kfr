@@ -1,4 +1,4 @@
-/** @addtogroup dsp
+/** @addtogroup dsp_extra
  *  @{
  */
 /*
@@ -26,6 +26,8 @@
 #pragma once
 
 namespace kfr
+{
+inline namespace CMT_ARCH_NAME
 {
 
 enum class Speaker : int
@@ -93,4 +95,5 @@ enum class SpeakerArrangement : int
     Music81        = 27,
     Arr102         = 28
 };
+} // namespace CMT_ARCH_NAME
 } // namespace kfr

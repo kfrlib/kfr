@@ -148,5 +148,7 @@ int main()
 #endif
 #endif
 
+    println("SVG plots have been saved to svg directory");
+
     return 0;
 }

@@ -25,27 +25,51 @@
  */
 #pragma once
 
-#include "operators.hpp"
+#include "../simd/operators.hpp"
+#include "../simd/vec.hpp"
 #include "univector.hpp"
-#include "vec.hpp"
 #include <algorithm>
 
 namespace kfr
 {
+inline namespace CMT_ARCH_NAME
+{
+
+namespace internal
+{
+template <size_t width, typename Fn>
+KFR_INTRINSIC void block_process_impl(size_t& i, size_t size, Fn&& fn)
+{
+    CMT_LOOP_NOUNROLL
+    for (; i < size / width * width; i += width)
+        fn(i, csize_t<width>());
+}
+} // namespace internal
+
+template <size_t... widths, typename Fn>
+KFR_INTRINSIC void block_process(size_t size, csizes_t<widths...>, Fn&& fn)
+{
+    size_t i = 0;
+    swallow{ (internal::block_process_impl<widths>(i, size, std::forward<Fn>(fn)), 0)... };
+}
 
 namespace internal
 {
 
 template <typename To, typename E>
-struct expression_convert : expression_base<E>
+struct expression_convert : expression_with_arguments<E>
 {
     using value_type = To;
-    CMT_INLINE expression_convert(E&& expr) noexcept : expression_base<E>(std::forward<E>(expr)) {}
+    KFR_MEM_INTRINSIC expression_convert(E&& expr) CMT_NOEXCEPT
+        : expression_with_arguments<E>(std::forward<E>(expr))
+    {
+    }
 
     template <size_t N>
-    CMT_INLINE vec<To, N> operator()(cinput_t input, size_t index, vec_t<To, N>) const
+    friend KFR_INTRINSIC vec<To, N> get_elements(const expression_convert& self, cinput_t input,
+                                                     size_t index, vec_shape<To, N>)
     {
-        return this->argument_first(input, index, vec_t<To, N>());
+        return self.argument_first(input, index, vec_shape<To, N>());
     }
 };
 
@@ -56,7 +80,7 @@ struct expression_iterator
     struct iterator
     {
         T operator*() const { return get(); }
-        T get() const { return expr.e1(cinput, position, vec_t<T, 1>())[0]; }
+        T get() const { return get_elements(expr.e1, cinput, position, vec_shape<T, 1>()).front(); }
         iterator& operator++()
         {
             ++position;
@@ -79,13 +103,13 @@ struct expression_iterator
 } // namespace internal
 
 template <typename To, typename E>
-CMT_INLINE internal::expression_convert<To, E> convert(E&& expr)
+KFR_INTRINSIC internal::expression_convert<To, E> convert(E&& expr)
 {
     return internal::expression_convert<To, E>(std::forward<E>(expr));
 }
 
 template <typename E1, typename T = value_type_of<E1>>
-CMT_INLINE internal::expression_iterator<T, E1> to_iterator(E1&& e1)
+KFR_INTRINSIC internal::expression_iterator<T, E1> to_iterator(E1&& e1)
 {
     return internal::expression_iterator<T, E1>(std::forward<E1>(e1));
 }
@@ -99,30 +123,30 @@ inline auto sequence(const Ts&... list)
 }
 
 template <typename T = int>
-CMT_INLINE auto zeros()
+KFR_INTRINSIC auto zeros()
 {
     return lambda<T>([](cinput_t, size_t, auto x) { return zerovector(x); });
 }
 
 template <typename T = int>
-CMT_INLINE auto ones()
+KFR_INTRINSIC auto ones()
 {
-    return lambda<T>([](cinput_t, size_t, auto x) { return 1; });
+    return lambda<T>([](cinput_t, size_t, auto) { return 1; });
 }
 
 template <typename T = int>
-CMT_INLINE auto counter()
+KFR_INTRINSIC auto counter()
 {
     return lambda<T>([](cinput_t, size_t index, auto x) { return enumerate(x) + index; });
 }
 
 template <typename T1>
-CMT_INLINE auto counter(T1 start)
+KFR_INTRINSIC auto counter(T1 start)
 {
     return lambda<T1>([start](cinput_t, size_t index, auto x) { return enumerate(x) + index + start; });
 }
 template <typename T1, typename T2>
-CMT_INLINE auto counter(T1 start, T2 step)
+KFR_INTRINSIC auto counter(T1 start, T2 step)
 {
     return lambda<common_type<T1, T2>>(
         [start, step](cinput_t, size_t index, auto x) { return (enumerate(x) + index) * step + start; });
@@ -149,10 +173,10 @@ namespace internal
 template <typename T, typename E1>
 struct expression_reader
 {
-    constexpr expression_reader(E1&& e1) noexcept : e1(std::forward<E1>(e1)) {}
+    constexpr expression_reader(E1&& e1) CMT_NOEXCEPT : e1(std::forward<E1>(e1)) {}
     T read() const
     {
-        const T result = e1(cinput, m_position, vec_t<T, 1>());
+        const T result = get_elements(e1, cinput, m_position, vec_shape<T, 1>());
         m_position++;
         return result;
     }
@@ -162,7 +186,7 @@ struct expression_reader
 template <typename T, typename E1>
 struct expression_writer
 {
-    constexpr expression_writer(E1&& e1) noexcept : e1(std::forward<E1>(e1)) {}
+    constexpr expression_writer(E1&& e1) CMT_NOEXCEPT : e1(std::forward<E1>(e1)) {}
     template <typename U>
     void write(U value)
     {
@@ -192,19 +216,20 @@ namespace internal
 {
 
 template <typename E1>
-struct expression_slice : expression_base<E1>
+struct expression_slice : expression_with_arguments<E1>
 {
     using value_type = value_type_of<E1>;
     using T          = value_type;
     expression_slice(E1&& e1, size_t start, size_t size)
-        : expression_base<E1>(std::forward<E1>(e1)), start(start),
+        : expression_with_arguments<E1>(std::forward<E1>(e1)), start(start),
           new_size(size_min(size, size_sub(std::get<0>(this->args).size(), start)))
     {
     }
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
+    friend KFR_INTRINSIC vec<T, N> get_elements(const expression_slice& self, cinput_t cinput,
+                                                    size_t index, vec_shape<T, N> y)
     {
-        return this->argument_first(cinput, index + start, y);
+        return self.argument_first(cinput, index + self.start, y);
     }
     size_t size() const { return new_size; }
     size_t start;
@@ -212,15 +237,16 @@ struct expression_slice : expression_base<E1>
 };
 
 template <typename E1>
-struct expression_reverse : expression_base<E1>
+struct expression_reverse : expression_with_arguments<E1>
 {
     using value_type = value_type_of<E1>;
     using T          = value_type;
-    expression_reverse(E1&& e1) : expression_base<E1>(std::forward<E1>(e1)), expr_size(e1.size()) {}
+    expression_reverse(E1&& e1) : expression_with_arguments<E1>(std::forward<E1>(e1)), expr_size(e1.size()) {}
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
+    friend KFR_INTRINSIC vec<T, N> get_elements(const expression_reverse& self, cinput_t cinput,
+                                                    size_t index, vec_shape<T, N> y)
     {
-        return reverse(this->argument_first(cinput, expr_size - index - N, y));
+        return reverse(self.argument_first(cinput, self.expr_size - index - N, y));
     }
     size_t size() const { return expr_size; }
     size_t expr_size;
@@ -234,7 +260,7 @@ struct expression_linspace<T, false> : input_expression
 {
     using value_type = T;
 
-    CMT_INLINE constexpr size_t size() const noexcept { return truncate_size; }
+    KFR_MEM_INTRINSIC constexpr size_t size() const CMT_NOEXCEPT { return truncate_size; }
 
     expression_linspace(T start, T stop, size_t size, bool endpoint = false, bool truncate = false)
         : start(start), offset((stop - start) / T(endpoint ? size - 1 : size)),
@@ -248,10 +274,11 @@ struct expression_linspace<T, false> : input_expression
     }
 
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> x) const
+    friend KFR_INTRINSIC vec<T, N> get_elements(const expression_linspace& self, cinput_t, size_t index,
+                                                    vec_shape<T, N> x)
     {
         using TI = itype<T>;
-        return T(start) + (enumerate(x) + cast<T>(cast<TI>(index))) * T(offset);
+        return T(self.start) + (enumerate(x) + static_cast<T>(static_cast<TI>(index))) * T(self.offset);
     }
 
     T start;
@@ -264,7 +291,7 @@ struct expression_linspace<T, true> : input_expression
 {
     using value_type = T;
 
-    CMT_INLINE constexpr size_t size() const noexcept { return truncate_size; }
+    KFR_MEM_INTRINSIC constexpr size_t size() const CMT_NOEXCEPT { return truncate_size; }
 
     expression_linspace(T start, T stop, size_t size, bool endpoint = false, bool truncate = false)
         : start(start), stop(stop), invsize(1.0 / T(endpoint ? size - 1 : size)),
@@ -278,13 +305,15 @@ struct expression_linspace<T, true> : input_expression
     }
 
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t, size_t index, vec_t<T, N> x) const
+    friend KFR_INTRINSIC vec<T, N> get_elements(const expression_linspace& self, cinput_t, size_t index,
+                                                    vec_shape<T, N> x)
     {
         using TI = itype<T>;
-        return mix((enumerate(x) + cast<T>(cast<TI>(index))) * invsize, cast<T>(start), cast<T>(stop));
+        return mix((enumerate(x) + static_cast<T>(static_cast<TI>(index))) * self.invsize, self.start,
+                   self.stop);
     }
     template <typename U, size_t N>
-    CMT_INLINE static vec<U, N> mix(const vec<U, N>& t, U x, U y)
+    KFR_MEM_INTRINSIC static vec<U, N> mix(const vec<U, N>& t, U x, U y)
     {
         return (U(1.0) - t) * x + t * y;
     }
@@ -296,16 +325,16 @@ struct expression_linspace<T, true> : input_expression
 };
 
 template <typename... E>
-struct expression_sequence : expression_base<E...>
+struct expression_sequence : expression_with_arguments<E...>
 {
 public:
-    using base = expression_base<E...>;
+    using base = expression_with_arguments<E...>;
 
     using value_type = common_type<value_type_of<E>...>;
     using T          = value_type;
 
     template <typename... Expr_>
-    CMT_INLINE expression_sequence(const size_t (&segments)[base::count], Expr_&&... expr) noexcept
+    KFR_MEM_INTRINSIC expression_sequence(const size_t (&segments)[base::count], Expr_&&... expr) CMT_NOEXCEPT
         : base(std::forward<Expr_>(expr)...)
     {
         std::copy(std::begin(segments), std::end(segments), this->segments.begin() + 1);
@@ -314,20 +343,22 @@ public:
     }
 
     template <size_t N>
-    CMT_NOINLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_sequence& self, cinput_t cinput,
+                                                    size_t index, vec_shape<T, N> y)
     {
-        std::size_t sindex = size_t(std::upper_bound(std::begin(segments), std::end(segments), index) - 1 -
-                                    std::begin(segments));
-        if (segments[sindex + 1] - index >= N)
-            return get(cinput, index, sindex - 1, y);
+        std::size_t sindex =
+            size_t(std::upper_bound(std::begin(self.segments), std::end(self.segments), index) - 1 -
+                   std::begin(self.segments));
+        if (self.segments[sindex + 1] - index >= N)
+            return get_elements(self, cinput, index, sindex - 1, y);
         else
         {
             vec<T, N> result;
             CMT_PRAGMA_CLANG(clang loop unroll_count(4))
             for (size_t i = 0; i < N; i++)
             {
-                sindex           = segments[sindex + 1] == index ? sindex + 1 : sindex;
-                result.data()[i] = get(cinput, index, sindex - 1, vec_t<T, 1>())[0];
+                sindex           = self.segments[sindex + 1] == index ? sindex + 1 : sindex;
+                result.data()[i] = get_elements(self, cinput, index, sindex - 1, vec_shape<T, 1>()).front();
                 index++;
             }
             return result;
@@ -336,10 +367,11 @@ public:
 
 protected:
     template <size_t N>
-    CMT_NOINLINE vec<T, N> get(cinput_t cinput, size_t index, size_t expr_index, vec_t<T, N> y)
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_sequence& self, cinput_t cinput,
+                                                    size_t index, size_t expr_index, vec_shape<T, N> y)
     {
         return cswitch(indicesfor_t<E...>(), expr_index,
-                       [&](auto val) { return this->argument(cinput, val, index, y); },
+                       [&](auto val) { return self.argument(cinput, val, index, y); },
                        [&]() { return zerovector(y); });
     }
 
@@ -347,20 +379,24 @@ protected:
 };
 
 template <typename Fn, typename E>
-struct expression_adjacent : expression_base<E>
+struct expression_adjacent : expression_with_arguments<E>
 {
     using value_type = value_type_of<E>;
     using T          = value_type;
 
-    expression_adjacent(Fn&& fn, E&& e) : expression_base<E>(std::forward<E>(e)), fn(std::forward<Fn>(fn)) {}
+    expression_adjacent(Fn&& fn, E&& e)
+        : expression_with_arguments<E>(std::forward<E>(e)), fn(std::forward<Fn>(fn))
+    {
+    }
 
     template <size_t N>
-    vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_adjacent& self, cinput_t cinput,
+                                                    size_t index, vec_shape<T, N>)
     {
-        const vec<T, N> in      = this->argument_first(cinput, index, vec_t<T, N>());
-        const vec<T, N> delayed = insertleft(data, in);
-        data                    = in[N - 1];
-        return this->fn(in, delayed);
+        const vec<T, N> in      = self.argument_first(cinput, index, vec_shape<T, N>());
+        const vec<T, N> delayed = insertleft(self.data, in);
+        self.data               = in[N - 1];
+        return self.fn(in, delayed);
     }
     Fn fn;
     mutable value_type data = value_type(0);
@@ -370,7 +406,7 @@ struct expression_adjacent : expression_base<E>
 /** @brief Returns the subrange of the given expression
  */
 template <typename E1>
-CMT_INLINE internal::expression_slice<E1> slice(E1&& e1, size_t start, size_t size = infinite_size)
+KFR_INTRINSIC internal::expression_slice<E1> slice(E1&& e1, size_t start, size_t size = infinite_size)
 {
     return internal::expression_slice<E1>(std::forward<E1>(e1), start, size);
 }
@@ -378,15 +414,15 @@ CMT_INLINE internal::expression_slice<E1> slice(E1&& e1, size_t start, size_t si
 /** @brief Returns the expression truncated to the given size
  */
 template <typename E1>
-CMT_INLINE internal::expression_slice<E1> truncate(E1&& e1, size_t size)
+KFR_INTRINSIC internal::expression_slice<E1> truncate(E1&& e1, size_t size)
 {
     return internal::expression_slice<E1>(std::forward<E1>(e1), 0, size);
 }
 
-/** @brief Returns reversed expression
+/** @brief Returns the reversed expression
  */
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
-CMT_INLINE internal::expression_reverse<E1> reverse(E1&& e1)
+KFR_INTRINSIC internal::expression_reverse<E1> reverse(E1&& e1)
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
     return internal::expression_reverse<E1>(std::forward<E1>(e1));
@@ -401,23 +437,24 @@ CMT_INLINE internal::expression_reverse<E1> reverse(E1&& e1)
  * @param truncate If ``true``, linspace returns exactly size elements, otherwise, returns infinite sequence
  */
 template <typename T1, typename T2, bool precise = false, typename TF = ftype<common_type<T1, T2>>>
-CMT_INLINE internal::expression_linspace<TF, precise> linspace(T1 start, T2 stop, size_t size,
-                                                               bool endpoint = false, bool truncate = false)
+KFR_INTRINSIC internal::expression_linspace<TF, precise> linspace(T1 start, T2 stop, size_t size,
+                                                                  bool endpoint = false,
+                                                                  bool truncate = false)
 {
     return internal::expression_linspace<TF, precise>(start, stop, size, endpoint, truncate);
 }
 KFR_FN(linspace)
 
 template <typename T, bool precise = false, typename TF = ftype<T>>
-CMT_INLINE internal::expression_linspace<TF, precise> symmlinspace(T symsize, size_t size,
-                                                                   bool endpoint = false)
+KFR_INTRINSIC internal::expression_linspace<TF, precise> symmlinspace(T symsize, size_t size,
+                                                                      bool endpoint = false)
 {
     return internal::expression_linspace<TF, precise>(symmetric_linspace, symsize, size, endpoint);
 }
 KFR_FN(symmlinspace)
 
 template <size_t size, typename... E>
-CMT_INLINE internal::expression_sequence<decay<E>...> gen_sequence(const size_t (&list)[size], E&&... gens)
+KFR_INTRINSIC internal::expression_sequence<decay<E>...> gen_sequence(const size_t (&list)[size], E&&... gens)
 {
     static_assert(size == sizeof...(E), "Lists must be of equal length");
     return internal::expression_sequence<decay<E>...>(list, std::forward<E>(gens)...);
@@ -428,7 +465,7 @@ KFR_FN(gen_sequence)
  * @brief Returns template expression that returns the result of calling \f$ fn(x_i, x_{i-1}) \f$
  */
 template <typename Fn, typename E1>
-CMT_INLINE internal::expression_adjacent<Fn, E1> adjacent(Fn&& fn, E1&& e1)
+KFR_INTRINSIC internal::expression_adjacent<Fn, E1> adjacent(Fn&& fn, E1&& e1)
 {
     return internal::expression_adjacent<Fn, E1>(std::forward<Fn>(fn), std::forward<E1>(e1));
 }
@@ -436,37 +473,38 @@ CMT_INLINE internal::expression_adjacent<Fn, E1> adjacent(Fn&& fn, E1&& e1)
 namespace internal
 {
 template <typename E>
-struct expression_padded : expression_base<E>
+struct expression_padded : expression_with_arguments<E>
 {
     using value_type = value_type_of<E>;
 
-    CMT_INLINE constexpr static size_t size() noexcept { return infinite_size; }
+    KFR_MEM_INTRINSIC constexpr static size_t size() CMT_NOEXCEPT { return infinite_size; }
 
     expression_padded(value_type fill_value, E&& e)
-        : expression_base<E>(std::forward<E>(e)), fill_value(fill_value), input_size(e.size())
+        : expression_with_arguments<E>(std::forward<E>(e)), fill_value(fill_value), input_size(e.size())
     {
     }
 
     template <size_t N>
-    vec<value_type, N> operator()(cinput_t cinput, size_t index, vec_t<value_type, N> y) const
+    KFR_INTRINSIC friend vec<value_type, N> get_elements(const expression_padded& self, cinput_t cinput,
+                                                             size_t index, vec_shape<value_type, N> y)
     {
-        if (index >= input_size)
+        if (index >= self.input_size)
         {
-            return fill_value;
+            return self.fill_value;
         }
-        else if (index + N <= input_size)
+        else if (index + N <= self.input_size)
         {
-            return this->argument_first(cinput, index, y);
+            return self.argument_first(cinput, index, y);
         }
         else
         {
-            vec<value_type, N> x;
+            vec<value_type, N> x{};
             for (size_t i = 0; i < N; i++)
             {
-                if (index + i < input_size)
-                    x[i] = this->argument_first(cinput, index + i, vec_t<value_type, 1>())[0];
+                if (index + i < self.input_size)
+                    x[i] = self.argument_first(cinput, index + i, vec_shape<value_type, 1>()).front();
                 else
-                    x[i] = fill_value;
+                    x[i] = self.fill_value;
             }
             return x;
         }
@@ -507,44 +545,45 @@ private:
 };
 
 template <typename... E>
-struct expression_pack : expression_base<E...>
+struct expression_pack : expression_with_arguments<E...>
 {
     constexpr static size_t count = sizeof...(E);
 
-    expression_pack(E&&... e) : expression_base<E...>(std::forward<E>(e)...) {}
+    expression_pack(E&&... e) : expression_with_arguments<E...>(std::forward<E>(e)...) {}
     using value_type = vec<common_type<value_type_of<E>...>, count>;
     using T          = value_type;
 
-    using expression_base<E...>::size;
+    using expression_with_arguments<E...>::size;
 
     template <size_t N>
-    CMT_INLINE vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N> y) const
+    friend KFR_INTRINSIC vec<T, N> get_elements(const expression_pack& self, cinput_t cinput,
+                                                    size_t index, vec_shape<T, N> y)
     {
-        return this->call(cinput, fn::packtranspose(), index, y);
+        return self.call(cinput, fn::packtranspose(), index, y);
     }
 };
 
 template <typename... E>
-struct expression_unpack : private expression_base<E...>, output_expression
+struct expression_unpack : private expression_with_arguments<E...>, output_expression
 {
-    using expression_base<E...>::begin_block;
-    using expression_base<E...>::end_block;
+    using expression_with_arguments<E...>::begin_block;
+    using expression_with_arguments<E...>::end_block;
     using output_expression::begin_block;
     using output_expression::end_block;
     constexpr static size_t count = sizeof...(E);
 
-    expression_unpack(E&&... e) : expression_base<E...>(std::forward<E>(e)...) {}
+    expression_unpack(E&&... e) : expression_with_arguments<E...>(std::forward<E>(e)...) {}
 
-    using expression_base<E...>::size;
+    using expression_with_arguments<E...>::size;
 
     template <typename U, size_t N>
-    CMT_INLINE void operator()(coutput_t coutput, size_t index, const vec<vec<U, count>, N>& x)
+    KFR_MEM_INTRINSIC void operator()(coutput_t coutput, size_t index, const vec<vec<U, count>, N>& x)
     {
-        output(coutput, index, x, csizeseq_t<count>());
+        output(coutput, index, x, csizeseq<count>);
     }
 
     template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
-    CMT_INLINE expression_unpack& operator=(Input&& input)
+    KFR_MEM_INTRINSIC expression_unpack& operator=(Input&& input)
     {
         process(*this, std::forward<Input>(input));
         return *this;
@@ -554,7 +593,7 @@ private:
     template <typename U, size_t N, size_t... indices>
     void output(coutput_t coutput, size_t index, const vec<vec<U, count>, N>& x, csizes_t<indices...>)
     {
-        const vec<vec<U, N>, count> xx = compcast<vec<U, N>>(transpose<count>(flatten(x)));
+        const vec<vec<U, N>, count> xx = vec<vec<U, N>, count>::from_flatten(transpose<count>(flatten(x)));
         swallow{ (std::get<indices>(this->args)(coutput, index, xx[indices]), void(), 0)... };
     }
 };
@@ -600,12 +639,13 @@ task_partition<OutExpr, InExpr> partition(OutExpr&& output, InExpr&& input, size
 {
     static_assert(!is_infinite<OutExpr>::value || !is_infinite<InExpr>::value, "");
 
-    minimum_size            = minimum_size == 0 ? platform<T>::vector_width * 8 : minimum_size;
+    minimum_size            = minimum_size == 0 ? vector_width<T> * 8 : minimum_size;
     const size_t size       = size_min(output.size(), input.size());
-    const size_t chunk_size = align_up(std::max(size / count, minimum_size), platform<T>::vector_width);
+    const size_t chunk_size = align_up(std::max(size / count, minimum_size), vector_width<T>);
 
     task_partition<OutExpr, InExpr> result(std::forward<OutExpr>(output), std::forward<InExpr>(input), size,
                                            chunk_size, (size + chunk_size - 1) / chunk_size);
     return result;
 }
+} // namespace CMT_ARCH_NAME
 } // namespace kfr

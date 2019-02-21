@@ -27,10 +27,10 @@
 
 #include "../cometa/array.hpp"
 
-#include "function.hpp"
+#include "../simd/impl/function.hpp"
+#include "../simd/read_write.hpp"
+#include "../simd/types.hpp"
 #include "memory.hpp"
-#include "read_write.hpp"
-#include "types.hpp"
 
 CMT_PRAGMA_MSVC(warning(push))
 CMT_PRAGMA_MSVC(warning(disable : 4324))
@@ -97,20 +97,14 @@ struct univector_base : input_expression, output_expression
     using output_expression::end_block;
 
     template <typename U, size_t N>
-    CMT_INLINE void operator()(coutput_t, size_t index, const vec<U, N>& value)
+    KFR_MEM_INTRINSIC void operator()(coutput_t, size_t index, const vec<U, N>& value)
     {
         T* data = derived_cast<Class>(this)->data();
         write(ptr_cast<T>(data) + index, vec<T, N>(value));
     }
-    template <typename U, size_t N>
-    CMT_INLINE vec<U, N> operator()(cinput_t, size_t index, vec_t<U, N>) const
-    {
-        const T* data = derived_cast<Class>(this)->data();
-        return static_cast<vec<U, N>>(read<N>(ptr_cast<T>(data) + index));
-    }
 
     template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
-    CMT_INLINE Class& operator=(Input&& input)
+    KFR_MEM_INTRINSIC Class& operator=(Input&& input)
     {
         assign_expr(std::forward<Input>(input));
         return *derived_cast<Class>(this);
@@ -254,15 +248,15 @@ struct univector_base : input_expression, output_expression
 
 protected:
     template <typename Input>
-    CMT_INLINE void assign_expr(Input&& input)
+    KFR_MEM_INTRINSIC void assign_expr(Input&& input)
     {
         process(*derived_cast<Class>(this), std::forward<Input>(input));
     }
 
 private:
-    CMT_INLINE size_t get_size() const { return derived_cast<Class>(this)->size(); }
-    CMT_INLINE const T* get_data() const { return derived_cast<Class>(this)->data(); }
-    CMT_INLINE T* get_data() { return derived_cast<Class>(this)->data(); }
+    KFR_MEM_INTRINSIC size_t get_size() const { return derived_cast<Class>(this)->size(); }
+    KFR_MEM_INTRINSIC const T* get_data() const { return derived_cast<Class>(this)->data(); }
+    KFR_MEM_INTRINSIC T* get_data() { return derived_cast<Class>(this)->data(); }
 
     static void copy(T* dest, const T* src, size_t size)
     {
@@ -283,12 +277,12 @@ struct alignas(platform<>::maximum_vector_alignment) univector : std::array<T, S
         this->assign_expr(std::forward<Input>(input));
     }
     template <typename... Args>
-    constexpr univector(const T& x, const Args&... args) noexcept
+    constexpr univector(const T& x, const Args&... args) CMT_NOEXCEPT
         : std::array<T, Size>{ { x, static_cast<T>(args)... } }
     {
     }
 
-    constexpr univector() noexcept(noexcept(std::array<T, Size>())) = default;
+    constexpr univector() CMT_NOEXCEPT_SPEC(noexcept(std::array<T, Size>())) = default;
     constexpr univector(size_t, const T& value) { std::fill(this->begin(), this->end(), value); }
     constexpr static bool size_known   = true;
     constexpr static bool is_array     = true;
@@ -298,13 +292,13 @@ struct alignas(platform<>::maximum_vector_alignment) univector : std::array<T, S
     constexpr static bool is_pod       = kfr::is_pod<T>::value;
     using value_type                   = T;
 
-    value_type get(size_t index, value_type fallback_value) const noexcept
+    value_type get(size_t index, value_type fallback_value) const CMT_NOEXCEPT
     {
         return index < this->size() ? this->operator[](index) : fallback_value;
     }
     using univector_base<T, univector>::operator=;
 
-    void resize(size_t) noexcept {}
+    void resize(size_t) CMT_NOEXCEPT {}
 };
 
 template <typename T>
@@ -334,7 +328,7 @@ struct univector<T, tag_array_ref> : array_ref<T>, univector_base<T, univector<T
     constexpr univector(univector<U, Tag>& other) : array_ref<T>(other.data(), other.size())
     {
     }
-    void resize(size_t) noexcept {}
+    void resize(size_t) CMT_NOEXCEPT {}
     constexpr static bool size_known   = false;
     constexpr static bool is_array     = false;
     constexpr static bool is_array_ref = true;
@@ -342,7 +336,7 @@ struct univector<T, tag_array_ref> : array_ref<T>, univector_base<T, univector<T
     constexpr static bool is_aligned   = false;
     using value_type                   = remove_const<T>;
 
-    value_type get(size_t index, value_type fallback_value) const noexcept
+    value_type get(size_t index, value_type fallback_value) const CMT_NOEXCEPT
     {
         return index < this->size() ? this->operator[](index) : fallback_value;
     }
@@ -364,9 +358,11 @@ struct univector<T, tag_dynamic_vector> : std::vector<T, allocator<T>>,
         this->resize(input.size());
         this->assign_expr(std::forward<Input>(input));
     }
-    constexpr univector() noexcept(noexcept(std::vector<T, allocator<T>>())) = default;
+    constexpr univector() CMT_NOEXCEPT_SPEC(noexcept(std::vector<T, allocator<T>>())) = default;
     constexpr univector(const std::vector<T, allocator<T>>& other) : std::vector<T, allocator<T>>(other) {}
-    constexpr univector(std::vector<T, allocator<T>>&& other) : std::vector<T, allocator<T>>(std::move(other)) {}
+    constexpr univector(std::vector<T, allocator<T>>&& other) : std::vector<T, allocator<T>>(std::move(other))
+    {
+    }
     constexpr univector(const array_ref<T>& other) : std::vector<T, allocator<T>>(other.begin(), other.end())
     {
     }
@@ -378,19 +374,19 @@ struct univector<T, tag_dynamic_vector> : std::vector<T, allocator<T>>,
     constexpr univector(const std::vector<T, Allocator>&) = delete;
     template <typename Allocator>
     constexpr univector(std::vector<T, Allocator>&&) = delete;
-    constexpr static bool size_known   = false;
-    constexpr static bool is_array     = false;
-    constexpr static bool is_array_ref = false;
-    constexpr static bool is_vector    = true;
-    constexpr static bool is_aligned   = true;
-    using value_type                   = T;
+    constexpr static bool size_known                 = false;
+    constexpr static bool is_array                   = false;
+    constexpr static bool is_array_ref               = false;
+    constexpr static bool is_vector                  = true;
+    constexpr static bool is_aligned                 = true;
+    using value_type                                 = T;
 
-    value_type get(size_t index, value_type fallback_value) const noexcept
+    value_type get(size_t index, value_type fallback_value) const CMT_NOEXCEPT
     {
         return index < this->size() ? this->operator[](index) : fallback_value;
     }
     template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
-    CMT_INLINE univector& operator=(Input&& input)
+    KFR_MEM_INTRINSIC univector& operator=(Input&& input)
     {
         if (input.size() != infinite_size)
             this->resize(input.size());
@@ -416,38 +412,16 @@ using univector3d = abstract_vector<abstract_vector<univector<T, Size3>, Size2>,
 
 /// @brief Creates univector from data and size
 template <typename T>
-CMT_INLINE univector_ref<T> make_univector(T* data, size_t size)
+KFR_INTRINSIC univector_ref<T> make_univector(T* data, size_t size)
 {
     return univector_ref<T>(data, size);
 }
 
 /// @brief Creates univector from data and size
 template <typename T>
-CMT_INLINE univector_ref<const T> make_univector(const T* data, size_t size)
+KFR_INTRINSIC univector_ref<const T> make_univector(const T* data, size_t size)
 {
     return univector_ref<const T>(data, size);
-}
-
-/// @brief Converts an expression to univector
-template <typename Expr, typename T = value_type_of<Expr>>
-CMT_INLINE univector<T> render(Expr&& expr)
-{
-    static_assert(!is_infinite<Expr>::value,
-                  "render: Can't process infinite expressions. Pass size as a second argument to render.");
-    univector<T> result;
-    result.resize(expr.size());
-    result = expr;
-    return result;
-}
-
-/// @brief Converts an expression to univector
-template <typename Expr, typename T = value_type_of<Expr>>
-CMT_INLINE univector<T> render(Expr&& expr, size_t size, size_t offset = 0)
-{
-    univector<T> result;
-    result.resize(size);
-    result = slice(expr, offset, size);
-    return result;
 }
 
 /// @brief Single producer single consumer lock-free ring buffer
@@ -476,8 +450,8 @@ struct lockfree_ring_buffer
 
         const size_t real_tail  = cur_tail % buffer.size();
         const size_t first_size = std::min(buffer.size() - real_tail, size);
-        internal::builtin_memcpy(buffer.data() + real_tail, source, first_size * sizeof(T));
-        internal::builtin_memcpy(buffer.data(), source + first_size, (size - first_size) * sizeof(T));
+        builtin_memcpy(buffer.data() + real_tail, source, first_size * sizeof(T));
+        builtin_memcpy(buffer.data(), source + first_size, (size - first_size) * sizeof(T));
 
         std::atomic_thread_fence(std::memory_order_release);
 
@@ -500,8 +474,8 @@ struct lockfree_ring_buffer
 
         const size_t real_front = cur_front % buffer.size();
         const size_t first_size = std::min(buffer.size() - real_front, size);
-        internal::builtin_memcpy(dest, buffer.data() + real_front, first_size * sizeof(T));
-        internal::builtin_memcpy(dest + first_size, buffer.data(), (size - first_size) * sizeof(T));
+        builtin_memcpy(dest, buffer.data() + real_front, first_size * sizeof(T));
+        builtin_memcpy(dest + first_size, buffer.data(), (size - first_size) * sizeof(T));
 
         std::atomic_thread_fence(std::memory_order_release);
 
@@ -514,6 +488,47 @@ private:
     char cacheline_filler[64 - sizeof(std::atomic<size_t>)];
     std::atomic<size_t> tail;
 };
+inline namespace CMT_ARCH_NAME
+{
+
+template <typename T, univector_tag Tag, typename U, size_t N>
+KFR_INTRINSIC vec<U, N> get_elements(const univector<T, Tag>& self, cinput_t, size_t index, vec_shape<U, N>)
+{
+    const T* data = self.data();
+    return static_cast<vec<U, N>>(read<N>(ptr_cast<T>(data) + index));
+}
+
+/// @brief Converts an expression to univector
+template <typename Expr, typename T = value_type_of<Expr>>
+KFR_INTRINSIC univector<T> render(Expr&& expr)
+{
+    static_assert(!is_infinite<Expr>::value,
+                  "render: Can't process infinite expressions. Pass size as a second argument to render.");
+    univector<T> result;
+    result.resize(expr.size());
+    result = expr;
+    return result;
+}
+
+/// @brief Converts an expression to univector
+template <typename Expr, typename T = value_type_of<Expr>>
+KFR_INTRINSIC univector<T> render(Expr&& expr, size_t size, size_t offset = 0)
+{
+    univector<T> result;
+    result.resize(size);
+    result = slice(expr, offset, size);
+    return result;
+}
+
+/// @brief Converts an expression to univector
+template <typename Expr, size_t Size, typename T = value_type_of<Expr>>
+KFR_INTRINSIC univector<T, Size> render(Expr&& expr, csize_t<Size>)
+{
+    univector<T, Size> result;
+    result = expr;
+    return result;
+}
+} // namespace CMT_ARCH_NAME
 } // namespace kfr
 
 CMT_PRAGMA_MSVC(warning(pop))

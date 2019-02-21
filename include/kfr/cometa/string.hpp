@@ -27,7 +27,7 @@ template <typename T>
 struct representation
 {
     using type = T;
-    static constexpr const T& get(const T& value) noexcept { return value; }
+    static constexpr const T& get(const T& value) CMT_NOEXCEPT { return value; }
 };
 
 template <typename T>
@@ -175,7 +175,7 @@ CMT_INLINE auto pack_value(const fmt_t<T, t, width, prec>& value)
 }
 
 template <typename T>
-CMT_INLINE auto pack_value(const T& value)
+CMT_INLINE auto pack_value(const T&)
 {
     return pack_value(type_name<T>());
 }
@@ -218,7 +218,7 @@ CMT_INLINE constexpr cstring<N1 - 3 + Nnew> fmt_replace_impl(const cstring<N1>& 
 template <size_t N1, size_t Nto>
 CMT_INLINE constexpr cstring<N1 - 3 + Nto> fmt_replace(const cstring<N1>& str, const cstring<Nto>& newfmt)
 {
-    return fmt_replace_impl(str, newfmt, csizeseq_t<N1 - 3 + Nto - 1>());
+    return fmt_replace_impl(str, newfmt, csizeseq<N1 - 3 + Nto - 1>);
 }
 
 inline std::string replace_one(const std::string& str, const std::string& from, const std::string& to)
@@ -305,7 +305,7 @@ struct print_t
     }
 };
 
-#ifdef CMT_COMPILER_GNU
+#if defined CMT_COMPILER_GNU && !defined(CMT_COMPILER_INTEL)
 
 template <typename Char, Char... chars>
 constexpr format_t<chars...> operator""_format()

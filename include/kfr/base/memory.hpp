@@ -1,4 +1,4 @@
-/** @addtogroup utility
+/** @addtogroup memory
  *  @{
  */
 /*
@@ -25,8 +25,8 @@
  */
 #pragma once
 
-#include "read_write.hpp"
-#include "types.hpp"
+#include "../simd/read_write.hpp"
+#include "../simd/types.hpp"
 #include <algorithm>
 #include <atomic>
 #include <memory>
@@ -34,7 +34,7 @@
 namespace kfr
 {
 
-namespace internal
+namespace internal_generic
 {
 
 struct memory_statistics
@@ -51,6 +51,8 @@ inline memory_statistics& get_memory_statistics()
     return ms;
 }
 
+#pragma pack(push, 1)
+
 struct mem_header
 {
     u8 offset;
@@ -60,12 +62,17 @@ struct mem_header
     unsigned int references_uint;
     size_t size;
 
-    CMT_INLINE std::atomic_uint& references() { return reinterpret_cast<std::atomic_uint&>(references_uint); }
+    KFR_MEM_INTRINSIC std::atomic_uint& references()
+    {
+        return reinterpret_cast<std::atomic_uint&>(references_uint);
+    }
 }
 #ifdef CMT_GNU_ATTRIBUTES
 __attribute__((__packed__))
 #endif
 ;
+
+#pragma pack(pop)
 
 inline mem_header* aligned_header(void* ptr) { return ptr_cast<mem_header>(ptr) - 1; }
 
@@ -103,58 +110,58 @@ inline void aligned_free(void* ptr)
 }
 
 inline void aligned_release(void* ptr) { aligned_free(ptr); }
-} // namespace internal
+} // namespace internal_generic
 
 /// @brief Allocates aligned memory
 template <typename T = void, size_t alignment = platform<>::native_cache_alignment>
-CMT_INLINE T* aligned_allocate(size_t size = 1)
+KFR_INTRINSIC T* aligned_allocate(size_t size = 1)
 {
     T* ptr = static_cast<T*>(CMT_ASSUME_ALIGNED(
-        internal::aligned_malloc(std::max(alignment, size * details::elementsize<T>()), alignment),
+        internal_generic::aligned_malloc(std::max(alignment, size * details::elementsize<T>()), alignment),
         alignment));
     return ptr;
 }
 
 /// @brief Deallocates aligned memory
 template <typename T = void>
-CMT_INLINE void aligned_deallocate(T* ptr)
+KFR_INTRINSIC void aligned_deallocate(T* ptr)
 {
-    return internal::aligned_free(ptr);
+    return internal_generic::aligned_free(ptr);
 }
 
-namespace internal
+namespace internal_generic
 {
 template <typename T>
 struct aligned_deleter
 {
-    CMT_INLINE void operator()(T* ptr) const { aligned_deallocate(ptr); }
+    KFR_MEM_INTRINSIC void operator()(T* ptr) const { aligned_deallocate(ptr); }
 };
-} // namespace internal
+} // namespace internal_generic
 
 template <typename T>
 struct autofree
 {
-    CMT_INLINE autofree() {}
-    explicit CMT_INLINE autofree(size_t size) : ptr(aligned_allocate<T>(size)) {}
+    KFR_MEM_INTRINSIC autofree() {}
+    explicit KFR_MEM_INTRINSIC autofree(size_t size) : ptr(aligned_allocate<T>(size)) {}
     autofree(const autofree&) = delete;
     autofree& operator=(const autofree&) = delete;
-    autofree(autofree&&) noexcept        = default;
-    autofree& operator=(autofree&&) noexcept = default;
-    CMT_INLINE T& operator[](size_t index) noexcept { return ptr[index]; }
-    CMT_INLINE const T& operator[](size_t index) const noexcept { return ptr[index]; }
+    autofree(autofree&&) CMT_NOEXCEPT    = default;
+    autofree& operator=(autofree&&) CMT_NOEXCEPT = default;
+    KFR_MEM_INTRINSIC T& operator[](size_t index) CMT_NOEXCEPT { return ptr[index]; }
+    KFR_MEM_INTRINSIC const T& operator[](size_t index) const CMT_NOEXCEPT { return ptr[index]; }
 
     template <typename U = T>
-    CMT_INLINE U* data() noexcept
+    KFR_MEM_INTRINSIC U* data() CMT_NOEXCEPT
     {
         return ptr_cast<U>(ptr.get());
     }
     template <typename U = T>
-    CMT_INLINE const U* data() const noexcept
+    KFR_MEM_INTRINSIC const U* data() const CMT_NOEXCEPT
     {
         return ptr_cast<U>(ptr.get());
     }
 
-    std::unique_ptr<T[], internal::aligned_deleter<T>> ptr;
+    std::unique_ptr<T[], internal_generic::aligned_deleter<T>> ptr;
 };
 
 #ifdef KFR_USE_STD_ALLOCATION
@@ -181,14 +188,14 @@ struct allocator
     {
         using other = allocator<U>;
     };
-    constexpr allocator() noexcept                 = default;
-    constexpr allocator(const allocator&) noexcept = default;
+    constexpr allocator() CMT_NOEXCEPT                 = default;
+    constexpr allocator(const allocator&) CMT_NOEXCEPT = default;
     template <typename U>
-    constexpr allocator(const allocator<U>&) noexcept
+    constexpr allocator(const allocator<U>&) CMT_NOEXCEPT
     {
     }
-    pointer address(reference x) const noexcept { return std::addressof(x); }
-    const_pointer address(const_reference x) const noexcept { return std::addressof(x); }
+    pointer address(reference x) const CMT_NOEXCEPT { return std::addressof(x); }
+    const_pointer address(const_reference x) const CMT_NOEXCEPT { return std::addressof(x); }
     pointer allocate(size_type n, std::allocator<void>::const_pointer = 0) const
     {
         pointer result = aligned_allocate<value_type>(n);
@@ -211,12 +218,12 @@ struct allocator
 };
 
 template <typename T1, typename T2>
-constexpr inline bool operator==(const allocator<T1>&, const allocator<T2>&) noexcept
+constexpr inline bool operator==(const allocator<T1>&, const allocator<T2>&) CMT_NOEXCEPT
 {
     return true;
 }
 template <typename T1, typename T2>
-constexpr inline bool operator!=(const allocator<T1>&, const allocator<T2>&) noexcept
+constexpr inline bool operator!=(const allocator<T1>&, const allocator<T2>&) CMT_NOEXCEPT
 {
     return false;
 }
@@ -243,4 +250,5 @@ public:                                                                         
                                                                                                              \
 private:                                                                                                     \
     mutable std::atomic_uintptr_t m_refcount = ATOMIC_VAR_INIT(0);
+
 } // namespace kfr

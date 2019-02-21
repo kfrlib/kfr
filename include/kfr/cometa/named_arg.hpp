@@ -19,10 +19,10 @@ struct named_arg
 
 struct named
 {
-    constexpr named(const char* name) noexcept : name(name) {}
+    constexpr named(const char* name) CMT_NOEXCEPT : name(name) {}
 
     template <typename T>
-    CMT_INTRIN constexpr named_arg<T> operator=(T&& value)
+    CMT_MEM_INTRINSIC constexpr named_arg<T> operator=(T&& value)
     {
         return named_arg<T>{ std::forward<T>(value), name };
     }

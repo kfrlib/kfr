@@ -94,5 +94,7 @@ int main()
     plot_save("biquad_filter_lowpass", output,
               options + ", title='Biquad Low pass filter (0.2, 0.9) (using biquad_filter)'");
 
+    println("SVG plots have been saved to svg directory");
+
     return 0;
 }

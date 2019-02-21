@@ -57,5 +57,7 @@ int main()
     output = window_kaiser(output.size(), 2.5);
     plot_save("window_kaiser", output, options + ", title='Kaiser window'");
 
+    println("SVG plots have been saved to svg directory");
+
     return 0;
 }

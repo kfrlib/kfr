@@ -72,5 +72,7 @@ int main()
         plot_save("audio_draft_quality", "audio_draft_quality.wav", "");
     }
 
+    println("SVG plots have been saved to svg directory");
+
     return 0;
 }

@@ -11,7 +11,9 @@ set (CMAKE_CXX_COMPILER_WORKS TRUE)
 set (CMAKE_C_COMPILER_WORKS TRUE)
 
 set (ARM_ROOT "/usr/arm-linux-gnueabihf/include")
-set (GCC_VER 5.4.0)
+if (NOT GCC_VER)
+    set (GCC_VER 5.4.0)
+endif ()
 set (SYS_PATHS "-isystem ${ARM_ROOT}/c++/${GCC_VER} -isystem ${ARM_ROOT}/c++/${GCC_VER}/backward -isystem ${ARM_ROOT}/c++/${GCC_VER}/arm-linux-gnueabihf -isystem ${ARM_ROOT}")
 
 set (ARM_COMMON_FLAGS "-target arm-linux-gnueabihf -mcpu=cortex-a15 -mfpu=neon-vfpv4 -mfloat-abi=hard -static")

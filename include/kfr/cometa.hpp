@@ -8,11 +8,15 @@
 #include <cstdint>
 #include <cstdlib>
 #include <limits>
+#include <random>
 #include <type_traits>
 #include <utility>
 
 CMT_PRAGMA_GNU(GCC diagnostic push)
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpragmas")
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wunknown-warning-option")
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wmaybe-uninitialized")
 
 CMT_PRAGMA_MSVC(warning(push))
 CMT_PRAGMA_MSVC(warning(disable : 4814))
@@ -26,13 +30,13 @@ using std::size_t;
 #if __cplusplus >= 201103L || CMT_MSC_VER >= 1900 || CMT_HAS_FEATURE(cxx_constexpr)
 
 template <typename T, size_t N>
-constexpr inline static size_t arraysize(const T (&)[N]) noexcept
+constexpr inline static size_t arraysize(const T (&)[N]) CMT_NOEXCEPT
 {
     return N;
 }
 
 template <typename T, size_t N>
-constexpr inline static std::integral_constant<size_t, N> carraysize(const T (&)[N]) noexcept
+constexpr inline static std::integral_constant<size_t, N> carraysize(const T (&)[N]) CMT_NOEXCEPT
 {
     return {};
 }
@@ -173,9 +177,6 @@ using is_template_arg = std::integral_constant<bool, std::is_integral<T>::value 
 template <typename T>
 using decay = typename std::decay<T>::type;
 
-template <typename... T>
-using decay_common = decay<common_type<T...>>;
-
 template <typename T1, typename T2 = void, typename... Ts>
 constexpr size_t typeindex()
 {
@@ -253,7 +254,7 @@ namespace ops
 {
 struct empty
 {
-    constexpr empty() noexcept {}
+    constexpr empty() CMT_NOEXCEPT {}
 };
 } // namespace ops
 
@@ -261,9 +262,9 @@ template <typename T, T val>
 struct cval_t : ops::empty
 {
     constexpr static T value = val;
-    constexpr cval_t() noexcept {}
-    constexpr cval_t(const cval_t&) noexcept = default;
-    constexpr cval_t(cval_t&&) noexcept      = default;
+    constexpr cval_t() CMT_NOEXCEPT {}
+    constexpr cval_t(const cval_t&) CMT_NOEXCEPT = default;
+    constexpr cval_t(cval_t&&) CMT_NOEXCEPT      = default;
     typedef T value_type;
     typedef cval_t type;
     constexpr operator value_type() const { return value; }
@@ -386,6 +387,8 @@ struct get_nth_type<index>
 template <typename T, T... values>
 struct cvals_t : ops::empty
 {
+    constexpr cvals_t() CMT_NOEXCEPT = default;
+
     using type = cvals_t<T, values...>;
     constexpr static size_t size() { return sizeof...(values); }
     template <size_t index>
@@ -413,12 +416,13 @@ struct cvals_t : ops::empty
     constexpr cvals_t<T, details::get_nth_e<indices, type>::value...> operator[](
         cvals_t<size_t, indices...>) const
     {
+        //        static_assert(sizeof(T)==0, "+++++++++++++++++++++++++++++");
         return {};
     }
 
     // MSVC requires static_cast<T> here:
     template <typename Fn>
-    constexpr auto map(Fn&& fn) -> cvals_t<T, static_cast<T>(Fn()(values))...>
+    constexpr auto map(Fn&&) const -> cvals_t<T, static_cast<T>(Fn()(values))...>
     {
         return {};
     }
@@ -487,6 +491,10 @@ constexpr inline T cprod(cvals_t<T, first, rest...>)
 template <typename T>
 struct ctype_t
 {
+#ifdef CMT_COMPILER_INTEL
+    constexpr ctype_t() CMT_NOEXCEPT               = default;
+    constexpr ctype_t(const ctype_t&) CMT_NOEXCEPT = default;
+#endif
     using type = T;
 };
 
@@ -510,8 +518,14 @@ struct ctypes_t
 
 namespace details
 {
-template <typename T1, typename T2>
+template <typename T1, typename... Ts>
 struct concat_impl;
+
+template <typename T>
+struct concat_impl<T>
+{
+    using type = T;
+};
 
 template <typename T, T... values1, T... values2>
 struct concat_impl<cvals_t<T, values1...>, cvals_t<T, values2...>>
@@ -523,12 +537,19 @@ struct concat_impl<ctypes_t<types1...>, ctypes_t<types2...>>
 {
     using type = ctypes_t<types1..., types2...>;
 };
-} // namespace details
-template <typename T1, typename T2>
-using concat_lists = typename details::concat_impl<T1, T2>::type;
 
-template <typename T1, typename T2>
-constexpr inline concat_lists<T1, T2> cconcat(T1, T2)
+template <typename T1, typename T2, typename T3, typename... Ts>
+struct concat_impl<T1, T2, T3, Ts...>
+{
+    using type = typename concat_impl<typename concat_impl<T1, T2>::type, T3, Ts...>::type;
+};
+
+} // namespace details
+template <typename T1, typename... Ts>
+using concat_lists = typename details::concat_impl<decay<T1>, decay<Ts>...>::type;
+
+template <typename T1, typename... Ts>
+constexpr inline concat_lists<T1, Ts...> cconcat(T1, Ts...)
 {
     return {};
 }
@@ -584,7 +605,7 @@ template <typename Fn>
 using function_result = typename details::function_arguments_impl<decltype(&Fn::operator())>::result;
 
 template <typename T1, typename T2>
-using cfilter_t = typename details::filter_impl<T1, T2>::type;
+using cfilter_t = typename details::filter_impl<decay<T1>, decay<T2>>::type;
 
 template <typename T, T... vals, bool... flags,
           typename Ret = cfilter_t<cvals_t<T, vals...>, cvals_t<bool, flags...>>>
@@ -659,15 +680,13 @@ CMT_BIN_OP(^)
 
 namespace details
 {
-template <typename T, size_t Nsize, T Nstart, ptrdiff_t Nstep>
-struct cvalseq_impl;
 
 template <typename T, size_t Nsize, T Nstart, ptrdiff_t Nstep>
-using cgen_seq = typename cvalseq_impl<T, Nsize, Nstart, Nstep>::type;
-
-template <typename T, size_t Nsize, T Nstart, ptrdiff_t Nstep>
-struct cvalseq_impl : concat_impl<cgen_seq<T, Nsize / 2, Nstart, Nstep>,
-                                  cgen_seq<T, Nsize - Nsize / 2, Nstart + (Nsize / 2) * Nstep, Nstep>>
+struct cvalseq_impl
+    : concat_impl<typename cvalseq_impl<T, Nsize / 2, Nstart, Nstep>::type,
+                  typename cvalseq_impl<T, Nsize - Nsize / 2,
+                                        static_cast<T>(Nstart + static_cast<ptrdiff_t>(Nsize / 2) * Nstep),
+                                        Nstep>::type>
 {
 };
 
@@ -677,6 +696,10 @@ struct cvalseq_impl<T, 0, Nstart, Nstep> : cvals_t<T>
 };
 template <typename T, T Nstart, ptrdiff_t Nstep>
 struct cvalseq_impl<T, 1, Nstart, Nstep> : cvals_t<T, static_cast<T>(Nstart)>
+{
+};
+template <typename T, T Nstart, ptrdiff_t Nstep>
+struct cvalseq_impl<T, 2, Nstart, Nstep> : cvals_t<T, static_cast<T>(Nstart), static_cast<T>(Nstart + Nstep)>
 {
 };
 } // namespace details
@@ -691,9 +714,11 @@ template <typename... List>
 using indicesfor_t = cvalseq_t<size_t, sizeof...(List), 0>;
 
 template <size_t group, size_t... indices, size_t N = group * sizeof...(indices)>
-constexpr inline auto scale(csizes_t<indices...> i) noexcept
+constexpr inline auto scale(csizes_t<indices...> i) CMT_NOEXCEPT
 {
-    return i[csizeseq_t<N>() / csize_t<group>()] * csize_t<group>() + csizeseq_t<N>() % csize_t<group>();
+    return cconcat(csizeseq_t<group, group * indices>()...);
+    //    return i[csizeseq_t<N>() / csize_t<group>()] * csize_t<group>() + csizeseq_t<N>() %
+    //    csize_t<group>();
 }
 
 namespace details
@@ -814,12 +839,14 @@ constexpr inline unsigned ilog2(T n, unsigned p = 0)
     return (n <= 1) ? p : ilog2(n / 2, p + 1);
 }
 
+/// @brief Returns a nearest power of two that is greater or equal than n
 template <typename T>
 constexpr inline T next_poweroftwo(T n)
 {
     return n > 2 ? T(1) << (ilog2(n - 1) + 1) : n;
 }
 
+/// @brief Returns a nearest power of two that is less or equal than n
 template <typename T>
 constexpr inline T prev_poweroftwo(T n)
 {
@@ -1007,7 +1034,7 @@ template <>
 constexpr size_t elementsize<void>()
 {
     return 1;
-};
+}
 } // namespace details
 
 /// @brief Utility typedef used to disable type deduction
@@ -1018,7 +1045,7 @@ using identity = typename details::identity_impl<T>::type;
 struct swallow
 {
     template <typename... T>
-    CMT_INTRIN constexpr swallow(T&&...) noexcept
+    CMT_MEM_INTRINSIC constexpr swallow(T&&...) CMT_NOEXCEPT
     {
     }
 };
@@ -1029,52 +1056,52 @@ struct carray;
 template <typename T>
 struct carray<T, 1>
 {
-    CMT_INTRIN constexpr carray() noexcept = default;
-    CMT_INTRIN constexpr carray(T val) noexcept : val(val) {}
+    CMT_MEM_INTRINSIC constexpr carray() CMT_NOEXCEPT = default;
+    CMT_MEM_INTRINSIC constexpr carray(T val) CMT_NOEXCEPT : val(val) {}
 
     template <typename Fn, size_t index = 0, CMT_ENABLE_IF(is_callable<Fn, csize_t<index>>::value)>
-    CMT_INTRIN constexpr carray(Fn&& fn, csize_t<index> = csize_t<index>{}) noexcept
+    CMT_MEM_INTRINSIC constexpr carray(Fn&& fn, csize_t<index> = csize_t<index>{}) CMT_NOEXCEPT
         : val(static_cast<T>(fn(csize_t<index>())))
     {
     }
 
-    CMT_INTRIN constexpr carray(const carray&) noexcept = default;
-    CMT_INTRIN constexpr carray(carray&&) noexcept      = default;
-    CMT_INTRIN static constexpr size_t size() noexcept { return 1; }
+    CMT_MEM_INTRINSIC constexpr carray(const carray&) CMT_NOEXCEPT = default;
+    CMT_MEM_INTRINSIC constexpr carray(carray&&) CMT_NOEXCEPT      = default;
+    CMT_MEM_INTRINSIC static constexpr size_t size() CMT_NOEXCEPT { return 1; }
 
     template <size_t index>
-    CMT_INTRIN constexpr T& get(csize_t<index>) noexcept
+    CMT_MEM_INTRINSIC constexpr T& get(csize_t<index>) CMT_NOEXCEPT
     {
         static_assert(index == 0, "carray: Array index is out of range");
         return val;
     }
     template <size_t index>
-    CMT_INTRIN constexpr const T& get(csize_t<index>) const noexcept
+    CMT_MEM_INTRINSIC constexpr const T& get(csize_t<index>) const CMT_NOEXCEPT
     {
         static_assert(index == 0, "carray: Array index is out of range");
         return val;
     }
     template <size_t index>
-    CMT_INTRIN constexpr T& get() noexcept
+    CMT_MEM_INTRINSIC constexpr T& get() CMT_NOEXCEPT
     {
         return get(csize_t<index>());
     }
     template <size_t index>
-    CMT_INTRIN constexpr const T& get() const noexcept
+    CMT_MEM_INTRINSIC constexpr const T& get() const CMT_NOEXCEPT
     {
         return get(csize_t<index>());
     }
-    CMT_INTRIN constexpr const T* front() const noexcept { return val; }
-    CMT_INTRIN constexpr T* front() noexcept { return val; }
-    CMT_INTRIN constexpr const T* back() const noexcept { return val; }
-    CMT_INTRIN constexpr T* back() noexcept { return val; }
-    CMT_INTRIN constexpr const T* begin() const noexcept { return &val; }
-    CMT_INTRIN constexpr const T* end() const noexcept { return &val + 1; }
-    CMT_INTRIN constexpr T* begin() noexcept { return &val; }
-    CMT_INTRIN constexpr T* end() noexcept { return &val + 1; }
-    CMT_INTRIN constexpr const T* data() const noexcept { return begin(); }
-    CMT_INTRIN constexpr T* data() noexcept { return begin(); }
-    CMT_INTRIN constexpr bool empty() const noexcept { return false; }
+    CMT_MEM_INTRINSIC constexpr const T* front() const CMT_NOEXCEPT { return val; }
+    CMT_MEM_INTRINSIC constexpr T* front() CMT_NOEXCEPT { return val; }
+    CMT_MEM_INTRINSIC constexpr const T* back() const CMT_NOEXCEPT { return val; }
+    CMT_MEM_INTRINSIC constexpr T* back() CMT_NOEXCEPT { return val; }
+    CMT_MEM_INTRINSIC constexpr const T* begin() const CMT_NOEXCEPT { return &val; }
+    CMT_MEM_INTRINSIC constexpr const T* end() const CMT_NOEXCEPT { return &val + 1; }
+    CMT_MEM_INTRINSIC constexpr T* begin() CMT_NOEXCEPT { return &val; }
+    CMT_MEM_INTRINSIC constexpr T* end() CMT_NOEXCEPT { return &val + 1; }
+    CMT_MEM_INTRINSIC constexpr const T* data() const CMT_NOEXCEPT { return begin(); }
+    CMT_MEM_INTRINSIC constexpr T* data() CMT_NOEXCEPT { return begin(); }
+    CMT_MEM_INTRINSIC constexpr bool empty() const CMT_NOEXCEPT { return false; }
     T val;
 };
 
@@ -1082,55 +1109,56 @@ template <typename T, size_t N>
 struct carray : carray<T, N - 1>
 {
     template <typename... Ts>
-    CMT_INTRIN constexpr carray(T first, Ts... list) noexcept : carray<T, N - 1>(list...), val(first)
+    CMT_MEM_INTRINSIC constexpr carray(T first, Ts... list) CMT_NOEXCEPT : carray<T, N - 1>(list...),
+                                                                           val(first)
     {
         static_assert(sizeof...(list) + 1 == N, "carray: Argument count is invalid");
     }
 
     template <typename Fn, size_t index = N - 1>
-    CMT_INTRIN constexpr carray(Fn&& fn, csize_t<index> = csize_t<index>{}) noexcept
+    CMT_MEM_INTRINSIC constexpr carray(Fn&& fn, csize_t<index> = csize_t<index>{}) CMT_NOEXCEPT
         : carray<T, N - 1>(std::forward<Fn>(fn), csize_t<index - 1>()),
           val(static_cast<T>(fn(csize_t<index>())))
     {
     }
 
-    CMT_INTRIN constexpr carray() noexcept              = default;
-    CMT_INTRIN constexpr carray(const carray&) noexcept = default;
-    CMT_INTRIN constexpr carray(carray&&) noexcept      = default;
-    CMT_INTRIN static constexpr size_t size() noexcept { return N; }
-    CMT_INTRIN constexpr T& get(csize_t<N - 1>) noexcept { return val; }
+    CMT_MEM_INTRINSIC constexpr carray() CMT_NOEXCEPT              = default;
+    CMT_MEM_INTRINSIC constexpr carray(const carray&) CMT_NOEXCEPT = default;
+    CMT_MEM_INTRINSIC constexpr carray(carray&&) CMT_NOEXCEPT      = default;
+    CMT_MEM_INTRINSIC static constexpr size_t size() CMT_NOEXCEPT { return N; }
+    CMT_MEM_INTRINSIC constexpr T& get(csize_t<N - 1>) CMT_NOEXCEPT { return val; }
     template <size_t index>
-    CMT_INTRIN constexpr T& get(csize_t<index>) noexcept
+    CMT_MEM_INTRINSIC constexpr T& get(csize_t<index>) CMT_NOEXCEPT
     {
         return carray<T, N - 1>::get(csize_t<index>());
     }
-    CMT_INTRIN constexpr const T& get(csize_t<N - 1>) const noexcept { return val; }
+    CMT_MEM_INTRINSIC constexpr const T& get(csize_t<N - 1>) const CMT_NOEXCEPT { return val; }
     template <size_t index>
-    CMT_INTRIN constexpr const T& get(csize_t<index>) const noexcept
+    CMT_MEM_INTRINSIC constexpr const T& get(csize_t<index>) const CMT_NOEXCEPT
     {
         return carray<T, N - 1>::get(csize_t<index>());
     }
     template <size_t index>
-    CMT_INTRIN constexpr T& get() noexcept
+    CMT_MEM_INTRINSIC constexpr T& get() CMT_NOEXCEPT
     {
         return get(csize_t<index>());
     }
     template <size_t index>
-    CMT_INTRIN constexpr const T& get() const noexcept
+    CMT_MEM_INTRINSIC constexpr const T& get() const CMT_NOEXCEPT
     {
         return get(csize_t<index>());
     }
-    CMT_INTRIN constexpr const T* front() const noexcept { return carray<T, N - 1>::front(); }
-    CMT_INTRIN constexpr T* front() noexcept { return carray<T, N - 1>::front(); }
-    CMT_INTRIN constexpr const T* back() const noexcept { return val; }
-    CMT_INTRIN constexpr T* back() noexcept { return val; }
-    CMT_INTRIN constexpr const T* begin() const noexcept { return carray<T, N - 1>::begin(); }
-    CMT_INTRIN constexpr const T* end() const noexcept { return &val + 1; }
-    CMT_INTRIN constexpr T* begin() noexcept { return carray<T, N - 1>::begin(); }
-    CMT_INTRIN constexpr T* end() noexcept { return &val + 1; }
-    CMT_INTRIN constexpr const T* data() const noexcept { return begin(); }
-    CMT_INTRIN constexpr T* data() noexcept { return begin(); }
-    CMT_INTRIN constexpr bool empty() const noexcept { return false; }
+    CMT_MEM_INTRINSIC constexpr const T* front() const CMT_NOEXCEPT { return carray<T, N - 1>::front(); }
+    CMT_MEM_INTRINSIC constexpr T* front() CMT_NOEXCEPT { return carray<T, N - 1>::front(); }
+    CMT_MEM_INTRINSIC constexpr const T* back() const CMT_NOEXCEPT { return val; }
+    CMT_MEM_INTRINSIC constexpr T* back() CMT_NOEXCEPT { return val; }
+    CMT_MEM_INTRINSIC constexpr const T* begin() const CMT_NOEXCEPT { return carray<T, N - 1>::begin(); }
+    CMT_MEM_INTRINSIC constexpr const T* end() const CMT_NOEXCEPT { return &val + 1; }
+    CMT_MEM_INTRINSIC constexpr T* begin() CMT_NOEXCEPT { return carray<T, N - 1>::begin(); }
+    CMT_MEM_INTRINSIC constexpr T* end() CMT_NOEXCEPT { return &val + 1; }
+    CMT_MEM_INTRINSIC constexpr const T* data() const CMT_NOEXCEPT { return begin(); }
+    CMT_MEM_INTRINSIC constexpr T* data() CMT_NOEXCEPT { return begin(); }
+    CMT_MEM_INTRINSIC constexpr bool empty() const CMT_NOEXCEPT { return false; }
 
 private:
     T val;
@@ -1162,43 +1190,50 @@ private:
 
 /// @brief Function that returns its first argument
 template <typename T>
-CMT_INTRIN constexpr T&& pass_through(T&& x) noexcept
+CMT_INTRINSIC constexpr T&& pass_through(T&& x) CMT_NOEXCEPT
 {
     return std::forward<T>(x);
 }
 
 /// @brief Function that returns void and ignores all its arguments
 template <typename... Ts>
-CMT_INTRIN constexpr void noop(Ts&&...) noexcept
+CMT_INTRINSIC constexpr void noop(Ts&&...) CMT_NOEXCEPT
 {
 }
 
 /// @brief Function that returns its first argument and ignores all other arguments
 template <typename T1, typename... Ts>
-CMT_INTRIN constexpr T1&& get_first(T1&& x, Ts&&...) noexcept
+CMT_INTRINSIC constexpr T1&& get_first(T1&& x, Ts&&...) CMT_NOEXCEPT
 {
     return std::forward<T1>(x);
 }
 
 /// @brief Function that returns its second argument and ignores all other arguments
 template <typename T1, typename T2, typename... Ts>
-CMT_INTRIN constexpr T2&& get_second(T1, T2&& x, Ts&&...) noexcept
+CMT_INTRINSIC constexpr T2&& get_second(T1, T2&& x, Ts&&...) CMT_NOEXCEPT
 {
     return std::forward<T2>(x);
 }
 
 /// @brief Function that returns its third argument and ignores all other arguments
 template <typename T1, typename T2, typename T3, typename... Ts>
-CMT_INTRIN constexpr T3&& get_third(T1&&, T2&&, T3&& x, Ts&&...) noexcept
+CMT_INTRINSIC constexpr T3&& get_third(T1&&, T2&&, T3&& x, Ts&&...) CMT_NOEXCEPT
 {
     return std::forward<T3>(x);
 }
 
 /// @brief Function that returns value-initialization of type T and ignores all its arguments
 template <typename T, typename... Ts>
-CMT_INTRIN constexpr T returns(Ts&&...)
+CMT_INTRINSIC constexpr T returns(Ts&&...)
 {
     return T();
+}
+
+/// @brief Function that returns constant of type T and ignores all its arguments
+template <typename T, T value, typename... Args>
+CMT_INTRINSIC constexpr T return_constant(Args&&...)
+{
+    return value;
 }
 
 CMT_FN(pass_through)
@@ -1208,33 +1243,43 @@ CMT_FN(get_second)
 CMT_FN(get_third)
 CMT_FN_TPL((typename T), (T), returns)
 
+template <typename T, T value>
+struct fn_return_constant
+{
+    template <typename... Args>
+    constexpr T operator()(Args&&...) const noexcept
+    {
+        return value;
+    }
+};
+
 template <typename T1, typename T2>
-CMT_INTRIN bool is_equal(const T1& x, const T2& y)
+CMT_INTRINSIC bool is_equal(const T1& x, const T2& y)
 {
     return x == y;
 }
 template <typename T1, typename T2>
-CMT_INTRIN bool is_notequal(const T1& x, const T2& y)
+CMT_INTRINSIC bool is_notequal(const T1& x, const T2& y)
 {
     return x != y;
 }
 template <typename T1, typename T2>
-CMT_INTRIN bool is_less(const T1& x, const T2& y)
+CMT_INTRINSIC bool is_less(const T1& x, const T2& y)
 {
     return x < y;
 }
 template <typename T1, typename T2>
-CMT_INTRIN bool is_greater(const T1& x, const T2& y)
+CMT_INTRINSIC bool is_greater(const T1& x, const T2& y)
 {
     return x > y;
 }
 template <typename T1, typename T2>
-CMT_INTRIN bool is_lessorequal(const T1& x, const T2& y)
+CMT_INTRINSIC bool is_lessorequal(const T1& x, const T2& y)
 {
     return x <= y;
 }
 template <typename T1, typename T2>
-CMT_INTRIN bool is_greaterorequal(const T1& x, const T2& y)
+CMT_INTRINSIC bool is_greaterorequal(const T1& x, const T2& y)
 {
     return x >= y;
 }
@@ -1313,7 +1358,7 @@ void cforeach_impl(Fn&& fn)
 #endif
 
 template <typename T, T... values, typename Fn>
-CMT_INTRIN void cforeach(cvals_t<T, values...>, Fn&& fn)
+CMT_INTRINSIC void cforeach(cvals_t<T, values...>, Fn&& fn)
 {
 #ifdef CMT_COMPILER_CLANG
     swallow{ (fn(cval_t<T, values>()), void(), 0)... };
@@ -1323,7 +1368,7 @@ CMT_INTRIN void cforeach(cvals_t<T, values...>, Fn&& fn)
 }
 
 template <typename T, typename Fn, CMT_ENABLE_IF(has_begin_end<T>::value)>
-CMT_INTRIN void cforeach(T&& list, Fn&& fn)
+CMT_INTRINSIC void cforeach(T&& list, Fn&& fn)
 {
     for (const auto& v : list)
     {
@@ -1332,7 +1377,7 @@ CMT_INTRIN void cforeach(T&& list, Fn&& fn)
 }
 
 template <typename T, size_t N, typename Fn>
-CMT_INTRIN void cforeach(const T (&array)[N], Fn&& fn)
+CMT_INTRINSIC void cforeach(const T (&array)[N], Fn&& fn)
 {
     for (size_t i = 0; i < N; i++)
     {
@@ -1344,59 +1389,94 @@ namespace details
 {
 
 template <size_t index, typename... types>
-CMT_INTRIN auto get_type_arg(ctypes_t<types...>)
+CMT_INTRINSIC auto get_type_arg(ctypes_t<types...>)
 {
     return ctype_t<type_of<details::get_nth_type<index, types...>>>();
 }
 
 template <typename T0, typename... types, typename Fn, size_t... indices>
-CMT_INTRIN void cforeach_types_impl(ctypes_t<T0, types...> type_list, Fn&& fn, csizes_t<indices...>)
+CMT_INTRINSIC void cforeach_types_impl(ctypes_t<T0, types...> type_list, Fn&& fn, csizes_t<indices...>)
 {
     swallow{ (fn(get_type_arg<indices>(type_list)), void(), 0)... };
+}
+template <typename Fn>
+CMT_INTRINSIC void cforeach_types_impl(ctypes_t<>, Fn&&, csizes_t<>)
+{
 }
 } // namespace details
 
 template <typename... Ts, typename Fn>
-CMT_INTRIN void cforeach(ctypes_t<Ts...> types, Fn&& fn)
+CMT_INTRINSIC void cforeach(ctypes_t<Ts...> types, Fn&& fn)
 {
     details::cforeach_types_impl(types, std::forward<Fn>(fn), csizeseq_t<sizeof...(Ts)>());
 }
 
 template <typename A0, typename A1, typename Fn>
-CMT_INTRIN void cforeach(A0&& a0, A1&& a1, Fn&& fn)
+CMT_INTRINSIC void cforeach(A0&& a0, A1&& a1, Fn&& fn)
 {
-    cforeach(std::forward<A0>(a0),
-             [&](auto v0) { cforeach(std::forward<A1>(a1), [&](auto v1) { fn(v0, v1); }); });
+    // Default capture causes ICE in Intel C++
+    cforeach(std::forward<A0>(a0), //
+             [&a1, &fn](auto v0) { //
+                 cforeach(std::forward<A1>(a1), //
+                          [&v0, &fn](auto v1) { fn(v0, v1); });
+             });
 }
 
 template <typename A0, typename A1, typename A2, typename Fn>
-CMT_INTRIN void cforeach(A0&& a0, A1&& a1, A2&& a2, Fn&& fn)
+CMT_INTRINSIC void cforeach(A0&& a0, A1&& a1, A2&& a2, Fn&& fn)
 {
-    cforeach(std::forward<A0>(a0), [&](auto v0) {
-        cforeach(std::forward<A1>(a1),
-                 [&](auto v1) { cforeach(std::forward<A2>(a2), [&](auto v2) { fn(v0, v1, v2); }); });
-    });
+    // Default capture causes ICE in Intel C++
+    cforeach(std::forward<A0>(a0), //
+             [&a1, &a2, &fn](auto v0) { //
+                 cforeach(std::forward<A1>(a1), //
+                          [&v0, &a2, &fn](auto v1) { //
+                              cforeach(std::forward<A2>(a2), //
+                                       [&v0, &v1, &fn](auto v2) { //
+                                           fn(v0, v1, v2);
+                                       });
+                          });
+             });
 }
+
+template <typename A0, typename A1, typename A2, typename A3, typename Fn>
+CMT_INTRINSIC void cforeach(A0&& a0, A1&& a1, A2&& a2, A3&& a3, Fn&& fn)
+{
+    // Default capture causes ICE in Intel C++
+    cforeach(std::forward<A0>(a0), //
+             [&a1, &a2, &a3, &fn](auto v0) { //
+                 cforeach(std::forward<A1>(a1), //
+                          [&v0, &a2, &a3, &fn](auto v1) { //
+                              cforeach(std::forward<A2>(a2), //
+                                       [&v0, &v1, &a3, &fn](auto v2) { //
+                                           cforeach(std::forward<A3>(a3), //
+                                                    [&v0, &v1, &v2, &fn](auto v3) //
+                                                    { fn(v0, v1, v2, v3); });
+                                       });
+                          });
+             });
+}
+
 template <typename TrueFn, typename FalseFn = fn_noop>
-CMT_INTRIN decltype(auto) cif(cbool_t<true>, TrueFn&& truefn, FalseFn&& = FalseFn())
+CMT_INTRINSIC decltype(auto) cif(cbool_t<true>, TrueFn&& truefn, FalseFn&& = FalseFn())
 {
     return truefn(ctrue);
 }
 
 template <typename TrueFn, typename FalseFn = fn_noop>
-CMT_INTRIN decltype(auto) cif(cbool_t<false>, TrueFn&&, FalseFn&& falsefn = FalseFn())
+CMT_INTRINSIC decltype(auto) cif(cbool_t<false>, TrueFn&&, FalseFn&& falsefn = FalseFn())
 {
     return falsefn(cfalse);
 }
 
 template <typename T, T start, T stop, typename BodyFn>
-CMT_INTRIN decltype(auto) cfor(cval_t<T, start>, cval_t<T, stop>, BodyFn&& bodyfn)
+CMT_INTRINSIC decltype(auto) cfor(cval_t<T, start>, cval_t<T, stop>, BodyFn&& bodyfn)
 {
     return cforeach(cvalseq_t<T, stop - start, start>(), std::forward<BodyFn>(bodyfn));
 }
 
 template <typename T, T... vs, typename U, typename Function, typename Fallback = fn_noop>
-void cswitch(cvals_t<T, vs...>, const U& value, Function&& function, Fallback&& fallback = Fallback())
+CMT_INTRINSIC void cswitch(cvals_t<T, vs...>, const U& value, Function&& function,
+                           Fallback&& fallback = Fallback())
 {
     bool result = false;
     swallow{ (result = result || ((vs == value) ? (function(cval_t<T, vs>()), void(), true) : false), void(),
@@ -1406,14 +1486,15 @@ void cswitch(cvals_t<T, vs...>, const U& value, Function&& function, Fallback&& 
 }
 
 template <typename T, typename Fn, typename DefFn = fn_noop, typename CmpFn = fn_is_equal>
-CMT_INTRIN decltype(auto) cswitch(cvals_t<T>, identity<T>, Fn&&, DefFn&& deffn = DefFn(), CmpFn&& = CmpFn())
+CMT_INTRINSIC decltype(auto) cswitch(cvals_t<T>, identity<T>, Fn&&, DefFn&& deffn = DefFn(),
+                                     CmpFn&& = CmpFn())
 {
     return deffn();
 }
 
 template <typename T, T v0, T... values, typename Fn, typename DefFn = fn_noop, typename CmpFn = fn_is_equal>
-CMT_INTRIN decltype(auto) cswitch(cvals_t<T, v0, values...>, identity<T> value, Fn&& fn,
-                                  DefFn&& deffn = DefFn(), CmpFn&& cmpfn = CmpFn())
+CMT_INTRINSIC decltype(auto) cswitch(cvals_t<T, v0, values...>, identity<T> value, Fn&& fn,
+                                     DefFn&& deffn = DefFn(), CmpFn&& cmpfn = CmpFn())
 {
     if (cmpfn(value, v0))
     {
@@ -1428,7 +1509,6 @@ CMT_INTRIN decltype(auto) cswitch(cvals_t<T, v0, values...>, identity<T> value, 
 
 namespace details
 {
-
 template <typename T, typename Fn1, typename Fn2, typename... Fns>
 inline decltype(auto) cmatch_impl(T&& value, Fn1&& first, Fn2&& second, Fns&&... rest);
 template <typename T, typename Fn, typename... Ts>
@@ -1491,15 +1571,15 @@ template <typename Fn>
 struct fn_noinline
 {
     template <typename... Args>
-    CMT_INTRIN result_of<Fn(Args...)> operator()(Args&&... args) const
+    CMT_MEM_INTRINSIC result_of<Fn(Args...)> operator()(Args&&... args) const
     {
         return noinline(Fn{}, std::forward<Args>(args)...);
     }
-};
+}; // namespace cometa
 
 template <typename... Args, typename Fn, typename Ret = decltype(std::declval<Fn>()(std::declval<Args>()...)),
           typename NonMemFn = Ret (*)(Fn*, Args...)>
-CMT_INTRIN NonMemFn make_nonmember(const Fn&)
+CMT_INTRINSIC NonMemFn make_nonmember(const Fn&)
 {
     return [](Fn* fn, Args... args) -> Ret { return fn->operator()(std::forward<Args>(args)...); };
 }
@@ -1510,6 +1590,11 @@ constexpr inline T choose_const()
     static_assert(sizeof(T) != 0, "T not found in the list of template arguments");
     return T();
 }
+template <typename T, typename C1>
+constexpr inline T choose_const_fallback(C1 c1)
+{
+    return static_cast<T>(c1);
+}
 
 /**
  * Selects constant of the specific type
@@ -1518,10 +1603,21 @@ constexpr inline T choose_const()
  * CHECK( choose_const<f64>( 32.0f, 64.0 ) == 64.0 );
  * @endcode
  */
-template <typename T, typename C1, typename... Cs>
-constexpr inline T choose_const(C1 c1, Cs... constants)
+template <typename T, typename C1, typename... Cs, CMT_ENABLE_IF(std::is_same<T, C1>::value)>
+constexpr inline T choose_const(C1 c1, Cs...)
 {
-    return std::is_same<T, C1>::value ? static_cast<T>(c1) : choose_const<T>(constants...);
+    return static_cast<T>(c1);
+}
+template <typename T, typename C1, typename... Cs, CMT_ENABLE_IF(!std::is_same<T, C1>::value)>
+constexpr inline T choose_const(C1, Cs... constants)
+{
+    return choose_const<T>(constants...);
+}
+
+template <typename T, typename C1, typename... Cs>
+constexpr inline T choose_const_fallback(C1 c1, Cs... constants)
+{
+    return std::is_same<T, C1>::value ? static_cast<T>(c1) : choose_const_fallback<T>(constants...);
 }
 
 template <typename Tfrom>
@@ -1529,14 +1625,14 @@ struct autocast_impl
 {
     const Tfrom value;
     template <typename T>
-    CMT_INTRIN constexpr operator T() const noexcept
+    CMT_MEM_INTRINSIC constexpr operator T() const CMT_NOEXCEPT
     {
         return static_cast<T>(value);
     }
 };
 
 template <typename Tfrom>
-CMT_INTRIN constexpr autocast_impl<Tfrom> autocast(const Tfrom& value) noexcept
+CMT_INTRINSIC constexpr autocast_impl<Tfrom> autocast(const Tfrom& value) CMT_NOEXCEPT
 {
     return { value };
 }
@@ -1603,49 +1699,49 @@ CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wundefined-reinterpret-cast")
 #endif
 
 template <typename T, typename U>
-CMT_INLINE constexpr static T& ref_cast(U& ptr)
+CMT_INTRINSIC constexpr static T& ref_cast(U& ptr)
 {
     return reinterpret_cast<T&>(ptr);
 }
 
 template <typename T, typename U>
-CMT_INLINE constexpr static const T& ref_cast(const U& ptr)
+CMT_INTRINSIC constexpr static const T& ref_cast(const U& ptr)
 {
     return reinterpret_cast<const T&>(ptr);
 }
 
 template <typename T, typename U>
-CMT_INLINE constexpr static T* ptr_cast(U* ptr)
+CMT_INTRINSIC constexpr static T* ptr_cast(U* ptr)
 {
     return reinterpret_cast<T*>(ptr);
 }
 
 template <typename T, typename U>
-CMT_INLINE constexpr static const T* ptr_cast(const U* ptr)
+CMT_INTRINSIC constexpr static const T* ptr_cast(const U* ptr)
 {
     return reinterpret_cast<const T*>(ptr);
 }
 
 template <typename T, typename U>
-CMT_INLINE constexpr static T* ptr_cast(U* ptr, ptrdiff_t offset)
+CMT_INTRINSIC constexpr static T* ptr_cast(U* ptr, ptrdiff_t offset)
 {
     return ptr_cast<T>(ptr_cast<unsigned char>(ptr) + offset);
 }
 
 template <typename T, typename U>
-CMT_INLINE constexpr static T* derived_cast(U* ptr)
+CMT_INTRINSIC constexpr static T* derived_cast(U* ptr)
 {
     return static_cast<T*>(ptr);
 }
 
 template <typename T, typename U>
-CMT_INLINE constexpr static const T* derived_cast(const U* ptr)
+CMT_INTRINSIC constexpr static const T* derived_cast(const U* ptr)
 {
     return static_cast<const T*>(ptr);
 }
 
 template <typename T, typename U>
-CMT_INLINE constexpr static T implicit_cast(U&& value)
+CMT_INTRINSIC constexpr static T implicit_cast(U&& value)
 {
     return std::forward<T>(value);
 }
@@ -1750,6 +1846,228 @@ constexpr conditional<std::is_scalar<T>::value, T, const T&> const_min(const T& 
 {
     return x < y ? x : y;
 }
+
+template <int n = 10>
+struct overload_priority : overload_priority<n - 1>
+{
+};
+
+template <>
+struct overload_priority<0>
+{
+};
+
+constexpr overload_priority<> overload_auto{};
+
+using overload_generic = overload_priority<0>;
+
+#define CMT_GEN_LIST1(m, ...) m(0, __VA_ARGS__)
+#define CMT_GEN_LIST2(m, ...) CMT_GEN_LIST1(m, __VA_ARGS__), m(1, __VA_ARGS__)
+#define CMT_GEN_LIST3(m, ...) CMT_GEN_LIST2(m, __VA_ARGS__), m(2, __VA_ARGS__)
+#define CMT_GEN_LIST4(m, ...) CMT_GEN_LIST3(m, __VA_ARGS__), m(3, __VA_ARGS__)
+#define CMT_GEN_LIST5(m, ...) CMT_GEN_LIST4(m, __VA_ARGS__), m(4, __VA_ARGS__)
+#define CMT_GEN_LIST6(m, ...) CMT_GEN_LIST5(m, __VA_ARGS__), m(5, __VA_ARGS__)
+#define CMT_GEN_LIST7(m, ...) CMT_GEN_LIST6(m, __VA_ARGS__), m(6, __VA_ARGS__)
+#define CMT_GEN_LIST8(m, ...) CMT_GEN_LIST7(m, __VA_ARGS__), m(7, __VA_ARGS__)
+#define CMT_GEN_LIST9(m, ...) CMT_GEN_LIST8(m, __VA_ARGS__), m(8, __VA_ARGS__)
+#define CMT_GEN_LIST10(m, ...) CMT_GEN_LIST9(m, __VA_ARGS__), m(9, __VA_ARGS__)
+
+#define CMT_GEN_LIST11(m, ...) CMT_GEN_LIST10(m, __VA_ARGS__), m(10, __VA_ARGS__)
+#define CMT_GEN_LIST12(m, ...) CMT_GEN_LIST11(m, __VA_ARGS__), m(11, __VA_ARGS__)
+#define CMT_GEN_LIST13(m, ...) CMT_GEN_LIST12(m, __VA_ARGS__), m(12, __VA_ARGS__)
+#define CMT_GEN_LIST14(m, ...) CMT_GEN_LIST13(m, __VA_ARGS__), m(13, __VA_ARGS__)
+#define CMT_GEN_LIST15(m, ...) CMT_GEN_LIST14(m, __VA_ARGS__), m(14, __VA_ARGS__)
+#define CMT_GEN_LIST16(m, ...) CMT_GEN_LIST15(m, __VA_ARGS__), m(15, __VA_ARGS__)
+#define CMT_GEN_LIST17(m, ...) CMT_GEN_LIST16(m, __VA_ARGS__), m(16, __VA_ARGS__)
+#define CMT_GEN_LIST18(m, ...) CMT_GEN_LIST17(m, __VA_ARGS__), m(17, __VA_ARGS__)
+#define CMT_GEN_LIST19(m, ...) CMT_GEN_LIST18(m, __VA_ARGS__), m(18, __VA_ARGS__)
+#define CMT_GEN_LIST20(m, ...) CMT_GEN_LIST19(m, __VA_ARGS__), m(19, __VA_ARGS__)
+
+#define CMT_GEN_LIST21(m, ...) CMT_GEN_LIST20(m, __VA_ARGS__), m(20, __VA_ARGS__)
+#define CMT_GEN_LIST22(m, ...) CMT_GEN_LIST21(m, __VA_ARGS__), m(21, __VA_ARGS__)
+#define CMT_GEN_LIST23(m, ...) CMT_GEN_LIST22(m, __VA_ARGS__), m(22, __VA_ARGS__)
+#define CMT_GEN_LIST24(m, ...) CMT_GEN_LIST23(m, __VA_ARGS__), m(23, __VA_ARGS__)
+#define CMT_GEN_LIST25(m, ...) CMT_GEN_LIST24(m, __VA_ARGS__), m(24, __VA_ARGS__)
+#define CMT_GEN_LIST26(m, ...) CMT_GEN_LIST25(m, __VA_ARGS__), m(25, __VA_ARGS__)
+#define CMT_GEN_LIST27(m, ...) CMT_GEN_LIST26(m, __VA_ARGS__), m(26, __VA_ARGS__)
+#define CMT_GEN_LIST28(m, ...) CMT_GEN_LIST27(m, __VA_ARGS__), m(27, __VA_ARGS__)
+#define CMT_GEN_LIST29(m, ...) CMT_GEN_LIST28(m, __VA_ARGS__), m(28, __VA_ARGS__)
+#define CMT_GEN_LIST30(m, ...) CMT_GEN_LIST29(m, __VA_ARGS__), m(29, __VA_ARGS__)
+
+#define CMT_GEN_LIST31(m, ...) CMT_GEN_LIST30(m, __VA_ARGS__), m(30, __VA_ARGS__)
+#define CMT_GEN_LIST32(m, ...) CMT_GEN_LIST31(m, __VA_ARGS__), m(31, __VA_ARGS__)
+#define CMT_GEN_LIST33(m, ...) CMT_GEN_LIST32(m, __VA_ARGS__), m(32, __VA_ARGS__)
+#define CMT_GEN_LIST34(m, ...) CMT_GEN_LIST33(m, __VA_ARGS__), m(33, __VA_ARGS__)
+#define CMT_GEN_LIST35(m, ...) CMT_GEN_LIST34(m, __VA_ARGS__), m(34, __VA_ARGS__)
+#define CMT_GEN_LIST36(m, ...) CMT_GEN_LIST35(m, __VA_ARGS__), m(35, __VA_ARGS__)
+#define CMT_GEN_LIST37(m, ...) CMT_GEN_LIST36(m, __VA_ARGS__), m(36, __VA_ARGS__)
+#define CMT_GEN_LIST38(m, ...) CMT_GEN_LIST37(m, __VA_ARGS__), m(37, __VA_ARGS__)
+#define CMT_GEN_LIST39(m, ...) CMT_GEN_LIST38(m, __VA_ARGS__), m(38, __VA_ARGS__)
+#define CMT_GEN_LIST40(m, ...) CMT_GEN_LIST39(m, __VA_ARGS__), m(39, __VA_ARGS__)
+
+#define CMT_GEN_LIST41(m, ...) CMT_GEN_LIST40(m, __VA_ARGS__), m(40, __VA_ARGS__)
+#define CMT_GEN_LIST42(m, ...) CMT_GEN_LIST41(m, __VA_ARGS__), m(41, __VA_ARGS__)
+#define CMT_GEN_LIST43(m, ...) CMT_GEN_LIST42(m, __VA_ARGS__), m(42, __VA_ARGS__)
+#define CMT_GEN_LIST44(m, ...) CMT_GEN_LIST43(m, __VA_ARGS__), m(43, __VA_ARGS__)
+#define CMT_GEN_LIST45(m, ...) CMT_GEN_LIST44(m, __VA_ARGS__), m(44, __VA_ARGS__)
+#define CMT_GEN_LIST46(m, ...) CMT_GEN_LIST45(m, __VA_ARGS__), m(45, __VA_ARGS__)
+#define CMT_GEN_LIST47(m, ...) CMT_GEN_LIST46(m, __VA_ARGS__), m(46, __VA_ARGS__)
+#define CMT_GEN_LIST48(m, ...) CMT_GEN_LIST47(m, __VA_ARGS__), m(47, __VA_ARGS__)
+#define CMT_GEN_LIST49(m, ...) CMT_GEN_LIST48(m, __VA_ARGS__), m(48, __VA_ARGS__)
+#define CMT_GEN_LIST50(m, ...) CMT_GEN_LIST49(m, __VA_ARGS__), m(49, __VA_ARGS__)
+
+#define CMT_GEN_LIST51(m, ...) CMT_GEN_LIST50(m, __VA_ARGS__), m(50, __VA_ARGS__)
+#define CMT_GEN_LIST52(m, ...) CMT_GEN_LIST51(m, __VA_ARGS__), m(51, __VA_ARGS__)
+#define CMT_GEN_LIST53(m, ...) CMT_GEN_LIST52(m, __VA_ARGS__), m(52, __VA_ARGS__)
+#define CMT_GEN_LIST54(m, ...) CMT_GEN_LIST53(m, __VA_ARGS__), m(53, __VA_ARGS__)
+#define CMT_GEN_LIST55(m, ...) CMT_GEN_LIST54(m, __VA_ARGS__), m(54, __VA_ARGS__)
+#define CMT_GEN_LIST56(m, ...) CMT_GEN_LIST55(m, __VA_ARGS__), m(55, __VA_ARGS__)
+#define CMT_GEN_LIST57(m, ...) CMT_GEN_LIST56(m, __VA_ARGS__), m(56, __VA_ARGS__)
+#define CMT_GEN_LIST58(m, ...) CMT_GEN_LIST57(m, __VA_ARGS__), m(57, __VA_ARGS__)
+#define CMT_GEN_LIST59(m, ...) CMT_GEN_LIST58(m, __VA_ARGS__), m(58, __VA_ARGS__)
+#define CMT_GEN_LIST60(m, ...) CMT_GEN_LIST59(m, __VA_ARGS__), m(59, __VA_ARGS__)
+
+#define CMT_GEN_LIST61(m, ...) CMT_GEN_LIST60(m, __VA_ARGS__), m(60, __VA_ARGS__)
+#define CMT_GEN_LIST62(m, ...) CMT_GEN_LIST61(m, __VA_ARGS__), m(61, __VA_ARGS__)
+#define CMT_GEN_LIST63(m, ...) CMT_GEN_LIST62(m, __VA_ARGS__), m(62, __VA_ARGS__)
+#define CMT_GEN_LIST64(m, ...) CMT_GEN_LIST63(m, __VA_ARGS__), m(63, __VA_ARGS__)
+#define CMT_GEN_LIST65(m, ...) CMT_GEN_LIST64(m, __VA_ARGS__), m(64, __VA_ARGS__)
+#define CMT_GEN_LIST66(m, ...) CMT_GEN_LIST65(m, __VA_ARGS__), m(65, __VA_ARGS__)
+#define CMT_GEN_LIST67(m, ...) CMT_GEN_LIST66(m, __VA_ARGS__), m(66, __VA_ARGS__)
+#define CMT_GEN_LIST68(m, ...) CMT_GEN_LIST67(m, __VA_ARGS__), m(67, __VA_ARGS__)
+#define CMT_GEN_LIST69(m, ...) CMT_GEN_LIST68(m, __VA_ARGS__), m(68, __VA_ARGS__)
+#define CMT_GEN_LIST70(m, ...) CMT_GEN_LIST69(m, __VA_ARGS__), m(69, __VA_ARGS__)
+
+#define CMT_GEN_LIST(c, m, ...) CMT_GEN_LIST##c(m, __VA_ARGS__)
+
+template <typename Tout, typename Tin>
+constexpr CMT_INLINE Tout bitcast_anything(const Tin& in)
+{
+    static_assert(sizeof(Tin) == sizeof(Tout), "Invalid arguments for bitcast_anything");
+#ifdef CMT_COMPILER_INTEL
+    const union {
+        const Tin in;
+        Tout out;
+    } u{ in };
+    return u.out;
+#else
+    union {
+        Tin in;
+        Tout out;
+    } u{ in };
+    return u.out;
+#endif
+}
+
+template <typename T>
+constexpr T dont_deduce(T x)
+{
+    return x;
+}
+
+template <typename Ty, typename T>
+constexpr T just_value(T value)
+{
+    return value;
+}
+
+enum class special_constant
+{
+    undefined,
+    default_constructed,
+    infinity,
+    neg_infinity,
+    min,
+    max,
+    neg_max,
+    lowest,
+    epsilon,
+    integer,
+    floating_point,
+    random_bits,
+};
+
+CMT_PRAGMA_MSVC(warning(push))
+CMT_PRAGMA_MSVC(warning(disable : 4700))
+CMT_PRAGMA_MSVC(warning(disable : 4146))
+struct special_value
+{
+    constexpr special_value(const special_value&) = default;
+    constexpr special_value(special_constant c) : c(c), ll(0), d(0) {}
+    constexpr special_value(double d) : c(special_constant::floating_point), ll(0), d(d) {}
+    constexpr special_value(long long ll) : c(special_constant::integer), ll(ll), d(0) {}
+    constexpr special_value(int i) : c(special_constant::integer), ll(i), d(0) {}
+
+    template <typename T>
+    constexpr T get() const CMT_NOEXCEPT
+    {
+        switch (c)
+        {
+            CMT_PRAGMA_GNU(GCC diagnostic push)
+            CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wuninitialized")
+            CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wmaybe-uninitialized")
+        case special_constant::undefined:
+            T undef;
+            return undef;
+            CMT_PRAGMA_GNU(GCC diagnostic pop)
+        case special_constant::default_constructed:
+            return T{};
+        case special_constant::infinity:
+            return std::numeric_limits<subtype<T>>::infinity();
+        case special_constant::neg_infinity:
+        {
+            subtype<T> gg = std::numeric_limits<subtype<T>>::infinity();
+            return -gg;
+        }
+        case special_constant::min:
+            return std::numeric_limits<subtype<T>>::min();
+        case special_constant::max:
+            return std::numeric_limits<subtype<T>>::max();
+        case special_constant::neg_max:
+            return static_cast<T>(-std::numeric_limits<subtype<T>>::max());
+        case special_constant::lowest:
+            return std::numeric_limits<subtype<T>>::lowest();
+        case special_constant::integer:
+            return static_cast<T>(ll);
+        case special_constant::floating_point:
+            return static_cast<T>(d);
+        case special_constant::random_bits:
+            return random_bits<T>();
+        default:
+            return T{};
+        }
+    }
+
+    template <typename T>
+    constexpr operator T() const CMT_NOEXCEPT
+    {
+        return get<T>();
+    }
+    special_constant c;
+    long long ll;
+    double d;
+
+    static std::mt19937& random_generator()
+    {
+        static std::mt19937 rnd(1);
+        return rnd;
+    }
+
+    template <typename T>
+    static T random_bits()
+    {
+        union {
+            uint32_t bits[(sizeof(T) + sizeof(uint32_t) - 1) / sizeof(uint32_t)];
+            T value;
+        } u;
+        for (uint32_t& b : u.bits)
+        {
+            b = random_generator()();
+        }
+        return u.value;
+    }
+};
+CMT_PRAGMA_MSVC(warning(pop))
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)
 } // namespace cometa

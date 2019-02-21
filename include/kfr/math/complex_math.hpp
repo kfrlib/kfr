@@ -1,0 +1,410 @@
+/** @addtogroup complex
+ *  @{
+ */
+/*
+  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  This file is part of KFR
+
+  KFR is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  KFR is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with KFR.
+
+  If GPL is not suitable for your project, you must purchase a commercial license to use KFR.
+  Buying a commercial license is mandatory as soon as you develop commercial activities without
+  disclosing the source code of your own applications.
+  See https://www.kfrlib.com for details.
+ */
+#pragma once
+
+#include "../simd/complex.hpp"
+#include "abs.hpp"
+#include "atan.hpp"
+#include "hyperbolic.hpp"
+#include "log_exp.hpp"
+#include "min_max.hpp"
+#include "select.hpp"
+#include "sin_cos.hpp"
+#include "sqrt.hpp"
+
+namespace kfr
+{
+inline namespace CMT_ARCH_NAME
+{
+
+namespace intrinsics
+{
+template <typename T, size_t N>
+KFR_INTRINSIC vec<complex<T>, N> csin(const vec<complex<T>, N>& x)
+{
+    return ccomp(sincos(cdecom(cdupreal(x))) * coshsinh(cdecom(cdupimag(x))));
+}
+template <typename T, size_t N>
+KFR_INTRINSIC vec<complex<T>, N> csinh(const vec<complex<T>, N>& x)
+{
+    return ccomp(sinhcosh(cdecom(cdupreal(x))) * cossin(cdecom(cdupimag(x))));
+}
+template <typename T, size_t N>
+KFR_INTRINSIC vec<complex<T>, N> ccos(const vec<complex<T>, N>& x)
+{
+    return ccomp(negodd(cossin(cdecom(cdupreal(x))) * coshsinh(cdecom(cdupimag(x)))));
+}
+template <typename T, size_t N>
+KFR_INTRINSIC vec<complex<T>, N> ccosh(const vec<complex<T>, N>& x)
+{
+    return ccomp(coshsinh(cdecom(cdupreal(x))) * cossin(cdecom(cdupimag(x))));
+}
+
+template <typename T, size_t N>
+KFR_INTRINSIC vec<T, N> cabs(const vec<complex<T>, N>& x)
+{
+    const vec<T, N* 2> xx = sqr(cdecom(x));
+    return sqrt(even(xx) + odd(xx));
+}
+template <typename T, size_t N>
+KFR_INTRINSIC vec<T, N> carg(const vec<complex<T>, N>& x)
+{
+    const vec<T, N* 2> xx = cdecom(x);
+    return atan2(even(xx), odd(xx));
+}
+
+template <typename T, size_t N>
+KFR_INTRINSIC vec<complex<T>, N> clog(const vec<complex<T>, N>& x)
+{
+    return make_complex(log(cabs(x)), carg(x));
+}
+template <typename T, size_t N>
+KFR_INTRINSIC vec<complex<T>, N> clog2(const vec<complex<T>, N>& x)
+{
+    return clog(x) * avoid_odr_use(c_recip_log_2<T>);
+}
+template <typename T, size_t N>
+KFR_INTRINSIC vec<complex<T>, N> clog10(const vec<complex<T>, N>& x)
+{
+    return clog(x) * avoid_odr_use(c_recip_log_10<T>);
+}
+
+template <typename T, size_t N>
+KFR_INTRINSIC vec<complex<T>, N> cexp(const vec<complex<T>, N>& x)
+{
+    return ccomp(exp(cdecom(cdupreal(x))) * cossin(cdecom(cdupimag(x))));
+}
+template <typename T, size_t N>
+KFR_INTRINSIC vec<complex<T>, N> cexp2(const vec<complex<T>, N>& x)
+{
+    return cexp(x * avoid_odr_use(c_log_2<T>));
+}
+template <typename T, size_t N>
+KFR_INTRINSIC vec<complex<T>, N> cexp10(const vec<complex<T>, N>& x)
+{
+    return cexp(x * avoid_odr_use(c_log_10<T>));
+}
+
+template <typename T, size_t N>
+KFR_INTRINSIC vec<complex<T>, N> polar(const vec<complex<T>, N>& x)
+{
+    return make_complex(cabs(x), carg(x));
+}
+template <typename T, size_t N>
+KFR_INTRINSIC vec<complex<T>, N> cartesian(const vec<complex<T>, N>& x)
+{
+    return cdupreal(x) * ccomp(cossin(cdecom(cdupimag(x))));
+}
+
+template <typename T, size_t N>
+KFR_INTRINSIC vec<T, N> cabsdup(const vec<T, N>& x)
+{
+    x = sqr(x);
+    return sqrt(x + swap<2>(x));
+}
+
+template <typename T, size_t N>
+KFR_INTRINSIC vec<complex<T>, N> csqrt(const vec<complex<T>, N>& x)
+{
+    const vec<T, N> t = (cabsdup(cdecom(x)) + cdecom(cnegimag(cdupreal(x)))) * T(0.5);
+    return ccomp(select(dupodd(x) < T(), cdecom(cnegimag(ccomp(t))), t));
+}
+
+KFR_HANDLE_SCALAR(cconj)
+KFR_HANDLE_SCALAR(csin)
+KFR_HANDLE_SCALAR(csinh)
+KFR_HANDLE_SCALAR(ccos)
+KFR_HANDLE_SCALAR(ccosh)
+KFR_HANDLE_SCALAR(clog)
+KFR_HANDLE_SCALAR(clog2)
+KFR_HANDLE_SCALAR(clog10)
+KFR_HANDLE_SCALAR(cexp)
+KFR_HANDLE_SCALAR(cexp2)
+KFR_HANDLE_SCALAR(cexp10)
+KFR_HANDLE_SCALAR(polar)
+KFR_HANDLE_SCALAR(cartesian)
+KFR_HANDLE_SCALAR(csqrt)
+
+template <typename T, size_t N>
+KFR_INTRINSIC vec<T, N> cabs(const vec<T, N>& a)
+{
+    return to_scalar(intrinsics::cabs(static_cast<vec<complex<T>, N>>(a)));
+}
+template <typename T, size_t N>
+KFR_INTRINSIC vec<T, N> carg(const vec<T, N>& a)
+{
+    return to_scalar(intrinsics::carg(static_cast<vec<complex<T>, N>>(a)));
+}
+template <typename T1>
+KFR_INTRINSIC realtype<T1> cabs(const T1& a)
+{
+    using vecout = vec1<T1>;
+    return to_scalar(intrinsics::cabs(vecout(a)));
+}
+template <typename T1>
+KFR_INTRINSIC realtype<T1> carg(const T1& a)
+{
+    using vecout = vec1<T1>;
+    return to_scalar(intrinsics::carg(vecout(a)));
+}
+} // namespace intrinsics
+
+KFR_I_FN(cconj)
+KFR_I_FN(csin)
+KFR_I_FN(csinh)
+KFR_I_FN(ccos)
+KFR_I_FN(ccosh)
+KFR_I_FN(cabs)
+KFR_I_FN(carg)
+KFR_I_FN(clog)
+KFR_I_FN(clog2)
+KFR_I_FN(clog10)
+KFR_I_FN(cexp)
+KFR_I_FN(cexp2)
+KFR_I_FN(cexp10)
+KFR_I_FN(polar)
+KFR_I_FN(cartesian)
+KFR_I_FN(csqrt)
+
+/// @brief Returns the sine of the complex number x
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_FUNCTION T1 csin(const T1& x)
+{
+    return intrinsics::csin(x);
+}
+
+/// @brief Returns template expression that returns the sine of the the complex value x
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_FUNCTION internal::expression_function<fn::csin, E1> csin(E1&& x)
+{
+    return { fn::csin(), std::forward<E1>(x) };
+}
+
+/// @brief Returns the hyperbolic sine of the complex number x
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_FUNCTION T1 csinh(const T1& x)
+{
+    return intrinsics::csinh(x);
+}
+
+/// @brief Returns template expression that returns the hyperbolic sine of the complex number x
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_FUNCTION internal::expression_function<fn::csinh, E1> csinh(E1&& x)
+{
+    return { fn::csinh(), std::forward<E1>(x) };
+}
+
+/// @brief Returns the cosine of the complex number x
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_FUNCTION T1 ccos(const T1& x)
+{
+    return intrinsics::ccos(x);
+}
+
+/// @brief Returns template expression that returns the cosine of the the complex value x
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_FUNCTION internal::expression_function<fn::ccos, E1> ccos(E1&& x)
+{
+    return { fn::ccos(), std::forward<E1>(x) };
+}
+
+/// @brief Returns the hyperbolic cosine of the complex number x
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_FUNCTION T1 ccosh(const T1& x)
+{
+    return intrinsics::ccosh(x);
+}
+
+/// @brief Returns template expression that returns the hyperbolic cosine of the the complex value x
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_FUNCTION internal::expression_function<fn::ccosh, E1> ccosh(E1&& x)
+{
+    return { fn::ccosh(), std::forward<E1>(x) };
+}
+
+/// @brief Returns the absolute value (magnitude) of the complex number x
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_FUNCTION realtype<T1> cabs(const T1& x)
+{
+    return intrinsics::cabs(x);
+}
+
+/// @brief Returns template expression that returns the absolute value (magnitude) of the complex number x
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_FUNCTION internal::expression_function<fn::cabs, E1> cabs(E1&& x)
+{
+    return { fn::cabs(), std::forward<E1>(x) };
+}
+
+/// @brief Returns the phase angle (argument) of the complex number x
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_FUNCTION realtype<T1> carg(const T1& x)
+{
+    return intrinsics::carg(x);
+}
+
+/// @brief Returns template expression that returns the phase angle (argument) of the complex number x
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_FUNCTION internal::expression_function<fn::carg, E1> carg(E1&& x)
+{
+    return { fn::carg(), std::forward<E1>(x) };
+}
+
+/// @brief Returns template expression that returns the complex conjugate of the complex number x
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_FUNCTION internal::expression_function<fn::cconj, E1> cconj(E1&& x)
+{
+    return { fn::cconj(), std::forward<E1>(x) };
+}
+
+/// @brief Returns the natural logarithm of the complex number x
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_FUNCTION T1 clog(const T1& x)
+{
+    return intrinsics::clog(x);
+}
+
+/// @brief Returns template expression that returns the natural logarithm of the complex number x
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_FUNCTION internal::expression_function<fn::clog, E1> clog(E1&& x)
+{
+    return { fn::clog(), std::forward<E1>(x) };
+}
+
+/// @brief Returns the binary (base-2) logarithm of the complex number x
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_FUNCTION T1 clog2(const T1& x)
+{
+    return intrinsics::clog2(x);
+}
+
+/// @brief Returns template expression that returns the binary (base-2) logarithm of the complex number x
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_FUNCTION internal::expression_function<fn::clog2, E1> clog2(E1&& x)
+{
+    return { fn::clog2(), std::forward<E1>(x) };
+}
+
+/// @brief Returns the common (base-10) logarithm of the complex number x
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_FUNCTION T1 clog10(const T1& x)
+{
+    return intrinsics::clog10(x);
+}
+
+/// @brief Returns template expression that returns the common (base-10) logarithm of the complex number x
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_FUNCTION internal::expression_function<fn::clog10, E1> clog10(E1&& x)
+{
+    return { fn::clog10(), std::forward<E1>(x) };
+}
+
+/// @brief Returns \f$e\f$ raised to the complex number x
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_FUNCTION T1 cexp(const T1& x)
+{
+    return intrinsics::cexp(x);
+}
+
+/// @brief Returns template expression that returns \f$e\f$ raised to the complex number x
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_FUNCTION internal::expression_function<fn::cexp, E1> cexp(E1&& x)
+{
+    return { fn::cexp(), std::forward<E1>(x) };
+}
+
+/// @brief Returns 2 raised to the complex number x
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_FUNCTION T1 cexp2(const T1& x)
+{
+    return intrinsics::cexp2(x);
+}
+
+/// @brief Returns template expression that returns 2 raised to the complex number x
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_FUNCTION internal::expression_function<fn::cexp2, E1> cexp2(E1&& x)
+{
+    return { fn::cexp2(), std::forward<E1>(x) };
+}
+
+/// @brief Returns 10 raised to the complex number x
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_FUNCTION T1 cexp10(const T1& x)
+{
+    return intrinsics::cexp10(x);
+}
+
+/// @brief Returns template expression that returns 10 raised to the complex number x
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_FUNCTION internal::expression_function<fn::cexp10, E1> cexp10(E1&& x)
+{
+    return { fn::cexp10(), std::forward<E1>(x) };
+}
+
+/// @brief Converts complex number to polar
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_FUNCTION T1 polar(const T1& x)
+{
+    return intrinsics::polar(x);
+}
+
+/// @brief Returns template expression that converts complex number to polar
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_FUNCTION internal::expression_function<fn::polar, E1> polar(E1&& x)
+{
+    return { fn::polar(), std::forward<E1>(x) };
+}
+
+/// @brief Converts complex number to cartesian
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_FUNCTION T1 cartesian(const T1& x)
+{
+    return intrinsics::cartesian(x);
+}
+
+/// @brief Returns template expression that converts complex number to cartesian
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_FUNCTION internal::expression_function<fn::cartesian, E1> cartesian(E1&& x)
+{
+    return { fn::cartesian(), std::forward<E1>(x) };
+}
+
+/// @brief Returns square root of the complex number x
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_FUNCTION T1 csqrt(const T1& x)
+{
+    return intrinsics::csqrt(x);
+}
+
+/// @brief Returns template expression that returns square root of the complex number x
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_FUNCTION internal::expression_function<fn::csqrt, E1> csqrt(E1&& x)
+{
+    return { fn::csqrt(), std::forward<E1>(x) };
+}
+
+} // namespace CMT_ARCH_NAME
+} // namespace kfr

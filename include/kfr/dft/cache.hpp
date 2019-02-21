@@ -32,6 +32,8 @@
 
 namespace kfr
 {
+inline namespace CMT_ARCH_NAME
+{
 
 template <typename T>
 using dft_plan_ptr = std::shared_ptr<const dft_plan<T>>;
@@ -166,4 +168,5 @@ univector<T> irealdft(const univector<complex<T>, Tag>& input)
     dft->execute(output, input, temp);
     return output;
 }
+} // namespace CMT_ARCH_NAME
 } // namespace kfr

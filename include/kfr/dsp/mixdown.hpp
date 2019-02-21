@@ -1,4 +1,4 @@
-/** @addtogroup dsp
+/** @addtogroup dsp_extra
  *  @{
  */
 /*
@@ -29,6 +29,9 @@
 
 namespace kfr
 {
+inline namespace CMT_ARCH_NAME
+{
+
 /**
  * @brief Returns template expression that returns the sum of all the inputs
  */
@@ -43,12 +46,12 @@ namespace internal
 struct stereo_matrix
 {
     template <typename T, size_t N>
-    CMT_INLINE vec<vec<T, 2>, N> operator()(const vec<vec<T, 2>, N>& x) const
+    KFR_MEM_INTRINSIC vec<vec<T, 2>, N> operator()(const vec<vec<T, 2>, N>& x) const
     {
-        return process(x, csizeseq_t<N>());
+        return process(x, csizeseq<N>);
     }
     template <typename T, size_t N, size_t... indices>
-    CMT_INLINE vec<vec<T, 2>, N> process(const vec<vec<T, 2>, N>& x, csizes_t<indices...>) const
+    KFR_MEM_INTRINSIC vec<vec<T, 2>, N> process(const vec<vec<T, 2>, N>& x, csizes_t<indices...>) const
     {
         return vec<vec<T, 2>, N>(hadd(transpose(x[indices] * matrix))...);
     }
@@ -79,4 +82,5 @@ Result mixdown_stereo(Left&& left, Right&& right, const f64x2x2& matrix)
     return Result(internal::stereo_matrix{ matrix },
                   pack(std::forward<Left>(left), std::forward<Right>(right)));
 }
+} // namespace CMT_ARCH_NAME
 } // namespace kfr

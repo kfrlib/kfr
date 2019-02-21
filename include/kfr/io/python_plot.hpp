@@ -1,4 +1,4 @@
-/** @addtogroup io
+/** @addtogroup plotting
  *  @{
  */
 /*
@@ -24,8 +24,8 @@
   See https://www.kfrlib.com for details.
  */
 #pragma once
-#include "../base/vec.hpp"
 #include "../cometa/string.hpp"
+#include "../simd/vec.hpp"
 #include <cstdlib>
 
 #ifdef CMT_OS_WIN
@@ -38,7 +38,7 @@
 
 namespace kfr
 {
-namespace internal
+namespace internal_generic
 {
 CMT_PRAGMA_GNU(GCC diagnostic push)
 #if CMT_HAS_WARNING("-Wdeprecated-declarations")
@@ -51,7 +51,7 @@ void python(const std::string& name, const std::string& code)
     std::string filename;
     {
         char curdir[1024];
-        cross_getcwd(curdir, arraysize(curdir));
+        (void)cross_getcwd(curdir, arraysize(curdir));
         filename = curdir;
     }
 #ifdef CMT_OS_WIN
@@ -64,7 +64,7 @@ void python(const std::string& name, const std::string& code)
     FILE* f = fopen(filename.c_str(), "w");
     fwrite(code.c_str(), 1, code.size(), f);
     fclose(f);
-    std::system(("python \"" + filename + "\"").c_str());
+    (void)std::system(("python \"" + filename + "\"").c_str());
 }
 CMT_PRAGMA_GNU(GCC diagnostic pop)
 
@@ -78,7 +78,7 @@ inline T flush_to_zero(T value)
 {
     return static_cast<double>(value);
 }
-} // namespace internal
+} // namespace internal_generic
 
 inline std::string concat_args() { return {}; }
 
@@ -106,7 +106,7 @@ void plot_show(const std::string& name, const std::string& wavfile, const std::s
     std::string ss;
     ss += python_prologue() + "dspplot.plot(" + concat_args("r'" + wavfile + "'", options) + ")\n";
 
-    internal::python(name, ss);
+    internal_generic::python(name, ss);
     print("done\n");
 }
 
@@ -125,12 +125,12 @@ void plot_show(const std::string& name, const T& x, const std::string& options =
     std::string ss;
     ss += python_prologue() + "data = [\n";
     for (size_t i = 0; i < array.size(); i++)
-        ss += as_string(fmt<'g', 20, 17>(internal::flush_to_zero(array[i])), ",\n");
+        ss += as_string(fmt<'g', 20, 17>(internal_generic::flush_to_zero(array[i])), ",\n");
     ss += "]\n";
 
     ss += "dspplot.plot(" + concat_args("data", options) + ")\n";
 
-    internal::python(name, ss);
+    internal_generic::python(name, ss);
     print("done\n");
 }
 
@@ -170,7 +170,7 @@ void perfplot_show(const std::string& name, T1&& data, T2&& labels, const std::s
 
     ss += "dspplot.perfplot(" + concat_args("data, labels", options) + ")\n";
 
-    internal::python(name, ss);
+    internal_generic::python(name, ss);
     print("done\n");
 }
 

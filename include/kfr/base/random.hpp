@@ -1,4 +1,4 @@
-/** @addtogroup math
+/** @addtogroup random
  *  @{
  */
 /*
@@ -24,55 +24,58 @@
   See https://www.kfrlib.com for details.
  */
 #pragma once
-#include "function.hpp"
-#include "operators.hpp"
-#include "shuffle.hpp"
-#include "vec.hpp"
+#include "../simd/impl/function.hpp"
+#include "../simd/operators.hpp"
+#include "../simd/shuffle.hpp"
+#include "../simd/vec.hpp"
 
 namespace kfr
 {
 
-using random_state = u32x4;
-
 #ifndef KFR_DISABLE_READCYCLECOUNTER
-
 struct seed_from_rdtsc_t
 {
 };
 
 constexpr seed_from_rdtsc_t seed_from_rdtsc{};
+#endif
 
-#ifndef KFR_READCYCLECOUNTER
+inline namespace CMT_ARCH_NAME
+{
+
+using random_state = u32x4;
+
+#ifndef KFR_DISABLE_READCYCLECOUNTER
 #ifdef CMT_COMPILER_CLANG
-#define KFR_READCYCLECOUNTER() __builtin_readcyclecounter()
+#define KFR_builtin_readcyclecounter()                                                                       \
+    static_cast<u64>(__builtin_readcyclecounter()) // Intel C++ requires cast here
 #else
-#define KFR_READCYCLECOUNTER() __rdtsc()
+#define KFR_builtin_readcyclecounter() static_cast<u64>(__rdtsc())
 #endif
-#endif
-
 #endif
 
 struct random_bit_generator
 {
-
 #ifndef KFR_DISABLE_READCYCLECOUNTER
-    random_bit_generator(seed_from_rdtsc_t) noexcept
-        : state(bitcast<u32>(
-              make_vector(KFR_READCYCLECOUNTER(), (KFR_READCYCLECOUNTER() << 11) ^ 0x710686d615e2257bull)))
+    KFR_MEM_INTRINSIC random_bit_generator(seed_from_rdtsc_t) CMT_NOEXCEPT
+        : state(bitcast<u32>(make_vector(KFR_builtin_readcyclecounter(),
+                                         (KFR_builtin_readcyclecounter() << 11) ^ 0x710686d615e2257bull)))
     {
         (void)operator()();
     }
 #endif
-    random_bit_generator(u32 x0, u32 x1, u32 x2, u32 x3) noexcept : state(x0, x1, x2, x3)
+    KFR_MEM_INTRINSIC random_bit_generator(u32 x0, u32 x1, u32 x2, u32 x3) CMT_NOEXCEPT
+        : state(x0, x1, x2, x3)
     {
         (void)operator()();
     }
-    random_bit_generator(u64 x0, u64 x1) noexcept : state(bitcast<u32>(make_vector(x0, x1)))
+    KFR_MEM_INTRINSIC random_bit_generator(u64 x0, u64 x1) CMT_NOEXCEPT
+        : state(bitcast<u32>(make_vector(x0, x1)))
     {
         (void)operator()();
     }
 
-    inline random_state operator()()
+    KFR_MEM_INTRINSIC random_state operator()()
     {
         const static random_state mul{ 214013u, 17405u, 214013u, 69069u };
         const static random_state add{ 2531011u, 10395331u, 13737667u, 1u };
@@ -87,13 +90,13 @@ protected:
 static_assert(sizeof(random_state) == 16, "sizeof(random_state) == 16");
 
 template <size_t N, KFR_ENABLE_IF(N <= sizeof(random_state))>
-inline vec<u8, N> random_bits(random_bit_generator& gen)
+KFR_INTRINSIC vec<u8, N> random_bits(random_bit_generator& gen)
 {
     return narrow<N>(bitcast<u8>(gen()));
 }
 
 template <size_t N, KFR_ENABLE_IF(N > sizeof(random_state))>
-inline vec<u8, N> random_bits(random_bit_generator& gen)
+KFR_INTRINSIC vec<u8, N> random_bits(random_bit_generator& gen)
 {
     constexpr size_t N2         = prev_poweroftwo(N - 1);
     const vec<u8, N2> bits1     = random_bits<N2>(gen);
@@ -102,37 +105,37 @@ inline vec<u8, N> random_bits(random_bit_generator& gen)
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(std::is_integral<T>::value)>
-inline vec<T, N> random_uniform(random_bit_generator& gen)
+KFR_INTRINSIC vec<T, N> random_uniform(random_bit_generator& gen)
 {
     return bitcast<T>(random_bits<N * sizeof(T)>(gen));
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(std::is_same<T, f32>::value)>
-inline vec<f32, N> randommantissa(random_bit_generator& gen)
+KFR_INTRINSIC vec<f32, N> randommantissa(random_bit_generator& gen)
 {
     return bitcast<f32>((random_uniform<u32, N>(gen) & 0x7FFFFFu) | 0x3f800000u) + 0.0f;
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(std::is_same<T, f64>::value)>
-inline vec<f64, N> randommantissa(random_bit_generator& gen)
+KFR_INTRINSIC vec<f64, N> randommantissa(random_bit_generator& gen)
 {
     return bitcast<f64>((random_uniform<u64, N>(gen) & 0x000FFFFFFFFFFFFFull) | 0x3FF0000000000000ull) + 0.0;
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
-inline vec<T, N> random_uniform(random_bit_generator& gen)
+KFR_INTRINSIC vec<T, N> random_uniform(random_bit_generator& gen)
 {
     return randommantissa<T, N>(gen) - 1.f;
 }
 
 template <size_t N, typename T, KFR_ENABLE_IF(is_f_class<T>::value)>
-inline vec<T, N> random_range(random_bit_generator& gen, T min, T max)
+KFR_INTRINSIC vec<T, N> random_range(random_bit_generator& gen, T min, T max)
 {
     return mix(random_uniform<T, N>(gen), min, max);
 }
 
 template <size_t N, typename T, KFR_ENABLE_IF(!is_f_class<T>::value)>
-inline vec<T, N> random_range(random_bit_generator& gen, T min, T max)
+KFR_INTRINSIC vec<T, N> random_range(random_bit_generator& gen, T min, T max)
 {
     using big_type = findinttype<sqr(std::numeric_limits<T>::min()), sqr(std::numeric_limits<T>::max())>;
 
@@ -147,11 +150,11 @@ template <typename T>
 struct expression_random_uniform : input_expression
 {
     using value_type = T;
-    constexpr expression_random_uniform(const random_bit_generator& gen) noexcept : gen(gen) {}
+    constexpr expression_random_uniform(const random_bit_generator& gen) CMT_NOEXCEPT : gen(gen) {}
     template <size_t N>
-    vec<T, N> operator()(cinput_t, size_t, vec_t<T, N>) const
+    friend vec<T, N> get_elements(const expression_random_uniform& self, cinput_t, size_t, vec_shape<T, N>)
     {
-        return random_uniform<T, N>(gen);
+        return random_uniform<T, N>(self.gen);
     }
     mutable random_bit_generator gen;
 };
@@ -160,15 +163,16 @@ template <typename T>
 struct expression_random_range : input_expression
 {
     using value_type = T;
-    constexpr expression_random_range(const random_bit_generator& gen, T min, T max) noexcept
-        : gen(gen), min(min), max(max)
+    constexpr expression_random_range(const random_bit_generator& gen, T min, T max) CMT_NOEXCEPT : gen(gen),
+                                                                                                    min(min),
+                                                                                                    max(max)
     {
     }
 
     template <size_t N>
-    vec<T, N> operator()(cinput_t, size_t, vec_t<T, N>) const
+    friend vec<T, N> get_elements(const expression_random_range& self, cinput_t, size_t, vec_shape<T, N>)
     {
-        return random_range<N, T>(gen, min, max);
+        return random_range<N, T>(self.gen, self.min, self.max);
     }
     mutable random_bit_generator gen;
     const T min;
@@ -178,16 +182,15 @@ struct expression_random_range : input_expression
 
 /// @brief Returns expression that returns pseudo random values
 template <typename T>
-inline internal::expression_random_uniform<T> gen_random_uniform(const random_bit_generator& gen)
+KFR_FUNCTION internal::expression_random_uniform<T> gen_random_uniform(const random_bit_generator& gen)
 {
     return internal::expression_random_uniform<T>(gen);
 }
 
-
 #ifndef KFR_DISABLE_READCYCLECOUNTER
 /// @brief Returns expression that returns pseudo random values
 template <typename T>
-inline internal::expression_random_uniform<T> gen_random_uniform()
+KFR_FUNCTION internal::expression_random_uniform<T> gen_random_uniform()
 {
     return internal::expression_random_uniform<T>(random_bit_generator(seed_from_rdtsc));
 }
@@ -195,18 +198,19 @@ inline internal::expression_random_uniform<T> gen_random_uniform()
 
 /// @brief Returns expression that returns pseudo random values of the given range
 template <typename T>
-inline internal::expression_random_range<T> gen_random_range(const random_bit_generator& gen, T min, T max)
+KFR_FUNCTION internal::expression_random_range<T> gen_random_range(const random_bit_generator& gen, T min,
+                                                                   T max)
 {
     return internal::expression_random_range<T>(gen, min, max);
 }
 
-
 #ifndef KFR_DISABLE_READCYCLECOUNTER
 /// @brief Returns expression that returns pseudo random values of the given range
 template <typename T>
-inline internal::expression_random_range<T> gen_random_range(T min, T max)
+KFR_FUNCTION internal::expression_random_range<T> gen_random_range(T min, T max)
 {
     return internal::expression_random_range<T>(random_bit_generator(seed_from_rdtsc), min, max);
 }
 #endif
+} // namespace CMT_ARCH_NAME
 } // namespace kfr

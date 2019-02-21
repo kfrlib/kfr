@@ -25,8 +25,7 @@
  */
 #pragma once
 
-#include "operators.hpp"
-#include "vec.hpp"
+#include "../simd/types.hpp"
 
 namespace kfr
 {

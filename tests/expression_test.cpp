@@ -13,6 +13,9 @@
 
 using namespace kfr;
 
+namespace CMT_ARCH_NAME
+{
+
 TEST(pack)
 {
     const univector<float, 21> v1 = 1 + counter();
@@ -59,6 +62,17 @@ TEST(test_arg_access)
     CHECK_EXPRESSION(e1, 10, [](size_t i) { return (i == 0 ? 100 : i) + 1; });
 }
 
+TEST(to_pointer)
+{
+    auto e1 = to_pointer(counter<float>());
+
+    CHECK_EXPRESSION(e1, infinite_size, [](size_t i) { return static_cast<float>(i); });
+
+    auto e2 = to_pointer(gen_linear(0.f, 1.f));
+
+    CHECK_EXPRESSION(e2, infinite_size, [](size_t i) { return static_cast<float>(i); });
+}
+
 TEST(test_arg_replace)
 {
     univector<float, 10> v1 = counter();
@@ -88,11 +102,11 @@ TEST(placeholders_pointer)
 TEST(univector_assignment)
 {
     univector<int> x = truncate(counter(), 10);
-    CHECK(x.size() == 10);
+    CHECK(x.size() == 10u);
 
     univector<int> y;
     y = truncate(counter(), 10);
-    CHECK(y.size() == 10);
+    CHECK(y.size() == 10u);
 }
 
 TEST(size_calc)
@@ -102,9 +116,9 @@ TEST(size_calc)
     auto b = slice(counter(), 100);
     CHECK(b.size() == infinite_size);
     auto c = slice(counter(), 100, 1000);
-    CHECK(c.size() == 1000);
+    CHECK(c.size() == 1000u);
     auto d = slice(c, 100);
-    CHECK(d.size() == 900);
+    CHECK(d.size() == 900u);
 }
 
 TEST(reverse)
@@ -126,8 +140,8 @@ TEST(partition)
     {
         univector<double, 385> output = zeros();
         auto result                   = partition(output, counter(), 5, 1);
-        CHECK(result.count == 5);
-        CHECK(result.chunk_size == 80);
+        CHECK(result.count == 5u);
+        CHECK(result.chunk_size == 80u);
 
         result(0);
         CHECK(sum(output) >= fast_range_sum(80 - 1));
@@ -144,8 +158,8 @@ TEST(partition)
     {
         univector<double, 385> output = zeros();
         auto result                   = partition(output, counter(), 5, 160);
-        CHECK(result.count == 3);
-        CHECK(result.chunk_size == 160);
+        CHECK(result.count == 3u);
+        CHECK(result.chunk_size == 160u);
 
         result(0);
         CHECK(sum(output) >= fast_range_sum(160 - 1));
@@ -155,6 +169,7 @@ TEST(partition)
         CHECK(sum(output) == fast_range_sum(385 - 1));
     }
 }
+} // namespace CMT_ARCH_NAME
 
 #ifndef KFR_NO_MAIN
 int main()

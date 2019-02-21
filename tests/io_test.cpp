@@ -8,10 +8,12 @@
 
 #include <kfr/base.hpp>
 #include <kfr/cometa/function.hpp>
-#include <kfr/dsp.hpp>
 #include <kfr/io.hpp>
 
 using namespace kfr;
+
+namespace CMT_ARCH_NAME
+{
 
 #if KFR_ENABLE_WAV
 TEST(write_wav_file)
@@ -22,17 +24,17 @@ TEST(write_wav_file)
     data      = sin(counter() * 0.01f);
     size_t wr = writer.write(data.data(), data.size());
     CHECK(wr == data.size());
-    CHECK(writer.format().length == data.size() / 2);
+    CHECK(umax(writer.format().length) == data.size() / 2);
 }
 
 TEST(read_wav_file)
 {
     audio_reader_wav<float> reader(open_file_for_reading(KFR_FILEPATH("temp_audio_file.wav")));
-    CHECK(reader.format().channels == 2);
+    CHECK(reader.format().channels == 2u);
     CHECK(reader.format().type == audio_sample_type::i16);
     CHECK(reader.format().samplerate == 44100);
     univector<float> data(44100 * 2);
-    CHECK(reader.format().length == data.size() / 2);
+    CHECK(umax(reader.format().length) == data.size() / 2);
     size_t rd = reader.read(data.data(), data.size());
     CHECK(rd == data.size());
     CHECK(absmaxof(data - render(sin(counter() * 0.01f), data.size())) < 0.0001f);
@@ -40,10 +42,10 @@ TEST(read_wav_file)
 #endif
 
 #if KFR_ENABLE_FLAC
-TEST(read_flac_file)
+DTEST(read_flac_file)
 {
     audio_reader_flac<float> reader(open_file_for_reading(KFR_FILEPATH("../../tests/test-audio/sine.flac")));
-    CHECK(reader.format().channels == 2);
+    CHECK(reader.format().channels == 2u);
     CHECK(reader.format().type == audio_sample_type::i32);
     CHECK(reader.format().samplerate == 44100);
     univector<float> data(44100 * 2);
@@ -53,6 +55,7 @@ TEST(read_flac_file)
     CHECK(absmaxof(data - render(sin(counter() * 0.01f), data.size())) < 0.0001f);
 }
 #endif
+} // namespace CMT_ARCH_NAME
 
 #ifndef KFR_NO_MAIN
 int main()

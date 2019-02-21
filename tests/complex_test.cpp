@@ -11,6 +11,9 @@
 
 using namespace kfr;
 
+namespace CMT_ARCH_NAME
+{
+
 TEST(complex_vector)
 {
     const vec<c32, 1> c32x1{ c32{ 0, 1 } };
@@ -68,9 +71,11 @@ TEST(complex_math)
 {
     const vec<c32, 1> a{ c32{ 1, 2 } };
     const vec<c32, 1> b{ c32{ 3, 4 } };
+    CHECK(c32(vec<c32, 1>(2)[0]) == c32{ 2, 0 });
     CHECK(a + b == make_vector(c32{ 4, 6 }));
     CHECK(a - b == make_vector(c32{ -2, -2 }));
     CHECK(a * b == make_vector(c32{ -5, 10 }));
+    CHECK(a * vec<c32, 1>(2) == make_vector(c32{ 2, 4 }));
     CHECK(a * 2 == make_vector(c32{ 2, 4 }));
     CHECK(a / b == make_vector(c32{ 0.44f, 0.08f }));
     CHECK(-a == make_vector(c32{ -1, -2 }));
@@ -88,8 +93,7 @@ TEST(complex_math)
     CHECK(cabs(-3.f) == 3.f);
     CHECK(cabs(make_vector(-3.f)) == make_vector(3.f));
 
-    testo::epsilon<f32>() *= 5;
-    testo::epsilon<f64>() *= 5;
+    testo::eplison_scope<void> eps(5);
 
     CHECK(csin(c32{ 1.f, 1.f }) == c32{ 1.2984575814159773f, 0.634963914784736f });
     CHECK(ccos(c32{ 1.f, 1.f }) == c32{ 0.8337300251311489f, -0.9888977057628651f });
@@ -176,13 +180,6 @@ TEST(complex_function_expressions)
 
 TEST(static_tests)
 {
-#ifdef CMT_ARCH_SSE2
-    static_assert(platform<f32, cpu_t::sse2>::vector_width == 4, "");
-    static_assert(platform<c32, cpu_t::sse2>::vector_width == 2, "");
-    static_assert(platform<i32, cpu_t::sse2>::vector_width == 4, "");
-    static_assert(platform<complex<i32>, cpu_t::sse2>::vector_width == 2, "");
-#endif
-
     static_assert(is_numeric<vec<complex<float>, 4>>::value, "");
     static_assert(is_numeric_args<vec<complex<float>, 4>>::value, "");
 
@@ -207,8 +204,9 @@ TEST(static_tests)
     testo::assert_is_same<kfr::internal::arg<complex<int>>,
                           kfr::internal::expression_scalar<kfr::complex<int>, 1>>();
 
-    testo::assert_is_same<common_type<complex<int>, double>, complex<double>>();
+    testo::assert_is_same<kfr::common_type<complex<int>, double>, complex<double>>();
 }
+} // namespace CMT_ARCH_NAME
 
 #ifndef KFR_NO_MAIN
 int main()

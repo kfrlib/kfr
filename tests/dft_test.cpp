@@ -14,6 +14,9 @@
 
 using namespace kfr;
 
+namespace CMT_ARCH_NAME
+{
+
 #ifdef KFR_NATIVE_F64
 constexpr ctypes_t<float, double> dft_float_types{};
 #else
@@ -25,7 +28,7 @@ TEST(test_convolve)
     univector<fbase, 5> a({ 1, 2, 3, 4, 5 });
     univector<fbase, 5> b({ 0.25, 0.5, 1.0, -2.0, 1.5 });
     univector<fbase> c = convolve(a, b);
-    CHECK(c.size() == 9);
+    CHECK(c.size() == 9u);
     CHECK(rms(c - univector<fbase>({ 0.25, 1., 2.75, 2.5, 3.75, 3.5, 1.5, -4., 7.5 })) < 0.0001);
 }
 
@@ -44,7 +47,7 @@ TEST(test_correlate)
     univector<fbase, 5> a({ 1, 2, 3, 4, 5 });
     univector<fbase, 5> b({ 0.25, 0.5, 1.0, -2.0, 1.5 });
     univector<fbase> c = correlate(a, b);
-    CHECK(c.size() == 9);
+    CHECK(c.size() == 9u);
     CHECK(rms(c - univector<fbase>({ 1.5, 1., 1.5, 2.5, 3.75, -4., 7.75, 3.5, 1.25 })) < 0.0001);
 }
 
@@ -87,58 +90,60 @@ TEST(fft_accuracy)
 #endif
     println(sizes);
 
-    testo::matrix(
-        named("type") = dft_float_types, //
-        named("size") = sizes, //
-        [&gen](auto type, size_t size) {
-            using float_type      = type_of<decltype(type)>;
-            const double min_prec = 0.000001 * std::log(size) * size;
+    testo::matrix(named("type") = dft_float_types, //
+                  named("size") = sizes, //
+                  [&gen](auto type, size_t size) {
+                      using float_type      = type_of<decltype(type)>;
+                      const double min_prec = 0.000001 * std::log(size) * size;
 
-            for (bool inverse : { false, true })
-            {
-                testo::active_test()->append_comment(inverse ? "complex-inverse" : "complex-direct");
-                univector<complex<float_type>> in =
-                    truncate(gen_random_range<float_type>(gen, -1.0, +1.0), size);
-                univector<complex<float_type>> out    = in;
-                univector<complex<float_type>> refout = out;
-                univector<complex<float_type>> outo   = in;
-                const dft_plan<float_type> dft(size);
-                univector<u8> temp(dft.temp_size);
+                      for (bool inverse : { false, true })
+                      {
+                          testo::scope s(inverse ? "complex-inverse" : "complex-direct");
+                          univector<complex<float_type>> in =
+                              truncate(gen_random_range<float_type>(gen, -1.0, +1.0), size);
+                          univector<complex<float_type>> out    = in;
+                          univector<complex<float_type>> refout = out;
+                          univector<complex<float_type>> outo   = in;
+                          const dft_plan<float_type> dft(size);
+                          univector<u8> temp(dft.temp_size);
 
-                reference_dft(refout.data(), in.data(), size, inverse);
-                dft.execute(outo, in, temp, inverse);
-                dft.execute(out, out, temp, inverse);
+                          reference_dft(refout.data(), in.data(), size, inverse);
+                          dft.execute(outo, in, temp, inverse);
+                          dft.execute(out, out, temp, inverse);
 
-                const float_type rms_diff_inplace = rms(cabs(refout - out));
-                CHECK(rms_diff_inplace < min_prec);
-                const float_type rms_diff_outofplace = rms(cabs(refout - outo));
-                CHECK(rms_diff_outofplace < min_prec);
-            }
+                          const float_type rms_diff_inplace = rms(cabs(refout - out));
+                          CHECK(rms_diff_inplace < min_prec);
+                          const float_type rms_diff_outofplace = rms(cabs(refout - outo));
+                          CHECK(rms_diff_outofplace < min_prec);
+                      }
 
-            if (size >= 4 && is_poweroftwo(size))
-            {
-                univector<float_type> in = truncate(gen_random_range<float_type>(gen, -1.0, +1.0), size);
+                      if (size >= 4 && is_poweroftwo(size))
+                      {
+                          univector<float_type> in =
+                              truncate(gen_random_range<float_type>(gen, -1.0, +1.0), size);
 
-                univector<complex<float_type>> out    = truncate(scalar(qnan), size);
-                univector<complex<float_type>> refout = truncate(scalar(qnan), size);
-                const dft_plan_real<float_type> dft(size);
-                univector<u8> temp(dft.temp_size);
+                          univector<complex<float_type>> out    = truncate(scalar(qnan), size);
+                          univector<complex<float_type>> refout = truncate(scalar(qnan), size);
+                          const dft_plan_real<float_type> dft(size);
+                          univector<u8> temp(dft.temp_size);
 
-                testo::active_test()->append_comment("real-direct");
-                reference_fft(refout.data(), in.data(), size);
-                dft.execute(out, in, temp);
-                float_type rms_diff = rms(cabs(refout.truncate(size / 2 + 1) - out.truncate(size / 2 + 1)));
-                CHECK(rms_diff < min_prec);
+                          testo::scope s("real-direct");
+                          reference_fft(refout.data(), in.data(), size);
+                          dft.execute(out, in, temp);
+                          float_type rms_diff =
+                              rms(cabs(refout.truncate(size / 2 + 1) - out.truncate(size / 2 + 1)));
+                          CHECK(rms_diff < min_prec);
 
-                univector<float_type> out2(size, 0.f);
-                testo::active_test()->append_comment("real-inverse");
-                dft.execute(out2, out, temp);
-                out2     = out2 / size;
-                rms_diff = rms(in - out2);
-                CHECK(rms_diff < min_prec);
-            }
-        });
+                          univector<float_type> out2(size, 0.f);
+                          s.text = "real-inverse";
+                          dft.execute(out2, out, temp);
+                          out2     = out2 / size;
+                          rms_diff = rms(in - out2);
+                          CHECK(rms_diff < min_prec);
+                      }
+                  });
 }
+} // namespace CMT_ARCH_NAME
 
 #ifndef KFR_NO_MAIN
 int main()

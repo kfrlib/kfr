@@ -1,4 +1,4 @@
-/** @addtogroup io
+/** @addtogroup audio_io
  *  @{
  */
 /*
@@ -28,8 +28,8 @@
 #include "../base/basic_expressions.hpp"
 #include "../base/conversion.hpp"
 #include "../base/univector.hpp"
-#include "../base/vec.hpp"
 #include "../cometa/ctti.hpp"
+#include "../simd/vec.hpp"
 #include "file.hpp"
 
 #ifndef KFR_ENABLE_WAV
@@ -64,10 +64,8 @@ struct audio_format
 struct audio_format_and_length : audio_format
 {
     using audio_format::audio_format;
-#ifdef CMT_COMPILER_MSVC
-    audio_format_and_length() noexcept {}
-#endif
-    audio_format_and_length(const audio_format& fmt) : audio_format(fmt) {}
+    constexpr audio_format_and_length() CMT_NOEXCEPT {}
+    constexpr audio_format_and_length(const audio_format& fmt) : audio_format(fmt) {}
 
     imax length = 0; // in samples
 };
@@ -95,39 +93,43 @@ struct audio_writer : public abstract_writer<T>
     virtual void close() = 0;
 };
 
-namespace internal
+namespace internal_generic
 {
 #if KFR_ENABLE_WAV
-static size_t drwav_writer_write_proc(abstract_writer<void>* file, const void* pData, size_t bytesToWrite)
+static inline size_t drwav_writer_write_proc(abstract_writer<void>* file, const void* pData,
+                                             size_t bytesToWrite)
 {
     return file->write(pData, bytesToWrite);
 }
-static drwav_bool32 drwav_writer_seek_proc(abstract_writer<void>* file, int offset, drwav_seek_origin origin)
+static inline drwav_bool32 drwav_writer_seek_proc(abstract_writer<void>* file, int offset,
+                                                  drwav_seek_origin origin)
 {
     return file->seek(offset, origin == drwav_seek_origin_start ? seek_origin::begin : seek_origin::current);
 }
-static size_t drwav_reader_read_proc(abstract_reader<void>* file, void* pBufferOut, size_t bytesToRead)
+static inline size_t drwav_reader_read_proc(abstract_reader<void>* file, void* pBufferOut, size_t bytesToRead)
 {
     return file->read(pBufferOut, bytesToRead);
 }
-static drwav_bool32 drwav_reader_seek_proc(abstract_reader<void>* file, int offset, drwav_seek_origin origin)
+static inline drwav_bool32 drwav_reader_seek_proc(abstract_reader<void>* file, int offset,
+                                                  drwav_seek_origin origin)
 {
     return file->seek(offset, origin == drwav_seek_origin_start ? seek_origin::begin : seek_origin::current);
 }
 #endif
 #if KFR_ENABLE_FLAC
-static size_t drflac_reader_read_proc(abstract_reader<void>* file, void* pBufferOut, size_t bytesToRead)
+static inline size_t drflac_reader_read_proc(abstract_reader<void>* file, void* pBufferOut,
+                                             size_t bytesToRead)
 {
     return file->read(pBufferOut, bytesToRead);
 }
-static drflac_bool32 drflac_reader_seek_proc(abstract_reader<void>* file, int offset,
-                                             drflac_seek_origin origin)
+static inline drflac_bool32 drflac_reader_seek_proc(abstract_reader<void>* file, int offset,
+                                                    drflac_seek_origin origin)
 {
     return file->seek(offset, origin == drflac_seek_origin_start ? seek_origin::begin : seek_origin::current);
 }
 #endif
 
-} // namespace internal
+} // namespace internal_generic
 
 #if KFR_ENABLE_WAV
 /// @brief WAV format writer
@@ -139,16 +141,18 @@ struct audio_writer_wav : audio_writer<T>
         : writer(std::move(writer)), f(nullptr), fmt(fmt)
     {
         drwav_data_format wav_fmt;
-        wav_fmt.channels   = fmt.channels;
-        wav_fmt.sampleRate = fmt.samplerate;
+        wav_fmt.channels   = static_cast<drwav_uint32>(fmt.channels);
+        wav_fmt.sampleRate = static_cast<drwav_uint32>(fmt.samplerate);
         wav_fmt.format =
             fmt.type >= audio_sample_type::first_float ? DR_WAVE_FORMAT_IEEE_FLOAT : DR_WAVE_FORMAT_PCM;
-        wav_fmt.bitsPerSample = audio_sample_bit_depth(fmt.type);
+        wav_fmt.bitsPerSample = static_cast<drwav_uint32>(audio_sample_bit_depth(fmt.type));
         wav_fmt.container     = fmt.use_w64 ? drwav_container_w64 : drwav_container_riff;
-        f = drwav_open_write(&wav_fmt, (drwav_write_proc)&internal::drwav_writer_write_proc,
-                             (drwav_seek_proc)&internal::drwav_writer_seek_proc, this->writer.get());
+        f = drwav_open_write(&wav_fmt, (drwav_write_proc)&internal_generic::drwav_writer_write_proc,
+                             (drwav_seek_proc)&internal_generic::drwav_writer_seek_proc, this->writer.get());
     }
     ~audio_writer_wav() { close(); }
+
+    using audio_writer<T>::write;
 
     /// @brief Write data to underlying binary writer
     size_t write(const T* data, size_t size) override
@@ -184,7 +188,7 @@ struct audio_writer_wav : audio_writer<T>
 
     imax tell() const override { return fmt.length; }
 
-    bool seek(imax position, seek_origin origin) override { return false; }
+    bool seek(imax, seek_origin) override { return false; }
 
 private:
     std::shared_ptr<abstract_writer<>> writer;
@@ -199,8 +203,8 @@ struct audio_reader_wav : audio_reader<T>
     /// @brief Constructs WAV reader
     audio_reader_wav(std::shared_ptr<abstract_reader<>>&& reader) : reader(std::move(reader))
     {
-        f              = drwav_open((drwav_read_proc)&internal::drwav_reader_read_proc,
-                       (drwav_seek_proc)&internal::drwav_reader_seek_proc, this->reader.get());
+        f              = drwav_open((drwav_read_proc)&internal_generic::drwav_reader_read_proc,
+                       (drwav_seek_proc)&internal_generic::drwav_reader_seek_proc, this->reader.get());
         fmt.channels   = f->channels;
         fmt.samplerate = f->sampleRate;
         fmt.length     = f->totalSampleCount / fmt.channels;
@@ -307,8 +311,8 @@ struct audio_reader_flac : audio_reader<T>
     /// @brief Constructs FLAC reader
     audio_reader_flac(std::shared_ptr<abstract_reader<>>&& reader) : reader(std::move(reader))
     {
-        f              = drflac_open((drflac_read_proc)&internal::drflac_reader_read_proc,
-                        (drflac_seek_proc)&internal::drflac_reader_seek_proc, this->reader.get());
+        f              = drflac_open((drflac_read_proc)&internal_generic::drflac_reader_read_proc,
+                        (drflac_seek_proc)&internal_generic::drflac_reader_seek_proc, this->reader.get());
         fmt.channels   = f->channels;
         fmt.samplerate = f->sampleRate;
         fmt.length     = f->totalSampleCount / fmt.channels;

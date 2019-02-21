@@ -25,13 +25,13 @@
  */
 #pragma once
 
-#include "../base/complex.hpp"
-#include "../base/constants.hpp"
 #include "../base/memory.hpp"
-#include "../base/read_write.hpp"
 #include "../base/small_buffer.hpp"
 #include "../base/univector.hpp"
-#include "../base/vec.hpp"
+#include "../simd/complex.hpp"
+#include "../simd/constants.hpp"
+#include "../simd/read_write.hpp"
+#include "../simd/vec.hpp"
 #include <cmath>
 #include <vector>
 

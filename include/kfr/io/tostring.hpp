@@ -1,4 +1,4 @@
-/** @addtogroup io
+/** @addtogroup string_io
  *  @{
  */
 /*
@@ -25,14 +25,49 @@
  */
 #pragma once
 
-#include "../base/complex.hpp"
 #include "../base/univector.hpp"
-#include "../base/vec.hpp"
 #include "../cometa/string.hpp"
+#include "../simd/complex.hpp"
+#include "../simd/vec.hpp"
 #include <cmath>
 
 namespace cometa
 {
+
+template <>
+struct representation<cometa::special_value>
+{
+    using type = std::string;
+    static std::string get(const cometa::special_value& value)
+    {
+        using cometa::special_constant;
+        switch (value.c)
+        {
+        case special_constant::undefined:
+            return "undefined";
+        case special_constant::default_constructed:
+            return "default_constructed";
+        case special_constant::infinity:
+            return "infinity";
+        case special_constant::neg_infinity:
+            return "neg_infinity";
+        case special_constant::min:
+            return "min";
+        case special_constant::max:
+            return "max";
+        case special_constant::neg_max:
+            return "neg_max";
+        case special_constant::lowest:
+            return "lowest";
+        case special_constant::integer:
+            return as_string(value.ll);
+        case special_constant::floating_point:
+            return as_string(value.d);
+        default:
+            return "unknown";
+        }
+    }
+};
 
 namespace details
 {
@@ -157,9 +192,20 @@ struct representation<kfr::univector<T, Tag>>
         return details::array_to_string(value.data(), value.size());
     }
 };
+template <typename T, size_t Size>
+struct representation<std::array<T, Size>>
+{
+    using type = std::string;
+    static std::string get(const std::array<T, Size>& value)
+    {
+        return details::array_to_string(value.data(), value.size());
+    }
+};
 } // namespace cometa
 
 namespace kfr
+{
+inline namespace CMT_ARCH_NAME
 {
 
 namespace internal
@@ -205,6 +251,7 @@ inline internal::expression_printer printer() { return internal::expression_prin
 
 /// @brief Returns an output expression that prints the values with their types (used for debug)
 inline internal::expression_debug_printer debug_printer() { return internal::expression_debug_printer(); }
+} // namespace CMT_ARCH_NAME
 
 /// @brief Converts dB value to string (uses oo for infinity symbol)
 template <typename T>

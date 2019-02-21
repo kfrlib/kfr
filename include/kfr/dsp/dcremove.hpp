@@ -1,4 +1,4 @@
-/** @addtogroup dsp
+/** @addtogroup biquad
  *  @{
  */
 /*
@@ -30,11 +30,14 @@
 
 namespace kfr
 {
+inline namespace CMT_ARCH_NAME
+{
 
 template <typename E1, typename T = flt_type<value_type_of<E1>>>
-CMT_INLINE internal::expression_biquads<1, T, E1> dcremove(E1&& e1, double cutoff = 0.00025)
+KFR_INTRINSIC internal::expression_biquads<1, T, E1> dcremove(E1&& e1, double cutoff = 0.00025)
 {
     const biquad_params<T> bqs[1] = { biquad_highpass(cutoff, 0.5) };
     return internal::expression_biquads<1, T, E1>(bqs, std::forward<E1>(e1));
 }
+} // namespace CMT_ARCH_NAME
 } // namespace kfr

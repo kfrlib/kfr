@@ -1,4 +1,4 @@
-/** @addtogroup dft
+/** @addtogroup convolution
  *  @{
  */
 /*
@@ -25,12 +25,12 @@
  */
 #pragma once
 
-#include "../base/complex.hpp"
-#include "../base/constants.hpp"
 #include "../base/filter.hpp"
 #include "../base/memory.hpp"
-#include "../base/read_write.hpp"
-#include "../base/vec.hpp"
+#include "../simd/complex.hpp"
+#include "../simd/constants.hpp"
+#include "../simd/read_write.hpp"
+#include "../simd/vec.hpp"
 
 #include "cache.hpp"
 #include "fft.hpp"
@@ -42,8 +42,10 @@ CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
 
 namespace kfr
 {
+inline namespace CMT_ARCH_NAME
+{
 
-namespace internal
+namespace intrinsics
 {
 template <typename T>
 univector<T> convolve(const univector_ref<const T>& src1, const univector_ref<const T>& src2);
@@ -51,27 +53,27 @@ template <typename T>
 univector<T> correlate(const univector_ref<const T>& src1, const univector_ref<const T>& src2);
 template <typename T>
 univector<T> autocorrelate(const univector_ref<const T>& src1);
-} // namespace internal
+} // namespace intrinsics
 
 /// @brief Convolution
 template <typename T, univector_tag Tag1, univector_tag Tag2>
 univector<T> convolve(const univector<T, Tag1>& src1, const univector<T, Tag2>& src2)
 {
-    return internal::convolve(src1.slice(), src2.slice());
+    return intrinsics::convolve(src1.slice(), src2.slice());
 }
 
 /// @brief Correlation
 template <typename T, univector_tag Tag1, univector_tag Tag2>
 univector<T> correlate(const univector<T, Tag1>& src1, const univector<T, Tag2>& src2)
 {
-    return internal::correlate(src1.slice(), src2.slice());
+    return intrinsics::correlate(src1.slice(), src2.slice());
 }
 
 /// @brief Auto-correlation
 template <typename T, univector_tag Tag1>
 univector<T> autocorrelate(const univector<T, Tag1>& src)
 {
-    return internal::autocorrelate(src.slice());
+    return intrinsics::autocorrelate(src.slice());
 }
 
 /// @brief Convolution using Filter API
@@ -91,12 +93,12 @@ protected:
     }
     void process_buffer(T* output, const T* input, size_t size) final;
 
+    const size_t size;
+    const size_t block_size;
     const dft_plan_real<T> fft;
     univector<u8> temp;
     std::vector<univector<complex<T>>> segments;
     std::vector<univector<complex<T>>> ir_segments;
-    const size_t size;
-    const size_t block_size;
     size_t input_position;
     univector<T> saved_input;
     univector<complex<T>> premul;
@@ -105,6 +107,6 @@ protected:
     univector<T> overlap;
     size_t position;
 };
-
+} // namespace CMT_ARCH_NAME
 } // namespace kfr
 CMT_PRAGMA_GNU(GCC diagnostic pop)

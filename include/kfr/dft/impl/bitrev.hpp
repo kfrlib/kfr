@@ -25,19 +25,21 @@
  */
 #pragma once
 
-#include "../../base/complex.hpp"
-#include "../../base/constants.hpp"
-#include "../../base/digitreverse.hpp"
-#include "../../base/vec.hpp"
+#include "../../simd/complex.hpp"
+#include "../../simd/constants.hpp"
+#include "../../simd/digitreverse.hpp"
+#include "../../simd/vec.hpp"
 
-#include "../../data/bitrev.hpp"
+#include "../data/bitrev.hpp"
 
 #include "ft.hpp"
 
 namespace kfr
 {
+inline namespace CMT_ARCH_NAME
+{
 
-namespace internal
+namespace intrinsics
 {
 
 constexpr bool fft_reorder_aligned = false;
@@ -74,7 +76,7 @@ CMT_GNU_CONSTEXPR inline u32 dig4rev_using_table(u32 x, size_t bits)
 }
 
 template <size_t log2n, size_t bitrev, typename T>
-KFR_INTRIN void fft_reorder_swap(T* inout, size_t i)
+KFR_INTRINSIC void fft_reorder_swap(T* inout, size_t i)
 {
     using cxx           = cvec<T, 16>;
     constexpr size_t N  = 1 << log2n;
@@ -86,7 +88,7 @@ KFR_INTRIN void fft_reorder_swap(T* inout, size_t i)
 }
 
 template <size_t log2n, size_t bitrev, typename T>
-KFR_INTRIN void fft_reorder_swap_two(T* inout, size_t i, size_t j)
+KFR_INTRINSIC void fft_reorder_swap_two(T* inout, size_t i, size_t j)
 {
     CMT_ASSUME(i != j);
     using cxx           = cvec<T, 16>;
@@ -103,7 +105,7 @@ KFR_INTRIN void fft_reorder_swap_two(T* inout, size_t i, size_t j)
 }
 
 template <size_t log2n, size_t bitrev, typename T>
-KFR_INTRIN void fft_reorder_swap(T* inout, size_t i, size_t j)
+KFR_INTRINSIC void fft_reorder_swap(T* inout, size_t i, size_t j)
 {
     CMT_ASSUME(i != j);
     using cxx           = cvec<T, 16>;
@@ -120,25 +122,25 @@ KFR_INTRIN void fft_reorder_swap(T* inout, size_t i, size_t j)
 }
 
 template <size_t log2n, size_t bitrev, typename T>
-KFR_INTRIN void fft_reorder_swap(complex<T>* inout, size_t i)
+KFR_INTRINSIC void fft_reorder_swap(complex<T>* inout, size_t i)
 {
     fft_reorder_swap<log2n, bitrev>(ptr_cast<T>(inout), i * 2);
 }
 
 template <size_t log2n, size_t bitrev, typename T>
-KFR_INTRIN void fft_reorder_swap_two(complex<T>* inout, size_t i0, size_t i1)
+KFR_INTRINSIC void fft_reorder_swap_two(complex<T>* inout, size_t i0, size_t i1)
 {
     fft_reorder_swap_two<log2n, bitrev>(ptr_cast<T>(inout), i0 * 2, i1 * 2);
 }
 
 template <size_t log2n, size_t bitrev, typename T>
-KFR_INTRIN void fft_reorder_swap(complex<T>* inout, size_t i, size_t j)
+KFR_INTRINSIC void fft_reorder_swap(complex<T>* inout, size_t i, size_t j)
 {
     fft_reorder_swap<log2n, bitrev>(ptr_cast<T>(inout), i * 2, j * 2);
 }
 
 template <typename T>
-KFR_INTRIN void fft_reorder(complex<T>* inout, csize_t<11>)
+KFR_INTRINSIC void fft_reorder(complex<T>* inout, csize_t<11>)
 {
     fft_reorder_swap_two<11>(inout, 0 * 4, 8 * 4);
     fft_reorder_swap<11>(inout, 1 * 4, 64 * 4);
@@ -207,7 +209,7 @@ KFR_INTRIN void fft_reorder(complex<T>* inout, csize_t<11>)
 }
 
 template <typename T>
-KFR_INTRIN void fft_reorder(complex<T>* inout, csize_t<7>)
+KFR_INTRINSIC void fft_reorder(complex<T>* inout, csize_t<7>)
 {
     constexpr size_t bitrev = 2;
     fft_reorder_swap_two<7, bitrev>(inout, 0 * 4, 2 * 4);
@@ -217,7 +219,7 @@ KFR_INTRIN void fft_reorder(complex<T>* inout, csize_t<7>)
 }
 
 template <typename T>
-KFR_INTRIN void fft_reorder(complex<T>* inout, csize_t<8>)
+KFR_INTRINSIC void fft_reorder(complex<T>* inout, csize_t<8>)
 {
     constexpr size_t bitrev = 4;
     fft_reorder_swap_two<8, bitrev>(inout, 0 * 4, 5 * 4);
@@ -231,7 +233,7 @@ KFR_INTRIN void fft_reorder(complex<T>* inout, csize_t<8>)
 }
 
 template <typename T>
-KFR_INTRIN void fft_reorder(complex<T>* inout, csize_t<9>)
+KFR_INTRINSIC void fft_reorder(complex<T>* inout, csize_t<9>)
 {
     constexpr size_t bitrev = 2;
     fft_reorder_swap_two<9, bitrev>(inout, 0 * 4, 4 * 4);
@@ -253,14 +255,14 @@ KFR_INTRIN void fft_reorder(complex<T>* inout, csize_t<9>)
 }
 
 template <typename T, bool use_br2>
-void cwrite_reordered(T* out, const cvec<T, 16>& value, size_t N4, cbool_t<use_br2>)
+KFR_INTRINSIC void cwrite_reordered(T* out, const cvec<T, 16>& value, size_t N4, cbool_t<use_br2>)
 {
     cwrite_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(out), N4,
                                             digitreverse<(use_br2 ? 2 : 4), 2>(value));
 }
 
 template <typename T, bool use_br2>
-KFR_INTRIN void fft_reorder_swap_n4(T* inout, size_t i, size_t j, size_t N4, cbool_t<use_br2>)
+KFR_INTRINSIC void fft_reorder_swap_n4(T* inout, size_t i, size_t j, size_t N4, cbool_t<use_br2>)
 {
     CMT_ASSUME(i != j);
     const cvec<T, 16> vi = cread_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + i), N4);
@@ -270,7 +272,7 @@ KFR_INTRIN void fft_reorder_swap_n4(T* inout, size_t i, size_t j, size_t N4, cbo
 }
 
 template <typename T>
-KFR_INTRIN void fft_reorder(complex<T>* inout, size_t log2n, ctrue_t use_br2)
+KFR_INTRINSIC void fft_reorder(complex<T>* inout, size_t log2n, ctrue_t use_br2)
 {
     const size_t N         = 1 << log2n;
     const size_t N4        = N / 4;
@@ -305,7 +307,7 @@ KFR_INTRIN void fft_reorder(complex<T>* inout, size_t log2n, ctrue_t use_br2)
 }
 
 template <typename T>
-KFR_INTRIN void fft_reorder(complex<T>* inout, size_t log2n, cfalse_t use_br2)
+KFR_INTRINSIC void fft_reorder(complex<T>* inout, size_t log2n, cfalse_t use_br2)
 {
     const size_t N         = size_t(1) << log2n;
     const size_t N4        = N / 4;
@@ -386,5 +388,6 @@ KFR_INTRIN void fft_reorder(complex<T>* inout, size_t log2n, cfalse_t use_br2)
         i += istep;
     }
 }
-} // namespace internal
+} // namespace intrinsics
+} // namespace CMT_ARCH_NAME
 } // namespace kfr

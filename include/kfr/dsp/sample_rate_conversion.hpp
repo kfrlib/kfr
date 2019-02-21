@@ -25,14 +25,17 @@
  */
 #pragma once
 
-#include "../base/function.hpp"
 #include "../base/memory.hpp"
 #include "../base/reduce.hpp"
-#include "../base/vec.hpp"
+#include "../simd/impl/function.hpp"
+#include "../simd/vec.hpp"
 #include "window.hpp"
 
 namespace kfr
 {
+inline namespace CMT_ARCH_NAME
+{
+
 enum class sample_rate_conversion_quality : int
 {
     draft   = 4,
@@ -52,32 +55,32 @@ struct samplerate_converter
     using ftype = subtype<T>;
 
 private:
-    KFR_INTRIN ftype window(ftype n) const
+    KFR_MEM_INTRINSIC ftype window(ftype n) const
     {
         return modzerobessel(kaiser_beta * sqrt(1 - sqr(2 * n - 1))) * reciprocal(modzerobessel(kaiser_beta));
     }
-    KFR_INTRIN ftype sidelobe_att() const { return kaiser_beta / 0.1102 + 8.7; }
-    KFR_INTRIN ftype transition_width() const { return (sidelobe_att() - 8) / (depth - 1) / 2.285; }
+    KFR_MEM_INTRINSIC ftype sidelobe_att() const { return kaiser_beta / 0.1102 + 8.7; }
+    KFR_MEM_INTRINSIC ftype transition_width() const { return (sidelobe_att() - 8) / (depth - 1) / 2.285; }
 
 public:
-    static KFR_INTRIN size_t filter_order(sample_rate_conversion_quality quality)
+    static KFR_MEM_INTRINSIC size_t filter_order(sample_rate_conversion_quality quality)
     {
-        return 1 << (static_cast<int>(quality) + 1);
+        return size_t(1) << (static_cast<int>(quality) + 1);
     }
 
     /// @brief Returns sidelobe attenuation for the given quality (in dB)
-    static KFR_INTRIN ftype sidelobe_attenuation(sample_rate_conversion_quality quality)
+    static KFR_MEM_INTRINSIC ftype sidelobe_attenuation(sample_rate_conversion_quality quality)
     {
         return (static_cast<int>(quality) - 3) * ftype(20);
     }
 
     /// @brief Returns transition width for the given quality (in rad)
-    static KFR_INTRIN ftype transition_width(sample_rate_conversion_quality quality)
+    static KFR_MEM_INTRINSIC ftype transition_width(sample_rate_conversion_quality quality)
     {
         return (sidelobe_attenuation(quality) - 8) / (filter_order(quality) - 1) / ftype(2.285);
     }
 
-    static KFR_INTRIN ftype window_param(sample_rate_conversion_quality quality)
+    static KFR_MEM_INTRINSIC ftype window_param(sample_rate_conversion_quality quality)
     {
         const ftype att = sidelobe_attenuation(quality);
         if (att > 50)
@@ -112,7 +115,8 @@ public:
 
         for (itype j = 0, jj = 0; j < taps; j++)
         {
-            filter[size_t(j)] = sinc((jj - halftaps) * cutoff * c_pi<ftype, 2>) * window(ftype(jj) / ftype(taps - 1));
+            filter[size_t(j)] =
+                sinc((jj - halftaps) * cutoff * c_pi<ftype, 2>) * window(ftype(jj) / ftype(taps - 1));
             jj += size_t(interpolation_factor);
             if (jj >= taps)
                 jj = jj - taps + 1;
@@ -122,25 +126,31 @@ public:
         filter    = filter * s;
     }
 
-    itype input_position_to_intermediate(itype in_pos) const { return in_pos * interpolation_factor; }
-    itype output_position_to_intermediate(itype out_pos) const { return out_pos * decimation_factor; }
+    KFR_MEM_INTRINSIC itype input_position_to_intermediate(itype in_pos) const
+    {
+        return in_pos * interpolation_factor;
+    }
+    KFR_MEM_INTRINSIC itype output_position_to_intermediate(itype out_pos) const
+    {
+        return out_pos * decimation_factor;
+    }
 
-    itype input_position_to_output(itype in_pos) const
+    KFR_MEM_INTRINSIC itype input_position_to_output(itype in_pos) const
     {
         return floor_div(input_position_to_intermediate(in_pos), decimation_factor).quot;
     }
-    itype output_position_to_input(itype out_pos) const
+    KFR_MEM_INTRINSIC itype output_position_to_input(itype out_pos) const
     {
         return floor_div(output_position_to_intermediate(out_pos), interpolation_factor).quot;
     }
 
-    itype output_size_for_input(itype input_size) const
+    KFR_MEM_INTRINSIC itype output_size_for_input(itype input_size) const
     {
         return input_position_to_output(input_position + input_size - 1) -
                input_position_to_output(input_position - 1);
     }
 
-    itype input_size_for_output(itype output_size) const
+    KFR_MEM_INTRINSIC itype input_size_for_output(itype output_size) const
     {
         return output_position_to_input(output_position + output_size - 1) -
                output_position_to_input(output_position - 1);
@@ -183,7 +193,6 @@ public:
             const std::lldiv_t input_pos =
                 floor_div(intermediate_start + interpolation_factor - 1, interpolation_factor);
             const itype input_start        = input_pos.quot; // first input sample
-            const itype input_end          = input_start + depth;
             const itype tap_start          = interpolation_factor - 1 - input_pos.rem;
             const univector_ref<T> tap_ptr = filter.slice(static_cast<size_t>(tap_start * depth));
 
@@ -219,8 +228,8 @@ public:
 
         return required_input_size;
     }
-    double get_fractional_delay() const { return (taps - 1) * 0.5 / decimation_factor; }
-    size_t get_delay() const { return static_cast<size_t>(get_fractional_delay()); }
+    KFR_MEM_INTRINSIC double get_fractional_delay() const { return (taps - 1) * 0.5 / decimation_factor; }
+    KFR_MEM_INTRINSIC size_t get_delay() const { return static_cast<size_t>(get_fractional_delay()); }
 
     ftype kaiser_beta;
     itype depth;
@@ -244,130 +253,140 @@ template <size_t factor, size_t offset, typename E>
 struct expression_downsample;
 
 template <typename E>
-struct expression_upsample<2, E> : expression_base<E>
+struct expression_upsample<2, E> : expression_with_arguments<E>
 {
-    using expression_base<E>::expression_base;
+    using expression_with_arguments<E>::expression_with_arguments;
     using value_type = value_type_of<E>;
     using T          = value_type;
 
-    size_t size() const noexcept { return expression_base<E>::size() * 2; }
+    KFR_MEM_INTRINSIC size_t size() const CMT_NOEXCEPT { return expression_with_arguments<E>::size() * 2; }
 
     template <size_t N>
-    vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_upsample& self, cinput_t cinput,
+                                                size_t index, vec_shape<T, N>)
     {
-        const vec<T, N / 2> x = this->argument_first(cinput, index / 2, vec_t<T, N / 2>());
+        const vec<T, N / 2> x = self.argument_first(cinput, index / 2, vec_shape<T, N / 2>());
         return interleave(x, zerovector(x));
     }
-    vec<T, 1> operator()(cinput_t cinput, size_t index, vec_t<T, 1>) const
+    KFR_INTRINSIC friend vec<T, 1> get_elements(const expression_upsample& self, cinput_t cinput,
+                                                size_t index, vec_shape<T, 1>)
     {
         if (index & 1)
             return 0;
         else
-            return this->argument_first(cinput, index / 2, vec_t<T, 1>());
+            return self.argument_first(cinput, index / 2, vec_shape<T, 1>());
     }
 };
 
 template <typename E>
-struct expression_upsample<4, E> : expression_base<E>
+struct expression_upsample<4, E> : expression_with_arguments<E>
 {
-    using expression_base<E>::expression_base;
+    using expression_with_arguments<E>::expression_with_arguments;
     using value_type = value_type_of<E>;
     using T          = value_type;
 
-    size_t size() const noexcept { return expression_base<E>::size() * 4; }
+    KFR_MEM_INTRINSIC size_t size() const CMT_NOEXCEPT { return expression_with_arguments<E>::size() * 4; }
 
     template <size_t N>
-    vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_upsample& self, cinput_t cinput,
+                                                size_t index, vec_shape<T, N>) CMT_NOEXCEPT
     {
-        const vec<T, N / 4> x  = this->argument_first(cinput, index / 4, vec_t<T, N / 4>());
+        const vec<T, N / 4> x  = self.argument_first(cinput, index / 4, vec_shape<T, N / 4>());
         const vec<T, N / 2> xx = interleave(x, zerovector(x));
         return interleave(xx, zerovector(xx));
     }
-    vec<T, 2> operator()(cinput_t cinput, size_t index, vec_t<T, 2>) const
+    KFR_INTRINSIC friend vec<T, 2> get_elements(const expression_upsample& self, cinput_t cinput,
+                                                size_t index, vec_shape<T, 2>) CMT_NOEXCEPT
     {
         switch (index & 3)
         {
         case 0:
-            return interleave(this->argument_first(cinput, index / 4, vec_t<T, 1>()), zerovector<T, 1>());
+            return interleave(self.argument_first(cinput, index / 4, vec_shape<T, 1>()), zerovector<T, 1>());
         case 3:
-            return interleave(zerovector<T, 1>(), this->argument_first(cinput, index / 4, vec_t<T, 1>()));
+            return interleave(zerovector<T, 1>(), self.argument_first(cinput, index / 4, vec_shape<T, 1>()));
         default:
             return 0;
         }
     }
-    vec<T, 1> operator()(cinput_t cinput, size_t index, vec_t<T, 1>) const
+    KFR_INTRINSIC friend vec<T, 1> get_elements(const expression_upsample& self, cinput_t cinput,
+                                                size_t index, vec_shape<T, 1>) CMT_NOEXCEPT
     {
         if (index & 3)
             return 0;
         else
-            return this->argument_first(cinput, index / 4, vec_t<T, 1>());
+            return self.argument_first(cinput, index / 4, vec_shape<T, 1>());
     }
 };
 
 template <typename E, size_t offset>
-struct expression_downsample<2, offset, E> : expression_base<E>
+struct expression_downsample<2, offset, E> : expression_with_arguments<E>
 {
-    using expression_base<E>::expression_base;
+    using expression_with_arguments<E>::expression_with_arguments;
     using value_type = value_type_of<E>;
     using T          = value_type;
 
-    size_t size() const noexcept { return expression_base<E>::size() / 2; }
+    KFR_MEM_INTRINSIC size_t size() const CMT_NOEXCEPT { return expression_with_arguments<E>::size() / 2; }
 
     template <size_t N>
-    vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_downsample& self, cinput_t cinput,
+                                                size_t index, vec_shape<T, N>) CMT_NOEXCEPT
     {
-        const vec<T, N* 2> x = this->argument_first(cinput, index * 2, vec_t<T, N * 2>());
-        return x.shuffle(csizeseq_t<N, offset, 2>());
+        const vec<T, N* 2> x = self.argument_first(cinput, index * 2, vec_shape<T, N * 2>());
+        return x.shuffle(csizeseq<N, offset, 2>);
     }
 };
 
 template <typename E, size_t offset>
-struct expression_downsample<4, offset, E> : expression_base<E>
+struct expression_downsample<4, offset, E> : expression_with_arguments<E>
 {
-    using expression_base<E>::expression_base;
+    using expression_with_arguments<E>::expression_with_arguments;
     using value_type = value_type_of<E>;
     using T          = value_type;
 
-    size_t size() const noexcept { return expression_base<E>::size() / 4; }
+    KFR_MEM_INTRINSIC size_t size() const CMT_NOEXCEPT { return expression_with_arguments<E>::size() / 4; }
 
     template <size_t N>
-    vec<T, N> operator()(cinput_t cinput, size_t index, vec_t<T, N>) const
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_downsample& self, cinput_t cinput,
+                                                size_t index, vec_shape<T, N>) CMT_NOEXCEPT
     {
-        const vec<T, N* 4> x = this->argument_first(cinput, index * 4, vec_t<T, N * 4>());
-        return x.shuffle(csizeseq_t<N, offset, 4>());
+        const vec<T, N* 4> x = self.argument_first(cinput, index * 4, vec_shape<T, N * 4>());
+        return x.shuffle(csizeseq<N, offset, 4>);
     }
 };
 } // namespace internal
 
 template <typename E1, size_t offset = 0>
-CMT_INLINE internal::expression_downsample<2, offset, E1> downsample2(E1&& e1, csize_t<offset> = csize_t<0>())
+KFR_FUNCTION internal::expression_downsample<2, offset, E1> downsample2(E1&& e1,
+                                                                        csize_t<offset> = csize_t<0>())
 {
     return internal::expression_downsample<2, offset, E1>(std::forward<E1>(e1));
 }
 
 template <typename E1, size_t offset = 0>
-CMT_INLINE internal::expression_downsample<4, offset, E1> downsample4(E1&& e1, csize_t<offset> = csize_t<0>())
+KFR_FUNCTION internal::expression_downsample<4, offset, E1> downsample4(E1&& e1,
+                                                                        csize_t<offset> = csize_t<0>())
 {
     return internal::expression_downsample<4, offset, E1>(std::forward<E1>(e1));
 }
 
 template <typename E1>
-CMT_INLINE internal::expression_upsample<2, E1> upsample2(E1&& e1)
+KFR_FUNCTION internal::expression_upsample<2, E1> upsample2(E1&& e1)
 {
     return internal::expression_upsample<2, E1>(std::forward<E1>(e1));
 }
 
 template <typename E1>
-CMT_INLINE internal::expression_upsample<4, E1> upsample4(E1&& e1)
+KFR_FUNCTION internal::expression_upsample<4, E1> upsample4(E1&& e1)
 {
     return internal::expression_upsample<4, E1>(std::forward<E1>(e1));
 }
 
 template <typename T = fbase>
-inline samplerate_converter<T> sample_rate_converter(sample_rate_conversion_quality quality,
-                                                     size_t interpolation_factor, size_t decimation_factor,
-                                                     subtype<T> scale  = subtype<T>(1),
-                                                     subtype<T> cutoff = 0.5f)
+KFR_FUNCTION samplerate_converter<T> sample_rate_converter(sample_rate_conversion_quality quality,
+                                                           size_t interpolation_factor,
+                                                           size_t decimation_factor,
+                                                           subtype<T> scale  = subtype<T>(1),
+                                                           subtype<T> cutoff = 0.5f)
 {
     using itype = typename samplerate_converter<T>::itype;
     return samplerate_converter<T>(quality, itype(interpolation_factor), itype(decimation_factor), scale,
@@ -376,12 +395,13 @@ inline samplerate_converter<T> sample_rate_converter(sample_rate_conversion_qual
 
 // Deprecated in 0.9.2
 template <typename T = fbase>
-inline samplerate_converter<T> resampler(sample_rate_conversion_quality quality, size_t interpolation_factor,
-                                         size_t decimation_factor, subtype<T> scale = subtype<T>(1),
-                                         subtype<T> cutoff = 0.5f)
+KFR_FUNCTION samplerate_converter<T> resampler(sample_rate_conversion_quality quality,
+                                               size_t interpolation_factor, size_t decimation_factor,
+                                               subtype<T> scale = subtype<T>(1), subtype<T> cutoff = 0.5f)
 {
     using itype = typename samplerate_converter<T>::itype;
     return samplerate_converter<T>(quality, itype(interpolation_factor), itype(decimation_factor), scale,
                                    cutoff);
 }
+} // namespace CMT_ARCH_NAME
 } // namespace kfr
