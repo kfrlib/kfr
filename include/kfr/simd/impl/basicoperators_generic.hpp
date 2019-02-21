@@ -560,7 +560,7 @@ KFR_INTRINSIC f32avx shl(const f32avx& x, unsigned y)
 #if defined CMT_ARCH_AVX2
     return _mm256_castsi256_ps(_mm256_slli_epi32(_mm256_castps_si256(x.v), y));
 #else
-    return _mm256_setr_m128(
+    return KFR_mm256_setr_m128(
         _mm_castsi128_ps(_mm_slli_epi32(_mm_castps_si128(_mm256_castps256_ps128(x.v)), y)),
         _mm_castsi128_ps(_mm_slli_epi32(_mm_castps_si128(_mm256_extractf128_ps(x.v, 1)), y)));
 #endif
@@ -570,7 +570,7 @@ KFR_INTRINSIC f64avx shl(const f64avx& x, unsigned y)
 #if defined CMT_ARCH_AVX2
     return _mm256_castsi256_pd(_mm256_slli_epi64(_mm256_castpd_si256(x.v), y));
 #else
-    return _mm256_setr_m128d(
+    return KFR_mm256_setr_m128d(
         _mm_castsi128_pd(_mm_slli_epi64(_mm_castpd_si128(_mm256_castpd256_pd128(x.v)), y)),
         _mm_castsi128_pd(_mm_slli_epi64(_mm_castpd_si128(_mm256_extractf128_pd(x.v, 1)), y)));
 #endif
@@ -580,7 +580,7 @@ KFR_INTRINSIC f32avx shr(const f32avx& x, unsigned y)
 #if defined CMT_ARCH_AVX2
     return _mm256_castsi256_ps(_mm256_srli_epi32(_mm256_castps_si256(x.v), y));
 #else
-    return _mm256_setr_m128(
+    return KFR_mm256_setr_m128(
         _mm_castsi128_ps(_mm_srli_epi32(_mm_castps_si128(_mm256_castps256_ps128(x.v)), y)),
         _mm_castsi128_ps(_mm_srli_epi32(_mm_castps_si128(_mm256_extractf128_ps(x.v, 1)), y)));
 #endif
@@ -590,7 +590,7 @@ KFR_INTRINSIC f64avx shr(const f64avx& x, unsigned y)
 #if defined CMT_ARCH_AVX2
     return _mm256_castsi256_pd(_mm256_srli_epi64(_mm256_castpd_si256(x.v), y));
 #else
-    return _mm256_setr_m128d(
+    return KFR_mm256_setr_m128d(
         _mm_castsi128_pd(_mm_srli_epi64(_mm_castpd_si128(_mm256_castpd256_pd128(x.v)), y)),
         _mm_castsi128_pd(_mm_srli_epi64(_mm_castpd_si128(_mm256_extractf128_pd(x.v, 1)), y)));
 #endif
