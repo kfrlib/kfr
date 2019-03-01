@@ -1,25 +1,34 @@
 # KFR - Fast, modern C++ DSP framework
 
 ![Build Status](https://img.shields.io/azure-devops/build/dlevin256/dlevin256/1/master.svg?style=flat-square)
-[![Gitter](https://img.shields.io/gitter/room/kfrlib/kfr.svg?maxAge=2592000&style=flat-square)](https://gitter.im/kfrlib/kfr)
+[![Gitter](https://img.shields.io/gitter/room/kfrlib/kfr.svg?maxAge=2592000&style=flat-square)](https://gitter.im/kfrlib/kfr) ![License](https://img.shields.io/github/license/kfrlib/kfr.svg?style=flat-square)
+
+Compiler support:
+
+![Clang 4+](https://img.shields.io/badge/Clang-4%2B-brightgreen.svg?style=flat-square)
+![Xcode 8.3+](https://img.shields.io/badge/Xcode-8.3%2B-brightgreen.svg?style=flat-square)
+![GCC 7+](https://img.shields.io/badge/GCC-7%2B-brightgreen.svg?style=flat-square)
+![MSVC 2017](https://img.shields.io/badge/MSVC-2017-brightgreen.svg?style=flat-square)
 
 https://www.kfrlib.com
 
 KFR is an open source C++ DSP framework that focuses on high performance (see benchmark results section).
 
-KFR is a header-only library (except DFT) and has no external dependencies.
+KFR has no external dependencies except C++14-compatible standard C++ library.
 
 # Features
 
 ## What's new in KFR 3.0
 
 * Optimized non-power of two DFT implementation
+* GCC 7+ support
+* MSVC 2017 support
 * Full AVX-512 support
 * EBU R128
 * Ability to include KFR as a subdirectory in cmake project
+* Ability to link objects built for multiple architectures into one binary
 * Number of automatic tests has been increased
 * C API for DFT
-* Partial GCC 8.x support
 * GPL version changed from 3 to 2+
 
 ## All features
@@ -73,12 +82,6 @@ Small numbers from 18 to 119 (*Higher is better*)
 Random sizes from 120 to 30720000 (*Higher is better*)
 
 ![DFT Performance](img/extra_double_120_30720000.png)
-
-### KFR 0.9.1
-
- (*Higher is better*)
-
-![DFT Performance](img/fft_performance.png)
 
 See [fft benchmark](https://github.com/kfrlib/fft-benchmark) for details about benchmarking process.
 
