@@ -127,7 +127,7 @@ KFR_INTRINSIC void cwrite(complex<T>* dest, const cvec<T, N>& value)
 template <size_t count, size_t N, size_t stride, bool A, typename T, size_t... indices>
 KFR_INTRINSIC cvec<T, count * N> cread_group_impl(const complex<T>* src, csizes_t<indices...>)
 {
-    return concat(read<N * 2, A>(ptr_cast<T>(src + stride * indices))...);
+    return concat(read(cbool<A>, csize<N * 2>, ptr_cast<T>(src + stride * indices))...);
 }
 template <size_t count, size_t N, size_t stride, bool A, typename T, size_t... indices>
 KFR_INTRINSIC void cwrite_group_impl(complex<T>* dest, const cvec<T, count * N>& value, csizes_t<indices...>)
@@ -138,7 +138,7 @@ KFR_INTRINSIC void cwrite_group_impl(complex<T>* dest, const cvec<T, count * N>&
 template <size_t count, size_t N, bool A, typename T, size_t... indices>
 KFR_INTRINSIC cvec<T, count * N> cread_group_impl(const complex<T>* src, size_t stride, csizes_t<indices...>)
 {
-    return concat(read<N * 2, A>(ptr_cast<T>(src + stride * indices))...);
+    return concat(read(cbool<A>, csize<N * 2>, ptr_cast<T>(src + stride * indices))...);
 }
 template <size_t count, size_t N, bool A, typename T, size_t... indices>
 KFR_INTRINSIC void cwrite_group_impl(complex<T>* dest, size_t stride, const cvec<T, count * N>& value,
@@ -1459,7 +1459,7 @@ KFR_INTRINSIC void butterfly(cbool_t<inverse>, const vec<T, N>& in0, const vec<T
 template <bool transposed, typename T, size_t... N, size_t Nout = csum<size_t, N...>()>
 KFR_INTRINSIC void cread_transposed(cbool_t<transposed>, const complex<T>* ptr, vec<T, N>&... w)
 {
-    vec<T, Nout> temp = read<Nout>(ptr_cast<T>(ptr));
+    vec<T, Nout> temp = read(cunaligned, csize<Nout>, ptr_cast<T>(ptr));
     if (transposed)
         temp = ctranspose<sizeof...(N)>(temp);
     split(temp, w...);

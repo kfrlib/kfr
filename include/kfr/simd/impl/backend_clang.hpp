@@ -173,41 +173,6 @@ KFR_INTRINSIC simd<T, N> simd_convert(simd_cvt_t<T, T, N>, const simd<T, N>& x)
 template <typename T, size_t N, bool A>
 using simd_storage = struct_with_alignment<simd<T, N>, A>;
 
-template <size_t N, bool A = false, typename T, KFR_ENABLE_IF(is_poweroftwo(N))>
-KFR_INTRINSIC simd<T, N> simd_read(const T* src)
-{
-    return ptr_cast<simd_storage<T, N, A>>(src)->value;
-}
-
-template <size_t N, bool A = false, typename T, KFR_ENABLE_IF(!is_poweroftwo(N)), typename = void>
-KFR_INTRINSIC simd<T, N> simd_read(const T* src)
-{
-    constexpr size_t first        = prev_poweroftwo(N);
-    constexpr size_t rest         = N - first;
-    constexpr auto extend_indices = cconcat(csizeseq<rest>, csizeseq<first - rest, index_undefined, 0>);
-    constexpr auto concat_indices = cvalseq_t<size_t, N>();
-    return simd_shuffle(
-        simd2_t<T, first, first>{}, simd_read<first, A>(src),
-        simd_shuffle(simd_t<T, rest>{}, simd_read<rest, false>(src + first), extend_indices, overload_auto),
-        concat_indices, overload_auto);
-}
-
-template <bool A = false, size_t N, typename T, KFR_ENABLE_IF(is_poweroftwo(N))>
-KFR_INTRINSIC void simd_write(T* dest, const simd<T, N>& value)
-{
-    ptr_cast<simd_storage<T, N, A>>(dest)->value = value;
-}
-
-template <bool A = false, size_t N, typename T, KFR_ENABLE_IF(!is_poweroftwo(N)), typename = void>
-KFR_INTRINSIC void simd_write(T* dest, const simd<T, N>& value)
-{
-    constexpr size_t first = prev_poweroftwo(N);
-    constexpr size_t rest  = N - first;
-    simd_write<A, first>(dest, simd_shuffle(simd_t<T, N>{}, value, csizeseq<first>, overload_auto));
-    simd_write<false, rest>(dest + first,
-                            simd_shuffle(simd_t<T, N>{}, value, csizeseq<rest, first>, overload_auto));
-}
-
 template <typename T, size_t N>
 KFR_INTRINSIC T simd_get_element(const simd<T, N>& value, size_t index)
 {

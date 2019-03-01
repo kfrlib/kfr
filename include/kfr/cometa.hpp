@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <limits>
 #include <random>
 #include <type_traits>
@@ -714,7 +715,7 @@ template <typename... List>
 using indicesfor_t = cvalseq_t<size_t, sizeof...(List), 0>;
 
 template <size_t group, size_t... indices, size_t N = group * sizeof...(indices)>
-constexpr inline auto scale(csizes_t<indices...> i) CMT_NOEXCEPT
+constexpr inline auto scale(csizes_t<indices...>) CMT_NOEXCEPT
 {
     return cconcat(csizeseq_t<group, group * indices>()...);
     //    return i[csizeseq_t<N>() / csize_t<group>()] * csize_t<group>() + csizeseq_t<N>() %
@@ -1941,10 +1942,10 @@ using overload_generic = overload_priority<0>;
 #define CMT_GEN_LIST(c, m, ...) CMT_GEN_LIST##c(m, __VA_ARGS__)
 
 template <typename Tout, typename Tin>
-constexpr CMT_INLINE Tout bitcast_anything(const Tin& in)
+CMT_INLINE Tout bitcast_anything(const Tin& in)
 {
     static_assert(sizeof(Tin) == sizeof(Tout), "Invalid arguments for bitcast_anything");
-#ifdef CMT_COMPILER_INTEL
+#if defined CMT_COMPILER_INTEL
     const union {
         const Tin in;
         Tout out;
@@ -1969,6 +1970,19 @@ template <typename Ty, typename T>
 constexpr T just_value(T value)
 {
     return value;
+}
+
+template <typename Tout, typename>
+CMT_INTRINSIC constexpr Tout pack_elements()
+{
+    return 0;
+}
+
+template <typename Tout, typename Arg, typename... Args>
+CMT_INTRINSIC constexpr Tout pack_elements(Arg x, Args... args)
+{
+    return static_cast<typename std::make_unsigned<Arg>::type>(x) |
+           (pack_elements<Tout, Arg>(args...) << (sizeof(Arg) * 8));
 }
 
 enum class special_constant

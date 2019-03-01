@@ -20,6 +20,10 @@ cmake_minimum_required(VERSION 3.1)
 add_definitions(-DKFR_TESTING=1)
 add_definitions(-DKFR_SRC_DIR=\"${CMAKE_SOURCE_DIR}\")
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    add_compile_options(-Wno-parentheses)
+endif ()
+
 # Binary output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${PROJECT_BINARY_DIR}/bin)
@@ -29,8 +33,11 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/tests/cmake/")
 if (ENABLE_ASMTEST)
     add_executable(asm_test asm_test.cpp)
     target_link_libraries(asm_test kfr)
-    target_set_arch(asm_test PRIVATE avx)
+    target_set_arch(asm_test PRIVATE avx2)
     target_compile_definitions(asm_test PRIVATE KFR_SHOW_NOT_OPTIMIZED)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options(asm_test PRIVATE -fno-stack-protector)
+    endif ()
 
     add_custom_command(TARGET asm_test POST_BUILD COMMAND objconv -fyasm $<TARGET_FILE:asm_test>)
 endif()
@@ -113,30 +120,32 @@ function(add_x86_test ARCH)
 
 endfunction()
 
+message(STATUS "ARCH_TESTS = ${ARCH_TESTS}")
+
+if (ARCH_TESTS AND ARCH_TESTS STREQUAL "ON")
+    set (ARCH_LIST generic sse2 ssse3 sse42 avx avx2 avx512)
+else ()
+    string (REPLACE "," ";" ARCH_LIST "${ARCH_TESTS}")
+endif ()
+
+if (MSVC AND NOT CLANG)
+    list(REMOVE_ITEM ARCH_LIST generic)
+endif ()
+
+message(STATUS "Testing for ${ARCH_LIST}")
+
 if (ARCH_TESTS)
-    if (NOT MSVC OR CLANG)
-        add_x86_test(generic)
-    endif ()
-    add_x86_test(sse2)
-    add_x86_test(sse3)
-    add_x86_test(ssse3)
-    add_x86_test(sse41)
-    add_x86_test(avx)
-    add_x86_test(avx2)
-    add_x86_test(avx512)
+
+    foreach(A IN LISTS ARCH_LIST)
+        add_x86_test(${A})
+    endforeach()
 
     if (ARCH_TESTS_MULTI)
         add_executable(all_tests_multiarch all_tests.cpp)
         target_compile_definitions(all_tests_multiarch PRIVATE KFR_MULTI_ARCH)
-        target_link_libraries(all_tests_multiarch
-                all_tests_multiarch_sse2
-                all_tests_multiarch_sse3
-                all_tests_multiarch_ssse3
-                all_tests_multiarch_sse41
-                all_tests_multiarch_avx
-                all_tests_multiarch_avx2
-                all_tests_multiarch_avx512
-                )
+        foreach(A IN LISTS ARCH_LIST)
+            target_link_libraries(all_tests_multiarch all_tests_multiarch_${A})
+        endforeach()
     endif ()
 endif()
 
@@ -162,13 +171,8 @@ if (NOT IOS)
             COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests)
 
     if (ARCH_TESTS)
-        add_test(NAME generic COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_generic )
-        add_test(NAME sse2    COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_sse2    )
-        add_test(NAME sse3    COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_sse3    )
-        add_test(NAME ssse3   COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_ssse3   )
-        add_test(NAME sse41   COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_sse41   )
-        add_test(NAME avx     COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_avx     )
-        add_test(NAME avx2    COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_avx2    )
-        add_test(NAME avx512  COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_avx512  )
+        foreach(A IN LISTS ARCH_LIST)
+            add_test(NAME ${A} COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_${A})
+        endforeach()
     endif ()
 endif ()

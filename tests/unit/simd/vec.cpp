@@ -110,5 +110,25 @@ TEST(cast)
         [](auto t, special_value x) { return is_in_range_of<f64>(x.get<subtype<type_of<decltype(t)>>>()); });
 }
 
+TEST(unaligned_read)
+{
+    testo::matrix(named("type") = numeric_vector_types<vec>, [](auto type) {
+        using T                   = type_of<decltype(type)>;
+        using Tsub                = subtype<T>;
+        constexpr static size_t N = T::size();
+        Tsub data[N * 2];
+        for (size_t i = 0; i < arraysize(data); i++)
+        {
+            data[i] = static_cast<Tsub>(i);
+        }
+
+        for (size_t i = 0; i < N; i++)
+        {
+//            testo::scope sc(as_string("i = ", i));
+            CHECK(read<N, false>(data + i) == (enumerate<Tsub, N>() + static_cast<Tsub>(i)));
+        }
+    });
+}
+
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

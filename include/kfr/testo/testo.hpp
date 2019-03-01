@@ -346,6 +346,7 @@ void matrix(named_arg<Arg0>&& arg0, named_arg<Arg1>&& arg1, named_arg<Arg2>&& ar
 
 CMT_UNUSED static int run_all(const std::string& name = std::string(), bool show_successful = false)
 {
+    console_color c(White);
     std::vector<test_case*> success;
     std::vector<test_case*> failed;
     int success_checks = 0;
@@ -380,6 +381,7 @@ CMT_UNUSED static int run_all(const std::string& name = std::string(), bool show
     }
     return static_cast<int>(failed.size());
 }
+
 
 template <typename T1, typename T2>
 void assert_is_same()

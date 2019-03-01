@@ -41,6 +41,7 @@ CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wignored-qualifiers")
 
 #ifdef KFR_TESTING
 #include "../testo/testo.hpp"
+#include "../cometa/function.hpp"
 #endif
 
 #include "../cometa.hpp"
@@ -149,12 +150,20 @@ constexpr ctypes_t<i8, i16, i32, i64, u8, u16, u32, u64, f32
 
 constexpr csizes_t<1, 2, 3, 4, 8, 16, 32, 64> test_vector_sizes{};
 
+#ifdef CMT_ARCH_AVX512
+constexpr size_t max_test_size = 128;
+#elif defined CMT_ARCH_AVX
+constexpr size_t max_test_size = 64;
+#else
+constexpr size_t max_test_size = 32;
+#endif
+
 template <template <typename, size_t> class vec_tpl, typename T,
           typename sizes =
 #ifdef KFR_EXTENDED_TESTS
-              cfilter_t<decltype(test_vector_sizes), decltype(test_vector_sizes <= csize<64 / sizeof(T)>)>
+              cfilter_t<decltype(test_vector_sizes), decltype(test_vector_sizes <= csize<max_test_size / sizeof(T)>)>
 #else
-              csizes_t<1>
+              csizes_t<1, 2>
 #endif
           >
 struct vector_types_for_size_t_impl;

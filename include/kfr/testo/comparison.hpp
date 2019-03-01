@@ -79,55 +79,46 @@ struct eplison_scope<void>
     eplison_scope<long double> ld;
 };
 
-template <>
-struct equality_comparer<float, float>
-{
-    bool operator()(const float& l, const float& r) const
-    {
-        return !(std::abs(l - r) > current_epsilon<float>());
-    }
-};
-template <>
-struct equality_comparer<double, double>
-{
-    bool operator()(const double& l, const double& r) const
-    {
-        return !(std::abs(l - r) > current_epsilon<double>());
-    }
-};
-template <>
-struct equality_comparer<long double, long double>
-{
-    bool operator()(const long double& l, const long double& r) const
-    {
-        return !(std::abs(l - r) > current_epsilon<long double>());
-    }
-};
-
 CMT_PRAGMA_GNU(GCC diagnostic pop)
 
-template <typename L, typename R>
-struct equality_comparer<L, R, void_t<enable_if<!compound_type_traits<L>::is_scalar>>>
+template <typename T1, typename T2,
+          CMT_ENABLE_IF(compound_type_traits<T1>::is_scalar&& compound_type_traits<T2>::is_scalar &&
+                        (std::is_floating_point<T1>::value || std::is_floating_point<T2>::value))>
+constexpr bool deep_is_equal(const T1& x, const T2& y)
 {
-    using Tsubtype = subtype<L>;
-    constexpr static static_assert_type_eq<subtype<L>, subtype<R>> assert{};
-
-    bool operator()(const L& l, const R& r) const
-    {
-        if (compound_type_traits<L>::width != compound_type_traits<R>::width)
-            return false;
-
-        compound_type_traits<L> itl;
-        compound_type_traits<R> itr;
-        for (size_t i = 0; i < compound_type_traits<L>::width; i++)
-        {
-            equality_comparer<Tsubtype, Tsubtype> cmp;
-            if (!cmp(itl.at(l, i), itr.at(r, i)))
-                return false;
-        }
+    using C    = std::common_type_t<T1, T2>;
+    const C xx = static_cast<C>(x);
+    const C yy = static_cast<C>(y);
+    if (std::isnan(xx) && std::isnan(yy))
         return true;
+    if (std::isnan(xx) || std::isnan(yy))
+        return false;
+
+    return !(std::abs(xx - yy) > current_epsilon<C>());
+}
+
+template <typename T1, typename T2,
+          CMT_ENABLE_IF(compound_type_traits<T1>::is_scalar&& compound_type_traits<T2>::is_scalar &&
+                        !std::is_floating_point<T1>::value && !std::is_floating_point<T2>::value)>
+constexpr bool deep_is_equal(const T1& x, const T2& y)
+{
+    return x == y;
+}
+
+template <typename T1, typename T2,
+          CMT_ENABLE_IF(!compound_type_traits<T1>::is_scalar || !compound_type_traits<T2>::is_scalar)>
+constexpr bool deep_is_equal(const T1& x, const T2& y)
+{
+    static_assert(compound_type_traits<T1>::width == compound_type_traits<T2>::width ||
+                      compound_type_traits<T1>::is_scalar || compound_type_traits<T2>::is_scalar,
+                  "");
+    for (size_t i = 0; i < std::max(+compound_type_traits<T1>::width, +compound_type_traits<T2>::width); i++)
+    {
+        if (!deep_is_equal(compound_type_traits<T1>::at(x, i), compound_type_traits<T2>::at(y, i)))
+            return false;
     }
-};
+    return true;
+}
 
 struct cmp_eq
 {
@@ -136,8 +127,7 @@ struct cmp_eq
     template <typename L, typename R>
     bool operator()(L&& left, R&& right) const
     {
-        equality_comparer<decay<L>, decay<R>> eq;
-        return eq(left, right);
+        return deep_is_equal(left, right);
     }
 };
 

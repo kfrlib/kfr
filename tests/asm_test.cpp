@@ -4,11 +4,19 @@
  * See LICENSE.txt for details
  */
 
+#define KFR_EXTENDED_TESTS
+
 #include <kfr/base.hpp>
 #include <kfr/io.hpp>
 #include <kfr/testo/console_colors.hpp>
 
 using namespace kfr;
+
+#ifdef CMT_COMPILER_MSVC
+#define KFR_PUBLIC CMT_PUBLIC_C CMT_DLL_EXPORT
+#else
+#define KFR_PUBLIC CMT_PUBLIC_C
+#endif
 
 #define TEST_ASM_8(fn, ty, MACRO)                                                                            \
     MACRO(fn, ty, 1)                                                                                         \
@@ -42,12 +50,6 @@ using namespace kfr;
     MACRO(fn, ty, 4)                                                                                         \
     MACRO(fn, ty, 8)                                                                                         \
     MACRO(fn, ty, 16)
-
-#ifdef CMT_COMPILER_MSVC
-#define KFR_PUBLIC CMT_PUBLIC_C CMT_DLL_EXPORT
-#else
-#define KFR_PUBLIC CMT_PUBLIC_C
-#endif
 
 #define TEST_ASM_VTY1(fn, ty, n)                                                                             \
     KFR_PUBLIC void asm__test__##fn##__##ty##__##n(vec<ty, n>& r, const vec<ty, n>& x) { r = kfr::fn(x); }
@@ -120,6 +122,28 @@ using namespace kfr;
 
 #define TEST_ASM_DOUBLE1(fn, ty, n)                                                                          \
     KFR_PUBLIC void asm__test__##fn##__##ty##__##n(vec<ty, n * 2>& r, const vec<ty, n>& x) { r = kfr::fn(x); }
+
+#define TEST_READ(fn, ty, n)                                                                                 \
+    KFR_PUBLIC void asm__test__##fn##__##ty##__##n##__aligned(vec<ty, n>& __restrict r,                      \
+                                                              const ty* __restrict x)                        \
+    {                                                                                                        \
+        r = kfr::fn<n, true>(x);                                                                             \
+    }                                                                                                        \
+    KFR_PUBLIC void asm__test__##fn##__##ty##__##n##__unaligned(vec<ty, n> & __restrict r,                   \
+                                                                const ty* __restrict x)                      \
+    {                                                                                                        \
+        r = kfr::fn<n, false>(x);                                                                            \
+    }
+
+#define TEST_WRITE(fn, ty, n)                                                                                \
+    KFR_PUBLIC void asm__test__##fn##__##ty##__##n##__aligned(ty* __restrict p, const vec<ty, n>& x)         \
+    {                                                                                                        \
+        kfr::fn<true>(p, x);                                                                                 \
+    }                                                                                                        \
+    KFR_PUBLIC void asm__test__##fn##__##ty##__##n##__unaligned(ty * __restrict p, const vec<ty, n>& x)      \
+    {                                                                                                        \
+        kfr::fn<false>(p, x);                                                                                \
+    }
 
 #define TEST_ASM_U(fn, MACRO)                                                                                \
     TEST_ASM_8(fn, u8, MACRO)                                                                                \
@@ -203,10 +227,14 @@ TEST_ASM_UIF(make_vector, TEST_ASM_MAKE_VECTOR)
 
 TEST_ASM_UIF(broadcast, TEST_ASM_BROADCAST)
 
+TEST_ASM_UIF(read, TEST_READ)
+
+TEST_ASM_UIF(write, TEST_WRITE)
+
 namespace kfr
 {
 #ifdef KFR_SHOW_NOT_OPTIMIZED
-CMT_PUBLIC_C CMT_DLL_EXPORT void not_optimized(const char* fn) CMT_NOEXCEPT { puts(fn); }
+KFR_PUBLIC void not_optimized(const char* fn) CMT_NOEXCEPT { puts(fn); }
 #endif
 } // namespace kfr
 

@@ -134,6 +134,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/basicoperators_generic.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/function.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/operators.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/read_write.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/simd.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/intrinsics.h
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/specializations.i

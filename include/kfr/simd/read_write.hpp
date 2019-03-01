@@ -25,9 +25,7 @@
  */
 #pragma once
 
-#include "shuffle.hpp"
-#include "types.hpp"
-#include "vec.hpp"
+#include "impl/read_write.hpp"
 
 namespace kfr
 {
@@ -35,15 +33,16 @@ inline namespace CMT_ARCH_NAME
 {
 
 template <size_t N, bool A = false, typename T>
-KFR_INTRINSIC static vec<T, N> read(const T* src)
+KFR_INTRINSIC vec<T, N> read(const T* src)
 {
-    return vec<T, N>(src, cbool_t<A>());
+    return vec<T, N>::from_flatten(intrinsics::read(cbool<A>, csize<N * compound_type_traits<T>::deep_width>,
+                                                    ptr_cast<deep_subtype<T>>(src)));
 }
 
 template <bool A = false, size_t N, typename T>
-KFR_INTRINSIC static void write(T* dest, const vec<T, N>& value)
+KFR_INTRINSIC void write(T* dest, const vec<T, N>& value)
 {
-    value.write(dest, cbool_t<A>());
+    intrinsics::write(cbool<A>, ptr_cast<deep_subtype<T>>(dest), value.flatten());
 }
 
 template <typename... Indices, typename T, size_t Nout = 1 + sizeof...(Indices)>
@@ -239,5 +238,24 @@ KFR_INTRINSIC vec<T, N> partial_mask(size_t index, vec_shape<T, N>)
 {
     return partial_mask<T, N>(index);
 }
+
+// read/write
+template <typename T, size_t N>
+template <bool aligned>
+KFR_MEM_INTRINSIC constexpr vec<T, N>::vec(const value_type* src, cbool_t<aligned>) CMT_NOEXCEPT
+    : vec(vec<T, N>::from_flatten(intrinsics::read(cbool<aligned>,
+                                                   csize<N * compound_type_traits<T>::deep_width>,
+                                                   ptr_cast<deep_subtype<T>>(src))))
+{
+}
+
+template <typename T, size_t N>
+template <bool aligned>
+KFR_MEM_INTRINSIC const vec<T, N>& vec<T, N>::write(value_type* dest, cbool_t<aligned>) const CMT_NOEXCEPT
+{
+    intrinsics::write(cbool<aligned>, ptr_cast<deep_subtype<T>>(dest), flatten());
+    return *this;
+}
+
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
