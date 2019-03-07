@@ -67,6 +67,24 @@ mark_as_advanced(ENABLE_ASMTEST)
 mark_as_advanced(REGENERATE_TESTS)
 mark_as_advanced(DISABLE_CLANG_EXTENSIONS)
 
+if (IOS)
+    set(STD_LIB)
+else ()
+    set(STD_LIB stdc++)
+endif ()
+
+if (ANDROID)
+    set(PTHREAD_LIB)
+    
+    if (${ANDROID_ABI} STREQUAL "x86")
+        set(CPU_ARCH SSSE3)
+    elseif (${ANDROID_ABI} STREQUAL "x86_64")
+        set(CPU_ARCH SSE42)
+    endif ()
+else ()
+    set(PTHREAD_LIB pthread)
+endif ()
+
 if (NOT CPU_ARCH)
     set(CPU_ARCH avx2)
 endif ()
@@ -101,18 +119,6 @@ if (WIN32)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
     add_definitions(-D_ENABLE_EXTENDED_ALIGNED_STORAGE)
 endif()
-
-if (IOS)
-    set(STD_LIB)
-else ()
-    set(STD_LIB stdc++)
-endif ()
-
-if (ANDROID)
-    set(PTHREAD_LIB)
-else ()
-    set(PTHREAD_LIB pthread)
-endif ()
 
 # KFR library
 add_library(kfr INTERFACE)
