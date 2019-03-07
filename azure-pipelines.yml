@@ -123,7 +123,10 @@ jobs:
   steps:
   - script: |
       choco install ninja
-      ci\run.cmd build-release -DCMAKE_TOOLCHAIN_FILE=%ANDROID_NDK_HOME%\build\cmake\android.toolchain.cmake -DANDROID_ABI=armeabi-v7a -DANDROID_ARM_NEON=TRUE -DSKIP_TESTS=ON -DCMAKE_BUILD_TYPE=Release
+      echo y > %TMP%\always_yes
+      echo y >> %TMP%\always_yes
+      %ANDROID_HOME%\tools\bin\sdkmanager.bat --install "ndk-bundle" < %TMP%\always_yes
+      ci\run.cmd build-release -DCMAKE_TOOLCHAIN_FILE=%ANDROID_HOME%\ndk-bundle\build\cmake\android.toolchain.cmake -DANDROID_ABI=armeabi-v7a -DANDROID_ARM_NEON=TRUE -DSKIP_TESTS=ON -DCMAKE_BUILD_TYPE=Release
 
 - job: Android_AARCH64_Clang_Release
   pool:
@@ -131,7 +134,10 @@ jobs:
   steps:
   - script: |
       choco install ninja
-      ci\run.cmd build-release -DCMAKE_TOOLCHAIN_FILE=%ANDROID_NDK_HOME%\build\cmake\android.toolchain.cmake -DANDROID_ABI=arm64-v8a -DANDROID_ARM_NEON=TRUE -DSKIP_TESTS=ON -DCMAKE_BUILD_TYPE=Release
+      echo y > %TMP%\always_yes
+      echo y >> %TMP%\always_yes
+      %ANDROID_HOME%\tools\bin\sdkmanager.bat --install "ndk-bundle" < %TMP%\always_yes
+      ci\run.cmd build-release -DCMAKE_TOOLCHAIN_FILE=%ANDROID_HOME%\ndk-bundle\build\cmake\android.toolchain.cmake -DANDROID_ABI=arm64-v8a -DANDROID_ARM_NEON=TRUE -DSKIP_TESTS=ON -DCMAKE_BUILD_TYPE=Release
 
 - job: Windows_MinGW_x86_64_AVX512_Clang_Release
   pool: WIN-AVX512
