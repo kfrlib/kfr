@@ -68,10 +68,10 @@ mark_as_advanced(REGENERATE_TESTS)
 mark_as_advanced(DISABLE_CLANG_EXTENSIONS)
 
 if (NOT CPU_ARCH)
-    set(CPU_ARCH avx2)
+    set(CPU_ARCH detect)
 endif ()
 
-if (CPU_ARCH STREQUAL "detect")
+if (CPU_ARCH STREQUAL "detect" AND X86)
     message(STATUS "Detecting native cpu...")
     try_run(
             RUN_RESULT COMPILE_RESULT
