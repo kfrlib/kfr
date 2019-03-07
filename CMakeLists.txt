@@ -77,7 +77,7 @@ if (CPU_ARCH STREQUAL "detect" AND X86)
     try_run(
             RUN_RESULT COMPILE_RESULT
             "${CMAKE_BINARY_DIR}/tmpdir"
-            ${CMAKE_SOURCE_DIR}/cmake/detect_cpu.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/cmake/detect_cpu.cpp
             CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${CMAKE_SOURCE_DIR}/include"
             COMPILE_OUTPUT_VARIABLE COMPILE_OUT
             RUN_OUTPUT_VARIABLE RUN_OUT
