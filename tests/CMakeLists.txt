@@ -42,7 +42,7 @@ if (ENABLE_ASMTEST)
     add_custom_command(TARGET asm_test POST_BUILD COMMAND objconv -fyasm $<TARGET_FILE:asm_test>)
 endif()
 
-if (NOT ARM)
+if (X86)
     if(MSVC AND NOT CLANG)
         add_executable(multiarch multiarch.cpp multiarch_fir_sse2.cpp multiarch_fir_avx.cpp)
         set_source_files_properties(multiarch_fir_sse2.cpp PROPERTIES COMPILE_FLAGS /arch:SSE2)
@@ -159,10 +159,10 @@ else ()
     set(EMULATOR "")
 endif ()
 
-if (NOT IOS)
+if (NOT SKIP_TESTS)
     enable_testing()
 
-    if (NOT ARM)
+    if (X86)
         add_test(NAME multiarch
                 COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/multiarch)
     endif ()
