@@ -1,5 +1,35 @@
 # Changelog
 
+## 3.0.7
+
+2019-03-11
+
+#### Added
+
+- Detected CPU is now saved to CMake cache
+- Linux/AArch64 tests have been added to CI
+
+#### Changed
+
+- `mask<>` is now a specialization of `vec<>`. This allows using many `vec` functions for masks
+
+#### Fixed
+
+- Fixed the bug with infinitely loading in Intellisense
+
+## 3.0.6
+
+2019-03-07
+
+#### Added
+
+- Android arm & arm64 tests have been added to CI
+
+#### Fixed
+
+- Fixed Android support (thanks to https://github.com/Jman420)
+- Fixed building cpu detection tool in CMake subdirectory (thanks to https://github.com/Jman420)
+
 ## 3.0.5
 
 2019-02-21
@@ -29,7 +59,7 @@
 
 #### Changed
 
-- KFR_READCYCLECOUNTER may be redefined to point to any function returning (pseudo-)random value
+- `KFR_READCYCLECOUNTER` may be redefined to point to any function returning (pseudo-)random value
 - Ability to disable random number initialization functions
 
 #### Fixed
@@ -41,14 +71,14 @@
 #### Added
 
 - Partial compatibility for Visual Studio 2017
-- Support for KFR_USE_STD_ALLOCATION
-- univector support for abstract_reader/abstract_writer
+- Support for `KFR_USE_STD_ALLOCATION`
+- `univector` support for `abstract_reader`/`abstract_writer`
 
 #### Changed
 
 #### Fixed
 
-- Paths in CMakeLists.txt
+- Paths in `CMakeLists.txt`
 
 ## 3.0.2
 
@@ -57,10 +87,10 @@
 #### Added
 
 - More documentation
-- dspplot: freqticks parameter
-- dspplot: freq_lim parameter
-- dspplot: freq_dB_lim parameter
-- dspplot: phasearg parameter
+- dspplot: `freqticks` parameter
+- dspplot: `freq_lim` parameter
+- dspplot: `freq_dB_lim` parameter
+- dspplot: `phasearg` parameter
 - More tests for Sample Rate Converter
 
 #### Changed
@@ -72,7 +102,7 @@
 
 #### Fixed
 
-- amp_to_dB function
+- `amp_to_dB` function
 - 24-bit audio reading
 
 ## 3.0.1
@@ -86,7 +116,7 @@
 - Audio sample conversion
 - Interleaving/deinterleaving
 - sample_rate_converter example
-- Sample Rate Converter: process() function
+- Sample Rate Converter: `process`() function
 
 #### Changed
 
@@ -96,7 +126,7 @@
 
 #### Fixed
 
-- Resampler bug: sequential calls to resampler::operator() may fail
+- Resampler bug: sequential calls to `resampler::operator()` may fail
 
 ### 3.0.0
 
