@@ -43,6 +43,11 @@ constexpr cstring<Nout> gettypename_impl(const char* str, csizes_t<indices...>) 
 {
     return cstring<Nout>{ { (str[indices])..., 0 } };
 }
+template <size_t... indices>
+constexpr cstring<1> gettypename_impl(const char*, csizes_t<>) CMT_NOEXCEPT
+{
+    return cstring<1>{ { 0 } };
+}
 } // namespace details
 
 #ifdef CMT_COMPILER_MSVC
@@ -52,13 +57,15 @@ constexpr cstring<Nout> gettypename_impl(const char* str, csizes_t<indices...>) 
 #endif
 
 template <typename T>
-constexpr auto KFR_CALL_CONV_SPEC ctype_name() CMT_NOEXCEPT
+constexpr auto KFR_CALL_CONV_SPEC ctype_name() noexcept
 {
-    static_assert(details::typename_prefix + details::typename_postfix + 1 <= sizeof(CMT_FUNC_SIGNATURE) - 1,
-                  "Incorrect details::typename_prefix or details::typename_postfix");
-    return details::gettypename_impl(CMT_FUNC_SIGNATURE + details::typename_prefix,
-                                     csizeseq_t<(sizeof(CMT_FUNC_SIGNATURE) - 1 - details::typename_prefix -
-                                                 details::typename_postfix)>());
+    constexpr size_t length =
+        sizeof(CMT_FUNC_SIGNATURE) - 1 > details::typename_prefix + details::typename_postfix
+            ? sizeof(CMT_FUNC_SIGNATURE) - 1 - details::typename_prefix - details::typename_postfix
+            : 0;
+    static_assert(length > 0, "");
+    return details::gettypename_impl(CMT_FUNC_SIGNATURE + (length > 0 ? details::typename_prefix : 0),
+                                     csizeseq<length>);
 }
 
 /**
