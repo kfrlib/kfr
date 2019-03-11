@@ -124,10 +124,30 @@ TEST(unaligned_read)
 
         for (size_t i = 0; i < N; i++)
         {
-//            testo::scope sc(as_string("i = ", i));
+            testo::scope sc(as_string("i = ", i));
             CHECK(read<N, false>(data + i) == (enumerate<Tsub, N>() + static_cast<Tsub>(i)));
         }
     });
+}
+
+TEST(mask_broadcast)
+{
+    CHECK(mask<i32, 4>(mask<f32, 4>(true, false, true, false)).asvec() == vec<i32, 4>(-1, 0, -1, 0));
+    CHECK(mask<i32, 4>(mask<f32, 4>(true)).asvec() == vec<i32, 4>(-1, -1, -1, -1));
+}
+
+TEST(masks)
+{
+    mask<float, 4> m = make_mask<float>(false, true, false, true);
+    vec<float, 4> v  = m.asvec();
+    CHECK(bit<float>(m[0]) == false);
+    CHECK(bit<float>(m[1]) == true);
+    CHECK(bit<float>(m[2]) == false);
+    CHECK(bit<float>(m[3]) == true);
+    CHECK(float(v[0]) == maskbits<float>(false));
+    CHECK(float(v[1]) == maskbits<float>(true));
+    CHECK(float(v[2]) == maskbits<float>(false));
+    CHECK(float(v[3]) == maskbits<float>(true));
 }
 
 } // namespace CMT_ARCH_NAME

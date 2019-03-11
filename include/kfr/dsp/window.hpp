@@ -131,7 +131,7 @@ struct expression_rectangular : input_expression
                                                     size_t index, vec_shape<T, N>)
     {
         using TI           = utype<T>;
-        const vec<TI, N> i = enumerate(vec<TI, N>()) + static_cast<TI>(index);
+        const vec<TI, N> i = enumerate(vec_shape<TI, N>()) + static_cast<TI>(index);
         return select(i < static_cast<TI>(self.m_size), T(1), T(0));
     }
     size_t size() const { return m_size; }

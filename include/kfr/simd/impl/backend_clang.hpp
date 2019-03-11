@@ -36,7 +36,7 @@ namespace intrinsics
 {
 
 template <typename TT, size_t NN>
-using simd = TT __attribute__((ext_vector_type(NN)));
+using simd = unwrap_bit<TT> __attribute__((ext_vector_type(NN)));
 
 template <typename T, size_t N1>
 KFR_INTRINSIC simd<T, N1> simd_concat(const simd<T, N1>& x);
@@ -51,13 +51,13 @@ KFR_INTRINSIC void simd_make(ctype_t<Tout>) = delete;
 template <typename Tout, typename Arg>
 KFR_INTRINSIC simd<Tout, 1> simd_make(ctype_t<Tout>, const Arg& arg)
 {
-    return (simd<Tout, 1>){ static_cast<Tout>(arg) };
+    return (simd<Tout, 1>){ static_cast<unwrap_bit<Tout>>(arg) };
 }
 
 template <typename Tout, typename... Args, size_t N = sizeof...(Args), KFR_ENABLE_IF(N > 1)>
 KFR_INTRINSIC simd<Tout, N> simd_make(ctype_t<Tout>, const Args&... args)
 {
-    return (simd<Tout, N>){ static_cast<Tout>(args)... };
+    return (simd<Tout, N>){ static_cast<unwrap_bit<Tout>>(args)... };
 }
 
 /// @brief Returns vector with undefined value
@@ -111,7 +111,7 @@ KFR_INTRINSIC simd<T, N> simd_set_element(simd<T, N> value, csize_t<index>, T x)
 template <typename T, size_t N>
 KFR_INTRINSIC simd<T, N> simd_broadcast(simd_t<T, N>, identity<T> value)
 {
-    return value;
+    return static_cast<unwrap_bit<T>>(value);
 }
 
 template <typename T, size_t N, size_t... indices, size_t Nout = sizeof...(indices)>

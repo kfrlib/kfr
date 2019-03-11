@@ -161,6 +161,8 @@ struct platform<cpu_t::common>
     constexpr static size_t native_vector_alignment_mask = native_vector_alignment - 1;
 
     constexpr static bool fast_unaligned = false;
+
+    constexpr static bool mask_registers = false;
 };
 template <>
 struct platform<cpu_t::sse2> : platform<cpu_t::common>
@@ -208,6 +210,8 @@ struct platform<cpu_t::avx512> : platform<cpu_t::avx2>
     constexpr static size_t native_vector_alignment_mask = native_vector_alignment - 1;
 
     constexpr static size_t simd_register_count = bitness_const(8, 32);
+
+    constexpr static bool mask_registers = true;
 };
 #endif
 #ifdef CMT_ARCH_ARM
@@ -234,6 +238,8 @@ struct platform<cpu_t::common>
     constexpr static size_t native_vector_alignment_mask = native_vector_alignment - 1;
 
     constexpr static bool fast_unaligned = false;
+
+    constexpr static bool mask_registers = false;
 };
 template <>
 struct platform<cpu_t::neon> : platform<cpu_t::common>
@@ -279,8 +285,9 @@ constexpr static bool is_simd_size(size_t size)
 
 template <typename T, size_t N = vector_width<T>>
 struct vec;
+
 template <typename T, size_t N = vector_width<T>>
-struct mask;
+using mask = vec<bit<T>, N>;
 
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

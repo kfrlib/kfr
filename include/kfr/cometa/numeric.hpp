@@ -142,7 +142,7 @@ using is_i_class = std::integral_constant<bool, typeclass<T> == datatype::i>;
 template <typename T>
 struct typebits
 {
-    static_assert(is_number<deep_subtype<T>>::value, "");
+    // static_assert(is_number<deep_subtype<T>>::value, "");
     constexpr static size_t bits  = sizeof(typename compound_type_traits<T>::subtype) * 8;
     constexpr static size_t width = compound_type_traits<T>::is_scalar ? 0 : compound_type_traits<T>::width;
     using subtype                 = typename compound_type_traits<T>::subtype;

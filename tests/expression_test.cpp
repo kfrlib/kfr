@@ -133,6 +133,13 @@ TEST(mix)
     });
 }
 
+TEST(expression_mask)
+{
+    univector<float> x(100);
+    univector<float> y(100);
+    x = select(x > y, 0.5f, 0.1f) * (y - x) + x;
+}
+
 constexpr inline size_t fast_range_sum(size_t stop) { return stop * (stop + 1) / 2; }
 
 TEST(partition)

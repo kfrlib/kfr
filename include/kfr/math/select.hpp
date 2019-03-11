@@ -43,7 +43,7 @@ template <typename T1, size_t N, typename T2, typename T3, KFR_ENABLE_IF(is_nume
 KFR_INTRINSIC vec<Tout, N> select(const mask<T1, N>& m, const T2& x, const T3& y)
 {
     static_assert(sizeof(T1) == sizeof(Tout), "select: incompatible types");
-    return intrinsics::select(bitcast<Tout>(m.asvec()), innercast<Tout>(x), innercast<Tout>(y));
+    return intrinsics::select(bitcast<Tout>(m.asvec()).asmask(), innercast<Tout>(x), innercast<Tout>(y));
 }
 
 /**

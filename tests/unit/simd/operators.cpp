@@ -142,7 +142,7 @@ TEST(eq)
 {
     test_function2(test_catogories::vectors, [](auto x, auto y) { return (x == y).asvec(); },
                    [](auto x, auto y) -> common_type<decltype(x), decltype(y)> {
-                       return internal::maskbits<subtype<decltype(x)>>(x == y);
+                       return maskbits<subtype<decltype(x)>>(x == y);
                    });
 }
 
@@ -150,7 +150,7 @@ TEST(ne)
 {
     test_function2(test_catogories::vectors, [](auto x, auto y) { return (x != y).asvec(); },
                    [](auto x, auto y) -> common_type<decltype(x), decltype(y)> {
-                       return internal::maskbits<subtype<decltype(x)>>(x != y);
+                       return maskbits<subtype<decltype(x)>>(x != y);
                    });
 }
 
@@ -158,7 +158,7 @@ TEST(ge)
 {
     test_function2(test_catogories::vectors, [](auto x, auto y) { return (x >= y).asvec(); },
                    [](auto x, auto y) -> common_type<decltype(x), decltype(y)> {
-                       return internal::maskbits<subtype<decltype(x)>>(x >= y);
+                       return maskbits<subtype<decltype(x)>>(x >= y);
                    });
 }
 
@@ -166,7 +166,7 @@ TEST(le)
 {
     test_function2(test_catogories::vectors, [](auto x, auto y) { return (x <= y).asvec(); },
                    [](auto x, auto y) -> common_type<decltype(x), decltype(y)> {
-                       return internal::maskbits<subtype<decltype(x)>>(x <= y);
+                       return maskbits<subtype<decltype(x)>>(x <= y);
                    });
 }
 
@@ -174,7 +174,7 @@ TEST(gt)
 {
     test_function2(test_catogories::vectors, [](auto x, auto y) { return (x > y).asvec(); },
                    [](auto x, auto y) -> common_type<decltype(x), decltype(y)> {
-                       return internal::maskbits<subtype<decltype(x)>>(x > y);
+                       return maskbits<subtype<decltype(x)>>(x > y);
                    });
 }
 
@@ -182,7 +182,7 @@ TEST(lt)
 {
     test_function2(test_catogories::vectors, [](auto x, auto y) { return (x < y).asvec(); },
                    [](auto x, auto y) -> common_type<decltype(x), decltype(y)> {
-                       return internal::maskbits<subtype<decltype(x)>>(x < y);
+                       return maskbits<subtype<decltype(x)>>(x < y);
                    });
 }
 

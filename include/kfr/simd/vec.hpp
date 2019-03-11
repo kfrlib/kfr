@@ -112,9 +112,6 @@ template <typename T, size_t N>
 struct vec;
 
 template <typename T, size_t N>
-struct mask;
-
-template <typename T, size_t N>
 struct vec_halves
 {
     vec<T, prev_poweroftwo(N - 1)> low;
@@ -250,15 +247,15 @@ struct alignas(const_max(alignof(intrinsics::simd<typename compound_type_traits<
     }
 
     // from vector of another type
-    template <typename U,
-              KFR_ENABLE_IF(std::is_convertible<U, value_type>::value&& compound_type_traits<T>::is_scalar)>
+    template <typename U, KFR_ENABLE_IF(std::is_convertible<U, value_type>::value &&
+                                        (compound_type_traits<T>::is_scalar && !is_bit<U>::value))>
     KFR_MEM_INTRINSIC vec(const vec<U, N>& x) CMT_NOEXCEPT
         : v(intrinsics::simd_convert(intrinsics::simd_cvt_t<ST, deep_subtype<U>, SN>{}, x.v))
     {
     }
 
-    template <typename U,
-              KFR_ENABLE_IF(std::is_convertible<U, value_type>::value && !compound_type_traits<T>::is_scalar)>
+    template <typename U, KFR_ENABLE_IF(std::is_convertible<U, value_type>::value &&
+                                        !(compound_type_traits<T>::is_scalar && !is_bit<U>::value))>
     KFR_MEM_INTRINSIC vec(const vec<U, N>& x) CMT_NOEXCEPT
         : v(internal::conversion<vec<T, N>, vec<U, N>>::cast(x).v)
     {
@@ -411,6 +408,11 @@ struct alignas(const_max(alignof(intrinsics::simd<typename compound_type_traits<
     KFR_MEM_INTRINSIC static vec from_flatten(const vec<ST, SN>& x) { return vec(x.v); }
 
     KFR_MEM_INTRINSIC constexpr mask_t asmask() const CMT_NOEXCEPT { return mask_t(v); }
+
+    KFR_MEM_INTRINSIC constexpr vec<unwrap_bit<T>, N> asvec() const CMT_NOEXCEPT
+    {
+        return vec<unwrap_bit<T>, N>(v);
+    }
 
     constexpr static size_t simd_element_size  = const_min(vector_width<T>, N);
     constexpr static size_t simd_element_count = N / simd_element_size;
@@ -1152,7 +1154,18 @@ void test_function2(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
 
 namespace internal
 {
-// vector<vector> to vector<vector>
+// vector to vector<vector>
+template <typename To, typename From, size_t N>
+struct conversion<vec<bit<To>, N>, vec<bit<From>, N>>
+{
+    static vec<bit<To>, N> cast(const vec<bit<From>, N>& value)
+    {
+        return vec<To, N>::frombits(innercast<itype<To>>(vec<itype<From>, N>::frombits(value.asvec())))
+            .asmask();
+    }
+};
+
+// vector to vector<vector>
 template <typename To, typename From, size_t N1, size_t N2, size_t Ns1>
 struct conversion<vec<vec<To, N1>, N2>, vec<From, Ns1>>
 {

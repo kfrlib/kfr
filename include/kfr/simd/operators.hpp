@@ -800,11 +800,13 @@ vec<vec<T, sizeof...(Ns) + 1>, N1> packtranspose(const vec<T, N1>& x, const vec<
 
 KFR_FN(packtranspose)
 
+#if 0
 template <typename T, size_t N>
-KFR_I_CE mask<T, N>::mask(const base& v) CMT_NOEXCEPT
+KFR_I_CE vec<bit<T>, N>::vec(const base& v) CMT_NOEXCEPT
 {
     this->v = base::frombits((vec<itype<T>, N>::frombits(v) < itype<T>(0)).asvec()).v;
 }
+#endif
 
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

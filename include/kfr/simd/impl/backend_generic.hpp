@@ -49,7 +49,7 @@ namespace intrinsics
 {
 
 template <typename T, size_t N>
-using simd = typename simd_type<T, N>::type;
+using simd = typename simd_type<unwrap_bit<T>, N>::type;
 
 template <typename T, size_t N, typename U>
 union simd_small_array {
@@ -767,7 +767,7 @@ KFR_INTRINSIC simd<T, N> from_simd_array(const simd_array<T, N>& x) CMT_NOEXCEPT
 template <typename T, size_t N, size_t... indices>
 KFR_INTRINSIC simd<T, N> from_simd_array_impl(const simd_array<T, N>& x, csizes_t<indices...>) CMT_NOEXCEPT
 {
-    return { x.val[indices]... };
+    return { static_cast<unwrap_bit<T>>(x.val[indices])... };
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(is_simd_small_array<simd<T, N>>::value)>
@@ -806,7 +806,7 @@ KFR_INTRINSIC void simd_make(ctype_t<Tout>) CMT_NOEXCEPT = delete;
 template <typename Tout, typename Arg>
 KFR_INTRINSIC simd<Tout, 1> simd_make(ctype_t<Tout>, const Arg& arg) CMT_NOEXCEPT
 {
-    return simd<Tout, 1>{ static_cast<Tout>(arg) };
+    return simd<Tout, 1>{ static_cast<unwrap_bit<Tout>>(static_cast<Tout>(arg)) };
 }
 
 template <typename T, size_t... indices, typename... Args, size_t N = sizeof...(indices)>
@@ -931,7 +931,7 @@ KFR_INTRINSIC simd<T, N + N> simd_shuffle(simd2_t<T, N, N>, const simd<T, N>& x,
 template <typename T>
 KFR_INTRINSIC simd<T, 1> simd_broadcast(simd_t<T, 1>, identity<T> value) CMT_NOEXCEPT
 {
-    return { value };
+    return { static_cast<unwrap_bit<T>>(value) };
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(N >= 2), size_t Nlow = prev_poweroftwo(N - 1)>
@@ -964,7 +964,7 @@ simd_array<T, Nout> simd_shuffle_generic(const simd_array<T, N>& x, const unsign
     for (size_t i = 0; i < Nout; ++i)
     {
         const size_t index = indices[i];
-        result.val[i]      = index >= N ? T() : x.val[index];
+        result.val[i]      = index >= N ? T() : static_cast<T>(x.val[index]);
     }
     return result;
 }
@@ -977,7 +977,9 @@ simd_array<T, Nout> simd_shuffle2_generic(const simd_array<T, N1>& x, const simd
     for (size_t i = 0; i < Nout; ++i)
     {
         const size_t index = indices[i];
-        result.val[i]      = index > N1 + N2 ? T() : index >= N1 ? y.val[index - N1] : x.val[index];
+        result.val[i]      = index >= N1 + N2
+                            ? T()
+                            : index >= N1 ? static_cast<T>(y.val[index - N1]) : static_cast<T>(x.val[index]);
     }
     return result;
 }
@@ -992,7 +994,8 @@ KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd_t<T, N>, const simd<T, N>& x, csiz
     constexpr static unsigned indices_array[] = { static_cast<unsigned>(indices)... };
     return from_simd_array<T, Nout>(simd_shuffle_generic<T, Nout, N>(xx, indices_array));
 #else
-    return from_simd_array<T, Nout>({ (indices > N ? T() : to_simd_array<T, N>(x).val[indices])... });
+    return from_simd_array<T, Nout>(
+        { (indices >= N ? T() : static_cast<T>(to_simd_array<T, N>(x).val[indices]))... });
 #endif
 }
 
@@ -1009,9 +1012,9 @@ KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd2_t<T, N, N>, const simd<T, N>& x, 
     return from_simd_array<T, Nout>(simd_shuffle2_generic<T, Nout, N, N>(xx, yy, indices_array));
 #else
     return from_simd_array<T, Nout>(
-        { (indices > N * 2 ? T()
-                           : indices >= N ? to_simd_array<T, N>(y).val[indices - N]
-                                          : to_simd_array<T, N>(x).val[indices])... });
+        { (indices >= N * 2 ? T()
+                            : indices >= N ? static_cast<T>(to_simd_array<T, N>(y).val[indices - N])
+                                           : static_cast<T>(to_simd_array<T, N>(x).val[indices]))... });
 #endif
 }
 
@@ -1031,8 +1034,8 @@ KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd2_t<T, N1, N2>, const simd<T, N1>& 
 
     return from_simd_array<T, Nout>(
         { (indices > N1 + N2 ? T()
-                             : indices >= N1 ? to_simd_array<T, N2>(y).val[indices - N1]
-                                             : to_simd_array<T, N1>(x).val[indices])... });
+                             : indices >= N1 ? static_cast<T>(to_simd_array<T, N2>(y).val[indices - N1])
+                                             : static_cast<T>(to_simd_array<T, N1>(x).val[indices]))... });
 #endif
 }
 

@@ -141,7 +141,7 @@ extern char* gets(char* __s);
 #define CMT_ARCH_BITNESS_NAME "32-bit"
 #endif
 
-#ifdef __ARM_NEON__
+#if defined __ARM_NEON__ || defined __ARM_NEON
 
 #if __ARM_ARCH >= 8 && defined(__aarch64__)
 #define CMT_ARCH_NEON64 1

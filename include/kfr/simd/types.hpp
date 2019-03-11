@@ -28,6 +28,7 @@
 #include "../kfr.h"
 
 #include "impl/intrinsics.h"
+#include "impl/specialconstants.hpp"
 
 #include <climits>
 
@@ -40,8 +41,8 @@ CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wignored-qualifiers")
 
 #ifdef KFR_TESTING
-#include "../testo/testo.hpp"
 #include "../cometa/function.hpp"
+#include "../testo/testo.hpp"
 #endif
 
 #include "../cometa.hpp"
@@ -161,7 +162,8 @@ constexpr size_t max_test_size = 32;
 template <template <typename, size_t> class vec_tpl, typename T,
           typename sizes =
 #ifdef KFR_EXTENDED_TESTS
-              cfilter_t<decltype(test_vector_sizes), decltype(test_vector_sizes <= csize<max_test_size / sizeof(T)>)>
+              cfilter_t<decltype(test_vector_sizes),
+                        decltype(test_vector_sizes <= csize<max_test_size / sizeof(T)>)>
 #else
               csizes_t<1, 2>
 #endif
@@ -255,9 +257,88 @@ struct bitmask
 };
 
 template <typename T>
-struct maskbit
+constexpr inline T maskbits(bool value)
 {
-    bool value;
+    return value ? special_constants<T>::allones() : special_constants<T>::allzeros();
+}
+
+template <typename T>
+struct bit_value;
+
+template <typename T>
+struct bit
+{
+    alignas(T) bool value;
+    bit() CMT_NOEXCEPT = default;
+
+    constexpr bit(const bit_value<T>& value) CMT_NOEXCEPT : value(static_cast<bool>(value)) {}
+
+    constexpr bit(T value) CMT_NOEXCEPT : value(bitcast_anything<itype<T>>(value) < 0) {}
+    constexpr bit(bool value) CMT_NOEXCEPT : value(value) {}
+
+    template <typename U>
+    constexpr bit(const bit<U>& value) CMT_NOEXCEPT : value(value.value)
+    {
+    }
+
+    constexpr operator bool() const CMT_NOEXCEPT { return value; }
+    constexpr explicit operator T() const CMT_NOEXCEPT { return maskbits<T>(value); }
+};
+
+template <typename T>
+struct bit_value
+{
+    T value;
+    bit_value() CMT_NOEXCEPT = default;
+
+    constexpr bit_value(const bit<T>& value) CMT_NOEXCEPT : bit_value(value.value) {}
+
+    constexpr bit_value(T value) CMT_NOEXCEPT : value(value) {}
+    constexpr bit_value(bool value) CMT_NOEXCEPT : value(maskbits<T>(value)) {}
+
+    template <typename U>
+    constexpr bit_value(const bit_value<U>& value) CMT_NOEXCEPT : bit_value(value.operator bool())
+    {
+    }
+
+    constexpr operator bool() const CMT_NOEXCEPT { return bitcast_anything<itype<T>>(value) < 0; }
+    constexpr explicit operator T() const CMT_NOEXCEPT { return value; }
+};
+
+template <typename T>
+struct special_scalar_constants<bit<T>>
+{
+    constexpr static bit<T> highbitmask() { return true; }
+    constexpr static bit<T> allones() noexcept { return true; };
+    constexpr static bit<T> allzeros() { return false; }
+    constexpr static bit<T> invhighbitmask() { return false; }
+};
+
+namespace internal_generic
+{
+template <typename T>
+struct unwrap_bit
+{
+    using type = T;
+};
+template <typename T>
+struct unwrap_bit<bit<T>>
+{
+    using type = T;
+};
+
+} // namespace internal_generic
+
+template <typename T>
+using unwrap_bit = typename internal_generic::unwrap_bit<T>::type;
+
+template <typename T>
+struct is_bit : cfalse_t
+{
+};
+template <typename T>
+struct is_bit<bit<T>> : ctrue_t
+{
 };
 
 namespace fn_generic
@@ -337,6 +418,11 @@ struct is_simd_type
                     std::is_same<T, int>::value || std::is_same<T, unsigned int>::value ||
                     std::is_same<T, long>::value || std::is_same<T, unsigned long>::value ||
                     std::is_same<T, long long>::value || std::is_same<T, unsigned long long>::value>
+{
+};
+
+template <typename T>
+struct is_simd_type<bit<T>> : is_simd_type<T>
 {
 };
 

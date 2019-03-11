@@ -412,19 +412,19 @@ KFR_INTRINSIC i64sse ne(const i64sse& x, const i64sse& y) { return _mm_not_si128
 #else
 KFR_INTRINSIC u64sse eq(const u64sse& x, const u64sse& y)
 {
-    KFR_COMPONENTWISE_RET_I(u64sse, result[i] = internal::maskbits<u64>(x[i] == y[i]));
+    KFR_COMPONENTWISE_RET_I(u64sse, result[i] = maskbits<u64>(x[i] == y[i]));
 }
 KFR_INTRINSIC i64sse eq(const i64sse& x, const i64sse& y)
 {
-    KFR_COMPONENTWISE_RET_I(i64sse, result[i] = internal::maskbits<i64>(x[i] == y[i]));
+    KFR_COMPONENTWISE_RET_I(i64sse, result[i] = maskbits<i64>(x[i] == y[i]));
 }
 KFR_INTRINSIC u64sse ne(const u64sse& x, const u64sse& y)
 {
-    KFR_COMPONENTWISE_RET_I(u64sse, result[i] = internal::maskbits<u64>(x[i] != y[i]));
+    KFR_COMPONENTWISE_RET_I(u64sse, result[i] = maskbits<u64>(x[i] != y[i]));
 }
 KFR_INTRINSIC i64sse ne(const i64sse& x, const i64sse& y)
 {
-    KFR_COMPONENTWISE_RET_I(i64sse, result[i] = internal::maskbits<i64>(x[i] != y[i]));
+    KFR_COMPONENTWISE_RET_I(i64sse, result[i] = maskbits<i64>(x[i] != y[i]));
 }
 #endif
 
@@ -458,35 +458,35 @@ KFR_INTRINSIC u64sse le(const u64sse& x, const u64sse& y)
 #else
 KFR_INTRINSIC u64sse gt(const u64sse& x, const u64sse& y)
 {
-    KFR_COMPONENTWISE_RET_I(u64sse, result[i] = internal::maskbits<u64>(x[i] > y[i]));
+    KFR_COMPONENTWISE_RET_I(u64sse, result[i] = maskbits<u64>(x[i] > y[i]));
 }
 KFR_INTRINSIC i64sse gt(const i64sse& x, const i64sse& y)
 {
-    KFR_COMPONENTWISE_RET_I(i64sse, result[i] = internal::maskbits<i64>(x[i] > y[i]));
+    KFR_COMPONENTWISE_RET_I(i64sse, result[i] = maskbits<i64>(x[i] > y[i]));
 }
 KFR_INTRINSIC u64sse lt(const u64sse& x, const u64sse& y)
 {
-    KFR_COMPONENTWISE_RET_I(u64sse, result[i] = internal::maskbits<u64>(x[i] < y[i]));
+    KFR_COMPONENTWISE_RET_I(u64sse, result[i] = maskbits<u64>(x[i] < y[i]));
 }
 KFR_INTRINSIC i64sse lt(const i64sse& x, const i64sse& y)
 {
-    KFR_COMPONENTWISE_RET_I(i64sse, result[i] = internal::maskbits<i64>(x[i] < y[i]));
+    KFR_COMPONENTWISE_RET_I(i64sse, result[i] = maskbits<i64>(x[i] < y[i]));
 }
 KFR_INTRINSIC u64sse ge(const u64sse& x, const u64sse& y)
 {
-    KFR_COMPONENTWISE_RET_I(u64sse, result[i] = internal::maskbits<u64>(x[i] >= y[i]));
+    KFR_COMPONENTWISE_RET_I(u64sse, result[i] = maskbits<u64>(x[i] >= y[i]));
 }
 KFR_INTRINSIC i64sse ge(const i64sse& x, const i64sse& y)
 {
-    KFR_COMPONENTWISE_RET_I(i64sse, result[i] = internal::maskbits<i64>(x[i] >= y[i]));
+    KFR_COMPONENTWISE_RET_I(i64sse, result[i] = maskbits<i64>(x[i] >= y[i]));
 }
 KFR_INTRINSIC u64sse le(const u64sse& x, const u64sse& y)
 {
-    KFR_COMPONENTWISE_RET_I(u64sse, result[i] = internal::maskbits<u64>(x[i] <= y[i]));
+    KFR_COMPONENTWISE_RET_I(u64sse, result[i] = maskbits<u64>(x[i] <= y[i]));
 }
 KFR_INTRINSIC i64sse le(const i64sse& x, const i64sse& y)
 {
-    KFR_COMPONENTWISE_RET_I(i64sse, result[i] = internal::maskbits<i64>(x[i] <= y[i]));
+    KFR_COMPONENTWISE_RET_I(i64sse, result[i] = maskbits<i64>(x[i] <= y[i]));
 }
 #endif
 
@@ -1557,32 +1557,32 @@ KFR_INTRINSIC vec<T, N> shr(const vec<T, N>& x, unsigned y)
 template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>::value)>
 KFR_INTRINSIC vec<T, N> eq(const vec<T, N>& x, const vec<T, N>& y)
 {
-    KFR_COMPONENTWISE_RET(result[i] = internal::maskbits<T>(x[i] == y[i]));
+    KFR_COMPONENTWISE_RET(result[i] = maskbits<T>(x[i] == y[i]));
 }
 template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>::value)>
 KFR_INTRINSIC vec<T, N> ne(const vec<T, N>& x, const vec<T, N>& y)
 {
-    KFR_COMPONENTWISE_RET(result[i] = internal::maskbits<T>(x[i] != y[i]));
+    KFR_COMPONENTWISE_RET(result[i] = maskbits<T>(x[i] != y[i]));
 }
 template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>::value)>
 KFR_INTRINSIC vec<T, N> ge(const vec<T, N>& x, const vec<T, N>& y)
 {
-    KFR_COMPONENTWISE_RET(result[i] = internal::maskbits<T>(x[i] >= y[i]));
+    KFR_COMPONENTWISE_RET(result[i] = maskbits<T>(x[i] >= y[i]));
 }
 template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>::value)>
 KFR_INTRINSIC vec<T, N> le(const vec<T, N>& x, const vec<T, N>& y)
 {
-    KFR_COMPONENTWISE_RET(result[i] = internal::maskbits<T>(x[i] <= y[i]));
+    KFR_COMPONENTWISE_RET(result[i] = maskbits<T>(x[i] <= y[i]));
 }
 template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>::value)>
 KFR_INTRINSIC vec<T, N> gt(const vec<T, N>& x, const vec<T, N>& y)
 {
-    KFR_COMPONENTWISE_RET(result[i] = internal::maskbits<T>(x[i] > y[i]));
+    KFR_COMPONENTWISE_RET(result[i] = maskbits<T>(x[i] > y[i]));
 }
 template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>::value)>
 KFR_INTRINSIC vec<T, N> lt(const vec<T, N>& x, const vec<T, N>& y)
 {
-    KFR_COMPONENTWISE_RET(result[i] = internal::maskbits<T>(x[i] < y[i]));
+    KFR_COMPONENTWISE_RET(result[i] = maskbits<T>(x[i] < y[i]));
 }
 
 template <typename T, size_t N, typename = decltype(ubitcast(T())), KFR_ENABLE_IF(is_simd_type<T>::value)>
