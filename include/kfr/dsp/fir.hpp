@@ -105,7 +105,7 @@ struct expression_short_fir : expression_with_arguments<E1>
 
     template <size_t N>
     KFR_INTRINSIC friend vec<U, N> get_elements(const expression_short_fir& self, cinput_t cinput,
-                                                    size_t index, vec_shape<U, N> x)
+                                                size_t index, vec_shape<U, N> x)
     {
         vec<U, N> in = self.argument_first(cinput, index, x);
 
@@ -133,7 +133,7 @@ struct expression_fir : expression_with_arguments<E1>
 
     template <size_t N>
     KFR_INTRINSIC friend vec<U, N> get_elements(const expression_fir& self, cinput_t cinput, size_t index,
-                                                    vec_shape<U, N> x)
+                                                vec_shape<U, N> x)
     {
         const size_t tapcount = self.state.s.taps.size();
         const vec<U, N> input = self.argument_first(cinput, index, x);
@@ -184,11 +184,11 @@ KFR_INTRINSIC internal::expression_fir<T, U, E1, true> fir(fir_state<T, U>& stat
  * @param taps coefficients for the FIR filter
  */
 template <typename T, size_t TapCount, typename E1>
-KFR_INTRINSIC internal::expression_short_fir<next_poweroftwo(TapCount), T, value_type_of<E1>, E1> short_fir(
-    E1&& e1, const univector<T, TapCount>& taps)
+KFR_INTRINSIC internal::expression_short_fir<next_poweroftwo(TapCount - 1) + 1, T, value_type_of<E1>, E1>
+short_fir(E1&& e1, const univector<T, TapCount>& taps)
 {
-    static_assert(TapCount >= 2 && TapCount <= 32, "Use short_fir only for small FIR filters");
-    return internal::expression_short_fir<next_poweroftwo(TapCount), T, value_type_of<E1>, E1>(
+    static_assert(TapCount >= 2 && TapCount <= 33, "Use short_fir only for small FIR filters");
+    return internal::expression_short_fir<next_poweroftwo(TapCount - 1) + 1, T, value_type_of<E1>, E1>(
         std::forward<E1>(e1), taps);
 }
 

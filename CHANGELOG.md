@@ -2,7 +2,7 @@
 
 ## 3.0.7
 
-2019-03-11
+2019-03-13
 
 #### Added
 
@@ -12,6 +12,7 @@
 #### Changed
 
 - `mask<>` is now a specialization of `vec<>`. This allows using many `vec` functions for masks
+- `short_fir` performance has been increased by around 50%-60%
 
 #### Fixed
 
