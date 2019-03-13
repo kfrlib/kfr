@@ -37,9 +37,6 @@ CMT_PRAGMA_MSVC(warning(disable : 4814))
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
-{
-
 #ifdef KFR_STD_COMPLEX
 
 template <typename T>
@@ -85,71 +82,87 @@ struct complex
     KFR_MEM_INTRINSIC constexpr void imag(T value) CMT_NOEXCEPT { im = value; }
     T re;
     T im;
-
-    KFR_MEM_INTRINSIC friend complex operator+(const complex& x, const complex& y)
-    {
-        return (make_vector(x) + make_vector(y))[0];
-    }
-    KFR_MEM_INTRINSIC friend complex operator-(const complex& x, const complex& y)
-    {
-        return (make_vector(x) - make_vector(y))[0];
-    }
-    KFR_MEM_INTRINSIC friend complex operator*(const complex& x, const complex& y)
-    {
-        return (make_vector(x) * make_vector(y))[0];
-    }
-    KFR_MEM_INTRINSIC friend complex operator/(const complex& x, const complex& y)
-    {
-        return (make_vector(x) / make_vector(y))[0];
-    }
-
-    template <typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex, U>>
-    KFR_MEM_INTRINSIC friend C operator+(const complex& x, const U& y)
-    {
-        return static_cast<C>(x) + static_cast<C>(y);
-    }
-    template <typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex, U>>
-    KFR_MEM_INTRINSIC friend C operator-(const complex& x, const U& y)
-    {
-        return static_cast<C>(x) - static_cast<C>(y);
-    }
-    template <typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex, U>>
-    KFR_MEM_INTRINSIC friend C operator*(const complex& x, const U& y)
-    {
-        return static_cast<C>(x) * static_cast<C>(y);
-    }
-    template <typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex, U>>
-    KFR_MEM_INTRINSIC friend C operator/(const complex& x, const U& y)
-    {
-        return static_cast<C>(x) / static_cast<C>(y);
-    }
-
-    template <typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex, U>>
-    KFR_MEM_INTRINSIC friend C operator+(const U& x, const complex& y)
-    {
-        return static_cast<C>(x) + static_cast<C>(y);
-    }
-    template <typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex, U>>
-    KFR_MEM_INTRINSIC friend C operator-(const U& x, const complex& y)
-    {
-        return static_cast<C>(x) - static_cast<C>(y);
-    }
-    template <typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex, U>>
-    KFR_MEM_INTRINSIC friend C operator*(const U& x, const complex& y)
-    {
-        return static_cast<C>(x) * static_cast<C>(y);
-    }
-    template <typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex, U>>
-    KFR_MEM_INTRINSIC friend C operator/(const U& x, const complex& y)
-    {
-        return static_cast<C>(x) / static_cast<C>(y);
-    }
-    KFR_MEM_INTRINSIC friend complex operator-(const complex& x) { return (-make_vector(x))[0]; }
-    KFR_MEM_INTRINSIC friend complex operator+(const complex& x) { return x; }
 };
-#endif
-#endif
+
+inline namespace CMT_ARCH_NAME
+{
+
+template <typename T>
+KFR_INTRINSIC complex<T> operator+(const complex<T>& x, const complex<T>& y)
+{
+    return (make_vector(x) + make_vector(y))[0];
+}
+template <typename T>
+KFR_INTRINSIC complex<T> operator-(const complex<T>& x, const complex<T>& y)
+{
+    return (make_vector(x) - make_vector(y))[0];
+}
+template <typename T>
+KFR_INTRINSIC complex<T> operator*(const complex<T>& x, const complex<T>& y)
+{
+    return (make_vector(x) * make_vector(y))[0];
+}
+template <typename T>
+KFR_INTRINSIC complex<T> operator/(const complex<T>& x, const complex<T>& y)
+{
+    return (make_vector(x) / make_vector(y))[0];
+}
+
+template <typename T, typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex<T>, U>>
+KFR_INTRINSIC C operator+(const complex<T>& x, const U& y)
+{
+    return static_cast<C>(x) + static_cast<C>(y);
+}
+template <typename T, typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex<T>, U>>
+KFR_INTRINSIC C operator-(const complex<T>& x, const U& y)
+{
+    return static_cast<C>(x) - static_cast<C>(y);
+}
+template <typename T, typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex<T>, U>>
+KFR_INTRINSIC C operator*(const complex<T>& x, const U& y)
+{
+    return static_cast<C>(x) * static_cast<C>(y);
+}
+template <typename T, typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex<T>, U>>
+KFR_INTRINSIC C operator/(const complex<T>& x, const U& y)
+{
+    return static_cast<C>(x) / static_cast<C>(y);
+}
+
+template <typename T, typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex<T>, U>>
+KFR_INTRINSIC C operator+(const U& x, const complex<T>& y)
+{
+    return static_cast<C>(x) + static_cast<C>(y);
+}
+template <typename T, typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex<T>, U>>
+KFR_INTRINSIC C operator-(const U& x, const complex<T>& y)
+{
+    return static_cast<C>(x) - static_cast<C>(y);
+}
+template <typename T, typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex<T>, U>>
+KFR_INTRINSIC C operator*(const U& x, const complex<T>& y)
+{
+    return static_cast<C>(x) * static_cast<C>(y);
+}
+template <typename T, typename U, KFR_ENABLE_IF(is_number<U>::value), typename C = common_type<complex<T>, U>>
+KFR_INTRINSIC C operator/(const U& x, const complex<T>& y)
+{
+    return static_cast<C>(x) / static_cast<C>(y);
+}
+template <typename T>
+KFR_INTRINSIC complex<T> operator-(const complex<T>& x)
+{
+    return (-make_vector(x))[0];
+}
+template <typename T>
+KFR_INTRINSIC complex<T> operator+(const complex<T>& x)
+{
+    return x;
+}
+
 } // namespace CMT_ARCH_NAME
+#endif
+#endif
 } // namespace kfr
 namespace cometa
 {
@@ -175,8 +188,6 @@ struct compound_type_traits<kfr::complex<T>>
 } // namespace cometa
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
-{
 
 /// @brief Alias for complex<f32>
 using c32 = complex<f32>;
@@ -186,6 +197,9 @@ using c64 = complex<f64>;
 
 /// @brief Alias for complex<fbase>
 using cbase = complex<fbase>;
+
+inline namespace CMT_ARCH_NAME
+{
 
 namespace intrinsics
 {

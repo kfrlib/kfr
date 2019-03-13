@@ -41,6 +41,20 @@ CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wparentheses")
 
 namespace kfr
 {
+
+#ifdef KFR_STD_COMPLEX
+
+template <typename T>
+using complex = std::complex<T>;
+
+#else
+#ifndef KFR_CUSTOM_COMPLEX
+
+template <typename>
+struct complex;
+#endif
+#endif
+
 inline namespace CMT_ARCH_NAME
 {
 
@@ -61,19 +75,6 @@ using cinput_t  = const cinput_context*;
 
 constexpr cinput_t cinput   = nullptr;
 constexpr coutput_t coutput = nullptr;
-
-#ifdef KFR_STD_COMPLEX
-
-template <typename T>
-using complex = std::complex<T>;
-
-#else
-#ifndef KFR_CUSTOM_COMPLEX
-
-template <typename>
-struct complex;
-#endif
-#endif
 
 constexpr size_t infinite_size = static_cast<size_t>(-1);
 
@@ -194,21 +195,21 @@ struct expression_lambda : input_expression
     KFR_MEM_INTRINSIC expression_lambda(Fn&& fn) : fn(std::move(fn)) {}
 
     template <size_t N, KFR_ENABLE_IF(N&& is_callable<Fn, cinput_t, size_t, vec_shape<T, N>>::value)>
-    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_lambda& self, cinput_t cinput,
-                                                    size_t index, vec_shape<T, N> y)
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_lambda& self, cinput_t cinput, size_t index,
+                                                vec_shape<T, N> y)
     {
         return self.fn(cinput, index, y);
     }
 
     template <size_t N, KFR_ENABLE_IF(N&& is_callable<Fn, size_t>::value)>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_lambda& self, cinput_t, size_t index,
-                                                    vec_shape<T, N>)
+                                                vec_shape<T, N>)
     {
         return apply(self.fn, enumerate<size_t, N>() + index);
     }
     template <size_t N, KFR_ENABLE_IF(N&& is_callable<Fn>::value)>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_lambda& self, cinput_t, size_t,
-                                                    vec_shape<T, N>)
+                                                vec_shape<T, N>)
     {
         return apply<N>(self.fn);
     }
@@ -327,7 +328,7 @@ struct expression_scalar : input_expression
 
     template <size_t N>
     friend KFR_INTRINSIC vec<T, N> get_elements(const expression_scalar& self, cinput_t, size_t,
-                                                    vec_shape<T, N>)
+                                                vec_shape<T, N>)
     {
         return resize<N>(self.val);
     }
@@ -379,7 +380,7 @@ struct expression_function : expression_with_arguments<arg<Args>...>
     }
     template <size_t N>
     friend KFR_INTRINSIC vec<T, N> get_elements(const expression_function& self, cinput_t cinput,
-                                                    size_t index, vec_shape<T, N> x)
+                                                size_t index, vec_shape<T, N> x)
     {
         return self.call(cinput, self.fn, index, x);
     }
@@ -471,7 +472,7 @@ struct input_expression_base : input_expression
     virtual T input(size_t index) const = 0;
     template <typename U, size_t N>
     friend KFR_INTRINSIC vec<U, N> get_elements(const input_expression_base& self, cinput_t, size_t index,
-                                                    vec_shape<U, N>)
+                                                vec_shape<U, N>)
     {
         vec<U, N> out;
         for (size_t i = 0; i < N; i++)
