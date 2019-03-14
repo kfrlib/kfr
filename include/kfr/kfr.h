@@ -10,12 +10,12 @@
 
 #define KFR_VERSION_MAJOR 3
 #define KFR_VERSION_MINOR 0
-#define KFR_VERSION_PATCH 7
-#define KFR_VERSION_LABEL "rc"
+#define KFR_VERSION_PATCH 8
+#define KFR_VERSION_LABEL ""
 
 #define KFR_VERSION_STRING                                                                                   \
     CMT_STRINGIFY(KFR_VERSION_MAJOR)                                                                         \
-    "." CMT_STRINGIFY(KFR_VERSION_MINOR) "." CMT_STRINGIFY(KFR_VERSION_PATCH) "-" KFR_VERSION_LABEL
+    "." CMT_STRINGIFY(KFR_VERSION_MINOR) "." CMT_STRINGIFY(KFR_VERSION_PATCH) KFR_VERSION_LABEL
 #define KFR_VERSION (KFR_VERSION_MAJOR * 10000 + KFR_VERSION_MINOR * 100 + KFR_VERSION_PATCH)
 
 #if defined DEBUG || defined KFR_DEBUG
