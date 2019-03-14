@@ -1,3 +1,9 @@
+/**
+ * KFR (http://kfrlib.com)
+ * Copyright (C) 2016  D Levin
+ * See LICENSE.txt for details
+ */
+
 #include <kfr/base/reduce.hpp>
 
 namespace kfr

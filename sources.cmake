@@ -167,6 +167,7 @@ set(
 set(
     KFR_UNITTEST_SRC
     ${PROJECT_SOURCE_DIR}/tests/unit/base/conversion.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/base/random.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/reduce.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/abs.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/asin_acos.cpp

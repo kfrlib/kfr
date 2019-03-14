@@ -1,3 +1,9 @@
+/**
+ * KFR (http://kfrlib.com)
+ * Copyright (C) 2016  D Levin
+ * See LICENSE.txt for details
+ */
+
 #include <kfr/io/tostring.hpp>
 #include <kfr/testo/testo.hpp>
 #include <kfr/version.hpp>
