@@ -64,7 +64,9 @@ void python(const std::string& name, const std::string& code)
     FILE* f = fopen(filename.c_str(), "w");
     fwrite(code.c_str(), 1, code.size(), f);
     fclose(f);
+#ifndef CMT_OS_MOBILE
     (void)std::system(("python \"" + filename + "\"").c_str());
+#endif
 }
 CMT_PRAGMA_GNU(GCC diagnostic pop)
 

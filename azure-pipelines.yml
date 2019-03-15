@@ -93,6 +93,38 @@ jobs:
       brew install ninja
       ci/run.sh build-release -DCPU_ARCH=detect -DCMAKE_BUILD_TYPE=Release
 
+- job: iOS_ARM_Clang_Release
+  strategy:
+    matrix:
+      xcode10.1:
+        XCODE_VER: 10.1
+      xcode8.3.3:
+        XCODE_VER: 8.3.3
+  pool:
+    vmImage: 'macOS-10.13'
+  steps:
+  - bash: |
+      set -e
+      /bin/bash -c "sudo xcode-select -s /Applications/Xcode_$(XCODE_VER).app/Contents/Developer"
+      brew install ninja
+      ci/run.sh build-release -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.cmake -DCMAKE_BUILD_TYPE=Release -DIOS_PLATFORM=OS -DIOS_ARCH=armv7 -DCMAKE_MAKE_PROGRAM=/usr/local/bin/ninja -DSKIP_TESTS=ON
+
+- job: iOS_ARM64_Clang_Release
+  strategy:
+    matrix:
+      xcode10.1:
+        XCODE_VER: 10.1
+      xcode8.3.3:
+        XCODE_VER: 8.3.3
+  pool:
+    vmImage: 'macOS-10.13'
+  steps:
+  - bash: |
+      set -e
+      /bin/bash -c "sudo xcode-select -s /Applications/Xcode_$(XCODE_VER).app/Contents/Developer"
+      brew install ninja
+      ci/run.sh build-release -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.cmake -DCMAKE_BUILD_TYPE=Release -DIOS_PLATFORM=OS64 -DIOS_ARCH=arm64 -DCMAKE_MAKE_PROGRAM=/usr/local/bin/ninja -DSKIP_TESTS=ON
+
 - job: Windows_MSVC_x86_64_Clang_Release
   pool:
     vmImage: 'vs2017-win2016'

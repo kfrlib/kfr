@@ -177,19 +177,23 @@ extern char* gets(char* __s);
 
 #if defined(__APPLE__)
 #include "TargetConditionals.h"
-#ifdef TARGET_OS_IPHONE
+#if defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE
 #define CMT_OS_IOS 1
 #define CMT_OS_MOBILE 1
-#elif TARGET_IPHONE_SIMULATOR
+#define CMT_OS_APPLE 1
+#elif defined(TARGET_IPHONE_SIMULATOR) && TARGET_IPHONE_SIMULATOR
 #define CMT_OS_IOS 1
 #define CMT_OS_IOS_SIMULATOR 1
 #define CMT_OS_MOBILE 1
-#elif TARGET_OS_MAC
+#define CMT_OS_APPLE 1
+#elif defined(TARGET_OS_MAC) && TARGET_OS_MAC
 #define CMT_OS_MAC 1
 #define CMT_OS_MACOS 1
 #define CMT_OS_OSX 1
+#define CMT_OS_APPLE 1
 #endif
 #define CMT_OS_POSIX 1
+#define CMT_OS_APPLE 1
 #endif
 
 #if defined(__ANDROID__)
