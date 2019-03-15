@@ -98,8 +98,6 @@ jobs:
     matrix:
       xcode10.1:
         XCODE_VER: 10.1
-      xcode8.3.3:
-        XCODE_VER: 8.3.3
   pool:
     vmImage: 'macOS-10.13'
   steps:
@@ -114,8 +112,6 @@ jobs:
     matrix:
       xcode10.1:
         XCODE_VER: 10.1
-      xcode8.3.3:
-        XCODE_VER: 8.3.3
   pool:
     vmImage: 'macOS-10.13'
   steps:
