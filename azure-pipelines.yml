@@ -214,3 +214,10 @@ jobs:
   - script: |
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
       ci\run.cmd build-release -DARCH_TESTS=ON -DCPU_ARCH=avx512 -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
+
+- job: Windows_MSVC_x86_AVX512_MSVC2017_Release
+  pool: WIN-AVX512
+  steps:
+  - script: |
+      call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
+      ci\run.cmd build-release -DARCH_TESTS=OFF -DCPU_ARCH=avx512 -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
