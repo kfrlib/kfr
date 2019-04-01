@@ -30,14 +30,8 @@ int main(int argc, char** argv)
     audio_reader_wav<double> reader(open_file_for_reading(argv[1]));
     const size_t input_sr = reader.format().samplerate;
 
-    // Read interleaved audio
-    univector<double> input_interleaved(reader.format().length * reader.format().channels);
-    reader.read(input_interleaved.data(), input_interleaved.size());
-
-    // Deinterleave audio
-    univector2d<double> input_channels(
-        reader.format().channels, univector<double>(input_interleaved.size() / reader.format().channels));
-    deinterleave(input_channels, input_interleaved);
+    // Read channels of audio
+    univector2d<double> input_channels = reader.read_channels(reader.format().length);
 
     // Prepare conversion
     univector2d<double> output_channels;
@@ -85,16 +79,13 @@ int main(int argc, char** argv)
         output_channels.push_back(std::move(output));
     }
 
-    // Interleave channels
-    univector<double> output_interleved = interleave(output_channels);
-
     // Initialize WAV writer
     audio_writer_wav<double> writer(
         open_file_for_writing(argv[2]),
         audio_format{ reader.format().channels, reader.format().type, kfr::fmax(output_sr) });
 
-    // Write interleaved audio
-    writer.write(output_interleved.data(), output_interleved.size());
+    // Write audio
+    writer.write_channels(output_channels);
 
     return 0;
 }
