@@ -64,43 +64,47 @@ KFR_INTRINSIC auto reduce_call_final(FinalFn&& finalfn, size_t, T value)
     return finalfn(value);
 }
 
-template <typename T, typename ReduceFn, typename TransformFn, typename FinalFn, KFR_ARCH_DEP>
+template <typename Tout, typename Twork, typename Tin, typename ReduceFn, typename TransformFn,
+          typename FinalFn, KFR_ARCH_DEP>
 struct expression_reduce : output_expression
 {
-    constexpr static size_t width = vector_width<T> * bitness_const(1, 2);
+    constexpr static size_t width = vector_width<Tin> * bitness_const(1, 2);
 
-    using value_type = T;
+    using value_type = Tin;
 
     expression_reduce(ReduceFn&& reducefn, TransformFn&& transformfn, FinalFn&& finalfn)
         : counter(0), reducefn(std::move(reducefn)), transformfn(std::move(transformfn)),
-          finalfn(std::move(finalfn)), value(resize<width>(make_vector(reducefn(initialvalue<T>{}))))
+          finalfn(std::move(finalfn)), value(resize<width>(make_vector(reducefn(initialvalue<Twork>{}))))
     {
     }
 
     template <size_t N>
-    KFR_MEM_INTRINSIC void operator()(coutput_t, size_t, const vec<T, N>& x) const
+    KFR_MEM_INTRINSIC void operator()(coutput_t, size_t, const vec<Tin, N>& x) const
     {
         counter += N;
         process(x);
     }
 
-    KFR_MEM_INTRINSIC T get()
+    KFR_MEM_INTRINSIC Tout get()
     {
         return internal::reduce_call_final(finalfn, counter, horizontal(value, reducefn));
     }
 
 protected:
     void reset() { counter = 0; }
-    KFR_MEM_INTRINSIC void process(const vec<T, width>& x) const { value = reducefn(transformfn(x), value); }
+    KFR_MEM_INTRINSIC void process(const vec<Tin, width>& x) const
+    {
+        value = reducefn(transformfn(x), value);
+    }
 
     template <size_t N, KFR_ENABLE_IF(N < width)>
-    KFR_MEM_INTRINSIC void process(const vec<T, N>& x) const
+    KFR_MEM_INTRINSIC void process(const vec<Tin, N>& x) const
     {
         value = combine(value, reducefn(transformfn(x), narrow<N>(value)));
     }
 
     template <size_t N, KFR_ENABLE_IF(N > width)>
-    KFR_MEM_INTRINSIC void process(const vec<T, N>& x) const
+    KFR_MEM_INTRINSIC void process(const vec<Tin, N>& x) const
     {
         process(low(x));
         process(high(x));
@@ -110,23 +114,48 @@ protected:
     ReduceFn reducefn;
     TransformFn transformfn;
     FinalFn finalfn;
-    mutable vec<T, width> value;
+    mutable vec<Twork, width> value;
 };
 } // namespace internal
 
 template <typename ReduceFn, typename TransformFn = fn_generic::pass_through,
-          typename FinalFn = fn_generic::pass_through, typename E1, typename T = value_type_of<E1>>
-KFR_INTRINSIC T reduce(const E1& e1, ReduceFn&& reducefn,
-                       TransformFn&& transformfn = fn_generic::pass_through(),
-                       FinalFn&& finalfn         = fn_generic::pass_through())
+          typename FinalFn = fn_generic::pass_through, typename E1, typename Tin = value_type_of<E1>,
+          typename Twork = decay<decltype(std::declval<TransformFn>()(std::declval<Tin>()))>,
+          typename Tout  = decay<decltype(internal::reduce_call_final(
+              std::declval<FinalFn>(), std::declval<size_t>(), std::declval<Twork>()))>,
+          KFR_ENABLE_IF(is_input_expression<E1>::value)>
+KFR_INTRINSIC Tout reduce(const E1& e1, ReduceFn&& reducefn,
+                          TransformFn&& transformfn = fn_generic::pass_through(),
+                          FinalFn&& finalfn         = fn_generic::pass_through())
 {
     static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
-    using reducer_t = internal::expression_reduce<T, decay<ReduceFn>, decay<TransformFn>, decay<FinalFn>>;
+    using reducer_t =
+        internal::expression_reduce<Tout, Twork, Tin, decay<ReduceFn>, decay<TransformFn>, decay<FinalFn>>;
     reducer_t red(std::forward<ReduceFn>(reducefn), std::forward<TransformFn>(transformfn),
                   std::forward<FinalFn>(finalfn));
     process(red, e1);
 
     return red.get();
+}
+
+template <typename ReduceFn, typename TransformFn = fn_generic::pass_through,
+          typename FinalFn = fn_generic::pass_through, typename E1, typename Tin = value_type_of<E1>,
+          typename Twork = decay<decltype(std::declval<TransformFn>()(std::declval<Tin>()))>,
+          typename Tout  = decay<decltype(internal::reduce_call_final(
+              std::declval<FinalFn>(), std::declval<size_t>(), std::declval<Twork>()))>,
+          KFR_ENABLE_IF(!is_input_expression<E1>::value)>
+KFR_INTRINSIC Tout reduce(const E1& e1, ReduceFn&& reducefn,
+                          TransformFn&& transformfn = fn_generic::pass_through(),
+                          FinalFn&& finalfn         = fn_generic::pass_through())
+{
+    Twork result   = reducefn(initialvalue<Twork>());
+    size_t counter = 0;
+    for (const Tin& in : e1)
+    {
+        result = reducefn(result, transformfn(in));
+        ++counter;
+    }
+    return internal::reduce_call_final(finalfn, counter, result);
 }
 
 KFR_FN(reduce)
