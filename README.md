@@ -10,7 +10,7 @@ Compiler support:
 ![GCC 7+](https://img.shields.io/badge/GCC-7%2B-brightgreen.svg?style=flat-square)
 ![MSVC 2017](https://img.shields.io/badge/MSVC-2017-brightgreen.svg?style=flat-square)
 
-https://www.kfrlib.com
+https://www.kfr.dev
 
 KFR is an open source C++ DSP framework that focuses on high performance (see benchmark results section).
 
@@ -313,4 +313,4 @@ Tested on the following systems:
 
 KFR is dual-licensed, available under both commercial and open-source GPL 2+ license.
 
-If you want to use KFR in commercial product or a closed-source project, you need to [purchase a Commercial License](https://kfrlib.com/purchase-license)
+If you want to use KFR in commercial product or a closed-source project, you need to [purchase a Commercial License](https://kfr.dev/purchase-license)

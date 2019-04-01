@@ -1,5 +1,41 @@
 # Changelog
 
+## 3.0.9
+
+2019-04-02
+
+#### Added
+
+- `reduce` supports different types and containers other than `univector`
+- Assignment operators for `univector`: `+=`, `*=` etc
+- `concatenate` function to concatenate two expressions sequentially
+- Audio file IO: `read_channels`/`write_channels` to read channels data directly without interleaving/deinterleaving
+- `as_string`: support for `std::vector`
+
+#### Changed
+
+- `expression_scalar`: support for `vec<T>`
+
+#### Fixed
+
+- CPU detection in cmake subdirectory
+- MSVC 2017 32-bit intrinsics
+
+## 3.0.8
+
+2019-03-15
+
+#### Added
+
+- Ability to pass `random_bit_generator` by reference
+- Tests for iOS ARM and ARM64
+
+#### Changed
+
+- `kfr::complex` is placed in `kfr` namespace
+
+#### Fixed
+
 ## 3.0.7
 
 2019-03-13
