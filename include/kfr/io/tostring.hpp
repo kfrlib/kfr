@@ -30,6 +30,7 @@
 #include "../simd/complex.hpp"
 #include "../simd/vec.hpp"
 #include <cmath>
+#include <vector>
 
 namespace cometa
 {
@@ -197,6 +198,15 @@ struct representation<std::array<T, Size>>
 {
     using type = std::string;
     static std::string get(const std::array<T, Size>& value)
+    {
+        return details::array_to_string(value.data(), value.size());
+    }
+};
+template <typename T, typename Allocator>
+struct representation<std::vector<T, Allocator>>
+{
+    using type = std::string;
+    static std::string get(const std::vector<T, Allocator>& value)
     {
         return details::array_to_string(value.data(), value.size());
     }
