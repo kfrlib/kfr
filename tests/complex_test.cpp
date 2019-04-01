@@ -200,9 +200,9 @@ TEST(static_tests)
     testo::assert_is_same<ftype<vec<complex<i32>, 4>>, vec<complex<f32>, 4>>();
     testo::assert_is_same<ftype<vec<complex<i64>, 8>>, vec<complex<f64>, 8>>();
 
-    testo::assert_is_same<kfr::internal::arg<int>, kfr::internal::expression_scalar<int, 1>>();
+    testo::assert_is_same<kfr::internal::arg<int>, kfr::internal::expression_scalar<int>>();
     testo::assert_is_same<kfr::internal::arg<complex<int>>,
-                          kfr::internal::expression_scalar<kfr::complex<int>, 1>>();
+                          kfr::internal::expression_scalar<kfr::complex<int>>>();
 
     testo::assert_is_same<kfr::common_type<complex<int>, double>, complex<double>>();
 }
