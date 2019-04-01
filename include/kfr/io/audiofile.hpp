@@ -76,6 +76,17 @@ struct audio_reader : public abstract_reader<T>
     /// @brief Reads interleaved audio
     using abstract_reader<T>::read;
 
+    univector2d<T> read_channels() { return read_channels(format().length); }
+
+    univector2d<T> read_channels(size_t size)
+    {
+        univector<T> interleaved = read(size * format().channels);
+        univector2d<T> input_channels(format().channels,
+                                      univector<T>(interleaved.size() / format().channels));
+        deinterleave(input_channels, interleaved);
+        return input_channels;
+    }
+
     /// @brief Returns audio format description
     virtual const audio_format_and_length& format() const = 0;
 };
@@ -85,6 +96,13 @@ struct audio_writer : public abstract_writer<T>
 {
     /// @brief Writes interleaved audio
     using abstract_writer<T>::write;
+
+    template <univector_tag Tag1, univector_tag Tag2>
+    size_t write_channels(const univector2d<T, Tag1, Tag2>& data)
+    {
+        const univector<T> interleaved = interleave(data);
+        return write(interleaved) / format().channels;
+    }
 
     /// @brief Returns audio format description
     virtual const audio_format_and_length& format() const = 0;
@@ -200,6 +218,8 @@ private:
 template <typename T>
 struct audio_reader_wav : audio_reader<T>
 {
+    using audio_reader<T>::read;
+
     /// @brief Constructs WAV reader
     audio_reader_wav(std::shared_ptr<abstract_reader<>>&& reader) : reader(std::move(reader))
     {
