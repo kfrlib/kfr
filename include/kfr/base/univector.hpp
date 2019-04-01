@@ -88,8 +88,11 @@ template <typename T, univector_tag Tag = tag_dynamic_vector>
 struct univector;
 
 /// @brief Base class for all univector specializations.
+template <typename T, typename Class, bool is_expression>
+struct univector_base;
+
 template <typename T, typename Class>
-struct univector_base : input_expression, output_expression
+struct univector_base<T, Class, true> : input_expression, output_expression
 {
     using input_expression::begin_block;
     using input_expression::end_block;
@@ -109,6 +112,26 @@ struct univector_base : input_expression, output_expression
         assign_expr(std::forward<Input>(input));
         return *derived_cast<Class>(this);
     }
+
+#define KFR_UVEC_ASGN_OP(aop, op)                                                                            \
+    template <typename Input>                                                                                \
+    KFR_MEM_INTRINSIC Class& aop(Input&& input)                                                              \
+    {                                                                                                        \
+        assign_expr(*derived_cast<Class>(this) op std::forward<Input>(input));                               \
+        return *derived_cast<Class>(this);                                                                   \
+    }
+    KFR_UVEC_ASGN_OP(operator+=, +)
+    KFR_UVEC_ASGN_OP(operator-=, -)
+    KFR_UVEC_ASGN_OP(operator*=, *)
+    KFR_UVEC_ASGN_OP(operator/=, /)
+    KFR_UVEC_ASGN_OP(operator%=, %)
+
+    KFR_UVEC_ASGN_OP(operator&=, &)
+    KFR_UVEC_ASGN_OP(operator|=, |)
+    KFR_UVEC_ASGN_OP(operator^=, ^)
+
+    KFR_UVEC_ASGN_OP(operator<<=, <<)
+    KFR_UVEC_ASGN_OP(operator>>=, >>)
 
     /// @brief Returns subrange of the vector.
     /// If start is greater or equal to this->size, returns empty univector
@@ -265,9 +288,45 @@ private:
     }
 };
 
+template <typename T, typename Class>
+struct univector_base<T, Class, false>
+{
+    array_ref<T> ref()
+    {
+        T* data           = get_data();
+        const size_t size = get_size();
+        return array_ref<T>(data, size);
+    }
+    array_ref<const T> ref() const
+    {
+        const T* data     = get_data();
+        const size_t size = get_size();
+        return array_ref<const T>(data, size);
+    }
+    array_ref<const T> cref() const
+    {
+        const T* data     = get_data();
+        const size_t size = get_size();
+        return array_ref<const T>(data, size);
+    }
+
+    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
+    KFR_MEM_INTRINSIC Class& operator=(Input&& input)
+    {
+        static_assert(sizeof(Input) == 0, "Can't assign expression to non-expression");
+        return *derived_cast<Class>(this);
+    }
+
+private:
+    KFR_MEM_INTRINSIC size_t get_size() const { return derived_cast<Class>(this)->size(); }
+    KFR_MEM_INTRINSIC const T* get_data() const { return derived_cast<Class>(this)->data(); }
+    KFR_MEM_INTRINSIC T* get_data() { return derived_cast<Class>(this)->data(); }
+};
+
 template <typename T, size_t Size>
-struct alignas(platform<>::maximum_vector_alignment) univector : std::array<T, Size>,
-                                                                 univector_base<T, univector<T, Size>>
+struct alignas(platform<>::maximum_vector_alignment) univector
+    : std::array<T, Size>,
+      univector_base<T, univector<T, Size>, is_vec_element<T>::value>
 {
     using std::array<T, Size>::size;
     using size_type = size_t;
@@ -296,13 +355,14 @@ struct alignas(platform<>::maximum_vector_alignment) univector : std::array<T, S
     {
         return index < this->size() ? this->operator[](index) : fallback_value;
     }
-    using univector_base<T, univector>::operator=;
+    using univector_base<T, univector, is_vec_element<T>::value>::operator=;
 
     void resize(size_t) CMT_NOEXCEPT {}
 };
 
 template <typename T>
-struct univector<T, tag_array_ref> : array_ref<T>, univector_base<T, univector<T, tag_array_ref>>
+struct univector<T, tag_array_ref> : array_ref<T>,
+                                     univector_base<T, univector<T, tag_array_ref>, is_vec_element<T>::value>
 {
     using array_ref<T>::size;
     using array_ref<T>::array_ref;
@@ -340,21 +400,24 @@ struct univector<T, tag_array_ref> : array_ref<T>, univector_base<T, univector<T
     {
         return index < this->size() ? this->operator[](index) : fallback_value;
     }
-    using univector_base<T, univector>::operator=;
+    using univector_base<T, univector, is_vec_element<T>::value>::operator=;
 
     univector<T, tag_array_ref>& ref() && { return *this; }
 };
 
 template <typename T>
-struct univector<T, tag_dynamic_vector> : std::vector<T, allocator<T>>,
-                                          univector_base<T, univector<T, tag_dynamic_vector>>
+struct univector<T, tag_dynamic_vector>
+    : std::vector<T, allocator<T>>,
+      univector_base<T, univector<T, tag_dynamic_vector>, is_vec_element<T>::value>
 {
     using std::vector<T, allocator<T>>::size;
     using std::vector<T, allocator<T>>::vector;
     using size_type = size_t;
-    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value && !is_infinite<Input>::value)>
+    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
     univector(Input&& input)
     {
+        static_assert(!is_infinite<Input>::value,
+                      "Dynamically sized vector requires finite input expression");
         this->resize(input.size());
         this->assign_expr(std::forward<Input>(input));
     }
