@@ -375,17 +375,11 @@ struct struct_with_alignment
     KFR_MEM_INTRINSIC void operator=(T value) { this->value = value; }
 };
 
-#ifdef CMT_COMPILER_MSVC
-#define KFR_UNALIGNED_POINTER __unaligned
-#else
-#define KFR_UNALIGNED_POINTER
-#endif
-
 template <typename T>
 struct struct_with_alignment<T, false>
 {
-    using pointer       = KFR_UNALIGNED_POINTER struct_with_alignment*;
-    using const_pointer = KFR_UNALIGNED_POINTER const struct_with_alignment*;
+    using pointer       = struct_with_alignment*;
+    using const_pointer = const struct_with_alignment*;
     T value;
     KFR_MEM_INTRINSIC void operator=(T value) { this->value = value; }
 }
