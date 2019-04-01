@@ -427,6 +427,11 @@ public:
     };
 };
 
+template <typename T>
+struct is_vec_element : cbool_t<is_simd_type<deep_subtype<remove_const<T>>>::value>
+{
+};
+
 template <typename T, size_t N, size_t... indices>
 KFR_INTRINSIC vec<T, sizeof...(indices)> shufflevector(const vec<T, N>& x,
                                                        csizes_t<indices...> i) CMT_NOEXCEPT
