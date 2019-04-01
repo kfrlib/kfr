@@ -10,7 +10,7 @@
 
 #define KFR_VERSION_MAJOR 3
 #define KFR_VERSION_MINOR 0
-#define KFR_VERSION_PATCH 8
+#define KFR_VERSION_PATCH 9
 #define KFR_VERSION_LABEL ""
 
 #define KFR_VERSION_STRING                                                                                   \
