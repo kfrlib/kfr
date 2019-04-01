@@ -287,6 +287,23 @@ KFR_INTRIN_BROADCAST(f64, 2, _mm_set1_pd(value))
         return __VA_ARGS__;                                                                                  \
     }
 
+#if defined CMT_MSC_VER && defined CMT_ARCH_X32
+KFR_INTRINSIC __m128i _mm_cvtsi64_si128(int64_t u)
+{
+    __m128i r      = _mm_setzero_si128();
+    r.m128i_i64[0] = u;
+    return r;
+}
+KFR_INTRINSIC int64_t _mm_cvtsi128_si64(const __m128i& i) { return i.m128i_i64[0]; }
+KFR_INTRINSIC int64_t _mm_cvttsd_si64(const __m128d& d) { return static_cast<int64_t>(d.m128d_f64[0]); }
+KFR_INTRINSIC __m128d _mm_cvtsi64_sd(const __m128d& a, int64_t b)
+{
+    __m128d r      = a;
+    r.m128d_f64[0] = static_cast<double>(b);
+    return r;
+}
+#endif
+
 // extend
 KFR_INTRIN_SHUFFLE_LINEAR(i8, 16, 1, _mm_cvtsi32_si128(u8(x)))
 KFR_INTRIN_SHUFFLE_LINEAR(i16, 8, 1, _mm_cvtsi32_si128(u16(x)))
