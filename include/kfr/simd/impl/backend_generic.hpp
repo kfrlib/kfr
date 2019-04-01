@@ -287,7 +287,7 @@ KFR_INTRIN_BROADCAST(f64, 2, _mm_set1_pd(value))
         return __VA_ARGS__;                                                                                  \
     }
 
-#if defined CMT_MSC_VER && defined CMT_ARCH_X32
+#if defined CMT_COMPILER_MSVC && !defined CMT_COMPILER_CLANG && defined CMT_ARCH_X32
 KFR_INTRINSIC __m128i _mm_cvtsi64_si128(int64_t u)
 {
     __m128i r      = _mm_setzero_si128();
