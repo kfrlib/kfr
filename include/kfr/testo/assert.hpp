@@ -19,6 +19,9 @@
 namespace testo
 {
 
+#ifdef TESTO_CUSTOM_ASSERTION_PRINT
+void assertion_failed(const std::string& string, const char* file, int line);
+#else
 inline void assertion_failed(const std::string& string, const char* file, int line)
 {
     errorln("Assertion failed at ", file, ":", line);
@@ -26,6 +29,7 @@ inline void assertion_failed(const std::string& string, const char* file, int li
     errorln();
     std::fflush(stderr);
 }
+#endif
 
 bool check_assertion(...);
 
