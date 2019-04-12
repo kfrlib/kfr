@@ -465,12 +465,12 @@ void prepare_dft_stage(dft_plan<T>* self, size_t radix, size_t iterations, size_
     return cswitch(
         dft_radices, radix,
         [self, iterations, blocks](auto radix) CMT_INLINE_LAMBDA {
-            add_stage<conditional<is_final, intrinsics::dft_stage_fixed_final_impl<T, val_of(radix)>,
+            self->template add_stage<conditional<is_final, intrinsics::dft_stage_fixed_final_impl<T, val_of(radix)>,
                                   intrinsics::dft_stage_fixed_impl<T, val_of(radix)>>>(self, radix,
                                                                                        iterations, blocks);
         },
         [self, radix, iterations, blocks]() {
-            add_stage<intrinsics::dft_stage_generic_impl<T, is_final>>(self, radix, iterations, blocks);
+            self->template add_stage<intrinsics::dft_stage_generic_impl<T, is_final>>(self, radix, iterations, blocks);
         });
 }
 
