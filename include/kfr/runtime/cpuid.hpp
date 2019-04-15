@@ -115,11 +115,23 @@ struct cpu_data
 };
 
 #if defined CMT_COMPILER_GNU || defined CMT_COMPILER_CLANG
+#if defined __i386__
 KFR_INTRINSIC u32 get_cpuid(u32 func, u32 subfunc, u32* eax, u32* ebx, u32* ecx, u32* edx)
 {
     __asm__("cpuid" : "=a"(*eax), "=b"(*ebx), "=c"(*ecx), "=d"(*edx) : "0"(func), "2"(subfunc));
     return 1;
 }
+#else
+KFR_INTRINSIC u32 get_cpuid(u32 func, u32 subfunc, u32* eax, u32* ebx, u32* ecx, u32* edx)
+{
+    __asm("xchgq  %%rbx,%q1\n"
+          "cpuid\n"
+          "xchgq  %%rbx,%q1"
+          : "=a"(*eax), "=r"(*ebx), "=c"(*ecx), "=d"(*edx)
+          : "0"(func), "2"(subfunc));
+    return 1;
+}
+#endif
 KFR_INTRINSIC void cpuid(u32* ptr, u32 func, u32 subfunc = 0)
 {
     get_cpuid(func, subfunc, &ptr[0], &ptr[1], &ptr[2], &ptr[3]);
