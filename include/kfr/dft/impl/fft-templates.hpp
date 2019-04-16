@@ -31,19 +31,8 @@ namespace kfr
 {
 inline namespace CMT_ARCH_NAME
 {
-
-template dft_plan<FLOAT>::dft_plan(size_t, dft_order);
-template void dft_plan<FLOAT>::init_fft(size_t, dft_order);
-template dft_plan<FLOAT>::~dft_plan();
-template void dft_plan<FLOAT>::dump() const;
-template void dft_plan<FLOAT>::execute_dft(cometa::cbool_t<false>, kfr::complex<FLOAT>* out,
-                                           const kfr::complex<FLOAT>* in, kfr::u8* temp) const;
-template void dft_plan<FLOAT>::execute_dft(cometa::cbool_t<true>, kfr::complex<FLOAT>* out,
-                                           const kfr::complex<FLOAT>* in, kfr::u8* temp) const;
-template dft_plan_real<FLOAT>::dft_plan_real(size_t);
-template void dft_plan_real<FLOAT>::from_fmt(kfr::complex<FLOAT>* out, const kfr::complex<FLOAT>* in,
-                                             kfr::dft_pack_format fmt) const;
-template void dft_plan_real<FLOAT>::to_fmt(kfr::complex<FLOAT>* out, kfr::dft_pack_format fmt) const;
+template void dft_initialize<FLOAT>(dft_plan<FLOAT>& plan);
+template void dft_real_initialize<FLOAT>(dft_plan_real<FLOAT>& plan);
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
 

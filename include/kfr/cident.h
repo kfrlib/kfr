@@ -160,6 +160,74 @@ extern char* gets(char* __s);
 #define CMT_ARCH_NAME generic
 #endif
 
+#define CMT_ARCH_ID_GENERIC 0
+
+#define CMT_ARCH_ID_SSE2 1
+#define CMT_ARCH_ID_SSE3 2
+#define CMT_ARCH_ID_SSSE3 3
+#define CMT_ARCH_ID_SSE41 4
+#define CMT_ARCH_ID_SSE42 5
+#define CMT_ARCH_ID_AVX 6
+#define CMT_ARCH_ID_AVX2 7
+#define CMT_ARCH_ID_AVX512 8
+
+#define CMT_ARCH_ID_NEON 1
+#define CMT_ARCH_ID_NEON64 2
+
+#ifdef CMT_ENABLE_SSE2
+#define CMT_EXPAND_IF_ARCH_sse2(...) __VA_ARGS__
+#else
+#define CMT_EXPAND_IF_ARCH_sse2(...)
+#endif
+
+#ifdef CMT_ENABLE_SSE3
+#define CMT_EXPAND_IF_ARCH_sse3(...) __VA_ARGS__
+#else
+#define CMT_EXPAND_IF_ARCH_sse3(...)
+#endif
+
+#ifdef CMT_ENABLE_SSSE3
+#define CMT_EXPAND_IF_ARCH_ssse3(...) __VA_ARGS__
+#else
+#define CMT_EXPAND_IF_ARCH_ssse3(...)
+#endif
+
+#ifdef CMT_ENABLE_SSE41
+#define CMT_EXPAND_IF_ARCH_sse41(...) __VA_ARGS__
+#else
+#define CMT_EXPAND_IF_ARCH_sse41(...)
+#endif
+
+#ifdef CMT_ENABLE_SSE41
+#define CMT_EXPAND_IF_ARCH_sse41(...) __VA_ARGS__
+#else
+#define CMT_EXPAND_IF_ARCH_sse41(...)
+#endif
+
+#ifdef CMT_ENABLE_SSE42
+#define CMT_EXPAND_IF_ARCH_sse42(...) __VA_ARGS__
+#else
+#define CMT_EXPAND_IF_ARCH_sse42(...)
+#endif
+
+#ifdef CMT_ENABLE_AVX
+#define CMT_EXPAND_IF_ARCH_avx(...) __VA_ARGS__
+#else
+#define CMT_EXPAND_IF_ARCH_avx(...)
+#endif
+
+#ifdef CMT_ENABLE_AVX2
+#define CMT_EXPAND_IF_ARCH_avx2(...) __VA_ARGS__
+#else
+#define CMT_EXPAND_IF_ARCH_avx2(...)
+#endif
+
+#ifdef CMT_ENABLE_AVX512
+#define CMT_EXPAND_IF_ARCH_avx512(...) __VA_ARGS__
+#else
+#define CMT_EXPAND_IF_ARCH_avx512(...)
+#endif
+
 #ifndef CMT_NO_NATIVE_F64
 #define CMT_NATIVE_F64 1
 #endif

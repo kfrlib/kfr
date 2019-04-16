@@ -82,16 +82,16 @@ univector<T> autocorrelate(const univector_ref<const T>& src1)
 
 template <typename T>
 convolve_filter<T>::convolve_filter(size_t size, size_t block_size)
-    : size(size), block_size(block_size), fft(2 * next_poweroftwo(block_size)), temp(fft.temp_size),
-      segments((size + block_size - 1) / block_size)
+    : size(size), block_size(block_size), fft(2 * next_poweroftwo(block_size), dft_pack_format::Perm),
+      temp(fft.temp_size), segments((size + block_size - 1) / block_size)
 
 {
 }
 
 template <typename T>
 convolve_filter<T>::convolve_filter(const univector<T>& data, size_t block_size)
-    : size(data.size()), block_size(next_poweroftwo(block_size)), fft(2 * next_poweroftwo(block_size)),
-      temp(fft.temp_size),
+    : size(data.size()), block_size(next_poweroftwo(block_size)),
+      fft(2 * next_poweroftwo(block_size), dft_pack_format::Perm), temp(fft.temp_size),
       segments((data.size() + next_poweroftwo(block_size) - 1) / next_poweroftwo(block_size)),
       ir_segments((data.size() + next_poweroftwo(block_size) - 1) / next_poweroftwo(block_size)),
       input_position(0), position(0)
@@ -110,7 +110,7 @@ void convolve_filter<T>::set_data(const univector<T>& data)
         ir_segments[i].resize(block_size, 0);
         input = padded(data.slice(i * block_size, block_size));
 
-        fft.execute(ir_segments[i], input, temp, dft_pack_format::Perm);
+        fft.execute(ir_segments[i], input, temp);
         process(ir_segments[i], ir_segments[i] * ifftsize);
     }
     saved_input.resize(block_size, 0);
@@ -130,7 +130,7 @@ void convolve_filter<T>::process_buffer(T* output, const T* input, size_t size)
         builtin_memcpy(saved_input.data() + input_position, input + processed, processing * sizeof(T));
 
         process(scratch, padded(saved_input));
-        fft.execute(segments[position], scratch, temp, dft_pack_format::Perm);
+        fft.execute(segments[position], scratch, temp);
 
         if (input_position == 0)
         {
@@ -143,7 +143,7 @@ void convolve_filter<T>::process_buffer(T* output, const T* input, size_t size)
         }
         fft_multiply_accumulate(cscratch, premul, ir_segments[0], segments[position], dft_pack_format::Perm);
 
-        fft.execute(scratch, cscratch, temp, dft_pack_format::Perm);
+        fft.execute(scratch, cscratch, temp);
 
         process(make_univector(output + processed, processing),
                 scratch.slice(input_position) + overlap.slice(input_position));

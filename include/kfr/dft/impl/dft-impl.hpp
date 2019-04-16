@@ -166,7 +166,7 @@ struct fft_inverse : internal::expression_with_arguments<E>
     }
 
     friend KFR_INTRINSIC vec<value_type, 1> get_elements(const fft_inverse& self, cinput_t input,
-                                                             size_t index, vec_shape<value_type, 1>)
+                                                         size_t index, vec_shape<value_type, 1>)
     {
         return self.argument_first(input, index == 0 ? 0 : self.size() - index, vec_shape<value_type, 1>());
     }
@@ -459,32 +459,31 @@ protected:
 };
 } // namespace intrinsics
 
-template <typename T>
-template <bool is_final>
-void dft_plan<T>::prepare_dft_stage(size_t radix, size_t iterations, size_t blocks, cbool_t<is_final>)
+template <bool is_final, typename T>
+void prepare_dft_stage(dft_plan<T>* self, size_t radix, size_t iterations, size_t blocks, cbool_t<is_final>)
 {
     return cswitch(
         dft_radices, radix,
-        [this, iterations, blocks](auto radix) CMT_INLINE_LAMBDA {
+        [self, iterations, blocks](auto radix) CMT_INLINE_LAMBDA {
             add_stage<conditional<is_final, intrinsics::dft_stage_fixed_final_impl<T, val_of(radix)>,
-                                  intrinsics::dft_stage_fixed_impl<T, val_of(radix)>>>(radix, iterations,
-                                                                                       blocks);
+                                  intrinsics::dft_stage_fixed_impl<T, val_of(radix)>>>(self, radix,
+                                                                                       iterations, blocks);
         },
-        [this, radix, iterations, blocks]() {
-            add_stage<intrinsics::dft_stage_generic_impl<T, is_final>>(radix, iterations, blocks);
+        [self, radix, iterations, blocks]() {
+            add_stage<intrinsics::dft_stage_generic_impl<T, is_final>>(self, radix, iterations, blocks);
         });
 }
 
 template <typename T>
-void dft_plan<T>::init_dft(size_t size, dft_order)
+void init_dft(dft_plan<T>* self, size_t size, dft_order)
 {
     if (size == 60)
     {
-        this->add_stage<intrinsics::dft_special_stage_impl<T, 6, 10>>();
+        add_stage<intrinsics::dft_special_stage_impl<T, 6, 10>>(self);
     }
     else if (size == 48)
     {
-        this->add_stage<intrinsics::dft_special_stage_impl<T, 6, 8>>();
+        add_stage<intrinsics::dft_special_stage_impl<T, 6, 8>>(self);
     }
     else
     {
@@ -504,7 +503,7 @@ void dft_plan<T>::init_dft(size_t size, dft_order)
 
         if (cur_size >= 101)
         {
-            this->add_stage<intrinsics::dft_arblen_stage_impl<T>>(size);
+            add_stage<intrinsics::dft_arblen_stage_impl<T>>(self, size);
         }
         else
         {
@@ -518,9 +517,9 @@ void dft_plan<T>::init_dft(size_t size, dft_order)
                     iterations /= r;
                     radices[radices_size++] = r;
                     if (iterations == 1)
-                        this->prepare_dft_stage(r, iterations, blocks, ctrue);
+                        prepare_dft_stage(self, r, iterations, blocks, ctrue);
                     else
-                        this->prepare_dft_stage(r, iterations, blocks, cfalse);
+                        prepare_dft_stage(self, r, iterations, blocks, cfalse);
                     blocks *= r;
                 }
             }
@@ -530,13 +529,13 @@ void dft_plan<T>::init_dft(size_t size, dft_order)
                 iterations /= cur_size;
                 radices[radices_size++] = cur_size;
                 if (iterations == 1)
-                    this->prepare_dft_stage(cur_size, iterations, blocks, ctrue);
+                    prepare_dft_stage(self, cur_size, iterations, blocks, ctrue);
                 else
-                    this->prepare_dft_stage(cur_size, iterations, blocks, cfalse);
+                    prepare_dft_stage(self, cur_size, iterations, blocks, cfalse);
             }
 
-            if (stages.size() > 2)
-                this->add_stage<intrinsics::dft_reorder_stage_impl<T>>(radices, radices_size);
+            if (self->stages.size() > 2)
+                add_stage<intrinsics::dft_reorder_stage_impl<T>>(self, radices, radices_size);
         }
     }
 }

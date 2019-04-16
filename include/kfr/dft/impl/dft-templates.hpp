@@ -33,7 +33,7 @@ inline namespace CMT_ARCH_NAME
 {
 
 #ifndef KFR_DFT_NO_NPo2
-template void dft_plan<FLOAT>::init_dft(size_t, dft_order);
+template void init_dft(dft_plan<FLOAT>*, size_t, dft_order);
 #endif
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

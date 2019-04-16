@@ -82,18 +82,18 @@ extern "C"
 
     // Real DFT plans
 
-    KFR_DFT_REAL_PLAN_F32* kfr_dft_create_real_plan_f32(size_t size);
-    KFR_DFT_REAL_PLAN_F64* kfr_dft_create_real_plan_f64(size_t size);
+    KFR_DFT_REAL_PLAN_F32* kfr_dft_create_real_plan_f32(size_t size, KFR_DFT_PACK_FORMAT pack_format);
+    KFR_DFT_REAL_PLAN_F64* kfr_dft_create_real_plan_f64(size_t size, KFR_DFT_PACK_FORMAT pack_format);
 
     void kfr_dft_execute_real_f32(KFR_DFT_REAL_PLAN_F32* plan, size_t size, float* out, const float* in,
-                                  uint8_t* temp, KFR_DFT_PACK_FORMAT pack_format);
+                                  uint8_t* temp);
     void kfr_dft_execute_real_f64(KFR_DFT_REAL_PLAN_F64* plan, size_t size, double* out, const double* in,
-                                  uint8_t* temp, KFR_DFT_PACK_FORMAT pack_format);
+                                  uint8_t* temp);
 
     void kfr_dft_execute_real_inverse_f32(KFR_DFT_REAL_PLAN_F32* plan, size_t size, float* out,
-                                          const float* in, uint8_t* temp, KFR_DFT_PACK_FORMAT pack_format);
+                                          const float* in, uint8_t* temp);
     void kfr_dft_execute_real_inverse_f64(KFR_DFT_REAL_PLAN_F64* plan, size_t size, double* out,
-                                          const double* in, uint8_t* temp, KFR_DFT_PACK_FORMAT pack_format);
+                                          const double* in, uint8_t* temp);
 
     void kfr_dft_delete_real_plan_f32(KFR_DFT_REAL_PLAN_F32* plan);
     void kfr_dft_delete_real_plan_f64(KFR_DFT_REAL_PLAN_F64* plan);

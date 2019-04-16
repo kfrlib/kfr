@@ -559,20 +559,18 @@ struct fft_reorder_stage_impl : dft_stage<T>
     {
         this->name       = type_name<decltype(*this)>();
         this->stage_size = stage_size;
-        log2n            = ilog2(stage_size);
+        this->user       = ilog2(stage_size);
         this->data_size  = 0;
     }
 
 protected:
-    size_t log2n;
-
     virtual void do_initialize(size_t) override final {}
 
     DFT_STAGE_FN
     template <bool inverse>
     KFR_MEM_INTRINSIC void do_execute(complex<T>* out, const complex<T>*, u8*)
     {
-        fft_reorder(out, log2n, cbool_t<!is_even>());
+        fft_reorder(out, this->user, cbool_t<!is_even>());
     }
 };
 
@@ -841,21 +839,20 @@ struct fft_specialization<T, 10> : fft_final_stage_impl<T, false, 1024>
 
 } // namespace intrinsics
 
-template <typename T>
-template <bool is_even, bool first>
-void dft_plan<T>::make_fft(size_t stage_size, cbool_t<is_even>, cbool_t<first>)
+template <bool is_even, bool first, typename T>
+KFR_INTRINSIC void make_fft(dft_plan<T>* self, size_t stage_size, cbool_t<is_even>, cbool_t<first>)
 {
     constexpr size_t final_size = is_even ? 1024 : 512;
 
     if (stage_size >= 2048)
     {
-        add_stage<intrinsics::fft_stage_impl<T, !first, is_even>>(stage_size);
+        add_stage<intrinsics::fft_stage_impl<T, !first, is_even>>(self, stage_size);
 
-        make_fft(stage_size / 4, cbool_t<is_even>(), cfalse);
+        make_fft(self, stage_size / 4, cbool_t<is_even>(), cfalse);
     }
     else
     {
-        add_stage<intrinsics::fft_final_stage_impl<T, !first, final_size>>(final_size);
+        add_stage<intrinsics::fft_final_stage_impl<T, !first, final_size>>(self, final_size);
     }
 }
 
@@ -866,38 +863,49 @@ struct reverse_wrapper
 };
 
 template <typename T>
-auto begin(reverse_wrapper<T> w)
+KFR_INTRINSIC auto begin(reverse_wrapper<T> w)
 {
     return std::rbegin(w.iterable);
 }
 
 template <typename T>
-auto end(reverse_wrapper<T> w)
+KFR_INTRINSIC auto end(reverse_wrapper<T> w)
 {
     return std::rend(w.iterable);
 }
 
 template <typename T>
-reverse_wrapper<T> reversed(T&& iterable)
+KFR_INTRINSIC reverse_wrapper<T> reversed(T&& iterable)
 {
     return { iterable };
 }
 
 template <typename T>
-void dft_plan<T>::initialize()
+KFR_INTRINSIC void initialize_data_stage(dft_plan<T>* self, const dft_stage_ptr<T>& stage, size_t& offset)
 {
-    data          = autofree<u8>(data_size);
-    size_t offset = 0;
-    for (dft_stage_ptr& stage : stages)
-    {
-        stage->data = data.data() + offset;
-        stage->initialize(this->size);
-        offset += stage->data_size;
-    }
+    stage->data = self->data.data() + offset;
+    stage->initialize(self->size);
+    offset += stage->data_size;
+}
 
+template <typename T>
+KFR_INTRINSIC size_t initialize_data(dft_plan<T>* self)
+{
+    self->data    = autofree<u8>(self->data_size);
+    size_t offset = 0;
+    for (dft_stage_ptr<T>& stage : self->stages)
+    {
+        initialize_data_stage(self, stage, offset);
+    }
+    return offset;
+}
+
+template <typename T>
+KFR_INTRINSIC void initialize_order(dft_plan<T>* self)
+{
     bool to_scratch     = false;
     bool scratch_needed = false;
-    for (dft_stage_ptr& stage : reversed(stages))
+    for (dft_stage_ptr<T>& stage : reversed(self->stages))
     {
         if (to_scratch)
         {
@@ -909,141 +917,47 @@ void dft_plan<T>::initialize()
             to_scratch = !to_scratch;
         }
     }
-    if (scratch_needed || !stages[0]->can_inplace)
-        this->temp_size += align_up(sizeof(complex<T>) * this->size, platform<>::native_cache_alignment);
+    if (scratch_needed || !self->stages[0]->can_inplace)
+        self->temp_size += align_up(sizeof(complex<T>) * self->size, platform<>::native_cache_alignment);
 }
 
 template <typename T>
-const complex<T>* dft_plan<T>::select_in(size_t stage, const complex<T>* out, const complex<T>* in,
-                                         const complex<T>* scratch, bool in_scratch) const
-{
-    if (stage == 0)
-        return in_scratch ? scratch : in;
-    return stages[stage - 1]->to_scratch ? scratch : out;
-}
-
-template <typename T>
-complex<T>* dft_plan<T>::select_out(size_t stage, complex<T>* out, complex<T>* scratch) const
-{
-    return stages[stage]->to_scratch ? scratch : out;
-}
-
-template <typename T>
-template <bool inverse>
-void dft_plan<T>::execute_dft(cbool_t<inverse>, complex<T>* out, const complex<T>* in, u8* temp) const
-{
-    if (stages.size() == 1 && (stages[0]->can_inplace || in != out))
-    {
-        return stages[0]->execute(cbool<inverse>, out, in, temp);
-    }
-    size_t stack[32] = { 0 };
-
-    complex<T>* scratch =
-        ptr_cast<complex<T>>(temp + this->temp_size -
-                             align_up(sizeof(complex<T>) * this->size, platform<>::native_cache_alignment));
-
-    bool in_scratch = !stages[0]->can_inplace && in == out;
-    if (in_scratch)
-    {
-        builtin_memcpy(scratch, in, sizeof(complex<T>) * this->size);
-    }
-
-    const size_t count = stages.size();
-
-    for (size_t depth = 0; depth < count;)
-    {
-        if (stages[depth]->recursion)
-        {
-            size_t offset   = 0;
-            size_t rdepth   = depth;
-            size_t maxdepth = depth;
-            do
-            {
-                if (stack[rdepth] == stages[rdepth]->repeats)
-                {
-                    stack[rdepth] = 0;
-                    rdepth--;
-                }
-                else
-                {
-                    complex<T>* rout      = select_out(rdepth, out, scratch);
-                    const complex<T>* rin = select_in(rdepth, out, in, scratch, in_scratch);
-                    stages[rdepth]->execute(cbool<inverse>, rout + offset, rin + offset, temp);
-                    offset += stages[rdepth]->out_offset;
-                    stack[rdepth]++;
-                    if (rdepth < count - 1 && stages[rdepth + 1]->recursion)
-                        rdepth++;
-                    else
-                        maxdepth = rdepth;
-                }
-            } while (rdepth != depth);
-            depth = maxdepth + 1;
-        }
-        else
-        {
-            stages[depth]->execute(cbool<inverse>, select_out(depth, out, scratch),
-                                   select_in(depth, out, in, scratch, in_scratch), temp);
-            depth++;
-        }
-    }
-}
-
-template <typename T>
-void dft_plan<T>::init_fft(size_t size, dft_order)
+KFR_INTRINSIC void init_fft(dft_plan<T>* self, size_t size, dft_order)
 {
     const size_t log2n = ilog2(size);
     cswitch(csizes_t<1, 2, 3, 4, 5, 6, 7, 8, 9, 10>(), log2n,
             [&](auto log2n) {
                 (void)log2n;
                 constexpr size_t log2nv = val_of(decltype(log2n)());
-                this->add_stage<intrinsics::fft_specialization<T, log2nv>>(size);
+                add_stage<intrinsics::fft_specialization<T, log2nv>>(self, size);
             },
             [&]() {
                 cswitch(cfalse_true, is_even(log2n), [&](auto is_even) {
-                    this->make_fft(size, is_even, ctrue);
+                    make_fft(self, size, is_even, ctrue);
                     constexpr size_t is_evenv = val_of(decltype(is_even)());
-                    if (need_reorder)
-                        this->add_stage<intrinsics::fft_reorder_stage_impl<T, is_evenv>>(size);
+                    add_stage<intrinsics::fft_reorder_stage_impl<T, is_evenv>>(self, size);
                 });
             });
 }
 
 template <typename T>
-dft_plan<T>::dft_plan(size_t size, dft_order order) : size(size), temp_size(0), data_size(0)
-{
-    need_reorder = true;
-    if (is_poweroftwo(size))
-    {
-        init_fft(size, order);
-    }
-#ifndef KFR_DFT_NO_NPo2
-    else
-    {
-        init_dft(size, order);
-    }
-#endif
-    initialize();
-}
-
-template <typename T>
-dft_plan_real<T>::dft_plan_real(size_t size) : dft_plan<T>(size / 2), size(size), rtwiddle(size / 4)
+KFR_INTRINSIC void generate_real_twiddles(dft_plan_real<T>* self, size_t size)
 {
     using namespace intrinsics;
-
     constexpr size_t width = vector_width<T> * 2;
-
     block_process(size / 4, csizes_t<width, 1>(), [=](size_t i, auto w) {
         constexpr size_t width = val_of(decltype(w)());
-        cwrite<width>(rtwiddle.data() + i,
+        cwrite<width>(self->rtwiddle.data() + i,
                       cossin(dup(-constants<T>::pi * ((enumerate<T, width>() + i + size / 4) / (size / 2)))));
     });
 }
 
 template <typename T>
-void dft_plan_real<T>::to_fmt(complex<T>* out, dft_pack_format fmt) const
+KFR_INTRINSIC void to_fmt(size_t real_size, const complex<T>* rtwiddle, complex<T>* out, const complex<T>* in,
+                          dft_pack_format fmt)
 {
     using namespace intrinsics;
-    size_t csize = this->size / 2; // const size_t causes internal compiler error: in tsubst_copy in GCC 5.2
+    size_t csize = real_size / 2; // const size_t causes internal compiler error: in tsubst_copy in GCC 5.2
 
     constexpr size_t width = vector_width<T> * 2;
     const cvec<T, 1> dc    = cread<1>(out);
@@ -1053,9 +967,9 @@ void dft_plan_real<T>::to_fmt(complex<T>* out, dft_pack_format fmt) const
         i++;
         constexpr size_t width    = val_of(decltype(w)());
         constexpr size_t widthm1  = width - 1;
-        const cvec<T, width> tw   = cread<width>(rtwiddle.data() + i);
-        const cvec<T, width> fpk  = cread<width>(out + i);
-        const cvec<T, width> fpnk = reverse<2>(negodd(cread<width>(out + csize - i - widthm1)));
+        const cvec<T, width> tw   = cread<width>(rtwiddle + i);
+        const cvec<T, width> fpk  = cread<width>(in + i);
+        const cvec<T, width> fpnk = reverse<2>(negodd(cread<width>(in + csize - i - widthm1)));
 
         const cvec<T, width> f1k = fpk + fpnk;
         const cvec<T, width> f2k = fpk - fpnk;
@@ -1066,7 +980,7 @@ void dft_plan_real<T>::to_fmt(complex<T>* out, dft_pack_format fmt) const
 
     {
         size_t k              = csize / 2;
-        const cvec<T, 1> fpk  = cread<1>(out + k);
+        const cvec<T, 1> fpk  = cread<1>(in + k);
         const cvec<T, 1> fpnk = negodd(fpk);
         cwrite<1>(out + k, fpnk);
     }
@@ -1082,11 +996,12 @@ void dft_plan_real<T>::to_fmt(complex<T>* out, dft_pack_format fmt) const
 }
 
 template <typename T>
-void dft_plan_real<T>::from_fmt(complex<T>* out, const complex<T>* in, dft_pack_format fmt) const
+KFR_INTRINSIC void from_fmt(size_t real_size, complex<T>* rtwiddle, complex<T>* out, const complex<T>* in,
+                            dft_pack_format fmt)
 {
     using namespace intrinsics;
 
-    const size_t csize = this->size / 2;
+    const size_t csize = real_size / 2;
 
     cvec<T, 1> dc;
 
@@ -1106,7 +1021,7 @@ void dft_plan_real<T>::from_fmt(complex<T>* out, const complex<T>* in, dft_pack_
         i++;
         constexpr size_t width    = val_of(decltype(w)());
         constexpr size_t widthm1  = width - 1;
-        const cvec<T, width> tw   = cread<width>(rtwiddle.data() + i);
+        const cvec<T, width> tw   = cread<width>(rtwiddle + i);
         const cvec<T, width> fpk  = cread<width>(in + i);
         const cvec<T, width> fpnk = reverse<2>(negodd(cread<width>(in + csize - i - widthm1)));
 
@@ -1127,18 +1042,77 @@ void dft_plan_real<T>::from_fmt(complex<T>* out, const complex<T>* in, dft_pack_
 }
 
 template <typename T>
-dft_plan<T>::~dft_plan()
+void init_dft(dft_plan<T>* self, size_t size, dft_order);
+
+template <typename T>
+KFR_INTRINSIC void initialize_stages(dft_plan<T>* self)
 {
+    if (is_poweroftwo(self->size))
+    {
+        init_fft(self, self->size, dft_order::normal);
+    }
+#ifndef KFR_DFT_NO_NPo2
+    else
+    {
+        init_dft(self, self->size, dft_order::normal);
+    }
+#endif
 }
 
 template <typename T>
-void dft_plan<T>::dump() const
+void dft_initialize(dft_plan<T>& plan)
 {
-    for (const dft_stage_ptr& s : stages)
-    {
-        s->dump();
-    }
+    initialize_stages(&plan);
+    initialize_data(&plan);
+    initialize_order(&plan);
 }
+
+template <typename T>
+struct dft_stage_real_repack : dft_stage<T>
+{
+public:
+    dft_stage_real_repack(size_t real_size, dft_pack_format fmt)
+    {
+        this->user       = static_cast<int>(fmt);
+        this->stage_size = real_size;
+        this->data_size  = align_up(sizeof(complex<T>) * (real_size / 4), platform<>::native_cache_alignment);
+    }
+    void do_initialize(size_t) override
+    {
+        using namespace intrinsics;
+        constexpr size_t width = vector_width<T> * 2;
+        const size_t real_size = this->stage_size;
+        complex<T>* rtwiddle   = ptr_cast<complex<T>>(this->data);
+        block_process(real_size / 4, csizes_t<width, 1>(), [=](size_t i, auto w) {
+            constexpr size_t width = val_of(decltype(w)());
+            cwrite<width>(rtwiddle + i,
+                          cossin(dup(-constants<T>::pi *
+                                     ((enumerate<T, width>() + i + real_size / 4) / (real_size / 2)))));
+        });
+    }
+    void do_execute(cdirect_t, complex<T>* out, const complex<T>* in, u8* temp) override
+    {
+        to_fmt(this->stage_size, ptr_cast<complex<T>>(this->data), out, in,
+               static_cast<dft_pack_format>(this->user));
+    }
+    void do_execute(cinvert_t, complex<T>* out, const complex<T>* in, u8* temp) override
+    {
+        from_fmt(this->stage_size, ptr_cast<complex<T>>(this->data), out, in,
+                 static_cast<dft_pack_format>(this->user));
+    }
+};
+
+template <typename T>
+void dft_real_initialize(dft_plan_real<T>& plan)
+{
+    initialize_stages(&plan);
+    plan.fmt_stage.reset(new dft_stage_real_repack<T>(plan.size, plan.fmt));
+    plan.data_size += plan.fmt_stage->data_size;
+    size_t offset = initialize_data(&plan);
+    initialize_data_stage(&plan, plan.fmt_stage, offset);
+    initialize_order(&plan);
+}
+
 } // namespace CMT_ARCH_NAME
 
 } // namespace kfr
