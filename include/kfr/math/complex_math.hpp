@@ -273,6 +273,13 @@ KFR_FUNCTION internal::expression_function<fn::carg, E1> carg(E1&& x)
     return { fn::carg(), std::forward<E1>(x) };
 }
 
+/// @brief Returns the complex conjugate of the complex number x
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+KFR_FUNCTION T1 cconj(const T1& x)
+{
+    return intrinsics::cconj(x);
+}
+
 /// @brief Returns template expression that returns the complex conjugate of the complex number x
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
 KFR_FUNCTION internal::expression_function<fn::cconj, E1> cconj(E1&& x)
