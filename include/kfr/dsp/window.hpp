@@ -385,11 +385,11 @@ struct expression_flattop : input_expression
                                                     size_t index, vec_shape<T, N> y)
     {
         const vec<T, N> n = get_elements(self.linspace, cinput, index, y) * c_pi<T, 2>;
-        constexpr T a0    = 1;
-        constexpr T a1    = 1.93;
-        constexpr T a2    = 1.29;
-        constexpr T a3    = 0.388;
-        constexpr T a4    = 0.028;
+        constexpr T a0    = 0.21557895;
+        constexpr T a1    = 0.41663158;
+        constexpr T a2    = 0.277263158;
+        constexpr T a3    = 0.083578947;
+        constexpr T a4    = 0.006947368;
         return a0 - a1 * cos(n) + a2 * cos(2 * n) - a3 * cos(3 * n) + a4 * cos(4 * n);
     }
     size_t size() const { return m_size; }
