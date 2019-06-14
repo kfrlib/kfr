@@ -23,7 +23,13 @@ int main()
     univector<complex<fbase>, size> out = scalar(qnan);
 
     // initialize fft
-    const dft_plan<fbase> dft(size);
+    const dft_plan<fbase> dft(
+#ifdef KFR_DFT_MULTI
+        cpu_t::runtime,
+#endif
+        size);
+
+    dft.dump();
 
     // allocate work buffer for fft (if needed)
     univector<u8> temp(dft.temp_size);

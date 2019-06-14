@@ -7,14 +7,15 @@ import subprocess
 import sys
 import glob
 
-def list_sources(name, searchpath, masks):
+def list_sources(name, searchpath, masks, exclude = []):
     global cmake
     path = os.path.join(os.path.dirname(os.path.realpath(__file__)), searchpath)
     filenames = []
     for root, dirnames, files in os.walk(path, path):
         for mask in masks:
-            for filename in fnmatch.filter(files, mask):
-                filenames.append(os.path.relpath(os.path.join(root, filename), path).replace('\\','/'))
+            for filename in fnmatch.filter(files, mask):=
+                if filename not in exclude:
+                    filenames.append(os.path.relpath(os.path.join(root, filename), path).replace('\\','/'))
 
     cmake += """
 set(
@@ -30,7 +31,7 @@ cmake = """
 """
 
 list_sources("KFR_SRC", "include", ['*.hpp', '*.h', '*.i', '*.inc'])
-list_sources("KFR_DFT_SRC", "include/kfr/dft", ['*.cpp'])
+list_sources("KFR_DFT_SRC", "include/kfr/dft", ['*.cpp'], ["dft-src.cpp"])
 list_sources("KFR_IO_SRC", "include/kfr/io", ['*.cpp'])
 
 list_sources("KFR_UNITTEST_SRC", "tests/unit", ['*.cpp'])

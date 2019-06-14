@@ -152,7 +152,6 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/convolution-impl.cpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/dft-impl-f32.cpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/dft-impl-f64.cpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/dft-src.cpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/fft-impl-f32.cpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/fft-impl-f64.cpp
 )

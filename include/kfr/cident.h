@@ -28,6 +28,8 @@ extern char* gets(char* __s);
 #define CMT_ARCH_AVX512 1
 #define CMT_ARCH_AVX2 1
 #define CMT_ARCH_AVX 1
+#define CMT_ARCH_SSE4_2 1
+#define CMT_ARCH_SSE4_1 1
 #define CMT_ARCH_SSE42 1
 #define CMT_ARCH_SSE41 1
 #define CMT_ARCH_SSSE3 1
@@ -38,6 +40,8 @@ extern char* gets(char* __s);
 #if defined __AVX2__ && !defined CMT_ARCH_AVX2
 #define CMT_ARCH_AVX2 1
 #define CMT_ARCH_AVX 1
+#define CMT_ARCH_SSE4_2 1
+#define CMT_ARCH_SSE4_1 1
 #define CMT_ARCH_SSE42 1
 #define CMT_ARCH_SSE41 1
 #define CMT_ARCH_SSSE3 1
@@ -47,6 +51,8 @@ extern char* gets(char* __s);
 #endif
 #if defined __AVX__ && !defined CMT_ARCH_AVX
 #define CMT_ARCH_AVX 1
+#define CMT_ARCH_SSE4_2 1
+#define CMT_ARCH_SSE4_1 1
 #define CMT_ARCH_SSE42 1
 #define CMT_ARCH_SSE41 1
 #define CMT_ARCH_SSSE3 1
@@ -56,6 +62,8 @@ extern char* gets(char* __s);
 #endif
 #if defined __SSE4_2__ && !defined CMT_ARCH_SSE4_2
 #define CMT_ARCH_SSE4_2 1
+#define CMT_ARCH_SSE42 1
+#define CMT_ARCH_SSE4_1 1
 #define CMT_ARCH_SSE41 1
 #define CMT_ARCH_SSSE3 1
 #define CMT_ARCH_SSE3 1
@@ -64,6 +72,7 @@ extern char* gets(char* __s);
 #endif
 #if defined __SSE4_1__ && !defined CMT_ARCH_SSE4_1
 #define CMT_ARCH_SSE4_1 1
+#define CMT_ARCH_SSE41 1
 #define CMT_ARCH_SSSE3 1
 #define CMT_ARCH_SSE3 1
 #define CMT_ARCH_SSE2 1
@@ -115,20 +124,33 @@ extern char* gets(char* __s);
 
 #if defined CMT_ARCH_AVX512
 #define CMT_ARCH_NAME avx512
+#define CMT_ARCH_IS_AVX512 1
 #elif defined CMT_ARCH_AVX2
 #define CMT_ARCH_NAME avx2
+#define CMT_ARCH_IS_AVX2 1
 #elif defined CMT_ARCH_AVX
 #define CMT_ARCH_NAME avx
-#elif defined CMT_ARCH_SSE4_1
+#define CMT_ARCH_IS_AVX 1
+#elif defined CMT_ARCH_SSE42
+#define CMT_ARCH_NAME sse42
+#define CMT_ARCH_IS_SSE42 1
+#elif defined CMT_ARCH_SSE41
 #define CMT_ARCH_NAME sse41
+#define CMT_ARCH_IS_SSE4 1
 #elif defined CMT_ARCH_SSSE3
 #define CMT_ARCH_NAME ssse3
+#define CMT_ARCH_IS_SSSE3 1
 #elif defined CMT_ARCH_SSE3
 #define CMT_ARCH_NAME sse3
+#define CMT_ARCH_IS_SSE3 1
 #elif defined CMT_ARCH_SSE2
 #define CMT_ARCH_NAME sse2
+#define CMT_ARCH_IS_SSE2 1
 #elif defined CMT_ARCH_SSE
 #define CMT_ARCH_NAME sse
+#define CMT_ARCH_IS_SSE 1
+#else
+#define CMT_ARCH_IS_GENERIC 1
 #endif
 
 #elif defined(CMT_ARCH_ARM)

@@ -133,12 +133,69 @@ template <typename T>
 void dft_real_initialize(dft_plan_real<T>& plan);
 } // namespace CMT_ARCH_NAME
 
+#ifdef KFR_DFT_MULTI
+
+#define KFR_DFT_PROTO(arch)                                                                                  \
+    namespace arch                                                                                           \
+    {                                                                                                        \
+    template <typename T>                                                                                    \
+    void dft_initialize(dft_plan<T>& plan);                                                                  \
+    template <typename T>                                                                                    \
+    void dft_real_initialize(dft_plan_real<T>& plan);                                                        \
+    }
+
+#if !CMT_ARCH_IS_AVX512
+KFR_DFT_PROTO(avx512)
+#endif
+#if !CMT_ARCH_IS_AVX2
+KFR_DFT_PROTO(avx2)
+#endif
+#if !CMT_ARCH_IS_AVX
+KFR_DFT_PROTO(avx)
+#endif
+#if !CMT_ARCH_IS_SSE41
+KFR_DFT_PROTO(sse41)
+#endif
+#if !CMT_ARCH_IS_SSE2
+KFR_DFT_PROTO(sse2)
+#endif
+
+#endif
+
 /// @brief Class for performing DFT/FFT
 template <typename T>
 struct dft_plan
 {
     size_t size;
     size_t temp_size;
+
+#ifdef KFR_DFT_MULTI
+    explicit dft_plan(cpu_t cpu, size_t size, dft_order order = dft_order::normal)
+        : size(size), temp_size(0), data_size(0)
+    {
+        if (cpu == cpu_t::runtime)
+            cpu = get_cpu();
+        switch (cpu)
+        {
+        case cpu_t::avx512:
+            avx512::dft_initialize(*this);
+            break;
+        case cpu_t::avx2:
+            avx2::dft_initialize(*this);
+            break;
+        case cpu_t::avx:
+            avx::dft_initialize(*this);
+            break;
+        case cpu_t::sse42:
+        case cpu_t::sse41:
+            sse41::dft_initialize(*this);
+            break;
+        default:
+            sse2::dft_initialize(*this);
+            break;
+        }
+    }
+#endif
 
     explicit dft_plan(size_t size, dft_order order = dft_order::normal)
         : size(size), temp_size(0), data_size(0)
@@ -276,6 +333,34 @@ struct dft_plan_real : dft_plan<T>
     size_t size;
     dft_pack_format fmt;
     dft_stage_ptr<T> fmt_stage;
+
+#ifdef KFR_DFT_MULTI
+    explicit dft_plan_real(cpu_t cpu, size_t size, dft_pack_format fmt = dft_pack_format::CCs)
+        : dft_plan<T>(typename dft_plan<T>::noinit{}, size / 2), size(size), fmt(fmt)
+    {
+        if (cpu == cpu_t::runtime)
+            cpu = get_cpu();
+        switch (cpu)
+        {
+        case cpu_t::avx512:
+            avx512::dft_real_initialize(*this);
+            break;
+        case cpu_t::avx2:
+            avx2::dft_real_initialize(*this);
+            break;
+        case cpu_t::avx:
+            avx::dft_real_initialize(*this);
+            break;
+        case cpu_t::sse42:
+        case cpu_t::sse41:
+            sse41::dft_real_initialize(*this);
+            break;
+        default:
+            sse2::dft_real_initialize(*this);
+            break;
+        }
+    }
+#endif
 
     explicit dft_plan_real(size_t size, dft_pack_format fmt = dft_pack_format::CCs)
         : dft_plan<T>(typename dft_plan<T>::noinit{}, size / 2), size(size), fmt(fmt)
