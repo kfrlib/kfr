@@ -476,9 +476,10 @@ KFR_WINDOW_BY_TYPE(lanczos)
 /**
  * @brief Returns template expression that generates Rrectangular window of length @c size
  */
-KFR_FUNCTION internal::expression_rectangular<fbase> window_rectangular(size_t size)
+template <typename T = fbase>
+KFR_FUNCTION internal::expression_rectangular<T> window_rectangular(size_t size, ctype_t<T> = ctype_t<T>())
 {
-    return internal::expression_rectangular<fbase>(size, fbase());
+    return internal::expression_rectangular<T>(size, T());
 }
 
 /**
