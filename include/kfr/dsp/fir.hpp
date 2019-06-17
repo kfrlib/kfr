@@ -220,5 +220,8 @@ protected:
 private:
     fir_state<T, U> state;
 };
+
+template <typename T, typename U = T>
+using fir_filter = filter_fir<T, U>;
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
