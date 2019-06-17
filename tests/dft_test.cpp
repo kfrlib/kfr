@@ -17,7 +17,7 @@ using namespace kfr;
 namespace CMT_ARCH_NAME
 {
 
-#ifdef KFR_NATIVE_F64
+#ifdef CMT_NATIVE_F64
 constexpr ctypes_t<float, double> dft_float_types{};
 #else
 constexpr ctypes_t<float> dft_float_types{};

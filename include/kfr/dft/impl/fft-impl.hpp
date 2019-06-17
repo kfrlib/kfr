@@ -953,7 +953,11 @@ KFR_INTRINSIC void generate_real_twiddles(dft_plan_real<T>* self, size_t size)
 }
 
 template <typename T>
-KFR_INTRINSIC void to_fmt(size_t real_size, const complex<T>* rtwiddle, complex<T>* out, const complex<T>* in,
+#ifdef CMT_ARCH_X32
+// Fix Clang 8.0 bug
+__attribute__((target("no-fma"), flatten, noinline))
+#endif
+void to_fmt(size_t real_size, const complex<T>* rtwiddle, complex<T>* out, const complex<T>* in,
                           dft_pack_format fmt)
 {
     using namespace intrinsics;
@@ -996,7 +1000,11 @@ KFR_INTRINSIC void to_fmt(size_t real_size, const complex<T>* rtwiddle, complex<
 }
 
 template <typename T>
-KFR_INTRINSIC void from_fmt(size_t real_size, complex<T>* rtwiddle, complex<T>* out, const complex<T>* in,
+#ifdef CMT_ARCH_X32
+// Fix Clang 8.0 bug
+__attribute__((target("no-fma"), flatten, noinline))
+#endif
+void from_fmt(size_t real_size, complex<T>* rtwiddle, complex<T>* out, const complex<T>* in,
                             dft_pack_format fmt)
 {
     using namespace intrinsics;

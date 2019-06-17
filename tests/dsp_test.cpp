@@ -343,7 +343,7 @@ TEST(fir)
     }
 #else
     testo::matrix(named("type") = ctypes_t<float
-#ifdef KFR_NATIVE_F64
+#ifdef CMT_NATIVE_F64
                                            ,
                                            double
 #endif
@@ -372,7 +372,7 @@ TEST(fir)
 #endif
 }
 
-#ifdef KFR_NATIVE_F64
+#ifdef CMT_NATIVE_F64
 TEST(fir_different)
 {
     const univector<float, 100> data = counter() + sequence(1, 2, -10, 100) + sequence(0, -7, 0.5f);

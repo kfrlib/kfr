@@ -135,14 +135,14 @@ constexpr ctypes_t<i8, i16, i32, i64> signed_types{};
 constexpr ctypes_t<u8, u16, u32, u64> unsigned_types{};
 constexpr ctypes_t<i8, i16, i32, i64, u8, u16, u32, u64> integer_types{};
 constexpr ctypes_t<f32
-#ifdef KFR_NATIVE_F64
+#ifdef CMT_NATIVE_F64
                    ,
                    f64
 #endif
                    >
     float_types{};
 constexpr ctypes_t<i8, i16, i32, i64, u8, u16, u32, u64, f32
-#ifdef KFR_NATIVE_F64
+#ifdef CMT_NATIVE_F64
                    ,
                    f64
 #endif
@@ -203,7 +203,7 @@ constexpr integer_vector_types_t<vec_tpl> integer_vector_types{};
 
 template <template <typename, size_t> class vec_tpl>
 using float_vector_types_t = concat_lists<vector_types_for_size_t<vec_tpl, f32>
-#ifdef KFR_NATIVE_F64
+#ifdef CMT_NATIVE_F64
                                           ,
                                           vector_types_for_size_t<vec_tpl, f64>
 #endif
