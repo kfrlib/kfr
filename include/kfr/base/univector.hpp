@@ -330,9 +330,15 @@ struct alignas(platform<>::maximum_vector_alignment) univector
 {
     using std::array<T, Size>::size;
     using size_type = size_t;
+#if !defined CMT_COMPILER_MSVC || defined CMT_COMPILER_CLANG
+    univector(univector& v) : univector(const_cast<const univector&>(v)) {}
+#endif
+    univector(const univector& v)   = default;
+    univector(univector&&) noexcept = default;
     template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
     univector(Input&& input)
     {
+        printf("assign from expression\n");
         this->assign_expr(std::forward<Input>(input));
     }
     template <typename... Args>
@@ -367,6 +373,11 @@ struct univector<T, tag_array_ref> : array_ref<T>,
     using array_ref<T>::size;
     using array_ref<T>::array_ref;
     using size_type = size_t;
+#if !defined CMT_COMPILER_MSVC || defined CMT_COMPILER_CLANG
+    univector(univector& v) : univector(const_cast<const univector&>(v)) {}
+#endif
+    univector(const univector& v)   = default;
+    univector(univector&&) noexcept = default;
     constexpr univector(const array_ref<T>& other) : array_ref<T>(other) {}
     constexpr univector(array_ref<T>&& other) : array_ref<T>(std::move(other)) {}
 
@@ -413,6 +424,11 @@ struct univector<T, tag_dynamic_vector>
     using std::vector<T, allocator<T>>::size;
     using std::vector<T, allocator<T>>::vector;
     using size_type = size_t;
+#if !defined CMT_COMPILER_MSVC || defined CMT_COMPILER_CLANG
+    univector(univector& v) : univector(const_cast<const univector&>(v)) {}
+#endif
+    univector(const univector& v)   = default;
+    univector(univector&&) noexcept = default;
     template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
     univector(Input&& input)
     {
