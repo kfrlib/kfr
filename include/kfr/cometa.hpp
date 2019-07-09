@@ -2022,8 +2022,7 @@ struct special_value
             CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wuninitialized")
             CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wmaybe-uninitialized")
         case special_constant::undefined:
-            T undef;
-            return undef;
+            return T{};
             CMT_PRAGMA_GNU(GCC diagnostic pop)
         case special_constant::default_constructed:
             return T{};

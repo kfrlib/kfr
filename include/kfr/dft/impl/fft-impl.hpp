@@ -840,7 +840,7 @@ struct fft_specialization<T, 10> : fft_final_stage_impl<T, false, 1024>
 } // namespace intrinsics
 
 template <bool is_even, bool first, typename T>
-KFR_INTRINSIC void make_fft(dft_plan<T>* self, size_t stage_size, cbool_t<is_even>, cbool_t<first>)
+void make_fft(dft_plan<T>* self, size_t stage_size, cbool_t<is_even>, cbool_t<first>)
 {
     constexpr size_t final_size = is_even ? 1024 : 512;
 
@@ -1089,7 +1089,7 @@ public:
     {
         using namespace intrinsics;
         constexpr size_t width = vector_width<T> * 2;
-        const size_t real_size = this->stage_size;
+        size_t real_size = this->stage_size;
         complex<T>* rtwiddle   = ptr_cast<complex<T>>(this->data);
         block_process(real_size / 4, csizes_t<width, 1>(), [=](size_t i, auto w) {
             constexpr size_t width = val_of(decltype(w)());
