@@ -189,10 +189,10 @@ add_library(kfr_io ${KFR_IO_SRC})
 target_link_libraries(kfr_io kfr)
 target_compile_definitions(kfr_io PUBLIC KFR_ENABLE_FLAC=1)
 
-install(TARGETS kfr kfr_io ARCHIVE DESTINATION lib)
+install(TARGETS kfr kfr_io ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
 
 if (ENABLE_DFT)
-    install(TARGETS kfr_dft ARCHIVE DESTINATION lib)
+    install(TARGETS kfr_dft ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
 endif ()
 
 install(DIRECTORY include/kfr DESTINATION include)
