@@ -1988,7 +1988,6 @@ CMT_INTRINSIC constexpr Tout pack_elements(Arg x, Args... args)
 
 enum class special_constant
 {
-    undefined,
     default_constructed,
     infinity,
     neg_infinity,
@@ -2018,13 +2017,6 @@ struct special_value
     {
         switch (c)
         {
-            CMT_PRAGMA_GNU(GCC diagnostic push)
-            CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wuninitialized")
-            CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wmaybe-uninitialized")
-        case special_constant::undefined:
-            T undef;
-            return undef;
-            CMT_PRAGMA_GNU(GCC diagnostic pop)
         case special_constant::default_constructed:
             return T{};
         case special_constant::infinity:
