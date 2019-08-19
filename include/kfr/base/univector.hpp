@@ -464,6 +464,8 @@ struct univector<T, tag_dynamic_vector>
     {
         return index < this->size() ? this->operator[](index) : fallback_value;
     }
+    using univector_base<T, univector, is_vec_element<T>::value>::operator=;
+    univector& operator=(const univector&) = default;
     template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
     KFR_MEM_INTRINSIC univector& operator=(Input&& input)
     {
