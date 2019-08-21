@@ -319,6 +319,11 @@ KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& m, const T& x, const vec<T,
     return select(m, vec<T, N>(x), y);
 }
 #endif
+template <typename T1, typename T2>
+KFR_INTRINSIC common_type<T1, T2> select(bool m, const T1& x, const T2& y)
+{
+    return m ? x : y;
+}
 
 } // namespace intrinsics
 KFR_I_FN(select)

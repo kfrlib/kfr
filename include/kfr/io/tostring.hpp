@@ -44,8 +44,6 @@ struct representation<cometa::special_value>
         using cometa::special_constant;
         switch (value.c)
         {
-        case special_constant::undefined:
-            return "undefined";
         case special_constant::default_constructed:
             return "default_constructed";
         case special_constant::infinity:
