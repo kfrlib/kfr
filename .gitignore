@@ -85,7 +85,7 @@ mkdocs/
 .idea/
 
 # VSCode
-.vs-code/
+.vscode/
 .vs/
 *.code-workspace
 

@@ -67,6 +67,22 @@ int main()
     plot_save("biquad_bandpass", output, options + ", title='Biquad band pass (0.25, 0.2)'");
 
     {
+        biquad_params<fbase> bq[] = { biquad_bandpass(0.25, 0.2) };
+        std::vector<fbase> data(output.size(), 0.f);
+        data[0] = 1.f;
+        output  = biquad(bq, make_univector(data));
+    }
+    plot_save("biquad_bandpass_stdvector", output, options + ", title='Biquad band pass (0.25, 0.2)'");
+
+    {
+        biquad_params<fbase> bq[] = { biquad_bandpass(0.25, 0.2) };
+        fbase data[output.size()] = { 0 }; // .size() is constexpr
+        data[0]                   = 1.f;
+        output                    = biquad(bq, make_univector(data));
+    }
+    plot_save("biquad_bandpass_carray", output, options + ", title='Biquad band pass (0.25, 0.2)'");
+
+    {
         // filter initialization
         biquad_params<fbase> bq[]       = { biquad_lowpass(0.2, 0.9) };
         expression_filter<fbase> filter = to_filter(biquad(bq, placeholder<fbase>()));

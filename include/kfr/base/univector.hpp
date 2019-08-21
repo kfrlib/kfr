@@ -505,6 +505,36 @@ KFR_INTRINSIC univector_ref<const T> make_univector(const T* data, size_t size)
     return univector_ref<const T>(data, size);
 }
 
+/// @brief Creates univector from a container (must have data() and size() methods)
+template <typename Container, KFR_ENABLE_IF(kfr::has_data_size<Container>::value),
+          typename T = value_type_of<Container>>
+KFR_INTRINSIC univector_ref<const T> make_univector(const Container& container)
+{
+    return univector_ref<const T>(container.data(), container.size());
+}
+
+/// @brief Creates univector from a container (must have data() and size() methods)
+template <typename Container, KFR_ENABLE_IF(kfr::has_data_size<Container>::value),
+          typename T = value_type_of<Container>>
+KFR_INTRINSIC univector_ref<T> make_univector(Container& container)
+{
+    return univector_ref<T>(container.data(), container.size());
+}
+
+/// @brief Creates univector from a sized array
+template <typename T, size_t N>
+KFR_INTRINSIC univector_ref<T> make_univector(T (&arr)[N])
+{
+    return univector_ref<T>(arr, N);
+}
+
+/// @brief Creates univector from a sized array
+template <typename T, size_t N>
+KFR_INTRINSIC univector_ref<const T> make_univector(const T (&arr)[N])
+{
+    return univector_ref<const T>(arr, N);
+}
+
 /// @brief Single producer single consumer lock-free ring buffer
 template <typename T>
 struct lockfree_ring_buffer
