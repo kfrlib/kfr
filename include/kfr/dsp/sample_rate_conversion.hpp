@@ -33,8 +33,6 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
-{
 
 enum class sample_rate_conversion_quality : int
 {
@@ -44,6 +42,9 @@ enum class sample_rate_conversion_quality : int
     high    = 10,
     perfect = 12,
 };
+
+inline namespace CMT_ARCH_NAME
+{
 
 using resample_quality = sample_rate_conversion_quality;
 

@@ -32,8 +32,6 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
-{
 
 enum class audio_sample_type
 {
@@ -48,6 +46,7 @@ enum class audio_sample_type
 
     first_float = f32
 };
+
 
 inline constexpr size_t audio_sample_sizeof(audio_sample_type type)
 {
@@ -74,6 +73,9 @@ inline constexpr size_t audio_sample_bit_depth(audio_sample_type type)
 {
     return audio_sample_sizeof(type) * 8;
 }
+
+inline namespace CMT_ARCH_NAME
+{
 
 using audio_sample_type_clist =
     cvals_t<audio_sample_type, audio_sample_type::i8, audio_sample_type::i16, audio_sample_type::i24,

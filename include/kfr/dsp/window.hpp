@@ -34,8 +34,6 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
-{
 
 enum class window_type
 {
@@ -67,6 +65,9 @@ enum class window_symmetry
     symmetric
 };
 
+inline namespace CMT_ARCH_NAME
+{
+    
 namespace internal
 {
 

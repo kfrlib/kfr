@@ -34,8 +34,6 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
-{
 
 enum class biquad_type
 {
@@ -48,6 +46,9 @@ enum class biquad_type
     lowshelf,
     highshelf
 };
+
+inline namespace CMT_ARCH_NAME
+{
 
 /**
  * @brief Structure for holding biquad filter coefficients.
