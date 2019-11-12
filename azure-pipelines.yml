@@ -36,7 +36,7 @@ jobs:
       set -e
       sudo add-apt-repository ppa:ubuntu-toolchain-r/test
       sudo apt-get update && sudo apt-get install -y ninja-build libmpfr-dev gcc-9 g++-9
-      ci/run.sh build-release -DCPU_ARCH=detect -DENABLE_DFT=ON -DCMAKE_CXX_COMPILER=g++-9 -DCMAKE_BUILD_TYPE=Release
+      ci/run.sh build-release -DCPU_ARCH=detect -DENABLE_DFT=OFF -DCMAKE_CXX_COMPILER=g++-9 -DCMAKE_BUILD_TYPE=Release
 
 - job: Linux_ARM_Clang_Release
   pool:
