@@ -338,7 +338,6 @@ struct alignas(platform<>::maximum_vector_alignment) univector
     template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
     univector(Input&& input)
     {
-        printf("assign from expression\n");
         this->assign_expr(std::forward<Input>(input));
     }
     template <typename... Args>
