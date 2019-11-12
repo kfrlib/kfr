@@ -122,7 +122,7 @@ jobs:
       call "%ANDROID_HOME%\tools\bin\sdkmanager.bat" "ndk-bundle" < %TMP%\always_yes
       ci\run.cmd build-release -DCMAKE_TOOLCHAIN_FILE="%ANDROID_HOME%\ndk-bundle\build\cmake\android.toolchain.cmake" -DANDROID_ABI=arm64-v8a -DANDROID_ARM_NEON=TRUE -DSKIP_TESTS=ON -DCMAKE_BUILD_TYPE=Release
 
-- job: Windows_MinGW_x86_Clang_Release
+- job: Windows_MinGW_x86_Clang701_Release
   pool:
     vmImage: 'vs2017-win2016'
   steps:
@@ -131,13 +131,12 @@ jobs:
       choco install msys2
       choco install ninja
       choco install llvm --version 7.0.1
-      echo %PATH%
       set PATH=C:\ProgramData\Chocolatey\bin;C:\Program Files\CMake\bin;C:\tools\msys64\usr\local\bin;C:\tools\msys64\usr\bin;C:\tools\msys64\mingw32\bin;C:\windows;C:\windows\system32;C:\Windows;C:\Windows\System32\WindowsPowerShell\v1.0
       call C:\tools\msys64\msys2_shell.cmd -defterm -mingw32 -no-start -full-path -here -c "pacman -S --noconfirm mingw32/mingw-w64-i686-gcc"
       call C:\tools\msys64\msys2_shell.cmd -defterm -mingw32 -no-start -full-path -here -c "pacman -S --noconfirm mingw32/mingw-w64-i686-ninja"
       call C:\tools\msys64\msys2_shell.cmd -defterm -mingw32 -no-start -full-path -here -c "ci/run.sh build-release -DCMAKE_CXX_COMPILER='C:/Program Files/LLVM/bin/clang++.exe' -DCPU_ARCH=detect -DCMAKE_CXX_FLAGS=--target=i686-w64-windows-gnu -DCMAKE_BUILD_TYPE=Release"
 
-- job: Windows_MinGW_x86_64_Clang_Release
+- job: Windows_MinGW_x86_64_Clang701_Release
   pool:
     vmImage: 'vs2017-win2016'
   steps:
@@ -146,45 +145,53 @@ jobs:
       choco install msys2
       choco install ninja
       choco install llvm --version 7.0.1
-      echo %PATH%
       set PATH=C:\ProgramData\Chocolatey\bin;C:\Program Files\CMake\bin;C:\tools\msys64\usr\local\bin;C:\tools\msys64\usr\bin;C:\tools\msys64\mingw64\bin;C:\windows;C:\windows\system32;C:\Windows;C:\Windows\System32\WindowsPowerShell\v1.0
       call C:\tools\msys64\msys2_shell.cmd -defterm -mingw64 -no-start -full-path -here -c "pacman -S --noconfirm mingw64/mingw-w64-x86_64-gcc"
       call C:\tools\msys64\msys2_shell.cmd -defterm -mingw64 -no-start -full-path -here -c "pacman -S --noconfirm mingw64/mingw-w64-x86_64-ninja"
       call C:\tools\msys64\msys2_shell.cmd -defterm -mingw64 -no-start -full-path -here -c "ci/run.sh build-release -DCMAKE_CXX_COMPILER='C:/Program Files/LLVM/bin/clang++.exe' -DCPU_ARCH=detect -DCMAKE_CXX_FLAGS=--target=x86_64-w64-windows-gnu -DCMAKE_BUILD_TYPE=Release"
 
-- job: Windows_MSVC_x86_64_AVX512_Clang_Release
+- job: Windows_MSVC_x86_64_AVX512_Clang701_Release
   pool:
     vmImage: 'vs2017-win2016'
   steps:
   - script: |
+      choco install ninja
+      choco install llvm --version 7.0.1
+
       curl -o "$(Agent.TempDirectory)/sde.zip" -L $(SDEURL)
       "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "$(Agent.TempDirectory)/sde.zip"
 
-      call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
+      call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
       set PATH=C:\sde;%PATH%
-      ci\run.cmd build-release -DARCH_TESTS=ON -DCMAKE_CXX_COMPILER="C:/LLVM/bin/clang-cl.exe" -DCPU_ARCH=avx512 -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release
+      ci\run.cmd build-release -DARCH_TESTS=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCPU_ARCH=avx512 -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release
 
-- job: Windows_MSVC_x86_AVX512_Clang_Release
+- job: Windows_MSVC_x86_AVX512_Clang701_Release
   pool:
     vmImage: 'vs2017-win2016'
   steps:
   - script: |
+      choco install ninja
+      choco install llvm --version 7.0.1
+
       curl -o "$(Agent.TempDirectory)/sde.zip" -L $(SDEURL)
       "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "$(Agent.TempDirectory)/sde.zip"
 
-      call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
+      call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
       set PATH=C:\sde;%PATH%
-      ci\run.cmd build-release -DARCH_TESTS=ON -DCMAKE_CXX_COMPILER="C:/LLVM/bin/clang-cl.exe" -DCPU_ARCH=avx512 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Release
+      ci\run.cmd build-release -DARCH_TESTS=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCPU_ARCH=avx512 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Release
 
 - job: Windows_MSVC_x86_64_AVX512_MSVC2017_Release
   pool:
     vmImage: 'vs2017-win2016'
   steps:
   - script: |
+      choco install ninja
+      choco install llvm --version 7.0.1
+
       curl -o "$(Agent.TempDirectory)/sde.zip" -L $(SDEURL)
       "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "$(Agent.TempDirectory)/sde.zip"
 
-      call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
+      call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
       set PATH=C:\sde;%PATH%
       ci\run.cmd build-release -DARCH_TESTS=ON -DCPU_ARCH=avx512 -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
 
@@ -193,9 +200,12 @@ jobs:
     vmImage: 'vs2017-win2016'
   steps:
   - script: |
+      choco install ninja
+      choco install llvm --version 7.0.1
+
       curl -o "$(Agent.TempDirectory)/sde.zip" -L $(SDEURL)
       "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "$(Agent.TempDirectory)/sde.zip"
 
-      call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
+      call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
       set PATH=C:\sde;%PATH%
       ci\run.cmd build-release -DARCH_TESTS=OFF -DCPU_ARCH=avx512 -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
