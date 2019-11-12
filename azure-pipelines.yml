@@ -155,6 +155,8 @@ jobs:
     vmImage: 'vs2017-win2016'
   steps:
   - script: |
+      choco list --local-only
+      choco uninstall mingw
       choco install ninja
       choco install llvm --version 7.0.1
 
@@ -170,6 +172,7 @@ jobs:
     vmImage: 'vs2017-win2016'
   steps:
   - script: |
+      choco list --local-only
       choco install ninja
       choco install llvm --version 7.0.1
 
@@ -185,6 +188,7 @@ jobs:
     vmImage: 'vs2017-win2016'
   steps:
   - script: |
+      choco list --local-only
       choco install ninja
       choco install llvm --version 7.0.1
 
@@ -200,6 +204,8 @@ jobs:
     vmImage: 'vs2017-win2016'
   steps:
   - script: |
+      choco list --local-only
+      choco uninstall mingw
       choco install ninja
       choco install llvm --version 7.0.1
 
