@@ -164,6 +164,9 @@ jobs:
       "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "$(Agent.TempDirectory)/sde.zip"
 
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+      set PATH=%PATH:C:\tools\mingw64\bin;=%
+      set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
+      set PATH=%PATH:C:\Strawberry\c\bin;=%
       set PATH=C:\sde;%PATH%
       ci\run.cmd build-release -DARCH_TESTS=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCPU_ARCH=avx512 -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release
 
@@ -180,6 +183,9 @@ jobs:
       "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "$(Agent.TempDirectory)/sde.zip"
 
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+      set PATH=%PATH:C:\tools\mingw64\bin;=%
+      set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
+      set PATH=%PATH:C:\Strawberry\c\bin;=%
       set PATH=C:\sde;%PATH%
       ci\run.cmd build-release -DARCH_TESTS=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCPU_ARCH=avx512 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Release
 
@@ -196,6 +202,9 @@ jobs:
       "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "$(Agent.TempDirectory)/sde.zip"
 
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+      set PATH=%PATH:C:\tools\mingw64\bin;=%
+      set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
+      set PATH=%PATH:C:\Strawberry\c\bin;=%
       set PATH=C:\sde;%PATH%
       ci\run.cmd build-release -DARCH_TESTS=ON -DCPU_ARCH=avx512 -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
 
@@ -213,5 +222,8 @@ jobs:
       "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "$(Agent.TempDirectory)/sde.zip"
 
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+      set PATH=%PATH:C:\tools\mingw64\bin;=%
+      set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
+      set PATH=%PATH:C:\Strawberry\c\bin;=%
       set PATH=C:\sde;%PATH%
       ci\run.cmd build-release -DARCH_TESTS=OFF -DCPU_ARCH=avx512 -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
