@@ -23,6 +23,7 @@
 #pragma once
 
 #include "../platform.hpp"
+#include "../constants.hpp"
 
 namespace kfr
 {
@@ -67,13 +68,13 @@ constexpr size_t alignment()
 }
 
 template <typename T, size_t N>
-struct alignas(alignment<T, N>()) simd_array
+struct alignas(force_compiletime_size_t<alignment<T, N>()>) simd_array
 {
     T val[next_poweroftwo(N)];
 };
 
 template <typename T, size_t N>
-struct alignas(alignment<T, N>()) simd_array<bit<T>, N>
+struct alignas(force_compiletime_size_t<alignment<T, N>()>) simd_array<bit<T>, N>
 {
     bit_value<T> val[next_poweroftwo(N)];
 };

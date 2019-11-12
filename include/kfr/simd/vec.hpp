@@ -162,11 +162,11 @@ struct compoundcast<vec<vec<T, N1>, N2>>
 } // namespace internal
 
 template <typename T, size_t N>
-struct alignas(const_max(alignof(intrinsics::simd<typename compound_type_traits<T>::deep_subtype,
+struct alignas(force_compiletime_size_t<const_max(alignof(intrinsics::simd<typename compound_type_traits<T>::deep_subtype,
                                                   N * compound_type_traits<T>::deep_width>),
                          const_min(size_t(platform<>::native_vector_alignment),
                                    next_poweroftwo(sizeof(typename compound_type_traits<T>::deep_subtype) *
-                                                   N * compound_type_traits<T>::deep_width)))) vec
+                                                   N * compound_type_traits<T>::deep_width)))>) vec
 {
     static constexpr vec_shape<T, N> shape() CMT_NOEXCEPT { return {}; }
 

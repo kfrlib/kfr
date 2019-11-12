@@ -28,6 +28,7 @@
 #include "../shuffle.hpp"
 #include "../types.hpp"
 #include "../vec.hpp"
+#include "function.hpp"
 
 namespace kfr
 {

@@ -88,6 +88,9 @@ public:
     using Tsub = subtype<T>;
 };
 
+template <size_t Value>
+constexpr size_t force_compiletime_size_t = Value;
+
 CMT_PRAGMA_GNU(GCC diagnostic pop)
 
 /// π (pi)

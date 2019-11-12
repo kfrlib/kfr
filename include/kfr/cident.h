@@ -342,7 +342,9 @@ extern char* gets(char* __s);
 
 #define CMT_NODEBUG
 // __attribute__((__nodebug__))
-#ifdef NDEBUG
+
+// GCC 9 broke attributes on lambdas.
+#if defined(NDEBUG) && (!defined(__GNUC__) || __GNUC__ != 9)
 #define CMT_ALWAYS_INLINE __attribute__((__always_inline__))
 #else
 #define CMT_ALWAYS_INLINE
