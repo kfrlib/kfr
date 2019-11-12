@@ -156,7 +156,6 @@ jobs:
   steps:
   - script: |
       choco list --local-only
-      choco uninstall mingw
       choco install ninja
       choco install llvm --version 7.0.1
 
@@ -168,7 +167,7 @@ jobs:
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
       set PATH=%PATH:C:\Strawberry\c\bin;=%
       set PATH=C:\sde;%PATH%
-      ci\run.cmd build-release -DARCH_TESTS=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCPU_ARCH=avx512 -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release
+      ci\run.cmd build-release -DARCH_TESTS=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCPU_ARCH=avx512 -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release
 
 - job: Windows_MSVC_x86_AVX512_Clang701_Release
   pool:
@@ -187,13 +186,14 @@ jobs:
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
       set PATH=%PATH:C:\Strawberry\c\bin;=%
       set PATH=C:\sde;%PATH%
-      ci\run.cmd build-release -DARCH_TESTS=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -DCPU_ARCH=avx512 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Release
+      ci\run.cmd build-release -DARCH_TESTS=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCPU_ARCH=avx512 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Release
 
 - job: Windows_MSVC_x86_64_AVX512_MSVC2017_Release
   pool:
     vmImage: 'vs2017-win2016'
   steps:
   - script: |
+      choco uninstall mingw
       choco list --local-only
       choco install ninja
       choco install llvm --version 7.0.1
