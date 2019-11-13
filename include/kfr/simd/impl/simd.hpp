@@ -22,8 +22,8 @@
  */
 #pragma once
 
-#include "../platform.hpp"
 #include "../constants.hpp"
+#include "../platform.hpp"
 
 namespace kfr
 {

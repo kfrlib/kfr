@@ -67,7 +67,7 @@ enum class window_symmetry
 
 inline namespace CMT_ARCH_NAME
 {
-    
+
 namespace internal
 {
 
@@ -128,8 +128,8 @@ struct expression_rectangular : input_expression
     {
     }
     template <size_t N>
-    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_rectangular& self, cinput_t,
-                                                    size_t index, vec_shape<T, N>)
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_rectangular& self, cinput_t, size_t index,
+                                                vec_shape<T, N>)
     {
         using TI           = utype<T>;
         const vec<TI, N> i = enumerate(vec_shape<TI, N>()) + static_cast<TI>(index);
@@ -152,7 +152,7 @@ struct expression_triangular : input_expression
     }
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_triangular& self, cinput_t cinput,
-                                                    size_t index, vec_shape<T, N> y)
+                                                size_t index, vec_shape<T, N> y)
     {
         return 1 - abs(get_elements(self.linspace, cinput, index, y));
     }
@@ -174,7 +174,7 @@ struct expression_bartlett : input_expression
     }
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_bartlett& self, cinput_t cinput,
-                                                    size_t index, vec_shape<T, N> y)
+                                                size_t index, vec_shape<T, N> y)
     {
         return 1 - abs(get_elements(self.linspace, cinput, index, y));
     }
@@ -195,8 +195,8 @@ struct expression_cosine : input_expression
     {
     }
     template <size_t N>
-    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_cosine& self, cinput_t cinput,
-                                                    size_t index, vec_shape<T, N> y)
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_cosine& self, cinput_t cinput, size_t index,
+                                                vec_shape<T, N> y)
     {
         return sin(c_pi<T> * get_elements(self.linspace, cinput, index, y));
     }
@@ -217,8 +217,8 @@ struct expression_hann : input_expression
     {
     }
     template <size_t N>
-    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_hann& self, cinput_t cinput,
-                                                    size_t index, vec_shape<T, N> y)
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_hann& self, cinput_t cinput, size_t index,
+                                                vec_shape<T, N> y)
     {
         return T(0.5) * (T(1) - cos(c_pi<T, 2> * get_elements(self.linspace, cinput, index, y)));
     }
@@ -240,7 +240,7 @@ struct expression_bartlett_hann : input_expression
     }
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_bartlett_hann& self, cinput_t cinput,
-                                                    size_t index, vec_shape<T, N> y)
+                                                size_t index, vec_shape<T, N> y)
     {
         const vec<T, N> xx = get_elements(self.linspace, cinput, index, y);
         return T(0.62) - T(0.48) * abs(xx - T(0.5)) + T(0.38) * cos(c_pi<T, 2> * (xx - T(0.5)));
@@ -262,8 +262,8 @@ struct expression_hamming : input_expression
     {
     }
     template <size_t N>
-    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_hamming& self, cinput_t cinput,
-                                                    size_t index, vec_shape<T, N> y)
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_hamming& self, cinput_t cinput, size_t index,
+                                                vec_shape<T, N> y)
     {
         return self.alpha -
                (T(1.0) - self.alpha) * (cos(c_pi<T, 2> * get_elements(self.linspace, cinput, index, y)));
@@ -286,8 +286,8 @@ struct expression_bohman : input_expression
     {
     }
     template <size_t N>
-    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_bohman& self, cinput_t cinput,
-                                                    size_t index, vec_shape<T, N> y)
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_bohman& self, cinput_t cinput, size_t index,
+                                                vec_shape<T, N> y)
     {
         const vec<T, N> n = abs(get_elements(self.linspace, cinput, index, y));
         return (T(1) - n) * cos(c_pi<T> * n) + (T(1) / c_pi<T>)*sin(c_pi<T> * n);
@@ -310,7 +310,7 @@ struct expression_blackman : input_expression
     }
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_blackman& self, cinput_t cinput,
-                                                    size_t index, vec_shape<T, N> y)
+                                                size_t index, vec_shape<T, N> y)
     {
         const vec<T, N> n = get_elements(self.linspace, cinput, index, y);
         return self.a0 - self.a1 * cos(c_pi<T, 2> * n) + self.a2 * cos(c_pi<T, 4> * n);
@@ -334,7 +334,7 @@ struct expression_blackman_harris : input_expression
     }
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_blackman_harris& self, cinput_t cinput,
-                                                    size_t index, vec_shape<T, N> y)
+                                                size_t index, vec_shape<T, N> y)
     {
         const vec<T, N> n = get_elements(self.linspace, cinput, index, y) * c_pi<T, 2>;
         return T(0.35875) - T(0.48829) * cos(n) + T(0.14128) * cos(2 * n) - T(0.01168) * cos(3 * n);
@@ -357,8 +357,8 @@ struct expression_kaiser : input_expression
     {
     }
     template <size_t N>
-    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_kaiser& self, cinput_t cinput,
-                                                    size_t index, vec_shape<T, N> y)
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_kaiser& self, cinput_t cinput, size_t index,
+                                                vec_shape<T, N> y)
     {
         return modzerobessel(self.beta * sqrt(1 - sqr(get_elements(self.linspace, cinput, index, y)))) *
                self.m;
@@ -382,8 +382,8 @@ struct expression_flattop : input_expression
     {
     }
     template <size_t N>
-    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_flattop& self, cinput_t cinput,
-                                                    size_t index, vec_shape<T, N> y)
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_flattop& self, cinput_t cinput, size_t index,
+                                                vec_shape<T, N> y)
     {
         const vec<T, N> n = get_elements(self.linspace, cinput, index, y) * c_pi<T, 2>;
         constexpr T a0    = 0.21557895;
@@ -411,7 +411,7 @@ struct expression_gaussian : input_expression
     }
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_gaussian& self, cinput_t cinput,
-                                                    size_t index, vec_shape<T, N> y)
+                                                size_t index, vec_shape<T, N> y)
     {
         return exp(T(-0.5) * sqr(self.alpha * get_elements(self.linspace, cinput, index, y)));
     }
@@ -434,8 +434,8 @@ struct expression_lanczos : input_expression
     {
     }
     template <size_t N>
-    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_lanczos& self, cinput_t cinput,
-                                                    size_t index, vec_shape<T, N> y)
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_lanczos& self, cinput_t cinput, size_t index,
+                                                vec_shape<T, N> y)
     {
         return sinc(get_elements(self.linspace, cinput, index, y));
     }

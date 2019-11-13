@@ -127,7 +127,7 @@ KFR_VEC_OPERATOR2(/, /=, div)
 
 KFR_VEC_OPERATOR2(&, &=, band)
 KFR_VEC_OPERATOR2(|, |=, bor)
-KFR_VEC_OPERATOR2 (^, ^=, bxor)
+KFR_VEC_OPERATOR2(^, ^=, bxor)
 KFR_VEC_SHIFT_OPERATOR(<<, <<=, shl)
 KFR_VEC_SHIFT_OPERATOR(>>, >>=, shr)
 

@@ -1690,15 +1690,16 @@ template <typename T, bool inverse, typename Tstride = csize_t<1>>
 KFR_INTRINSIC void generic_butterfly(size_t radix, cbool_t<inverse>, complex<T>* out, const complex<T>* in,
                                      complex<T>*, const complex<T>* twiddle, Tstride ostride = {})
 {
-    cswitch(csizes_t<11, 13>(), radix,
-            [&](auto radix_) CMT_INLINE_LAMBDA {
-                constexpr size_t width = vector_width<T>;
-                spec_generic_butterfly_w<width>(radix_, cbool_t<inverse>(), out, in, twiddle, ostride);
-            },
-            [&]() CMT_INLINE_LAMBDA {
-                constexpr size_t width = vector_width<T>;
-                generic_butterfly_w<width>(radix, cbool_t<inverse>(), out, in, twiddle, ostride);
-            });
+    cswitch(
+        csizes_t<11, 13>(), radix,
+        [&](auto radix_) CMT_INLINE_LAMBDA {
+            constexpr size_t width = vector_width<T>;
+            spec_generic_butterfly_w<width>(radix_, cbool_t<inverse>(), out, in, twiddle, ostride);
+        },
+        [&]() CMT_INLINE_LAMBDA {
+            constexpr size_t width = vector_width<T>;
+            generic_butterfly_w<width>(radix, cbool_t<inverse>(), out, in, twiddle, ostride);
+        });
 }
 
 template <typename T, size_t N>

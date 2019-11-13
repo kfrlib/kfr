@@ -152,8 +152,8 @@ struct expression_biquads_l : public expression_with_arguments<E1>
     {
     }
     template <size_t width>
-    friend KFR_INTRINSIC vec<T, width> get_elements(const expression_biquads_l& self, cinput_t cinput, size_t index,
-                                      vec_shape<T, width> t)
+    friend KFR_INTRINSIC vec<T, width> get_elements(const expression_biquads_l& self, cinput_t cinput,
+                                                    size_t index, vec_shape<T, width> t)
     {
         const vec<T, width> in = self.argument_first(cinput, index, t);
         vec<T, width> out;
@@ -202,8 +202,8 @@ struct expression_biquads : expression_with_arguments<E1>
     void end_block(cinput_t, size_t) const { state = saved_state; }
 
     template <size_t width>
-    friend KFR_INTRINSIC vec<T, width> get_elements(const expression_biquads& self, cinput_t cinput, size_t index,
-                                      vec_shape<T, width> t)
+    friend KFR_INTRINSIC vec<T, width> get_elements(const expression_biquads& self, cinput_t cinput,
+                                                    size_t index, vec_shape<T, width> t)
     {
         index += filters - 1;
         vec<T, width> out{};
@@ -311,13 +311,14 @@ template <size_t maxfiltercount = 4, typename T, typename E1>
 KFR_FUNCTION expression_pointer<T> biquad(const biquad_params<T>* bq, size_t count, E1&& e1)
 {
     constexpr csizes_t<1, 2, 4, 8, 16, 32, 64> sizes;
-    return cswitch(cfilter(sizes, sizes <= csize_t<maxfiltercount>{}), next_poweroftwo(count),
-                   [&](auto x) {
-                       constexpr size_t filters = x;
-                       return to_pointer(internal::expression_biquads<filters, T, E1>(
-                           internal::biquad_block<T, filters>(bq, count), std::forward<E1>(e1)));
-                   },
-                   [&] { return to_pointer(zeros<T>()); });
+    return cswitch(
+        cfilter(sizes, sizes <= csize_t<maxfiltercount>{}), next_poweroftwo(count),
+        [&](auto x) {
+            constexpr size_t filters = x;
+            return to_pointer(internal::expression_biquads<filters, T, E1>(
+                internal::biquad_block<T, filters>(bq, count), std::forward<E1>(e1)));
+        },
+        [&] { return to_pointer(zeros<T>()); });
 }
 
 template <typename T, size_t maxfiltercount = 4>

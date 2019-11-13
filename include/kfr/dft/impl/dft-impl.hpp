@@ -424,37 +424,38 @@ protected:
     template <bool inverse>
     KFR_MEM_INTRINSIC void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
-        cswitch(dft_radices, radices[0],
-                [&](auto first_radix) {
-                    if (count == 3)
+        cswitch(
+            dft_radices, radices[0],
+            [&](auto first_radix) {
+                if (count == 3)
+                {
+                    dft_permute(out, in, radices[2], radices[1], first_radix);
+                }
+                else
+                {
+                    const size_t rlast = radices[count - 1];
+                    for (size_t p = 0; p < rlast; p++)
                     {
-                        dft_permute(out, in, radices[2], radices[1], first_radix);
+                        dft_permute_deep(out, in, radices, count, count - 2, 1, inner_size, first_radix);
+                        in += size / rlast;
                     }
-                    else
+                }
+            },
+            [&]() {
+                if (count == 3)
+                {
+                    dft_permute(out, in, radices[2], radices[1], radices[0]);
+                }
+                else
+                {
+                    const size_t rlast = radices[count - 1];
+                    for (size_t p = 0; p < rlast; p++)
                     {
-                        const size_t rlast = radices[count - 1];
-                        for (size_t p = 0; p < rlast; p++)
-                        {
-                            dft_permute_deep(out, in, radices, count, count - 2, 1, inner_size, first_radix);
-                            in += size / rlast;
-                        }
+                        dft_permute_deep(out, in, radices, count, count - 2, 1, inner_size, radices[0]);
+                        in += size / rlast;
                     }
-                },
-                [&]() {
-                    if (count == 3)
-                    {
-                        dft_permute(out, in, radices[2], radices[1], radices[0]);
-                    }
-                    else
-                    {
-                        const size_t rlast = radices[count - 1];
-                        for (size_t p = 0; p < rlast; p++)
-                        {
-                            dft_permute_deep(out, in, radices, count, count - 2, 1, inner_size, radices[0]);
-                            in += size / rlast;
-                        }
-                    }
-                });
+                }
+            });
     }
 };
 } // namespace intrinsics

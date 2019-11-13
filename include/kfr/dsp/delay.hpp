@@ -44,7 +44,7 @@ struct expression_delay : expression_with_arguments<E>
 
     template <size_t N, KFR_ENABLE_IF(N <= delay)>
     friend KFR_INTRINSIC vec<T, N> get_elements(const expression_delay& self, cinput_t cinput, size_t index,
-                                  vec_shape<T, N>)
+                                                vec_shape<T, N>)
     {
         vec<T, N> out;
         size_t c = self.cursor;
@@ -88,7 +88,7 @@ struct expression_delay<1, E> : expression_with_arguments<E>
 
     template <size_t N>
     friend KFR_INTRINSIC vec<T, N> get_elements(const expression_delay& self, cinput_t cinput, size_t index,
-                                  vec_shape<T, N>)
+                                                vec_shape<T, N>)
     {
         const vec<T, N> in  = self.argument_first(cinput, index, vec_shape<T, N>());
         const vec<T, N> out = insertleft(self.data, in);

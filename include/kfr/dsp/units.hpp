@@ -48,7 +48,8 @@ KFR_INTRINSIC common_type<T1, T2> fix_nans(const T1& val, const T2& replacement)
 template <typename T, typename TF = flt_type<T>>
 KFR_INTRINSIC TF amp_to_dB(const T& amp)
 {
-    return fix_nans(log(static_cast<TF>(abs(amp))) * subtype<TF>(8.6858896380650365530225783783322), -c_infinity<T>);
+    return fix_nans(log(static_cast<TF>(abs(amp))) * subtype<TF>(8.6858896380650365530225783783322),
+                    -c_infinity<T>);
     // return T( 20.0 ) * log10( level );
 }
 
@@ -62,7 +63,9 @@ KFR_INTRINSIC TF dB_to_amp(const T& dB)
 template <typename T, typename TF = flt_type<T>>
 KFR_INTRINSIC TF amp_to_dB(const T& amp, const T& offset)
 {
-    return fix_nans(log_fmadd(static_cast<TF>(abs(amp)), subtype<TF>(8.6858896380650365530225783783322), offset), -c_infinity<T>);
+    return fix_nans(
+        log_fmadd(static_cast<TF>(abs(amp)), subtype<TF>(8.6858896380650365530225783783322), offset),
+        -c_infinity<T>);
     // return T( 20.0 ) * log10( level );
 }
 

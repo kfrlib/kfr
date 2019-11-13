@@ -47,7 +47,6 @@ enum class audio_sample_type
     first_float = f32
 };
 
-
 inline constexpr size_t audio_sample_sizeof(audio_sample_type type)
 {
     switch (type)

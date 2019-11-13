@@ -370,9 +370,9 @@ protected:
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_sequence& self, cinput_t cinput,
                                                 size_t index, size_t expr_index, vec_shape<T, N> y)
     {
-        return cswitch(indicesfor_t<E...>(), expr_index,
-                       [&](auto val) { return self.argument(cinput, val, index, y); },
-                       [&]() { return zerovector(y); });
+        return cswitch(
+            indicesfor_t<E...>(), expr_index, [&](auto val) { return self.argument(cinput, val, index, y); },
+            [&]() { return zerovector(y); });
     }
 
     std::array<size_t, base::count + 2> segments;

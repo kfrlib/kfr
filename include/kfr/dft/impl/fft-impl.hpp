@@ -925,19 +925,20 @@ template <typename T>
 KFR_INTRINSIC void init_fft(dft_plan<T>* self, size_t size, dft_order)
 {
     const size_t log2n = ilog2(size);
-    cswitch(csizes_t<1, 2, 3, 4, 5, 6, 7, 8, 9, 10>(), log2n,
-            [&](auto log2n) {
-                (void)log2n;
-                constexpr size_t log2nv = val_of(decltype(log2n)());
-                add_stage<intrinsics::fft_specialization<T, log2nv>>(self, size);
-            },
-            [&]() {
-                cswitch(cfalse_true, is_even(log2n), [&](auto is_even) {
-                    make_fft(self, size, is_even, ctrue);
-                    constexpr size_t is_evenv = val_of(decltype(is_even)());
-                    add_stage<intrinsics::fft_reorder_stage_impl<T, is_evenv>>(self, size);
-                });
+    cswitch(
+        csizes_t<1, 2, 3, 4, 5, 6, 7, 8, 9, 10>(), log2n,
+        [&](auto log2n) {
+            (void)log2n;
+            constexpr size_t log2nv = val_of(decltype(log2n)());
+            add_stage<intrinsics::fft_specialization<T, log2nv>>(self, size);
+        },
+        [&]() {
+            cswitch(cfalse_true, is_even(log2n), [&](auto is_even) {
+                make_fft(self, size, is_even, ctrue);
+                constexpr size_t is_evenv = val_of(decltype(is_even)());
+                add_stage<intrinsics::fft_reorder_stage_impl<T, is_evenv>>(self, size);
             });
+        });
 }
 
 template <typename T>
@@ -1089,7 +1090,7 @@ public:
     {
         using namespace intrinsics;
         constexpr size_t width = vector_width<T> * 2;
-        size_t real_size = this->stage_size;
+        size_t real_size       = this->stage_size;
         complex<T>* rtwiddle   = ptr_cast<complex<T>>(this->data);
         block_process(real_size / 4, csizes_t<width, 1>(), [=](size_t i, auto w) {
             constexpr size_t width = val_of(decltype(w)());

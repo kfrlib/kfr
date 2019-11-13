@@ -382,7 +382,6 @@ CMT_UNUSED static int run_all(const std::string& name = std::string(), bool show
     return static_cast<int>(failed.size());
 }
 
-
 template <typename T1, typename T2>
 void assert_is_same()
 {

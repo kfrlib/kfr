@@ -149,7 +149,7 @@ struct expression_pointer : input_expression
     }
     template <size_t N, KFR_ENABLE_IF(N <= maximum_expression_width<T>)>
     friend KFR_INTRINSIC vec<T, N> get_elements(const expression_pointer& self, cinput_t, size_t index,
-                                                    vec_shape<T, N>)
+                                                vec_shape<T, N>)
     {
         static_assert(is_poweroftwo(N), "N must be a power of two");
         vec<T, N> result;
@@ -157,8 +157,8 @@ struct expression_pointer : input_expression
         return result;
     }
     template <size_t N, KFR_ENABLE_IF(N > maximum_expression_width<T>)>
-    friend KFR_INTRINSIC vec<T, N> get_elements(const expression_pointer& self, cinput_t cinput,
-                                                    size_t index, vec_shape<T, N>)
+    friend KFR_INTRINSIC vec<T, N> get_elements(const expression_pointer& self, cinput_t cinput, size_t index,
+                                                vec_shape<T, N>)
     {
         static_assert(is_poweroftwo(N), "N must be a power of two");
         const vec<T, N / 2> r1 = get_elements(self, cinput, index, vec_shape<T, N / 2>());
@@ -225,8 +225,8 @@ public:
     using value_type                      = T;
     expression_placeholder() CMT_NOEXCEPT = default;
     template <typename U, size_t N>
-    friend KFR_INTRINSIC vec<U, N> get_elements(const expression_placeholder& self, cinput_t,
-                                                    size_t index, vec_shape<U, N>)
+    friend KFR_INTRINSIC vec<U, N> get_elements(const expression_placeholder& self, cinput_t, size_t index,
+                                                vec_shape<U, N>)
     {
         return self.pointer ? elemcast<U>(get_elements(self.pointer, cinput, index, vec_shape<T, N>())) : 0;
     }
