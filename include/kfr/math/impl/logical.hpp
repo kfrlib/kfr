@@ -128,19 +128,19 @@ KFR_INTRINSIC bool bittestall(const mi64avx512& x) { return !uint8_t(~_mm512_mov
 #elif defined CMT_ARCH_SSE41
 KFR_INTRINSIC bool bittestany(const mf32sse& x)
 {
-    return !_mm_testz_si128(bitcast<u8>(x).v, bitcast<u8>(x).v);
+    return !_mm_testz_si128(bitcast<bit<u8>>(x).v, bitcast<bit<u8>>(x).v);
 }
 KFR_INTRINSIC bool bittestany(const mf64sse& x)
 {
-    return !_mm_testz_si128(bitcast<u8>(x).v, bitcast<u8>(x).v);
+    return !_mm_testz_si128(bitcast<bit<u8>>(x).v, bitcast<bit<u8>>(x).v);
 }
 KFR_INTRINSIC bool bittestall(const mf32sse& x)
 {
-    return _mm_testc_si128(bitcast<u8>(x).v, allonesvector(bitcast<u8>(x)).v);
+    return _mm_testc_si128(bitcast<bit<u8>>(x).v, allonesvector(bitcast<bit<u8>>(x)).v);
 }
 KFR_INTRINSIC bool bittestall(const mf64sse& x)
 {
-    return _mm_testc_si128(bitcast<u8>(x).v, allonesvector(bitcast<u8>(x)).v);
+    return _mm_testc_si128(bitcast<bit<u8>>(x).v, allonesvector(bitcast<bit<u8>>(x)).v);
 }
 #endif
 
@@ -204,23 +204,23 @@ KFR_INTRINSIC bool bittestany(const mu32neon& a)
     const uint32x2_t tmp = vorr_u32(vget_low_u32(a.v), vget_high_u32(a.v));
     return vget_lane_u32(vpmax_u32(tmp, tmp), 0) != 0;
 }
-KFR_INTRINSIC bool bittestany(const mu8neon& a) { return bittestany(bitcast<u32>(a)); }
-KFR_INTRINSIC bool bittestany(const mu16neon& a) { return bittestany(bitcast<u32>(a)); }
-KFR_INTRINSIC bool bittestany(const mu64neon& a) { return bittestany(bitcast<u32>(a)); }
-KFR_INTRINSIC bool bittestany(const mi8neon& a) { return bittestany(bitcast<u32>(a)); }
-KFR_INTRINSIC bool bittestany(const mi16neon& a) { return bittestany(bitcast<u32>(a)); }
-KFR_INTRINSIC bool bittestany(const mi64neon& a) { return bittestany(bitcast<u32>(a)); }
-KFR_INTRINSIC bool bittestany(const mf32neon& a) { return bittestany(bitcast<u32>(a)); }
-KFR_INTRINSIC bool bittestany(const mf64neon& a) { return bittestany(bitcast<u32>(a)); }
+KFR_INTRINSIC bool bittestany(const mu8neon& a) { return bittestany(bitcast<bit<u32>>(a)); }
+KFR_INTRINSIC bool bittestany(const mu16neon& a) { return bittestany(bitcast<bit<u32>>(a)); }
+KFR_INTRINSIC bool bittestany(const mu64neon& a) { return bittestany(bitcast<bit<u32>>(a)); }
+KFR_INTRINSIC bool bittestany(const mi8neon& a) { return bittestany(bitcast<bit<u32>>(a)); }
+KFR_INTRINSIC bool bittestany(const mi16neon& a) { return bittestany(bitcast<bit<u32>>(a)); }
+KFR_INTRINSIC bool bittestany(const mi64neon& a) { return bittestany(bitcast<bit<u32>>(a)); }
+KFR_INTRINSIC bool bittestany(const mf32neon& a) { return bittestany(bitcast<bit<u32>>(a)); }
+KFR_INTRINSIC bool bittestany(const mf64neon& a) { return bittestany(bitcast<bit<u32>>(a)); }
 
-KFR_INTRINSIC bool bittestall(const mu8neon& a) { return bittestall(bitcast<u32>(a)); }
-KFR_INTRINSIC bool bittestall(const mu16neon& a) { return bittestall(bitcast<u32>(a)); }
-KFR_INTRINSIC bool bittestall(const mu64neon& a) { return bittestall(bitcast<u32>(a)); }
-KFR_INTRINSIC bool bittestall(const mi8neon& a) { return bittestall(bitcast<u32>(a)); }
-KFR_INTRINSIC bool bittestall(const mi16neon& a) { return bittestall(bitcast<u32>(a)); }
-KFR_INTRINSIC bool bittestall(const mi64neon& a) { return bittestall(bitcast<u32>(a)); }
-KFR_INTRINSIC bool bittestall(const mf32neon& a) { return bittestall(bitcast<u32>(a)); }
-KFR_INTRINSIC bool bittestall(const mf64neon& a) { return bittestall(bitcast<u32>(a)); }
+KFR_INTRINSIC bool bittestall(const mu8neon& a) { return bittestall(bitcast<bit<u32>>(a)); }
+KFR_INTRINSIC bool bittestall(const mu16neon& a) { return bittestall(bitcast<bit<u32>>(a)); }
+KFR_INTRINSIC bool bittestall(const mu64neon& a) { return bittestall(bitcast<bit<u32>>(a)); }
+KFR_INTRINSIC bool bittestall(const mi8neon& a) { return bittestall(bitcast<bit<u32>>(a)); }
+KFR_INTRINSIC bool bittestall(const mi16neon& a) { return bittestall(bitcast<bit<u32>>(a)); }
+KFR_INTRINSIC bool bittestall(const mi64neon& a) { return bittestall(bitcast<bit<u32>>(a)); }
+KFR_INTRINSIC bool bittestall(const mf32neon& a) { return bittestall(bitcast<bit<u32>>(a)); }
+KFR_INTRINSIC bool bittestall(const mf64neon& a) { return bittestall(bitcast<bit<u32>>(a)); }
 
 template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T>)>
 KFR_INTRINSIC bool bittestall(const mask<T, N>& a)
