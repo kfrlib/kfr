@@ -273,7 +273,7 @@ struct bit
 
     constexpr bit(const bit_value<T>& value) CMT_NOEXCEPT : value(static_cast<bool>(value)) {}
 
-    constexpr bit(T value) CMT_NOEXCEPT : value(bitcast_anything<itype<T>>(value) < 0) {}
+    constexpr explicit bit(T value) CMT_NOEXCEPT : value(bitcast_anything<itype<T>>(value) < 0) {}
     constexpr bit(bool value) CMT_NOEXCEPT : value(value) {}
 
     template <typename U>

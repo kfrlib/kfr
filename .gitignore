@@ -93,3 +93,4 @@ mkdocs/
 cmake-*
 
 *.TMP
+temp_audio_file.wav

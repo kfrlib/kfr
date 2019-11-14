@@ -140,6 +140,8 @@ TEST(mask_broadcast)
 {
     CHECK(mask<i32, 4>(mask<f32, 4>(true, false, true, false)).asvec() == vec<i32, 4>(-1, 0, -1, 0));
     CHECK(mask<i32, 4>(mask<f32, 4>(true)).asvec() == vec<i32, 4>(-1, -1, -1, -1));
+    CHECK(mask<i32, 4>(mask<i32, 4>(true)).asvec() == vec<i32, 4>(-1, -1, -1, -1));
+    CHECK(mask<i32, 4>(mask<u32, 4>(true)).asvec() == vec<i32, 4>(-1, -1, -1, -1));
 }
 
 TEST(masks)

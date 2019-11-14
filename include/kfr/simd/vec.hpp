@@ -219,14 +219,15 @@ struct alignas(force_compiletime_size_t<
     template <typename U,
               KFR_ENABLE_IF(std::is_convertible<U, value_type>::value&& compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC vec(const U& s) CMT_NOEXCEPT
-        : v(intrinsics::simd_broadcast(intrinsics::simd_t<ST, SN>{}, static_cast<ST>(s)))
+        : v(intrinsics::simd_broadcast(intrinsics::simd_t<unwrap_bit<ST>, SN>{},
+                                       static_cast<unwrap_bit<ST>>(static_cast<ST>(s))))
     {
     }
 
     template <typename U,
               KFR_ENABLE_IF(std::is_convertible<U, value_type>::value && !compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC vec(const U& s) CMT_NOEXCEPT
-        : v(intrinsics::simd_shuffle(intrinsics::simd_t<ST, SW>{},
+        : v(intrinsics::simd_shuffle(intrinsics::simd_t<unwrap_bit<ST>, SW>{},
                                      internal::compoundcast<T>::to_flat(static_cast<T>(s)).v,
                                      csizeseq<SN> % csize<SW>, overload_auto))
     {
@@ -251,7 +252,8 @@ struct alignas(force_compiletime_size_t<
     template <typename U, KFR_ENABLE_IF(std::is_convertible<U, value_type>::value &&
                                         (compound_type_traits<T>::is_scalar && !is_bit<U>::value))>
     KFR_MEM_INTRINSIC vec(const vec<U, N>& x) CMT_NOEXCEPT
-        : v(intrinsics::simd_convert(intrinsics::simd_cvt_t<ST, deep_subtype<U>, SN>{}, x.v))
+        : v(intrinsics::simd_convert(
+              intrinsics::simd_cvt_t<unwrap_bit<ST>, unwrap_bit<deep_subtype<U>>, SN>{}, x.v))
     {
     }
 
@@ -291,8 +293,8 @@ struct alignas(force_compiletime_size_t<
     template <size_t... indices>
     KFR_MEM_INTRINSIC vec<value_type, sizeof...(indices)> shuffle(csizes_t<indices...> i) const CMT_NOEXCEPT
     {
-        return vec<value_type, sizeof...(indices)>(
-            intrinsics::simd_shuffle(intrinsics::simd_t<ST, SN>{}, v, scale<SW>(i), overload_auto));
+        return vec<value_type, sizeof...(indices)>(intrinsics::simd_shuffle(
+            intrinsics::simd_t<unwrap_bit<ST>, SN>{}, v, scale<SW>(i), overload_auto));
     }
 
     template <size_t... indices>
@@ -340,7 +342,7 @@ struct alignas(force_compiletime_size_t<
     KFR_MEM_INTRINSIC constexpr value_type get(csize_t<index>) const CMT_NOEXCEPT
     {
         return internal::compoundcast<T>::from_flat(intrinsics::simd_shuffle(
-            intrinsics::simd_t<ST, SN>{}, v, csizeseq<SW, SW * index>, overload_auto));
+            intrinsics::simd_t<unwrap_bit<ST>, SN>{}, v, csizeseq<SW, SW * index>, overload_auto));
     }
 
     template <int dummy = 0, KFR_ENABLE_IF(dummy == 0 && compound_type_traits<T>::is_scalar)>
@@ -437,7 +439,7 @@ template <typename T, size_t N, size_t... indices>
 KFR_INTRINSIC vec<T, sizeof...(indices)> shufflevector(const vec<T, N>& x,
                                                        csizes_t<indices...> i) CMT_NOEXCEPT
 {
-    return intrinsics::simd_shuffle(intrinsics::simd_t<T, N>{}, x.v, i, overload_auto);
+    return intrinsics::simd_shuffle(intrinsics::simd_t<unwrap_bit<T>, N>{}, x.v, i, overload_auto);
 }
 
 template <typename T, size_t N, size_t... indices>

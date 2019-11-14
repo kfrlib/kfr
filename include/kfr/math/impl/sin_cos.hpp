@@ -160,14 +160,15 @@ template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
 KFR_INTRINSIC vec<T, N> sin(const vec<T, N>& x)
 {
     vec<itype<T>, N> quadrant;
+    mask<T, N> xmask = mask<T, N>(x);
     vec<T, N> folded = trig_fold(x, quadrant);
 
-    mask<T, N> flip_sign = quadrant >= itype<T>(4);
-    mask<T, N> usecos    = (quadrant == itype<T>(2)) || (quadrant == itype<T>(6));
+    mask<T, N> flip_sign = (quadrant >= 4) ^ xmask;
+    mask<T, N> usecos    = (quadrant == 2) || (quadrant == 6);
 
     vec<T, N> formula = trig_sincos(folded, usecos);
 
-    formula = select(flip_sign ^ mask<T, N>(x), -formula, formula);
+    formula = select(flip_sign, -formula, formula);
     return formula;
 }
 
