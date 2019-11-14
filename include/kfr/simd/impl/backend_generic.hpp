@@ -534,6 +534,8 @@ KFR_INTRIN_SHUFFLE_CONCAT(u16, 8, KFR_mm256_setr_m128i(x, y))
 KFR_INTRIN_SHUFFLE_CONCAT(u32, 4, KFR_mm256_setr_m128i(x, y))
 KFR_INTRIN_SHUFFLE_CONCAT(u64, 2, KFR_mm256_setr_m128i(x, y))
 
+#ifndef CMT_COMPILER_GCC
+// GCC bug workaround
 KFR_INTRIN_SHUFFLE_CONCAT(i8, 1, simd<i8, 2>(x, y))
 KFR_INTRIN_SHUFFLE_CONCAT(u8, 1, simd<u8, 2>(x, y))
 KFR_INTRIN_SHUFFLE_CONCAT(i16, 1, simd<i16, 2>(x, y))
@@ -541,6 +543,7 @@ KFR_INTRIN_SHUFFLE_CONCAT(u16, 1, simd<u16, 2>(x, y))
 KFR_INTRIN_SHUFFLE_CONCAT(i32, 1, simd<i32, 2>(x, y))
 KFR_INTRIN_SHUFFLE_CONCAT(u32, 1, simd<u32, 2>(x, y))
 KFR_INTRIN_SHUFFLE_CONCAT(f32, 1, simd<f32, 2>{ x, y })
+#endif
 
 KFR_INTRIN_SHUFFLE_CONCAT(f64, 1, _mm_setr_pd(x, y))
 

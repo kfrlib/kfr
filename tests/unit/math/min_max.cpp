@@ -6,6 +6,8 @@
 
 #include <kfr/math/min_max.hpp>
 
+#include <kfr/io.hpp>
+
 namespace kfr
 {
 inline namespace CMT_ARCH_NAME
