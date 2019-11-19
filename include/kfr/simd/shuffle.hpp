@@ -284,11 +284,11 @@ KFR_INTRINSIC vec<T, N> dupodd(const vec<T, N>& x)
 KFR_FN(dupodd)
 
 template <typename T, size_t N>
-KFR_INTRINSIC vec<T, N * 2> duphalfs(const vec<T, N>& x)
+KFR_INTRINSIC vec<T, N * 2> duphalves(const vec<T, N>& x)
 {
     return x.shuffle(csizeseq<N * 2> % csize<N>);
 }
-KFR_FN(duphalfs)
+KFR_FN(duphalves)
 
 template <size_t... Indices, typename T, size_t N, size_t count = sizeof...(Indices)>
 KFR_INTRINSIC vec<T, N> shuffle(const vec<T, N>& x, const vec<T, N>& y,
@@ -485,12 +485,12 @@ KFR_FN(interleave)
 
 template <size_t group = 1, typename T, size_t N, size_t size = N / group, size_t side2 = 2,
           size_t side1 = size / side2>
-KFR_INTRINSIC vec<T, N> interleavehalfs(const vec<T, N>& x)
+KFR_INTRINSIC vec<T, N> interleavehalves(const vec<T, N>& x)
 {
     return x.shuffle(scale<group>(csizeseq_t<size>() % csize_t<side2>() * csize_t<side1>() +
                                   csizeseq_t<size>() / csize_t<side2>()));
 }
-KFR_FN(interleavehalfs)
+KFR_FN(interleavehalves)
 
 template <size_t group = 1, typename T, size_t N, size_t size = N / group, size_t side1 = 2,
           size_t side2 = size / side1>

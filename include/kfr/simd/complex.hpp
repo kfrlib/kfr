@@ -224,15 +224,16 @@ template <typename T, size_t N, size_t... indices>
 KFR_INTRINSIC vec<complex<T>, sizeof...(indices)> shufflevector(const vec<complex<T>, N>& x,
                                                                 csizes_t<indices...>) CMT_NOEXCEPT
 {
-    return intrinsics::simd_shuffle(intrinsics::simd_t<unwrap_bit<T>, N>{}, x.v, scale<2, indices...>(), overload_auto);
+    return intrinsics::simd_shuffle(intrinsics::simd_t<unwrap_bit<T>, N>{}, x.v, scale<2, indices...>(),
+                                    overload_auto);
 }
 template <typename T, size_t N, size_t... indices>
 KFR_INTRINSIC vec<complex<T>, sizeof...(indices)> shufflevectors(const vec<complex<T>, N>& x,
                                                                  const vec<T, N>& y,
                                                                  csizes_t<indices...>) CMT_NOEXCEPT
 {
-    return intrinsics::simd_shuffle(intrinsics::simd2_t<unwrap_bit<T>, N, N>{}, x.v, y.v, scale<2, indices...>(),
-                                    overload_auto);
+    return intrinsics::simd_shuffle(intrinsics::simd2_t<unwrap_bit<T>, N, N>{}, x.v, y.v,
+                                    scale<2, indices...>(), overload_auto);
 }
 namespace internal
 {

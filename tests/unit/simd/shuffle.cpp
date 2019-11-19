@@ -51,7 +51,7 @@ TEST(blend)
 TEST(duplicate_shuffle)
 {
     CHECK(dup(pack(0, 1, 2, 3)) == pack(0, 0, 1, 1, 2, 2, 3, 3));
-    CHECK(duphalfs(pack(0, 1, 2, 3)) == pack(0, 1, 2, 3, 0, 1, 2, 3));
+    CHECK(duphalves(pack(0, 1, 2, 3)) == pack(0, 1, 2, 3, 0, 1, 2, 3));
     CHECK(dupeven(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(0, 0, 2, 2, 4, 4, 6, 6));
     CHECK(dupodd(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(1, 1, 3, 3, 5, 5, 7, 7));
 }
@@ -71,8 +71,8 @@ TEST(split_interleave)
     CHECK(splitpairs(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(0, 2, 4, 6, 1, 3, 5, 7));
     CHECK(splitpairs<2>(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(0, 1, 4, 5, 2, 3, 6, 7));
 
-    CHECK(interleavehalfs(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(0, 4, 1, 5, 2, 6, 3, 7));
-    CHECK(interleavehalfs<2>(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(0, 1, 4, 5, 2, 3, 6, 7));
+    CHECK(interleavehalves(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(0, 4, 1, 5, 2, 6, 3, 7));
+    CHECK(interleavehalves<2>(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(0, 1, 4, 5, 2, 3, 6, 7));
 }
 
 TEST(broadcast)

@@ -108,7 +108,7 @@ inline vec<f32, 32> shufflevector<f32, 32>(
 {
     const vec<f32, 32> xx = permutegroups<(8), 0, 2, 1, 3>(x);
 
-    return concat(interleavehalfs(low(xx)), interleavehalfs(high(xx)));
+    return concat(interleavehalves(low(xx)), interleavehalves(high(xx)));
 }
 } // namespace intrinsics
 } // namespace CMT_ARCH_NAME

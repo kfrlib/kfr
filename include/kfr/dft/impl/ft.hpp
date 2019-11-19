@@ -185,7 +185,7 @@ KFR_INTRINSIC void cwrite_split(complex<T>* dest, const cvec<T, N>& value)
 {
     cvec<T, N> v = value;
     if (split)
-        v = interleavehalfs(v);
+        v = interleavehalves(v);
     v.write(ptr_cast<T>(dest), cbool_t<A>());
 }
 

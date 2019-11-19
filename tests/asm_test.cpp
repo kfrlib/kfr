@@ -233,7 +233,7 @@ TEST_ASM_UIF(shl, TEST_ASM_SHIFT_SCALAR)
 
 TEST_ASM_UIF(shr, TEST_ASM_SHIFT_SCALAR)
 
-TEST_ASM_UIF(duphalfs, TEST_ASM_DOUBLE1)
+TEST_ASM_UIF(duphalves, TEST_ASM_DOUBLE1)
 
 TEST_ASM_UIF(sqr, TEST_ASM_VTY1)
 
@@ -245,7 +245,7 @@ TEST_ASM_UIF(read, TEST_READ)
 
 TEST_ASM_UIF(write, TEST_WRITE)
 
-#define TEST_FFT_SPEC(ty, size)                                                                                   \
+#define TEST_FFT_SPEC(ty, size)                                                                              \
     static intrinsics::fft_specialization<ty, size> fft__##ty##__##size(static_cast<size_t>(1 << size));     \
     KFR_PUBLIC void asm__test__fft__##ty##__##size(complex<ty>* out, const complex<ty>* in, u8* temp)        \
     {                                                                                                        \
@@ -255,13 +255,13 @@ TEST_ASM_UIF(write, TEST_WRITE)
     {                                                                                                        \
         fft__##ty##__##size.do_execute<true>(out, in, temp);                                                 \
     }
-#define TEST_FFT_GEN(ty)                                                                                   \
-    static intrinsics::fft_stage_impl<ty, true, true> fft__##ty##__##size(static_cast<size_t>(65526));     \
-    KFR_PUBLIC void asm__test__fft__##ty##__gen(complex<ty>* out, const complex<ty>* in, u8* temp)        \
+#define TEST_FFT_GEN(ty)                                                                                     \
+    static intrinsics::fft_stage_impl<ty, true, true> fft__##ty##__##size(static_cast<size_t>(65526));       \
+    KFR_PUBLIC void asm__test__fft__##ty##__gen(complex<ty>* out, const complex<ty>* in, u8* temp)           \
     {                                                                                                        \
         fft__##ty##__##size.do_execute<false>(out, in, temp);                                                \
     }                                                                                                        \
-    KFR_PUBLIC void asm__test__ifft__##ty##__gen(complex<ty>* out, const complex<ty>* in, u8* temp)       \
+    KFR_PUBLIC void asm__test__ifft__##ty##__gen(complex<ty>* out, const complex<ty>* in, u8* temp)          \
     {                                                                                                        \
         fft__##ty##__##size.do_execute<true>(out, in, temp);                                                 \
     }

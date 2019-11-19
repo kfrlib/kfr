@@ -39,11 +39,11 @@ namespace kfr
 {
 
 #define DFT_STAGE_FN                                                                                         \
-    KFR_MEM_INTRINSIC void do_execute(cdirect_t, complex<T>* out, const complex<T>* in, u8* temp) final                        \
+    KFR_MEM_INTRINSIC void do_execute(cdirect_t, complex<T>* out, const complex<T>* in, u8* temp) final      \
     {                                                                                                        \
         return do_execute<false>(out, in, temp);                                                             \
     }                                                                                                        \
-    KFR_MEM_INTRINSIC void do_execute(cinvert_t, complex<T>* out, const complex<T>* in, u8* temp) final                        \
+    KFR_MEM_INTRINSIC void do_execute(cinvert_t, complex<T>* out, const complex<T>* in, u8* temp) final      \
     {                                                                                                        \
         return do_execute<true>(out, in, temp);                                                              \
     }

@@ -10,12 +10,21 @@ import glob
 path = os.path.dirname(os.path.realpath(__file__))
 
 masks = ['*.hpp', '*.h', '*.cpp', '*.c', '*.cxx']
+ignore = ['build/*', 'build-*', 'cmake-*', '.*']
 
 filenames = []
 for root, dirnames, files in os.walk(path, path):
-    for mask in masks:
-        for filename in fnmatch.filter(files, mask):
-            filenames.append(os.path.join(root, filename))
+    ignore_dir = False
+    for mask in ignore:
+        if fnmatch.fnmatch(os.path.relpath(root, path), mask):
+            ignore_dir = True
+            break
+
+    if not ignore_dir:
+        for mask in masks:
+            for filename in fnmatch.filter(files, mask):
+                filenames.append(os.path.join(root, filename))
+
 
 for filename in filenames:
     print( filename, '...' )

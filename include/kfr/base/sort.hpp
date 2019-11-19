@@ -64,7 +64,7 @@ KFR_INTRINSIC vec<T, N> sort(const vec<T, N>& x)
         o = rotateleft<1>(o);
         e = t;
     }
-    return interleavehalfs(concat(e, o));
+    return interleavehalves(concat(e, o));
 }
 
 /**
@@ -97,7 +97,7 @@ KFR_INTRINSIC vec<T, N> sortdesc(const vec<T, N>& x)
         o = rotateleft<1>(o);
         e = t;
     }
-    return interleavehalfs(concat(e, o));
+    return interleavehalves(concat(e, o));
 }
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
