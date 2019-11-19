@@ -28,16 +28,21 @@
 CMT_PRAGMA_GNU(GCC diagnostic push)
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wimplicit-fallthrough")
 
-#if defined(KFR_ENABLE_WAV) && KFR_ENABLE_WAV
+#ifndef KFR_DISABLE_WAV
 #define DR_WAV_NO_STDIO
 #define DR_WAV_NO_CONVERSION_API
 #define DR_WAV_IMPLEMENTATION
 #include "../dr/dr_wav.h"
 #endif
-#if defined(KFR_ENABLE_FLAC) && KFR_ENABLE_FLAC
+#ifndef KFR_DISABLE_FLAC
 #define DR_FLAC_IMPLEMENTATION
 #define DR_FLAC_NO_STDIO
 #include "../dr/dr_flac.h"
+#endif
+#ifndef KFR_DISABLE_MP3
+#define DR_MP3_IMPLEMENTATION
+#define DR_MP3_NO_STDIO
+#include "../dr/dr_mp3.h"
 #endif
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)

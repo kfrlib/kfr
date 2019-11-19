@@ -1090,8 +1090,15 @@ KFR_INTRINSIC simd<Tout, N> simd_allones() CMT_NOEXCEPT
 }
 
 /// @brief Converts input vector to vector with subtype Tout
-template <typename Tout, typename Tin, size_t N, size_t Nout = (sizeof(Tin) * N / sizeof(Tout)),
-          KFR_ENABLE_IF(Nout == 1 || N == 1)>
+template <typename Tout, typename Tin, size_t N, size_t Nout = (sizeof(Tin) * N / sizeof(Tout))
+#ifdef _MSC_VER
+                                                     ,
+          KFR_ENABLE_IF((Nout == 1 || N == 1) && !is_same<Tout, Tin>::value)
+#else
+                                                     ,
+          KFR_ENABLE_IF(Nout == 1 || N == 1)
+#endif
+          >
 KFR_INTRINSIC simd<Tout, Nout> simd_bitcast(simd_cvt_t<Tout, Tin, N>, const simd<Tin, N>& x) CMT_NOEXCEPT
 {
     not_optimized(CMT_FUNC_SIGNATURE);
@@ -1099,8 +1106,15 @@ KFR_INTRINSIC simd<Tout, Nout> simd_bitcast(simd_cvt_t<Tout, Tin, N>, const simd
 }
 
 /// @brief Converts input vector to vector with subtype Tout
-template <typename Tout, typename Tin, size_t N, size_t Nout = (sizeof(Tin) * N / sizeof(Tout)),
-          KFR_ENABLE_IF(Nout > 1 && N > 1)>
+template <typename Tout, typename Tin, size_t N, size_t Nout = (sizeof(Tin) * N / sizeof(Tout))
+#ifdef _MSC_VER
+                                                     ,
+          KFR_ENABLE_IF(Nout > 1 && N > 1 && !is_same<Tout, Tin>::value)
+#else
+                                                     ,
+          KFR_ENABLE_IF(Nout > 1 && N > 1)
+#endif
+          >
 KFR_INTRINSIC simd<Tout, Nout> simd_bitcast(simd_cvt_t<Tout, Tin, N>, const simd<Tin, N>& x) CMT_NOEXCEPT
 {
     constexpr size_t Nlow = prev_poweroftwo(N - 1);

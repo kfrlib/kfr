@@ -222,7 +222,7 @@ inline void cwrite_split<8, false, true, f32>(complex<f32>* dest, const cvec<f32
         concat(shuffle<0, 8 + 0, 1, 8 + 1>(low(x), high(x)), shuffle<2, 8 + 2, 3, 8 + 3>(low(x), high(x)));
 
     cvec<f32, 2> a, b, c, d;
-    split(xx, a, b, c, d);
+    split<f32, 16>(xx, a, b, c, d);
     cwrite<2>(dest, a);
     cwrite<2>(dest + 4, b);
     cwrite<2>(dest + 2, c);
@@ -235,7 +235,7 @@ inline void cwrite_split<8, true, true, f32>(complex<f32>* dest, const cvec<f32,
         concat(shuffle<0, 8 + 0, 1, 8 + 1>(low(x), high(x)), shuffle<2, 8 + 2, 3, 8 + 3>(low(x), high(x)));
 
     cvec<f32, 2> a, b, c, d;
-    split(xx, a, b, c, d);
+    split<f32, 16>(xx, a, b, c, d);
     cwrite<2, true>(dest + 0, a);
     cwrite<2, true>(dest + 4, b);
     cwrite<2, true>(dest + 2, c);
@@ -415,10 +415,10 @@ KFR_INTRINSIC void transpose4(cvec<T, 16>& a, cvec<T, 16>& b, cvec<T, 16>& c, cv
     cvec<T, 4> c0, c1, c2, c3;
     cvec<T, 4> d0, d1, d2, d3;
 
-    split(a, a0, a1, a2, a3);
-    split(b, b0, b1, b2, b3);
-    split(c, c0, c1, c2, c3);
-    split(d, d0, d1, d2, d3);
+    split<T, 32>(a, a0, a1, a2, a3);
+    split<T, 32>(b, b0, b1, b2, b3);
+    split<T, 32>(c, c0, c1, c2, c3);
+    split<T, 32>(d, d0, d1, d2, d3);
 
     a = concat(a0, b0, c0, d0);
     b = concat(a1, b1, c1, d1);
@@ -434,10 +434,10 @@ KFR_INTRINSIC void transpose4(cvec<T, 16>& a, cvec<T, 16>& b, cvec<T, 16>& c, cv
     cvec<T, 4> c0, c1, c2, c3;
     cvec<T, 4> d0, d1, d2, d3;
 
-    split(a, a0, a1, a2, a3);
-    split(b, b0, b1, b2, b3);
-    split(c, c0, c1, c2, c3);
-    split(d, d0, d1, d2, d3);
+    split<T, 32>(a, a0, a1, a2, a3);
+    split<T, 32>(b, b0, b1, b2, b3);
+    split<T, 32>(c, c0, c1, c2, c3);
+    split<T, 32>(d, d0, d1, d2, d3);
 
     aa = concat(a0, b0, c0, d0);
     bb = concat(a1, b1, c1, d1);
@@ -662,7 +662,7 @@ KFR_INTRINSIC void butterfly8(cvec<T, 2>& a01, cvec<T, 2>& a23, cvec<T, 2>& a45,
 
     cvec<T, 8> b01234567 = concat(b01, b23, b45, b67);
     cvec<T, 8> b02461357 = concat(even<2>(b01234567), odd<2>(b01234567));
-    split(b02461357, b02, b46, b13, b57);
+    split<T, 16>(b02461357, b02, b46, b13, b57);
 
     b13 = cmul(b13, fixed_twiddle<T, 2, 8, 0, 1, inverse>());
     b57 = cmul(b57, fixed_twiddle<T, 2, 8, 2, 1, inverse>());
@@ -676,7 +676,7 @@ template <bool inverse = false, typename T>
 KFR_INTRINSIC void butterfly8(cvec<T, 8>& v8)
 {
     cvec<T, 2> w0, w1, w2, w3;
-    split(v8, w0, w1, w2, w3);
+    split<T, 16>(v8, w0, w1, w2, w3);
     butterfly8<inverse>(w0, w1, w2, w3);
     v8 = concat(w0, w1, w2, w3);
 }
@@ -685,7 +685,7 @@ template <bool inverse = false, typename T>
 KFR_INTRINSIC void butterfly32(cvec<T, 32>& v32)
 {
     cvec<T, 4> w0, w1, w2, w3, w4, w5, w6, w7;
-    split(v32, w0, w1, w2, w3, w4, w5, w6, w7);
+    split<T, 64>(v32, w0, w1, w2, w3, w4, w5, w6, w7);
     butterfly8<4, inverse>(w0, w1, w2, w3, w4, w5, w6, w7);
 
     w1 = cmul(w1, fixed_twiddle<T, 4, 32, 0, 1, inverse>());
@@ -710,7 +710,7 @@ KFR_INTRINSIC void butterfly4(cvec<T, N * 4>& a0123)
     cvec<T, N> a1;
     cvec<T, N> a2;
     cvec<T, N> a3;
-    split(a0123, a0, a1, a2, a3);
+    split<T, N * 4 * 2>(a0123, a0, a1, a2, a3);
     butterfly4<N, inverse>(cfalse, a0, a1, a2, a3, a0, a1, a2, a3);
     a0123 = concat(a0, a1, a2, a3);
 }
@@ -731,8 +731,8 @@ KFR_INTRINSIC void apply_twiddle(const cvec<T, N>& a1, const cvec<T, N>& tw1, cv
     if (split_format)
     {
         vec<T, N> re1, im1, tw1re, tw1im;
-        split(a1, re1, im1);
-        split(tw1, tw1re, tw1im);
+        split<T, 2 * N>(a1, re1, im1);
+        split<T, 2 * N>(tw1, tw1re, tw1im);
         vec<T, N> b1re = re1 * tw1re;
         vec<T, N> b1im = im1 * tw1re;
         if (inverse)
@@ -821,7 +821,7 @@ KFR_INTRINSIC void apply_twiddles4(cvec<T, N * 4>& __restrict a0123)
     cvec<T, N> a1;
     cvec<T, N> a2;
     cvec<T, N> a3;
-    split(a0123, a0, a1, a2, a3);
+    split<T, 2 * N * 4>(a0123, a0, a1, a2, a3);
 
     cvec<T, N> tw1 = fixed_twiddle<T, N, 64, n2 * nnstep * 1, nnstep * 1, inverse>(),
                tw2 = fixed_twiddle<T, N, 64, n2 * nnstep * 2, nnstep * 2, inverse>(),
@@ -1472,7 +1472,7 @@ KFR_INTRINSIC void cread_transposed(cbool_t<true>, const complex<f32>* ptr, cvec
     cvec<f32, 4> w3;
     cvec<f32, 16> v16 = concat(cread<4>(ptr), cread<4>(ptr + 3), cread<4>(ptr + 6), cread<4>(ptr + 9));
     v16               = digitreverse4<2>(v16);
-    split(v16, w0, w1, w2, w3);
+    split<f32, 32>(v16, w0, w1, w2, w3);
 }
 
 KFR_INTRINSIC void cread_transposed(cbool_t<true>, const complex<f32>* ptr, cvec<f32, 4>& w0,
@@ -1480,7 +1480,7 @@ KFR_INTRINSIC void cread_transposed(cbool_t<true>, const complex<f32>* ptr, cvec
 {
     cvec<f32, 16> v16 = concat(cread<4>(ptr), cread<4>(ptr + 5), cread<4>(ptr + 10), cread<4>(ptr + 15));
     v16               = digitreverse4<2>(v16);
-    split(v16, w0, w1, w2, w3);
+    split<f32, 32>(v16, w0, w1, w2, w3);
     w4 = cgather<4, 5>(ptr + 4);
 }
 

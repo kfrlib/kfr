@@ -132,7 +132,7 @@ if (NOT IOS)
     endif ()
 endif ()
 if (MSVC)
-    target_compile_options(kfr INTERFACE -bigobj)
+    target_compile_options(kfr INTERFACE -bigobj -EHsc)
 else ()
     target_link_libraries(kfr INTERFACE ${STD_LIB} ${PTHREAD_LIB} m)
 endif ()
@@ -190,7 +190,6 @@ endif()
 
 add_library(kfr_io ${KFR_IO_SRC})
 target_link_libraries(kfr_io kfr)
-target_compile_definitions(kfr_io PUBLIC KFR_ENABLE_FLAC=1)
 
 install(TARGETS kfr kfr_io ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
 

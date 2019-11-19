@@ -7,7 +7,9 @@
 #define KFR_EXTENDED_TESTS
 
 #include <kfr/base.hpp>
+#ifdef KFR_ENABLE_DFT
 #include <kfr/dft/impl/fft-impl.hpp>
+#endif
 #include <kfr/io.hpp>
 #include <kfr/testo/console_colors.hpp>
 
@@ -245,6 +247,8 @@ TEST_ASM_UIF(read, TEST_READ)
 
 TEST_ASM_UIF(write, TEST_WRITE)
 
+#ifdef KFR_ENABLE_DFT
+
 #define TEST_FFT_SPEC(ty, size)                                                                              \
     static intrinsics::fft_specialization<ty, size> fft__##ty##__##size(static_cast<size_t>(1 << size));     \
     KFR_PUBLIC void asm__test__fft__##ty##__##size(complex<ty>* out, const complex<ty>* in, u8* temp)        \
@@ -277,6 +281,8 @@ TEST_FFT_SPEC(f64, 4)
 
 TEST_FFT_GEN(f32)
 TEST_FFT_GEN(f64)
+
+#endif
 
 #endif
 

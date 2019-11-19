@@ -113,8 +113,8 @@ KFR_INTRINSIC cvec<T, width> radix4_apply_twiddle(csize_t<width>, ctrue_t /*spli
                                                   const cvec<T, width>& w, const cvec<T, width>& tw)
 {
     vec<T, width> re1, im1, twre, twim;
-    split(w, re1, im1);
-    split(tw, twre, twim);
+    split<T, 2 * width>(w, re1, im1);
+    split<T, 2 * width>(tw, twre, twim);
 
     const vec<T, width> b1re = re1 * twre;
     const vec<T, width> b1im = im1 * twre;
@@ -136,10 +136,10 @@ KFR_INTRINSIC void radix4_body(size_t N, csize_t<width>, ctrue_t, cbool_t<splito
 
     vec<T, width> re0, im0, re1, im1, re2, im2, re3, im3;
 
-    split(cread_split<width, aligned, read_split>(in + N4 * 0), re0, im0);
-    split(cread_split<width, aligned, read_split>(in + N4 * 1), re1, im1);
-    split(cread_split<width, aligned, read_split>(in + N4 * 2), re2, im2);
-    split(cread_split<width, aligned, read_split>(in + N4 * 3), re3, im3);
+    split<T, 2 * width>(cread_split<width, aligned, read_split>(in + N4 * 0), re0, im0);
+    split<T, 2 * width>(cread_split<width, aligned, read_split>(in + N4 * 1), re1, im1);
+    split<T, 2 * width>(cread_split<width, aligned, read_split>(in + N4 * 2), re2, im2);
+    split<T, 2 * width>(cread_split<width, aligned, read_split>(in + N4 * 3), re3, im3);
 
     const vec<T, width> sum02re = re0 + re2;
     const vec<T, width> sum02im = im0 + im2;
@@ -586,7 +586,7 @@ struct fft_specialization<T, 1> : dft_stage<T>
     KFR_MEM_INTRINSIC void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
         cvec<T, 1> a0, a1;
-        split(cread<2, aligned>(in), a0, a1);
+        split<T, 4>(cread<2, aligned>(in), a0, a1);
         cwrite<2, aligned>(out, concat(a0 + a1, a0 - a1));
     }
 };
@@ -602,7 +602,7 @@ struct fft_specialization<T, 2> : dft_stage<T>
     KFR_MEM_INTRINSIC void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
         cvec<T, 1> a0, a1, a2, a3;
-        split(cread<4>(in), a0, a1, a2, a3);
+        split<T, 8>(cread<4>(in), a0, a1, a2, a3);
         butterfly(cbool_t<inverse>(), a0, a1, a2, a3, a0, a1, a2, a3);
         cwrite<4>(out, concat(concat(a0, a1), concat(a2, a3)));
     }

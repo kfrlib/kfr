@@ -20,6 +20,12 @@ cmake_minimum_required(VERSION 3.1)
 add_definitions(-DKFR_TESTING=1)
 add_definitions(-DKFR_SRC_DIR=\"${CMAKE_SOURCE_DIR}\")
 
+if (MSVC)
+    link_libraries(-DEBUG)
+else ()
+    add_compile_options(-g)
+endif ()
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wno-parentheses)
 endif ()
@@ -67,7 +73,8 @@ set(ALL_TESTS_CPP
         expression_test.cpp
         intrinsic_test.cpp
         io_test.cpp
-        ${KFR_UNITTEST_SRC})
+        ${KFR_UNITTEST_SRC}
+        )
 
 # set(ALL_TESTS_MERGED_CPP all_tests_merged.cpp)
 

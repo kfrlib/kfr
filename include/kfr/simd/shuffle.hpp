@@ -144,12 +144,12 @@ KFR_INTRINSIC vec<T, Nout> extend(const vec<T, 1>& x)
 {
     return vec<T, Nout>(x.front());
 }
-template <size_t Nout, typename T, size_t N, KFR_ENABLE_IF(N != Nout)>
+template <size_t Nout, typename T, size_t N, KFR_ENABLE_IF(N != Nout && N > 1)>
 KFR_INTRINSIC vec<T, Nout> extend(const vec<T, N>& x)
 {
     return x.shuffle(csizeseq<Nout>);
 }
-template <size_t Nout, typename T, size_t N, KFR_ENABLE_IF(N == Nout)>
+template <size_t Nout, typename T, size_t N, KFR_ENABLE_IF(N == Nout && N > 1)>
 constexpr KFR_INTRINSIC const vec<T, Nout>& extend(const vec<T, N>& x)
 {
     return x;
