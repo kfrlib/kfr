@@ -9,6 +9,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/cometa.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/graphics.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/runtime.hpp
@@ -72,11 +73,15 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/waveshaper.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/weighting.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/window.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/graphics/color.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/graphics/geometry.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/graphics/scaled.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/audiofile.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/file.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/python_plot.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/tostring.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/dr/dr_flac.h
+    ${PROJECT_SOURCE_DIR}/include/kfr/io/dr/dr_mp3.h
     ${PROJECT_SOURCE_DIR}/include/kfr/io/dr/dr_wav.h
     ${PROJECT_SOURCE_DIR}/include/kfr/math/abs.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/asin_acos.hpp
@@ -168,6 +173,8 @@ set(
     ${PROJECT_SOURCE_DIR}/tests/unit/base/conversion.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/random.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/reduce.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/graphics/color.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/graphics/geometry.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/abs.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/asin_acos.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/atan.cpp

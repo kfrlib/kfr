@@ -13,7 +13,7 @@ def list_sources(name, searchpath, masks, exclude = []):
     filenames = []
     for root, dirnames, files in os.walk(path, path):
         for mask in masks:
-            for filename in fnmatch.filter(files, mask):=
+            for filename in fnmatch.filter(files, mask):
                 if filename not in exclude:
                     filenames.append(os.path.relpath(os.path.join(root, filename), path).replace('\\','/'))
 

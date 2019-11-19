@@ -20,49 +20,9 @@
   disclosing the source code of your own applications.
   See https://www.kfrlib.com for details.
  */
+#pragma once
 
-#include "base.hpp"
-#include "dft.hpp"
-#include "dsp.hpp"
-#include "graphics.hpp"
-#include "io.hpp"
+#include "math.hpp"
 
-/** @defgroup cometa Cometa
- * @brief Metaprogramming
- */
-
-/** @defgroup types Types
- * @brief Core types
- */
-
-/** @defgroup expressions Expressions
- * @brief Expressions
- */
-
-/** @defgroup shuffle Shuffle
- * @brief Vector shuffle functions
- */
-
-/** @defgroup utility Utility
- * @brief Utility classes and functions
- */
-
-/** @defgroup dft DFT
- * @brief Fast Fourier Transform & Direct Fourier Transform
- */
-
-/** @defgroup dsp DSP
- * @brief Filters and other DSP-related functions
- */
-
-/** @defgroup io IO
- * @brief Input & Output
- */
-
-/** @defgroup math Math
- * @brief Mathematical functions
- */
-
-/** @defgroup cpuid CPUID
- * @brief CPU detection
- */
+#include "graphics/color.hpp"
+#include "graphics/geometry.hpp"
