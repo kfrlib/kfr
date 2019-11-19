@@ -428,6 +428,19 @@ struct cvals_t : ops::empty
     {
         return {};
     }
+
+    constexpr bool operator==(cvals_t<T, values...>) const noexcept { return true; }
+    template <T... values2>
+    constexpr bool operator==(cvals_t<T, values2...>) const noexcept
+    {
+        return false;
+    }
+
+    template <T... values2>
+    constexpr bool operator!=(cvals_t<T, values...> ind) const noexcept
+    {
+        return !operator==(ind);
+    }
 };
 
 template <typename T>
@@ -1847,6 +1860,29 @@ template <typename T>
 constexpr conditional<std::is_scalar<T>::value, T, const T&> const_min(const T& x, const T& y)
 {
     return x < y ? x : y;
+}
+
+template <typename T>
+constexpr T cminof(cvals_t<T>)
+{
+    return std::numeric_limits<T>::max();
+}
+template <typename T, T val, T... vals>
+constexpr T cminof(cvals_t<T, val, vals...>)
+{
+    T m = cminof(cvals<T, vals...>);
+    return val < m ? val : m;
+}
+template <typename T>
+constexpr T cmaxof(cvals_t<T>)
+{
+    return std::numeric_limits<T>::min();
+}
+template <typename T, T val, T... vals>
+constexpr T cmaxof(cvals_t<T, val, vals...>)
+{
+    T m = cmaxof(cvals<T, vals...>);
+    return val > m ? val : m;
 }
 
 template <int n = 10>

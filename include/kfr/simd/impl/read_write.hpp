@@ -147,8 +147,12 @@ KFR_INTRINSIC void write(cunaligned_t, T* ptr, const vec<T, 1>& x)
 }
 KFR_INTRINSIC void write(cunaligned_t, f32* ptr, const f32x2& x)
 {
+#ifndef KFR_f32x2_array
+    *reinterpret_cast<f64*>(ptr) = x.v.whole;
+#else
     ptr[0] = x.v.low;
     ptr[1] = x.v.high;
+#endif
 }
 
 KFR_INTRINSIC void write(cunaligned_t, u8* ptr, const u8x2& x) { *reinterpret_cast<u16*>(ptr) = x.v.whole; }

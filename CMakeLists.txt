@@ -17,15 +17,11 @@
 
 cmake_minimum_required(VERSION 3.1)
 
-message(STATUS CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS})
-
 set(CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS}" CACHE STRING "compile flags" FORCE)
-
-message(STATUS CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS})
 
 project(kfr CXX)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
@@ -56,11 +52,15 @@ endif()
 include(sources.cmake)
 
 option(ENABLE_TESTS "Enable tests and examples" OFF)
-option(ENABLE_DFT "Enable DFT and related algorithms." ON)
 if (CLANG)
+    option(ENABLE_DFT "Enable DFT and related algorithms." ON)
+    option(ENABLE_DFT_NP "Enable Non-power of 2 DFT" ON)
     if (X86)
         option(ENABLE_DFT_MULTIARCH "Build DFT static libraries for various architectures. Requires Clang" OFF)
     endif ()
+else ()
+    option(ENABLE_DFT "Enable DFT and related algorithms." OFF)
+    option(ENABLE_DFT_NP "Enable Non-power of 2 DFT" OFF)
 endif()
 option(ENABLE_ASMTEST "Enable writing disassembly" OFF)
 option(REGENERATE_TESTS "Regenerate auto tests" OFF)
@@ -81,7 +81,7 @@ if (CPU_ARCH STREQUAL "detect" AND X86)
             RUN_RESULT COMPILE_RESULT
             "${CMAKE_CURRENT_BINARY_DIR}/tmpdir"
             ${CMAKE_CURRENT_SOURCE_DIR}/cmake/detect_cpu.cpp
-            CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${CMAKE_CURRENT_SOURCE_DIR}/include" -DCMAKE_CXX_STANDARD=14
+            CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${CMAKE_CURRENT_SOURCE_DIR}/include" -DCMAKE_CXX_STANDARD=17
             -DCMAKE_CXX_STANDARD_REQUIRED=ON -DCMAKE_CXX_EXTENSIONS=ON
             COMPILE_OUTPUT_VARIABLE COMPILE_OUT
             RUN_OUTPUT_VARIABLE RUN_OUT
@@ -176,6 +176,12 @@ if (ENABLE_DFT)
     else()
         target_compile_options(kfr_dft PRIVATE -ffast-math)
     endif()
+
+    if (ENABLE_DFT_NP)
+        target_compile_definitions(kfr_dft PUBLIC -DKFR_DFT_NPo2)
+    else ()
+        target_compile_definitions(kfr_dft PUBLIC -DKFR_DFT_NO_NPo2)
+    endif ()    
 
     if (ENABLE_DFT_MULTIARCH)
         add_subdirectory(dft)

@@ -207,7 +207,7 @@ struct alignas(force_compiletime_size_t<
     // from SIMD
     KFR_MEM_INTRINSIC vec(const simd_type& simd) CMT_NOEXCEPT : v(simd) {}
     // default
-    KFR_MEM_INTRINSIC constexpr vec() CMT_NOEXCEPT = default;
+    KFR_MEM_INTRINSIC vec() CMT_NOEXCEPT {}
     // copy
     KFR_MEM_INTRINSIC constexpr vec(const vec& value) CMT_NOEXCEPT = default;
     // move
@@ -343,6 +343,12 @@ struct alignas(force_compiletime_size_t<
     {
         return internal::compoundcast<T>::from_flat(intrinsics::simd_shuffle(
             intrinsics::simd_t<unwrap_bit<ST>, SN>{}, v, csizeseq<SW, SW * index>, overload_auto));
+    }
+
+    template <size_t index>
+    KFR_MEM_INTRINSIC constexpr value_type get() const CMT_NOEXCEPT
+    {
+        return this->get(csize_t<index>{});
     }
 
     template <int dummy = 0, KFR_ENABLE_IF(dummy == 0 && compound_type_traits<T>::is_scalar)>
@@ -1318,3 +1324,19 @@ struct flt_type_impl<kfr::vec<T, N>>
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)
 CMT_PRAGMA_MSVC(warning(pop))
+
+namespace std
+{
+
+template <typename T, size_t N>
+class tuple_size<kfr::vec<T, N>> : public integral_constant<size_t, N>
+{
+};
+
+template <size_t I, class T, size_t N>
+struct tuple_element<I, kfr::vec<T, N>>
+{
+    using type = T;
+};
+
+} // namespace std

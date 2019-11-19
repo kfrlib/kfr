@@ -625,7 +625,7 @@ extern char* gets(char* __s);
     "clang-msvc-" CMT_STRINGIFY(__clang_major__) "." CMT_STRINGIFY(__clang_minor__) "." CMT_STRINGIFY(       \
         __clang_patchlevel__)
 #else
-#define CMT_COMPILER_NAME "clang"
+#define CMT_COMPILER_NAME "clang-mingw"
 #define CMT_COMPILER_FULL_NAME                                                                               \
     "clang-" CMT_STRINGIFY(__clang_major__) "." CMT_STRINGIFY(__clang_minor__) "." CMT_STRINGIFY(            \
         __clang_patchlevel__)

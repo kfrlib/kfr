@@ -260,6 +260,11 @@ constexpr static size_t vector_width =
     (const_max(size_t(1), typeclass<T> == datatype::f ? platform<>::native_float_vector_size / sizeof(T)
                                                       : platform<>::native_int_vector_size / sizeof(T)));
 
+template <typename T, cpu_t cpu>
+constexpr static size_t vector_width_for =
+    (const_max(size_t(1), typeclass<T> == datatype::f ? platform<cpu>::native_float_vector_size / sizeof(T)
+                                                      : platform<cpu>::native_int_vector_size / sizeof(T)));
+
 template <typename T>
 constexpr static size_t minimum_vector_width =
     (const_max(size_t(1), typeclass<T> == datatype::f ? platform<>::minimum_float_vector_size / sizeof(T)

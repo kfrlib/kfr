@@ -121,7 +121,7 @@ KFR_INTRINSIC cvec<T, N> cread(const complex<T>* src)
 template <size_t N, bool A = false, typename T>
 KFR_INTRINSIC void cwrite(complex<T>* dest, const cvec<T, N>& value)
 {
-    value.write(ptr_cast<T>(dest));
+    value.write(ptr_cast<T>(dest), cbool_t<A>());
 }
 
 template <size_t count, size_t N, size_t stride, bool A, typename T, size_t... indices>

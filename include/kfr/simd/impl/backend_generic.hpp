@@ -49,10 +49,12 @@ namespace intrinsics
 {
 
 template <typename T, size_t N>
-using simd = typename simd_type<unwrap_bit<T>, N>::type;
+using simd = typename simd_type<unwrap_bit<T>, next_poweroftwo(static_cast<size_t>(N))>::type;
 
 template <typename T, size_t N, typename U>
-union simd_small_array {
+struct simd_small_array
+{
+    static_assert(is_poweroftwo(N), "");
     static_assert(sizeof(T) * N == sizeof(U), "");
     U whole;
 
@@ -60,7 +62,11 @@ union simd_small_array {
     constexpr static size_t size = N;
     using packed_type            = U;
 
+#ifdef _MSC_VER
     KFR_INTRINSIC constexpr simd_small_array() CMT_NOEXCEPT = default;
+#else
+    KFR_INTRINSIC simd_small_array() CMT_NOEXCEPT {}
+#endif
 
     KFR_INTRINSIC constexpr simd_small_array(U whole) CMT_NOEXCEPT : whole(whole) {}
 
@@ -71,6 +77,57 @@ union simd_small_array {
     }
 
     KFR_INTRINSIC static constexpr simd_small_array from(U whole) CMT_NOEXCEPT { return { whole }; }
+};
+
+template <>
+struct simd_small_array<f32, 2, f64>
+{
+    f64 whole;
+
+    using value_type             = f32;
+    constexpr static size_t size = 2;
+    using packed_type            = f64;
+
+#ifdef _MSC_VER
+    KFR_INTRINSIC constexpr simd_small_array() CMT_NOEXCEPT = default;
+#else
+    KFR_INTRINSIC simd_small_array() CMT_NOEXCEPT {}
+#endif
+
+    KFR_INTRINSIC constexpr simd_small_array(f64 whole) CMT_NOEXCEPT : whole(whole) {}
+
+    KFR_INTRINSIC simd_small_array(f32 x, f32 y) CMT_NOEXCEPT
+    {
+#ifdef _MSC_VER
+#ifdef CMT_ARCH_SSE2
+        whole = _mm_cvtsd_f64(_mm_castps_pd(_mm_setr_ps(x, y, x, y)));
+#else
+        union {
+            struct
+            {
+                f32 x;
+                f32 y;
+            };
+            f64 r;
+        } u;
+        u.x   = x;
+        u.y   = y;
+        whole = u.r;
+#endif
+#else
+        union {
+            struct
+            {
+                f32 x;
+                f32 y;
+            };
+            f64 r;
+        } u{ { x, y } };
+        whole = u.r;
+#endif
+    }
+
+    KFR_INTRINSIC static constexpr simd_small_array from(f64 whole) CMT_NOEXCEPT { return { whole }; }
 };
 
 template <typename T>
@@ -124,6 +181,10 @@ KFR_SIMD_SMALL_TYPE(i16, 4, u64)
 KFR_SIMD_SMALL_TYPE(i32, 2, u64)
 
 #ifdef CMT_ARCH_SSE
+#ifndef KFR_f32x2_array
+KFR_SIMD_SMALL_TYPE(f32, 2, f64)
+#endif
+
 KFR_SIMD_TYPE(f32, 4, __m128)
 KFR_SIMD_TYPE(f64, 2, __m128d)
 #endif // CMT_ARCH_SSE
@@ -206,6 +267,9 @@ KFR_SIMD_TYPE(f64, 2, float64x2_t);
 
 // specializations
 
+template <typename T, size_t N, size_t... indices, size_t Nout = sizeof...(indices)>
+KFR_INTRINSIC simd<T, Nout> universal_shuffle(simd_t<T, N>, const simd<T, N>& x, csizes_t<indices...>);
+
 #ifdef KFR_NATIVE_INTRINSICS
 
 #define KFR_GEN_ty(n, ty) ty(n)
@@ -219,8 +283,14 @@ KFR_SIMD_TYPE(f64, 2, float64x2_t);
     }
 
 #ifdef CMT_ARCH_SSE2
-inline __m128i KFR_mm_setr_epi64x(int64_t q0, int64_t q1) CMT_NOEXCEPT { return _mm_set_epi64x(q1, q0); }
-inline __m128i KFR_mm_setr_epi32(int32_t q0, int32_t q1, int32_t q2, int32_t q3) CMT_NOEXCEPT
+
+KFR_INTRINSIC double take_hi_sd(__m128d x) { return _mm_cvtsd_f64(_mm_unpackhi_pd(x, x)); }
+
+KFR_INTRINSIC __m128i KFR_mm_setr_epi64x(int64_t q0, int64_t q1) CMT_NOEXCEPT
+{
+    return _mm_set_epi64x(q1, q0);
+}
+KFR_INTRINSIC __m128i KFR_mm_setr_epi32(int32_t q0, int32_t q1, int32_t q2, int32_t q3) CMT_NOEXCEPT
 {
     return _mm_set_epi32(q3, q2, q1, q0);
 }
@@ -263,6 +333,36 @@ KFR_INTRIN_BROADCAST(i32, 2, simd<i32, 2>(value, value))
 KFR_INTRIN_BROADCAST(u32, 2, simd<u32, 2>(value, value))
 KFR_INTRIN_BROADCAST(f32, 2, simd<f32, 2>{ value, value })
 
+template <size_t N, size_t... indices, size_t Nout = sizeof...(indices)>
+KFR_INTRINSIC simd<float, Nout> simd_shuffle(simd_t<float, N>, const simd<float, N>& x,
+                                             csizes_t<indices...> ind, overload_priority<2>) CMT_NOEXCEPT
+{
+    return universal_shuffle(simd_t<float, N>{}, x, ind);
+}
+
+template <size_t N, size_t... indices, size_t Nout = sizeof...(indices)>
+KFR_INTRINSIC simd<double, Nout> simd_shuffle(simd_t<double, N>, const simd<double, N>& x,
+                                              csizes_t<indices...> ind, overload_priority<2>) CMT_NOEXCEPT
+{
+    return universal_shuffle(simd_t<double, N>{}, x, ind);
+}
+
+template <size_t N, size_t... indices, size_t Nout = sizeof...(indices)>
+KFR_INTRINSIC simd<float, Nout> simd_shuffle(simd2_t<float, N, N>, const simd<float, N>& x,
+                                             const simd<float, N>& y, csizes_t<indices...> ind,
+                                             overload_priority<2>) CMT_NOEXCEPT
+{
+    return universal_shuffle(simd_t<float, 2 * N>{}, simd_from_halves(simd_t<float, 2 * N>{}, x, y), ind);
+}
+
+template <size_t N, size_t... indices, size_t Nout = sizeof...(indices)>
+KFR_INTRINSIC simd<double, Nout> simd_shuffle(simd2_t<double, N, N>, const simd<double, N>& x,
+                                              const simd<double, N>& y, csizes_t<indices...> ind,
+                                              overload_priority<2>) CMT_NOEXCEPT
+{
+    return universal_shuffle(simd_t<double, 2 * N>{}, simd_from_halves(simd_t<double, 2 * N>{}, x, y), ind);
+}
+
 #define KFR_INTRIN_SHUFFLE_DUPHALVES(T, N, ...)                                                              \
     KFR_INTRINSIC simd<T, N * 2> simd_shuffle(simd_t<T, N>, const simd<T, N>& x,                             \
                                               decltype(csizeseq<N * 2> % csize<N>), overload_priority<9>)    \
@@ -299,6 +399,16 @@ KFR_INTRIN_BROADCAST(f32, 2, simd<f32, 2>{ value, value })
     {                                                                                                        \
         return __VA_ARGS__;                                                                                  \
     }
+
+KFR_INTRINSIC __m128 KFR_swap_ps(__m128 x) { return _mm_shuffle_ps(x, x, _MM_SHUFFLE(2, 3, 0, 1)); }
+
+#ifndef KFR_f32x2_array
+// KFR_INTRIN_SHUFFLE_CONCAT(f32, 2, _mm_castpd_ps(_mm_setr_pd(x.whole, y.whole)))
+KFR_INTRIN_SHUFFLE_SWAP(f32, 2, _mm_cvtsd_f64(_mm_castps_pd(KFR_swap_ps(_mm_castpd_ps(_mm_set_sd(x.whole))))))
+#else
+KFR_INTRIN_SHUFFLE_CONCAT(f32, 2, _mm_setr_ps(x.low, x.high, y.low, y.high))
+KFR_INTRIN_SHUFFLE_SWAP(f32, 2, simd<f32, 2>(x.high, x.low))
+#endif
 
 #if defined CMT_COMPILER_MSVC && !defined CMT_COMPILER_CLANG && defined CMT_ARCH_X32
 KFR_INTRINSIC __m128i _mm_cvtsi64_si128(int64_t u)
@@ -364,7 +474,11 @@ KFR_INTRIN_SHUFFLE_LINEAR(i64, 1, 2, _mm_cvtsi128_si64(x))
 KFR_INTRIN_SHUFFLE_LINEAR(u64, 1, 2, _mm_cvtsi128_si64(x))
 KFR_INTRIN_SHUFFLE_LINEAR(f32, 1, 4, _mm_cvtss_f32(x))
 KFR_INTRIN_SHUFFLE_LINEAR(f32, 2, 4, bitcast_anything<simd<float, 2>>(_mm_cvtsd_f64(_mm_castps_pd(x))))
+#ifndef KFR_f32x2_array
+KFR_INTRIN_SHUFFLE_LINEAR(f32, 4, 2, _mm_castpd_ps(_mm_set_sd(x.whole)))
+#else
 KFR_INTRIN_SHUFFLE_LINEAR(f32, 4, 2, _mm_unpacklo_ps(_mm_set_ss(x.low), _mm_set_ss(x.high)))
+#endif
 KFR_INTRIN_SHUFFLE_LINEAR(f64, 1, 2, _mm_cvtsd_f64(x))
 
 KFR_INTRIN_SHUFFLE_LINEAR(i8, 2, 16, simd<i8, 2>::from(u16(_mm_cvtsi128_si32(x))))
@@ -389,6 +503,13 @@ KFR_INTRIN_SHUFFLE_LINEAR_START(u16, 4, 8, 4, simd<u16, 4>::from(KFR_u64sse_INDE
 KFR_INTRIN_SHUFFLE_LINEAR_START(i16, 4, 8, 4, simd<i16, 4>::from(KFR_u64sse_INDEX(x, 1)))
 KFR_INTRIN_SHUFFLE_LINEAR_START(u32, 2, 4, 2, simd<u32, 2>::from(KFR_u64sse_INDEX(x, 1)))
 KFR_INTRIN_SHUFFLE_LINEAR_START(i32, 2, 4, 2, simd<i32, 2>::from(KFR_u64sse_INDEX(x, 1)))
+
+#ifndef KFR_f32x2_array
+KFR_INTRIN_SHUFFLE_LINEAR_START(f32, 2, 4, 2, simd<f32, 2>::from(take_hi_sd(_mm_castps_pd(x))))
+#else
+KFR_INTRIN_SHUFFLE_LINEAR_START(f32, 2, 4, 2,
+                                simd_halves<f32, 2>{ KFR_f32sse_INDEX(x, 2), KFR_f32sse_INDEX(x, 3) })
+#endif
 
 #define KFR_INTRIN_CONVERT(Tout, Tin, N, ...)                                                                \
     KFR_INTRINSIC simd<Tout, N> simd_convert(simd_cvt_t<Tout, Tin, N>, const simd<Tin, N>& x) CMT_NOEXCEPT   \
@@ -492,14 +613,14 @@ KFR_INTRIN_BITCAST(f64, i64, 4, _mm256_castsi256_pd(x))
 KFR_INTRIN_BITCAST(i64, f64, 4, _mm256_castpd_si256(x))
 
 #ifndef CMT_ARCH_AVX2
-KFR_INTRIN_SHUFFLE_DUPHALVES(i8, 16, _mm256_insertf128_si256(_mm256_castsi128_si256(x), x, 1) )
-KFR_INTRIN_SHUFFLE_DUPHALVES(u8, 16, _mm256_insertf128_si256(_mm256_castsi128_si256(x), x, 1) )
-KFR_INTRIN_SHUFFLE_DUPHALVES(i16, 8, _mm256_insertf128_si256(_mm256_castsi128_si256(x), x, 1) )
-KFR_INTRIN_SHUFFLE_DUPHALVES(u16, 8, _mm256_insertf128_si256(_mm256_castsi128_si256(x), x, 1) )
-KFR_INTRIN_SHUFFLE_DUPHALVES(i32, 4, _mm256_insertf128_si256(_mm256_castsi128_si256(x), x, 1) )
-KFR_INTRIN_SHUFFLE_DUPHALVES(u32, 4, _mm256_insertf128_si256(_mm256_castsi128_si256(x), x, 1) )
-KFR_INTRIN_SHUFFLE_DUPHALVES(i64, 2, _mm256_insertf128_si256(_mm256_castsi128_si256(x), x, 1) )
-KFR_INTRIN_SHUFFLE_DUPHALVES(u64, 2, _mm256_insertf128_si256(_mm256_castsi128_si256(x), x, 1) )
+KFR_INTRIN_SHUFFLE_DUPHALVES(i8, 16, _mm256_insertf128_si256(_mm256_castsi128_si256(x), x, 1))
+KFR_INTRIN_SHUFFLE_DUPHALVES(u8, 16, _mm256_insertf128_si256(_mm256_castsi128_si256(x), x, 1))
+KFR_INTRIN_SHUFFLE_DUPHALVES(i16, 8, _mm256_insertf128_si256(_mm256_castsi128_si256(x), x, 1))
+KFR_INTRIN_SHUFFLE_DUPHALVES(u16, 8, _mm256_insertf128_si256(_mm256_castsi128_si256(x), x, 1))
+KFR_INTRIN_SHUFFLE_DUPHALVES(i32, 4, _mm256_insertf128_si256(_mm256_castsi128_si256(x), x, 1))
+KFR_INTRIN_SHUFFLE_DUPHALVES(u32, 4, _mm256_insertf128_si256(_mm256_castsi128_si256(x), x, 1))
+KFR_INTRIN_SHUFFLE_DUPHALVES(i64, 2, _mm256_insertf128_si256(_mm256_castsi128_si256(x), x, 1))
+KFR_INTRIN_SHUFFLE_DUPHALVES(u64, 2, _mm256_insertf128_si256(_mm256_castsi128_si256(x), x, 1))
 #endif
 
 KFR_INTRINSIC __m256 KFR_mm256_setr_m128(__m128 x, __m128 y)
@@ -562,9 +683,15 @@ KFR_INTRIN_SHUFFLE_LINEAR(u16, 8, 16, _mm256_castsi256_si128(x))
 KFR_INTRIN_SHUFFLE_LINEAR(u32, 4, 8, _mm256_castsi256_si128(x))
 KFR_INTRIN_SHUFFLE_LINEAR(u64, 2, 4, _mm256_castsi256_si128(x))
 
+KFR_INTRIN_SHUFFLE_LINEAR(f32, 2, 8, _mm_cvtsd_f64(_mm_castps_pd(_mm256_castps256_ps128(x))))
+KFR_INTRIN_SHUFFLE_LINEAR_START(f32, 2, 8, 2, take_hi_sd(_mm_castps_pd(_mm256_castps256_ps128(x))))
+KFR_INTRIN_SHUFFLE_LINEAR_START(f32, 2, 8, 4, _mm_cvtsd_f64(_mm_castps_pd(_mm256_extractf128_ps(x, 1))))
+KFR_INTRIN_SHUFFLE_LINEAR_START(f32, 2, 8, 6, take_hi_sd(_mm_castps_pd(_mm256_extractf128_ps(x, 1))))
+
 // extend
 KFR_INTRIN_SHUFFLE_LINEAR(f32, 4 * 2, 4, _mm256_castps128_ps256(x))
 KFR_INTRIN_SHUFFLE_LINEAR(f64, 2 * 2, 2, _mm256_castpd128_pd256(x))
+KFR_INTRIN_SHUFFLE_LINEAR(f32, 4 * 2, 2, _mm256_castps128_ps256(_mm_castpd_ps(_mm_set_sd(x.whole))))
 
 // high
 KFR_INTRIN_SHUFFLE_LINEAR_START(f32, 4, 8, 4, _mm256_extractf128_ps(x, 1))
@@ -1222,6 +1349,483 @@ KFR_INTRINSIC simd<T, N> simd_set_element(const simd<T, N>& value, size_t index,
     arr.val[index]       = x;
     return from_simd_array(arr);
 }
+
+#define SIMD_TYPE_INTRIN(T, N, TO_SCALAR, FROM_SCALAR, FROM_BROADCAST, FROM_ZERO)                            \
+    KFR_INTRINSIC T simd_to_scalar(simd_t<T, N>, const simd<T, N>& x) { return TO_SCALAR; }                  \
+    KFR_INTRINSIC simd<T, N> simd_from_scalar(simd_t<T, N>, T x) { return FROM_SCALAR; }                     \
+    KFR_INTRINSIC simd<T, N> simd_from_broadcast(simd_t<T, N>, T x) { return FROM_BROADCAST; }               \
+    KFR_INTRINSIC simd<T, N> simd_from_zero(simd_t<T, N>) { return FROM_ZERO; }
+
+#define SIMD_TYPE_INTRIN_EX(T, N, TO_SCALAR, FROM_SCALAR, FROM_BROADCAST, FROM_ZERO, GET_LOW, GET_HIGH,      \
+                            FROM_HALVES)                                                                     \
+    SIMD_TYPE_INTRIN(T, N, TO_SCALAR, FROM_SCALAR, FROM_BROADCAST, FROM_ZERO)                                \
+    KFR_INTRINSIC simd<T, N / 2> simd_get_low(simd_t<T, N>, const simd<T, N>& x) { return GET_LOW; }         \
+    KFR_INTRINSIC simd<T, N / 2> simd_get_high(simd_t<T, N>, const simd<T, N>& x) { return GET_HIGH; }       \
+    KFR_INTRINSIC simd<T, N> simd_from_halves(simd_t<T, N>, const simd<T, N / 2>& x,                         \
+                                              const simd<T, N / 2>& y)                                       \
+    {                                                                                                        \
+        return FROM_HALVES;                                                                                  \
+    }
+
+template <typename T, size_t Nout, size_t Nin>
+KFR_INTRINSIC simd<T, Nout> simd_from_partial(simd2_t<T, Nout, Nin>, const simd<T, Nin>& x)
+{
+#ifdef _MSC_VER
+    union {
+        simd<T, Nin> in;
+        simd<T, Nout> out;
+    } u;
+    u.in = x;
+    return u.out;
+#else
+    union {
+        simd<T, Nin> in;
+        simd<T, Nout> out;
+    } u{ x };
+    return u.out;
+#endif
+}
+template <typename T, size_t N>
+KFR_INTRINSIC simd<T, N / 2> simd_get_low(simd_t<T, N>, const simd<T, N>& x)
+{
+    return x.low;
+}
+template <typename T, size_t N>
+KFR_INTRINSIC simd<T, N / 2> simd_get_high(simd_t<T, N>, const simd<T, N>& x)
+{
+    return x.high;
+}
+template <typename T, size_t N>
+KFR_INTRINSIC simd<T, N> simd_from_halves(simd_t<T, N>, const simd<T, N / 2>& x, const simd<T, N / 2>& y)
+{
+    return { x, y };
+}
+
+KFR_INTRINSIC simd<float, 4> simd_from_halves(simd_t<float, 4>, const simd<float, 2>& x,
+                                              const simd<float, 2>& y)
+{
+    return _mm_castpd_ps(_mm_setr_pd(x.whole, y.whole));
+}
+
+KFR_INTRINSIC simd<double, 2> simd_from_halves(simd_t<double, 2>, const simd<double, 1>& x,
+                                               const simd<double, 1>& y)
+{
+    return _mm_setr_pd(x, y);
+}
+
+SIMD_TYPE_INTRIN(f32, 4, _mm_cvtss_f32(x), _mm_set_ss(x), _mm_set1_ps(x), _mm_setzero_ps())
+SIMD_TYPE_INTRIN(f64, 2, _mm_cvtsd_f64(x), _mm_set_sd(x), _mm_set1_pd(x), _mm_setzero_pd())
+
+#ifdef CMT_ARCH_AVX
+SIMD_TYPE_INTRIN_EX(f32, 8, _mm256_cvtss_f32(x), _mm256_castps128_ps256(_mm_set_ss(x)), _mm256_set1_ps(x),
+                    _mm256_setzero_ps(), _mm256_castps256_ps128(x), _mm256_extractf128_ps(x, 1),
+                    KFR_mm256_setr_m128(x, y))
+SIMD_TYPE_INTRIN_EX(f64, 4, _mm256_cvtsd_f64(x), _mm256_castpd128_pd256(_mm_set_sd(x)), _mm256_set1_pd(x),
+                    _mm256_setzero_pd(), _mm256_castpd256_pd128(x), _mm256_extractf128_pd(x, 1),
+                    KFR_mm256_setr_m128d(x, y))
+#endif
+
+#ifdef CMT_ARCH_AVX512
+SIMD_TYPE_INTRIN_EX(f32, 16, _mm512_cvtss_f32(x), _mm512_castps128_ps512(_mm_set_ss(x)), _mm512_set1_ps(x),
+                    _mm512_setzero_ps(), _mm512_castps512_ps256(x), _mm512_extractf32x8_ps(x, 1),
+                    KFR_mm512_setr_m256(x, y))
+SIMD_TYPE_INTRIN_EX(f64, 8, _mm512_cvtsd_f64(x), _mm512_castpd128_pd512(_mm_set_sd(x)), _mm512_set1_pd(x),
+                    _mm512_setzero_pd(), _mm512_castpd512_pd256(x), _mm512_extractf64x4_pd(x, 1),
+                    KFR_mm512_setr_m256d(x, y))
+#endif
+
+template <size_t bits, size_t...>
+struct shuffle_mask;
+
+template <size_t i0, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5, size_t i6, size_t i7>
+struct shuffle_mask<8, i0, i1, i2, i3, i4, i5, i6, i7>
+{
+    constexpr static inline size_t Nmax  = 1;
+    constexpr static inline size_t value = (const_min(i7, Nmax) << 7) | (const_min(i6, Nmax) << 6) |
+                                           (const_min(i5, Nmax) << 5) | (const_min(i4, Nmax) << 4) |
+                                           (const_min(i3, Nmax) << 3) | (const_min(i2, Nmax) << 2) |
+                                           (const_min(i1, Nmax) << 1) | const_min(i0, Nmax);
+};
+
+template <size_t i0, size_t i1, size_t i2, size_t i3>
+struct shuffle_mask<8, i0, i1, i2, i3>
+{
+    constexpr static inline size_t Nmax  = 3;
+    constexpr static inline size_t value = (const_min(i3, Nmax) << 6) | (const_min(i2, Nmax) << 4) |
+                                           (const_min(i1, Nmax) << 2) | const_min(i0, Nmax);
+};
+
+template <size_t i0, size_t i1, size_t i2, size_t i3>
+struct shuffle_mask<4, i0, i1, i2, i3>
+{
+    constexpr static inline size_t Nmax  = 1;
+    constexpr static inline size_t value = (const_min(i3, Nmax) << 3) | (const_min(i2, Nmax) << 2) |
+                                           (const_min(i1, Nmax) << 1) | const_min(i0, Nmax);
+};
+
+template <size_t i0, size_t i1>
+struct shuffle_mask<2, i0, i1>
+{
+    constexpr static inline size_t Nmax  = 1;
+    constexpr static inline size_t value = (const_min(i1, Nmax) << 1) | const_min(i0, Nmax);
+};
+
+#ifdef CMT_ARCH_SSE2
+
+template <size_t I0, size_t I1, size_t I2, size_t I3>
+KFR_INTRINSIC simd<float, 4> simd_vec_shuffle(simd_t<float, 4>, const simd<float, 4>& x,
+                                              csizes_t<I0, I1, I2, I3>)
+{
+    // SSE -> SSE
+    return _mm_shuffle_ps(x, x, shuffle_mask<8, I0, I1, I2, I3>::value);
+}
+
+template <size_t I0, size_t I1>
+KFR_INTRINSIC simd<double, 2> simd_vec_shuffle(simd_t<double, 2>, const simd<double, 2>& x, csizes_t<I0, I1>)
+{
+    // SSE -> SSE
+    return _mm_shuffle_pd(x, x, shuffle_mask<2, I0, I1>::value);
+}
+#endif
+
+#ifdef CMT_ARCH_AVX512
+
+template <size_t I0, size_t I1, size_t I2, size_t I3, size_t I4, size_t I5, size_t I6, size_t I7, size_t I8,
+          size_t I9, size_t I10, size_t I11, size_t I12, size_t I13, size_t I14, size_t I15>
+KFR_INTRINSIC simd<float, 16> simd_vec_shuffle(
+    simd_t<float, 16>, const simd<float, 16>& x,
+    csizes_t<I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15>)
+{
+    // AVX512 -> AVX512
+    return _mm512_permutexvar_ps(
+        _mm512_setr_epi32(I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15), x);
+}
+
+template <size_t I0, size_t I1, size_t I2, size_t I3, size_t I4, size_t I5, size_t I6, size_t I7>
+KFR_INTRINSIC simd<double, 8> simd_vec_shuffle(simd_t<double, 8>, const simd<double, 8>& x,
+                                               csizes_t<I0, I1, I2, I3, I4, I5, I6, I7>)
+{
+    // AVX512 -> AVX512
+    return _mm512_permutexvar_pd(_mm512_setr_epi64(I0, I1, I2, I3, I4, I5, I6, I7), x);
+}
+
+template <size_t I0, size_t I1, size_t I2, size_t I3, size_t I4, size_t I5, size_t I6, size_t I7>
+KFR_INTRINSIC simd<float, 8> simd_vec_shuffle(simd_t<float, 16>, const simd<float, 16>& x,
+                                              csizes_t<I0, I1, I2, I3, I4, I5, I6, I7>)
+{
+    // AVX512 -> AVX
+    return _mm512_castps512_ps256(_mm512_permutexvar_ps(
+        _mm512_setr_epi32(I0, I1, I2, I3, I4, I5, I6, I7, I0, I1, I2, I3, I4, I5, I6, I7), x));
+}
+
+template <size_t I0, size_t I1, size_t I2, size_t I3>
+KFR_INTRINSIC simd<float, 4> simd_vec_shuffle(simd_t<float, 16>, const simd<float, 16>& x,
+                                              csizes_t<I0, I1, I2, I3>)
+{
+    // AVX512 -> SSE
+    return _mm512_castps512_ps128(_mm512_permutexvar_ps(
+        _mm512_setr_epi32(I0, I1, I2, I3, I0, I1, I2, I3, I0, I1, I2, I3, I0, I1, I2, I3), x));
+}
+
+template <size_t I0, size_t I1, size_t I2, size_t I3>
+KFR_INTRINSIC simd<double, 4> simd_vec_shuffle(simd_t<double, 8>, const simd<double, 8>& x,
+                                               csizes_t<I0, I1, I2, I3>)
+{
+    // AVX512 -> AVX
+    return _mm512_castpd512_pd256(
+        _mm512_permutexvar_pd(_mm512_setr_epi64(I0, I1, I2, I3, I0, I1, I2, I3), x));
+}
+
+template <size_t I0, size_t I1>
+KFR_INTRINSIC simd<double, 2> simd_vec_shuffle(simd_t<double, 8>, const simd<double, 8>& x, csizes_t<I0, I1>)
+{
+    // AVX512 -> SSE
+    return _mm512_castpd512_pd128(
+        _mm512_permutexvar_pd(_mm512_setr_epi64(I0, I1, I0, I1, I0, I1, I0, I1), x));
+}
+
+template <size_t I0, size_t I1, size_t I2, size_t I3, size_t I4, size_t I5, size_t I6, size_t I7, size_t I8,
+          size_t I9, size_t I10, size_t I11, size_t I12, size_t I13, size_t I14, size_t I15>
+KFR_INTRINSIC simd<float, 16> simd_vec_shuffle(
+    simd_t<float, 8>, const simd<float, 8>& x,
+    csizes_t<I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15>)
+{
+    // AVX -> AVX512
+    return _mm512_permutexvar_ps(
+        _mm512_setr_epi32(I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15),
+        _mm512_castps256_ps512(x));
+}
+
+template <size_t I0, size_t I1, size_t I2, size_t I3, size_t I4, size_t I5, size_t I6, size_t I7, size_t I8,
+          size_t I9, size_t I10, size_t I11, size_t I12, size_t I13, size_t I14, size_t I15>
+KFR_INTRINSIC simd<float, 16> simd_vec_shuffle(
+    simd_t<float, 4>, const simd<float, 4>& x,
+    csizes_t<I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15>)
+{
+    // SSE -> AVX512
+    return _mm512_permutexvar_ps(
+        _mm512_setr_epi32(I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15),
+        _mm512_castps128_ps512(x));
+}
+
+template <size_t I0, size_t I1, size_t I2, size_t I3, size_t I4, size_t I5, size_t I6, size_t I7>
+KFR_INTRINSIC simd<double, 8> simd_vec_shuffle(simd_t<double, 4>, const simd<double, 4>& x,
+                                               csizes_t<I0, I1, I2, I3, I4, I5, I6, I7>)
+{
+    // AVX -> AVX512
+    return _mm512_permutexvar_pd(_mm512_setr_epi64(I0, I1, I2, I3, I4, I5, I6, I7),
+                                 _mm512_castpd256_pd512(x));
+}
+
+template <size_t I0, size_t I1, size_t I2, size_t I3, size_t I4, size_t I5, size_t I6, size_t I7>
+KFR_INTRINSIC simd<double, 8> simd_vec_shuffle(simd_t<double, 2>, const simd<double, 2>& x,
+                                               csizes_t<I0, I1, I2, I3, I4, I5, I6, I7>)
+{
+    // SSE -> AVX512
+    return _mm512_permutexvar_pd(_mm512_setr_epi64(I0, I1, I2, I3, I4, I5, I6, I7),
+                                 _mm512_castpd128_pd512(x));
+}
+
+#endif
+
+#ifdef CMT_ARCH_AVX
+
+template <size_t I0, size_t I1, size_t I2, size_t I3, size_t I4, size_t I5, size_t I6, size_t I7>
+KFR_INTRINSIC simd<float, 8> simd_vec_shuffle(simd_t<float, 8>, const simd<float, 8>& x,
+                                              csizes_t<I0, I1, I2, I3, I4, I5, I6, I7>)
+{
+    // AVX -> AVX
+    if constexpr (cmaxof(csizes<I0, I1, I2, I3>) < 4 && csizes<I0, I1, I2, I3> == csizes<I4, I5, I6, I7>)
+    {
+        const simd<float, 4> tmp = universal_shuffle(simd_t<float, 4>{}, simd_get_low(simd_t<float, 8>{}, x),
+                                                     csizes<I0, I1, I2, I3>);
+        return simd_from_halves(simd_t<float, 8>{}, tmp, tmp);
+    }
+    else if constexpr (cmaxof(csizes<I0, I1, I2, I3>) < 4 && cminof(csizes<I4, I5, I6, I7>) >= 4)
+    {
+        if constexpr (csizes<I0, I1, I2, I3, I4, I5, I6, I7> ==
+                      csizes<I0, I1, I2, I3, I0 + 4, I1 + 4, I2 + 4, I3 + 4>)
+        {
+            return _mm256_shuffle_ps(x, x, shuffle_mask<8, I0, I1, I2, I3>::value);
+        }
+        else
+        {
+            return simd_from_halves(simd_t<float, 8>{},
+                                    universal_shuffle(simd_t<float, 4>{}, simd_get_low(simd_t<float, 8>{}, x),
+                                                      shuffle_mask<8, I0, I1, I2, I3>::value),
+                                    universal_shuffle(simd_t<float, 4>{},
+                                                      simd_get_high(simd_t<float, 8>{}, x),
+                                                      shuffle_mask<8, I4, I5, I6, I7>::value));
+        }
+    }
+    else
+    {
+        const __m256 sw = _mm256_permute2f128_ps(x, x, 1); // swap lanes
+        const __m256 t1 = _mm256_permutevar_ps(
+            x, _mm256_setr_epi32(I0 % 4, I1 % 4, I2 % 4, I3 % 4, I4 % 4, I5 % 4, I6 % 4, I7 % 4));
+        const __m256 t2 = _mm256_permutevar_ps(
+            sw, _mm256_setr_epi32(I0 % 4, I1 % 4, I2 % 4, I3 % 4, I4 % 4, I5 % 4, I6 % 4, I7 % 4));
+        return _mm256_blend_ps(t1, t2,
+                               shuffle_mask<8, I0 / 4, I1 / 4, I2 / 4, I3 / 4, 1 - I4 / 4, 1 - I5 / 4,
+                                            1 - I6 / 4, 1 - I7 / 4>::value);
+    }
+}
+
+template <size_t I0, size_t I1, size_t I2, size_t I3>
+KFR_INTRINSIC simd<double, 4> simd_vec_shuffle(simd_t<double, 4>, const simd<double, 4>& x,
+                                               csizes_t<I0, I1, I2, I3>)
+{
+    // AVX -> AVX
+    if constexpr (cmaxof(csizes<I0, I1>) < 2 && csizes<I0, I1> == csizes<I2, I3>)
+    {
+        const simd<double, 2> tmp =
+            universal_shuffle(simd_t<double, 2>{}, simd_get_low(simd_t<double, 4>{}, x), csizes<I0, I1>);
+        return simd_from_halves(simd_t<double, 4>{}, tmp, tmp);
+    }
+    else if constexpr (cmaxof(csizes<I0, I1>) < 4 && cminof(csizes<I2, I3>) >= 4)
+    {
+        if constexpr (csizes<I0, I1, I2, I3> == csizes<I0, I1, I2 + 2, I3 + 2>)
+        {
+            return _mm256_shuffle_ps(x, x, shuffle_mask<2, I0, I1>::value);
+        }
+        else
+        {
+            return simd_from_halves(
+                simd_t<double, 4>{},
+                universal_shuffle(simd_t<double, 2>{}, simd_get_low(simd_t<double, 4>{}, x),
+                                  shuffle_mask<2, I0, I1>::value),
+                universal_shuffle(simd_t<double, 2>{}, simd_get_high(simd_t<double, 4>{}, x),
+                                  shuffle_mask<2, I2, I3>::value));
+        }
+    }
+    else
+    {
+        const __m256d sw = _mm256_permute2f128_pd(x, x, 1); // swap lanes
+        const __m256d t1 = _mm256_permutevar_pd(
+            x, _mm256_setr_epi64x((I0 % 2) << 1, (I1 % 2) << 1, (I2 % 2) << 1, (I3 % 2) << 1));
+        const __m256d t2 = _mm256_permutevar_pd(
+            sw, _mm256_setr_epi64x((I0 % 2) << 1, (I1 % 2) << 1, (I2 % 2) << 1, (I3 % 2) << 1));
+        return _mm256_blend_pd(t1, t2, shuffle_mask<4, I0 / 2, I1 / 2, 1 - I2 / 2, 1 - I3 / 2>::value);
+    }
+}
+
+template <size_t I0, size_t I1, size_t I2, size_t I3>
+KFR_INTRINSIC simd<float, 4> simd_vec_shuffle(simd_t<float, 8>, const simd<float, 8>& x,
+                                              csizes_t<I0, I1, I2, I3>)
+{
+    // AVX -> SSE
+    if constexpr (I0 % 4 == 0 && I1 % 4 == 1 && I2 % 4 == 2 && I3 % 4 == 3)
+    {
+        __m128 t1 = simd_get_low(simd_t<float, 8>{}, x);
+        __m128 t2 = simd_get_high(simd_t<float, 8>{}, x);
+        return _mm_blend_ps(t1, t2, shuffle_mask<4, I0 / 4, I1 / 4, I2 / 4, I3 / 4>::value);
+    }
+    else
+    {
+        __m128 t1 = simd_get_low(simd_t<float, 8>{}, x);
+        __m128 t2 = simd_get_high(simd_t<float, 8>{}, x);
+        t1        = _mm_permute_ps(t1, shuffle_mask<8, I0 % 4, I1 % 4, I2 % 4, I3 % 4>::value);
+        t2        = _mm_permute_ps(t2, shuffle_mask<8, I0 % 4, I1 % 4, I2 % 4, I3 % 4>::value);
+        return _mm_blend_ps(t1, t2, shuffle_mask<4, I0 / 4, I1 / 4, I2 / 4, I3 / 4>::value);
+    }
+}
+
+template <size_t I0, size_t I1>
+KFR_INTRINSIC simd<double, 2> simd_vec_shuffle(simd_t<double, 4>, const simd<double, 4>& x, csizes_t<I0, I1>)
+{
+    // AVX -> SSE
+    if constexpr (I0 % 2 == 0 && I1 % 2 == 1)
+    {
+        __m128d t1 = simd_get_low(simd_t<double, 4>{}, x);
+        __m128d t2 = simd_get_high(simd_t<double, 4>{}, x);
+        return _mm_blend_pd(t1, t2, shuffle_mask<2, I0 / 2, I1 / 2>::value);
+    }
+    else
+    {
+        __m128d t1 = simd_get_low(simd_t<double, 4>{}, x);
+        __m128d t2 = simd_get_high(simd_t<double, 4>{}, x);
+        t1         = _mm_permute_pd(t1, shuffle_mask<2, I0 % 2, I1 % 2>::value);
+        t2         = _mm_permute_pd(t2, shuffle_mask<2, I0 % 2, I1 % 2>::value);
+        return _mm_blend_pd(t1, t2, shuffle_mask<2, I0 / 2, I1 / 2>::value);
+    }
+}
+
+template <size_t I0, size_t I1, size_t I2, size_t I3, size_t I4, size_t I5, size_t I6, size_t I7>
+KFR_INTRINSIC simd<float, 8> simd_vec_shuffle(simd_t<float, 4>, const simd<float, 4>& x,
+                                              csizes_t<I0, I1, I2, I3, I4, I5, I6, I7>)
+{
+    // SSE -> AVX
+    return KFR_mm256_setr_m128(_mm_shuffle_ps(x, x, shuffle_mask<8, I0, I1, I2, I3>::value),
+                               _mm_shuffle_ps(x, x, shuffle_mask<8, I4, I5, I6, I7>::value));
+}
+
+template <size_t I0, size_t I1, size_t I2, size_t I3>
+KFR_INTRINSIC simd<double, 4> simd_vec_shuffle(simd_t<double, 2>, const simd<double, 2>& x,
+                                               csizes_t<I0, I1, I2, I3>)
+{
+    // SSE -> AVX
+    return KFR_mm256_setr_m128d(_mm_shuffle_pd(x, x, shuffle_mask<2, I0, I1>::value),
+                                _mm_shuffle_pd(x, x, shuffle_mask<2, I2, I3>::value));
+}
+
+#endif
+
+template <typename T, size_t Nin, size_t... indices, size_t Nout>
+KFR_INTRINSIC simd<T, Nout> universal_shuffle(simd_t<T, Nin>, const simd<T, Nin>& x, csizes_t<indices...>)
+{
+    using Indices = csizes_t<indices...>;
+
+    constexpr bool floating = typeclass<T> == datatype::f;
+
+    constexpr size_t minwidth = minimum_vector_width<T>;
+    constexpr size_t maxwidth = vector_width<T>;
+    constexpr size_t minindex = cminof(Indices{});
+    constexpr size_t maxindex = cmaxof(csizes<(indices >= Nin ? 0 : indices)...>);
+
+    if constexpr (Nin == 1 && Nout == 1)
+    {
+        return x;
+    }
+    else if constexpr (next_poweroftwo(Nin) == next_poweroftwo(Nout) && Indices{} == csizeseq<Nout>)
+    {
+        return x;
+    }
+    else if constexpr (!is_poweroftwo(Nin) || !is_poweroftwo(Nout))
+    {
+        // Fix if not power of two
+        return universal_shuffle(
+            simd_t<T, next_poweroftwo(Nin)>{}, x,
+            cconcat(Indices{}, csizeseq<next_poweroftwo(Nout) - Nout, index_undefined, 0>));
+    }
+    else if constexpr (Nout < minwidth)
+    {
+        // Expand indices if less than vector
+        const simd<T, minwidth> tmp = universal_shuffle(
+            simd_t<T, Nin>{}, x, cconcat(Indices{}, csizeseq<minwidth - Nout, index_undefined, 0>));
+
+        if constexpr (Nout == 1)
+        {
+            return simd_to_scalar(simd_t<T, minwidth>{}, tmp);
+        }
+        else
+        {
+            union {
+                simd<T, minwidth> tmp;
+                simd<T, Nout> r;
+            } u{ tmp };
+            return u.r;
+        }
+    }
+    else if constexpr (Nout > maxwidth)
+    {
+        auto lowi  = Indices{}[csizeseq<Nout / 2, 0>];
+        auto highi = Indices{}[csizeseq<Nout / 2, Nout / 2>];
+        if constexpr (lowi == highi)
+        {
+            auto tmp = universal_shuffle(simd_t<T, Nin>{}, x, lowi);
+            return { tmp, tmp };
+        }
+        else
+        {
+            return { universal_shuffle(simd_t<T, Nin>{}, x, lowi),
+                     universal_shuffle(simd_t<T, Nin>{}, x, highi) };
+        }
+    }
+    else if constexpr (minindex >= Nin)
+    {
+        return simd_from_zero(simd_t<T, Nout>{});
+    }
+    else if constexpr (Nin == 1)
+    {
+        return simd_from_broadcast(simd_t<T, Nout>{}, x);
+    }
+    else if constexpr (Nin < minwidth)
+    {
+        return universal_shuffle(simd_t<T, minwidth>{}, simd_from_partial(simd2_t<T, minwidth, Nin>{}, x),
+                                 Indices{});
+    }
+    else if constexpr (Nin > Nout && maxindex < Nin / 2)
+    {
+        return universal_shuffle(simd_t<T, Nin / 2>{}, simd_get_low(simd_t<T, Nin>{}, x), Indices{});
+    }
+    else if constexpr (Nin > Nout && minindex >= Nin / 2)
+    {
+        return universal_shuffle(simd_t<T, Nin / 2>{}, simd_get_high(simd_t<T, Nin>{}, x),
+                                 csizes<(indices < Nin ? indices - csize<Nin / 2> : indices)...>);
+    }
+    else if constexpr (Nin >= minwidth && Nin <= maxwidth && Nout >= minwidth && Nout <= maxwidth)
+    {
+        return simd_vec_shuffle(simd_t<T, Nin>{}, x, Indices{});
+    }
+    else
+    {
+        not_optimized(CMT_FUNC_SIGNATURE);
+        const simd_array<T, Nin> xx               = to_simd_array<T, Nin>(x);
+        constexpr static unsigned indices_array[] = { static_cast<unsigned>(indices)... };
+        return from_simd_array<T, Nout>(simd_shuffle_generic<T, Nout, Nin>(xx, indices_array));
+    }
+}
+
 } // namespace intrinsics
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

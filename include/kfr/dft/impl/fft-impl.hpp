@@ -329,7 +329,7 @@ KFR_INTRINSIC ctrue_t radix4_pass(csize_t<32>, size_t blocks, csize_t<width>, cf
         transpose4x8(w0, w1, w2, w3, w4, w5, w6, w7, z0, z1, z2, z3);
 
         butterfly4<8, inverse>(cfalse, z0, z1, z2, z3, z0, z1, z2, z3);
-        cwrite<32, aligned>(out, bitreverse<2>(concat(z0, z1, z2, z3)));
+        cwrite<32, aligned>(out, bitreverse<2>(concat(concat(z0, z1), concat(z2, z3))));
         out += 32;
     }
     return {};
@@ -430,7 +430,6 @@ struct fft_stage_impl : dft_stage<T>
             align_up(sizeof(complex<T>) * stage_size / 4 * 3, platform<>::native_cache_alignment);
     }
 
-protected:
     constexpr static bool prefetch = true;
     constexpr static bool aligned  = false;
     constexpr static size_t width  = fft_vector_width<T>;
@@ -470,7 +469,6 @@ struct fft_final_stage_impl : dft_stage<T>
         this->data_size  = align_up(sizeof(complex<T>) * size * 3 / 2, platform<>::native_cache_alignment);
     }
 
-protected:
     constexpr static size_t width  = fft_vector_width<T>;
     constexpr static bool is_even  = cometa::is_even(ilog2(size));
     constexpr static bool use_br2  = !is_even;
@@ -496,7 +494,7 @@ protected:
         init_twiddles(csize<size>, total_size, cbool<splitin>, twiddle);
     }
 
-    DFT_STAGE_FN
+    DFT_STAGE_FN_NONFINAL
     template <bool inverse>
     KFR_MEM_INTRINSIC void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
@@ -563,7 +561,6 @@ struct fft_reorder_stage_impl : dft_stage<T>
         this->data_size  = 0;
     }
 
-protected:
     virtual void do_initialize(size_t) override final {}
 
     DFT_STAGE_FN
@@ -582,7 +579,6 @@ struct fft_specialization<T, 1> : dft_stage<T>
 {
     fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
 
-protected:
     constexpr static bool aligned = false;
     DFT_STAGE_FN
 
@@ -600,7 +596,6 @@ struct fft_specialization<T, 2> : dft_stage<T>
 {
     fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
 
-protected:
     constexpr static bool aligned = false;
     DFT_STAGE_FN
     template <bool inverse>
@@ -609,7 +604,7 @@ protected:
         cvec<T, 1> a0, a1, a2, a3;
         split(cread<4>(in), a0, a1, a2, a3);
         butterfly(cbool_t<inverse>(), a0, a1, a2, a3, a0, a1, a2, a3);
-        cwrite<4>(out, concat(a0, a1, a2, a3));
+        cwrite<4>(out, concat(concat(a0, a1), concat(a2, a3)));
     }
 };
 
@@ -618,7 +613,6 @@ struct fft_specialization<T, 3> : dft_stage<T>
 {
     fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
 
-protected:
     constexpr static bool aligned = false;
     DFT_STAGE_FN
     template <bool inverse>
@@ -635,7 +629,6 @@ struct fft_specialization<T, 4> : dft_stage<T>
 {
     fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
 
-protected:
     constexpr static bool aligned = false;
     DFT_STAGE_FN
     template <bool inverse>
@@ -652,7 +645,6 @@ struct fft_specialization<T, 5> : dft_stage<T>
 {
     fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
 
-protected:
     constexpr static bool aligned = false;
     DFT_STAGE_FN
     template <bool inverse>
@@ -669,7 +661,6 @@ struct fft_specialization<T, 6> : dft_stage<T>
 {
     fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
 
-protected:
     constexpr static bool aligned = false;
     DFT_STAGE_FN
     template <bool inverse>
@@ -689,7 +680,6 @@ struct fft_specialization<T, 7> : dft_stage<T>
         this->data_size  = align_up(sizeof(complex<T>) * 128 * 3 / 2, platform<>::native_cache_alignment);
     }
 
-protected:
     constexpr static bool aligned        = false;
     constexpr static size_t width        = vector_width<T>;
     constexpr static bool use_br2        = true;
@@ -748,7 +738,6 @@ struct fft_specialization<float, 8> : dft_stage<float>
         this->temp_size = sizeof(complex<float>) * 256;
     }
 
-protected:
     using T = float;
     DFT_STAGE_FN
     template <bool inverse>
