@@ -389,7 +389,7 @@ struct dft_plan_real : dft_plan<T>
     KFR_MEM_INTRINSIC void execute(T* out, const complex<T>* in, u8* temp) const
     {
         complex<T>* outdata = ptr_cast<complex<T>>(out);
-        fmt_stage->execute(cfalse, outdata, in, nullptr);
+        fmt_stage->execute(ctrue, outdata, in, nullptr);
         this->execute_dft(ctrue, outdata, outdata, temp);
     }
 
