@@ -194,9 +194,7 @@ struct allocator
     constexpr allocator(const allocator<U>&) CMT_NOEXCEPT
     {
     }
-    pointer address(reference x) const CMT_NOEXCEPT { return std::addressof(x); }
-    const_pointer address(const_reference x) const CMT_NOEXCEPT { return std::addressof(x); }
-    pointer allocate(size_type n, std::allocator<void>::const_pointer = 0) const
+    pointer allocate(size_type n) const
     {
         pointer result = aligned_allocate<value_type>(n);
         if (!result)
@@ -204,17 +202,6 @@ struct allocator
         return result;
     }
     void deallocate(pointer p, size_type) { aligned_deallocate(p); }
-    size_type max_size() const { return std::numeric_limits<size_type>::max() / sizeof(value_type); }
-    template <typename U, typename... Args>
-    void construct(U* p, Args&&... args)
-    {
-        ::new (pvoid(p)) U(std::forward<Args>(args)...);
-    }
-    template <typename U>
-    void destroy(U* p)
-    {
-        p->~U();
-    }
 };
 
 template <typename T1, typename T2>

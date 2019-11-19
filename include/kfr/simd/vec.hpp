@@ -971,14 +971,14 @@ namespace internal
 {
 
 template <size_t Index, typename T, size_t N, typename Fn, typename... Args,
-          typename Tout = result_of<Fn(subtype<decay<Args>>...)>>
+          typename Tout = invoke_result<Fn, subtype<decay<Args>>...>>
 constexpr KFR_INTRINSIC Tout applyfn_helper(Fn&& fn, Args&&... args)
 {
     return fn(args[Index]...);
 }
 
 template <typename T, size_t N, typename Fn, typename... Args,
-          typename Tout = result_of<Fn(subtype<decay<Args>>...)>, size_t... Indices>
+          typename Tout = invoke_result<Fn, subtype<decay<Args>>...>, size_t... Indices>
 constexpr KFR_INTRINSIC vec<Tout, N> apply_helper(Fn&& fn, csizes_t<Indices...>, Args&&... args)
 {
     return make_vector(applyfn_helper<Indices, T, N>(std::forward<Fn>(fn), std::forward<Args>(args)...)...);
@@ -992,20 +992,20 @@ constexpr KFR_INTRINSIC vec<T, N> apply0_helper(Fn&& fn, csizes_t<Indices...>)
 } // namespace internal
 
 template <typename T, size_t N, typename Fn, typename... Args,
-          typename Tout = result_of<Fn(T, subtype<decay<Args>>...)>>
+          typename Tout = invoke_result<Fn, T, subtype<decay<Args>>...>>
 constexpr KFR_INTRINSIC vec<Tout, N> apply(Fn&& fn, const vec<T, N>& arg, Args&&... args)
 {
     return internal::apply_helper<T, N>(std::forward<Fn>(fn), csizeseq<N>, arg, std::forward<Args>(args)...);
 }
 
-template <typename T, typename Fn, typename... Args, typename Tout = result_of<Fn(T, decay<Args>...)>,
+template <typename T, typename Fn, typename... Args, typename Tout = invoke_result<Fn, T, decay<Args>...>,
           KFR_ENABLE_IF(is_same<T, subtype<T>>::value)>
 constexpr KFR_INTRINSIC Tout apply(Fn&& fn, const T& arg, Args&&... args)
 {
     return fn(arg, args...);
 }
 
-template <size_t N, typename Fn, typename T = result_of<Fn()>>
+template <size_t N, typename Fn, typename T = invoke_result<Fn>>
 constexpr KFR_INTRINSIC vec<T, N> apply(Fn&& fn)
 {
     return internal::apply0_helper<T, N>(std::forward<Fn>(fn), csizeseq<N>);

@@ -125,8 +125,8 @@ constexpr size_t max_size_t = size_t(-1);
 template <typename... T>
 using common_type = typename std::common_type<T...>::type;
 
-template <typename T>
-using result_of = typename std::result_of<T>::type;
+template <typename T, typename... Args>
+using invoke_result = typename std::invoke_result<T, Args...>::type;
 
 template <bool Condition, typename Type = void>
 using enable_if = typename std::enable_if<Condition, Type>::type;
@@ -745,8 +745,8 @@ struct is_returning_type_impl : std::false_type
 };
 
 template <typename Ret, typename Fn, typename... Args>
-struct is_returning_type_impl<Ret, Fn(Args...), void_t<result_of<Fn(Args...)>>>
-    : std::is_same<Ret, result_of<Fn(Args...)>>
+struct is_returning_type_impl<Ret, Fn(Args...), void_t<invoke_result<Fn, Args...>>>
+    : std::is_same<Ret, invoke_result<Fn, Args...>>
 {
 };
 
@@ -756,7 +756,7 @@ struct is_callable_impl : std::false_type
 };
 
 template <typename Fn, typename... Args>
-struct is_callable_impl<Fn, ctypes_t<Args...>, void_t<result_of<Fn(Args...)>>> : std::true_type
+struct is_callable_impl<Fn, ctypes_t<Args...>, void_t<invoke_result<Fn, Args...>>> : std::true_type
 {
 };
 
@@ -1577,7 +1577,7 @@ inline size_t cfind(cvals_t<T, values...>, identity<T> value)
 }
 
 template <typename Fn, typename... Args>
-CMT_NOINLINE static result_of<Fn(Args...)> noinline(Fn&& fn, Args&&... args)
+CMT_NOINLINE static invoke_result<Fn, Args...> noinline(Fn&& fn, Args&&... args)
 {
     return fn(std::forward<Args>(args)...);
 }
@@ -1586,7 +1586,7 @@ template <typename Fn>
 struct fn_noinline
 {
     template <typename... Args>
-    CMT_MEM_INTRINSIC result_of<Fn(Args...)> operator()(Args&&... args) const
+    CMT_MEM_INTRINSIC invoke_result<Fn, Args...> operator()(Args&&... args) const
     {
         return noinline(Fn{}, std::forward<Args>(args)...);
     }
