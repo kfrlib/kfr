@@ -160,7 +160,127 @@ constexpr inline f32color operator""_rgb(unsigned long long rgb)
     return f32color::from_argb(0xFF000000u | rgb);
 }
 
+CMT_INTRINSIC f32x3 lab_to_xyz(const f32x3& lab)
+{
+    const float y = (lab[0] + 16.f) / 116.f;
+    const float x = lab[1] / 500.f + y;
+    const float z = y - lab[2] / 200.f;
+
+    const f32x3 w = { x, y, z };
+
+    const f32x3 cube = w * w * w;
+    return f32x3{ 0.95047f, 1.00000f, 1.08883f } *
+           (select(cube > 216.f / 24389.f, cube, (w - 16.f / 116.f) / (24389.f / 27.f / 116.f)));
 }
+
+CMT_INTRINSIC f32x3 xyz_to_rgb(const f32x3& xyz)
+{
+    return xyz[0] * f32x3{ 3.2406f, -0.9689f, 0.0557f } + xyz[1] * f32x3{ -1.5372f, 1.8758f, -0.2040f } +
+           xyz[2] * f32x3{ -0.4986f, 0.0415f, 1.0570f };
+}
+
+CMT_INTRINSIC f32x3 rgb_to_srgb(const f32x3& rgb)
+{
+    return select(rgb > 0.0031308f, 1.055f * kfr::pow(rgb, 1.f / 2.4f) - 0.055f, 12.92f * rgb);
+}
+
+CMT_INTRINSIC f32x3 srgb_to_rgb(const f32x3& srgb)
+{
+    return select(srgb > 0.04045f, kfr::pow((srgb + 0.055f) / 1.055f, 2.4f), srgb / 12.92f);
+}
+
+CMT_INTRINSIC f32x3 rgb_to_xyz(const f32x3& rgb)
+{
+    return (rgb[0] * f32x3{ 0.4124f, 0.2126f, 0.0193f } + rgb[1] * f32x3{ 0.3576f, 0.7152f, 0.1192f } +
+            rgb[2] * f32x3{ 0.1805f, 0.0722f, 0.9505f }) /
+           f32x3{ 0.95047f, 1.f, 1.08883f };
+}
+
+CMT_INTRINSIC f32x3 xyz_to_lab(const f32x3& xyz)
+{
+    const f32x3 w = select(xyz > 0.008856f, kfr::pow(xyz, 0.33333f), (7.787f * xyz) + 16.f / 116.f);
+
+    return { (116.f * w[1]) - 16.f, 500.f * (w[0] - w[1]), 200.f * (w[1] - w[2]) };
+}
+
+//
+
+CMT_INTRINSIC f32color lab_to_srgb(const f32x3& lab, float alpha = 1.f)
+{
+    const f32x3 srgb = clamp(rgb_to_srgb(xyz_to_rgb(lab_to_xyz(lab))), 0.f, 1.f);
+    return f32x4(srgb, f32x1{ alpha });
+}
+
+CMT_INTRINSIC f32color lab_to_linear_rgb(const f32x3& lab, float alpha = 1.f)
+{
+    const f32x3 rgb = clamp(xyz_to_rgb(lab_to_xyz(lab)), 0.f, 1.f);
+    return f32x4(rgb, f32x1{ alpha });
+}
+
+CMT_INTRINSIC f32x3 srgb_to_lab(const f32color& srgb)
+{
+    return xyz_to_lab(rgb_to_xyz(srgb_to_rgb(slice<0, 3>(srgb.v))));
+}
+
+CMT_INTRINSIC f32x3 lab_to_lch(const f32x3& lab)
+{
+    return f32x3{ lab[0], kfr::sqrt(lab[1] * lab[1] + lab[2] * lab[2]), kfr::atan2deg(lab[1], lab[2]) };
+}
+
+CMT_INTRINSIC f32x3 lch_to_lab(const f32x3& lch)
+{
+    return f32x3{ lch[0], kfr::sindeg(lch[2]) * lch[1], kfr::cosdeg(lch[2]) * lch[1] };
+}
+
+CMT_INTRINSIC f32color adjust_lab(const f32color& srgb, float lum = 0.f, float chroma = 1.f)
+{
+    f32x3 lab = srgb_to_lab(srgb);
+    lab[0]    = kfr::clamp(lab[0] + lum, 0.f, 100.f);
+    lab[1]    = lab[1] * chroma;
+    lab[2]    = lab[2] * chroma;
+    return lab_to_srgb(lab, srgb.alpha);
+}
+CMT_INTRINSIC f32color adjust_lab_luminance(const f32color& srgb, float lum = 0.f)
+{
+    f32x3 lab = srgb_to_lab(srgb);
+    lab[0]    = kfr::clamp(lab[0] + lum, 0.f, 100.f);
+    return lab_to_srgb(lab, srgb.alpha);
+}
+
+// [0..360), [0..100], [0..100]
+CMT_INTRINSIC f32color hsv_to_srgb(const f32x3& hsv, float alpha = 1.f)
+{
+    float v    = hsv[2];
+    int hi     = int(hsv[0] / 60.f);
+    int lo     = int(hsv[0]) % 60;
+    float vmin = ((100.f - hsv[1]) * v) / 100.f;
+    float a    = (v - vmin) * lo / 60.f;
+    float vinc = vmin + a;
+    float vdec = v - a;
+    v /= 100.f;
+    vmin /= 100.f;
+    vinc /= 100.f;
+    vdec /= 100.f;
+    switch (hi % 6)
+    {
+    case 0:
+        return { v, vinc, vmin, alpha };
+    case 1:
+        return { vdec, v, vmin, alpha };
+    case 2:
+        return { vmin, v, vinc, alpha };
+    case 3:
+        return { vmin, vdec, v, alpha };
+    case 4:
+        return { vinc, vmin, v, alpha };
+    case 5:
+        return { v, vmin, vdec, alpha };
+    default:
+        return { 0, 0, 0, 0 };
+    }
+}
+
+} // namespace CMT_ARCH_NAME
 } // namespace kfr
 
 namespace cometa
