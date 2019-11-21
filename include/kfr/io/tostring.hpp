@@ -113,7 +113,7 @@ inline std::string array_to_string(const T* source, size_t N)
     {
         if (i > 0)
         {
-            if (i % details::number_columns == 0 || kfr::is_vec<T>::value)
+            if (i % details::number_columns == 0 || kfr::is_vec<T>)
                 str += "\n";
             else
                 str += " ";

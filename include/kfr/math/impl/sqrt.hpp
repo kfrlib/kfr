@@ -52,12 +52,12 @@ KFR_INTRINSIC f32avx512 sqrt(const f32avx512& x) { return _mm512_sqrt_ps(x.v); }
 KFR_INTRINSIC f64avx512 sqrt(const f64avx512& x) { return _mm512_sqrt_pd(x.v); }
 #endif
 
-KFR_HANDLE_ALL_SIZES_1_IF(sqrt, is_f_class<T>::value)
+KFR_HANDLE_ALL_SIZES_1_IF(sqrt, is_f_class<T>)
 
 #else
 
 // fallback
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
+template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> sqrt(const vec<T, N>& x)
 {
     return apply([](T x) { return std::sqrt(x); }, x);

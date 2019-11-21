@@ -106,7 +106,7 @@ struct univector_base<T, Class, true> : input_expression, output_expression
         write(ptr_cast<T>(data) + index, vec<T, N>(value));
     }
 
-    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
+    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>)>
     KFR_MEM_INTRINSIC Class& operator=(Input&& input)
     {
         assign_expr(std::forward<Input>(input));
@@ -310,7 +310,7 @@ struct univector_base<T, Class, false>
         return array_ref<const T>(data, size);
     }
 
-    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
+    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>)>
     KFR_MEM_INTRINSIC Class& operator=(Input&& input)
     {
         static_assert(sizeof(Input) == 0, "Can't assign expression to non-expression");
@@ -326,7 +326,7 @@ private:
 template <typename T, size_t Size>
 struct alignas(platform<>::maximum_vector_alignment) univector
     : std::array<T, Size>,
-      univector_base<T, univector<T, Size>, is_vec_element<T>::value>
+      univector_base<T, univector<T, Size>, is_vec_element<T>>
 {
     using std::array<T, Size>::size;
     using size_type = size_t;
@@ -335,7 +335,7 @@ struct alignas(platform<>::maximum_vector_alignment) univector
 #endif
     univector(const univector& v)   = default;
     univector(univector&&) noexcept = default;
-    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
+    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>)>
     univector(Input&& input)
     {
         this->assign_expr(std::forward<Input>(input));
@@ -353,21 +353,21 @@ struct alignas(platform<>::maximum_vector_alignment) univector
     constexpr static bool is_array_ref = false;
     constexpr static bool is_vector    = false;
     constexpr static bool is_aligned   = true;
-    constexpr static bool is_pod       = kfr::is_pod<T>::value;
+    constexpr static bool is_pod       = kfr::is_pod<T>;
     using value_type                   = T;
 
     value_type get(size_t index, value_type fallback_value) const CMT_NOEXCEPT
     {
         return index < this->size() ? this->operator[](index) : fallback_value;
     }
-    using univector_base<T, univector, is_vec_element<T>::value>::operator=;
+    using univector_base<T, univector, is_vec_element<T>>::operator=;
 
     void resize(size_t) CMT_NOEXCEPT {}
 };
 
 template <typename T>
 struct univector<T, tag_array_ref> : array_ref<T>,
-                                     univector_base<T, univector<T, tag_array_ref>, is_vec_element<T>::value>
+                                     univector_base<T, univector<T, tag_array_ref>, is_vec_element<T>>
 {
     using array_ref<T>::size;
     using array_ref<T>::array_ref;
@@ -388,13 +388,11 @@ struct univector<T, tag_array_ref> : array_ref<T>,
     constexpr univector(univector<T, Tag>& other) : array_ref<T>(other.data(), other.size())
     {
     }
-    template <typename U, univector_tag Tag,
-              KFR_ENABLE_IF(is_same<remove_const<T>, U>::value&& is_const<T>::value)>
+    template <typename U, univector_tag Tag, KFR_ENABLE_IF(is_same<remove_const<T>, U>&& is_const<T>)>
     constexpr univector(const univector<U, Tag>& other) : array_ref<T>(other.data(), other.size())
     {
     }
-    template <typename U, univector_tag Tag,
-              KFR_ENABLE_IF(is_same<remove_const<T>, U>::value&& is_const<T>::value)>
+    template <typename U, univector_tag Tag, KFR_ENABLE_IF(is_same<remove_const<T>, U>&& is_const<T>)>
     constexpr univector(univector<U, Tag>& other) : array_ref<T>(other.data(), other.size())
     {
     }
@@ -410,15 +408,14 @@ struct univector<T, tag_array_ref> : array_ref<T>,
     {
         return index < this->size() ? this->operator[](index) : fallback_value;
     }
-    using univector_base<T, univector, is_vec_element<T>::value>::operator=;
+    using univector_base<T, univector, is_vec_element<T>>::operator=;
 
     univector<T, tag_array_ref>& ref() && { return *this; }
 };
 
 template <typename T>
 struct univector<T, tag_dynamic_vector>
-    : std::vector<T, allocator<T>>,
-      univector_base<T, univector<T, tag_dynamic_vector>, is_vec_element<T>::value>
+    : std::vector<T, allocator<T>>, univector_base<T, univector<T, tag_dynamic_vector>, is_vec_element<T>>
 {
     using std::vector<T, allocator<T>>::size;
     using std::vector<T, allocator<T>>::vector;
@@ -428,11 +425,10 @@ struct univector<T, tag_dynamic_vector>
 #endif
     univector(const univector& v)   = default;
     univector(univector&&) noexcept = default;
-    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
+    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>)>
     univector(Input&& input)
     {
-        static_assert(!is_infinite<Input>::value,
-                      "Dynamically sized vector requires finite input expression");
+        static_assert(!is_infinite<Input>, "Dynamically sized vector requires finite input expression");
         this->resize(input.size());
         this->assign_expr(std::forward<Input>(input));
     }
@@ -463,9 +459,9 @@ struct univector<T, tag_dynamic_vector>
     {
         return index < this->size() ? this->operator[](index) : fallback_value;
     }
-    using univector_base<T, univector, is_vec_element<T>::value>::operator=;
+    using univector_base<T, univector, is_vec_element<T>>::operator=;
     univector& operator=(const univector&) = default;
-    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
+    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>)>
     KFR_MEM_INTRINSIC univector& operator=(Input&& input)
     {
         if (input.size() != infinite_size)
@@ -505,7 +501,7 @@ KFR_INTRINSIC univector_ref<const T> make_univector(const T* data, size_t size)
 }
 
 /// @brief Creates univector from a container (must have data() and size() methods)
-template <typename Container, KFR_ENABLE_IF(kfr::has_data_size<Container>::value),
+template <typename Container, KFR_ENABLE_IF(kfr::has_data_size<Container>),
           typename T = value_type_of<Container>>
 KFR_INTRINSIC univector_ref<const T> make_univector(const Container& container)
 {
@@ -513,7 +509,7 @@ KFR_INTRINSIC univector_ref<const T> make_univector(const Container& container)
 }
 
 /// @brief Creates univector from a container (must have data() and size() methods)
-template <typename Container, KFR_ENABLE_IF(kfr::has_data_size<Container>::value),
+template <typename Container, KFR_ENABLE_IF(kfr::has_data_size<Container>),
           typename T = value_type_of<Container>>
 KFR_INTRINSIC univector_ref<T> make_univector(Container& container)
 {
@@ -612,7 +608,7 @@ KFR_INTRINSIC vec<U, N> get_elements(const univector<T, Tag>& self, cinput_t, si
 template <typename Expr, typename T = value_type_of<Expr>>
 KFR_INTRINSIC univector<T> render(Expr&& expr)
 {
-    static_assert(!is_infinite<Expr>::value,
+    static_assert(!is_infinite<Expr>,
                   "render: Can't process infinite expressions. Pass size as a second argument to render.");
     univector<T> result;
     result.resize(expr.size());

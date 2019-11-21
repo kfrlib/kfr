@@ -333,13 +333,9 @@ template <typename T>
 using unwrap_bit = typename internal_generic::unwrap_bit<T>::type;
 
 template <typename T>
-struct is_bit : cfalse_t
-{
-};
+constexpr inline bool is_bit = false;
 template <typename T>
-struct is_bit<bit<T>> : ctrue_t
-{
-};
+constexpr inline bool is_bit<bit<T>> = true;
 
 namespace fn_generic
 {
@@ -404,21 +400,13 @@ struct initialvalue
 };
 
 template <typename T>
-struct is_simd_type
-    : std::integral_constant<
-          bool, std::is_same<T, float>::value || std::is_same<T, double>::value ||
-                    std::is_same<T, signed char>::value || std::is_same<T, unsigned char>::value ||
-                    std::is_same<T, short>::value || std::is_same<T, unsigned short>::value ||
-                    std::is_same<T, int>::value || std::is_same<T, unsigned int>::value ||
-                    std::is_same<T, long>::value || std::is_same<T, unsigned long>::value ||
-                    std::is_same<T, long long>::value || std::is_same<T, unsigned long long>::value>
-{
-};
+constexpr inline bool is_simd_type =
+    is_same<T, float> || is_same<T, double> || is_same<T, signed char> || is_same<T, unsigned char> ||
+    is_same<T, short> || is_same<T, unsigned short> || is_same<T, int> || is_same<T, unsigned int> ||
+    is_same<T, long> || is_same<T, unsigned long> || is_same<T, long long> || is_same<T, unsigned long long>;
 
 template <typename T>
-struct is_simd_type<bit<T>> : is_simd_type<T>
-{
-};
+constexpr inline bool is_simd_type<bit<T>> = is_simd_type<T>;
 
 template <typename T, size_t N>
 struct vec_shape
@@ -453,8 +441,6 @@ constexpr cunaligned_t cunaligned{};
 #else
 #define KFR_I_CE
 #endif
-
-#define avoid_odr_use(x) static_cast<decltype(x)>(x)
 
 } // namespace kfr
 

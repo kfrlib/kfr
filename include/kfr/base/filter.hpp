@@ -90,13 +90,13 @@ public:
         process_expression(dest, src, size_min(size, src.size()));
     }
 
-    template <univector_tag Tag, typename Expr, KFR_ENABLE_IF(is_input_expression<Expr>::value)>
+    template <univector_tag Tag, typename Expr, KFR_ENABLE_IF(is_input_expression<Expr>)>
     void apply(univector<T, Tag>& dest, const Expr& src)
     {
         process_expression(dest.data(), to_pointer(src), size_min(dest.size(), src.size()));
     }
 
-    template <typename Expr, KFR_ENABLE_IF(is_input_expression<Expr>::value)>
+    template <typename Expr, KFR_ENABLE_IF(is_input_expression<Expr>)>
     void apply(T* dest, const Expr& src, size_t size)
     {
         process_expression(dest, to_pointer(src), size_min(size, src.size()));

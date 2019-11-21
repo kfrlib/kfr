@@ -12,4 +12,4 @@ inline namespace CMT_ARCH_NAME
 {
 
 }
-}
+} // namespace kfr

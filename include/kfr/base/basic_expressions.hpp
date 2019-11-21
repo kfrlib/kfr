@@ -201,14 +201,14 @@ struct expression_writer
 template <typename T, typename E1>
 internal::expression_reader<T, E1> reader(E1&& e1)
 {
-    static_assert(is_input_expression<E1>::value, "E1 must be an expression");
+    static_assert(is_input_expression<E1>, "E1 must be an expression");
     return internal::expression_reader<T, E1>(std::forward<E1>(e1));
 }
 
 template <typename T, typename E1>
 internal::expression_writer<T, E1> writer(E1&& e1)
 {
-    static_assert(is_output_expression<E1>::value, "E1 must be an output expression");
+    static_assert(is_output_expression<E1>, "E1 must be an output expression");
     return internal::expression_writer<T, E1>(std::forward<E1>(e1));
 }
 
@@ -421,10 +421,10 @@ KFR_INTRINSIC internal::expression_slice<E1> truncate(E1&& e1, size_t size)
 
 /** @brief Returns the reversed expression
  */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_INTRINSIC internal::expression_reverse<E1> reverse(E1&& e1)
 {
-    static_assert(!is_infinite<E1>::value, "e1 must be a sized expression (use slice())");
+    static_assert(!is_infinite<E1>, "e1 must be a sized expression (use slice())");
     return internal::expression_reverse<E1>(std::forward<E1>(e1));
 }
 
@@ -520,7 +520,7 @@ struct expression_padded : expression_with_arguments<E>
 template <typename E, typename T = value_type_of<E>>
 internal::expression_padded<E> padded(E&& e, const T& fill_value = T(0))
 {
-    static_assert(is_input_expression<E>::value, "E must be an input expression");
+    static_assert(is_input_expression<E>, "E must be an input expression");
     return internal::expression_padded<E>(fill_value, std::forward<E>(e));
 }
 
@@ -582,7 +582,7 @@ struct expression_unpack : private expression_with_arguments<E...>, output_expre
         output(coutput, index, x, csizeseq<count>);
     }
 
-    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>::value)>
+    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>)>
     KFR_MEM_INTRINSIC expression_unpack& operator=(Input&& input)
     {
         process(*this, std::forward<Input>(input));
@@ -599,13 +599,13 @@ private:
 };
 } // namespace internal
 
-template <typename... E, KFR_ENABLE_IF(is_output_expressions<E...>::value)>
+template <typename... E, KFR_ENABLE_IF(is_output_expressions<E...>)>
 internal::expression_unpack<E...> unpack(E&&... e)
 {
     return internal::expression_unpack<E...>(std::forward<E>(e)...);
 }
 
-template <typename... E, KFR_ENABLE_IF(is_input_expressions<E...>::value)>
+template <typename... E, KFR_ENABLE_IF(is_input_expressions<E...>)>
 internal::expression_pack<internal::arg<E>...> pack(E&&... e)
 {
     return internal::expression_pack<internal::arg<E>...>(std::forward<E>(e)...);
@@ -637,7 +637,7 @@ template <typename OutExpr, typename InExpr, typename T = value_type_of<InExpr>>
 task_partition<OutExpr, InExpr> partition(OutExpr&& output, InExpr&& input, size_t count,
                                           size_t minimum_size = 0)
 {
-    static_assert(!is_infinite<OutExpr>::value || !is_infinite<InExpr>::value, "");
+    static_assert(!is_infinite<OutExpr> || !is_infinite<InExpr>, "");
 
     minimum_size            = minimum_size == 0 ? vector_width<T> * 8 : minimum_size;
     const size_t size       = size_min(output.size(), input.size());
@@ -697,8 +697,7 @@ struct concatenate_expression : expression_with_arguments<E1, E2>
 };
 } // namespace internal
 
-template <typename E1, typename E2,
-          KFR_ENABLE_IF(is_input_expression<E1>::value&& is_input_expression<E2>::value)>
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expression<E1>&& is_input_expression<E2>)>
 internal::concatenate_expression<E1, E2> concatenate(E1&& e1, E2&& e2)
 {
     return { std::forward<E1>(e1), std::forward<E2>(e2) };

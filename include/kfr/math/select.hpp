@@ -38,7 +38,7 @@ inline namespace CMT_ARCH_NAME
  * return m ? x : y
  * @endcode
  */
-template <typename T1, size_t N, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>::value),
+template <typename T1, size_t N, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>),
           typename Tout = subtype<common_type<T2, T3>>>
 KFR_INTRINSIC vec<Tout, N> select(const mask<T1, N>& m, const T2& x, const T3& y)
 {
@@ -50,7 +50,7 @@ KFR_INTRINSIC vec<Tout, N> select(const mask<T1, N>& m, const T2& x, const T3& y
  * @brief Returns template expression that returns x if m is true, otherwise return y. Order of the arguments
  * is same as in ternary operator.
  */
-template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2, E3>::value)>
+template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2, E3>)>
 KFR_INTRINSIC internal::expression_function<fn::select, E1, E2, E3> select(E1&& m, E2&& x, E3&& y)
 {
     return { fn::select(), std::forward<E1>(m), std::forward<E2>(x), std::forward<E3>(y) };

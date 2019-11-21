@@ -46,7 +46,7 @@ inline auto waveshaper_tanh(E1&& input, double saturation)
     return tanh(saturation * input) * (coth(saturation));
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> saturate_I(const T1& x)
 {
     const flt_type<T1> xx = -1 / (abs(static_cast<flt_type<T1>>(x)) + 1) + 1;
@@ -54,7 +54,7 @@ KFR_FUNCTION flt_type<T1> saturate_I(const T1& x)
 }
 KFR_FN(saturate_I)
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> saturate_II(const T1& x)
 {
     const flt_type<T1> xx = sqr(abs(static_cast<flt_type<T1>>(x)) + 1);
@@ -62,13 +62,13 @@ KFR_FUNCTION flt_type<T1> saturate_II(const T1& x)
 }
 KFR_FN(saturate_II)
 
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_FUNCTION internal::expression_function<fn::saturate_II, E1> saturate_I(E1&& x)
 {
     return { fn::saturate_I(), std::forward<E1>(x) };
 }
 
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_FUNCTION internal::expression_function<fn::saturate_II, E1> saturate_II(E1&& x)
 {
     return { fn::saturate_II(), std::forward<E1>(x) };

@@ -188,7 +188,7 @@ namespace internal
 template <typename T, typename E>
 KFR_INTRINSIC expression_vtable<T>* make_expression_vtable()
 {
-    static_assert(is_input_expression<E>::value, "E must be an expression");
+    static_assert(is_input_expression<E>, "E must be an expression");
     static expression_vtable<T> vtable{ ctype_t<decay<E>>{} };
     return &vtable;
 }
@@ -201,7 +201,7 @@ KFR_INTRINSIC expression_vtable<T>* make_expression_vtable()
 template <typename E, typename T = value_type_of<E>>
 KFR_INTRINSIC expression_pointer<T> to_pointer(E& expr)
 {
-    static_assert(is_input_expression<E>::value, "E must be an expression");
+    static_assert(is_input_expression<E>, "E must be an expression");
     return expression_pointer<T>(std::addressof(expr), internal::make_expression_vtable<T, E>());
 }
 
@@ -212,7 +212,7 @@ KFR_INTRINSIC expression_pointer<T> to_pointer(E& expr)
 template <typename E, typename T = value_type_of<E>>
 KFR_INTRINSIC expression_pointer<T> to_pointer(E&& expr)
 {
-    static_assert(is_input_expression<E>::value, "E must be an expression");
+    static_assert(is_input_expression<E>, "E must be an expression");
     std::shared_ptr<expression_resource> ptr = make_resource(std::move(expr));
     void* instance                           = ptr->instance();
     return expression_pointer<T>(instance, internal::make_expression_vtable<T, E>(), std::move(ptr));

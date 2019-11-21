@@ -35,7 +35,7 @@ inline namespace CMT_ARCH_NAME
 /**
  * @brief Returns the positive square root of the x. \f$\sqrt{x}\f$
  */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_INTRINSIC flt_type<T1> sqrt(const T1& x)
 {
     return intrinsics::sqrt(x);
@@ -44,7 +44,7 @@ KFR_INTRINSIC flt_type<T1> sqrt(const T1& x)
 /**
  * @brief Returns template expression that returns the positive square root of the x. \f$\sqrt{x}\f$
  */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_INTRINSIC internal::expression_function<fn::sqrt, E1> sqrt(E1&& x)
 {
     return { fn::sqrt(), std::forward<E1>(x) };

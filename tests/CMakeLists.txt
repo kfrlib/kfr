@@ -20,6 +20,10 @@ cmake_minimum_required(VERSION 3.1)
 add_definitions(-DKFR_TESTING=1)
 add_definitions(-DKFR_SRC_DIR=\"${CMAKE_SOURCE_DIR}\")
 
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options(-fdiagnostics-absolute-paths)
+endif ()
+
 if (MSVC)
     link_libraries(-DEBUG)
 else ()

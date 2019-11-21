@@ -40,9 +40,7 @@ struct color
 
     using vec_type = vec<T, 4>;
 
-    static_assert(std::is_floating_point<T>::value || std::is_same<T, uint8_t>::value ||
-                      std::is_same<T, uint16_t>::value,
-                  "Incorrect type");
+    static_assert(is_floating_point<T> || is_same<T, uint8_t> || is_same<T, uint16_t>, "Incorrect type");
 
     constexpr color(int) = delete;
     constexpr explicit color(T grey, T alpha = maximum) : v(grey, grey, grey, alpha) {}
@@ -70,7 +68,7 @@ struct color
 
     constexpr T lightness() const
     {
-        using Tcommon = conditional<std::is_floating_point<T>::value, T, findinttype<min * 3, max * 3>>;
+        using Tcommon = conditional<is_floating_point<T>, T, findinttype<min * 3, max * 3>>;
         return (Tcommon(r) + g + b) / 3;
     }
 

@@ -156,7 +156,7 @@ KFR_INTRINSIC vec<T, N> sincos_mask(const vec<T, N>& x_full, const mask<T, N>& c
     return formula;
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
+template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> sin(const vec<T, N>& x)
 {
     vec<itype<T>, N> quadrant;
@@ -172,7 +172,7 @@ KFR_INTRINSIC vec<T, N> sin(const vec<T, N>& x)
     return formula;
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
+template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> cos(const vec<T, N>& x)
 {
     vec<itype<T>, N> quadrant;
@@ -188,7 +188,7 @@ KFR_INTRINSIC vec<T, N> cos(const vec<T, N>& x)
     return formula;
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
+template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> fastsin(const vec<T, N>& x)
 {
     const vec<T, N> msk = broadcast<N>(special_constants<T>::highbitmask());
@@ -213,7 +213,7 @@ KFR_INTRINSIC vec<T, N> fastsin(const vec<T, N>& x)
     return formula;
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
+template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> fastcos(const vec<T, N>& x)
 {
     x += c_pi<T, 1, 2>;
@@ -221,22 +221,22 @@ KFR_INTRINSIC vec<T, N> fastcos(const vec<T, N>& x)
     return fastsin(x);
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(N > 1 && is_f_class<T>::value)>
+template <typename T, size_t N, KFR_ENABLE_IF(N > 1 && is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> sincos(const vec<T, N>& x)
 {
     return sincos_mask(x, internal::oddmask<T, N>());
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(N > 1 && is_f_class<T>::value)>
+template <typename T, size_t N, KFR_ENABLE_IF(N > 1 && is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> cossin(const vec<T, N>& x)
 {
     return sincos_mask(x, internal::evenmask<T, N>());
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
+template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> sinc(const vec<T, N>& x)
 {
-    return select(abs(x) <= avoid_odr_use(constants<T>::epsilon), T(1), sin(x) / x);
+    return select(abs(x) <= constants<T>::epsilon, T(1), sin(x) / x);
 }
 
 KFR_HANDLE_SCALAR_1_T(sin, flt_type<T>)
@@ -258,37 +258,37 @@ KFR_HANDLE_NOT_F_1(sinc)
 template <typename T, typename Tout = flt_type<T>>
 KFR_INTRINSIC Tout sindeg(const T& x)
 {
-    return sin(x * avoid_odr_use(constants<Tout>::degtorad));
+    return sin(x * constants<Tout>::degtorad);
 }
 
 template <typename T, typename Tout = flt_type<T>>
 KFR_INTRINSIC Tout cosdeg(const T& x)
 {
-    return cos(x * avoid_odr_use(constants<Tout>::degtorad));
+    return cos(x * constants<Tout>::degtorad);
 }
 
 template <typename T, typename Tout = flt_type<T>>
 KFR_INTRINSIC Tout fastsindeg(const T& x)
 {
-    return fastsin(x * avoid_odr_use(constants<Tout>::degtorad));
+    return fastsin(x * constants<Tout>::degtorad);
 }
 
 template <typename T, typename Tout = flt_type<T>>
 KFR_INTRINSIC Tout fastcosdeg(const T& x)
 {
-    return fastcos(x * avoid_odr_use(constants<Tout>::degtorad));
+    return fastcos(x * constants<Tout>::degtorad);
 }
 
 template <typename T, typename Tout = flt_type<T>>
 KFR_INTRINSIC Tout sincosdeg(const T& x)
 {
-    return sincos(x * avoid_odr_use(constants<Tout>::degtorad));
+    return sincos(x * constants<Tout>::degtorad);
 }
 
 template <typename T, typename Tout = flt_type<T>>
 KFR_INTRINSIC Tout cossindeg(const T& x)
 {
-    return cossin(x * avoid_odr_use(constants<Tout>::degtorad));
+    return cossin(x * constants<Tout>::degtorad);
 }
 } // namespace intrinsics
 

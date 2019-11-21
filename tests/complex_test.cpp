@@ -180,8 +180,8 @@ TEST(complex_function_expressions)
 
 TEST(static_tests)
 {
-    static_assert(is_numeric<vec<complex<float>, 4>>::value, "");
-    static_assert(is_numeric_args<vec<complex<float>, 4>>::value, "");
+    static_assert(is_numeric<vec<complex<float>, 4>>, "");
+    static_assert(is_numeric_args<vec<complex<float>, 4>>, "");
 
     static_assert(sizeof(vec<c32, 4>) == sizeof(vec<f32, 8>), "");
     static_assert(vec<f32, 4>::size() == 4, "");

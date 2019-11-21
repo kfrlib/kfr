@@ -108,19 +108,19 @@ KFR_INTRINSIC vec<u8, N> random_bits(random_bit_generator& gen)
     return concat(bits1, bits2);
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(std::is_integral<T>::value)>
+template <typename T, size_t N, KFR_ENABLE_IF(is_integral<T>)>
 KFR_INTRINSIC vec<T, N> random_uniform(random_bit_generator& gen)
 {
     return bitcast<T>(random_bits<N * sizeof(T)>(gen));
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(std::is_same<T, f32>::value)>
+template <typename T, size_t N, KFR_ENABLE_IF(is_same<T, f32>)>
 KFR_INTRINSIC vec<f32, N> randommantissa(random_bit_generator& gen)
 {
     return bitcast<f32>((random_uniform<u32, N>(gen) & u32(0x7FFFFFu)) | u32(0x3f800000u)) + 0.0f;
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(std::is_same<T, f64>::value)>
+template <typename T, size_t N, KFR_ENABLE_IF(is_same<T, f64>)>
 KFR_INTRINSIC vec<f64, N> randommantissa(random_bit_generator& gen)
 {
     return bitcast<f64>((random_uniform<u64, N>(gen) & u64(0x000FFFFFFFFFFFFFull)) |
@@ -128,19 +128,19 @@ KFR_INTRINSIC vec<f64, N> randommantissa(random_bit_generator& gen)
            0.0;
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
+template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> random_uniform(random_bit_generator& gen)
 {
     return randommantissa<T, N>(gen) - 1.f;
 }
 
-template <size_t N, typename T, KFR_ENABLE_IF(is_f_class<T>::value)>
+template <size_t N, typename T, KFR_ENABLE_IF(is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> random_range(random_bit_generator& gen, T min, T max)
 {
     return mix(random_uniform<T, N>(gen), min, max);
 }
 
-template <size_t N, typename T, KFR_ENABLE_IF(!is_f_class<T>::value)>
+template <size_t N, typename T, KFR_ENABLE_IF(!is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> random_range(random_bit_generator& gen, T min, T max)
 {
     using big_type = findinttype<sqr(std::numeric_limits<T>::min()), sqr(std::numeric_limits<T>::max())>;

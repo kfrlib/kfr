@@ -109,17 +109,6 @@ struct and_t_impl<T, Ts...> : std::integral_constant<bool, T::value && and_t_imp
 };
 } // namespace details
 
-template <typename... Ts>
-using or_t = details::or_t_impl<Ts...>;
-
-template <typename... Ts>
-using and_t = details::and_t_impl<Ts...>;
-
-template <typename T>
-struct not_t : std::integral_constant<bool, !T::value>
-{
-};
-
 constexpr size_t max_size_t = size_t(-1);
 
 template <typename... T>
@@ -153,28 +142,52 @@ template <typename T>
 using underlying_type = typename std::underlying_type<T>::type;
 
 template <typename T>
-using is_pod = or_t<std::is_pod<T>, details::is_pod_impl<T>>;
+constexpr inline bool is_pod = std::is_pod_v<T> || details::is_pod_impl<T>::value;
 
 template <typename T>
-using is_class = std::is_class<T>;
+constexpr inline bool is_class = std::is_class_v<T>;
 
 template <typename T>
-using is_const = std::is_const<T>;
+constexpr inline bool is_const = std::is_const_v<T>;
 
 template <typename T>
-using is_pointer = std::is_pointer<T>;
+constexpr inline bool is_pointer = std::is_pointer_v<T>;
 
 template <typename T>
-using is_array = std::is_array<T>;
+constexpr inline bool is_array = std::is_array_v<T>;
 
 template <typename T>
-using is_void = std::is_void<T>;
+constexpr inline bool is_void = std::is_void_v<T>;
+
+template <typename T>
+constexpr inline bool is_floating_point = std::is_floating_point_v<T>;
+
+template <typename T>
+constexpr inline bool is_unsigned = std::is_unsigned_v<T>;
+
+template <typename T>
+constexpr inline bool is_signed = std::is_signed_v<T>;
+
+template <typename T>
+constexpr inline bool is_scalar = std::is_scalar_v<T>;
+
+template <typename T>
+constexpr inline bool is_integral = std::is_integral_v<T>;
 
 template <typename T1, typename T2>
-using is_same = std::is_same<T1, T2>;
+constexpr inline bool is_same = std::is_same_v<T1, T2>;
+
+template <typename Tbase, typename Tderived>
+constexpr inline bool is_base_of = std::is_base_of_v<Tbase, Tderived>;
+
+template <typename Tfrom, typename Tto>
+constexpr inline bool is_convertible = std::is_convertible_v<Tfrom, Tto>;
+
+template <typename T, typename... Args>
+constexpr inline bool is_constructible = std::is_constructible_v<T, Args...>;
 
 template <typename T>
-using is_template_arg = std::integral_constant<bool, std::is_integral<T>::value || std::is_enum<T>::value>;
+constexpr inline bool is_template_arg = std::is_integral<T>::value || std::is_enum<T>::value;
 
 template <typename T>
 using decay = typename std::decay<T>::type;
@@ -215,7 +228,7 @@ constexpr size_t widthof()
 }
 
 template <typename T>
-using is_compound = std::integral_constant<bool, !compound_type_traits<decay<T>>::is_scalar>;
+constexpr inline bool is_compound = !compound_type_traits<decay<T>>::is_scalar;
 
 template <typename T>
 using subtype = typename compound_type_traits<T>::subtype;
@@ -795,29 +808,23 @@ struct unique_enum_impl
 } // namespace details
 
 template <typename T>
-struct is_enabled : details::is_enabled_impl<T>
-{
-};
+constexpr inline bool is_enabled = details::is_enabled_impl<T>::value;
 
 template <typename Fn, typename... Args>
-struct is_callable : details::is_callable_impl<Fn, ctypes_t<Args...>>
-{
-};
+constexpr inline bool is_callable = details::is_callable_impl<Fn, ctypes_t<Args...>>::value;
 
 template <typename Ret, typename T>
-struct is_returning_type : details::is_returning_type_impl<Ret, T>
-{
-};
+constexpr inline bool is_returning_type = details::is_returning_type_impl<Ret, T>::value;
 
 namespace details
 {
-template <typename Fn, CMT_ENABLE_IF(is_callable<Fn()>::value)>
+template <typename Fn, CMT_ENABLE_IF(is_callable<Fn()>)>
 inline auto call_if_callable(Fn&& fn)
 {
     return fn();
 }
 
-template <typename Fn, CMT_ENABLE_IF(!is_callable<Fn()>::value)>
+template <typename Fn, CMT_ENABLE_IF(!is_callable<Fn()>)>
 inline auto call_if_callable(Fn&& fn)
 {
     return std::forward<Fn>(fn);
@@ -1026,10 +1033,10 @@ using findinttype = typename details::findinttype_impl<min, max, uint8_t, int8_t
                                                        int32_t, uint64_t, int64_t>::type;
 
 template <typename T>
-using is_number = details::is_number_impl<decay<T>>;
+constexpr inline bool is_number = details::is_number_impl<decay<T>>::value;
 
 template <typename... Ts>
-using is_numbers = and_t<details::is_number_impl<decay<Ts>>...>;
+constexpr inline bool is_numbers = (details::is_number_impl<decay<Ts>>> ::value && ...);
 
 namespace details
 {
@@ -1074,7 +1081,7 @@ struct carray<T, 1>
     CMT_MEM_INTRINSIC constexpr carray() CMT_NOEXCEPT = default;
     CMT_MEM_INTRINSIC constexpr carray(T val) CMT_NOEXCEPT : val(val) {}
 
-    template <typename Fn, size_t index = 0, CMT_ENABLE_IF(is_callable<Fn, csize_t<index>>::value)>
+    template <typename Fn, size_t index = 0, CMT_ENABLE_IF(is_callable<Fn, csize_t<index>>)>
     CMT_MEM_INTRINSIC constexpr carray(Fn&& fn, csize_t<index> = csize_t<index>{}) CMT_NOEXCEPT
         : val(static_cast<T>(fn(csize_t<index>())))
     {
@@ -1353,10 +1360,10 @@ struct value_type_impl<T, Fallback, void_t<typename T::value_type>>
 } // namespace details
 
 template <typename T>
-using has_begin_end = details::has_begin_end_impl<decay<T>>;
+constexpr inline bool has_begin_end = details::has_begin_end_impl<decay<T>>::value;
 
 template <typename T>
-using has_data_size = details::has_data_size_impl<decay<T>>;
+constexpr inline bool has_data_size = details::has_data_size_impl<decay<T>>::value;
 
 template <typename T>
 using value_type_of = typename decay<T>::value_type;
@@ -1382,7 +1389,7 @@ CMT_INTRINSIC void cforeach(cvals_t<T, values...>, Fn&& fn)
 #endif
 }
 
-template <typename T, typename Fn, CMT_ENABLE_IF(has_begin_end<T>::value)>
+template <typename T, typename Fn, CMT_ENABLE_IF(has_begin_end<T>)>
 CMT_INTRINSIC void cforeach(T&& list, Fn&& fn)
 {
     for (const auto& v : list)
@@ -1545,7 +1552,7 @@ template <typename T, typename Fn1, typename Fn2, typename... Fns>
 inline decltype(auto) cmatch_impl(T&& value, Fn1&& first, Fn2&& second, Fns&&... rest)
 {
     using first_arg        = typename function_arguments<Fn1>::template nth<0>;
-    constexpr bool is_same = std::is_same<decay<T>, decay<first_arg>>::value;
+    constexpr bool is_same = cometa::is_same<decay<T>, decay<first_arg>>;
     return cmatch_impl2(cbool_t<is_same>(), std::forward<T>(value), std::forward<Fn1>(first),
                         std::forward<Fn2>(second), std::forward<Fns>(rest)...);
 }
@@ -1618,12 +1625,12 @@ constexpr inline T choose_const_fallback(C1 c1)
  * CHECK( choose_const<f64>( 32.0f, 64.0 ) == 64.0 );
  * @endcode
  */
-template <typename T, typename C1, typename... Cs, CMT_ENABLE_IF(std::is_same<T, C1>::value)>
+template <typename T, typename C1, typename... Cs, CMT_ENABLE_IF(std::is_same_v<T, C1>)>
 constexpr inline T choose_const(C1 c1, Cs...)
 {
     return static_cast<T>(c1);
 }
-template <typename T, typename C1, typename... Cs, CMT_ENABLE_IF(!std::is_same<T, C1>::value)>
+template <typename T, typename C1, typename... Cs, CMT_ENABLE_IF(!std::is_same_v<T, C1>)>
 constexpr inline T choose_const(C1, Cs... constants)
 {
     return choose_const<T>(constants...);
@@ -1632,7 +1639,7 @@ constexpr inline T choose_const(C1, Cs... constants)
 template <typename T, typename C1, typename... Cs>
 constexpr inline T choose_const_fallback(C1 c1, Cs... constants)
 {
-    return std::is_same<T, C1>::value ? static_cast<T>(c1) : choose_const_fallback<T>(constants...);
+    return std::is_same_v<T, C1> ? static_cast<T>(c1) : choose_const_fallback<T>(constants...);
 }
 
 template <typename Tfrom>
@@ -1662,7 +1669,7 @@ struct signed_type_impl
     using type = T;
 };
 template <typename T>
-struct signed_type_impl<T, void_t<enable_if<std::is_unsigned<T>::value>>>
+struct signed_type_impl<T, void_t<enable_if<is_unsigned<T>>>>
 {
     using type = findinttype<std::numeric_limits<T>::min(), std::numeric_limits<T>::max()>;
 };
@@ -1852,12 +1859,12 @@ constexpr indicesfor_t<List...> indicesfor{};
 
 // Workaround for GCC 4.8
 template <typename T>
-constexpr conditional<std::is_scalar<T>::value, T, const T&> const_max(const T& x, const T& y)
+constexpr conditional<is_scalar<T>, T, const T&> const_max(const T& x, const T& y)
 {
     return x > y ? x : y;
 }
 template <typename T>
-constexpr conditional<std::is_scalar<T>::value, T, const T&> const_min(const T& x, const T& y)
+constexpr conditional<is_scalar<T>, T, const T&> const_min(const T& x, const T& y)
 {
     return x < y ? x : y;
 }

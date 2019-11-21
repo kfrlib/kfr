@@ -37,10 +37,10 @@ namespace intrinsics
 #if defined CMT_ARCH_SSSE3 && defined KFR_NATIVE_INTRINSICS
 
 // floating point
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
+template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> abs(const vec<T, N>& x) CMT_NOEXCEPT
 {
-    return x & avoid_odr_use(special_constants<T>::invhighbitmask());
+    return x & special_constants<T>::invhighbitmask();
 }
 
 KFR_INTRINSIC i64sse abs(const i64sse& x) CMT_NOEXCEPT
@@ -84,7 +84,7 @@ KFR_INTRINSIC u16avx512 abs(const u16avx512& x) CMT_NOEXCEPT { return x; }
 KFR_INTRINSIC u8avx512 abs(const u8avx512& x) CMT_NOEXCEPT { return x; }
 #endif
 
-KFR_HANDLE_ALL_SIZES_1_IF(abs, !is_f_class<T>::value)
+KFR_HANDLE_ALL_SIZES_1_IF(abs, !is_f_class<T>)
 
 #elif defined CMT_ARCH_NEON && defined KFR_NATIVE_INTRINSICS
 
@@ -108,7 +108,7 @@ KFR_INTRINSIC f64neon abs(const f64neon& x) CMT_NOEXCEPT { return vabsq_f64(x.v)
 #else
 KFR_INTRINSIC f64neon abs(const f64neon& x) CMT_NOEXCEPT
 {
-    return x & avoid_odr_use(special_constants<f64>::invhighbitmask());
+    return x & special_constants<f64>::invhighbitmask();
 }
 #endif
 
@@ -117,14 +117,14 @@ KFR_HANDLE_ALL_SIZES_1(abs)
 #else
 
 // floating point
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>::value)>
+template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> abs(const vec<T, N>& x) CMT_NOEXCEPT
 {
-    return x & avoid_odr_use(special_constants<T>::invhighbitmask());
+    return x & special_constants<T>::invhighbitmask();
 }
 
 // fallback
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
+template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> abs(const vec<T, N>& x) CMT_NOEXCEPT
 {
     return select(x >= T(0), x, -x);

@@ -26,7 +26,7 @@ TEST(vec_broadcast)
 template <typename Tout, typename Tin>
 bool is_in_range_of(Tin x)
 {
-    return (is_f_class<Tin>::value && is_f_class<Tout>::value) || static_cast<Tin>(static_cast<Tout>(x)) == x;
+    return (is_f_class<Tin> && is_f_class<Tout>) || static_cast<Tin>(static_cast<Tout>(x)) == x;
 }
 
 TEST(cast)
@@ -41,27 +41,27 @@ TEST(cast)
               vec<float, 4>{ 1.f, 2.f, 3.f, 4.f }, vec<float, 4>{ 11.f, 22.f, 33.f, 44.f } }) ==
           vec<vec<double, 4>, 2>{ vec<double, 4>{ 1., 2., 3., 4. }, vec<double, 4>{ 11., 22., 33., 44. } });
 
-    static_assert(std::is_convertible<float, f32x4>::value, "");
-    static_assert(std::is_convertible<float, f64x8>::value, "");
-    static_assert(std::is_convertible<float, u8x3>::value, "");
+    static_assert(is_convertible<float, f32x4>, "");
+    static_assert(is_convertible<float, f64x8>, "");
+    static_assert(is_convertible<float, u8x3>, "");
 
-    static_assert(std::is_convertible<u16x4, i32x4>::value, "");
-    static_assert(!std::is_convertible<u16x4, i32x3>::value, "");
-    static_assert(!std::is_convertible<u16x1, u16x16>::value, "");
+    static_assert(is_convertible<u16x4, i32x4>, "");
+    static_assert(!is_convertible<u16x4, i32x3>, "");
+    static_assert(!is_convertible<u16x1, u16x16>, "");
 
-    static_assert(is_same<decltype(innercast<f64>(f32x4x4(1))), f64x4x4>::value, "");
-    static_assert(is_same<decltype(innercast<f64>(f32x4(1))), f64x4>::value, "");
-    static_assert(is_same<decltype(innercast<f64>(f32(1))), f64>::value, "");
+    static_assert(is_same<decltype(innercast<f64>(f32x4x4(1))), f64x4x4>, "");
+    static_assert(is_same<decltype(innercast<f64>(f32x4(1))), f64x4>, "");
+    static_assert(is_same<decltype(innercast<f64>(f32(1))), f64>, "");
 
-    // N/A static_assert(is_same<decltype(innercast<f64x4>(f32x4x4(1))), f64x4x4>::value, "");
-    static_assert(is_same<decltype(innercast<f64x4>(f32x4(1))), f64x4x4>::value, "");
-    static_assert(is_same<decltype(innercast<f64x4>(f32(1))), f64x4>::value, "");
+    // N/A static_assert(is_same<decltype(innercast<f64x4>(f32x4x4(1))), f64x4x4>, "");
+    static_assert(is_same<decltype(innercast<f64x4>(f32x4(1))), f64x4x4>, "");
+    static_assert(is_same<decltype(innercast<f64x4>(f32(1))), f64x4>, "");
 
-    // N/A static_assert(is_same<decltype(elemcast<f64>(f32x4x4(1))), f64x4>::value, "");
-    static_assert(is_same<decltype(elemcast<f64>(f32x4(1))), f64x4>::value, "");
+    // N/A static_assert(is_same<decltype(elemcast<f64>(f32x4x4(1))), f64x4>, "");
+    static_assert(is_same<decltype(elemcast<f64>(f32x4(1))), f64x4>, "");
 
-    static_assert(is_same<decltype(elemcast<f64x4>(f32x4x4(1))), f64x4x4>::value, "");
-    static_assert(is_same<decltype(elemcast<f64x4>(f32x4(1))), f64x4x4>::value, "");
+    static_assert(is_same<decltype(elemcast<f64x4>(f32x4x4(1))), f64x4x4>, "");
+    static_assert(is_same<decltype(elemcast<f64x4>(f32x4(1))), f64x4x4>, "");
 
     testo::scope s("");
     s.text = ("target_type = u8");

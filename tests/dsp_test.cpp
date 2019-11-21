@@ -455,7 +455,7 @@ inline const univector<T, Tag>& choose_array(const univector<T, Tag>& array, con
     return array;
 }
 
-template <typename T, typename T2, typename... Ts, univector_tag Tag, KFR_ENABLE_IF(!is_same<T, T2>::value)>
+template <typename T, typename T2, typename... Ts, univector_tag Tag, KFR_ENABLE_IF(!is_same<T, T2>)>
 inline const univector<T, Tag>& choose_array(const univector<T2, Tag>&, const univector<Ts, Tag>&... arrays)
 {
     return choose_array<T>(arrays...);

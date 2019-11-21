@@ -36,8 +36,8 @@ TEST(adjacent)
 
 TEST(padded)
 {
-    static_assert(is_infinite<decltype(padded(counter()))>::value, "");
-    static_assert(is_infinite<decltype(padded(truncate(counter(), 100)))>::value, "");
+    static_assert(is_infinite<decltype(padded(counter()))>, "");
+    static_assert(is_infinite<decltype(padded(truncate(counter(), 100)))>, "");
 
     CHECK_EXPRESSION(padded(truncate(counter(), 6), -1), infinite_size,
                      [](size_t i) { return i >= 6 ? -1 : i; });

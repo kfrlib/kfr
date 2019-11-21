@@ -131,13 +131,10 @@ struct simd_small_array<f32, 2, f64>
 };
 
 template <typename T>
-struct is_simd_small_array : cfalse_t
-{
-};
+constexpr inline bool is_simd_small_array = false;
+
 template <typename T, size_t N, typename U>
-struct is_simd_small_array<simd_small_array<T, N, U>> : ctrue_t
-{
-};
+constexpr inline bool is_simd_small_array<simd_small_array<T, N, U>> = true;
 
 #define KFR_SIMD_TYPE(T, N, ...)                                                                             \
     template <>                                                                                              \
@@ -993,7 +990,7 @@ KFR_INTRINSIC simd_array<T, N> to_simd_array(const simd<T, N>& x) CMT_NOEXCEPT
 
 #if defined CMT_COMPILER_MSVC
 
-template <typename T, size_t N, KFR_ENABLE_IF(!is_simd_small_array<simd<T, N>>::value)>
+template <typename T, size_t N, KFR_ENABLE_IF(!is_simd_small_array<simd<T, N>>)>
 KFR_INTRINSIC simd<T, N> from_simd_array(const simd_array<T, N>& x) CMT_NOEXCEPT
 {
     return bitcast_anything<simd<T, N>>(x);
@@ -1005,7 +1002,7 @@ KFR_INTRINSIC simd<T, N> from_simd_array_impl(const simd_array<T, N>& x, csizes_
     return { static_cast<unwrap_bit<T>>(x.val[indices])... };
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_simd_small_array<simd<T, N>>::value)>
+template <typename T, size_t N, KFR_ENABLE_IF(is_simd_small_array<simd<T, N>>)>
 KFR_INTRINSIC simd<T, N> from_simd_array(const simd_array<T, N>& x) CMT_NOEXCEPT
 {
     return from_simd_array_impl(x, csizeseq<N>);
@@ -1093,7 +1090,7 @@ KFR_INTRINSIC simd<Tout, N> simd_allones() CMT_NOEXCEPT
 template <typename Tout, typename Tin, size_t N, size_t Nout = (sizeof(Tin) * N / sizeof(Tout))
 #ifdef _MSC_VER
                                                      ,
-          KFR_ENABLE_IF((Nout == 1 || N == 1) && !is_same<Tout, Tin>::value)
+          KFR_ENABLE_IF((Nout == 1 || N == 1) && !is_same<Tout, Tin>)
 #else
                                                      ,
           KFR_ENABLE_IF(Nout == 1 || N == 1)
@@ -1109,7 +1106,7 @@ KFR_INTRINSIC simd<Tout, Nout> simd_bitcast(simd_cvt_t<Tout, Tin, N>, const simd
 template <typename Tout, typename Tin, size_t N, size_t Nout = (sizeof(Tin) * N / sizeof(Tout))
 #ifdef _MSC_VER
                                                      ,
-          KFR_ENABLE_IF(Nout > 1 && N > 1 && !is_same<Tout, Tin>::value)
+          KFR_ENABLE_IF(Nout > 1 && N > 1 && !is_same<Tout, Tin>)
 #else
                                                      ,
           KFR_ENABLE_IF(Nout > 1 && N > 1)
@@ -1169,8 +1166,7 @@ KFR_INTRINSIC const simd<T, N2>& simd_shuffle(simd2_t<T, N1, N2>, const simd<T, 
 
 // concat()
 template <typename T, size_t N,
-          KFR_ENABLE_IF(is_poweroftwo(N) &&
-                        is_same<simd<T, N + N>, simd_halves<unwrap_bit<T>, N + N>>::value)>
+          KFR_ENABLE_IF(is_poweroftwo(N) && is_same<simd<T, N + N>, simd_halves<unwrap_bit<T>, N + N>>)>
 KFR_INTRINSIC simd<T, N + N> simd_shuffle(simd2_t<T, N, N>, const simd<T, N>& x, const simd<T, N>& y,
                                           csizeseq_t<N + N>, overload_priority<8>) CMT_NOEXCEPT
 {
@@ -1191,7 +1187,7 @@ KFR_INTRINSIC simd<T, N> simd_broadcast(simd_t<T, N>, identity<T> value) CMT_NOE
 }
 
 template <typename T, size_t N,
-          KFR_ENABLE_IF(is_poweroftwo(N) && is_same<simd<T, N>, simd_halves<unwrap_bit<T>, N>>::value)>
+          KFR_ENABLE_IF(is_poweroftwo(N) && is_same<simd<T, N>, simd_halves<unwrap_bit<T>, N>>)>
 KFR_INTRINSIC simd<T, N / 2> simd_shuffle(simd_t<T, N>, const simd<T, N>& x, csizeseq_t<N / 2>,
                                           overload_priority<7>) CMT_NOEXCEPT
 {
@@ -1199,7 +1195,7 @@ KFR_INTRINSIC simd<T, N / 2> simd_shuffle(simd_t<T, N>, const simd<T, N>& x, csi
 }
 
 template <typename T, size_t N,
-          KFR_ENABLE_IF(is_poweroftwo(N) && is_same<simd<T, N>, simd_halves<unwrap_bit<T>, N>>::value)>
+          KFR_ENABLE_IF(is_poweroftwo(N) && is_same<simd<T, N>, simd_halves<unwrap_bit<T>, N>>)>
 KFR_INTRINSIC simd<T, N / 2> simd_shuffle(simd_t<T, N>, const simd<T, N>& x, csizeseq_t<N / 2, N / 2>,
                                           overload_priority<7>) CMT_NOEXCEPT
 {

@@ -122,11 +122,11 @@ KFR_INTRINSIC f32avx512 fract(const f32avx512& x) { return x - floor(x); }
 KFR_INTRINSIC f64avx512 fract(const f64avx512& x) { return x - floor(x); }
 #endif
 
-KFR_HANDLE_ALL_SIZES_1_IF(floor, is_f_class<T>::value)
-KFR_HANDLE_ALL_SIZES_1_IF(ceil, is_f_class<T>::value)
-KFR_HANDLE_ALL_SIZES_1_IF(round, is_f_class<T>::value)
-KFR_HANDLE_ALL_SIZES_1_IF(trunc, is_f_class<T>::value)
-KFR_HANDLE_ALL_SIZES_1_IF(fract, is_f_class<T>::value)
+KFR_HANDLE_ALL_SIZES_1_IF(floor, is_f_class<T>)
+KFR_HANDLE_ALL_SIZES_1_IF(ceil, is_f_class<T>)
+KFR_HANDLE_ALL_SIZES_1_IF(round, is_f_class<T>)
+KFR_HANDLE_ALL_SIZES_1_IF(trunc, is_f_class<T>)
+KFR_HANDLE_ALL_SIZES_1_IF(fract, is_f_class<T>)
 
 #else
 
@@ -195,27 +195,27 @@ KFR_INTRINSIC vec<f64, N> fract(const vec<f64, N>& x)
 }
 #endif
 
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
+template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> floor(const vec<T, N>& value)
 {
     return value;
 }
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
+template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> ceil(const vec<T, N>& value)
 {
     return value;
 }
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
+template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> trunc(const vec<T, N>& value)
 {
     return value;
 }
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
+template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> round(const vec<T, N>& value)
 {
     return value;
 }
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>::value)>
+template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> fract(const vec<T, N>&)
 {
     return T(0);

@@ -120,27 +120,27 @@ struct output_expression
 
 /// @brief Check if the type argument is an input expression
 template <typename E>
-using is_input_expression = std::is_base_of<input_expression, decay<E>>;
+constexpr inline bool is_input_expression = is_base_of<input_expression, decay<E>>;
 
 /// @brief Check if the type arguments are an input expressions
 template <typename... Es>
-using is_input_expressions = or_t<std::is_base_of<input_expression, decay<Es>>...>;
+constexpr inline bool is_input_expressions = (is_base_of<input_expression, decay<Es>> || ...);
 
 /// @brief Check if the type argument is an output expression
 template <typename E>
-using is_output_expression = std::is_base_of<output_expression, decay<E>>;
+constexpr inline bool is_output_expression = is_base_of<output_expression, decay<E>>;
 
 /// @brief Check if the type arguments are an output expressions
 template <typename... Es>
-using is_output_expressions = or_t<std::is_base_of<output_expression, decay<Es>>...>;
+constexpr inline bool is_output_expressions = (is_base_of<output_expression, decay<Es>> || ...);
 
 /// @brief Check if the type argument is a number or a vector of numbers
 template <typename T>
-using is_numeric = is_number<deep_subtype<T>>;
+constexpr inline bool is_numeric = is_number<deep_subtype<T>>;
 
 /// @brief Check if the type arguments are a numbers or a vectors of numbers
 template <typename... Ts>
-using is_numeric_args = and_t<is_numeric<Ts>...>;
+constexpr inline bool is_numeric_args = (is_numeric<Ts> && ...);
 
 #ifdef KFR_TESTING
 namespace internal
@@ -194,20 +194,20 @@ struct expression_lambda : input_expression
     using value_type = T;
     KFR_MEM_INTRINSIC expression_lambda(Fn&& fn) : fn(std::move(fn)) {}
 
-    template <size_t N, KFR_ENABLE_IF(N&& is_callable<Fn, cinput_t, size_t, vec_shape<T, N>>::value)>
+    template <size_t N, KFR_ENABLE_IF(N&& is_callable<Fn, cinput_t, size_t, vec_shape<T, N>>)>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_lambda& self, cinput_t cinput, size_t index,
                                                 vec_shape<T, N> y)
     {
         return self.fn(cinput, index, y);
     }
 
-    template <size_t N, KFR_ENABLE_IF(N&& is_callable<Fn, size_t>::value)>
+    template <size_t N, KFR_ENABLE_IF(N&& is_callable<Fn, size_t>)>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_lambda& self, cinput_t, size_t index,
                                                 vec_shape<T, N>)
     {
         return apply(self.fn, enumerate<size_t, N>() + index);
     }
-    template <size_t N, KFR_ENABLE_IF(N&& is_callable<Fn>::value)>
+    template <size_t N, KFR_ENABLE_IF(N&& is_callable<Fn>)>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_lambda& self, cinput_t, size_t,
                                                 vec_shape<T, N>)
     {
@@ -240,7 +240,7 @@ struct is_infinite_impl<T, void_t<decltype(T::size())>>
 } // namespace internal
 
 template <typename T>
-using is_infinite = typename internal::is_infinite_impl<T>::type;
+constexpr inline bool is_infinite = internal::is_infinite_impl<T>::value;
 
 namespace internal
 {
@@ -340,7 +340,7 @@ struct arg_impl
 };
 
 template <typename T1, typename T2>
-struct arg_impl<T1, T2, void_t<enable_if<is_vec_element<T1>::value>>>
+struct arg_impl<T1, T2, void_t<enable_if<is_vec_element<T1>>>>
 {
     using type = expression_scalar<T1>;
 };
@@ -416,8 +416,8 @@ CMT_INTRINSIC static size_t process(OutputExpr&& out, const InputExpr& in, size_
                                     cinput_t cinput = nullptr, csize_t<groupsize> = csize_t<groupsize>())
 {
     using Tin = value_type_of<InputExpr>;
-    static_assert(is_output_expression<OutputExpr>::value, "OutFn must be an expression");
-    static_assert(is_input_expression<InputExpr>::value, "Fn must be an expression");
+    static_assert(is_output_expression<OutputExpr>, "OutFn must be an expression");
+    static_assert(is_input_expression<InputExpr>, "Fn must be an expression");
 
     size = size_sub(size_min(out.size(), in.size(), size_add(size, start)), start);
     if (size == 0 || size == infinite_size)
@@ -477,7 +477,7 @@ struct output_expression_base : output_expression
     }
 };
 
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
 CMT_INTRINSIC internal::expression_function<fn::interleave, E1, E2> interleave(E1&& x, E2&& y)
 {
     return { fn::interleave(), std::forward<E1>(x), std::forward<E2>(y) };

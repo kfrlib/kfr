@@ -370,7 +370,8 @@ struct audio_reader_flac : audio_reader<T>
             return 0;
         if (audio_sample_traits<T>::type == audio_sample_type::i32)
         {
-            const size_t sz = drflac_read_pcm_frames_s32(f, size / fmt.channels, reinterpret_cast<i32*>(data));
+            const size_t sz =
+                drflac_read_pcm_frames_s32(f, size / fmt.channels, reinterpret_cast<i32*>(data));
             position += sz;
             return sz * fmt.channels;
         }
@@ -442,7 +443,8 @@ struct audio_reader_mp3 : audio_reader<T>
             return 0;
         if (audio_sample_traits<T>::type == audio_sample_type::i16)
         {
-            const size_t sz = drmp3_read_pcm_frames_s16(&f, size / fmt.channels, reinterpret_cast<i16*>(data));
+            const size_t sz =
+                drmp3_read_pcm_frames_s16(&f, size / fmt.channels, reinterpret_cast<i16*>(data));
             position += sz;
             return sz * fmt.channels;
         }

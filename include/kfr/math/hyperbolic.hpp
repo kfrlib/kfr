@@ -33,56 +33,56 @@ inline namespace CMT_ARCH_NAME
 {
 
 /// @brief Returns the hyperbolic sine of the x
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> sinh(const T1& x)
 {
     return intrinsics::sinh(x);
 }
 
 /// @brief Returns template expression that returns the hyperbolic sine of the x
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_FUNCTION internal::expression_function<fn::sinh, E1> sinh(E1&& x)
 {
     return { fn::sinh(), std::forward<E1>(x) };
 }
 
 /// @brief Returns the hyperbolic cosine of the x
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> cosh(const T1& x)
 {
     return intrinsics::cosh(x);
 }
 
 /// @brief Returns template expression that returns the hyperbolic cosine of the x
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_FUNCTION internal::expression_function<fn::cosh, E1> cosh(E1&& x)
 {
     return { fn::cosh(), std::forward<E1>(x) };
 }
 
 /// @brief Returns the hyperbolic tangent of the x
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> tanh(const T1& x)
 {
     return intrinsics::tanh(x);
 }
 
 /// @brief Returns template expression that returns the hyperbolic tangent of the x
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_FUNCTION internal::expression_function<fn::tanh, E1> tanh(E1&& x)
 {
     return { fn::tanh(), std::forward<E1>(x) };
 }
 
 /// @brief Returns the hyperbolic cotangent of the x
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> coth(const T1& x)
 {
     return intrinsics::coth(x);
 }
 
 /// @brief Returns template expression that returns the hyperbolic cotangent of the x
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_FUNCTION internal::expression_function<fn::coth, E1> coth(E1&& x)
 {
     return { fn::coth(), std::forward<E1>(x) };
@@ -90,7 +90,7 @@ KFR_FUNCTION internal::expression_function<fn::coth, E1> coth(E1&& x)
 
 /// @brief Returns the hyperbolic sine of the even elements of the x and the hyperbolic cosine of the odd
 /// elements of the x
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> sinhcosh(const T1& x)
 {
     return intrinsics::sinhcosh(x);
@@ -98,7 +98,7 @@ KFR_FUNCTION flt_type<T1> sinhcosh(const T1& x)
 
 /// @brief Returns template expression that returns the hyperbolic sine of the even elements of the x and the
 /// hyperbolic cosine of the odd elements of the x
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_FUNCTION internal::expression_function<fn::sinhcosh, E1> sinhcosh(E1&& x)
 {
     return { fn::sinhcosh(), std::forward<E1>(x) };
@@ -106,7 +106,7 @@ KFR_FUNCTION internal::expression_function<fn::sinhcosh, E1> sinhcosh(E1&& x)
 
 /// @brief Returns the hyperbolic cosine of the even elements of the x and the hyperbolic sine of the odd
 /// elements of the x
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> coshsinh(const T1& x)
 {
     return intrinsics::coshsinh(x);
@@ -114,7 +114,7 @@ KFR_FUNCTION flt_type<T1> coshsinh(const T1& x)
 
 /// @brief Returns template expression that returns the hyperbolic cosine of the even elements of the x and
 /// the hyperbolic sine of the odd elements of the x
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_FUNCTION internal::expression_function<fn::coshsinh, E1> coshsinh(E1&& x)
 {
     return { fn::coshsinh(), std::forward<E1>(x) };

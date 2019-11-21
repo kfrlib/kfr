@@ -97,67 +97,67 @@ CMT_PRAGMA_GNU(GCC diagnostic pop)
 /// c_pi<f64, 4>      = 4pi
 /// c_pi<f64, 3, 4>   = 3/4pi
 template <typename T, int m = 1, int d = 1>
-constexpr subtype<T> c_pi = subtype<T>(3.1415926535897932384626433832795 * m / d);
+constexpr inline subtype<T> c_pi = subtype<T>(3.1415926535897932384626433832795 * m / d);
 
 /// π² (pi²)
 /// c_sqr_pi<f64, 4>      = 4pi²
 /// c_sqr_pi<f64, 3, 4>   = 3/4pi²
 template <typename T, int m = 1, int d = 1>
-constexpr subtype<T> c_sqr_pi = subtype<T>(9.8696044010893586188344909998762 * m / d);
+constexpr inline subtype<T> c_sqr_pi = subtype<T>(9.8696044010893586188344909998762 * m / d);
 
 /// 1/π (1/pi)
 /// c_recip_pi<f64>       1/pi
 /// c_recip_pi<f64, 4>    4/pi
 template <typename T, int m = 1, int d = 1>
-constexpr subtype<T> c_recip_pi = subtype<T>(0.31830988618379067153776752674503 * m / d);
+constexpr inline subtype<T> c_recip_pi = subtype<T>(0.31830988618379067153776752674503 * m / d);
 
 /// degree to radian conversion factor
 template <typename T>
-constexpr subtype<T> c_degtorad = c_pi<T, 1, 180>;
+constexpr inline subtype<T> c_degtorad = c_pi<T, 1, 180>;
 
 /// radian to degree conversion factor
 template <typename T>
-constexpr subtype<T> c_radtodeg = c_recip_pi<T, 180>;
+constexpr inline subtype<T> c_radtodeg = c_recip_pi<T, 180>;
 
 /// e, Euler's number
 template <typename T, int m = 1, int d = 1>
-constexpr subtype<T> c_e = subtype<T>(2.718281828459045235360287471352662 * m / d);
+constexpr inline subtype<T> c_e = subtype<T>(2.718281828459045235360287471352662 * m / d);
 
 template <typename T>
-constexpr unsigned c_mantissa_bits = sizeof(subtype<T>) == 32 ? 23 : 52;
+constexpr inline unsigned c_mantissa_bits = sizeof(subtype<T>) == 32 ? 23 : 52;
 
 template <typename T>
-constexpr subtype<T> c_mantissa_mask = (subtype<T>(1) << c_mantissa_bits<T>)-1;
+constexpr inline subtype<T> c_mantissa_mask = (subtype<T>(1) << c_mantissa_bits<T>)-1;
 
 template <typename T>
-constexpr subtype<T> c_epsilon = (std::numeric_limits<subtype<T>>::epsilon());
+constexpr inline subtype<T> c_epsilon = (std::numeric_limits<subtype<T>>::epsilon());
 
 /// infinity
 template <typename T>
-constexpr subtype<T> c_infinity = std::numeric_limits<subtype<T>>::infinity();
+constexpr inline subtype<T> c_infinity = std::numeric_limits<subtype<T>>::infinity();
 
 /// -infinity
 template <typename T>
-constexpr subtype<T> c_neginfinity = -std::numeric_limits<subtype<T>>::infinity();
+constexpr inline subtype<T> c_neginfinity = -std::numeric_limits<subtype<T>>::infinity();
 
 /// Quiet NaN
 template <typename T>
-constexpr subtype<T> c_qnan = std::numeric_limits<subtype<T>>::quiet_NaN();
+constexpr inline subtype<T> c_qnan = std::numeric_limits<subtype<T>>::quiet_NaN();
 
 template <typename T>
-constexpr subtype<T> c_recip_log_2 = subtype<T>(1.442695040888963407359924681001892137426645954);
+constexpr inline subtype<T> c_recip_log_2 = subtype<T>(1.442695040888963407359924681001892137426645954);
 
 template <typename T>
-constexpr subtype<T> c_recip_log_10 = subtype<T>(0.43429448190325182765112891891661);
+constexpr inline subtype<T> c_recip_log_10 = subtype<T>(0.43429448190325182765112891891661);
 
 template <typename T>
-constexpr subtype<T> c_log_2 = subtype<T>(0.69314718055994530941723212145818);
+constexpr inline subtype<T> c_log_2 = subtype<T>(0.69314718055994530941723212145818);
 
 template <typename T>
-constexpr subtype<T> c_log_10 = subtype<T>(2.3025850929940456840179914546844);
+constexpr inline subtype<T> c_log_10 = subtype<T>(2.3025850929940456840179914546844);
 
 template <typename T, int m = 1, int d = 1>
-constexpr subtype<T> c_sqrt_2 = subtype<T>(1.4142135623730950488016887242097 * m / d);
+constexpr inline subtype<T> c_sqrt_2 = subtype<T>(1.4142135623730950488016887242097 * m / d);
 } // namespace kfr
 
 CMT_PRAGMA_MSVC(warning(pop))

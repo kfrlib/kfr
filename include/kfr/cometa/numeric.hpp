@@ -124,25 +124,24 @@ constexpr inline datatype operator&(datatype x, datatype y)
 }
 
 template <typename T>
-constexpr datatype typeclass = std::is_floating_point<typename compound_type_traits<T>::subtype>::value
-                                   ? datatype::f
-                                   : std::is_integral<typename compound_type_traits<T>::subtype>::value
-                                         ? (std::is_unsigned<typename compound_type_traits<T>::subtype>::value
-                                                ? datatype::u
-                                                : datatype::i)
-                                         : datatype();
+constexpr inline datatype typeclass = is_floating_point<typename compound_type_traits<T>::subtype>
+                                          ? datatype::f
+                                          : is_integral<typename compound_type_traits<T>::subtype>
+                                                ? (is_unsigned<typename compound_type_traits<T>::subtype>
+                                                       ? datatype::u
+                                                       : datatype::i)
+                                                : datatype();
 
 template <typename T>
-using is_f_class = std::integral_constant<bool, typeclass<T> == datatype::f>;
+constexpr inline bool is_f_class = typeclass<T> == datatype::f;
 template <typename T>
-using is_u_class = std::integral_constant<bool, typeclass<T> == datatype::u>;
+constexpr inline bool is_u_class = typeclass<T> == datatype::u;
 template <typename T>
-using is_i_class = std::integral_constant<bool, typeclass<T> == datatype::i>;
+constexpr inline bool is_i_class = typeclass<T> == datatype::i;
 
 template <typename T>
 struct typebits
 {
-    // static_assert(is_number<deep_subtype<T>>::value, "");
     constexpr static size_t bits  = sizeof(typename compound_type_traits<T>::subtype) * 8;
     constexpr static size_t width = compound_type_traits<T>::is_scalar ? 0 : compound_type_traits<T>::width;
     using subtype                 = typename compound_type_traits<T>::subtype;
@@ -159,7 +158,7 @@ using utype =
     typename compound_type_traits<T>::template deep_rebind<unsigned_type<typebits<deep_subtype<T>>::bits>>;
 
 template <typename T>
-using uitype = conditional<is_i_class<deep_subtype<T>>::value, T, utype<T>>;
+using uitype = conditional<is_i_class<deep_subtype<T>>, T, utype<T>>;
 
 template <typename T>
 using fsubtype = ftype<subtype<T>>;

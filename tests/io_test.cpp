@@ -44,7 +44,8 @@ TEST(read_wav_file)
 #ifndef KFR_DISABLE_FLAC
 TEST(read_flac_file)
 {
-    audio_reader_flac<float> reader(open_file_for_reading(KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/sine.flac")));
+    audio_reader_flac<float> reader(
+        open_file_for_reading(KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/sine.flac")));
     CHECK(reader.format().channels == 2u);
     CHECK(reader.format().type == audio_sample_type::i32);
     CHECK(reader.format().samplerate == 44100);
@@ -59,7 +60,8 @@ TEST(read_flac_file)
 #ifndef KFR_DISABLE_MP3
 TEST(read_mp3_file)
 {
-    audio_reader_mp3<float> reader(open_file_for_reading(KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/sine.mp3")));
+    audio_reader_mp3<float> reader(
+        open_file_for_reading(KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/sine.mp3")));
     CHECK(reader.format().channels == 2u);
     CHECK(reader.format().type == audio_sample_type::i16);
     CHECK(reader.format().samplerate == 44100);

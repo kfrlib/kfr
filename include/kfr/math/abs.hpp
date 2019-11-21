@@ -35,7 +35,7 @@ inline namespace CMT_ARCH_NAME
 /**
  * @brief Returns the absolute value of x.
  */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_INTRINSIC T1 abs(const T1& x)
 {
     return intrinsics::abs(x);
@@ -44,7 +44,7 @@ KFR_INTRINSIC T1 abs(const T1& x)
 /**
  * @brief Returns template expression that returns the absolute value of x.
  */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_INTRINSIC internal::expression_function<fn::abs, E1> abs(E1&& x)
 {
     return { fn::abs(), std::forward<E1>(x) };

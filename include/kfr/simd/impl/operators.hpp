@@ -119,31 +119,31 @@ KFR_COMPLEX_OP_CVT(bor)
 
 #define KFR_VECVEC_OP2(fn)                                                                                   \
     template <typename T1, typename T2, size_t N1, size_t N2, typename C = common_type<T1, T2>,              \
-              KFR_ENABLE_IF(is_simd_type<C>::value)>                                                         \
+              KFR_ENABLE_IF(is_simd_type<C>)>                                                                \
     KFR_INTRINSIC vec<vec<C, N1>, N2> fn(const vec<vec<T1, N1>, N2>& x, const vec<vec<T2, N1>, N2>& y)       \
     {                                                                                                        \
         return fn(innercast<C>(x.flatten()), innercast<C>(y.flatten())).v;                                   \
     }                                                                                                        \
     template <typename T1, typename T2, size_t N1, size_t N2, typename C = common_type<T1, T2>,              \
-              KFR_ENABLE_IF(is_simd_type<C>::value)>                                                         \
+              KFR_ENABLE_IF(is_simd_type<C>)>                                                                \
     KFR_INTRINSIC vec<vec<C, N1>, N2> fn(const vec<vec<T1, N1>, N2>& x, const T2& y)                         \
     {                                                                                                        \
         return fn(innercast<C>(x.flatten()), innercast<C>(y)).v;                                             \
     }                                                                                                        \
     template <typename T1, typename T2, size_t N1, size_t N2, typename C = common_type<T1, T2>,              \
-              KFR_ENABLE_IF(is_simd_type<C>::value)>                                                         \
+              KFR_ENABLE_IF(is_simd_type<C>)>                                                                \
     KFR_INTRINSIC vec<vec<C, N1>, N2> fn(const vec<vec<T1, N1>, N2>& x, const vec<T2, N1>& y)                \
     {                                                                                                        \
         return fn(innercast<C>(x.flatten()), repeat<N2>(innercast<C>(y.flatten()))).v;                       \
     }                                                                                                        \
     template <typename T1, typename T2, size_t N1, size_t N2, typename C = common_type<T1, T2>,              \
-              KFR_ENABLE_IF(is_simd_type<C>::value)>                                                         \
+              KFR_ENABLE_IF(is_simd_type<C>)>                                                                \
     KFR_INTRINSIC vec<vec<C, N1>, N2> fn(const T1& x, const vec<vec<T2, N1>, N2>& y)                         \
     {                                                                                                        \
         return fn(innercast<C>(x), innercast<C>(y.flatten())).v;                                             \
     }                                                                                                        \
     template <typename T1, typename T2, size_t N1, size_t N2, typename C = common_type<T1, T2>,              \
-              KFR_ENABLE_IF(is_simd_type<C>::value)>                                                         \
+              KFR_ENABLE_IF(is_simd_type<C>)>                                                                \
     KFR_INTRINSIC vec<vec<C, N1>, N2> fn(const vec<T1, N1>& x, const vec<vec<T2, N1>, N2>& y)                \
     {                                                                                                        \
         return fn(repeat<N2>(innercast<C>(x.flatten())), innercast<C>(y.flatten())).v;                       \
@@ -158,47 +158,47 @@ KFR_COMPLEX_OP_CVT(bor)
 
 #define KFR_VECVECVEC_OP2(fn)                                                                                \
     template <typename T1, typename T2, size_t N1, size_t N2, size_t N3, typename C = common_type<T1, T2>,   \
-              KFR_ENABLE_IF(is_simd_type<C>::value)>                                                         \
+              KFR_ENABLE_IF(is_simd_type<C>)>                                                                \
     KFR_INTRINSIC vec<vec<vec<C, N1>, N2>, N3> fn(const vec<vec<vec<T1, N1>, N2>, N3>& x,                    \
                                                   const vec<vec<vec<T2, N1>, N2>, N3>& y)                    \
     { /* VVV @ VVV */                                                                                        \
         return fn(innercast<C>(x.flatten()), innercast<C>(y.flatten())).v;                                   \
     }                                                                                                        \
     template <typename T1, typename T2, size_t N1, size_t N2, size_t N3, typename C = common_type<T1, T2>,   \
-              KFR_ENABLE_IF(is_simd_type<C>::value)>                                                         \
+              KFR_ENABLE_IF(is_simd_type<C>)>                                                                \
     KFR_INTRINSIC vec<vec<vec<C, N1>, N2>, N3> fn(const vec<vec<vec<T1, N1>, N2>, N3>& x,                    \
                                                   const vec<vec<T2, N1>, N2>& y)                             \
     { /* VVV @ VV */                                                                                         \
         return fn(innercast<C>(x.flatten()), repeat<N3>(innercast<C>(y.flatten()))).v;                       \
     }                                                                                                        \
     template <typename T1, typename T2, size_t N1, size_t N2, size_t N3, typename C = common_type<T1, T2>,   \
-              KFR_ENABLE_IF(is_simd_type<C>::value)>                                                         \
+              KFR_ENABLE_IF(is_simd_type<C>)>                                                                \
     KFR_INTRINSIC vec<vec<vec<C, N1>, N2>, N3> fn(const vec<vec<T1, N1>, N2>& x,                             \
                                                   const vec<vec<vec<T2, N1>, N2>, N3>& y)                    \
     { /* VV @ VVV */                                                                                         \
         return fn(repeat<N3>(innercast<C>(x.flatten())), innercast<C>(y.flatten())).v;                       \
     }                                                                                                        \
     template <typename T1, typename T2, size_t N1, size_t N2, size_t N3, typename C = common_type<T1, T2>,   \
-              KFR_ENABLE_IF(is_simd_type<C>::value)>                                                         \
+              KFR_ENABLE_IF(is_simd_type<C>)>                                                                \
     KFR_INTRINSIC vec<vec<vec<C, N1>, N2>, N3> fn(const vec<vec<vec<T1, N1>, N2>, N3>& x, const T2& y)       \
     { /* VVV @ S */                                                                                          \
         return fn(innercast<C>(x.flatten()), innercast<C>(y)).v;                                             \
     }                                                                                                        \
     template <typename T1, typename T2, size_t N1, size_t N2, size_t N3, typename C = common_type<T1, T2>,   \
-              KFR_ENABLE_IF(is_simd_type<C>::value)>                                                         \
+              KFR_ENABLE_IF(is_simd_type<C>)>                                                                \
     KFR_INTRINSIC vec<vec<vec<C, N1>, N2>, N3> fn(const vec<vec<vec<T1, N1>, N2>, N3>& x,                    \
                                                   const vec<T2, N1>& y)                                      \
     { /* VVV @ V */                                                                                          \
         return fn(innercast<C>(x.flatten()), repeat<N2>(innercast<C>(y.flatten()))).v;                       \
     }                                                                                                        \
     template <typename T1, typename T2, size_t N1, size_t N2, size_t N3, typename C = common_type<T1, T2>,   \
-              KFR_ENABLE_IF(is_simd_type<C>::value)>                                                         \
+              KFR_ENABLE_IF(is_simd_type<C>)>                                                                \
     KFR_INTRINSIC vec<vec<vec<C, N1>, N2>, N3> fn(const T1& x, const vec<vec<vec<T2, N1>, N2>, N3>& y)       \
     { /* S @ VVV */                                                                                          \
         return fn(innercast<C>(x), innercast<C>(y.flatten())).v;                                             \
     }                                                                                                        \
     template <typename T1, typename T2, size_t N1, size_t N2, size_t N3, typename C = common_type<T1, T2>,   \
-              KFR_ENABLE_IF(is_simd_type<C>::value)>                                                         \
+              KFR_ENABLE_IF(is_simd_type<C>)>                                                                \
     KFR_INTRINSIC vec<vec<vec<C, N1>, N2>, N3> fn(const vec<T1, N1>& x,                                      \
                                                   const vec<vec<vec<T2, N1>, N2>, N3>& y)                    \
     { /* V @ VVV */                                                                                          \

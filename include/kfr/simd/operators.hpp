@@ -292,7 +292,7 @@ constexpr KFR_INTRINSIC T add(const T& x)
 /**
  * @brief Returns sum of all the arguments passed to a function.
  */
-template <typename T1, typename T2, typename... Ts, KFR_ENABLE_IF(is_numeric_args<T1, T2, Ts...>::value)>
+template <typename T1, typename T2, typename... Ts, KFR_ENABLE_IF(is_numeric_args<T1, T2, Ts...>)>
 constexpr KFR_INTRINSIC common_type<T1, T2, Ts...> add(const T1& x, const T2& y, const Ts&... rest)
 {
     return x + add(y, rest...);
@@ -307,7 +307,7 @@ KFR_FN(add)
 /**
  * @brief Returns template expression that returns sum of all the arguments passed to a function.
  */
-template <typename... E, KFR_ENABLE_IF((is_input_expressions<E...>::value) && true)>
+template <typename... E, KFR_ENABLE_IF((is_input_expressions<E...>)&&true)>
 KFR_INTRINSIC internal::expression_function<fn::add, E...> add(E&&... x)
 {
     return { fn::add(), std::forward<E>(x)... };
@@ -325,7 +325,7 @@ constexpr KFR_INTRINSIC T sub(initialvalue<T>)
 }
 KFR_FN(sub)
 
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
 KFR_INTRINSIC internal::expression_function<fn::sub, E1, E2> sub(E1&& x, E2&& y)
 {
     return { fn::sub(), std::forward<E1>(x), std::forward<E2>(y) };
@@ -356,7 +356,7 @@ KFR_FN(mul)
 /**
  * @brief Returns template expression that returns product of all the arguments passed to a function.
  */
-template <typename... E, KFR_ENABLE_IF(is_input_expressions<E...>::value)>
+template <typename... E, KFR_ENABLE_IF(is_input_expressions<E...>)>
 KFR_INTRINSIC internal::expression_function<fn::mul, E...> mul(E&&... x)
 {
     return { fn::mul(), std::forward<E>(x)... };
@@ -365,7 +365,7 @@ KFR_INTRINSIC internal::expression_function<fn::mul, E...> mul(E&&... x)
 /**
  * @brief Returns square of x.
  */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 constexpr inline T1 sqr(const T1& x)
 {
     return x * x;
@@ -375,7 +375,7 @@ KFR_FN(sqr)
 /**
  * @brief Returns template expression that returns square of x.
  */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_INTRINSIC internal::expression_function<fn::sqr, E1> sqr(E1&& x)
 {
     return { fn::sqr(), std::forward<E1>(x) };
@@ -384,7 +384,7 @@ KFR_INTRINSIC internal::expression_function<fn::sqr, E1> sqr(E1&& x)
 /**
  * @brief Returns cube of x.
  */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>::value)>
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 constexpr inline T1 cub(const T1& x)
 {
     return sqr(x) * x;
@@ -394,31 +394,31 @@ KFR_FN(cub)
 /**
  * @brief Returns template expression that returns cube of x.
  */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_INTRINSIC internal::expression_function<fn::cub, E1> cub(E1&& x)
 {
     return { fn::cub(), std::forward<E1>(x) };
 }
 
-template <typename T, KFR_ENABLE_IF(is_numeric_args<T>::value)>
+template <typename T, KFR_ENABLE_IF(is_numeric_args<T>)>
 constexpr KFR_INTRINSIC T pow2(const T& x)
 {
     return sqr(x);
 }
 
-template <typename T, KFR_ENABLE_IF(is_numeric_args<T>::value)>
+template <typename T, KFR_ENABLE_IF(is_numeric_args<T>)>
 constexpr KFR_INTRINSIC T pow3(const T& x)
 {
     return cub(x);
 }
 
-template <typename T, KFR_ENABLE_IF(is_numeric_args<T>::value)>
+template <typename T, KFR_ENABLE_IF(is_numeric_args<T>)>
 constexpr KFR_INTRINSIC T pow4(const T& x)
 {
     return sqr(sqr(x));
 }
 
-template <typename T, KFR_ENABLE_IF(is_numeric_args<T>::value)>
+template <typename T, KFR_ENABLE_IF(is_numeric_args<T>)>
 constexpr KFR_INTRINSIC T pow5(const T& x)
 {
     return pow4(x) * x;
@@ -428,22 +428,22 @@ KFR_FN(pow3)
 KFR_FN(pow4)
 KFR_FN(pow5)
 
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_INTRINSIC internal::expression_function<fn::pow2, E1> pow2(E1&& x)
 {
     return { fn::pow2(), std::forward<E1>(x) };
 }
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_INTRINSIC internal::expression_function<fn::pow3, E1> pow3(E1&& x)
 {
     return { fn::pow3(), std::forward<E1>(x) };
 }
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_INTRINSIC internal::expression_function<fn::pow4, E1> pow4(E1&& x)
 {
     return { fn::pow4(), std::forward<E1>(x) };
 }
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_INTRINSIC internal::expression_function<fn::pow5, E1> pow5(E1&& x)
 {
     return { fn::pow5(), std::forward<E1>(x) };
@@ -470,7 +470,7 @@ constexpr inline T ipow(const T& x, int base)
 }
 KFR_FN(ipow)
 
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
 KFR_INTRINSIC internal::expression_function<fn::ipow, E1, E2> ipow(E1&& x, E2&& b)
 {
     return { fn::ipow(), std::forward<E1>(x), std::forward<E2>(b) };
@@ -535,14 +535,14 @@ KFR_FN(fmsub)
 
 /// @brief Linear blend of `x` and `y` (`c` must be in the range 0...+1)
 /// Returns `x + ( y - x ) * c`
-template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>::value)>
+template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>)>
 KFR_INTRINSIC constexpr common_type<T1, T2, T3> mix(const T1& c, const T2& x, const T3& y)
 {
     return fmadd(c, y - x, x);
 }
 
 /// @brief Linear blend of `x` and `y` (`c` must be in the range -1...+1)
-template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>::value)>
+template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>)>
 KFR_INTRINSIC constexpr common_type<T1, T2, T3> mixs(const T1& c, const T2& x, const T3& y)
 {
     return mix(fmadd(c, 0.5, 0.5), x, y);
@@ -550,13 +550,13 @@ KFR_INTRINSIC constexpr common_type<T1, T2, T3> mixs(const T1& c, const T2& x, c
 KFR_FN(mix)
 KFR_FN(mixs)
 
-template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2, E3>::value)>
+template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2, E3>)>
 KFR_INTRINSIC internal::expression_function<fn::mix, E1, E2, E3> mix(E1&& c, E2&& x, E3&& y)
 {
     return { fn::mix(), std::forward<E1>(c), std::forward<E2>(x), std::forward<E3>(y) };
 }
 
-template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2, E3>::value)>
+template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2, E3>)>
 KFR_INTRINSIC internal::expression_function<fn::mixs, E1, E2, E3> mixs(E1&& c, E2&& x, E3&& y)
 {
     return { fn::mixs(), std::forward<E1>(c), std::forward<E2>(x), std::forward<E3>(y) };
@@ -610,14 +610,14 @@ constexpr KFR_INTRINSIC common_type<T1, T2, T3, Ts...> horner_odd(const T1& x, c
 /// @brief Calculate polynomial using Horner's method
 ///
 /// ``horner(x, 1, 2, 3)`` is equivalent to \(3x^2 + 2x + 1\)
-template <typename T1, typename... Ts, KFR_ENABLE_IF(is_numeric_args<T1, Ts...>::value)>
+template <typename T1, typename... Ts, KFR_ENABLE_IF(is_numeric_args<T1, Ts...>)>
 constexpr KFR_INTRINSIC common_type<T1, Ts...> horner(const T1& x, const Ts&... c)
 {
     return intrinsics::horner(x, c...);
 }
 KFR_FN(horner)
 
-template <typename... E, KFR_ENABLE_IF(is_input_expressions<E...>::value)>
+template <typename... E, KFR_ENABLE_IF(is_input_expressions<E...>)>
 KFR_INTRINSIC internal::expression_function<fn::horner, E...> horner(E&&... x)
 {
     return { fn::horner(), std::forward<E>(x)... };
@@ -626,14 +626,14 @@ KFR_INTRINSIC internal::expression_function<fn::horner, E...> horner(E&&... x)
 /// @brief Calculate polynomial using Horner's method (even powers)
 ///
 /// ``horner_even(x, 1, 2, 3)`` is equivalent to \(3x^4 + 2x^2 + 1\)
-template <typename T1, typename... Ts, KFR_ENABLE_IF(is_numeric_args<T1, Ts...>::value)>
+template <typename T1, typename... Ts, KFR_ENABLE_IF(is_numeric_args<T1, Ts...>)>
 constexpr KFR_INTRINSIC common_type<T1, Ts...> horner_even(const T1& x, const Ts&... c)
 {
     return intrinsics::horner_even(x, c...);
 }
 KFR_FN(horner_even)
 
-template <typename... E, KFR_ENABLE_IF(is_input_expressions<E...>::value)>
+template <typename... E, KFR_ENABLE_IF(is_input_expressions<E...>)>
 KFR_INTRINSIC internal::expression_function<fn::horner_even, E...> horner_even(E&&... x)
 {
     return { fn::horner_even(), std::forward<E>(x)... };
@@ -642,14 +642,14 @@ KFR_INTRINSIC internal::expression_function<fn::horner_even, E...> horner_even(E
 /// @brief Calculate polynomial using Horner's method (odd powers)
 ///
 /// ``horner_odd(x, 1, 2, 3)`` is equivalent to \(3x^5 + 2x^3 + 1x\)
-template <typename T1, typename... Ts, KFR_ENABLE_IF(is_numeric_args<T1, Ts...>::value)>
+template <typename T1, typename... Ts, KFR_ENABLE_IF(is_numeric_args<T1, Ts...>)>
 constexpr KFR_INTRINSIC common_type<T1, Ts...> horner_odd(const T1& x, const Ts&... c)
 {
     return intrinsics::horner_odd(x, c...);
 }
 KFR_FN(horner_odd)
 
-template <typename... E, KFR_ENABLE_IF(is_input_expressions<E...>::value)>
+template <typename... E, KFR_ENABLE_IF(is_input_expressions<E...>)>
 KFR_INTRINSIC internal::expression_function<fn::horner_odd, E...> horner_odd(E&&... x)
 {
     return { fn::horner_odd(), std::forward<E>(x)... };
@@ -660,7 +660,7 @@ KFR_INTRINSIC internal::expression_function<fn::horner_odd, E...> horner_odd(E&&
 template <typename T>
 constexpr KFR_INTRINSIC T reciprocal(const T& x)
 {
-    static_assert(std::is_floating_point<subtype<T>>::value, "T must be floating point type");
+    static_assert(is_floating_point<subtype<T>>, "T must be floating point type");
     return subtype<T>(1) / x;
 }
 KFR_FN(reciprocal)
@@ -725,67 +725,67 @@ KFR_INTRINSIC vec<T, N> negodd(const vec<T, N>& x)
     return x ^ broadcast<N>(T(), -T());
 }
 
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_INTRINSIC internal::expression_function<fn::neg, E1> operator-(E1&& e1)
 {
     return { fn::neg(), std::forward<E1>(e1) };
 }
 
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>::value)>
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_INTRINSIC internal::expression_function<fn::bitwisenot, E1> operator~(E1&& e1)
 {
     return { fn::bitwisenot(), std::forward<E1>(e1) };
 }
 
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
 KFR_INTRINSIC internal::expression_function<fn::add, E1, E2> operator+(E1&& e1, E2&& e2)
 {
     return { fn::add(), std::forward<E1>(e1), std::forward<E2>(e2) };
 }
 
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
 KFR_INTRINSIC internal::expression_function<fn::sub, E1, E2> operator-(E1&& e1, E2&& e2)
 {
     return { fn::sub(), std::forward<E1>(e1), std::forward<E2>(e2) };
 }
 
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
 KFR_INTRINSIC internal::expression_function<fn::mul, E1, E2> operator*(E1&& e1, E2&& e2)
 {
     return { fn::mul(), std::forward<E1>(e1), std::forward<E2>(e2) };
 }
 
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
 KFR_INTRINSIC internal::expression_function<fn::div, E1, E2> operator/(E1&& e1, E2&& e2)
 {
     return { fn::div(), std::forward<E1>(e1), std::forward<E2>(e2) };
 }
 
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
 KFR_INTRINSIC internal::expression_function<fn::bitwiseand, E1, E2> operator&(E1&& e1, E2&& e2)
 {
     return { fn::bitwiseand(), std::forward<E1>(e1), std::forward<E2>(e2) };
 }
 
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
 KFR_INTRINSIC internal::expression_function<fn::bitwiseor, E1, E2> operator|(E1&& e1, E2&& e2)
 {
     return { fn::bitwiseor(), std::forward<E1>(e1), std::forward<E2>(e2) };
 }
 
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
 KFR_INTRINSIC internal::expression_function<fn::bitwisexor, E1, E2> operator^(E1&& e1, E2&& e2)
 {
     return { fn::bitwisexor(), std::forward<E1>(e1), std::forward<E2>(e2) };
 }
 
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
 KFR_INTRINSIC internal::expression_function<fn::shl, E1, E2> operator<<(E1&& e1, E2&& e2)
 {
     return { fn::shl(), std::forward<E1>(e1), std::forward<E2>(e2) };
 }
 
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>::value)>
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
 KFR_INTRINSIC internal::expression_function<fn::shr, E1, E2> operator>>(E1&& e1, E2&& e2)
 {
     return { fn::shr(), std::forward<E1>(e1), std::forward<E2>(e2) };
