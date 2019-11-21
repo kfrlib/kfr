@@ -169,7 +169,7 @@ KFR_FN(reduce)
  * \f]
  */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_INTRINSIC T sum(const E1& x)
+KFR_FUNCTION T sum(const E1& x)
 {
     static_assert(!is_infinite<E1>, "e1 must be a sized expression (use slice())");
     return reduce(x, fn::add());
@@ -184,7 +184,7 @@ KFR_INTRINSIC T sum(const E1& x)
  * \f]
  */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_INTRINSIC T mean(const E1& x)
+KFR_FUNCTION T mean(const E1& x)
 {
     static_assert(!is_infinite<E1>, "e1 must be a sized expression (use slice())");
     return reduce(x, fn::add(), fn_generic::pass_through(), fn::final_mean());
@@ -196,7 +196,7 @@ KFR_INTRINSIC T mean(const E1& x)
  * x must have its size and type specified.
  */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_INTRINSIC T minof(const E1& x)
+KFR_FUNCTION T minof(const E1& x)
 {
     static_assert(!is_infinite<E1>, "e1 must be a sized expression (use slice())");
     return reduce(x, fn::min());
@@ -208,7 +208,7 @@ KFR_INTRINSIC T minof(const E1& x)
  * x must have its size and type specified.
  */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_INTRINSIC T maxof(const E1& x)
+KFR_FUNCTION T maxof(const E1& x)
 {
     static_assert(!is_infinite<E1>, "e1 must be a sized expression (use slice())");
     return reduce(x, fn::max());
@@ -220,7 +220,7 @@ KFR_INTRINSIC T maxof(const E1& x)
  * x must have its size and type specified.
  */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_INTRINSIC T absminof(const E1& x)
+KFR_FUNCTION T absminof(const E1& x)
 {
     static_assert(!is_infinite<E1>, "e1 must be a sized expression (use slice())");
     return reduce(x, fn::absmin());
@@ -232,7 +232,7 @@ KFR_INTRINSIC T absminof(const E1& x)
  * x must have its size and type specified.
  */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_INTRINSIC T absmaxof(const E1& x)
+KFR_FUNCTION T absmaxof(const E1& x)
 {
     static_assert(!is_infinite<E1>, "e1 must be a sized expression (use slice())");
     return reduce(x, fn::absmax());
@@ -249,7 +249,7 @@ KFR_INTRINSIC T absmaxof(const E1& x)
 template <typename E1, typename E2,
           typename T = value_type_of<decltype(std::declval<E1>() * std::declval<E2>())>,
           KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
-KFR_INTRINSIC T dotproduct(E1&& x, E2&& y)
+KFR_FUNCTION T dotproduct(E1&& x, E2&& y)
 {
     auto m    = std::forward<E1>(x) * std::forward<E2>(y);
     using E12 = decltype(m);
@@ -266,7 +266,7 @@ KFR_INTRINSIC T dotproduct(E1&& x, E2&& y)
    \f]
  */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_INTRINSIC T rms(const E1& x)
+KFR_FUNCTION T rms(const E1& x)
 {
     static_assert(!is_infinite<E1>, "e1 must be a sized expression (use slice())");
     return reduce(x, fn::add(), fn::sqr(), fn::final_rootmean());
@@ -281,7 +281,7 @@ KFR_INTRINSIC T rms(const E1& x)
    \f]
  */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_INTRINSIC T sumsqr(const E1& x)
+KFR_FUNCTION T sumsqr(const E1& x)
 {
     static_assert(!is_infinite<E1>, "e1 must be a sized expression (use slice())");
     return reduce(x, fn::add(), fn::sqr());
@@ -296,7 +296,7 @@ KFR_INTRINSIC T sumsqr(const E1& x)
    \f]
  */
 template <typename E1, typename T = value_type_of<E1>, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_INTRINSIC T product(const E1& x)
+KFR_FUNCTION T product(const E1& x)
 {
     static_assert(!is_infinite<E1>, "e1 must be a sized expression (use slice())");
     return reduce(x, fn::mul());
