@@ -155,9 +155,17 @@ struct compoundcast<vec<T, N>>
 template <typename T, size_t N1, size_t N2>
 struct compoundcast<vec<vec<T, N1>, N2>>
 {
-    static vec<T, N1 * N2> to_flat(const vec<vec<T, N1>, N2>& x) { return x; }
+    static vec<T, N1 * N2> to_flat(const vec<vec<T, N1>, N2>& x) { return x.v; }
 
-    static vec<vec<T, N1>, N2> from_flat(const vec<T, N1 * N2>& x) { return x; }
+    static vec<vec<T, N1>, N2> from_flat(const vec<T, N1 * N2>& x) { return x.v; }
+};
+
+template <typename T, size_t N1, size_t N2, size_t N3>
+struct compoundcast<vec<vec<vec<T, N1>, N2>, N3>>
+{
+    static vec<T, N1 * N2 * N3> to_flat(const vec<vec<vec<T, N1>, N2>, N3>& x) { return x.v; }
+
+    static vec<vec<vec<T, N1>, N2>, N3> from_flat(const vec<T, N1 * N2 * N3>& x) { return x.v; }
 };
 } // namespace internal
 
@@ -594,6 +602,14 @@ constexpr KFR_INTRINSIC vec<vec<Tout, N1>, N2> cast(const vec<vec<Tin, N1>, N2>&
     return vec<vec<Tout, N1>, N2>(value);
 }
 
+template <typename Tout, typename Tin, size_t N1, size_t N2, size_t N3,
+          KFR_ENABLE_IF(!is_same<Tin, Tout>::value)>
+constexpr KFR_INTRINSIC vec<vec<vec<Tout, N1>, N2>, N3> cast(const vec<vec<vec<Tin, N1>, N2>, N3>& value)
+    CMT_NOEXCEPT
+{
+    return vec<vec<vec<Tout, N1>, N2>, N3>(value);
+}
+
 template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(is_same<Tin, Tout>::value)>
 constexpr KFR_INTRINSIC const vec<Tin, N>& cast(const vec<Tin, N>& value) CMT_NOEXCEPT
 {
@@ -602,6 +618,14 @@ constexpr KFR_INTRINSIC const vec<Tin, N>& cast(const vec<Tin, N>& value) CMT_NO
 
 template <typename Tout, typename Tin, size_t N1, size_t N2, KFR_ENABLE_IF(is_same<Tin, Tout>::value)>
 constexpr KFR_INTRINSIC const vec<vec<Tin, N1>, N2>& cast(const vec<vec<Tin, N1>, N2>& value) CMT_NOEXCEPT
+{
+    return value;
+}
+
+template <typename Tout, typename Tin, size_t N1, size_t N2, size_t N3,
+          KFR_ENABLE_IF(is_same<Tin, Tout>::value)>
+constexpr KFR_INTRINSIC const vec<vec<vec<Tin, N1>, N2>, N3>& cast(
+    const vec<vec<vec<Tin, N1>, N2>, N3>& value) CMT_NOEXCEPT
 {
     return value;
 }
@@ -627,6 +651,14 @@ constexpr KFR_INTRINSIC vec<vec<Tout, N1>, N2> innercast(const vec<vec<Tin, N1>,
     return vec<vec<Tout, N1>, N2>(value);
 }
 
+template <typename Tout, typename Tin, size_t N1, size_t N2, size_t N3,
+          KFR_ENABLE_IF(!is_same<Tin, Tout>::value)>
+constexpr KFR_INTRINSIC vec<vec<vec<Tout, N1>, N2>, N3> innercast(const vec<vec<vec<Tin, N1>, N2>, N3>& value)
+    CMT_NOEXCEPT
+{
+    return vec<vec<vec<Tout, N1>, N2>, N3>(value);
+}
+
 template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(is_same<Tin, Tout>::value)>
 constexpr KFR_INTRINSIC const vec<Tin, N>& innercast(const vec<Tin, N>& value) CMT_NOEXCEPT
 {
@@ -636,6 +668,14 @@ constexpr KFR_INTRINSIC const vec<Tin, N>& innercast(const vec<Tin, N>& value) C
 template <typename Tout, typename Tin, size_t N1, size_t N2, KFR_ENABLE_IF(is_same<Tin, Tout>::value)>
 constexpr KFR_INTRINSIC const vec<vec<Tin, N1>, N2>& innercast(const vec<vec<Tin, N1>, N2>& value)
     CMT_NOEXCEPT
+{
+    return value;
+}
+
+template <typename Tout, typename Tin, size_t N1, size_t N2, size_t N3,
+          KFR_ENABLE_IF(is_same<Tin, Tout>::value)>
+constexpr KFR_INTRINSIC const vec<vec<vec<Tin, N1>, N2>, N3>& innercast(
+    const vec<vec<vec<Tin, N1>, N2>, N3>& value) CMT_NOEXCEPT
 {
     return value;
 }
@@ -658,6 +698,13 @@ template <typename Tout, typename Tin, size_t N1, size_t N2, KFR_ENABLE_IF(!is_s
 constexpr KFR_INTRINSIC vec<Tout, N2> elemcast(const vec<vec<Tin, N1>, N2>& value) CMT_NOEXCEPT
 {
     return vec<Tout, N2>(value);
+}
+
+template <typename Tout, typename Tin, size_t N1, size_t N2, size_t N3,
+          KFR_ENABLE_IF(!is_same<Tin, Tout>::value)>
+constexpr KFR_INTRINSIC vec<Tout, N3> elemcast(const vec<vec<vec<Tin, N1>, N2>, N3>& value) CMT_NOEXCEPT
+{
+    return vec<Tout, N3>(value);
 }
 
 template <typename To, typename From>
@@ -1195,6 +1242,22 @@ struct conversion<vec<vec<To, N1>, N2>, vec<From, Ns1>>
     }
 };
 
+// vector to vector<vector<vector>>
+template <typename To, typename From, size_t N1, size_t N2, size_t N3, size_t Ns1>
+struct conversion<vec<vec<vec<To, N1>, N2>, N3>, vec<From, Ns1>>
+{
+    static_assert(N1 == Ns1, "");
+    static_assert(!is_compound<To>::value, "");
+    static_assert(!is_compound<From>::value, "");
+
+    static vec<vec<vec<To, N1>, N2>, N3> cast(const vec<From, N1>& value)
+    {
+        return vec<vec<vec<To, N1>, N2>, N3>::from_flatten(
+            kfr::innercast<To>(value.flatten())
+                .shuffle(csizeseq<N2 * vec<From, N1>::scalar_size()> % csize<N2>));
+    }
+};
+
 // vector<vector> to vector<vector>
 template <typename To, typename From, size_t N1, size_t N2, size_t NN1, size_t NN2>
 struct conversion<vec<vec<To, N1>, N2>, vec<vec<From, NN1>, NN2>>
@@ -1207,6 +1270,22 @@ struct conversion<vec<vec<To, N1>, N2>, vec<vec<From, NN1>, NN2>>
     static vec<vec<To, N1>, N2> cast(const vec<vec<From, N1>, N2>& value)
     {
         return vec<vec<To, N1>, N2>::from_flatten(kfr::innercast<To>(value.flatten()));
+    }
+};
+
+// vector<vector<vector>> to vector<vector<vector>>
+template <typename To, typename From, size_t N1, size_t N2, size_t N3, size_t NN1, size_t NN2, size_t NN3>
+struct conversion<vec<vec<vec<To, N1>, N2>, N3>, vec<vec<vec<From, NN1>, NN2>, NN3>>
+{
+    static_assert(N1 == NN1, "");
+    static_assert(N2 == NN2, "");
+    static_assert(N3 == NN3, "");
+    static_assert(!is_compound<To>::value, "");
+    static_assert(!is_compound<From>::value, "");
+
+    static vec<vec<vec<To, N1>, N2>, N3> cast(const vec<vec<vec<From, N1>, N2>, N3>& value)
+    {
+        return vec<vec<vec<To, N1>, N2>, N3>::from_flatten(kfr::innercast<To>(value.flatten()));
     }
 };
 } // namespace internal
@@ -1243,6 +1322,40 @@ struct vec_vec_template
     using type = vec<vec<T, N1>, N2>;
 };
 
+namespace internal
+{
+
+template <typename T, size_t... Ns>
+struct vecx_t;
+
+template <typename T>
+struct vecx_t<T>
+{
+    using type = T;
+};
+
+template <typename T, size_t N1>
+struct vecx_t<T, N1>
+{
+    using type = vec<T, N1>;
+};
+
+template <typename T, size_t N1, size_t N2>
+struct vecx_t<T, N1, N2>
+{
+    using type = vec<vec<T, N1>, N2>;
+};
+
+template <typename T, size_t N1, size_t N2, size_t N3>
+struct vecx_t<T, N1, N2, N3>
+{
+    using type = vec<vec<vec<T, N1>, N2>, N3>;
+};
+} // namespace internal
+
+template <typename T, size_t... Ns>
+using vecx = typename internal::vecx_t<T, Ns...>::type;
+
 } // namespace CMT_ARCH_NAME
 template <typename T1, typename T2, size_t N>
 struct common_type_impl<kfr::vec<T1, N>, kfr::vec<T2, N>>
@@ -1271,6 +1384,7 @@ struct common_type_impl<kfr::vec<kfr::vec<T1, N1>, N2>, kfr::vec<T2, N1>>
     : common_type_from_subtypes<T1, T2, kfr::vec_vec_template<N1, N2>::template type>
 {
 };
+
 } // namespace kfr
 
 namespace cometa

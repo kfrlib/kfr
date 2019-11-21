@@ -177,8 +177,6 @@ using namespace kfr;
 
 #define TEST_ASM_IF(fn, MACRO) TEST_ASM_I(fn, MACRO) TEST_ASM_F(fn, MACRO)
 
-#if 1
-
 TEST_ASM_UIF(add, TEST_ASM_VTY2)
 
 TEST_ASM_UIF(sub, TEST_ASM_VTY2)
@@ -284,8 +282,6 @@ TEST_FFT_GEN(f64)
 
 #endif
 
-#endif
-
 TEST_ASM_F(sin, TEST_ASM_VTY1_F)
 
 TEST_ASM_F(cos, TEST_ASM_VTY1_F)
@@ -296,154 +292,7 @@ namespace kfr
 #ifdef KFR_SHOW_NOT_OPTIMIZED
 KFR_PUBLIC void not_optimized(const char* fn) CMT_NOEXCEPT { puts(fn); }
 #endif
+
 } // namespace kfr
-
-KFR_PUBLIC void test_shuffle_old1(f32x1& x, const f32x4& y)
-{
-    x.v = kfr::intrinsics::simd_shuffle(kfr::intrinsics::simd_t<f32, 4>{}, y.v, csizes<2>, overload_auto);
-}
-
-KFR_PUBLIC void test_shuffle_old2(f32x4& x, const f32x4& y)
-{
-    x.v = kfr::intrinsics::simd_shuffle(kfr::intrinsics::simd_t<f32, 4>{}, y.v, csizes<3, 2, 1, 0>,
-                                        overload_auto);
-}
-
-KFR_PUBLIC void test_shuffle_old3(f32x4& x, const f32x4& y)
-{
-    x.v = kfr::intrinsics::simd_shuffle(kfr::intrinsics::simd_t<f32, 4>{}, y.v, csizes<0, 1, 2, 3>,
-                                        overload_auto);
-}
-
-KFR_PUBLIC void test_shuffle_old4(f32x2& x, const f32x4& y)
-{
-    x.v = kfr::intrinsics::simd_shuffle(kfr::intrinsics::simd_t<f32, 4>{}, y.v, csizes<2, 3>, overload_auto);
-}
-
-KFR_PUBLIC void test_shuffle_old5(f32x8& x, const f32x4& y)
-{
-    x.v = kfr::intrinsics::simd_shuffle(kfr::intrinsics::simd_t<f32, 4>{}, y.v,
-                                        csizes<3, 2, 1, 0, 0, 1, 2, 3>, overload_auto);
-}
-
-KFR_PUBLIC void test_shuffle_old6(f32x8& x, const f32x4& y)
-{
-    x.v = kfr::intrinsics::simd_shuffle(kfr::intrinsics::simd_t<f32, 4>{}, y.v,
-                                        csizes<7, 6, 5, 4, 3, 2, 1, 0>, overload_auto);
-}
-
-KFR_PUBLIC void test_shuffle_old9(vec<f32, 3>& x, const vec<f32, 15>& y)
-{
-    x.v = kfr::intrinsics::simd_shuffle(kfr::intrinsics::simd_t<f32, 15>{}, y.v, csizes<3, 2, 1>,
-                                        overload_auto);
-}
-
-KFR_PUBLIC void test_shuffle_new1(f32x1& x, const f32x4& y)
-{
-    x.v = kfr::intrinsics::universal_shuffle(kfr::intrinsics::simd_t<f32, 4>{}, y.v, csizes<2>);
-}
-
-KFR_PUBLIC void test_shuffle_new2(f32x4& x, const f32x4& y)
-{
-    x.v = kfr::intrinsics::universal_shuffle(kfr::intrinsics::simd_t<f32, 4>{}, y.v, csizes<3, 2, 1, 0>);
-}
-
-KFR_PUBLIC void test_shuffle_new3(f32x4& x, const f32x4& y)
-{
-    x.v = kfr::intrinsics::universal_shuffle(kfr::intrinsics::simd_t<f32, 4>{}, y.v, csizes<0, 1, 2, 3>);
-}
-
-KFR_PUBLIC void test_shuffle_new4(f32x2& x, const f32x4& y)
-{
-    x.v = kfr::intrinsics::universal_shuffle(kfr::intrinsics::simd_t<f32, 4>{}, y.v, csizes<2, 3>);
-}
-
-KFR_PUBLIC void test_shuffle_new5(f32x8& x, const f32x4& y)
-{
-    x.v = kfr::intrinsics::universal_shuffle(kfr::intrinsics::simd_t<f32, 4>{}, y.v,
-                                             csizes<3, 2, 1, 0, 0, 1, 2, 3>);
-}
-
-KFR_PUBLIC void test_shuffle_new6(f32x8& x, const f32x4& y)
-{
-    x.v = kfr::intrinsics::universal_shuffle(kfr::intrinsics::simd_t<f32, 4>{}, y.v,
-                                             csizes<7, 6, 5, 4, 3, 2, 1, 0>);
-}
-
-KFR_PUBLIC void test_shuffle_new7(f32x1& x, const f32x32& y)
-{
-    x.v = kfr::intrinsics::universal_shuffle(kfr::intrinsics::simd_t<f32, 32>{}, (y + 1.f).v, csizes<19>);
-}
-
-KFR_PUBLIC void test_shuffle_new8(f32x8& x, const f32x8& y)
-{
-    x.v = kfr::intrinsics::universal_shuffle(kfr::intrinsics::simd_t<f32, 8>{}, y.v,
-                                             csizes<3, 2, 1, 0, 3, 2, 1, 0>);
-}
-
-KFR_PUBLIC void test_shuffle_new9(vec<f32, 3>& x, const vec<f32, 15>& y)
-{
-    x.v = kfr::intrinsics::universal_shuffle(kfr::intrinsics::simd_t<f32, 15>{}, y.v, csizes<3, 2, 1>);
-}
-
-KFR_PUBLIC void test_shuffle_new9a(vec<f32, 3>& x, const vec<f32, 15>& y)
-{
-    x.v = kfr::intrinsics::universal_shuffle(kfr::intrinsics::simd_t<f32, 15>{}, y.v, csizes<5, 6, 7>);
-}
-
-KFR_PUBLIC void test_shuffle_new9b(vec<f32, 3>& x, const vec<f32, 15>& y)
-{
-    x.v = kfr::intrinsics::universal_shuffle(kfr::intrinsics::simd_t<f32, 15>{}, y.v, csizes<11, 11, 11>);
-}
-
-KFR_PUBLIC void test_shuffle_new9c(vec<f32, 3>& x, const vec<f32, 15>& y)
-{
-    x.v = kfr::intrinsics::universal_shuffle(kfr::intrinsics::simd_t<f32, 15>{}, y.v, csizes<3, 4, 5>);
-}
-
-KFR_PUBLIC void test_shuffle_new10(vec<f32, 15>& x)
-{
-    x.v = kfr::intrinsics::universal_shuffle(kfr::intrinsics::simd_t<f32, 1>{}, 0.f,
-                                             csizes<1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15>);
-}
-KFR_PUBLIC void test_shuffle_new11(vec<f32, 15>& x, float y)
-{
-    x.v = kfr::intrinsics::universal_shuffle(kfr::intrinsics::simd_t<f32, 1>{}, y,
-                                             csizes<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>);
-}
-KFR_PUBLIC void test_shuffle_new12(vec<f32, 32>& x, const vec<f32, 32>& y)
-{
-    x.v =
-        kfr::intrinsics::universal_shuffle(kfr::intrinsics::simd_t<f32, 32>{}, y.v, csizeseq<32> ^ csize<1>);
-}
-KFR_PUBLIC void test_shuffle_new13(vec<f32, 8>& x, const vec<f32, 8>& y)
-{
-    x.v = kfr::intrinsics::universal_shuffle(kfr::intrinsics::simd_t<f32, 8>{}, y.v,
-                                             csizes<0, 2, 4, 6, 1, 3, 5, 7>);
-}
-KFR_PUBLIC void test_shuffle_new14(vec<f32, 8>& x, const vec<f32, 8>& y)
-{
-    x.v = kfr::intrinsics::universal_shuffle(kfr::intrinsics::simd_t<f32, 8>{}, y.v,
-                                             csizes<0, 4, 1, 5, 2, 6, 3, 7>);
-}
-KFR_PUBLIC void test_shuffle_new15(vec<f32, 4>& x, const vec<f32, 8>& y)
-{
-    x.v = kfr::intrinsics::universal_shuffle(kfr::intrinsics::simd_t<f32, 8>{}, y.v, csizes<0, 5, 2, 7>);
-}
-KFR_PUBLIC void test_shuffle_new16(vec<f32, 2>& x, const vec<f32, 2>& y)
-{
-    x.v = kfr::intrinsics::universal_shuffle(kfr::intrinsics::simd_t<f32, 2>{}, y.v, csizes<1, 0>);
-}
-KFR_PUBLIC void test_shuffle_new17(vec<f32, 16>& x, const vec<f32, 16>& y)
-{
-    x.v = kfr::intrinsics::universal_shuffle(kfr::intrinsics::simd_t<f32, 16>{}, y.v,
-                                             csizes<0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15>);
-}
-
-KFR_PUBLIC float tuple_assign()
-{
-    auto [x, y, z, w] = f32x4(1.f, 2.f, 3.f, 4.f);
-    return x + y * y + z * z * z + w * w * w * w;
-}
 
 int main() { println(library_version()); }
