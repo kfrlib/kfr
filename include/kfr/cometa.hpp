@@ -1036,7 +1036,7 @@ template <typename T>
 constexpr inline bool is_number = details::is_number_impl<decay<T>>::value;
 
 template <typename... Ts>
-constexpr inline bool is_numbers = (details::is_number_impl<decay<Ts>>> ::value && ...);
+constexpr inline bool is_numbers = (details::is_number_impl<decay<Ts>>::value && ...);
 
 namespace details
 {
