@@ -32,6 +32,11 @@
 #include "../simd/vec.hpp"
 #include "file.hpp"
 
+#if !defined CMT_ARCH_SSE2 && !defined CMT_ARCH_ARM64
+#define DR_MP3_NO_SIMD 1
+#define DR_FLAC_NO_SIMD 1
+#endif
+
 #ifndef KFR_DISABLE_WAV
 #define DR_WAV_NO_STDIO
 #define DR_WAV_NO_CONVERSION_API

@@ -178,6 +178,11 @@ extern char* gets(char* __s);
 
 #endif
 
+#if defined CMT_ARCH_ARM && defined CMT_ARCH_X64
+#define CMT_ARCH_ARM64 1
+#define CMT_ARCH_AARCH64 1
+#endif
+
 #ifndef CMT_ARCH_NAME
 #define CMT_ARCH_NAME generic
 #endif
