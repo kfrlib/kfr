@@ -115,9 +115,9 @@ jobs:
   strategy:
     matrix:
       xcode10.1:
-        XCODE_VER: 10.1
+        XCODE_VER: 11.2
   pool:
-    vmImage: 'macOS-10.13'
+    vmImage: 'macOS-10.14'
   steps:
   - bash: |
       set -e
@@ -130,9 +130,9 @@ jobs:
   strategy:
     matrix:
       xcode10.1:
-        XCODE_VER: 10.1
+        XCODE_VER: 11.2
   pool:
-    vmImage: 'macOS-10.13'
+    vmImage: 'macOS-10.14'
   steps:
   - bash: |
       set -e
