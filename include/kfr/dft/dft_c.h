@@ -41,6 +41,8 @@
 #define KFR_CDECL __cdecl
 #elif defined KFR_ARCH_IS_X86
 #define KFR_CDECL __attribute__((__cdecl__))
+#else
+#define KFR_CDECL
 #endif
 #endif
 
