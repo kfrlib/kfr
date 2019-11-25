@@ -111,7 +111,7 @@ struct expression_vtable<T, 0>
     }
 };
 
-struct expression_resource : aligned_new
+struct expression_resource
 {
     virtual ~expression_resource() {}
     virtual void* instance() { return nullptr; }
@@ -133,7 +133,7 @@ KFR_INTRINSIC std::shared_ptr<expression_resource> make_resource(E&& e)
 {
     using T = expression_resource_impl<decay<E>>;
     return std::static_pointer_cast<expression_resource>(
-        std::allocate_shared<T>(allocator<T>(), std::move(e)));
+        std::shared_ptr<T>(new (aligned_allocate<T>()) T(std::move(e))));
 }
 
 template <typename T, bool enable_resource>
