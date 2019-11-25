@@ -104,6 +104,7 @@ target_set_arch(use_arch INTERFACE ${CPU_ARCH})
 
 if (WIN32)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    add_definitions(-D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS)
     add_definitions(-D_ENABLE_EXTENDED_ALIGNED_STORAGE)
 endif()
 

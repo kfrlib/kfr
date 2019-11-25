@@ -101,9 +101,9 @@ struct cpu_features
     u32 hasXOP : 1;
     u32 hasXSAVE : 1;
     u32 padding1 : 6;
-    char vendor[17];
-    char model[49];
-    char padding2[2];
+    alignas(int32_t) char vendor[17];
+    alignas(int32_t) char model[49];
+    alignas(int32_t) char padding2[2];
 };
 
 namespace internal_generic
