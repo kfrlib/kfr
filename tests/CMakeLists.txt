@@ -185,12 +185,12 @@ if (NOT SKIP_TESTS)
                 COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/multiarch)
     endif ()
 
-    add_test(NAME all_tests
-            COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests)
-
     if (ARCH_TESTS)
         foreach(A IN LISTS ARCH_LIST)
-            add_test(NAME ${A} COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_${A})
+            add_test(NAME all_tests_${A} COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_${A})
         endforeach()
+    else ()
+        add_test(NAME all_tests
+                COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests)
     endif ()
 endif ()

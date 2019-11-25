@@ -142,7 +142,6 @@ KFR_INTRINSIC vec<complex<T>, N> csqr(const vec<complex<T>, N>& x)
     return x * x;
 }
 
-KFR_HANDLE_SCALAR(cconj)
 KFR_HANDLE_SCALAR(csin)
 KFR_HANDLE_SCALAR(csinh)
 KFR_HANDLE_SCALAR(ccos)
@@ -182,7 +181,6 @@ KFR_INTRINSIC realtype<T1> carg(const T1& a)
 }
 } // namespace intrinsics
 
-KFR_I_FN(cconj)
 KFR_I_FN(csin)
 KFR_I_FN(csinh)
 KFR_I_FN(ccos)
@@ -282,13 +280,6 @@ template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_FUNCTION internal::expression_function<fn::carg, E1> carg(E1&& x)
 {
     return { fn::carg(), std::forward<E1>(x) };
-}
-
-/// @brief Returns template expression that returns the complex conjugate of the complex number x
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::cconj, E1> cconj(E1&& x)
-{
-    return { fn::cconj(), std::forward<E1>(x) };
 }
 
 /// @brief Returns the natural logarithm of the complex number x
