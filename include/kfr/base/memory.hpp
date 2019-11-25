@@ -219,17 +219,19 @@ constexpr inline bool operator!=(const allocator<T1>&, const allocator<T2>&) CMT
 
 struct aligned_new
 {
-    inline static void* operator new(size_t size) { return aligned_allocate(size); }
-    inline static void operator delete(void* ptr) { return aligned_deallocate(ptr); }
+    inline static void* operator new(size_t size) noexcept { return aligned_allocate(size); }
+    inline static void operator delete(void* ptr) noexcept { return aligned_deallocate(ptr); }
 
-    inline static void* operator new(size_t size, std::align_val_t al)
+#ifdef __cpp_aligned_new
+    inline static void* operator new(size_t size, std::align_val_t al) noexcept
     {
         return internal_generic::aligned_malloc(size, std::max(size_t(32), static_cast<size_t>(al)));
     }
-    inline static void operator delete(void* ptr, std::align_val_t al)
+    inline static void operator delete(void* ptr, std::align_val_t al) noexcept
     {
         return internal_generic::aligned_free(ptr);
     }
+#endif
 };
 
 #define KFR_CLASS_REFCOUNT(cl)                                                                               \
