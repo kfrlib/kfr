@@ -28,12 +28,18 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#if defined(_M_IX86) || defined(__i386__) || defined(_M_X64) || defined(__x86_64__)
+#define KFR_ARCH_IS_X86 1
+#elif defined(__arm__) || defined(__arm64__) || defined(_M_ARM) || defined(__aarch64__)
+#define KFR_ARCH_IS_ARM 1
+#endif
+
 #if defined(_M_X64) || defined(__x86_64__)
 #define KFR_CDECL
 #else
 #ifdef _WIN32
 #define KFR_CDECL __cdecl
-#else
+#elif defined KFR_ARCH_IS_X86
 #define KFR_CDECL __attribute__((__cdecl__))
 #endif
 #endif
