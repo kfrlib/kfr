@@ -143,6 +143,35 @@ TEST(fft_accuracy)
                       }
                   });
 }
+
+TEST(dct)
+{
+    constexpr size_t size = 16;
+    dct_plan<float> plan(size);
+    univector<float, size> in = counter();
+    univector<float, size> out;
+    univector<float, size> outinv;
+    univector<u8> tmp(plan.temp_size);
+    plan.execute(out, in, tmp, false);
+
+    univector<float, size> refout = { 120., -51.79283109806667,  0., -5.6781471211595695,
+                                      0.,   -1.9843883778092053, 0., -0.9603691873838152,
+                                      0.,   -0.5308329190495176, 0., -0.3030379000702155,
+                                      0.,   -0.1584982220313824, 0., -0.0494839805703826 };
+
+    CHECK(rms(refout - out) < 0.00001f);
+
+    plan.execute(outinv, in, tmp, true);
+
+    univector<float, size> refoutinv = { 59.00747544192212,  -65.54341437693878,  27.70332758523579,
+                                         -24.56124678824279, 15.546989102481612,  -14.293082621965974,
+                                         10.08224348063459,  -9.38097406470581,   6.795411054455922,
+                                         -6.320715753372687, 4.455202292297903,   -4.0896421269390455,
+                                         2.580439536964837,  -2.2695816108369176, 0.9311870090070382,
+                                         -0.643618159997807 };
+
+    CHECK(rms(refoutinv - outinv) < 0.00001f);
+}
 } // namespace CMT_ARCH_NAME
 
 #ifndef KFR_NO_MAIN

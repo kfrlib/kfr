@@ -689,7 +689,7 @@ struct concatenate_expression : expression_with_arguments<E1, E2>
             }
             for (size_t i = size0 - index; i < N; ++i)
             {
-                result[i] = self.argument(cinput, csize<1>, index + i, vec_shape<T, 1>{})[0];
+                result[i] = self.argument(cinput, csize<1>, index + i - size0, vec_shape<T, 1>{})[0];
             }
             return result;
         }

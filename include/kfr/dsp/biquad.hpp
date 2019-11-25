@@ -321,6 +321,12 @@ KFR_FUNCTION expression_pointer<T> biquad(const biquad_params<T>* bq, size_t cou
         [&] { return to_pointer(zeros<T>()); });
 }
 
+template <size_t maxfiltercount = 4, typename T, typename E1>
+KFR_FUNCTION expression_pointer<T> biquad(const std::vector<biquad_params<T>>& bq, E1&& e1)
+{
+    return biquad<maxfiltercount>(bq.data(), bq.size(), std::forward<E1>(e1));
+}
+
 template <typename T, size_t maxfiltercount = 4>
 class biquad_filter : public expression_filter<T>
 {

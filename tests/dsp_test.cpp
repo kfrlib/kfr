@@ -275,7 +275,6 @@ TEST(mixdown)
                      [](size_t i) { return i + i * 2 + 100; });
 }
 
-#ifdef CMT_COMPILER_CLANG__
 TEST(mixdown_stereo)
 {
     const univector<double, 21> left  = counter();
@@ -287,7 +286,6 @@ TEST(mixdown_stereo)
     CHECK_EXPRESSION(mid, 21, [](size_t i) { return i + i * 2.0 + 100.0; });
     CHECK_EXPRESSION(side, 21, [](size_t i) { return i - (i * 2.0 + 100.0); });
 }
-#endif
 
 TEST(phasor)
 {

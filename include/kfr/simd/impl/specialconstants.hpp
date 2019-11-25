@@ -77,7 +77,7 @@ template <>
 struct special_scalar_constants<float>
 {
     constexpr static float highbitmask() { return -0.f; }
-    KFR_CONSTEXPR_NON_INTEL static float allones() noexcept { return allones_f32(); };
+    KFR_CONSTEXPR_NON_INTEL static float allones() noexcept { return allones_f32(); }
     constexpr static float allzeros() { return 0.f; }
     KFR_CONSTEXPR_NON_INTEL static float invhighbitmask() { return invhighbit_f32(); }
 };
@@ -86,7 +86,7 @@ template <>
 struct special_scalar_constants<double>
 {
     constexpr static double highbitmask() { return -0.; }
-    KFR_CONSTEXPR_NON_INTEL static double allones() noexcept { return allones_f64(); };
+    KFR_CONSTEXPR_NON_INTEL static double allones() noexcept { return allones_f64(); }
     constexpr static double allzeros() { return 0.; }
     KFR_CONSTEXPR_NON_INTEL static double invhighbitmask() { return invhighbit_f64(); }
 };

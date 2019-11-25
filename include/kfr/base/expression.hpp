@@ -333,26 +333,37 @@ struct expression_scalar : input_expression
     }
 };
 
-template <typename, typename T, typename = void>
+template <typename T1, typename T2, typename = void>
 struct arg_impl
 {
-    using type = T;
+    using type       = T2;
+    using value_type = typename T1::value_type;
 };
 
 template <typename T1, typename T2>
 struct arg_impl<T1, T2, void_t<enable_if<is_vec_element<T1>>>>
 {
-    using type = expression_scalar<T1>;
+    using type       = expression_scalar<T1>;
+    using value_type = T1;
 };
 
 template <typename T>
 using arg = typename internal::arg_impl<decay<T>, T>::type;
 
+template <typename T>
+using arg_type = typename internal::arg_impl<decay<T>, T>::value_type;
+
+template <typename Fn, typename... Args>
+struct function_value_type
+{
+    using type = typename invoke_result<Fn, vec<arg_type<Args>, 1>...>::value_type;
+};
+
 template <typename Fn, typename... Args>
 struct expression_function : expression_with_arguments<arg<Args>...>
 {
-    using value_type =
-        subtype<decltype(std::declval<Fn>()(std::declval<vec<value_type_of<arg<Args>>, 1>>()...))>;
+    using value_type = typename function_value_type<Fn, Args...>::type;
+    // subtype<decltype(std::declval<Fn>()(std::declval<vec<value_type_of<arg<Args>>, 1>>()...))>;
     using T = value_type;
 
     expression_function(Fn&& fn, arg<Args>&&... args) CMT_NOEXCEPT

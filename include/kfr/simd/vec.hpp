@@ -187,11 +187,8 @@ struct alignas(force_compiletime_size_t<
     using ST          = typename compound_type_traits<T>::deep_subtype;
     using scalar_type = ST;
 
-    enum : size_t
-    {
-        SW = compound_type_traits<T>::deep_width,
-        SN = N * SW
-    };
+    constexpr static size_t SW = compound_type_traits<T>::deep_width;
+    constexpr static size_t SN = N * SW;
 
     constexpr static size_t scalar_size() CMT_NOEXCEPT { return SN; }
 
@@ -334,7 +331,11 @@ struct alignas(force_compiletime_size_t<
               KFR_ENABLE_IF(dummy == 0 && !compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC constexpr value_type get(size_t index) const CMT_NOEXCEPT
     {
-        return this->s[index];
+        union {
+            simd_type v;
+            T s[N];
+        } u{ this->v };
+        return u.s[index];
     }
 
     template <size_t index, KFR_ENABLE_IF(index < 1024 && compound_type_traits<T>::is_scalar)>
@@ -366,7 +367,12 @@ struct alignas(force_compiletime_size_t<
     template <int dummy = 0, KFR_ENABLE_IF(dummy == 0 && !compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC constexpr void set(size_t index, const value_type& s) CMT_NOEXCEPT
     {
-        this->s[index] = s;
+        union {
+            simd_type v;
+            T s[N];
+        } u{ this->v };
+        u.s[index] = s;
+        this->v    = u.v;
     }
 
     template <size_t index, KFR_ENABLE_IF(index < 1024 && compound_type_traits<T>::is_scalar)>
@@ -437,8 +443,8 @@ public:
     union {
         simd_type v;
         vec_halves<T, N> h;
-        simd_element_type w[simd_element_count];
-        T s[N];
+        // simd_element_type w[simd_element_count];
+        // T s[N];
     };
 };
 
@@ -1433,7 +1439,7 @@ namespace std
 {
 
 template <typename T, size_t N>
-class tuple_size<kfr::vec<T, N>> : public integral_constant<size_t, N>
+struct tuple_size<kfr::vec<T, N>> : public integral_constant<size_t, N>
 {
 };
 

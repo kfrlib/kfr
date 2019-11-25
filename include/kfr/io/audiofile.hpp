@@ -178,7 +178,7 @@ struct audio_writer_wav : audio_writer<T>
                                    (drwav_seek_proc)&internal_generic::drwav_writer_seek_proc,
                                    this->writer.get(), nullptr);
     }
-    ~audio_writer_wav() { close(); }
+    ~audio_writer_wav() override { close(); }
 
     using audio_writer<T>::write;
 
@@ -243,7 +243,7 @@ struct audio_reader_wav : audio_reader<T>
                    (drwav_seek_proc)&internal_generic::drwav_reader_seek_proc, this->reader.get(), nullptr);
         fmt.channels   = f.channels;
         fmt.samplerate = f.sampleRate;
-        fmt.length     = f.totalPCMFrameCount;
+        fmt.length     = static_cast<imax>(f.totalPCMFrameCount);
         switch (f.translatedFormatTag)
         {
         case DR_WAVE_FORMAT_IEEE_FLOAT:
@@ -288,7 +288,7 @@ struct audio_reader_wav : audio_reader<T>
             break;
         }
     }
-    ~audio_reader_wav() { drwav_uninit(&f); }
+    ~audio_reader_wav() override { drwav_uninit(&f); }
 
     /// @brief Returns audio format description
     const audio_format_and_length& format() const override { return fmt; }
@@ -323,14 +323,13 @@ struct audio_reader_wav : audio_reader<T>
         switch (origin)
         {
         case seek_origin::current:
-            return drwav_seek_to_pcm_frame(&f, this->position + offset);
+            return drwav_seek_to_pcm_frame(&f, static_cast<drmp3_uint64>(this->position + offset));
         case seek_origin::begin:
-            return drwav_seek_to_pcm_frame(&f, offset);
+            return drwav_seek_to_pcm_frame(&f, static_cast<drmp3_uint64>(offset));
         case seek_origin::end:
-            return drwav_seek_to_pcm_frame(&f, fmt.length + offset);
-        default:
-            return false;
+            return drwav_seek_to_pcm_frame(&f, static_cast<drmp3_uint64>(fmt.length + offset));
         }
+        return false;
     }
 
 private:
@@ -355,10 +354,10 @@ struct audio_reader_flac : audio_reader<T>
                         nullptr);
         fmt.channels   = f->channels;
         fmt.samplerate = f->sampleRate;
-        fmt.length     = f->totalPCMFrameCount;
+        fmt.length     = static_cast<imax>(f->totalPCMFrameCount);
         fmt.type       = audio_sample_type::i32;
     }
-    ~audio_reader_flac() { drflac_close(f); }
+    ~audio_reader_flac() override { drflac_close(f); }
 
     /// @brief Returns audio format description
     const audio_format_and_length& format() const override { return fmt; }
@@ -394,14 +393,13 @@ struct audio_reader_flac : audio_reader<T>
         switch (origin)
         {
         case seek_origin::current:
-            return drflac_seek_to_pcm_frame(f, this->position + offset);
+            return drflac_seek_to_pcm_frame(f, static_cast<drmp3_uint64>(this->position + offset));
         case seek_origin::begin:
-            return drflac_seek_to_pcm_frame(f, offset);
+            return drflac_seek_to_pcm_frame(f, static_cast<drmp3_uint64>(offset));
         case seek_origin::end:
-            return drflac_seek_to_pcm_frame(f, fmt.length + offset);
-        default:
-            return false;
+            return drflac_seek_to_pcm_frame(f, static_cast<drmp3_uint64>(fmt.length + offset));
         }
+        return false;
     }
 
 private:
@@ -426,10 +424,10 @@ struct audio_reader_mp3 : audio_reader<T>
                    nullptr);
         fmt.channels   = f.channels;
         fmt.samplerate = f.sampleRate;
-        fmt.length     = drmp3_get_pcm_frame_count(&f);
+        fmt.length     = static_cast<imax>(drmp3_get_pcm_frame_count(&f));
         fmt.type       = audio_sample_type::i16;
     }
-    ~audio_reader_mp3() { drmp3_uninit(&f); }
+    ~audio_reader_mp3() override { drmp3_uninit(&f); }
 
     drmp3_config config{ 0, 0 };
 
@@ -467,14 +465,13 @@ struct audio_reader_mp3 : audio_reader<T>
         switch (origin)
         {
         case seek_origin::current:
-            return drmp3_seek_to_pcm_frame(&f, this->position + offset);
+            return drmp3_seek_to_pcm_frame(&f, static_cast<drmp3_uint64>(this->position + offset));
         case seek_origin::begin:
-            return drmp3_seek_to_pcm_frame(&f, offset);
+            return drmp3_seek_to_pcm_frame(&f, static_cast<drmp3_uint64>(offset));
         case seek_origin::end:
-            return drmp3_seek_to_pcm_frame(&f, fmt.length + offset);
-        default:
-            return false;
+            return drmp3_seek_to_pcm_frame(&f, static_cast<drmp3_uint64>(fmt.length + offset));
         }
+        return false;
     }
 
 private:

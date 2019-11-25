@@ -7,7 +7,8 @@
 #define KFR_EXTENDED_TESTS
 
 #include <kfr/base.hpp>
-#ifdef KFR_ENABLE_DFT
+#include <kfr/dsp.hpp>
+#ifdef HAVE_DFT
 #include <kfr/dft/impl/fft-impl.hpp>
 #endif
 #include <kfr/io.hpp>
@@ -245,7 +246,7 @@ TEST_ASM_UIF(read, TEST_READ)
 
 TEST_ASM_UIF(write, TEST_WRITE)
 
-#ifdef KFR_ENABLE_DFT
+#ifdef HAVE_DFT
 
 #define TEST_FFT_SPEC(ty, size)                                                                              \
     static intrinsics::fft_specialization<ty, size> fft__##ty##__##size(static_cast<size_t>(1 << size));     \

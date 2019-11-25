@@ -73,7 +73,9 @@ struct eplison_scope
 template <>
 struct eplison_scope<void>
 {
-    eplison_scope(float scale) : f(scale), d(scale), ld(scale) {}
+    eplison_scope(float scale) : f(scale), d(static_cast<double>(scale)), ld(static_cast<long double>(scale))
+    {
+    }
     eplison_scope<float> f;
     eplison_scope<double> d;
     eplison_scope<long double> ld;

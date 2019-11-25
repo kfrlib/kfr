@@ -285,7 +285,7 @@ KFR_INTRINSIC void intrin(vec<T, N>& result, const T& a, const vec<T, N>& b, Fn&
     KFR_INTRINSIC vec<T, N> fn(const vec<T, N>& a, const vec<T, N>& b) CMT_NOEXCEPT                          \
     {                                                                                                        \
         vec<T, N> r;                                                                                         \
-        intrin(r, a, b, [](const auto& a, const auto& b) { return intrinsics::fn(a, b); });                  \
+        intrin(r, a, b, [](const auto& aa, const auto& bb) { return intrinsics::fn(aa, bb); });              \
         return r;                                                                                            \
     }                                                                                                        \
     template <typename T, size_t N,                                                                          \
@@ -299,7 +299,7 @@ KFR_INTRINSIC void intrin(vec<T, N>& result, const T& a, const vec<T, N>& b, Fn&
     KFR_INTRINSIC vec<T, N> fn(const vec<T, N>& a, const T& b) CMT_NOEXCEPT                                  \
     {                                                                                                        \
         vec<T, N> r;                                                                                         \
-        intrin(r, a, b, [](const auto& a, const auto& b) { return intrinsics::fn(a, b); });                  \
+        intrin(r, a, b, [](const auto& aa, const auto& bb) { return intrinsics::fn(aa, bb); });              \
         return r;                                                                                            \
     }                                                                                                        \
     template <typename T, size_t N,                                                                          \
@@ -313,7 +313,7 @@ KFR_INTRINSIC void intrin(vec<T, N>& result, const T& a, const vec<T, N>& b, Fn&
     KFR_INTRINSIC vec<T, N> fn(const T& a, const vec<T, N>& b) CMT_NOEXCEPT                                  \
     {                                                                                                        \
         vec<T, N> r;                                                                                         \
-        intrin(r, a, b, [](const auto& a, const auto& b) { return intrinsics::fn(a, b); });                  \
+        intrin(r, a, b, [](const auto& aa, const auto& bb) { return intrinsics::fn(aa, bb); });              \
         return r;                                                                                            \
     }
 

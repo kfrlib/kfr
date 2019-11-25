@@ -95,7 +95,7 @@ struct simd_halves
 
     subtype low;
     subtype high;
-#if KFR_DEFINE_CTORS_FOR_HALVES
+#if defined KFR_DEFINE_CTORS_FOR_HALVES && KFR_DEFINE_CTORS_FOR_HALVES
     simd_halves() CMT_NOEXCEPT {}
     simd_halves(const subtype& l, const subtype& h) CMT_NOEXCEPT : low(l), high(h) {}
     simd_halves(const simd_halves& v) CMT_NOEXCEPT : low(v.low), high(v.high) {}

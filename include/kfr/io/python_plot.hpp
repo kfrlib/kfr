@@ -41,9 +41,8 @@ namespace kfr
 namespace internal_generic
 {
 CMT_PRAGMA_GNU(GCC diagnostic push)
-#if CMT_HAS_WARNING("-Wdeprecated-declarations")
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wdeprecated-declarations")
-#endif
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wunused-result")
 
 template <int = 0>
 void python(const std::string& name, const std::string& code)

@@ -62,6 +62,10 @@ struct representation<cometa::special_value>
             return as_string(value.ll);
         case special_constant::floating_point:
             return as_string(value.d);
+        case special_constant::epsilon:
+            return "epsilon";
+        case special_constant::random_bits:
+            return "random_bits";
         default:
             return "unknown";
         }
@@ -149,6 +153,17 @@ struct representation<kfr::complex<T>>
     static std::string get(const kfr::complex<T>& value)
     {
         return as_string(value.real()) + " + " + as_string(value.imag()) + "j";
+    }
+};
+
+template <char t, int width, int prec, typename T>
+struct representation<details::fmt_t<kfr::complex<T>, t, width, prec>>
+{
+    using type = std::string;
+    static std::string get(const details::fmt_t<kfr::complex<T>, t, width, prec>& value)
+    {
+        return as_string(fmt<t, width, prec>(value.value.real())) + " + " +
+               as_string(fmt<t, width, prec>(value.value.imag())) + "j";
     }
 };
 

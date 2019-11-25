@@ -24,6 +24,10 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-fdiagnostics-absolute-paths)
 endif ()
 
+if (ENABLE_DFT)
+    add_definitions(-DHAVE_DFT)
+endif ()
+
 if (MSVC)
     link_libraries(-DEBUG)
 else ()

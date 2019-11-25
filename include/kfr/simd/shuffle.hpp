@@ -501,12 +501,13 @@ KFR_INTRINSIC vec<T, N> splitpairs(const vec<T, N>& x)
 }
 KFR_FN(splitpairs)
 
-template <size_t group = 1, typename T, size_t N, size_t size = N / group>
+template <size_t group = 1, typename T, size_t N>
 KFR_INTRINSIC vec<T, N> reverse(const vec<T, N>& x)
 {
+    constexpr size_t size = N / group;
     return x.shuffle(scale<group>(csizeseq_t<size, size - 1, -1>()));
 }
-template <typename T, size_t N1, size_t N2>
+template <size_t group = 1, typename T, size_t N1, size_t N2>
 KFR_INTRINSIC vec<vec<T, N1>, N2> reverse(const vec<vec<T, N1>, N2>& x)
 {
     return swap<N1>(x.flatten()).v;

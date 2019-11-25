@@ -18,6 +18,7 @@ namespace CMT_ARCH_NAME
 
 TEST(pack)
 {
+    static_assert(std::is_same_v<vec<f32x2, 1>, std::invoke_result_t<fn::reverse, vec<f32x2, 1>>>);
     const univector<float, 21> v1 = 1 + counter();
     const univector<float, 21> v2 = v1 * 11;
 

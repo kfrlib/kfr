@@ -422,6 +422,59 @@ struct dft_plan_real : dft_plan<T>
                  dft_pack_format) const = delete;
 };
 
+/// @brief DCT type 2 (unscaled)
+template <typename T>
+struct dct_plan : dft_plan<T>
+{
+    dct_plan(size_t size) : dft_plan<T>(size) { this->temp_size += sizeof(complex<T>) * size * 2; }
+
+    KFR_MEM_INTRINSIC void execute(T* out, const T* in, u8* temp, bool inverse = false) const
+    {
+        const size_t size                  = this->size;
+        const size_t halfSize              = size / 2;
+        univector_ref<complex<T>> mirrored = make_univector(
+            ptr_cast<complex<T>>(temp + this->temp_size - sizeof(complex<T>) * size * 2), size);
+        univector_ref<complex<T>> mirrored_dft =
+            make_univector(ptr_cast<complex<T>>(temp + this->temp_size - sizeof(complex<T>) * size), size);
+        auto t = counter() * c_pi<T> / (size * 2);
+        if (!inverse)
+        {
+            for (size_t i = 0; i < halfSize; i++)
+            {
+                mirrored[i]            = in[i * 2];
+                mirrored[size - 1 - i] = in[i * 2 + 1];
+            }
+            if (size % 2)
+            {
+                mirrored[halfSize] = in[size - 1];
+            }
+            dft_plan<T>::execute(mirrored_dft.data(), mirrored.data(), temp, cfalse);
+            make_univector(out, size) = real(mirrored_dft) * cos(t) + imag(mirrored_dft) * sin(t);
+        }
+        else
+        {
+            mirrored = make_complex(make_univector(in, size) * cos(t), make_univector(in, size) * -sin(t));
+            dft_plan<T>::execute(mirrored_dft.data(), mirrored.data(), temp, cfalse);
+            for (size_t i = 0; i < halfSize; i++)
+            {
+                out[i * 2 + 0] = mirrored_dft[i].re;
+                out[i * 2 + 1] = mirrored_dft[size - 1 - i].re;
+            }
+            if (size % 2)
+            {
+                out[size - 1] = mirrored_dft[halfSize].re;
+            }
+        }
+    }
+
+    template <univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
+    KFR_MEM_INTRINSIC void execute(univector<T, Tag1>& out, const univector<T, Tag2>& in,
+                                   univector<u8, Tag3>& temp, bool inverse = false) const
+    {
+        execute(out.data(), in.data(), temp.data(), inverse);
+    }
+};
+
 inline namespace CMT_ARCH_NAME
 {
 

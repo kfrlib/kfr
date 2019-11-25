@@ -12,7 +12,7 @@ from scipy import interpolate
 
 def gen_ticks(stop, start=10):
     yield start
-    for s in range(0, 10):
+    for s in range(1, 10):
         if start * s > stop:
             yield stop
             raise StopIteration
@@ -21,8 +21,8 @@ def gen_ticks(stop, start=10):
         yield t
 
 def gen_tick_labels(stop, start=10):
-    yield (str(start) + 'Hz').replace('000Hz', 'kHz')
-    for s in range(0, 10):
+    yield (str(int(start)) + 'Hz').replace('000Hz', 'kHz')
+    for s in range(1, 10):
         if start * s > stop:
             yield (str(int(stop)) + 'Hz').replace('000Hz', 'kHz')
             raise StopIteration
@@ -153,7 +153,7 @@ def plot(data,
         style = {'linewidth': 1.4, 'color': '#0072bd'}
         grid_style = {'color': '#777777'}
 
-        dataplot = a[0] if freqresp or phaseresp else a
+        dataplot = a[0] if freqresp or   phaseresp else a
 
         dataplot.plot(np.linspace(0, n, n, False), data, marker='.' if dots else None, **style)
         dataplot.set_xlabel('Samples')
@@ -180,11 +180,16 @@ def plot(data,
                 if normalized_freq:
                     a.set_xlabel(freq_label[0])
                     X = np.linspace(0, 1, len(Y), False)
-                    a.set_xlim([0, 1])
+                    if log_freq:
+                        a.set_xscale('log')
+                        a.set_xlim([0.01, 1])
+                    else:
+                        a.set_xlim([0, 1])
                 else:
                     a.set_xlabel(freq_label[1])
                     if log_freq:
                         a.set_xscale('log')
+
                         a.set_xticks(list(gen_ticks(Fs / 2)))
                         a.set_xticklabels(list(gen_tick_labels(Fs / 2)))
                     X = np.linspace(0, Fs / 2, len(Y), False)

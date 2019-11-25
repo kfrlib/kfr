@@ -307,6 +307,14 @@ KFR_INTRINSIC vec<complex<T>, N> cnegimag(const vec<complex<T>, N>& x)
 }
 KFR_FN(cnegimag)
 
+/// @brief Returns mask with true for real elements
+template <typename T>
+KFR_INTRINSIC bool isreal(const complex<T>& x)
+{
+    return x.imag() == 0;
+}
+KFR_FN(isreal)
+
 namespace internal
 {
 template <typename T>
@@ -377,7 +385,7 @@ KFR_FN(real)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_INTRINSIC internal::expression_function<fn::real, E1> real(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::real{}, std::forward<E1>(x) };
 }
 
 /// @brief Returns the imaginary part of the complex value
@@ -399,7 +407,7 @@ KFR_FN(imag)
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_INTRINSIC internal::expression_function<fn::imag, E1> imag(E1&& x)
 {
-    return { {}, std::forward<E1>(x) };
+    return { fn::imag{}, std::forward<E1>(x) };
 }
 
 /// @brief Constructs complex value from real and imaginary parts
@@ -411,10 +419,19 @@ constexpr KFR_INTRINSIC vec<complex<T>, N> make_complex(const vec<T1, N>& real,
 }
 
 /// @brief Constructs complex value from real and imaginary parts
-template <typename T1, typename T2 = T1, typename T = common_type<T1, T2>>
+template <typename T1, typename T2 = T1, typename T = common_type<T1, T2>,
+          KFR_ENABLE_IF(is_numeric_args<T1, T2>)>
 constexpr KFR_INTRINSIC complex<T> make_complex(T1 real, T2 imag = T2(0))
 {
     return complex<T>(innercast<T>(real), innercast<T>(imag));
+}
+KFR_FN(make_complex)
+
+/// @brief Constructs complex value from real and imaginary parts
+template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
+KFR_INTRINSIC internal::expression_function<fn::make_complex, E1, E2> make_complex(E1&& re, E2&& im)
+{
+    return { fn::make_complex{}, std::forward<E1>(re), std::forward<E2>(im) };
 }
 
 namespace intrinsics

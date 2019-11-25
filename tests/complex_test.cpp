@@ -154,6 +154,19 @@ TEST(complex_basic_expressions)
     CHECK(uv3[14] == c32{ 14, 0 });
 }
 
+TEST(complex_functions)
+{
+    CHECK(csqr(complex<f32>(4.f, 0.f)) == c32{ 16.f, 0.f });
+    CHECK(csqrt(complex<f32>(16.f, 0.f)) == c32{ 4.f, 0.f });
+
+    CHECK(csqr(complex<f32>(1.f, 4.f)) == c32{ -15.f, 8.f });
+
+    CHECK(csqrt(complex<f32>(15.f, 8.f)) == c32{ 4.f, 1.f });
+    CHECK(csqrt(complex<f32>(-15.f, 8.f)) == c32{ 1.f, 4.f });
+    CHECK(csqrt(complex<f32>(15.f, -8.f)) == c32{ 4.f, -1.f });
+    CHECK(csqrt(complex<f32>(-15.f, -8.f)) == c32{ 1.f, -4.f });
+}
+
 TEST(complex_function_expressions)
 {
     const univector<c32, 4> uv1 = sqr(counter());

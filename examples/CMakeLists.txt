@@ -26,6 +26,9 @@ file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/svg)
 add_executable(biquads biquads.cpp)
 target_link_libraries(biquads kfr use_arch)
 
+add_executable(iir iir.cpp)
+target_link_libraries(iir kfr use_arch)
+
 add_executable(window window.cpp)
 target_link_libraries(window kfr use_arch)
 

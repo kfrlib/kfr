@@ -1584,7 +1584,7 @@ inline size_t cfind(cvals_t<T, values...>, identity<T> value)
 }
 
 template <typename Fn, typename... Args>
-CMT_NOINLINE static invoke_result<Fn, Args...> noinline(Fn&& fn, Args&&... args)
+CMT_UNUSED CMT_NOINLINE static invoke_result<Fn, Args...> noinline(Fn&& fn, Args&&... args)
 {
     return fn(std::forward<Args>(args)...);
 }
@@ -2083,9 +2083,12 @@ struct special_value
             return static_cast<T>(d);
         case special_constant::random_bits:
             return random_bits<T>();
-        default:
-            return T{};
+        case special_constant::epsilon:
+            return std::numeric_limits<subtype<T>>::epsilon();
+            // default:
+            // return T{};
         }
+        return T();
     }
 
     template <typename T>

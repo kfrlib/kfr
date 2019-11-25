@@ -15,9 +15,9 @@ namespace win32_lite
 typedef void* HANDLE;
 typedef uint32_t DWORD;
 
-#define WIN32_LITE_STD_INPUT_HANDLE ((win32_lite::DWORD)-10)
-#define WIN32_LITE_STD_OUTPUT_HANDLE ((win32_lite::DWORD)-11)
-#define WIN32_LITE_STD_ERROR_HANDLE ((win32_lite::DWORD)-12)
+#define WIN32_LITE_STD_INPUT_HANDLE (static_cast<win32_lite::DWORD>(-10))
+#define WIN32_LITE_STD_OUTPUT_HANDLE (static_cast<win32_lite::DWORD>(-11))
+#define WIN32_LITE_STD_ERROR_HANDLE (static_cast<win32_lite::DWORD>(-12))
 
 #define WIN32_LITE_ENABLE_VIRTUAL_TERMINAL_PROCESSING (4)
 

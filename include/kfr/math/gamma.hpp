@@ -59,5 +59,37 @@ KFR_FUNCTION internal::expression_function<fn::factorial_approx, E1> factorial_a
 {
     return { fn::factorial_approx(), std::forward<E1>(x) };
 }
+
+constexpr inline uint64_t factorial_table[21] = {
+    0,
+    1,
+    2,
+    6,
+    24,
+    120,
+    720,
+    5040,
+    40320,
+    362880,
+    3628800,
+    39916800,
+    479001600,
+    6227020800,
+    87178291200,
+    1307674368000,
+    20922789888000,
+    355687428096000,
+    6402373705728000,
+    121645100408832000,
+    2432902008176640000,
+};
+
+/// @brief Returns the factorial of an argument. Returns max(uint64_t) if does not fit to uint64_t
+constexpr uint64_t factorial(int n)
+{
+    if (n < 0 || n > 20)
+        return std::numeric_limits<uint64_t>::max();
+    return factorial_table[n];
+}
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

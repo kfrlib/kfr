@@ -122,15 +122,24 @@ KFR_INTRINSIC vec<complex<T>, N> cartesian(const vec<complex<T>, N>& x)
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> cabsdup(const vec<T, N>& x)
 {
-    x = sqr(x);
-    return sqrt(x + swap<2>(x));
+    vec<T, N> xx = sqr(x);
+    return sqrt(xx + swap<2>(xx));
 }
 
 template <typename T, size_t N>
 KFR_INTRINSIC vec<complex<T>, N> csqrt(const vec<complex<T>, N>& x)
 {
-    const vec<T, N> t = (cabsdup(cdecom(x)) + cdecom(cnegimag(cdupreal(x)))) * T(0.5);
-    return ccomp(select(dupodd(x) < T(), cdecom(cnegimag(ccomp(t))), t));
+    const vec<T, N> s        = sqrt((abs(real(x)) + cabs(x)) * 0.5);
+    const vec<T, N> d        = abs(imag(x)) * 0.5 / s;
+    const mask<T, N> posreal = real(x) >= T(0);
+    const vec<T, N> imagsign = imag(x) & special_constants<T>::highbitmask();
+    return make_complex(select(posreal, s, d), select(posreal, d ^ imagsign, s ^ imagsign));
+}
+
+template <typename T, size_t N>
+KFR_INTRINSIC vec<complex<T>, N> csqr(const vec<complex<T>, N>& x)
+{
+    return x * x;
 }
 
 KFR_HANDLE_SCALAR(cconj)
@@ -147,6 +156,7 @@ KFR_HANDLE_SCALAR(cexp10)
 KFR_HANDLE_SCALAR(polar)
 KFR_HANDLE_SCALAR(cartesian)
 KFR_HANDLE_SCALAR(csqrt)
+KFR_HANDLE_SCALAR(csqr)
 
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> cabs(const vec<T, N>& a)
@@ -188,6 +198,7 @@ KFR_I_FN(cexp10)
 KFR_I_FN(polar)
 KFR_I_FN(cartesian)
 KFR_I_FN(csqrt)
+KFR_I_FN(csqr)
 
 /// @brief Returns the sine of the complex number x
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
@@ -271,13 +282,6 @@ template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_FUNCTION internal::expression_function<fn::carg, E1> carg(E1&& x)
 {
     return { fn::carg(), std::forward<E1>(x) };
-}
-
-/// @brief Returns the complex conjugate of the complex number x
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
-KFR_FUNCTION T1 cconj(const T1& x)
-{
-    return intrinsics::cconj(x);
 }
 
 /// @brief Returns template expression that returns the complex conjugate of the complex number x
@@ -411,6 +415,20 @@ template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_FUNCTION internal::expression_function<fn::csqrt, E1> csqrt(E1&& x)
 {
     return { fn::csqrt(), std::forward<E1>(x) };
+}
+
+/// @brief Returns square of the complex number x
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+KFR_FUNCTION T1 csqr(const T1& x)
+{
+    return intrinsics::csqr(x);
+}
+
+/// @brief Returns template expression that returns square of the complex number x
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
+KFR_FUNCTION internal::expression_function<fn::csqr, E1> csqr(E1&& x)
+{
+    return { fn::csqr(), std::forward<E1>(x) };
 }
 
 } // namespace CMT_ARCH_NAME

@@ -309,7 +309,7 @@ template <typename T>
 struct special_scalar_constants<bit<T>>
 {
     constexpr static bit<T> highbitmask() { return true; }
-    constexpr static bit<T> allones() noexcept { return true; };
+    constexpr static bit<T> allones() noexcept { return true; }
     constexpr static bit<T> allzeros() { return false; }
     constexpr static bit<T> invhighbitmask() { return false; }
 };

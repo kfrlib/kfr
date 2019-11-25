@@ -32,6 +32,41 @@ CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wmaybe-uninitialized")
 
 namespace kfr
 {
+template <size_t bits, size_t...>
+struct shuffle_mask;
+
+template <size_t i0, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5, size_t i6, size_t i7>
+struct shuffle_mask<8, i0, i1, i2, i3, i4, i5, i6, i7>
+{
+    constexpr static inline size_t Nmax  = 1;
+    constexpr static inline size_t value = (const_min(i7, Nmax) << 7) | (const_min(i6, Nmax) << 6) |
+                                           (const_min(i5, Nmax) << 5) | (const_min(i4, Nmax) << 4) |
+                                           (const_min(i3, Nmax) << 3) | (const_min(i2, Nmax) << 2) |
+                                           (const_min(i1, Nmax) << 1) | const_min(i0, Nmax);
+};
+
+template <size_t i0, size_t i1, size_t i2, size_t i3>
+struct shuffle_mask<8, i0, i1, i2, i3>
+{
+    constexpr static inline size_t Nmax  = 3;
+    constexpr static inline size_t value = (const_min(i3, Nmax) << 6) | (const_min(i2, Nmax) << 4) |
+                                           (const_min(i1, Nmax) << 2) | const_min(i0, Nmax);
+};
+
+template <size_t i0, size_t i1, size_t i2, size_t i3>
+struct shuffle_mask<4, i0, i1, i2, i3>
+{
+    constexpr static inline size_t Nmax  = 1;
+    constexpr static inline size_t value = (const_min(i3, Nmax) << 3) | (const_min(i2, Nmax) << 2) |
+                                           (const_min(i1, Nmax) << 1) | const_min(i0, Nmax);
+};
+
+template <size_t i0, size_t i1>
+struct shuffle_mask<2, i0, i1>
+{
+    constexpr static inline size_t Nmax  = 1;
+    constexpr static inline size_t value = (const_min(i1, Nmax) << 1) | const_min(i0, Nmax);
+};
 
 #if KFR_SHOW_NOT_OPTIMIZED
 CMT_PUBLIC_C CMT_DLL_EXPORT void not_optimized(const char* fn) CMT_NOEXCEPT;
@@ -608,6 +643,22 @@ KFR_INTRIN_BITCAST(f32, i32, 8, _mm256_castsi256_ps(x))
 KFR_INTRIN_BITCAST(i32, f32, 8, _mm256_castps_si256(x))
 KFR_INTRIN_BITCAST(f64, i64, 4, _mm256_castsi256_pd(x))
 KFR_INTRIN_BITCAST(i64, f64, 4, _mm256_castpd_si256(x))
+
+KFR_INTRINSIC simd<float, 8> simd_shuffle(simd_t<float, 16>, const simd<float, 16>& x,
+                                          csizes_t<2, 3, 6, 7, 10, 11, 14, 15>, overload_priority<9>)
+{
+    const __m256 t1 = _mm256_permute2f128_ps(x.low, x.high, (0 << 0) | (2 << 4));
+    const __m256 t2 = _mm256_permute2f128_ps(x.low, x.high, (1 << 0) | (3 << 4));
+    return _mm256_shuffle_ps(t1, t2, shuffle_mask<8, 2, 3, 2, 3>::value);
+}
+
+KFR_INTRINSIC simd<float, 8> simd_shuffle(simd_t<float, 16>, const simd<float, 16>& x,
+                                          csizes_t<0, 1, 4, 5, 8, 9, 12, 13>, overload_priority<9>)
+{
+    const __m256 t1 = _mm256_permute2f128_ps(x.low, x.high, (0 << 0) | (2 << 4));
+    const __m256 t2 = _mm256_permute2f128_ps(x.low, x.high, (1 << 0) | (3 << 4));
+    return _mm256_shuffle_ps(t1, t2, shuffle_mask<8, 0, 1, 0, 1>::value);
+}
 
 #ifndef CMT_ARCH_AVX2
 KFR_INTRIN_SHUFFLE_DUPHALVES(i8, 16, _mm256_insertf128_si256(_mm256_castsi128_si256(x), x, 1))
@@ -1297,12 +1348,29 @@ KFR_INTRINSIC const simd<T, N1>& simd_concat(const simd<T, N1>& x) CMT_NOEXCEPT
     return x;
 }
 
+template <typename T, size_t N1, size_t N2, size_t N3, size_t N4>
+KFR_INTRINSIC simd<T, N1 + N2 + N3 + N4> simd_concat4(const simd<T, N1>& x, const simd<T, N2>& y,
+                                                      const simd<T, N3>& z, const simd<T, N4>& w) CMT_NOEXCEPT
+{
+    return simd_shuffle(simd2_t<T, N1 + N2, N3 + N4>{},
+                        simd_shuffle(simd2_t<T, N1, N2>{}, x, y, csizeseq<N1 + N2>, overload_auto),
+                        simd_shuffle(simd2_t<T, N3, N4>{}, z, w, csizeseq<N3 + N4>, overload_auto),
+                        csizeseq<N1 + N2 + N3 + N4>, overload_auto);
+}
+
 template <typename T, size_t N1, size_t N2, size_t... Ns, size_t Nscount /*= csum(csizes<Ns...>)*/>
 KFR_INTRINSIC simd<T, N1 + N2 + Nscount> simd_concat(const simd<T, N1>& x, const simd<T, N2>& y,
                                                      const simd<T, Ns>&... z) CMT_NOEXCEPT
 {
-    return simd_shuffle(simd2_t<T, N1, N2 + Nscount>{}, x, simd_concat<T, N2, Ns...>(y, z...),
-                        csizeseq<N1 + N2 + Nscount>, overload_auto);
+    if constexpr (sizeof...(Ns) == 2)
+    {
+        return simd_concat4<T, N1, N2, Ns...>(x, y, z...);
+    }
+    else
+    {
+        return simd_shuffle(simd2_t<T, N1, N2 + Nscount>{}, x, simd_concat<T, N2, Ns...>(y, z...),
+                            csizeseq<N1 + N2 + Nscount>, overload_auto);
+    }
 }
 
 template <typename Tout, typename Tin, size_t N, size_t... indices>
@@ -1443,42 +1511,6 @@ SIMD_TYPE_INTRIN_EX(f64, 8, _mm512_cvtsd_f64(x), _mm512_castpd128_pd512(_mm_set_
                     _mm512_setzero_pd(), _mm512_castpd512_pd256(x), _mm512_extractf64x4_pd(x, 1),
                     KFR_mm512_setr_m256d(x, y))
 #endif
-
-template <size_t bits, size_t...>
-struct shuffle_mask;
-
-template <size_t i0, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5, size_t i6, size_t i7>
-struct shuffle_mask<8, i0, i1, i2, i3, i4, i5, i6, i7>
-{
-    constexpr static inline size_t Nmax  = 1;
-    constexpr static inline size_t value = (const_min(i7, Nmax) << 7) | (const_min(i6, Nmax) << 6) |
-                                           (const_min(i5, Nmax) << 5) | (const_min(i4, Nmax) << 4) |
-                                           (const_min(i3, Nmax) << 3) | (const_min(i2, Nmax) << 2) |
-                                           (const_min(i1, Nmax) << 1) | const_min(i0, Nmax);
-};
-
-template <size_t i0, size_t i1, size_t i2, size_t i3>
-struct shuffle_mask<8, i0, i1, i2, i3>
-{
-    constexpr static inline size_t Nmax  = 3;
-    constexpr static inline size_t value = (const_min(i3, Nmax) << 6) | (const_min(i2, Nmax) << 4) |
-                                           (const_min(i1, Nmax) << 2) | const_min(i0, Nmax);
-};
-
-template <size_t i0, size_t i1, size_t i2, size_t i3>
-struct shuffle_mask<4, i0, i1, i2, i3>
-{
-    constexpr static inline size_t Nmax  = 1;
-    constexpr static inline size_t value = (const_min(i3, Nmax) << 3) | (const_min(i2, Nmax) << 2) |
-                                           (const_min(i1, Nmax) << 1) | const_min(i0, Nmax);
-};
-
-template <size_t i0, size_t i1>
-struct shuffle_mask<2, i0, i1>
-{
-    constexpr static inline size_t Nmax  = 1;
-    constexpr static inline size_t value = (const_min(i1, Nmax) << 1) | const_min(i0, Nmax);
-};
 
 #ifdef CMT_ARCH_SSE2
 

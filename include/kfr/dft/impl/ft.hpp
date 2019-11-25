@@ -685,7 +685,7 @@ template <bool inverse = false, typename T>
 KFR_INTRINSIC void butterfly32(cvec<T, 32>& v32)
 {
     cvec<T, 4> w0, w1, w2, w3, w4, w5, w6, w7;
-    split<T, 64>(v32, w0, w1, w2, w3, w4, w5, w6, w7);
+    split(v32, w0, w1, w2, w3, w4, w5, w6, w7);
     butterfly8<4, inverse>(w0, w1, w2, w3, w4, w5, w6, w7);
 
     w1 = cmul(w1, fixed_twiddle<T, 4, 32, 0, 1, inverse>());

@@ -2264,20 +2264,20 @@ static DRFLAC_INLINE drflac_uint32 drflac__clz_lzcnt(drflac_cache_t x)
     #endif
 #else
     #if defined(__GNUC__) || defined(__clang__)
-        #if defined(DRFLAC_X64)
+        #if 0 /* defined(DRFLAC_X64) --- workaround for Clang bug */
             {
                 drflac_uint64 r;
                 __asm__ __volatile__ (
-                    "lzcnt{ %1, %0| %0, %1}" : "=r"(r) : "r"(x)
+                    "lzcnt{ %1, %0| %0, %1}" : "=r"(r) : "r"(x) : "cc"
                 );
 
                 return (drflac_uint32)r;
             }
-        #elif defined(DRFLAC_X86)
+        #elif 0 /* defined(DRFLAC_X86) --- workaround for Clang bug */
             {
                 drflac_uint32 r;
                 __asm__ __volatile__ (
-                    "lzcnt{l %1, %0| %0, %1}" : "=r"(r) : "r"(x)
+                    "lzcnt{l %1, %0| %0, %1}" : "=r"(r) : "r"(x) : "cc"
                 );
 
                 return r;

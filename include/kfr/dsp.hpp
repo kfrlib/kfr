@@ -33,6 +33,7 @@
 #include "dsp/fir_design.hpp"
 #include "dsp/fracdelay.hpp"
 #include "dsp/goertzel.hpp"
+#include "dsp/iir_design.hpp"
 #include "dsp/mixdown.hpp"
 #include "dsp/oscillators.hpp"
 #include "dsp/sample_rate_conversion.hpp"
