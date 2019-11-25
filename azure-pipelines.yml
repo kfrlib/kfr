@@ -117,7 +117,7 @@ jobs:
   steps:
   - bash: |
       set -e
-      /bin/bash -c "sudo xcode-select -s /Applications/Xcode_$(XCODE_VER).app/Contents/Developer"
+      /bin/bash -c "sudo xcode-select -s /Applications/Xcode_11.2.app/Contents/Developer"
       brew install ninja
       ci/run.sh build-release -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.cmake -DCMAKE_BUILD_TYPE=Release -DIOS_PLATFORM=OS -DIOS_ARCH=armv7 -DCMAKE_MAKE_PROGRAM=/usr/local/bin/ninja -DSKIP_TESTS=ON
 
@@ -128,7 +128,7 @@ jobs:
   steps:
   - bash: |
       set -e
-      /bin/bash -c "sudo xcode-select -s /Applications/Xcode_$(XCODE_VER).app/Contents/Developer"
+      /bin/bash -c "sudo xcode-select -s /Applications/Xcode_11.2.app/Contents/Developer"
       brew install ninja
       ci/run.sh build-release -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.cmake -DCMAKE_BUILD_TYPE=Release -DIOS_PLATFORM=OS64 -DIOS_ARCH=arm64 -DCMAKE_MAKE_PROGRAM=/usr/local/bin/ninja -DSKIP_TESTS=ON
 
