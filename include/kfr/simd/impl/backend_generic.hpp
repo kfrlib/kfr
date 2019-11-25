@@ -644,6 +644,7 @@ KFR_INTRIN_BITCAST(i32, f32, 8, _mm256_castps_si256(x))
 KFR_INTRIN_BITCAST(f64, i64, 4, _mm256_castsi256_pd(x))
 KFR_INTRIN_BITCAST(i64, f64, 4, _mm256_castpd_si256(x))
 
+#ifndef CMT_ARCH_AVX512
 KFR_INTRINSIC simd<float, 8> simd_shuffle(simd_t<float, 16>, const simd<float, 16>& x,
                                           csizes_t<2, 3, 6, 7, 10, 11, 14, 15>, overload_priority<9>)
 {
@@ -659,6 +660,7 @@ KFR_INTRINSIC simd<float, 8> simd_shuffle(simd_t<float, 16>, const simd<float, 1
     const __m256 t2 = _mm256_permute2f128_ps(x.low, x.high, (1 << 0) | (3 << 4));
     return _mm256_shuffle_ps(t1, t2, shuffle_mask<8, 0, 1, 0, 1>::value);
 }
+#endif
 
 #ifndef CMT_ARCH_AVX2
 KFR_INTRIN_SHUFFLE_DUPHALVES(i8, 16, _mm256_insertf128_si256(_mm256_castsi128_si256(x), x, 1))
