@@ -142,49 +142,49 @@ template <typename T>
 using underlying_type = typename std::underlying_type<T>::type;
 
 template <typename T>
-constexpr inline bool is_pod = std::is_pod_v<T> || details::is_pod_impl<T>::value;
+constexpr inline bool is_pod = std::is_pod<T>::value || details::is_pod_impl<T>::value;
 
 template <typename T>
-constexpr inline bool is_class = std::is_class_v<T>;
+constexpr inline bool is_class = std::is_class<T>::value;
 
 template <typename T>
-constexpr inline bool is_const = std::is_const_v<T>;
+constexpr inline bool is_const = std::is_const<T>::value;
 
 template <typename T>
-constexpr inline bool is_pointer = std::is_pointer_v<T>;
+constexpr inline bool is_pointer = std::is_pointer<T>::value;
 
 template <typename T>
-constexpr inline bool is_array = std::is_array_v<T>;
+constexpr inline bool is_array = std::is_array<T>::value;
 
 template <typename T>
-constexpr inline bool is_void = std::is_void_v<T>;
+constexpr inline bool is_void = std::is_void<T>::value;
 
 template <typename T>
-constexpr inline bool is_floating_point = std::is_floating_point_v<T>;
+constexpr inline bool is_floating_point = std::is_floating_point<T>::value;
 
 template <typename T>
-constexpr inline bool is_unsigned = std::is_unsigned_v<T>;
+constexpr inline bool is_unsigned = std::is_unsigned<T>::value;
 
 template <typename T>
-constexpr inline bool is_signed = std::is_signed_v<T>;
+constexpr inline bool is_signed = std::is_signed<T>::value;
 
 template <typename T>
-constexpr inline bool is_scalar = std::is_scalar_v<T>;
+constexpr inline bool is_scalar = std::is_scalar<T>::value;
 
 template <typename T>
-constexpr inline bool is_integral = std::is_integral_v<T>;
+constexpr inline bool is_integral = std::is_integral<T>::value;
 
 template <typename T1, typename T2>
-constexpr inline bool is_same = std::is_same_v<T1, T2>;
+constexpr inline bool is_same = std::is_same<T1, T2>::value;
 
 template <typename Tbase, typename Tderived>
-constexpr inline bool is_base_of = std::is_base_of_v<Tbase, Tderived>;
+constexpr inline bool is_base_of = std::is_base_of<Tbase, Tderived>::value;
 
 template <typename Tfrom, typename Tto>
-constexpr inline bool is_convertible = std::is_convertible_v<Tfrom, Tto>;
+constexpr inline bool is_convertible = std::is_convertible<Tfrom, Tto>::value;
 
 template <typename T, typename... Args>
-constexpr inline bool is_constructible = std::is_constructible_v<T, Args...>;
+constexpr inline bool is_constructible = std::is_constructible<T, Args...>::value;
 
 template <typename T>
 constexpr inline bool is_template_arg = std::is_integral<T>::value || std::is_enum<T>::value;
@@ -1625,12 +1625,12 @@ constexpr inline T choose_const_fallback(C1 c1)
  * CHECK( choose_const<f64>( 32.0f, 64.0 ) == 64.0 );
  * @endcode
  */
-template <typename T, typename C1, typename... Cs, CMT_ENABLE_IF(std::is_same_v<T, C1>)>
+template <typename T, typename C1, typename... Cs, CMT_ENABLE_IF(is_same<T, C1>)>
 constexpr inline T choose_const(C1 c1, Cs...)
 {
     return static_cast<T>(c1);
 }
-template <typename T, typename C1, typename... Cs, CMT_ENABLE_IF(!std::is_same_v<T, C1>)>
+template <typename T, typename C1, typename... Cs, CMT_ENABLE_IF(!is_same<T, C1>)>
 constexpr inline T choose_const(C1, Cs... constants)
 {
     return choose_const<T>(constants...);
@@ -1639,7 +1639,7 @@ constexpr inline T choose_const(C1, Cs... constants)
 template <typename T, typename C1, typename... Cs>
 constexpr inline T choose_const_fallback(C1 c1, Cs... constants)
 {
-    return std::is_same_v<T, C1> ? static_cast<T>(c1) : choose_const_fallback<T>(constants...);
+    return is_same<T, C1> ? static_cast<T>(c1) : choose_const_fallback<T>(constants...);
 }
 
 template <typename Tfrom>

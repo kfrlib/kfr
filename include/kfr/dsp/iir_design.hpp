@@ -808,7 +808,7 @@ namespace internal
 {
 
 template <typename T>
-KFR_FUNCTION zpk<T> bilinear(const zpk<T>& filter, T fs)
+KFR_FUNCTION zpk<T> bilinear(const zpk<T>& filter, identity<T> fs)
 {
     const T fs2 = 2.0 * fs;
     zpk<T> result;
@@ -832,13 +832,8 @@ KFR_FUNCTION vec<T, 3> zpk2tf_poly(const complex<T>& x, const complex<T>& y)
 }
 
 template <typename T>
-KFR_FUNCTION biquad_params<T> zpk2tf(const zero_pole_pairs<T>& pairs, T k)
+KFR_FUNCTION biquad_params<T> zpk2tf(const zero_pole_pairs<T>& pairs, identity<T> k)
 {
-    //     println("----zpk2tf");
-    //     println(fmt<'g', 24, 19>(pairs.z1), " | ", fmt<'g', 24, 19>(pairs.z2));
-    //     println(fmt<'g', 24, 19>(pairs.p1), " | ", fmt<'g', 24, 19>(pairs.p2));
-    //     println(k);
-
     vec<T, 3> zz = k * zpk2tf_poly(pairs.z1, pairs.z2);
     vec<T, 3> pp = zpk2tf_poly(pairs.p1, pairs.p2);
     // return { zz[0], zz[1], zz[2], pp[0], pp[1], pp[2] };
@@ -909,7 +904,7 @@ KFR_FUNCTION int countreal(const univector<complex<T>>& list)
 }
 
 template <typename T>
-KFR_FUNCTION zpk<T> lp2lp_zpk(const zpk<T>& filter, T wo)
+KFR_FUNCTION zpk<T> lp2lp_zpk(const zpk<T>& filter, identity<T> wo)
 {
     zpk<T> result;
     result.z = wo * filter.z;
