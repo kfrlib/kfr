@@ -132,8 +132,8 @@ template <typename E>
 KFR_INTRINSIC std::shared_ptr<expression_resource> make_resource(E&& e)
 {
     using T = expression_resource_impl<decay<E>>;
-    return std::static_pointer_cast<expression_resource>(
-        std::shared_ptr<T>(new (aligned_allocate<T>()) T(std::move(e))));
+    return std::static_pointer_cast<expression_resource>(std::shared_ptr<T>(
+        new (aligned_allocate<T>()) T(std::move(e)), [](T* pi) { aligned_deallocate<T>(pi); }));
 }
 
 template <typename T, bool enable_resource>
