@@ -221,6 +221,15 @@ struct aligned_new
 {
     inline static void* operator new(size_t size) { return aligned_allocate(size); }
     inline static void operator delete(void* ptr) { return aligned_deallocate(ptr); }
+
+    inline static void* operator new(size_t size, std::align_val_t al)
+    {
+        return internal_generic::aligned_malloc(size, std::max(size_t(32), static_cast<size_t>(al)));
+    }
+    inline static void operator delete(void* ptr, std::align_val_t al)
+    {
+        return internal_generic::aligned_free(ptr);
+    }
 };
 
 #define KFR_CLASS_REFCOUNT(cl)                                                                               \
