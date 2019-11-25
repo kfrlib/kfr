@@ -111,7 +111,7 @@ struct expression_vtable<T, 0>
     }
 };
 
-struct expression_resource
+struct expression_resource : aligned_new
 {
     virtual ~expression_resource() {}
     virtual void* instance() { return nullptr; }

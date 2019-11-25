@@ -112,10 +112,6 @@ jobs:
 
 - job: iOS_ARM_Clang_Release
   timeoutInMinutes: 120
-  strategy:
-    matrix:
-      xcode10.1:
-        XCODE_VER: 11.2
   pool:
     vmImage: 'macOS-10.14'
   steps:
@@ -127,10 +123,6 @@ jobs:
 
 - job: iOS_ARM64_Clang_Release
   timeoutInMinutes: 120
-  strategy:
-    matrix:
-      xcode10.1:
-        XCODE_VER: 11.2
   pool:
     vmImage: 'macOS-10.14'
   steps:
