@@ -4,7 +4,9 @@
  * See LICENSE.txt for details
  */
 
+#include <kfr/io.hpp>
 #include <kfr/simd/shuffle.hpp>
+
 namespace kfr
 {
 inline namespace CMT_ARCH_NAME
@@ -73,6 +75,22 @@ TEST(split_interleave)
 
     CHECK(interleavehalves(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(0, 4, 1, 5, 2, 6, 3, 7));
     CHECK(interleavehalves<2>(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(0, 1, 4, 5, 2, 3, 6, 7));
+}
+
+TEST(zip)
+{
+    CHECK(zip(pack(1, 2, 3, 4), pack(10, 20, 30, 40)) ==
+          pack(pack(1, 10), pack(2, 20), pack(3, 30), pack(4, 40)));
+
+    CHECK(zip(pack(1, 2, 3, 4), pack(10, 20, 30, 40), pack(111, 222, 333, 444), pack(-1, -2, -3, -4)) ==
+          pack(pack(1, 10, 111, -1), pack(2, 20, 222, -2), pack(3, 30, 333, -3), pack(4, 40, 444, -4)));
+}
+
+TEST(column)
+{
+    CHECK(column<1>(pack(pack(0, 1), pack(2, 3), pack(4, 5), pack(6, 7))) == pack(1, 3, 5, 7));
+
+    CHECK(column<0>(pack(pack(0., 1.), pack(2., 3.), pack(4., 5.), pack(6., 7.))) == pack(0., 2., 4., 6.));
 }
 
 TEST(broadcast)

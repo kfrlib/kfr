@@ -483,6 +483,23 @@ KFR_INTRINSIC vec<T, Nout> interleave(const vec<T, N>& x, const vec<T, N>& y)
 }
 KFR_FN(interleave)
 
+template <typename T, size_t N1, size_t... Ns, size_t size = N1 + csum<size_t, Ns...>(),
+          size_t side2 = 1 + sizeof...(Ns), size_t side1 = size / side2>
+KFR_INTRINSIC vec<vec<T, side2>, side1> zip(const vec<T, N1>& x, const vec<T, Ns>&... y)
+{
+    static_assert(is_poweroftwo(1 + sizeof...(Ns)), "number of vectors must be power of two");
+    return vec<vec<T, side2>, side1>::from_flatten(concat(x, y...).shuffle(scale<1>(
+        csizeseq_t<size>() % csize_t<side2>() * csize_t<side1>() + csizeseq_t<size>() / csize_t<side2>())));
+}
+KFR_FN(zip)
+
+template <size_t index, typename T, size_t N1, size_t N2>
+KFR_INTRINSIC vec<T, N2> column(const vec<vec<T, N1>, N2>& x)
+{
+    static_assert(index < N1, "column index must be less than inner vector length");
+    return x.flatten().shuffle(csizeseq_t<N2>() * csize_t<N1>() + csize_t<index>());
+}
+
 template <size_t group = 1, typename T, size_t N, size_t size = N / group, size_t side2 = 2,
           size_t side1 = size / side2>
 KFR_INTRINSIC vec<T, N> interleavehalves(const vec<T, N>& x)
