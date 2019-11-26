@@ -25,9 +25,11 @@
  */
 #pragma once
 
+#include "../base/basic_expressions.hpp"
 #include "../base/memory.hpp"
 #include "../base/small_buffer.hpp"
 #include "../base/univector.hpp"
+#include "../math/sin_cos.hpp"
 #include "../simd/complex.hpp"
 #include "../simd/constants.hpp"
 #include "../simd/read_write.hpp"
@@ -156,6 +158,12 @@ KFR_DFT_PROTO(avx)
 #if !CMT_ARCH_IS_SSE41
 KFR_DFT_PROTO(sse41)
 #endif
+#if !CMT_ARCH_IS_SSSE3
+KFR_DFT_PROTO(ssse3)
+#endif
+#if !CMT_ARCH_IS_SSE3
+KFR_DFT_PROTO(sse3)
+#endif
 #if !CMT_ARCH_IS_SSE2
 KFR_DFT_PROTO(sse2)
 #endif
@@ -189,6 +197,12 @@ struct dft_plan
         case cpu_t::sse42:
         case cpu_t::sse41:
             sse41::dft_initialize(*this);
+            break;
+        case cpu_t::ssse3:
+            ssse3::dft_initialize(*this);
+            break;
+        case cpu_t::sse3:
+            sse3::dft_initialize(*this);
             break;
         default:
             sse2::dft_initialize(*this);
@@ -355,6 +369,12 @@ struct dft_plan_real : dft_plan<T>
         case cpu_t::sse41:
             sse41::dft_real_initialize(*this);
             break;
+        case cpu_t::ssse3:
+            ssse3::dft_real_initialize(*this);
+            break;
+        case cpu_t::sse3:
+            sse3::dft_real_initialize(*this);
+            break;
         default:
             sse2::dft_real_initialize(*this);
             break;
@@ -427,6 +447,13 @@ template <typename T>
 struct dct_plan : dft_plan<T>
 {
     dct_plan(size_t size) : dft_plan<T>(size) { this->temp_size += sizeof(complex<T>) * size * 2; }
+
+#ifdef KFR_DFT_MULTI
+    dct_plan(cpu_t cpu, size_t size) : dft_plan<T>(cpu, size)
+    {
+        this->temp_size += sizeof(complex<T>) * size * 2;
+    }
+#endif
 
     KFR_MEM_INTRINSIC void execute(T* out, const T* in, u8* temp, bool inverse = false) const
     {
