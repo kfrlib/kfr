@@ -110,6 +110,37 @@ inline void aligned_free(void* ptr)
 }
 
 inline void aligned_release(void* ptr) { aligned_free(ptr); }
+
+inline void* aligned_reallocate(void* ptr, size_t new_size, size_t alignment)
+{
+    if (ptr)
+    {
+        if (new_size)
+        {
+            void* new_ptr   = aligned_malloc(new_size, alignment);
+            size_t old_size = aligned_size(ptr);
+            memcpy(new_ptr, ptr, std::min(old_size, new_size));
+            aligned_release(ptr);
+            return new_ptr;
+        }
+        else
+        {
+            aligned_release(ptr);
+            return nullptr;
+        }
+    }
+    else
+    {
+        if (new_size)
+        {
+            return internal_generic::aligned_malloc(new_size, alignment);
+        }
+        else
+        {
+            return nullptr; // do nothing
+        }
+    }
+}
 } // namespace internal_generic
 
 /// @brief Allocates aligned memory
