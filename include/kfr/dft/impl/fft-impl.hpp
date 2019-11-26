@@ -943,12 +943,17 @@ KFR_INTRINSIC void generate_real_twiddles(dft_plan_real<T>* self, size_t size)
 }
 
 template <typename T>
-#ifdef CMT_ARCH_X32
-// Fix Clang 8.0 bug
+#if (defined CMT_ARCH_X32 && defined __clang__) && ((defined __APPLE__) || (__clang_major__ == 8))
+// Fix for Clang 8.0 bug (x32 with FMA instructions)
+// Xcode has different versions but x86 is very rare on macOS these days, 
+// so disable inlining and FMA for x32 macOS and Clang 8.x
 __attribute__((target("no-fma"), flatten, noinline))
+#else
+KFR_INTRINSIC
 #endif
-void to_fmt(size_t real_size, const complex<T>* rtwiddle, complex<T>* out, const complex<T>* in,
-                          dft_pack_format fmt)
+void
+to_fmt(size_t real_size, const complex<T>* rtwiddle, complex<T>* out, const complex<T>* in,
+       dft_pack_format fmt)
 {
     using namespace intrinsics;
     size_t csize = real_size / 2; // const size_t causes internal compiler error: in tsubst_copy in GCC 5.2
