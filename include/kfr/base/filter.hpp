@@ -32,8 +32,6 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
-{
 
 /// @brief Abstract base class for filters with one argument. Mainly for DSP
 template <typename T>
@@ -131,12 +129,16 @@ protected:
     expression_pointer<T> filter_expr;
 };
 
+inline namespace CMT_ARCH_NAME
+{
+
 /// @brief Converts expression with placeholder to filter. Placeholder and filter must have the same type
 template <typename E, typename T = value_type_of<E>>
 KFR_INTRINSIC expression_filter<T> to_filter(E&& e)
 {
     return expression_filter<T>(to_pointer(std::move(e)));
 }
+} // namespace CMT_ARCH_NAME
 
 /// @brief Converts expression with placeholder to filter. Placeholder and filter must have the same type
 template <typename T, typename E>
@@ -145,5 +147,4 @@ KFR_INTRINSIC expression_filter<T> to_filter(expression_pointer<T>&& e)
     return expression_filter<T>(std::move(e));
 }
 
-} // namespace CMT_ARCH_NAME
 } // namespace kfr

@@ -127,48 +127,8 @@ struct dft_stage;
 template <typename T>
 using dft_stage_ptr = std::unique_ptr<dft_stage<T>>;
 
-inline namespace CMT_ARCH_NAME
-{
-template <typename T>
-void dft_initialize(dft_plan<T>& plan);
-template <typename T>
-void dft_real_initialize(dft_plan_real<T>& plan);
-} // namespace CMT_ARCH_NAME
-
-#ifdef KFR_DFT_MULTI
-
-#define KFR_DFT_PROTO(arch)                                                                                  \
-    namespace arch                                                                                           \
-    {                                                                                                        \
-    template <typename T>                                                                                    \
-    void dft_initialize(dft_plan<T>& plan);                                                                  \
-    template <typename T>                                                                                    \
-    void dft_real_initialize(dft_plan_real<T>& plan);                                                        \
-    }
-
-#if !CMT_ARCH_IS_AVX512
-KFR_DFT_PROTO(avx512)
-#endif
-#if !CMT_ARCH_IS_AVX2
-KFR_DFT_PROTO(avx2)
-#endif
-#if !CMT_ARCH_IS_AVX
-KFR_DFT_PROTO(avx)
-#endif
-#if !CMT_ARCH_IS_SSE41
-KFR_DFT_PROTO(sse41)
-#endif
-#if !CMT_ARCH_IS_SSSE3
-KFR_DFT_PROTO(ssse3)
-#endif
-#if !CMT_ARCH_IS_SSE3
-KFR_DFT_PROTO(sse3)
-#endif
-#if !CMT_ARCH_IS_SSE2
-KFR_DFT_PROTO(sse2)
-#endif
-
-#endif
+CMT_MULTI_PROTO(template <typename T> void dft_initialize(dft_plan<T>& plan);)
+CMT_MULTI_PROTO(template <typename T> void dft_real_initialize(dft_plan_real<T>& plan);)
 
 /// @brief Class for performing DFT/FFT
 template <typename T>

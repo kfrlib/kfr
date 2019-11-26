@@ -55,9 +55,6 @@ struct complex;
 #endif
 #endif
 
-inline namespace CMT_ARCH_NAME
-{
-
 constexpr size_t inout_context_size = 16;
 
 struct coutput_context
@@ -141,6 +138,9 @@ constexpr inline bool is_numeric = is_number<deep_subtype<T>>;
 /// @brief Check if the type arguments are a numbers or a vectors of numbers
 template <typename... Ts>
 constexpr inline bool is_numeric_args = (is_numeric<Ts> && ...);
+
+inline namespace CMT_ARCH_NAME
+{
 
 #ifdef KFR_TESTING
 namespace internal

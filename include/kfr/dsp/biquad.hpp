@@ -47,9 +47,6 @@ enum class biquad_type
     highshelf
 };
 
-inline namespace CMT_ARCH_NAME
-{
-
 /**
  * @brief Structure for holding biquad filter coefficients.
  */
@@ -92,6 +89,9 @@ struct biquad_params
     biquad_params<T> normalized_b0() const { return { a0, a1, a2, T(1.0), b1 / b0, b2 / b0 }; }
     biquad_params<T> normalized_all() const { return normalized_a0().normalized_b0(); }
 };
+
+inline namespace CMT_ARCH_NAME
+{
 
 namespace internal
 {
@@ -341,5 +341,9 @@ public:
     {
     }
 };
+
 } // namespace CMT_ARCH_NAME
+
+CMT_MULTI_PROTO(template <typename T, size_t maxfiltercount>
+                filter<T>* make_biquad_filter(const biquad_params<T>* bq, size_t count);)
 } // namespace kfr

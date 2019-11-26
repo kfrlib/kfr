@@ -187,8 +187,8 @@ if (ENABLE_DFT)
         target_compile_definitions(kfr_dft PUBLIC -DKFR_DFT_NO_NPo2)
     endif ()    
 
-    if (ENABLE_DFT_MULTIARCH)
-        add_subdirectory(dft)
+    if (ENABLE_CAPI_BUILD)
+        add_subdirectory(capi)
     endif ()
 endif()
 

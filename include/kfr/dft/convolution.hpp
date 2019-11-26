@@ -82,8 +82,8 @@ class convolve_filter : public filter<T>
 {
 public:
     explicit convolve_filter(size_t size, size_t block_size = 1024);
-    explicit convolve_filter(const univector<T>& data, size_t block_size = 1024);
-    void set_data(const univector<T>& data);
+    explicit convolve_filter(const univector_ref<const T>& data, size_t block_size = 1024);
+    void set_data(const univector_ref<const T>& data);
 
 protected:
     void process_expression(T* dest, const expression_pointer<T>& src, size_t size) final
@@ -108,5 +108,9 @@ protected:
     size_t position;
 };
 } // namespace CMT_ARCH_NAME
+
+CMT_MULTI_PROTO(template <typename T>
+                filter<T>* make_convolve_filter(const univector_ref<const T>& taps, size_t block_size);)
+
 } // namespace kfr
 CMT_PRAGMA_GNU(GCC diagnostic pop)

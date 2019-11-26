@@ -15,6 +15,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/runtime.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/version.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/capi.h
     ${PROJECT_SOURCE_DIR}/include/kfr/cident.h
     ${PROJECT_SOURCE_DIR}/include/kfr/kfr.h
     ${PROJECT_SOURCE_DIR}/include/kfr/base/basic_expressions.hpp
@@ -45,7 +46,6 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/convolution.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/fft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/reference_dft.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/dft_c.h
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/data/bitrev.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/data/sincos.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/bitrev.hpp

@@ -31,14 +31,15 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
-{
-
-template <typename T>
-constexpr size_t maximum_expression_width = vector_width<T> * 2;
 
 template <typename T, bool enable_resource = true>
 struct expression_pointer;
+
+template <typename T>
+constexpr size_t maximum_expression_width = vector_width_for<T, cpu_t::highest> * 2;
+
+inline namespace CMT_ARCH_NAME
+{
 
 namespace internal
 {
@@ -47,6 +48,7 @@ template <typename Expression, typename T, size_t key = 0>
 KFR_INTRINSIC bool invoke_substitute(Expression& expr, expression_pointer<T>&& new_pointer,
                                      csize_t<key> = {});
 }
+} // namespace CMT_ARCH_NAME
 
 template <typename T, size_t N = maximum_expression_width<T>>
 struct expression_vtable : expression_vtable<T, N / 2>
@@ -182,6 +184,9 @@ private:
     std::shared_ptr<expression_resource> resource;
 };
 
+inline namespace CMT_ARCH_NAME
+{
+
 namespace internal
 {
 
@@ -277,19 +282,11 @@ KFR_INTRINSIC bool substitute(expression_pointer<T>& expr, expression_pointer<T>
 namespace internal
 {
 
-KFR_INTRINSIC bool var_or() { return false; }
-
-template <typename... Args>
-KFR_INTRINSIC bool var_or(bool b, Args... args)
-{
-    return b || var_or(args...);
-}
-
 template <typename... Args, typename T, size_t key, size_t... indices>
 KFR_INTRINSIC bool substitute(internal::expression_with_arguments<Args...>& expr,
                               expression_pointer<T>&& new_pointer, csize_t<key>, csizes_t<indices...>)
 {
-    return var_or(substitute(std::get<indices>(expr.args), std::move(new_pointer), csize_t<key>())...);
+    return (substitute(std::get<indices>(expr.args), std::move(new_pointer), csize_t<key>()) || ...);
 }
 
 } // namespace internal

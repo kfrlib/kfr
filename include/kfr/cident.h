@@ -651,3 +651,107 @@ extern char* gets(char* __s);
 
 #define CMT_NARGS2(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, ...) _10
 #define CMT_NARGS(...) CMT_NARGS2(__VA_ARGS__, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
+
+#ifdef CMT_MULTI_ENABLED_AVX512
+#define CMT_IF_ENABLED_AVX512(...) __VA_ARGS__
+#else
+#define CMT_IF_ENABLED_AVX512(...)
+#endif
+
+#ifdef CMT_MULTI_ENABLED_AVX2
+#define CMT_IF_ENABLED_AVX2(...) __VA_ARGS__
+#else
+#define CMT_IF_ENABLED_AVX2(...)
+#endif
+
+#ifdef CMT_MULTI_ENABLED_AVX
+#define CMT_IF_ENABLED_AVX(...) __VA_ARGS__
+#else
+#define CMT_IF_ENABLED_AVX(...)
+#endif
+
+#ifdef CMT_MULTI_ENABLED_SSE42
+#define CMT_IF_ENABLED_SSE42(...) __VA_ARGS__
+#else
+#define CMT_IF_ENABLED_SSE42(...)
+#endif
+
+#ifdef CMT_MULTI_ENABLED_SSE41
+#define CMT_IF_ENABLED_SSE41(...) __VA_ARGS__
+#else
+#define CMT_IF_ENABLED_SSE41(...)
+#endif
+
+#ifdef CMT_MULTI_ENABLED_SSSE3
+#define CMT_IF_ENABLED_SSSE3(...) __VA_ARGS__
+#else
+#define CMT_IF_ENABLED_SSSE3(...)
+#endif
+
+#ifdef CMT_MULTI_ENABLED_SSE3
+#define CMT_IF_ENABLED_SSE3(...) __VA_ARGS__
+#else
+#define CMT_IF_ENABLED_SSE3(...)
+#endif
+
+#ifdef CMT_MULTI_ENABLED_SSE2
+#define CMT_IF_ENABLED_SSE2(...) __VA_ARGS__
+#else
+#define CMT_IF_ENABLED_SSE2(...)
+#endif
+
+#define CMT_IF_IS_AVX512(...)
+#define CMT_IF_IS_AVX2(...)
+#define CMT_IF_IS_AVX(...)
+#define CMT_IF_IS_SSE42(...)
+#define CMT_IF_IS_SSE41(...)
+#define CMT_IF_IS_SSSE3(...)
+#define CMT_IF_IS_SSE3(...)
+#define CMT_IF_IS_SSE2(...)
+
+#if defined CMT_ARCH_AVX512
+#undef CMT_IF_IS_AVX512
+#define CMT_IF_IS_AVX512(...) __VA_ARGS__
+#elif defined CMT_ARCH_AVX2
+#undef CMT_IF_IS_AVX2
+#define CMT_IF_IS_AVX2(...) __VA_ARGS__
+#elif defined CMT_ARCH_AVX
+#undef CMT_IF_IS_AVX
+#define CMT_IF_IS_AVX(...) __VA_ARGS__
+#elif defined CMT_ARCH_SSE42
+#undef CMT_IF_IS_SSE42
+#define CMT_IF_IS_SSE42(...) __VA_ARGS__
+#elif defined CMT_ARCH_SSE41
+#undef CMT_IF_IS_SSE41
+#define CMT_IF_IS_SSE41(...) __VA_ARGS__
+#elif defined CMT_ARCH_SSSE3
+#undef CMT_IF_IS_SSSE3
+#define CMT_IF_IS_SSSE3(...) __VA_ARGS__
+#elif defined CMT_ARCH_SSE3
+#undef CMT_IF_IS_SSE3
+#define CMT_IF_IS_SSE3(...) __VA_ARGS__
+#elif defined CMT_ARCH_SSE2
+#undef CMT_IF_IS_SSE2
+#define CMT_IF_IS_SSE2(...) __VA_ARGS__
+#endif
+
+#ifdef CMT_MULTI
+#define CMT_MULTI_PROTO(...)                                                                                 \
+    inline namespace CMT_ARCH_NAME                                                                           \
+    {                                                                                                        \
+    __VA_ARGS__                                                                                              \
+    }                                                                                                        \
+    CMT_IF_ENABLED_SSE2(CMT_IF_IS_SSE2(inline) namespace sse2{ __VA_ARGS__ })                                \
+    CMT_IF_ENABLED_SSE3(CMT_IF_IS_SSE3(inline) namespace sse3{ __VA_ARGS__ })                                \
+    CMT_IF_ENABLED_SSSE3(CMT_IF_IS_SSSE3(inline) namespace ssse3{ __VA_ARGS__ })                             \
+    CMT_IF_ENABLED_SSE41(CMT_IF_IS_SSE41(inline) namespace sse41{ __VA_ARGS__ })                             \
+    CMT_IF_ENABLED_AVX(CMT_IF_IS_AVX(inline) namespace avx{ __VA_ARGS__ })                                   \
+    CMT_IF_ENABLED_AVX2(CMT_IF_IS_AVX2(inline) namespace avx2{ __VA_ARGS__ })                                \
+    CMT_IF_ENABLED_AVX512(CMT_IF_IS_AVX512(inline) namespace avx512{ __VA_ARGS__ })
+#else
+#define CMT_MULTI_PROTO(...)                                                                                 \
+    inline namespace CMT_ARCH_NAME                                                                           \
+    {                                                                                                        \
+    __VA_ARGS__                                                                                              \
+    }
+#endif

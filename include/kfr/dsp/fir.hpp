@@ -193,12 +193,12 @@ short_fir(E1&& e1, const univector<T, TapCount>& taps)
 }
 
 template <typename T, typename U = T>
-class filter_fir : public filter<U>
+class fir_filter : public filter<U>
 {
 public:
-    filter_fir(const array_ref<const T>& taps) : state(taps) {}
+    fir_filter(const univector_ref<const T>& taps) : state(taps) {}
 
-    void set_taps(const array_ref<const T>& taps) { state = fir_state<T, U>(taps); }
+    void set_taps(const univector_ref<const T>& taps) { state = fir_state<T, U>(taps); }
 
     /// Reset internal filter state
     void reset() final
@@ -222,6 +222,10 @@ private:
 };
 
 template <typename T, typename U = T>
-using fir_filter = filter_fir<T, U>;
+using filter_fir = fir_filter<T, U>;
+
 } // namespace CMT_ARCH_NAME
+
+CMT_MULTI_PROTO(template <typename U, typename T>
+                filter<U>* make_fir_filter(const univector_ref<const T>& taps);)
 } // namespace kfr

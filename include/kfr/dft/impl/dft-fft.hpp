@@ -25,8 +25,6 @@
  */
 #pragma once
 
-#include "../dft_c.h"
-
 #include "../../base/basic_expressions.hpp"
 #include "../../math/complex_math.hpp"
 #include "../../testo/assert.hpp"

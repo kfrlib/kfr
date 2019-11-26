@@ -89,7 +89,7 @@ convolve_filter<T>::convolve_filter(size_t size, size_t block_size)
 }
 
 template <typename T>
-convolve_filter<T>::convolve_filter(const univector<T>& data, size_t block_size)
+convolve_filter<T>::convolve_filter(const univector_ref<const T>& data, size_t block_size)
     : size(data.size()), block_size(next_poweroftwo(block_size)),
       fft(2 * next_poweroftwo(block_size), dft_pack_format::Perm), temp(fft.temp_size),
       segments((data.size() + next_poweroftwo(block_size) - 1) / next_poweroftwo(block_size)),
@@ -100,7 +100,7 @@ convolve_filter<T>::convolve_filter(const univector<T>& data, size_t block_size)
 }
 
 template <typename T>
-void convolve_filter<T>::set_data(const univector<T>& data)
+void convolve_filter<T>::set_data(const univector_ref<const T>& data)
 {
     univector<T> input(fft.size);
     const T ifftsize = reciprocal(T(fft.size));
@@ -177,9 +177,9 @@ template univector<float> autocorrelate<float>(const univector_ref<const float>&
 
 template convolve_filter<float>::convolve_filter(size_t, size_t);
 
-template convolve_filter<float>::convolve_filter(const univector<float>&, size_t);
+template convolve_filter<float>::convolve_filter(const univector_ref<const float>&, size_t);
 
-template void convolve_filter<float>::set_data(const univector<float>&);
+template void convolve_filter<float>::set_data(const univector_ref<const float>&);
 
 template void convolve_filter<float>::process_buffer(float* output, const float* input, size_t size);
 
@@ -197,10 +197,20 @@ template univector<double> autocorrelate<double>(const univector_ref<const doubl
 
 template convolve_filter<double>::convolve_filter(size_t, size_t);
 
-template convolve_filter<double>::convolve_filter(const univector<double>&, size_t);
+template convolve_filter<double>::convolve_filter(const univector_ref<const double>&, size_t);
 
-template void convolve_filter<double>::set_data(const univector<double>&);
+template void convolve_filter<double>::set_data(const univector_ref<const double>&);
 
 template void convolve_filter<double>::process_buffer(double* output, const double* input, size_t size);
+
+template <typename T>
+filter<T>* make_convolve_filter(const univector_ref<const T>& taps, size_t block_size)
+{
+    return new convolve_filter<T>(taps, block_size);
+}
+
+template filter<float>* make_convolve_filter(const univector_ref<const float>&, size_t);
+template filter<double>* make_convolve_filter(const univector_ref<const double>&, size_t);
+
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
