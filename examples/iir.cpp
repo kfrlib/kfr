@@ -87,6 +87,22 @@ int main()
     }
     plot_save("butterworth_bandpass4", output, options + ", title='4th-order Butterworth filter, bandpass'");
 
+    {
+        zpk<fbase> filt                       = iir_lowpass(chebyshev1<fbase>(8, 2), 0.09);
+        std::vector<biquad_params<fbase>> bqs = to_sos(filt);
+        output                                = biquad<maxorder>(bqs, unitimpulse());
+    }
+    plot_save("chebyshev1_lowpass8", output,
+              options + ", title='8th-order Chebyshev type I filter, lowpass'");
+
+    {
+        zpk<fbase> filt                       = iir_lowpass(chebyshev2<fbase>(8, 80), 0.09);
+        std::vector<biquad_params<fbase>> bqs = to_sos(filt);
+        output                                = biquad<maxorder>(bqs, unitimpulse());
+    }
+    plot_save("chebyshev2_lowpass8", output,
+              options + ", title='8th-order Chebyshev type II filter, lowpass'");
+
     println("SVG plots have been saved to svg directory");
 
     return 0;
