@@ -144,9 +144,9 @@ struct expression_pointer : input_expression
     using value_type = T;
 
     expression_pointer() CMT_NOEXCEPT : instance(nullptr), vtable(nullptr) {}
-    expression_pointer(void* instance, const expression_vtable<T>* vtable,
+    expression_pointer(const void* instance, const expression_vtable<T>* vtable,
                        std::shared_ptr<expression_resource> resource = nullptr)
-        : instance(instance), vtable(vtable), resource(std::move(resource))
+        : instance(const_cast<void*>(instance)), vtable(vtable), resource(std::move(resource))
     {
     }
     template <size_t N, KFR_ENABLE_IF(N <= maximum_expression_width<T>)>

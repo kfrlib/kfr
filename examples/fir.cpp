@@ -137,11 +137,11 @@ int main()
     // --------------------------------------------------------------------------------------
 
     // Initialize FIR filter with float input/output and fbase taps
-    convolve_filter<float> conv_filter(taps127);
+    convolve_filter<fbase> conv_filter(taps127);
 
     // Apply to univector, static array, data by pointer or anything
-    univector<float> filtered_noise3;
-    conv_filter.apply(filtered_noise3, noise);
+    univector<fbase> filtered_noise3;
+    conv_filter.apply(filtered_noise3, noise * 1.0);
 
 #if PYTHON_IS_INSTALLED
     // Plot results, same as filtered_noise2
