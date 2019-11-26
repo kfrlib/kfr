@@ -141,7 +141,7 @@ int main()
 
     // Apply to univector, static array, data by pointer or anything
     univector<fbase> filtered_noise3;
-    conv_filter.apply(filtered_noise3, noise * 1.0);
+    conv_filter.apply(filtered_noise3, noise * fbase(1.0));
 
 #if PYTHON_IS_INSTALLED
     // Plot results, same as filtered_noise2
