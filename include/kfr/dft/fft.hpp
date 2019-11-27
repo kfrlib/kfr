@@ -146,27 +146,21 @@ struct dft_plan
         switch (cpu)
         {
         case cpu_t::avx512:
-            avx512::dft_initialize(*this);
-            break;
+            CMT_IF_ENABLED_AVX512(avx512::dft_initialize(*this); break;)
         case cpu_t::avx2:
-            avx2::dft_initialize(*this);
-            break;
+            CMT_IF_ENABLED_AVX2(avx2::dft_initialize(*this); break;)
         case cpu_t::avx:
-            avx::dft_initialize(*this);
-            break;
+            CMT_IF_ENABLED_AVX(avx::dft_initialize(*this); break;)
         case cpu_t::sse42:
         case cpu_t::sse41:
-            sse41::dft_initialize(*this);
-            break;
+            CMT_IF_ENABLED_SSE41(sse41::dft_initialize(*this); break;)
         case cpu_t::ssse3:
-            ssse3::dft_initialize(*this);
-            break;
+            CMT_IF_ENABLED_SSSE3(ssse3::dft_initialize(*this); break;)
         case cpu_t::sse3:
-            sse3::dft_initialize(*this);
-            break;
+            CMT_IF_ENABLED_SSE3(sse3::dft_initialize(*this); break;)
         default:
-            sse2::dft_initialize(*this);
-            break;
+            CMT_IF_ENABLED_SSE2(sse2::dft_initialize(*this); break;)
+            ;
         }
     }
 #endif
@@ -317,27 +311,21 @@ struct dft_plan_real : dft_plan<T>
         switch (cpu)
         {
         case cpu_t::avx512:
-            avx512::dft_real_initialize(*this);
-            break;
+            CMT_IF_ENABLED_AVX512(avx512::dft_real_initialize(*this); break;)
         case cpu_t::avx2:
-            avx2::dft_real_initialize(*this);
-            break;
+            CMT_IF_ENABLED_AVX2(avx2::dft_real_initialize(*this); break;)
         case cpu_t::avx:
-            avx::dft_real_initialize(*this);
-            break;
+            CMT_IF_ENABLED_AVX(avx::dft_real_initialize(*this); break;)
         case cpu_t::sse42:
         case cpu_t::sse41:
-            sse41::dft_real_initialize(*this);
-            break;
+            CMT_IF_ENABLED_SSE41(sse41::dft_real_initialize(*this); break;)
         case cpu_t::ssse3:
-            ssse3::dft_real_initialize(*this);
-            break;
+            CMT_IF_ENABLED_SSSE3(ssse3::dft_real_initialize(*this); break;)
         case cpu_t::sse3:
-            sse3::dft_real_initialize(*this);
-            break;
+            CMT_IF_ENABLED_SSE3(sse3::dft_real_initialize(*this); break;)
         default:
-            sse2::dft_real_initialize(*this);
-            break;
+            CMT_IF_ENABLED_SSE2(sse2::dft_real_initialize(*this); break;)
+            ;
         }
     }
 #endif
