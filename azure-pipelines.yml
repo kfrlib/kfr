@@ -21,7 +21,11 @@ jobs:
   - bash: |
       set -e
       sudo apt-get update && sudo apt-get install -y ninja-build libmpfr-dev clang-8
-      ci/run.sh build-release -DCPU_ARCH=detect -DCMAKE_CXX_COMPILER=clang++-8 -DCMAKE_BUILD_TYPE=Release
+      curl -o "$(Agent.TempDirectory)/sde.tar.bz2" -L $(SDEURLLINUX)
+      mkdir "$(Agent.TempDirectory)/sde-bin"
+      tar -C "$(Agent.TempDirectory)/sde-bin" -xjf "$(Agent.TempDirectory)/sde.tar.bz2"  --strip 1
+      sudo ln -s $(Agent.TempDirectory)/sde-bin/sde64 /usr/bin/sde
+      ci/run.sh build-release -DARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DCPU_ARCH=detect -DUSE_SDE=ON -DCMAKE_CXX_COMPILER=clang++-8 -DCMAKE_BUILD_TYPE=Release
 
 - job: Linux_x86_64_GCC7
   timeoutInMinutes: 120
@@ -47,7 +51,7 @@ jobs:
       mkdir "$(Agent.TempDirectory)/sde-bin"
       tar -C "$(Agent.TempDirectory)/sde-bin" -xjf "$(Agent.TempDirectory)/sde.tar.bz2"  --strip 1
       sudo ln -s $(Agent.TempDirectory)/sde-bin/sde64 /usr/bin/sde
-      ci/run.sh build-release -DARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DUSE_SDE=ON -DCPU_ARCH=detect -DENABLE_DFT=OFF -DCMAKE_CXX_COMPILER=g++-8 -DCMAKE_BUILD_TYPE=Release
+      ci/run.sh build-release -DARCH_TESTS=sse2,sse3,sse41,avx,avx2 -DUSE_SDE=ON -DCPU_ARCH=detect -DENABLE_DFT=OFF -DCMAKE_CXX_COMPILER=g++-8 -DCMAKE_BUILD_TYPE=Release
       
 - job: Linux_x86_64_GCC9
   timeoutInMinutes: 120
@@ -62,7 +66,7 @@ jobs:
       mkdir "$(Agent.TempDirectory)/sde-bin"
       tar -C "$(Agent.TempDirectory)/sde-bin" -xjf "$(Agent.TempDirectory)/sde.tar.bz2"  --strip 1
       sudo ln -s $(Agent.TempDirectory)/sde-bin/sde64 /usr/bin/sde
-      ci/run.sh build-release -DARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DUSE_SDE=ON  -DCPU_ARCH=detect -DENABLE_DFT=OFF -DCMAKE_CXX_COMPILER=g++-9 -DCMAKE_BUILD_TYPE=Release
+      ci/run.sh build-release -DARCH_TESTS=sse2,sse3,sse41,avx,avx2 -DUSE_SDE=ON  -DCPU_ARCH=detect -DENABLE_DFT=OFF -DCMAKE_CXX_COMPILER=g++-9 -DCMAKE_BUILD_TYPE=Release
 
 - job: Linux_ARM_Clang_Release
   timeoutInMinutes: 120
@@ -107,8 +111,6 @@ jobs:
   timeoutInMinutes: 120
   strategy:
     matrix:
-      xcode11.2:
-        XCODE_VER: 11.2
       xcode11:
         XCODE_VER: 11
       xcode10.3:
@@ -121,6 +123,17 @@ jobs:
       /bin/bash -c "sudo xcode-select -s /Applications/Xcode_$(XCODE_VER).app/Contents/Developer"
       brew install ninja
       ci/run.sh build-release -DCPU_ARCH=detect -DCMAKE_BUILD_TYPE=Release
+      
+- job: macOS14_x86_64_Clang_Arch_Release
+  timeoutInMinutes: 120
+  pool:
+    vmImage: 'macOS-10.14'
+  steps:
+  - bash: |
+      set -e
+      /bin/bash -c "sudo xcode-select -s /Applications/Xcode_11.2.app/Contents/Developer"
+      brew install ninja
+      ci/run.sh build-release -DARCH_TESTS=sse2,sse3,sse41,avx -DCMAKE_BUILD_TYPE=Release
 
 - job: iOS_ARM_Clang_Release
   timeoutInMinutes: 120
