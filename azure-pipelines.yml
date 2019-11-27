@@ -7,7 +7,11 @@ jobs:
   - bash: |
       set -e
       sudo apt-get update && sudo apt-get install -y ninja-build libmpfr-dev
-      ci/run.sh build-release -DCPU_ARCH=detect -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release
+      curl -o "$(Agent.TempDirectory)/sde.tar.bz2" -L $(SDEURLLINUX)
+      mkdir "$(Agent.TempDirectory)/sde-bin"
+      tar -C "$(Agent.TempDirectory)/sde-bin" -xjf "$(Agent.TempDirectory)/sde.tar.bz2"  --strip 1
+      sudo ln -s $(Agent.TempDirectory)/sde-bin/sde64 /usr/bin/sde
+      ci/run.sh build-release -DARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DCPU_ARCH=detect -DUSE_SDE=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release
       
 - job: Linux_x86_64_Clang8
   timeoutInMinutes: 120
@@ -39,7 +43,11 @@ jobs:
       set -e
       sudo add-apt-repository ppa:ubuntu-toolchain-r/test
       sudo apt-get update && sudo apt-get install -y ninja-build libmpfr-dev gcc-8 g++-8
-      ci/run.sh build-release -DCPU_ARCH=detect -DENABLE_DFT=OFF -DCMAKE_CXX_COMPILER=g++-8 -DCMAKE_BUILD_TYPE=Release
+      curl -o "$(Agent.TempDirectory)/sde.tar.bz2" -L $(SDEURLLINUX)
+      mkdir "$(Agent.TempDirectory)/sde-bin"
+      tar -C "$(Agent.TempDirectory)/sde-bin" -xjf "$(Agent.TempDirectory)/sde.tar.bz2"  --strip 1
+      sudo ln -s $(Agent.TempDirectory)/sde-bin/sde64 /usr/bin/sde
+      ci/run.sh build-release -DARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DUSE_SDE=ON -DCPU_ARCH=detect -DENABLE_DFT=OFF -DCMAKE_CXX_COMPILER=g++-8 -DCMAKE_BUILD_TYPE=Release
       
 - job: Linux_x86_64_GCC9
   timeoutInMinutes: 120
@@ -50,7 +58,11 @@ jobs:
       set -e
       sudo add-apt-repository ppa:ubuntu-toolchain-r/test
       sudo apt-get update && sudo apt-get install -y ninja-build libmpfr-dev gcc-9 g++-9
-      ci/run.sh build-release -DCPU_ARCH=detect -DENABLE_DFT=OFF -DCMAKE_CXX_COMPILER=g++-9 -DCMAKE_BUILD_TYPE=Release
+      curl -o "$(Agent.TempDirectory)/sde.tar.bz2" -L $(SDEURLLINUX)
+      mkdir "$(Agent.TempDirectory)/sde-bin"
+      tar -C "$(Agent.TempDirectory)/sde-bin" -xjf "$(Agent.TempDirectory)/sde.tar.bz2"  --strip 1
+      sudo ln -s $(Agent.TempDirectory)/sde-bin/sde64 /usr/bin/sde
+      ci/run.sh build-release -DARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DUSE_SDE=ON  -DCPU_ARCH=detect -DENABLE_DFT=OFF -DCMAKE_CXX_COMPILER=g++-9 -DCMAKE_BUILD_TYPE=Release
 
 - job: Linux_ARM_Clang_Release
   timeoutInMinutes: 120
