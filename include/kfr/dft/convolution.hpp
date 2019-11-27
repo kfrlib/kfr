@@ -112,5 +112,12 @@ protected:
 CMT_MULTI_PROTO(template <typename T>
                 filter<T>* make_convolve_filter(const univector_ref<const T>& taps, size_t block_size);)
 
+#ifdef CMT_MULTI
+template <typename T>
+KFR_FUNCTION filter<T>* make_convolve_filter(cpu_t cpu, const univector_ref<const T>& taps, size_t block_size)
+{
+    CMT_MULTI_PROTO_GATE(make_convolve_filter<T>(taps, block_size))
+}
+#endif
 } // namespace kfr
 CMT_PRAGMA_GNU(GCC diagnostic pop)

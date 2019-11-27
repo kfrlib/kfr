@@ -346,4 +346,12 @@ public:
 
 CMT_MULTI_PROTO(template <typename T, size_t maxfiltercount>
                 filter<T>* make_biquad_filter(const biquad_params<T>* bq, size_t count);)
+
+#ifdef CMT_MULTI
+template <typename T, size_t maxfiltercount>
+KFR_FUNCTION filter<T>* make_biquad_filter(cpu_t cpu, const biquad_params<T>* bq, size_t count)
+{
+    CMT_MULTI_PROTO_GATE(make_biquad_filter<T, maxfiltercount>(bq, count))
+}
+#endif
 } // namespace kfr

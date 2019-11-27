@@ -228,4 +228,12 @@ using filter_fir = fir_filter<T, U>;
 
 CMT_MULTI_PROTO(template <typename U, typename T>
                 filter<U>* make_fir_filter(const univector_ref<const T>& taps);)
+
+#ifdef CMT_MULTI
+template <typename U, typename T>
+KFR_FUNCTION filter<U>* make_fir_filter(cpu_t cpu, const univector_ref<const T>& taps)
+{
+    CMT_MULTI_PROTO_GATE(make_fir_filter<U>(taps))
+}
+#endif
 } // namespace kfr
