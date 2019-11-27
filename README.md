@@ -5,8 +5,8 @@
 
 Compiler support:
 
-![Clang 4+](https://img.shields.io/badge/Clang-4%2B-brightgreen.svg?style=flat-square)
-![Xcode 8.3+](https://img.shields.io/badge/Xcode-8.3%2B-brightgreen.svg?style=flat-square)
+![Clang 6+](https://img.shields.io/badge/Clang-6%2B-brightgreen.svg?style=flat-square)
+![Xcode 9+](https://img.shields.io/badge/Xcode-9%2B-brightgreen.svg?style=flat-square)
 ![GCC 7+](https://img.shields.io/badge/GCC-7%2B-brightgreen.svg?style=flat-square)
 ![MSVC 2017](https://img.shields.io/badge/MSVC-2017-brightgreen.svg?style=flat-square)
 
@@ -18,12 +18,41 @@ KFR has no external dependencies except C++14-compatible standard C++ library.
 
 # Features
 
+## What's new in KFR 4.0
+
+* IIR filter design
+  * Butterworth
+  * Chebyshev type I and II
+  * Bessel
+  * Lowpass, highpass, bandpass and bandstop filters
+  * Conversion from zpk to SOS format (biquad function can be used to perform filtering)
+* Discrete Cosine Transform type II (and its inverse, also called DCT type III)
+* cmake uninstall target (thank to @acxz)
+* C API: DFT, real DFT, DCT, FIR and IIR filters and convolution, memory allocation
+  * Built for SSE2, SSE4.1, AVX, AVX2, AVX512, x86 and x86_64, architecture is selected at runtime
+  * Can be used with any compiler and any language with ability to call C functions
+  * Windows binaries will be available soon
+* C++17
+  * Inline variables
+  * Fold expressions
+  * Structured binding
+* New vector based types: color, rectangle, point, size, border, geometric vector, 2D matrix
+* Color space conversion (sRGB, XYZ, Lab, LCH)
+* MP3 file reading (using third party dr_lib library, see source code for details)
+* Various optimizations and fixes (thank to @bmanga, @ncorgan, @rotkreis, @mujjingun for fixes and bug reports)
+
+
+### Release notes
+
+* MSVC support is limited to MSVC2017 due to ICE in MSVC2019. Once fixed, support will be added
+* DFT is limited to Clang due to ICE in MSVC and broken AVX optimization in GCC 8 and 9. Once fixed, support will be added
+
 ## What's new in KFR 3.0
 
 * Optimized non-power of two DFT implementation
 * GCC 7+ support
 * MSVC 2017 support
-* Full AVX-512 support
+* AVX-512 support (MSVC and Clang, GCC has incomplete support of AVX-512 instrinsics)
 * EBU R128
 * Ability to include KFR as a subdirectory in cmake project
 * Ability to link objects built for multiple architectures into one binary
