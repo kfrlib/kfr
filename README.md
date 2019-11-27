@@ -25,9 +25,9 @@ KFR has no external dependencies except C++14-compatible standard C++ library.
   * Chebyshev type I and II
   * Bessel
   * Lowpass, highpass, bandpass and bandstop filters
-  * Conversion from zpk to SOS format (biquad function can be used to perform filtering)
+  * Conversion of arbitrary filter from Z,P,K to SOS format (suitable for biquad function and filter)
 * Discrete Cosine Transform type II (and its inverse, also called DCT type III)
-* cmake uninstall target (thank to @acxz)
+* cmake uninstall target (thank to [@acxz](https://github.com/acxz))
 * C API: DFT, real DFT, DCT, FIR and IIR filters and convolution, memory allocation
   * Built for SSE2, SSE4.1, AVX, AVX2, AVX512, x86 and x86_64, architecture is selected at runtime
   * Can be used with any compiler and any language with ability to call C functions
@@ -39,7 +39,7 @@ KFR has no external dependencies except C++14-compatible standard C++ library.
 * New vector based types: color, rectangle, point, size, border, geometric vector, 2D matrix
 * Color space conversion (sRGB, XYZ, Lab, LCH)
 * MP3 file reading (using third party dr_lib library, see source code for details)
-* Various optimizations and fixes (thank to @bmanga, @ncorgan, @rotkreis, @mujjingun for fixes and bug reports)
+* Various optimizations and fixes (thank to [@bmanga](https://github.com/bmanga), [@ncorgan](https://github.com/ncorgan), [@rotkreis](https://github.com/rotkreis), [@mujjingun](https://github.com/mujjingun) for fixes and bug reports)
 
 
 ### Release notes
