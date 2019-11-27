@@ -94,3 +94,4 @@ cmake-*
 
 *.TMP
 temp_audio_file.wav
+.DS_Store
