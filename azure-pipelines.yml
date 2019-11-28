@@ -36,7 +36,7 @@ jobs:
       set -e
       sudo add-apt-repository ppa:ubuntu-toolchain-r/test
       sudo apt-get update && sudo apt-get install -y ninja-build libmpfr-dev gcc-7 g++-7
-      ci/run.sh build-release -DCPU_ARCH=detect -DENABLE_DFT=OFF -DCMAKE_CXX_COMPILER=g++-7 -DCMAKE_BUILD_TYPE=Release
+      ci/run.sh build-release -DCPU_ARCH=avx -DENABLE_DFT=OFF -DCMAKE_CXX_COMPILER=g++-7 -DCMAKE_BUILD_TYPE=Release
 
 - job: Linux_x86_64_GCC8
   timeoutInMinutes: 120

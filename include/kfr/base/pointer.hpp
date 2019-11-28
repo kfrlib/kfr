@@ -125,6 +125,13 @@ struct expression_resource_impl : expression_resource
     expression_resource_impl(E&& e) CMT_NOEXCEPT : e(std::move(e)) {}
     virtual ~expression_resource_impl() {}
     virtual void* instance() override final { return &e; }
+public:
+#ifdef __cpp_aligned_new
+    static void operator delete (void* p, std::align_val_t al) noexcept
+    {
+        internal_generic::aligned_release(p);
+    }
+#endif
 
 private:
     E e;

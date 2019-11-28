@@ -93,7 +93,7 @@ else ()
 
     if (APPLE)
         message (STATUS "Minimum macOS version is set to ${CMAKE_OSX_DEPLOYMENT_TARGET}")
-        message (STATUS "Adjust CMAKE_OSX_DEPLOYMENT_TARGET variable if needed")
+        message (STATUS "Set CMAKE_OSX_DEPLOYMENT_TARGET variable to change")
     else ()
         set_property(TARGET kfr_capi APPEND PROPERTY LINK_LIBRARIES -nodefaultlibs -Wl,-Bdynamic -lm -lc -Wl,-Bstatic -lstdc++ -lgcc -s)
     endif ()
