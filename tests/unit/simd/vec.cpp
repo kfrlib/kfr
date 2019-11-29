@@ -12,6 +12,28 @@ namespace kfr
 {
 inline namespace CMT_ARCH_NAME
 {
+TEST(mask_op)
+{
+    mask<float, 4> m = make_mask<float>(true, false, true, false);
+
+    CHECK(m == make_mask<float>(true, false, true, false));
+
+    m ^= vec<float, 4>(1, 2, 3, 4) < 3;
+
+    CHECK(m == make_mask<float>(false, true, true, false));
+
+    m |= vec<float, 4>(1, 2, 3, 4) < 3;
+
+    CHECK(m == make_mask<float>(true, true, true, false));
+
+    m &= vec<float, 4>(1, 2, 3, 4) < 3;
+
+    CHECK(m == make_mask<float>(true, true, false, false));
+
+    m = ~m;
+
+    CHECK(m == make_mask<float>(false, false, true, true));
+}
 TEST(cones)
 {
     CHECK(vec<int, 2>(cones) == vec<int, 2>(-1, -1));
