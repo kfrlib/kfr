@@ -6,6 +6,9 @@
 
 #define KFR_EXTENDED_TESTS
 
+#include <type_traits>
+#include <utility>
+
 #include <kfr/base.hpp>
 #include <kfr/dsp.hpp>
 #ifdef HAVE_DFT

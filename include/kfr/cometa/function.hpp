@@ -11,30 +11,6 @@ namespace cometa
 namespace details
 {
 
-template <typename Result, typename... Args>
-struct virtual_function
-{
-    virtual Result operator()(Args... args)     = 0;
-    virtual virtual_function* make_copy() const = 0;
-    virtual ~virtual_function()                 = default;
-};
-
-template <typename Fn, typename Result, typename... Args>
-struct virtual_function_impl : virtual_function<Result, Args...>
-{
-public:
-    CMT_MEM_INTRINSIC virtual_function_impl(const Fn& fn) : fn(fn) {}
-    CMT_MEM_INTRINSIC Result operator()(Args... args) final { return fn(args...); }
-    CMT_MEM_INTRINSIC virtual_function<Result, Args...>* make_copy() const final
-    {
-        return new virtual_function_impl{ fn };
-    }
-    CMT_MEM_INTRINSIC ~virtual_function_impl() {}
-
-private:
-    Fn fn;
-};
-
 template <typename Fn>
 struct func_filter
 {
@@ -58,9 +34,6 @@ constexpr CMT_INTRINSIC void return_val<void>() CMT_NOEXCEPT
 }
 } // namespace details
 
-template <typename>
-struct function;
-
 /**
  * @brief std::function-like lightweight function wrapper
  * @code
@@ -68,66 +41,76 @@ struct function;
  * CHECK( f( 3.4f ) == 3 )
  * @endcode
  */
-template <typename Result, typename... Args>
-struct function<Result(Args...)>
+template <typename F>
+struct function;
+
+namespace details
 {
-    using this_t = function<Result(Args...)>;
-
-    function(function&& other) : fn(other.fn) { other.fn = nullptr; }
-    function& operator=(function&& other)
+template <typename R, typename... Args>
+struct function_abstract
+{
+    virtual ~function_abstract() {}
+    virtual R operator()(Args... args) = 0;
+};
+template <typename Fn, typename R, typename... Args>
+struct function_impl : public function_abstract<R, Args...>
+{
+    inline static void* operator new(size_t size) noexcept { return std::aligned_alloc(size, alignof(Fn)); }
+    inline static void operator delete(void* ptr) noexcept { return std::free(ptr); }
+    inline static void* operator new(size_t size, std::align_val_t al) noexcept
     {
-        fn       = other.fn;
-        other.fn = nullptr;
-        return *this;
+        return std::aligned_alloc(size, static_cast<size_t>(al));
+    }
+    inline static void operator delete(void* ptr, std::align_val_t al) noexcept { return std::free(ptr); }
+
+    template <typename Fn_>
+    function_impl(Fn_ fn) : fn(std::forward<Fn_>(fn))
+    {
+    }
+    ~function_impl() override {}
+    R operator()(Args... args) override { return fn(std::forward<Args>(args)...); }
+    Fn fn;
+};
+} // namespace details
+
+template <typename R, typename... Args>
+struct function<R(Args...)>
+{
+    function() noexcept = default;
+
+    function(nullptr_t) noexcept {}
+
+    template <typename Fn, typename = std::enable_if_t<std::is_invocable_r_v<R, Fn, Args...> &&
+                                                       !std::is_same_v<std::decay_t<Fn>, function>>>
+    function(Fn fn) : impl(new internal::function_impl<std::decay_t<Fn>, R, Args...>(std::move(fn)))
+    {
     }
 
-    CMT_MEM_INTRINSIC function() : fn(nullptr) {}
-    CMT_MEM_INTRINSIC function(std::nullptr_t) : fn(nullptr) {}
-    template <typename Func>
-    CMT_MEM_INTRINSIC function(const Func& x)
-        : fn(new details::virtual_function_impl<typename details::func_filter<Func>::type, Result, Args...>(
-              x))
+    function(const function&) = default;
+
+    function(function&&) noexcept = default;
+
+    function& operator=(const function&) = default;
+
+    function& operator=(function&&) noexcept = default;
+
+    R operator()(Args... args) const
     {
-    }
-    function(const this_t& other) : fn(other.fn ? other.fn->make_copy() : nullptr) {}
-    CMT_MEM_INTRINSIC function& operator=(const this_t& other)
-    {
-        if ((&other != this) && (other.fn))
+        if (impl)
         {
-            auto* temp = other.fn->make_copy();
-            delete fn;
-            fn = temp;
+            return impl->operator()(std::forward<Args>(args)...);
         }
-        return *this;
+        throw std::bad_function_call();
     }
-    CMT_MEM_INTRINSIC function& operator=(std::nullptr_t)
-    {
-        delete fn;
-        fn = nullptr;
-        return *this;
-    }
-    template <typename Fn>
-    CMT_MEM_INTRINSIC function& operator=(const Fn& x)
-    {
-        using FnImpl =
-            details::virtual_function_impl<typename details::func_filter<Fn>::type, Result, Args...>;
-        FnImpl* temp = new FnImpl(x);
-        delete fn;
-        fn = temp;
-        return *this;
-    }
-    CMT_MEM_INTRINSIC Result operator()(Args... args) const { return (*fn)(std::forward<Args>(args)...); }
-    template <typename TResult>
-    CMT_MEM_INTRINSIC Result call(TResult&& default_result, Args... args) const
-    {
-        return fn ? (*fn)(std::forward<Args>(args)...) : std::forward<TResult>(default_result);
-    }
-    CMT_MEM_INTRINSIC explicit operator bool() const CMT_NOEXCEPT { return !!fn; }
 
-    CMT_MEM_INTRINSIC ~function() { delete fn; }
+    [[nodiscard]] explicit operator bool() const { return !!impl; }
 
-private:
-    details::virtual_function<Result, Args...>* fn;
+    [[nodiscard]] bool empty() const { return !impl; }
+
+    std::shared_ptr<details::function_abstract<R, Args...>> impl;
+
+    bool operator==(const function& fn) const { return impl == fn.impl; }
+    bool operator!=(const function& fn) const { return !operator==(fn); }
 };
 
 template <typename Ret, typename... Args, typename T, typename Fn, typename DefFn = fn_noop>
