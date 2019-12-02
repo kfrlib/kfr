@@ -57,16 +57,16 @@ namespace internal
 {
 
 template <typename To, typename E>
-struct expression_convert : expression_with_arguments<E>
+struct expression_cast : expression_with_arguments<E>
 {
     using value_type = To;
-    KFR_MEM_INTRINSIC expression_convert(E&& expr) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC expression_cast(E&& expr) CMT_NOEXCEPT
         : expression_with_arguments<E>(std::forward<E>(expr))
     {
     }
 
     template <size_t N>
-    friend KFR_INTRINSIC vec<To, N> get_elements(const expression_convert& self, cinput_t input, size_t index,
+    friend KFR_INTRINSIC vec<To, N> get_elements(const expression_cast& self, cinput_t input, size_t index,
                                                  vec_shape<To, N>)
     {
         return self.argument_first(input, index, vec_shape<To, N>());
@@ -102,10 +102,10 @@ struct expression_iterator
 };
 } // namespace internal
 
-template <typename To, typename E>
-KFR_INTRINSIC internal::expression_convert<To, E> convert(E&& expr)
+template <typename To, typename E, KFR_ENABLE_IF(is_input_expression<E>)>
+KFR_INTRINSIC internal::expression_cast<To, E> cast(E&& expr)
 {
-    return internal::expression_convert<To, E>(std::forward<E>(expr));
+    return internal::expression_cast<To, E>(std::forward<E>(expr));
 }
 
 template <typename E1, typename T = value_type_of<E1>>
