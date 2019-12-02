@@ -5,10 +5,10 @@
 
 #include "../cometa.hpp"
 #include "memory.hpp"
-#include <cstdlib>
 #include <cstddef>
-#include <type_traits>
+#include <cstdlib>
 #include <memory>
+#include <type_traits>
 #if CMT_HAS_EXCEPTIONS
 #include <functional>
 #endif
@@ -91,9 +91,9 @@ struct function<R(Args...)>
 
     function(nullptr_t) noexcept {}
 
-    template <typename Fn, typename = std::enable_if_t<std::is_invocable_r_v<R, Fn, Args...> &&
-                                                       !std::is_same_v<std::decay_t<Fn>, function>>>
-    function(Fn fn) : impl(new details::function_impl<std::decay_t<Fn>, R, Args...>(std::move(fn)))
+    template <typename Fn,
+              typename = enable_if<is_invocable<R, Fn, Args...> && !is_same<decay<Fn>, function>>>
+    function(Fn fn) : impl(new details::function_impl<decay<Fn>, R, Args...>(std::move(fn)))
     {
     }
 

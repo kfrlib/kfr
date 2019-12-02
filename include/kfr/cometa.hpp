@@ -186,6 +186,9 @@ constexpr inline bool is_convertible = std::is_convertible<Tfrom, Tto>::value;
 template <typename T, typename... Args>
 constexpr inline bool is_constructible = std::is_constructible<T, Args...>::value;
 
+template <typename T, typename... Args>
+constexpr inline bool is_invocable = std::is_invocable<T, Args...>::value;
+
 template <typename T>
 constexpr inline bool is_template_arg = std::is_integral<T>::value || std::is_enum<T>::value;
 
