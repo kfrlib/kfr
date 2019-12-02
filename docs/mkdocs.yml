@@ -1,0 +1,112 @@
+site_name: KFR
+theme:
+  name: 'material'
+  feature:
+    tabs: true
+extra:
+  search:
+    language: en
+
+  social:
+    - type: 'github'
+      link: 'https://github.com/kfrlib'
+    - type: 'twitter'
+      link: 'https://twitter.com/kfrlib'
+
+copyright: 'Copyright &copy; 2016 - 2019 KFR'
+
+plugins:
+    - search
+
+markdown_extensions:
+  - admonition
+  - codehilite:
+      guess_lang: false
+  - footnotes
+  - meta
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.details
+
+extra_javascript:
+  - js/math.js
+  - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.9.0/katex.min.js
+
+extra_css:
+  - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.9.0/katex.min.css
+  - css/fix.css
+
+repo_url: https://github.com/kfrlib/kfr
+repo_name: KFR
+
+nav:
+  - index.md
+  - types.md
+  - expressions.md
+  - DSP:
+    - conversion.md
+    - normalize.md
+    - convert_stereo.md
+    - fir.md
+    - bq.md
+    - src.md
+    - convolution.md
+    - ebur128.md
+    - fir_gallery.md
+    - bq_gallery.md
+    - src_gallery.md
+  - DFT:
+    - dft.md
+    - dft2.md
+    - dft_format.md
+  - I/O:
+    - read_audio.md
+    - file_support.md
+    - plot.md
+  - Reference:
+    - auto/refindex.md
+    - Math:
+      - auto/types.md
+      - auto/memory.md
+      - auto/conversion.md
+      - auto/complex.md
+      - auto/constants.md
+      - auto/logical.md
+      - auto/basic_math.md
+      - auto/exponential.md
+      - auto/round.md
+      - auto/saturation.md
+      - auto/trigonometric.md
+      - auto/hyperbolic.md
+      - auto/horizontal.md
+      - auto/other_math.md
+      - auto/expressions.md
+      - auto/generators.md
+      - auto/random.md
+      - auto/array.md
+      - auto/utility.md
+    - DSP:      
+      - auto/filter.md
+      - auto/biquad.md
+      - auto/fir.md
+      - auto/window.md
+      - auto/dsp.md
+      - auto/dsp_extra.md
+    - DFT:
+      - auto/convolution.md
+      - auto/dft.md
+    - IO:      
+      - auto/binary_io.md
+      - auto/audio_io.md
+      - auto/plotting.md
+      - auto/string_io.md
+    - Other functions: auto/default.md
+    - auto/cpuid.md
+    - auto/cometa.md
+
+  - kfr.dev: https://kfr.dev
+  - github.com/kfrlib/kfr: https://github.com/kfrlib/kfr

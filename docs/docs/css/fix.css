@@ -1,0 +1,11 @@
+.md-typeset .admonition, .md-typeset details { 
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,.14) !important;
+ }
+.md-typeset .admonition.abstract>.admonition-title, .md-typeset .admonition.abstract>summary, .md-typeset .admonition.summary>.admonition-title, .md-typeset .admonition.summary>summary, .md-typeset .admonition.tldr>.admonition-title, .md-typeset .admonition.tldr>summary, .md-typeset details.abstract>.admonition-title, .md-typeset details.abstract>summary, .md-typeset details.summary>.admonition-title, .md-typeset details.summary>summary, .md-typeset details.tldr>.admonition-title, .md-typeset details.tldr>summary
+{
+    background-color: rgba(0,176,255,.06);
+}
+.md-typeset .admonition.abstract, .md-typeset .admonition.summary, .md-typeset .admonition.tldr, .md-typeset details.abstract, .md-typeset details.summary, .md-typeset details.tldr
+{
+    border-left: none;
+}
