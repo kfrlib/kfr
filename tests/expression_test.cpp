@@ -42,6 +42,11 @@ TEST(padded)
 
     CHECK_EXPRESSION(padded(truncate(counter(), 6), -1), infinite_size,
                      [](size_t i) { return i >= 6 ? -1 : i; });
+
+    CHECK_EXPRESSION(padded(truncate(counter(), 0), -1), infinite_size, [](size_t i) { return -1; });
+
+    CHECK_EXPRESSION(padded(truncate(counter(), 501), -1), infinite_size,
+                     [](size_t i) { return i >= 501 ? -1 : i; });
 }
 
 TEST(rebind)

@@ -25,6 +25,7 @@
  */
 #pragma once
 
+#include "../cometa/string.hpp"
 #include "../simd/types.hpp"
 
 namespace kfr
@@ -133,3 +134,19 @@ private:
     static i64 lcm(i64 a, i64 b) { return std::abs(a * b) / gcd(a, b); }
 };
 } // namespace kfr
+
+namespace cometa
+{
+template <>
+struct representation<kfr::fraction>
+{
+    using type = std::string;
+    static std::string get(const kfr::fraction& value)
+    {
+        if (value.denominator == 1)
+            return as_string(value.numerator);
+        else
+            return as_string(value.numerator, "/", value.denominator);
+    }
+};
+} // namespace cometa

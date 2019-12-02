@@ -24,6 +24,14 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-fdiagnostics-absolute-paths)
 endif ()
 
+option(ENABLE_COVERAGE "Enable coverage reporting" OFF)
+
+if (ENABLE_COVERAGE)
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
+    endif ()
+endif ()
+
 if (ENABLE_DFT)
     add_definitions(-DHAVE_DFT)
 endif ()

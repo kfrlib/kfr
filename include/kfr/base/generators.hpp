@@ -48,7 +48,7 @@ struct generator : input_expression
     constexpr static bool is_incremental = true;
 
     template <typename U, size_t N>
-    friend KFR_INTRINSIC vec<U, N> get_elements(const generator& self, cinput_t, size_t, vec_shape<U, N> t)
+    friend KFR_INTRINSIC vec<U, N> get_elements(const generator& self, cinput_t, size_t index, vec_shape<U, N> t)
     {
         return self.generate(t);
     }

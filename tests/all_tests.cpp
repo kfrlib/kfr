@@ -34,11 +34,6 @@ FORCE_LINK(avx2)
 int main()
 {
     println(library_version(), " running on ", cpu_runtime());
-    if (get_cpu() < cpu_t::native)
-    {
-        println("CPU is not supported");
-        return -1;
-    }
 #ifdef HAVE_MPFR
     mpfr::scoped_precision p(64);
 #endif

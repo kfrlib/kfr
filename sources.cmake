@@ -172,6 +172,7 @@ set(
 set(
     KFR_UNITTEST_SRC
     ${PROJECT_SOURCE_DIR}/tests/unit/base/conversion.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/base/fraction.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/random.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/reduce.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/graphics/color.cpp

@@ -163,14 +163,17 @@ void test_expression(const E& expr, size_t size, Fn&& fn, const char* expression
         return;
     size                     = size_min(size, 200);
     constexpr size_t maxsize = 2 + ilog2(vector_width<T> * 2);
+    size_t g                 = 1;
     for (size_t i = 0; i < size;)
     {
-        const size_t next_size =
-            std::min(prev_poweroftwo(size - i), static_cast<size_t>(1) << (std::rand() % maxsize));
+        const size_t next_size = std::min(prev_poweroftwo(size - i), g);
+        g *= 2;
+        if (g > (1 << (maxsize - 1)))
+            g = 1;
 
         cswitch(csize<1> << csizeseq<maxsize>, next_size, [&](auto x) {
             constexpr size_t nsize = val_of(decltype(x)());
-            ::testo::scope s(as_string("i = ", i));
+            ::testo::scope s(as_string("i = ", i, " width = ", nsize));
             test->check(c <= get_elements(expr, cinput, i, vec_shape<T, nsize>()) ==
                             internal::get_fn_value<T, nsize>(i, fn),
                         expression);
