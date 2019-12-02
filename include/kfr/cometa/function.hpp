@@ -65,6 +65,8 @@ struct function_impl : public function_abstract<R, Args...>
 {
     inline static void* operator new(size_t size) noexcept { return aligned_allocate(size, alignof(Fn)); }
     inline static void operator delete(void* ptr) noexcept { return aligned_deallocate(ptr); }
+
+#ifdef __cpp_aligned_new
     inline static void* operator new(size_t size, std::align_val_t al) noexcept
     {
         return aligned_allocate(size, static_cast<size_t>(al));
@@ -73,6 +75,7 @@ struct function_impl : public function_abstract<R, Args...>
     {
         return aligned_deallocate(ptr);
     }
+#endif
 
     template <typename Fn_>
     function_impl(Fn_ fn) : fn(std::forward<Fn_>(fn))
@@ -92,7 +95,7 @@ struct function<R(Args...)>
     function(nullptr_t) noexcept {}
 
     template <typename Fn,
-              typename = enable_if<is_invocable<R, Fn, Args...> && !is_same<decay<Fn>, function>>>
+              typename = enable_if<is_invocable_r<R, Fn, Args...> && !is_same<decay<Fn>, function>>>
     function(Fn fn) : impl(new details::function_impl<decay<Fn>, R, Args...>(std::move(fn)))
     {
     }

@@ -573,7 +573,7 @@ struct concat_impl<T1, T2, T3, Ts...>
     using type = typename concat_impl<typename concat_impl<T1, T2>::type, T3, Ts...>::type;
 };
 
-template <typename Fn, typename Args, typename enable=void>
+template <typename Fn, typename Args, typename enable = void>
 struct is_invocable_impl : std::false_type
 {
 };
@@ -582,6 +582,18 @@ template <typename Fn, typename... Args>
 struct is_invocable_impl<Fn, ctypes_t<Args...>, void_t<decltype(std::declval<Fn>()(std::declval<Args>()...))>>
     : std::true_type
 {
+};
+
+template <typename Fn, typename Ret, typename Args, typename enable = void>
+struct is_invocable_r_impl : std::false_type
+{
+};
+
+template <typename Fn, typename Ret, typename... Args>
+struct is_invocable_r_impl<Fn, Ret, ctypes_t<Args...>,
+                           void_t<decltype(std::declval<Fn>()(std::declval<Args>()...))>>
+{
+    static constexpr bool value = is_convertible<decltype(std::declval<Fn>()(std::declval<Args>()...)), Ret>;
 };
 
 } // namespace details
@@ -595,11 +607,17 @@ constexpr inline concat_lists<T1, Ts...> cconcat(T1, Ts...)
 }
 
 #ifdef __cpp_lib_is_invocable
-template <typename T, typename... Args>
-constexpr inline bool is_invocable = std::is_invocable<T, Args...>::value;
+template <typename Fn, typename... Args>
+constexpr inline bool is_invocable = std::is_invocable<Fn, Args...>::value;
+
+template <typename Ret, typename Fn, typename... Args>
+constexpr inline bool is_invocable_r = std::is_invocable_r<Ret, Fn, Args...>::value;
 #else
-template <typename T, typename... Args>
-constexpr inline bool is_invocable = details::is_invocable_impl<T, ctypes_t<Args...>>::value;
+template <typename Fn, typename... Args>
+constexpr inline bool is_invocable = details::is_invocable_impl<Fn, ctypes_t<Args...>>::value;
+
+template <typename Ret, typename Fn, typename... Args>
+constexpr inline bool is_invocable_r = details::is_invocable_r_impl<Ret, Fn, ctypes_t<Args...>>::value;
 #endif
 
 namespace details
