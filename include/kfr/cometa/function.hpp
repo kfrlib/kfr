@@ -92,7 +92,7 @@ struct function<R(Args...)>
 {
     function() noexcept = default;
 
-    function(nullptr_t) noexcept {}
+    function(std::nullptr_t) noexcept {}
 
     template <typename Fn,
               typename = enable_if<is_invocable_r<R, Fn, Args...> && !is_same<decay<Fn>, function>>>
