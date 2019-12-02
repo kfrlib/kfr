@@ -83,7 +83,7 @@ protected:
     KFR_MEM_INTRINSIC vec<T, N> generate(vec_shape<T, N>) const
     {
         const vec<T, N> result = narrow<N>(value);
-        shift(csize_t<N>());
+        call_shift(csize_t<N>());
         return result;
     }
 
