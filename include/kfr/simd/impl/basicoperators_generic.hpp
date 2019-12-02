@@ -1665,6 +1665,27 @@ KFR_INTRINSIC vec<T, N> neg(const vec<T, N>& x)
     return bxor(special_constants<T>::highbitmask(), x);
 }
 
+template <typename T, size_t N>
+KFR_INTRINSIC vec<bit<T>, N> bxor(const vec<bit<T>, N>& x, const vec<bit<T>, N>& y)
+{
+    return bxor(vec<T, N>(x.v), vec<T, N>(y.v)).v;
+}
+template <typename T, size_t N>
+KFR_INTRINSIC vec<bit<T>, N> bor(const vec<bit<T>, N>& x, const vec<bit<T>, N>& y)
+{
+    return bor(vec<T, N>(x.v), vec<T, N>(y.v)).v;
+}
+template <typename T, size_t N>
+KFR_INTRINSIC vec<bit<T>, N> band(const vec<bit<T>, N>& x, const vec<bit<T>, N>& y)
+{
+    return band(vec<T, N>(x.v), vec<T, N>(y.v)).v;
+}
+template <typename T, size_t N>
+KFR_INTRINSIC vec<bit<T>, N> bnot(const vec<bit<T>, N>& x)
+{
+    return bnot(vec<T, N>(x.v)).v;
+}
+
 } // namespace intrinsics
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
