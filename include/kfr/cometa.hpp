@@ -107,6 +107,7 @@ template <typename T, typename... Ts>
 struct and_t_impl<T, Ts...> : std::integral_constant<bool, T::value && and_t_impl<Ts...>::value>
 {
 };
+
 } // namespace details
 
 constexpr size_t max_size_t = size_t(-1);
@@ -185,9 +186,6 @@ constexpr inline bool is_convertible = std::is_convertible<Tfrom, Tto>::value;
 
 template <typename T, typename... Args>
 constexpr inline bool is_constructible = std::is_constructible<T, Args...>::value;
-
-template <typename T, typename... Args>
-constexpr inline bool is_invocable = std::is_invocable<T, Args...>::value;
 
 template <typename T>
 constexpr inline bool is_template_arg = std::is_integral<T>::value || std::is_enum<T>::value;
@@ -575,6 +573,17 @@ struct concat_impl<T1, T2, T3, Ts...>
     using type = typename concat_impl<typename concat_impl<T1, T2>::type, T3, Ts...>::type;
 };
 
+template <typename Fn, typename Args, typename enable=void>
+struct is_invocable_impl : std::false_type
+{
+};
+
+template <typename Fn, typename... Args>
+struct is_invocable_impl<Fn, ctypes_t<Args...>, void_t<decltype(std::declval<Fn>()(std::declval<Args>()...))>>
+    : std::true_type
+{
+};
+
 } // namespace details
 template <typename T1, typename... Ts>
 using concat_lists = typename details::concat_impl<decay<T1>, decay<Ts>...>::type;
@@ -584,6 +593,14 @@ constexpr inline concat_lists<T1, Ts...> cconcat(T1, Ts...)
 {
     return {};
 }
+
+#ifdef __cpp_lib_is_invocable
+template <typename T, typename... Args>
+constexpr inline bool is_invocable = std::is_invocable<T, Args...>::value;
+#else
+template <typename T, typename... Args>
+constexpr inline bool is_invocable = details::is_invocable_impl<T, ctypes_t<Args...>>::value;
+#endif
 
 namespace details
 {
@@ -2131,4 +2148,3 @@ CMT_PRAGMA_GNU(GCC diagnostic pop)
 CMT_PRAGMA_GNU(GCC diagnostic pop)
 
 CMT_PRAGMA_MSVC(warning(pop))
-
