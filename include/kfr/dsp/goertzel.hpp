@@ -38,7 +38,7 @@ inline namespace CMT_ARCH_NAME
 namespace internal
 {
 
-template <typename T, KFR_ARCH_DEP>
+template <typename T>
 struct expression_goertzel : output_expression
 {
     expression_goertzel(complex<T>& result, T omega)

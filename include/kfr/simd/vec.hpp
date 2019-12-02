@@ -239,7 +239,7 @@ struct alignas(force_compiletime_size_t<
     // from list
     template <typename... Us, KFR_ENABLE_IF(sizeof...(Us) <= 1022 && compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC vec(const value_type& s0, const value_type& s1, const Us&... rest) CMT_NOEXCEPT
-        : v(intrinsics::simd_make(ctype<T>, s0, s1, static_cast<value_type>(rest)...))
+        : v(intrinsics::simd_make(cometa::ctype<T>, s0, s1, static_cast<value_type>(rest)...))
     {
     }
 

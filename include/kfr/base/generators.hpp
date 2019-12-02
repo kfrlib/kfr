@@ -115,7 +115,7 @@ protected:
     T vstep;
 };
 
-template <typename T, size_t width = vector_width<T>* bitness_const(1, 2), KFR_ARCH_DEP>
+template <typename T, size_t width = vector_width<T>* bitness_const(1, 2)>
 struct generator_exp : generator<T, width, generator_exp<T, width>>
 {
     generator_exp(T start, T step) CMT_NOEXCEPT : step(step), vstep(exp(make_vector(step* width))[0] - 1)
@@ -135,7 +135,7 @@ protected:
     T vstep;
 };
 
-template <typename T, size_t width = vector_width<T>* bitness_const(1, 2), KFR_ARCH_DEP>
+template <typename T, size_t width = vector_width<T>* bitness_const(1, 2)>
 struct generator_exp2 : generator<T, width, generator_exp2<T, width>>
 {
     generator_exp2(T start, T step) CMT_NOEXCEPT : step(step), vstep(exp2(make_vector(step* width))[0] - 1)
@@ -155,7 +155,7 @@ protected:
     T vstep;
 };
 
-template <typename T, size_t width = vector_width<T>* bitness_const(1, 2), KFR_ARCH_DEP>
+template <typename T, size_t width = vector_width<T>* bitness_const(1, 2)>
 struct generator_cossin : generator<T, width, generator_cossin<T, width>>
 {
     generator_cossin(T start, T step)
@@ -180,7 +180,7 @@ protected:
     }
 };
 
-template <typename T, size_t width = vector_width<T>* bitness_const(2, 4), KFR_ARCH_DEP>
+template <typename T, size_t width = vector_width<T>* bitness_const(2, 4)>
 struct generator_sin : generator<T, width, generator_sin<T, width>>
 {
     generator_sin(T start, T step)

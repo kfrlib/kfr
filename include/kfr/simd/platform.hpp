@@ -66,8 +66,6 @@ enum class cpu_t : int
     runtime = -1,
 };
 
-#define KFR_ARCH_DEP cpu_t cpu = cpu_t::native
-
 template <cpu_t cpu>
 using ccpu_t = cval_t<cpu_t, cpu>;
 

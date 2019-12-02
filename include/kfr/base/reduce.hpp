@@ -65,7 +65,7 @@ KFR_INTRINSIC auto reduce_call_final(FinalFn&& finalfn, size_t, T value)
 }
 
 template <typename Tout, typename Twork, typename Tin, typename ReduceFn, typename TransformFn,
-          typename FinalFn, KFR_ARCH_DEP>
+          typename FinalFn>
 struct expression_reduce : output_expression
 {
     constexpr static size_t width = vector_width<Tin> * bitness_const(1, 2);

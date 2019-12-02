@@ -49,7 +49,7 @@ inline namespace CMT_ARCH_NAME
 using resample_quality = sample_rate_conversion_quality;
 
 /// @brief Sample Rate converter
-template <typename T, KFR_ARCH_DEP>
+template <typename T>
 struct samplerate_converter
 {
     using itype = i64;

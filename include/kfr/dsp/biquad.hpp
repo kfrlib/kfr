@@ -95,7 +95,7 @@ inline namespace CMT_ARCH_NAME
 
 namespace internal
 {
-template <typename T, size_t filters, KFR_ARCH_DEP>
+template <typename T, size_t filters>
 struct biquad_state
 {
     vec<T, filters> s1;
@@ -104,7 +104,7 @@ struct biquad_state
     constexpr biquad_state() CMT_NOEXCEPT : s1(0), s2(0), out(0) {}
 };
 
-template <typename T, size_t filters, KFR_ARCH_DEP>
+template <typename T, size_t filters>
 struct biquad_block
 {
     vec<T, filters> a1;
@@ -142,7 +142,7 @@ struct biquad_block
     }
 };
 
-template <size_t filters, typename T, typename E1, KFR_ARCH_DEP>
+template <size_t filters, typename T, typename E1>
 struct expression_biquads_l : public expression_with_arguments<E1>
 {
     using value_type = T;
@@ -180,7 +180,7 @@ struct expression_biquads_l : public expression_with_arguments<E1>
     mutable biquad_state<T, filters> state;
 };
 
-template <size_t filters, typename T, typename E1, KFR_ARCH_DEP>
+template <size_t filters, typename T, typename E1>
 struct expression_biquads : expression_with_arguments<E1>
 {
     using value_type = T;

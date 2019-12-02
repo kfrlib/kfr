@@ -93,7 +93,7 @@ struct state_holder<T, true>
     const T& s;
 };
 
-template <size_t tapcount, typename T, typename U, typename E1, bool stateless = false, KFR_ARCH_DEP>
+template <size_t tapcount, typename T, typename U, typename E1, bool stateless = false>
 struct expression_short_fir : expression_with_arguments<E1>
 {
     using value_type = U;
@@ -121,7 +121,7 @@ struct expression_short_fir : expression_with_arguments<E1>
     state_holder<short_fir_state<tapcount, T, U>, stateless> state;
 };
 
-template <typename T, typename U, typename E1, bool stateless = false, KFR_ARCH_DEP>
+template <typename T, typename U, typename E1, bool stateless = false>
 struct expression_fir : expression_with_arguments<E1>
 {
     using value_type = U;
