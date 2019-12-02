@@ -36,6 +36,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/cometa/cstring.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/cometa/ctti.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/cometa/function.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/cometa/memory.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/cometa/named_arg.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/cometa/numeric.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/cometa/range.hpp

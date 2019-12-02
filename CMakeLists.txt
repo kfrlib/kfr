@@ -159,9 +159,11 @@ endif()
 
 message(STATUS CPU_ARCH=${CPU_ARCH})
 
-add_executable(detect_cpu ${CMAKE_CURRENT_SOURCE_DIR}/cmake/detect_cpu.cpp)
-target_link_libraries(detect_cpu PRIVATE kfr)
-target_set_arch(detect_cpu PRIVATE generic)
+if (X86)
+    add_executable(detect_cpu ${CMAKE_CURRENT_SOURCE_DIR}/cmake/detect_cpu.cpp)
+    target_link_libraries(detect_cpu PRIVATE kfr)
+    target_set_arch(detect_cpu PRIVATE generic)
+endif ()
 
 if (ENABLE_TESTS)
 

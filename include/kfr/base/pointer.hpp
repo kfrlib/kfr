@@ -129,7 +129,7 @@ public:
 #ifdef __cpp_aligned_new
     static void operator delete (void* p, std::align_val_t al) noexcept
     {
-        internal_generic::aligned_release(p);
+        details::aligned_release(p);
     }
 #endif
 

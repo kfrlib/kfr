@@ -4,6 +4,14 @@
 #pragma once
 
 #include "../cometa.hpp"
+#include "memory.hpp"
+#include <cstdlib>
+#include <cstddef>
+#include <type_traits>
+#include <memory>
+#if CMT_HAS_EXCEPTIONS
+#include <functional>
+#endif
 
 namespace cometa
 {
@@ -55,13 +63,16 @@ struct function_abstract
 template <typename Fn, typename R, typename... Args>
 struct function_impl : public function_abstract<R, Args...>
 {
-    inline static void* operator new(size_t size) noexcept { return std::aligned_alloc(size, alignof(Fn)); }
-    inline static void operator delete(void* ptr) noexcept { return std::free(ptr); }
+    inline static void* operator new(size_t size) noexcept { return aligned_allocate(size, alignof(Fn)); }
+    inline static void operator delete(void* ptr) noexcept { return aligned_deallocate(ptr); }
     inline static void* operator new(size_t size, std::align_val_t al) noexcept
     {
-        return std::aligned_alloc(size, static_cast<size_t>(al));
+        return aligned_allocate(size, static_cast<size_t>(al));
     }
-    inline static void operator delete(void* ptr, std::align_val_t al) noexcept { return std::free(ptr); }
+    inline static void operator delete(void* ptr, std::align_val_t al) noexcept
+    {
+        return aligned_deallocate(ptr);
+    }
 
     template <typename Fn_>
     function_impl(Fn_ fn) : fn(std::forward<Fn_>(fn))
@@ -82,7 +93,7 @@ struct function<R(Args...)>
 
     template <typename Fn, typename = std::enable_if_t<std::is_invocable_r_v<R, Fn, Args...> &&
                                                        !std::is_same_v<std::decay_t<Fn>, function>>>
-    function(Fn fn) : impl(new internal::function_impl<std::decay_t<Fn>, R, Args...>(std::move(fn)))
+    function(Fn fn) : impl(new details::function_impl<std::decay_t<Fn>, R, Args...>(std::move(fn)))
     {
     }
 
@@ -96,11 +107,16 @@ struct function<R(Args...)>
 
     R operator()(Args... args) const
     {
+#if CMT_HAS_EXCEPTIONS
         if (impl)
         {
             return impl->operator()(std::forward<Args>(args)...);
         }
         throw std::bad_function_call();
+#else
+        // With exceptions disabled let it crash. To prevent this, check first
+        return impl->operator()(std::forward<Args>(args)...);
+#endif
     }
 
     [[nodiscard]] explicit operator bool() const { return !!impl; }
