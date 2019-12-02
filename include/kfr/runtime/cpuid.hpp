@@ -289,6 +289,8 @@ cpu_t detect_cpu()
         return cpu_t::avx2;
     if (c.hasAVX && c.hasAVXOSSUPPORT)
         return cpu_t::avx1;
+    if (c.hasSSE42)
+        return cpu_t::sse42;
     if (c.hasSSE41)
         return cpu_t::sse41;
     if (c.hasSSSE3)
