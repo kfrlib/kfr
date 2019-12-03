@@ -803,18 +803,15 @@ using indicesfor_t = cvalseq_t<size_t, sizeof...(List), 0>;
 template <size_t group, size_t... indices, size_t N = group * sizeof...(indices)>
 constexpr inline auto scale(csizes_t<indices...>) CMT_NOEXCEPT
 {
-    return concat_lists<csizeseq_t<group, group * indices>...>{};
-    //    return i[csizeseq_t<N>() / csize_t<group>()] * csize_t<group>() + csizeseq_t<N>() %
-    //    csize_t<group>();
+    using Tlist = typename details::concat_impl<csizeseq_t<group, group * indices>...>::type;
+    return Tlist{};
 }
 
 template <size_t group, size_t... indices, size_t N = group * sizeof...(indices)>
 constexpr inline auto scale() CMT_NOEXCEPT
 {
-    return concat_lists<csizeseq_t<group, group * indices>...>{};
-    // return cconcat(csizeseq_t<group, group * indices>()...);
-    //    return i[csizeseq_t<N>() / csize_t<group>()] * csize_t<group>() + csizeseq_t<N>() %
-    //    csize_t<group>();
+    using Tlist = typename details::concat_impl<csizeseq_t<group, group * indices>...>::type;
+    return Tlist{};
 }
 
 namespace details
