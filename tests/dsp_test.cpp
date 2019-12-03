@@ -262,23 +262,23 @@ TEST(amp_to_dB)
 {
     testo::eplison_scope<void> eps(1000);
 
-    CHECK(kfr::amp_to_dB(2.0) == fbase(6.0205999132796239042747778944899));
-    CHECK(kfr::amp_to_dB(-2.0) == fbase(6.0205999132796239042747778944899));
-    CHECK(kfr::amp_to_dB(1.0) == fbase(0));
-    CHECK(kfr::amp_to_dB(-1.0) == fbase(0));
-    CHECK(kfr::amp_to_dB(0.5) == fbase(-6.0205999132796239042747778944899));
-    CHECK(kfr::amp_to_dB(-0.5) == fbase(-6.0205999132796239042747778944899));
-    CHECK(kfr::amp_to_dB(0.0) == fbase(-HUGE_VAL));
+    CHECK(kfr::amp_to_dB(fbase(2.0)) == fbase(6.0205999132796239042747778944899));
+    CHECK(kfr::amp_to_dB(fbase(-2.0)) == fbase(6.0205999132796239042747778944899));
+    CHECK(kfr::amp_to_dB(fbase(1.0)) == fbase(0));
+    CHECK(kfr::amp_to_dB(fbase(-1.0)) == fbase(0));
+    CHECK(kfr::amp_to_dB(fbase(0.5)) == fbase(-6.0205999132796239042747778944899));
+    CHECK(kfr::amp_to_dB(fbase(-0.5)) == fbase(-6.0205999132796239042747778944899));
+    CHECK(kfr::amp_to_dB(fbase(0.0)) == fbase(-HUGE_VAL));
 }
 
 TEST(dB_to_amp)
 {
     testo::eplison_scope<void> eps(1000);
 
-    CHECK(kfr::dB_to_amp(-HUGE_VAL) == fbase(0.0));
-    CHECK(kfr::dB_to_amp(0.0) == fbase(1.0));
-    CHECK(kfr::dB_to_amp(6.0205999132796239042747778944899) == fbase(2.0));
-    CHECK(kfr::dB_to_amp(-6.0205999132796239042747778944899) == fbase(0.5));
+    CHECK(kfr::dB_to_amp(fbase(-HUGE_VAL)) == fbase(0.0));
+    CHECK(kfr::dB_to_amp(fbase(0.0)) == fbase(1.0));
+    CHECK(kfr::dB_to_amp(fbase(6.0205999132796239042747778944899)) == fbase(2.0));
+    CHECK(kfr::dB_to_amp(fbase(-6.0205999132796239042747778944899)) == fbase(0.5));
 }
 
 TEST(delay)

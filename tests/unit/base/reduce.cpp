@@ -13,34 +13,41 @@ inline namespace CMT_ARCH_NAME
 
 TEST(reduce)
 {
+    testo::eplison_scope<void> e(100);
     {
-        univector<float, 5> a({ 1, 2, 3, 4, 5 });
-        CHECK(sum(a) == 15);
-        CHECK(mean(a) == 3);
-        CHECK(minof(a) == 1);
+        univector<float, 6> a({ 1, 2, 3, 4, 5, -9 });
+        CHECK(sum(a) == 6);
+        CHECK(mean(a) == 1);
+        CHECK(minof(a) == -9);
         CHECK(maxof(a) == 5);
-        CHECK(sumsqr(a) == 55);
-        CHECK(rms(a) == 3.316624790355399849115f);
-        CHECK(product(a) == 120);
+        CHECK(absminof(a) == 1);
+        CHECK(absmaxof(a) == 9);
+        CHECK(sumsqr(a) == 136);
+        CHECK(rms(a) == 4.760952285695233f);
+        CHECK(product(a) == -1080);
     }
     {
-        univector<double, 5> a({ 1, 2, 3, 4, 5 });
-        CHECK(sum(a) == 15);
-        CHECK(mean(a) == 3);
-        CHECK(minof(a) == 1);
+        univector<double, 6> a({ 1, 2, 3, 4, 5, -9 });
+        CHECK(sum(a) == 6);
+        CHECK(mean(a) == 1);
+        CHECK(minof(a) == -9);
         CHECK(maxof(a) == 5);
-        CHECK(sumsqr(a) == 55);
-        CHECK(rms(a) == 3.316624790355399849115);
-        CHECK(product(a) == 120);
+        CHECK(absminof(a) == 1);
+        CHECK(absmaxof(a) == 9);
+        CHECK(sumsqr(a) == 136);
+        CHECK(rms(a) == 4.760952285695233);
+        CHECK(product(a) == -1080);
     }
     {
-        univector<int, 5> a({ 1, 2, 3, 4, 5 });
-        CHECK(sum(a) == 15);
-        CHECK(mean(a) == 3);
-        CHECK(minof(a) == 1);
+        univector<int, 6> a({ 1, 2, 3, 4, 5, -9 });
+        CHECK(sum(a) == 6);
+        CHECK(mean(a) == 1);
+        CHECK(minof(a) == -9);
         CHECK(maxof(a) == 5);
-        CHECK(sumsqr(a) == 55);
-        CHECK(product(a) == 120);
+        CHECK(absminof(a) == 1);
+        CHECK(absmaxof(a) == 9);
+        CHECK(sumsqr(a) == 136);
+        CHECK(product(a) == -1080);
     }
 }
 } // namespace CMT_ARCH_NAME
