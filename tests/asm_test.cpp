@@ -181,6 +181,8 @@ using namespace kfr;
 
 #define TEST_ASM_IF(fn, MACRO) TEST_ASM_I(fn, MACRO) TEST_ASM_F(fn, MACRO)
 
+#if 1
+
 TEST_ASM_UIF(add, TEST_ASM_VTY2)
 
 TEST_ASM_UIF(sub, TEST_ASM_VTY2)
@@ -289,6 +291,8 @@ TEST_FFT_GEN(f64)
 TEST_ASM_F(sin, TEST_ASM_VTY1_F)
 
 TEST_ASM_F(cos, TEST_ASM_VTY1_F)
+
+#endif
 
 namespace kfr
 {

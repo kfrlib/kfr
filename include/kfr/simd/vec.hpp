@@ -467,55 +467,6 @@ KFR_INTRINSIC vec<T, sizeof...(indices)> shufflevectors(const vec<T, N>& x, cons
 
 namespace internal
 {
-
-#if 0
-constexpr inline size_t scale_get_index(size_t counter, size_t groupsize, size_t index) CMT_NOEXCEPT
-{
-    return index == index_undefined ? index_undefined : (counter % groupsize + groupsize * index);
-}
-
-#ifdef CMT_COMPILER_MSVC
-template <size_t counter, size_t groupsize, size_t... indices>
-constexpr inline size_t scale_get_index(csizes_t<indices...>) CMT_NOEXCEPT
-{
-    return scale_get_index(counter, groupsize, csizes_t<indices...>().get(csize_t<counter / groupsize>()));
-}
-
-template <size_t... indices, size_t... counter, size_t groupsize = sizeof...(counter) / sizeof...(indices)>
-constexpr inline auto scale_impl(csizes_t<indices...> ind, csizes_t<counter...> cnt) CMT_NOEXCEPT
-    -> csizes_t<scale_get_index<counter, groupsize>(ind)...>
-{
-    return {};
-}
-#else
-
-template <size_t counter, size_t groupsize, size_t... indices>
-constexpr inline size_t scale_get_index() CMT_NOEXCEPT
-{
-    return scale_get_index(counter, groupsize, csizes_t<indices...>().get(csize_t<counter / groupsize>()));
-}
-
-template <size_t... indices, size_t... counter, size_t groupsize = sizeof...(counter) / sizeof...(indices)>
-constexpr inline auto scale_impl(csizes_t<indices...>, csizes_t<counter...>) CMT_NOEXCEPT
-    -> csizes_t<scale_get_index<counter, groupsize, indices...>()...>
-{
-    return {};
-}
-
-#endif
-#endif
-
-} // namespace internal
-
-template <size_t groupsize, size_t... indices>
-constexpr inline auto scale() CMT_NOEXCEPT
-{
-    return cconcat(csizeseq<groupsize, groupsize * indices>...);
-    //    return internal::scale_impl(csizes_t<indices...>(), csizeseq<sizeof...(indices) * groupsize>);
-}
-
-namespace internal
-{
 template <typename T>
 struct is_vec_impl : std::false_type
 {
@@ -819,6 +770,22 @@ CMT_GNU_CONSTEXPR KFR_INTRINSIC vec<T, N> make_vector_impl(csizes_t<indices...>,
     const T list[] = { static_cast<T>(args)... };
     return vec<T, N>(list[indices]...);
 }
+
+template <bool, typename Tfallback, typename... Args>
+struct conditional_common;
+
+template <typename Tfallback, typename... Args>
+struct conditional_common<true, Tfallback, Args...>
+{
+    using type = common_type<Args...>;
+};
+
+template <typename Tfallback, typename... Args>
+struct conditional_common<false, Tfallback, Args...>
+{
+    using type = Tfallback;
+};
+
 } // namespace internal
 
 /// Create vector from scalar values
@@ -826,11 +793,10 @@ CMT_GNU_CONSTEXPR KFR_INTRINSIC vec<T, N> make_vector_impl(csizes_t<indices...>,
 /// CHECK( make_vector( 1, 2, 3, 4 ) == i32x4{1, 2, 3, 4} );
 /// @endcode
 template <typename Type = void, typename Arg, typename... Args, size_t N = (sizeof...(Args) + 1),
-          typename SubType = fix_type<conditional<is_void<Type>, common_type<Arg, Args...>, Type>>>
+          typename SubType =
+              fix_type<typename internal::conditional_common<is_void<Type>, Type, Arg, Args...>::type>>
 constexpr KFR_INTRINSIC vec<SubType, N> make_vector(const Arg& x, const Args&... rest)
 {
-    //    static_assert(! is_same<SubType, unsigned long long>, "!!!--1");
-    //    static_assert(! is_same<fix_type<SubType>, unsigned long long>, "!!!--2");
     return internal::make_vector_impl<SubType>(cvalseq_t<size_t, N>(), static_cast<SubType>(x),
                                                static_cast<SubType>(rest)...);
 }

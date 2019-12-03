@@ -462,6 +462,8 @@ struct cvals_t<T> : ops::empty
 {
     using type = cvals_t<T>;
     constexpr static size_t size() { return 0; }
+
+    static const T* array() { return nullptr; }
 };
 
 namespace details
@@ -768,6 +770,25 @@ template <typename T, T Nstart, ptrdiff_t Nstep>
 struct cvalseq_impl<T, 2, Nstart, Nstep> : cvals_t<T, static_cast<T>(Nstart), static_cast<T>(Nstart + Nstep)>
 {
 };
+
+template <typename T, T Nstart, ptrdiff_t Nstep>
+struct cvalseq_impl<T, 4, Nstart, Nstep>
+    : cvals_t<T, static_cast<T>(Nstart), static_cast<T>(Nstart + Nstep),
+              static_cast<T>(Nstart + Nstep + Nstep), static_cast<T>(Nstart + Nstep + Nstep + Nstep)>
+{
+};
+
+template <typename T1, typename T2>
+struct scale_impl;
+
+template <size_t... Args1, size_t... Args2>
+struct scale_impl<csizes_t<Args1...>, csizes_t<Args2...>>
+{
+    constexpr static size_t count1 = sizeof...(Args1);
+    constexpr static size_t count2 = sizeof...(Args2);
+    using type                     = csizes_t<>;
+};
+
 } // namespace details
 
 template <typename T, size_t size, T start = T(), ptrdiff_t step = 1>
@@ -782,7 +803,16 @@ using indicesfor_t = cvalseq_t<size_t, sizeof...(List), 0>;
 template <size_t group, size_t... indices, size_t N = group * sizeof...(indices)>
 constexpr inline auto scale(csizes_t<indices...>) CMT_NOEXCEPT
 {
-    return cconcat(csizeseq_t<group, group * indices>()...);
+    return concat_lists<csizeseq_t<group, group * indices>...>{};
+    //    return i[csizeseq_t<N>() / csize_t<group>()] * csize_t<group>() + csizeseq_t<N>() %
+    //    csize_t<group>();
+}
+
+template <size_t group, size_t... indices, size_t N = group * sizeof...(indices)>
+constexpr inline auto scale() CMT_NOEXCEPT
+{
+    return concat_lists<csizeseq_t<group, group * indices>...>{};
+    // return cconcat(csizeseq_t<group, group * indices>()...);
     //    return i[csizeseq_t<N>() / csize_t<group>()] * csize_t<group>() + csizeseq_t<N>() %
     //    csize_t<group>();
 }

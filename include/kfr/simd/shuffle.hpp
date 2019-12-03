@@ -330,7 +330,7 @@ namespace internal
 template <typename T, size_t Nout, typename Fn, size_t... Indices>
 constexpr KFR_INTRINSIC vec<T, Nout> generate_vector(csizes_t<Indices...>)
 {
-    return make_vector(static_cast<T>(Fn()(Indices))...);
+    return make_vector<T>(static_cast<T>(Fn()(Indices))...);
 }
 } // namespace internal
 
