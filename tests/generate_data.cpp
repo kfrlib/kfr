@@ -86,7 +86,7 @@ int main()
 {
     using num = mpfr::number;
     mpfr::scoped_precision prec(512);
-    
+
     generate_test(
         cint<1>, "sin", [](const num& x) { return mpfr::sin(x); }, 0, M_PI * 2);
     generate_test(

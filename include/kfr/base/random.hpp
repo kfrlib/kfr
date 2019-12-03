@@ -24,10 +24,12 @@
   See https://www.kfrlib.com for details.
  */
 #pragma once
+
 #include "../simd/impl/function.hpp"
 #include "../simd/operators.hpp"
 #include "../simd/shuffle.hpp"
 #include "../simd/vec.hpp"
+#include <functional>
 
 #ifdef CMT_ARCH_ARM
 #define KFR_DISABLE_READCYCLECOUNTER

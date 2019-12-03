@@ -16,6 +16,7 @@ clang:
   arguments: 
     - '-DKFR_ENABLE_FLAC=1'
     - '-DCMT_FORCE_GENERIC_CPU=1'
+    - '-std=gnu++17'
 
 input_directory: ../include/kfr
 

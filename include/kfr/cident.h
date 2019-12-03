@@ -743,19 +743,19 @@ extern char* gets(char* __s);
     switch (cpu)                                                                                             \
     {                                                                                                        \
     case cpu_t::avx512:                                                                                      \
-        CMT_IF_ENABLED_AVX512(return avx512::__VA_ARGS__;)                                                    \
+        CMT_IF_ENABLED_AVX512(return avx512::__VA_ARGS__;)                                                   \
     case cpu_t::avx2:                                                                                        \
-        CMT_IF_ENABLED_AVX2(return avx2::__VA_ARGS__;)                                                        \
+        CMT_IF_ENABLED_AVX2(return avx2::__VA_ARGS__;)                                                       \
     case cpu_t::avx:                                                                                         \
-        CMT_IF_ENABLED_AVX(return avx::__VA_ARGS__;)                                                          \
+        CMT_IF_ENABLED_AVX(return avx::__VA_ARGS__;)                                                         \
     case cpu_t::sse41:                                                                                       \
-        CMT_IF_ENABLED_SSE41(return sse41::__VA_ARGS__;)                                                      \
+        CMT_IF_ENABLED_SSE41(return sse41::__VA_ARGS__;)                                                     \
     case cpu_t::ssse3:                                                                                       \
-        CMT_IF_ENABLED_SSSE3(return ssse3::__VA_ARGS__;)                                                      \
+        CMT_IF_ENABLED_SSSE3(return ssse3::__VA_ARGS__;)                                                     \
     case cpu_t::sse3:                                                                                        \
-        CMT_IF_ENABLED_SSE3(return sse3::__VA_ARGS__;)                                                        \
+        CMT_IF_ENABLED_SSE3(return sse3::__VA_ARGS__;)                                                       \
     case cpu_t::sse2:                                                                                        \
-        CMT_IF_ENABLED_SSE2(return sse2::__VA_ARGS__;)                                                        \
+        CMT_IF_ENABLED_SSE2(return sse2::__VA_ARGS__;)                                                       \
     default:                                                                                                 \
         return {};                                                                                           \
     }

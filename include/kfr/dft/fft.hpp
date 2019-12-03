@@ -159,8 +159,7 @@ struct dft_plan
         case cpu_t::sse3:
             CMT_IF_ENABLED_SSE3(sse3::dft_initialize(*this); break;)
         default:
-            CMT_IF_ENABLED_SSE2(sse2::dft_initialize(*this); break;)
-            ;
+            CMT_IF_ENABLED_SSE2(sse2::dft_initialize(*this); break;);
         }
     }
 #endif
@@ -324,8 +323,7 @@ struct dft_plan_real : dft_plan<T>
         case cpu_t::sse3:
             CMT_IF_ENABLED_SSE3(sse3::dft_real_initialize(*this); break;)
         default:
-            CMT_IF_ENABLED_SSE2(sse2::dft_real_initialize(*this); break;)
-            ;
+            CMT_IF_ENABLED_SSE2(sse2::dft_real_initialize(*this); break;);
         }
     }
 #endif
