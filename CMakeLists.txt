@@ -165,19 +165,6 @@ if (X86)
     target_set_arch(detect_cpu PRIVATE generic)
 endif ()
 
-if (ENABLE_TESTS)
-
-    if (MSVC)
-    else()
-        # disable exceptions and rtti
-        add_compile_options(-fno-exceptions -fno-rtti -fno-asynchronous-unwind-tables)
-    endif ()
-
-    add_subdirectory(examples)
-    add_subdirectory(tests)
-    add_subdirectory(tools)
-endif ()
-
 if (ENABLE_DFT)
     add_library(kfr_dft ${KFR_DFT_SRC})
     target_link_libraries(kfr_dft kfr use_arch)
@@ -197,6 +184,12 @@ if (ENABLE_DFT)
         add_subdirectory(capi)
     endif ()
 endif()
+
+if (ENABLE_TESTS)
+    add_subdirectory(examples)
+    add_subdirectory(tests)
+    add_subdirectory(tools)
+endif ()
 
 add_library(kfr_io ${KFR_IO_SRC})
 target_link_libraries(kfr_io kfr)

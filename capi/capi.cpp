@@ -335,6 +335,9 @@ extern "C"
         reinterpret_cast<filter<double>*>(plan)->apply(output, input, size);
     }
 
+    void kfr_filter_reset_f32(KFR_FILTER_F32* plan) { reinterpret_cast<filter<float>*>(plan)->reset(); }
+    void kfr_filter_reset_f64(KFR_FILTER_F64* plan) { reinterpret_cast<filter<double>*>(plan)->reset(); }
+
     void kfr_filter_delete_plan_f32(KFR_FILTER_F32* plan) { delete reinterpret_cast<filter<f32>*>(plan); }
     void kfr_filter_delete_plan_f64(KFR_FILTER_F64* plan) { delete reinterpret_cast<filter<f64>*>(plan); }
 }

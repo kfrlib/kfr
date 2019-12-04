@@ -52,6 +52,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${PROJECT_BINARY_DIR}/bin)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/tests/cmake/")
 
+if (ENABLE_CAPI_BUILD)
+    add_executable(capi_test capi_test.cpp)
+    target_include_directories(capi_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+    target_link_libraries(capi_test PUBLIC kfr_capi)
+endif ()
+
 if (ENABLE_ASMTEST)
     add_executable(asm_test asm_test.cpp)
     target_link_libraries(asm_test kfr)
@@ -202,19 +208,23 @@ if (NOT SKIP_TESTS)
 
     if (X86)
         add_test(NAME multiarch
-                COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/multiarch)
+                COMMAND ${EMULATOR} multiarch)
+
+        if (ENABLE_CAPI_BUILD)
+            add_test(NAME capi_test COMMAND ${EMULATOR} capi_test)
+        endif ()
     endif ()
 
     if (ARCH_TESTS)
         foreach(A IN LISTS ARCH_LIST)
             if (USE_SDE)
-                add_test(NAME all_tests_${A} COMMAND ${SDE} ${SDE_ARCH_${A}} -- ${PROJECT_BINARY_DIR}/bin/all_tests_${A})
+                add_test(NAME all_tests_${A} COMMAND ${SDE} ${SDE_ARCH_${A}} -- all_tests_${A})
             else ()
-                add_test(NAME all_tests_${A} COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_${A})
+                add_test(NAME all_tests_${A} COMMAND ${EMULATOR} all_tests_${A})
             endif ()
         endforeach()
     else ()
         add_test(NAME all_tests
-                COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests)
+                COMMAND ${EMULATOR} all_tests)
     endif ()
 endif ()
