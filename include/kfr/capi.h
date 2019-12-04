@@ -77,6 +77,8 @@ extern "C"
         KFR_ARCH_AVX512 = 8,
     };
 
+#define KFR_HEADERS_VERSION 40000
+
     KFR_API_SPEC const char* kfr_version_string();
     KFR_API_SPEC uint32_t kfr_version();
     KFR_API_SPEC const char* kfr_enabled_archs();
@@ -119,14 +121,14 @@ typedef double kfr_c64;
 
 #define KFR_DEFAULT_ALIGNMENT 64
 
-    void* kfr_allocate(size_t size);
-    void* kfr_allocate_aligned(size_t size, size_t alignment);
-    void* kfr_reallocate(void* ptr, size_t new_size);
-    void* kfr_reallocate_aligned(void* ptr, size_t new_size, size_t alignment);
-    void* kfr_add_ref(void* ptr);
-    void kfr_release(void* ptr);
-    void kfr_deallocate(void* ptr);
-    size_t kfr_allocated_size(void* ptr);
+    KFR_API_SPEC void* kfr_allocate(size_t size);
+    KFR_API_SPEC void* kfr_allocate_aligned(size_t size, size_t alignment);
+    KFR_API_SPEC void* kfr_reallocate(void* ptr, size_t new_size);
+    KFR_API_SPEC void* kfr_reallocate_aligned(void* ptr, size_t new_size, size_t alignment);
+    KFR_API_SPEC void* kfr_add_ref(void* ptr);
+    KFR_API_SPEC void kfr_release(void* ptr);
+    KFR_API_SPEC void kfr_deallocate(void* ptr);
+    KFR_API_SPEC size_t kfr_allocated_size(void* ptr);
 
     typedef enum KFR_DFT_PACK_FORMAT
     {
