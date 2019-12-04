@@ -33,22 +33,23 @@ inline memory_statistics& get_memory_statistics()
 
 struct mem_header
 {
-    u8 offset;
-    u8 alignment;
-    u8 reserved1;
-    u8 reserved2;
-    unsigned int references_uint;
+    u16 offset;
+    u16 alignment;
+    u32 references_uint;
     size_t size;
 
-    CMT_MEM_INTRINSIC std::atomic_uint& references()
+    CMT_MEM_INTRINSIC std::atomic_uint32_t& references()
     {
-        return reinterpret_cast<std::atomic_uint&>(references_uint);
+        return reinterpret_cast<std::atomic_uint32_t&>(references_uint);
     }
 }
 #ifdef CMT_GNU_ATTRIBUTES
 __attribute__((__packed__))
 #endif
 ;
+
+static_assert(sizeof(mem_header) == sizeof(size_t) + 2 * sizeof(u16) + sizeof(u32),
+              "Wrong mem_header layout");
 
 #pragma pack(pop)
 
@@ -58,6 +59,8 @@ inline size_t aligned_size(void* ptr) { return aligned_header(ptr)->size; }
 
 inline void* aligned_malloc(size_t size, size_t alignment)
 {
+    if (alignment == 0 || alignment > 32768)
+        return nullptr;
     get_memory_statistics().allocation_count++;
     get_memory_statistics().allocation_size += size;
     void* ptr = malloc(size + (alignment - 1) + sizeof(mem_header));
@@ -65,8 +68,8 @@ inline void* aligned_malloc(size_t size, size_t alignment)
         return nullptr;
     void* aligned_ptr                         = advance(ptr, sizeof(mem_header));
     aligned_ptr                               = align_up(aligned_ptr, alignment);
-    aligned_header(aligned_ptr)->alignment    = static_cast<u8>(alignment > 255 ? 255 : alignment);
-    aligned_header(aligned_ptr)->offset       = static_cast<u8>(distance(aligned_ptr, ptr));
+    aligned_header(aligned_ptr)->alignment    = static_cast<u16>(alignment);
+    aligned_header(aligned_ptr)->offset       = static_cast<u16>(distance(aligned_ptr, ptr));
     aligned_header(aligned_ptr)->references() = 1;
     aligned_header(aligned_ptr)->size         = size;
     return aligned_ptr;
