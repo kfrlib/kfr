@@ -43,28 +43,28 @@ extern "C"
     const char* kfr_enabled_archs() { return KFR_ENABLED_ARCHS; }
     int kfr_current_arch() { return static_cast<int>(get_cpu()); }
 
-    void* kfr_allocate(size_t size) { return internal_generic::aligned_malloc(size, KFR_DEFAULT_ALIGNMENT); }
+    void* kfr_allocate(size_t size) { return details::aligned_malloc(size, KFR_DEFAULT_ALIGNMENT); }
     void* kfr_allocate_aligned(size_t size, size_t alignment)
     {
-        return internal_generic::aligned_malloc(size, alignment);
+        return details::aligned_malloc(size, alignment);
     }
-    void kfr_deallocate(void* ptr) { return internal_generic::aligned_free(ptr); }
-    size_t kfr_allocated_size(void* ptr) { return internal_generic::aligned_size(ptr); }
+    void kfr_deallocate(void* ptr) { return details::aligned_free(ptr); }
+    size_t kfr_allocated_size(void* ptr) { return details::aligned_size(ptr); }
 
     void* kfr_add_ref(void* ptr)
     {
-        internal_generic::aligned_add_ref(ptr);
+        details::aligned_add_ref(ptr);
         return ptr;
     }
-    void kfr_release(void* ptr) { internal_generic::aligned_release(ptr); }
+    void kfr_release(void* ptr) { details::aligned_release(ptr); }
 
     void* kfr_reallocate(void* ptr, size_t new_size)
     {
-        return internal_generic::aligned_reallocate(ptr, new_size, KFR_DEFAULT_ALIGNMENT);
+        return details::aligned_reallocate(ptr, new_size, KFR_DEFAULT_ALIGNMENT);
     }
     void* kfr_reallocate_aligned(void* ptr, size_t new_size, size_t alignment)
     {
-        return internal_generic::aligned_reallocate(ptr, new_size, alignment);
+        return details::aligned_reallocate(ptr, new_size, alignment);
     }
 
     KFR_DFT_PLAN_F32* kfr_dft_create_plan_f32(size_t size)

@@ -17,6 +17,10 @@
 
 cmake_minimum_required(VERSION 3.1)
 
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options(-fdiagnostics-absolute-paths)
+endif ()
+
 if (MSVC)
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
