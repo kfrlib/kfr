@@ -35,12 +35,12 @@ struct mem_header
 {
     u16 offset;
     u16 alignment;
-    u32 references_uint;
+    unsigned int references_uint;
     size_t size;
 
-    CMT_MEM_INTRINSIC std::atomic_uint32_t& references()
+    CMT_MEM_INTRINSIC std::atomic_uint& references()
     {
-        return reinterpret_cast<std::atomic_uint32_t&>(references_uint);
+        return reinterpret_cast<std::atomic_uint&>(references_uint);
     }
 }
 #ifdef CMT_GNU_ATTRIBUTES
@@ -48,7 +48,7 @@ __attribute__((__packed__))
 #endif
 ;
 
-static_assert(sizeof(mem_header) == sizeof(size_t) + 2 * sizeof(u16) + sizeof(u32),
+static_assert(sizeof(mem_header) == sizeof(size_t) + 2 * sizeof(u16) + sizeof(unsigned int),
               "Wrong mem_header layout");
 
 #pragma pack(pop)
