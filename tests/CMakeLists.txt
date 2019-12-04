@@ -208,23 +208,23 @@ if (NOT SKIP_TESTS)
 
     if (X86)
         add_test(NAME multiarch
-                COMMAND ${EMULATOR} multiarch)
+                COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/multiarch)
 
         if (ENABLE_CAPI_BUILD)
-            add_test(NAME capi_test COMMAND ${EMULATOR} capi_test)
+            add_test(NAME capi_test COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/capi_test)
         endif ()
     endif ()
 
     if (ARCH_TESTS)
         foreach(A IN LISTS ARCH_LIST)
             if (USE_SDE)
-                add_test(NAME all_tests_${A} COMMAND ${SDE} ${SDE_ARCH_${A}} -- all_tests_${A})
+                add_test(NAME all_tests_${A} COMMAND ${SDE} ${SDE_ARCH_${A}} -- ${PROJECT_BINARY_DIR}/bin/all_tests_${A})
             else ()
-                add_test(NAME all_tests_${A} COMMAND ${EMULATOR} all_tests_${A})
+                add_test(NAME all_tests_${A} COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_${A})
             endif ()
         endforeach()
     else ()
         add_test(NAME all_tests
-                COMMAND ${EMULATOR} all_tests)
+                COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests)
     endif ()
 endif ()

@@ -14,7 +14,9 @@ https://www.kfr.dev
 
 KFR is an open source C++ DSP framework that focuses on high performance (see benchmark results section).
 
-KFR has no external dependencies except C++14-compatible standard C++ library.
+KFR has no external dependencies except C++17-compatible standard C++ library.
+
+Some C++17 library features will be emulated if not present in the standard library.
 
 # Features
 
@@ -40,7 +42,6 @@ KFR has no external dependencies except C++14-compatible standard C++ library.
 * Color space conversion (sRGB, XYZ, Lab, LCH)
 * MP3 file reading (using third party dr_lib library, see source code for details)
 * Various optimizations and fixes (thank to [@bmanga](https://github.com/bmanga), [@ncorgan](https://github.com/ncorgan), [@rotkreis](https://github.com/rotkreis), [@mujjingun](https://github.com/mujjingun) for fixes and bug reports)
-
 
 ### Release notes
 
@@ -144,11 +145,36 @@ To obtain the full code, including examples and tests, you can clone the git rep
 git clone https://github.com/kfrlib/kfr.git
 ```
 
+## Building KFR C API
+
+### Windows
+
+These commands must be executed in MSVC2017 command prompt
+
+```bash
+cd <path_to_kfr_repository>
+mkdir build && cd build
+cmake -GNinja -DENABLE_CAPI_BUILD=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER="<PATH_TO_LLVM_DIR>/bin/clang-cl.exe" ..
+ninja kfr_capi
+```
+
+### Linux, macOS, other
+
+```bash
+cd <path_to_kfr_repository>
+mkdir build && cd build
+cmake -GNinja -DENABLE_CAPI_BUILD=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=clang++ ..
+ninja kfr_capi
+```
+
+Prebuilt binaries will be available soon.
+
 ## Including in CMake project
 
-CMakeLists.txt contains two libraries:
+CMakeLists.txt contains these libraries:
 * `kfr` - header only interface library
 * `kfr_dft` - static library for DFT and related algorithms
+* `kfr_io` - static library for file IO and audio IO
 
 ```cmake
 # Include KFR subdirectory
@@ -159,20 +185,31 @@ target_link_libraries(your_executable_or_library kfr)
 
 # Add KFR DFT to your executable or library, (cpp file will be built for this)
 target_link_libraries(your_executable_or_library kfr_dft)
+
+# Add KFR IO to your executable or library, (cpp file will be built for this)
+target_link_libraries(your_executable_or_library kfr_io)
 ```
 
-## Makefile, command line etc
+## Makefile, command line etc (Unix-like systems)
 
 ```bash
 # Add this to command line
 -Ipath_to_kfr/include
+
+# And this if needed
+-lkfr_dft -lkfr_io
+
+# C++17 mode must be enabled
+-std=c++17
+# or
+-std=gnu++17
 ```
 
 ## Linux
 
 ### Prerequisites
-* GCC 5.4 or newer
-* Clang 4.0 or newer
+* GCC 7 or newer
+* Clang 6.0 or newer
 
 ### Command line
 ```bash
@@ -192,7 +229,7 @@ ninja
 ## macOS
 
 ### Prerequisites
-* XCode 8.3, 9.x or 10.x
+* XCode 9.x, 10.x or 11.x
 
 ### Command line
 Using Xcode project:
@@ -260,7 +297,7 @@ cmake -G"Visual Studio 15 2017 Win64" -DENABLE_TESTS=ON -Tllvm -DCMAKE_BUILD_TYP
 
 ### Prerequisites
 * Latest MinGW or MSYS2
-* Clang 4.0 or newer
+* Clang 6.0 or newer
 
 Using Makefiles:
 ```
@@ -276,6 +313,13 @@ mkdir build && cd build
 cmake -GNinja -DENABLE_TESTS=ON -DCMAKE_BUILD_TYPE=Release ..
 ninja
 ```
+
+## Branches
+
+`dev` - current development version. Pull requests should go to `dev`.
+
+`master` - current stable version passing all compiler/architecture tests.
+
 
 ## Tests
 
@@ -336,7 +380,6 @@ Tested on the following systems:
 * Parallel execution of algorithms
 * Serialization/Deserialization of any expression
 * More formats for audio file reading/writing
-* Reduce STL dependency
 
 ## License
 
