@@ -23,6 +23,7 @@
   disclosing the source code of your own applications.
   See https://www.kfrlib.com for details.
  */
+#define KFR_NO_C_COMPLEX_TYPES 1
 
 #include <kfr/capi.h>
 #include <kfr/dft.hpp>

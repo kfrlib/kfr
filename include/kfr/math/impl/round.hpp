@@ -133,9 +133,9 @@ KFR_HANDLE_ALL_SIZES_1_IF(fract, is_f_class<T>)
 // fallback
 
 template <typename T>
-constexpr T fp_precision_limit = 4503599627370496.0;
+constexpr inline T fp_precision_limit = 4503599627370496.0;
 template <>
-constexpr f32 fp_precision_limit<f32> = 16777216.0f;
+constexpr inline f32 fp_precision_limit<f32> = 16777216.0f;
 
 template <size_t N>
 KFR_INTRINSIC vec<f32, N> floor(const vec<f32, N>& x)
