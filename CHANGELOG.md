@@ -1,5 +1,94 @@
 # Changelog
 
+## 4.0.0
+
+2019-12-05
+
+#### Added
+
+- IIR filter design
+  - Butterworth
+  - Chebyshev type I and II
+  - Bessel
+  - Lowpass, highpass, bandpass and bandstop filters
+  - Conversion of arbitrary filter from Z,P,K to SOS format (suitable for biquad function and filter)
+- Discrete Cosine Transform type II and III
+- cmake uninstall target
+- C API: 
+  - DFT
+  - real DFT
+  - DCT
+  - FIR
+  - IIR
+  - Convolution
+  - Aligned memory allocation
+  - Built for SSE2, SSE4.1, AVX, AVX2, AVX512, x86 and x86_64, architecture is selected at runtime
+- New vector based types: 
+  - color
+  - rectangle
+  - point
+  - size
+  - border
+  - geometric vector
+  - 2D matrix
+- Color space conversion:
+  - sRGB
+  - linear RGB
+  - XYZ
+  - Lab
+  - LCH
+  - HSV
+- MP3 audio reading
+- `aligned_reallocate` function
+- `zip` and `column` functions
+- `vec<vec<vec<T>>>` support
+- New example: `iir.cpp`
+- `biquad` that gets `std::vector` of `biquad_param`s
+- `csqr` function
+- `factorial` function
+- `isreal` function
+- `make_complex` function for expressions
+- New optimization technique for vector element shuffle
+- `std::get<>` support for `vec<>`
+- C++17 structured bindings support for `vec<>`
+- comparison operators for `cvals_t`
+- compile time `cminof`, `cmaxof` functions
+- `vector_width_for` constant to get vector width for specific architecture
+- make_univector for containers and arrays
+- univector: copy constructor optimization
+- Custom `assertion_failed`
+
+#### Changed
+
+- C++17 compiler is required. Some of C++17 library features may be missing, in this case KFR uses custom implementation
+- `cast` function now works with both vectors and expressions (expression versions was previously called `convert`)
+- Memory alignment can be up to 32768
+- New implementation for `cometa::function` using shared pointer
+- `memory.hpp` allocation functions has been moved to cometa
+- `cconj` has been moved to simd module (instead of `math`)
+- dr_libs version updated
+- All global constants are now `inline constexpr`
+- enums moved out of architecture namespace
+- `special_constant::undefined` removed
+
+#### Fixed
+
+- Fixed real DFT with raw poitners
+- Bug with generators 
+- Fixed grid issues in dspplot
+- Wrong index in `concatenate`
+- `csqrt` function
+- Fixed NaNs in `amp_to_dB`
+- GCC 9 support
+- Workaround for Clang 8.0 FMA code generator bug
+- Flat top window
+- SSE4.2 detection (previously detected as SSE4.1)
+
+#### Notes
+
+* MSVC support is limited to MSVC2017 due to ICE in MSVC2019. Once fixed, support will be added
+* DFT is limited to Clang due to ICE in MSVC and broken AVX optimization in GCC 8 and 9. Once fixed, support will be added
+
 ## 3.0.9
 
 2019-04-02
