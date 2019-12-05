@@ -9,23 +9,35 @@
 * All vector lengths are also supported. `vec<float,1>`, `vec<unsigned,3>`, `vec<complex<float>, 11>` all are valid vector types in KFR
 * Most of the standard library functions are re-implemented to support vector of any length and data type and to support expressions 
 * Runtime cpu detection
+* C API: DFT, real DFT, DCT, FIR and IIR filters and convolution, memory allocation
+  * Built for SSE2, SSE4.1, AVX, AVX2, AVX512, x86 and x86_64, architecture is selected at runtime
+  * Can be used with any compiler and any language with ability to call C functions
+  * [Prebuilt Windows binaries](https://github.com/kfrlib/kfr/releases)
 
 ### DSP/Audio algorithms
 
 * [FFT](dft.md)
+* DCT
 * [Convolution](convolution.md)
 * [FIR filtering](fir.md)
 * [FIR filter design using the window method](fir.md)
 * [Resampling with configurable quality](src.md) (See resampling.cpp from Examples directory)
+* IIR filter design
+  * Butterworth
+  * Chevyshev I and Chevyshev II
+  * Bessel
+  * Low pass, high pass, band pass, band stop
+  * Convert arbitrary filter from Z, P, K format to SOS suitable for biquad function
 * Goertzel algorithm
 * Fractional delay
 * [Biquad filtering](bq.md)
 * [Biquad design functions](bq.md)
 * Oscillators: Sine, Square, Sawtooth, Triangle
 * Window functions: Triangular, Bartlett, Cosine, Hann, Bartlett-Hann, Hamming, Bohman, Blackman, Blackman-Harris, Kaiser, Flattop, Gaussian, Lanczos, Rectangular
-* [Audio file reading/writing](read_audio.md)
+* [Audio file reading/writing (wav, flac, mp3)](read_audio.md)
 * Pseudorandom number generator
 * Sorting
+* Color space conversion (sRGB, XYZ, Lab, LCH)
 * Ring (Circular) buffer
 * Simple waveshaper
 * Fast incremental sine/cosine generation
@@ -39,7 +51,7 @@
 
 Xcode | Visual Studio | Clang | GCC | Intel Compiler
 ----- | ------------- | ----- | --- | --------------
-8.3+  | 2017          | 4+    | 7+  | Experimental
+9+    | 2017          | 6+    | 7+  | Experimental
 
 Tested on macOS, Windows (MinGW, MSYS and MSVC), Linux, iOS, Android.
 
