@@ -1,5 +1,10 @@
 # KFR - Fast, modern C++ DSP framework
 
+<p align="center">
+  <img width="300" height="auto" src="img/KFR1.png">
+</p>
+
+
 ![Build Status](https://img.shields.io/azure-devops/build/dlevin256/dlevin256/1/master.svg?style=flat-square)
 [![Gitter](https://img.shields.io/gitter/room/kfrlib/kfr.svg?maxAge=2592000&style=flat-square)](https://gitter.im/kfrlib/kfr) ![License](https://img.shields.io/github/license/kfrlib/kfr.svg?style=flat-square)
 
@@ -314,6 +319,17 @@ cmake -GNinja -DENABLE_TESTS=ON -DCMAKE_BUILD_TYPE=Release ..
 ninja
 ```
 
+## Documentation
+
+Documentation home:
+
+https://www.kfrlib.com/newdocs/
+
+Built with
+* [cxxdox - generates markdown docs from C++](https://github.com/kfrlib/cxxdox)
+* [mkdocs - static documentation generator](https://www.mkdocs.org/)
+* [mkdocs-material - material theme for mkdocs](https://squidfunk.github.io/mkdocs-material/)
+
 ## Branches
 
 `dev` - current development version. Pull requests should go to `dev`.
@@ -334,6 +350,7 @@ ctest -V
 ```
 
 Tested on the following systems:
+
 
 ### macOS
 * (**Intel AVX2**) macOS **10.13.6** / Xcode 10 / AppleClang 10.0.0.10001145
