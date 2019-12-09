@@ -103,7 +103,7 @@ TEST(shl)
         named("type") = test_catogories::types(test_catogories::vectors), named("value1") = special_values(),
         named("shift") = std::vector<unsigned>{ 1, 2, 7, 8, 9, 15, 16, 31, 32, 63, 64 },
         [&](auto type, special_value value, unsigned shift) {
-            using T = type_of<decltype(type)>;
+            using T = typename decltype(type)::type;
             if (shift < sizeof(subtype<T>))
             {
                 const T x(value);
@@ -131,7 +131,7 @@ TEST(shr)
         named("type") = test_catogories::types(test_catogories::vectors), named("value1") = special_values(),
         named("shift") = std::vector<unsigned>{ 1, 2, 7, 8, 9, 15, 16, 31, 32, 63, 64 },
         [&](auto type, special_value value, unsigned shift) {
-            using T = type_of<decltype(type)>;
+            using T = typename decltype(type)::type;
             if (shift < sizeof(subtype<T>))
             {
                 const T x(value);

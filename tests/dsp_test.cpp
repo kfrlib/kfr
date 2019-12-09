@@ -125,7 +125,7 @@ TEST(ebu_stereo_1_and_2)
 {
     testo::matrix(named("type")        = ctypes_t<float, double>{},
                   named("sample_rate") = std::vector<int>{ 44100, 48000 }, [](auto type, int sample_rate) {
-                      using T = type_of<decltype(type)>;
+                      using T = typename decltype(type)::type;
 
                       ebu_test_stereo<T>(sample_rate, { { -23.f, 20.f, 1000.f } }, -23.f, -23.f, -23.f, NAN);
                       ebu_test_stereo<T>(sample_rate, { { -33.f, 20.f, 1000.f } }, -33.f, -33.f, -33.f, NAN);
@@ -136,7 +136,7 @@ TEST(ebu_stereo_3_4_and_5)
 {
     testo::matrix(named("type")        = ctypes_t<float, double>{},
                   named("sample_rate") = std::vector<int>{ 44100, 48000 }, [](auto type, int sample_rate) {
-                      using T = type_of<decltype(type)>;
+                      using T = typename decltype(type)::type;
 
                       ebu_test_stereo<T>(
                           sample_rate,
@@ -156,7 +156,7 @@ TEST(ebu_multichannel_6)
 {
     testo::matrix(named("type")        = ctypes_t<float, double>{},
                   named("sample_rate") = std::vector<int>{ 44100, 48000 }, [](auto type, int sample_rate) {
-                      using T = type_of<decltype(type)>;
+                      using T = typename decltype(type)::type;
 
                       ebu_test_multichannel<T>(sample_rate, { { -28.f, -24.f, -30.f, 20.f, 1000.f } }, NAN,
                                                NAN, -23.f, NAN);
@@ -167,7 +167,7 @@ TEST(ebu_stereo_9)
 {
     testo::matrix(named("type")        = ctypes_t<float, double>{},
                   named("sample_rate") = std::vector<int>{ 44100, 48000 }, [](auto type, int sample_rate) {
-                      using T = type_of<decltype(type)>;
+                      using T = typename decltype(type)::type;
 
                       ebu_test_stereo<T>(sample_rate,
                                          { { -20.f, 1.34f, 1000.f },
@@ -188,7 +188,7 @@ TEST(ebu_stereo_12)
 {
     testo::matrix(named("type")        = ctypes_t<float, double>{},
                   named("sample_rate") = std::vector<int>{ 44100, 48000 }, [](auto type, int sample_rate) {
-                      using T = type_of<decltype(type)>;
+                      using T = typename decltype(type)::type;
 
                       ebu_test_stereo<T>(
                           sample_rate,
@@ -217,7 +217,7 @@ TEST(ebu_lra_1_2_3_and_4)
 {
     testo::matrix(named("type")        = ctypes_t<float, double>{},
                   named("sample_rate") = std::vector<int>{ 44100, 48000 }, [](auto type, int sample_rate) {
-                      using T = type_of<decltype(type)>;
+                      using T = typename decltype(type)::type;
 
                       ebu_test_stereo<T>(sample_rate, { { -20.f, 20.f, 1000.f }, { -30.f, 20.f, 1000.f } },
                                          NAN, NAN, NAN, 10.f);
@@ -383,7 +383,7 @@ TEST(fir)
 #endif
                                            >{},
                   [](auto type) {
-                      using T = type_of<decltype(type)>;
+                      using T = typename decltype(type)::type;
 
                       const univector<T, 100> data =
                           counter() + sequence(1, 2, -10, 100) + sequence(0, -7, 0.5);
@@ -498,7 +498,7 @@ inline const univector<T, Tag>& choose_array(const univector<T2, Tag>&, const un
 TEST(biquad_lowpass1)
 {
     testo::matrix(named("type") = ctypes_t<float, double>{}, [](auto type) {
-        using T = type_of<decltype(type)>;
+        using T = typename decltype(type)::type;
 
         const biquad_params<T> bq = biquad_lowpass<T>(0.1, 0.7);
 
@@ -533,7 +533,7 @@ TEST(biquad_lowpass1)
 TEST(biquad_lowpass2)
 {
     testo::matrix(named("type") = ctypes_t<float, double>{}, [](auto type) {
-        using T = type_of<decltype(type)>;
+        using T = typename decltype(type)::type;
 
         const biquad_params<T> bq = biquad_lowpass<T>(0.45, 0.2);
 

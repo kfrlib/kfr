@@ -90,58 +90,58 @@ TEST(cast)
     test_function1(
         test_catogories::all, [](auto x) { return kfr::innercast<u8>(x); },
         [](auto x) -> u8 { return static_cast<u8>(x); },
-        [](auto t, special_value x) { return is_in_range_of<u8>(x.get<subtype<type_of<decltype(t)>>>()); });
+        [](auto t, special_value x) { return is_in_range_of<u8>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = i8");
     test_function1(
         test_catogories::all, [](auto x) { return kfr::innercast<i8>(x); },
         [](auto x) -> i8 { return static_cast<i8>(x); },
-        [](auto t, special_value x) { return is_in_range_of<i8>(x.get<subtype<type_of<decltype(t)>>>()); });
+        [](auto t, special_value x) { return is_in_range_of<i8>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = u16");
     test_function1(
         test_catogories::all, [](auto x) { return kfr::innercast<u16>(x); },
         [](auto x) -> u16 { return static_cast<u16>(x); },
-        [](auto t, special_value x) { return is_in_range_of<u16>(x.get<subtype<type_of<decltype(t)>>>()); });
+        [](auto t, special_value x) { return is_in_range_of<u16>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = i16");
     test_function1(
         test_catogories::all, [](auto x) { return kfr::innercast<i16>(x); },
         [](auto x) -> i16 { return static_cast<i16>(x); },
-        [](auto t, special_value x) { return is_in_range_of<i16>(x.get<subtype<type_of<decltype(t)>>>()); });
+        [](auto t, special_value x) { return is_in_range_of<i16>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = u32");
     test_function1(
         test_catogories::all, [](auto x) { return kfr::innercast<u32>(x); },
         [](auto x) -> u32 { return static_cast<u32>(x); },
-        [](auto t, special_value x) { return is_in_range_of<u32>(x.get<subtype<type_of<decltype(t)>>>()); });
+        [](auto t, special_value x) { return is_in_range_of<u32>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = i32");
     test_function1(
         test_catogories::all, [](auto x) { return kfr::innercast<i32>(x); },
         [](auto x) -> i32 { return static_cast<i32>(x); },
-        [](auto t, special_value x) { return is_in_range_of<i32>(x.get<subtype<type_of<decltype(t)>>>()); });
+        [](auto t, special_value x) { return is_in_range_of<i32>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = u64");
     test_function1(
         test_catogories::all, [](auto x) { return kfr::innercast<u64>(x); },
         [](auto x) -> u64 { return static_cast<u64>(x); },
-        [](auto t, special_value x) { return is_in_range_of<u64>(x.get<subtype<type_of<decltype(t)>>>()); });
+        [](auto t, special_value x) { return is_in_range_of<u64>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = i64");
     test_function1(
         test_catogories::all, [](auto x) { return kfr::innercast<i64>(x); },
         [](auto x) -> i64 { return static_cast<i64>(x); },
-        [](auto t, special_value x) { return is_in_range_of<i64>(x.get<subtype<type_of<decltype(t)>>>()); });
+        [](auto t, special_value x) { return is_in_range_of<i64>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = f32");
     test_function1(
         test_catogories::all, [](auto x) { return kfr::innercast<f32>(x); },
         [](auto x) -> f32 { return static_cast<f32>(x); },
-        [](auto t, special_value x) { return is_in_range_of<f32>(x.get<subtype<type_of<decltype(t)>>>()); });
+        [](auto t, special_value x) { return is_in_range_of<f32>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = f64");
     test_function1(
         test_catogories::all, [](auto x) { return kfr::innercast<f64>(x); },
         [](auto x) -> f64 { return static_cast<f64>(x); },
-        [](auto t, special_value x) { return is_in_range_of<f64>(x.get<subtype<type_of<decltype(t)>>>()); });
+        [](auto t, special_value x) { return is_in_range_of<f64>(x.get<subtype<typename decltype(t)::type>>()); });
 }
 
 TEST(unaligned_read)
 {
     testo::matrix(named("type") = numeric_vector_types<vec>, [](auto type) {
-        using T                   = type_of<decltype(type)>;
+            using T = typename decltype(type)::type;
         using Tsub                = subtype<T>;
         constexpr static size_t N = T::size();
         Tsub data[N * 2];

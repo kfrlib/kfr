@@ -74,7 +74,7 @@ inline const char* tname(ctype_t<f64>) { return "double"; }
     TEST(fn##_##datafile)                                                                                    \
     {                                                                                                        \
         testo::matrix(named("type") = vector_types(), [&](auto type) {                                       \
-            using T               = type_of<decltype(type)>;                                                 \
+            using T               = typename decltype(type)::type;                                           \
             using Tsub            = subtype<T>;                                                              \
             double error_sum      = 0.0;                                                                     \
             uint64_t error_peak   = 0;                                                                       \
@@ -99,7 +99,7 @@ inline const char* tname(ctype_t<f64>) { return "double"; }
     TEST(fn##_##datafile)                                                                                    \
     {                                                                                                        \
         testo::matrix(named("type") = vector_types(), [&](auto type) {                                       \
-            using T               = type_of<decltype(type)>;                                                 \
+            using T               = typename decltype(type)::type;                                           \
             using Tsub            = subtype<T>;                                                              \
             double error_sum      = 0.0;                                                                     \
             uint64_t error_peak   = 0;                                                                       \

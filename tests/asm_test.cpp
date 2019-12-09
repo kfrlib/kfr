@@ -251,6 +251,26 @@ TEST_ASM_UIF(read, TEST_READ)
 
 TEST_ASM_UIF(write, TEST_WRITE)
 
+TEST_ASM_F(sin, TEST_ASM_VTY1_F)
+
+TEST_ASM_F(log, TEST_ASM_VTY1_F)
+
+TEST_ASM_F(exp, TEST_ASM_VTY1_F)
+
+TEST_ASM_F(log2, TEST_ASM_VTY1_F)
+
+TEST_ASM_F(exp2, TEST_ASM_VTY1_F)
+
+TEST_ASM_F(cos, TEST_ASM_VTY1_F)
+
+TEST_ASM_F(tan, TEST_ASM_VTY1_F)
+
+TEST_ASM_F(atan, TEST_ASM_VTY1_F)
+
+TEST_ASM_F(asin, TEST_ASM_VTY1_F)
+
+TEST_ASM_F(acos, TEST_ASM_VTY1_F)
+
 #ifdef HAVE_DFT
 
 #define TEST_FFT_SPEC(ty, size)                                                                              \
@@ -287,11 +307,6 @@ TEST_FFT_GEN(f32)
 TEST_FFT_GEN(f64)
 
 #endif
-
-TEST_ASM_F(sin, TEST_ASM_VTY1_F)
-
-TEST_ASM_F(cos, TEST_ASM_VTY1_F)
-
 #endif
 
 namespace kfr

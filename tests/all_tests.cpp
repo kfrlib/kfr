@@ -34,8 +34,23 @@ FORCE_LINK(avx2)
 int main()
 {
     println(library_version(), " running on ", cpu_runtime());
+    try
+    {
 #ifdef HAVE_MPFR
-    mpfr::scoped_precision p(64);
+        mpfr::scoped_precision p(64);
 #endif
-    return testo::run_all("");
+        return testo::run_all("");
+    }
+    catch (const std::exception& e)
+    {
+        errorln("****************************************");
+        errorln("***** Exception: ", typeid(e).name(), ": ", e.what());
+        return -1;
+    }
+    catch (...)
+    {
+        errorln("****************************************");
+        errorln("***** Exception: unknown");
+        return -1;
+    }
 }

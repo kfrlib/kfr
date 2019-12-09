@@ -97,8 +97,8 @@ KFR_INTRINSIC vec<f32, N> log(const vec<f32, N>& d)
 
     vec<f32, N> sp = select(d < 0, constants<f32>::qnan, constants<f32>::neginfinity);
 
-    vec<f32, N> t = 0.2371599674224853515625f;
-    t             = fmadd(t, x2, 0.285279005765914916992188f);
+    vec<f32, N> t;
+    t             = fmadd(0.2371599674224853515625f, x2, 0.285279005765914916992188f);
     t             = fmadd(t, x2, 0.400005519390106201171875f);
     t             = fmadd(t, x2, 0.666666567325592041015625f);
     t             = fmadd(t, x2, 2.0f);
@@ -120,8 +120,8 @@ KFR_INTRINSIC vec<f64, N> log(const vec<f64, N>& d)
 
     vec<f64, N> sp = select(d < 0, constants<f64>::qnan, constants<f64>::neginfinity);
 
-    vec<f64, N> t = 0.148197055177935105296783;
-    t             = fmadd(t, x2, 0.153108178020442575739679);
+    vec<f64, N> t; 
+    t             = fmadd(0.148197055177935105296783, x2, 0.153108178020442575739679);
     t             = fmadd(t, x2, 0.181837339521549679055568);
     t             = fmadd(t, x2, 0.22222194152736701733275);
     t             = fmadd(t, x2, 0.285714288030134544449368);
@@ -165,8 +165,7 @@ KFR_INTRINSIC vec<f32, N> exp(const vec<f32, N>& d)
     const f32 c6 = 1.304379315115511417388916015625e-3f;
     const f32 c7 = 2.7555381529964506626129150390625e-4f;
 
-    u = c7;
-    u = fmadd(u, s, c6);
+    u = fmadd(c7, s, c6);
     u = fmadd(u, s, c5);
     u = fmadd(u, s, c4);
     u = fmadd(u, s, c3);
@@ -203,8 +202,7 @@ KFR_INTRINSIC vec<f64, N> exp(const vec<f64, N>& d)
     const f64 c10 = 2.59589616274586264243611237120812340606335055781528e-7;
     const f64 c11 = 3.43801438838789632454461529017381016259946591162588e-8;
 
-    u = c11;
-    u = fmadd(u, s, c10);
+    u = fmadd(c11, s, c10);
     u = fmadd(u, s, c9);
     u = fmadd(u, s, c8);
     u = fmadd(u, s, c7);

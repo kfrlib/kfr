@@ -518,7 +518,7 @@ KFR_INTRINSIC vec<T, N> splitpairs(const vec<T, N>& x)
 }
 KFR_FN(splitpairs)
 
-template <size_t group = 1, typename T, size_t N>
+template <size_t group = 1, typename T, size_t N, KFR_ENABLE_IF(!is_vec<T>)>
 KFR_INTRINSIC vec<T, N> reverse(const vec<T, N>& x)
 {
     constexpr size_t size = N / group;

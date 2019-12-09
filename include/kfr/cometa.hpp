@@ -443,17 +443,17 @@ struct cvals_t : ops::empty
         return {};
     }
 
-    constexpr bool operator==(cvals_t<T, values...>) const noexcept { return true; }
+    constexpr bool equal(cvals_t<T, values...>) const noexcept { return true; }
     template <T... values2>
-    constexpr bool operator==(cvals_t<T, values2...>) const noexcept
+    constexpr bool equal(cvals_t<T, values2...>) const noexcept
     {
         return false;
     }
 
     template <T... values2>
-    constexpr bool operator!=(cvals_t<T, values...> ind) const noexcept
+    constexpr bool notequal(cvals_t<T, values...> ind) const noexcept
     {
-        return !operator==(ind);
+        return !equal(ind);
     }
 };
 
@@ -1478,7 +1478,7 @@ namespace details
 template <size_t index, typename... types>
 CMT_INTRINSIC auto get_type_arg(ctypes_t<types...>)
 {
-    return ctype_t<type_of<details::get_nth_type<index, types...>>>();
+    return ctype_t<typename details::get_nth_type<index, types...>::type>();
 }
 
 template <typename T0, typename... types, typename Fn, size_t... indices>

@@ -108,7 +108,7 @@ TEST(intrin_sqrt)
     CHECK(kfr::sqrt(make_vector(-9)) == make_vector<fbase>(qnan));
     testo::matrix(named("type") = float_vector_types<vec>, named("value") = std::vector<int>{ 0, 2, 65536 },
                   [](auto type, int value) {
-                      using T = type_of<decltype(type)>;
+                      using T = typename decltype(type)::type;
                       const T x(value);
                       CHECK(kfr::sqrt(x) == apply([](auto x) -> decltype(x) { return std::sqrt(x); }, x));
                   });
@@ -118,7 +118,7 @@ TEST(intrin_satadd_satsub)
 {
     testo::matrix(named("type") = cconcat(signed_vector_types<vec>, unsigned_vector_types<vec>),
                   [](auto type) {
-                      using T     = type_of<decltype(type)>;
+                      using T     = typename decltype(type)::type;
                       using Tsub  = subtype<T>;
                       const T min = std::numeric_limits<Tsub>::min();
                       const T max = std::numeric_limits<Tsub>::max();
@@ -145,7 +145,7 @@ TEST(intrin_satadd_satsub)
 TEST(intrin_any_all)
 {
     testo::matrix(named("type") = unsigned_vector_types<vec>, [](auto type) {
-        using T                = type_of<decltype(type)>;
+        using T                = typename decltype(type)::type;
         constexpr size_t width = widthof<T>();
         using Tsub             = subtype<T>;
         const auto x           = enumerate<Tsub, width>() == Tsub(0);

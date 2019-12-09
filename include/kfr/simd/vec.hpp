@@ -1126,7 +1126,7 @@ void test_function1(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
     testo::matrix(
         named("value") = special_values(), named("type") = test_catogories::types(cat),
         [&](special_value value, auto type) {
-            using T = type_of<decltype(type)>;
+            using T = typename decltype(type)::type;
             if (isapplicable(ctype<T>, value))
             {
                 const T x(value);
@@ -1141,7 +1141,7 @@ void test_function1(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
         });
 
     testo::matrix(named("type") = test_catogories::types(cint<Cat & ~1>), [&](auto type) {
-        using T   = type_of<decltype(type)>;
+        using T   = typename decltype(type)::type;
         const T x = test_enumerate(T::shape(), csizeseq<T::size()>, 0);
         CHECK(fn(x) == apply(reffn, x));
     });
@@ -1153,7 +1153,7 @@ void test_function2(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
     testo::matrix(named("value1") = special_values(), //
                   named("value2") = special_values(), named("type") = test_catogories::types(cat),
                   [&](special_value value1, special_value value2, auto type) {
-                      using T = type_of<decltype(type)>;
+                      using T = typename decltype(type)::type;
                       const T x1(value1);
                       const T x2(value2);
                       if (isapplicable(ctype<T>, value1, value2))
@@ -1166,7 +1166,7 @@ void test_function2(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
                   });
 
     testo::matrix(named("type") = test_catogories::types(cint<Cat & ~1>), [&](auto type) {
-        using T    = type_of<decltype(type)>;
+        using T    = typename decltype(type)::type;
         const T x1 = test_enumerate(T::shape(), csizeseq<T::size()>, 0, 1);
         const T x2 = test_enumerate(T::shape(), csizeseq<T::size()>, 100, -1);
         CHECK(fn(x1, x2) == apply(reffn, x1, x2));

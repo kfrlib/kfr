@@ -1639,7 +1639,7 @@ KFR_INTRINSIC simd<float, 8> simd_vec_shuffle(simd_t<float, 8>, const simd<float
                                               csizes_t<I0, I1, I2, I3, I4, I5, I6, I7>)
 {
     // AVX -> AVX
-    if constexpr (cmaxof(csizes<I0, I1, I2, I3>) < 4 && csizes<I0, I1, I2, I3> == csizes<I4, I5, I6, I7>)
+    if constexpr (cmaxof(csizes<I0, I1, I2, I3>) < 4 && csizes<I0, I1, I2, I3>.equal(csizes<I4, I5, I6, I7>))
     {
         const simd<float, 4> tmp = universal_shuffle(simd_t<float, 4>{}, simd_get_low(simd_t<float, 8>{}, x),
                                                      csizes<I0, I1, I2, I3>);
@@ -1647,8 +1647,8 @@ KFR_INTRINSIC simd<float, 8> simd_vec_shuffle(simd_t<float, 8>, const simd<float
     }
     else if constexpr (cmaxof(csizes<I0, I1, I2, I3>) < 4 && cminof(csizes<I4, I5, I6, I7>) >= 4)
     {
-        if constexpr (csizes<I0, I1, I2, I3, I4, I5, I6, I7> ==
-                      csizes<I0, I1, I2, I3, I0 + 4, I1 + 4, I2 + 4, I3 + 4>)
+        if constexpr (csizes<I0, I1, I2, I3, I4, I5, I6, I7>.equal(
+                      csizes<I0, I1, I2, I3, I0 + 4, I1 + 4, I2 + 4, I3 + 4>))
         {
             return _mm256_shuffle_ps(x, x, shuffle_mask<8, I0, I1, I2, I3>::value);
         }
@@ -1680,7 +1680,7 @@ KFR_INTRINSIC simd<double, 4> simd_vec_shuffle(simd_t<double, 4>, const simd<dou
                                                csizes_t<I0, I1, I2, I3>)
 {
     // AVX -> AVX
-    if constexpr (cmaxof(csizes<I0, I1>) < 2 && csizes<I0, I1> == csizes<I2, I3>)
+    if constexpr (cmaxof(csizes<I0, I1>) < 2 && csizes<I0, I1>.equal(csizes<I2, I3>))
     {
         const simd<double, 2> tmp =
             universal_shuffle(simd_t<double, 2>{}, simd_get_low(simd_t<double, 4>{}, x), csizes<I0, I1>);
@@ -1688,7 +1688,7 @@ KFR_INTRINSIC simd<double, 4> simd_vec_shuffle(simd_t<double, 4>, const simd<dou
     }
     else if constexpr (cmaxof(csizes<I0, I1>) < 4 && cminof(csizes<I2, I3>) >= 4)
     {
-        if constexpr (csizes<I0, I1, I2, I3> == csizes<I0, I1, I2 + 2, I3 + 2>)
+        if constexpr (csizes<I0, I1, I2, I3>.equal(csizes<I0, I1, I2 + 2, I3 + 2>))
         {
             return _mm256_shuffle_ps(x, x, shuffle_mask<2, I0, I1>::value);
         }
@@ -1790,7 +1790,7 @@ KFR_INTRINSIC simd<T, Nout> universal_shuffle(simd_t<T, Nin>, const simd<T, Nin>
     {
         return x;
     }
-    else if constexpr (next_poweroftwo(Nin) == next_poweroftwo(Nout) && Indices{} == csizeseq<Nout>)
+    else if constexpr (next_poweroftwo(Nin) == next_poweroftwo(Nout) && Indices{}.equal(csizeseq<Nout>))
     {
         return x;
     }
@@ -1824,7 +1824,7 @@ KFR_INTRINSIC simd<T, Nout> universal_shuffle(simd_t<T, Nin>, const simd<T, Nin>
     {
         auto lowi  = Indices{}[csizeseq<Nout / 2, 0>];
         auto highi = Indices{}[csizeseq<Nout / 2, Nout / 2>];
-        if constexpr (lowi == highi)
+        if constexpr (lowi.equal(highi))
         {
             auto tmp = universal_shuffle(simd_t<T, Nin>{}, x, lowi);
             return { tmp, tmp };
