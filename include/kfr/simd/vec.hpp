@@ -212,7 +212,7 @@ struct alignas(force_compiletime_size_t<
     // from SIMD
     KFR_MEM_INTRINSIC vec(const simd_type& simd) CMT_NOEXCEPT : v(simd) {}
     // default
-    KFR_MEM_INTRINSIC vec() CMT_NOEXCEPT {}
+    KFR_MEM_INTRINSIC constexpr vec() CMT_NOEXCEPT {}
     // copy
     KFR_MEM_INTRINSIC constexpr vec(const vec& value) CMT_NOEXCEPT = default;
     // move
