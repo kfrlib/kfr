@@ -32,7 +32,17 @@ TEST(test_convolve)
     CHECK(rms(c - univector<fbase>({ 0.25, 1., 2.75, 2.5, 3.75, 3.5, 1.5, -4., 7.5 })) < 0.0001);
 }
 
-TEST(test_fft_convolve)
+TEST(test_complex_convolve)
+{
+    univector<complex<fbase>, 5> a({ 1, 2, 3, 4, 5 });
+    univector<complex<fbase>, 5> b({ 0.25, 0.5, 1.0, -2.0, 1.5 });
+    univector<complex<fbase>> c = convolve(a, b);
+    CHECK(c.size() == 9u);
+    CHECK(rms(cabs(c - univector<complex<fbase>>({ 0.25, 1., 2.75, 2.5, 3.75, 3.5, 1.5, -4., 7.5 }))) <
+          0.0001);
+}
+
+TEST(test_convolve_filter)
 {
     univector<fbase, 5> a({ 1, 2, 3, 4, 5 });
     univector<fbase, 5> b({ 0.25, 0.5, 1.0, -2.0, 1.5 });
@@ -42,6 +52,21 @@ TEST(test_fft_convolve)
     CHECK(rms(dest - univector<fbase>({ 0.25, 1., 2.75, 2.5, 3.75 })) < 0.0001);
 }
 
+TEST(test_complex_convolve_filter)
+{
+    univector<complex<fbase>, 5> a({ 1, 2, 3, 4, 5 });
+    univector<complex<fbase>, 5> b({ 0.25, 0.5, 1.0, -2.0, 1.5 });
+    univector<complex<fbase>, 5> dest;
+    convolve_filter<complex<fbase>> filter(a);
+    filter.apply(dest, b);
+    CHECK(rms(cabs(dest - univector<complex<fbase>>({ 0.25, 1., 2.75, 2.5, 3.75 }))) < 0.0001);
+    filter.apply(dest, b);
+    CHECK(rms(cabs(dest - univector<complex<fbase>>({ 0.25, 1., 2.75, 2.5, 3.75 }))) > 0.0001);
+    filter.reset();
+    filter.apply(dest, b);
+    CHECK(rms(cabs(dest - univector<complex<fbase>>({ 0.25, 1., 2.75, 2.5, 3.75 }))) < 0.0001);
+}
+
 TEST(test_correlate)
 {
     univector<fbase, 5> a({ 1, 2, 3, 4, 5 });
@@ -49,6 +74,15 @@ TEST(test_correlate)
     univector<fbase> c = correlate(a, b);
     CHECK(c.size() == 9u);
     CHECK(rms(c - univector<fbase>({ 1.5, 1., 1.5, 2.5, 3.75, -4., 7.75, 3.5, 1.25 })) < 0.0001);
+}
+
+TEST(test_complex_correlate)
+{
+    univector<complex<fbase>, 5> a({ 1, 2, 3, 4, 5 });
+    univector<complex<fbase>, 5> b({ 0.25, 0.5, 1.0, -2.0, 1.5 });
+    univector<complex<fbase>> c = correlate(a, b);
+    CHECK(c.size() == 9u);
+    CHECK(rms(cabs(c - univector<fbase>({ 1.5, 1., 1.5, 2.5, 3.75, -4., 7.75, 3.5, 1.25 }))) < 0.0001);
 }
 
 #if defined CMT_ARCH_ARM || !defined NDEBUG
