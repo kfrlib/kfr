@@ -64,6 +64,12 @@ KFR_INTRINSIC vec<complex<T>, N> ccosh(const vec<complex<T>, N>& x)
 }
 
 template <typename T, size_t N>
+KFR_INTRINSIC vec<T, N> cabssqr(const vec<complex<T>, N>& x)
+{
+    const vec<T, N* 2> xx = sqr(cdecom(x));
+    return even(xx) + odd(xx);
+}
+template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> cabs(const vec<complex<T>, N>& x)
 {
     const vec<T, N* 2> xx = sqr(cdecom(x));
@@ -158,6 +164,11 @@ KFR_HANDLE_SCALAR(csqrt)
 KFR_HANDLE_SCALAR(csqr)
 
 template <typename T, size_t N>
+KFR_INTRINSIC vec<T, N> cabssqr(const vec<T, N>& a)
+{
+    return to_scalar(intrinsics::cabssqr(static_cast<vec<complex<T>, N>>(a)));
+}
+template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> cabs(const vec<T, N>& a)
 {
     return to_scalar(intrinsics::cabs(static_cast<vec<complex<T>, N>>(a)));
@@ -166,6 +177,12 @@ template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> carg(const vec<T, N>& a)
 {
     return to_scalar(intrinsics::carg(static_cast<vec<complex<T>, N>>(a)));
+}
+template <typename T1>
+KFR_INTRINSIC realtype<T1> cabssqr(const T1& a)
+{
+    using vecout = vec1<T1>;
+    return to_scalar(intrinsics::cabssqr(vecout(a)));
 }
 template <typename T1>
 KFR_INTRINSIC realtype<T1> cabs(const T1& a)
@@ -185,6 +202,7 @@ KFR_I_FN(csin)
 KFR_I_FN(csinh)
 KFR_I_FN(ccos)
 KFR_I_FN(ccosh)
+KFR_I_FN(cabssqr)
 KFR_I_FN(cabs)
 KFR_I_FN(carg)
 KFR_I_FN(clog)
@@ -252,6 +270,21 @@ template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_FUNCTION internal::expression_function<fn::ccosh, E1> ccosh(E1&& x)
 {
     return { fn::ccosh(), std::forward<E1>(x) };
+}
+
+/// @brief Returns the squared absolute value (magnitude squared) of the complex number x
+template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+KFR_FUNCTION realtype<T1> cabssqr(const T1& x)
+{
+    return intrinsics::cabssqr(x);
+}
+
+/// @brief Returns template expression that returns the squared absolute value (magnitude squared) of the
+/// complex number x
+template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
+KFR_FUNCTION internal::expression_function<fn::cabssqr, E1> cabssqr(E1&& x)
+{
+    return { fn::cabssqr(), std::forward<E1>(x) };
 }
 
 /// @brief Returns the absolute value (magnitude) of the complex number x
