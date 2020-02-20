@@ -586,13 +586,13 @@ struct is_invocable_impl<Fn, ctypes_t<Args...>, void_t<decltype(std::declval<Fn>
 {
 };
 
-template <typename Fn, typename Ret, typename Args, typename enable = void>
+template <typename Ret, typename Fn, typename Args, typename enable = void>
 struct is_invocable_r_impl : std::false_type
 {
 };
 
-template <typename Fn, typename Ret, typename... Args>
-struct is_invocable_r_impl<Fn, Ret, ctypes_t<Args...>,
+template <typename Ret, typename Fn, typename... Args>
+struct is_invocable_r_impl<Ret, Fn, ctypes_t<Args...>,
                            void_t<decltype(std::declval<Fn>()(std::declval<Args>()...))>>
 {
     static constexpr bool value = is_convertible<decltype(std::declval<Fn>()(std::declval<Args>()...)), Ret>;
