@@ -31,6 +31,7 @@
 #include "../base/reduce.hpp"
 #include "../base/univector.hpp"
 #include "../simd/vec.hpp"
+#include "state_holder.hpp"
 
 namespace kfr
 {
@@ -72,26 +73,6 @@ struct fir_state
 
 namespace internal
 {
-
-template <typename T, bool stateless>
-struct state_holder
-{
-    state_holder()                    = delete;
-    state_holder(const state_holder&) = default;
-    state_holder(state_holder&&)      = default;
-    constexpr state_holder(const T& state) CMT_NOEXCEPT : s(state) {}
-    T s;
-};
-
-template <typename T>
-struct state_holder<T, true>
-{
-    state_holder()                    = delete;
-    state_holder(const state_holder&) = default;
-    state_holder(state_holder&&)      = default;
-    constexpr state_holder(const T& state) CMT_NOEXCEPT : s(state) {}
-    const T& s;
-};
 
 template <size_t tapcount, typename T, typename U, typename E1, bool stateless = false>
 struct expression_short_fir : expression_with_arguments<E1>

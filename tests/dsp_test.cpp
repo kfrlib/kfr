@@ -287,6 +287,12 @@ TEST(delay)
     CHECK_EXPRESSION(delay(v1), 33, [](size_t i) { return i < 1 ? 0.f : (i - 1) + 100.f; });
 
     CHECK_EXPRESSION(delay<3>(v1), 33, [](size_t i) { return i < 3 ? 0.f : (i - 3) + 100.f; });
+
+    delay_state<float, 3> state1;
+    CHECK_EXPRESSION(delay(state1, v1), 33, [](size_t i) { return i < 3 ? 0.f : (i - 3) + 100.f; });
+
+    delay_state<float, 3, tag_dynamic_vector> state2;
+    CHECK_EXPRESSION(delay(state2, v1), 33, [](size_t i) { return i < 3 ? 0.f : (i - 3) + 100.f; });
 }
 
 TEST(fracdelay)
@@ -390,6 +396,15 @@ TEST(fir)
                       const univector<T, 6> taps{ 1, 2, -2, 0.5, 0.0625, 4 };
 
                       CHECK_EXPRESSION(fir(data, taps), 100, [&](size_t index) -> T {
+                          T result = 0;
+                          for (size_t i = 0; i < taps.size(); i++)
+                              result += data.get(index - i, 0) * taps[i];
+                          return result;
+                      });
+
+                      fir_state state(taps.ref());
+
+                      CHECK_EXPRESSION(fir(state, data), 100, [&](size_t index) -> T {
                           T result = 0;
                           for (size_t i = 0; i < taps.size(); i++)
                               result += data.get(index - i, 0) * taps[i];
