@@ -92,6 +92,18 @@ TEST(test_basic)
     CHECK(inrange(pack(1, 2, 3), 1, 1) == make_mask<int>(true, false, false));
 }
 
+TEST(test_gen_expj)
+{
+    kfr::univector<cbase> v = kfr::truncate(kfr::gen_expj(0.f, constants<float>::pi_s(2) * 0.1f), 1000);
+    CHECK(rms(cabs(v.slice(990) -
+                   univector<cbase>({ cbase(1., +0.00000000e+00), cbase(0.80901699, +5.87785252e-01),
+                                      cbase(0.30901699, +9.51056516e-01), cbase(-0.30901699, +9.51056516e-01),
+                                      cbase(-0.80901699, +5.87785252e-01), cbase(-1., +1.22464680e-16),
+                                      cbase(-0.80901699, -5.87785252e-01),
+                                      cbase(-0.30901699, -9.51056516e-01), cbase(0.30901699, -9.51056516e-01),
+                                      cbase(0.80901699, -5.87785252e-01) }))) < 0.00001);
+}
+
 } // namespace CMT_ARCH_NAME
 
 #ifndef KFR_NO_MAIN
