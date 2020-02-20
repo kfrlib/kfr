@@ -11,7 +11,7 @@ jobs:
       mkdir "$(Agent.TempDirectory)/sde-bin"
       tar -C "$(Agent.TempDirectory)/sde-bin" -xjf "$(Agent.TempDirectory)/sde.tar.bz2"  --strip 1
       sudo ln -s $(Agent.TempDirectory)/sde-bin/sde64 /usr/bin/sde
-      ci/run.sh build-release -DARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DCPU_ARCH=detect -DUSE_SDE=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release
+      ci/run.sh build-release -DARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DCPU_ARCH=avx2 -DUSE_SDE=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release
       
 - job: Linux_x86_64_Clang8
   timeoutInMinutes: 120
@@ -25,7 +25,7 @@ jobs:
       mkdir "$(Agent.TempDirectory)/sde-bin"
       tar -C "$(Agent.TempDirectory)/sde-bin" -xjf "$(Agent.TempDirectory)/sde.tar.bz2"  --strip 1
       sudo ln -s $(Agent.TempDirectory)/sde-bin/sde64 /usr/bin/sde
-      ci/run.sh build-release -DENABLE_CAPI_BUILD=ON -DARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DCPU_ARCH=detect -DUSE_SDE=ON -DCMAKE_CXX_COMPILER=clang++-8 -DCMAKE_BUILD_TYPE=Release
+      ci/run.sh build-release -DENABLE_CAPI_BUILD=ON -DARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DCPU_ARCH=avx2 -DUSE_SDE=ON -DCMAKE_CXX_COMPILER=clang++-8 -DCMAKE_BUILD_TYPE=Release
 
 - job: Linux_x86_64_GCC7
   timeoutInMinutes: 120
@@ -51,7 +51,7 @@ jobs:
       mkdir "$(Agent.TempDirectory)/sde-bin"
       tar -C "$(Agent.TempDirectory)/sde-bin" -xjf "$(Agent.TempDirectory)/sde.tar.bz2"  --strip 1
       sudo ln -s $(Agent.TempDirectory)/sde-bin/sde64 /usr/bin/sde
-      ci/run.sh build-release -DARCH_TESTS=sse2,sse3,sse41,avx,avx2 -DUSE_SDE=ON -DCPU_ARCH=detect -DENABLE_DFT=OFF -DCMAKE_CXX_COMPILER=g++-8 -DCMAKE_BUILD_TYPE=Release
+      ci/run.sh build-release -DARCH_TESTS=sse2,sse3,sse41,avx,avx2 -DUSE_SDE=ON -DCPU_ARCH=avx -DENABLE_DFT=OFF -DCMAKE_CXX_COMPILER=g++-8 -DCMAKE_BUILD_TYPE=Release
       
 - job: Linux_x86_64_GCC9
   timeoutInMinutes: 120
@@ -66,7 +66,7 @@ jobs:
       mkdir "$(Agent.TempDirectory)/sde-bin"
       tar -C "$(Agent.TempDirectory)/sde-bin" -xjf "$(Agent.TempDirectory)/sde.tar.bz2"  --strip 1
       sudo ln -s $(Agent.TempDirectory)/sde-bin/sde64 /usr/bin/sde
-      ci/run.sh build-release -DARCH_TESTS=sse2,sse3,sse41,avx,avx2 -DUSE_SDE=ON  -DCPU_ARCH=detect -DENABLE_DFT=OFF -DCMAKE_CXX_COMPILER=g++-9 -DCMAKE_BUILD_TYPE=Release
+      ci/run.sh build-release -DARCH_TESTS=sse2,sse3,sse41,avx,avx2 -DUSE_SDE=ON  -DCPU_ARCH=avx2 -DENABLE_DFT=OFF -DCMAKE_CXX_COMPILER=g++-9 -DCMAKE_BUILD_TYPE=Release
 
 - job: Linux_ARM_Clang_Release
   timeoutInMinutes: 120
@@ -198,7 +198,7 @@ jobs:
       set PATH=C:\ProgramData\Chocolatey\bin;C:\Program Files\CMake\bin;C:\tools\msys64\usr\local\bin;C:\tools\msys64\usr\bin;C:\tools\msys64\mingw32\bin;C:\windows;C:\windows\system32;C:\Windows;C:\Windows\System32\WindowsPowerShell\v1.0
       call C:\tools\msys64\msys2_shell.cmd -defterm -mingw32 -no-start -full-path -here -c "pacman -S --noconfirm mingw32/mingw-w64-i686-gcc"
       call C:\tools\msys64\msys2_shell.cmd -defterm -mingw32 -no-start -full-path -here -c "pacman -S --noconfirm mingw32/mingw-w64-i686-ninja"
-      call C:\tools\msys64\msys2_shell.cmd -defterm -mingw32 -no-start -full-path -here -c "ci/run.sh build-release -DCMAKE_CXX_COMPILER='C:/Program Files/LLVM/bin/clang++.exe' -DCPU_ARCH=detect -DCMAKE_CXX_FLAGS=--target=i686-w64-windows-gnu -DCMAKE_BUILD_TYPE=Release"
+      call C:\tools\msys64\msys2_shell.cmd -defterm -mingw32 -no-start -full-path -here -c "ci/run.sh build-release -DCMAKE_CXX_COMPILER=""C:/Program Files/LLVM/bin/clang++.exe"" -DCPU_ARCH=avx -DCMAKE_CXX_FLAGS=--target=i686-w64-windows-gnu -DCMAKE_BUILD_TYPE=Release"
 
 - job: Windows_MinGW_x86_64_Clang9_Release
   timeoutInMinutes: 120
@@ -213,7 +213,7 @@ jobs:
       set PATH=C:\ProgramData\Chocolatey\bin;C:\Program Files\CMake\bin;C:\tools\msys64\usr\local\bin;C:\tools\msys64\usr\bin;C:\tools\msys64\mingw64\bin;C:\windows;C:\windows\system32;C:\Windows;C:\Windows\System32\WindowsPowerShell\v1.0
       call C:\tools\msys64\msys2_shell.cmd -defterm -mingw64 -no-start -full-path -here -c "pacman -S --noconfirm mingw64/mingw-w64-x86_64-gcc"
       call C:\tools\msys64\msys2_shell.cmd -defterm -mingw64 -no-start -full-path -here -c "pacman -S --noconfirm mingw64/mingw-w64-x86_64-ninja"
-      call C:\tools\msys64\msys2_shell.cmd -defterm -mingw64 -no-start -full-path -here -c "ci/run.sh build-release -DCMAKE_CXX_COMPILER='C:/Program Files/LLVM/bin/clang++.exe' -DCPU_ARCH=detect -DCMAKE_CXX_FLAGS=--target=x86_64-w64-windows-gnu -DCMAKE_BUILD_TYPE=Release"
+      call C:\tools\msys64\msys2_shell.cmd -defterm -mingw64 -no-start -full-path -here -c "ci/run.sh build-release -DCMAKE_CXX_COMPILER=""C:/Program Files/LLVM/bin/clang++.exe"" -DCPU_ARCH=avx -DCMAKE_CXX_FLAGS=--target=x86_64-w64-windows-gnu -DCMAKE_BUILD_TYPE=Release"
 
 - job: Windows_MSVC_x86_64_AVX512_Clang9_Release
   timeoutInMinutes: 120
