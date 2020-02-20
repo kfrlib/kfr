@@ -444,7 +444,7 @@ inline std::complex<T> from_std(const std::complex<T>& c)
 template <typename T>
 inline std::complex<T> to_std(const kfr::complex<T>& c)
 {
-    return { c.re, c.im };
+    return { c.real(), c.imag() };
 }
 
 template <typename T>

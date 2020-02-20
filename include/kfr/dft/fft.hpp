@@ -430,12 +430,12 @@ struct dct_plan : dft_plan<T>
             dft_plan<T>::execute(mirrored_dft.data(), mirrored.data(), temp, cfalse);
             for (size_t i = 0; i < halfSize; i++)
             {
-                out[i * 2 + 0] = mirrored_dft[i].re;
-                out[i * 2 + 1] = mirrored_dft[size - 1 - i].re;
+                out[i * 2 + 0] = mirrored_dft[i].real();
+                out[i * 2 + 1] = mirrored_dft[size - 1 - i].real();
             }
             if (size % 2)
             {
-                out[size - 1] = mirrored_dft[halfSize].re;
+                out[size - 1] = mirrored_dft[halfSize].real();
             }
         }
     }

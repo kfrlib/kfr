@@ -63,7 +63,7 @@ KFR_FUNCTION zpk<T> chebyshev1(int N, identity<T> rp)
 
     univector<T> theta      = c_pi<T> * m / (2 * N);
     univector<complex<T>> p = -csinh(make_complex(mu, theta));
-    T k                     = product(-p).re;
+    T k                     = product(-p).real();
     if (N % 2 == 0)
         k = k / sqrt(1.0 + eps * eps);
     return { {}, std::move(p), k };
@@ -98,7 +98,7 @@ KFR_FUNCTION zpk<T> chebyshev2(int N, identity<T> rs)
     p = make_complex(sinh(mu) * real(p), cosh(mu) * imag(p));
     p = 1.0 / p;
 
-    T k = (product(-p) / product(-z)).re;
+    T k = (product(-p) / product(-z)).real();
 
     return { std::move(z), std::move(p), k };
 }
@@ -868,7 +868,7 @@ KFR_FUNCTION zpk<T> bilinear(const zpk<T>& filter, identity<T> fs)
     result.z = (fs2 + filter.z) / (fs2 - filter.z);
     result.p = (fs2 + filter.p) / (fs2 - filter.p);
     result.z.resize(result.p.size(), complex<T>(-1));
-    result.k = filter.k * real(product(fs2 - filter.z) / product(fs2 - filter.p));
+    result.k = filter.k * kfr::real(product(fs2 - filter.z) / product(fs2 - filter.p));
     return result;
 }
 
@@ -881,7 +881,7 @@ struct zero_pole_pairs
 template <typename T>
 KFR_FUNCTION vec<T, 3> zpk2tf_poly(const complex<T>& x, const complex<T>& y)
 {
-    return { T(1), -(x.re + y.re), x.re * y.re - x.im * y.im };
+    return { T(1), -(x.real() + y.real()), x.real() * y.real() - x.imag() * y.imag() };
 }
 
 template <typename T>
@@ -897,18 +897,18 @@ template <typename T>
 KFR_FUNCTION univector<complex<T>> cplxreal(const univector<complex<T>>& list)
 {
     univector<complex<T>> x = list;
-    std::sort(x.begin(), x.end(), [](const complex<T>& a, const complex<T>& b) { return a.re < b.re; });
+    std::sort(x.begin(), x.end(), [](const complex<T>& a, const complex<T>& b) { return a.real() < b.real(); });
     T tol                        = std::numeric_limits<T>::epsilon() * 100;
     univector<complex<T>> result = x;
     for (size_t i = result.size(); i > 1; i--)
     {
         if (!isreal(result[i - 1]) && !isreal(result[i - 2]))
         {
-            if (abs(result[i - 1].re - result[i - 2].re) < tol &&
-                abs(result[i - 1].im + result[i - 2].im) < tol)
+            if (abs(result[i - 1].real() - result[i - 2].real()) < tol &&
+                abs(result[i - 1].imag() + result[i - 2].imag()) < tol)
             {
                 result.erase(result.begin() + i - 1);
-                result[i - 2].im = abs(result[i - 2].im);
+                result[i - 2].imag(abs(result[i - 2].imag()));
             }
         }
     }
@@ -951,7 +951,7 @@ KFR_FUNCTION int countreal(const univector<complex<T>>& list)
     int nreal = 0;
     for (complex<T> c : list)
     {
-        if (c.im == 0)
+        if (c.imag() == 0)
             nreal++;
     }
     return nreal;
@@ -974,7 +974,7 @@ KFR_FUNCTION zpk<T> lp2hp_zpk(const zpk<T>& filter, identity<T> wo)
     result.z = wo / filter.z;
     result.p = wo / filter.p;
     result.z.resize(result.p.size(), T(0));
-    result.k = filter.k * real(product(-filter.z) / product(-filter.p));
+    result.k = filter.k * kfr::real(product(-filter.z) / product(-filter.p));
     return result;
 }
 
@@ -1012,7 +1012,7 @@ KFR_FUNCTION zpk<T> lp2bs_zpk(const zpk<T>& filter, identity<T> wo, identity<T> 
 
     result.z.resize(result.z.size() + filter.p.size() - filter.z.size(), complex<T>(0, +wo));
     result.z.resize(result.z.size() + filter.p.size() - filter.z.size(), complex<T>(0, -wo));
-    result.k = filter.k * real(product(-filter.z) / product(-filter.p));
+    result.k = filter.k * kfr::real(product(-filter.z) / product(-filter.p));
 
     return result;
 }
