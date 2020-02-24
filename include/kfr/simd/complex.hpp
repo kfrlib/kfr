@@ -60,13 +60,13 @@ struct complex
     constexpr complex(const complex&) CMT_NOEXCEPT = default;
     constexpr complex(complex&&) CMT_NOEXCEPT      = default;
     template <typename U>
-    KFR_MEM_INTRINSIC constexpr complex(const complex<U>& other) CMT_NOEXCEPT : re(static_cast<T>(other.re)),
-                                                                                im(static_cast<T>(other.im))
+    KFR_MEM_INTRINSIC constexpr complex(const complex<U>& other) CMT_NOEXCEPT : re(static_cast<T>(other.real())),
+                                                                                im(static_cast<T>(other.imag()))
     {
     }
     template <typename U>
-    KFR_MEM_INTRINSIC constexpr complex(complex<U>&& other) CMT_NOEXCEPT : re(std::move(other.re)),
-                                                                           im(std::move(other.im))
+    KFR_MEM_INTRINSIC constexpr complex(complex<U>&& other) CMT_NOEXCEPT : re(std::move(other.real())),
+                                                                           im(std::move(other.imag()))
     {
     }
 #ifdef CMT_COMPILER_GNU
@@ -80,6 +80,7 @@ struct complex
     KFR_MEM_INTRINSIC constexpr const T& imag() const CMT_NOEXCEPT { return im; }
     KFR_MEM_INTRINSIC constexpr void real(T value) CMT_NOEXCEPT { re = value; }
     KFR_MEM_INTRINSIC constexpr void imag(T value) CMT_NOEXCEPT { im = value; }
+private:
     T re;
     T im;
 };

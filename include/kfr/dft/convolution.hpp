@@ -84,6 +84,9 @@ public:
     explicit convolve_filter(size_t size, size_t block_size = 1024);
     explicit convolve_filter(const univector_ref<const T>& data, size_t block_size = 1024);
     void set_data(const univector_ref<const T>& data);
+    void reset() final;
+    /// Apply filter to multiples of returned block size for optimal processing efficiency.
+    size_t input_block_size() const { return block_size; }
 
 protected:
     void process_expression(T* dest, const expression_pointer<T>& src, size_t size) final
@@ -93,19 +96,36 @@ protected:
     }
     void process_buffer(T* output, const T* input, size_t size) final;
 
-    const size_t size;
+    using ST                       = subtype<T>;
+    static constexpr auto real_fft = !std::is_same<T, complex<ST>>::value;
+    using plan_t                   = std::conditional_t<real_fft, dft_plan_real<T>, dft_plan<ST>>;
+
+    // Length of filter data.
+    size_t data_size;
+    // Size of block to process.
     const size_t block_size;
-    const dft_plan_real<T> fft;
+    // FFT plan for circular convolution.
+    const plan_t fft;
+    // Temp storage for FFT.
     univector<u8> temp;
-    std::vector<univector<complex<T>>> segments;
-    std::vector<univector<complex<T>>> ir_segments;
-    size_t input_position;
-    univector<T> saved_input;
-    univector<complex<T>> premul;
-    univector<complex<T>> cscratch;
-    univector<T> scratch;
-    univector<T> overlap;
+    // History of input segments after fwd DFT.  History is circular relative to position below.
+    std::vector<univector<complex<ST>>> segments;
+    // Index into segments of current block.
     size_t position;
+    // Blocks of filter/data after fwd DFT.
+    std::vector<univector<complex<ST>>> ir_segments;
+    // Saved input for current block.
+    univector<T> saved_input;
+    // Index into saved_input for next input to begin.
+    size_t input_position;
+    // Pre-multiplied products of input history and delayed filter blocks.
+    univector<complex<ST>> premul;
+    // Scratch buffer for product of filter and input for processing by reverse DFT.
+    univector<complex<ST>> cscratch;
+    // Scratch buffers for input and output of fwd and rev DFTs.
+    univector<T> scratch1, scratch2;
+    // Overlap saved from previous block to add into current block.
+    univector<T> overlap;
 };
 } // namespace CMT_ARCH_NAME
 

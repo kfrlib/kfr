@@ -136,6 +136,35 @@ protected:
     T vstep;
 };
 
+template <typename T, size_t width = vector_width<T>* bitness_const(1, 2),
+          std::enable_if_t<std::is_same<complex<deep_subtype<T>>, T>::value, int> = 0>
+struct generator_expj : generator<T, width, generator_expj<T, width>>
+{
+    using ST = deep_subtype<T>;
+
+    generator_expj(ST start_, ST step_)
+        : step(step_), alpha(2 * sqr(sin(width * step / 2))), beta(-sin(width * step))
+    {
+        this->resync(T(start_));
+    }
+    KFR_MEM_INTRINSIC void sync(T start) const CMT_NOEXCEPT { this->value = init_cossin(step, start.real()); }
+
+    KFR_MEM_INTRINSIC void next() const CMT_NOEXCEPT
+    {
+        this->value = ccomp(cdecom(this->value) -
+                            subadd(alpha * cdecom(this->value), beta * swap<2>(cdecom(this->value))));
+    }
+
+protected:
+    ST const step;
+    ST const alpha;
+    ST const beta;
+    CMT_NOINLINE static vec<T, width> init_cossin(ST w, ST phase)
+    {
+        return ccomp(cossin(dup(phase + enumerate<ST, width>() * w)));
+    }
+};
+
 template <typename T, size_t width = vector_width<T>* bitness_const(1, 2)>
 struct generator_exp2 : generator<T, width, generator_exp2<T, width>>
 {
@@ -250,6 +279,18 @@ template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
 KFR_FUNCTION internal::generator_exp<TF> gen_exp(T1 start, T2 step)
 {
     return internal::generator_exp<TF>(start, step);
+}
+
+/**
+ * @brief Returns template expression that generates values using the following formula:
+ * \f[
+    x_i = e^{ j ( start + i \cdot step ) }
+   \f]
+ */
+template <typename T1, typename T2, typename TF = complex<ftype<common_type<T1, T2>>>>
+KFR_FUNCTION internal::generator_expj<TF> gen_expj(T1 start, T2 step)
+{
+    return internal::generator_expj<TF>(start, step);
 }
 
 /**

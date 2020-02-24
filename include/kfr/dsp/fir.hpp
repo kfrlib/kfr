@@ -31,6 +31,7 @@
 #include "../base/reduce.hpp"
 #include "../base/univector.hpp"
 #include "../simd/vec.hpp"
+#include "state_holder.hpp"
 
 namespace kfr
 {
@@ -70,28 +71,23 @@ struct fir_state
     mutable size_t delayline_cursor;
 };
 
+template <typename U, univector_tag Tag = tag_dynamic_vector>
+struct moving_sum_state
+{
+    moving_sum_state() : delayline({ 0 }), head_cursor(0), tail_cursor(1) {}
+    mutable univector<U, Tag> delayline;
+    mutable size_t head_cursor, tail_cursor;
+};
+template <typename U>
+struct moving_sum_state<U, tag_dynamic_vector>
+{
+    moving_sum_state(size_t sum_length) : delayline(sum_length, U(0)), head_cursor(0), tail_cursor(1) {}
+    mutable univector<U> delayline;
+    mutable size_t head_cursor, tail_cursor;
+};
+
 namespace internal
 {
-
-template <typename T, bool stateless>
-struct state_holder
-{
-    state_holder()                    = delete;
-    state_holder(const state_holder&) = default;
-    state_holder(state_holder&&)      = default;
-    constexpr state_holder(const T& state) CMT_NOEXCEPT : s(state) {}
-    T s;
-};
-
-template <typename T>
-struct state_holder<T, true>
-{
-    state_holder()                    = delete;
-    state_holder(const state_holder&) = default;
-    state_holder(state_holder&&)      = default;
-    constexpr state_holder(const T& state) CMT_NOEXCEPT : s(state) {}
-    const T& s;
-};
 
 template <size_t tapcount, typename T, typename U, typename E1, bool stateless = false>
 struct expression_short_fir : expression_with_arguments<E1>
@@ -153,6 +149,51 @@ struct expression_fir : expression_with_arguments<E1>
     }
     state_holder<fir_state<T, U>, stateless> state;
 };
+
+template <typename U, typename E1, univector_tag STag, bool stateless = false>
+struct expression_moving_sum : expression_with_arguments<E1>
+{
+    using value_type = U;
+
+    expression_moving_sum(E1&& e1, const moving_sum_state<U, STag>& state)
+        : expression_with_arguments<E1>(std::forward<E1>(e1)), state(state)
+    {
+    }
+
+    template <size_t N>
+    KFR_INTRINSIC friend vec<U, N> get_elements(const expression_moving_sum& self, cinput_t cinput,
+                                                size_t index, vec_shape<U, N> x)
+    {
+        static_assert(N >= 1, "");
+
+        const vec<U, N> input = self.argument_first(cinput, index, x);
+
+        vec<U, N> output;
+        size_t wcursor = self.state.s.head_cursor;
+        size_t rcursor = self.state.s.tail_cursor;
+
+        // initial summation
+        self.state.s.delayline.ringbuf_write(wcursor, input[0]);
+        auto s    = sum(self.state.s.delayline);
+        output[0] = s;
+
+        CMT_LOOP_NOUNROLL
+        for (size_t i = 1; i < N; i++)
+        {
+            U nextout;
+            self.state.s.delayline.ringbuf_read(rcursor, nextout);
+            U const nextin = input[i];
+            self.state.s.delayline.ringbuf_write(wcursor, nextin);
+            s += nextin - nextout;
+            output[i] = s;
+        }
+        self.state.s.delayline.ringbuf_step(rcursor, 1);
+        self.state.s.head_cursor = wcursor;
+        self.state.s.tail_cursor = rcursor;
+        return output;
+    }
+    state_holder<moving_sum_state<U, STag>, stateless> state;
+};
 } // namespace internal
 
 /**
@@ -175,6 +216,30 @@ template <typename T, typename U, typename E1>
 KFR_INTRINSIC internal::expression_fir<T, U, E1, true> fir(fir_state<T, U>& state, E1&& e1)
 {
     return internal::expression_fir<T, U, E1, true>(std::forward<E1>(e1), state);
+}
+
+/**
+ * @brief Returns template expression that performs moving sum on the input
+ * @param state moving sum state
+ * @param e1 an input expression
+ */
+template <size_t sum_length, typename E1>
+KFR_INTRINSIC internal::expression_moving_sum<value_type_of<E1>, E1, tag_dynamic_vector> moving_sum(E1&& e1)
+{
+    return internal::expression_moving_sum<value_type_of<E1>, E1, tag_dynamic_vector>(std::forward<E1>(e1),
+                                                                                      sum_length);
+}
+
+/**
+ * @brief Returns template expression that performs moving sum on the input
+ * @param state moving sum state
+ * @param e1 an input expression
+ */
+template <typename U, typename E1, univector_tag STag>
+KFR_INTRINSIC internal::expression_moving_sum<U, E1, STag, true> moving_sum(moving_sum_state<U, STag>& state,
+                                                                            E1&& e1)
+{
+    return internal::expression_moving_sum<U, E1, STag, true>(std::forward<E1>(e1), state);
 }
 
 /**

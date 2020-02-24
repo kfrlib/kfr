@@ -287,6 +287,12 @@ TEST(delay)
     CHECK_EXPRESSION(delay(v1), 33, [](size_t i) { return i < 1 ? 0.f : (i - 1) + 100.f; });
 
     CHECK_EXPRESSION(delay<3>(v1), 33, [](size_t i) { return i < 3 ? 0.f : (i - 3) + 100.f; });
+
+    delay_state<float, 3> state1;
+    CHECK_EXPRESSION(delay(state1, v1), 33, [](size_t i) { return i < 3 ? 0.f : (i - 3) + 100.f; });
+
+    delay_state<float, 3, tag_dynamic_vector> state2;
+    CHECK_EXPRESSION(delay(state2, v1), 33, [](size_t i) { return i < 3 ? 0.f : (i - 3) + 100.f; });
 }
 
 TEST(fracdelay)
@@ -396,10 +402,44 @@ TEST(fir)
                           return result;
                       });
 
+                      fir_state state(taps.ref());
+
+                      CHECK_EXPRESSION(fir(state, data), 100, [&](size_t index) -> T {
+                          T result = 0;
+                          for (size_t i = 0; i < taps.size(); i++)
+                              result += data.get(index - i, 0) * taps[i];
+                          return result;
+                      });
+
                       CHECK_EXPRESSION(short_fir(data, taps), 100, [&](size_t index) -> T {
                           T result = 0;
                           for (size_t i = 0; i < taps.size(); i++)
                               result += data.get(index - i, 0) * taps[i];
+                          return result;
+                      });
+
+                      CHECK_EXPRESSION(moving_sum<taps.size()>(data), 100, [&](size_t index) -> T {
+                          T result = 0;
+                          for (size_t i = 0; i < taps.size(); i++)
+                              result += data.get(index - i, 0);
+                          return result;
+                      });
+
+                      moving_sum_state<T, 131> msstate1;
+
+                      CHECK_EXPRESSION(moving_sum(msstate1, data), 100, [&](size_t index) -> T {
+                          T result = 0;
+                          for (size_t i = 0; i < msstate1.delayline.size(); i++)
+                              result += data.get(index - i, 0);
+                          return result;
+                      });
+
+                      moving_sum_state<T> msstate2(133);
+
+                      CHECK_EXPRESSION(moving_sum(msstate2, data), 100, [&](size_t index) -> T {
+                          T result = 0;
+                          for (size_t i = 0; i < msstate2.delayline.size(); i++)
+                              result += data.get(index - i, 0);
                           return result;
                       });
                   });
@@ -444,7 +484,7 @@ inline std::complex<T> from_std(const std::complex<T>& c)
 template <typename T>
 inline std::complex<T> to_std(const kfr::complex<T>& c)
 {
-    return { c.re, c.im };
+    return { c.real(), c.imag() };
 }
 
 template <typename T>
@@ -584,9 +624,9 @@ TEST(resampler_test)
 } // namespace CMT_ARCH_NAME
 
 #ifndef KFR_NO_MAIN
-int main()
+int main(int argc, char* argv[])
 {
     println(library_version());
-    return testo::run_all("", true);
+    return testo::run_all(argc > 1 ? argv[1] : "", true);
 }
 #endif
