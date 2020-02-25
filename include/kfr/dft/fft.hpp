@@ -347,12 +347,12 @@ struct dft_plan_real : dft_plan<T>
     void execute(univector<complex<T>, Tag1>&, const univector<complex<T>, Tag2>&, univector<u8, Tag3>&,
                  cbool_t<inverse>) const = delete;
 
-    KFR_MEM_INTRINSIC void execute(complex<T>* out, const T* in, u8* temp) const
+    KFR_MEM_INTRINSIC void execute(complex<T>* out, const T* in, u8* temp, cdirect_t = {}) const
     {
         this->execute_dft(cfalse, out, ptr_cast<complex<T>>(in), temp);
         fmt_stage->execute(cfalse, out, out, nullptr);
     }
-    KFR_MEM_INTRINSIC void execute(T* out, const complex<T>* in, u8* temp) const
+    KFR_MEM_INTRINSIC void execute(T* out, const complex<T>* in, u8* temp, cinvert_t = {}) const
     {
         complex<T>* outdata = ptr_cast<complex<T>>(out);
         fmt_stage->execute(ctrue, outdata, in, nullptr);
@@ -361,14 +361,14 @@ struct dft_plan_real : dft_plan<T>
 
     template <univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
     KFR_MEM_INTRINSIC void execute(univector<complex<T>, Tag1>& out, const univector<T, Tag2>& in,
-                                   univector<u8, Tag3>& temp) const
+                                   univector<u8, Tag3>& temp, cdirect_t = {}) const
     {
         this->execute_dft(cfalse, out.data(), ptr_cast<complex<T>>(in.data()), temp.data());
         fmt_stage->execute(cfalse, out.data(), out.data(), nullptr);
     }
     template <univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
     KFR_MEM_INTRINSIC void execute(univector<T, Tag1>& out, const univector<complex<T>, Tag2>& in,
-                                   univector<u8, Tag3>& temp) const
+                                   univector<u8, Tag3>& temp, cinvert_t = {}) const
     {
         complex<T>* outdata = ptr_cast<complex<T>>(out.data());
         fmt_stage->execute(ctrue, outdata, in.data(), nullptr);

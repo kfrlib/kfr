@@ -76,6 +76,26 @@ univector<T> autocorrelate(const univector<T, Tag1>& src)
     return intrinsics::autocorrelate(src.slice());
 }
 
+namespace internal
+{
+/// @brief Utility class to abstract real/complex differences
+template <typename T>
+struct dft_conv_plan: public dft_plan_real<T>
+{
+    dft_conv_plan(size_t size) : dft_plan_real<T>(size, dft_pack_format::Perm) {}
+    
+    size_t csize() const { return this->size / 2; }
+};
+
+template <typename T>
+struct dft_conv_plan<complex<T>>: public dft_plan<T>
+{
+    dft_conv_plan(size_t size) : dft_plan<T>(size) {}
+    
+    size_t csize() const { return this->size; }
+};
+} // namespace internal
+
 /// @brief Convolution using Filter API
 template <typename T>
 class convolve_filter : public filter<T>
@@ -98,7 +118,7 @@ protected:
 
     using ST                       = subtype<T>;
     static constexpr auto real_fft = !std::is_same<T, complex<ST>>::value;
-    using plan_t                   = std::conditional_t<real_fft, dft_plan_real<T>, dft_plan<ST>>;
+    using plan_t = internal::dft_conv_plan<T>;
 
     // Length of filter data.
     size_t data_size;
