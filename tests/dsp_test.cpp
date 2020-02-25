@@ -402,7 +402,7 @@ TEST(fir)
                           return result;
                       });
 
-                      fir_state state(taps.ref());
+                      fir_state<T> state(taps.ref());
 
                       CHECK_EXPRESSION(fir(state, data), 100, [&](size_t index) -> T {
                           T result = 0;
