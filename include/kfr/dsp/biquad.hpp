@@ -340,6 +340,12 @@ public:
     biquad_filter(const biquad_params<T> (&bq)[N]) : biquad_filter(bq, N)
     {
     }
+
+    biquad_filter(const std::vector<biquad_params<T>>& bq)
+        : biquad_filter(bq.data(), bq.size()) 
+    {
+    }
+
 };
 
 } // namespace CMT_ARCH_NAME
