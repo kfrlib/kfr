@@ -1521,14 +1521,16 @@ KFR_INTRINSIC simd<float, 4> simd_vec_shuffle(simd_t<float, 4>, const simd<float
                                               csizes_t<I0, I1, I2, I3>)
 {
     // SSE -> SSE
-    return _mm_shuffle_ps(x, x, shuffle_mask<8, I0, I1, I2, I3>::value);
+    constexpr size_t mask = shuffle_mask<8, I0, I1, I2, I3>::value;
+    return _mm_shuffle_ps(x, x, mask);
 }
 
 template <size_t I0, size_t I1>
 KFR_INTRINSIC simd<double, 2> simd_vec_shuffle(simd_t<double, 2>, const simd<double, 2>& x, csizes_t<I0, I1>)
 {
     // SSE -> SSE
-    return _mm_shuffle_pd(x, x, shuffle_mask<2, I0, I1>::value);
+    constexpr size_t mask = shuffle_mask<2, I0, I1>::value;
+    return _mm_shuffle_pd(x, x, mask);
 }
 #endif
 
