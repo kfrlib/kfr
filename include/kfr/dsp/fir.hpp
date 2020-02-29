@@ -257,6 +257,22 @@ short_fir(E1&& e1, const univector<T, TapCount>& taps)
         std::forward<E1>(e1), taps);
 }
 
+/**
+ * @brief Returns template expression that applies FIR filter to the input (count of coefficients must be in
+ * range 2..32)
+ * @param state FIR filter state
+ * @param e1 an input expression
+ */
+template <size_t TapCount, typename T, typename U, typename E1>
+KFR_INTRINSIC internal::expression_short_fir<next_poweroftwo(TapCount - 1) + 1, T, value_type_of<E1>, E1,
+                                             true>
+    short_fir(short_fir_state<next_poweroftwo(TapCount - 1) + 1, T, U>& state, E1&& e1)
+{
+    static_assert(TapCount >= 2 && TapCount <= 33, "Use short_fir only for small FIR filters");
+    return internal::expression_short_fir<next_poweroftwo(TapCount - 1) + 1, T, value_type_of<E1>, E1, true>(
+        std::forward<E1>(e1), state);
+}
+
 template <typename T, typename U = T>
 class fir_filter : public filter<U>
 {
