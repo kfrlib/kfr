@@ -418,6 +418,15 @@ TEST(fir)
                           return result;
                       });
 
+                      short_fir_state<9, T> state2(taps);
+
+                      CHECK_EXPRESSION(short_fir<taps.size()>(state2, data), 100, [&](size_t index) -> T {
+                          T result = 0;
+                          for (size_t i = 0; i < taps.size(); i++)
+                              result += data.get(index - i, 0) * taps[i];
+                          return result;
+                      });
+
                       CHECK_EXPRESSION(moving_sum<taps.size()>(data), 100, [&](size_t index) -> T {
                           T result = 0;
                           for (size_t i = 0; i < taps.size(); i++)
