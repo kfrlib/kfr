@@ -101,7 +101,8 @@ TEST(test_gen_expj)
                                       cbase(-0.80901699, +5.87785252e-01), cbase(-1., +1.22464680e-16),
                                       cbase(-0.80901699, -5.87785252e-01),
                                       cbase(-0.30901699, -9.51056516e-01), cbase(0.30901699, -9.51056516e-01),
-                                      cbase(0.80901699, -5.87785252e-01) }))) < 0.00002);
+                                      cbase(0.80901699, -5.87785252e-01) }))) < 0.00006); // error here depends on vector width
+                                      // In most cases error is much lower (less than 0.00001)
 }
 
 } // namespace CMT_ARCH_NAME
