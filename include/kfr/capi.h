@@ -77,7 +77,7 @@ extern "C"
         KFR_ARCH_AVX512 = 8,
     };
 
-#define KFR_HEADERS_VERSION 40000
+#define KFR_HEADERS_VERSION 40100
 
     KFR_API_SPEC const char* kfr_version_string();
     KFR_API_SPEC uint32_t kfr_version();

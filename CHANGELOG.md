@@ -1,5 +1,29 @@
 # Changelog
 
+## 4.1.0
+
+2020-03-04
+
+#### Added
+
+- MSVC2019 support (16.4.4 is required)
+- Stateless short_fir expression (thanks to https://github.com/slarew)
+- `biquad_filter` constructor taking `std::vector<biquad_params<T>>` (thanks to https://github.com/BenjaminNavarro)
+- `cabssqr` function (thanks to https://github.com/slarew)
+- `moving_sum` expression (thanks to https://github.com/slarew)
+- `gen_expj` generator (thanks to https://github.com/slarew)
+
+#### Changed
+- `cdirect_t{}` is now allowed in real dft plan methods for compatibility
+- complex support for `convolve_filter` (thanks to https://github.com/slarew)
+
+#### Fixed
+
+- GCC debug build (thanks to https://github.com/BenjaminNavarro)
+- `is_invocable_r_impl` fallback for missing C++17 feature
+- `std::complex` compatibility (thanks to https://github.com/slarew)
+- Various CI fixes
+
 ## 4.0.0
 
 2019-12-05

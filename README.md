@@ -13,7 +13,7 @@ Compiler support:
 ![Clang 6+](https://img.shields.io/badge/Clang-6%2B-brightgreen.svg?style=flat-square)
 ![Xcode 9+](https://img.shields.io/badge/Xcode-9%2B-brightgreen.svg?style=flat-square)
 ![GCC 7+](https://img.shields.io/badge/GCC-7%2B-brightgreen.svg?style=flat-square)
-![MSVC 2017](https://img.shields.io/badge/MSVC-2017-brightgreen.svg?style=flat-square)
+![MSVC 2017](https://img.shields.io/badge/MSVC-2017%2B-brightgreen.svg?style=flat-square)
 
 https://www.kfr.dev
 
@@ -50,7 +50,6 @@ Some C++17 library features will be emulated if not present in the standard libr
 
 ### Release notes
 
-* MSVC support is limited to MSVC2017 due to ICE in MSVC2019. Once fixed, support will be added
 * DFT is limited to Clang due to ICE in MSVC and broken AVX optimization in GCC 8 and 9. Once fixed, support will be added
 
 ## What's new in KFR 3.0
