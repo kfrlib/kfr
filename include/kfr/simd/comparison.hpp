@@ -116,7 +116,7 @@ KFR_INTRINSIC mask<T, N> isnan(const vec<T, N>& x)
 template <typename T, size_t N>
 KFR_INTRINSIC mask<T, N> isinf(const vec<T, N>& x)
 {
-    return x == constants<T>::infinity || x == -constants<T>::infinity;
+    return x == constants<T>::infinity() || x == -constants<T>::infinity();
 }
 
 template <typename T, size_t N>

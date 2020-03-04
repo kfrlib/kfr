@@ -60,7 +60,7 @@ template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> trig_fold(const vec<T, N>& x, vec<itype<T>, N>& quadrant)
 {
     const vec<T, N> xabs = abs(x);
-    constexpr T div      = constants<T>::fold_constant_div;
+    constexpr T div      = constants<T>::fold_constant_div();
     vec<T, N> y          = floor(xabs / div);
     quadrant             = innercast<itype<T>>(innercast<int>(y - floor(y * T(1.0 / 16.0)) * T(16.0)));
 
@@ -69,9 +69,9 @@ KFR_INTRINSIC vec<T, N> trig_fold(const vec<T, N>& x, vec<itype<T>, N>& quadrant
     y                    = select(msk, y + T(1.0), y);
     quadrant             = quadrant & 7;
 
-    constexpr T hi   = constants<T>::fold_constant_hi;
-    constexpr T rem1 = constants<T>::fold_constant_rem1;
-    constexpr T rem2 = constants<T>::fold_constant_rem2;
+    constexpr T hi   = constants<T>::fold_constant_hi();
+    constexpr T rem1 = constants<T>::fold_constant_rem1();
+    constexpr T rem2 = constants<T>::fold_constant_rem2();
     return (xabs - y * hi) - y * rem1 - y * rem2;
 }
 
@@ -236,7 +236,7 @@ KFR_INTRINSIC vec<T, N> cossin(const vec<T, N>& x)
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> sinc(const vec<T, N>& x)
 {
-    return select(abs(x) <= constants<T>::epsilon, T(1), sin(x) / x);
+    return select(abs(x) <= constants<T>::epsilon(), T(1), sin(x) / x);
 }
 
 KFR_HANDLE_SCALAR_1_T(sin, flt_type<T>)
@@ -258,37 +258,37 @@ KFR_HANDLE_NOT_F_1(sinc)
 template <typename T, typename Tout = flt_type<T>>
 KFR_INTRINSIC Tout sindeg(const T& x)
 {
-    return sin(x * constants<Tout>::degtorad);
+    return sin(x * constants<Tout>::degtorad());
 }
 
 template <typename T, typename Tout = flt_type<T>>
 KFR_INTRINSIC Tout cosdeg(const T& x)
 {
-    return cos(x * constants<Tout>::degtorad);
+    return cos(x * constants<Tout>::degtorad());
 }
 
 template <typename T, typename Tout = flt_type<T>>
 KFR_INTRINSIC Tout fastsindeg(const T& x)
 {
-    return fastsin(x * constants<Tout>::degtorad);
+    return fastsin(x * constants<Tout>::degtorad());
 }
 
 template <typename T, typename Tout = flt_type<T>>
 KFR_INTRINSIC Tout fastcosdeg(const T& x)
 {
-    return fastcos(x * constants<Tout>::degtorad);
+    return fastcos(x * constants<Tout>::degtorad());
 }
 
 template <typename T, typename Tout = flt_type<T>>
 KFR_INTRINSIC Tout sincosdeg(const T& x)
 {
-    return sincos(x * constants<Tout>::degtorad);
+    return sincos(x * constants<Tout>::degtorad());
 }
 
 template <typename T, typename Tout = flt_type<T>>
 KFR_INTRINSIC Tout cossindeg(const T& x)
 {
-    return cossin(x * constants<Tout>::degtorad);
+    return cossin(x * constants<Tout>::degtorad());
 }
 } // namespace intrinsics
 

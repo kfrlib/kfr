@@ -48,37 +48,50 @@ CMT_PRAGMA_GNU(GCC diagnostic ignored "-Woverflow")
 template <typename T>
 struct scalar_constants
 {
-    constexpr static T pi_s(int m, int d = 1) { return pi * m / d; }
+    constexpr static T pi_s(int m, int d = 1) { return pi() * m / d; }
     constexpr static T recip_pi_s(int m, int d = 1) { return recip_pi * m / d; }
 
-    constexpr static T pi           = static_cast<T>(3.1415926535897932384626433832795);
-    constexpr static T sqr_pi       = static_cast<T>(9.8696044010893586188344909998762);
-    constexpr static T recip_pi     = static_cast<T>(0.31830988618379067153776752674503);
-    constexpr static T degtorad     = static_cast<T>(pi / 180);
-    constexpr static T radtodeg     = static_cast<T>(pi * 180);
-    constexpr static T e            = static_cast<T>(2.718281828459045235360287471352662);
-    constexpr static T recip_log_2  = static_cast<T>(1.442695040888963407359924681001892137426645954);
-    constexpr static T recip_log_10 = static_cast<T>(0.43429448190325182765112891891661);
-    constexpr static T log_2        = static_cast<T>(0.69314718055994530941723212145818);
-    constexpr static T log_10       = static_cast<T>(2.3025850929940456840179914546844);
-    constexpr static T sqrt_2       = static_cast<T>(1.4142135623730950488016887242097);
+    constexpr static T pi() { return static_cast<T>(3.1415926535897932384626433832795); }
+    constexpr static T sqr_pi() { return static_cast<T>(9.8696044010893586188344909998762); }
+    constexpr static T recip_pi() { return static_cast<T>(0.31830988618379067153776752674503); }
+    constexpr static T degtorad() { return static_cast<T>(pi() / 180); }
+    constexpr static T radtodeg() { return static_cast<T>(pi() * 180); }
+    constexpr static T e() { return static_cast<T>(2.718281828459045235360287471352662); }
+    constexpr static T recip_log_2()
+    {
+        return static_cast<T>(1.442695040888963407359924681001892137426645954);
+    }
+    constexpr static T recip_log_10() { return static_cast<T>(0.43429448190325182765112891891661); }
+    constexpr static T log_2() { return static_cast<T>(0.69314718055994530941723212145818); }
+    constexpr static T log_10() { return static_cast<T>(2.3025850929940456840179914546844); }
+    constexpr static T sqrt_2() { return static_cast<T>(1.4142135623730950488016887242097); }
 
-    constexpr static T fold_constant_div = choose_const<T>(
-        CMT_FP(0x1.921fb6p-1f, 7.8539818525e-01f), CMT_FP(0x1.921fb54442d18p-1, 7.853981633974482790e-01));
+    constexpr static T fold_constant_div()
+    {
+        return choose_const<T>(CMT_FP(0x1.921fb6p-1f, 7.8539818525e-01f),
+                               CMT_FP(0x1.921fb54442d18p-1, 7.853981633974482790e-01));
+    }
 
-    constexpr static T fold_constant_hi = choose_const<T>(
-        CMT_FP(0x1.922000p-1f, 7.8540039062e-01f), CMT_FP(0x1.921fb40000000p-1, 7.853981256484985352e-01));
-    constexpr static T fold_constant_rem1 =
-        choose_const<T>(CMT_FP(-0x1.2ae000p-19f, -2.2267922759e-06f),
-                        CMT_FP(0x1.4442d00000000p-25, 3.774894707930798177e-08));
-    constexpr static T fold_constant_rem2 =
-        choose_const<T>(CMT_FP(-0x1.de973ep-32f, -4.3527578764e-10f),
-                        CMT_FP(0x1.8469898cc5170p-49, 2.695151429079059484e-15));
+    constexpr static T fold_constant_hi()
+    {
+        return choose_const<T>(CMT_FP(0x1.922000p-1f, 7.8540039062e-01f),
+                               CMT_FP(0x1.921fb40000000p-1, 7.853981256484985352e-01));
+    }
+    constexpr static T fold_constant_rem1()
+    {
+        return choose_const<T>(CMT_FP(-0x1.2ae000p-19f, -2.2267922759e-06f),
+                               CMT_FP(0x1.4442d00000000p-25, 3.774894707930798177e-08));
+    }
+    constexpr static T fold_constant_rem2()
+    {
+        return choose_const<T>(CMT_FP(-0x1.de973ep-32f, -4.3527578764e-10f),
+                               CMT_FP(0x1.8469898cc5170p-49, 2.695151429079059484e-15));
+    }
 
-    constexpr static T epsilon     = std::numeric_limits<T>::epsilon();
-    constexpr static T infinity    = std::numeric_limits<T>::infinity();
-    constexpr static T neginfinity = -std::numeric_limits<T>::infinity();
-    constexpr static T qnan        = std::numeric_limits<T>::quiet_NaN();
+    constexpr static T epsilon() { return std::numeric_limits<T>::epsilon(); }
+    constexpr static T infinity() { return std::numeric_limits<T>::infinity(); }
+    constexpr static T neginfinity() { return -std::numeric_limits<T>::infinity(); }
+    constexpr static T qnan() { return std::numeric_limits<T>::quiet_NaN(); }
 };
 
 template <typename T>

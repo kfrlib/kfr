@@ -95,7 +95,7 @@ KFR_INTRINSIC vec<f32, N> log(const vec<f32, N>& d)
     vec<f32, N> x  = (m - 1.0f) / (m + 1.0f);
     vec<f32, N> x2 = x * x;
 
-    vec<f32, N> sp = select(d < 0, constants<f32>::qnan, constants<f32>::neginfinity);
+    vec<f32, N> sp = select(d < 0, constants<f32>::qnan(), constants<f32>::neginfinity());
 
     vec<f32, N> t;
     t             = fmadd(0.2371599674224853515625f, x2, 0.285279005765914916992188f);
@@ -118,7 +118,7 @@ KFR_INTRINSIC vec<f64, N> log(const vec<f64, N>& d)
     vec<f64, N> x  = (m - 1.0) / (m + 1.0);
     vec<f64, N> x2 = x * x;
 
-    vec<f64, N> sp = select(d < 0, constants<f64>::qnan, constants<f64>::neginfinity);
+    vec<f64, N> sp = select(d < 0, constants<f64>::qnan(), constants<f64>::neginfinity());
 
     vec<f64, N> t; 
     t             = fmadd(0.148197055177935105296783, x2, 0.153108178020442575739679);
@@ -129,7 +129,7 @@ KFR_INTRINSIC vec<f64, N> log(const vec<f64, N>& d)
     t             = fmadd(t, x2, 0.666666666666685503450651);
     t             = fmadd(t, x2, 2);
 
-    x = x * t + constants<f64>::log_2 * innercast<f64>(e);
+    x = x * t + constants<f64>::log_2() * innercast<f64>(e);
     x = select(d > 0, x, sp);
 
     return x;
@@ -138,12 +138,12 @@ KFR_INTRINSIC vec<f64, N> log(const vec<f64, N>& d)
 template <typename T, size_t N, typename Tout = flt_type<T>>
 KFR_INTRINSIC vec<Tout, N> log2(const vec<T, N>& x)
 {
-    return log(innercast<Tout>(x)) * constants<Tout>::recip_log_2;
+    return log(innercast<Tout>(x)) * constants<Tout>::recip_log_2();
 }
 template <typename T, size_t N, typename Tout = flt_type<T>>
 KFR_INTRINSIC vec<Tout, N> log10(const vec<T, N>& x)
 {
-    return log(innercast<Tout>(x)) * constants<Tout>::recip_log_10;
+    return log(innercast<Tout>(x)) * constants<Tout>::recip_log_10();
 }
 
 template <size_t N>
@@ -152,7 +152,7 @@ KFR_INTRINSIC vec<f32, N> exp(const vec<f32, N>& d)
     const f32 ln2_part1 = 0.6931457519f;
     const f32 ln2_part2 = 1.4286067653e-6f;
 
-    vec<i32, N> q = innercast<i32>(floor(d * constants<f32>::recip_log_2));
+    vec<i32, N> q = innercast<i32>(floor(d * constants<f32>::recip_log_2()));
     vec<f32, N> s, u;
 
     s = fmadd(innercast<f32>(q), -ln2_part1, d);
@@ -174,7 +174,7 @@ KFR_INTRINSIC vec<f32, N> exp(const vec<f32, N>& d)
     u = s * s * u + s + 1.0f;
     u = vldexpk(u, q);
 
-    u = select(d == constants<f32>::neginfinity, 0.f, u);
+    u = select(d == constants<f32>::neginfinity(), 0.f, u);
 
     return u;
 }
@@ -185,7 +185,7 @@ KFR_INTRINSIC vec<f64, N> exp(const vec<f64, N>& d)
     const f64 ln2_part1 = 0.69314717501401901245;
     const f64 ln2_part2 = 5.545926273775592108e-009;
 
-    vec<i64, N> q = innercast<i64>(floor(d * constants<f64>::recip_log_2));
+    vec<i64, N> q = innercast<i64>(floor(d * constants<f64>::recip_log_2()));
     vec<f64, N> s, u;
 
     s = fmadd(innercast<f64>(q), -ln2_part1, d);
@@ -215,19 +215,19 @@ KFR_INTRINSIC vec<f64, N> exp(const vec<f64, N>& d)
     u = s * s * u + s + 1.0;
     u = vldexpk(u, q);
 
-    u = select(d == constants<f64>::neginfinity, 0.0, u);
+    u = select(d == constants<f64>::neginfinity(), 0.0, u);
 
     return u;
 }
 template <typename T, size_t N, typename Tout = flt_type<T>>
 KFR_INTRINSIC vec<Tout, N> exp2(const vec<T, N>& x)
 {
-    return exp(x * constants<Tout>::log_2);
+    return exp(x * constants<Tout>::log_2());
 }
 template <typename T, size_t N, typename Tout = flt_type<T>>
 KFR_INTRINSIC vec<Tout, N> exp10(const vec<T, N>& x)
 {
-    return exp(x * constants<Tout>::log_10);
+    return exp(x * constants<Tout>::log_10());
 }
 
 template <typename T, size_t N>
@@ -238,7 +238,7 @@ KFR_INTRINSIC vec<T, N> pow(const vec<T, N>& a, const vec<T, N>& b)
     const mask<T, N> iseven = (innercast<itype<T>>(b) & 1) == 0;
     return select(
         a > T(), t,
-        select(a == T(), T(), select(isint, select(iseven, t, -t), broadcast<N>(constants<T>::qnan))));
+        select(a == T(), T(), select(isint, select(iseven, t, -t), broadcast<N>(constants<T>::qnan()))));
 }
 
 template <typename T, size_t N>

@@ -1089,7 +1089,7 @@ public:
         block_process(real_size / 4, csizes_t<width, 1>(), [=](size_t i, auto w) {
             constexpr size_t width = val_of(decltype(w)());
             cwrite<width>(rtwiddle + i,
-                          cossin(dup(-constants<T>::pi *
+                          cossin(dup(-constants<T>::pi() *
                                      ((enumerate<T, width>() + i + real_size / 4) / (real_size / 2)))));
         });
     }
