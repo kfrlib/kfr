@@ -90,6 +90,9 @@ docs/update.sh
 # CLion
 cmake-*
 
+
+!cmake-format*
+
 *.TMP
 temp_audio_file.wav
 .DS_Store
