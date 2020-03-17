@@ -26,6 +26,21 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
+if (WIN32 AND CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX
+        ""
+        CACHE STRING "Reset install prefix on Win32" FORCE)
+endif ()
+
+if (WIN32)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+endif ()
+
+set(CMAKE_CXX_VISIBILITY_PRESET "default")
+set(CMAKE_C_VISIBILITY_PRESET "default")
+
+message(STATUS "Install prefix = ${CMAKE_INSTALL_PREFIX}")
+
 message(
     STATUS
         "C++ compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} ${CMAKE_CXX_COMPILER} "
@@ -176,7 +191,7 @@ if (X86)
 endif ()
 
 function (add_arch_library NAME ARCH SRCS DEFS)
-    add_library(${NAME}_${ARCH} STATIC ${SRCS})
+    add_library(${NAME}_${ARCH} ${SRCS})
     target_link_libraries(${NAME}_${ARCH} kfr)
     target_set_arch(${NAME}_${ARCH} PRIVATE ${ARCH})
     target_compile_options(${NAME}_${ARCH} PRIVATE ${DEFS})
@@ -193,8 +208,8 @@ if (ENABLE_DFT)
 
     if (ENABLE_DFT_MULTIARCH)
         add_library(kfr_dft INTERFACE)
-        add_library(kft_multidft_all INTERFACE)
-        target_link_libraries(kfr_dft INTERFACE kfr kft_multidft_all)
+        add_library(kft_dft_all INTERFACE)
+        target_link_libraries(kfr_dft INTERFACE kfr kft_dft_all)
         target_compile_definitions(
             kfr_dft
             INTERFACE -DKFR_DFT_MULTI=1
@@ -205,11 +220,11 @@ if (ENABLE_DFT)
                       -DCMT_MULTI_ENABLED_AVX2=1
                       -DCMT_MULTI_ENABLED_AVX512=1)
 
-        add_arch_library(kft_multidft sse2 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
-        add_arch_library(kft_multidft sse41 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
-        add_arch_library(kft_multidft avx "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
-        add_arch_library(kft_multidft avx2 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
-        add_arch_library(kft_multidft avx512 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
+        add_arch_library(kft_dft sse2 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
+        add_arch_library(kft_dft sse41 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
+        add_arch_library(kft_dft avx "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
+        add_arch_library(kft_dft avx2 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
+        add_arch_library(kft_dft avx512 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
 
     else ()
         add_library(kfr_dft ${KFR_DFT_SRC})
@@ -240,16 +255,62 @@ target_link_libraries(kfr_io kfr)
 install(
     TARGETS kfr kfr_io
     ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib)
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin)
+
+if (ENABLE_CAPI_BUILD)
+    install(
+        TARGETS kfr_capi
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        RUNTIME DESTINATION bin)
+endif ()
+
+set(kfr_defines)
+
+function(append_defines_from target)
+    get_target_property(compile_defs ${target} INTERFACE_COMPILE_DEFINITIONS)
+    if (compile_defs)
+        list(APPEND kfr_defines "${compile_defs}")
+    endif ()
+    set(kfr_defines ${kfr_defines} PARENT_SCOPE)
+endfunction()
+
+append_defines_from(kfr)
+append_defines_from(kfr_dft)
+append_defines_from(kfr_io)
+
+message(STATUS kfr_defines = "${kfr_defines}")
+string(REPLACE "=" " " kfr_defines "${kfr_defines}")
+string(REPLACE ";" "\n#define " kfr_defines "${kfr_defines}")
+set(kfr_defines "#define ${kfr_defines}\n")
+
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/kfr_config.h "${kfr_defines}")
 
 if (ENABLE_DFT)
-    install(
-        TARGETS kfr_dft
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib)
+    if (ENABLE_DFT_MULTIARCH)
+        install(
+            TARGETS kft_dft_sse2 kft_dft_sse41 kft_dft_avx kft_dft_avx2
+                    kft_dft_avx512
+            ARCHIVE DESTINATION lib
+            LIBRARY DESTINATION lib
+            RUNTIME DESTINATION bin)
+    else ()
+        install(
+            TARGETS kfr_dft
+            ARCHIVE DESTINATION lib
+            LIBRARY DESTINATION lib
+            RUNTIME DESTINATION bin)
+    endif ()
 endif ()
 
 install(DIRECTORY include/kfr DESTINATION include)
+
+install(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/kfr_config.h
+    DESTINATION include/kfr
+    RENAME config.h
+    )
 
 # uninstall target
 if (NOT TARGET uninstall)

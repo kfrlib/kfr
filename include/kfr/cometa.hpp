@@ -19,9 +19,11 @@ CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpragmas")
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wunknown-warning-option")
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wmaybe-uninitialized")
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wdeprecated-declarations")
 
 CMT_PRAGMA_MSVC(warning(push))
 CMT_PRAGMA_MSVC(warning(disable : 4814))
+CMT_PRAGMA_MSVC(warning(disable : 4014))
 
 namespace cometa
 {
