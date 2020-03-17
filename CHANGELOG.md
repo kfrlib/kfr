@@ -1,5 +1,21 @@
 # Changelog
 
+## 4.2.0
+
+2020-02-17
+
+#### Added
+
+- `ENABLE_DFT_MULTIARCH` cmake option can be used to build `kfr_dft` with multiple architectures support (x86/x86_64 only)
+- `config.h` is generated during install step with all `#define`s needed for correct usage of installed libraries
+
+#### Changed
+
+- `CMAKE_INSTALL_PREFIX` is reset to empty on Win32 (can be overriden in cmake command line)
+- C API binary is now installed using install command (`make install`, `ninja install` or `cmake --build . --target install`)
+
+#### Fixed
+
 ## 4.1.0
 
 2020-03-04
