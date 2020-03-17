@@ -277,7 +277,9 @@ function(append_defines_from target)
 endfunction()
 
 append_defines_from(kfr)
-append_defines_from(kfr_dft)
+if (ENABLE_DFT)
+    append_defines_from(kfr_dft)
+endif ()
 append_defines_from(kfr_io)
 
 message(STATUS kfr_defines = "${kfr_defines}")
