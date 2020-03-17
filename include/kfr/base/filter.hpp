@@ -64,7 +64,7 @@ public:
         process_buffer(buffer.data(), buffer.data(), buffer.size());
     }
 
-    /// @brief Applies filter to a univector and write the result to another univector
+    /// @brief Applies filter to a univector and writes the result to another univector
     template <univector_tag Tag1, univector_tag Tag2>
     void apply(univector<T, Tag1>& dest, const univector<T, Tag2>& src)
     {
@@ -109,10 +109,7 @@ template <typename T>
 class expression_filter : public filter<T>
 {
 public:
-    template <typename... Args>
-    explicit expression_filter(expression_pointer<T>&& filter_expr) : filter_expr(std::move(filter_expr))
-    {
-    }
+    explicit expression_filter(expression_pointer<T>&& filter_expr) : filter_expr(std::move(filter_expr)) {}
 
 protected:
     void process_buffer(T* dest, const T* src, size_t size) override

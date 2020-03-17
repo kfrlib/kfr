@@ -162,13 +162,18 @@ struct dft_plan
             CMT_IF_ENABLED_SSE2(sse2::dft_initialize(*this); break;);
         }
     }
-#endif
-
+    explicit dft_plan(size_t size, dft_order order = dft_order::normal)
+        :dft_plan(cpu_t::runtime, size, order)
+    {
+    }
+#else
     explicit dft_plan(size_t size, dft_order order = dft_order::normal)
         : size(size), temp_size(0), data_size(0)
     {
         dft_initialize(*this);
     }
+#endif
+
 
     void dump() const
     {

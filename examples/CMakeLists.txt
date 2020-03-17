@@ -14,7 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with KFR.
 
-
 cmake_minimum_required(VERSION 3.1)
 
 # Binary output directories
@@ -46,10 +45,6 @@ target_link_libraries(sample_rate_conversion kfr kfr_io use_arch)
 if (ENABLE_DFT)
     add_executable(dft dft.cpp)
     target_link_libraries(dft kfr kfr_dft use_arch)
-    if (ENABLE_DFT_MULTIARCH)
-        target_link_libraries(dft kfr_multidft)
-        target_compile_definitions(dft PRIVATE -DKFR_DFT_MULTI=1)
-    endif ()
     add_executable(ccv ccv.cpp)
     target_link_libraries(ccv kfr kfr_dft use_arch)
 endif ()

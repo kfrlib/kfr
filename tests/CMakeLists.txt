@@ -14,7 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with KFR.
 
-
 cmake_minimum_required(VERSION 3.1)
 
 add_definitions(-DKFR_TESTING=1)
@@ -54,7 +53,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/tests/cmake/")
 
 if (ENABLE_CAPI_BUILD)
     add_executable(capi_test capi_test.cpp)
-    target_include_directories(capi_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+    target_include_directories(capi_test
+                               PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include)
     target_link_libraries(capi_test PUBLIC kfr_capi)
 endif ()
 
@@ -72,33 +72,40 @@ if (ENABLE_ASMTEST)
         target_compile_options(asm_test PRIVATE -Gs16384)
     endif ()
 
-    add_custom_command(TARGET asm_test POST_BUILD COMMAND objconv -fyasm $<TARGET_FILE:asm_test>)
-endif()
+    add_custom_command(
+        TARGET asm_test
+        POST_BUILD
+        COMMAND objconv -fyasm $<TARGET_FILE:asm_test>)
+endif ()
 
 if (X86)
-    if(MSVC AND NOT CLANG)
-        add_executable(multiarch multiarch.cpp multiarch_fir_sse2.cpp multiarch_fir_avx.cpp)
-        set_source_files_properties(multiarch_fir_sse2.cpp PROPERTIES COMPILE_FLAGS /arch:SSE2)
-        set_source_files_properties(multiarch_fir_avx.cpp PROPERTIES COMPILE_FLAGS /arch:AVX)
-    else()
-        add_executable(multiarch multiarch.cpp multiarch_fir_sse2.cpp multiarch_fir_avx.cpp)
-        set_source_files_properties(multiarch_fir_sse2.cpp PROPERTIES COMPILE_FLAGS "-mno-avx -mno-sse3 -msse2")
-        set_source_files_properties(multiarch_fir_avx.cpp PROPERTIES COMPILE_FLAGS "-mavx -mno-avx2")
-    endif()
+    if (MSVC AND NOT CLANG)
+        add_executable(multiarch multiarch.cpp multiarch_fir_sse2.cpp
+                                 multiarch_fir_avx.cpp)
+        set_source_files_properties(multiarch_fir_sse2.cpp
+                                    PROPERTIES COMPILE_FLAGS /arch:SSE2)
+        set_source_files_properties(multiarch_fir_avx.cpp
+                                    PROPERTIES COMPILE_FLAGS /arch:AVX)
+    else ()
+        add_executable(multiarch multiarch.cpp multiarch_fir_sse2.cpp
+                                 multiarch_fir_avx.cpp)
+        set_source_files_properties(
+            multiarch_fir_sse2.cpp PROPERTIES COMPILE_FLAGS
+                                              "-mno-avx -mno-sse3 -msse2")
+        set_source_files_properties(multiarch_fir_avx.cpp
+                                    PROPERTIES COMPILE_FLAGS "-mavx -mno-avx2")
+    endif ()
     target_link_libraries(multiarch kfr)
 endif ()
 
 set(ALL_TESTS_CPP
-        base_test.cpp
-        complex_test.cpp
-        dsp_test.cpp
-        expression_test.cpp
-        intrinsic_test.cpp
-        io_test.cpp
-        ${KFR_UNITTEST_SRC}
-        )
-
-# set(ALL_TESTS_MERGED_CPP all_tests_merged.cpp)
+    base_test.cpp
+    complex_test.cpp
+    dsp_test.cpp
+    expression_test.cpp
+    intrinsic_test.cpp
+    io_test.cpp
+    ${KFR_UNITTEST_SRC})
 
 if (ENABLE_DFT)
     list(APPEND ALL_TESTS_CPP dft_test.cpp)
@@ -111,13 +118,16 @@ if (MPFR_FOUND AND GMP_FOUND)
     message(STATUS "MPFR is found")
     add_executable(generate_data generate_data.cpp)
     target_link_libraries(generate_data kfr)
-    target_include_directories(generate_data PRIVATE ${MPFR_INCLUDE_DIR} ${GMP_INCLUDE_DIR})
+    target_include_directories(generate_data PRIVATE ${MPFR_INCLUDE_DIR}
+                                                     ${GMP_INCLUDE_DIR})
     target_link_libraries(generate_data ${MPFR_LIBRARIES} ${GMP_LIBRARIES})
     if (REGENERATE_TESTS)
-        add_custom_command(TARGET generate_data POST_BUILD
-                COMMENT "Generating tests..."
-                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/data
-                COMMAND generate_data)
+        add_custom_command(
+            TARGET generate_data
+            POST_BUILD
+            COMMENT "Generating tests..."
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/data
+            COMMAND generate_data)
     endif ()
 endif ()
 
@@ -129,10 +139,11 @@ if (ENABLE_DFT)
 endif ()
 target_link_libraries(all_tests kfr_io)
 
-function(add_x86_test ARCH)
+function (add_x86_test ARCH)
     set(NAME ${ARCH})
 
-    add_executable(all_tests_${NAME} all_tests.cpp ${ALL_TESTS_CPP}  ${KFR_IO_SRC})
+    add_executable(all_tests_${NAME} all_tests.cpp ${ALL_TESTS_CPP}
+                                     ${KFR_IO_SRC})
     if (ENABLE_DFT)
         target_sources(all_tests_${NAME} PRIVATE ${KFR_DFT_SRC})
     endif ()
@@ -142,24 +153,34 @@ function(add_x86_test ARCH)
     target_compile_definitions(all_tests_${NAME} PUBLIC KFR_ENABLE_FLAC=1)
 
     if (ARCH_TESTS_MULTI)
-        add_library(all_tests_multiarch_${NAME} STATIC ${ALL_TESTS_MERGED_CPP}  ${KFR_IO_SRC})
+        add_library(all_tests_multiarch_${NAME} STATIC ${ALL_TESTS_MERGED_CPP}
+                                                       ${KFR_IO_SRC})
         if (ENABLE_DFT)
             target_sources(all_tests_multiarch_${NAME} PRIVATE ${KFR_DFT_SRC})
         endif ()
         target_link_libraries(all_tests_multiarch_${NAME} kfr)
         target_set_arch(all_tests_multiarch_${NAME} PRIVATE ${ARCH})
-        target_compile_definitions(all_tests_multiarch_${NAME} PRIVATE KFR_NO_MAIN)
-        target_compile_definitions(all_tests_multiarch_${NAME} PUBLIC KFR_ENABLE_FLAC=1)
+        target_compile_definitions(all_tests_multiarch_${NAME}
+                                   PRIVATE KFR_NO_MAIN)
+        target_compile_definitions(all_tests_multiarch_${NAME}
+                                   PUBLIC KFR_ENABLE_FLAC=1)
     endif ()
 
-endfunction()
+endfunction ()
 
 message(STATUS "ARCH_TESTS = ${ARCH_TESTS}")
 
 if (ARCH_TESTS AND ARCH_TESTS STREQUAL "ON")
-    set (ARCH_LIST generic sse2 ssse3 sse42 avx avx2 avx512)
+    set(ARCH_LIST
+        generic
+        sse2
+        ssse3
+        sse42
+        avx
+        avx2
+        avx512)
 else ()
-    string (REPLACE "," ";" ARCH_LIST "${ARCH_TESTS}")
+    string(REPLACE "," ";" ARCH_LIST "${ARCH_TESTS}")
 endif ()
 
 if (MSVC AND NOT CLANG)
@@ -170,20 +191,20 @@ message(STATUS "Testing for ${ARCH_LIST}")
 
 if (ARCH_TESTS)
 
-    foreach(A IN LISTS ARCH_LIST)
+    foreach (A IN LISTS ARCH_LIST)
         add_x86_test(${A})
-    endforeach()
+    endforeach ()
 
     if (ARCH_TESTS_MULTI)
         add_executable(all_tests_multiarch all_tests.cpp)
         target_compile_definitions(all_tests_multiarch PRIVATE KFR_MULTI_ARCH)
-        foreach(A IN LISTS ARCH_LIST)
+        foreach (A IN LISTS ARCH_LIST)
             target_link_libraries(all_tests_multiarch all_tests_multiarch_${A})
-        endforeach()
+        endforeach ()
     endif ()
-endif()
+endif ()
 
-if(USE_SDE)
+if (USE_SDE)
     find_program(SDE "sde")
     find_program(EMULATOR "sde")
     list(APPEND EMULATOR "-skx")
@@ -207,24 +228,29 @@ if (NOT SKIP_TESTS)
     enable_testing()
 
     if (X86)
-        add_test(NAME multiarch
-                COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/multiarch)
+        add_test(NAME multiarch COMMAND ${EMULATOR}
+                                        ${PROJECT_BINARY_DIR}/bin/multiarch)
 
         if (ENABLE_CAPI_BUILD)
-            add_test(NAME capi_test COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/capi_test)
+            add_test(NAME capi_test COMMAND ${EMULATOR}
+                                            ${PROJECT_BINARY_DIR}/bin/capi_test)
         endif ()
     endif ()
 
     if (ARCH_TESTS)
-        foreach(A IN LISTS ARCH_LIST)
+        foreach (A IN LISTS ARCH_LIST)
             if (USE_SDE)
-                add_test(NAME all_tests_${A} COMMAND ${SDE} ${SDE_ARCH_${A}} -- ${PROJECT_BINARY_DIR}/bin/all_tests_${A})
+                add_test(NAME all_tests_${A}
+                         COMMAND ${SDE} ${SDE_ARCH_${A}} --
+                                 ${PROJECT_BINARY_DIR}/bin/all_tests_${A})
             else ()
-                add_test(NAME all_tests_${A} COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_${A})
+                add_test(NAME all_tests_${A}
+                         COMMAND ${EMULATOR}
+                                 ${PROJECT_BINARY_DIR}/bin/all_tests_${A})
             endif ()
-        endforeach()
+        endforeach ()
     else ()
-        add_test(NAME all_tests
-                COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests)
+        add_test(NAME all_tests COMMAND ${EMULATOR}
+                                        ${PROJECT_BINARY_DIR}/bin/all_tests)
     endif ()
 endif ()

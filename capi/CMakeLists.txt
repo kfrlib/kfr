@@ -14,7 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with KFR.
 
-
 cmake_minimum_required(VERSION 3.1)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -26,9 +25,9 @@ if (MSVC)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
 endif ()
 
-if(APPLE)
+if (APPLE)
     add_compile_options(-mmacosx-version-min=10.9)
-endif()
+endif ()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${PROJECT_BINARY_DIR}/bin)
@@ -44,33 +43,32 @@ if (NOT WIN32)
     target_link_libraries(kfr_capi_all_pic INTERFACE kfr)
 endif ()
 
-function(add_c_library ARCH)
-    add_library(kfr_capi_${ARCH} STATIC 
-            ${KFR_DFT_SRC} 
-            ${CMAKE_CURRENT_SOURCE_DIR}/../include/kfr/dsp/impl/dsp-impl.cpp
-        )
+function (add_c_library ARCH)
+    add_library(
+        kfr_capi_${ARCH} STATIC
+        ${KFR_DFT_SRC}
+        ${CMAKE_CURRENT_SOURCE_DIR}/../include/kfr/dsp/impl/dsp-impl.cpp)
     target_link_libraries(kfr_capi_${ARCH} kfr)
     target_set_arch(kfr_capi_${ARCH} PRIVATE ${ARCH})
     target_compile_options(kfr_capi_${ARCH} PRIVATE -Xclang -ffast-math)
     target_link_libraries(kfr_capi_all INTERFACE kfr_capi_${ARCH})
 
     if (NOT WIN32)
-        add_library(kfr_capi_${ARCH}_pic STATIC 
+        add_library(
+            kfr_capi_${ARCH}_pic STATIC
             ${KFR_DFT_SRC}
-            ${CMAKE_CURRENT_SOURCE_DIR}/../include/kfr/dsp/impl/dsp-impl.cpp
-        )
-        set_property(TARGET kfr_capi_${ARCH}_pic PROPERTY POSITION_INDEPENDENT_CODE 1)
+            ${CMAKE_CURRENT_SOURCE_DIR}/../include/kfr/dsp/impl/dsp-impl.cpp)
+        set_property(TARGET kfr_capi_${ARCH}_pic
+                     PROPERTY POSITION_INDEPENDENT_CODE 1)
         target_link_libraries(kfr_capi_${ARCH}_pic kfr)
         target_set_arch(kfr_capi_${ARCH}_pic PRIVATE ${ARCH})
         target_compile_options(kfr_capi_${ARCH}_pic PRIVATE -Xclang -ffast-math)
 
         target_link_libraries(kfr_capi_all_pic INTERFACE kfr_capi_${ARCH}_pic)
-    endif()
-endfunction()
+    endif ()
+endfunction ()
 
-
-add_library(kfr_capi SHARED 
-    ${PROJECT_SOURCE_DIR}/capi/capi.cpp)
+add_library(kfr_capi SHARED ${PROJECT_SOURCE_DIR}/capi/capi.cpp)
 
 add_c_library(sse2)
 add_c_library(sse41)
@@ -78,15 +76,16 @@ add_c_library(avx)
 add_c_library(avx2)
 add_c_library(avx512)
 
-target_compile_definitions(kfr_capi PRIVATE 
-    -DKFR_DFT_MULTI=1 
-    -DCMT_MULTI=1 
-    -DCMT_MULTI_ENABLED_SSE2=1
-    -DCMT_MULTI_ENABLED_SSE41=1
-    -DCMT_MULTI_ENABLED_AVX=1
-    -DCMT_MULTI_ENABLED_AVX2=1
-    -DCMT_MULTI_ENABLED_AVX512=1
-    -DKFR_BUILDING_DLL=1)
+target_compile_definitions(
+    kfr_capi
+    PRIVATE -DKFR_DFT_MULTI=1
+            -DCMT_MULTI=1
+            -DCMT_MULTI_ENABLED_SSE2=1
+            -DCMT_MULTI_ENABLED_SSE41=1
+            -DCMT_MULTI_ENABLED_AVX=1
+            -DCMT_MULTI_ENABLED_AVX2=1
+            -DCMT_MULTI_ENABLED_AVX512=1
+            -DKFR_BUILDING_DLL=1)
 
 target_set_arch(kfr_capi PRIVATE sse2)
 
@@ -96,9 +95,22 @@ else ()
     target_link_libraries(kfr_capi PRIVATE kfr kfr_capi_all_pic)
 
     if (APPLE)
-        message (STATUS "Minimum macOS version is set to ${CMAKE_OSX_DEPLOYMENT_TARGET}")
-        message (STATUS "Set CMAKE_OSX_DEPLOYMENT_TARGET variable to change")
+        message(
+            STATUS
+                "Minimum macOS version is set to ${CMAKE_OSX_DEPLOYMENT_TARGET}"
+        )
+        message(STATUS "Set CMAKE_OSX_DEPLOYMENT_TARGET variable to change")
     else ()
-        set_property(TARGET kfr_capi APPEND PROPERTY LINK_LIBRARIES -nodefaultlibs -Wl,-Bdynamic -lm -lc -Wl,-Bstatic -lstdc++ -lgcc -s)
+        set_property(
+            TARGET kfr_capi APPEND
+            PROPERTY LINK_LIBRARIES
+                     -nodefaultlibs
+                     -Wl,-Bdynamic
+                     -lm
+                     -lc
+                     -Wl,-Bstatic
+                     -lstdc++
+                     -lgcc
+                     -s)
     endif ()
-endif()
+endif ()
