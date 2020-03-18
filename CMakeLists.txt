@@ -208,8 +208,8 @@ if (ENABLE_DFT)
 
     if (ENABLE_DFT_MULTIARCH)
         add_library(kfr_dft INTERFACE)
-        add_library(kft_dft_all INTERFACE)
-        target_link_libraries(kfr_dft INTERFACE kfr kft_dft_all)
+        add_library(kfr_dft_all INTERFACE)
+        target_link_libraries(kfr_dft INTERFACE kfr kfr_dft_all)
         target_compile_definitions(
             kfr_dft
             INTERFACE -DKFR_DFT_MULTI=1
@@ -220,11 +220,11 @@ if (ENABLE_DFT)
                       -DCMT_MULTI_ENABLED_AVX2=1
                       -DCMT_MULTI_ENABLED_AVX512=1)
 
-        add_arch_library(kft_dft sse2 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
-        add_arch_library(kft_dft sse41 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
-        add_arch_library(kft_dft avx "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
-        add_arch_library(kft_dft avx2 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
-        add_arch_library(kft_dft avx512 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
+        add_arch_library(kfr_dft sse2 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
+        add_arch_library(kfr_dft sse41 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
+        add_arch_library(kfr_dft avx "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
+        add_arch_library(kfr_dft avx2 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
+        add_arch_library(kfr_dft avx512 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
 
     else ()
         add_library(kfr_dft ${KFR_DFT_SRC})
@@ -292,8 +292,8 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/kfr_config.h "${kfr_defines}")
 if (ENABLE_DFT)
     if (ENABLE_DFT_MULTIARCH)
         install(
-            TARGETS kft_dft_sse2 kft_dft_sse41 kft_dft_avx kft_dft_avx2
-                    kft_dft_avx512
+            TARGETS kfr_dft_sse2 kfr_dft_sse41 kfr_dft_avx kfr_dft_avx2
+                    kfr_dft_avx512
             ARCHIVE DESTINATION lib
             LIBRARY DESTINATION lib
             RUNTIME DESTINATION bin)
