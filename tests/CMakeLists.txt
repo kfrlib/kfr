@@ -205,8 +205,12 @@ if (ARCH_TESTS)
 endif ()
 
 if (USE_SDE)
-    find_program(SDE "sde")
-    find_program(EMULATOR "sde")
+    if ("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
+        find_program(SDE NAMES "sde64" "sde")
+    else ()
+        find_program(SDE NAMES "sde")
+    endif ()
+    set(EMULATOR "${SDE}")
     list(APPEND EMULATOR "-skx")
     list(APPEND EMULATOR "--")
 elseif (NOT EMULATOR)
@@ -241,8 +245,8 @@ if (NOT SKIP_TESTS)
         foreach (A IN LISTS ARCH_LIST)
             if (USE_SDE)
                 add_test(NAME all_tests_${A}
-                         COMMAND ${SDE} ${SDE_ARCH_${A}} --
-                                 ${PROJECT_BINARY_DIR}/bin/all_tests_${A})
+                         COMMAND ${SDE} ${SDE_ARCH_${A}} -chip_check_exe_only
+                                 -- ${PROJECT_BINARY_DIR}/bin/all_tests_${A})
             else ()
                 add_test(NAME all_tests_${A}
                          COMMAND ${EMULATOR}

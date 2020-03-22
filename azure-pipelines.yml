@@ -94,12 +94,8 @@ jobs:
     matrix:
       xcode11.1.2:
         XCODE_VER: 11.3.1
-      xcode11:
-        XCODE_VER: 11
       xcode10.3:
         XCODE_VER: 10.3
-      xcode10:
-        XCODE_VER: 10
       xcode9.4.1:
         XCODE_VER: 9.4.1
   pool:
@@ -107,20 +103,20 @@ jobs:
   steps:
   - bash: |
       set -e
+
+      curl -o "$(Agent.TempDirectory)/sde.tar.bz2" -L $(SDE_URL_MACOS)
+      mkdir -p "$(Agent.TempDirectory)/sde-bin"
+      tar -C "$(Agent.TempDirectory)/sde-bin" -xjf "$(Agent.TempDirectory)/sde.tar.bz2" --strip 1
+      export PATH=$PATH:$(Agent.TempDirectory)/sde-bin
+      sde64 -help || true
+
+      sudo spctl --master-disable
+      sudo /usr/sbin/DevToolsSecurity –enable
+      sudo security authorizationdb write system.privilege.taskport allow
+
       /bin/bash -c "sudo xcode-select -s /Applications/Xcode_$(XCODE_VER).app/Contents/Developer"
       brew install ninja
-      ci/run.sh build-release -DCPU_ARCH=detect -DCMAKE_BUILD_TYPE=Release      
-      
-- job: macOS_x86_64_Clang_Arch_Release
-  timeoutInMinutes: 120
-  pool:
-    vmImage: 'macOS-10.14'
-  steps:
-  - bash: |
-      set -e
-      /bin/bash -c "sudo xcode-select -s /Applications/Xcode_11.3.app/Contents/Developer"
-      brew install ninja
-      ci/run.sh build-release -DENABLE_CAPI_BUILD=ON -DARCH_TESTS=sse2,sse3,sse41,avx -DCMAKE_BUILD_TYPE=Release
+      ci/run.sh build-release -DENABLE_CAPI_BUILD=ON -DUSE_SDE=ON -DARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DCMAKE_BUILD_TYPE=Release      
 
 - job: iOS_ARM_Clang_Release
   timeoutInMinutes: 120
