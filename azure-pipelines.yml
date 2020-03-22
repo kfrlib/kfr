@@ -7,7 +7,7 @@ jobs:
   - bash: |
       set -e
       sudo apt-get update && sudo apt-get install -y ninja-build libmpfr-dev
-      curl -o "$(Agent.TempDirectory)/sde.tar.bz2" -L $(SDEURLLINUX)
+      curl -o "$(Agent.TempDirectory)/sde.tar.bz2" -L $(SDE_URL_LINUX)
       mkdir "$(Agent.TempDirectory)/sde-bin"
       tar -C "$(Agent.TempDirectory)/sde-bin" -xjf "$(Agent.TempDirectory)/sde.tar.bz2"  --strip 1
       sudo ln -s $(Agent.TempDirectory)/sde-bin/sde64 /usr/bin/sde
@@ -21,7 +21,7 @@ jobs:
   - bash: |
       set -e
       sudo apt-get update && sudo apt-get install -y ninja-build libmpfr-dev clang-8
-      curl -o "$(Agent.TempDirectory)/sde.tar.bz2" -L $(SDEURLLINUX)
+      curl -o "$(Agent.TempDirectory)/sde.tar.bz2" -L $(SDE_URL_LINUX)
       mkdir "$(Agent.TempDirectory)/sde-bin"
       tar -C "$(Agent.TempDirectory)/sde-bin" -xjf "$(Agent.TempDirectory)/sde.tar.bz2"  --strip 1
       sudo ln -s $(Agent.TempDirectory)/sde-bin/sde64 /usr/bin/sde
@@ -47,7 +47,7 @@ jobs:
       set -e
       sudo add-apt-repository ppa:ubuntu-toolchain-r/test
       sudo apt-get update && sudo apt-get install -y ninja-build libmpfr-dev gcc-8 g++-8
-      curl -o "$(Agent.TempDirectory)/sde.tar.bz2" -L $(SDEURLLINUX)
+      curl -o "$(Agent.TempDirectory)/sde.tar.bz2" -L $(SDE_URL_LINUX)
       mkdir "$(Agent.TempDirectory)/sde-bin"
       tar -C "$(Agent.TempDirectory)/sde-bin" -xjf "$(Agent.TempDirectory)/sde.tar.bz2"  --strip 1
       sudo ln -s $(Agent.TempDirectory)/sde-bin/sde64 /usr/bin/sde
@@ -62,7 +62,7 @@ jobs:
       set -e
       sudo add-apt-repository ppa:ubuntu-toolchain-r/test
       sudo apt-get update && sudo apt-get install -y ninja-build libmpfr-dev gcc-9 g++-9
-      curl -o "$(Agent.TempDirectory)/sde.tar.bz2" -L $(SDEURLLINUX)
+      curl -o "$(Agent.TempDirectory)/sde.tar.bz2" -L $(SDE_URL_LINUX)
       mkdir "$(Agent.TempDirectory)/sde-bin"
       tar -C "$(Agent.TempDirectory)/sde-bin" -xjf "$(Agent.TempDirectory)/sde.tar.bz2"  --strip 1
       sudo ln -s $(Agent.TempDirectory)/sde-bin/sde64 /usr/bin/sde
@@ -211,7 +211,7 @@ jobs:
       choco install ninja
       choco install llvm
 
-      curl -o "$(Agent.TempDirectory)/sde.zip" -L $(SDEURL)
+      curl -o "$(Agent.TempDirectory)/sde.zip" -L $(SDE_URL_WINDOWS)
       "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "$(Agent.TempDirectory)/sde.zip"
 
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
@@ -230,7 +230,7 @@ jobs:
       choco install ninja
       choco install llvm
 
-      curl -o "$(Agent.TempDirectory)/sde.zip" -L $(SDEURL)
+      curl -o "$(Agent.TempDirectory)/sde.zip" -L $(SDE_URL_WINDOWS)
       "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "$(Agent.TempDirectory)/sde.zip"
 
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
@@ -249,7 +249,7 @@ jobs:
       choco uninstall mingw
       choco install ninja
 
-      curl -o "$(Agent.TempDirectory)/sde.zip" -L $(SDEURL)
+      curl -o "$(Agent.TempDirectory)/sde.zip" -L $(SDE_URL_WINDOWS)
       "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "$(Agent.TempDirectory)/sde.zip"
 
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
@@ -268,7 +268,7 @@ jobs:
       choco uninstall mingw
       choco install ninja
 
-      curl -o "$(Agent.TempDirectory)/sde.zip" -L $(SDEURL)
+      curl -o "$(Agent.TempDirectory)/sde.zip" -L $(SDE_URL_WINDOWS)
       "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "$(Agent.TempDirectory)/sde.zip"
 
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
