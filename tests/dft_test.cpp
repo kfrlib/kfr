@@ -139,6 +139,10 @@ TEST(fft_accuracy)
                           univector<complex<float_type>> refout = out;
                           univector<complex<float_type>> outo   = in;
                           const dft_plan<float_type> dft(size);
+                          if (!inverse)
+                          {
+                              dft.dump();
+                          }
                           univector<u8> temp(dft.temp_size);
 
                           reference_dft(refout.data(), in.data(), size, inverse);
