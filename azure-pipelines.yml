@@ -110,8 +110,8 @@ jobs:
       export PATH=$PATH:$(Agent.TempDirectory)/sde-bin
       sde64 -help || true
 
-      sudo spctl --master-disable
-      sudo /usr/sbin/DevToolsSecurity –enable
+      # sudo spctl --master-disable
+      # sudo /usr/sbin/DevToolsSecurity –enable
       sudo security authorizationdb write system.privilege.taskport allow
 
       /bin/bash -c "sudo xcode-select -s /Applications/Xcode_$(XCODE_VER).app/Contents/Developer"
