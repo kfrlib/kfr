@@ -257,7 +257,7 @@ if (NOT SKIP_TESTS)
     if (USE_SDE)
         add_test(NAME all_tests COMMAND ${SDE} ${SDE_ARCH_${CPU_ARCH}} -chip_check_exe_only
                                     -- ${PROJECT_BINARY_DIR}/bin/all_tests)
-        add_test(NAME all_tests COMMAND ${SDE} ${SDE_ARCH_avx512} -chip_check_exe_only
+        add_test(NAME all_tests_on_avx512 COMMAND ${SDE} ${SDE_ARCH_avx512} -chip_check_exe_only
                                     -- ${PROJECT_BINARY_DIR}/bin/all_tests)
     else ()
         add_test(NAME all_tests COMMAND ${PROJECT_BINARY_DIR}/bin/all_tests)
