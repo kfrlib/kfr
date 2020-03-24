@@ -252,6 +252,7 @@ endif ()
 
 add_library(kfr_io ${KFR_IO_SRC})
 target_link_libraries(kfr_io kfr)
+target_link_libraries(kfr_io use_arch)
 
 install(
     TARGETS kfr kfr_io
