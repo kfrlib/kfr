@@ -253,8 +253,7 @@ if (NOT SKIP_TESTS)
                                  ${PROJECT_BINARY_DIR}/bin/all_tests_${A})
             endif ()
         endforeach ()
-    else ()
-        add_test(NAME all_tests COMMAND ${EMULATOR}
-                                        ${PROJECT_BINARY_DIR}/bin/all_tests)
     endif ()
+    add_test(NAME all_tests COMMAND ${SDE} ${SDE_ARCH_${CPU_ARCH}} -chip_check_exe_only
+                                    -- ${PROJECT_BINARY_DIR}/bin/all_tests)
 endif ()

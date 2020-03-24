@@ -118,7 +118,7 @@ jobs:
 
       /bin/bash -c "sudo xcode-select -s /Applications/Xcode_$(XCODE_VER).app/Contents/Developer"
       brew install ninja
-      ci/run.sh build-release -DENABLE_CAPI_BUILD=ON -DUSE_SDE=ON -DARCH_TESTS=sse2,ssse3,sse41,avx,avx2,avx512 -DCMAKE_BUILD_TYPE=Release      
+      ci/run.sh build-release -DENABLE_CAPI_BUILD=ON -DUSE_SDE=ON -DARCH_TESTS=sse2,ssse3,sse41,avx,avx2,avx512 -DCPU_ARCH=sse2 -DENABLE_DFT_MULTIARCH=ON -DCMAKE_BUILD_TYPE=Release      
 
 - job: iOS_ARM_Clang_Release
   timeoutInMinutes: 120
@@ -217,7 +217,7 @@ jobs:
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
       set PATH=%PATH:C:\Strawberry\c\bin;=%
       set PATH=C:\sde;%PATH%
-      ci\run.cmd build-release -DENABLE_CAPI_BUILD=ON -DARCH_TESTS=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DUSE_SDE=ON -DCPU_ARCH=avx512 -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release
+      ci\run.cmd build-release -DENABLE_CAPI_BUILD=ON -DARCH_TESTS=ON -DENABLE_DFT_MULTIARCH=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DUSE_SDE=ON -DCPU_ARCH=sse2 -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release
 
 - job: Windows_MSVC_x86_AVX512_Clang9_Release
   timeoutInMinutes: 120
@@ -236,7 +236,7 @@ jobs:
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
       set PATH=%PATH:C:\Strawberry\c\bin;=%
       set PATH=C:\sde;%PATH%
-      ci\run.cmd build-release -DARCH_TESTS=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DUSE_SDE=ON -DCPU_ARCH=avx512 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Release
+      ci\run.cmd build-release -DENABLE_CAPI_BUILD=ON -DARCH_TESTS=ON -DENABLE_DFT_MULTIARCH=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DUSE_SDE=ON -DCPU_ARCH=sse2 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Release
 
 - job: Windows_MSVC_x86_64_AVX512_MSVC2017_Release
   timeoutInMinutes: 120
