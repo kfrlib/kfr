@@ -125,7 +125,7 @@ See [fft benchmark](https://github.com/kfrlib/fft-benchmark) for details about b
  (*Higher is better*)
 
 ![Biquad Performance](img/biquad.svg)
-    
+
 # Usage
 
 ## Common prerequisites
@@ -135,7 +135,7 @@ See [fft benchmark](https://github.com/kfrlib/fft-benchmark) for details about b
 * (Optional) Ninja (https://ninja-build.org/)
 
 For running examples and plotting frequency responses of filters the following python packages are required:
-  
+
 ```bash
 pip install matplotlib
 pip install numpy
@@ -170,6 +170,16 @@ mkdir build && cd build
 cmake -GNinja -DENABLE_CAPI_BUILD=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=clang++ ..
 ninja kfr_capi
 ```
+
+#### ArchLinux Package
+KFR is available on the [ArchLinux User Repository](https://wiki.archlinux.org/index.php/Arch_User_Repository) (AUR).
+You can install it with an [AUR helper](https://wiki.archlinux.org/index.php/AUR_helpers), like [`yay`](https://aur.archlinux.org/packages/yay/), as follows:
+
+```bash
+yay -S kfr
+```
+To discuss any issues related to this AUR package refer to the comments section of
+[`kfr`](https://aur.archlinux.org/packages/kfr/).
 
 Prebuilt binaries will be available soon.
 
