@@ -94,36 +94,10 @@ mark_as_advanced(ENABLE_ASMTEST)
 mark_as_advanced(REGENERATE_TESTS)
 mark_as_advanced(DISABLE_CLANG_EXTENSIONS)
 
-if (NOT CPU_ARCH)
-    set(CPU_ARCH detect)
-endif ()
-
-if (CPU_ARCH STREQUAL "detect" AND X86)
-    message(STATUS "Detecting native cpu...")
-    try_run(
-        RUN_RESULT COMPILE_RESULT "${CMAKE_CURRENT_BINARY_DIR}/tmpdir"
-        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/detect_cpu.cpp
-        CMAKE_FLAGS
-            "-DINCLUDE_DIRECTORIES=${CMAKE_CURRENT_SOURCE_DIR}/include"
-            -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON
-            -DCMAKE_CXX_EXTENSIONS=ON
-        COMPILE_OUTPUT_VARIABLE COMPILE_OUT
-        RUN_OUTPUT_VARIABLE RUN_OUT)
-    if (COMPILE_RESULT AND RUN_RESULT EQUAL 0)
-        message(STATUS DETECTED_CPU = ${RUN_OUT})
-        set(CPU_ARCH
-            ${RUN_OUT}
-            CACHE STRING "Detected CPU" FORCE)
-    else ()
-        message(STATUS COMPILE_RESULT = ${COMPILE_RESULT})
-        message(STATUS RUN_RESULT = ${RUN_RESULT})
-        message(STATUS COMPILE_OUT = ${COMPILE_OUT})
-        message(STATUS RUN_OUT = ${RUN_OUT})
-    endif ()
-endif ()
+include(cmake/detect_cpu.cmake)
+detect_cpu(${CMAKE_CURRENT_SOURCE_DIR})
 
 include(cmake/target_set_arch.cmake)
-
 add_library(use_arch INTERFACE)
 target_set_arch(use_arch INTERFACE ${CPU_ARCH})
 
@@ -314,6 +288,11 @@ install(
     FILES ${CMAKE_CURRENT_BINARY_DIR}/kfr_config.h
     DESTINATION include/kfr
     RENAME config.h
+    )
+
+install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake/ 
+    DESTINATION cmake
     )
 
 # uninstall target
