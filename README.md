@@ -204,6 +204,57 @@ target_link_libraries(your_executable_or_library kfr_dft)
 target_link_libraries(your_executable_or_library kfr_io)
 ```
 
+## Including Prebuilt Binaries in CMake Project
+```
+# Android Hacks
+set(KFR_LIB_PREFIX)
+if (ANDROID)
+    set(KFR_LIB_PREFIX lib)
+endif()
+message(STATUS "KFR_LIB_PREFIX : ${KFR_LIB_PREFIX}")
+set(LIBRARY_EXT lib)
+if (ANDROID)
+    set(LIBRARY_EXT a)
+endif()
+message(STATUS "LIBRARY_EXT : ${LIBRARY_EXT}")
+
+# Add KFR Dependency
+add_library(
+    libkfr-dft
+    STATIC IMPORTED
+)
+set_target_properties(
+    libkfr-dft
+    PROPERTIES IMPORTED_LOCATION
+    
+    ${KFR_INSTALL_DIR}/lib/${KFR_LIB_PREFIX}kfr_dft.${LIBRARY_EXT}
+)
+
+include(${KFR_CMAKE_DIR}/detect_cpu.cmake)
+detect_cpu(${KFR_INCLUDE_DIR} ${KFR_CMAKE_DIR})
+message(STATUS "CPU_ARCH : ${CPU_ARCH}")
+
+include(${KFR_CMAKE_DIR}/target_set_arch.cmake)
+add_library(kfr_arch_flags INTERFACE)
+target_set_arch(kfr_arch_flags INTERFACE ${CPU_ARCH})
+
+...
+
+target_include_directories(
+    ${PROJECT_NAME}
+    PUBLIC
+
+    ${KFR_LIB_DIR}/include
+)
+target_link_libraries(
+    ${PROJECT_NAME}
+    PUBLIC
+
+    kfr_arch_flags
+    libkfr-dft
+)
+```
+
 ## Makefile, command line etc (Unix-like systems)
 
 ```bash
