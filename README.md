@@ -230,11 +230,7 @@ set_target_properties(
     ${KFR_INSTALL_DIR}/lib/${KFR_LIB_PREFIX}kfr_dft.${LIBRARY_EXT}
 )
 
-include(${KFR_CMAKE_DIR}/detect_cpu.cmake)
-detect_cpu(${KFR_INCLUDE_DIR} ${KFR_CMAKE_DIR})
-message(STATUS "CPU_ARCH : ${CPU_ARCH}")
-
-include(${KFR_CMAKE_DIR}/target_set_arch.cmake)
+include(${KFR_INSTALL_DIR}/cmake/kfr_include.cmake)
 add_library(kfr_arch_flags INTERFACE)
 target_set_arch(kfr_arch_flags INTERFACE ${CPU_ARCH})
 
