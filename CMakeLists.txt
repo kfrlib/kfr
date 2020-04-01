@@ -265,9 +265,18 @@ install(
     RENAME config.h
     )
 
+file(
+    READ ${CMAKE_CURRENT_SOURCE_DIR}/cmake/target_set_arch.cmake
+    SET_ARCH_FUNC_DEF
+    )
+file(
+    WRITE ${CMAKE_CURRENT_BINARY_DIR}/kfr_include.cmake
+    "set(CPU_ARCH ${CPU_ARCH})
+    ${SET_ARCH_FUNC_DEF}"
+    )
 install(
-    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake/ 
-    DESTINATION include/kfr/cmake
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/kfr_include.cmake
+    DESTINATION cmake
     )
 
 # uninstall target
