@@ -240,7 +240,7 @@ target_include_directories(
     ${PROJECT_NAME}
     PUBLIC
 
-    ${KFR_LIB_DIR}/include
+    ${KFR_INSTALL_DIR}/include
 )
 target_link_libraries(
     ${PROJECT_NAME}
