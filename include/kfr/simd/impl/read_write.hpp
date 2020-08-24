@@ -284,26 +284,26 @@ KFR_INTRINSIC void write(cunaligned_t, i64* ptr, const i64avx& x)
 KFR_INTRINSIC f32avx512 read(cunaligned_t, csize_t<16>, const f32* ptr) { return _mm512_loadu_ps(ptr); }
 KFR_INTRINSIC f64avx512 read(cunaligned_t, csize_t<8>, const f64* ptr) { return _mm512_loadu_pd(ptr); }
 
-KFR_INTRINSIC u8avx512 read(cunaligned_t, csize_t<64>, const u8* ptr) { return _mm512_loadu_epi8(ptr); }
-KFR_INTRINSIC i8avx512 read(cunaligned_t, csize_t<64>, const i8* ptr) { return _mm512_loadu_epi8(ptr); }
-KFR_INTRINSIC u16avx512 read(cunaligned_t, csize_t<32>, const u16* ptr) { return _mm512_loadu_epi16(ptr); }
-KFR_INTRINSIC i16avx512 read(cunaligned_t, csize_t<32>, const i16* ptr) { return _mm512_loadu_epi16(ptr); }
-KFR_INTRINSIC u32avx512 read(cunaligned_t, csize_t<16>, const u32* ptr) { return _mm512_loadu_epi32(ptr); }
-KFR_INTRINSIC i32avx512 read(cunaligned_t, csize_t<16>, const i32* ptr) { return _mm512_loadu_epi32(ptr); }
-KFR_INTRINSIC u64avx512 read(cunaligned_t, csize_t<8>, const u64* ptr) { return _mm512_loadu_epi64(ptr); }
-KFR_INTRINSIC i64avx512 read(cunaligned_t, csize_t<8>, const i64* ptr) { return _mm512_loadu_epi64(ptr); }
+KFR_INTRINSIC u8avx512 read(cunaligned_t, csize_t<64>, const u8* ptr) { return _mm512_loadu_si512(ptr); }
+KFR_INTRINSIC i8avx512 read(cunaligned_t, csize_t<64>, const i8* ptr) { return _mm512_loadu_si512(ptr); }
+KFR_INTRINSIC u16avx512 read(cunaligned_t, csize_t<32>, const u16* ptr) { return _mm512_loadu_si512(ptr); }
+KFR_INTRINSIC i16avx512 read(cunaligned_t, csize_t<32>, const i16* ptr) { return _mm512_loadu_si512(ptr); }
+KFR_INTRINSIC u32avx512 read(cunaligned_t, csize_t<16>, const u32* ptr) { return _mm512_loadu_si512(ptr); }
+KFR_INTRINSIC i32avx512 read(cunaligned_t, csize_t<16>, const i32* ptr) { return _mm512_loadu_si512(ptr); }
+KFR_INTRINSIC u64avx512 read(cunaligned_t, csize_t<8>, const u64* ptr) { return _mm512_loadu_si512(ptr); }
+KFR_INTRINSIC i64avx512 read(cunaligned_t, csize_t<8>, const i64* ptr) { return _mm512_loadu_si512(ptr); }
 
 KFR_INTRINSIC void write(cunaligned_t, f32* ptr, const f32avx512& x) { _mm512_storeu_ps(ptr, x.v); }
 KFR_INTRINSIC void write(cunaligned_t, f64* ptr, const f64avx512& x) { _mm512_storeu_pd(ptr, x.v); }
 
-KFR_INTRINSIC void write(cunaligned_t, u8* ptr, const u8avx512& x) { _mm512_storeu_epi8(ptr, x.v); }
-KFR_INTRINSIC void write(cunaligned_t, i8* ptr, const i8avx512& x) { _mm512_storeu_epi8(ptr, x.v); }
-KFR_INTRINSIC void write(cunaligned_t, u16* ptr, const u16avx512& x) { _mm512_storeu_epi16(ptr, x.v); }
-KFR_INTRINSIC void write(cunaligned_t, i16* ptr, const i16avx512& x) { _mm512_storeu_epi16(ptr, x.v); }
-KFR_INTRINSIC void write(cunaligned_t, u32* ptr, const u32avx512& x) { _mm512_storeu_epi32(ptr, x.v); }
-KFR_INTRINSIC void write(cunaligned_t, i32* ptr, const i32avx512& x) { _mm512_storeu_epi32(ptr, x.v); }
-KFR_INTRINSIC void write(cunaligned_t, u64* ptr, const u64avx512& x) { _mm512_storeu_epi64(ptr, x.v); }
-KFR_INTRINSIC void write(cunaligned_t, i64* ptr, const i64avx512& x) { _mm512_storeu_epi64(ptr, x.v); }
+KFR_INTRINSIC void write(cunaligned_t, u8* ptr, const u8avx512& x) { _mm512_storeu_si512(ptr, x.v); }
+KFR_INTRINSIC void write(cunaligned_t, i8* ptr, const i8avx512& x) { _mm512_storeu_si512(ptr, x.v); }
+KFR_INTRINSIC void write(cunaligned_t, u16* ptr, const u16avx512& x) { _mm512_storeu_si512(ptr, x.v); }
+KFR_INTRINSIC void write(cunaligned_t, i16* ptr, const i16avx512& x) { _mm512_storeu_si512(ptr, x.v); }
+KFR_INTRINSIC void write(cunaligned_t, u32* ptr, const u32avx512& x) { _mm512_storeu_si512(ptr, x.v); }
+KFR_INTRINSIC void write(cunaligned_t, i32* ptr, const i32avx512& x) { _mm512_storeu_si512(ptr, x.v); }
+KFR_INTRINSIC void write(cunaligned_t, u64* ptr, const u64avx512& x) { _mm512_storeu_si512(ptr, x.v); }
+KFR_INTRINSIC void write(cunaligned_t, i64* ptr, const i64avx512& x) { _mm512_storeu_si512(ptr, x.v); }
 
 #endif
 #endif
