@@ -218,7 +218,7 @@ jobs:
 - job: Windows_MSVC_x86_64_AVX512_Clang10_Release
   timeoutInMinutes: 120
   pool:
-    vmImage: 'vs2017-win2016'
+    vmImage: 'windows-2019'
   steps:
   - script: |
       choco install ninja
@@ -227,7 +227,7 @@ jobs:
       curl -o "$(Agent.TempDirectory)/sde.zip" -L $(SDE_URL_WINDOWS)
       "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "$(Agent.TempDirectory)/sde.zip"
 
-      call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+      call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
       set PATH=%PATH:C:\tools\mingw64\bin;=%
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
       set PATH=%PATH:C:\Strawberry\c\bin;=%
@@ -237,7 +237,7 @@ jobs:
 - job: Windows_MSVC_x86_AVX512_Clang10_Release
   timeoutInMinutes: 120
   pool:
-    vmImage: 'vs2017-win2016'
+    vmImage: 'windows-2019'
   steps:
   - script: |
       choco install ninja
@@ -246,7 +246,7 @@ jobs:
       curl -o "$(Agent.TempDirectory)/sde.zip" -L $(SDE_URL_WINDOWS)
       "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "$(Agent.TempDirectory)/sde.zip"
 
-      call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+      call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
       set PATH=%PATH:C:\tools\mingw64\bin;=%
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
       set PATH=%PATH:C:\Strawberry\c\bin;=%
@@ -290,22 +290,6 @@ jobs:
       set PATH=%PATH:C:\Strawberry\c\bin;=%
       set PATH=C:\sde;%PATH%
       ci\run.cmd build-release -DARCH_TESTS=OFF -DUSE_SDE=ON -DCPU_ARCH=avx512 -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
-
-- job: Windows_MSVC2019_x86_64_Clang10_Release
-  timeoutInMinutes: 120
-  pool:
-    vmImage: 'windows-2019'
-  steps:
-  - script: |
-      choco uninstall mingw
-      choco install ninja
-      choco install llvm
-
-      call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-      set PATH=%PATH:C:\tools\mingw64\bin;=%
-      set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
-      set PATH=%PATH:C:\Strawberry\c\bin;=%
-      ci\run.cmd build-release -DARCH_TESTS=OFF -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCPU_ARCH=detect -DENABLE_DFT=ON -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release
 
 - job: Windows_MSVC2019_x86_64_Release
   timeoutInMinutes: 120
