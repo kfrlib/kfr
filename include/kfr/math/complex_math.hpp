@@ -79,7 +79,7 @@ template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> carg(const vec<complex<T>, N>& x)
 {
     const vec<T, N* 2> xx = cdecom(x);
-    return atan2(even(xx), odd(xx));
+    return atan2(odd(xx), even(xx));
 }
 
 template <typename T, size_t N>
