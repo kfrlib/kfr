@@ -92,14 +92,14 @@ jobs:
   timeoutInMinutes: 120
   strategy:
     matrix:
-      xcode11.1.2:
-        XCODE_VER: 11.3.1
-      xcode10.3:
+      xcode12:
+        XCODE_VER: 12
+      xcode11:
+        XCODE_VER: 11.7
+      xcode10:
         XCODE_VER: 10.3
-      xcode9.4.1:
-        XCODE_VER: 9.4.1
   pool:
-    vmImage: 'macOS-10.14'
+    vmImage: 'macOS-10.15'
   steps:
   - bash: |
       set -e
@@ -123,22 +123,22 @@ jobs:
 - job: iOS_ARM_Clang_Release
   timeoutInMinutes: 120
   pool:
-    vmImage: 'macOS-10.14'
+    vmImage: 'macOS-10.15'
   steps:
   - bash: |
       set -e
-      /bin/bash -c "sudo xcode-select -s /Applications/Xcode_11.3.app/Contents/Developer"
+      /bin/bash -c "sudo xcode-select -s /Applications/Xcode_11.7.app/Contents/Developer"
       brew install ninja
       ci/run.sh build-release -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.cmake -DCMAKE_BUILD_TYPE=Release -DIOS_PLATFORM=OS -DIOS_ARCH=armv7 -DCMAKE_MAKE_PROGRAM=/usr/local/bin/ninja -DSKIP_TESTS=ON
 
 - job: iOS_ARM64_Clang_Release
   timeoutInMinutes: 120
   pool:
-    vmImage: 'macOS-10.14'
+    vmImage: 'macOS-10.15'
   steps:
   - bash: |
       set -e
-      /bin/bash -c "sudo xcode-select -s /Applications/Xcode_11.3.app/Contents/Developer"
+      /bin/bash -c "sudo xcode-select -s /Applications/Xcode_11.7.app/Contents/Developer"
       brew install ninja
       ci/run.sh build-release -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.cmake -DCMAKE_BUILD_TYPE=Release -DIOS_PLATFORM=OS64 -DIOS_ARCH=arm64 -DCMAKE_MAKE_PROGRAM=/usr/local/bin/ninja -DSKIP_TESTS=ON
 
@@ -170,7 +170,7 @@ jobs:
       call "%ANDROID_HOME%\tools\bin\sdkmanager.bat" "ndk-bundle" < %TMP%\always_yes
       ci\run.cmd build-release -DCMAKE_TOOLCHAIN_FILE="%ANDROID_HOME%\ndk-bundle\build\cmake\android.toolchain.cmake" -DANDROID_ABI=arm64-v8a -DANDROID_ARM_NEON=TRUE -DSKIP_TESTS=ON -DCMAKE_BUILD_TYPE=Release
 
-- job: Windows_MinGW_x86_Clang9_Release
+- job: Windows_MinGW_x86_Clang10_Release
   timeoutInMinutes: 120
   pool:
     vmImage: 'vs2017-win2016'
@@ -185,7 +185,7 @@ jobs:
       call C:\tools\msys64\msys2_shell.cmd -defterm -mingw32 -no-start -full-path -here -c "pacman -S --noconfirm mingw32/mingw-w64-i686-ninja"
       call C:\tools\msys64\msys2_shell.cmd -defterm -mingw32 -no-start -full-path -here -c "ci/run.sh build-release -DCMAKE_CXX_COMPILER=""C:/Program Files/LLVM/bin/clang++.exe"" -DCPU_ARCH=avx -DCMAKE_CXX_FLAGS=--target=i686-w64-windows-gnu -DCMAKE_BUILD_TYPE=Release"
 
-- job: Windows_MinGW_x86_64_Clang9_Release
+- job: Windows_MinGW_x86_64_Clang10_Release
   timeoutInMinutes: 120
   pool:
     vmImage: 'vs2017-win2016'
@@ -200,7 +200,7 @@ jobs:
       call C:\tools\msys64\msys2_shell.cmd -defterm -mingw64 -no-start -full-path -here -c "pacman -S --noconfirm mingw64/mingw-w64-x86_64-ninja"
       call C:\tools\msys64\msys2_shell.cmd -defterm -mingw64 -no-start -full-path -here -c "ci/run.sh build-release -DCMAKE_CXX_COMPILER=""C:/Program Files/LLVM/bin/clang++.exe"" -DCPU_ARCH=avx -DCMAKE_CXX_FLAGS=--target=x86_64-w64-windows-gnu -DCMAKE_BUILD_TYPE=Release"
 
-- job: Windows_MSVC_x86_64_AVX512_Clang9_Release
+- job: Windows_MSVC_x86_64_AVX512_Clang10_Release
   timeoutInMinutes: 120
   pool:
     vmImage: 'vs2017-win2016'
@@ -217,9 +217,9 @@ jobs:
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
       set PATH=%PATH:C:\Strawberry\c\bin;=%
       set PATH=C:\sde;%PATH%
-      ci\run.cmd build-release -DENABLE_CAPI_BUILD=ON -DARCH_TESTS=ON -DENABLE_DFT_MULTIARCH=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DUSE_SDE=ON -DCPU_ARCH=sse2 -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release
+      ci\run.cmd build-release -DENABLE_CAPI_BUILD=ON -DARCH_TESTS=ON -DENABLE_DFT_MULTIARCH=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DUSE_SDE=ON -DCPU_ARCH=sse2 -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release
 
-- job: Windows_MSVC_x86_AVX512_Clang9_Release
+- job: Windows_MSVC_x86_AVX512_Clang10_Release
   timeoutInMinutes: 120
   pool:
     vmImage: 'vs2017-win2016'
@@ -236,7 +236,7 @@ jobs:
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
       set PATH=%PATH:C:\Strawberry\c\bin;=%
       set PATH=C:\sde;%PATH%
-      ci\run.cmd build-release -DENABLE_CAPI_BUILD=ON -DARCH_TESTS=ON -DENABLE_DFT_MULTIARCH=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DUSE_SDE=ON -DCPU_ARCH=sse2 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Release
+      ci\run.cmd build-release -DENABLE_CAPI_BUILD=ON -DARCH_TESTS=ON -DENABLE_DFT_MULTIARCH=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DUSE_SDE=ON -DCPU_ARCH=sse2 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Release
 
 - job: Windows_MSVC_x86_64_AVX512_MSVC2017_Release
   timeoutInMinutes: 120
@@ -276,7 +276,7 @@ jobs:
       set PATH=C:\sde;%PATH%
       ci\run.cmd build-release -DARCH_TESTS=OFF -DUSE_SDE=ON -DCPU_ARCH=avx512 -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
 
-- job: Windows_MSVC2019_x86_64_Clang9_Release
+- job: Windows_MSVC2019_x86_64_Clang10_Release
   timeoutInMinutes: 120
   pool:
     vmImage: 'windows-2019'
@@ -290,7 +290,7 @@ jobs:
       set PATH=%PATH:C:\tools\mingw64\bin;=%
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
       set PATH=%PATH:C:\Strawberry\c\bin;=%
-      ci\run.cmd build-release -DARCH_TESTS=OFF -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCPU_ARCH=detect -DENABLE_DFT=ON -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release
+      ci\run.cmd build-release -DARCH_TESTS=OFF -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCPU_ARCH=detect -DENABLE_DFT=ON -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release
 
 - job: Windows_MSVC2019_x86_64_Release
   timeoutInMinutes: 120
@@ -300,7 +300,6 @@ jobs:
   - script: |
       choco uninstall mingw
       choco install ninja
-      choco install llvm
 
       call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
       set PATH=%PATH:C:\tools\mingw64\bin;=%
