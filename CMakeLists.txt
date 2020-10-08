@@ -328,3 +328,11 @@ if (NOT TARGET uninstall)
         COMMAND ${CMAKE_COMMAND} -P
                 ${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake)
 endif ()
+
+if (DEBUG_CMAKE)
+    get_cmake_property(_variableNames VARIABLES)
+    list(SORT _variableNames)
+    foreach (_variableName ${_variableNames})
+        message(STATUS "${_variableName}=${${_variableName}}")
+    endforeach ()
+endif ()
