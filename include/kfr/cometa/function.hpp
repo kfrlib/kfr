@@ -135,7 +135,7 @@ struct function<R(Args...)>
 template <typename Ret, typename... Args, typename T, typename Fn, typename DefFn = fn_noop>
 CMT_INLINE function<Ret(Args...)> cdispatch(cvals_t<T>, identity<T>, Fn&&, DefFn&& deffn = DefFn())
 {
-    return [=](Args... args) CMT_INLINE_MEMBER -> Ret { return deffn(std::forward<Args>(args)...); };
+    return [=](Args... args) CMT_INLINE_LAMBDA -> Ret { return deffn(std::forward<Args>(args)...); };
 }
 
 template <typename Ret, typename... Args, typename T, T v0, T... values, typename Fn,
@@ -146,7 +146,7 @@ inline function<Ret(Args...)> cdispatch(cvals_t<T, v0, values...>, identity<T> v
     if (value == v0)
     {
         return [=](Args... args)
-                   CMT_INLINE_MEMBER -> Ret { return fn(cval_t<T, v0>(), std::forward<Args>(args)...); };
+                   CMT_INLINE_LAMBDA -> Ret { return fn(cval_t<T, v0>(), std::forward<Args>(args)...); };
     }
     else
     {

@@ -64,10 +64,18 @@ inline std::string number_to_string(const mpfr::number& reference, int precision
 template <typename T>
 inline double ulp_distance(long double reference, T test)
 {
-    if (__builtin_isnan(test) && __builtin_isnan(reference))
+#if defined CMT_COMPILER_MSVC && !defined CMT_COMPILER_CLANG
+#define TESTO__ISNAN(x) std::isnan(x)
+#define TESTO__ISINF(x) std::isinf(x)
+#else
+#define TESTO__ISNAN(x) __builtin_isnan(x)
+#define TESTO__ISINF(x) __builtin_isinf(x)
+#endif
+
+    if (TESTO__ISNAN(test) && TESTO__ISNAN(reference))
         return 0.0;
-    if (__builtin_isinf(test) &&
-        (__builtin_isinf(reference) || std::fabs(reference) > std::numeric_limits<T>::max()))
+    if (TESTO__ISINF(test) &&
+        (TESTO__ISINF(reference) || std::fabs(reference) > std::numeric_limits<T>::max()))
     {
         if ((reference < 0 && test < 0) || (reference > 0 && test > 0))
             return 0.0;
@@ -78,6 +86,8 @@ inline double ulp_distance(long double reference, T test)
     T next             = std::nexttoward(test, std::numeric_limits<long double>::infinity());
     long double ulp    = test80 - static_cast<long double>(next);
     return std::abs(static_cast<double>((reference - test80) / ulp));
+#undef TESTO__ISNAN
+#undef TESTO__ISINF
 }
 #endif
 

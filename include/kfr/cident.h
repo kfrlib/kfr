@@ -367,7 +367,11 @@ extern char* gets(char* __s);
 #define CMT_NODEBUG
 #define CMT_INLINE /*inline*/ __forceinline
 #define CMT_INLINE_MEMBER __forceinline
+#if _MSC_VER >= 1927
+#define CMT_INLINE_LAMBDA [[msvc::forceinline]]
+#else
 #define CMT_INLINE_LAMBDA
+#endif
 #define CMT_NOINLINE __declspec(noinline)
 #define CMT_FLATTEN
 #define CMT_RESTRICT __restrict
