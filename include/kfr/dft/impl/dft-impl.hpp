@@ -82,12 +82,13 @@ struct dft_stage_fixed_impl : dft_stage<T>
 {
     dft_stage_fixed_impl(size_t, size_t iterations, size_t blocks)
     {
-        this->name      = type_name<decltype(*this)>();
-        this->radix     = fixed_radix;
-        this->blocks    = blocks;
-        this->repeats   = iterations;
-        this->recursion = false; // true;
-        this->data_size = align_up((this->repeats * (fixed_radix - 1)) * sizeof(complex<T>),
+        this->name       = type_name<decltype(*this)>();
+        this->radix      = fixed_radix;
+        this->blocks     = blocks;
+        this->repeats    = iterations;
+        this->recursion  = false; // true;
+        this->stage_size = fixed_radix * iterations * blocks;
+        this->data_size  = align_up((this->repeats * (fixed_radix - 1)) * sizeof(complex<T>),
                                    platform<>::native_cache_alignment);
     }
 
@@ -125,6 +126,7 @@ struct dft_stage_fixed_final_impl : dft_stage<T>
         this->radix       = fixed_radix;
         this->blocks      = blocks;
         this->repeats     = iterations;
+        this->stage_size  = fixed_radix * iterations * blocks;
         this->recursion   = false;
         this->can_inplace = false;
     }
@@ -204,6 +206,7 @@ struct dft_arblen_stage_impl : dft_stage<T>
         this->recursion   = false;
         this->can_inplace = false;
         this->temp_size   = plan.temp_size;
+        this->stage_size  = size;
 
         chirp_ = render(cexp(sqr(linspace(T(1) - size, size - T(1), size * 2 - 1, true, true)) *
                              complex<T>(0, -1) * c_pi<T> / size));
@@ -259,6 +262,7 @@ struct dft_special_stage_impl : dft_stage<T>
         this->repeats     = 1;
         this->recursion   = false;
         this->can_inplace = false;
+        this->stage_size  = size;
         this->temp_size   = stage1.temp_size + stage2.temp_size + sizeof(complex<T>) * size;
         this->data_size   = stage1.data_size + stage2.data_size;
     }
@@ -300,6 +304,7 @@ struct dft_stage_generic_impl : dft_stage<T>
         this->repeats     = iterations;
         this->recursion   = false; // true;
         this->can_inplace = false;
+        this->stage_size  = radix * iterations * blocks;
         this->temp_size   = align_up(sizeof(complex<T>) * radix, platform<>::native_cache_alignment);
         this->data_size =
             align_up(sizeof(complex<T>) * sqr(this->radix / 2), platform<>::native_cache_alignment);
@@ -411,6 +416,7 @@ struct dft_reorder_stage_impl : dft_stage<T>
                 this->inner_size *= radices[r];
             this->size *= radices[r];
         }
+        this->stage_size = this->size;
     }
 
 protected:

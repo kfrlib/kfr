@@ -109,6 +109,8 @@ set(ALL_TESTS_CPP
 
 if (ENABLE_DFT)
     list(APPEND ALL_TESTS_CPP dft_test.cpp)
+
+    add_executable(dft_test dft_test.cpp)
 endif ()
 
 find_package(MPFR)
@@ -136,6 +138,7 @@ target_compile_definitions(all_tests PRIVATE KFR_NO_MAIN)
 target_link_libraries(all_tests kfr use_arch)
 if (ENABLE_DFT)
     target_link_libraries(all_tests kfr_dft)
+    target_link_libraries(dft_test kfr_dft)
 endif ()
 target_link_libraries(all_tests kfr_io)
 

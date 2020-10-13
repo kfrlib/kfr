@@ -42,12 +42,13 @@ inline namespace CMT_ARCH_NAME
 namespace intrinsics
 {
 
-constexpr bool fft_reorder_aligned = false;
+constexpr inline static bool fft_reorder_aligned = false;
+
+constexpr inline static size_t bitrev_table_log2N = ilog2(arraysize(data::bitrev_table));
 
 template <size_t Bits>
 CMT_GNU_CONSTEXPR inline u32 bitrev_using_table(u32 x)
 {
-    constexpr size_t bitrev_table_log2N = ilog2(arraysize(data::bitrev_table));
     if (Bits > bitrev_table_log2N)
         return bitreverse<Bits>(x);
 
@@ -56,7 +57,6 @@ CMT_GNU_CONSTEXPR inline u32 bitrev_using_table(u32 x)
 
 CMT_GNU_CONSTEXPR inline u32 bitrev_using_table(u32 x, size_t bits)
 {
-    constexpr size_t bitrev_table_log2N = ilog2(arraysize(data::bitrev_table));
     if (bits > bitrev_table_log2N)
         return bitreverse<32>(x) >> (32 - bits);
 
@@ -65,7 +65,6 @@ CMT_GNU_CONSTEXPR inline u32 bitrev_using_table(u32 x, size_t bits)
 
 CMT_GNU_CONSTEXPR inline u32 dig4rev_using_table(u32 x, size_t bits)
 {
-    constexpr size_t bitrev_table_log2N = ilog2(arraysize(data::bitrev_table));
     if (bits > bitrev_table_log2N)
         return digitreverse4<32>(x) >> (32 - bits);
 

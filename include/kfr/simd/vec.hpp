@@ -167,16 +167,23 @@ struct compoundcast<vec<vec<vec<T, N1>, N2>, N3>>
 
     static vec<vec<vec<T, N1>, N2>, N3> from_flat(const vec<T, N1 * N2 * N3>& x) { return x.v; }
 };
+
+template <typename T, size_t N_>
+inline constexpr size_t vec_alignment =
+    const_max(alignof(intrinsics::simd<typename compound_type_traits<T>::deep_subtype,
+                                       const_max(size_t(1), N_) * compound_type_traits<T>::deep_width>),
+              const_min(size_t(platform<>::native_vector_alignment),
+                        next_poweroftwo(sizeof(typename compound_type_traits<T>::deep_subtype) *
+                                        const_max(size_t(1), N_) * compound_type_traits<T>::deep_width)));
+
 } // namespace internal
 
-template <typename T, size_t N>
-struct alignas(force_compiletime_size_t<
-               const_max(alignof(intrinsics::simd<typename compound_type_traits<T>::deep_subtype,
-                                                  N * compound_type_traits<T>::deep_width>),
-                         const_min(size_t(platform<>::native_vector_alignment),
-                                   next_poweroftwo(sizeof(typename compound_type_traits<T>::deep_subtype) *
-                                                   N * compound_type_traits<T>::deep_width)))>) vec
+template <typename T, size_t N_>
+struct alignas(internal::vec_alignment<T, N_>) vec
 {
+    static_assert(N_ > 0, "vec<T, N>: vector width cannot be zero");
+
+    constexpr static inline size_t N = const_max(size_t(1), N_);
     static constexpr vec_shape<T, N> shape() CMT_NOEXCEPT { return {}; }
 
     // type and size
@@ -187,8 +194,8 @@ struct alignas(force_compiletime_size_t<
     using ST          = typename compound_type_traits<T>::deep_subtype;
     using scalar_type = ST;
 
-    constexpr static size_t SW = compound_type_traits<T>::deep_width;
-    constexpr static size_t SN = N * SW;
+    constexpr static inline size_t SW = compound_type_traits<T>::deep_width;
+    constexpr static inline size_t SN = N * SW;
 
     constexpr static size_t scalar_size() CMT_NOEXCEPT { return SN; }
 

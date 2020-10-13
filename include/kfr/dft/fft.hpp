@@ -291,8 +291,13 @@ protected:
             }
             else
             {
-                stages[depth]->execute(cbool<inverse>, select_out(depth, out, scratch),
-                                       select_in(depth, out, in, scratch, in_scratch), temp);
+                size_t offset   = 0;
+                while (offset < this->size)
+                {
+                    stages[depth]->execute(cbool<inverse>, select_out(depth, out, scratch) + offset,
+                                       select_in(depth, out, in, scratch, in_scratch) + offset, temp);
+                    offset += stages[depth]->stage_size;
+                }
                 depth++;
             }
         }
