@@ -1,6 +1,6 @@
 jobs:
 - job: Windows_MSVC_x86_64_AVX512_Clang10_Release
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   pool:
     vmImage: 'windows-2019'
   steps:
@@ -19,7 +19,7 @@ jobs:
       ci\run.cmd build-release -DENABLE_CAPI_BUILD=ON -DARCH_TESTS=ON -DENABLE_DFT_MULTIARCH=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DUSE_SDE=ON -DCPU_ARCH=sse2 -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release -DDEBUG_CMAKE=ON -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
 
 - job: Windows_MSVC_x86_AVX512_Clang10_Release
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   pool:
     vmImage: 'windows-2019'
   steps:
@@ -38,7 +38,7 @@ jobs:
       ci\run.cmd build-release -DENABLE_CAPI_BUILD=ON -DARCH_TESTS=ON -DENABLE_DFT_MULTIARCH=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DUSE_SDE=ON -DCPU_ARCH=sse2 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Release -DDEBUG_CMAKE=ON -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
 
 - job: Linux_x86_64_Clang6
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   pool:
     vmImage: 'ubuntu-16.04'
   steps:
@@ -52,7 +52,7 @@ jobs:
       ci/run.sh build-release -DARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DCPU_ARCH=avx2 -DUSE_SDE=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release
       
 - job: Linux_x86_64_Clang8
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   pool:
     vmImage: 'ubuntu-18.04'
   steps:
@@ -66,7 +66,7 @@ jobs:
       ci/run.sh build-release -DENABLE_CAPI_BUILD=ON -DARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DCPU_ARCH=avx2 -DUSE_SDE=ON -DCMAKE_CXX_COMPILER=clang++-8 -DCMAKE_BUILD_TYPE=Release
 
 - job: Linux_x86_64_GCC7
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   pool:
     vmImage: 'ubuntu-16.04'
   steps:
@@ -77,7 +77,7 @@ jobs:
       ci/run.sh build-release -DCPU_ARCH=avx -DENABLE_DFT=OFF -DCMAKE_CXX_COMPILER=g++-7 -DCMAKE_BUILD_TYPE=Release
 
 - job: Linux_x86_64_GCC8
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   pool:
     vmImage: 'ubuntu-16.04'
   steps:
@@ -92,7 +92,7 @@ jobs:
       ci/run.sh build-release -DARCH_TESTS=sse2,sse3,sse41,avx,avx2 -DUSE_SDE=ON -DCPU_ARCH=avx -DENABLE_DFT=OFF -DCMAKE_CXX_COMPILER=g++-8 -DCMAKE_BUILD_TYPE=Release
       
 - job: Linux_x86_64_GCC9
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   pool:
     vmImage: 'ubuntu-16.04'
   steps:
@@ -107,7 +107,7 @@ jobs:
       ci/run.sh build-release -DARCH_TESTS=sse2,sse3,sse41,avx,avx2 -DUSE_SDE=ON  -DCPU_ARCH=avx2 -DENABLE_DFT=OFF -DCMAKE_CXX_COMPILER=g++-9 -DCMAKE_BUILD_TYPE=Release
 
 - job: Linux_ARM_Clang_Release
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   pool:
     vmImage: 'ubuntu-16.04'
   steps:
@@ -117,7 +117,7 @@ jobs:
       ci/run.sh build-release -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake -DARCH_FLAGS=-DLIBC_WORKAROUND_GETS=1
 
 - job: Linux_ARM64_Clang_Release
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   pool:
     vmImage: 'ubuntu-16.04'
   steps:
@@ -127,7 +127,7 @@ jobs:
       ci/run.sh build-release -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake -DARCH_FLAGS=-DLIBC_WORKAROUND_GETS=1
 
 - job: macOS15_x86_64_Clang_Release
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   strategy:
     matrix:
       xcode12:
@@ -144,7 +144,7 @@ jobs:
       ci/run.sh build-release -DENABLE_CAPI_BUILD=ON -DARCH_TESTS=sse2,ssse3,sse41,avx -DCPU_ARCH=detect -DENABLE_DFT_MULTIARCH=ON -DCMAKE_BUILD_TYPE=Release      
 
 - job: macOS_x86_64_Clang_Release
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   strategy:
     matrix:
       xcode11:
@@ -174,7 +174,7 @@ jobs:
       ci/run.sh build-release -DENABLE_CAPI_BUILD=ON -DUSE_SDE=ON -DARCH_TESTS=sse2,ssse3,sse41,avx,avx2,avx512 -DCPU_ARCH=sse2 -DENABLE_DFT_MULTIARCH=ON -DCMAKE_BUILD_TYPE=Release      
 
 - job: iOS_ARM_Clang_Release
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   pool:
     vmImage: 'macOS-10.15'
   steps:
@@ -185,7 +185,7 @@ jobs:
       ci/run.sh build-release -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.cmake -DCMAKE_BUILD_TYPE=Release -DIOS_PLATFORM=OS -DIOS_ARCH=armv7 -DCMAKE_MAKE_PROGRAM=/usr/local/bin/ninja -DSKIP_TESTS=ON
 
 - job: iOS_ARM64_Clang_Release
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   pool:
     vmImage: 'macOS-10.15'
   steps:
@@ -196,7 +196,7 @@ jobs:
       ci/run.sh build-release -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.cmake -DCMAKE_BUILD_TYPE=Release -DIOS_PLATFORM=OS64 -DIOS_ARCH=arm64 -DCMAKE_MAKE_PROGRAM=/usr/local/bin/ninja -DSKIP_TESTS=ON
 
 - job: Android_ARMv7_Clang_Release
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   pool:
     vmImage: 'vs2017-win2016'
   steps:
@@ -210,7 +210,7 @@ jobs:
       ci\run.cmd build-release -DCMAKE_TOOLCHAIN_FILE="%ANDROID_HOME%\ndk-bundle\build\cmake\android.toolchain.cmake" -DANDROID_ABI=armeabi-v7a -DANDROID_ARM_NEON=TRUE -DSKIP_TESTS=ON -DCMAKE_BUILD_TYPE=Release
 
 - job: Android_AArch64_Clang_Release
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   pool:
     vmImage: 'vs2017-win2016'
   steps:
@@ -224,7 +224,7 @@ jobs:
       ci\run.cmd build-release -DCMAKE_TOOLCHAIN_FILE="%ANDROID_HOME%\ndk-bundle\build\cmake\android.toolchain.cmake" -DANDROID_ABI=arm64-v8a -DANDROID_ARM_NEON=TRUE -DSKIP_TESTS=ON -DCMAKE_BUILD_TYPE=Release
 
 - job: Windows_MinGW_x86_Clang10_Release
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   pool:
     vmImage: 'vs2017-win2016'
   steps:
@@ -239,7 +239,7 @@ jobs:
       call C:\tools\msys64\msys2_shell.cmd -defterm -mingw32 -no-start -full-path -here -c "ci/run.sh build-release -DCMAKE_CXX_COMPILER=""C:/Program Files/LLVM/bin/clang++.exe"" -DCPU_ARCH=avx -DCMAKE_CXX_FLAGS=--target=i686-w64-windows-gnu -DCMAKE_BUILD_TYPE=Release"
 
 - job: Windows_MinGW_x86_64_Clang10_Release
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   pool:
     vmImage: 'vs2017-win2016'
   steps:
@@ -254,7 +254,7 @@ jobs:
       call C:\tools\msys64\msys2_shell.cmd -defterm -mingw64 -no-start -full-path -here -c "ci/run.sh build-release -DCMAKE_CXX_COMPILER=""C:/Program Files/LLVM/bin/clang++.exe"" -DCPU_ARCH=avx -DCMAKE_CXX_FLAGS=--target=x86_64-w64-windows-gnu -DCMAKE_BUILD_TYPE=Release"
 
 - job: Windows_MSVC_x86_64_AVX512_MSVC2017_Release
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   pool:
     vmImage: 'vs2017-win2016'
   steps:
@@ -273,7 +273,7 @@ jobs:
       ci\run.cmd build-release -DARCH_TESTS=ON -DUSE_SDE=ON -DCPU_ARCH=avx512 -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
 
 - job: Windows_MSVC_x86_AVX512_MSVC2017_Release
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   pool:
     vmImage: 'vs2017-win2016'
   steps:
@@ -292,7 +292,7 @@ jobs:
       ci\run.cmd build-release -DARCH_TESTS=OFF -DUSE_SDE=ON -DCPU_ARCH=avx512 -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
 
 - job: Windows_MSVC2019_x86_64_Release
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   pool:
     vmImage: 'windows-2019'
   steps:
