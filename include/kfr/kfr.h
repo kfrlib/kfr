@@ -81,3 +81,7 @@ constexpr inline const char version_full[] = KFR_VERSION_FULL;
 #if defined CMT_ARCH_ARM && !defined CMT_ARCH_NEON && !defined CMT_FORCE_GENERIC_CPU
 #error "ARM builds require NEON support. Add -march=native for native build or skip the check with CMT_FORCE_GENERIC_CPU=1"
 #endif
+
+#if defined CMT_ARCH_ARM && !defined CMT_COMPILER_CLANG && !defined CMT_FORCE_NON_CLANG
+#error "ARM builds require Clang compiler. Disable checking with CMT_FORCE_NON_CLANG"
+#endif
