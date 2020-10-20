@@ -978,7 +978,7 @@ KFR_INTRINSIC void generate_real_twiddles(dft_plan_real<T>* self, size_t size)
 }
 
 template <typename T>
-#if (defined CMT_ARCH_X32 && defined __clang__) && ((defined __APPLE__) || (__clang_major__ == 8))
+#if (defined CMT_ARCH_X32 && defined CMT_ARCH_X86 && defined __clang__) && ((defined __APPLE__) || (__clang_major__ == 8))
 // Fix for Clang 8.0 bug (x32 with FMA instructions)
 // Xcode has different versions but x86 is very rare on macOS these days, 
 // so disable inlining and FMA for x32 macOS and Clang 8.x
