@@ -15,7 +15,7 @@ def gen_ticks(stop, start=10):
     for s in range(1, 10):
         if start * s > stop:
             yield stop
-            raise StopIteration
+            return
         yield start * s
     for t in gen_ticks(stop, start * 10):
         yield t
@@ -25,7 +25,7 @@ def gen_tick_labels(stop, start=10):
     for s in range(1, 10):
         if start * s > stop:
             yield (str(int(stop)) + 'Hz').replace('000Hz', 'kHz')
-            raise StopIteration
+            return
         yield ''
     for t in gen_tick_labels(stop, start * 10):
         yield t
