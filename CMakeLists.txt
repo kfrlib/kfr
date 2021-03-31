@@ -47,10 +47,12 @@ message(
 )
 message(STATUS CMAKE_SYSTEM_PROCESSOR = ${CMAKE_SYSTEM_PROCESSOR})
 
+set(X86 FALSE)
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
     set(X86 TRUE)
-else ()
-    set(X86 FALSE)
+endif ()
+if (CMAKE_OSX_ARCHITECTURES MATCHES "x86_64")
+    set(X86 TRUE)
 endif ()
 
 if (X86)

@@ -1,7 +1,6 @@
+if (X86)
 
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
-
-    function(target_set_arch TARGET MODE ARCH)    
+    function(target_set_arch TARGET MODE ARCH)
 
         set(ARCH_FLAGS_GNU_generic -DCMT_FORCE_GENERIC_CPU)
         set(ARCH_FLAGS_GNU_sse2    -msse2)
