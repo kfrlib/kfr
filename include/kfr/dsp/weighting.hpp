@@ -46,7 +46,7 @@ KFR_INTRINSIC T weight_a_unnorm(T f)
 }
 
 template <typename T>
-const static T weight_a_gain = reciprocal(weight_a_unnorm(T(1000.0)));
+constexpr inline T weight_a_gain = T(1.25889662908332766733);
 
 template <typename T>
 KFR_INTRINSIC T aweighting(T f)
@@ -65,7 +65,7 @@ KFR_INTRINSIC T weight_b_unnorm(T f)
 }
 
 template <typename T>
-const static T weight_b_gain = reciprocal(weight_b_unnorm(T(1000.0)));
+constexpr inline T weight_b_gain = T(1.01971824783723263863);
 
 template <typename T>
 KFR_INTRINSIC T bweighting(T f)
@@ -84,7 +84,7 @@ KFR_INTRINSIC T weight_c_unnorm(T f)
 }
 
 template <typename T>
-const static T weight_c_gain = reciprocal(weight_c_unnorm(T(1000.0)));
+constexpr inline T weight_c_gain = T(1.00714583514109112805);
 
 template <typename T>
 KFR_INTRINSIC T cweighting(T f)
