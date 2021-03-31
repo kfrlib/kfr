@@ -126,7 +126,7 @@ void plot_show(const std::string& name, const T& x, const std::string& options =
     std::string ss;
     ss += python_prologue() + "data = [\n";
     for (size_t i = 0; i < array.size(); i++)
-        ss += as_string(fmt<'g', 20, 17>(internal_generic::flush_to_zero(array[i])), ",\n");
+        ss += as_string(cometa::fmt<'g', 20, 17>(internal_generic::flush_to_zero(array[i])), ",\n");
     ss += "]\n";
 
     ss += "dspplot.plot(" + concat_args("data", options) + ")\n";
@@ -156,7 +156,7 @@ void perfplot_show(const std::string& name, T1&& data, T2&& labels, const std::s
         auto subarray = make_array_ref(array[i]);
         ss += "[\n";
         for (size_t i = 0; i < subarray.size(); i++)
-            ss += as_string("    ", fmt<'g', 20, 17>(subarray[i]), ",\n");
+            ss += as_string("    ", cometa::fmt<'g', 20, 17>(subarray[i]), ",\n");
         ss += "],";
     }
     ss += "]\n";
