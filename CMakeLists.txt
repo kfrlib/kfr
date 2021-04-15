@@ -16,10 +16,6 @@
 
 cmake_minimum_required(VERSION 3.1)
 
-set(CMAKE_CXX_FLAGS
-    " ${CMAKE_CXX_FLAGS}"
-    CACHE STRING "compile flags" FORCE)
-
 project(kfr CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -32,35 +28,12 @@ if (WIN32 AND CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
         CACHE STRING "Reset install prefix on Win32" FORCE)
 endif ()
 
-if (WIN32)
-    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-endif ()
-
-set(CMAKE_CXX_VISIBILITY_PRESET "default")
-set(CMAKE_C_VISIBILITY_PRESET "default")
-
-message(STATUS "Install prefix = ${CMAKE_INSTALL_PREFIX}")
-
-message(
-    STATUS
-        "C++ compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} ${CMAKE_CXX_COMPILER} "
-)
-message(STATUS CMAKE_SYSTEM_PROCESSOR = ${CMAKE_SYSTEM_PROCESSOR})
-
 set(X86 FALSE)
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
     set(X86 TRUE)
 endif ()
 if (CMAKE_OSX_ARCHITECTURES MATCHES "x86_64")
     set(X86 TRUE)
-endif ()
-
-if (X86)
-    message(STATUS X86)
-endif ()
-
-if (MSVC)
-    message(STATUS MSVC)
 endif ()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL
@@ -286,7 +259,6 @@ if (ENABLE_DFT)
 endif ()
 append_defines_from(kfr_io)
 
-message(STATUS kfr_defines = "${kfr_defines}")
 string(REPLACE "=" " " kfr_defines "${kfr_defines}")
 string(REPLACE ";" "\n#define " kfr_defines "${kfr_defines}")
 set(kfr_defines "#define ${kfr_defines}\n")

@@ -16,6 +16,13 @@
 
 cmake_minimum_required(VERSION 3.1)
 
+if (WIN32)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+endif ()
+
+set(CMAKE_CXX_VISIBILITY_PRESET "default")
+set(CMAKE_C_VISIBILITY_PRESET "default")
+
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-fdiagnostics-absolute-paths)
 endif ()
