@@ -1089,14 +1089,23 @@ KFR_INTRINSIC void butterfly6(cvec<T, N>& a0, cvec<T, N>& a1, cvec<T, N>& a2, cv
 }
 
 template <typename T, bool inverse = false>
-const static cvec<T, 1> tw9_1 = { T(0.76604444311897803520239265055541),
+static constexpr KFR_INTRINSIC cvec<T, 1> tw9_1()
+{
+    return { T(0.76604444311897803520239265055541),
                                   (inverse ? -1 : 1) * T(-0.64278760968653932632264340990727) };
+}
 template <typename T, bool inverse = false>
-const static cvec<T, 1> tw9_2 = { T(0.17364817766693034885171662676931),
+static constexpr KFR_INTRINSIC cvec<T, 1> tw9_2()
+{
+    return { T(0.17364817766693034885171662676931),
                                   (inverse ? -1 : 1) * T(-0.98480775301220805936674302458952) };
+}
 template <typename T, bool inverse = false>
-const static cvec<T, 1> tw9_4 = { T(-0.93969262078590838405410927732473),
+static constexpr KFR_INTRINSIC cvec<T, 1> tw9_4()
+{
+    return { T(-0.93969262078590838405410927732473),
                                   (inverse ? -1 : 1) * T(-0.34202014332566873304409961468226) };
+}
 
 template <size_t N, bool inverse = false, typename T>
 KFR_INTRINSIC void butterfly9(const cvec<T, N>& a0, const cvec<T, N>& a1, const cvec<T, N>& a2,
@@ -1114,10 +1123,10 @@ KFR_INTRINSIC void butterfly9(const cvec<T, N>& a0, const cvec<T, N>& a1, const 
     split(a345, t3, t4, t5);
     split(a678, t6, t7, t8);
 
-    t4 = cmul(t4, tw9_1<T, inverse>);
-    t5 = cmul(t5, tw9_2<T, inverse>);
-    t7 = cmul(t7, tw9_2<T, inverse>);
-    t8 = cmul(t8, tw9_4<T, inverse>);
+    t4 = cmul(t4, tw9_1<T, inverse>());
+    t5 = cmul(t5, tw9_2<T, inverse>());
+    t7 = cmul(t7, tw9_2<T, inverse>());
+    t8 = cmul(t8, tw9_4<T, inverse>());
 
     cvec<T, N* 3> t036 = concat(t0, t3, t6);
     cvec<T, N* 3> t147 = concat(t1, t4, t7);
