@@ -1809,3 +1809,4 @@ KFR_INTRINSIC void cdigitreverse4_write<false, f64, 32>(complex<f64>* dest, cons
 } // namespace kfr
 
 CMT_PRAGMA_MSVC(warning(pop))
+
