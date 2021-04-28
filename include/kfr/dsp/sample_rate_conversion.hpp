@@ -123,7 +123,7 @@ public:
                 jj = jj - taps + 1;
         }
 
-        const T s = reciprocal(sum(filter)) * interpolation_factor * scale;
+        const T s = reciprocal(sum(filter)) * static_cast<ftype>(interpolation_factor * scale);
         filter    = filter * s;
     }
 

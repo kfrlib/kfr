@@ -16,6 +16,7 @@
 
 cmake_minimum_required(VERSION 3.1)
 
+
 add_definitions(-DKFR_TESTING=1)
 add_definitions(-DKFR_SRC_DIR=\"${CMAKE_SOURCE_DIR}\")
 
