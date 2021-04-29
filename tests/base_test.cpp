@@ -105,6 +105,11 @@ TEST(test_gen_expj)
                                       // In most cases error is much lower (less than 0.00001)
 }
 
+TEST(ctti)
+{
+    CHECK(cometa::type_name<float>() == std::string("float"));
+}
+
 } // namespace CMT_ARCH_NAME
 
 #ifndef KFR_NO_MAIN
