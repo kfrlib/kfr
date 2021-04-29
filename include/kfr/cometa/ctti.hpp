@@ -28,7 +28,7 @@ constexpr inline type_id_t typeident_impl() CMT_NOEXCEPT
 }
 
 #ifdef CMT_COMPILER_CLANG
-constexpr size_t typename_prefix  = sizeof("auto cometa::ctype_name() [T = ") - 1;
+constexpr size_t typename_prefix  = sizeof("auto __cdecl cometa::ctype_name(void) [T = ") - 1;
 constexpr size_t typename_postfix = sizeof("]") - 1;
 #elif CMT_COMPILER_MSVC
 constexpr size_t typename_prefix  = sizeof("auto __cdecl cometa::ctype_name<") - 1;
