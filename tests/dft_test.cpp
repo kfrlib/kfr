@@ -106,6 +106,24 @@ TEST(fft_real)
     CHECK(rms(rev - in) <= 0.00001f);
 }
 
+TEST(fft_real_not_size_4N)
+{
+    kfr::univector<double, 6> in = counter();
+    auto out = realdft(in);
+    kfr::univector<kfr::complex<double>> expected { 
+        15.0, { -3, 5.19615242}, {-3, +1.73205081}, -3.0 };
+    CHECK(rms(cabs(out - expected)) <= 0.00001f);
+    kfr::univector<double, 6> rev = irealdft(out) / 6;
+    CHECK(rms(rev - in) <= 0.00001f);
+
+    random_bit_generator gen(2247448713, 915890490, 864203735, 2982561);
+    constexpr size_t size = 66;
+    kfr::univector<double, size> in2 = gen_random_range<double>(gen, -1.0, +1.0);
+    kfr::univector<kfr::complex<double>, size / 2 + 1> out2 = realdft(in2);
+    kfr::univector<double, size> rev2                       = irealdft(out2) / size;
+    CHECK(rms(rev2 - in2) <= 0.00001f);
+}
+
 TEST(fft_accuracy)
 {
     testo::active_test()->show_progress = true;
