@@ -102,8 +102,8 @@ jobs:
   steps:
   - bash: |
       set -e
-      sudo deb http://apt.llvm.org/focal/ llvm-toolchain-focal-13 main
       wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+      echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-13 main" | sudo tee /etc/apt/sources.list.d/llvm.list
       sudo apt-get update && sudo apt-get install -y ninja-build libmpfr-dev clang-13
       ci/run.sh build-release -DCPU_ARCH=avx2 -DCMAKE_CXX_COMPILER=clang++-13 -DCMAKE_BUILD_TYPE=Release
 
@@ -159,25 +159,29 @@ jobs:
       sudo ln -s $(Agent.TempDirectory)/sde-bin/sde64 /usr/bin/sde
       ci/run.sh build-release -DARCH_TESTS=sse2,sse3,sse41,avx,avx2 -DUSE_SDE=ON  -DCPU_ARCH=avx2 -DENABLE_DFT=OFF -DCMAKE_CXX_COMPILER=g++-10 -DCMAKE_BUILD_TYPE=Release
 
-- job: Linux_ARM_Clang_Release
+- job: Linux_ARM_Clang9_Release
   timeoutInMinutes: 180
   pool:
     vmImage: 'ubuntu-18.04'
   steps:
   - bash: |
       set -e
-      sudo apt-get update && sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf qemu
-      ci/run.sh build-release -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake -DARCH_FLAGS=-DLIBC_WORKAROUND_GETS=1
+      sudo apt-get update && sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf qemu clang-9
+      sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-9 100
+      sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-9 100
+      ci/run.sh build-release -DENABLE_TESTS=ON -DCMAKE_BUILD_TYPE=Release -DGCC_VER=7.5.0 -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
 
-- job: Linux_ARM64_Clang_Release
+- job: Linux_ARM64_Clang9_Release
   timeoutInMinutes: 180
   pool:
     vmImage: 'ubuntu-18.04'
   steps:
   - bash: |
       set -e
-      sudo apt-get update && sudo apt-get install -y ninja-build g++-aarch64-linux-gnu qemu
-      ci/run.sh build-release -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake -DARCH_FLAGS=-DLIBC_WORKAROUND_GETS=1
+      sudo apt-get update && sudo apt-get install -y ninja-build g++-aarch64-linux-gnu qemu clang-9
+      sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-9 100
+      sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-9 100
+      ci/run.sh build-release -DENABLE_TESTS=ON -DCMAKE_BUILD_TYPE=Release -DGCC_VER=7.5.0 -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
 
 - job: macOSBigSur_x86_64_Clang_Release
   timeoutInMinutes: 180
@@ -329,6 +333,7 @@ jobs:
       call "C:\Program Files\Microsoft Visual Studio\2022\Preview\VC\Auxiliary\Build\vcvars64.bat"
       set PATH=%PATH:C:\tools\mingw64\bin;=%
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
+      set PATH=%PATH:C:\Program Files\LLVM\bin;=%
       set PATH=%PATH:C:\Strawberry\c\bin;=%
       ci\run.cmd build-release -DARCH_TESTS=OFF -DCPU_ARCH=detect -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
 
@@ -347,6 +352,7 @@ jobs:
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
       set PATH=%PATH:C:\tools\mingw64\bin;=%
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
+      set PATH=%PATH:C:\Program Files\LLVM\bin;=%
       set PATH=%PATH:C:\Strawberry\c\bin;=%
       set PATH=C:\sde;%PATH%
       ci\run.cmd build-release -DARCH_TESTS=ON -DUSE_SDE=ON -DCPU_ARCH=avx512 -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
@@ -366,6 +372,7 @@ jobs:
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
       set PATH=%PATH:C:\tools\mingw64\bin;=%
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
+      set PATH=%PATH:C:\Program Files\LLVM\bin;=%
       set PATH=%PATH:C:\Strawberry\c\bin;=%
       set PATH=C:\sde;%PATH%
       ci\run.cmd build-release -DARCH_TESTS=OFF -DUSE_SDE=ON -DCPU_ARCH=avx512 -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
@@ -382,5 +389,6 @@ jobs:
       call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
       set PATH=%PATH:C:\tools\mingw64\bin;=%
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
+      set PATH=%PATH:C:\Program Files\LLVM\bin;=%
       set PATH=%PATH:C:\Strawberry\c\bin;=%
       ci\run.cmd build-release -DARCH_TESTS=OFF -DCPU_ARCH=detect -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
