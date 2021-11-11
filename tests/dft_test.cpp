@@ -6,6 +6,7 @@
 
 #include <kfr/testo/testo.hpp>
 
+#include <chrono>
 #include <kfr/base.hpp>
 #include <kfr/dft.hpp>
 #include <kfr/dsp.hpp>
@@ -21,6 +22,58 @@ namespace CMT_ARCH_NAME
 constexpr ctypes_t<float, double> dft_float_types{};
 #else
 constexpr ctypes_t<float> dft_float_types{};
+#endif
+
+#ifdef __clang__
+
+static void full_barrier() { asm volatile("mfence" ::: "memory"); }
+static void dont_optimize(const void* in) { asm volatile("" : "+m"(in)); }
+
+template <typename T>
+static void perf_test_t(int size)
+{
+    print("[PERFORMANCE] DFT ", fmt<'s', 6>(type_name<T>()), " ", fmt<'d', 6>(size), "...");
+    random_bit_generator gen1(2247448713, 915890490, 864203735, 2982561);
+    random_bit_generator gen2(2982561, 2247448713, 915890490, 864203735);
+    std::chrono::high_resolution_clock::duration duration(0);
+    dft_plan<T> dft(size);
+    univector<u8> tmp(dft.temp_size);
+    uint64_t counter = 0;
+    while (duration < std::chrono::seconds(1))
+    {
+        univector<complex<T>> data(size);
+        data = make_complex(gen_random_range<T>(gen1, -1.0, +1.0), gen_random_range<T>(gen2, -1.0, +1.0));
+        full_barrier();
+        auto start = std::chrono::high_resolution_clock::now();
+        dft.execute(data, data, tmp);
+
+        full_barrier();
+        duration += std::chrono::high_resolution_clock::now() - start;
+        dont_optimize(data.data());
+        ++counter;
+    }
+    double opspersecond = counter / (std::chrono::nanoseconds(duration).count() / 1'000'000'000.0);
+    println(" ", fmt<'f', 12, 1>(opspersecond), " ops/second");
+}
+
+static void perf_test(int size)
+{
+    perf_test_t<float>(size);
+    perf_test_t<double>(size);
+}
+
+TEST(test_performance)
+{
+    for (int size = 16; size <= 16384; size <<= 1)
+    {
+        perf_test(size);
+    }
+
+    perf_test(210);
+    perf_test(3150);
+    perf_test(211);
+    perf_test(3163);
+}
 #endif
 
 TEST(test_convolve)
@@ -126,7 +179,8 @@ TEST(fft_accuracy)
 
     testo::matrix(named("type") = dft_float_types, //
                   named("size") = sizes, //
-                  [&gen](auto type, size_t size) {
+                  [&gen](auto type, size_t size)
+                  {
                       using float_type      = type_of<decltype(type)>;
                       const double min_prec = 0.000001 * std::log(size) * size;
 

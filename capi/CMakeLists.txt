@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with KFR.
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.12)
 
 if (WIN32)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
@@ -57,7 +57,7 @@ function (add_c_library ARCH)
         ${CMAKE_CURRENT_SOURCE_DIR}/../include/kfr/dsp/impl/dsp-impl.cpp)
     target_link_libraries(kfr_capi_${ARCH} kfr)
     target_set_arch(kfr_capi_${ARCH} PRIVATE ${ARCH})
-    target_compile_options(kfr_capi_${ARCH} PRIVATE -Xclang -ffast-math)
+    target_compile_options(kfr_capi_${ARCH} PRIVATE "SHELL:-Xclang -ffp-contract=fast")
     target_link_libraries(kfr_capi_all INTERFACE kfr_capi_${ARCH})
 
     if (NOT WIN32)
@@ -69,7 +69,7 @@ function (add_c_library ARCH)
                      PROPERTY POSITION_INDEPENDENT_CODE 1)
         target_link_libraries(kfr_capi_${ARCH}_pic kfr)
         target_set_arch(kfr_capi_${ARCH}_pic PRIVATE ${ARCH})
-        target_compile_options(kfr_capi_${ARCH}_pic PRIVATE -Xclang -ffast-math)
+        target_compile_options(kfr_capi_${ARCH}_pic PRIVATE "SHELL:-Xclang -ffp-contract=fast")
 
         target_link_libraries(kfr_capi_all_pic INTERFACE kfr_capi_${ARCH}_pic)
     endif ()

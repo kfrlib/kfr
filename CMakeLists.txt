@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with KFR.
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.12)
 
 project(kfr CXX)
 
@@ -131,7 +131,7 @@ if (APPLE)
 endif ()
 if (NOT IOS)
     if (CLANG)
-        target_compile_options(kfr INTERFACE -Xclang -mstackrealign)
+        target_compile_options(kfr INTERFACE "SHELL:-Xclang -mstackrealign")
     elseif (NOT MSVC)
         target_compile_options(kfr INTERFACE -mstackrealign)
     endif ()
@@ -180,11 +180,7 @@ endfunction ()
 
 if (ENABLE_DFT)
 
-    if (MSVC)
-        set(KFR_DFT_DEFS -fp:fast)
-    else ()
-        set(KFR_DFT_DEFS -ffast-math)
-    endif ()
+    set(KFR_DFT_DEFS "SHELL:-Xclang -ffp-contract=fast")
 
     if (ENABLE_DFT_MULTIARCH)
         add_library(kfr_dft INTERFACE)
