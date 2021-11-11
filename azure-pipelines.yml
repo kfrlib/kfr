@@ -321,22 +321,6 @@ jobs:
       call C:\tools\msys64\msys2_shell.cmd -defterm -mingw64 -no-start -full-path -here -c "pacman -S --noconfirm mingw64/mingw-w64-x86_64-ninja"
       call C:\tools\msys64\msys2_shell.cmd -defterm -mingw64 -no-start -full-path -here -c "ci/run.sh build-release -DCMAKE_CXX_COMPILER=""C:/Program Files/LLVM/bin/clang++.exe"" -DCPU_ARCH=avx -DCMAKE_CXX_FLAGS=--target=x86_64-w64-windows-gnu -DCMAKE_BUILD_TYPE=Release"
 
-- job: Windows_MSVC2022_x86_64_Release
-  timeoutInMinutes: 180
-  pool:
-    vmImage: 'windows-2022'
-  steps:
-  - script: |
-      choco uninstall mingw
-      choco install ninja
-
-      call "C:\Program Files\Microsoft Visual Studio\2022\Preview\VC\Auxiliary\Build\vcvars64.bat"
-      set PATH=%PATH:C:\tools\mingw64\bin;=%
-      set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
-      set PATH=%PATH:C:\Program Files\LLVM\bin;=%
-      set PATH=%PATH:C:\Strawberry\c\bin;=%
-      ci\run.cmd build-release -DARCH_TESTS=OFF -DCPU_ARCH=detect -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
-
 - job: Windows_MSVC_x86_64_AVX512_MSVC2017_Release
   timeoutInMinutes: 180
   pool:
