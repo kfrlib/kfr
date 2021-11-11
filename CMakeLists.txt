@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with KFR.
 
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.10)
 
 project(kfr CXX)
 
@@ -121,6 +121,12 @@ else ()
     set(PTHREAD_LIB pthread)
 endif ()
 
+if (MSVC AND CLANG)
+    set(CLANG_ARG_PREFIX "SHELL:-Xclang ")
+else ()
+    set(CLANG_ARG_PREFIX "")
+endif ()
+
 # KFR library
 add_library(kfr INTERFACE)
 target_sources(kfr INTERFACE ${KFR_SRC})
@@ -130,10 +136,8 @@ if (APPLE)
     target_compile_options(kfr INTERFACE -faligned-allocation)
 endif ()
 if (NOT IOS)
-    if (CLANG)
-        target_compile_options(kfr INTERFACE "SHELL:-Xclang -mstackrealign")
-    elseif (NOT MSVC)
-        target_compile_options(kfr INTERFACE -mstackrealign)
+    if (NOT MSVC OR CLANG)
+        target_compile_options(kfr INTERFACE "${CLANG_ARG_PREFIX}-mstackrealign")
     endif ()
 endif ()
 if (MSVC)
@@ -148,10 +152,10 @@ if (KFR_STD_COMPLEX)
     target_compile_definitions(kfr INTERFACE -DKFR_STD_COMPLEX)
 endif()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(kfr INTERFACE -Wno-ignored-qualifiers)
+    target_compile_options(kfr INTERFACE -Wno-ignored-qualifiers -Wno-psabi)
 endif ()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(kfr INTERFACE -Wno-c++1z-extensions)
+    target_compile_options(kfr INTERFACE -Wno-c++1z-extensions -Wno-psabi)
 endif ()
 
 if (NOT ENABLE_DFT)
@@ -180,7 +184,7 @@ endfunction ()
 
 if (ENABLE_DFT)
 
-    set(KFR_DFT_DEFS "SHELL:-Xclang -ffp-contract=fast")
+    set(KFR_DFT_DEFS "${CLANG_ARG_PREFIX}-ffp-contract=fast")
 
     if (ENABLE_DFT_MULTIARCH)
         add_library(kfr_dft INTERFACE)

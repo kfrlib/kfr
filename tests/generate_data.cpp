@@ -15,9 +15,6 @@
 constexpr size_t points      = 10000;
 constexpr size_t points_2arg = 100;
 
-constexpr size_t fuzz_points      = 10000;
-constexpr size_t fuzz_points_2arg = 100;
-
 using namespace kfr;
 
 using testo::test_data_entry;

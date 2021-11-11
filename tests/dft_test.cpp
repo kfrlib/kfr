@@ -24,7 +24,7 @@ constexpr ctypes_t<float, double> dft_float_types{};
 constexpr ctypes_t<float> dft_float_types{};
 #endif
 
-#ifdef __clang__
+#if defined(__clang__) && defined(CMT_ARCH_X86)
 
 static void full_barrier() { asm volatile("mfence" ::: "memory"); }
 static void dont_optimize(const void* in) { asm volatile("" : "+m"(in)); }
