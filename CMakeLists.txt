@@ -66,6 +66,8 @@ option(DISABLE_CLANG_EXTENSIONS "Disable Clang vector extensions" OFF)
 option(KFR_EXTENDED_TESTS "Extended tests (up to hour)" OFF)
 option(SKIP_TESTS "Skip tests (only build)" OFF)
 option(KFR_STD_COMPLEX "Use std::complex instead of custom complex type" OFF)
+option(KFR_ENABLE_INSTALL "Enable installation of targets" ON)
+
 mark_as_advanced(ENABLE_ASMTEST)
 mark_as_advanced(REGENERATE_TESTS)
 mark_as_advanced(DISABLE_CLANG_EXTENSIONS)
@@ -233,20 +235,6 @@ add_library(kfr_io ${KFR_IO_SRC})
 target_link_libraries(kfr_io kfr)
 target_link_libraries(kfr_io use_arch)
 
-install(
-    TARGETS kfr kfr_io
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION bin)
-
-if (ENABLE_CAPI_BUILD)
-    install(
-        TARGETS kfr_capi
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib
-        RUNTIME DESTINATION bin)
-endif ()
-
 set(kfr_defines)
 
 function(append_defines_from target)
@@ -269,43 +257,59 @@ set(kfr_defines "#define ${kfr_defines}\n")
 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/kfr_config.h "${kfr_defines}")
 
-if (ENABLE_DFT)
-    if (ENABLE_DFT_MULTIARCH)
-        install(
-            TARGETS kfr_dft_sse2 kfr_dft_sse41 kfr_dft_avx kfr_dft_avx2
-                    kfr_dft_avx512
-            ARCHIVE DESTINATION lib
-            LIBRARY DESTINATION lib
-            RUNTIME DESTINATION bin)
-    else ()
-        install(
-            TARGETS kfr_dft
-            ARCHIVE DESTINATION lib
-            LIBRARY DESTINATION lib
-            RUNTIME DESTINATION bin)
-    endif ()
-endif ()
+if(KFR_ENABLE_INSTALL)
+  install(
+      TARGETS kfr kfr_io
+      ARCHIVE DESTINATION lib
+      LIBRARY DESTINATION lib
+      RUNTIME DESTINATION bin)
 
-install(DIRECTORY include/kfr DESTINATION include)
+  if (ENABLE_CAPI_BUILD)
+      install(
+          TARGETS kfr_capi
+          ARCHIVE DESTINATION lib
+          LIBRARY DESTINATION lib
+          RUNTIME DESTINATION bin)
+  endif ()
 
-install(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/kfr_config.h
-    DESTINATION include/kfr
-    RENAME config.h
-    )
+  if (ENABLE_DFT)
+      if (ENABLE_DFT_MULTIARCH)
+          install(
+              TARGETS kfr_dft_sse2 kfr_dft_sse41 kfr_dft_avx kfr_dft_avx2
+                      kfr_dft_avx512
+              ARCHIVE DESTINATION lib
+              LIBRARY DESTINATION lib
+              RUNTIME DESTINATION bin)
+      else ()
+          install(
+              TARGETS kfr_dft
+              ARCHIVE DESTINATION lib
+              LIBRARY DESTINATION lib
+              RUNTIME DESTINATION bin)
+      endif ()
+  endif ()
 
-# uninstall target
-if (NOT TARGET uninstall)
-    configure_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
-        "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake" IMMEDIATE
-        @ONLY)
+  install(DIRECTORY include/kfr DESTINATION include)
 
-    add_custom_target(
-        uninstall
-        COMMAND ${CMAKE_COMMAND} -P
-                ${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake)
-endif ()
+  install(
+      FILES ${CMAKE_CURRENT_BINARY_DIR}/kfr_config.h
+      DESTINATION include/kfr
+      RENAME config.h
+      )
+
+  # uninstall target
+  if (NOT TARGET uninstall)
+      configure_file(
+          "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
+          "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake" IMMEDIATE
+          @ONLY)
+
+      add_custom_target(
+          uninstall
+          COMMAND ${CMAKE_COMMAND} -P
+                  ${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake)
+  endif ()
+endif()
 
 if (DEBUG_CMAKE)
     get_cmake_property(_variableNames VARIABLES)
