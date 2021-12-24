@@ -260,6 +260,7 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/kfr_config.h "${kfr_defines}")
 if(KFR_ENABLE_INSTALL)
   install(
       TARGETS kfr kfr_io
+      EXPORT kfr-exports
       ARCHIVE DESTINATION lib
       LIBRARY DESTINATION lib
       RUNTIME DESTINATION bin)
@@ -267,6 +268,7 @@ if(KFR_ENABLE_INSTALL)
   if (ENABLE_CAPI_BUILD)
       install(
           TARGETS kfr_capi
+          EXPORT kfr-exports
           ARCHIVE DESTINATION lib
           LIBRARY DESTINATION lib
           RUNTIME DESTINATION bin)
@@ -277,12 +279,14 @@ if(KFR_ENABLE_INSTALL)
           install(
               TARGETS kfr_dft_sse2 kfr_dft_sse41 kfr_dft_avx kfr_dft_avx2
                       kfr_dft_avx512
+              EXPORT kfr-exports
               ARCHIVE DESTINATION lib
               LIBRARY DESTINATION lib
               RUNTIME DESTINATION bin)
       else ()
           install(
               TARGETS kfr_dft
+              EXPORT kfr-exports
               ARCHIVE DESTINATION lib
               LIBRARY DESTINATION lib
               RUNTIME DESTINATION bin)
@@ -296,6 +300,10 @@ if(KFR_ENABLE_INSTALL)
       DESTINATION include/kfr
       RENAME config.h
       )
+
+  install(EXPORT kfr-exports
+          DESTINATION lib/cmake/kfr)
+  export(EXPORT kfr-exports)
 
   # uninstall target
   if (NOT TARGET uninstall)
