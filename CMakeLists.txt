@@ -131,8 +131,11 @@ endif ()
 
 # KFR library
 add_library(kfr INTERFACE)
-target_sources(kfr INTERFACE ${KFR_SRC})
-target_include_directories(kfr INTERFACE include)
+
+target_include_directories(kfr INTERFACE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
 target_compile_options(kfr INTERFACE "$<$<CONFIG:DEBUG>:-DKFR_DEBUG>")
 if (APPLE)
     target_compile_options(kfr INTERFACE -faligned-allocation)
@@ -259,7 +262,7 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/kfr_config.h "${kfr_defines}")
 
 if(KFR_ENABLE_INSTALL)
   install(
-      TARGETS kfr kfr_io
+      TARGETS kfr kfr_io use_arch
       EXPORT kfr-exports
       ARCHIVE DESTINATION lib
       LIBRARY DESTINATION lib
