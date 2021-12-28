@@ -35,7 +35,20 @@
 
 namespace kfr
 {
-#ifdef CMT_ARCH_X86
+#if defined(__EMSCRIPTEN__)
+
+namespace internal_generic
+{
+
+template <size_t = 0>
+cpu_t detect_cpu()
+{
+    return cpu_t::avx1;
+}
+
+}
+
+#elif defined(CMT_ARCH_X86)
 
 struct cpu_features
 {
