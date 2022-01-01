@@ -84,34 +84,4 @@ bool check_assertion(const half_comparison<L>& comparison, const char* expr, con
 #define ASSERT TESTO_ASSERT
 #endif
 
-template <typename OutType, typename InType>
-inline OutType safe_cast(const InType& val)
-{
-    static_assert(std::is_integral<InType>::value && std::is_integral<OutType>::value,
-                  "safe_cast is for numeric types only");
-    if (std::is_signed<InType>::value && std::is_signed<OutType>::value) // S->S
-    {
-        ASSERT(val >= std::numeric_limits<OutType>::min());
-        ASSERT(val <= std::numeric_limits<OutType>::max());
-    }
-    else if (!std::is_signed<InType>::value && !std::is_signed<OutType>::value) // U->U
-    {
-        ASSERT(val <= std::numeric_limits<OutType>::max());
-    }
-    else if (std::is_signed<InType>::value && !std::is_signed<OutType>::value) // S->U
-    {
-        ASSERT(val >= 0);
-        ASSERT(val <= std::numeric_limits<OutType>::max());
-        // val will be converted to an unsigned number for the above comparison.
-        // it's safe because we've already checked that it is positive
-    }
-    else // U->S
-    {
-        ASSERT(val <= std::numeric_limits<OutType>::max());
-        // std::numeric_limits<OutType>::max() will be converted to an unsigned number for the above
-        // comparison. it's also safe here
-    }
-    return static_cast<OutType>(val);
-}
-
 } // namespace testo
