@@ -29,6 +29,7 @@
 #include "../simd/shuffle.hpp"
 #include "../simd/types.hpp"
 #include "../simd/vec.hpp"
+#include "../cometa.hpp"
 
 #include <tuple>
 #ifdef KFR_STD_COMPLEX
@@ -359,7 +360,7 @@ using arg_type = typename internal::arg_impl<decay<T>, T>::value_type;
 template <typename Fn, typename... Args>
 struct function_value_type
 {
-    using type = typename invoke_result<Fn, vec<arg_type<Args>, 1>...>::value_type;
+    using type = typename cometa::invoke_result<Fn, vec<arg_type<Args>, 1>...>::value_type;
 };
 
 template <typename Fn, typename... Args>
