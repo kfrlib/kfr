@@ -103,7 +103,7 @@ endif ()
 include(cmake/target_set_arch.cmake)
 
 add_library(use_arch INTERFACE)
-target_set_arch(use_arch INTERFACE ${CPU_ARCH})
+target_set_arch(use_arch INTERFACE "${CPU_ARCH}")
 
 if (WIN32)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
