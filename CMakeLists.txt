@@ -285,7 +285,7 @@ if(KFR_ENABLE_INSTALL)
       if (ENABLE_DFT_MULTIARCH)
           install(
               TARGETS kfr_dft_sse2 kfr_dft_sse41 kfr_dft_avx kfr_dft_avx2
-                      kfr_dft_avx512
+                      kfr_dft_avx512 kfr_dft kfr_dft_all
               EXPORT kfr-exports
               ARCHIVE DESTINATION lib
               LIBRARY DESTINATION lib
