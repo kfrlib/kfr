@@ -204,12 +204,14 @@ if (ENABLE_DFT)
             INTERFACE -DKFR_DFT_MULTI=1
                       -DCMT_MULTI=1
                       -DCMT_MULTI_ENABLED_SSE2=1
+                      -DCMT_MULTI_ENABLED_SSSE3=1
                       -DCMT_MULTI_ENABLED_SSE41=1
                       -DCMT_MULTI_ENABLED_AVX=1
                       -DCMT_MULTI_ENABLED_AVX2=1
                       -DCMT_MULTI_ENABLED_AVX512=1)
 
         add_arch_library(kfr_dft sse2 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
+        add_arch_library(kfr_dft ssse3 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
         add_arch_library(kfr_dft sse41 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
         add_arch_library(kfr_dft avx "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
         add_arch_library(kfr_dft avx2 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
@@ -284,7 +286,7 @@ if(KFR_ENABLE_INSTALL)
   if (ENABLE_DFT)
       if (ENABLE_DFT_MULTIARCH)
           install(
-              TARGETS kfr_dft_sse2 kfr_dft_sse41 kfr_dft_avx kfr_dft_avx2
+              TARGETS kfr_dft_sse2 kfr_dft_ssse3 kfr_dft_sse41 kfr_dft_avx kfr_dft_avx2
                       kfr_dft_avx512 kfr_dft kfr_dft_all
               EXPORT kfr-exports
               ARCHIVE DESTINATION lib
