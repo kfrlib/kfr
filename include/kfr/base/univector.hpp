@@ -56,9 +56,9 @@ struct abstract_vector : std::array<T, Size>
 };
 
 template <typename T>
-struct abstract_vector<T, tag_dynamic_vector> : std::vector<T, allocator<T>>
+struct abstract_vector<T, tag_dynamic_vector> : std::vector<T, cometa::allocator<T>>
 {
-    using std::vector<T, allocator<T>>::vector;
+    using std::vector<T, cometa::allocator<T>>::vector;
 };
 
 template <typename T>
@@ -388,11 +388,11 @@ struct univector<T, tag_array_ref> : array_ref<T>,
     constexpr univector(univector<T, Tag>& other) : array_ref<T>(other.data(), other.size())
     {
     }
-    template <typename U, univector_tag Tag, KFR_ENABLE_IF(is_same<remove_const<T>, U>&& is_const<T>)>
+    template <typename U, univector_tag Tag, KFR_ENABLE_IF(cometa::is_same<cometa::remove_const<T>, U>&& cometa::is_const<T>)>
     constexpr univector(const univector<U, Tag>& other) : array_ref<T>(other.data(), other.size())
     {
     }
-    template <typename U, univector_tag Tag, KFR_ENABLE_IF(is_same<remove_const<T>, U>&& is_const<T>)>
+    template <typename U, univector_tag Tag, KFR_ENABLE_IF(cometa::is_same<cometa::remove_const<T>, U>&& cometa::is_const<T>)>
     constexpr univector(univector<U, Tag>& other) : array_ref<T>(other.data(), other.size())
     {
     }
@@ -402,7 +402,7 @@ struct univector<T, tag_array_ref> : array_ref<T>,
     constexpr static bool is_array_ref = true;
     constexpr static bool is_vector    = false;
     constexpr static bool is_aligned   = false;
-    using value_type                   = remove_const<T>;
+    using value_type                   = cometa::remove_const<T>;
 
     value_type get(size_t index, value_type fallback_value) const CMT_NOEXCEPT
     {
@@ -415,10 +415,10 @@ struct univector<T, tag_array_ref> : array_ref<T>,
 
 template <typename T>
 struct univector<T, tag_dynamic_vector>
-    : std::vector<T, allocator<T>>, univector_base<T, univector<T, tag_dynamic_vector>, is_vec_element<T>>
+    : std::vector<T, cometa::allocator<T>>, univector_base<T, univector<T, tag_dynamic_vector>, is_vec_element<T>>
 {
-    using std::vector<T, allocator<T>>::size;
-    using std::vector<T, allocator<T>>::vector;
+    using std::vector<T, cometa::allocator<T>>::size;
+    using std::vector<T, cometa::allocator<T>>::vector;
     using size_type = size_t;
 #if !defined CMT_COMPILER_MSVC || defined CMT_COMPILER_CLANG
     univector(univector& v) : univector(const_cast<const univector&>(v)) {}
@@ -432,16 +432,16 @@ struct univector<T, tag_dynamic_vector>
         this->resize(input.size());
         this->assign_expr(std::forward<Input>(input));
     }
-    constexpr univector() CMT_NOEXCEPT_SPEC(noexcept(std::vector<T, allocator<T>>())) = default;
-    constexpr univector(const std::vector<T, allocator<T>>& other) : std::vector<T, allocator<T>>(other) {}
-    constexpr univector(std::vector<T, allocator<T>>&& other) : std::vector<T, allocator<T>>(std::move(other))
+    constexpr univector() CMT_NOEXCEPT_SPEC(noexcept(std::vector<T, cometa::allocator<T>>())) = default;
+    constexpr univector(const std::vector<T, cometa::allocator<T>>& other) : std::vector<T, cometa::allocator<T>>(other) {}
+    constexpr univector(std::vector<T, cometa::allocator<T>>&& other) : std::vector<T, cometa::allocator<T>>(std::move(other))
     {
     }
-    constexpr univector(const array_ref<T>& other) : std::vector<T, allocator<T>>(other.begin(), other.end())
+    constexpr univector(const array_ref<T>& other) : std::vector<T, cometa::allocator<T>>(other.begin(), other.end())
     {
     }
     constexpr univector(const array_ref<const T>& other)
-        : std::vector<T, allocator<T>>(other.begin(), other.end())
+        : std::vector<T, cometa::allocator<T>>(other.begin(), other.end())
     {
     }
     template <typename Allocator>

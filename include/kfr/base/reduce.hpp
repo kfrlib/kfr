@@ -120,8 +120,8 @@ protected:
 
 template <typename ReduceFn, typename TransformFn = fn_generic::pass_through,
           typename FinalFn = fn_generic::pass_through, typename E1, typename Tin = value_type_of<E1>,
-          typename Twork = decay<decltype(std::declval<TransformFn>()(std::declval<Tin>()))>,
-          typename Tout  = decay<decltype(internal::reduce_call_final(
+          typename Twork = cometa::decay<decltype(std::declval<TransformFn>()(std::declval<Tin>()))>,
+          typename Tout  = cometa::decay<decltype(internal::reduce_call_final(
               std::declval<FinalFn>(), std::declval<size_t>(), std::declval<Twork>()))>,
           KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_INTRINSIC Tout reduce(const E1& e1, ReduceFn&& reducefn,
@@ -130,7 +130,7 @@ KFR_INTRINSIC Tout reduce(const E1& e1, ReduceFn&& reducefn,
 {
     static_assert(!is_infinite<E1>, "e1 must be a sized expression (use slice())");
     using reducer_t =
-        internal::expression_reduce<Tout, Twork, Tin, decay<ReduceFn>, decay<TransformFn>, decay<FinalFn>>;
+        internal::expression_reduce<Tout, Twork, Tin, cometa::decay<ReduceFn>, cometa::decay<TransformFn>, cometa::decay<FinalFn>>;
     reducer_t red(std::forward<ReduceFn>(reducefn), std::forward<TransformFn>(transformfn),
                   std::forward<FinalFn>(finalfn));
     process(red, e1);
@@ -140,8 +140,8 @@ KFR_INTRINSIC Tout reduce(const E1& e1, ReduceFn&& reducefn,
 
 template <typename ReduceFn, typename TransformFn = fn_generic::pass_through,
           typename FinalFn = fn_generic::pass_through, typename E1, typename Tin = value_type_of<E1>,
-          typename Twork = decay<decltype(std::declval<TransformFn>()(std::declval<Tin>()))>,
-          typename Tout  = decay<decltype(internal::reduce_call_final(
+          typename Twork = cometa::decay<decltype(std::declval<TransformFn>()(std::declval<Tin>()))>,
+          typename Tout  = cometa::decay<decltype(internal::reduce_call_final(
               std::declval<FinalFn>(), std::declval<size_t>(), std::declval<Twork>()))>,
           KFR_ENABLE_IF(!is_input_expression<E1>)>
 KFR_INTRINSIC Tout reduce(const E1& e1, ReduceFn&& reducefn,

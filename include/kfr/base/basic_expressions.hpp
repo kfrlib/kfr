@@ -454,10 +454,10 @@ KFR_INTRINSIC internal::expression_linspace<TF, precise> symmlinspace(T symsize,
 KFR_FN(symmlinspace)
 
 template <size_t size, typename... E>
-KFR_INTRINSIC internal::expression_sequence<decay<E>...> gen_sequence(const size_t (&list)[size], E&&... gens)
+KFR_INTRINSIC internal::expression_sequence<cometa::decay<E>...> gen_sequence(const size_t (&list)[size], E&&... gens)
 {
     static_assert(size == sizeof...(E), "Lists must be of equal length");
-    return internal::expression_sequence<decay<E>...>(list, std::forward<E>(gens)...);
+    return internal::expression_sequence<cometa::decay<E>...>(list, std::forward<E>(gens)...);
 }
 KFR_FN(gen_sequence)
 

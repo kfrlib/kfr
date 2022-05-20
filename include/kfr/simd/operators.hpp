@@ -660,7 +660,7 @@ KFR_INTRINSIC internal::expression_function<fn::horner_odd, E...> horner_odd(E&&
 template <typename T>
 constexpr KFR_INTRINSIC T reciprocal(const T& x)
 {
-    static_assert(is_floating_point<subtype<T>>, "T must be floating point type");
+    static_assert(cometa::is_floating_point<subtype<T>>, "T must be floating point type");
     return subtype<T>(1) / x;
 }
 KFR_FN(reciprocal)

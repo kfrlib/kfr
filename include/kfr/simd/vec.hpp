@@ -131,7 +131,7 @@ namespace internal
 template <typename To, typename From>
 struct conversion
 {
-    static_assert(is_convertible<From, To>, "");
+    static_assert(cometa::is_convertible<From, To>, "");
 
     static To cast(const From& value) { return value; }
 };
@@ -207,10 +207,10 @@ struct alignas(internal::vec_alignment<T, N_>) vec
 
     using simd_type    = intrinsics::simd<ST, SN>;
     using uvalue_type  = utype<T>;
-    using iuvalue_type = conditional<is_i_class<T>, T, uvalue_type>;
+    using iuvalue_type = cometa::conditional<is_i_class<T>, T, uvalue_type>;
 
     using uscalar_type  = utype<ST>;
-    using iuscalar_type = conditional<is_i_class<ST>, ST, uscalar_type>;
+    using iuscalar_type = cometa::conditional<is_i_class<ST>, ST, uscalar_type>;
 
     using usimd_type  = intrinsics::simd<uscalar_type, SN>;
     using iusimd_type = intrinsics::simd<iuscalar_type, SN>;
@@ -228,14 +228,14 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     KFR_MEM_INTRINSIC constexpr vec& operator=(const vec&) CMT_NOEXCEPT = default;
 
     // from scalar
-    template <typename U, KFR_ENABLE_IF(is_convertible<U, value_type>&& compound_type_traits<T>::is_scalar)>
+    template <typename U, KFR_ENABLE_IF(cometa::is_convertible<U, value_type>&& compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC vec(const U& s) CMT_NOEXCEPT
         : v(intrinsics::simd_broadcast(intrinsics::simd_t<unwrap_bit<ST>, SN>{},
                                        static_cast<unwrap_bit<ST>>(static_cast<ST>(s))))
     {
     }
 
-    template <typename U, KFR_ENABLE_IF(is_convertible<U, value_type> && !compound_type_traits<T>::is_scalar)>
+    template <typename U, KFR_ENABLE_IF(cometa::is_convertible<U, value_type> && !compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC vec(const U& s) CMT_NOEXCEPT
         : v(intrinsics::simd_shuffle(intrinsics::simd_t<unwrap_bit<ST>, SW>{},
                                      internal::compoundcast<T>::to_flat(static_cast<T>(s)).v,
@@ -259,7 +259,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     }
 
     // from vector of another type
-    template <typename U, KFR_ENABLE_IF(is_convertible<U, value_type> &&
+    template <typename U, KFR_ENABLE_IF(cometa::is_convertible<U, value_type> &&
                                         (compound_type_traits<T>::is_scalar && !is_bit<U>))>
     KFR_MEM_INTRINSIC vec(const vec<U, N>& x) CMT_NOEXCEPT
         : v(intrinsics::simd_convert(
@@ -267,7 +267,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     {
     }
 
-    template <typename U, KFR_ENABLE_IF(is_convertible<U, value_type> &&
+    template <typename U, KFR_ENABLE_IF(cometa::is_convertible<U, value_type> &&
                                         !(compound_type_traits<T>::is_scalar && !is_bit<U>))>
     KFR_MEM_INTRINSIC vec(const vec<U, N>& x) CMT_NOEXCEPT
         : v(internal::conversion<vec<T, N>, vec<U, N>>::cast(x).v)
@@ -275,7 +275,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     }
 
     // from list of vectors
-    template <size_t... Ns, typename = enable_if<csum<size_t, Ns...>() == N>>
+    template <size_t... Ns, typename = cometa::enable_if<csum<size_t, Ns...>() == N>>
     KFR_MEM_INTRINSIC vec(const vec<T, Ns>&... vs) CMT_NOEXCEPT
         : v(intrinsics::simd_concat<ST, (SW * Ns)...>(vs.v...))
     {
@@ -456,7 +456,7 @@ public:
 };
 
 template <typename T>
-constexpr inline bool is_vec_element = is_simd_type<deep_subtype<remove_const<T>>>;
+constexpr inline bool is_vec_element = is_simd_type<deep_subtype<cometa::remove_const<T>>>;
 
 template <typename T, size_t N, size_t... indices>
 KFR_INTRINSIC vec<T, sizeof...(indices)> shufflevector(const vec<T, N>& x,
@@ -514,8 +514,8 @@ template <typename To, typename From, size_t N, size_t N2>
 struct conversion<vec<To, N>, vec<From, N2>>
 {
     static_assert(N == N2, "");
-    static_assert(!is_compound<To>, "");
-    static_assert(!is_compound<From>, "");
+    static_assert(!cometa::is_compound<To>, "");
+    static_assert(!cometa::is_compound<From>, "");
 
     static vec<To, N> cast(const vec<From, N>& value) { return vec<To, N>(value); }
 };
@@ -524,7 +524,7 @@ struct conversion<vec<To, N>, vec<From, N2>>
 template <typename To, typename From, size_t N>
 struct conversion<vec<To, N>, From>
 {
-    static_assert(is_convertible<From, To>, "");
+    static_assert(cometa::is_convertible<From, To>, "");
 
     static vec<To, N> cast(const From& value) { return broadcast<N>(static_cast<To>(value)); }
 };
@@ -550,38 +550,38 @@ constexpr KFR_INTRINSIC Tout cast(const From& value) CMT_NOEXCEPT
     return static_cast<Tout>(value);
 }
 
-template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(!is_same<Tin, Tout>)>
+template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(!cometa::is_same<Tin, Tout>)>
 constexpr KFR_INTRINSIC vec<Tout, N> cast(const vec<Tin, N>& value) CMT_NOEXCEPT
 {
     return vec<Tout, N>(value);
 }
 
-template <typename Tout, typename Tin, size_t N1, size_t N2, KFR_ENABLE_IF(!is_same<Tin, Tout>)>
+template <typename Tout, typename Tin, size_t N1, size_t N2, KFR_ENABLE_IF(!cometa::is_same<Tin, Tout>)>
 constexpr KFR_INTRINSIC vec<vec<Tout, N1>, N2> cast(const vec<vec<Tin, N1>, N2>& value) CMT_NOEXCEPT
 {
     return vec<vec<Tout, N1>, N2>(value);
 }
 
-template <typename Tout, typename Tin, size_t N1, size_t N2, size_t N3, KFR_ENABLE_IF(!is_same<Tin, Tout>)>
+template <typename Tout, typename Tin, size_t N1, size_t N2, size_t N3, KFR_ENABLE_IF(!cometa::is_same<Tin, Tout>)>
 constexpr KFR_INTRINSIC vec<vec<vec<Tout, N1>, N2>, N3> cast(const vec<vec<vec<Tin, N1>, N2>, N3>& value)
     CMT_NOEXCEPT
 {
     return vec<vec<vec<Tout, N1>, N2>, N3>(value);
 }
 
-template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(is_same<Tin, Tout>)>
+template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(cometa::is_same<Tin, Tout>)>
 constexpr KFR_INTRINSIC const vec<Tin, N>& cast(const vec<Tin, N>& value) CMT_NOEXCEPT
 {
     return value;
 }
 
-template <typename Tout, typename Tin, size_t N1, size_t N2, KFR_ENABLE_IF(is_same<Tin, Tout>)>
+template <typename Tout, typename Tin, size_t N1, size_t N2, KFR_ENABLE_IF(cometa::is_same<Tin, Tout>)>
 constexpr KFR_INTRINSIC const vec<vec<Tin, N1>, N2>& cast(const vec<vec<Tin, N1>, N2>& value) CMT_NOEXCEPT
 {
     return value;
 }
 
-template <typename Tout, typename Tin, size_t N1, size_t N2, size_t N3, KFR_ENABLE_IF(is_same<Tin, Tout>)>
+template <typename Tout, typename Tin, size_t N1, size_t N2, size_t N3, KFR_ENABLE_IF(cometa::is_same<Tin, Tout>)>
 constexpr KFR_INTRINSIC const vec<vec<vec<Tin, N1>, N2>, N3>& cast(
     const vec<vec<vec<Tin, N1>, N2>, N3>& value) CMT_NOEXCEPT
 {
@@ -597,39 +597,39 @@ constexpr KFR_INTRINSIC Tout innercast(const From& value) CMT_NOEXCEPT
     return static_cast<Tout>(value);
 }
 
-template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(!is_same<Tin, Tout>)>
+template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(!cometa::is_same<Tin, Tout>)>
 constexpr KFR_INTRINSIC vec<Tout, N> innercast(const vec<Tin, N>& value) CMT_NOEXCEPT
 {
     return vec<Tout, N>(value);
 }
 
-template <typename Tout, typename Tin, size_t N1, size_t N2, KFR_ENABLE_IF(!is_same<Tin, Tout>)>
+template <typename Tout, typename Tin, size_t N1, size_t N2, KFR_ENABLE_IF(!cometa::is_same<Tin, Tout>)>
 constexpr KFR_INTRINSIC vec<vec<Tout, N1>, N2> innercast(const vec<vec<Tin, N1>, N2>& value) CMT_NOEXCEPT
 {
     return vec<vec<Tout, N1>, N2>(value);
 }
 
-template <typename Tout, typename Tin, size_t N1, size_t N2, size_t N3, KFR_ENABLE_IF(!is_same<Tin, Tout>)>
+template <typename Tout, typename Tin, size_t N1, size_t N2, size_t N3, KFR_ENABLE_IF(!cometa::is_same<Tin, Tout>)>
 constexpr KFR_INTRINSIC vec<vec<vec<Tout, N1>, N2>, N3> innercast(const vec<vec<vec<Tin, N1>, N2>, N3>& value)
     CMT_NOEXCEPT
 {
     return vec<vec<vec<Tout, N1>, N2>, N3>(value);
 }
 
-template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(is_same<Tin, Tout>)>
+template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(cometa::is_same<Tin, Tout>)>
 constexpr KFR_INTRINSIC const vec<Tin, N>& innercast(const vec<Tin, N>& value) CMT_NOEXCEPT
 {
     return value;
 }
 
-template <typename Tout, typename Tin, size_t N1, size_t N2, KFR_ENABLE_IF(is_same<Tin, Tout>)>
+template <typename Tout, typename Tin, size_t N1, size_t N2, KFR_ENABLE_IF(cometa::is_same<Tin, Tout>)>
 constexpr KFR_INTRINSIC const vec<vec<Tin, N1>, N2>& innercast(const vec<vec<Tin, N1>, N2>& value)
     CMT_NOEXCEPT
 {
     return value;
 }
 
-template <typename Tout, typename Tin, size_t N1, size_t N2, size_t N3, KFR_ENABLE_IF(is_same<Tin, Tout>)>
+template <typename Tout, typename Tin, size_t N1, size_t N2, size_t N3, KFR_ENABLE_IF(cometa::is_same<Tin, Tout>)>
 constexpr KFR_INTRINSIC const vec<vec<vec<Tin, N1>, N2>, N3>& innercast(
     const vec<vec<vec<Tin, N1>, N2>, N3>& value) CMT_NOEXCEPT
 {
@@ -638,25 +638,25 @@ constexpr KFR_INTRINSIC const vec<vec<vec<Tin, N1>, N2>, N3>& innercast(
 
 //
 
-template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(!is_same<Tin, Tout>)>
+template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(!cometa::is_same<Tin, Tout>)>
 constexpr KFR_INTRINSIC vec<Tout, N> elemcast(const vec<Tin, N>& value) CMT_NOEXCEPT
 {
     return vec<Tout, N>(value);
 }
 
-template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(is_same<Tin, Tout>)>
+template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(cometa::is_same<Tin, Tout>)>
 constexpr KFR_INTRINSIC const vec<Tin, N>& elemcast(const vec<Tin, N>& value) CMT_NOEXCEPT
 {
     return value;
 }
 
-template <typename Tout, typename Tin, size_t N1, size_t N2, KFR_ENABLE_IF(!is_same<Tin, Tout>)>
+template <typename Tout, typename Tin, size_t N1, size_t N2, KFR_ENABLE_IF(!cometa::is_same<Tin, Tout>)>
 constexpr KFR_INTRINSIC vec<Tout, N2> elemcast(const vec<vec<Tin, N1>, N2>& value) CMT_NOEXCEPT
 {
     return vec<Tout, N2>(value);
 }
 
-template <typename Tout, typename Tin, size_t N1, size_t N2, size_t N3, KFR_ENABLE_IF(!is_same<Tin, Tout>)>
+template <typename Tout, typename Tin, size_t N1, size_t N2, size_t N3, KFR_ENABLE_IF(!cometa::is_same<Tin, Tout>)>
 constexpr KFR_INTRINSIC vec<Tout, N3> elemcast(const vec<vec<vec<Tin, N1>, N2>, N3>& value) CMT_NOEXCEPT
 {
     return vec<Tout, N3>(value);
@@ -679,25 +679,25 @@ CMT_GNU_CONSTEXPR KFR_INTRINSIC vec<To, Nout> bitcast(const vec<From, N>& value)
     return vec<To, Nout>::frombits(value);
 }
 
-template <typename From, typename To = utype<From>, KFR_ENABLE_IF(!is_compound<From>)>
+template <typename From, typename To = utype<From>, KFR_ENABLE_IF(!cometa::is_compound<From>)>
 constexpr KFR_INTRINSIC To ubitcast(const From& value) CMT_NOEXCEPT
 {
     return bitcast<To>(value);
 }
 
-template <typename From, typename To = itype<From>, KFR_ENABLE_IF(!is_compound<From>)>
+template <typename From, typename To = itype<From>, KFR_ENABLE_IF(!cometa::is_compound<From>)>
 constexpr KFR_INTRINSIC To ibitcast(const From& value) CMT_NOEXCEPT
 {
     return bitcast<To>(value);
 }
 
-template <typename From, typename To = ftype<From>, KFR_ENABLE_IF(!is_compound<From>)>
+template <typename From, typename To = ftype<From>, KFR_ENABLE_IF(!cometa::is_compound<From>)>
 constexpr KFR_INTRINSIC To fbitcast(const From& value) CMT_NOEXCEPT
 {
     return bitcast<To>(value);
 }
 
-template <typename From, typename To = uitype<From>, KFR_ENABLE_IF(!is_compound<From>)>
+template <typename From, typename To = uitype<From>, KFR_ENABLE_IF(!cometa::is_compound<From>)>
 constexpr KFR_INTRINSIC To uibitcast(const From& value) CMT_NOEXCEPT
 {
     return bitcast<To>(value);
@@ -801,7 +801,7 @@ struct conditional_common<false, Tfallback, Args...>
 /// @endcode
 template <typename Type = void, typename Arg, typename... Args, size_t N = (sizeof...(Args) + 1),
           typename SubType =
-              fix_type<typename internal::conditional_common<is_void<Type>, Type, Arg, Args...>::type>>
+              fix_type<typename internal::conditional_common<cometa::is_void<Type>, Type, Arg, Args...>::type>>
 constexpr KFR_INTRINSIC vec<SubType, N> make_vector(const Arg& x, const Args&... rest)
 {
     return internal::make_vector_impl<SubType>(cvalseq_t<size_t, N>(), static_cast<SubType>(x),
@@ -821,7 +821,7 @@ constexpr KFR_INTRINSIC vec<T, N> make_vector(cvals_t<T, Values...>)
 }
 
 template <typename Type = void, typename Arg, typename... Args, size_t N = (sizeof...(Args) + 1),
-          typename SubType = fix_type<conditional<is_void<Type>, common_type<Arg, Args...>, Type>>,
+          typename SubType = fix_type<cometa::conditional<cometa::is_void<Type>, common_type<Arg, Args...>, Type>>,
           KFR_ENABLE_IF(is_number<subtype<SubType>>)>
 constexpr KFR_INTRINSIC vec<SubType, N> pack(const Arg& x, const Args&... rest)
 {
@@ -988,14 +988,14 @@ namespace internal
 {
 
 template <size_t Index, typename T, size_t N, typename Fn, typename... Args,
-          typename Tout = invoke_result<Fn, subtype<decay<Args>>...>>
+          typename Tout = cometa::invoke_result<Fn, subtype<cometa::decay<Args>>...>>
 constexpr KFR_INTRINSIC Tout applyfn_helper(Fn&& fn, Args&&... args)
 {
     return fn(args[Index]...);
 }
 
 template <typename T, size_t N, typename Fn, typename... Args,
-          typename Tout = invoke_result<Fn, subtype<decay<Args>>...>, size_t... Indices>
+          typename Tout = cometa::invoke_result<Fn, subtype<cometa::decay<Args>>...>, size_t... Indices>
 constexpr KFR_INTRINSIC vec<Tout, N> apply_helper(Fn&& fn, csizes_t<Indices...>, Args&&... args)
 {
     return make_vector(applyfn_helper<Indices, T, N>(std::forward<Fn>(fn), std::forward<Args>(args)...)...);
@@ -1009,20 +1009,20 @@ constexpr KFR_INTRINSIC vec<T, N> apply0_helper(Fn&& fn, csizes_t<Indices...>)
 } // namespace internal
 
 template <typename T, size_t N, typename Fn, typename... Args,
-          typename Tout = invoke_result<Fn, T, subtype<decay<Args>>...>>
+          typename Tout = cometa::invoke_result<Fn, T, subtype<cometa::decay<Args>>...>>
 constexpr KFR_INTRINSIC vec<Tout, N> apply(Fn&& fn, const vec<T, N>& arg, Args&&... args)
 {
     return internal::apply_helper<T, N>(std::forward<Fn>(fn), csizeseq<N>, arg, std::forward<Args>(args)...);
 }
 
-template <typename T, typename Fn, typename... Args, typename Tout = invoke_result<Fn, T, decay<Args>...>,
-          KFR_ENABLE_IF(is_same<T, subtype<T>>)>
+template <typename T, typename Fn, typename... Args, typename Tout = cometa::invoke_result<Fn, T, cometa::decay<Args>...>,
+          KFR_ENABLE_IF(cometa::is_same<T, subtype<T>>)>
 constexpr KFR_INTRINSIC Tout apply(Fn&& fn, const T& arg, Args&&... args)
 {
     return fn(arg, args...);
 }
 
-template <size_t N, typename Fn, typename T = invoke_result<Fn>>
+template <size_t N, typename Fn, typename T = cometa::invoke_result<Fn>>
 constexpr KFR_INTRINSIC vec<T, N> apply(Fn&& fn)
 {
     return internal::apply0_helper<T, N>(std::forward<Fn>(fn), csizeseq<N>);
@@ -1137,7 +1137,7 @@ void test_function1(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
             if (isapplicable(ctype<T>, value))
             {
                 const T x(value);
-                CHECK(is_same<decltype(fn(x)), typename compound_type_traits<T>::template rebind<decltype(
+                CHECK(cometa::is_same<decltype(fn(x)), typename compound_type_traits<T>::template rebind<decltype(
                                                    reffn(std::declval<subtype<T>>()))>>);
                 const auto fn_x  = fn(x);
                 const auto ref_x = apply(reffn, x);
@@ -1165,7 +1165,7 @@ void test_function2(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
                       const T x2(value2);
                       if (isapplicable(ctype<T>, value1, value2))
                       {
-                          CHECK(is_same<decltype(fn(x1, x2)),
+                          CHECK(cometa::is_same<decltype(fn(x1, x2)),
                                         typename compound_type_traits<T>::template rebind<decltype(
                                             reffn(std::declval<subtype<T>>(), std::declval<subtype<T>>()))>>);
                           CHECK(fn(x1, x2) == apply(reffn, x1, x2));
@@ -1200,8 +1200,8 @@ template <typename To, typename From, size_t N1, size_t N2, size_t Ns1>
 struct conversion<vec<vec<To, N1>, N2>, vec<From, Ns1>>
 {
     static_assert(N1 == Ns1, "");
-    static_assert(!is_compound<To>, "");
-    static_assert(!is_compound<From>, "");
+    static_assert(!cometa::is_compound<To>, "");
+    static_assert(!cometa::is_compound<From>, "");
 
     static vec<vec<To, N1>, N2> cast(const vec<From, N1>& value)
     {
@@ -1216,8 +1216,8 @@ template <typename To, typename From, size_t N1, size_t N2, size_t N3, size_t Ns
 struct conversion<vec<vec<vec<To, N1>, N2>, N3>, vec<From, Ns1>>
 {
     static_assert(N1 == Ns1, "");
-    static_assert(!is_compound<To>, "");
-    static_assert(!is_compound<From>, "");
+    static_assert(!cometa::is_compound<To>, "");
+    static_assert(!cometa::is_compound<From>, "");
 
     static vec<vec<vec<To, N1>, N2>, N3> cast(const vec<From, N1>& value)
     {
@@ -1233,8 +1233,8 @@ struct conversion<vec<vec<To, N1>, N2>, vec<vec<From, NN1>, NN2>>
 {
     static_assert(N1 == NN1, "");
     static_assert(N2 == NN2, "");
-    static_assert(!is_compound<To>, "");
-    static_assert(!is_compound<From>, "");
+    static_assert(!cometa::is_compound<To>, "");
+    static_assert(!cometa::is_compound<From>, "");
 
     static vec<vec<To, N1>, N2> cast(const vec<vec<From, N1>, N2>& value)
     {
@@ -1249,8 +1249,8 @@ struct conversion<vec<vec<vec<To, N1>, N2>, N3>, vec<vec<vec<From, NN1>, NN2>, N
     static_assert(N1 == NN1, "");
     static_assert(N2 == NN2, "");
     static_assert(N3 == NN3, "");
-    static_assert(!is_compound<To>, "");
-    static_assert(!is_compound<From>, "");
+    static_assert(!cometa::is_compound<To>, "");
+    static_assert(!cometa::is_compound<From>, "");
 
     static vec<vec<vec<To, N1>, N2>, N3> cast(const vec<vec<vec<From, N1>, N2>, N3>& value)
     {

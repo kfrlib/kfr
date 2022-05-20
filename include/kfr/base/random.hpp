@@ -110,19 +110,19 @@ KFR_INTRINSIC vec<u8, N> random_bits(random_bit_generator& gen)
     return concat(bits1, bits2);
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_integral<T>)>
+template <typename T, size_t N, KFR_ENABLE_IF(cometa::is_integral<T>)>
 KFR_INTRINSIC vec<T, N> random_uniform(random_bit_generator& gen)
 {
     return bitcast<T>(random_bits<N * sizeof(T)>(gen));
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_same<T, f32>)>
+template <typename T, size_t N, KFR_ENABLE_IF(cometa::is_same<T, f32>)>
 KFR_INTRINSIC vec<f32, N> randommantissa(random_bit_generator& gen)
 {
     return bitcast<f32>((random_uniform<u32, N>(gen) & u32(0x7FFFFFu)) | u32(0x3f800000u)) + 0.0f;
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_same<T, f64>)>
+template <typename T, size_t N, KFR_ENABLE_IF(cometa::is_same<T, f64>)>
 KFR_INTRINSIC vec<f64, N> randommantissa(random_bit_generator& gen)
 {
     return bitcast<f64>((random_uniform<u64, N>(gen) & u64(0x000FFFFFFFFFFFFFull)) |

@@ -117,19 +117,19 @@ struct output_expression
 
 /// @brief Check if the type argument is an input expression
 template <typename E>
-constexpr inline bool is_input_expression = is_base_of<input_expression, decay<E>>;
+constexpr inline bool is_input_expression = cometa::is_base_of<input_expression, cometa::decay<E>>;
 
 /// @brief Check if the type arguments are an input expressions
 template <typename... Es>
-constexpr inline bool is_input_expressions = (is_base_of<input_expression, decay<Es>> || ...);
+constexpr inline bool is_input_expressions = (cometa::is_base_of<input_expression, cometa::decay<Es>> || ...);
 
 /// @brief Check if the type argument is an output expression
 template <typename E>
-constexpr inline bool is_output_expression = is_base_of<output_expression, decay<E>>;
+constexpr inline bool is_output_expression = cometa::is_base_of<output_expression, cometa::decay<E>>;
 
 /// @brief Check if the type arguments are an output expressions
 template <typename... Es>
-constexpr inline bool is_output_expressions = (is_base_of<output_expression, decay<Es>> || ...);
+constexpr inline bool is_output_expressions = (cometa::is_base_of<output_expression, cometa::decay<Es>> || ...);
 
 /// @brief Check if the type argument is a number or a vector of numbers
 template <typename T>
@@ -222,9 +222,9 @@ struct expression_lambda : input_expression
 } // namespace internal
 
 template <typename T, typename Fn>
-internal::expression_lambda<T, decay<Fn>> lambda(Fn&& fn)
+internal::expression_lambda<T, cometa::decay<Fn>> lambda(Fn&& fn)
 {
-    return internal::expression_lambda<T, decay<Fn>>(std::move(fn));
+    return internal::expression_lambda<T, cometa::decay<Fn>>(std::move(fn));
 }
 
 namespace internal
@@ -236,7 +236,7 @@ struct is_infinite_impl : std::false_type
 };
 
 template <typename T>
-struct is_infinite_impl<T, void_t<decltype(T::size())>>
+struct is_infinite_impl<T, cometa::void_t<decltype(T::size())>>
     : std::integral_constant<bool, T::size() == infinite_size>
 {
 };
@@ -344,22 +344,22 @@ struct arg_impl
 };
 
 template <typename T1, typename T2>
-struct arg_impl<T1, T2, void_t<enable_if<is_vec_element<T1>>>>
+struct arg_impl<T1, T2, cometa::void_t<cometa::enable_if<is_vec_element<T1>>>>
 {
     using type       = expression_scalar<T1>;
     using value_type = T1;
 };
 
 template <typename T>
-using arg = typename internal::arg_impl<decay<T>, T>::type;
+using arg = typename internal::arg_impl<cometa::decay<T>, T>::type;
 
 template <typename T>
-using arg_type = typename internal::arg_impl<decay<T>, T>::value_type;
+using arg_type = typename internal::arg_impl<cometa::decay<T>, T>::value_type;
 
 template <typename Fn, typename... Args>
 struct function_value_type
 {
-    using type = typename invoke_result<Fn, vec<arg_type<Args>, 1>...>::value_type;
+    using type = typename cometa::invoke_result<Fn, vec<arg_type<Args>, 1>...>::value_type;
 };
 
 template <typename Fn, typename... Args>
@@ -406,9 +406,9 @@ CMT_INTRINSIC internal::expression_scalar<T> scalar(const T& val)
 }
 
 template <typename Fn, typename... Args>
-CMT_INTRINSIC internal::expression_function<decay<Fn>, Args...> bind_expression(Fn&& fn, Args&&... args)
+CMT_INTRINSIC internal::expression_function<cometa::decay<Fn>, Args...> bind_expression(Fn&& fn, Args&&... args)
 {
-    return internal::expression_function<decay<Fn>, Args...>(std::forward<Fn>(fn),
+    return internal::expression_function<cometa::decay<Fn>, Args...>(std::forward<Fn>(fn),
                                                              std::forward<Args>(args)...);
 }
 /**

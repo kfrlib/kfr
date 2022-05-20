@@ -318,7 +318,7 @@ KFR_INTRINSIC void intrin(vec<T, N>& result, const T& a, const vec<T, N>& b, Fn&
     }
 
 template <typename T>
-using vec1 = conditional<is_vec<T>, T, vec<T, 1>>;
+using vec1 = cometa::conditional<is_vec<T>, T, vec<T, 1>>;
 
 template <typename T>
 inline const T& to_scalar(const T& value) CMT_NOEXCEPT

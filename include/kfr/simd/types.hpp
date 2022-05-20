@@ -64,7 +64,7 @@ struct common_type_impl
 };
 
 template <typename... T>
-using decay_common = decay<common_type_impl<T...>>;
+using decay_common = cometa::decay<common_type_impl<T...>>;
 
 template <typename T1, typename T2, template <typename TT> class result_type, typename = void>
 struct common_type_from_subtypes
@@ -72,7 +72,7 @@ struct common_type_from_subtypes
 };
 
 template <typename T1, typename T2, template <typename TT> class result_type>
-struct common_type_from_subtypes<T1, T2, result_type, void_t<typename common_type_impl<T1, T2>::type>>
+struct common_type_from_subtypes<T1, T2, result_type, cometa::void_t<typename common_type_impl<T1, T2>::type>>
 {
     using type = result_type<typename common_type_impl<T1, T2>::type>;
 };
@@ -80,7 +80,7 @@ struct common_type_from_subtypes<T1, T2, result_type, void_t<typename common_typ
 template <typename T>
 struct common_type_impl<T>
 {
-    using type = decay<T>;
+    using type = cometa::decay<T>;
 };
 
 template <typename T1, typename T2>
@@ -92,12 +92,12 @@ struct common_type_2_default
 };
 
 template <typename T1, typename T2>
-struct common_type_2_default<T1, T2, void_t<common_for_two<T1, T2>>>
+struct common_type_2_default<T1, T2, cometa::void_t<common_for_two<T1, T2>>>
 {
     using type = std::decay_t<common_for_two<T1, T2>>;
 };
 
-template <typename T1, typename T2, typename D1 = decay<T1>, typename D2 = decay<T2>>
+template <typename T1, typename T2, typename D1 = cometa::decay<T1>, typename D2 = cometa::decay<T2>>
 struct common_type_2_impl : common_type_impl<D1, D2>
 {
 };
@@ -118,7 +118,7 @@ struct common_type_multi_impl
 };
 
 template <typename T1, typename T2, typename... R>
-struct common_type_multi_impl<void_t<typename common_type_impl<T1, T2>::type>, T1, T2, R...>
+struct common_type_multi_impl<cometa::void_t<typename common_type_impl<T1, T2>::type>, T1, T2, R...>
     : common_type_impl<typename common_type_impl<T1, T2>::type, R...>
 {
 };
@@ -248,8 +248,8 @@ struct f16
 template <size_t bits>
 struct bitmask
 {
-    using type = conditional<(bits > 32), uint64_t,
-                             conditional<(bits > 16), uint32_t, conditional<(bits > 8), uint16_t, uint8_t>>>;
+    using type = cometa::conditional<(bits > 32), uint64_t,
+                             cometa::conditional<(bits > 16), uint32_t, cometa::conditional<(bits > 8), uint16_t, uint8_t>>>;
 
     bitmask(type val) : value(val) {}
 
@@ -401,9 +401,9 @@ struct initialvalue
 
 template <typename T>
 constexpr inline bool is_simd_type =
-    is_same<T, float> || is_same<T, double> || is_same<T, signed char> || is_same<T, unsigned char> ||
-    is_same<T, short> || is_same<T, unsigned short> || is_same<T, int> || is_same<T, unsigned int> ||
-    is_same<T, long> || is_same<T, unsigned long> || is_same<T, long long> || is_same<T, unsigned long long>;
+    cometa::is_same<T, float> || cometa::is_same<T, double> || cometa::is_same<T, signed char> || cometa::is_same<T, unsigned char> ||
+    cometa::is_same<T, short> || cometa::is_same<T, unsigned short> || cometa::is_same<T, int> || cometa::is_same<T, unsigned int> ||
+    cometa::is_same<T, long> || cometa::is_same<T, unsigned long> || cometa::is_same<T, long long> || cometa::is_same<T, unsigned long long>;
 
 template <typename T>
 constexpr inline bool is_simd_type<bit<T>> = is_simd_type<T>;
