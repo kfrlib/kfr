@@ -68,7 +68,7 @@ struct color
 
     constexpr T lightness() const
     {
-        using Tcommon = conditional<cometa::is_floating_point<T>, T, findinttype<min * 3, max * 3>>;
+        using Tcommon = cometa::conditional<cometa::is_floating_point<T>, T, findinttype<min * 3, max * 3>>;
         return (Tcommon(r) + g + b) / 3;
     }
 
