@@ -126,7 +126,7 @@ struct abstract_reader : abstract_stream<T>
         this->read(result);
         return result;
     }
-    bool read(conditional<is_void<T>, internal_generic::empty, T>& data) { return read(&data, 1) == 1; }
+    bool read(cometa::conditional<cometa::cometa::is_void<T>, internal_generic::empty, T>& data) { return read(&data, 1) == 1; }
 };
 
 /// @brief Base class for all typed writers
@@ -141,7 +141,7 @@ struct abstract_writer : abstract_stream<T>
         return write(data.data(), data.size());
     }
     size_t write(univector_ref<const T>&& data) { return write(data.data(), data.size()); }
-    bool write(const conditional<is_void<T>, internal_generic::empty, T>& data)
+    bool write(const cometa::conditional<cometa::cometa::is_void<T>, internal_generic::empty, T>& data)
     {
         return write(&data, 1) == 1;
     }

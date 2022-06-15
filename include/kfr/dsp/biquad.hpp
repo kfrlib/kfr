@@ -64,7 +64,7 @@ struct biquad_params
     }
     constexpr static bool is_pod = true;
 
-    static_assert(is_floating_point<T>, "T must be a floating point type");
+    static_assert(cometa::is_floating_point<T>, "T must be a floating point type");
     constexpr biquad_params() CMT_NOEXCEPT : a0(1), a1(0), a2(0), b0(1), b1(0), b2(0) {}
     constexpr biquad_params(T a0, T a1, T a2, T b0, T b1, T b2) CMT_NOEXCEPT : a0(a0),
                                                                                a1(a1),
@@ -342,7 +342,7 @@ public:
     }
 
     biquad_filter(const std::vector<biquad_params<T>>& bq)
-        : biquad_filter(bq.data(), bq.size()) 
+        : biquad_filter(bq.data(), bq.size())
     {
     }
 
