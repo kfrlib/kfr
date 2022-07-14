@@ -24,15 +24,15 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-fdiagnostics-absolute-paths)
 endif ()
 
-option(ENABLE_COVERAGE "Enable coverage reporting" OFF)
+option(KFR_ENABLE_COVERAGE "Enable coverage reporting" OFF)
 
-if (ENABLE_COVERAGE)
+if (KFR_ENABLE_COVERAGE)
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
     endif ()
 endif ()
 
-if (ENABLE_DFT)
+if (KFR_ENABLE_DFT)
     add_definitions(-DHAVE_DFT)
 endif ()
 
@@ -52,14 +52,14 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${PROJECT_BINARY_DIR}/bin)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/tests/cmake/")
 
-if (ENABLE_CAPI_BUILD)
+if (KFR_ENABLE_CAPI_BUILD)
     add_executable(capi_test capi_test.cpp)
     target_include_directories(capi_test
                                PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include)
     target_link_libraries(capi_test PUBLIC kfr_capi)
 endif ()
 
-if (ENABLE_ASMTEST)
+if (KFR_ENABLE_ASMTEST)
     add_executable(asm_test asm_test.cpp)
     target_link_libraries(asm_test kfr)
     target_set_arch(asm_test PRIVATE avx2)
@@ -108,7 +108,7 @@ set(ALL_TESTS_CPP
     io_test.cpp
     ${KFR_UNITTEST_SRC})
 
-if (ENABLE_DFT)
+if (KFR_ENABLE_DFT)
     list(APPEND ALL_TESTS_CPP dft_test.cpp)
 
     add_executable(dft_test dft_test.cpp)
@@ -118,13 +118,12 @@ find_package(MPFR)
 find_package(GMP)
 
 if (MPFR_FOUND AND GMP_FOUND)
-    message(STATUS "MPFR is found")
     add_executable(generate_data generate_data.cpp)
     target_link_libraries(generate_data kfr)
     target_include_directories(generate_data PRIVATE ${MPFR_INCLUDE_DIR}
                                                      ${GMP_INCLUDE_DIR})
     target_link_libraries(generate_data ${MPFR_LIBRARIES} ${GMP_LIBRARIES})
-    if (REGENERATE_TESTS)
+    if (KFR_REGENERATE_TESTS)
         add_custom_command(
             TARGET generate_data
             POST_BUILD
@@ -137,7 +136,7 @@ endif ()
 add_executable(all_tests all_tests.cpp ${ALL_TESTS_CPP})
 target_compile_definitions(all_tests PRIVATE KFR_NO_MAIN)
 target_link_libraries(all_tests kfr use_arch)
-if (ENABLE_DFT)
+if (KFR_ENABLE_DFT)
     target_link_libraries(all_tests kfr_dft)
     target_link_libraries(dft_test kfr_dft)
 endif ()
@@ -152,7 +151,7 @@ function (add_x86_test ARCH)
 
     add_executable(all_tests_${NAME} all_tests.cpp ${ALL_TESTS_CPP}
                                      ${KFR_IO_SRC})
-    if (ENABLE_DFT)
+    if (KFR_ENABLE_DFT)
         target_sources(all_tests_${NAME} PRIVATE ${KFR_DFT_SRC})
     endif ()
     target_link_libraries(all_tests_${NAME} kfr)
@@ -160,10 +159,10 @@ function (add_x86_test ARCH)
     target_compile_definitions(all_tests_${NAME} PRIVATE KFR_NO_MAIN)
     target_compile_definitions(all_tests_${NAME} PUBLIC KFR_ENABLE_FLAC=1)
 
-    if (ARCH_TESTS_MULTI)
+    if (KFR_ARCH_TESTS_MULTI)
         add_library(all_tests_multiarch_${NAME} STATIC ${ALL_TESTS_MERGED_CPP}
                                                        ${KFR_IO_SRC})
-        if (ENABLE_DFT)
+        if (KFR_ENABLE_DFT)
             target_sources(all_tests_multiarch_${NAME} PRIVATE ${KFR_DFT_SRC})
         endif ()
         target_link_libraries(all_tests_multiarch_${NAME} kfr)
@@ -176,9 +175,7 @@ function (add_x86_test ARCH)
 
 endfunction ()
 
-message(STATUS "ARCH_TESTS = ${ARCH_TESTS}")
-
-if (ARCH_TESTS AND ARCH_TESTS STREQUAL "ON")
+if (KFR_ARCH_TESTS AND KFR_ARCH_TESTS STREQUAL "ON")
     set(ARCH_LIST
         generic
         sse2
@@ -188,22 +185,20 @@ if (ARCH_TESTS AND ARCH_TESTS STREQUAL "ON")
         avx2
         avx512)
 else ()
-    string(REPLACE "," ";" ARCH_LIST "${ARCH_TESTS}")
+    string(REPLACE "," ";" ARCH_LIST "${KFR_ARCH_TESTS}")
 endif ()
 
 if (MSVC AND NOT CLANG)
     list(REMOVE_ITEM ARCH_LIST generic)
 endif ()
 
-message(STATUS "Testing for ${ARCH_LIST}")
+if (KFR_ARCH_TESTS)
 
-if (ARCH_TESTS)
-
-    foreach (A IN LISTS ARCH_LIST)
+    foreach (A IN LISTS KFR_ARCH_LIST)
         add_x86_test(${A})
     endforeach ()
 
-    if (ARCH_TESTS_MULTI)
+    if (KFR_ARCH_TESTS_MULTI)
         add_executable(all_tests_multiarch all_tests.cpp)
         target_compile_definitions(all_tests_multiarch PRIVATE KFR_MULTI_ARCH)
         foreach (A IN LISTS ARCH_LIST)
@@ -236,20 +231,20 @@ set(SDE_ARCH_avx -snb)
 set(SDE_ARCH_avx2 -hsw)
 set(SDE_ARCH_avx512 -skx)
 
-if (NOT SKIP_TESTS)
+if (NOT KFR_SKIP_TESTS)
     enable_testing()
 
     if (X86)
         add_test(NAME multiarch COMMAND ${EMULATOR}
                                         ${PROJECT_BINARY_DIR}/bin/multiarch)
 
-        if (ENABLE_CAPI_BUILD)
+        if (KFR_ENABLE_CAPI_BUILD)
             add_test(NAME capi_test COMMAND ${EMULATOR}
                                             ${PROJECT_BINARY_DIR}/bin/capi_test)
         endif ()
     endif ()
 
-    if (ARCH_TESTS)
+    if (KFR_ARCH_TESTS)
         foreach (A IN LISTS ARCH_LIST)
             if (USE_SDE)
                 add_test(NAME all_tests_${A}
@@ -263,7 +258,7 @@ if (NOT SKIP_TESTS)
         endforeach ()
     endif ()
     if (USE_SDE)
-        add_test(NAME all_tests COMMAND ${SDE} ${SDE_ARCH_${CPU_ARCH}} -chip_check_exe_only
+        add_test(NAME all_tests COMMAND ${SDE} ${SDE_ARCH_${KFR_ARCH}} -chip_check_exe_only
                                     -- ${PROJECT_BINARY_DIR}/bin/all_tests)
         add_test(NAME all_tests_on_avx512 COMMAND ${SDE} ${SDE_ARCH_avx512} -chip_check_exe_only
                                     -- ${PROJECT_BINARY_DIR}/bin/all_tests)
