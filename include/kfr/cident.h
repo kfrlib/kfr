@@ -361,6 +361,9 @@ extern char* gets(char* __s);
 #define CMT_FLATTEN __attribute__((__flatten__))
 #define CMT_RESTRICT __restrict__
 
+#define CMT_LIKELY(...) __builtin_expect(__VA_ARGS__, 1)
+#define CMT_UNLIKELY(...) __builtin_expect(__VA_ARGS__, 0)
+
 #elif defined(CMT_MSVC_ATTRIBUTES)
 
 #define CMT_ALWAYS_INLINE __forceinline
@@ -375,6 +378,9 @@ extern char* gets(char* __s);
 #define CMT_NOINLINE __declspec(noinline)
 #define CMT_FLATTEN
 #define CMT_RESTRICT __restrict
+
+#define CMT_LIKELY(...) (__VA_ARGS__)
+#define CMT_UNLIKELY(...) (__VA_ARGS__)
 
 #endif
 
