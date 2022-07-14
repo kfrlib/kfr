@@ -99,13 +99,6 @@ struct univector_base<T, Class, true> : input_expression, output_expression
     using output_expression::begin_block;
     using output_expression::end_block;
 
-    template <typename U, size_t N>
-    KFR_MEM_INTRINSIC void operator()(coutput_t, size_t index, const vec<U, N>& value)
-    {
-        T* data = derived_cast<Class>(this)->data();
-        write(ptr_cast<T>(data) + index, vec<T, N>(value));
-    }
-
     template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>)>
     KFR_MEM_INTRINSIC Class& operator=(Input&& input)
     {
@@ -602,6 +595,14 @@ KFR_INTRINSIC vec<U, N> get_elements(const univector<T, Tag>& self, cinput_t, si
 {
     const T* data = self.data();
     return static_cast<vec<U, N>>(read<N>(ptr_cast<T>(data) + index));
+}
+
+template <typename T, univector_tag Tag, typename U, size_t N>
+KFR_INTRINSIC void set_elements(univector<T, Tag>& self, coutput_t, size_t index,
+                                const vec<U, N>& value)
+{
+    T* data = self.data();
+    write(ptr_cast<T>(data) + index, vec<T, N>(value));
 }
 
 /// @brief Converts an expression to univector

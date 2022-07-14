@@ -51,15 +51,15 @@ struct expression_goertzel : output_expression
         result.imag(q2 * sin(omega));
     }
     template <typename U, size_t N>
-    KFR_MEM_INTRINSIC void operator()(coutput_t, size_t, const vec<U, N>& x)
+    KFR_INTRINSIC friend void set_elements(expression_goertzel& self, coutput_t, size_t, const vec<U, N>& x)
     {
         vec<T, N> in = x;
         CMT_LOOP_UNROLL
         for (size_t i = 0; i < N; i++)
         {
-            q0 = coeff * q1 - q2 + in[i];
-            q2 = q1;
-            q1 = q0;
+            self.q0 = self.coeff * self.q1 - self.q2 + in[i];
+            self.q2 = self.q1;
+            self.q1 = self.q0;
         }
     }
     complex<T>& result;
@@ -88,15 +88,16 @@ struct expression_parallel_goertzel : output_expression
         }
     }
     template <typename U, size_t N>
-    KFR_MEM_INTRINSIC void operator()(coutput_t, size_t, const vec<U, N>& x)
+    KFR_INTRINSIC friend void set_elements(expression_parallel_goertzel& self, coutput_t, size_t,
+                                           const vec<U, N>& x)
     {
         const vec<T, N> in = x;
         CMT_LOOP_UNROLL
         for (size_t i = 0; i < N; i++)
         {
-            q0 = coeff * q1 - q2 + in[i];
-            q2 = q1;
-            q1 = q0;
+            self.q0 = self.coeff * self.q1 - self.q2 + in[i];
+            self.q2 = self.q1;
+            self.q1 = self.q0;
         }
     }
     complex<T>* result;

@@ -236,7 +236,8 @@ namespace internal
 struct expression_printer : output_expression
 {
     template <typename T, size_t N>
-    void operator()(coutput_t, size_t index, const vec<T, N>& value)
+    KFR_INTRINSIC friend void set_elements(expression_printer& self, coutput_t, size_t index,
+                                           const vec<T, N>& value)
     {
         for (size_t i = 0; i < N; i++)
         {
@@ -256,7 +257,8 @@ struct expression_printer : output_expression
 struct expression_debug_printer : output_expression
 {
     template <typename T, size_t N>
-    void operator()(coutput_t, size_t index, const vec<T, N>& value)
+    KFR_INTRINSIC friend void set_elements(expression_debug_printer& self, coutput_t, size_t index,
+                                           const vec<T, N>& value)
     {
         println(fmtwidth<7>(index), ": (", value, ")");
     }

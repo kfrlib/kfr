@@ -171,13 +171,15 @@ void test_expression(const E& expr, size_t size, Fn&& fn, const char* expression
         if (g > (1 << (maxsize - 1)))
             g = 1;
 
-        cswitch(csize<1> << csizeseq<maxsize>, next_size, [&](auto x) {
-            constexpr size_t nsize = val_of(decltype(x)());
-            ::testo::scope s(as_string("i = ", i, " width = ", nsize));
-            test->check(c <= get_elements(expr, cinput, i, vec_shape<T, nsize>()) ==
-                            internal::get_fn_value<T, nsize>(i, fn),
-                        expression);
-        });
+        cswitch(csize<1> << csizeseq<maxsize>, next_size,
+                [&](auto x)
+                {
+                    constexpr size_t nsize = val_of(decltype(x)());
+                    ::testo::scope s(as_string("i = ", i, " width = ", nsize));
+                    test->check(c <= get_elements(expr, cinput, i, vec_shape<T, nsize>()) ==
+                                    internal::get_fn_value<T, nsize>(i, fn),
+                                expression);
+                });
         i += next_size;
     }
 }
@@ -451,10 +453,10 @@ CMT_INTRINSIC static size_t process(OutputExpr&& out, const InputExpr& in, size_
 
     CMT_LOOP_NOUNROLL
     for (; i < start + size / w * w; i += w)
-        out(coutput, i, get_elements(in, cinput, i, vec_shape<Tin, w>()));
+        set_elements(out, coutput, i, get_elements(in, cinput, i, vec_shape<Tin, w>()));
     CMT_LOOP_NOUNROLL
     for (; i < start + size / groupsize * groupsize; i += groupsize)
-        out(coutput, i, get_elements(in, cinput, i, vec_shape<Tin, groupsize>()));
+        set_elements(out, coutput, i, get_elements(in, cinput, i, vec_shape<Tin, groupsize>()));
 
     in.end_block(cinput, size);
     out.end_block(coutput, size);
@@ -484,10 +486,11 @@ struct output_expression_base : output_expression
     virtual void output(size_t index, const T& value) = 0;
 
     template <typename U, size_t N>
-    KFR_MEM_INTRINSIC void operator()(coutput_t, size_t index, const vec<U, N>& value)
+    friend KFR_INTRINSIC void set_elements(const output_expression_base& self, coutput_t, size_t index,
+                                           const vec<U, N>& value)
     {
         for (size_t i = 0; i < N; i++)
-            output(index + i, static_cast<T>(value[i]));
+            self.output(index + i, static_cast<T>(value[i]));
     }
 };
 

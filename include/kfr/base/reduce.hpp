@@ -79,10 +79,10 @@ struct expression_reduce : output_expression
     }
 
     template <size_t N>
-    KFR_MEM_INTRINSIC void operator()(coutput_t, size_t, const vec<Tin, N>& x) const
+    KFR_INTRINSIC friend void set_elements(expression_reduce& self, coutput_t, size_t, const vec<Tin, N>& x)
     {
-        counter += N;
-        process(x);
+        self.counter += N;
+        self.process(x);
     }
 
     KFR_MEM_INTRINSIC Tout get()

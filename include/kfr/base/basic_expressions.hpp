@@ -117,9 +117,8 @@ KFR_INTRINSIC internal::expression_iterator<T, E1> to_iterator(E1&& e1)
 template <typename... Ts, typename T = common_type<Ts...>>
 inline auto sequence(const Ts&... list)
 {
-    return lambda<T>([seq = std::array<T, sizeof...(Ts)>{ { static_cast<T>(list)... } }](size_t index) {
-        return seq[index % seq.size()];
-    });
+    return lambda<T>([seq = std::array<T, sizeof...(Ts)>{ { static_cast<T>(list)... } }](size_t index)
+                     { return seq[index % seq.size()]; });
 }
 
 template <typename T = int>
@@ -148,8 +147,8 @@ KFR_INTRINSIC auto counter(T1 start)
 template <typename T1, typename T2>
 KFR_INTRINSIC auto counter(T1 start, T2 step)
 {
-    return lambda<common_type<T1, T2>>(
-        [start, step](cinput_t, size_t index, auto x) { return (enumerate(x) + index) * step + start; });
+    return lambda<common_type<T1, T2>>([start, step](cinput_t, size_t index, auto x)
+                                       { return (enumerate(x) + index) * step + start; });
 }
 
 template <typename Gen>
@@ -534,10 +533,11 @@ struct multioutput : output_expression
     {
     }
     template <typename T, size_t N>
-    void operator()(coutput_t coutput, size_t index, const vec<T, N>& x)
+    KFR_INTRINSIC friend void set_elements(multioutput& self, coutput_t coutput, size_t index,
+                                           const vec<T, N>& x)
     {
         cfor(csize_t<0>(), csize_t<sizeof...(E)>(),
-             [&](auto n) { std::get<val_of(decltype(n)())>(outputs)(coutput, index, x); });
+             [&](auto n) { set_elements(std::get<val_of(decltype(n)())>(self.outputs), coutput, index, x); });
     }
     std::tuple<E...> outputs;
 
@@ -577,9 +577,10 @@ struct expression_unpack : private expression_with_arguments<E...>, output_expre
     using expression_with_arguments<E...>::size;
 
     template <typename U, size_t N>
-    KFR_MEM_INTRINSIC void operator()(coutput_t coutput, size_t index, const vec<vec<U, count>, N>& x)
+    KFR_INTRINSIC friend void set_elements(expression_unpack& self, coutput_t coutput, size_t index,
+                                           const vec<vec<U, count>, N>& x)
     {
-        output(coutput, index, x, csizeseq<count>);
+        self.output(coutput, index, x, csizeseq<count>);
     }
 
     template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>)>
@@ -594,7 +595,7 @@ private:
     void output(coutput_t coutput, size_t index, const vec<vec<U, count>, N>& x, csizes_t<indices...>)
     {
         const vec<vec<U, N>, count> xx = vec<vec<U, N>, count>::from_flatten(transpose<count>(flatten(x)));
-        swallow{ (std::get<indices>(this->args)(coutput, index, xx[indices]), void(), 0)... };
+        swallow{ (set_elements(std::get<indices>(this->args), coutput, index, xx[indices]), void(), 0)... };
     }
 };
 } // namespace internal
