@@ -117,8 +117,13 @@ constexpr size_t max_size_t = size_t(-1);
 template <typename... T>
 using common_type = typename std::common_type<T...>::type;
 
+#if __cplusplus >= 201703L
+template <typename T, typename... Args>
+using invoke_result = typename std::invoke_result<T, Args...>::type;
+#else
 template <typename T, typename... Args>
 using invoke_result = typename std::result_of<T(Args...)>::type;
+#endif
 
 template <bool Condition, typename Type = void>
 using enable_if = typename std::enable_if<Condition, Type>::type;
