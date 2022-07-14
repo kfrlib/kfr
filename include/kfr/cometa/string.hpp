@@ -512,6 +512,19 @@ struct representation<std::shared_ptr<T1>>
             return as_string(type_name<std::shared_ptr<T1>>(), "(nullptr)");
     }
 };
+
+template <>
+struct representation<std::shared_ptr<void>>
+{
+    using type = std::string;
+    static std::string get(const std::shared_ptr<void>& value)
+    {
+        if (value)
+            return as_string(type_name<std::shared_ptr<void>>(), "(", value.get(), ")");
+        else
+            return as_string(type_name<std::shared_ptr<void>>(), "(nullptr)");
+    }
+};
 } // namespace cometa
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)
