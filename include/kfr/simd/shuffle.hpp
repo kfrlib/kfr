@@ -32,6 +32,9 @@
 #include <tuple>
 #include <utility>
 
+CMT_PRAGMA_MSVC(warning(push))
+CMT_PRAGMA_MSVC(warning(disable : 5051))
+
 namespace kfr
 {
 
@@ -130,12 +133,28 @@ KFR_INTRINSIC vec<T, N + Ncount> padhigh(const vec<T, N>& x)
 {
     return x.shuffle(csizeseq<N + Ncount>);
 }
+template <size_t Ncount, typename T, size_t N>
+KFR_INTRINSIC vec<T, N + Ncount> padhigh(const vec<T, N>& x, identity<T> newvalue)
+{
+    if constexpr (Ncount == 0)
+        return x;
+    else
+        return concat(x, broadcast<Ncount, T>(newvalue));
+}
 KFR_FN(padhigh)
 
 template <size_t Ncount, typename T, size_t N>
 KFR_INTRINSIC vec<T, N + Ncount> padlow(const vec<T, N>& x)
 {
     return x.shuffle(csizeseq<N + Ncount, 0 - Ncount>);
+}
+template <size_t Ncount, typename T, size_t N>
+KFR_INTRINSIC vec<T, N + Ncount> padlow(const vec<T, N>& x, identity<T> newvalue)
+{
+    if constexpr (Ncount == 0)
+        return x;
+    else
+        return concat(broadcast<Ncount, T>(newvalue), x);
 }
 KFR_FN(padlow)
 
@@ -566,6 +585,33 @@ constexpr KFR_INTRINSIC vec<T, N> enumerate(vec_shape<T, N>)
 {
     return generate_vector<T, N, internal::generate_index<start, stride>>();
 }
+template <typename T, size_t N>
+KFR_INTRINSIC vec<T, N> enumerate(vec_shape<T, N> sh, identity<T> step)
+{
+    if constexpr (N == 1)
+    {
+        return czeros;
+    }
+    else if constexpr (!is_poweroftwo(N))
+    {
+        return slice<0, N>(enumerate(vec_shape<T, next_poweroftwo(N)>{}, step));
+    }
+    else
+    {
+        vec<T, N> vv = step;
+        vec<T, N> zz(czeros);
+
+        vec<T, N> acc = blend(zz, vv, csizeseq<N> % csize<2>);
+        cfor(csize<0>, csize<ilog2(N) - 1>,
+             [&](auto idx) CMT_INLINE_LAMBDA
+             {
+                 vv = vv + vv;
+                 acc += blend(zz, vv, csizeseq<N> / (csize<2 << (idx)>) % csize<2>);
+             });
+        return acc;
+    }
+}
+
 KFR_FN(enumerate)
 
 template <typename T, size_t N, size_t start = 0, size_t size = 1, int on = 1, int off = 0>
@@ -585,3 +631,5 @@ KFR_FN(onoff)
 } // namespace kfr
 #define KFR_SHUFFLE_SPECIALIZATIONS 1
 #include "impl/specializations.i"
+
+CMT_PRAGMA_MSVC(warning(pop))
