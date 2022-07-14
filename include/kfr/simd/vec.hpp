@@ -88,9 +88,6 @@ CMT_PRAGMA_MSVC(warning(disable : 4814))
 namespace kfr
 {
 
-inline namespace CMT_ARCH_NAME
-{
-
 template <typename T, size_t N>
 struct alignas(next_poweroftwo(sizeof(T)) * next_poweroftwo(N)) portable_vec
 {
@@ -106,7 +103,13 @@ struct alignas(next_poweroftwo(sizeof(T)) * next_poweroftwo(N)) portable_vec
     constexpr static size_t size() CMT_NOEXCEPT { return N; }
 
     T elem[N];
+
+    T operator[](size_t index) const { return elem[index]; }
+    T& operator[](size_t index) { return elem[index]; }
 };
+
+inline namespace CMT_ARCH_NAME
+{
 
 template <typename T, size_t N>
 struct vec;
@@ -324,9 +327,17 @@ struct alignas(internal::vec_alignment<T, N_>) vec
 
     KFR_MEM_INTRINSIC constexpr element operator[](size_t index) & CMT_NOEXCEPT { return { *this, index }; }
 
-    KFR_MEM_INTRINSIC value_type front() const CMT_NOEXCEPT { return get(csize<0>); }
+    KFR_MEM_INTRINSIC value_type front() const& CMT_NOEXCEPT { return get(csize<0>); }
 
-    KFR_MEM_INTRINSIC value_type back() const CMT_NOEXCEPT { return get(csize<N - 1>); }
+    KFR_MEM_INTRINSIC value_type back() const& CMT_NOEXCEPT { return get(csize<N - 1>); }
+
+    KFR_MEM_INTRINSIC value_type front() && CMT_NOEXCEPT { return get(csize<0>); }
+
+    KFR_MEM_INTRINSIC value_type back() && CMT_NOEXCEPT { return get(csize<N - 1>); }
+
+    KFR_MEM_INTRINSIC element front() & CMT_NOEXCEPT { return { *this, 0 }; }
+
+    KFR_MEM_INTRINSIC element back() & CMT_NOEXCEPT { return { *this, N - 1 }; }
 
     template <int dummy = 0, KFR_ENABLE_IF(dummy == 0 && compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC constexpr value_type get(size_t index) const CMT_NOEXCEPT
@@ -338,7 +349,8 @@ struct alignas(internal::vec_alignment<T, N_>) vec
               KFR_ENABLE_IF(dummy == 0 && !compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC constexpr value_type get(size_t index) const CMT_NOEXCEPT
     {
-        union {
+        union
+        {
             simd_type v;
             T s[N];
         } u{ this->v };
@@ -374,7 +386,8 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     template <int dummy = 0, KFR_ENABLE_IF(dummy == 0 && !compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC constexpr void set(size_t index, const value_type& s) CMT_NOEXCEPT
     {
-        union {
+        union
+        {
             simd_type v;
             T s[N];
         } u{ this->v };
@@ -403,6 +416,49 @@ struct alignas(internal::vec_alignment<T, N_>) vec
         {
             v.set(index, s);
             return *this;
+        }
+
+        KFR_MEM_INTRINSIC element& operator+=(const value_type& s) CMT_NOEXCEPT
+        {
+            v.set(index, v.get(index) + s);
+            return *this;
+        }
+        KFR_MEM_INTRINSIC element& operator-=(const value_type& s) CMT_NOEXCEPT
+        {
+            v.set(index, v.get(index) - s);
+            return *this;
+        }
+        KFR_MEM_INTRINSIC element& operator*=(const value_type& s) CMT_NOEXCEPT
+        {
+            v.set(index, v.get(index) * s);
+            return *this;
+        }
+        KFR_MEM_INTRINSIC element& operator/=(const value_type& s) CMT_NOEXCEPT
+        {
+            v.set(index, v.get(index) / s);
+            return *this;
+        }
+        KFR_MEM_INTRINSIC element& operator++() CMT_NOEXCEPT
+        {
+            v.set(index, v.get(index) + 1);
+            return *this;
+        }
+        KFR_MEM_INTRINSIC element& operator--() CMT_NOEXCEPT
+        {
+            v.set(index, v.get(index) - 1);
+            return *this;
+        }
+        KFR_MEM_INTRINSIC value_type operator++(int) CMT_NOEXCEPT
+        {
+            value_type val = v.get(index) + 1;
+            v.set(index, val);
+            return val;
+        }
+        KFR_MEM_INTRINSIC value_type operator--(int) CMT_NOEXCEPT
+        {
+            value_type val = v.get(index) - 1;
+            v.set(index, val);
+            return val;
         }
 
         KFR_MEM_INTRINSIC element& operator=(const element& s) CMT_NOEXCEPT
@@ -447,13 +503,17 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     using simd_element_type                    = simd<ST, simd_element_size>;
 
 public:
-    union {
+    union
+    {
         simd_type v;
         vec_halves<T, N> h;
         // simd_element_type w[simd_element_count];
         // T s[N];
     };
 };
+
+template <typename... T>
+vec(T&&...) -> vec<std::common_type_t<T...>, sizeof...(T)>;
 
 template <typename T>
 constexpr inline bool is_vec_element = is_simd_type<deep_subtype<remove_const<T>>>;
@@ -666,7 +726,8 @@ template <typename To, typename From>
 CMT_GNU_CONSTEXPR KFR_INTRINSIC To bitcast(const From& value) CMT_NOEXCEPT
 {
     static_assert(sizeof(From) == sizeof(To), "bitcast: Incompatible types");
-    union {
+    union
+    {
         From from;
         To to;
     } u{ value };
@@ -1130,28 +1191,31 @@ vec<T, N> test_enumerate(vec_shape<T, N>, csizes_t<indices...>, double start = 0
 template <int Cat, typename Fn, typename RefFn, typename IsApplicable = fn_return_constant<bool, true>>
 void test_function1(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isapplicable = IsApplicable{})
 {
-    testo::matrix(
-        named("value") = special_values(), named("type") = test_catogories::types(cat),
-        [&](special_value value, auto type) {
-            using T = typename decltype(type)::type;
-            if (isapplicable(ctype<T>, value))
-            {
-                const T x(value);
-                CHECK(is_same<decltype(fn(x)), typename compound_type_traits<T>::template rebind<decltype(
-                                                   reffn(std::declval<subtype<T>>()))>>);
-                const auto fn_x  = fn(x);
-                const auto ref_x = apply(reffn, x);
-                ::testo::active_test()->check(testo::deep_is_equal(ref_x, fn_x),
-                                              as_string(fn_x, " == ", ref_x), "fn(x) == apply(reffn, x)");
-                //   CHECK(fn(x) == apply(reffn, x));
-            }
-        });
+    testo::matrix(named("value") = special_values(), named("type") = test_catogories::types(cat),
+                  [&](special_value value, auto type)
+                  {
+                      using T = typename decltype(type)::type;
+                      if (isapplicable(ctype<T>, value))
+                      {
+                          const T x(value);
+                          CHECK(is_same<decltype(fn(x)), typename compound_type_traits<T>::template rebind<
+                                                             decltype(reffn(std::declval<subtype<T>>()))>>);
+                          const auto fn_x  = fn(x);
+                          const auto ref_x = apply(reffn, x);
+                          ::testo::active_test()->check(testo::deep_is_equal(ref_x, fn_x),
+                                                        as_string(fn_x, " == ", ref_x),
+                                                        "fn(x) == apply(reffn, x)");
+                          //   CHECK(fn(x) == apply(reffn, x));
+                      }
+                  });
 
-    testo::matrix(named("type") = test_catogories::types(cint<Cat & ~1>), [&](auto type) {
-        using T   = typename decltype(type)::type;
-        const T x = test_enumerate(T::shape(), csizeseq<T::size()>, 0);
-        CHECK(fn(x) == apply(reffn, x));
-    });
+    testo::matrix(named("type") = test_catogories::types(cint<Cat & ~1>),
+                  [&](auto type)
+                  {
+                      using T   = typename decltype(type)::type;
+                      const T x = test_enumerate(T::shape(), csizeseq<T::size()>, 0);
+                      CHECK(fn(x) == apply(reffn, x));
+                  });
 }
 
 template <int Cat, typename Fn, typename RefFn, typename IsApplicable = fn_return_constant<bool, true>>
@@ -1159,25 +1223,28 @@ void test_function2(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
 {
     testo::matrix(named("value1") = special_values(), //
                   named("value2") = special_values(), named("type") = test_catogories::types(cat),
-                  [&](special_value value1, special_value value2, auto type) {
+                  [&](special_value value1, special_value value2, auto type)
+                  {
                       using T = typename decltype(type)::type;
                       const T x1(value1);
                       const T x2(value2);
                       if (isapplicable(ctype<T>, value1, value2))
                       {
                           CHECK(is_same<decltype(fn(x1, x2)),
-                                        typename compound_type_traits<T>::template rebind<decltype(
-                                            reffn(std::declval<subtype<T>>(), std::declval<subtype<T>>()))>>);
+                                        typename compound_type_traits<T>::template rebind<decltype(reffn(
+                                            std::declval<subtype<T>>(), std::declval<subtype<T>>()))>>);
                           CHECK(fn(x1, x2) == apply(reffn, x1, x2));
                       }
                   });
 
-    testo::matrix(named("type") = test_catogories::types(cint<Cat & ~1>), [&](auto type) {
-        using T    = typename decltype(type)::type;
-        const T x1 = test_enumerate(T::shape(), csizeseq<T::size()>, 0, 1);
-        const T x2 = test_enumerate(T::shape(), csizeseq<T::size()>, 100, -1);
-        CHECK(fn(x1, x2) == apply(reffn, x1, x2));
-    });
+    testo::matrix(named("type") = test_catogories::types(cint<Cat & ~1>),
+                  [&](auto type)
+                  {
+                      using T    = typename decltype(type)::type;
+                      const T x1 = test_enumerate(T::shape(), csizeseq<T::size()>, 0, 1);
+                      const T x2 = test_enumerate(T::shape(), csizeseq<T::size()>, 100, -1);
+                      CHECK(fn(x1, x2) == apply(reffn, x1, x2));
+                  });
 }
 
 #endif
