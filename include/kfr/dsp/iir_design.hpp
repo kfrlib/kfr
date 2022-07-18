@@ -897,7 +897,8 @@ template <typename T>
 KFR_FUNCTION univector<complex<T>> cplxreal(const univector<complex<T>>& list)
 {
     univector<complex<T>> x = list;
-    std::sort(x.begin(), x.end(), [](const complex<T>& a, const complex<T>& b) { return a.real() < b.real(); });
+    std::sort(x.begin(), x.end(),
+              [](const complex<T>& a, const complex<T>& b) { return a.real() < b.real(); });
     T tol                        = std::numeric_limits<T>::epsilon() * 100;
     univector<complex<T>> result = x;
     for (size_t i = result.size(); i > 1; i--)

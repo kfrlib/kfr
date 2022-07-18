@@ -346,23 +346,23 @@ extern char* gets(char* __s);
 #if defined(CMT_GNU_ATTRIBUTES)
 
 #define CMT_NODEBUG
-// __attribute__((__nodebug__))
 
-// GCC 9 broke attributes on lambdas.
-#if defined(NDEBUG) && (!defined(__GNUC__) || __GNUC__ != 9)
 #define CMT_ALWAYS_INLINE __attribute__((__always_inline__))
-#else
-#define CMT_ALWAYS_INLINE
-#endif
 #define CMT_INLINE __inline__ CMT_ALWAYS_INLINE
 #define CMT_INLINE_MEMBER CMT_ALWAYS_INLINE
+#if defined(CMT_COMPILER_GCC) &&                                                                             \
+    (CMT_GCC_VERSION >= 900 && CMT_GCC_VERSION < 904 || CMT_GCC_VERSION >= 1000 && CMT_GCC_VERSION < 1002)
+// Workaround for GCC 9/10 bug https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90333
+#define CMT_INLINE_LAMBDA
+#else
 #define CMT_INLINE_LAMBDA CMT_INLINE_MEMBER
+#endif
 #define CMT_NOINLINE __attribute__((__noinline__))
 #define CMT_FLATTEN __attribute__((__flatten__))
 #define CMT_RESTRICT __restrict__
 
-#define CMT_LIKELY(...) __builtin_expect(__VA_ARGS__, 1)
-#define CMT_UNLIKELY(...) __builtin_expect(__VA_ARGS__, 0)
+#define CMT_LIKELY(...) __builtin_expect(!!(__VA_ARGS__), 1)
+#define CMT_UNLIKELY(...) __builtin_expect(!!(__VA_ARGS__), 0)
 
 #elif defined(CMT_MSVC_ATTRIBUTES)
 

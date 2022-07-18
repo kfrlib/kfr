@@ -103,7 +103,7 @@ CMT_UNUSED static const char* cpu_name(cpu_t set)
 #ifdef CMT_ARCH_ARM
     static const char* names[] = { "generic", "neon", "neon64" };
 #endif
-    if (set >= cpu_t::lowest && set <= cpu_t::highest)
+    if (CMT_LIKELY(set >= cpu_t::lowest && set <= cpu_t::highest))
         return names[static_cast<size_t>(set)];
     return "-";
 }

@@ -86,7 +86,7 @@ KFR_INTRINSIC Tout power_to_dB(const T& x)
 template <typename T, typename Tout = flt_type<T>>
 KFR_INTRINSIC Tout dB_to_power(const T& x)
 {
-    if (x == -c_infinity<Tout>)
+    if (CMT_UNLIKELY(x == -c_infinity<Tout>))
         return 0.0;
     else
         return exp(x * (c_log_10<Tout> / 10.0));

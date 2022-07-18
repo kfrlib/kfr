@@ -436,7 +436,7 @@ static size_t process(OutputExpr&& out, const InputExpr& in, size_t start = 0,
     static_assert(is_input_expression<InputExpr>, "Fn must be an expression");
 
     size = size_sub(size_min(out.size(), in.size(), size_add(size, start)), start);
-    if (size == 0 || size == infinite_size)
+    if (CMT_UNLIKELY(size == 0 || size == infinite_size))
         return size;
     out.begin_block(coutput, size);
     in.begin_block(cinput, size);

@@ -348,7 +348,7 @@ public:
         std::size_t sindex =
             size_t(std::upper_bound(std::begin(self.segments), std::end(self.segments), index) - 1 -
                    std::begin(self.segments));
-        if (self.segments[sindex + 1] - index >= N)
+        if (CMT_LIKELY(self.segments[sindex + 1] - index >= N))
             return get_elements(self, cinput, index, sindex - 1, y);
         else
         {
@@ -487,11 +487,11 @@ struct expression_padded : expression_with_arguments<E>
     KFR_INTRINSIC friend vec<value_type, N> get_elements(const expression_padded& self, cinput_t cinput,
                                                          size_t index, vec_shape<value_type, N> y)
     {
-        if (index >= self.input_size)
+        if (CMT_UNLIKELY(index >= self.input_size))
         {
             return self.fill_value;
         }
-        else if (index + N <= self.input_size)
+        else if (CMT_LIKELY(index + N <= self.input_size))
         {
             return self.argument_first(cinput, index, y);
         }
@@ -500,7 +500,7 @@ struct expression_padded : expression_with_arguments<E>
             vec<value_type, N> x{};
             for (size_t i = 0; i < N; i++)
             {
-                if (index + i < self.input_size)
+                if (CMT_LIKELY(index + i < self.input_size))
                     x[i] = self.argument_first(cinput, index + i, vec_shape<value_type, 1>()).front();
                 else
                     x[i] = self.fill_value;
@@ -627,7 +627,7 @@ struct task_partition
     size_t count;
     size_t operator()(size_t index)
     {
-        if (index >= count)
+        if (CMT_UNLIKELY(index >= count))
             return 0;
         return process(output, input, index * chunk_size,
                        index == count - 1 ? size - (count - 1) * chunk_size : chunk_size);
@@ -677,7 +677,7 @@ struct concatenate_expression : expression_with_arguments<E1, E2>
         {
             return self.argument(cinput, csize<1>, index - size0, y);
         }
-        else if (index + N <= size0)
+        else if (CMT_LIKELY(index + N <= size0))
         {
             return self.argument(cinput, csize<0>, index, y);
         }

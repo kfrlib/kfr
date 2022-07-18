@@ -185,7 +185,7 @@ struct univector_base<T, Class, true> : input_expression, output_expression
 
     void ringbuf_write(size_t& cursor, const T* src, size_t srcsize)
     {
-        if (srcsize == 0)
+        if (CMT_UNLIKELY(srcsize == 0))
             return;
         // skip redundant data
         const size_t size = get_size();
@@ -197,7 +197,7 @@ struct univector_base<T, Class, true> : input_expression, output_expression
         }
         const size_t fsize = size - cursor;
         // one fragment
-        if (srcsize <= fsize)
+        if (CMT_LIKELY(srcsize <= fsize))
         {
             copy(data + cursor, src, srcsize);
         }
@@ -238,7 +238,7 @@ struct univector_base<T, Class, true> : input_expression, output_expression
     }
     void ringbuf_read(size_t& cursor, T* dest, size_t destsize) const
     {
-        if (destsize == 0)
+        if (CMT_UNLIKELY(destsize == 0))
             return;
         // skip redundant data
         const size_t size = get_size();
@@ -250,7 +250,7 @@ struct univector_base<T, Class, true> : input_expression, output_expression
         }
         const size_t fsize = size - cursor;
         // one fragment
-        if (destsize <= fsize)
+        if (CMT_LIKELY(destsize <= fsize))
         {
             copy(dest, data + cursor, destsize);
         }

@@ -87,7 +87,7 @@ constexpr inline uint64_t factorial_table[21] = {
 /// @brief Returns the factorial of an argument. Returns max(uint64_t) if does not fit to uint64_t
 constexpr uint64_t factorial(int n)
 {
-    if (n < 0 || n > 20)
+    if (CMT_LIKELY(n < 0 || n > 20))
         return std::numeric_limits<uint64_t>::max();
     return factorial_table[n];
 }

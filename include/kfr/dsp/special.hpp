@@ -41,7 +41,7 @@ template <typename T = int>
 auto unitimpulse()
 {
     return lambda<T>([](cinput_t, size_t index, auto x) {
-        if (index == 0)
+        if (CMT_UNLIKELY(index == 0))
             return onoff(x);
         else
             return zerovector(x);
