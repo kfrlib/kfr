@@ -57,6 +57,6 @@ static char dummyvar = init_dummyvar();
 /**
  * @brief Returns cpu instruction set detected at runtime.
  */
-KFR_FUNCTION cpu_t get_cpu() { return internal_generic::cpu_v(); }
+inline cpu_t get_cpu() { return internal_generic::cpu_v(); }
 
 } // namespace kfr
