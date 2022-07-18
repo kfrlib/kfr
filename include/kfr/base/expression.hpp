@@ -425,7 +425,7 @@ CMT_INTRINSIC internal::expression_function<Fn, NewArgs...> rebind(
 
 template <size_t width = 0, typename OutputExpr, typename InputExpr, size_t groupsize = 1,
           typename Tvec = vec<value_type_of<InputExpr>, 1>>
-CMT_INTRINSIC static size_t process(OutputExpr&& out, const InputExpr& in, size_t start = 0,
+static size_t process(OutputExpr&& out, const InputExpr& in, size_t start = 0,
                                     size_t size = infinite_size, coutput_t coutput = nullptr,
                                     cinput_t cinput = nullptr, csize_t<groupsize> = csize_t<groupsize>())
 {

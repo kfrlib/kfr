@@ -162,7 +162,7 @@ KFR_FUNCTION flt_type<T1> amp_to_dB(const T1& x)
 }
 
 template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_INTRINSIC internal::expression_function<fn::amp_to_dB, E1> amp_to_dB(E1&& x)
+KFR_FUNCTION internal::expression_function<fn::amp_to_dB, E1> amp_to_dB(E1&& x)
 {
     return { fn::amp_to_dB(), std::forward<E1>(x) };
 }

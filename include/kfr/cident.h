@@ -380,7 +380,6 @@ extern char* gets(char* __s);
 
 #define CMT_INTRINSIC CMT_INLINE CMT_NODEBUG
 #define CMT_MEM_INTRINSIC CMT_INLINE CMT_NODEBUG
-#define CMT_FUNCTION inline
 
 #if defined _MSC_VER && _MSC_VER >= 1900 &&                                                                  \
     (!defined(__clang__) ||                                                                                  \
