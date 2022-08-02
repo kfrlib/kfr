@@ -1071,22 +1071,6 @@ KFR_INTRINSIC simd<T, N> from_simd_array(const simd_array<T, N>& x) CMT_NOEXCEPT
 
 #endif
 
-#define KFR_COMPONENTWISE_RET(code)                                                                          \
-    vec<T, N> result;                                                                                        \
-    for (size_t i = 0; i < N; i++)                                                                           \
-        code;                                                                                                \
-    return result;
-
-#define KFR_COMPONENTWISE_RET_I(Tvec, code)                                                                  \
-    Tvec result;                                                                                             \
-    for (size_t i = 0; i < result.size(); i++)                                                               \
-        code;                                                                                                \
-    return result;
-
-#define KFR_COMPONENTWISE(code)                                                                              \
-    for (size_t i = 0; i < N; i++)                                                                           \
-        code;
-
 template <typename Tout>
 KFR_INTRINSIC void simd_make(ctype_t<Tout>) CMT_NOEXCEPT = delete;
 
