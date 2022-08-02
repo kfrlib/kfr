@@ -406,7 +406,20 @@ constexpr inline bool is_simd_type =
     is_same<T, long> || is_same<T, unsigned long> || is_same<T, long long> || is_same<T, unsigned long long>;
 
 template <typename T>
+constexpr inline bool is_simd_float_type = is_same<T, float> || is_same<T, double>;
+
+template <typename T>
+constexpr inline bool is_simd_int_type =
+    is_same<T, signed char> || is_same<T, unsigned char> || is_same<T, short> || is_same<T, unsigned short> ||
+    is_same<T, int> || is_same<T, unsigned int> || is_same<T, long> || is_same<T, unsigned long> ||
+    is_same<T, long long> || is_same<T, unsigned long long>;
+
+template <typename T>
 constexpr inline bool is_simd_type<bit<T>> = is_simd_type<T>;
+template <typename T>
+constexpr inline bool is_simd_float_type<bit<T>> = is_simd_float_type<T>;
+template <typename T>
+constexpr inline bool is_simd_int_type<bit<T>> = is_simd_int_type<T>;
 
 template <typename T, size_t N>
 struct vec_shape
