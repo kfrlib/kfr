@@ -266,3 +266,6 @@ if (NOT KFR_SKIP_TESTS)
         add_test(NAME all_tests COMMAND ${PROJECT_BINARY_DIR}/bin/all_tests)
     endif ()
 endif ()
+
+add_executable(tensor_test tensor_test.cpp unit/base/tensor.cpp)
+target_link_libraries(tensor_test kfr use_arch)
