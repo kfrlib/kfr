@@ -34,13 +34,13 @@ using std::size_t;
 #if __cplusplus >= 201103L || CMT_MSC_VER >= 1900 || CMT_HAS_FEATURE(cxx_constexpr)
 
 template <typename T, size_t N>
-constexpr inline static size_t arraysize(const T (&)[N]) CMT_NOEXCEPT
+constexpr CMT_INTRINSIC static size_t arraysize(const T (&)[N]) CMT_NOEXCEPT
 {
     return N;
 }
 
 template <typename T, size_t N>
-constexpr inline static std::integral_constant<size_t, N> carraysize(const T (&)[N]) CMT_NOEXCEPT
+constexpr CMT_INTRINSIC static std::integral_constant<size_t, N> carraysize(const T (&)[N]) CMT_NOEXCEPT
 {
     return {};
 }
@@ -66,16 +66,16 @@ using void_t = void;
 
 namespace details
 {
-constexpr inline bool args_or() { return false; }
+constexpr CMT_INTRINSIC bool args_or() { return false; }
 template <typename... Ts>
-constexpr inline bool args_or(bool x, Ts... rest)
+constexpr CMT_INTRINSIC bool args_or(bool x, Ts... rest)
 {
     return x || args_or(rest...);
 }
 
-constexpr inline bool args_and() { return true; }
+constexpr CMT_INTRINSIC bool args_and() { return true; }
 template <typename... Ts>
-constexpr inline bool args_and(bool x, Ts... rest)
+constexpr CMT_INTRINSIC bool args_and(bool x, Ts... rest)
 {
     return x && args_and(rest...);
 }
@@ -221,7 +221,7 @@ struct compound_type_traits
     template <typename U>
     using deep_rebind = U;
 
-    CMT_INLINE static constexpr const subtype& at(const T& value, size_t /*index*/) { return value; }
+    CMT_MEM_INTRINSIC static constexpr const subtype& at(const T& value, size_t /*index*/) { return value; }
 };
 
 template <typename T>
@@ -267,7 +267,7 @@ struct compound_type_traits<std::pair<T, T>>
     using deep_rebind = std::pair<typename compound_type_traits<subtype>::template deep_rebind<U>,
                                   typename compound_type_traits<subtype>::template deep_rebind<U>>;
 
-    CMT_INLINE static constexpr const subtype& at(const std::pair<subtype, subtype>& value, size_t index)
+    CMT_MEM_INTRINSIC static constexpr const subtype& at(const std::pair<subtype, subtype>& value, size_t index)
     {
         return index == 0 ? value.first : value.second;
     }
@@ -277,35 +277,35 @@ template <typename T, T val>
 struct cval_t
 {
     constexpr static T value = val;
-    constexpr cval_t() CMT_NOEXCEPT {}
-    constexpr cval_t(const cval_t&) CMT_NOEXCEPT = default;
-    constexpr cval_t(cval_t&&) CMT_NOEXCEPT      = default;
+    constexpr CMT_MEM_INTRINSIC cval_t() CMT_NOEXCEPT {}
+    constexpr CMT_MEM_INTRINSIC cval_t(const cval_t&) CMT_NOEXCEPT = default;
+    constexpr CMT_MEM_INTRINSIC cval_t(cval_t&&) CMT_NOEXCEPT      = default;
     typedef T value_type;
     typedef cval_t type;
-    constexpr operator value_type() const { return value; }
-    constexpr value_type operator()() const { return value; }
+    constexpr CMT_MEM_INTRINSIC operator value_type() const { return value; }
+    constexpr CMT_MEM_INTRINSIC value_type operator()() const { return value; }
 };
 
 template <typename T, T value>
-constexpr inline T val_of(cval_t<T, value>)
+constexpr CMT_INTRINSIC T val_of(cval_t<T, value>)
 {
     return value;
 }
 
 template <typename T>
-constexpr inline T val_of(T value)
+constexpr CMT_INTRINSIC T val_of(T value)
 {
     return value;
 }
 
 template <typename T>
-constexpr inline bool is_constant_val(T)
+constexpr CMT_INTRINSIC bool is_constant_val(T)
 {
     return false;
 }
 
 template <typename T, T value>
-constexpr inline bool is_constant_val(cval_t<T, value>)
+constexpr CMT_INTRINSIC bool is_constant_val(cval_t<T, value>)
 {
     return true;
 }
@@ -402,33 +402,33 @@ struct get_nth_type<index>
 template <typename T, T... values>
 struct cvals_t
 {
-    constexpr cvals_t() CMT_NOEXCEPT = default;
+    constexpr CMT_MEM_INTRINSIC cvals_t() CMT_NOEXCEPT = default;
 
     using type = cvals_t<T, values...>;
-    constexpr static size_t size() { return sizeof...(values); }
+    constexpr CMT_MEM_INTRINSIC static size_t size() { return sizeof...(values); }
     template <size_t index>
-    constexpr T operator[](csize_t<index>) const
+    constexpr CMT_MEM_INTRINSIC T operator[](csize_t<index>) const
     {
         return get(csize_t<index>());
     }
     template <size_t index>
-    constexpr static T get(csize_t<index> = csize_t<index>())
+    constexpr CMT_MEM_INTRINSIC static T get(csize_t<index> = csize_t<index>())
     {
         return details::get_nth<index, T, values...>::value;
     }
-    constexpr static T front() { return get(csize_t<0>()); }
-    constexpr static T back() { return get(csize_t<size() - 1>()); }
+    constexpr CMT_MEM_INTRINSIC static T front() { return get(csize_t<0>()); }
+    constexpr CMT_MEM_INTRINSIC static T back() { return get(csize_t<size() - 1>()); }
 
-    static const T* begin() { return array(); }
-    static const T* end() { return array() + size(); }
+    static CMT_MEM_INTRINSIC const T* begin() { return array(); }
+    static CMT_MEM_INTRINSIC const T* end() { return array() + size(); }
 
-    static const T* array()
+    static CMT_MEM_INTRINSIC const T* array()
     {
         static const T arr[] = { values... };
         return &arr[0];
     }
     template <size_t... indices>
-    constexpr cvals_t<T, details::get_nth_e<indices, type>::value...> operator[](
+    constexpr CMT_MEM_INTRINSIC cvals_t<T, details::get_nth_e<indices, type>::value...> operator[](
         cvals_t<size_t, indices...>) const
     {
         //        static_assert(sizeof(T)==0, "+++++++++++++++++++++++++++++");
@@ -437,20 +437,20 @@ struct cvals_t
 
     // MSVC requires static_cast<T> here:
     template <typename Fn>
-    constexpr auto map(Fn&&) const -> cvals_t<T, static_cast<T>(Fn()(values))...>
+    constexpr CMT_MEM_INTRINSIC auto map(Fn&&) const -> cvals_t<T, static_cast<T>(Fn()(values))...>
     {
         return {};
     }
 
-    constexpr bool equal(cvals_t<T, values...>) const noexcept { return true; }
+    constexpr CMT_MEM_INTRINSIC bool equal(cvals_t<T, values...>) const noexcept { return true; }
     template <T... values2>
-    constexpr bool equal(cvals_t<T, values2...>) const noexcept
+    constexpr CMT_MEM_INTRINSIC bool equal(cvals_t<T, values2...>) const noexcept
     {
         return false;
     }
 
     template <T... values2>
-    constexpr bool notequal(cvals_t<T, values...> ind) const noexcept
+    constexpr CMT_MEM_INTRINSIC bool notequal(cvals_t<T, values...> ind) const noexcept
     {
         return !equal(ind);
     }
@@ -460,9 +460,9 @@ template <typename T>
 struct cvals_t<T>
 {
     using type = cvals_t<T>;
-    constexpr static size_t size() { return 0; }
+    constexpr CMT_MEM_INTRINSIC static size_t size() { return 0; }
 
-    static const T* array() { return nullptr; }
+    static CMT_MEM_INTRINSIC const T* array() { return nullptr; }
 };
 
 namespace details
@@ -495,25 +495,25 @@ template <size_t... values>
 using elements_t = cvals_t<size_t, values...>;
 
 template <typename T>
-constexpr inline T csum(cvals_t<T> = cvals_t<T>())
+constexpr CMT_INTRINSIC T csum(cvals_t<T> = cvals_t<T>())
 {
     return 0;
 }
 
 template <typename T, T first, T... rest>
-constexpr inline T csum(cvals_t<T, first, rest...> = cvals_t<T, first, rest...>())
+constexpr CMT_INTRINSIC T csum(cvals_t<T, first, rest...> = cvals_t<T, first, rest...>())
 {
     return first + csum(cvals_t<T, rest...>());
 }
 
 template <typename T>
-constexpr inline T cprod(cvals_t<T>)
+constexpr CMT_INTRINSIC T cprod(cvals_t<T>)
 {
     return 1;
 }
 
 template <typename T, T first, T... rest>
-constexpr inline T cprod(cvals_t<T, first, rest...>)
+constexpr CMT_INTRINSIC T cprod(cvals_t<T, first, rest...>)
 {
     return first * cprod(cvals_t<T, rest...>());
 }
@@ -602,7 +602,7 @@ template <typename T1, typename... Ts>
 using concat_lists = typename details::concat_impl<decay<T1>, decay<Ts>...>::type;
 
 template <typename T1, typename... Ts>
-constexpr inline concat_lists<T1, Ts...> cconcat(T1, Ts...)
+constexpr CMT_INTRINSIC concat_lists<T1, Ts...> cconcat(T1, Ts...)
 {
     return {};
 }
@@ -676,7 +676,7 @@ using cfilter_t = typename details::filter_impl<decay<T1>, decay<T2>>::type;
 
 template <typename T, T... vals, bool... flags,
           typename Ret = cfilter_t<cvals_t<T, vals...>, cvals_t<bool, flags...>>>
-constexpr inline Ret cfilter(cvals_t<T, vals...>, cvals_t<bool, flags...>)
+constexpr CMT_INTRINSIC Ret cfilter(cvals_t<T, vals...>, cvals_t<bool, flags...>)
 {
     return Ret{};
 }
@@ -684,12 +684,12 @@ constexpr inline Ret cfilter(cvals_t<T, vals...>, cvals_t<bool, flags...>)
 #define CMT_UN_OP(op)                                                                                        \
     template <typename T1, T1... vals1,                                                                      \
               typename Ret = cvals_t<decltype(op std::declval<T1>()), (op vals1)...>>                        \
-    constexpr inline Ret operator op(cvals_t<T1, vals1...>)                                                  \
+    constexpr CMT_INTRINSIC Ret operator op(cvals_t<T1, vals1...>)                                                  \
     {                                                                                                        \
         return Ret{};                                                                                        \
     }                                                                                                        \
     template <typename T1, T1 val1, typename Ret = cval_t<decltype(op std::declval<T1>()), (op val1)>>       \
-    constexpr inline Ret operator op(cval_t<T1, val1>)                                                       \
+    constexpr CMT_INTRINSIC Ret operator op(cval_t<T1, val1>)                                                       \
     {                                                                                                        \
         return Ret{};                                                                                        \
     }
@@ -698,25 +698,25 @@ constexpr inline Ret cfilter(cvals_t<T, vals...>, cvals_t<bool, flags...>)
     template <typename T1, T1... vals1, typename T2, T2... vals2,                                            \
               typename Ret =                                                                                 \
                   cvals_t<decltype(std::declval<T1>() op std::declval<T2>()), (vals1 op vals2)...>>          \
-    constexpr inline Ret operator op(cvals_t<T1, vals1...>, cvals_t<T2, vals2...>)                           \
+    constexpr CMT_INTRINSIC Ret operator op(cvals_t<T1, vals1...>, cvals_t<T2, vals2...>)                           \
     {                                                                                                        \
         return Ret{};                                                                                        \
     }                                                                                                        \
     template <typename T1, T1... vals1, typename T2, T2 val2,                                                \
               typename Ret =                                                                                 \
                   cvals_t<decltype(std::declval<T1>() op std::declval<T2>()), (vals1 op val2)...>>           \
-    constexpr inline Ret operator op(cvals_t<T1, vals1...>, cval_t<T2, val2>)                                \
+    constexpr CMT_INTRINSIC Ret operator op(cvals_t<T1, vals1...>, cval_t<T2, val2>)                                \
     {                                                                                                        \
         return Ret{};                                                                                        \
     }                                                                                                        \
     template <typename T1, T1 val1, typename T2, T2... vals2,                                                \
               typename Ret =                                                                                 \
                   cvals_t<decltype(std::declval<T1>() op std::declval<T2>()), (val1 op vals2)...>>           \
-    constexpr inline Ret operator op(cval_t<T1, val1>, cvals_t<T2, vals2...>)                                \
+    constexpr CMT_INTRINSIC Ret operator op(cval_t<T1, val1>, cvals_t<T2, vals2...>)                                \
     {                                                                                                        \
         return Ret{};                                                                                        \
     }
-    
+
 // clang-format off
 CMT_UN_OP(-)
 CMT_UN_OP(+)
@@ -742,7 +742,6 @@ CMT_BIN_OP(&)
 CMT_BIN_OP(|)
 CMT_BIN_OP(^)
 // clang-format on
-
 
 namespace details
 {
@@ -799,14 +798,14 @@ template <typename... List>
 using indicesfor_t = cvalseq_t<size_t, sizeof...(List), 0>;
 
 template <size_t group, size_t... indices, size_t N = group * sizeof...(indices)>
-constexpr inline auto scale(csizes_t<indices...>) CMT_NOEXCEPT
+constexpr CMT_INTRINSIC auto scale(csizes_t<indices...>) CMT_NOEXCEPT
 {
     using Tlist = typename details::concat_impl<csizeseq_t<group, group * indices>...>::type;
     return Tlist{};
 }
 
 template <size_t group, size_t... indices, size_t N = group * sizeof...(indices)>
-constexpr inline auto scale() CMT_NOEXCEPT
+constexpr CMT_INTRINSIC auto scale() CMT_NOEXCEPT
 {
     using Tlist = typename details::concat_impl<csizeseq_t<group, group * indices>...>::type;
     return Tlist{};
@@ -882,71 +881,71 @@ constexpr inline bool is_returning_type = details::is_returning_type_impl<Ret, T
 namespace details
 {
 template <typename Fn, CMT_ENABLE_IF(is_callable<Fn()>)>
-inline auto call_if_callable(Fn&& fn)
+CMT_INTRINSIC auto call_if_callable(Fn&& fn)
 {
     return fn();
 }
 
 template <typename Fn, CMT_ENABLE_IF(!is_callable<Fn()>)>
-inline auto call_if_callable(Fn&& fn)
+CMT_INTRINSIC auto call_if_callable(Fn&& fn)
 {
     return std::forward<Fn>(fn);
 }
 } // namespace details
 
 template <typename Fn, typename... Args>
-inline auto bind_func(Fn&& fn, Args&&... args)
+CMT_INTRINSIC auto bind_func(Fn&& fn, Args&&... args)
 {
     return [=]() CMT_INLINE_LAMBDA { return fn(details::call_if_callable(std::forward<Args>(args))...); };
 }
 
 template <typename T>
-constexpr inline bool is_even(T x)
+constexpr CMT_INTRINSIC bool is_even(T x)
 {
     return (x % 2) == 0;
 }
 
 template <typename T>
-constexpr inline bool is_odd(T x)
+constexpr CMT_INTRINSIC bool is_odd(T x)
 {
     return !is_even(x);
 }
 
 template <typename T>
-constexpr inline bool is_poweroftwo(T x)
+constexpr CMT_INTRINSIC bool is_poweroftwo(T x)
 {
     return ((x != 0) && !(x & (x - 1)));
 }
 
 template <typename T>
-constexpr inline unsigned ilog2(T n, unsigned p = 0)
+constexpr CMT_INTRINSIC unsigned ilog2(T n, unsigned p = 0)
 {
     return (n <= 1) ? p : ilog2(n / 2, p + 1);
 }
 
 /// @brief Returns a nearest power of two that is greater or equal than n
 template <typename T>
-constexpr inline T next_poweroftwo(T n)
+constexpr CMT_INTRINSIC T next_poweroftwo(T n)
 {
     return n > 2 ? T(1) << (ilog2(n - 1) + 1) : n;
 }
 
 /// @brief Returns a nearest power of two that is less or equal than n
 template <typename T>
-constexpr inline T prev_poweroftwo(T n)
+constexpr CMT_INTRINSIC T prev_poweroftwo(T n)
 {
     return n > 2 ? T(1) << (ilog2(n)) : n;
 }
 
 template <typename T>
-constexpr inline bool is_divisible(T x, T divisor)
+constexpr CMT_INTRINSIC bool is_divisible(T x, T divisor)
 {
     return x % divisor == 0;
 }
 
 /// @brief Greatest common divisor
 template <typename T>
-constexpr inline T gcd(T a)
+constexpr CMT_INTRINSIC T gcd(T a)
 {
     return a;
 }
@@ -960,33 +959,33 @@ constexpr inline T gcd(T a, T b)
 
 /// @brief Greatest common divisor
 template <typename T, typename... Ts>
-constexpr inline T gcd(T a, T b, T c, Ts... rest)
+constexpr CMT_INTRINSIC T gcd(T a, T b, T c, Ts... rest)
 {
     return gcd(a, gcd(b, c, rest...));
 }
 
 /// @brief Least common multiple
 template <typename T>
-constexpr inline T lcm(T a)
+constexpr CMT_INTRINSIC T lcm(T a)
 {
     return a;
 }
 
 /// @brief Least common multiple
 template <typename T>
-constexpr inline T lcm(T a, T b)
+constexpr CMT_INTRINSIC T lcm(T a, T b)
 {
     return a * b / gcd(a, b);
 }
 
 /// @brief Least common multiple
 template <typename T, typename... Ts>
-constexpr inline T lcm(T a, T b, T c, Ts... rest)
+constexpr CMT_INTRINSIC T lcm(T a, T b, T c, Ts... rest)
 {
     return lcm(a, lcm(b, c, rest...));
 }
 
-inline std::lldiv_t floor_div(long long a, long long b)
+CMT_INTRINSIC std::lldiv_t floor_div(long long a, long long b)
 {
     std::lldiv_t d = std::lldiv(a, b);
     if (d.rem < 0)
@@ -1000,67 +999,74 @@ inline std::lldiv_t floor_div(long long a, long long b)
 namespace details
 {
 
-template <size_t bits>
-struct float_type_impl;
-template <size_t bits>
-struct int_type_impl;
-template <size_t bits>
-struct unsigned_type_impl;
+template <typename T>
+constexpr inline char typekind = is_floating_point<T> ? 'f'
+                                 : is_integral<T>     ? (is_unsigned<T> ? 'u' : 'i')
+                                                      : '?';
+
+template <char kind, size_t bits>
+struct bits_to_type_impl;
 
 template <>
-struct float_type_impl<32>
+struct bits_to_type_impl<'f', 32>
 {
     using type = float;
     static_assert(sizeof(type) * 8 == 32, "float must represent IEEE single precision value");
 };
 template <>
-struct float_type_impl<64>
+struct bits_to_type_impl<'f', 64>
 {
     using type = double;
     static_assert(sizeof(type) * 8 == 64, "double must represent IEEE double precision value");
 };
 
 template <>
-struct int_type_impl<8>
+struct bits_to_type_impl<'i', 8>
 {
     using type = std::int8_t;
 };
 template <>
-struct int_type_impl<16>
+struct bits_to_type_impl<'i', 16>
 {
     using type = std::int16_t;
 };
 template <>
-struct int_type_impl<32>
+struct bits_to_type_impl<'i', 32>
 {
     using type = std::int32_t;
 };
 template <>
-struct int_type_impl<64>
+struct bits_to_type_impl<'i', 64>
 {
     using type = std::int64_t;
 };
 
 template <>
-struct unsigned_type_impl<8>
+struct bits_to_type_impl<'u', 8>
 {
     using type = std::uint8_t;
 };
 template <>
-struct unsigned_type_impl<16>
+struct bits_to_type_impl<'u', 16>
 {
     using type = std::uint16_t;
 };
 template <>
-struct unsigned_type_impl<32>
+struct bits_to_type_impl<'u', 32>
 {
     using type = std::uint32_t;
 };
 template <>
-struct unsigned_type_impl<64>
+struct bits_to_type_impl<'u', 64>
 {
     using type = std::uint64_t;
 };
+
+template <char kind, size_t bits>
+using bits_to_type = typename bits_to_type_impl<kind, bits>::type;
+
+template <char kind, size_t bytes>
+using bytes_to_type = typename bits_to_type_impl<kind, bytes * 8>::type;
 
 template <int64_t min, int64_t max, typename... Types>
 struct findinttype_impl
@@ -1085,11 +1091,11 @@ using is_number_impl =
 } // namespace details
 
 template <size_t bits>
-using float_type = typename details::float_type_impl<bits>::type;
+using float_type = typename details::bits_to_type_impl<'f', bits>::type;
 template <size_t bits>
-using int_type = typename details::int_type_impl<bits>::type;
+using int_type = typename details::bits_to_type_impl<'i', bits>::type;
 template <size_t bits>
-using unsigned_type = typename details::unsigned_type_impl<bits>::type;
+using unsigned_type = typename details::bits_to_type_impl<'u', bits>::type;
 
 template <int64_t min, int64_t max>
 using findinttype = typename details::findinttype_impl<min, max, uint8_t, int8_t, uint16_t, int16_t, uint32_t,
@@ -1595,24 +1601,24 @@ CMT_INTRINSIC decltype(auto) cswitch(cvals_t<T, v0, values...>, identity<T> valu
 namespace details
 {
 template <typename T, typename Fn1, typename Fn2, typename... Fns>
-inline decltype(auto) cmatch_impl(T&& value, Fn1&& first, Fn2&& second, Fns&&... rest);
+CMT_INTRINSIC decltype(auto) cmatch_impl(T&& value, Fn1&& first, Fn2&& second, Fns&&... rest);
 template <typename T, typename Fn, typename... Ts>
-inline decltype(auto) cmatch_impl(T&& value, Fn&& last);
+CMT_INTRINSIC decltype(auto) cmatch_impl(T&& value, Fn&& last);
 
 template <typename T, typename Fn, typename... Fns>
-inline decltype(auto) cmatch_impl2(cbool_t<true>, T&& value, Fn&& fn, Fns&&...)
+CMT_INTRINSIC decltype(auto) cmatch_impl2(cbool_t<true>, T&& value, Fn&& fn, Fns&&...)
 {
     return fn(std::forward<T>(value));
 }
 
 template <typename T, typename Fn, typename... Fns>
-inline decltype(auto) cmatch_impl2(cbool_t<false>, T&& value, Fn&&, Fns&&... rest)
+CMT_INTRINSIC decltype(auto) cmatch_impl2(cbool_t<false>, T&& value, Fn&&, Fns&&... rest)
 {
     return cmatch_impl(std::forward<T>(value), std::forward<Fns>(rest)...);
 }
 
 template <typename T, typename Fn1, typename Fn2, typename... Fns>
-inline decltype(auto) cmatch_impl(T&& value, Fn1&& first, Fn2&& second, Fns&&... rest)
+CMT_INTRINSIC decltype(auto) cmatch_impl(T&& value, Fn1&& first, Fn2&& second, Fns&&... rest)
 {
     using first_arg        = typename function_arguments<Fn1>::template nth<0>;
     constexpr bool is_same = cometa::is_same<decay<T>, decay<first_arg>>;
@@ -1621,20 +1627,20 @@ inline decltype(auto) cmatch_impl(T&& value, Fn1&& first, Fn2&& second, Fns&&...
 }
 
 template <typename T, typename Fn, typename... Ts>
-inline decltype(auto) cmatch_impl(T&& value, Fn&& last)
+CMT_INTRINSIC decltype(auto) cmatch_impl(T&& value, Fn&& last)
 {
     return last(std::forward<T>(value));
 }
 } // namespace details
 
 template <typename T, typename Fn, typename... Args>
-inline decltype(auto) cmatch(T&& value, Fn&& fn, Args... args)
+CMT_INTRINSIC decltype(auto) cmatch(T&& value, Fn&& fn, Args... args)
 {
     return details::cmatch_impl(std::forward<T>(value), std::forward<Fn>(fn), std::forward<Args>(args)...);
 }
 
 template <typename T, T... values>
-inline size_t cfind(cvals_t<T, values...>, identity<T> value)
+CMT_INTRINSIC size_t cfind(cvals_t<T, values...>, identity<T> value)
 {
     static constexpr T temp[]    = { values... };
     static constexpr size_t size = sizeof...(values);
@@ -1670,13 +1676,13 @@ CMT_INTRINSIC NonMemFn make_nonmember(const Fn&)
 }
 
 template <typename T>
-constexpr inline T choose_const()
+constexpr CMT_INTRINSIC T choose_const()
 {
     static_assert(sizeof(T) != 0, "T not found in the list of template arguments");
     return T();
 }
 template <typename T, typename C1>
-constexpr inline T choose_const_fallback(C1 c1)
+constexpr CMT_INTRINSIC T choose_const_fallback(C1 c1)
 {
     return static_cast<T>(c1);
 }
@@ -1689,18 +1695,18 @@ constexpr inline T choose_const_fallback(C1 c1)
  * @endcode
  */
 template <typename T, typename C1, typename... Cs, CMT_ENABLE_IF(is_same<T, C1>)>
-constexpr inline T choose_const(C1 c1, Cs...)
+constexpr CMT_INTRINSIC T choose_const(C1 c1, Cs...)
 {
     return static_cast<T>(c1);
 }
 template <typename T, typename C1, typename... Cs, CMT_ENABLE_IF(!is_same<T, C1>)>
-constexpr inline T choose_const(C1, Cs... constants)
+constexpr CMT_INTRINSIC T choose_const(C1, Cs... constants)
 {
     return choose_const<T>(constants...);
 }
 
 template <typename T, typename C1, typename... Cs>
-constexpr inline T choose_const_fallback(C1 c1, Cs... constants)
+constexpr CMT_INTRINSIC T choose_const_fallback(C1 c1, Cs... constants)
 {
     return is_same<T, C1> ? static_cast<T>(c1) : choose_const_fallback<T>(constants...);
 }
@@ -1742,38 +1748,38 @@ template <typename T>
 using signed_type = typename details::signed_type_impl<T>::type;
 
 template <typename T>
-constexpr inline T align_down(T x, identity<T> alignment)
+constexpr CMT_INTRINSIC T align_down(T x, identity<T> alignment)
 {
     return (x) & ~(alignment - 1);
 }
 template <typename T>
-constexpr inline T* align_down(T* x, size_t alignment)
+constexpr CMT_INTRINSIC T* align_down(T* x, size_t alignment)
 {
     return reinterpret_cast<T*>(align_down(reinterpret_cast<size_t>(x), alignment));
 }
 
 template <typename T>
-constexpr inline T align_up(T x, identity<T> alignment)
+constexpr CMT_INTRINSIC T align_up(T x, identity<T> alignment)
 {
     return (x + alignment - 1) & ~(alignment - 1);
 }
 template <typename T>
-constexpr inline T* align_up(T* x, size_t alignment)
+constexpr CMT_INTRINSIC T* align_up(T* x, size_t alignment)
 {
     return reinterpret_cast<T*>(align_up(reinterpret_cast<size_t>(x), alignment));
 }
 
 template <typename T>
-constexpr inline T* advance(T* x, ptrdiff_t offset)
+constexpr CMT_INTRINSIC T* advance(T* x, ptrdiff_t offset)
 {
     return x + offset;
 }
-constexpr inline void* advance(void* x, ptrdiff_t offset)
+constexpr CMT_INTRINSIC void* advance(void* x, ptrdiff_t offset)
 {
     return advance(static_cast<unsigned char*>(x), offset);
 }
 
-constexpr inline ptrdiff_t distance(const void* x, const void* y)
+constexpr CMT_INTRINSIC ptrdiff_t distance(const void* x, const void* y)
 {
     return static_cast<const unsigned char*>(x) - static_cast<const unsigned char*>(y);
 }
@@ -1834,20 +1840,20 @@ CMT_INTRINSIC constexpr static T implicit_cast(U&& value)
 namespace details
 {
 template <size_t start, size_t count>
-constexpr std::true_type test_sequence(csizeseq_t<count, start>)
+constexpr CMT_INTRINSIC std::true_type test_sequence(csizeseq_t<count, start>)
 {
     return {};
 }
 
 template <size_t, size_t>
-constexpr std::false_type test_sequence(...)
+constexpr CMT_INTRINSIC std::false_type test_sequence(...)
 {
     return {};
 }
 } // namespace details
 
 template <size_t number, size_t... numbers>
-constexpr bool is_sequence(csizes_t<number, numbers...>)
+constexpr CMT_INTRINSIC bool is_sequence(csizes_t<number, numbers...>)
 {
     return details::test_sequence<number, 1 + sizeof...(numbers)>(csizes_t<number, numbers...>()).value;
 }
@@ -1920,36 +1926,48 @@ constexpr cvalseq_t<unsigned, size, start, step> cuintseq{};
 template <typename... List>
 constexpr indicesfor_t<List...> indicesfor{};
 
-// Workaround for GCC 4.8
 template <typename T>
-constexpr conditional<is_scalar<T>, T, const T&> const_max(const T& x, const T& y)
+constexpr CMT_INTRINSIC T const_max(T x)
 {
-    return x > y ? x : y;
+    return x;
 }
-template <typename T>
-constexpr conditional<is_scalar<T>, T, const T&> const_min(const T& x, const T& y)
+template <typename T1, typename T2, typename... Ts>
+constexpr CMT_INTRINSIC std::common_type_t<T1, T2, Ts...> const_max(T1 x, T2 y, Ts... z)
 {
-    return x < y ? x : y;
+    auto yz = const_max(y, z...);
+    return x > yz ? x : yz;
 }
 
 template <typename T>
-constexpr T cminof(cvals_t<T>)
+constexpr CMT_INTRINSIC T const_min(T x)
+{
+    return x;
+}
+template <typename T1, typename T2, typename... Ts>
+constexpr CMT_INTRINSIC std::common_type_t<T1, T2, Ts...> const_min(T1 x, T2 y, Ts... z)
+{
+    auto yz = const_min(y, z...);
+    return x < yz ? x : yz;
+}
+
+template <typename T>
+constexpr CMT_INTRINSIC T cminof(cvals_t<T>)
 {
     return std::numeric_limits<T>::max();
 }
 template <typename T, T val, T... vals>
-constexpr T cminof(cvals_t<T, val, vals...>)
+constexpr CMT_INTRINSIC T cminof(cvals_t<T, val, vals...>)
 {
     T m = cminof(cvals<T, vals...>);
     return val < m ? val : m;
 }
 template <typename T>
-constexpr T cmaxof(cvals_t<T>)
+constexpr CMT_INTRINSIC T cmaxof(cvals_t<T>)
 {
     return std::numeric_limits<T>::min();
 }
 template <typename T, T val, T... vals>
-constexpr T cmaxof(cvals_t<T, val, vals...>)
+constexpr CMT_INTRINSIC T cmaxof(cvals_t<T, val, vals...>)
 {
     T m = cmaxof(cvals<T, vals...>);
     return val > m ? val : m;
@@ -2049,17 +2067,19 @@ using overload_generic = overload_priority<0>;
 #define CMT_GEN_LIST(c, m, ...) CMT_GEN_LIST##c(m, __VA_ARGS__)
 
 template <typename Tout, typename Tin>
-CMT_INLINE Tout bitcast_anything(const Tin& in)
+CMT_INTRINSIC Tout bitcast_anything(const Tin& in)
 {
     static_assert(sizeof(Tin) == sizeof(Tout), "Invalid arguments for bitcast_anything");
 #if defined CMT_COMPILER_INTEL
-    const union {
+    const union
+    {
         const Tin in;
         Tout out;
     } u{ in };
     return u.out;
 #else
-    union {
+    union
+    {
         Tin in;
         Tout out;
     } u{ in };
@@ -2068,13 +2088,13 @@ CMT_INLINE Tout bitcast_anything(const Tin& in)
 }
 
 template <typename T>
-constexpr T dont_deduce(T x)
+CMT_INTRINSIC constexpr T dont_deduce(T x)
 {
     return x;
 }
 
 template <typename Ty, typename T>
-constexpr T just_value(T value)
+CMT_INTRINSIC constexpr T just_value(T value)
 {
     return value;
 }
@@ -2172,7 +2192,8 @@ struct special_value
     template <typename T>
     static T random_bits()
     {
-        union {
+        union
+        {
             uint32_t bits[(sizeof(T) + sizeof(uint32_t) - 1) / sizeof(uint32_t)];
             T value;
         } u;
