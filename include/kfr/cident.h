@@ -347,7 +347,12 @@ extern char* gets(char* __s);
 
 #define CMT_NODEBUG
 
+#ifndef CMT_NO_FORCE_INLINE
 #define CMT_ALWAYS_INLINE __attribute__((__always_inline__))
+#else
+#define CMT_ALWAYS_INLINE
+#endif
+
 #define CMT_INLINE __inline__ CMT_ALWAYS_INLINE
 #define CMT_INLINE_MEMBER CMT_ALWAYS_INLINE
 #if defined(CMT_COMPILER_GCC) &&                                                                             \
@@ -358,7 +363,11 @@ extern char* gets(char* __s);
 #define CMT_INLINE_LAMBDA CMT_INLINE_MEMBER
 #endif
 #define CMT_NOINLINE __attribute__((__noinline__))
+#ifndef CMT_NO_FORCE_INLINE
 #define CMT_FLATTEN __attribute__((__flatten__))
+#else
+#define CMT_FLATTEN
+#endif
 #define CMT_RESTRICT __restrict__
 
 #define CMT_LIKELY(...) __builtin_expect(!!(__VA_ARGS__), 1)
@@ -366,12 +375,21 @@ extern char* gets(char* __s);
 
 #elif defined(CMT_MSVC_ATTRIBUTES)
 
-#define CMT_ALWAYS_INLINE __forceinline
-#define CMT_NODEBUG
-#define CMT_INLINE /*inline*/ __forceinline
-#define CMT_INLINE_MEMBER __forceinline
+#ifndef CMT_NO_FORCE_INLINE
 #if _MSC_VER >= 1927
-#define CMT_INLINE_LAMBDA [[msvc::forceinline]]
+#define CMT_ALWAYS_INLINE [[msvc::forceinline]]
+#else
+#define CMT_ALWAYS_INLINE __forceinline
+#endif
+#else
+#define CMT_ALWAYS_INLINE
+#endif
+
+#define CMT_NODEBUG
+#define CMT_INLINE /*inline*/ CMT_ALWAYS_INLINE
+#define CMT_INLINE_MEMBER CMT_ALWAYS_INLINE
+#if _MSC_VER >= 1927
+#define CMT_INLINE_LAMBDA CMT_ALWAYS_INLINE
 #else
 #define CMT_INLINE_LAMBDA
 #endif
