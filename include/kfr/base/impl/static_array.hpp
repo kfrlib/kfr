@@ -1,5 +1,6 @@
 #include "../../cometa.hpp"
 #include "../../kfr.h"
+#include "../../simd/read_write.hpp"
 
 namespace kfr
 {

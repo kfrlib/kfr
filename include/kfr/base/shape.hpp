@@ -3,6 +3,7 @@
 #include "../simd/shuffle.hpp"
 #include "../simd/types.hpp"
 #include "../simd/vec.hpp"
+#include "../math/min_max.hpp"
 
 #include <bitset>
 
