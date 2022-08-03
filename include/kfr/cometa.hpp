@@ -1107,6 +1107,14 @@ constexpr inline bool is_number = details::is_number_impl<decay<T>>::value;
 template <typename... Ts>
 constexpr inline bool is_numbers = (details::is_number_impl<decay<Ts>>::value && ...);
 
+/// @brief Check if the type argument is a number or a vector of numbers
+template <typename T>
+constexpr inline bool is_numeric = is_number<deep_subtype<T>>;
+
+/// @brief Check if the type arguments are a numbers or a vectors of numbers
+template <typename... Ts>
+constexpr inline bool is_numeric_args = (is_numeric<Ts> && ...);
+
 namespace details
 {
 template <typename T>

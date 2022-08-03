@@ -331,14 +331,6 @@ constexpr inline bool is_output_expression = is_base_of<output_expression, decay
 template <typename... Es>
 constexpr inline bool is_output_expressions = (is_base_of<output_expression, decay<Es>> || ...);
 
-/// @brief Check if the type argument is a number or a vector of numbers
-template <typename T>
-constexpr inline bool is_numeric = is_number<deep_subtype<T>>;
-
-/// @brief Check if the type arguments are a numbers or a vectors of numbers
-template <typename... Ts>
-constexpr inline bool is_numeric_args = (is_numeric<Ts> && ...);
-
 inline namespace CMT_ARCH_NAME
 {
 
