@@ -576,6 +576,8 @@ extern char* gets(char* __s);
 #endif
 #endif
 
+#define CMT_PRAGMA(...) _Pragma(#__VA_ARGS__)
+
 #if defined(CMT_GNU_ATTRIBUTES)
 #define CMT_FAST_CC __attribute__((fastcall))
 #define CMT_UNUSED __attribute__((unused))
