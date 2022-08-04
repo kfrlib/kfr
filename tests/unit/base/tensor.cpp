@@ -5,6 +5,7 @@
  */
 
 #include <kfr/base.hpp>
+#include <kfr/base/new_expressions.hpp>
 #include <kfr/base/tensor.hpp>
 #include <kfr/io/tostring.hpp>
 
@@ -35,10 +36,14 @@ TEST(shape)
 
     CHECK(internal_generic::strides_for_shape(shape{ 2, 3, 4 }, 10) == shape{ 120, 40, 10 });
 
-    CHECK(increment_indices_return(shape{ 0, 0, 0 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) == shape{ 0, 0, 1 });
-    CHECK(increment_indices_return(shape{ 0, 0, 3 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) == shape{ 0, 1, 0 });
-    CHECK(increment_indices_return(shape{ 0, 2, 0 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) == shape{ 0, 2, 1 });
-    CHECK(increment_indices_return(shape{ 0, 2, 3 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) == shape{ 1, 0, 0 });
+    CHECK(increment_indices_return(shape{ 0, 0, 0 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) ==
+          shape{ 0, 0, 1 });
+    CHECK(increment_indices_return(shape{ 0, 0, 3 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) ==
+          shape{ 0, 1, 0 });
+    CHECK(increment_indices_return(shape{ 0, 2, 0 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) ==
+          shape{ 0, 2, 1 });
+    CHECK(increment_indices_return(shape{ 0, 2, 3 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) ==
+          shape{ 1, 0, 0 });
     CHECK(increment_indices_return(shape{ 1, 2, 3 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) ==
           shape{ null_index, null_index, null_index });
 
@@ -218,7 +223,7 @@ TEST(tensor_broadcast)
     tensor<float, 2> t2{ shape{ 5, 1 }, { 10.f, 20.f, 30.f, 40.f, 50.f } };
     tensor<float, 1> t4{ shape{ 5 }, { 1.f, 2.f, 3.f, 4.f, 5.f } };
     tensor<float, 2> tresult{ shape{ 5, 5 }, { 11, 12, 13, 14, 15, 21, 22, 23, 24, 25, 31, 32, 33,
-                                               34, 35, 41, 42, 43, 44, 45, 51, 52, 53, 54, 55 } };
+                                                 34, 35, 41, 42, 43, 44, 45, 51, 52, 53, 54, 55 } };
 
     tensor<float, 2> t3 = tapply(t1, t2, fn::add{});
 
@@ -279,52 +284,52 @@ struct expression_traits<std::array<std::array<T, N1>, N2>> : expression_traits_
 
 inline namespace CMT_ARCH_NAME
 {
-template <typename T, typename U, size_t N>
-KFR_INTRINSIC vec<U, N> get_elements(const tcounter<T, 1>& self, const shape<1>& index, vec_shape<U, N> sh)
+template <typename T, size_t N>
+KFR_INTRINSIC vec<T, N> get_elements(const tcounter<T, 1>& self, const shape<1>& index, csize_t<N> sh)
 {
     T acc = self.start;
     acc += static_cast<T>(index.front()) * self.steps.front();
-    return static_cast<vec<U, N>>(acc + enumerate(vec_shape<T, N>(), self.steps.back()));
+    return acc + enumerate(vec_shape<T, N>(), self.steps.back());
 }
-template <typename T, index_t dims, typename U, size_t N>
-KFR_INTRINSIC vec<U, N> get_elements(const tcounter<T, dims>& self, const shape<dims>& index,
-                                     vec_shape<U, N> sh)
+template <typename T, index_t dims, size_t N>
+KFR_INTRINSIC vec<T, N> get_elements(const tcounter<T, dims>& self, const shape<dims>& index, csize_t<N> sh)
 {
     T acc                 = self.start;
     vec<T, dims> tindices = cast<T>(*index);
     cfor(csize<0>, csize<dims>, [&](auto i) CMT_INLINE_LAMBDA { acc += tindices[i] * self.steps[i]; });
-    return static_cast<vec<U, N>>(acc + enumerate(vec_shape<T, N>(), self.steps.back()));
+    return acc + enumerate(vec_shape<T, N>(), self.steps.back());
 }
 
-template <typename T, size_t N1, typename U, size_t N>
-KFR_INTRINSIC vec<U, N> get_elements(const std::array<T, N1>& CMT_RESTRICT self, const shape<1>& index,
-                                     vec_shape<U, N> sh)
+template <typename T, size_t N1, size_t N>
+KFR_INTRINSIC vec<T, N> get_elements(const std::array<T, N1>& CMT_RESTRICT self, const shape<1>& index,
+                                     csize_t<N> sh)
 {
     const T* CMT_RESTRICT const data = self.data();
     return read<N>(data + std::min(index[0], static_cast<index_t>(N1 - 1)));
 }
 
-template <typename T, size_t N1, typename U, size_t N>
-KFR_INTRINSIC void set_elements(std::array<T, N1>& CMT_RESTRICT self, const shape<1>& index, vec<U, N> val)
+template <typename T, size_t N1, size_t N>
+KFR_INTRINSIC void set_elements(std::array<T, N1>& CMT_RESTRICT self, const shape<1>& index, csize_t<N>,
+                                const identity<vec<T, N>>& val)
 {
     T* CMT_RESTRICT const data = self.data();
-    write(data + std::min(index[0], static_cast<index_t>(N1 - 1)), static_cast<vec<T, N>>(val));
+    write(data + std::min(index[0], static_cast<index_t>(N1 - 1)), val);
 }
 
-template <typename T, size_t N1, size_t N2, typename U, size_t N>
-KFR_INTRINSIC vec<U, N> get_elements(const std::array<std::array<T, N1>, N2>& CMT_RESTRICT self,
-                                     const shape<2>& index, vec_shape<U, N> sh)
+template <typename T, size_t N1, size_t N2, size_t N>
+KFR_INTRINSIC vec<T, N> get_elements(const std::array<std::array<T, N1>, N2>& CMT_RESTRICT self,
+                                     const shape<2>& index, csize_t<N> sh)
 {
     const T* CMT_RESTRICT const data = self[std::min(index[0], static_cast<index_t>(N2 - 1))].data();
     return read<N>(data + std::min(index[1], static_cast<index_t>(N1 - 1)));
 }
 
-template <typename T, size_t N1, size_t N2, typename U, size_t N>
+template <typename T, size_t N1, size_t N2, size_t N>
 KFR_INTRINSIC void set_elements(std::array<std::array<T, N1>, N2>& CMT_RESTRICT self, const shape<2>& index,
-                                vec<U, N> val)
+                                csize_t<N>, const identity<vec<T, N>>& val)
 {
     T* CMT_RESTRICT const data = self[std::min(index[0], static_cast<index_t>(N2 - 1))].data();
-    write(data + std::min(index[1], static_cast<index_t>(N1 - 1)), static_cast<vec<T, N>>(val));
+    write(data + std::min(index[1], static_cast<index_t>(N1 - 1)), val);
 }
 
 TEST(tensor_expressions2)
@@ -332,12 +337,12 @@ TEST(tensor_expressions2)
     auto aa = std::array<std::array<double, 2>, 2>{ { { { 1, 2 } }, { { 3, 4 } } } };
     static_assert(expression_traits<decltype(aa)>::dims == 2);
     CHECK(expression_traits<decltype(aa)>::shapeof(aa) == shape{ 2, 2 });
-    CHECK(get_elements(aa, { 1, 1 }, vec_shape<float, 1>{}) == vec{ 4.f });
-    CHECK(get_elements(aa, { 1, 0 }, vec_shape<float, 2>{}) == vec{ 3.f, 4.f });
+    CHECK(get_elements(aa, { 1, 1 }, csize_t<1>{}) == vec{ 4. });
+    CHECK(get_elements(aa, { 1, 0 }, csize_t<2>{}) == vec{ 3., 4. });
 
     static_assert(expression_traits<decltype(1234.f)>::dims == 0);
     CHECK(expression_traits<decltype(1234.f)>::shapeof(1234.f) == shape{});
-    CHECK(get_elements(1234.f, {}, vec_shape<float, 3>{}) == vec{ 1234.f, 1234.f, 1234.f });
+    CHECK(get_elements(1234.f, {}, csize_t<3>{}) == vec{ 1234.f, 1234.f, 1234.f });
 
     tprocess(aa, 123.45f);
 
@@ -504,8 +509,8 @@ extern "C" __declspec(dllexport) void assembly_test11(f64x2& x, u64x2 y) { x = y
 
 extern "C" __declspec(dllexport) void assembly_test12(
     std::array<std::array<uint32_t, 4>, 4>& x,
-    const xfunction<std::plus<>, std::array<std::array<uint32_t, 1>, 4>&, std::array<std::array<uint32_t, 4>, 1>&>&
-        y)
+    const xfunction<std::plus<>, std::array<std::array<uint32_t, 1>, 4>&,
+                    std::array<std::array<uint32_t, 4>, 1>&>& y)
 {
     // [[maybe_unused]] constexpr auto sh1 = expression_traits<decltype(x)>::shapeof();
     // [[maybe_unused]] constexpr auto sh2 = expression_traits<decltype(y)>::shapeof();

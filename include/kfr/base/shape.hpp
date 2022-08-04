@@ -27,10 +27,10 @@
 
 #include "impl/static_array.hpp"
 
+#include "../math/min_max.hpp"
 #include "../simd/shuffle.hpp"
 #include "../simd/types.hpp"
 #include "../simd/vec.hpp"
-#include "../math/min_max.hpp"
 
 #include <bitset>
 
@@ -85,14 +85,47 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
 
     static_assert(dims < maximum_dims);
 
-    shape operator+(const shape& other) const
+    bool ge(const shape& other) const
+    {
+        if constexpr (dims == 1)
+        {
+            return front() >= other.front();
+        }
+        else
+        {
+            return all(**this >= *other);
+        }
+    }
+
+    bool le(const shape& other) const
+    {
+        if constexpr (dims == 1)
+        {
+            return front() <= other.front();
+        }
+        else
+        {
+            return all(**this <= *other);
+        }
+    }
+
+    shape add(index_t value) const
+    {
+        shape result = *this;
+        result.back() += value;
+        return result;
+    }
+    shape add(const shape& other) const { return **this + *other; }
+    shape sub(const shape& other) const { return **this - *other; }
+
+    shape add_inf(const shape& other) const
     {
         vec<index_t, dims> x    = **this;
         vec<index_t, dims> y    = *other;
         mask<index_t, dims> inf = (x == infinite_size) || (y == infinite_size);
         return select(inf, infinite_size, x + y);
     }
-    shape operator-(const shape& other) const
+    shape sub_inf(const shape& other) const
     {
         vec<index_t, dims> x    = **this;
         vec<index_t, dims> y    = *other;

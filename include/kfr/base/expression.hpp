@@ -125,13 +125,13 @@ struct expression_traits<T, std::enable_if_t<is_simd_type<T>>> : expression_trai
 
 inline namespace CMT_ARCH_NAME
 {
-template <typename T, typename U, size_t N, KFR_ENABLE_IF(is_simd_type<std::decay_t<T>>)>
-KFR_MEM_INTRINSIC vec<U, N> get_elements(T&& self, const shape<0>& index, vec_shape<U, N> sh)
+template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<std::decay_t<T>>)>
+KFR_INTRINSIC vec<std::decay_t<T>, N> get_elements(T&& self, const shape<0>& index, csize_t<N> sh)
 {
     return self;
 }
-template <typename T, typename U, size_t N, KFR_ENABLE_IF(is_simd_type<std::decay_t<T>>)>
-KFR_MEM_INTRINSIC void set_elements(T& self, const shape<0>& index, const vec<U, N>& val)
+template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<std::decay_t<T>>)>
+KFR_INTRINSIC void set_elements(T& self, const shape<0>& index, csize_t<N> sh, const identity<vec<T, N>>& val)
 {
     static_assert(N == 1);
     static_assert(!std::is_const_v<T>);
@@ -149,20 +149,22 @@ KFR_INTRINSIC static void tprocess_body(Out&& out, In&& in, size_t start, size_t
     size_t x = start;
     if constexpr (w > gw)
     {
+        csize_t<w> wval;
         CMT_LOOP_NOUNROLL
         for (; x < stop / w * w; x += w)
         {
             outidx.set_revindex(0, x);
             inidx.set_revindex(0, std::min(x, insize - 1));
-            set_elements(out, outidx, get_elements(in, inidx, vec_shape<Tin, w>()));
+            set_elements(out, outidx, wval, get_elements(in, inidx, wval));
         }
     }
+    csize_t<gw> gwval;
     CMT_LOOP_NOUNROLL
     for (; x < stop / gw * gw; x += gw)
     {
         outidx.set_revindex(0, x);
         inidx.set_revindex(0, std::min(x, insize - 1));
-        set_elements(out, outidx, get_elements(in, inidx, vec_shape<Tin, gw>()));
+        set_elements(out, outidx, gwval, get_elements(in, inidx, gwval));
     }
 }
 
@@ -170,8 +172,7 @@ template <size_t width = 0, typename Out, typename In, size_t gw = 1,
           CMT_ENABLE_IF(expression_traits<Out>::dims == 0)>
 static auto tprocess(Out&& out, In&& in, shape<0> = {}, shape<0> = {}, csize_t<gw> = {}) -> shape<0>
 {
-    set_elements(out, shape<0>{},
-                 get_elements(in, shape<0>{}, vec_shape<typename expression_traits<In>::value_type, 1>()));
+    set_elements(out, shape<0>{}, csize_t<1>(), get_elements(in, shape<0>{}, csize_t<1>()));
     return {};
 }
 
@@ -212,9 +213,7 @@ static auto tprocess(Out&& out, In&& in, shape<outdims> start = 0, shape<outdims
     const shape<indims> inshape   = shapeof(in);
     if (CMT_UNLIKELY(!internal_generic::can_assign_from(outshape, inshape)))
         return { 0 };
-    shape<outdims> stop = min(start + size, outshape);
-
-    // min(out, in, size + start) - start
+    shape<outdims> stop = min(start.add_inf(size), outshape);
 
     shape<outdims> outidx;
     if constexpr (outdims == 1)
@@ -477,10 +476,10 @@ struct expression_traits<T, std::enable_if_t<std::is_base_of_v<input_expression,
 
 inline namespace CMT_ARCH_NAME
 {
-template <typename T, typename U, size_t N, KFR_ENABLE_IF(is_input_expression<T>)>
-KFR_MEM_INTRINSIC vec<U, N> get_elements(T&& self, const shape<1>& index, vec_shape<U, N> sh)
+template <typename E, size_t N, KFR_ENABLE_IF(is_input_expression<E>), typename T = value_type_of<E>>
+KFR_MEM_INTRINSIC vec<T, N> get_elements(E&& self, const shape<1>& index, csize_t<N> sh)
 {
-    return get_elements(self, cinput_t{}, index[0], sh);
+    return get_elements(self, cinput_t{}, index[0], vec_shape<T, N>{});
 }
 } // namespace CMT_ARCH_NAME
 
@@ -493,6 +492,13 @@ struct xwitharguments
 
     template <size_t idx>
     using nth = typename type_list::template nth<idx>;
+
+    using first_arg = typename type_list::template nth<0>;
+
+    template <size_t idx>
+    using nth_trait = expression_traits<typename type_list::template nth<idx>>;
+
+    using first_arg_trait = expression_traits<first_arg>;
 
     std::tuple<Args...> args;
     std::array<dimset, count> masks;
@@ -625,14 +631,15 @@ inline namespace CMT_ARCH_NAME
 
 namespace internal
 {
-template <index_t outdims, typename Fn, typename... Args, typename U, size_t N, index_t Dims, size_t idx>
-KFR_MEM_INTRINSIC vec<U, N> get_arg(const xfunction<Fn, Args...>& self, const shape<Dims>& index,
-                                    vec_shape<U, N> sh, csize_t<idx>)
+template <index_t outdims, typename Fn, typename... Args, size_t N, index_t Dims, size_t idx,
+          typename Traits = expression_traits<typename xfunction<Fn, Args...>::template nth<idx>>>
+KFR_MEM_INTRINSIC vec<typename Traits::value_type, N> get_arg(const xfunction<Fn, Args...>& self,
+                                                              const shape<Dims>& index, csize_t<N> sh,
+                                                              csize_t<idx>)
 {
-    using Traits = expression_traits<typename xfunction<Fn, Args...>::template nth<idx>>;
     if constexpr (Traits::dims == 0)
     {
-        return repeat<N>(get_elements(std::get<idx>(self.args), {}, vec_shape<U, 1>{}));
+        return repeat<N>(get_elements(std::get<idx>(self.args), {}, csize_t<1>{}));
     }
     else
     {
@@ -641,14 +648,14 @@ KFR_MEM_INTRINSIC vec<U, N> get_arg(const xfunction<Fn, Args...>& self, const sh
         if constexpr (last_dim > 0)
         {
             return repeat<N / std::min(last_dim, N)>(
-                get_elements(std::get<idx>(self.args), indices, vec_shape<U, std::min(last_dim, N)>{}));
+                get_elements(std::get<idx>(self.args), indices, csize_t<std::min(last_dim, N)>{}));
         }
         else
         {
             if constexpr (N > 1)
             {
                 if (CMT_UNLIKELY(self.masks[idx].back() == 0))
-                    return get_elements(std::get<idx>(self.args), indices, vec_shape<U, 1>{}).front();
+                    return get_elements(std::get<idx>(self.args), indices, csize_t<1>{}).front();
                 else
                     return get_elements(std::get<idx>(self.args), indices, sh);
             }
@@ -661,13 +668,14 @@ KFR_MEM_INTRINSIC vec<U, N> get_arg(const xfunction<Fn, Args...>& self, const sh
 }
 } // namespace internal
 
-template <typename Fn, typename... Args, typename U, size_t N, index_t Dims>
-KFR_MEM_INTRINSIC vec<U, N> get_elements(const xfunction<Fn, Args...>& self, const shape<Dims>& index,
-                                         vec_shape<U, N> sh)
+template <typename Fn, typename... Args, size_t N, index_t Dims,
+          typename Tr = expression_traits<xfunction<Fn, Args...>>, typename T = typename Tr::value_type>
+KFR_INTRINSIC vec<T, N> get_elements(const xfunction<Fn, Args...>& self, const shape<Dims>& index,
+                                     csize_t<N> sh)
 {
-    constexpr index_t outdims = expression_traits<xfunction<Fn, Args...>>::dims;
+    constexpr index_t outdims = Tr::dims;
     return self.fold_idx(
-        [&](auto... idx) CMT_INLINE_LAMBDA -> vec<U, N> {
+        [&](auto... idx) CMT_INLINE_LAMBDA -> vec<T, N> {
             return self.fn(internal::get_arg<outdims>(self, index, sh, idx)...);
         });
 }
