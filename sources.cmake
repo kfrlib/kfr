@@ -17,6 +17,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/version.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/capi.h
     ${PROJECT_SOURCE_DIR}/include/kfr/cident.h
+    ${PROJECT_SOURCE_DIR}/include/kfr/config.h
     ${PROJECT_SOURCE_DIR}/include/kfr/kfr.h
     ${PROJECT_SOURCE_DIR}/include/kfr/base/basic_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/conversion.hpp
@@ -25,13 +26,18 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/fraction.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/function_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/generators.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/math_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/memory.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/pointer.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/random.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/reduce.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/shape.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/simd_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/small_buffer.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/sort.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/tensor.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/univector.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/static_array.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/cometa/array.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/cometa/cstring.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/cometa/ctti.hpp
@@ -71,6 +77,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/sample_rate_conversion.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/speaker.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/special.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/dsp/state_holder.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/units.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/waveshaper.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/weighting.hpp
@@ -124,6 +131,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/runtime/cpuid_auto.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/comparison.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/complex.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/complex_type.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/constants.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/digitreverse.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/horizontal.hpp
@@ -138,6 +146,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/backend_clang.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/backend_generic.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/basicoperators_clang.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/basicoperators_complex.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/basicoperators_generic.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/function.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/operators.hpp
@@ -176,6 +185,7 @@ set(
     ${PROJECT_SOURCE_DIR}/tests/unit/base/fraction.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/random.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/reduce.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/base/tensor.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/graphics/color.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/graphics/geometry.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/abs.cpp

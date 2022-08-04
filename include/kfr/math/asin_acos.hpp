@@ -40,15 +40,6 @@ KFR_INTRINSIC flt_type<T1> asin(const T1& x)
 {
     return intrinsics::asin(x);
 }
-
-/**
- * @brief Returns template expression that returns the arc sine of x.
- */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_INTRINSIC internal::expression_function<fn::asin, E1> asin(E1&& x)
-{
-    return { fn::asin(), std::forward<E1>(x) };
-}
 /**
  * @brief Returns the arc cosine of x. The returned angle is in the range 0 through \f$\pi\f$.
  */
@@ -56,15 +47,6 @@ template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_INTRINSIC flt_type<T1> acos(const T1& x)
 {
     return intrinsics::acos(x);
-}
-
-/**
- * @brief Returns template expression that returns the arc cosine of x.
- */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_INTRINSIC internal::expression_function<fn::acos, E1> acos(E1&& x)
-{
-    return { fn::acos(), std::forward<E1>(x) };
 }
 } // namespace CMT_ARCH_NAME
 

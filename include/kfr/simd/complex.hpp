@@ -28,62 +28,11 @@
 #include "impl/function.hpp"
 #include "operators.hpp"
 
-#ifdef KFR_STD_COMPLEX
-#include <complex>
-#endif
-
 CMT_PRAGMA_MSVC(warning(push))
 CMT_PRAGMA_MSVC(warning(disable : 4814))
 
 namespace kfr
 {
-#ifdef KFR_STD_COMPLEX
-
-template <typename T>
-using complex = std::complex<T>;
-
-#else
-#ifndef KFR_CUSTOM_COMPLEX
-
-/**
- * @brief Represents the complex numbers. If KFR_STD_COMPLEX is defined, then kfr::complex is an alias for
- * std::complex.
- */
-template <typename T>
-struct complex
-{
-    static_assert(is_simd_type<T>, "Incorrect type for complex");
-    constexpr static bool is_pod     = true;
-    constexpr complex() CMT_NOEXCEPT = default;
-    KFR_MEM_INTRINSIC constexpr complex(T re) CMT_NOEXCEPT : re(re), im(0) {}
-    KFR_MEM_INTRINSIC constexpr complex(T re, T im) CMT_NOEXCEPT : re(re), im(im) {}
-    constexpr complex(const complex&) CMT_NOEXCEPT = default;
-    constexpr complex(complex&&) CMT_NOEXCEPT      = default;
-    template <typename U>
-    KFR_MEM_INTRINSIC constexpr complex(const complex<U>& other) CMT_NOEXCEPT : re(static_cast<T>(other.real())),
-                                                                                im(static_cast<T>(other.imag()))
-    {
-    }
-    template <typename U>
-    KFR_MEM_INTRINSIC constexpr complex(complex<U>&& other) CMT_NOEXCEPT : re(std::move(other.real())),
-                                                                           im(std::move(other.imag()))
-    {
-    }
-#ifdef CMT_COMPILER_GNU
-    constexpr complex& operator=(const complex&) CMT_NOEXCEPT = default;
-    constexpr complex& operator=(complex&&) CMT_NOEXCEPT = default;
-#else
-    complex& operator=(const complex&) = default;
-    complex& operator=(complex&&) = default;
-#endif
-    KFR_MEM_INTRINSIC constexpr const T& real() const CMT_NOEXCEPT { return re; }
-    KFR_MEM_INTRINSIC constexpr const T& imag() const CMT_NOEXCEPT { return im; }
-    KFR_MEM_INTRINSIC constexpr void real(T value) CMT_NOEXCEPT { re = value; }
-    KFR_MEM_INTRINSIC constexpr void imag(T value) CMT_NOEXCEPT { im = value; }
-private:
-    T re;
-    T im;
-};
 
 inline namespace CMT_ARCH_NAME
 {
@@ -162,8 +111,6 @@ KFR_INTRINSIC complex<T> operator+(const complex<T>& x)
 }
 
 } // namespace CMT_ARCH_NAME
-#endif
-#endif
 } // namespace kfr
 namespace cometa
 {
@@ -382,13 +329,6 @@ using realftype = ftype<decltype(kfr::real(std::declval<T>()))>;
 
 KFR_FN(real)
 
-/// @brief Returns the real part of the complex value
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_INTRINSIC internal::expression_function<fn::real, E1> real(E1&& x)
-{
-    return { fn::real{}, std::forward<E1>(x) };
-}
-
 /// @brief Returns the imaginary part of the complex value
 template <typename T>
 constexpr KFR_INTRINSIC T imag(const complex<T>& value)
@@ -403,13 +343,6 @@ constexpr KFR_INTRINSIC vec<T, N> imag(const vec<complex<T>, N>& value)
     return odd(cdecom(value));
 }
 KFR_FN(imag)
-
-/// @brief Returns the imaginary part of the complex value
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_INTRINSIC internal::expression_function<fn::imag, E1> imag(E1&& x)
-{
-    return { fn::imag{}, std::forward<E1>(x) };
-}
 
 /// @brief Constructs complex value from real and imaginary parts
 template <typename T1, typename T2 = T1, size_t N, typename T = common_type<T1, T2>>
@@ -428,13 +361,6 @@ constexpr KFR_INTRINSIC complex<T> make_complex(T1 real, T2 imag = T2(0))
 }
 KFR_FN(make_complex)
 
-/// @brief Constructs complex value from real and imaginary parts
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
-KFR_INTRINSIC internal::expression_function<fn::make_complex, E1, E2> make_complex(E1&& re, E2&& im)
-{
-    return { fn::make_complex{}, std::forward<E1>(re), std::forward<E2>(im) };
-}
-
 namespace intrinsics
 {
 template <typename T, size_t N>
@@ -452,13 +378,6 @@ template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_INTRINSIC T1 cconj(const T1& x)
 {
     return intrinsics::cconj(x);
-}
-
-/// @brief Returns template expression that returns the complex conjugate of the complex number x
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::cconj, E1> cconj(E1&& x)
-{
-    return { fn::cconj(), std::forward<E1>(x) };
 }
 
 template <size_t N>

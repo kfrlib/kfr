@@ -26,7 +26,7 @@
 #pragma once
 
 #include "../cometa/array.hpp"
-
+#include "expression.hpp"
 #include "../simd/impl/function.hpp"
 #include "../simd/read_write.hpp"
 #include "../simd/types.hpp"

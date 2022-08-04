@@ -26,6 +26,8 @@
 #pragma once
 
 #include "dft-fft.hpp"
+#include "../../base/simd_expressions.hpp"
+#include "../../base/math_expressions.hpp"
 
 CMT_PRAGMA_GNU(GCC diagnostic push)
 #if CMT_HAS_WARNING("-Wshadow")

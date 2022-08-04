@@ -71,42 +71,6 @@ KFR_FN(greater)
 KFR_FN(lessorequal)
 KFR_FN(greaterorequal)
 
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
-KFR_INTRINSIC internal::expression_function<fn::equal, E1, E2> operator==(E1&& e1, E2&& e2)
-{
-    return { fn::equal(), std::forward<E1>(e1), std::forward<E2>(e2) };
-}
-
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
-KFR_INTRINSIC internal::expression_function<fn::notequal, E1, E2> operator!=(E1&& e1, E2&& e2)
-{
-    return { fn::notequal(), std::forward<E1>(e1), std::forward<E2>(e2) };
-}
-
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
-KFR_INTRINSIC internal::expression_function<fn::less, E1, E2> operator<(E1&& e1, E2&& e2)
-{
-    return { fn::less(), std::forward<E1>(e1), std::forward<E2>(e2) };
-}
-
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
-KFR_INTRINSIC internal::expression_function<fn::greater, E1, E2> operator>(E1&& e1, E2&& e2)
-{
-    return { fn::greater(), std::forward<E1>(e1), std::forward<E2>(e2) };
-}
-
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
-KFR_INTRINSIC internal::expression_function<fn::lessorequal, E1, E2> operator<=(E1&& e1, E2&& e2)
-{
-    return { fn::lessorequal(), std::forward<E1>(e1), std::forward<E2>(e2) };
-}
-
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
-KFR_INTRINSIC internal::expression_function<fn::greaterorequal, E1, E2> operator>=(E1&& e1, E2&& e2)
-{
-    return { fn::greaterorequal(), std::forward<E1>(e1), std::forward<E2>(e2) };
-}
-
 template <typename T, size_t N>
 KFR_INTRINSIC mask<T, N> isnan(const vec<T, N>& x)
 {

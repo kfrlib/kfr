@@ -24,6 +24,8 @@
   See https://www.kfrlib.com for details.
  */
 #include "../convolution.hpp"
+#include "../../simd/complex.hpp"
+#include "../../base/simd_expressions.hpp"
 
 namespace kfr
 {

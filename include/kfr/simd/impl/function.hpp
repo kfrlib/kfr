@@ -22,7 +22,6 @@
  */
 #pragma once
 
-#include "../../base/expression.hpp"
 #include "../shuffle.hpp"
 #include "../types.hpp"
 #include "../vec.hpp"

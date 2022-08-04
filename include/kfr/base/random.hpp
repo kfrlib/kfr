@@ -29,6 +29,7 @@
 #include "../simd/operators.hpp"
 #include "../simd/shuffle.hpp"
 #include "../simd/vec.hpp"
+#include "expression.hpp"
 #include <functional>
 
 #ifdef CMT_ARCH_ARM

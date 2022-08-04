@@ -39,25 +39,11 @@ KFR_FUNCTION flt_type<T1> gamma(const T1& x)
     return intrinsics::gamma(x);
 }
 
-/// @brief Creates expression that returns the approximate gamma function of an argument
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::gamma, E1> gamma(E1&& x)
-{
-    return { fn::gamma(), std::forward<E1>(x) };
-}
-
 /// @brief Returns the approximate factorial of an argument
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> factorial_approx(const T1& x)
 {
     return intrinsics::factorial_approx(x);
-}
-
-/// @brief Creates expression that returns the approximate factorial of an argument
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::factorial_approx, E1> factorial_approx(E1&& x)
-{
-    return { fn::factorial_approx(), std::forward<E1>(x) };
 }
 
 constexpr inline uint64_t factorial_table[21] = {

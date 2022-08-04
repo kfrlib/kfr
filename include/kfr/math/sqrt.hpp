@@ -40,14 +40,5 @@ KFR_INTRINSIC flt_type<T1> sqrt(const T1& x)
 {
     return intrinsics::sqrt(x);
 }
-
-/**
- * @brief Returns template expression that returns the positive square root of the x. \f$\sqrt{x}\f$
- */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_INTRINSIC internal::expression_function<fn::sqrt, E1> sqrt(E1&& x)
-{
-    return { fn::sqrt(), std::forward<E1>(x) };
-}
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

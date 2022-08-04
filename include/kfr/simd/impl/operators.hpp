@@ -33,82 +33,14 @@
 #include "basicoperators_generic.hpp"
 #endif
 
+#include "basicoperators_complex.hpp"
+
 namespace kfr
 {
 inline namespace CMT_ARCH_NAME
 {
-
 namespace intrinsics
 {
-
-template <typename T, size_t N>
-KFR_INTRINSIC vec<complex<T>, N> neg(const vec<complex<T>, N>& x)
-{
-    return neg(x.flatten()).v;
-}
-
-template <typename T, size_t N>
-KFR_INTRINSIC vec<complex<T>, N> add(const vec<complex<T>, N>& x, const vec<complex<T>, N>& y)
-{
-    return add(x.flatten(), y.flatten()).v;
-}
-
-template <typename T, size_t N>
-KFR_INTRINSIC vec<complex<T>, N> sub(const vec<complex<T>, N>& x, const vec<complex<T>, N>& y)
-{
-    return sub(x.flatten(), y.flatten()).v;
-}
-
-template <typename T, size_t N>
-KFR_INTRINSIC vec<complex<T>, N> mul(const vec<complex<T>, N>& x, const vec<complex<T>, N>& y)
-{
-    const vec<T, (N * 2)> xx = x.v;
-    const vec<T, (N * 2)> yy = y.v;
-    return subadd(mul(xx, dupeven(yy)), mul(swap<2>(xx), dupodd(yy))).v;
-}
-
-template <typename T, size_t N>
-KFR_INTRINSIC vec<complex<T>, N> div(const vec<complex<T>, N>& x, const vec<complex<T>, N>& y)
-{
-    const vec<T, (N * 2)> xx = x.v;
-    const vec<T, (N * 2)> yy = y.v;
-    const vec<T, (N * 2)> m  = (add(sqr(dupeven(yy)), sqr(dupodd(yy))));
-    return swap<2>(subadd(mul(swap<2>(xx), dupeven(yy)), mul(xx, dupodd(yy))) / m).v;
-}
-
-template <typename T, size_t N>
-KFR_INTRINSIC vec<complex<T>, N> bor(const vec<complex<T>, N>& x, const vec<complex<T>, N>& y)
-{
-    return bor(x.flatten(), y.flatten()).v;
-}
-template <typename T, size_t N>
-KFR_INTRINSIC vec<complex<T>, N> bxor(const vec<complex<T>, N>& x, const vec<complex<T>, N>& y)
-{
-    return bxor(x.flatten(), y.flatten()).v;
-}
-template <typename T, size_t N>
-KFR_INTRINSIC vec<complex<T>, N> band(const vec<complex<T>, N>& x, const vec<complex<T>, N>& y)
-{
-    return band(x.flatten(), y.flatten()).v;
-}
-
-#define KFR_COMPLEX_OP_CVT(fn)                                                                               \
-    template <typename T, size_t N>                                                                          \
-    KFR_INTRINSIC vec<complex<T>, N> fn(const vec<complex<T>, N>& x, const complex<T>& y)                    \
-    {                                                                                                        \
-        return fn(x, vec<complex<T>, N>(y));                                                                 \
-    }                                                                                                        \
-    template <typename T, size_t N>                                                                          \
-    KFR_INTRINSIC vec<complex<T>, N> fn(const complex<T>& x, const vec<complex<T>, N>& y)                    \
-    {                                                                                                        \
-        return fn(vec<complex<T>, N>(x), y);                                                                 \
-    }
-
-KFR_COMPLEX_OP_CVT(mul)
-KFR_COMPLEX_OP_CVT(div)
-KFR_COMPLEX_OP_CVT(band)
-KFR_COMPLEX_OP_CVT(bxor)
-KFR_COMPLEX_OP_CVT(bor)
 
 #define KFR_VECVEC_OP1(fn)                                                                                   \
     template <typename T1, size_t N1, size_t N2>                                                             \
