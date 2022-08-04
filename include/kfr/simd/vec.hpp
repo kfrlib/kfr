@@ -270,6 +270,16 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     {
     }
 
+    // from lambda
+    template <typename Fn, KFR_ENABLE_IF(is_callable<Fn, size_t>)>
+    KFR_MEM_INTRINSIC vec(Fn&& fn) CMT_NOEXCEPT
+    {
+        for (size_t i = 0; i < N; ++i)
+        {
+            set(i, fn(i));
+        }
+    }
+
     template <typename U, KFR_ENABLE_IF(is_convertible<U, value_type> &&
                                         !(compound_type_traits<T>::is_scalar && !is_bit<U>))>
     KFR_MEM_INTRINSIC vec(const vec<U, N>& x) CMT_NOEXCEPT
