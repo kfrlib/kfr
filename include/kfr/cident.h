@@ -306,6 +306,7 @@ extern char* gets(char* __s);
 #define CMT_COMPILER_MSVC 1
 #define CMT_MSVC_ATTRIBUTES 1
 #define CMT_MSC_VER _MSC_VER
+#define CMT_COMPILER_IS_MSVC 1
 #else
 #define CMT_MSC_VER 0
 #endif
@@ -340,6 +341,12 @@ extern char* gets(char* __s);
 #define CMT_COMPILER_CLANG 1
 #ifndef CMT_GNU_ATTRIBUTES
 #define CMT_GNU_ATTRIBUTES 1
+#endif
+#endif
+
+#if defined(CMT_COMPILER_INTEL) || defined(CMT_COMPILER_CLANG)
+#ifdef CMT_COMPILER_IS_MSVC
+#undef CMT_COMPILER_IS_MSVC
 #endif
 #endif
 

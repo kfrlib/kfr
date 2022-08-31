@@ -262,7 +262,7 @@ public:
     tensor(const tensor&) = default;
     tensor(tensor&&)      = default;
 
-#if defined(CMT_COMPILER_MSVC) && !defined(CMT_COMPILER_CLANG)
+#if defined(CMT_COMPILER_IS_MSVC)
     tensor& operator=(const tensor& src) &
     {
         this->~tensor();

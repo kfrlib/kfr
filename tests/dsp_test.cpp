@@ -339,7 +339,7 @@ TEST(phasor)
 
 TEST(fir)
 {
-#ifdef CMT_COMPILER_MSVC
+#ifdef CMT_COMPILER_IS_MSVC
     // testo::matrix causes error in MSVC
     {
         using T = float;

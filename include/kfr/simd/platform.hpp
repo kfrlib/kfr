@@ -271,7 +271,7 @@ constexpr static size_t minimum_vector_width =
 template <typename T>
 constexpr static size_t vector_capacity = platform<>::simd_register_count* vector_width<T>;
 
-#ifdef CMT_COMPILER_MSVC
+#ifdef CMT_COMPILER_IS_MSVC
 template <typename T>
 constexpr static size_t maximum_vector_size = const_min(static_cast<size_t>(32), vector_width<T> * 2);
 #else
