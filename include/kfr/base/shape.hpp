@@ -39,10 +39,22 @@ namespace kfr
 
 #ifndef KFR_32BIT_INDICES
 using index_t = size_t;
+#if SIZE_MAX == UINT64_MAX
+using signed_index_t = int64_t;
 #else
-using index_t = uint32_t;
+using signed_index_t = int32_t;
+#endif
+#else
+using index_t        = uint32_t;
+using signed_index_t = int32_t;
 #endif
 constexpr inline index_t max_index_t = std::numeric_limits<index_t>::max();
+
+template <index_t val>
+using cindex_t = cval_t<index_t, val>;
+
+template <index_t val>
+constexpr inline cindex_t<val> cindex{};
 
 constexpr inline index_t infinite_size = max_index_t;
 
@@ -115,6 +127,13 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
         result.back() += value;
         return result;
     }
+    template <index_t Axis>
+    shape add_at(index_t value, cval_t<index_t, Axis> = {}) const
+    {
+        shape result = *this;
+        result[Axis] += value;
+        return result;
+    }
     shape add(const shape& other) const { return **this + *other; }
     shape sub(const shape& other) const { return **this - *other; }
 
@@ -137,25 +156,50 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
 
     KFR_MEM_INTRINSIC size_t to_flat(const shape<dims>& indices) const
     {
-        size_t result = 0;
-        size_t scale  = 1;
-        for (size_t i = 0; i < dims; ++i)
+        if constexpr (dims == 1)
         {
-            result += scale * indices[dims - 1 - i];
-            scale *= (*this)[dims - 1 - i];
+            return indices[0];
         }
-        return result;
+        else if constexpr (dims == 2)
+        {
+            return (*this)[1] * indices[0] + indices[1];
+        }
+        else
+        {
+            size_t result = 0;
+            size_t scale  = 1;
+            CMT_LOOP_UNROLL
+            for (size_t i = 0; i < dims; ++i)
+            {
+                result += scale * indices[dims - 1 - i];
+                scale *= (*this)[dims - 1 - i];
+            }
+            return result;
+        }
     }
     KFR_MEM_INTRINSIC shape<dims> from_flat(size_t index) const
     {
-        shape<dims> indices;
-        for (size_t i = 0; i < dims; ++i)
+        if constexpr (dims == 1)
         {
-            size_t sz             = (*this)[dims - 1 - i];
-            indices[dims - 1 - i] = index % sz;
-            index /= sz;
+            return { index };
         }
-        return indices;
+        else if constexpr (dims == 2)
+        {
+            index_t sz = (*this)[1];
+            return { index / sz, index % sz };
+        }
+        else
+        {
+            shape<dims> indices;
+            CMT_LOOP_UNROLL
+            for (size_t i = 0; i < dims; ++i)
+            {
+                size_t sz             = (*this)[dims - 1 - i];
+                indices[dims - 1 - i] = index % sz;
+                index /= sz;
+            }
+            return indices;
+        }
     }
 
     KFR_MEM_INTRINSIC index_t dot(const shape& other) const
@@ -401,19 +445,43 @@ constexpr KFR_INTRINSIC shape<outdims> compact_shape(const shape<dims>& in)
 template <index_t dims1, index_t dims2, index_t outdims = const_max(dims1, dims2)>
 bool can_assign_from(const shape<dims1>& dst_shape, const shape<dims2>& src_shape)
 {
-    for (size_t i = 0; i < outdims; ++i)
+    if constexpr (dims2 == 0)
     {
-        index_t dst_size = dst_shape.revindex(i);
-        index_t src_size = src_shape.revindex(i);
-        if (src_size == 1 || src_size == infinite_size || src_size == dst_size)
+        return true;
+    }
+    else
+    {
+        if constexpr (outdims >= 2)
         {
+            vec<index_t, outdims> dst = padlow<outdims - dims1>(*dst_shape, 1);
+            vec<index_t, outdims> src = padlow<outdims - dims2>(*src_shape, 1);
+
+            mask<index_t, outdims> match = src + 1 <= 2 || src == dst;
+            return all(match);
         }
         else
         {
-            return false;
+            for (size_t i = 0; i < outdims; ++i)
+            {
+                index_t dst_size = dst_shape.revindex(i);
+                index_t src_size = src_shape.revindex(i);
+                if (src_size == 1 || src_size == infinite_size || src_size == dst_size)
+                {
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
-    return true;
+}
+
+template <index_t dims>
+constexpr shape<dims> common_shape(const shape<dims>& shape)
+{
+    return shape;
 }
 
 template <index_t dims1, index_t dims2, index_t outdims = const_max(dims1, dims2)>
@@ -572,5 +640,17 @@ constexpr KFR_INTRINSIC index_t size_of_shape(const shape<dims>& shape)
     }
     return n;
 }
+
+template <index_t Axis, index_t N>
+struct axis_params
+{
+    constexpr static index_t axis  = Axis;
+    constexpr static index_t width = N;
+
+    constexpr axis_params() = default;
+};
+
+template <index_t Axis, index_t N>
+constexpr inline const axis_params<Axis, N> axis_params_v{};
 
 } // namespace kfr

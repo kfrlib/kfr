@@ -694,10 +694,10 @@ private:
     }
 
     T* m_data;
-    index_t m_size;
-    bool m_is_contiguous;
-    shape_type m_shape;
-    shape_type m_strides;
+    const index_t m_size;
+    const bool m_is_contiguous;
+    const shape_type m_shape;
+    const shape_type m_strides;
     memory_finalizer m_finalizer;
 };
 
@@ -740,33 +740,24 @@ struct expression_traits<tensor<T, Dims>> : expression_traits_defaults
 inline namespace CMT_ARCH_NAME
 {
 
-template <typename T, index_t NDims, size_t N>
-KFR_INTRINSIC vec<T, N> get_elements(const tensor<T, NDims>& self, const shape<NDims>& index, csize_t<N>)
+template <typename T, index_t NDims, index_t Axis, size_t N>
+KFR_INTRINSIC vec<T, N> get_elements(const tensor<T, NDims>& self, const shape<NDims>& index,
+                                     const axis_params<Axis, N>&)
 {
     const T* data = self.data() + self.calc_index(index);
-    if (self.is_last_contiguous())
-    {
+    if (self.strides()[Axis] == 1)
         return read<N>(data);
-    }
-    else
-    {
-        return gather_stride<N>(data, self.strides().back());
-    }
+    return gather_stride<N>(data, self.strides()[Axis]);
 }
 
-template <typename T, index_t NDims, size_t N>
-KFR_INTRINSIC void set_elements(const tensor<T, NDims>& self, const shape<NDims>& index, csize_t<N>,
-                                const identity<vec<T, N>>& value)
+template <typename T, index_t NDims, index_t Axis, size_t N>
+KFR_INTRINSIC void set_elements(const tensor<T, NDims>& self, const shape<NDims>& index,
+                                const axis_params<Axis, N>&, const identity<vec<T, N>>& value)
 {
     T* data = self.data() + self.calc_index(index);
-    if (self.is_last_contiguous())
-    {
-        write(data, value);
-    }
-    else
-    {
-        scatter_stride(data, value, self.strides().back());
-    }
+    if (self.strides()[Axis] == 1)
+        return write(data, value);
+    scatter_stride(data, value, self.strides()[Axis]);
 }
 
 template <typename T, index_t dims1, index_t dims2, typename Fn, index_t outdims = const_max(dims1, dims2)>

@@ -36,14 +36,10 @@ TEST(shape)
 
     CHECK(internal_generic::strides_for_shape(shape{ 2, 3, 4 }, 10) == shape{ 120, 40, 10 });
 
-    CHECK(increment_indices_return(shape{ 0, 0, 0 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) ==
-          shape{ 0, 0, 1 });
-    CHECK(increment_indices_return(shape{ 0, 0, 3 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) ==
-          shape{ 0, 1, 0 });
-    CHECK(increment_indices_return(shape{ 0, 2, 0 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) ==
-          shape{ 0, 2, 1 });
-    CHECK(increment_indices_return(shape{ 0, 2, 3 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) ==
-          shape{ 1, 0, 0 });
+    CHECK(increment_indices_return(shape{ 0, 0, 0 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) == shape{ 0, 0, 1 });
+    CHECK(increment_indices_return(shape{ 0, 0, 3 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) == shape{ 0, 1, 0 });
+    CHECK(increment_indices_return(shape{ 0, 2, 0 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) == shape{ 0, 2, 1 });
+    CHECK(increment_indices_return(shape{ 0, 2, 3 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) == shape{ 1, 0, 0 });
     CHECK(increment_indices_return(shape{ 1, 2, 3 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) ==
           shape{ null_index, null_index, null_index });
 
@@ -223,7 +219,7 @@ TEST(tensor_broadcast)
     tensor<float, 2> t2{ shape{ 5, 1 }, { 10.f, 20.f, 30.f, 40.f, 50.f } };
     tensor<float, 1> t4{ shape{ 5 }, { 1.f, 2.f, 3.f, 4.f, 5.f } };
     tensor<float, 2> tresult{ shape{ 5, 5 }, { 11, 12, 13, 14, 15, 21, 22, 23, 24, 25, 31, 32, 33,
-                                                 34, 35, 41, 42, 43, 44, 45, 51, 52, 53, 54, 55 } };
+                                               34, 35, 41, 42, 43, 44, 45, 51, 52, 53, 54, 55 } };
 
     tensor<float, 2> t3 = tapply(t1, t2, fn::add{});
 
@@ -249,7 +245,10 @@ template <typename T, index_t Dims = 1>
 struct tcounter
 {
     T start;
-    std::array<T, Dims> steps;
+    T steps[Dims];
+
+    T back() const { return steps[Dims - 1]; }
+    T front() const { return steps[0]; }
 };
 
 template <typename T, index_t Dims>
@@ -284,52 +283,68 @@ struct expression_traits<std::array<std::array<T, N1>, N2>> : expression_traits_
 
 inline namespace CMT_ARCH_NAME
 {
-template <typename T, size_t N>
-KFR_INTRINSIC vec<T, N> get_elements(const tcounter<T, 1>& self, const shape<1>& index, csize_t<N> sh)
+template <typename T, index_t Axis, size_t N>
+KFR_INTRINSIC vec<T, N> get_elements(const tcounter<T, 1>& self, const shape<1>& index,
+                                     const axis_params<Axis, N>&)
 {
     T acc = self.start;
-    acc += static_cast<T>(index.front()) * self.steps.front();
-    return acc + enumerate(vec_shape<T, N>(), self.steps.back());
+    acc += static_cast<T>(index.back()) * self.back();
+    return acc + enumerate(vec_shape<T, N>(), self.back());
 }
-template <typename T, index_t dims, size_t N>
-KFR_INTRINSIC vec<T, N> get_elements(const tcounter<T, dims>& self, const shape<dims>& index, csize_t<N> sh)
+template <typename T, index_t dims, index_t Axis, size_t N>
+KFR_INTRINSIC vec<T, N> get_elements(const tcounter<T, dims>& self, const shape<dims>& index,
+                                     const axis_params<Axis, N>&)
 {
     T acc                 = self.start;
     vec<T, dims> tindices = cast<T>(*index);
     cfor(csize<0>, csize<dims>, [&](auto i) CMT_INLINE_LAMBDA { acc += tindices[i] * self.steps[i]; });
-    return acc + enumerate(vec_shape<T, N>(), self.steps.back());
+    return acc + enumerate(vec_shape<T, N>(), self.steps[Axis]);
 }
 
-template <typename T, size_t N1, size_t N>
+template <typename T, size_t N1, index_t Axis, size_t N>
 KFR_INTRINSIC vec<T, N> get_elements(const std::array<T, N1>& CMT_RESTRICT self, const shape<1>& index,
-                                     csize_t<N> sh)
+                                     const axis_params<Axis, N>&)
 {
     const T* CMT_RESTRICT const data = self.data();
-    return read<N>(data + std::min(index[0], static_cast<index_t>(N1 - 1)));
+    return read<N>(data + index[0]);
 }
 
-template <typename T, size_t N1, size_t N>
-KFR_INTRINSIC void set_elements(std::array<T, N1>& CMT_RESTRICT self, const shape<1>& index, csize_t<N>,
-                                const identity<vec<T, N>>& val)
+template <typename T, size_t N1, index_t Axis, size_t N>
+KFR_INTRINSIC void set_elements(std::array<T, N1>& CMT_RESTRICT self, const shape<1>& index,
+                                const axis_params<Axis, N>&, const identity<vec<T, N>>& val)
 {
     T* CMT_RESTRICT const data = self.data();
-    write(data + std::min(index[0], static_cast<index_t>(N1 - 1)), val);
+    write(data + index[0], val);
 }
 
-template <typename T, size_t N1, size_t N2, size_t N>
+template <typename T, size_t N1, size_t N2, index_t Axis, size_t N>
 KFR_INTRINSIC vec<T, N> get_elements(const std::array<std::array<T, N1>, N2>& CMT_RESTRICT self,
-                                     const shape<2>& index, csize_t<N> sh)
+                                     const shape<2>& index, const axis_params<Axis, N>&)
 {
-    const T* CMT_RESTRICT const data = self[std::min(index[0], static_cast<index_t>(N2 - 1))].data();
-    return read<N>(data + std::min(index[1], static_cast<index_t>(N1 - 1)));
+    const T* CMT_RESTRICT const data = self.front().data() + index.front() * N1 + index.back();
+    if constexpr (Axis == 1)
+    {
+        return read<N>(data);
+    }
+    else
+    {
+        return gather_stride<N>(data, N1);
+    }
 }
 
-template <typename T, size_t N1, size_t N2, size_t N>
+template <typename T, size_t N1, size_t N2, index_t Axis, size_t N>
 KFR_INTRINSIC void set_elements(std::array<std::array<T, N1>, N2>& CMT_RESTRICT self, const shape<2>& index,
-                                csize_t<N>, const identity<vec<T, N>>& val)
+                                const axis_params<Axis, N>&, const identity<vec<T, N>>& val)
 {
-    T* CMT_RESTRICT const data = self[std::min(index[0], static_cast<index_t>(N2 - 1))].data();
-    write(data + std::min(index[1], static_cast<index_t>(N1 - 1)), val);
+    T* CMT_RESTRICT data = self.front().data() + index.front() * N1 + index.back();
+    if constexpr (Axis == 1)
+    {
+        write(data, val);
+    }
+    else
+    {
+        scatter_stride(data, val, N1);
+    }
 }
 
 TEST(tensor_expressions2)
@@ -337,12 +352,12 @@ TEST(tensor_expressions2)
     auto aa = std::array<std::array<double, 2>, 2>{ { { { 1, 2 } }, { { 3, 4 } } } };
     static_assert(expression_traits<decltype(aa)>::dims == 2);
     CHECK(expression_traits<decltype(aa)>::shapeof(aa) == shape{ 2, 2 });
-    CHECK(get_elements(aa, { 1, 1 }, csize_t<1>{}) == vec{ 4. });
-    CHECK(get_elements(aa, { 1, 0 }, csize_t<2>{}) == vec{ 3., 4. });
+    CHECK(get_elements(aa, { 1, 1 }, axis_params<1, 1>{}) == vec{ 4. });
+    CHECK(get_elements(aa, { 1, 0 }, axis_params<1, 2>{}) == vec{ 3., 4. });
 
     static_assert(expression_traits<decltype(1234.f)>::dims == 0);
     CHECK(expression_traits<decltype(1234.f)>::shapeof(1234.f) == shape{});
-    CHECK(get_elements(1234.f, {}, csize_t<3>{}) == vec{ 1234.f, 1234.f, 1234.f });
+    CHECK(get_elements(1234.f, {}, axis_params<0, 3>{}) == vec{ 1234.f, 1234.f, 1234.f });
 
     tprocess(aa, 123.45f);
 
@@ -360,13 +375,13 @@ TEST(tensor_counter)
 {
     std::array<double, 6> x;
 
-    tprocess(x, tcounter<double>{ 0.0, { { 0.5 } } });
+    tprocess(x, tcounter<double>{ 0.0, { 0.5 } });
 
     CHECK(x == std::array<double, 6>{ { 0.0, 0.5, 1.0, 1.5, 2.0, 2.5 } });
 
     std::array<std::array<double, 4>, 3> y;
 
-    tprocess(y, tcounter<double, 2>{ 100.0, { { 1.0, 10.0 } } });
+    tprocess(y, tcounter<double, 2>{ 100.0, { 1.0, 10.0 } });
 
     CHECK(y == std::array<std::array<double, 4>, 3>{ {
                    { { 100.0, 110.0, 120.0, 130.0 } },
@@ -379,7 +394,7 @@ DTEST(tensor_dims)
 {
     tensor<double, 6> t12{ shape{ 2, 3, 4, 5, 6, 7 } };
 
-    tprocess(t12, tcounter<double, 6>{ 0, { { 1, 10, 100, 1000, 10000, 100000 } } });
+    tprocess(t12, tcounter<double, 6>{ 0, { 1, 10, 100, 1000, 10000, 100000 } });
 
     auto t1 = t12(1, 2, 3, tall(), 5, 6);
     CHECK(render(t1) == univector<double>{ 650321, 651321, 652321, 653321, 654321 });
@@ -444,6 +459,13 @@ TEST(xfunction_test)
                                                        { { 501.f, 502.f, 503.f, 504.f, 505.f } } } });
 }
 
+TEST(xreshape)
+{
+    std::array<float, 12> x;
+    tprocess(x_reshape(x, shape{ 3, 4 }), tcounter<float, 2>{ 0, { 10, 1 } });
+    CHECK(x == std::array<float, 12>{ { 0, 1, 2, 3, 10, 11, 12, 13, 20, 21, 22, 23 } });
+}
+
 } // namespace CMT_ARCH_NAME
 
 #ifdef _MSC_VER
@@ -467,17 +489,17 @@ extern "C" __declspec(dllexport) bool assembly_test3(std::array<double, 16>& x)
 
 extern "C" __declspec(dllexport) bool assembly_test4(std::array<double, 16>& x)
 {
-    return tprocess(x, tcounter<double>{ 1000.0, { { 1.0 } } }).front() > 0;
+    return tprocess(x, tcounter<double>{ 1000.0, { 1.0 } }).front() > 0;
 }
 
 extern "C" __declspec(dllexport) bool assembly_test5(const tensor<double, 3>& x)
 {
-    return tprocess(x, tcounter<double, 3>{ 1000.0, { { 1.0, 2.0, 3.0 } } }).front() > 0;
+    return tprocess(x, tcounter<double, 3>{ 1000.0, { 1.0, 2.0, 3.0 } }).front() > 0;
 }
 
 extern "C" __declspec(dllexport) bool assembly_test6(const tensor<double, 2>& x)
 {
-    return tprocess(x, tcounter<double, 2>{ 1000.0, { { 1.0, 2.0 } } }).front() > 0;
+    return tprocess(x, tcounter<double, 2>{ 1000.0, { 1.0, 2.0 } }).front() > 0;
 }
 
 extern "C" __declspec(dllexport) bool assembly_test7(const tensor<double, 2>& x)
@@ -528,6 +550,74 @@ extern "C" __declspec(dllexport) void assembly_test13(const tensor<float, 1>& x,
     // static_assert(sh1 == shape{ 4, 4 });
     // static_assert(sh2 == shape{ 4, 4 });
     tprocess(x, y * 0.5f);
+}
+
+template <typename T, size_t N1, size_t N2>
+using array2d = std::array<std::array<T, N2>, N1>;
+
+extern "C" __declspec(dllexport) void assembly_test14(std::array<float, 32>& x,
+                                                      const std::array<float, 32>& y)
+{
+    tprocess(x, x_reverse(y));
+}
+
+extern "C" __declspec(dllexport) void assembly_test15(array2d<float, 32, 32>& x,
+                                                      const array2d<float, 32, 32>& y)
+{
+    tprocess(x, x_reverse(y));
+}
+
+extern "C" __declspec(dllexport) void assembly_test16a(array2d<double, 8, 2>& x,
+                                                       const array2d<double, 8, 2>& y)
+{
+    tprocess<8, 0>(x, y * y);
+}
+extern "C" __declspec(dllexport) void assembly_test16b(array2d<double, 8, 2>& x,
+                                                       const array2d<double, 8, 2>& y)
+{
+    tprocess<2, 1>(x, y * y);
+}
+
+extern "C" __declspec(dllexport) void assembly_test17a(const tensor<double, 2>& x, const tensor<double, 2>& y)
+{
+    xfunction ysqr = xfunction{ xwitharguments{ y }, fn::sqr{} };
+    tprocess<8, 0>(x, ysqr);
+}
+extern "C" __declspec(dllexport) void assembly_test17b(const tensor<double, 2>& x, const tensor<double, 2>& y)
+{
+    xfunction ysqr = xfunction{ xwitharguments{ y }, fn::sqr{} };
+    tprocess<2, 1>(x, ysqr);
+}
+
+extern "C" __declspec(dllexport) void assembly_test18a(const tensor<double, 2>& x, const tensor<double, 2>& y)
+{
+    xfunction ysqr = xfunction{ xwitharguments{ y }, fn::sqr{} };
+    tprocess<8, 0>(x_fixshape(x, static_shape<8, 2>{}), x_fixshape(ysqr, static_shape<8, 2>{}));
+}
+extern "C" __declspec(dllexport) void assembly_test18b(const tensor<double, 2>& x, const tensor<double, 2>& y)
+{
+    xfunction ysqr = xfunction{ xwitharguments{ y }, fn::sqr{} };
+    tprocess<2, 1>(x_fixshape(x, static_shape<8, 2>{}), x_fixshape(ysqr, static_shape<8, 2>{}));
+}
+
+extern "C" __declspec(dllexport) void assembly_test19(const tensor<double, 2>& x,
+                                                      const xreshape<tensor<double, 2>, 2>& y)
+{
+    tprocess(x, y);
+}
+
+extern "C" __declspec(dllexport) shape<2> assembly_test20_2(const shape<2>& x, size_t fl)
+{
+    return x.from_flat(fl);
+}
+extern "C" __declspec(dllexport) shape<4> assembly_test20_4(const shape<4>& x, size_t fl)
+{
+    return x.from_flat(fl);
+}
+
+extern "C" __declspec(dllexport) shape<4> assembly_test21(const shape<4>& x, size_t fl)
+{
+    return x.from_flat(fl);
 }
 #endif
 

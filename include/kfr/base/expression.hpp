@@ -125,13 +125,15 @@ struct expression_traits<T, std::enable_if_t<is_simd_type<T>>> : expression_trai
 
 inline namespace CMT_ARCH_NAME
 {
-template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<std::decay_t<T>>)>
-KFR_INTRINSIC vec<std::decay_t<T>, N> get_elements(T&& self, const shape<0>& index, csize_t<N> sh)
+template <typename T, index_t Axis, size_t N, KFR_ENABLE_IF(is_simd_type<std::decay_t<T>>)>
+KFR_INTRINSIC vec<std::decay_t<T>, N> get_elements(T&& self, const shape<0>& index,
+                                                   const axis_params<Axis, N>&)
 {
     return self;
 }
-template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<std::decay_t<T>>)>
-KFR_INTRINSIC void set_elements(T& self, const shape<0>& index, csize_t<N> sh, const identity<vec<T, N>>& val)
+template <typename T, index_t Axis, size_t N, KFR_ENABLE_IF(is_simd_type<std::decay_t<T>>)>
+KFR_INTRINSIC void set_elements(T& self, const shape<0>& index, const axis_params<Axis, N>&,
+                                const identity<vec<T, N>>& val)
 {
     static_assert(N == 1);
     static_assert(!std::is_const_v<T>);
@@ -142,44 +144,69 @@ KFR_INTRINSIC void set_elements(T& self, const shape<0>& index, csize_t<N> sh, c
 inline namespace CMT_ARCH_NAME
 {
 
-template <typename Out, typename In, size_t w, size_t gw, typename Tin, index_t outdims, index_t indims>
+template <typename Out, typename In, index_t OutAxis, size_t w, size_t gw, typename Tin, index_t outdims,
+          index_t indims>
 KFR_INTRINSIC static void tprocess_body(Out&& out, In&& in, size_t start, size_t stop, size_t insize,
                                         shape<outdims> outidx, shape<indims> inidx)
 {
-    size_t x = start;
-    if constexpr (w > gw)
+    if constexpr (indims == 0)
     {
-        csize_t<w> wval;
-        CMT_LOOP_NOUNROLL
-        for (; x < stop / w * w; x += w)
+        size_t x              = start;
+        const vec<Tin, 1> val = get_elements(in, inidx, axis_params_v<0, 1>);
+        if constexpr (w > gw)
         {
-            outidx.set_revindex(0, x);
-            inidx.set_revindex(0, std::min(x, insize - 1));
-            set_elements(out, outidx, wval, get_elements(in, inidx, wval));
+            CMT_LOOP_NOUNROLL
+            for (; x < stop / w * w; x += w)
+            {
+                outidx[OutAxis] = x;
+                set_elements(out, outidx, axis_params_v<OutAxis, w>, repeat<w>(val));
+            }
+        }
+        CMT_LOOP_NOUNROLL
+        for (; x < stop / gw * gw; x += gw)
+        {
+            outidx[OutAxis] = x;
+            set_elements(out, outidx, axis_params_v<OutAxis, gw>, repeat<gw>(val));
         }
     }
-    csize_t<gw> gwval;
-    CMT_LOOP_NOUNROLL
-    for (; x < stop / gw * gw; x += gw)
+    else
     {
-        outidx.set_revindex(0, x);
-        inidx.set_revindex(0, std::min(x, insize - 1));
-        set_elements(out, outidx, gwval, get_elements(in, inidx, gwval));
+        constexpr index_t InAxis = OutAxis + indims - outdims;
+        size_t x                 = start;
+        if constexpr (w > gw)
+        {
+            CMT_LOOP_NOUNROLL
+            for (; x < stop / w * w; x += w)
+            {
+                outidx[OutAxis] = x;
+                inidx[InAxis]   = std::min(x, insize - 1);
+                set_elements(out, outidx, axis_params_v<OutAxis, w>,
+                             get_elements(in, inidx, axis_params_v<InAxis, w>));
+            }
+        }
+        CMT_LOOP_NOUNROLL
+        for (; x < stop / gw * gw; x += gw)
+        {
+            outidx[OutAxis] = x;
+            inidx[InAxis]   = std::min(x, insize - 1);
+            set_elements(out, outidx, axis_params_v<OutAxis, gw>,
+                         get_elements(in, inidx, axis_params_v<InAxis, gw>));
+        }
     }
 }
 
-template <size_t width = 0, typename Out, typename In, size_t gw = 1,
+template <size_t width = 0, index_t Axis = 0, typename Out, typename In, size_t gw = 1,
           CMT_ENABLE_IF(expression_traits<Out>::dims == 0)>
 static auto tprocess(Out&& out, In&& in, shape<0> = {}, shape<0> = {}, csize_t<gw> = {}) -> shape<0>
 {
-    set_elements(out, shape<0>{}, csize_t<1>(), get_elements(in, shape<0>{}, csize_t<1>()));
+    set_elements(out, shape<0>{}, axis_params_v<0, 1>, get_elements(in, shape<0>{}, axis_params_v<0, 1>));
     return {};
 }
 
 namespace internal
 {
 
-constexpr size_t select_process_width(size_t width, size_t vec_width, index_t last_dim_size)
+constexpr KFR_INTRINSIC size_t select_process_width(size_t width, size_t vec_width, index_t last_dim_size)
 {
     if (width != 0)
         return width;
@@ -188,14 +215,46 @@ constexpr size_t select_process_width(size_t width, size_t vec_width, index_t la
 
     return std::min(vec_width, last_dim_size);
 }
+
+constexpr KFR_INTRINSIC index_t select_axis(index_t ndims, index_t axis)
+{
+    if (axis >= ndims)
+        return ndims - 1;
+    return axis;
+}
+
+template <index_t VecAxis, index_t LoopAxis, index_t outdims>
+KFR_INTRINSIC index_t axis_start(const shape<outdims>& sh)
+{
+    static_assert(VecAxis < outdims);
+    static_assert(LoopAxis < outdims);
+    if constexpr (VecAxis == LoopAxis)
+        return 0;
+    else
+        return sh[LoopAxis];
+}
+template <index_t VecAxis, index_t LoopAxis, index_t outdims>
+KFR_INTRINSIC index_t axis_stop(const shape<outdims>& sh)
+{
+    static_assert(VecAxis < outdims);
+    static_assert(LoopAxis < outdims);
+    if constexpr (VecAxis == LoopAxis)
+        return 1;
+    else
+        return sh[LoopAxis];
+}
+
 } // namespace internal
 
-template <size_t width = 0, typename Out, typename In, size_t gw = 1,
+template <size_t width = 0, index_t Axis = infinite_size, typename Out, typename In, size_t gw = 1,
           typename Tin = expression_value_type<In>, typename Tout = expression_value_type<Out>,
           index_t outdims = expression_dims<Out>, CMT_ENABLE_IF(expression_dims<Out> > 0)>
 static auto tprocess(Out&& out, In&& in, shape<outdims> start = 0, shape<outdims> size = infinite_size,
                      csize_t<gw> = {}) -> shape<outdims>
 {
+    using internal::axis_start;
+    using internal::axis_stop;
+
     constexpr index_t indims = expression_dims<In>;
     static_assert(outdims >= indims);
 
@@ -209,55 +268,71 @@ static auto tprocess(Out&& out, In&& in, shape<outdims> start = 0, shape<outdims
 
     constexpr size_t w = internal::select_process_width(width, vec_width, last_dim_size);
 
+    constexpr index_t out_axis = internal::select_axis(outdims, Axis);
+    constexpr index_t in_axis  = out_axis + indims - outdims;
+
     const shape<outdims> outshape = shapeof(out);
     const shape<indims> inshape   = shapeof(in);
     if (CMT_UNLIKELY(!internal_generic::can_assign_from(outshape, inshape)))
         return { 0 };
     shape<outdims> stop = min(start.add_inf(size), outshape);
 
+    index_t in_size = 0;
+    if constexpr (indims > 0)
+        in_size = inshape[in_axis];
+
     shape<outdims> outidx;
     if constexpr (outdims == 1)
     {
         outidx = shape<outdims>{ 0 };
-        tprocess_body<Out, In, w, gw, Tin, outdims, indims>(
-            std::forward<Out>(out), std::forward<In>(in), start.revindex(0), stop.revindex(0),
-            inshape.revindex(0), outidx, inshape.adapt(outidx));
+        tprocess_body<Out, In, out_axis, w, gw, Tin, outdims, indims>(
+            std::forward<Out>(out), std::forward<In>(in), start[out_axis], stop[out_axis], in_size, outidx,
+            inshape.adapt(outidx));
     }
     else if constexpr (outdims == 2)
     {
-        for (index_t x = start.revindex(1); x < stop.revindex(1); ++x)
+        for (index_t i0 = axis_start<out_axis, 0>(start); i0 < axis_stop<out_axis, 0>(stop); ++i0)
         {
-            outidx = shape<outdims>{ x, 0 };
-            tprocess_body<Out, In, w, gw, Tin, outdims, indims>(
-                std::forward<Out>(out), std::forward<In>(in), start.revindex(0), stop.revindex(0),
-                inshape.revindex(0), outidx, inshape.adapt(outidx));
+            for (index_t i1 = axis_start<out_axis, 1>(start); i1 < axis_stop<out_axis, 1>(stop); ++i1)
+            {
+                outidx = shape<outdims>{ i0, i1 };
+                tprocess_body<Out, In, out_axis, w, gw, Tin, outdims, indims>(
+                    std::forward<Out>(out), std::forward<In>(in), start[out_axis], stop[out_axis], in_size,
+                    outidx, inshape.adapt(outidx));
+            }
         }
     }
     else if constexpr (outdims == 3)
     {
-        for (index_t x = start.revindex(2); x < stop.revindex(2); ++x)
+        for (index_t i0 = axis_start<out_axis, 0>(start); i0 < axis_stop<out_axis, 0>(stop); ++i0)
         {
-            for (index_t y = start.revindex(1); y < stop.revindex(1); ++y)
+            for (index_t i1 = axis_start<out_axis, 1>(start); i1 < axis_stop<out_axis, 1>(stop); ++i1)
             {
-                outidx = shape<outdims>{ x, y, 0 };
-                tprocess_body<Out, In, w, gw, Tin, outdims, indims>(
-                    std::forward<Out>(out), std::forward<In>(in), start.revindex(0), stop.revindex(0),
-                    inshape.revindex(0), outidx, inshape.adapt(outidx));
+                for (index_t i2 = axis_start<out_axis, 2>(start); i2 < axis_stop<out_axis, 2>(stop); ++i2)
+                {
+                    outidx = shape<outdims>{ i0, i1, i2 };
+                    tprocess_body<Out, In, out_axis, w, gw, Tin, outdims, indims>(
+                        std::forward<Out>(out), std::forward<In>(in), start[out_axis], stop[out_axis],
+                        in_size, outidx, inshape.adapt(outidx));
+                }
             }
         }
     }
     else if constexpr (outdims == 4)
     {
-        for (index_t x = start.revindex(3); x < stop.revindex(3); ++x)
+        for (index_t i0 = axis_start<out_axis, 0>(start); i0 < axis_stop<out_axis, 0>(stop); ++i0)
         {
-            for (index_t y = start.revindex(2); y < stop.revindex(2); ++y)
+            for (index_t i1 = axis_start<out_axis, 1>(start); i1 < axis_stop<out_axis, 1>(stop); ++i1)
             {
-                for (index_t z = start.revindex(1); z < stop.revindex(1); ++z)
+                for (index_t i2 = axis_start<out_axis, 2>(start); i2 < axis_stop<out_axis, 2>(stop); ++i2)
                 {
-                    outidx = shape<outdims>{ x, y, z, 0 };
-                    tprocess_body<Out, In, w, gw, Tin, outdims, indims>(
-                        std::forward<Out>(out), std::forward<In>(in), start.revindex(0), stop.revindex(0),
-                        inshape.revindex(0), outidx, inshape.adapt(outidx));
+                    for (index_t i3 = axis_start<out_axis, 3>(start); i3 < axis_stop<out_axis, 3>(stop); ++i3)
+                    {
+                        outidx = shape<outdims>{ i0, i1, i2, i3 };
+                        tprocess_body<Out, In, out_axis, w, gw, Tin, outdims, indims>(
+                            std::forward<Out>(out), std::forward<In>(in), start[out_axis], stop[out_axis],
+                            in_size, outidx, inshape.adapt(outidx));
+                    }
                 }
             }
         }
@@ -265,14 +340,15 @@ static auto tprocess(Out&& out, In&& in, shape<outdims> start = 0, shape<outdims
     else
     {
         shape<outdims> outidx = start;
-        if (CMT_UNLIKELY(!internal_generic::compare_indices(outidx, stop, outdims - 2)))
+        if (CMT_UNLIKELY(!internal_generic::compare_indices(outidx, stop)))
             return stop;
         do
         {
-            tprocess_body<Out, In, w, gw, Tin, outdims, indims>(
-                std::forward<Out>(out), std::forward<In>(in), start.revindex(0), stop.revindex(0),
-                inshape.revindex(0), outidx, inshape.adapt(outidx));
-        } while (internal_generic::increment_indices(outidx, start, stop, outdims - 2));
+            tprocess_body<Out, In, out_axis, w, gw, Tin, outdims, indims>(
+                std::forward<Out>(out), std::forward<In>(in), start[out_axis], stop[out_axis], in_size,
+                outidx, inshape.adapt(outidx));
+            outidx[out_axis] = stop[out_axis] - 1;
+        } while (internal_generic::increment_indices(outidx, start, stop));
     }
     return stop;
 }
@@ -477,7 +553,7 @@ struct expression_traits<T, std::enable_if_t<std::is_base_of_v<input_expression,
 inline namespace CMT_ARCH_NAME
 {
 template <typename E, size_t N, KFR_ENABLE_IF(is_input_expression<E>), typename T = value_type_of<E>>
-KFR_MEM_INTRINSIC vec<T, N> get_elements(E&& self, const shape<1>& index, csize_t<N> sh)
+KFR_MEM_INTRINSIC vec<T, N> get_elements(E&& self, const shape<1>& index, const axis_params<0, N>& sh)
 {
     return get_elements(self, cinput_t{}, index[0], vec_shape<T, N>{});
 }
@@ -511,7 +587,7 @@ struct xwitharguments
     {
         static_assert(idx < count);
         using Traits = expression_traits<nth<idx>>;
-        if constexpr (Traits::dims == 0)
+        if constexpr (sizeof...(Args) <= 1 || Traits::dims == 0)
         {
             return -1;
         }
@@ -564,15 +640,62 @@ private:
     }
 };
 
+template <typename Arg>
+struct xwitharguments<Arg>
+{
+    constexpr static size_t count = 1;
+
+    using type_list = ctypes_t<Arg>;
+
+    template <size_t idx>
+    using nth = Arg;
+
+    using first_arg = Arg;
+
+    template <size_t idx>
+    using nth_trait = expression_traits<Arg>;
+
+    using first_arg_trait = expression_traits<first_arg>;
+
+    std::tuple<Arg> args;
+
+    KFR_INTRINSIC auto& first() { return std::get<0>(args); }
+    KFR_INTRINSIC const auto& first() const { return std::get<0>(args); }
+
+    template <size_t idx>
+    KFR_INTRINSIC dimset getmask(csize_t<idx> = {}) const
+    {
+        return -1;
+    }
+
+    template <typename Fn>
+    KFR_INTRINSIC constexpr auto fold(Fn&& fn) const
+    {
+        return fold_impl(std::forward<Fn>(fn), csizeseq<count>);
+    }
+    template <typename Fn>
+    KFR_INTRINSIC constexpr static auto fold_idx(Fn&& fn)
+    {
+        return fold_idx_impl(std::forward<Fn>(fn), csizeseq<count>);
+    }
+
+    KFR_INTRINSIC xwitharguments(Arg&& arg) : args{ std::forward<Arg>(arg) } {}
+
+private:
+    template <typename Fn, size_t... indices>
+    KFR_INTRINSIC constexpr auto fold_impl(Fn&& fn, csizes_t<indices...>) const
+    {
+        return fn(std::get<indices>(args)...);
+    }
+    template <typename Fn, size_t... indices>
+    KFR_INTRINSIC constexpr static auto fold_idx_impl(Fn&& fn, csizes_t<indices...>)
+    {
+        return fn(csize<indices>...);
+    }
+};
+
 template <typename... Args>
 xwitharguments(Args&&... args) -> xwitharguments<Args...>;
-
-template <index_t Dims, typename Arg>
-struct xreshape : public xwitharguments<Arg>
-{
-    shape<Dims> old_shape;
-    shape<Dims> new_shape;
-};
 
 template <typename Fn, typename... Args>
 struct xfunction : public xwitharguments<Args...>
@@ -617,29 +740,20 @@ struct expression_traits<xfunction<Fn, Args...>> : expression_traits_defaults
     }
 };
 
-template <index_t Dims, typename Arg>
-struct expression_traits<xreshape<Dims, Arg>> : expression_traits_defaults
-{
-    using value_type             = typename expression_traits<Arg>::value_type;
-    constexpr static size_t dims = Dims;
-
-    constexpr static shape<dims> shapeof(const xreshape<Dims, Arg>& self) { return self.new_shape; }
-};
-
 inline namespace CMT_ARCH_NAME
 {
 
 namespace internal
 {
-template <index_t outdims, typename Fn, typename... Args, size_t N, index_t Dims, size_t idx,
+template <index_t outdims, typename Fn, typename... Args, index_t Axis, size_t N, index_t Dims, size_t idx,
           typename Traits = expression_traits<typename xfunction<Fn, Args...>::template nth<idx>>>
 KFR_MEM_INTRINSIC vec<typename Traits::value_type, N> get_arg(const xfunction<Fn, Args...>& self,
-                                                              const shape<Dims>& index, csize_t<N> sh,
-                                                              csize_t<idx>)
+                                                              const shape<Dims>& index,
+                                                              const axis_params<Axis, N>& sh, csize_t<idx>)
 {
     if constexpr (Traits::dims == 0)
     {
-        return repeat<N>(get_elements(std::get<idx>(self.args), {}, csize_t<1>{}));
+        return repeat<N>(get_elements(std::get<idx>(self.args), {}, axis_params<Axis, 1>{}));
     }
     else
     {
@@ -648,14 +762,14 @@ KFR_MEM_INTRINSIC vec<typename Traits::value_type, N> get_arg(const xfunction<Fn
         if constexpr (last_dim > 0)
         {
             return repeat<N / std::min(last_dim, N)>(
-                get_elements(std::get<idx>(self.args), indices, csize_t<std::min(last_dim, N)>{}));
+                get_elements(std::get<idx>(self.args), indices, axis_params<Axis, std::min(last_dim, N)>{}));
         }
         else
         {
-            if constexpr (N > 1)
+            if constexpr (sizeof...(Args) > 1 && N > 1)
             {
                 if (CMT_UNLIKELY(self.masks[idx].back() == 0))
-                    return get_elements(std::get<idx>(self.args), indices, csize_t<1>{}).front();
+                    return get_elements(std::get<idx>(self.args), indices, axis_params<Axis, 1>{}).front();
                 else
                     return get_elements(std::get<idx>(self.args), indices, sh);
             }
@@ -668,10 +782,10 @@ KFR_MEM_INTRINSIC vec<typename Traits::value_type, N> get_arg(const xfunction<Fn
 }
 } // namespace internal
 
-template <typename Fn, typename... Args, size_t N, index_t Dims,
+template <typename Fn, typename... Args, index_t Axis, size_t N, index_t Dims,
           typename Tr = expression_traits<xfunction<Fn, Args...>>, typename T = typename Tr::value_type>
 KFR_INTRINSIC vec<T, N> get_elements(const xfunction<Fn, Args...>& self, const shape<Dims>& index,
-                                     csize_t<N> sh)
+                                     const axis_params<Axis, N>& sh)
 {
     constexpr index_t outdims = Tr::dims;
     return self.fold_idx(
