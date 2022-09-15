@@ -183,6 +183,20 @@ To discuss any issues related to this AUR package refer to the comments section 
 
 Prebuilt binaries will be available soon.
 
+#### Vcpkg
+
+Alternatively, you can build and install kfr using [vcpkg](https://github.com/Microsoft/vcpkg/) dependency manager:
+
+```
+git clone https://github.com/Microsoft/vcpkg.git
+cd vcpkg
+./bootstrap-vcpkg.sh
+./vcpkg integrate install
+./vcpkg install kfr
+```
+
+The kfr port in vcpkg is kept up to date by Microsoft team members and community contributors. If the version is out of date, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
+
 ## Including in CMake project
 
 CMakeLists.txt contains these libraries:
