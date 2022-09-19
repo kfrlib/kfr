@@ -97,7 +97,7 @@ KFR_INTRINSIC vec<T, Nout * groupsize> gather_stride(const T* base, size_t strid
         constexpr size_t Nlow = prev_poweroftwo(Nout - 1);
         return concat(
             internal::gather_stride_s<Nlow, groupsize>(base, stride, csizeseq<Nlow>),
-            internal::gather_stride_s<Nout - Nlow, groupsize>(base + Nlow, stride, csizeseq<Nout - Nlow>));
+            internal::gather_stride_s<Nout - Nlow, groupsize>(base + Nlow * stride, stride, csizeseq<Nout - Nlow>));
     }
     else
         return internal::gather_stride_s<Nout, groupsize>(base, stride, csizeseq<Nout>);
@@ -152,7 +152,7 @@ KFR_INTRINSIC void scatter_stride(T* base, const vec<T, N>& value, size_t stride
     {
         constexpr size_t Nlow = prev_poweroftwo(Nout - 1);
         internal::scatter_helper_s<groupsize>(base, stride, slice<0, Nlow>(value), csizeseq<Nlow>);
-        internal::scatter_helper_s<groupsize>(base + Nlow, stride, slice<Nlow, Nout - Nlow>(value),
+        internal::scatter_helper_s<groupsize>(base + Nlow * stride, stride, slice<Nlow, Nout - Nlow>(value),
                                               csizeseq<(Nout - Nlow)>);
     }
     else
