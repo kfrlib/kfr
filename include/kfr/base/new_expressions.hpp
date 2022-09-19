@@ -247,7 +247,7 @@ KFR_INTRINSIC vec<T, N> get_elements(const xreverse<Arg>& self, const shape<Trai
 // ----------------------------------------------------------------------------
 
 template <index_t... Values>
-struct static_shape
+struct fixed_shape
 {
     constexpr static shape<sizeof...(Values)> get() { return { Values... }; }
 };
@@ -261,14 +261,14 @@ struct xfixshape : public xwitharguments<Arg>
 };
 
 template <typename Arg, index_t... ShapeValues>
-KFR_INTRINSIC xfixshape<Arg, static_shape<ShapeValues...>> x_fixshape(Arg&& arg,
-                                                                      const static_shape<ShapeValues...>&)
+KFR_INTRINSIC xfixshape<Arg, fixed_shape<ShapeValues...>> x_fixshape(Arg&& arg,
+                                                                     const fixed_shape<ShapeValues...>&)
 {
     return { std::forward<Arg>(arg) };
 }
 
 template <typename Arg, index_t... ShapeValues>
-struct expression_traits<xfixshape<Arg, static_shape<ShapeValues...>>> : expression_traits_defaults
+struct expression_traits<xfixshape<Arg, fixed_shape<ShapeValues...>>> : expression_traits_defaults
 {
     using ArgTraits = expression_traits<Arg>;
 
@@ -276,11 +276,11 @@ struct expression_traits<xfixshape<Arg, static_shape<ShapeValues...>>> : express
     constexpr static size_t dims = ArgTraits::dims;
 
     KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof(
-        const xfixshape<Arg, static_shape<ShapeValues...>>& self)
+        const xfixshape<Arg, fixed_shape<ShapeValues...>>& self)
     {
-        return static_shape<ShapeValues...>::get();
+        return fixed_shape<ShapeValues...>::get();
     }
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return static_shape<ShapeValues...>::get(); }
+    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return fixed_shape<ShapeValues...>::get(); }
 };
 
 inline namespace CMT_ARCH_NAME

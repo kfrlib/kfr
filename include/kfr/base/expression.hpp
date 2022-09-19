@@ -113,7 +113,10 @@ using expressions_check = std::enable_if_t<(expression_traits<Xs>::explicit_oper
 #define KFR_ACCEPT_EXPRESSIONS(...) internal_generic::expressions_check<__VA_ARGS__>* = nullptr
 
 template <typename T>
-struct expression_traits<T, std::enable_if_t<is_simd_type<T>>> : expression_traits_defaults
+constexpr inline bool is_expr_element = std::is_same_v<std::remove_cv_t<T>, T>&& is_vec_element<T>;
+
+template <typename T>
+struct expression_traits<T, std::enable_if_t<is_expr_element<T>>> : expression_traits_defaults
 {
     using value_type                              = T;
     constexpr static size_t dims                  = 0;
@@ -125,13 +128,13 @@ struct expression_traits<T, std::enable_if_t<is_simd_type<T>>> : expression_trai
 
 inline namespace CMT_ARCH_NAME
 {
-template <typename T, index_t Axis, size_t N, KFR_ENABLE_IF(is_simd_type<std::decay_t<T>>)>
+template <typename T, index_t Axis, size_t N, KFR_ENABLE_IF(is_expr_element<std::decay_t<T>>)>
 KFR_INTRINSIC vec<std::decay_t<T>, N> get_elements(T&& self, const shape<0>& index,
                                                    const axis_params<Axis, N>&)
 {
     return self;
 }
-template <typename T, index_t Axis, size_t N, KFR_ENABLE_IF(is_simd_type<std::decay_t<T>>)>
+template <typename T, index_t Axis, size_t N, KFR_ENABLE_IF(is_expr_element<std::decay_t<T>>)>
 KFR_INTRINSIC void set_elements(T& self, const shape<0>& index, const axis_params<Axis, N>&,
                                 const identity<vec<T, N>>& val)
 {
@@ -247,18 +250,22 @@ KFR_INTRINSIC index_t axis_stop(const shape<outdims>& sh)
 } // namespace internal
 
 template <size_t width = 0, index_t Axis = infinite_size, typename Out, typename In, size_t gw = 1,
-          typename Tin = expression_value_type<In>, typename Tout = expression_value_type<Out>,
           index_t outdims = expression_dims<Out>, CMT_ENABLE_IF(expression_dims<Out> > 0)>
 static auto tprocess(Out&& out, In&& in, shape<outdims> start = shape<outdims>(0),
                      shape<outdims> size = shape<outdims>(infinite_size), csize_t<gw> = {}) -> shape<outdims>
 {
+    using Trin  = expression_traits<In>;
+    using Trout = expression_traits<Out>;
+    using Tin   = typename Trin::value_type;
+    using Tout  = typename Trout::value_type;
+
     using internal::axis_start;
     using internal::axis_stop;
 
     constexpr index_t indims = expression_dims<In>;
     static_assert(outdims >= indims);
 
-    constexpr index_t last_dim_size = prev_poweroftwo(expression_traits<Out>::shapeof().back());
+    constexpr index_t last_dim_size = prev_poweroftwo(Trout::shapeof().back());
 
 #ifdef NDEBUG
     constexpr size_t vec_width = maximum_vector_size<Tin>;
@@ -271,8 +278,8 @@ static auto tprocess(Out&& out, In&& in, shape<outdims> start = shape<outdims>(0
     constexpr index_t out_axis = internal::select_axis(outdims, Axis);
     constexpr index_t in_axis  = out_axis + indims - outdims;
 
-    const shape<outdims> outshape = shapeof(out);
-    const shape<indims> inshape   = shapeof(in);
+    const shape<outdims> outshape = Trout::shapeof(out);
+    const shape<indims> inshape   = Trin::shapeof(in);
     if (CMT_UNLIKELY(!internal_generic::can_assign_from(outshape, inshape)))
         return shape<outdims>{ 0 };
     shape<outdims> stop = min(start.add_inf(size), outshape);

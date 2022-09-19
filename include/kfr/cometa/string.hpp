@@ -242,6 +242,8 @@ CMT_INLINE auto build_fmt(const std::string& str, ctypes_t<Arg, Args...>)
 }
 } // namespace details
 
+using details::fmt_t;
+
 template <char t, int width = -1, int prec = -1, typename T>
 CMT_INLINE details::fmt_t<T, t, width, prec> fmt(const T& value)
 {

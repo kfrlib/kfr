@@ -4,10 +4,10 @@
  * See LICENSE.txt for details
  */
 
-#include <kfr/base.hpp>
 #include <kfr/base/new_expressions.hpp>
 #include <kfr/base/tensor.hpp>
 #include <kfr/io/tostring.hpp>
+#include <kfr/simd.hpp>
 
 CMT_PRAGMA_MSVC(warning(push))
 CMT_PRAGMA_MSVC(warning(disable : 5051))
@@ -122,17 +122,17 @@ TEST(tensor_memory)
     CHECK(refs == 0);
 }
 
-TEST(tensor_expression_assign)
-{
-    tensor<float, 1> t1{ shape{ 32 }, 0.f };
+// TEST(tensor_expression_assign)
+// {
+//     tensor<float, 1> t1{ shape{ 32 }, 0.f };
 
-    t1 = counter();
+//     t1 = counter();
 
-    CHECK(t1.size() == 32);
-    CHECK(t1(0) == 0.f);
-    CHECK(t1(1) == 1.f);
-    CHECK(t1(31) == 31.f);
-}
+//     CHECK(t1.size() == 32);
+//     CHECK(t1(0) == 0.f);
+//     CHECK(t1(1) == 1.f);
+//     CHECK(t1(31) == 31.f);
+// }
 
 DTEST(tensor_expression)
 {
@@ -484,7 +484,7 @@ TEST(tensor_tostring)
 {
     tensor<float, 1> t1(shape{ 60 });
     t1 = debug_counter<float, 1>();
-    CHECK(nl + t1.to_string("%2.0f", 12, 0) + nl == R"(
+    CHECK(nl + t1.to_string<fmt_t<float, 'f', 2, 0>>(12, 0) + nl == R"(
 { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11,
  12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
  24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
@@ -494,7 +494,7 @@ TEST(tensor_tostring)
 
     tensor<float, 2> t2(shape{ 12, 5 });
     t2 = debug_counter<float, 2>();
-    CHECK(nl + t2.to_string("%3.0f", 16, 0) + nl == R"(
+    CHECK(nl + t2.to_string<fmt_t<float, 'f', 3, 0>>(16, 0) + nl == R"(
 {{  0,   1,   2,   3,   4},
  { 10,  11,  12,  13,  14},
  { 20,  21,  22,  23,  24},
@@ -511,7 +511,7 @@ TEST(tensor_tostring)
 
     tensor<float, 3> t3(shape{ 3, 4, 5 });
     t3 = debug_counter<float, 3>();
-    CHECK(nl + t3.to_string("%4.0f", 16, 0) + nl == R"(
+    CHECK(nl + t3.to_string<fmt_t<float, 'f', 4, 0>>(16, 0) + nl == R"(
 {{{   0,    1,    2,    3,    4},
   {  10,   11,   12,   13,   14},
   {  20,   21,   22,   23,   24},
@@ -528,7 +528,7 @@ TEST(tensor_tostring)
 
     tensor<float, 4> t4(shape{ 3, 2, 2, 5 });
     t4 = debug_counter<float, 4>();
-    CHECK(nl + t4.to_string("%5.0f", 16, 0) + nl == R"(
+    CHECK(nl + t4.to_string<fmt_t<float, 'f', 5, 0>>(16, 0) + nl == R"(
 {{{{    0,     1,     2,     3,     4},
    {   10,    11,    12,    13,    14}},
   {{  100,   101,   102,   103,   104},
@@ -545,7 +545,7 @@ TEST(tensor_tostring)
 
     tensor<float, 2> t5(shape{ 10, 1 });
     t5 = debug_counter<float, 2>();
-    CHECK(nl + t5.to_string("%.0f", 12, 1) + nl == R"(
+    CHECK(nl + t5.to_string<fmt_t<float, 'f', -1, 0>>(12, 1) + nl == R"(
 {{0}, {10}, {20}, {30}, {40}, {50}, {60}, {70}, {80}, {90}}
 )");
 }
@@ -730,12 +730,12 @@ extern "C" __declspec(dllexport) void assembly_test17b(const tensor<double, 2>& 
 extern "C" __declspec(dllexport) void assembly_test18a(const tensor<double, 2>& x, const tensor<double, 2>& y)
 {
     xfunction ysqr = xfunction{ xwitharguments{ y }, fn::sqr{} };
-    tprocess<8, 0>(x_fixshape(x, static_shape<8, 2>{}), x_fixshape(ysqr, static_shape<8, 2>{}));
+    tprocess<8, 0>(x_fixshape(x, fixed_shape<8, 2>{}), x_fixshape(ysqr, fixed_shape<8, 2>{}));
 }
 extern "C" __declspec(dllexport) void assembly_test18b(const tensor<double, 2>& x, const tensor<double, 2>& y)
 {
     xfunction ysqr = xfunction{ xwitharguments{ y }, fn::sqr{} };
-    tprocess<2, 1>(x_fixshape(x, static_shape<8, 2>{}), x_fixshape(ysqr, static_shape<8, 2>{}));
+    tprocess<2, 1>(x_fixshape(x, fixed_shape<8, 2>{}), x_fixshape(ysqr, fixed_shape<8, 2>{}));
 }
 
 extern "C" __declspec(dllexport) void assembly_test19(const tensor<double, 2>& x,
@@ -826,6 +826,21 @@ TEST(slices)
     CHECK(t1(trange(1, 0, -1)) == tensor<float, 1>{ 1 });
 
     CHECK(t1(trange(3, 3 + 12, 0)) == tensor<float, 1>{ 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3 });
+}
+
+TEST(complex_tensors)
+{
+    tensor<complex<float>, 1> t1{
+        complex<float>(0, -1),
+    };
+    CHECK(trender(xfunction{ xwitharguments{ t1, complex<float>(0, 1) }, fn::mul{} }) ==
+          tensor<complex<float>, 1>{ complex<float>(1, 0) });
+    CHECK(trender(xfunction{ xwitharguments{ t1, complex<float>(1, 0) }, fn::mul{} }) ==
+          tensor<complex<float>, 1>{ complex<float>(0, -1) });
+    CHECK(trender(xfunction{ xwitharguments{ t1, complex<float>(0, -1) }, fn::mul{} }) ==
+          tensor<complex<float>, 1>{ complex<float>(-1, 0) });
+    CHECK(trender(xfunction{ xwitharguments{ t1, complex<float>(-1, 0) }, fn::mul{} }) ==
+          tensor<complex<float>, 1>{ complex<float>(0, 1) });
 }
 
 TEST(from_ilist)

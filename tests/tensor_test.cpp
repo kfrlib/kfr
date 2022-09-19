@@ -1,4 +1,5 @@
-#include "kfr/base.hpp"
+#include "kfr/version.hpp"
+#include "kfr/runtime.hpp"
 #include "kfr/testo/testo.hpp"
 
 using namespace kfr;

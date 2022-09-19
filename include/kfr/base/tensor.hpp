@@ -796,8 +796,20 @@ public:
 
     KFR_MEM_INTRINSIC bool is_last_contiguous() const { return m_strides.back() == 1; }
 
-    std::string to_string(std::string format = "%g", int max_columns = 16, int max_dimensions = INT_MAX,
-                          std::string separator = ", ", std::string open = "{", std::string close = "}") const
+    template <typename U, typename Fmt>
+    static Fmt wrap_fmt(const U& val, ctype_t<Fmt>)
+    {
+        return Fmt{ val };
+    }
+    template <typename U>
+    static U wrap_fmt(const U& val, ctype_t<void>)
+    {
+        return val;
+    }
+
+    template <typename Fmt = void>
+    std::string to_string(int max_columns = 16, int max_dimensions = INT_MAX, std::string separator = ", ",
+                          std::string open = "{", std::string close = "}") const
     {
         if (max_columns == 0)
             max_columns = INT_MAX;
@@ -814,8 +826,8 @@ public:
             int columns = 0;
             do
             {
-                int c     = sprintf_s(buf, std::size(buf), format.c_str(), access(index));
-                index_t z = index.trailing_zeros();
+                std::string str = as_string(wrap_fmt(access(index), ctype<Fmt>));
+                index_t z       = index.trailing_zeros();
                 if ((z > 0 && columns > 0) || columns >= max_columns)
                 {
                     for (index_t i = 0; i < z; ++i)
@@ -844,9 +856,7 @@ public:
                     if (columns > 0)
                         ss << separator;
                 }
-                if (c < 1)
-                    return "";
-                ss.write(buf, c);
+                ss << str;
                 ++columns;
             } while (internal_generic::increment_indices<dims>(index, shape_type{ 0 }, m_shape));
         }
