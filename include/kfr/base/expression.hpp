@@ -249,8 +249,8 @@ KFR_INTRINSIC index_t axis_stop(const shape<outdims>& sh)
 template <size_t width = 0, index_t Axis = infinite_size, typename Out, typename In, size_t gw = 1,
           typename Tin = expression_value_type<In>, typename Tout = expression_value_type<Out>,
           index_t outdims = expression_dims<Out>, CMT_ENABLE_IF(expression_dims<Out> > 0)>
-static auto tprocess(Out&& out, In&& in, shape<outdims> start = 0, shape<outdims> size = infinite_size,
-                     csize_t<gw> = {}) -> shape<outdims>
+static auto tprocess(Out&& out, In&& in, shape<outdims> start = shape<outdims>(0),
+                     shape<outdims> size = shape<outdims>(infinite_size), csize_t<gw> = {}) -> shape<outdims>
 {
     using internal::axis_start;
     using internal::axis_stop;
@@ -274,7 +274,7 @@ static auto tprocess(Out&& out, In&& in, shape<outdims> start = 0, shape<outdims
     const shape<outdims> outshape = shapeof(out);
     const shape<indims> inshape   = shapeof(in);
     if (CMT_UNLIKELY(!internal_generic::can_assign_from(outshape, inshape)))
-        return { 0 };
+        return shape<outdims>{ 0 };
     shape<outdims> stop = min(start.add_inf(size), outshape);
 
     index_t in_size = 0;

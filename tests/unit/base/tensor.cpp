@@ -14,6 +14,7 @@ CMT_PRAGMA_MSVC(warning(disable : 5051))
 
 namespace kfr
 {
+
 inline namespace CMT_ARCH_NAME
 {
 
@@ -257,8 +258,8 @@ struct expression_traits<tcounter<T, Dims>> : expression_traits_defaults
     using value_type             = T;
     constexpr static size_t dims = Dims;
 
-    constexpr static shape<dims> shapeof(const tcounter<T, Dims>& self) { return max_index_t; }
-    constexpr static shape<dims> shapeof() { return max_index_t; }
+    constexpr static shape<dims> shapeof(const tcounter<T, Dims>& self) { return shape<dims>(max_index_t); }
+    constexpr static shape<dims> shapeof() { return shape<dims>(max_index_t); }
 };
 
 template <typename T, size_t N1>
@@ -267,8 +268,8 @@ struct expression_traits<std::array<T, N1>> : expression_traits_defaults
     using value_type             = T;
     constexpr static size_t dims = 1;
 
-    constexpr static shape<1> shapeof(const std::array<T, N1>& self) { return { N1 }; }
-    constexpr static shape<1> shapeof() { return { N1 }; }
+    constexpr static shape<1> shapeof(const std::array<T, N1>& self) { return shape<1>{ N1 }; }
+    constexpr static shape<1> shapeof() { return shape<1>{ N1 }; }
 };
 
 template <typename T, size_t N1, size_t N2>
@@ -277,8 +278,11 @@ struct expression_traits<std::array<std::array<T, N1>, N2>> : expression_traits_
     using value_type             = T;
     constexpr static size_t dims = 2;
 
-    constexpr static shape<2> shapeof(const std::array<std::array<T, N1>, N2>& self) { return { N2, N1 }; }
-    constexpr static shape<2> shapeof() { return { N2, N1 }; }
+    constexpr static shape<2> shapeof(const std::array<std::array<T, N1>, N2>& self)
+    {
+        return shape<2>{ N2, N1 };
+    }
+    constexpr static shape<2> shapeof() { return shape<2>{ N2, N1 }; }
 };
 
 inline namespace CMT_ARCH_NAME
@@ -459,11 +463,155 @@ TEST(xfunction_test)
                                                        { { 501.f, 502.f, 503.f, 504.f, 505.f } } } });
 }
 
+template <typename Type, index_t Dims>
+KFR_FUNCTION tcounter<Type, Dims> debug_counter(uint64_t scale = 10)
+{
+    tcounter<Type, Dims> result;
+    result.start = 0;
+    uint64_t val = 1;
+    for (size_t i = 0; i < Dims; i++)
+    {
+        result.steps[Dims - 1 - i] = val;
+        val *= scale;
+    }
+    return result;
+}
+
+static std::string nl = R"(
+)";
+
+TEST(tensor_tostring)
+{
+    tensor<float, 1> t1(shape{ 60 });
+    t1 = debug_counter<float, 1>();
+    CHECK(nl + t1.to_string("%2.0f", 12, 0) + nl == R"(
+{ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11,
+ 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+ 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
+ 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+ 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59}
+)");
+
+    tensor<float, 2> t2(shape{ 12, 5 });
+    t2 = debug_counter<float, 2>();
+    CHECK(nl + t2.to_string("%3.0f", 16, 0) + nl == R"(
+{{  0,   1,   2,   3,   4},
+ { 10,  11,  12,  13,  14},
+ { 20,  21,  22,  23,  24},
+ { 30,  31,  32,  33,  34},
+ { 40,  41,  42,  43,  44},
+ { 50,  51,  52,  53,  54},
+ { 60,  61,  62,  63,  64},
+ { 70,  71,  72,  73,  74},
+ { 80,  81,  82,  83,  84},
+ { 90,  91,  92,  93,  94},
+ {100, 101, 102, 103, 104},
+ {110, 111, 112, 113, 114}}
+)");
+
+    tensor<float, 3> t3(shape{ 3, 4, 5 });
+    t3 = debug_counter<float, 3>();
+    CHECK(nl + t3.to_string("%4.0f", 16, 0) + nl == R"(
+{{{   0,    1,    2,    3,    4},
+  {  10,   11,   12,   13,   14},
+  {  20,   21,   22,   23,   24},
+  {  30,   31,   32,   33,   34}},
+ {{ 100,  101,  102,  103,  104},
+  { 110,  111,  112,  113,  114},
+  { 120,  121,  122,  123,  124},
+  { 130,  131,  132,  133,  134}},
+ {{ 200,  201,  202,  203,  204},
+  { 210,  211,  212,  213,  214},
+  { 220,  221,  222,  223,  224},
+  { 230,  231,  232,  233,  234}}}
+)");
+
+    tensor<float, 4> t4(shape{ 3, 2, 2, 5 });
+    t4 = debug_counter<float, 4>();
+    CHECK(nl + t4.to_string("%5.0f", 16, 0) + nl == R"(
+{{{{    0,     1,     2,     3,     4},
+   {   10,    11,    12,    13,    14}},
+  {{  100,   101,   102,   103,   104},
+   {  110,   111,   112,   113,   114}}},
+ {{{ 1000,  1001,  1002,  1003,  1004},
+   { 1010,  1011,  1012,  1013,  1014}},
+  {{ 1100,  1101,  1102,  1103,  1104},
+   { 1110,  1111,  1112,  1113,  1114}}},
+ {{{ 2000,  2001,  2002,  2003,  2004},
+   { 2010,  2011,  2012,  2013,  2014}},
+  {{ 2100,  2101,  2102,  2103,  2104},
+   { 2110,  2111,  2112,  2113,  2114}}}}
+)");
+
+    tensor<float, 2> t5(shape{ 10, 1 });
+    t5 = debug_counter<float, 2>();
+    CHECK(nl + t5.to_string("%.0f", 12, 1) + nl == R"(
+{{0}, {10}, {20}, {30}, {40}, {50}, {60}, {70}, {80}, {90}}
+)");
+}
+
+template <typename T, index_t dims1, index_t dims2>
+static void test_reshape_body(const tensor<T, dims1>& t1, const tensor<T, dims2>& t2)
+{
+    CHECK(t1.reshape_may_copy(t2.shape(), true) == t2);
+
+    cforeach(csizeseq<dims2>,
+             [&](auto x)
+             {
+                 constexpr index_t axis = val_of(decltype(x)());
+                 ::testo::scope s(
+                     as_string("axis = ", axis, " shape = (", t1.shape(), ") -> (", t2.shape(), ")"));
+                 CHECK(trender<1, axis>(x_reshape(t1, t2.shape())) == t2);
+                 CHECK(trender<2, axis>(x_reshape(t1, t2.shape())) == t2);
+                 CHECK(trender<4, axis>(x_reshape(t1, t2.shape())) == t2);
+                 CHECK(trender<8, axis>(x_reshape(t1, t2.shape())) == t2);
+             });
+}
+
+static void test_reshape() {}
+
+template <typename T, index_t dims1, index_t... dims>
+static void test_reshape(const tensor<T, dims1>& t1, const tensor<T, dims>&... ts)
+{
+    cforeach(std::make_tuple((&ts)...),
+             [&](auto t2)
+             {
+                 test_reshape_body(t1, *t2);
+                 test_reshape_body(*t2, t1);
+             });
+
+    test_reshape(ts...);
+}
+
 TEST(xreshape)
 {
     std::array<float, 12> x;
     tprocess(x_reshape(x, shape{ 3, 4 }), tcounter<float, 2>{ 0, { 10, 1 } });
     CHECK(x == std::array<float, 12>{ { 0, 1, 2, 3, 10, 11, 12, 13, 20, 21, 22, 23 } });
+
+    test_reshape(tensor<float, 1>{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 }, //
+                 tensor<float, 2>{ { 0, 1, 2, 3, 4, 5 }, { 6, 7, 8, 9, 10, 11 } },
+                 tensor<float, 2>{ { 0, 1, 2, 3 }, { 4, 5, 6, 7 }, { 8, 9, 10, 11 } },
+                 tensor<float, 2>{ { 0, 1, 2 }, { 3, 4, 5 }, { 6, 7, 8 }, { 9, 10, 11 } },
+                 tensor<float, 2>{ { 0, 1 }, { 2, 3 }, { 4, 5 }, { 6, 7 }, { 8, 9 }, { 10, 11 } },
+                 tensor<float, 2>{
+                     { 0 }, { 1 }, { 2 }, { 3 }, { 4 }, { 5 }, { 6 }, { 7 }, { 8 }, { 9 }, { 10 }, { 11 } });
+
+    test_reshape(tensor<float, 1>{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 }, //
+                 tensor<float, 3>{ { { 0, 1 }, { 2, 3 }, { 4, 5 } }, { { 6, 7 }, { 8, 9 }, { 10, 11 } } },
+                 tensor<float, 4>{ { { { 0 }, { 1 } }, { { 2 }, { 3 } }, { { 4 }, { 5 } } },
+                                   { { { 6 }, { 7 } }, { { 8 }, { 9 } }, { { 10 }, { 11 } } } });
+
+    test_reshape(
+        tensor<float, 1>{
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 }, //
+        tensor<float, 3>{ { { 0, 1 }, { 2, 3 }, { 4, 5 } },
+                          { { 6, 7 }, { 8, 9 }, { 10, 11 } },
+                          { { 12, 13 }, { 14, 15 }, { 16, 17 } },
+                          { { 18, 19 }, { 20, 21 }, { 22, 23 } } },
+        tensor<float, 4>{
+            { { { 0, 1 }, { 2, 3 } }, { { 4, 5 }, { 6, 7 } }, { { 8, 9 }, { 10, 11 } } },
+            { { { 12, 13 }, { 14, 15 } }, { { 16, 17 }, { 18, 19 } }, { { 20, 21 }, { 22, 23 } } } });
 }
 
 } // namespace CMT_ARCH_NAME
@@ -534,21 +682,11 @@ extern "C" __declspec(dllexport) void assembly_test12(
     const xfunction<std::plus<>, std::array<std::array<uint32_t, 1>, 4>&,
                     std::array<std::array<uint32_t, 4>, 1>&>& y)
 {
-    // [[maybe_unused]] constexpr auto sh1 = expression_traits<decltype(x)>::shapeof();
-    // [[maybe_unused]] constexpr auto sh2 = expression_traits<decltype(y)>::shapeof();
-
-    // static_assert(sh1 == shape{ 4, 4 });
-    // static_assert(sh2 == shape{ 4, 4 });
     tprocess(x, y);
 }
 
 extern "C" __declspec(dllexport) void assembly_test13(const tensor<float, 1>& x, const tensor<float, 1>& y)
 {
-    // [[maybe_unused]] constexpr auto sh1 = expression_traits<decltype(x)>::shapeof();
-    // [[maybe_unused]] constexpr auto sh2 = expression_traits<decltype(y)>::shapeof();
-
-    // static_assert(sh1 == shape{ 4, 4 });
-    // static_assert(sh2 == shape{ 4, 4 });
     tprocess(x, y * 0.5f);
 }
 
@@ -651,6 +789,58 @@ TEST(xwitharguments)
 
     xfunction fn3 = xfunction{ xwitharguments{ std::as_const(lvint_func()) }, fn::add{} };
     static_assert(std::is_same_v<decltype(fn3)::nth<0>, const val&>);
+}
+
+TEST(slices)
+{
+    const auto _ = std::nullopt;
+    tensor<float, 1> t1{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+    CHECK(t1(tstart(3)) == tensor<float, 1>{ 3, 4, 5, 6, 7, 8, 9 });
+    CHECK(t1(tstop(3)) == tensor<float, 1>{ 0, 1, 2 });
+    CHECK(t1(trange(3, 7)) == tensor<float, 1>{ 3, 4, 5, 6 });
+
+    CHECK(t1(tstart(10)) == tensor<float, 1>{});
+    CHECK(t1(tstop(0)) == tensor<float, 1>{});
+    CHECK(t1(trange(7, 3)) == tensor<float, 1>{});
+
+    CHECK(t1(tstart(-2)) == tensor<float, 1>{ 8, 9 });
+    CHECK(t1(trange(-7, -4)) == tensor<float, 1>{ 3, 4, 5 });
+    CHECK(t1(tall()) == tensor<float, 1>{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+
+    CHECK(t1(trange(3, _)) == tensor<float, 1>{ 3, 4, 5, 6, 7, 8, 9 });
+    CHECK(t1(trange(_, 7)) == tensor<float, 1>{ 0, 1, 2, 3, 4, 5, 6 });
+
+    CHECK(t1(trange(_, _, 2)) == tensor<float, 1>{ 0, 2, 4, 6, 8 });
+    CHECK(t1(trange(_, _, 5)) == tensor<float, 1>{ 0, 5 });
+    CHECK(t1(trange(_, _, 12)) == tensor<float, 1>{ 0 });
+    CHECK(t1(trange(1, _, 2)) == tensor<float, 1>{ 1, 3, 5, 7, 9 });
+    CHECK(t1(trange(1, _, 5)) == tensor<float, 1>{ 1, 6 });
+    CHECK(t1(trange(1, _, 12)) == tensor<float, 1>{ 1 });
+
+    CHECK(t1(tstep(2))(tstep(2)) == tensor<float, 1>{ 0, 4, 8 });
+    CHECK(t1(tstep(2))(tstep(2))(tstep(2)) == tensor<float, 1>{ 0, 8 });
+    CHECK(t1(tstep(2))(tstep(3)) == tensor<float, 1>{ 0, 6 });
+
+    CHECK(t1(trange(_, _, -1)) == tensor<float, 1>{ 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 });
+    CHECK(t1(trange(5, _, -1)) == tensor<float, 1>{ 5, 4, 3, 2, 1, 0 });
+    CHECK(t1(trange(1, 0, -1)) == tensor<float, 1>{ 1 });
+
+    CHECK(t1(trange(3, 3 + 12, 0)) == tensor<float, 1>{ 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3 });
+}
+
+TEST(from_ilist)
+{
+    tensor<float, 1> t1{ 10, 20, 30, 40 };
+    CHECK(t1 == tensor<float, 1>(shape{ 4 }, { 10, 20, 30, 40 }));
+
+    tensor<float, 2> t2{ { 10, 20 }, { 30, 40 } };
+    CHECK(t2 == tensor<float, 2>(shape{ 2, 2 }, { 10, 20, 30, 40 }));
+
+    tensor<float, 2> t3{ { 10, 20 } };
+    CHECK(t3 == tensor<float, 2>(shape{ 1, 2 }, { 10, 20 }));
+
+    tensor<float, 3> t4{ { { 10, 20 }, { 30, 40 } }, { { 50, 60 }, { 70, 80 } } };
+    CHECK(t4 == tensor<float, 3>(shape{ 2, 2, 2 }, { 10, 20, 30, 40, 50, 60, 70, 80 }));
 }
 
 TEST(enumerate)

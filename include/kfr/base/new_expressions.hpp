@@ -239,7 +239,7 @@ template <typename Arg, index_t Axis, size_t N, typename Traits = expression_tra
 KFR_INTRINSIC vec<T, N> get_elements(const xreverse<Arg>& self, const shape<Traits::dims>& index,
                                      const axis_params<Axis, N>& sh)
 {
-    return reverse(get_elements(self.first(), self.input_shape.sub(index).sub(N), sh));
+    return reverse(get_elements(self.first(), self.input_shape.sub(index).sub(shape<Traits::dims>(N)), sh));
 }
 
 } // namespace CMT_ARCH_NAME
@@ -340,7 +340,7 @@ struct expression_traits<xreshape<Arg, OutDims>> : expression_traits_defaults
     {
         return self.out_shape;
     }
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return { 0 }; }
+    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return shape<dims>{ 0 }; }
 };
 
 inline namespace CMT_ARCH_NAME
@@ -374,16 +374,19 @@ KFR_INTRINSIC vec<T, N> get_elements(const xreshape<Arg, outdims>& self, const s
         vec<T, N> result;
         bool done = false;
 
-        cforeach(cvalseq_t<index_t, indims, 0>{},
-                 [&](auto n) CMT_INLINE_LAMBDA
-                 {
-                     constexpr index_t axis = val_of<decltype(n)>({});
-                     if (!done && diff_idx[axis] == N - 1)
+        if (diff_idx.sum() == N - 1)
+        {
+            cforeach(cvalseq_t<index_t, indims, 0>{},
+                     [&](auto n) CMT_INLINE_LAMBDA
                      {
-                         result = get_elements(self.first(), first_idx, axis_params<axis, N>{});
-                         done   = true;
-                     }
-                 });
+                         constexpr index_t axis = val_of<decltype(n)>({});
+                         if (!done && diff_idx[axis] == N - 1)
+                         {
+                             result = get_elements(self.first(), first_idx, axis_params<axis, N>{});
+                             done   = true;
+                         }
+                     });
+        }
 
         if (!done)
         {
@@ -391,10 +394,9 @@ KFR_INTRINSIC vec<T, N> get_elements(const xreshape<Arg, outdims>& self, const s
             CMT_LOOP_NOUNROLL
             for (size_t i = 0; i < N; ++i)
             {
-                tmp[i] = get_elements(
-                             self.first(),
-                             self.in_shape.from_flat(self.out_shape.to_flat(index.add_at(i, cindex<Axis>))),
-                             axis_params<indims - 1, 1>{})
+                shape<Traits::dims> idx = index.add_at(i, cindex<Axis>);
+                tmp[i] = get_elements(self.first(), self.in_shape.from_flat(self.out_shape.to_flat(idx)),
+                                      axis_params<indims - 1, 1>{})
                              .front();
             }
             result = tmp;

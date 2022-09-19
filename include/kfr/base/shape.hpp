@@ -33,6 +33,7 @@
 #include "../simd/vec.hpp"
 
 #include <bitset>
+#include <optional>
 
 namespace kfr
 {
@@ -48,7 +49,8 @@ using signed_index_t = int32_t;
 using index_t        = uint32_t;
 using signed_index_t = int32_t;
 #endif
-constexpr inline index_t max_index_t = std::numeric_limits<index_t>::max();
+constexpr inline index_t max_index_t         = std::numeric_limits<index_t>::max();
+constexpr inline signed_index_t max_sindex_t = std::numeric_limits<signed_index_t>::max();
 
 template <index_t val>
 using cindex_t = cval_t<index_t, val>;
@@ -88,7 +90,7 @@ namespace internal_generic
 template <index_t dims>
 KFR_INTRINSIC bool increment_indices(shape<dims>& indices, const shape<dims>& start, const shape<dims>& stop,
                                      index_t dim = dims - 1);
-}
+} // namespace internal_generic
 
 template <index_t dims>
 struct shape : static_array_base<index_t, csizeseq_t<dims>>
@@ -107,6 +109,16 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
         {
             return all(**this >= *other);
         }
+    }
+
+    index_t trailing_zeros() const
+    {
+        for (index_t i = 0; i < dims; ++i)
+        {
+            if (revindex(i) != 0)
+                return i;
+        }
+        return dims;
     }
 
     bool le(const shape& other) const
@@ -136,6 +148,7 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
     }
     shape add(const shape& other) const { return **this + *other; }
     shape sub(const shape& other) const { return **this - *other; }
+    index_t sum() const { return hsum(**this); }
 
     shape add_inf(const shape& other) const
     {
@@ -358,29 +371,35 @@ struct cursor
     shape<Dims> maximum;
 };
 
+using opt_index_t = std::optional<signed_index_t>;
+
 struct tensor_range
 {
-    index_t start = 0;
-    index_t stop  = max_index_t;
-    index_t step  = 1;
-
-    constexpr KFR_INTRINSIC index_t size() const { return stop - start; }
+    opt_index_t start;
+    opt_index_t stop;
+    opt_index_t step;
 };
 
-constexpr KFR_INTRINSIC tensor_range tstart(index_t start, index_t step = 1)
-{
-    return { start, max_index_t, step };
-}
-constexpr KFR_INTRINSIC tensor_range tstop(index_t stop, index_t step = 1) { return { 0, stop, step }; }
-constexpr KFR_INTRINSIC tensor_range trange(index_t start, index_t stop, index_t step = 1)
+constexpr KFR_INTRINSIC tensor_range trange(std::optional<signed_index_t> start = std::nullopt,
+                                            std::optional<signed_index_t> stop  = std::nullopt,
+                                            std::optional<signed_index_t> step  = std::nullopt)
 {
     return { start, stop, step };
 }
-constexpr KFR_INTRINSIC tensor_range trange_n(index_t start, index_t size, index_t step = 1)
+
+constexpr KFR_INTRINSIC tensor_range tall() { return trange(); }
+constexpr KFR_INTRINSIC tensor_range tstart(signed_index_t start, signed_index_t step = 1)
 {
-    return { start, start + size, step };
+    return trange(start, std::nullopt, step);
 }
-constexpr KFR_INTRINSIC tensor_range tall() { return { 0, max_index_t, 1 }; }
+constexpr KFR_INTRINSIC tensor_range tstop(signed_index_t stop, signed_index_t step = 1)
+{
+    return trange(std::nullopt, stop, step);
+}
+constexpr KFR_INTRINSIC tensor_range tstep(signed_index_t step = 1)
+{
+    return trange(std::nullopt, std::nullopt, step);
+}
 
 namespace internal_generic
 {
@@ -400,32 +419,6 @@ constexpr KFR_INTRINSIC shape<dims> strides_for_shape(const shape<dims>& sh, ind
     return strides;
 }
 
-template <typename Index>
-constexpr KFR_INTRINSIC index_t get_start(const Index& idx)
-{
-    if constexpr (std::is_same_v<std::decay_t<Index>, tensor_range>)
-    {
-        return idx.start;
-    }
-    else
-    {
-        static_assert(std::is_convertible_v<Index, index_t>);
-        return static_cast<index_t>(idx);
-    }
-}
-template <typename Index>
-constexpr KFR_INTRINSIC index_t get_stop(const Index& idx)
-{
-    if constexpr (std::is_same_v<std::decay_t<Index>, tensor_range>)
-    {
-        return idx.stop;
-    }
-    else
-    {
-        static_assert(std::is_convertible_v<Index, index_t>);
-        return static_cast<index_t>(idx) + 1;
-    }
-}
 template <size_t dims, size_t outdims, bool... ranges>
 constexpr KFR_INTRINSIC shape<outdims> compact_shape(const shape<dims>& in)
 {
@@ -499,7 +492,7 @@ constexpr shape<outdims> common_shape(const shape<dims1>& shape1, const shape<di
         else
         {
             // broadcast failed
-            result = 0;
+            result = shape<outdims>(0);
             return result;
         }
     }
@@ -619,7 +612,7 @@ KFR_INTRINSIC shape<dims> increment_indices_return(const shape<dims>& indices, c
     }
     else
     {
-        return null_index;
+        return shape<dims>(null_index);
     }
 }
 
@@ -628,6 +621,63 @@ constexpr KFR_INTRINSIC size_t count_dimensions()
 {
     return ((std::is_same_v<std::decay_t<Index>, tensor_range> ? 1 : 0) + ...);
 }
+
+template <typename U>
+struct type_of_list
+{
+    using value_type = U;
+};
+
+template <typename U>
+struct type_of_list<std::initializer_list<U>>
+{
+    using value_type = typename type_of_list<U>::value_type;
+};
+
+template <typename U>
+using type_of_list_t = typename type_of_list<U>::value_type;
+
+template <typename U>
+constexpr KFR_INTRINSIC shape<1> shape_of_list(const std::initializer_list<U>& list)
+{
+    return list.size();
+}
+
+template <typename U>
+constexpr KFR_INTRINSIC auto shape_of_list(const std::initializer_list<std::initializer_list<U>>& list)
+{
+    return shape_of_list(*list.begin());
+}
+
+template <typename U>
+constexpr KFR_INTRINSIC U list_get(const std::initializer_list<U>& list, const shape<1>& idx)
+{
+    return list[idx.front()];
+}
+
+template <typename U, index_t dims>
+constexpr KFR_INTRINSIC auto list_get(const std::initializer_list<std::initializer_list<U>>& list,
+                                      const shape<dims>& idx)
+{
+    return list_get(list[idx[0]], idx.template trim<dims - 1>());
+}
+
+template <typename U, typename T>
+KFR_FUNCTION T* list_copy_recursively(const std::initializer_list<U>& list, T* dest)
+{
+    for (const auto& value : list)
+        *dest++ = static_cast<T>(value);
+    return dest;
+}
+
+template <typename U, typename T>
+KFR_FUNCTION T* list_copy_recursively(const std::initializer_list<std::initializer_list<U>>& list, T* dest)
+{
+    for (const auto& sublist : list)
+        dest = list_copy_recursively(sublist, dest);
+    return dest;
+}
+
 } // namespace internal_generic
 
 template <index_t dims>

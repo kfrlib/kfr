@@ -118,9 +118,9 @@ public:
         // prefix
         KFR_MEM_INTRINSIC tensor_iterator& operator++()
         {
-            if (!internal_generic::increment_indices(indices, kfr::shape<dims>(0), src->m_shape))
+            if (!internal_generic::increment_indices(indices, shape_type(0), src->m_shape))
             {
-                indices = internal_generic::null_index;
+                indices = shape_type(internal_generic::null_index);
             }
             return *this;
         }
@@ -188,18 +188,45 @@ public:
     }
     KFR_INTRINSIC tensor(const shape_type& shape, T value) : tensor(shape)
     {
-        std::fill(contiguous_begin(), contiguous_end(), value);
+        std::fill(contiguous_begin_unsafe(), contiguous_end_unsafe(), value);
     }
 
     KFR_INTRINSIC tensor(const shape_type& shape, const shape_type& strides, T value) : tensor(shape, strides)
     {
         std::fill(begin(), end(), value);
     }
-    KFR_INTRINSIC tensor(const shape_type& shape, std::initializer_list<T> values) : tensor(shape)
+    KFR_INTRINSIC tensor(const shape_type& shape, const std::initializer_list<T>& values) : tensor(shape)
     {
         if (values.size() != m_size)
             throw std::runtime_error("Invalid initializer provided for kfr::tensor");
-        std::copy(values.begin(), values.end(), contiguous_begin());
+        std::copy(values.begin(), values.end(), contiguous_begin_unsafe());
+    }
+
+    template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>&& dims == 1)>
+    KFR_INTRINSIC tensor(const std::initializer_list<U>& values) : tensor(shape_type{ values.size() })
+    {
+        internal_generic::list_copy_recursively(values, contiguous_begin_unsafe());
+    }
+    template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>&& dims == 2)>
+    KFR_INTRINSIC tensor(const std::initializer_list<std::initializer_list<U>>& values)
+        : tensor(shape_type{ values.size(), values.begin()->size() })
+    {
+        internal_generic::list_copy_recursively(values, contiguous_begin_unsafe());
+    }
+    template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>&& dims == 3)>
+    KFR_INTRINSIC tensor(const std::initializer_list<std::initializer_list<std::initializer_list<U>>>& values)
+        : tensor(shape_type{ values.size(), values.begin()->size(), values.begin()->begin()->size() })
+    {
+        internal_generic::list_copy_recursively(values, contiguous_begin_unsafe());
+    }
+    template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>&& dims == 4)>
+    KFR_INTRINSIC tensor(
+        const std::initializer_list<std::initializer_list<std::initializer_list<std::initializer_list<U>>>>&
+            values)
+        : tensor(shape_type{ values.size(), values.begin()->size(), values.begin()->begin()->size(),
+                             values.begin()->begin()->begin()->size() })
+    {
+        internal_generic::list_copy_recursively(values, contiguous_begin_unsafe());
     }
 
     KFR_INTRINSIC tensor(const shape_type& shape, const shape_type& strides, std::initializer_list<T> values)
@@ -214,10 +241,18 @@ public:
 
     KFR_INTRINSIC size_type size() const { return m_size; }
 
-    KFR_INTRINSIC tensor_iterator begin() const { return tensor_iterator{ this, 0 }; }
+    KFR_INTRINSIC bool empty() const { return m_size == 0; }
+
+    KFR_INTRINSIC tensor_iterator begin() const
+    {
+        if (empty())
+            return tensor_iterator{ this, shape_type(internal_generic::null_index) };
+        else
+            return tensor_iterator{ this, shape_type(0) };
+    }
     KFR_INTRINSIC tensor_iterator end() const
     {
-        return tensor_iterator{ this, internal_generic::null_index };
+        return tensor_iterator{ this, shape_type(internal_generic::null_index) };
     }
 
     KFR_INTRINSIC void require_contiguous() const
@@ -310,22 +345,97 @@ public:
     template <typename... Index>
     static constexpr bool has_tensor_range = (std::is_same_v<Index, tensor_range> || ...);
 
+    KFR_MEM_INTRINSIC static void get_range(index_t& start, index_t& shape, index_t& step,
+                                            signed_index_t tsize, index_t iidx)
+    {
+        signed_index_t tstart = iidx;
+        tstart                = tstart < 0 ? tsize + tstart : tstart;
+        start                 = tstart;
+        shape                 = tstart < tsize ? 1 : 0;
+        step                  = 1;
+    }
+
+    KFR_MEM_INTRINSIC static void get_range(index_t& start, index_t& shape, index_t& step,
+                                            signed_index_t tsize, const tensor_range& iidx)
+    {
+        signed_index_t tstep = iidx.step.value_or(1);
+        signed_index_t tstart;
+        signed_index_t tstop;
+        if (tstep >= 0)
+        {
+            tstart = iidx.start.value_or(0);
+            tstop  = iidx.stop.value_or(tsize);
+        }
+        else
+        {
+            tstart = iidx.start ? *iidx.start + 1 : tsize;
+            tstop  = iidx.stop ? *iidx.stop + 1 : 0;
+        }
+        tstart = tstart < 0 ? tsize + tstart : tstart;
+        tstart = std::max(std::min(tstart, tsize), signed_index_t(0));
+        if (tstep == 0)
+        {
+            start = tstart;
+            shape = tstop - tstart;
+            step  = 0;
+        }
+        else
+        {
+            tstop = tstop < 0 ? tsize + tstop : tstop;
+            tstop = std::max(std::min(tstop, tsize), signed_index_t(0));
+            if (tstep >= 0)
+            {
+                tstop = std::max(tstop, tstart);
+                start = tstart;
+                shape = (tstop - tstart + tstep - 1) / tstep;
+                step  = tstep;
+            }
+            else
+            {
+                tstart = std::max(tstart, tstop);
+                shape  = (tstart - tstop + -tstep - 1) / -tstep;
+                start  = tstart - 1;
+                step   = tstep;
+            }
+        }
+    }
+
+    template <index_t... Num, typename... Index>
+    KFR_MEM_INTRINSIC void get_ranges(shape_type& start, shape_type& shape, shape_type& step,
+                                      cvals_t<index_t, Num...> indices, const std::tuple<Index...>& idx) const
+    {
+        cforeach(indices,
+                 [&](auto i_) CMT_INLINE_LAMBDA
+                 {
+                     constexpr index_t i  = val_of(decltype(i_)());
+                     signed_index_t tsize = static_cast<signed_index_t>(m_shape[i]);
+                     if constexpr (i < sizeof...(Index))
+                     {
+                         get_range(start[i], shape[i], step[i], tsize, std::get<i>(idx));
+                     }
+                     else
+                     {
+                         start[i] = 0;
+                         shape[i] = tsize;
+                         step[i]  = 1;
+                     }
+                 });
+    }
+
     template <typename... Index,
               size_t ndimOut = internal_generic::count_dimensions<Index...>() + (dims - sizeof...(Index)),
               std::enable_if_t<has_tensor_range<Index...> || (sizeof...(Index) < dims)>* = nullptr>
     KFR_MEM_INTRINSIC tensor<T, ndimOut> operator()(const Index&... idx) const
     {
-        shape_type start{ internal_generic::get_start(idx)... };
-        shape_type stop{ internal_generic::get_stop(idx)... };
-        stop               = min(*stop, *m_shape);
-        shape_type strides = m_strides;
-        for (index_t i = sizeof...(Index); i < dims; ++i)
-        {
-            start[i] = 0;
-            stop[i]  = m_shape[i];
-        }
-        T* data          = m_data + calc_index(start);
-        shape_type shape = *stop - *start;
+        shape_type start;
+        shape_type shape;
+        shape_type step;
+        get_ranges(start, shape, step, cvalseq<index_t, dims>, std::make_tuple(idx...));
+        shape_type strides = *step * *m_strides;
+        // shape_type absstep = abs(*step);
+
+        T* data = m_data + calc_index(start);
+        // shape_type shape = ((*stop - *start) + (*absstep - 1)) / *absstep;
 
         return tensor<T, ndimOut>{
             data,
@@ -382,7 +492,7 @@ public:
 
     KFR_MEM_INTRINSIC tensor<T, 1> flatten_may_copy(bool allow_copy = false) const
     {
-        return reshape(shape<1>{ m_size }, allow_copy);
+        return reshape_may_copy(kfr::shape<1>{ m_size }, allow_copy);
     }
 
     KFR_MEM_INTRINSIC tensor copy() const
@@ -686,6 +796,65 @@ public:
 
     KFR_MEM_INTRINSIC bool is_last_contiguous() const { return m_strides.back() == 1; }
 
+    std::string to_string(std::string format = "%g", int max_columns = 16, int max_dimensions = INT_MAX,
+                          std::string separator = ", ", std::string open = "{", std::string close = "}") const
+    {
+        if (max_columns == 0)
+            max_columns = INT_MAX;
+        std::stringstream ss;
+        for (index_t i = 0; i < dims; ++i)
+            ss << open;
+
+        if (!empty())
+        {
+            shape_type index{ 0 };
+            std::string open_filler(open.size(), ' ');
+            std::string separator_trimmed = separator.substr(0, 1 + separator.find_last_not_of(" \t"));
+            char buf[64];
+            int columns = 0;
+            do
+            {
+                int c     = sprintf_s(buf, std::size(buf), format.c_str(), access(index));
+                index_t z = index.trailing_zeros();
+                if ((z > 0 && columns > 0) || columns >= max_columns)
+                {
+                    for (index_t i = 0; i < z; ++i)
+                        ss << close;
+
+                    if (z > max_dimensions || columns >= max_columns)
+                    {
+                        if (columns > 0)
+                            ss << separator_trimmed;
+                        ss << std::endl;
+                        for (index_t i = 0; i < dims - z; ++i)
+                            ss << open_filler;
+                    }
+                    else
+                    {
+                        if (columns > 0)
+                            ss << separator;
+                    }
+                    for (index_t i = 0; i < z; ++i)
+                        ss << open;
+
+                    columns = 0;
+                }
+                else
+                {
+                    if (columns > 0)
+                        ss << separator;
+                }
+                if (c < 1)
+                    return "";
+                ss.write(buf, c);
+                ++columns;
+            } while (internal_generic::increment_indices<dims>(index, shape_type{ 0 }, m_shape));
+        }
+        for (index_t i = 0; i < dims; ++i)
+            ss << close;
+        return ss.str();
+    }
+
 private:
     template <typename Input>
     KFR_MEM_INTRINSIC void assign_expr(Input&& input) const
@@ -734,7 +903,7 @@ struct expression_traits<tensor<T, Dims>> : expression_traits_defaults
     {
         return self.shape();
     }
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return { 0 }; }
+    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return shape<dims>{ 0 }; }
 };
 
 inline namespace CMT_ARCH_NAME
@@ -779,13 +948,21 @@ tensor<T, outdims> tapply(const tensor<T, dims1>& x, const tensor<T, dims2>& y, 
     return result;
 }
 
+template <size_t width = 0, index_t Axis = infinite_size, typename E, typename Traits = expression_traits<E>>
+tensor<typename Traits::value_type, Traits::dims> trender(const E& expr)
+{
+    tensor<typename Traits::value_type, Traits::dims> result(Traits::shapeof(expr));
+    tprocess<width, Axis>(result, expr);
+    return result;
+}
+
 } // namespace CMT_ARCH_NAME
 
 } // namespace kfr
 
 namespace cometa
 {
-template <size_t dims>
+template <kfr::index_t dims>
 struct representation<kfr::shape<dims>>
 {
     using type = std::string;
@@ -798,7 +975,7 @@ struct representation<kfr::shape<dims>>
         else
         {
             std::string s;
-            for (size_t i = 0; i < dims; ++i)
+            for (kfr::index_t i = 0; i < dims; ++i)
             {
                 if (CMT_LIKELY(i > 0))
                     s += ", ";
@@ -808,6 +985,14 @@ struct representation<kfr::shape<dims>>
         }
     }
 };
+
+template <typename T, kfr::index_t dims>
+struct representation<kfr::tensor<T, dims>>
+{
+    using type = std::string;
+    static std::string get(const kfr::tensor<T, dims>& value) { return value.to_string(); }
+};
+
 } // namespace cometa
 
 CMT_PRAGMA_MSVC(warning(pop))

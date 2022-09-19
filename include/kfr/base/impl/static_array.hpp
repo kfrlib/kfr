@@ -67,7 +67,7 @@ struct static_array_base<T, csizes_t<indices...>>
     constexpr static_array_base& operator=(static_array_base&&) = default;
 
     template <int dummy = 0, CMT_ENABLE_IF(dummy == 0 && static_size > 1)>
-    KFR_MEM_INTRINSIC constexpr static_array_base(value_type value)
+    KFR_MEM_INTRINSIC constexpr explicit static_array_base(value_type value)
     {
         (static_cast<void>(array[indices] = value), ...);
     }
