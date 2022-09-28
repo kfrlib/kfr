@@ -64,24 +64,6 @@ constexpr inline index_t maximum_dims = 8;
 
 using dimset = vec<i8, maximum_dims>;
 
-CMT_INTRINSIC constexpr index_t size_add(index_t x, index_t y)
-{
-    return (x == infinite_size || y == infinite_size) ? infinite_size : x + y;
-}
-
-CMT_INTRINSIC constexpr index_t size_sub(index_t x, index_t y)
-{
-    return (x == infinite_size || y == infinite_size) ? infinite_size : (x > y ? x - y : 0);
-}
-
-CMT_INTRINSIC constexpr index_t size_min(index_t x) CMT_NOEXCEPT { return x; }
-
-template <typename... Ts>
-CMT_INTRINSIC constexpr index_t size_min(index_t x, index_t y, Ts... rest) CMT_NOEXCEPT
-{
-    return size_min(x < y ? x : y, rest...);
-}
-
 template <index_t dims>
 struct shape;
 
@@ -149,6 +131,16 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
     shape add(const shape& other) const { return **this + *other; }
     shape sub(const shape& other) const { return **this - *other; }
     index_t sum() const { return hsum(**this); }
+
+    constexpr bool has_infinity() const
+    {
+        for (index_t i = 0; i < dims; ++i)
+        {
+            if (this->operator[](i) == infinite_size)
+                return true;
+        }
+        return false;
+    }
 
     shape add_inf(const shape& other) const
     {
@@ -306,6 +298,8 @@ struct shape<0>
     shape() = default;
     shape(index_t value) {}
 
+    constexpr bool has_infinity() const { return false; }
+
     KFR_MEM_INTRINSIC size_t to_flat(const shape<0>& indices) const { return 0; }
     KFR_MEM_INTRINSIC shape<0> from_flat(size_t index) const { return {}; }
 
@@ -314,6 +308,10 @@ struct shape<0>
     {
         return {};
     }
+
+    index_t trailing_zeros() const { return 0; }
+
+    KFR_MEM_INTRINSIC index_t dot(const shape& other) const { return 0; }
 
     KFR_MEM_INTRINSIC size_t product() const { return 0; }
 
@@ -328,10 +326,10 @@ struct shape<0>
         return {};
     }
 
-    KFR_MEM_INTRINSIC bool operator==(const shape<0>& other) const { return true; }
-    KFR_MEM_INTRINSIC bool operator!=(const shape<0>& other) const { return false; }
+    KFR_MEM_INTRINSIC constexpr bool operator==(const shape<0>& other) const { return true; }
+    KFR_MEM_INTRINSIC constexpr bool operator!=(const shape<0>& other) const { return false; }
 
-    KFR_MEM_INTRINSIC index_t revindex(size_t index) const { return 1; }
+    KFR_MEM_INTRINSIC constexpr index_t revindex(size_t index) const { return 1; }
     KFR_MEM_INTRINSIC void set_revindex(size_t index, index_t val) {}
 };
 
@@ -410,11 +408,14 @@ template <index_t dims>
 constexpr KFR_INTRINSIC shape<dims> strides_for_shape(const shape<dims>& sh, index_t stride = 1)
 {
     shape<dims> strides;
-    index_t n = stride;
-    for (index_t i = 0; i < dims; ++i)
+    if constexpr (dims > 0)
     {
-        strides[dims - 1 - i] = n;
-        n *= sh[dims - 1 - i];
+        index_t n = stride;
+        for (index_t i = 0; i < dims; ++i)
+        {
+            strides[dims - 1 - i] = n;
+            n *= sh[dims - 1 - i];
+        }
     }
     return strides;
 }
@@ -485,15 +486,36 @@ constexpr shape<outdims> common_shape(const shape<dims1>& shape1, const shape<di
     {
         index_t size1 = shape1.revindex(i);
         index_t size2 = shape2.revindex(i);
-        if (size1 == 1 || size2 == 1 || size1 == size2)
+        if (size1 == infinite_size)
         {
-            result[outdims - 1 - i] = std::max(size1, size2);
+            if (size2 == infinite_size)
+            {
+                result[outdims - 1 - i] = infinite_size;
+            }
+            else
+            {
+                result[outdims - 1 - i] = size2;
+            }
         }
         else
         {
-            // broadcast failed
-            result = shape<outdims>(0);
-            return result;
+            if (size2 == infinite_size)
+            {
+                result[outdims - 1 - i] = size1;
+            }
+            else
+            {
+                if (size1 == 1 || size2 == 1 || size1 == size2)
+                {
+                    result[outdims - 1 - i] = std::max(size1, size2);
+                }
+                else
+                {
+                    // broadcast failed
+                    result = shape<outdims>(0);
+                    return result;
+                }
+            }
         }
     }
     return result;
@@ -581,23 +603,29 @@ KFR_INTRINSIC bool increment_indices(shape<dims>& indices, const shape<dims>& st
         return false;
     return true;
 #else
-
-    indices[dim] += 1;
-    CMT_LOOP_UNROLL
-    for (int i = dim; i >= 0;)
+    if constexpr (dims > 0)
     {
-        if (CMT_LIKELY(indices[i] < stop[i]))
-            return true;
-        // carry
-        indices[i] = start[i];
-        --i;
-        if (i < 0)
+        indices[dim] += 1;
+        CMT_LOOP_UNROLL
+        for (int i = dim; i >= 0;)
         {
-            return false;
+            if (CMT_LIKELY(indices[i] < stop[i]))
+                return true;
+            // carry
+            indices[i] = start[i];
+            --i;
+            if (i < 0)
+            {
+                return false;
+            }
+            indices[i] += 1;
         }
-        indices[i] += 1;
+        return true;
     }
-    return true;
+    else
+    {
+        return false;
+    }
 #endif
 }
 
@@ -684,9 +712,12 @@ template <index_t dims>
 constexpr KFR_INTRINSIC index_t size_of_shape(const shape<dims>& shape)
 {
     index_t n = 1;
-    for (index_t i = 0; i < dims; ++i)
+    if constexpr (dims > 0)
     {
-        n *= shape[i];
+        for (index_t i = 0; i < dims; ++i)
+        {
+            n *= shape[i];
+        }
     }
     return n;
 }

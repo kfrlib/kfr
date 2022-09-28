@@ -56,6 +56,10 @@ struct complex;
 #endif
 #endif
 
+struct accepts_any
+{
+};
+
 template <typename T, typename V = void>
 struct expression_traits;
 
@@ -96,12 +100,13 @@ struct expression_traits<const T&&, std::void_t<typename expression_traits<T>::v
 
 struct expression_traits_defaults
 {
-    // using value_type = void;
+    // using value_type = accepts_any;
     // constexpr static size_t dims = 0;
     // constexpr static shape<dims> shapeof(const T&);
     // constexpr static shape<dims> shapeof();
 
     constexpr static inline bool explicit_operand = true;
+    constexpr static inline bool random_access    = true;
 };
 
 namespace internal_generic
@@ -200,7 +205,7 @@ KFR_INTRINSIC static void tprocess_body(Out&& out, In&& in, size_t start, size_t
 
 template <size_t width = 0, index_t Axis = 0, typename Out, typename In, size_t gw = 1,
           CMT_ENABLE_IF(expression_traits<Out>::dims == 0)>
-static auto tprocess(Out&& out, In&& in, shape<0> = {}, shape<0> = {}, csize_t<gw> = {}) -> shape<0>
+static auto process(Out&& out, In&& in, shape<0> = {}, shape<0> = {}, csize_t<gw> = {}) -> shape<0>
 {
     set_elements(out, shape<0>{}, axis_params_v<0, 1>, get_elements(in, shape<0>{}, axis_params_v<0, 1>));
     return {};
@@ -251,13 +256,12 @@ KFR_INTRINSIC index_t axis_stop(const shape<outdims>& sh)
 
 template <size_t width = 0, index_t Axis = infinite_size, typename Out, typename In, size_t gw = 1,
           index_t outdims = expression_dims<Out>, CMT_ENABLE_IF(expression_dims<Out> > 0)>
-static auto tprocess(Out&& out, In&& in, shape<outdims> start = shape<outdims>(0),
-                     shape<outdims> size = shape<outdims>(infinite_size), csize_t<gw> = {}) -> shape<outdims>
+static auto process(Out&& out, In&& in, shape<outdims> start = shape<outdims>(0),
+                    shape<outdims> size = shape<outdims>(infinite_size), csize_t<gw> = {}) -> shape<outdims>
 {
     using Trin  = expression_traits<In>;
     using Trout = expression_traits<Out>;
     using Tin   = typename Trin::value_type;
-    using Tout  = typename Trout::value_type;
 
     using internal::axis_start;
     using internal::axis_stop;
@@ -361,211 +365,6 @@ static auto tprocess(Out&& out, In&& in, shape<outdims> start = shape<outdims>(0
 }
 } // namespace CMT_ARCH_NAME
 
-struct coutput_context
-{
-};
-
-struct cinput_context
-{
-};
-
-using coutput_t = const coutput_context*;
-using cinput_t  = const cinput_context*;
-
-constexpr cinput_t cinput   = nullptr;
-constexpr coutput_t coutput = nullptr;
-
-/// @brief Base class of all input expressoins
-struct input_expression
-{
-    KFR_MEM_INTRINSIC constexpr static size_t size() CMT_NOEXCEPT { return infinite_size; }
-
-    constexpr static bool is_incremental = false;
-
-    KFR_MEM_INTRINSIC constexpr void begin_block(cinput_t, size_t) const {}
-    KFR_MEM_INTRINSIC constexpr void end_block(cinput_t, size_t) const {}
-};
-
-/// @brief Base class of all output expressoins
-struct output_expression
-{
-    KFR_MEM_INTRINSIC constexpr static size_t size() CMT_NOEXCEPT { return infinite_size; }
-
-    constexpr static bool is_incremental = false;
-
-    KFR_MEM_INTRINSIC constexpr void begin_block(coutput_t, size_t) const {}
-    KFR_MEM_INTRINSIC constexpr void end_block(coutput_t, size_t) const {}
-};
-
-/// @brief Check if the type argument is an input expression
-template <typename E>
-constexpr inline bool is_input_expression = is_base_of<input_expression, decay<E>>;
-
-/// @brief Check if the type arguments are an input expressions
-template <typename... Es>
-constexpr inline bool is_input_expressions = (is_base_of<input_expression, decay<Es>> || ...);
-
-/// @brief Check if the type argument is an output expression
-template <typename E>
-constexpr inline bool is_output_expression = is_base_of<output_expression, decay<E>>;
-
-/// @brief Check if the type arguments are an output expressions
-template <typename... Es>
-constexpr inline bool is_output_expressions = (is_base_of<output_expression, decay<Es>> || ...);
-
-inline namespace CMT_ARCH_NAME
-{
-
-#ifdef KFR_TESTING
-namespace internal
-{
-template <typename T, size_t N, typename Fn>
-inline vec<T, N> get_fn_value(size_t index, Fn&& fn)
-{
-    return apply(fn, enumerate<size_t, N>() + index);
-}
-} // namespace internal
-
-template <typename E, typename Fn>
-void test_expression(const E& expr, size_t size, Fn&& fn, const char* expression = nullptr)
-{
-    using T                  = value_type_of<E>;
-    ::testo::test_case* test = ::testo::active_test();
-    auto&& c                 = ::testo::make_comparison();
-    test->check(c <= expr.size() == size, expression);
-    if (expr.size() != size)
-        return;
-    size                     = size_min(size, 200);
-    constexpr size_t maxsize = 2 + ilog2(vector_width<T> * 2);
-    size_t g                 = 1;
-    for (size_t i = 0; i < size;)
-    {
-        const size_t next_size = std::min(prev_poweroftwo(size - i), g);
-        g *= 2;
-        if (g > (1 << (maxsize - 1)))
-            g = 1;
-
-        cswitch(csize<1> << csizeseq<maxsize>, next_size,
-                [&](auto x)
-                {
-                    constexpr size_t nsize = val_of(decltype(x)());
-                    ::testo::scope s(as_string("i = ", i, " width = ", nsize));
-                    test->check(c <= get_elements(expr, cinput, i, vec_shape<T, nsize>()) ==
-                                    internal::get_fn_value<T, nsize>(i, fn),
-                                expression);
-                });
-        i += next_size;
-    }
-}
-#define TESTO_CHECK_EXPRESSION(expr, size, ...) ::kfr::test_expression(expr, size, __VA_ARGS__, #expr)
-
-#ifndef TESTO_NO_SHORT_MACROS
-#define CHECK_EXPRESSION TESTO_CHECK_EXPRESSION
-#endif
-#endif
-
-namespace internal
-{
-
-template <typename T, typename Fn>
-struct expression_lambda : input_expression
-{
-    using value_type = T;
-    KFR_MEM_INTRINSIC expression_lambda(Fn&& fn) : fn(std::move(fn)) {}
-
-    template <size_t N, KFR_ENABLE_IF(N&& is_callable<Fn, cinput_t, size_t, vec_shape<T, N>>)>
-    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_lambda& self, cinput_t cinput, size_t index,
-                                                vec_shape<T, N> y)
-    {
-        return self.fn(cinput, index, y);
-    }
-
-    template <size_t N, KFR_ENABLE_IF(N&& is_callable<Fn, size_t>)>
-    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_lambda& self, cinput_t, size_t index,
-                                                vec_shape<T, N>)
-    {
-        return apply(self.fn, enumerate<size_t, N>() + index);
-    }
-    template <size_t N, KFR_ENABLE_IF(N&& is_callable<Fn>)>
-    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_lambda& self, cinput_t, size_t,
-                                                vec_shape<T, N>)
-    {
-        return apply<N>(self.fn);
-    }
-
-    Fn fn;
-};
-} // namespace internal
-
-template <typename T, typename Fn>
-internal::expression_lambda<T, decay<Fn>> lambda(Fn&& fn)
-{
-    return internal::expression_lambda<T, decay<Fn>>(std::move(fn));
-}
-
-} // namespace CMT_ARCH_NAME
-
-namespace internal_generic
-{
-
-template <typename T, typename = void>
-struct has_static_size_impl : std::false_type
-{
-};
-
-template <typename T>
-struct has_static_size_impl<T, std::void_t<decltype(T::size())>> : std::true_type
-{
-};
-
-template <typename T, typename = void>
-struct is_infinite_impl : std::false_type
-{
-};
-
-template <typename T>
-struct is_infinite_impl<T, void_t<decltype(T::size())>>
-    : std::integral_constant<bool, T::size() == infinite_size>
-{
-};
-} // namespace internal_generic
-
-template <typename T>
-constexpr inline bool is_infinite = internal_generic::is_infinite_impl<T>::value;
-
-template <typename T>
-constexpr inline bool has_static_size = internal_generic::has_static_size_impl<T>::value;
-
-template <typename T>
-struct expression_traits<T, std::enable_if_t<std::is_base_of_v<input_expression, T>>>
-    : expression_traits_defaults
-{
-    using value_type             = value_type_of<T>;
-    constexpr static size_t dims = 1;
-
-    constexpr static shape<1> shapeof(const T& self) { return self.size(); }
-    constexpr static shape<1> shapeof()
-    {
-        if constexpr (has_static_size<T>)
-        {
-            return { T::size() };
-        }
-        else
-        {
-            return { 0 };
-        }
-    }
-};
-
-inline namespace CMT_ARCH_NAME
-{
-template <typename E, size_t N, KFR_ENABLE_IF(is_input_expression<E>), typename T = value_type_of<E>>
-KFR_MEM_INTRINSIC vec<T, N> get_elements(E&& self, const shape<1>& index, const axis_params<0, N>& sh)
-{
-    return get_elements(self, cinput_t{}, index[0], vec_shape<T, N>{});
-}
-} // namespace CMT_ARCH_NAME
-
 template <typename... Args>
 struct xwitharguments
 {
@@ -666,17 +465,17 @@ struct xwitharguments<Arg>
 
     std::tuple<Arg> args;
 
-    KFR_INTRINSIC auto& first() { return std::get<0>(args); }
-    KFR_INTRINSIC const auto& first() const { return std::get<0>(args); }
+    KFR_MEM_INTRINSIC auto& first() { return std::get<0>(args); }
+    KFR_MEM_INTRINSIC const auto& first() const { return std::get<0>(args); }
 
     template <size_t idx>
-    KFR_INTRINSIC dimset getmask(csize_t<idx> = {}) const
+    KFR_MEM_INTRINSIC dimset getmask(csize_t<idx> = {}) const
     {
         return -1;
     }
 
     template <typename Fn>
-    KFR_INTRINSIC constexpr auto fold(Fn&& fn) const
+    KFR_MEM_INTRINSIC constexpr auto fold(Fn&& fn) const
     {
         return fold_impl(std::forward<Fn>(fn), csizeseq<count>);
     }
@@ -686,11 +485,11 @@ struct xwitharguments<Arg>
         return fold_idx_impl(std::forward<Fn>(fn), csizeseq<count>);
     }
 
-    KFR_INTRINSIC xwitharguments(Arg&& arg) : args{ std::forward<Arg>(arg) } {}
+    KFR_MEM_INTRINSIC xwitharguments(Arg&& arg) : args{ std::forward<Arg>(arg) } {}
 
 private:
     template <typename Fn, size_t... indices>
-    KFR_INTRINSIC constexpr auto fold_impl(Fn&& fn, csizes_t<indices...>) const
+    KFR_MEM_INTRINSIC constexpr auto fold_impl(Fn&& fn, csizes_t<indices...>) const
     {
         return fn(std::get<indices>(args)...);
     }
@@ -709,8 +508,12 @@ struct xfunction : public xwitharguments<Args...>
 {
     Fn fn;
 
-    KFR_INTRINSIC xfunction(xwitharguments<Args...> args, Fn&& fn)
+    KFR_MEM_INTRINSIC xfunction(xwitharguments<Args...> args, Fn&& fn)
         : xwitharguments<Args...>{ std::move(args) }, fn(std::move(fn))
+    {
+    }
+    KFR_MEM_INTRINSIC xfunction(Fn&& fn, Args&&... args)
+        : xwitharguments<Args...>{ std::forward<Args>(args)... }, fn(std::move(fn))
     {
     }
 };
@@ -745,6 +548,8 @@ struct expression_traits<xfunction<Fn, Args...>> : expression_traits_defaults
                 expression_traits<typename E::template nth<val_of(decltype(args)())>>::shapeof()...);
         });
     }
+
+    constexpr static inline bool random_access = (expression_traits<Args>::random_access && ...);
 };
 
 inline namespace CMT_ARCH_NAME
@@ -801,174 +606,10 @@ KFR_INTRINSIC vec<T, N> get_elements(const xfunction<Fn, Args...>& self, const s
         });
 }
 
-namespace internal
-{
-
-template <typename... Args>
-struct expression_with_arguments : input_expression
-{
-    KFR_MEM_INTRINSIC constexpr size_t size() const CMT_NOEXCEPT
-    {
-        return size_impl(indicesfor_t<Args...>());
-    }
-
-    constexpr static size_t count = sizeof...(Args);
-    expression_with_arguments()   = delete;
-    KFR_MEM_INTRINSIC constexpr expression_with_arguments(Args&&... args) CMT_NOEXCEPT
-        : args(std::forward<Args>(args)...)
-    {
-    }
-
-    KFR_MEM_INTRINSIC void begin_block(cinput_t cinput, size_t size) const
-    {
-        begin_block_impl(cinput, size, indicesfor_t<Args...>());
-    }
-    KFR_MEM_INTRINSIC void end_block(cinput_t cinput, size_t size) const
-    {
-        end_block_impl(cinput, size, indicesfor_t<Args...>());
-    }
-
-    std::tuple<Args...> args;
-
-protected:
-    template <size_t... indices>
-    KFR_MEM_INTRINSIC constexpr size_t size_impl(csizes_t<indices...>) const CMT_NOEXCEPT
-    {
-        return size_min(std::get<indices>(this->args).size()...);
-    }
-
-    template <typename Fn, typename T, size_t N>
-    KFR_MEM_INTRINSIC vec<T, N> call(cinput_t cinput, Fn&& fn, size_t index, vec_shape<T, N> x) const
-    {
-        return call_impl(cinput, std::forward<Fn>(fn), indicesfor_t<Args...>(), index, x);
-    }
-    template <size_t ArgIndex, typename U, size_t N,
-              typename T = value_type_of<typename details::get_nth_type<ArgIndex, Args...>::type>>
-    KFR_MEM_INTRINSIC vec<U, N> argument(cinput_t cinput, csize_t<ArgIndex>, size_t index,
-                                         vec_shape<U, N>) const
-    {
-        static_assert(ArgIndex < count, "Incorrect ArgIndex");
-        return static_cast<vec<U, N>>(
-            get_elements(std::get<ArgIndex>(this->args), cinput, index, vec_shape<T, N>()));
-    }
-    template <typename U, size_t N,
-              typename T = value_type_of<typename details::get_nth_type<0, Args...>::type>>
-    KFR_MEM_INTRINSIC vec<U, N> argument_first(cinput_t cinput, size_t index, vec_shape<U, N>) const
-    {
-        return static_cast<vec<U, N>>(
-            get_elements(std::get<0>(this->args), cinput, index, vec_shape<T, N>()));
-    }
-
-private:
-    template <typename Fn, typename T, size_t N, size_t... indices>
-    KFR_MEM_INTRINSIC vec<T, N> call_impl(cinput_t cinput, Fn&& fn, csizes_t<indices...>, size_t index,
-                                          vec_shape<T, N>) const
-    {
-        return fn(get_elements(std::get<indices>(this->args), cinput, index,
-                               vec_shape<value_type_of<Args>, N>())...);
-    }
-    template <size_t... indices>
-    KFR_MEM_INTRINSIC void begin_block_impl(cinput_t cinput, size_t size, csizes_t<indices...>) const
-    {
-        swallow{ (std::get<indices>(args).begin_block(cinput, size), 0)... };
-    }
-    template <size_t... indices>
-    KFR_MEM_INTRINSIC void end_block_impl(cinput_t cinput, size_t size, csizes_t<indices...>) const
-    {
-        swallow{ (std::get<indices>(args).end_block(cinput, size), 0)... };
-    }
-};
-
-template <typename T>
-struct expression_scalar : input_expression
-{
-    using value_type    = T;
-    expression_scalar() = delete;
-    constexpr expression_scalar(const T& val) CMT_NOEXCEPT : val(val) {}
-    T val;
-
-    template <size_t N>
-    friend KFR_INTRINSIC vec<T, N> get_elements(const expression_scalar& self, cinput_t, size_t,
-                                                vec_shape<T, N>)
-    {
-        return broadcast<N>(self.val);
-    }
-};
-
-template <typename T1, typename T2, typename = void>
-struct arg_impl
-{
-    using type       = T2;
-    using value_type = typename T1::value_type;
-};
-
-template <typename T1, typename T2>
-struct arg_impl<T1, T2, void_t<enable_if<is_vec_element<T1>>>>
-{
-    using type       = expression_scalar<T1>;
-    using value_type = T1;
-};
-
-template <typename T>
-using arg = typename internal::arg_impl<decay<T>, T>::type;
-
-template <typename T>
-using arg_type = typename internal::arg_impl<decay<T>, T>::value_type;
-
 template <typename Fn, typename... Args>
-struct function_value_type
+KFR_FUNCTION xfunction<decay<Fn>, Args...> bind_expression(Fn&& fn, Args&&... args)
 {
-    using type = typename invoke_result<Fn, vec<arg_type<Args>, 1>...>::value_type;
-};
-
-template <typename Fn, typename... Args>
-struct expression_function : expression_with_arguments<arg<Args>...>
-{
-    using value_type = typename function_value_type<Fn, Args...>::type;
-    // subtype<decltype(std::declval<Fn>()(std::declval<vec<value_type_of<arg<Args>>, 1>>()...))>;
-    using T = value_type;
-
-    expression_function(Fn&& fn, arg<Args>&&... args) CMT_NOEXCEPT
-        : expression_with_arguments<arg<Args>...>(std::forward<arg<Args>>(args)...),
-          fn(std::forward<Fn>(fn))
-    {
-    }
-    expression_function(const Fn& fn, arg<Args>&&... args) CMT_NOEXCEPT
-        : expression_with_arguments<arg<Args>...>(std::forward<arg<Args>>(args)...),
-          fn(fn)
-    {
-    }
-    template <size_t N>
-    friend KFR_INTRINSIC vec<T, N> get_elements(const expression_function& self, cinput_t cinput,
-                                                size_t index, vec_shape<T, N> x)
-    {
-        return self.call(cinput, self.fn, index, x);
-    }
-
-    const Fn& get_fn() const CMT_NOEXCEPT { return fn; }
-
-protected:
-    Fn fn;
-};
-} // namespace internal
-
-template <typename A>
-CMT_INTRINSIC internal::arg<A> e(A&& a)
-{
-    return internal::arg<A>(std::forward<A>(a));
-}
-
-template <typename T>
-CMT_INTRINSIC internal::expression_scalar<T> scalar(const T& val)
-{
-    return internal::expression_scalar<T>(val);
-}
-
-template <typename Fn, typename... Args>
-CMT_INTRINSIC internal::expression_function<decay<Fn>, Args...> bind_expression(Fn&& fn, Args&&... args)
-{
-    return internal::expression_function<decay<Fn>, Args...>(std::forward<Fn>(fn),
-                                                             std::forward<Args>(args)...);
+    return xfunction<decay<Fn>, Args...>(std::forward<Fn>(fn), std::forward<Args>(args)...);
 }
 /**
  * @brief Construct a new expression using the same function as in @c e and new arguments
@@ -976,85 +617,20 @@ CMT_INTRINSIC internal::expression_function<decay<Fn>, Args...> bind_expression(
  * @param args new arguments for the function
  */
 template <typename Fn, typename... OldArgs, typename... NewArgs>
-CMT_INTRINSIC internal::expression_function<Fn, NewArgs...> rebind(
-    const internal::expression_function<Fn, OldArgs...>& e, NewArgs&&... args)
+KFR_FUNCTION xfunction<Fn, NewArgs...> rebind(const xfunction<Fn, OldArgs...>& e, NewArgs&&... args)
 {
-    return internal::expression_function<Fn, NewArgs...>(e.get_fn(), std::forward<NewArgs>(args)...);
+    return xfunction<Fn, NewArgs...>(e.fn, std::forward<NewArgs>(args)...);
+}
+template <typename Fn, typename... OldArgs, typename... NewArgs>
+KFR_FUNCTION xfunction<Fn, NewArgs...> rebind(xfunction<Fn, OldArgs...>&& e, NewArgs&&... args)
+{
+    return xfunction<Fn, NewArgs...>(std::move(e.fn), std::forward<NewArgs>(args)...);
 }
 
-template <size_t width = 0, typename OutputExpr, typename InputExpr, size_t groupsize = 1,
-          typename Tvec = vec<value_type_of<InputExpr>, 1>>
-static size_t process(OutputExpr&& out, const InputExpr& in, size_t start = 0, size_t size = infinite_size,
-                      coutput_t coutput = nullptr, cinput_t cinput = nullptr,
-                      csize_t<groupsize> = csize_t<groupsize>())
+template <typename E1, typename E2, KFR_ACCEPT_EXPRESSIONS(E1, E2)>
+KFR_FUNCTION xfunction<fn::interleave, E1, E2> interleave(E1&& x, E2&& y)
 {
-    using Tin = value_type_of<InputExpr>;
-    static_assert(is_output_expression<OutputExpr>, "OutFn must be an expression");
-    static_assert(is_input_expression<InputExpr>, "Fn must be an expression");
-
-    size = size_sub(size_min(out.size(), in.size(), size_add(size, start)), start);
-    if (CMT_UNLIKELY(size == 0 || size == infinite_size))
-        return size;
-    out.begin_block(coutput, size);
-    in.begin_block(cinput, size);
-
-#ifdef NDEBUG
-    constexpr size_t w = width == 0 ? maximum_vector_size<Tin> : width;
-#else
-    constexpr size_t w         = width == 0 ? vector_width<Tin> : width;
-#endif
-
-    static_assert(w > 0 && is_poweroftwo(w), "");
-
-    size_t i = start;
-
-    CMT_LOOP_NOUNROLL
-    for (; i < start + size / w * w; i += w)
-        set_elements(out, coutput, i, get_elements(in, cinput, i, vec_shape<Tin, w>()));
-    CMT_LOOP_NOUNROLL
-    for (; i < start + size / groupsize * groupsize; i += groupsize)
-        set_elements(out, coutput, i, get_elements(in, cinput, i, vec_shape<Tin, groupsize>()));
-
-    in.end_block(cinput, size);
-    out.end_block(coutput, size);
-    return size;
-}
-
-template <typename T>
-struct input_expression_base : input_expression
-{
-    virtual ~input_expression_base() {}
-    virtual T input(size_t index) const = 0;
-    template <typename U, size_t N>
-    friend KFR_INTRINSIC vec<U, N> get_elements(const input_expression_base& self, cinput_t, size_t index,
-                                                vec_shape<U, N>)
-    {
-        vec<U, N> out;
-        for (size_t i = 0; i < N; i++)
-            out[i] = static_cast<U>(self.input(index + i));
-        return out;
-    }
-};
-
-template <typename T>
-struct output_expression_base : output_expression
-{
-    virtual ~output_expression_base() {}
-    virtual void output(size_t index, const T& value) = 0;
-
-    template <typename U, size_t N>
-    friend KFR_INTRINSIC void set_elements(const output_expression_base& self, coutput_t, size_t index,
-                                           const vec<U, N>& value)
-    {
-        for (size_t i = 0; i < N; i++)
-            self.output(index + i, static_cast<T>(value[i]));
-    }
-};
-
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
-CMT_INTRINSIC internal::expression_function<fn::interleave, E1, E2> interleave(E1&& x, E2&& y)
-{
-    return { fn::interleave(), std::forward<E1>(x), std::forward<E2>(y) };
+    return xfunction<Fn, E1, E2>{ fn::interleave(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

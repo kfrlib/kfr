@@ -26,10 +26,10 @@
 #pragma once
 
 #include "../cometa/array.hpp"
-#include "expression.hpp"
 #include "../simd/impl/function.hpp"
 #include "../simd/read_write.hpp"
 #include "../simd/types.hpp"
+#include "expression.hpp"
 #include "memory.hpp"
 
 CMT_PRAGMA_MSVC(warning(push))
@@ -92,14 +92,9 @@ template <typename T, typename Class, bool is_expression>
 struct univector_base;
 
 template <typename T, typename Class>
-struct univector_base<T, Class, true> : input_expression, output_expression
+struct univector_base<T, Class, true>
 {
-    using input_expression::begin_block;
-    using input_expression::end_block;
-    using output_expression::begin_block;
-    using output_expression::end_block;
-
-    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>)>
+    template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
     KFR_MEM_INTRINSIC Class& operator=(Input&& input)
     {
         assign_expr(std::forward<Input>(input));
@@ -303,7 +298,7 @@ struct univector_base<T, Class, false>
         return array_ref<const T>(data, size);
     }
 
-    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>)>
+    template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
     KFR_MEM_INTRINSIC Class& operator=(Input&& input)
     {
         static_assert(sizeof(Input) == 0, "Can't assign expression to non-expression");
@@ -328,7 +323,7 @@ struct alignas(platform<>::maximum_vector_alignment) univector
 #endif
     univector(const univector& v)   = default;
     univector(univector&&) noexcept = default;
-    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>)>
+    template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
     univector(Input&& input)
     {
         this->assign_expr(std::forward<Input>(input));
@@ -418,7 +413,7 @@ struct univector<T, tag_dynamic_vector>
 #endif
     univector(const univector& v)   = default;
     univector(univector&&) noexcept = default;
-    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>)>
+    template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
     univector(Input&& input)
     {
         static_assert(!is_infinite<Input>, "Dynamically sized vector requires finite input expression");
@@ -454,7 +449,7 @@ struct univector<T, tag_dynamic_vector>
     }
     using univector_base<T, univector, is_vec_element<T>>::operator=;
     univector& operator=(const univector&) = default;
-    template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>)>
+    template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
     KFR_MEM_INTRINSIC univector& operator=(Input&& input)
     {
         if (input.size() != infinite_size)
@@ -590,19 +585,20 @@ private:
 inline namespace CMT_ARCH_NAME
 {
 
-template <typename T, univector_tag Tag, typename U, size_t N>
-KFR_INTRINSIC vec<U, N> get_elements(const univector<T, Tag>& self, cinput_t, size_t index, vec_shape<U, N>)
+template <typename T, univector_tag Tag, size_t N>
+KFR_INTRINSIC vec<T, N> get_elements(const univector<T, Tag>& self, const shape<1>& index,
+                                     const axis_params<0, N>&)
 {
     const T* data = self.data();
-    return static_cast<vec<U, N>>(read<N>(ptr_cast<T>(data) + index));
+    return static_cast<vec<U, N>>(read<N>(ptr_cast<T>(data) + index.front()));
 }
 
-template <typename T, univector_tag Tag, typename U, size_t N>
-KFR_INTRINSIC void set_elements(univector<T, Tag>& self, coutput_t, size_t index,
-                                const vec<U, N>& value)
+template <typename T, univector_tag Tag, size_t N>
+KFR_INTRINSIC void set_elements(univector<T, Tag>& self, const shape<1>& index, const axis_params<0, N>&,
+                                const identity<vec<T, N>>& value)
 {
     T* data = self.data();
-    write(ptr_cast<T>(data) + index, vec<T, N>(value));
+    write(ptr_cast<T>(data) + index.front(), vec<T, N>(value));
 }
 
 /// @brief Converts an expression to univector

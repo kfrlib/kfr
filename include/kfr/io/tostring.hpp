@@ -228,55 +228,6 @@ struct representation<std::vector<T, Allocator>>
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
-{
-
-namespace internal
-{
-struct expression_printer : output_expression
-{
-    template <typename T, size_t N>
-    KFR_INTRINSIC friend void set_elements(expression_printer& self, coutput_t, size_t index,
-                                           const vec<T, N>& value)
-    {
-        for (size_t i = 0; i < N; i++)
-        {
-            if (index + i != 0)
-                print(", ");
-            print(value[i]);
-        }
-    }
-    template <typename InputExpr>
-    InputExpr& operator=(const InputExpr& input)
-    {
-        process(*this, input);
-        return input;
-    }
-};
-
-struct expression_debug_printer : output_expression
-{
-    template <typename T, size_t N>
-    KFR_INTRINSIC friend void set_elements(expression_debug_printer& self, coutput_t, size_t index,
-                                           const vec<T, N>& value)
-    {
-        println(fmtwidth<7>(index), ": (", value, ")");
-    }
-    template <typename InputExpr>
-    InputExpr& operator=(const InputExpr& input)
-    {
-        process(*this, input);
-        return input;
-    }
-};
-} // namespace internal
-
-/// @brief Returns an output expression that prints the values
-inline internal::expression_printer printer() { return internal::expression_printer(); }
-
-/// @brief Returns an output expression that prints the values with their types (used for debug)
-inline internal::expression_debug_printer debug_printer() { return internal::expression_debug_printer(); }
-} // namespace CMT_ARCH_NAME
 
 /// @brief Converts dB value to string (uses oo for infinity symbol)
 template <typename T>

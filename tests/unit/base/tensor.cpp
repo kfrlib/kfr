@@ -4,6 +4,8 @@
  * See LICENSE.txt for details
  */
 
+#include <kfr/base/simd_expressions.hpp>
+#include <kfr/base/math_expressions.hpp>
 #include <kfr/base/new_expressions.hpp>
 #include <kfr/base/tensor.hpp>
 #include <kfr/io/tostring.hpp>
@@ -178,27 +180,6 @@ DTEST(tensor_expression)
     CHECK(t4(3, 3) == 13.f);
 }
 
-template <typename T, index_t dims1, index_t dims2, index_t outdims = const_max(dims1, dims2)>
-KFR_INTRINSIC tensor<T, outdims> operator+(const tensor<T, dims1>& x, const tensor<T, dims2>& y)
-{
-    return tapply(x, y, fn::add{});
-}
-template <typename T, index_t dims1, index_t dims2, index_t outdims = const_max(dims1, dims2)>
-KFR_INTRINSIC tensor<T, outdims> operator-(const tensor<T, dims1>& x, const tensor<T, dims2>& y)
-{
-    return tapply(x, y, fn::sub{});
-}
-template <typename T, index_t dims1, index_t dims2, index_t outdims = const_max(dims1, dims2)>
-KFR_INTRINSIC tensor<T, outdims> operator*(const tensor<T, dims1>& x, const tensor<T, dims2>& y)
-{
-    return tapply(x, y, fn::mul{});
-}
-template <typename T, index_t dims1, index_t dims2, index_t outdims = const_max(dims1, dims2)>
-KFR_INTRINSIC tensor<T, outdims> operator/(const tensor<T, dims1>& x, const tensor<T, dims2>& y)
-{
-    return tapply(x, y, fn::div{});
-}
-
 TEST(tensor_broadcast)
 {
     using internal_generic::can_assign_from;
@@ -242,26 +223,6 @@ TEST(tensor_broadcast)
 }
 } // namespace CMT_ARCH_NAME
 
-template <typename T, index_t Dims = 1>
-struct tcounter
-{
-    T start;
-    T steps[Dims];
-
-    T back() const { return steps[Dims - 1]; }
-    T front() const { return steps[0]; }
-};
-
-template <typename T, index_t Dims>
-struct expression_traits<tcounter<T, Dims>> : expression_traits_defaults
-{
-    using value_type             = T;
-    constexpr static size_t dims = Dims;
-
-    constexpr static shape<dims> shapeof(const tcounter<T, Dims>& self) { return shape<dims>(max_index_t); }
-    constexpr static shape<dims> shapeof() { return shape<dims>(max_index_t); }
-};
-
 template <typename T, size_t N1>
 struct expression_traits<std::array<T, N1>> : expression_traits_defaults
 {
@@ -287,23 +248,6 @@ struct expression_traits<std::array<std::array<T, N1>, N2>> : expression_traits_
 
 inline namespace CMT_ARCH_NAME
 {
-template <typename T, index_t Axis, size_t N>
-KFR_INTRINSIC vec<T, N> get_elements(const tcounter<T, 1>& self, const shape<1>& index,
-                                     const axis_params<Axis, N>&)
-{
-    T acc = self.start;
-    acc += static_cast<T>(index.back()) * self.back();
-    return acc + enumerate(vec_shape<T, N>(), self.back());
-}
-template <typename T, index_t dims, index_t Axis, size_t N>
-KFR_INTRINSIC vec<T, N> get_elements(const tcounter<T, dims>& self, const shape<dims>& index,
-                                     const axis_params<Axis, N>&)
-{
-    T acc                 = self.start;
-    vec<T, dims> tindices = cast<T>(*index);
-    cfor(csize<0>, csize<dims>, [&](auto i) CMT_INLINE_LAMBDA { acc += tindices[i] * self.steps[i]; });
-    return acc + enumerate(vec_shape<T, N>(), self.steps[Axis]);
-}
 
 template <typename T, size_t N1, index_t Axis, size_t N>
 KFR_INTRINSIC vec<T, N> get_elements(const std::array<T, N1>& CMT_RESTRICT self, const shape<1>& index,
@@ -351,6 +295,44 @@ KFR_INTRINSIC void set_elements(std::array<std::array<T, N1>, N2>& CMT_RESTRICT 
     }
 }
 
+TEST(tensor_slice)
+{
+    tensor<double, 3> t1{
+        { { 0, 1, 2 }, { 3, 4, 5 }, { 6, 7, 8 } },
+        { { 9, 10, 11 }, { 12, 13, 14 }, { 15, 16, 17 } },
+        { { 18, 19, 20 }, { 21, 22, 23 }, { 24, 25, 26 } },
+    };
+    CHECK(t1 == trender(truncate(counter(0.0, 9, 3, 1), shape{ 3, 3, 3 })));
+
+    CHECK(trender(slice(t1, shape{ 1, 1, 1 }, shape{ 2, 2, 2 })) ==
+          trender(truncate(counter(13.0, 9, 3, 1), shape{ 2, 2, 2 })));
+}
+
+TEST(scalars)
+{
+    CHECK(trender(scalar(3)) == tensor<int, 0>{});
+    CHECK(trender(scalar(3)).to_string() == "3");
+}
+
+TEST(tensor_lambda)
+{
+    CHECK(trender(lambda<float, 2>([](shape<2> idx) -> float { return 1 + idx[1] + 3 * idx[0]; }),
+                  shape{ 3, 3 }) ==
+          tensor<float, 2>{
+              { 1, 2, 3 },
+              { 4, 5, 6 },
+              { 7, 8, 9 },
+          });
+
+    CHECK(trender(truncate(lambda<float, 2>([](shape<2> idx) -> float { return 1 + idx[1] + 3 * idx[0]; }),
+                           shape{ 3, 3 })) ==
+          tensor<float, 2>{
+              { 1, 2, 3 },
+              { 4, 5, 6 },
+              { 7, 8, 9 },
+          });
+}
+
 TEST(tensor_expressions2)
 {
     auto aa = std::array<std::array<double, 2>, 2>{ { { { 1, 2 } }, { { 3, 4 } } } };
@@ -363,14 +345,14 @@ TEST(tensor_expressions2)
     CHECK(expression_traits<decltype(1234.f)>::shapeof(1234.f) == shape{});
     CHECK(get_elements(1234.f, {}, axis_params<0, 3>{}) == vec{ 1234.f, 1234.f, 1234.f });
 
-    tprocess(aa, 123.45f);
+    process(aa, 123.45f);
 
     CHECK(aa ==
           std::array<std::array<double, 2>, 2>{ { { { 123.45f, 123.45f } }, { { 123.45f, 123.45f } } } });
 
     auto a = std::array<double, 2>{ { -5.f, +5.f } };
 
-    tprocess(aa, a);
+    process(aa, a);
 
     CHECK(aa == std::array<std::array<double, 2>, 2>{ { { { -5., +5. } }, { { -5., +5. } } } });
 }
@@ -379,13 +361,13 @@ TEST(tensor_counter)
 {
     std::array<double, 6> x;
 
-    tprocess(x, tcounter<double>{ 0.0, { 0.5 } });
+    process(x, counter(0.0, 0.5));
 
     CHECK(x == std::array<double, 6>{ { 0.0, 0.5, 1.0, 1.5, 2.0, 2.5 } });
 
     std::array<std::array<double, 4>, 3> y;
 
-    tprocess(y, tcounter<double, 2>{ 100.0, { 1.0, 10.0 } });
+    process(y, counter(100.0, 1.0, 10.0));
 
     CHECK(y == std::array<std::array<double, 4>, 3>{ {
                    { { 100.0, 110.0, 120.0, 130.0 } },
@@ -398,7 +380,7 @@ DTEST(tensor_dims)
 {
     tensor<double, 6> t12{ shape{ 2, 3, 4, 5, 6, 7 } };
 
-    tprocess(t12, tcounter<double, 6>{ 0, { 1, 10, 100, 1000, 10000, 100000 } });
+    process(t12, counter(0, 1, 10, 100, 1000, 10000, 100000));
 
     auto t1 = t12(1, 2, 3, tall(), 5, 6);
     CHECK(render(t1) == univector<double>{ 650321, 651321, 652321, 653321, 654321 });
@@ -413,49 +395,31 @@ TEST(vec_from_cvals)
                               cvalseq<index_t, 2, 0, 0>)) == make_vector<size_t>(0, 0, 1, 0, 0));
 }
 
-template <typename X1, typename X2, KFR_ACCEPT_EXPRESSIONS(X1, X2)>
-KFR_FUNCTION xfunction<fn::add, X1, X2> operator+(X1&& x1, X2&& x2)
-{
-    return { xwitharguments{ std::forward<X1>(x1), std::forward<X2>(x2) }, fn::add{} };
-}
-
-template <typename X1, typename X2, KFR_ACCEPT_EXPRESSIONS(X1, X2)>
-KFR_FUNCTION xfunction<fn::mul, X1, X2> operator*(X1&& x1, X2&& x2)
-{
-    return { xwitharguments{ std::forward<X1>(x1), std::forward<X2>(x2) }, fn::mul{} };
-}
-
-// template <typename X1>
-// KFR_FUNCTION xfunction<fn::neg, X1> operator-(X1&& x1)
-// {
-//     return { xwitharguments{ std::forward<X1>(x1) }, fn::neg{} };
-// }
-
 TEST(xfunction_test)
 {
     auto f = xfunction{ xwitharguments{ 3.f, 4.f }, std::plus<>{} };
     float v;
-    tprocess(v, f);
+    process(v, f);
     CHECK(v == 7.f);
     static_assert(std::is_same_v<decltype(f), xfunction<std::plus<>, float, float>>);
 
     auto f2 = xfunction{ xwitharguments{ 10.f, std::array{ 1.f, 2.f, 3.f, 4.f, 5.f } }, std::plus<>{} };
     std::array<float, 5> v2;
-    tprocess(v2, f2);
+    process(v2, f2);
     CHECK(v2 == std::array{ 11.f, 12.f, 13.f, 14.f, 15.f });
 
-    auto f3 = 10.f + std::array{ 1.f, 2.f, 3.f, 4.f, 5.f };
+    auto f3 = scalar(10.f) + std::array{ 1.f, 2.f, 3.f, 4.f, 5.f };
     std::array<float, 5> v3;
-    tprocess(v3, f3);
+    process(v3, f3);
     CHECK(v3 == std::array{ 11.f, 12.f, 13.f, 14.f, 15.f });
 
-    auto f4 = std::array<std::array<float, 1>, 5>{
+    auto f4 = scalar(0) + std::array<std::array<float, 1>, 5>{
         { { { 100.f } }, { { 200.f } }, { { 300.f } }, { { 400.f } }, { { 500.f } } }
     } + std::array{ 1.f, 2.f, 3.f, 4.f, 5.f };
     std::array<std::array<float, 5>, 5> v4;
 
     CHECK(expression_traits<decltype(f4)>::shapeof(f4) == shape{ 5, 5 });
-    tprocess(v4, f4);
+    process(v4, f4);
     CHECK(v4 == std::array<std::array<float, 5>, 5>{ { { { 101.f, 102.f, 103.f, 104.f, 105.f } },
                                                        { { 201.f, 202.f, 203.f, 204.f, 205.f } },
                                                        { { 301.f, 302.f, 303.f, 304.f, 305.f } },
@@ -463,10 +427,17 @@ TEST(xfunction_test)
                                                        { { 501.f, 502.f, 503.f, 504.f, 505.f } } } });
 }
 
-template <typename Type, index_t Dims>
-KFR_FUNCTION tcounter<Type, Dims> debug_counter(uint64_t scale = 10)
+TEST(xfunction_test2)
 {
-    tcounter<Type, Dims> result;
+    CHECK(trender(abs(tensor<float, 2>{ { 1, -2 }, { -1, 3 } })) == tensor<float, 2>{ { 1, 2 }, { 1, 3 } });
+    CHECK(trender(min(tensor<float, 2>{ { 1, -2 }, { -1, 3 } }, tensor<float, 2>{ { 0, 3 }, { 2, 1 } })) ==
+          tensor<float, 2>{ { 0, -2 }, { -1, 1 } });
+}
+
+template <typename Type, index_t Dims>
+KFR_FUNCTION xcounter<Type, Dims> debug_counter(uint64_t scale = 10)
+{
+    xcounter<Type, Dims> result;
     result.start = 0;
     uint64_t val = 1;
     for (size_t i = 0; i < Dims; i++)
@@ -561,10 +532,10 @@ static void test_reshape_body(const tensor<T, dims1>& t1, const tensor<T, dims2>
                  constexpr index_t axis = val_of(decltype(x)());
                  ::testo::scope s(
                      as_string("axis = ", axis, " shape = (", t1.shape(), ") -> (", t2.shape(), ")"));
-                 CHECK(trender<1, axis>(x_reshape(t1, t2.shape())) == t2);
-                 CHECK(trender<2, axis>(x_reshape(t1, t2.shape())) == t2);
-                 CHECK(trender<4, axis>(x_reshape(t1, t2.shape())) == t2);
-                 CHECK(trender<8, axis>(x_reshape(t1, t2.shape())) == t2);
+                 CHECK(trender<1, axis>(reshape(t1, t2.shape())) == t2);
+                 CHECK(trender<2, axis>(reshape(t1, t2.shape())) == t2);
+                 CHECK(trender<4, axis>(reshape(t1, t2.shape())) == t2);
+                 CHECK(trender<8, axis>(reshape(t1, t2.shape())) == t2);
              });
 }
 
@@ -586,7 +557,7 @@ static void test_reshape(const tensor<T, dims1>& t1, const tensor<T, dims>&... t
 TEST(xreshape)
 {
     std::array<float, 12> x;
-    tprocess(x_reshape(x, shape{ 3, 4 }), tcounter<float, 2>{ 0, { 10, 1 } });
+    process(reshape(x, shape{ 3, 4 }), xcounter<float, 2>{ 0, { 10, 1 } });
     CHECK(x == std::array<float, 12>{ { 0, 1, 2, 3, 10, 11, 12, 13, 20, 21, 22, 23 } });
 
     test_reshape(tensor<float, 1>{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 }, //
@@ -627,32 +598,32 @@ extern "C" __declspec(dllexport) bool assembly_test1(shape<4>& x)
 extern "C" __declspec(dllexport) bool assembly_test2(std::array<std::array<double, 2>, 2>& aa,
                                                      std::array<double, 2>& a)
 {
-    return tprocess(aa, a).front() > 0;
+    return process(aa, a).front() > 0;
 }
 
 extern "C" __declspec(dllexport) bool assembly_test3(std::array<double, 16>& x)
 {
-    return tprocess(x, 0.5).front() > 0;
+    return process(x, 0.5).front() > 0;
 }
 
 extern "C" __declspec(dllexport) bool assembly_test4(std::array<double, 16>& x)
 {
-    return tprocess(x, tcounter<double>{ 1000.0, { 1.0 } }).front() > 0;
+    return process(x, counter(1000.0, 1.0)).front() > 0;
 }
 
 extern "C" __declspec(dllexport) bool assembly_test5(const tensor<double, 3>& x)
 {
-    return tprocess(x, tcounter<double, 3>{ 1000.0, { 1.0, 2.0, 3.0 } }).front() > 0;
+    return process(x, counter(1000.0, 1.0, 2.0, 3.0)).front() > 0;
 }
 
 extern "C" __declspec(dllexport) bool assembly_test6(const tensor<double, 2>& x)
 {
-    return tprocess(x, tcounter<double, 2>{ 1000.0, { 1.0, 2.0 } }).front() > 0;
+    return process(x, counter(1000.0, 1.0, 2.0)).front() > 0;
 }
 
 extern "C" __declspec(dllexport) bool assembly_test7(const tensor<double, 2>& x)
 {
-    return tprocess(x, 12345.).front() > 0;
+    return process(x, 12345.).front() > 0;
 }
 
 extern "C" __declspec(dllexport) index_t assembly_test8_2(const shape<2>& x, const shape<2>& y)
@@ -671,9 +642,9 @@ extern "C" __declspec(dllexport) void assembly_test9(int64_t* dst, size_t stride
 }
 constexpr inline index_t rank = 1;
 extern "C" __declspec(dllexport) void assembly_test10(tensor<double, rank>& t12,
-                                                      const tcounter<double, rank>& ctr)
+                                                      const xcounter<double, rank>& ctr)
 {
-    tprocess(t12, ctr);
+    process(t12, ctr);
 }
 extern "C" __declspec(dllexport) void assembly_test11(f64x2& x, u64x2 y) { x = y; }
 
@@ -682,12 +653,12 @@ extern "C" __declspec(dllexport) void assembly_test12(
     const xfunction<std::plus<>, std::array<std::array<uint32_t, 1>, 4>&,
                     std::array<std::array<uint32_t, 4>, 1>&>& y)
 {
-    tprocess(x, y);
+    process(x, y);
 }
 
 extern "C" __declspec(dllexport) void assembly_test13(const tensor<float, 1>& x, const tensor<float, 1>& y)
 {
-    tprocess(x, y * 0.5f);
+    process(x, y * 0.5f);
 }
 
 template <typename T, size_t N1, size_t N2>
@@ -696,52 +667,52 @@ using array2d = std::array<std::array<T, N2>, N1>;
 extern "C" __declspec(dllexport) void assembly_test14(std::array<float, 32>& x,
                                                       const std::array<float, 32>& y)
 {
-    tprocess(x, x_reverse(y));
+    process(x, x_reverse(y));
 }
 
 extern "C" __declspec(dllexport) void assembly_test15(array2d<float, 32, 32>& x,
                                                       const array2d<float, 32, 32>& y)
 {
-    tprocess(x, x_reverse(y));
+    process(x, x_reverse(y));
 }
 
 extern "C" __declspec(dllexport) void assembly_test16a(array2d<double, 8, 2>& x,
                                                        const array2d<double, 8, 2>& y)
 {
-    tprocess<8, 0>(x, y * y);
+    process<8, 0>(x, y * y);
 }
 extern "C" __declspec(dllexport) void assembly_test16b(array2d<double, 8, 2>& x,
                                                        const array2d<double, 8, 2>& y)
 {
-    tprocess<2, 1>(x, y * y);
+    process<2, 1>(x, y * y);
 }
 
 extern "C" __declspec(dllexport) void assembly_test17a(const tensor<double, 2>& x, const tensor<double, 2>& y)
 {
     xfunction ysqr = xfunction{ xwitharguments{ y }, fn::sqr{} };
-    tprocess<8, 0>(x, ysqr);
+    process<8, 0>(x, ysqr);
 }
 extern "C" __declspec(dllexport) void assembly_test17b(const tensor<double, 2>& x, const tensor<double, 2>& y)
 {
     xfunction ysqr = xfunction{ xwitharguments{ y }, fn::sqr{} };
-    tprocess<2, 1>(x, ysqr);
+    process<2, 1>(x, ysqr);
 }
 
 extern "C" __declspec(dllexport) void assembly_test18a(const tensor<double, 2>& x, const tensor<double, 2>& y)
 {
     xfunction ysqr = xfunction{ xwitharguments{ y }, fn::sqr{} };
-    tprocess<8, 0>(x_fixshape(x, fixed_shape<8, 2>{}), x_fixshape(ysqr, fixed_shape<8, 2>{}));
+    process<8, 0>(fixshape(x, fixed_shape<8, 2>{}), fixshape(ysqr, fixed_shape<8, 2>{}));
 }
 extern "C" __declspec(dllexport) void assembly_test18b(const tensor<double, 2>& x, const tensor<double, 2>& y)
 {
     xfunction ysqr = xfunction{ xwitharguments{ y }, fn::sqr{} };
-    tprocess<2, 1>(x_fixshape(x, fixed_shape<8, 2>{}), x_fixshape(ysqr, fixed_shape<8, 2>{}));
+    process<2, 1>(fixshape(x, fixed_shape<8, 2>{}), fixshape(ysqr, fixed_shape<8, 2>{}));
 }
 
 extern "C" __declspec(dllexport) void assembly_test19(const tensor<double, 2>& x,
                                                       const xreshape<tensor<double, 2>, 2>& y)
 {
-    tprocess(x, y);
+    process(x, y);
 }
 
 extern "C" __declspec(dllexport) shape<2> assembly_test20_2(const shape<2>& x, size_t fl)

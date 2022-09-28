@@ -735,13 +735,13 @@ public:
     template <typename Input, index_t Dims = expression_traits<Input>::dims>
     KFR_MEM_INTRINSIC const tensor& operator=(Input&& input) const&
     {
-        tprocess(*this, input);
+        process(*this, input);
         return *this;
     }
     template <typename Input, index_t Dims = expression_traits<Input>::dims>
     KFR_MEM_INTRINSIC tensor& operator=(Input&& input) &&
     {
-        tprocess(*this, input);
+        process(*this, input);
         return *this;
     }
 
@@ -880,10 +880,11 @@ private:
     memory_finalizer m_finalizer;
 };
 
-template <typename T>
-struct tensor<T, 0>
-{
-};
+// template <typename T>
+// struct tensor<T, 0>
+// {
+// private:
+// };
 
 template <typename Container, CMT_ENABLE_IF(kfr::has_data_size<Container>),
           typename T = typename Container::value_type>
@@ -924,9 +925,17 @@ KFR_INTRINSIC vec<T, N> get_elements(const tensor<T, NDims>& self, const shape<N
                                      const axis_params<Axis, N>&)
 {
     const T* data = self.data() + self.calc_index(index);
-    if (self.strides()[Axis] == 1)
-        return read<N>(data);
-    return gather_stride<N>(data, self.strides()[Axis]);
+    if constexpr (NDims == 0)
+    {
+        static_assert(N == 1);
+        return *data;
+    }
+    else
+    {
+        if (self.strides()[Axis] == 1)
+            return read<N>(data);
+        return gather_stride<N>(data, self.strides()[Axis]);
+    }
 }
 
 template <typename T, index_t NDims, index_t Axis, size_t N>
@@ -934,9 +943,17 @@ KFR_INTRINSIC void set_elements(const tensor<T, NDims>& self, const shape<NDims>
                                 const axis_params<Axis, N>&, const identity<vec<T, N>>& value)
 {
     T* data = self.data() + self.calc_index(index);
-    if (self.strides()[Axis] == 1)
-        return write(data, value);
-    scatter_stride(data, value, self.strides()[Axis]);
+    if constexpr (NDims == 0)
+    {
+        static_assert(N == 1);
+        *data = value.front();
+    }
+    else
+    {
+        if (self.strides()[Axis] == 1)
+            return write(data, value);
+        scatter_stride(data, value, self.strides()[Axis]);
+    }
 }
 
 template <typename T, index_t dims1, index_t dims2, typename Fn, index_t outdims = const_max(dims1, dims2)>
@@ -961,8 +978,19 @@ tensor<T, outdims> tapply(const tensor<T, dims1>& x, const tensor<T, dims2>& y, 
 template <size_t width = 0, index_t Axis = infinite_size, typename E, typename Traits = expression_traits<E>>
 tensor<typename Traits::value_type, Traits::dims> trender(const E& expr)
 {
-    tensor<typename Traits::value_type, Traits::dims> result(Traits::shapeof(expr));
-    tprocess<width, Axis>(result, expr);
+    static_assert(!Traits::shapeof().has_infinity());
+    shape sh = Traits::shapeof(expr);
+    tensor<typename Traits::value_type, Traits::dims> result(sh);
+    process<width, Axis>(result, expr);
+    return result;
+}
+
+template <size_t width = 0, index_t Axis = infinite_size, typename E, typename Traits = expression_traits<E>>
+tensor<typename Traits::value_type, Traits::dims> trender(const E& expr, shape<Traits::dims> size)
+{
+    shape sh = min(Traits::shapeof(expr), size);
+    tensor<typename Traits::value_type, Traits::dims> result(sh);
+    process<width, Axis>(result, expr, shape<Traits::dims>{ 0 }, sh);
     return result;
 }
 

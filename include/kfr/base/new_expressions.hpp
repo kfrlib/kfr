@@ -29,54 +29,213 @@
 
 namespace kfr
 {
+// ----------------------------------------------------------------------------
+
+template <typename T>
+struct xscalar
+{
+    T value;
+};
+
+template <typename T>
+struct expression_traits<xscalar<T>> : expression_traits_defaults
+{
+    using value_type             = T;
+    constexpr static size_t dims = 0;
+
+    constexpr static shape<0> shapeof(const xscalar<T>& self) { return {}; }
+    constexpr static shape<0> shapeof() { return {}; }
+};
+
+template <typename T>
+KFR_INTRINSIC xscalar<T> scalar(T value)
+{
+    return { std::move(value) };
+}
+
+template <typename T = fbase>
+KFR_INTRINSIC xscalar<T> zeros()
+{
+    return { static_cast<T>(0) };
+}
+
+template <typename T = fbase>
+KFR_INTRINSIC xscalar<T> ones()
+{
+    return { static_cast<T>(1) };
+}
+
+inline namespace CMT_ARCH_NAME
+{
+template <typename T, index_t Axis, size_t N>
+KFR_INTRINSIC vec<T, N> get_elements(const xscalar<T>& self, const shape<0>& index,
+                                     const axis_params<Axis, N>&)
+{
+    return self.value;
+}
+} // namespace CMT_ARCH_NAME
+
+// ----------------------------------------------------------------------------
+
+template <typename T, index_t Dims = 1>
+struct xcounter
+{
+    T start;
+    T steps[Dims];
+
+    T back() const { return steps[Dims - 1]; }
+    T front() const { return steps[0]; }
+};
+
+template <typename T, index_t Dims>
+struct expression_traits<xcounter<T, Dims>> : expression_traits_defaults
+{
+    using value_type             = T;
+    constexpr static size_t dims = Dims;
+
+    constexpr static shape<dims> shapeof(const xcounter<T, Dims>& self) { return shape<dims>(max_index_t); }
+    constexpr static shape<dims> shapeof() { return shape<dims>(max_index_t); }
+};
+
+template <typename T, typename... Args, typename Tout = std::common_type_t<T, Args...>>
+KFR_INTRINSIC xcounter<Tout, sizeof...(Args)> counter(T start, Args... steps)
+{
+    return { static_cast<Tout>(std::move(start)), { static_cast<Tout>(std::move(steps))... } };
+}
+
+inline namespace CMT_ARCH_NAME
+{
+
+template <typename T, index_t Axis, size_t N>
+KFR_INTRINSIC vec<T, N> get_elements(const xcounter<T, 1>& self, const shape<1>& index,
+                                     const axis_params<Axis, N>&)
+{
+    T acc = self.start;
+    acc += static_cast<T>(index.back()) * self.back();
+    return acc + enumerate(vec_shape<T, N>(), self.back());
+}
+template <typename T, index_t dims, index_t Axis, size_t N>
+KFR_INTRINSIC vec<T, N> get_elements(const xcounter<T, dims>& self, const shape<dims>& index,
+                                     const axis_params<Axis, N>&)
+{
+    T acc                 = self.start;
+    vec<T, dims> tindices = cast<T>(*index);
+    cfor(csize<0>, csize<dims>, [&](auto i) CMT_INLINE_LAMBDA { acc += tindices[i] * self.steps[i]; });
+    return acc + enumerate(vec_shape<T, N>(), self.steps[Axis]);
+}
+} // namespace CMT_ARCH_NAME
+
+// ----------------------------------------------------------------------------
+
+template <typename Arg>
+struct xslice : public xwitharguments<Arg>
+{
+    constexpr static index_t dims = expression_dims<Arg>;
+    shape<dims> start;
+    shape<dims> size;
+
+    KFR_MEM_INTRINSIC xslice(Arg&& arg, shape<dims> start, shape<dims> size)
+        : xwitharguments<Arg>{ std::forward<Arg>(arg) }, start(start), size(size)
+    {
+    }
+};
+
+template <typename Arg>
+struct expression_traits<xslice<Arg>> : expression_traits_defaults
+{
+    using ArgTraits = expression_traits<Arg>;
+
+    using value_type                    = typename ArgTraits::value_type;
+    constexpr static size_t dims        = ArgTraits::dims;
+    constexpr static bool random_access = ArgTraits::random_access;
+
+    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof(const xslice<Arg>& self)
+    {
+        return min(ArgTraits::shapeof(self.first()).sub_inf(self.start), self.size);
+    }
+    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return shape<dims>(0); }
+};
+
+template <typename Arg, KFR_ACCEPT_EXPRESSIONS(Arg), index_t Dims = expression_dims<Arg>>
+KFR_INTRINSIC xslice<Arg> slice(Arg&& arg, shape<Dims> start, shape<Dims> size)
+{
+    return { std::forward<Arg>(arg), start, size };
+}
+
+template <typename Arg, KFR_ACCEPT_EXPRESSIONS(Arg), index_t Dims = expression_dims<Arg>>
+KFR_INTRINSIC xslice<Arg> truncate(Arg&& arg, shape<Dims> size)
+{
+    return { std::forward<Arg>(arg), shape<Dims>{ 0 }, size };
+}
+
+inline namespace CMT_ARCH_NAME
+{
+
+template <typename Arg, index_t NDims, index_t Axis, size_t N,
+          typename T = typename expression_traits<xslice<Arg>>::value_type>
+KFR_INTRINSIC vec<T, N> get_elements(const xslice<Arg>& self, const shape<NDims>& index,
+                                     const axis_params<Axis, N>& sh)
+{
+    return static_cast<vec<T, N>>(get_elements(self.first(), index.add(self.start), sh));
+}
+
+template <typename Arg, index_t NDims, index_t Axis, size_t N,
+          typename T = typename expression_traits<xslice<Arg>>::value_type>
+KFR_INTRINSIC void set_elements(const xslice<Arg>& self, const shape<NDims>& index,
+                                const axis_params<Axis, N>& sh, const identity<vec<T, N>>& value)
+{
+    set_elements(self.first(), index.add(self.start), sh, value);
+}
+} // namespace CMT_ARCH_NAME
 
 // ----------------------------------------------------------------------------
 
 template <typename T, typename Arg>
-struct xcastto : public xwitharguments<Arg>
+struct xcast : public xwitharguments<Arg>
 {
     using xwitharguments<Arg>::xwitharguments;
 };
 
-template <typename T, typename Arg, KFR_ACCEPT_EXPRESSIONS(Arg)>
-KFR_INTRINSIC xcastto<T, Arg> x_castto(Arg&& arg)
-{
-    return { std::forward<Arg>(arg) };
-}
-
-template <typename T, typename Arg, KFR_ACCEPT_EXPRESSIONS(Arg)>
-KFR_INTRINSIC xcastto<T, Arg> x_castto(Arg&& arg, ctype_t<T>)
-{
-    return { std::forward<Arg>(arg) };
-}
-
 template <typename T, typename Arg>
-struct expression_traits<xcastto<T, Arg>> : expression_traits_defaults
+struct expression_traits<xcast<T, Arg>> : expression_traits_defaults
 {
     using ArgTraits = expression_traits<Arg>;
 
-    using value_type             = T;
-    constexpr static size_t dims = ArgTraits::dims;
+    using value_type                    = T;
+    constexpr static size_t dims        = ArgTraits::dims;
+    constexpr static bool random_access = ArgTraits::random_access;
 
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof(const xcastto<T, Arg>& self)
+    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof(const xcast<T, Arg>& self)
     {
         return ArgTraits::shapeof(self.first());
     }
     KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return ArgTraits::shapeof(); }
 };
 
+template <typename T, typename Arg, KFR_ACCEPT_EXPRESSIONS(Arg)>
+KFR_INTRINSIC xcast<T, Arg> cast(Arg&& arg)
+{
+    return { std::forward<Arg>(arg) };
+}
+
+template <typename T, typename Arg, KFR_ACCEPT_EXPRESSIONS(Arg)>
+KFR_INTRINSIC xcast<T, Arg> cast(Arg&& arg, ctype_t<T>)
+{
+    return { std::forward<Arg>(arg) };
+}
+
 inline namespace CMT_ARCH_NAME
 {
 
 template <typename T, typename Arg, index_t NDims, index_t Axis, size_t N>
-KFR_INTRINSIC vec<T, N> get_elements(const xcastto<T, Arg>& self, const shape<NDims>& index,
+KFR_INTRINSIC vec<T, N> get_elements(const xcast<T, Arg>& self, const shape<NDims>& index,
                                      const axis_params<Axis, N>& sh)
 {
     return static_cast<vec<T, N>>(get_elements(self.first(), index, sh));
 }
 
 template <typename T, typename Arg, index_t NDims, index_t Axis, size_t N>
-KFR_INTRINSIC void set_elements(const xcastto<T, Arg>& self, const shape<NDims>& index,
+KFR_INTRINSIC void set_elements(const xcast<T, Arg>& self, const shape<NDims>& index,
                                 const axis_params<Axis, N>& sh, const identity<vec<T, N>>& value)
 {
     set_elements(self.first(), index, sh, value);
@@ -85,43 +244,56 @@ KFR_INTRINSIC void set_elements(const xcastto<T, Arg>& self, const shape<NDims>&
 
 // ----------------------------------------------------------------------------
 
-template <typename T, index_t Dims, typename Fn>
+template <typename T, index_t Dims, typename Fn, bool Rnd>
 struct xlambda
 {
     Fn&& fn;
 };
 
+template <typename T, index_t Dims, typename Fn, bool Rnd>
+struct expression_traits<xlambda<T, Dims, Fn, Rnd>> : expression_traits_defaults
+{
+    using value_type                           = T;
+    constexpr static size_t dims               = Dims;
+    constexpr static inline bool random_access = Rnd;
+
+    KFR_MEM_INTRINSIC constexpr static shape<Dims> shapeof(const xlambda<T, Dims, Fn, Rnd>& self)
+    {
+        return shape<Dims>(infinite_size);
+    }
+    KFR_MEM_INTRINSIC constexpr static shape<Dims> shapeof() { return shape<Dims>(infinite_size); }
+};
+
+template <typename T, index_t Dims = 1, typename Fn, bool RandomAccess = true>
+KFR_INTRINSIC xlambda<T, Dims, Fn, RandomAccess> lambda(Fn&& fn, cbool_t<RandomAccess> = {})
+{
+    return { std::forward<Fn>(fn) };
+}
 template <typename T, index_t Dims = 1, typename Fn>
-KFR_INTRINSIC xlambda<T, Dims, Fn> x_lambda(Fn&& fn)
+KFR_INTRINSIC xlambda<T, Dims, Fn, false> lambda_generator(Fn&& fn)
 {
     return { std::forward<Fn>(fn) };
 }
 
-template <typename T, index_t Dims, typename Fn>
-struct expression_traits<xlambda<T, Dims, Fn>> : expression_traits_defaults
+template <typename... Ts, typename T = std::common_type_t<Ts...>>
+KFR_INTRINSIC auto sequence(const Ts&... list)
 {
-    using value_type             = T;
-    constexpr static size_t dims = Dims;
-
-    KFR_MEM_INTRINSIC constexpr static shape<Dims> shapeof(const xlambda<T, Dims, Fn>& self)
-    {
-        return infinite_size;
-    }
-    KFR_MEM_INTRINSIC constexpr static shape<Dims> shapeof() { return infinite_size; }
-};
+    return lambda<T>([seq = std::array<T, sizeof...(Ts)>{ { static_cast<T>(list)... } }](size_t index)
+                     { return seq[index % seq.size()]; });
+}
 
 inline namespace CMT_ARCH_NAME
 {
 
-template <typename T, index_t Dims, typename Fn, index_t Axis, size_t N>
-KFR_INTRINSIC vec<T, N> get_elements(const xlambda<T, Dims, Fn>& self, const shape<Dims>& index,
+template <typename T, index_t Dims, typename Fn, bool Rnd, index_t Axis, size_t N>
+KFR_INTRINSIC vec<T, N> get_elements(const xlambda<T, Dims, Fn, Rnd>& self, const shape<Dims>& index,
                                      const axis_params<Axis, N>& sh)
 {
-    if constexpr (std::is_callable_v<Fn, shape<Dims>, csize_t<N>>)
+    if constexpr (std::is_invocable_v<Fn, shape<Dims>, csize_t<N>>)
         return self.fn(index, sh);
-    else if constexpr (std::is_callable_v<Fn, shape<Dims>>)
+    else if constexpr (std::is_invocable_v<Fn, shape<Dims>>)
         return vec<T, N>{ [&](size_t idx) { return self.fn(index.add(idx)); } };
-    else if constexpr (std::is_callable_v<Fn>)
+    else if constexpr (std::is_invocable_v<Fn>)
         return apply<N>(self.fn);
     else
         return czeros;
@@ -146,7 +318,7 @@ struct xpadded : public xwitharguments<Arg>
 };
 
 template <typename Arg, typename T = expression_value_type<Arg>>
-KFR_INTRINSIC xpadded<Arg> x_padded(Arg&& arg, T fill_value = T{})
+KFR_INTRINSIC xpadded<Arg> padded(Arg&& arg, T fill_value = T{})
 {
     static_assert(expression_dims<Arg> >= 1);
     return { std::forward<Arg>(arg), std::move(fill_value) };
@@ -157,8 +329,9 @@ struct expression_traits<xpadded<Arg>> : expression_traits_defaults
 {
     using ArgTraits = expression_traits<Arg>;
 
-    using value_type             = typename ArgTraits::value_type;
-    constexpr static size_t dims = ArgTraits::dims;
+    using value_type                    = typename ArgTraits::value_type;
+    constexpr static size_t dims        = ArgTraits::dims;
+    constexpr static bool random_access = ArgTraits::random_access;
 
     KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof(const xpadded<Arg>& self) { return infinite_size; }
     KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return infinite_size; }
@@ -223,6 +396,7 @@ struct expression_traits<xreverse<Arg>> : expression_traits_defaults
 
     using value_type             = typename ArgTraits::value_type;
     constexpr static size_t dims = ArgTraits::dims;
+    static_assert(ArgTraits::random_access, "xreverse requires an expression with random access");
 
     KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof(const xreverse<Arg>& self)
     {
@@ -261,8 +435,8 @@ struct xfixshape : public xwitharguments<Arg>
 };
 
 template <typename Arg, index_t... ShapeValues>
-KFR_INTRINSIC xfixshape<Arg, fixed_shape<ShapeValues...>> x_fixshape(Arg&& arg,
-                                                                     const fixed_shape<ShapeValues...>&)
+KFR_INTRINSIC xfixshape<Arg, fixed_shape<ShapeValues...>> fixshape(Arg&& arg,
+                                                                   const fixed_shape<ShapeValues...>&)
 {
     return { std::forward<Arg>(arg) };
 }
@@ -272,8 +446,9 @@ struct expression_traits<xfixshape<Arg, fixed_shape<ShapeValues...>>> : expressi
 {
     using ArgTraits = expression_traits<Arg>;
 
-    using value_type             = typename ArgTraits::value_type;
-    constexpr static size_t dims = ArgTraits::dims;
+    using value_type                    = typename ArgTraits::value_type;
+    constexpr static size_t dims        = ArgTraits::dims;
+    constexpr static bool random_access = ArgTraits::random_access;
 
     KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof(
         const xfixshape<Arg, fixed_shape<ShapeValues...>>& self)
@@ -323,7 +498,7 @@ struct xreshape : public xwitharguments<Arg>
 };
 
 template <typename Arg, index_t OutDims>
-KFR_INTRINSIC xreshape<Arg, OutDims> x_reshape(Arg&& arg, const shape<OutDims>& out_shape)
+KFR_INTRINSIC xreshape<Arg, OutDims> reshape(Arg&& arg, const shape<OutDims>& out_shape)
 {
     return { std::forward<Arg>(arg), out_shape };
 }
@@ -333,8 +508,9 @@ struct expression_traits<xreshape<Arg, OutDims>> : expression_traits_defaults
 {
     using ArgTraits = expression_traits<Arg>;
 
-    using value_type             = typename ArgTraits::value_type;
-    constexpr static size_t dims = OutDims;
+    using value_type                    = typename ArgTraits::value_type;
+    constexpr static size_t dims        = OutDims;
+    constexpr static bool random_access = ArgTraits::random_access;
 
     KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof(const xreshape<Arg, OutDims>& self)
     {
@@ -345,10 +521,6 @@ struct expression_traits<xreshape<Arg, OutDims>> : expression_traits_defaults
 
 inline namespace CMT_ARCH_NAME
 {
-
-namespace internal
-{
-} // namespace internal
 
 template <typename Arg, index_t outdims, index_t Axis, size_t N,
           typename Traits = expression_traits<xreshape<Arg, outdims>>,
@@ -453,5 +625,51 @@ KFR_INTRINSIC void set_elements(xreshape<Arg, outdims>& self, const shape<Traits
 }
 
 } // namespace CMT_ARCH_NAME
+
+// ----------------------------------------------------------------------------
+
+template <typename T, bool truncated = true>
+struct xlinspace
+{
+    T start;
+    T stop;
+    index_t size;
+    bool endpoint;
+};
+
+template <typename T, bool truncated>
+struct expression_traits<xlinspace<T, truncated>> : expression_traits_defaults
+{
+    using value_type             = T;
+    constexpr static size_t dims = 1;
+
+    constexpr static shape<dims> shapeof(const xlinspace<T, truncated>& self)
+    {
+        return shape<dims>(truncated ? self.size : infinite_size);
+    }
+    constexpr static shape<dims> shapeof() { return shape<dims>(truncated ? 0 : infinite_size); }
+};
+
+template <bool truncated = false, typename T1, typename T2, typename Tout = std::common_type_t<T1, T2>>
+KFR_INTRINSIC xlinspace<Tout, truncated> linspace(T1 start, T2 stop, size_t size, bool endpoint = false)
+{
+    return { static_cast<Tout>(start), static_cast<Tout>(stop), size, endpoint };
+}
+
+inline namespace CMT_ARCH_NAME
+{
+
+template <typename T, bool truncated, size_t N>
+KFR_INTRINSIC vec<T, N> get_elements(const xlinspace<T, truncated>& self, const shape<1>& index,
+                                     const axis_params<0, N>&)
+{
+    T acc    = self.start;
+    using TI = itype<T>;
+    return mix(enumerate(vec_shape<T, N>(), static_cast<T>(static_cast<TI>(index))) * self.invsize,
+               self.start, self.stop);
+}
+} // namespace CMT_ARCH_NAME
+
+// ----------------------------------------------------------------------------
 
 } // namespace kfr
