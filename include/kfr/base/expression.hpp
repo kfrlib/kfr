@@ -112,8 +112,33 @@ struct expression_traits_defaults
 namespace internal_generic
 {
 template <typename... Xs>
+using expressions_condition = std::void_t<expression_traits<Xs>...>;
+template <typename... Xs>
 using expressions_check = std::enable_if_t<(expression_traits<Xs>::explicit_operand || ...)>;
-}
+} // namespace internal_generic
+
+template <typename T>
+using enable_if_input_expression =
+    std::void_t<expression_traits<T>,
+                decltype(get_elements(std::declval<T>(), shape<expression_traits<T>::dims>(),
+                                      axis_params<0, 1>{}))>;
+
+template <typename T>
+using enable_if_output_expression =
+    std::void_t<expression_traits<T>,
+                decltype(set_elements(std::declval<T&>(), shape<expression_traits<T>::dims>(),
+                                      axis_params<0, 1>{},
+                                      vec<typename expression_traits<T>::value_type, 1>{}))>;
+
+template <typename T>
+using enable_if_inout_output_expression =
+    std::void_t<enable_if_input_expression<T>, enable_if_output_expression<T>>;
+
+template <typename... T>
+using enable_if_input_expressions = std::void_t<enable_if_input_expression<T>...>;
+
+template <typename... T>
+using enable_if_output_expressions = std::void_t<enable_if_output_expression<T>...>;
 
 #define KFR_ACCEPT_EXPRESSIONS(...) internal_generic::expressions_check<__VA_ARGS__>* = nullptr
 

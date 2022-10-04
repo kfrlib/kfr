@@ -26,7 +26,7 @@
 #pragma once
 
 #include "../math.hpp"
-#include "new_expressions.hpp"
+#include "basic_expressions.hpp"
 #include "expression.hpp"
 
 namespace kfr

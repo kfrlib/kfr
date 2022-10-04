@@ -24,7 +24,6 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/expression.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/filter.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/fraction.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/base/function_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/generators.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/math_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/memory.hpp

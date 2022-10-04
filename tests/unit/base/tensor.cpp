@@ -6,7 +6,7 @@
 
 #include <kfr/base/simd_expressions.hpp>
 #include <kfr/base/math_expressions.hpp>
-#include <kfr/base/new_expressions.hpp>
+#include <kfr/base/basic_expressions.hpp>
 #include <kfr/base/tensor.hpp>
 #include <kfr/io/tostring.hpp>
 #include <kfr/simd.hpp>
