@@ -240,7 +240,7 @@ TEST(ebu_lra_1_2_3_and_4)
 
 TEST(note_to_hertz)
 {
-    testo::eplison_scope<void> eps(1000);
+    testo::eplison_scope<void> eps(2000);
     CHECK(kfr::note_to_hertz(60) == fbase(261.6255653005986346778499935233));
     CHECK(kfr::note_to_hertz(pack(60)) == pack(fbase(261.6255653005986346778499935233)));
 
