@@ -225,9 +225,9 @@ jobs:
   - bash: |
       set -e
 
-      curl -o "$(Agent.TempDirectory)/sde.tar.bz2" -L $(SDE_URL_MACOS2)
+      curl -o "$(Agent.TempDirectory)/sde.tar.xz" -L $(SDE_URL_MACOS3)
       mkdir -p "$(Agent.TempDirectory)/sde-bin"
-      tar -C "$(Agent.TempDirectory)/sde-bin" -xjf "$(Agent.TempDirectory)/sde.tar.bz2" --strip 1
+      tar -C "$(Agent.TempDirectory)/sde-bin" -xJf "$(Agent.TempDirectory)/sde.tar.xz" --strip 1
       export PATH=$PATH:$(Agent.TempDirectory)/sde-bin
       sde64 -help || true
 
