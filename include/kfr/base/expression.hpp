@@ -131,7 +131,7 @@ using enable_if_output_expression =
                                       vec<typename expression_traits<T>::value_type, 1>{}))>;
 
 template <typename T>
-using enable_if_inout_output_expression =
+using enable_if_input_output_expression =
     std::void_t<enable_if_input_expression<T>, enable_if_output_expression<T>>;
 
 template <typename... T>
@@ -139,6 +139,27 @@ using enable_if_input_expressions = std::void_t<enable_if_input_expression<T>...
 
 template <typename... T>
 using enable_if_output_expressions = std::void_t<enable_if_output_expression<T>...>;
+
+template <typename... T>
+using enable_if_input_output_expressions = std::void_t<enable_if_input_output_expression<T>...>;
+
+template <typename E, typename = void>
+constexpr inline bool is_input_expression = false;
+
+template <typename E>
+constexpr inline bool is_input_expression<E, enable_if_input_expression<E>> = true;
+
+template <typename E, typename = void>
+constexpr inline bool is_output_expression = false;
+
+template <typename E>
+constexpr inline bool is_output_expression<E, enable_if_output_expression<E>> = true;
+
+template <typename E, typename = void>
+constexpr inline bool is_input_output_expression = false;
+
+template <typename E>
+constexpr inline bool is_input_output_expression<E, enable_if_input_output_expression<E>> = true;
 
 #define KFR_ACCEPT_EXPRESSIONS(...) internal_generic::expressions_check<__VA_ARGS__>* = nullptr
 
@@ -311,7 +332,7 @@ static auto process(Out&& out, In&& in, shape<outdims> start = shape<outdims>(0)
     const shape<indims> inshape   = Trin::shapeof(in);
     if (CMT_UNLIKELY(!internal_generic::can_assign_from(outshape, inshape)))
         return shape<outdims>{ 0 };
-    shape<outdims> stop = min(start.add_inf(size), outshape);
+    shape<outdims> stop = min(add_shape(start, size), outshape);
 
     index_t in_size = 0;
     if constexpr (indims > 0)

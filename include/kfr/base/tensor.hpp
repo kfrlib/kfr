@@ -29,8 +29,8 @@
 
 #include "../cometa/array.hpp"
 
-#include "../math/logical.hpp"
-#include "../math/min_max.hpp"
+#include "../simd/logical.hpp"
+#include "../simd/min_max.hpp"
 #include "../simd/horizontal.hpp"
 #include "../simd/impl/function.hpp"
 #include "../simd/read_write.hpp"
@@ -914,7 +914,7 @@ struct expression_traits<tensor<T, Dims>> : expression_traits_defaults
     {
         return self.shape();
     }
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return shape<dims>{ 0 }; }
+    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return shape<dims>{ undefined_size }; }
 };
 
 inline namespace CMT_ARCH_NAME

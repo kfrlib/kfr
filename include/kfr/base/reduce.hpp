@@ -25,7 +25,7 @@
  */
 #pragma once
 
-#include "../math/min_max.hpp"
+#include "../simd/min_max.hpp"
 #include "../simd/horizontal.hpp"
 #include "../simd/impl/function.hpp"
 #include "../simd/operators.hpp"

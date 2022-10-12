@@ -29,7 +29,6 @@
 #include "base/expression.hpp"
 #include "base/filter.hpp"
 #include "base/fraction.hpp"
-#include "base/function_expressions.hpp"
 #include "base/generators.hpp"
 #include "base/math_expressions.hpp"
 #include "base/memory.hpp"
@@ -38,5 +37,4 @@
 #include "base/reduce.hpp"
 #include "base/simd_expressions.hpp"
 #include "base/small_buffer.hpp"
-#include "base/sort.hpp"
 #include "base/univector.hpp"

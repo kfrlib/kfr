@@ -26,12 +26,12 @@
 #pragma once
 
 #include "../simd/complex.hpp"
-#include "abs.hpp"
+#include "../simd/abs.hpp"
 #include "atan.hpp"
 #include "hyperbolic.hpp"
 #include "log_exp.hpp"
-#include "min_max.hpp"
-#include "select.hpp"
+#include "../simd/min_max.hpp"
+#include "../simd/select.hpp"
 #include "sin_cos.hpp"
 #include "sqrt.hpp"
 

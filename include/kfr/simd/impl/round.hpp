@@ -22,8 +22,8 @@
  */
 #pragma once
 
-#include "../../simd/impl/function.hpp"
-#include "../../simd/operators.hpp"
+#include "function.hpp"
+#include "../operators.hpp"
 #include "abs.hpp"
 
 namespace kfr

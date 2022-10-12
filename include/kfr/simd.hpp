@@ -22,15 +22,23 @@
  */
 #pragma once
 
+#include "simd/abs.hpp"
+#include "simd/clamp.hpp"
 #include "simd/comparison.hpp"
 #include "simd/complex.hpp"
 #include "simd/constants.hpp"
 #include "simd/digitreverse.hpp"
 #include "simd/horizontal.hpp"
+#include "simd/logical.hpp"
 #include "simd/mask.hpp"
+#include "simd/min_max.hpp"
 #include "simd/operators.hpp"
 #include "simd/platform.hpp"
 #include "simd/read_write.hpp"
+#include "simd/round.hpp"
+#include "simd/saturation.hpp"
+#include "simd/select.hpp"
 #include "simd/shuffle.hpp"
+#include "simd/sort.hpp"
 #include "simd/types.hpp"
 #include "simd/vec.hpp"

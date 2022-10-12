@@ -22,7 +22,7 @@
  */
 #pragma once
 
-#include "../../math/min_max.hpp"
+#include "../min_max.hpp"
 
 namespace kfr
 {

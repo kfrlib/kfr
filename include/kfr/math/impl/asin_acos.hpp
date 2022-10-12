@@ -22,10 +22,10 @@
  */
 #pragma once
 
-#include "../../math/atan.hpp"
-#include "../../math/select.hpp"
-#include "../../math/sqrt.hpp"
 #include "../../simd/impl/function.hpp"
+#include "../../simd/select.hpp"
+#include "../atan.hpp"
+#include "../sqrt.hpp"
 
 namespace kfr
 {

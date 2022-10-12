@@ -25,9 +25,9 @@
  */
 #pragma once
 
-#include "../math/min_max.hpp"
-#include "../simd/shuffle.hpp"
-#include "../simd/vec.hpp"
+#include "min_max.hpp"
+#include "shuffle.hpp"
+#include "vec.hpp"
 
 namespace kfr
 {

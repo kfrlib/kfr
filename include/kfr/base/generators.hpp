@@ -26,107 +26,108 @@
 #pragma once
 
 #include "../math/log_exp.hpp"
-#include "../math/select.hpp"
 #include "../math/sin_cos.hpp"
 #include "../simd/impl/function.hpp"
+#include "../simd/select.hpp"
 #include "../simd/vec.hpp"
+#include "shape.hpp"
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+
+template <typename T, size_t VecWidth, typename Class, typename Twork = T>
+struct xgenerator
 {
-
-namespace internal
-{
-
-template <typename T, size_t width_, typename Class>
-struct generator : input_expression
-{
-    constexpr static size_t width = width_;
-    using value_type              = T;
-
-    constexpr static bool is_incremental = true;
-
-    template <typename U, size_t N>
-    friend KFR_INTRINSIC vec<U, N> get_elements(const generator& self, cinput_t, size_t index,
-                                                vec_shape<U, N> t)
-    {
-        return self.generate(t);
-    }
+    constexpr static size_t width = VecWidth;
 
     void resync(T start) const { ptr_cast<Class>(this)->sync(start); }
 
-protected:
-    void call_next() const { ptr_cast<Class>(this)->next(); }
     template <size_t N>
-    void call_shift(csize_t<N>) const
+    KFR_MEM_INTRINSIC vec<T, N> generate() const
     {
-        ptr_cast<Class>(this)->shift(csize_t<N>());
+        if constexpr (N < width)
+        {
+            const vec<T, N> result           = narrow<N>(call_get_value());
+            const vec<Twork, width> oldvalue = value;
+            call_next();
+            value = slice<N, width>(oldvalue, value);
+            return result;
+        }
+        else if (N > width)
+        {
+            const vec lo = generate(low(x));
+            const vec hi = generate(high(x));
+            return concat(lo, hi);
+        }
+        else // N == width
+        {
+            const vec<T, N> result = call_get_value();
+            call_next();
+            return result;
+        }
     }
+    mutable vec<Twork, width> value;
 
-    template <size_t N>
-    void shift(csize_t<N>) const
+private:
+    KFR_MEM_INTRINSIC void call_next() const { ptr_cast<Class>(this)->next(); }
+
+    KFR_MEM_INTRINSIC vec<T, width> call_get_value() const { return ptr_cast<Class>(this)->get_value(); }
+
+    KFR_MEM_INTRINSIC std::enable_if_t<std::is_same_v<T, Twork>, vec<T, width>> get_value() const
     {
-        const vec<T, width> oldvalue = value;
-        call_next();
-        value = slice<N, width>(oldvalue, value);
+        return value;
     }
-
-    template <size_t N, KFR_ENABLE_IF(N == width)>
-    KFR_MEM_INTRINSIC vec<T, N> generate(vec_shape<T, N>) const
-    {
-        const vec<T, N> result = value;
-        call_next();
-        return result;
-    }
-
-    template <size_t N, KFR_ENABLE_IF(N < width)>
-    KFR_MEM_INTRINSIC vec<T, N> generate(vec_shape<T, N>) const
-    {
-        const vec<T, N> result = narrow<N>(value);
-        call_shift(csize_t<N>());
-        return result;
-    }
-
-    template <size_t N, KFR_ENABLE_IF(N > width)>
-    KFR_MEM_INTRINSIC vec<T, N> generate(vec_shape<T, N> x) const
-    {
-        const auto lo = generate(low(x));
-        const auto hi = generate(high(x));
-        return concat(lo, hi);
-    }
-
-    mutable vec<T, width> value;
 };
 
-template <typename T, size_t width = vector_width<T>* bitness_const(1, 2)>
-struct generator_linear : generator<T, width, generator_linear<T, width>>
+template <typename T, size_t VecWidth, typename Class>
+struct expression_traits<xgenerator<T, VecWidth, Class>> : public expression_traits_defaults
 {
-    generator_linear(T start, T step) CMT_NOEXCEPT : step(step), vstep(step* width) { this->resync(start); }
+    using value_type             = T;
+    constexpr static size_t dims = 1;
+    constexpr static shape<1> shapeof(const T&) { return shape<1>(infinite_size); }
+    constexpr static shape<1> shapeof() { return shape<1>(infinite_size); }
+
+    constexpr static inline bool explicit_operand = true;
+    constexpr static inline bool random_access    = false;
+};
+
+inline namespace CMT_ARCH_NAME
+{
+template <typename T, size_t VecWidth, typename Class, size_t N>
+KFR_INTRINSIC vec<T, N> get_elements(const xgenerator<T, VecWidth, Class>& self, const shape<1>& index,
+                                     const axis_params<0, N>&)
+{
+    return self.template generate<N>();
+}
+} // namespace CMT_ARCH_NAME
+
+template <typename T, size_t VecWidth = vector_capacity<T> / 8>
+struct xgenlinear : public xgenerator<T, VecWidth, xgenlinear<T, VecWidth>>
+{
+    xgenlinear(T start, T step) CMT_NOEXCEPT : step{ step }, vstep{ step * VecWidth } { sync(start); }
 
     KFR_MEM_INTRINSIC void sync(T start) const CMT_NOEXCEPT
     {
-        this->value = start + enumerate<T, width>() * step;
+        this->value = start + enumerate(vec_shape<T, VecWidth>{}, vstep / VecWidth);
     }
 
     KFR_MEM_INTRINSIC void next() const CMT_NOEXCEPT { this->value += vstep; }
 
-protected:
-    T step;
     T vstep;
 };
 
-template <typename T, size_t width = vector_width<T>* bitness_const(1, 2)>
-struct generator_exp : generator<T, width, generator_exp<T, width>>
+template <typename T, size_t VecWidth = vector_capacity<T> / 8>
+struct xgenexp : public xgenerator<T, VecWidth, xgenexp<T, VecWidth>>
 {
-    generator_exp(T start, T step) CMT_NOEXCEPT : step(step), vstep(exp(make_vector(step* width))[0] - 1)
+    xgenexp(T start, T step) CMT_NOEXCEPT : step{ step },
+                                            vstep{ exp(make_vector(step * VecWidth)).front() - 1 }
     {
         this->resync(start);
     }
 
     KFR_MEM_INTRINSIC void sync(T start) const CMT_NOEXCEPT
     {
-        this->value = exp(start + enumerate<T, width>() * step);
+        this->value = exp(start + enumerate<T, VecWidth>() * step);
     }
 
     KFR_MEM_INTRINSIC void next() const CMT_NOEXCEPT { this->value += this->value * vstep; }
@@ -136,14 +137,14 @@ protected:
     T vstep;
 };
 
-template <typename T, size_t width = vector_width<T>* bitness_const(1, 2),
-          std::enable_if_t<std::is_same<complex<deep_subtype<T>>, T>::value, int> = 0>
-struct generator_expj : generator<T, width, generator_expj<T, width>>
+template <typename T, size_t VecWidth = vector_capacity<deep_subtype<T>> / 8 / 2>
+struct xgenexpj : public xgenerator<T, VecWidth, xgenexpj<T, VecWidth>>
 {
     using ST = deep_subtype<T>;
+    static_assert(std::is_same_v<complex<deep_subtype<T>>, T>, "xgenexpj requires complex type");
 
-    generator_expj(ST start_, ST step_)
-        : step(step_), alpha(2 * sqr(sin(width * step / 2))), beta(-sin(width * step))
+    xgenexpj(ST start_, ST step_)
+        : step(step_), alpha(2 * sqr(sin(VecWidth * step / 2))), beta(-sin(VecWidth * step))
     {
         this->resync(T(start_));
     }
@@ -156,26 +157,26 @@ struct generator_expj : generator<T, width, generator_expj<T, width>>
     }
 
 protected:
-    ST const step;
-    ST const alpha;
-    ST const beta;
-    CMT_NOINLINE static vec<T, width> init_cossin(ST w, ST phase)
+    ST step;
+    ST alpha;
+    ST beta;
+    CMT_NOINLINE static vec<T, VecWidth> init_cossin(ST w, ST phase)
     {
         return ccomp(cossin(dup(phase + enumerate<ST, width>() * w)));
     }
 };
 
-template <typename T, size_t width = vector_width<T>* bitness_const(1, 2)>
-struct generator_exp2 : generator<T, width, generator_exp2<T, width>>
+template <typename T, size_t VecWidth = vector_capacity<T> / 8>
+struct xgenexp2 : public xgenerator<T, VecWidth, xgenexp2<T, VecWidth>>
 {
-    generator_exp2(T start, T step) CMT_NOEXCEPT : step(step), vstep(exp2(make_vector(step* width))[0] - 1)
+    xgenexp2(T start, T step) CMT_NOEXCEPT : step{ step }, vstep{ exp2(make_vector(step * VecWidth))[0] - 1 }
     {
         this->resync(start);
     }
 
     KFR_MEM_INTRINSIC void sync(T start) const CMT_NOEXCEPT
     {
-        this->value = exp2(start + enumerate<T, width>() * step);
+        this->value = exp2(start + enumerate(vec_shape<T, VecWidth>, step));
     }
 
     KFR_MEM_INTRINSIC void next() const CMT_NOEXCEPT { this->value += this->value * vstep; }
@@ -185,11 +186,12 @@ protected:
     T vstep;
 };
 
-template <typename T, size_t width = vector_width<T>* bitness_const(1, 2)>
-struct generator_cossin : generator<T, width, generator_cossin<T, width>>
+template <typename T, size_t VecWidth = vector_capacity<T> / 8>
+struct xgencossin : public xgenerator<T, VecWidth, xgencossin<T, VecWidth>>
 {
-    generator_cossin(T start, T step)
-        : step(step), alpha(2 * sqr(sin(width / 2 * step / 2))), beta(-sin(width / 2 * step))
+    static_assert(VecWidth % 2 == 0);
+    xgencossin(T start, T step)
+        : step(step), alpha(2 * sqr(sin(VecWidth / 2 * step / 2))), beta(-sin(VecWidth / 2 * step))
     {
         this->resync(start);
     }
@@ -204,56 +206,50 @@ protected:
     T step;
     T alpha;
     T beta;
-    CMT_NOINLINE static vec<T, width> init_cossin(T w, T phase)
+    CMT_NOINLINE static vec<T, VecWidth> init_cossin(T w, T phase)
     {
-        return cossin(dup(phase + enumerate<T, width / 2>() * w));
+        return cossin(dup(phase + enumerate(vec_shape<T, VecWidth / 2>, w)));
     }
 };
 
-template <typename T, size_t width = vector_width<T>* bitness_const(2, 4)>
-struct generator_sin : generator<T, width, generator_sin<T, width>>
+template <typename T, size_t VecWidth = vector_capacity<T> / 8 / 2>
+struct xgensin : public xgenerator<T, VecWidth, xgensin<T, VecWidth>, vec<T, 2>>
 {
-    generator_sin(T start, T step)
-        : step(step), alpha(2 * sqr(sin(width * step / 2))), beta(sin(width * step))
+    xgensin(T start, T step)
+        : step(step), alpha(2 * sqr(sin(VecWidth * step / 2))), beta(sin(VecWidth * step))
     {
         this->resync(start);
     }
     KFR_MEM_INTRINSIC void sync(T start) const CMT_NOEXCEPT
     {
-        const vec<T, width* 2> cs = splitpairs(cossin(dup(start + enumerate<T, width>() * step)));
-        this->cos_value           = low(cs);
-        this->value               = high(cs);
+        const vec<T, 2 * VecWidth> cs = cossin(dup(start + enumerate(vec_shape<T, VecWidth>, step)));
+        this->value                   = vec<vec<T, 2>, VecWidth>::from_flatten(cs);
     }
 
     KFR_MEM_INTRINSIC void next() const CMT_NOEXCEPT
     {
-        const vec<T, width> c = this->cos_value;
-        const vec<T, width> s = this->value;
+        const vec<T, 2 * VecWidth> cs = flatten(this->value);
 
-        const vec<T, width> cc = alpha * c + beta * s;
-        const vec<T, width> ss = alpha * s - beta * c;
+        cs = cs - addsub(alpha * cs, beta * swap<2>(cs));
 
-        this->cos_value = c - cc;
-        this->value     = s - ss;
-    }
+        this->value = vec<vec<T, 2>, VecWidth>::from_flatten(cs);
 
-    template <size_t N>
-    void shift(csize_t<N>) const CMT_NOEXCEPT
-    {
-        const vec<T, width> oldvalue    = this->value;
-        const vec<T, width> oldcosvalue = this->cos_value;
-        next();
-        this->value     = slice<N, width>(oldvalue, this->value);
-        this->cos_value = slice<N, width>(oldcosvalue, this->cos_value);
+        // const vec<T, VecWidth> c = even(flatten(this->value));
+        // const vec<T, VecWidth> s = odd(flatten(this->value));
+        // const vec<T, VecWidth> cc = alpha * c + beta * s;
+        // const vec<T, VecWidth> ss = alpha * s - beta * c;
+        // this->cos_value = c - cc;
+        // this->value     = s - ss;
     }
 
 protected:
     T step;
     T alpha;
     T beta;
-    mutable vec<T, width> cos_value;
 };
-} // namespace internal
+
+inline namespace CMT_ARCH_NAME
+{
 
 /**
  * @brief Returns template expression that generates values starting from the start and using the step as the
@@ -264,9 +260,9 @@ protected:
    \f]
  */
 template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
-KFR_FUNCTION internal::generator_linear<TF> gen_linear(T1 start, T2 step)
+KFR_FUNCTION xgenlinear<TF> gen_linear(T1 start, T2 step)
 {
-    return internal::generator_linear<TF>(start, step);
+    return xgenlinear<TF>(start, step);
 }
 
 /**
@@ -276,9 +272,9 @@ KFR_FUNCTION internal::generator_linear<TF> gen_linear(T1 start, T2 step)
    \f]
  */
 template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
-KFR_FUNCTION internal::generator_exp<TF> gen_exp(T1 start, T2 step)
+KFR_FUNCTION xgenexp<TF> gen_exp(T1 start, T2 step)
 {
-    return internal::generator_exp<TF>(start, step);
+    return xgenexp<TF>(start, step);
 }
 
 /**
@@ -288,9 +284,9 @@ KFR_FUNCTION internal::generator_exp<TF> gen_exp(T1 start, T2 step)
    \f]
  */
 template <typename T1, typename T2, typename TF = complex<ftype<common_type<T1, T2>>>>
-KFR_FUNCTION internal::generator_expj<TF> gen_expj(T1 start, T2 step)
+KFR_FUNCTION xgenexpj<TF> gen_expj(T1 start, T2 step)
 {
-    return internal::generator_expj<TF>(start, step);
+    return xgenexpj<TF>(start, step);
 }
 
 /**
@@ -300,9 +296,9 @@ KFR_FUNCTION internal::generator_expj<TF> gen_expj(T1 start, T2 step)
    \f]
  */
 template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
-KFR_FUNCTION internal::generator_exp2<TF> gen_exp2(T1 start, T2 step)
+KFR_FUNCTION xgenexp2<TF> gen_exp2(T1 start, T2 step)
 {
-    return internal::generator_exp2<TF>(start, step);
+    return xgenexp2<TF>(start, step);
 }
 
 /**
@@ -316,9 +312,9 @@ KFR_FUNCTION internal::generator_exp2<TF> gen_exp2(T1 start, T2 step)
    \f]
  */
 template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
-KFR_FUNCTION internal::generator_cossin<TF> gen_cossin(T1 start, T2 step)
+KFR_FUNCTION xgencossin<TF> gen_cossin(T1 start, T2 step)
 {
-    return internal::generator_cossin<TF>(start, step);
+    return xgencossin<TF>(start, step);
 }
 
 /**
@@ -328,9 +324,9 @@ KFR_FUNCTION internal::generator_cossin<TF> gen_cossin(T1 start, T2 step)
    \f]
  */
 template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
-KFR_FUNCTION internal::generator_sin<TF> gen_sin(T1 start, T2 step)
+KFR_FUNCTION xgensin<TF> gen_sin(T1 start, T2 step)
 {
-    return internal::generator_sin<TF>(start, step);
+    return xgensin<TF>(start, step);
 }
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

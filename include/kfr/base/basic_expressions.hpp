@@ -93,8 +93,8 @@ struct expression_traits<xcounter<T, Dims>> : expression_traits_defaults
     using value_type             = T;
     constexpr static size_t dims = Dims;
 
-    constexpr static shape<dims> shapeof(const xcounter<T, Dims>& self) { return shape<dims>(max_index_t); }
-    constexpr static shape<dims> shapeof() { return shape<dims>(max_index_t); }
+    constexpr static shape<dims> shapeof(const xcounter<T, Dims>& self) { return shape<dims>(infinite_size); }
+    constexpr static shape<dims> shapeof() { return shape<dims>(infinite_size); }
 };
 
 template <typename T, typename... Args, typename Tout = std::common_type_t<T, Args...>>
@@ -151,9 +151,9 @@ struct expression_traits<xslice<Arg>> : expression_traits_defaults
 
     KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof(const xslice<Arg>& self)
     {
-        return min(ArgTraits::shapeof(self.first()).sub_inf(self.start), self.size);
+        return min(sub_shape(ArgTraits::shapeof(self.first()), self.start), self.size);
     }
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return shape<dims>(0); }
+    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return shape<dims>(undefined_size); }
 };
 
 template <typename Arg, KFR_ACCEPT_EXPRESSIONS(Arg), index_t Dims = expression_dims<Arg>>
@@ -333,8 +333,11 @@ struct expression_traits<xpadded<Arg>> : expression_traits_defaults
     constexpr static size_t dims        = ArgTraits::dims;
     constexpr static bool random_access = ArgTraits::random_access;
 
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof(const xpadded<Arg>& self) { return infinite_size; }
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return infinite_size; }
+    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof(const xpadded<Arg>& self)
+    {
+        return shape<dims>(infinite_size);
+    }
+    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return shape<dims>(infinite_size); }
 };
 
 inline namespace CMT_ARCH_NAME
@@ -516,7 +519,7 @@ struct expression_traits<xreshape<Arg, OutDims>> : expression_traits_defaults
     {
         return self.out_shape;
     }
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return shape<dims>{ 0 }; }
+    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return shape<dims>{ undefined_size }; }
 };
 
 inline namespace CMT_ARCH_NAME
@@ -647,7 +650,7 @@ struct expression_traits<xlinspace<T, truncated>> : expression_traits_defaults
     {
         return shape<dims>(truncated ? self.size : infinite_size);
     }
-    constexpr static shape<dims> shapeof() { return shape<dims>(truncated ? 0 : infinite_size); }
+    constexpr static shape<dims> shapeof() { return shape<dims>(truncated ? undefined_size : infinite_size); }
 };
 
 template <bool truncated = false, typename T1, typename T2, typename Tout = std::common_type_t<T1, T2>>
@@ -668,6 +671,108 @@ KFR_INTRINSIC vec<T, N> get_elements(const xlinspace<T, truncated>& self, const 
     return mix(enumerate(vec_shape<T, N>(), static_cast<T>(static_cast<TI>(index))) * self.invsize,
                self.start, self.stop);
 }
+} // namespace CMT_ARCH_NAME
+
+// ----------------------------------------------------------------------------
+
+template <typename Arg1, typename Arg2, index_t ConcatAxis>
+struct xconcatenate : public xwitharguments<Arg1, Arg2>
+{
+    static_assert(expression_dims<Arg1> == expression_dims<Arg2>);
+    static_assert(std::is_same_v<expression_value_type<Arg1>, expression_value_type<Arg2>>);
+    constexpr static index_t dims = expression_dims<Arg1>;
+    shape<dims> size1;
+
+    KFR_MEM_INTRINSIC xconcatenate(Arg1&& arg1, Arg2&& arg2)
+        : xwitharguments<Arg1, Arg2>{ std::forward<Arg1>(arg1), std::forward<Arg2>(arg2) },
+          size1(expression_traits<Arg1>::shapeof(arg1))
+    {
+    }
+};
+
+template <typename Arg1, typename Arg2, index_t ConcatAxis>
+struct expression_traits<xconcatenate<Arg1, Arg2, ConcatAxis>> : expression_traits_defaults
+{
+    using ArgTraits1 = expression_traits<Arg1>;
+    using ArgTraits2 = expression_traits<Arg2>;
+
+    using value_type                    = typename ArgTraits1::value_type;
+    constexpr static size_t dims        = ArgTraits1::dims;
+    constexpr static bool random_access = ArgTraits1::random_access && ArgTraits2::random_access;
+
+    KFR_INTRINSIC static shape<dims> concat_shape(const shape<dims>& sh1, const shape<dims>& sh2)
+    {
+        shape<dims> result = min(sh1, sh2);
+        shape<dims> sum    = add_shape_undef(sh1, sh2);
+        result[ConcatAxis] = sum[ConcatAxis];
+        return result;
+    }
+
+    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof(const xconcatenate<Arg1, Arg2, ConcatAxis>& self)
+    {
+        return concat_shape(ArgTraits1::shapeof(std::get<0>(self)), ArgTraits2::shapeof(std::get<1>(self)));
+    }
+    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof()
+    {
+        return concat_shape(ArgTraits1::shapeof(), ArgTraits2::shapeof());
+    }
+};
+
+template <index_t ConcatAxis = 0, typename Arg1, typename Arg2, KFR_ACCEPT_EXPRESSIONS(Arg1, Arg2)>
+KFR_INTRINSIC xconcatenate<Arg1, Arg2, ConcatAxis> concatenate(Arg1&& arg1, Arg2&& arg2)
+{
+    return { std::forward<Arg1>(arg1), std::forward<Arg2>(arg2) };
+}
+
+template <index_t ConcatAxis = 0, typename Arg1, typename Arg2, typename Arg3,
+          KFR_ACCEPT_EXPRESSIONS(Arg1, Arg2, Arg3)>
+KFR_INTRINSIC xconcatenate<Arg1, xconcatenate<Arg2, Arg3, ConcatAxis>, ConcatAxis> concatenate(Arg1&& arg1,
+                                                                                               Arg2&& arg2,
+                                                                                               Arg3&& arg3)
+{
+    return { std::forward<Arg1>(arg1), { std::forward<Arg2>(arg2), std::forward<Arg3>(arg3) } };
+}
+
+inline namespace CMT_ARCH_NAME
+{
+
+template <typename Arg1, typename Arg2, index_t ConcatAxis, index_t NDims, index_t Axis, size_t N,
+          typename T = typename expression_traits<xconcatenate<Arg1, Arg2, ConcatAxis>>::value_type>
+KFR_INTRINSIC vec<T, N> get_elements(const xconcatenate<Arg1, Arg2, ConcatAxis>& self,
+                                     const shape<NDims>& index, const axis_params<Axis, N>& sh)
+{
+    const index_t size1     = self.size1;
+    constexpr index_t Naxis = ConcatAxis == Axis ? N : 1;
+    if (index[ConcatAxis] >= size1[ConcatAxis])
+    {
+        shape index1 = index;
+        index1[ConcatAxis] -= size1[ConcatAxis];
+        return get_elements(std::get<1>(self.args), index1, sh);
+    }
+    else if (CMT_LIKELY(index[ConcatAxis] + Naxis <= size1[ConcatAxis]))
+    {
+        return get_elements(std::get<0>(self.args), index, sh);
+    }
+    else // (index < size1) && (index + N > size1)
+    {
+        vec<T, N> result;
+        // Here Axis == ConcatAxis
+        shape index1 = index;
+        for (index_t i = 0; i < size1[ConcatAxis] - index[ConcatAxis]; ++i)
+        {
+            result[i] = get_elements(std::get<0>(self.args), index1, axis_params<Axis, 1>{})[0];
+            ++index1[ConcatAxis];
+        }
+        index1[ConcatAxis] -= size1[ConcatAxis];
+        for (index_t i = size1[ConcatAxis] - index[ConcatAxis]; i < N; ++i)
+        {
+            result[i] = get_elements(std::get<1>(self.args), index1, axis_params<Axis, 1>{})[0];
+            ++index1[ConcatAxis];
+        }
+        return result;
+    }
+}
+
 } // namespace CMT_ARCH_NAME
 
 // ----------------------------------------------------------------------------

@@ -27,13 +27,14 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/generators.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/math_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/memory.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/old_basic_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/pointer.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/random.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/random_bits.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/reduce.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/shape.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/simd_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/small_buffer.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/base/sort.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/tensor.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/univector.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/static_array.hpp
@@ -91,65 +92,66 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/io/dr/dr_flac.h
     ${PROJECT_SOURCE_DIR}/include/kfr/io/dr/dr_mp3.h
     ${PROJECT_SOURCE_DIR}/include/kfr/io/dr/dr_wav.h
-    ${PROJECT_SOURCE_DIR}/include/kfr/math/abs.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/asin_acos.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/atan.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/math/clamp.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/compiletime.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/complex_math.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/gamma.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/hyperbolic.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/interpolation.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/math/logical.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/log_exp.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/math/min_max.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/modzerobessel.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/math/round.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/math/saturation.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/math/select.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/sin_cos.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/sqrt.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/tan.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/math/impl/abs.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/impl/asin_acos.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/impl/atan.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/math/impl/clamp.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/impl/gamma.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/impl/hyperbolic.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/math/impl/logical.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/impl/log_exp.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/math/impl/min_max.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/impl/modzerobessel.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/math/impl/round.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/math/impl/saturation.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/math/impl/select.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/impl/sin_cos.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/impl/sqrt.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/impl/tan.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/runtime/cpuid.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/runtime/cpuid_auto.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/abs.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/clamp.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/comparison.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/complex.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/complex_type.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/constants.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/digitreverse.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/horizontal.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/logical.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/mask.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/min_max.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/operators.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/platform.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/read_write.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/round.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/saturation.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/select.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/shuffle.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/sort.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/types.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/vec.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/abs.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/backend.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/backend_clang.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/backend_generic.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/basicoperators_clang.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/basicoperators_complex.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/basicoperators_generic.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/clamp.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/function.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/logical.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/min_max.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/operators.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/read_write.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/round.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/saturation.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/select.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/simd.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/specialconstants.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/intrinsics.h
@@ -187,18 +189,18 @@ set(
     ${PROJECT_SOURCE_DIR}/tests/unit/base/tensor.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/graphics/color.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/graphics/geometry.cpp
-    ${PROJECT_SOURCE_DIR}/tests/unit/math/abs.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/asin_acos.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/atan.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/hyperbolic.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/log_exp.cpp
-    ${PROJECT_SOURCE_DIR}/tests/unit/math/min_max.cpp
-    ${PROJECT_SOURCE_DIR}/tests/unit/math/round.cpp
-    ${PROJECT_SOURCE_DIR}/tests/unit/math/select.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/sin_cos.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/tan.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/simd/abs.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/complex.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/simd/min_max.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/operators.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/simd/round.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/simd/select.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/shuffle.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/vec.cpp
 )

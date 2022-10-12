@@ -25,7 +25,7 @@
  */
 #pragma once
 
-#include "../math/clamp.hpp"
+#include "../simd/clamp.hpp"
 #include "../simd/types.hpp"
 #include "../simd/vec.hpp"
 #include "univector.hpp"

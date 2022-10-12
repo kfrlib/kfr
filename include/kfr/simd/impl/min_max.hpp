@@ -22,10 +22,10 @@
  */
 #pragma once
 
-#include "../../math/abs.hpp"
-#include "../../math/select.hpp"
-#include "../../simd/impl/function.hpp"
-#include "../../simd/operators.hpp"
+#include "../abs.hpp"
+#include "../select.hpp"
+#include "function.hpp"
+#include "../operators.hpp"
 
 namespace kfr
 {

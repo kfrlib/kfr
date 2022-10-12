@@ -22,10 +22,10 @@
  */
 #pragma once
 
-#include "../../math/abs.hpp"
-#include "../../math/min_max.hpp"
-#include "../../math/round.hpp"
-#include "../../math/select.hpp"
+#include "../../simd/abs.hpp"
+#include "../../simd/min_max.hpp"
+#include "../../simd/round.hpp"
+#include "../../simd/select.hpp"
 #include "../../simd/constants.hpp"
 #include "../../simd/impl/function.hpp"
 #include "../../simd/operators.hpp"

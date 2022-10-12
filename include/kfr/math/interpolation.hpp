@@ -25,7 +25,7 @@
  */
 #pragma once
 
-#include "select.hpp"
+#include "../simd/select.hpp"
 #include "sin_cos.hpp"
 
 namespace kfr

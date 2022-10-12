@@ -21,9 +21,9 @@
   See https://www.kfrlib.com for details.
  */
 #pragma once
-#include "../../math/abs.hpp"
-#include "../../math/select.hpp"
-#include "../../math/sin_cos.hpp"
+#include "../../simd/abs.hpp"
+#include "../../simd/select.hpp"
+#include "../sin_cos.hpp"
 #include "../../simd/constants.hpp"
 #include "../../simd/impl/function.hpp"
 #include "../../simd/operators.hpp"

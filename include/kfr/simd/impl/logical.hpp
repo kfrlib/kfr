@@ -22,9 +22,9 @@
  */
 #pragma once
 
-#include "../../math/abs.hpp"
-#include "../../simd/impl/function.hpp"
-#include "../../simd/operators.hpp"
+#include "../abs.hpp"
+#include "function.hpp"
+#include "../operators.hpp"
 
 namespace kfr
 {

@@ -27,7 +27,7 @@
 
 #include "impl/static_array.hpp"
 
-#include "../math/min_max.hpp"
+#include "../simd/min_max.hpp"
 #include "../simd/shuffle.hpp"
 #include "../simd/types.hpp"
 #include "../simd/vec.hpp"
@@ -59,6 +59,8 @@ template <index_t val>
 constexpr inline cindex_t<val> cindex{};
 
 constexpr inline index_t infinite_size = max_index_t;
+
+constexpr inline index_t undefined_size = 0;
 
 constexpr inline index_t maximum_dims = 8;
 
@@ -142,19 +144,35 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
         return false;
     }
 
-    shape add_inf(const shape& other) const
+    friend shape add_shape(const shape& lhs, const shape& rhs)
     {
-        vec<index_t, dims> x    = **this;
-        vec<index_t, dims> y    = *other;
-        mask<index_t, dims> inf = (x == infinite_size) || (y == infinite_size);
+        vec<index_t, dims> x    = *lhs;
+        vec<index_t, dims> y    = *rhs;
+        mask<index_t, dims> inf = max(x, y) == infinite_size;
         return select(inf, infinite_size, x + y);
     }
-    shape sub_inf(const shape& other) const
+    friend shape sub_shape(const shape& lhs, const shape& rhs)
     {
-        vec<index_t, dims> x    = **this;
-        vec<index_t, dims> y    = *other;
-        mask<index_t, dims> inf = (x == infinite_size) || (y == infinite_size);
+        vec<index_t, dims> x    = *lhs;
+        vec<index_t, dims> y    = *rhs;
+        mask<index_t, dims> inf = max(x, y) == infinite_size;
         return select(inf, infinite_size, x - y);
+    }
+    friend shape add_shape_undef(const shape& lhs, const shape& rhs)
+    {
+        vec<index_t, dims> x      = *lhs;
+        vec<index_t, dims> y      = *rhs;
+        mask<index_t, dims> inf   = max(x, y) == infinite_size;
+        mask<index_t, dims> undef = min(x, y) == undefined_size;
+        return select(inf, infinite_size, select(undef, undefined_size, x + y));
+    }
+    friend shape sub_shape_undef(const shape& lhs, const shape& rhs)
+    {
+        vec<index_t, dims> x      = *lhs;
+        vec<index_t, dims> y      = *rhs;
+        mask<index_t, dims> inf   = max(x, y) == infinite_size;
+        mask<index_t, dims> undef = min(x, y) == undefined_size;
+        return select(inf, infinite_size, select(undef, undefined_size, x - y));
     }
 
     friend shape min(const shape& x, const shape& y) { return kfr::min(*x, *y); }

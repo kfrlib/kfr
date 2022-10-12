@@ -38,6 +38,15 @@ struct expression_pointer;
 template <typename T>
 constexpr size_t maximum_expression_width = vector_width_for<T, cpu_t::highest> * 2;
 
+template <typename T, template <T...> typename Tpl, typename Pack>
+struct expand_cvals;
+
+template <typename T, template <T...> typename Tpl, T... vals>
+struct expand_cvals<T, Tpl, cvals_t<T, vals...>>
+{
+    using type = Tpl<vals...>;
+};
+
 inline namespace CMT_ARCH_NAME
 {
 
@@ -50,64 +59,57 @@ KFR_INTRINSIC bool invoke_substitute(Expression& expr, expression_pointer<T>&& n
 }
 } // namespace CMT_ARCH_NAME
 
-template <typename T, size_t N = maximum_expression_width<T>>
-struct expression_vtable : expression_vtable<T, N / 2>
+template <typename T, index_t Dims>
+struct expression_vtable
 {
-    using func_get = void (*)(void*, size_t, vec<T, N>&);
-    func_get get;
+    constexpr static const size_t Nsizes = 1 + ilog2(maximum_expression_width<T>);
+
+    using func_get        = void (*)(void*, shape<Dims>, T*);
+    using func_set        = void (*)(void*, shape<Dims>, const T*);
+    using func_shapeof    = void (*)(void*, shape<Dims>&);
+    using func_substitute = bool (*)(void*, expression_pointer<T>&&);
+
+    func_shapeof fn_shapeof;
+    func_substitute fn_substitute;
+    std::array<std::array<func_get, Nsizes>, Dims> fn_get_elements;
+    std::array<std::array<func_set, Nsizes>, Dims> fn_set_elements;
 
     template <typename Expression>
     expression_vtable(ctype_t<Expression> t)
-        : expression_vtable<T, N / 2>(t), get(&expression_vtable<T, N>::template static_get<Expression>)
     {
+        fn_shapeof    = &static_shapeof<Expression>;
+        fn_substitute = &static_substitute<Expression>;
+        cforeach(csizeseq<Nsizes>,
+                 [&](size_t size) CMT_INLINE_LAMBDA
+                 {
+                     cforeach(csizeseq<Dims>,
+                              [&](size_t axis) CMT_INLINE_LAMBDA
+                              {
+                                  fn_get_elements[axis][size] =
+                                      &expression_vtable::static_get_elements<Expression, 1 << size, axis>;
+                                  fn_set_elements[axis][size] =
+                                      &expression_vtable::static_set_elements<Expression, 1 << size, axis>;
+                              });
+                 });
     }
 
-    template <typename Expression>
-    static void static_get(void* instance, size_t index, vec<T, N>& result)
+    template <typename Expression, size_t N, index_t VecAxis>
+    static void static_get_elements(void* instance, shape<Dims> index, T* dest)
     {
-        result = get_elements(*static_cast<Expression*>(instance), cinput, index, vec_shape<T, N>());
+        write(dest, get_elements(*static_cast<Expression*>(instance), index, axis_params_v<VecAxis, N>));
     }
-};
-
-template <typename T>
-struct expression_vtable<T, 0>
-{
-    using func_size        = size_t (*)(void* p);
-    using func_begin_block = void (*)(void*, size_t);
-    using func_end_block   = void (*)(void*, size_t);
-    using func_substitute  = bool (*)(void*, expression_pointer<T>&&);
-
-    func_size size;
-    func_begin_block begin_block;
-    func_end_block end_block;
-    func_substitute substitute;
-
-    template <typename Expression>
-    expression_vtable(ctype_t<Expression>)
-        : size(&expression_vtable<T, 0>::template static_size<Expression>),
-          begin_block(&expression_vtable<T, 0>::template static_begin_block<Expression>),
-          end_block(&expression_vtable<T, 0>::template static_end_block<Expression>),
-          substitute(&expression_vtable<T, 0>::template static_substitute<Expression>)
+    template <typename Expression, size_t N, index_t VecAxis>
+    static void static_set_elements(void* instance, shape<Dims> index, const T* src)
     {
-    }
-
-    template <typename Expression>
-    static size_t static_size(void* instance)
-    {
-        return static_cast<Expression*>(instance)->size();
+        set_elements(*static_cast<Expression*>(instance), index, axis_params_v<VecAxis, N>, read<N>(src));
     }
     template <typename Expression>
-    static void static_begin_block(void* instance, size_t size)
+    static void static_shapeof(void* instance, shape<Dims>& result)
     {
-        return static_cast<Expression*>(instance)->begin_block(cinput, size);
+        result = expression_traits<Expression>::shapeof(*static_cast<Expression*>(instance));
     }
     template <typename Expression>
-    static void static_end_block(void* instance, size_t size)
-    {
-        return static_cast<Expression*>(instance)->end_block(cinput, size);
-    }
-    template <typename Expression>
-    static bool static_substitute(void* instance, expression_pointer<T>&& ptr)
+    static bool static_substitute(void* instance, expression_pointer<T> ptr)
     {
         return internal::invoke_substitute(*static_cast<Expression*>(instance), std::move(ptr));
     }
@@ -143,51 +145,77 @@ KFR_INTRINSIC std::shared_ptr<expression_resource> make_resource(E&& e)
         new (aligned_allocate<T>()) T(std::move(e)), [](T* pi) { aligned_deallocate<T>(pi); }));
 }
 
-template <typename T, bool enable_resource>
-struct expression_pointer : input_expression
+template <typename T, index_t Dims>
+struct xpointer
 {
-    using value_type = T;
+    void* instance;
+    const expression_vtable<T, Dims>* vtable;
+    std::shared_ptr<expression_resource> resource;
 
-    expression_pointer() CMT_NOEXCEPT : instance(nullptr), vtable(nullptr) {}
-    expression_pointer(const void* instance, const expression_vtable<T>* vtable,
-                       std::shared_ptr<expression_resource> resource = nullptr)
+    xpointer() CMT_NOEXCEPT : instance(nullptr), vtable(nullptr) {}
+    xpointer(const void* instance, const expression_vtable<T, Dims>* vtable,
+             std::shared_ptr<expression_resource> resource = nullptr)
         : instance(const_cast<void*>(instance)), vtable(vtable), resource(std::move(resource))
     {
     }
-    template <size_t N, KFR_ENABLE_IF(N <= maximum_expression_width<T>)>
-    friend KFR_INTRINSIC vec<T, N> get_elements(const expression_pointer& self, cinput_t, size_t index,
-                                                vec_shape<T, N>)
-    {
-        static_assert(is_poweroftwo(N), "N must be a power of two");
-        vec<T, N> result;
-        static_cast<const expression_vtable<T, N>*>(self.vtable)->get(self.instance, index, result);
-        return result;
-    }
-    template <size_t N, KFR_ENABLE_IF(N > maximum_expression_width<T>)>
-    friend KFR_INTRINSIC vec<T, N> get_elements(const expression_pointer& self, cinput_t cinput, size_t index,
-                                                vec_shape<T, N>)
-    {
-        static_assert(is_poweroftwo(N), "N must be a power of two");
-        const vec<T, N / 2> r1 = get_elements(self, cinput, index, vec_shape<T, N / 2>());
-        const vec<T, N / 2> r2 = get_elements(self, cinput, index + N / 2, vec_shape<T, N / 2>());
-        return concat(r1, r2);
-    }
-    KFR_MEM_INTRINSIC void begin_block(cinput_t, size_t size) const { vtable->begin_block(instance, size); }
-    KFR_MEM_INTRINSIC void end_block(cinput_t, size_t size) const { vtable->end_block(instance, size); }
-    KFR_MEM_INTRINSIC size_t size() const { return vtable->size(instance); }
-
-    KFR_MEM_INTRINSIC bool substitute(expression_pointer<T>&& new_pointer, csize_t<0> = csize_t<0>{}) const
-    {
-        return vtable->substitute(instance, std::move(new_pointer));
-    }
 
     explicit operator bool() const { return instance != nullptr; }
-
-private:
-    void* instance;
-    const expression_vtable<T>* vtable;
-    std::shared_ptr<expression_resource> resource;
 };
+
+template <typename T, index_t Dims>
+struct expression_traits<xpointer<T, Dims>> : expression_traits_defaults
+{
+    using value_type             = T;
+    constexpr static size_t dims = Dims;
+    constexpr static shape<dims> shapeof(const xpointer<T, Dims>& self)
+    {
+        shape<dims> result;
+        self.vtable->fn_shapeof(self.instance, result);
+    }
+    constexpr static shape<dims> shapeof() { return shape<dims>(undefined_size); }
+
+    constexpr static inline bool random_access = false;
+};
+
+inline namespace CMT_ARCH_NAME
+{
+
+template <typename T, index_t NDims, index_t Axis, size_t N>
+KFR_INTRINSIC vec<T, N> get_elements(const xpointer<T, NDims>& self, const shape<NDims>& index,
+                                     const axis_params<Axis, N>& sh)
+{
+    static_assert(is_poweroftwo(N) && N >= 1);
+    if constexpr (N > expression_vtable<T, NDims>::Nmax)
+    {
+        constexpr size_t Nhalf = N / 2;
+        return concat(get_elements(self, index, axis_params_v<Axis, Nhalf>),
+                      get_elements(self, index.add_at(Axis, Nhalf), axis_params_v<Axis, Nhalf>));
+    }
+    else
+    {
+        portable_vec<T, N> result;
+        self.vtable->fn_get_elements[Axis][ilog2(N)](self.instance, index, result.elem);
+        return result;
+    }
+}
+
+template <typename T, index_t NDims, index_t Axis, size_t N>
+KFR_INTRINSIC void set_elements(const xpointer<T, NDims>& self, const shape<NDims>& index,
+                                const axis_params<Axis, N>& sh, const identity<vec<T, N>>& value)
+{
+    static_assert(is_poweroftwo(N) && N >= 1);
+    if constexpr (N > expression_vtable<T, NDims>::Nmax)
+    {
+        constexpr size_t Nhalf = N / 2;
+        set_elements(self, index, axis_params_v<Axis, Nhalf>, slice<0, Nhalf>(value));
+        set_elements(self, index.add_at(Axis, Nhalf), axis_params_v<Axis, Nhalf>, slice<Nhalf, Nhalf>(value));
+    }
+    else
+    {
+        self.vtable->fn_set_elements[Axis][ilog2(N)](self.instance, index, &value.front());
+    }
+}
+} // namespace CMT_ARCH_NAME
 
 inline namespace CMT_ARCH_NAME
 {
@@ -195,11 +223,10 @@ inline namespace CMT_ARCH_NAME
 namespace internal
 {
 
-template <typename T, typename E>
-KFR_INTRINSIC expression_vtable<T>* make_expression_vtable()
+template <typename T, index_t Dims, typename E>
+KFR_INTRINSIC expression_vtable<T, Dims>* make_expression_vtable()
 {
-    static_assert(is_input_expression<E>, "E must be an expression");
-    static expression_vtable<T> vtable{ ctype_t<decay<E>>{} };
+    static expression_vtable<T, Dims> vtable{ ctype_t<decay<E>>{} };
     return &vtable;
 }
 } // namespace internal
@@ -208,26 +235,25 @@ KFR_INTRINSIC expression_vtable<T>* make_expression_vtable()
  *  This overload takes reference to the expression.
  *  @warning Use with caution with local variables.
  */
-template <typename E, typename T = value_type_of<E>>
-KFR_INTRINSIC expression_pointer<T> to_pointer(E& expr)
+template <typename E, typename T = expression_value_type<E>, index_t Dims = expression_dims<E>>
+KFR_INTRINSIC expression_pointer<T, Dims> to_pointer(E& expr)
 {
-    static_assert(is_input_expression<E>, "E must be an expression");
-    return expression_pointer<T>(std::addressof(expr), internal::make_expression_vtable<T, E>());
+    return expression_pointer<T>(std::addressof(expr), internal::make_expression_vtable<T, Dims, E>());
 }
 
 /** @brief Converts the given expression into an opaque object.
  *  This overload takes ownership of the expression (Move semantics).
  *  @note Use std::move to force use of this overload.
  */
-template <typename E, typename T = value_type_of<E>>
-KFR_INTRINSIC expression_pointer<T> to_pointer(E&& expr)
+template <typename E, typename T = expression_value_type<E>, index_t Dims = expression_dims<E>>
+KFR_INTRINSIC expression_pointer<T, Dims> to_pointer(E&& expr)
 {
-    static_assert(is_input_expression<E>, "E must be an expression");
     std::shared_ptr<expression_resource> ptr = make_resource(std::move(expr));
     void* instance                           = ptr->instance();
-    return expression_pointer<T>(instance, internal::make_expression_vtable<T, E>(), std::move(ptr));
+    return expression_pointer<T, Dims>(instance, internal::make_expression_vtable<T, E>(), std::move(ptr));
 }
 
+#if 0
 template <typename T, size_t key>
 class expression_placeholder : public input_expression
 {
@@ -306,5 +332,7 @@ KFR_INTRINSIC bool invoke_substitute(Expression& expr, expression_pointer<T>&& n
 }
 
 } // namespace internal
+#endif
 } // namespace CMT_ARCH_NAME
-} // namespace kfr
+
+}
