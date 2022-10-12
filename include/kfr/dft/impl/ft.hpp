@@ -362,13 +362,13 @@ KFR_INTRINSIC void cscatter(complex<T>* base, size_t stride, const cvec<T, N>& v
 template <size_t groupsize = 1, typename T, size_t N, typename IT>
 KFR_INTRINSIC vec<T, N * 2 * groupsize> cgather(const complex<T>* base, const vec<IT, N>& offset)
 {
-    return gather_helper<2 * groupsize>(ptr_cast<T>(base), offset, csizeseq_t<N>());
+    return internal::gather_helper<2 * groupsize>(ptr_cast<T>(base), offset, csizeseq_t<N>());
 }
 
 template <size_t groupsize = 1, typename T, size_t N, typename IT>
 KFR_INTRINSIC void cscatter(complex<T>* base, const vec<IT, N>& offset, vec<T, N * 2 * groupsize> value)
 {
-    return scatter_helper<2 * groupsize>(ptr_cast<T>(base), offset, value, csizeseq_t<N>());
+    return internal::scatter_helper<2 * groupsize>(ptr_cast<T>(base), offset, value, csizeseq_t<N>());
 }
 
 template <typename T>
