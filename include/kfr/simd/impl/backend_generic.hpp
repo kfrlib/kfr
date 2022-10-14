@@ -124,18 +124,35 @@ struct simd_small_array<f32, 2, f64>
     using packed_type            = f64;
 
 #ifdef _MSC_VER
-    KFR_INTRINSIC constexpr simd_small_array() CMT_NOEXCEPT = default;
+    KFR_MEM_INTRINSIC constexpr simd_small_array() CMT_NOEXCEPT = default;
 #else
-    KFR_INTRINSIC simd_small_array() CMT_NOEXCEPT {}
+    KFR_MEM_INTRINSIC simd_small_array() CMT_NOEXCEPT {}
 #endif
 
-    KFR_INTRINSIC constexpr simd_small_array(f64 whole) CMT_NOEXCEPT : whole(whole) {}
+#ifdef _MSC_VER
+    // MSVC Internal Compiler Error workaround
+    KFR_MEM_INTRINSIC constexpr simd_small_array(const simd_small_array& v) CMT_NOEXCEPT : whole(v.whole) {}
+    KFR_MEM_INTRINSIC constexpr simd_small_array(simd_small_array&& v) CMT_NOEXCEPT : whole(v.whole) {}
+    KFR_MEM_INTRINSIC constexpr simd_small_array& operator=(const simd_small_array& v) CMT_NOEXCEPT
+    {
+        whole = v.whole;
+        return *this;
+    }
+    KFR_MEM_INTRINSIC constexpr simd_small_array& operator=(simd_small_array&& v) CMT_NOEXCEPT
+    {
+        whole = v.whole;
+        return *this;
+    }
+#endif
 
-    KFR_INTRINSIC simd_small_array(f32 x, f32 y) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr simd_small_array(f64 whole) CMT_NOEXCEPT : whole(whole) {}
+
+    KFR_MEM_INTRINSIC simd_small_array(f32 x, f32 y) CMT_NOEXCEPT
     {
 #ifdef _MSC_VER
 #ifdef CMT_ARCH_SSE2
-        whole = _mm_cvtsd_f64(_mm_castps_pd(_mm_setr_ps(x, y, x, y)));
+        // whole = _mm_cvtsd_f64(_mm_castps_pd(_mm_setr_ps(x, y, x, y)));
+        whole = _mm_cvtsd_f64(_mm_castps_pd(_mm_unpacklo_ps(_mm_set_ss(x), _mm_set_ss(y))));
 #else
         union
         {
@@ -164,7 +181,7 @@ struct simd_small_array<f32, 2, f64>
 #endif
     }
 
-    KFR_INTRINSIC static constexpr simd_small_array from(f64 whole) CMT_NOEXCEPT { return { whole }; }
+    KFR_MEM_INTRINSIC static constexpr simd_small_array from(f64 whole) CMT_NOEXCEPT { return { whole }; }
 };
 
 template <typename T>
@@ -438,7 +455,7 @@ KFR_INTRINSIC __m128 KFR_swap_ps(__m128 x) { return _mm_shuffle_ps(x, x, _MM_SHU
 
 #ifndef KFR_f32x2_array
 // KFR_INTRIN_SHUFFLE_CONCAT(f32, 2, _mm_castpd_ps(_mm_setr_pd(x.whole, y.whole)))
-KFR_INTRIN_SHUFFLE_SWAP(f32, 2, _mm_cvtsd_f64(_mm_castps_pd(KFR_swap_ps(_mm_castpd_ps(_mm_set_sd(x.whole))))))
+KFR_INTRIN_SHUFFLE_SWAP(f32, 2, _mm_cvtsd_f64(_mm_castps_pd(KFR_swap_ps(_mm_castpd_ps(_mm_set1_pd(x.whole))))))
 #else
 KFR_INTRIN_SHUFFLE_CONCAT(f32, 2, _mm_setr_ps(x.low, x.high, y.low, y.high))
 KFR_INTRIN_SHUFFLE_SWAP(f32, 2, simd<f32, 2>(x.high, x.low))

@@ -341,38 +341,38 @@ jobs:
       set PATH=C:\sde;%PATH%
       ci\run.cmd build-release -DARCH_TESTS=ON -DUSE_SDE=ON -DCPU_ARCH=avx512 -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
 
-- job: Windows_MSVC_x86_AVX512_MSVC2019_Release
-  timeoutInMinutes: 180
-  pool:
-    vmImage: 'windows-2019'
-  steps:
-  - script: |
-      choco uninstall mingw
-      choco install ninja
+# - job: Windows_MSVC_x86_AVX512_MSVC2019_Release
+#   timeoutInMinutes: 180
+#   pool:
+#     vmImage: 'windows-2019'
+#   steps:
+#   - script: |
+#       choco uninstall mingw
+#       choco install ninja
 
-      curl -o "$(Agent.TempDirectory)/sde.zip" -L $(SDE_URL_WINDOWS)
-      "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "$(Agent.TempDirectory)/sde.zip"
+#       curl -o "$(Agent.TempDirectory)/sde.zip" -L $(SDE_URL_WINDOWS)
+#       "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "$(Agent.TempDirectory)/sde.zip"
 
-      call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
-      set PATH=%PATH:C:\tools\mingw64\bin;=%
-      set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
-      set PATH=%PATH:C:\Program Files\LLVM\bin;=%
-      set PATH=%PATH:C:\Strawberry\c\bin;=%
-      set PATH=C:\sde;%PATH%
-      ci\run.cmd build-release -DARCH_TESTS=OFF -DUSE_SDE=ON -DCPU_ARCH=avx512 -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
+#       call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+#       set PATH=%PATH:C:\tools\mingw64\bin;=%
+#       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
+#       set PATH=%PATH:C:\Program Files\LLVM\bin;=%
+#       set PATH=%PATH:C:\Strawberry\c\bin;=%
+#       set PATH=C:\sde;%PATH%
+#       ci\run.cmd build-release -DARCH_TESTS=OFF -DUSE_SDE=ON -DCPU_ARCH=avx512 -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
 
-- job: Windows_MSVC2022_x86_64_Release
-  timeoutInMinutes: 180
-  pool:
-    vmImage: 'windows-2022'
-  steps:
-  - script: |
-      choco uninstall mingw
-      choco install ninja
+# - job: Windows_MSVC2022_x86_64_Release
+#   timeoutInMinutes: 180
+#   pool:
+#     vmImage: 'windows-2022'
+#   steps:
+#   - script: |
+#       choco uninstall mingw
+#       choco install ninja
 
-      call "C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-      set PATH=%PATH:C:\tools\mingw64\bin;=%
-      set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
-      set PATH=%PATH:C:\Program Files\LLVM\bin;=%
-      set PATH=%PATH:C:\Strawberry\c\bin;=%
-      ci\run.cmd build-release -DARCH_TESTS=OFF -DCPU_ARCH=detect -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
+#       call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+#       set PATH=%PATH:C:\tools\mingw64\bin;=%
+#       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
+#       set PATH=%PATH:C:\Program Files\LLVM\bin;=%
+#       set PATH=%PATH:C:\Strawberry\c\bin;=%
+#       ci\run.cmd build-release -DARCH_TESTS=OFF -DCPU_ARCH=detect -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release

@@ -117,7 +117,7 @@ endif ()
 find_package(MPFR)
 find_package(GMP)
 
-if (MPFR_FOUND AND GMP_FOUND)
+if (MPFR_FOUND AND GMP_FOUND AND REGENERATE_TESTS)
     message(STATUS "MPFR is found")
     add_executable(generate_data generate_data.cpp)
     target_link_libraries(generate_data kfr)
