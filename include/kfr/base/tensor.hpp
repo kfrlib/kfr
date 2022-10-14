@@ -822,7 +822,6 @@ public:
             shape_type index{ 0 };
             std::string open_filler(open.size(), ' ');
             std::string separator_trimmed = separator.substr(0, 1 + separator.find_last_not_of(" \t"));
-            char buf[64];
             int columns = 0;
             do
             {
