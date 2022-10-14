@@ -2,7 +2,7 @@
  *  @{
  */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2022 Fractalium Ltd (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -223,12 +223,35 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     KFR_MEM_INTRINSIC vec(const simd_type& simd) CMT_NOEXCEPT : v(simd) {}
     // default
     KFR_MEM_INTRINSIC constexpr vec() CMT_NOEXCEPT {}
+
+#if defined(_MSC_VER) && !defined (__clang__)
+    // MSVC Internal Compiler Error workaround
     // copy
-    KFR_MEM_INTRINSIC constexpr vec(const vec& value) CMT_NOEXCEPT = default;
+    KFR_MEM_INTRINSIC constexpr vec(const vec& value) CMT_NOEXCEPT : v(value.v) {}
+    // move
+    KFR_MEM_INTRINSIC constexpr vec(vec&& value) CMT_NOEXCEPT : v(value.v) {}
+    // assignment
+    KFR_MEM_INTRINSIC constexpr vec& operator=(const vec& value) CMT_NOEXCEPT
+    {
+        v = value.v;
+        return *this;
+    }
+    // assignment
+    KFR_MEM_INTRINSIC constexpr vec& operator=(vec&& value) CMT_NOEXCEPT
+    {
+        v = value.v;
+        return *this;
+    }
+#else
+    // copy
+    KFR_MEM_INTRINSIC constexpr vec(const vec&) CMT_NOEXCEPT = default;
     // move
     KFR_MEM_INTRINSIC constexpr vec(vec&&) CMT_NOEXCEPT = default;
     // assignment
     KFR_MEM_INTRINSIC constexpr vec& operator=(const vec&) CMT_NOEXCEPT = default;
+    // assignment
+    KFR_MEM_INTRINSIC constexpr vec& operator=(vec&&) CMT_NOEXCEPT = default;
+#endif
 
     // from scalar
     template <typename U, KFR_ENABLE_IF(is_convertible<U, value_type>&& compound_type_traits<T>::is_scalar)>
@@ -1201,23 +1224,25 @@ vec<T, N> test_enumerate(vec_shape<T, N>, csizes_t<indices...>, double start = 0
 template <int Cat, typename Fn, typename RefFn, typename IsApplicable = fn_return_constant<bool, true>>
 void test_function1(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isapplicable = IsApplicable{})
 {
-    testo::matrix(named("value") = special_values(), named("type") = test_catogories::types(cat),
-                  [&](special_value value, auto type)
-                  {
-                      using T = typename decltype(type)::type;
-                      if (isapplicable(ctype<T>, value))
-                      {
-                          const T x(value);
-                          CHECK(is_same<decltype(fn(x)), typename compound_type_traits<T>::template rebind<
-                                                             decltype(reffn(std::declval<subtype<T>>()))>>);
-                          const auto fn_x  = fn(x);
-                          const auto ref_x = apply(reffn, x);
-                          ::testo::active_test()->check(testo::deep_is_equal(ref_x, fn_x),
-                                                        as_string(fn_x, " == ", ref_x),
-                                                        "fn(x) == apply(reffn, x)");
-                          //   CHECK(fn(x) == apply(reffn, x));
-                      }
-                  });
+    testo::matrix(
+        named("value") = special_values(), named("type") = test_catogories::types(cat),
+        [&](special_value value, auto type) {
+            using T = typename decltype(type)::type;
+            if (isapplicable(ctype<T>, value))
+            {
+                const T x(value);
+#if !defined(_MSC_VER) || defined(__clang__)
+                // Supress ICE in MSVC
+                using RefFnTy = decltype(std::declval<RefFn>()(std::declval<subtype<T>>()));
+                CHECK(is_same<decltype(fn(x)), typename compound_type_traits<T>::template rebind<RefFnTy>>);
+#endif
+                const auto fn_x  = fn(x);
+                const auto ref_x = apply(reffn, x);
+                ::testo::active_test()->check(testo::deep_is_equal(ref_x, fn_x),
+                                              as_string(fn_x, " == ", ref_x), "fn(x) == apply(reffn, x)");
+                //   CHECK(fn(x) == apply(reffn, x));
+            }
+        });
 
     testo::matrix(named("type") = test_catogories::types(cint<Cat & ~1>),
                   [&](auto type)

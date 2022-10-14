@@ -220,14 +220,14 @@ jobs:
       xcode10:
         XCODE_VER: 10.3
   pool:
-    vmImage: 'macOS-10.14'
+    vmImage: 'macOS-10.15'
   steps:
   - bash: |
       set -e
 
-      curl -o "$(Agent.TempDirectory)/sde.tar.bz2" -L $(SDE_URL_MACOS2)
+      curl -o "$(Agent.TempDirectory)/sde.tar.xz" -L $(SDE_URL_MACOS3)
       mkdir -p "$(Agent.TempDirectory)/sde-bin"
-      tar -C "$(Agent.TempDirectory)/sde-bin" -xjf "$(Agent.TempDirectory)/sde.tar.bz2" --strip 1
+      tar -C "$(Agent.TempDirectory)/sde-bin" -xJf "$(Agent.TempDirectory)/sde.tar.xz" --strip 1
       export PATH=$PATH:$(Agent.TempDirectory)/sde-bin
       sde64 -help || true
 
@@ -266,7 +266,7 @@ jobs:
 - job: Android_ARMv7_Clang_Release
   timeoutInMinutes: 180
   pool:
-    vmImage: 'vs2017-win2016'
+    vmImage: 'windows-2019'
   steps:
   - script: |
       choco install ninja
@@ -280,7 +280,7 @@ jobs:
 - job: Android_AArch64_Clang_Release
   timeoutInMinutes: 180
   pool:
-    vmImage: 'vs2017-win2016'
+    vmImage: 'windows-2019'
   steps:
   - script: |
       choco install ninja
@@ -294,7 +294,7 @@ jobs:
 - job: Windows_MinGW_x86_Clang13_Release
   timeoutInMinutes: 180
   pool:
-    vmImage: 'vs2017-win2016'
+    vmImage: 'windows-2019'
   steps:
   - script: |
       choco uninstall mingw
@@ -309,7 +309,7 @@ jobs:
 - job: Windows_MinGW_x86_64_Clang13_Release
   timeoutInMinutes: 180
   pool:
-    vmImage: 'vs2017-win2016'
+    vmImage: 'windows-2019'
   steps:
   - script: |
       choco uninstall mingw
@@ -321,47 +321,7 @@ jobs:
       call C:\tools\msys64\msys2_shell.cmd -defterm -mingw64 -no-start -full-path -here -c "pacman -S --noconfirm mingw64/mingw-w64-x86_64-ninja"
       call C:\tools\msys64\msys2_shell.cmd -defterm -mingw64 -no-start -full-path -here -c "ci/run.sh build-release -DCMAKE_CXX_COMPILER=""C:/Program Files/LLVM/bin/clang++.exe"" -DCPU_ARCH=avx -DCMAKE_CXX_FLAGS=--target=x86_64-w64-windows-gnu -DCMAKE_BUILD_TYPE=Release"
 
-- job: Windows_MSVC_x86_64_AVX512_MSVC2017_Release
-  timeoutInMinutes: 180
-  pool:
-    vmImage: 'vs2017-win2016'
-  steps:
-  - script: |
-      choco uninstall mingw
-      choco install ninja
-
-      curl -o "$(Agent.TempDirectory)/sde.zip" -L $(SDE_URL_WINDOWS)
-      "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "$(Agent.TempDirectory)/sde.zip"
-
-      call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-      set PATH=%PATH:C:\tools\mingw64\bin;=%
-      set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
-      set PATH=%PATH:C:\Program Files\LLVM\bin;=%
-      set PATH=%PATH:C:\Strawberry\c\bin;=%
-      set PATH=C:\sde;%PATH%
-      ci\run.cmd build-release -DARCH_TESTS=ON -DUSE_SDE=ON -DCPU_ARCH=avx512 -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
-
-- job: Windows_MSVC_x86_AVX512_MSVC2017_Release
-  timeoutInMinutes: 180
-  pool:
-    vmImage: 'vs2017-win2016'
-  steps:
-  - script: |
-      choco uninstall mingw
-      choco install ninja
-
-      curl -o "$(Agent.TempDirectory)/sde.zip" -L $(SDE_URL_WINDOWS)
-      "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "$(Agent.TempDirectory)/sde.zip"
-
-      call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
-      set PATH=%PATH:C:\tools\mingw64\bin;=%
-      set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
-      set PATH=%PATH:C:\Program Files\LLVM\bin;=%
-      set PATH=%PATH:C:\Strawberry\c\bin;=%
-      set PATH=C:\sde;%PATH%
-      ci\run.cmd build-release -DARCH_TESTS=OFF -DUSE_SDE=ON -DCPU_ARCH=avx512 -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
-
-- job: Windows_MSVC2019_x86_64_Release
+- job: Windows_MSVC_x86_64_AVX512_MSVC2019_Release
   timeoutInMinutes: 180
   pool:
     vmImage: 'windows-2019'
@@ -370,9 +330,49 @@ jobs:
       choco uninstall mingw
       choco install ninja
 
+      curl -o "$(Agent.TempDirectory)/sde.zip" -L $(SDE_URL_WINDOWS)
+      "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "$(Agent.TempDirectory)/sde.zip"
+
       call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
       set PATH=%PATH:C:\tools\mingw64\bin;=%
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
       set PATH=%PATH:C:\Program Files\LLVM\bin;=%
       set PATH=%PATH:C:\Strawberry\c\bin;=%
-      ci\run.cmd build-release -DARCH_TESTS=OFF -DCPU_ARCH=detect -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
+      set PATH=C:\sde;%PATH%
+      ci\run.cmd build-release -DARCH_TESTS=ON -DUSE_SDE=ON -DCPU_ARCH=avx512 -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
+
+# - job: Windows_MSVC_x86_AVX512_MSVC2019_Release
+#   timeoutInMinutes: 180
+#   pool:
+#     vmImage: 'windows-2019'
+#   steps:
+#   - script: |
+#       choco uninstall mingw
+#       choco install ninja
+
+#       curl -o "$(Agent.TempDirectory)/sde.zip" -L $(SDE_URL_WINDOWS)
+#       "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "$(Agent.TempDirectory)/sde.zip"
+
+#       call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+#       set PATH=%PATH:C:\tools\mingw64\bin;=%
+#       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
+#       set PATH=%PATH:C:\Program Files\LLVM\bin;=%
+#       set PATH=%PATH:C:\Strawberry\c\bin;=%
+#       set PATH=C:\sde;%PATH%
+#       ci\run.cmd build-release -DARCH_TESTS=OFF -DUSE_SDE=ON -DCPU_ARCH=avx512 -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
+
+# - job: Windows_MSVC2022_x86_64_Release
+#   timeoutInMinutes: 180
+#   pool:
+#     vmImage: 'windows-2022'
+#   steps:
+#   - script: |
+#       choco uninstall mingw
+#       choco install ninja
+
+#       call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+#       set PATH=%PATH:C:\tools\mingw64\bin;=%
+#       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
+#       set PATH=%PATH:C:\Program Files\LLVM\bin;=%
+#       set PATH=%PATH:C:\Strawberry\c\bin;=%
+#       ci\run.cmd build-release -DARCH_TESTS=OFF -DCPU_ARCH=detect -DENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release

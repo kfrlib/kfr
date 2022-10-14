@@ -2,7 +2,7 @@
  *  @{
  */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2022 Fractalium Ltd (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -109,16 +109,19 @@ KFR_INTRINSIC vec<T, Nout> gather_stride(const T* base)
     return internal::gather_stride<Nout, Stride>(base, csizeseq<Nout>);
 }
 
+namespace internal
+{
 template <size_t groupsize, typename T, size_t N, typename IT, size_t... Indices>
 KFR_INTRINSIC vec<T, N * groupsize> gather_helper(const T* base, const vec<IT, N>& offset,
                                                   csizes_t<Indices...>)
 {
     return concat(read<groupsize>(base + groupsize * offset[Indices])...);
 }
+}
 template <size_t groupsize = 1, typename T, size_t N, typename IT>
 KFR_INTRINSIC vec<T, N * groupsize> gather(const T* base, const vec<IT, N>& offset)
 {
-    return gather_helper<groupsize>(base, offset, csizeseq<N>);
+    return internal::gather_helper<groupsize>(base, offset, csizeseq<N>);
 }
 
 namespace internal
