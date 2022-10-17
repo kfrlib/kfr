@@ -2,7 +2,7 @@
  *  @{
  */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2022 Fractalium Ltd (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -27,6 +27,7 @@
 #include "../audiofile.hpp"
 CMT_PRAGMA_GNU(GCC diagnostic push)
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wimplicit-fallthrough")
+CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wunused-function")
 
 #ifndef KFR_DISABLE_WAV
 #define DR_WAV_NO_STDIO

@@ -2,7 +2,7 @@
  *  @{
  */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2022 Fractalium Ltd (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -45,7 +45,17 @@ struct color
     constexpr color(int) = delete;
     constexpr explicit color(T grey, T alpha = maximum) : v(grey, grey, grey, alpha) {}
     constexpr color(T r, T g, T b, T a = maximum) : v(r, g, b, a) {}
+#if defined(_MSC_VER) && !defined(__clang__)
+    // MSVC Internal Compiler Error workaround
+    constexpr color(const color& value) : v(value.v) {}
+    constexpr color& operator=(const color& value)
+    {
+        v = value.v;
+        return *this;
+    }
+#else
     constexpr color(const color&) = default;
+#endif
     constexpr color(const vec<T, 4>& v) : v(v) {}
     constexpr color(const vec<T, 3>& v, T a = maximum) : v(concat(v, vec<T, 1>(a))) {}
     constexpr color(const vec<T, 4>& v, T a) : v(concat(slice<0, 3>(v), vec<T, 1>(a))) {}
@@ -105,7 +115,8 @@ struct color
     constexpr bool operator==(const color& c) const { return all(v == c.v); }
     constexpr bool operator!=(const color& c) const { return !(*this == c); }
 
-    union {
+    union
+    {
         struct
         {
             T r;

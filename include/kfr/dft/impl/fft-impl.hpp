@@ -2,7 +2,7 @@
  *  @{
  */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2022 Fractalium Ltd (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -1031,9 +1031,13 @@ to_fmt(size_t real_size, const complex<T>* rtwiddle, complex<T>* out, const comp
 }
 
 template <typename T>
-#ifdef CMT_ARCH_X32
-// Fix Clang 8.0 bug
+#if (defined CMT_ARCH_X32 && defined CMT_ARCH_X86 && defined __clang__) && ((defined __APPLE__) || (__clang_major__ == 8))
+// Fix for Clang 8.0 bug (x32 with FMA instructions)
+// Xcode has different versions but x86 is very rare on macOS these days, 
+// so disable inlining and FMA for x32 macOS and Clang 8.x
 __attribute__((target("no-fma"), flatten, noinline))
+#else
+KFR_INTRINSIC
 #endif
 void from_fmt(size_t real_size, complex<T>* rtwiddle, complex<T>* out, const complex<T>* in,
                             dft_pack_format fmt)

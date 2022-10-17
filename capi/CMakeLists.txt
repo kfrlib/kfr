@@ -1,4 +1,4 @@
-# Copyright (C) 2016 D Levin (http://www.kfrlib.com)
+# Copyright (C) 2016-2022 Fractalium Ltd (http://www.kfrlib.com)
 # This file is part of KFR
 #
 # KFR is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with KFR.
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.10)
 
 if (WIN32)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
@@ -57,7 +57,7 @@ function (add_c_library ARCH)
         ${CMAKE_CURRENT_SOURCE_DIR}/../include/kfr/dsp/impl/dsp-impl.cpp)
     target_link_libraries(kfr_capi_${ARCH} kfr)
     target_set_arch(kfr_capi_${ARCH} PRIVATE ${ARCH})
-    target_compile_options(kfr_capi_${ARCH} PRIVATE -Xclang -ffast-math)
+    target_compile_options(kfr_capi_${ARCH} PRIVATE "${CLANG_ARG_PREFIX}-ffp-contract=fast")
     target_link_libraries(kfr_capi_all INTERFACE kfr_capi_${ARCH})
 
     if (NOT WIN32)
@@ -69,7 +69,7 @@ function (add_c_library ARCH)
                      PROPERTY POSITION_INDEPENDENT_CODE 1)
         target_link_libraries(kfr_capi_${ARCH}_pic kfr)
         target_set_arch(kfr_capi_${ARCH}_pic PRIVATE ${ARCH})
-        target_compile_options(kfr_capi_${ARCH}_pic PRIVATE -Xclang -ffast-math)
+        target_compile_options(kfr_capi_${ARCH}_pic PRIVATE "${CLANG_ARG_PREFIX}-ffp-contract=fast")
 
         target_link_libraries(kfr_capi_all_pic INTERFACE kfr_capi_${ARCH}_pic)
     endif ()

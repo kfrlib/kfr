@@ -3,14 +3,13 @@ title: KFR
 postprocessor:
   ignore: 
     - CMT_INLINE
-    - KFR_SINTRIN
-    - KFR_INTRIN
     - KFR_INTRINSIC
-    - KFR_SINTRINSIC
-    - KFR_FUNC
+    - KFR_MEM_INTRINSIC
     - KFR_FUNCTION
-    - CMT_INTRIN
+    - CMT_INTRINSIC
+    - CMT_MEM_INTRINSIC
     - CMT_UNUSED
+    - CMT_INLINE
 
 clang:
   arguments: 

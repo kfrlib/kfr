@@ -1,27 +1,27 @@
 site_name: KFR
 theme:
   name: 'material'
-  feature:
-    tabs: true
+  features:
+    - navigation.tabs
+    - navigation.top
+    
 extra:
   search:
     language: en
 
   social:
-    - type: 'github'
+    - icon: fontawesome/brands/github-alt
       link: 'https://github.com/kfrlib'
-    - type: 'twitter'
+    - icon: fontawesome/brands/twitter
       link: 'https://twitter.com/kfrlib'
 
-copyright: 'Copyright &copy; 2016 - 2019 KFR'
+copyright: 'Copyright &copy; 2016 - 2022 KFR'
 
 plugins:
     - search
 
 markdown_extensions:
   - admonition
-  - codehilite:
-      guess_lang: false
   - footnotes
   - meta
   - toc:
@@ -30,7 +30,10 @@ markdown_extensions:
       generic: true
   - pymdownx.inlinehilite
   - pymdownx.superfences
+  - pymdownx.highlight
   - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
 
 extra_javascript:
   - js/math.js

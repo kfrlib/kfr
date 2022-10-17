@@ -11,7 +11,7 @@
 #include "cident.h"
 
 #define KFR_VERSION_MAJOR 4
-#define KFR_VERSION_MINOR 2
+#define KFR_VERSION_MINOR 3
 #define KFR_VERSION_PATCH 0
 #define KFR_VERSION_LABEL ""
 
@@ -72,7 +72,7 @@ constexpr inline const char version_full[] = KFR_VERSION_FULL;
 #ifdef KFR_FUNCTION_IS_INTRINSIC
 #define KFR_FUNCTION CMT_INTRINSIC
 #else
-#define KFR_FUNCTION CMT_FUNCTION
+#define KFR_FUNCTION 
 #endif
 #ifdef CMT_NATIVE_F64
 #define KFR_NATIVE_F64 CMT_NATIVE_F64

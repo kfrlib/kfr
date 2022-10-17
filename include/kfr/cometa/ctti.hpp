@@ -27,13 +27,16 @@ constexpr inline type_id_t typeident_impl() CMT_NOEXCEPT
     return type_id_t(pconstvoid(&typeident_impl<T>));
 }
 
-#ifdef CMT_COMPILER_CLANG
+#if defined CMT_COMPILER_CLANG && CMT_COMPILER_MSVC
+constexpr size_t typename_prefix  = sizeof("auto __cdecl cometa::ctype_name(void) [T = ") - 1;
+constexpr size_t typename_postfix = sizeof("]") - 1;
+#elif defined CMT_COMPILER_CLANG
 constexpr size_t typename_prefix  = sizeof("auto cometa::ctype_name() [T = ") - 1;
 constexpr size_t typename_postfix = sizeof("]") - 1;
-#elif CMT_COMPILER_MSVC
+#elif defined CMT_COMPILER_MSVC
 constexpr size_t typename_prefix  = sizeof("auto __cdecl cometa::ctype_name<") - 1;
 constexpr size_t typename_postfix = sizeof(">(void) noexcept") - 1;
-#else
+#else // GCC
 constexpr size_t typename_prefix  = sizeof("constexpr auto cometa::ctype_name() [with T = ") - 1;
 constexpr size_t typename_postfix = sizeof("]") - 1;
 #endif

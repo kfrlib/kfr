@@ -1,6 +1,6 @@
 /**
  * KFR (http://kfrlib.com)
- * Copyright (C) 2016  D Levin
+ * Copyright (C) 2016-2022 Fractalium Ltd
  * See LICENSE.txt for details
  */
 
@@ -103,6 +103,11 @@ TEST(test_gen_expj)
                                       cbase(-0.30901699, -9.51056516e-01), cbase(0.30901699, -9.51056516e-01),
                                       cbase(0.80901699, -5.87785252e-01) }))) < 0.00006); // error here depends on vector width
                                       // In most cases error is much lower (less than 0.00001)
+}
+
+TEST(ctti)
+{
+    CHECK(cometa::type_name<float>() == std::string("float"));
 }
 
 } // namespace CMT_ARCH_NAME

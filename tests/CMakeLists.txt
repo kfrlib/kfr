@@ -1,4 +1,4 @@
-# Copyright (C) 2016 D Levin (http://www.kfrlib.com)
+# Copyright (C) 2016-2022 Fractalium Ltd (http://www.kfrlib.com)
 # This file is part of KFR
 #
 # KFR is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with KFR.
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.10)
 
 
 add_definitions(-DKFR_TESTING=1)
@@ -117,7 +117,7 @@ endif ()
 find_package(MPFR)
 find_package(GMP)
 
-if (MPFR_FOUND AND GMP_FOUND)
+if (MPFR_FOUND AND GMP_FOUND AND REGENERATE_TESTS)
     message(STATUS "MPFR is found")
     add_executable(generate_data generate_data.cpp)
     target_link_libraries(generate_data kfr)

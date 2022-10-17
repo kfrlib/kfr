@@ -268,16 +268,8 @@ struct compound_type_traits<std::pair<T, T>>
     }
 };
 
-namespace ops
-{
-struct empty
-{
-    constexpr empty() CMT_NOEXCEPT {}
-};
-} // namespace ops
-
 template <typename T, T val>
-struct cval_t : ops::empty
+struct cval_t
 {
     constexpr static T value = val;
     constexpr cval_t() CMT_NOEXCEPT {}
@@ -403,7 +395,7 @@ struct get_nth_type<index>
 } // namespace details
 
 template <typename T, T... values>
-struct cvals_t : ops::empty
+struct cvals_t
 {
     constexpr cvals_t() CMT_NOEXCEPT = default;
 
@@ -460,7 +452,7 @@ struct cvals_t : ops::empty
 };
 
 template <typename T>
-struct cvals_t<T> : ops::empty
+struct cvals_t<T>
 {
     using type = cvals_t<T>;
     constexpr static size_t size() { return 0; }
@@ -719,8 +711,7 @@ constexpr inline Ret cfilter(cvals_t<T, vals...>, cvals_t<bool, flags...>)
     {                                                                                                        \
         return Ret{};                                                                                        \
     }
-namespace ops
-{
+    
 // clang-format off
 CMT_UN_OP(-)
 CMT_UN_OP(+)
@@ -746,7 +737,7 @@ CMT_BIN_OP(&)
 CMT_BIN_OP(|)
 CMT_BIN_OP(^)
 // clang-format on
-} // namespace ops
+
 
 namespace details
 {

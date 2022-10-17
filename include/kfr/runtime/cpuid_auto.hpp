@@ -2,7 +2,7 @@
  *  @{
  */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2022 Fractalium Ltd (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -57,6 +57,6 @@ static char dummyvar = init_dummyvar();
 /**
  * @brief Returns cpu instruction set detected at runtime.
  */
-KFR_FUNCTION cpu_t get_cpu() { return internal_generic::cpu_v(); }
+inline cpu_t get_cpu() { return internal_generic::cpu_v(); }
 
 } // namespace kfr

@@ -1,6 +1,6 @@
 /**
  * KFR (http://kfrlib.com)
- * Copyright (C) 2016  D Levin
+ * Copyright (C) 2016-2022 Fractalium Ltd
  * See LICENSE.txt for details
  */
 #define _USE_MATH_DEFINES
@@ -14,9 +14,6 @@
 
 constexpr size_t points      = 10000;
 constexpr size_t points_2arg = 100;
-
-constexpr size_t fuzz_points      = 10000;
-constexpr size_t fuzz_points_2arg = 100;
 
 using namespace kfr;
 

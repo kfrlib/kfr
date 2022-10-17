@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2022 Fractalium Ltd (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -124,20 +124,38 @@ struct simd_small_array<f32, 2, f64>
     using packed_type            = f64;
 
 #ifdef _MSC_VER
-    KFR_INTRINSIC constexpr simd_small_array() CMT_NOEXCEPT = default;
+    KFR_MEM_INTRINSIC constexpr simd_small_array() CMT_NOEXCEPT = default;
 #else
-    KFR_INTRINSIC simd_small_array() CMT_NOEXCEPT {}
+    KFR_MEM_INTRINSIC simd_small_array() CMT_NOEXCEPT {}
 #endif
 
-    KFR_INTRINSIC constexpr simd_small_array(f64 whole) CMT_NOEXCEPT : whole(whole) {}
+#ifdef _MSC_VER
+    // MSVC Internal Compiler Error workaround
+    KFR_MEM_INTRINSIC constexpr simd_small_array(const simd_small_array& v) CMT_NOEXCEPT : whole(v.whole) {}
+    KFR_MEM_INTRINSIC constexpr simd_small_array(simd_small_array&& v) CMT_NOEXCEPT : whole(v.whole) {}
+    KFR_MEM_INTRINSIC constexpr simd_small_array& operator=(const simd_small_array& v) CMT_NOEXCEPT
+    {
+        whole = v.whole;
+        return *this;
+    }
+    KFR_MEM_INTRINSIC constexpr simd_small_array& operator=(simd_small_array&& v) CMT_NOEXCEPT
+    {
+        whole = v.whole;
+        return *this;
+    }
+#endif
 
-    KFR_INTRINSIC simd_small_array(f32 x, f32 y) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr simd_small_array(f64 whole) CMT_NOEXCEPT : whole(whole) {}
+
+    KFR_MEM_INTRINSIC simd_small_array(f32 x, f32 y) CMT_NOEXCEPT
     {
 #ifdef _MSC_VER
 #ifdef CMT_ARCH_SSE2
-        whole = _mm_cvtsd_f64(_mm_castps_pd(_mm_setr_ps(x, y, x, y)));
+        // whole = _mm_cvtsd_f64(_mm_castps_pd(_mm_setr_ps(x, y, x, y)));
+        whole = _mm_cvtsd_f64(_mm_castps_pd(_mm_unpacklo_ps(_mm_set_ss(x), _mm_set_ss(y))));
 #else
-        union {
+        union
+        {
             struct
             {
                 f32 x;
@@ -150,7 +168,8 @@ struct simd_small_array<f32, 2, f64>
         whole = u.r;
 #endif
 #else
-        union {
+        union
+        {
             struct
             {
                 f32 x;
@@ -162,7 +181,7 @@ struct simd_small_array<f32, 2, f64>
 #endif
     }
 
-    KFR_INTRINSIC static constexpr simd_small_array from(f64 whole) CMT_NOEXCEPT { return { whole }; }
+    KFR_MEM_INTRINSIC static constexpr simd_small_array from(f64 whole) CMT_NOEXCEPT { return { whole }; }
 };
 
 template <typename T>
@@ -436,7 +455,7 @@ KFR_INTRINSIC __m128 KFR_swap_ps(__m128 x) { return _mm_shuffle_ps(x, x, _MM_SHU
 
 #ifndef KFR_f32x2_array
 // KFR_INTRIN_SHUFFLE_CONCAT(f32, 2, _mm_castpd_ps(_mm_setr_pd(x.whole, y.whole)))
-KFR_INTRIN_SHUFFLE_SWAP(f32, 2, _mm_cvtsd_f64(_mm_castps_pd(KFR_swap_ps(_mm_castpd_ps(_mm_set_sd(x.whole))))))
+KFR_INTRIN_SHUFFLE_SWAP(f32, 2, _mm_cvtsd_f64(_mm_castps_pd(KFR_swap_ps(_mm_castpd_ps(_mm_set1_pd(x.whole))))))
 #else
 KFR_INTRIN_SHUFFLE_CONCAT(f32, 2, _mm_setr_ps(x.low, x.high, y.low, y.high))
 KFR_INTRIN_SHUFFLE_SWAP(f32, 2, simd<f32, 2>(x.high, x.low))
@@ -650,7 +669,7 @@ KFR_INTRINSIC simd<float, 8> simd_shuffle(simd_t<float, 16>, const simd<float, 1
 {
     const __m256 t1 = _mm256_permute2f128_ps(x.low, x.high, (0 << 0) | (2 << 4));
     const __m256 t2 = _mm256_permute2f128_ps(x.low, x.high, (1 << 0) | (3 << 4));
-    return _mm256_shuffle_ps(t1, t2, shuffle_mask<8, 2, 3, 2, 3>::value);
+    return _mm256_shuffle_ps(t1, t2, (shuffle_mask<8, 2, 3, 2, 3>::value));
 }
 
 KFR_INTRINSIC simd<float, 8> simd_shuffle(simd_t<float, 16>, const simd<float, 16>& x,
@@ -658,7 +677,7 @@ KFR_INTRINSIC simd<float, 8> simd_shuffle(simd_t<float, 16>, const simd<float, 1
 {
     const __m256 t1 = _mm256_permute2f128_ps(x.low, x.high, (0 << 0) | (2 << 4));
     const __m256 t2 = _mm256_permute2f128_ps(x.low, x.high, (1 << 0) | (3 << 4));
-    return _mm256_shuffle_ps(t1, t2, shuffle_mask<8, 0, 1, 0, 1>::value);
+    return _mm256_shuffle_ps(t1, t2, (shuffle_mask<8, 0, 1, 0, 1>::value));
 }
 #endif
 
@@ -1282,9 +1301,9 @@ simd_array<T, Nout> simd_shuffle2_generic(const simd_array<T, N1>& x, const simd
     for (size_t i = 0; i < Nout; ++i)
     {
         const size_t index = indices[i];
-        result.val[i]      = index >= N1 + N2
-                            ? T()
-                            : index >= N1 ? static_cast<T>(y.val[index - N1]) : static_cast<T>(x.val[index]);
+        result.val[i]      = index >= N1 + N2 ? T()
+                             : index >= N1    ? static_cast<T>(y.val[index - N1])
+                                              : static_cast<T>(x.val[index]);
     }
     return result;
 }
@@ -1318,8 +1337,8 @@ KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd2_t<T, N, N>, const simd<T, N>& x, 
 #else
     return from_simd_array<T, Nout>(
         { (indices >= N * 2 ? T()
-                            : indices >= N ? static_cast<T>(to_simd_array<T, N>(y).val[indices - N])
-                                           : static_cast<T>(to_simd_array<T, N>(x).val[indices]))... });
+           : indices >= N ? static_cast<T>(to_simd_array<T, N>(y).val[indices - N])
+                          : static_cast<T>(to_simd_array<T, N>(x).val[indices]))... });
 #endif
 }
 
@@ -1339,8 +1358,8 @@ KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd2_t<T, N1, N2>, const simd<T, N1>& 
 
     return from_simd_array<T, Nout>(
         { (indices > N1 + N2 ? T()
-                             : indices >= N1 ? static_cast<T>(to_simd_array<T, N2>(y).val[indices - N1])
-                                             : static_cast<T>(to_simd_array<T, N1>(x).val[indices]))... });
+           : indices >= N1 ? static_cast<T>(to_simd_array<T, N2>(y).val[indices - N1])
+                           : static_cast<T>(to_simd_array<T, N1>(x).val[indices]))... });
 #endif
 }
 
@@ -1451,14 +1470,16 @@ template <typename T, size_t Nout, size_t Nin>
 KFR_INTRINSIC simd<T, Nout> simd_from_partial(simd2_t<T, Nout, Nin>, const simd<T, Nin>& x)
 {
 #ifdef _MSC_VER
-    union {
+    union
+    {
         simd<T, Nin> in;
         simd<T, Nout> out;
     } u;
     u.in = x;
     return u.out;
 #else
-    union {
+    union
+    {
         simd<T, Nin> in;
         simd<T, Nout> out;
     } u{ x };
@@ -1521,18 +1542,22 @@ KFR_INTRINSIC simd<float, 4> simd_vec_shuffle(simd_t<float, 4>, const simd<float
                                               csizes_t<I0, I1, I2, I3>)
 {
     // SSE -> SSE
-    constexpr size_t mask = shuffle_mask<8, I0, I1, I2, I3>::value;
-    return _mm_shuffle_ps(x, x, mask);
+    return _mm_shuffle_ps(x, x, (shuffle_mask<8, I0, I1, I2, I3>::value));
 }
 
 template <size_t I0, size_t I1>
 KFR_INTRINSIC simd<double, 2> simd_vec_shuffle(simd_t<double, 2>, const simd<double, 2>& x, csizes_t<I0, I1>)
 {
     // SSE -> SSE
-    constexpr size_t mask = shuffle_mask<2, I0, I1>::value;
-    return _mm_shuffle_pd(x, x, mask);
+    return _mm_shuffle_pd(x, x, (shuffle_mask<2, I0, I1>::value));
 }
 #endif
+
+template <uint8_t max>
+KFR_INTRINSIC constexpr uint8_t vec_idx(size_t value)
+{
+    return value >= max ? 0 : value;
+}
 
 #ifdef CMT_ARCH_AVX512
 
@@ -1544,7 +1569,11 @@ KFR_INTRINSIC simd<float, 16> simd_vec_shuffle(
 {
     // AVX512 -> AVX512
     return _mm512_permutexvar_ps(
-        _mm512_setr_epi32(I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15), x);
+        _mm512_setr_epi32(vec_idx<16>(I0), vec_idx<16>(I1), vec_idx<16>(I2), vec_idx<16>(I3), vec_idx<16>(I4),
+                          vec_idx<16>(I5), vec_idx<16>(I6), vec_idx<16>(I7), vec_idx<16>(I8), vec_idx<16>(I9),
+                          vec_idx<16>(I10), vec_idx<16>(I11), vec_idx<16>(I12), vec_idx<16>(I13),
+                          vec_idx<16>(I14), vec_idx<16>(I15)),
+        x);
 }
 
 template <size_t I0, size_t I1, size_t I2, size_t I3, size_t I4, size_t I5, size_t I6, size_t I7>
@@ -1552,7 +1581,10 @@ KFR_INTRINSIC simd<double, 8> simd_vec_shuffle(simd_t<double, 8>, const simd<dou
                                                csizes_t<I0, I1, I2, I3, I4, I5, I6, I7>)
 {
     // AVX512 -> AVX512
-    return _mm512_permutexvar_pd(_mm512_setr_epi64(I0, I1, I2, I3, I4, I5, I6, I7), x);
+    return _mm512_permutexvar_pd(_mm512_setr_epi64(vec_idx<8>(I0), vec_idx<8>(I1), vec_idx<8>(I2),
+                                                   vec_idx<8>(I3), vec_idx<8>(I4), vec_idx<8>(I5),
+                                                   vec_idx<8>(I6), vec_idx<8>(I7)),
+                                 x);
 }
 
 template <size_t I0, size_t I1, size_t I2, size_t I3, size_t I4, size_t I5, size_t I6, size_t I7>
@@ -1561,7 +1593,11 @@ KFR_INTRINSIC simd<float, 8> simd_vec_shuffle(simd_t<float, 16>, const simd<floa
 {
     // AVX512 -> AVX
     return _mm512_castps512_ps256(_mm512_permutexvar_ps(
-        _mm512_setr_epi32(I0, I1, I2, I3, I4, I5, I6, I7, I0, I1, I2, I3, I4, I5, I6, I7), x));
+        _mm512_setr_epi32(vec_idx<16>(I0), vec_idx<16>(I1), vec_idx<16>(I2), vec_idx<16>(I3), vec_idx<16>(I4),
+                          vec_idx<16>(I5), vec_idx<16>(I6), vec_idx<16>(I7), vec_idx<16>(I0), vec_idx<16>(I1),
+                          vec_idx<16>(I2), vec_idx<16>(I3), vec_idx<16>(I4), vec_idx<16>(I5), vec_idx<16>(I6),
+                          vec_idx<16>(I7)),
+        x));
 }
 
 template <size_t I0, size_t I1, size_t I2, size_t I3>
@@ -1570,7 +1606,11 @@ KFR_INTRINSIC simd<float, 4> simd_vec_shuffle(simd_t<float, 16>, const simd<floa
 {
     // AVX512 -> SSE
     return _mm512_castps512_ps128(_mm512_permutexvar_ps(
-        _mm512_setr_epi32(I0, I1, I2, I3, I0, I1, I2, I3, I0, I1, I2, I3, I0, I1, I2, I3), x));
+        _mm512_setr_epi32(vec_idx<16>(I0), vec_idx<16>(I1), vec_idx<16>(I2), vec_idx<16>(I3), vec_idx<16>(I0),
+                          vec_idx<16>(I1), vec_idx<16>(I2), vec_idx<16>(I3), vec_idx<16>(I0), vec_idx<16>(I1),
+                          vec_idx<16>(I2), vec_idx<16>(I3), vec_idx<16>(I0), vec_idx<16>(I1), vec_idx<16>(I2),
+                          vec_idx<16>(I3)),
+        x));
 }
 
 template <size_t I0, size_t I1, size_t I2, size_t I3>
@@ -1578,16 +1618,20 @@ KFR_INTRINSIC simd<double, 4> simd_vec_shuffle(simd_t<double, 8>, const simd<dou
                                                csizes_t<I0, I1, I2, I3>)
 {
     // AVX512 -> AVX
-    return _mm512_castpd512_pd256(
-        _mm512_permutexvar_pd(_mm512_setr_epi64(I0, I1, I2, I3, I0, I1, I2, I3), x));
+    return _mm512_castpd512_pd256(_mm512_permutexvar_pd(
+        _mm512_setr_epi64(vec_idx<8>(I0), vec_idx<8>(I1), vec_idx<8>(I2), vec_idx<8>(I3), vec_idx<8>(I0),
+                          vec_idx<8>(I1), vec_idx<8>(I2), vec_idx<8>(I3)),
+        x));
 }
 
 template <size_t I0, size_t I1>
 KFR_INTRINSIC simd<double, 2> simd_vec_shuffle(simd_t<double, 8>, const simd<double, 8>& x, csizes_t<I0, I1>)
 {
     // AVX512 -> SSE
-    return _mm512_castpd512_pd128(
-        _mm512_permutexvar_pd(_mm512_setr_epi64(I0, I1, I0, I1, I0, I1, I0, I1), x));
+    return _mm512_castpd512_pd128(_mm512_permutexvar_pd(
+        _mm512_setr_epi64(vec_idx<8>(I0), vec_idx<8>(I1), vec_idx<8>(I0), vec_idx<8>(I1), vec_idx<8>(I0),
+                          vec_idx<8>(I1), vec_idx<8>(I0), vec_idx<8>(I1)),
+        x));
 }
 
 template <size_t I0, size_t I1, size_t I2, size_t I3, size_t I4, size_t I5, size_t I6, size_t I7, size_t I8,
@@ -1598,7 +1642,10 @@ KFR_INTRINSIC simd<float, 16> simd_vec_shuffle(
 {
     // AVX -> AVX512
     return _mm512_permutexvar_ps(
-        _mm512_setr_epi32(I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15),
+        _mm512_setr_epi32(vec_idx<8>(I0), vec_idx<8>(I1), vec_idx<8>(I2), vec_idx<8>(I3), vec_idx<8>(I4),
+                          vec_idx<8>(I5), vec_idx<8>(I6), vec_idx<8>(I7), vec_idx<8>(I8), vec_idx<8>(I9),
+                          vec_idx<8>(I10), vec_idx<8>(I11), vec_idx<8>(I12), vec_idx<8>(I13), vec_idx<8>(I14),
+                          vec_idx<8>(I15)),
         _mm512_castps256_ps512(x));
 }
 
@@ -1610,7 +1657,10 @@ KFR_INTRINSIC simd<float, 16> simd_vec_shuffle(
 {
     // SSE -> AVX512
     return _mm512_permutexvar_ps(
-        _mm512_setr_epi32(I0, I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, I13, I14, I15),
+        _mm512_setr_epi32(vec_idx<4>(I0), vec_idx<4>(I1), vec_idx<4>(I2), vec_idx<4>(I3), vec_idx<4>(I4),
+                          vec_idx<4>(I5), vec_idx<4>(I6), vec_idx<4>(I7), vec_idx<4>(I8), vec_idx<4>(I9),
+                          vec_idx<4>(I10), vec_idx<4>(I11), vec_idx<4>(I12), vec_idx<4>(I13), vec_idx<4>(I14),
+                          vec_idx<4>(I15)),
         _mm512_castps128_ps512(x));
 }
 
@@ -1619,7 +1669,9 @@ KFR_INTRINSIC simd<double, 8> simd_vec_shuffle(simd_t<double, 4>, const simd<dou
                                                csizes_t<I0, I1, I2, I3, I4, I5, I6, I7>)
 {
     // AVX -> AVX512
-    return _mm512_permutexvar_pd(_mm512_setr_epi64(I0, I1, I2, I3, I4, I5, I6, I7),
+    return _mm512_permutexvar_pd(_mm512_setr_epi64(vec_idx<4>(I0), vec_idx<4>(I1), vec_idx<4>(I2),
+                                                   vec_idx<4>(I3), vec_idx<4>(I4), vec_idx<4>(I5),
+                                                   vec_idx<4>(I6), vec_idx<4>(I7)),
                                  _mm512_castpd256_pd512(x));
 }
 
@@ -1628,7 +1680,9 @@ KFR_INTRINSIC simd<double, 8> simd_vec_shuffle(simd_t<double, 2>, const simd<dou
                                                csizes_t<I0, I1, I2, I3, I4, I5, I6, I7>)
 {
     // SSE -> AVX512
-    return _mm512_permutexvar_pd(_mm512_setr_epi64(I0, I1, I2, I3, I4, I5, I6, I7),
+    return _mm512_permutexvar_pd(_mm512_setr_epi64(vec_idx<2>(I0), vec_idx<2>(I1), vec_idx<2>(I2),
+                                                   vec_idx<2>(I3), vec_idx<2>(I4), vec_idx<2>(I5),
+                                                   vec_idx<2>(I6), vec_idx<2>(I7)),
                                  _mm512_castpd128_pd512(x));
 }
 
@@ -1650,9 +1704,9 @@ KFR_INTRINSIC simd<float, 8> simd_vec_shuffle(simd_t<float, 8>, const simd<float
     else if constexpr (cmaxof(csizes<I0, I1, I2, I3>) < 4 && cminof(csizes<I4, I5, I6, I7>) >= 4)
     {
         if constexpr (csizes<I0, I1, I2, I3, I4, I5, I6, I7>.equal(
-                      csizes<I0, I1, I2, I3, I0 + 4, I1 + 4, I2 + 4, I3 + 4>))
+                          csizes<I0, I1, I2, I3, I0 + 4, I1 + 4, I2 + 4, I3 + 4>))
         {
-            return _mm256_shuffle_ps(x, x, shuffle_mask<8, I0, I1, I2, I3>::value);
+            return _mm256_shuffle_ps(x, x, (shuffle_mask<8, I0, I1, I2, I3>::value));
         }
         else
         {
@@ -1672,8 +1726,8 @@ KFR_INTRINSIC simd<float, 8> simd_vec_shuffle(simd_t<float, 8>, const simd<float
         const __m256 t2 = _mm256_permutevar_ps(
             sw, _mm256_setr_epi32(I0 % 4, I1 % 4, I2 % 4, I3 % 4, I4 % 4, I5 % 4, I6 % 4, I7 % 4));
         return _mm256_blend_ps(t1, t2,
-                               shuffle_mask<8, I0 / 4, I1 / 4, I2 / 4, I3 / 4, 1 - I4 / 4, 1 - I5 / 4,
-                                            1 - I6 / 4, 1 - I7 / 4>::value);
+                               (shuffle_mask<8, I0 / 4, I1 / 4, I2 / 4, I3 / 4, 1 - I4 / 4, 1 - I5 / 4,
+                                             1 - I6 / 4, 1 - I7 / 4>::value));
     }
 }
 
@@ -1692,7 +1746,7 @@ KFR_INTRINSIC simd<double, 4> simd_vec_shuffle(simd_t<double, 4>, const simd<dou
     {
         if constexpr (csizes<I0, I1, I2, I3>.equal(csizes<I0, I1, I2 + 2, I3 + 2>))
         {
-            return _mm256_shuffle_ps(x, x, shuffle_mask<2, I0, I1>::value);
+            return _mm256_shuffle_pd(x, x, (shuffle_mask<2, I0, I1>::value));
         }
         else
         {
@@ -1711,7 +1765,7 @@ KFR_INTRINSIC simd<double, 4> simd_vec_shuffle(simd_t<double, 4>, const simd<dou
             x, _mm256_setr_epi64x((I0 % 2) << 1, (I1 % 2) << 1, (I2 % 2) << 1, (I3 % 2) << 1));
         const __m256d t2 = _mm256_permutevar_pd(
             sw, _mm256_setr_epi64x((I0 % 2) << 1, (I1 % 2) << 1, (I2 % 2) << 1, (I3 % 2) << 1));
-        return _mm256_blend_pd(t1, t2, shuffle_mask<4, I0 / 2, I1 / 2, 1 - I2 / 2, 1 - I3 / 2>::value);
+        return _mm256_blend_pd(t1, t2, (shuffle_mask<4, I0 / 2, I1 / 2, 1 - I2 / 2, 1 - I3 / 2>::value));
     }
 }
 
@@ -1724,15 +1778,15 @@ KFR_INTRINSIC simd<float, 4> simd_vec_shuffle(simd_t<float, 8>, const simd<float
     {
         __m128 t1 = simd_get_low(simd_t<float, 8>{}, x);
         __m128 t2 = simd_get_high(simd_t<float, 8>{}, x);
-        return _mm_blend_ps(t1, t2, shuffle_mask<4, I0 / 4, I1 / 4, I2 / 4, I3 / 4>::value);
+        return _mm_blend_ps(t1, t2, (shuffle_mask<4, I0 / 4, I1 / 4, I2 / 4, I3 / 4>::value));
     }
     else
     {
         __m128 t1 = simd_get_low(simd_t<float, 8>{}, x);
         __m128 t2 = simd_get_high(simd_t<float, 8>{}, x);
-        t1        = _mm_permute_ps(t1, shuffle_mask<8, I0 % 4, I1 % 4, I2 % 4, I3 % 4>::value);
-        t2        = _mm_permute_ps(t2, shuffle_mask<8, I0 % 4, I1 % 4, I2 % 4, I3 % 4>::value);
-        return _mm_blend_ps(t1, t2, shuffle_mask<4, I0 / 4, I1 / 4, I2 / 4, I3 / 4>::value);
+        t1        = _mm_permute_ps(t1, (shuffle_mask<8, I0 % 4, I1 % 4, I2 % 4, I3 % 4>::value));
+        t2        = _mm_permute_ps(t2, (shuffle_mask<8, I0 % 4, I1 % 4, I2 % 4, I3 % 4>::value));
+        return _mm_blend_ps(t1, t2, (shuffle_mask<4, I0 / 4, I1 / 4, I2 / 4, I3 / 4>::value));
     }
 }
 
@@ -1744,15 +1798,15 @@ KFR_INTRINSIC simd<double, 2> simd_vec_shuffle(simd_t<double, 4>, const simd<dou
     {
         __m128d t1 = simd_get_low(simd_t<double, 4>{}, x);
         __m128d t2 = simd_get_high(simd_t<double, 4>{}, x);
-        return _mm_blend_pd(t1, t2, shuffle_mask<2, I0 / 2, I1 / 2>::value);
+        return _mm_blend_pd(t1, t2, (shuffle_mask<2, I0 / 2, I1 / 2>::value));
     }
     else
     {
         __m128d t1 = simd_get_low(simd_t<double, 4>{}, x);
         __m128d t2 = simd_get_high(simd_t<double, 4>{}, x);
-        t1         = _mm_permute_pd(t1, shuffle_mask<2, I0 % 2, I1 % 2>::value);
-        t2         = _mm_permute_pd(t2, shuffle_mask<2, I0 % 2, I1 % 2>::value);
-        return _mm_blend_pd(t1, t2, shuffle_mask<2, I0 / 2, I1 / 2>::value);
+        t1         = _mm_permute_pd(t1, (shuffle_mask<2, I0 % 2, I1 % 2>::value));
+        t2         = _mm_permute_pd(t2, (shuffle_mask<2, I0 % 2, I1 % 2>::value));
+        return _mm_blend_pd(t1, t2, (shuffle_mask<2, I0 / 2, I1 / 2>::value));
     }
 }
 
@@ -1761,8 +1815,8 @@ KFR_INTRINSIC simd<float, 8> simd_vec_shuffle(simd_t<float, 4>, const simd<float
                                               csizes_t<I0, I1, I2, I3, I4, I5, I6, I7>)
 {
     // SSE -> AVX
-    return KFR_mm256_setr_m128(_mm_shuffle_ps(x, x, shuffle_mask<8, I0, I1, I2, I3>::value),
-                               _mm_shuffle_ps(x, x, shuffle_mask<8, I4, I5, I6, I7>::value));
+    return KFR_mm256_setr_m128(_mm_shuffle_ps(x, x, (shuffle_mask<8, I0, I1, I2, I3>::value)),
+                               _mm_shuffle_ps(x, x, (shuffle_mask<8, I4, I5, I6, I7>::value)));
 }
 
 template <size_t I0, size_t I1, size_t I2, size_t I3>
@@ -1770,8 +1824,8 @@ KFR_INTRINSIC simd<double, 4> simd_vec_shuffle(simd_t<double, 2>, const simd<dou
                                                csizes_t<I0, I1, I2, I3>)
 {
     // SSE -> AVX
-    return KFR_mm256_setr_m128d(_mm_shuffle_pd(x, x, shuffle_mask<2, I0, I1>::value),
-                                _mm_shuffle_pd(x, x, shuffle_mask<2, I2, I3>::value));
+    return KFR_mm256_setr_m128d(_mm_shuffle_pd(x, x, (shuffle_mask<2, I0, I1>::value)),
+                                _mm_shuffle_pd(x, x, (shuffle_mask<2, I2, I3>::value)));
 }
 
 #endif
@@ -1815,7 +1869,8 @@ KFR_INTRINSIC simd<T, Nout> universal_shuffle(simd_t<T, Nin>, const simd<T, Nin>
         }
         else
         {
-            union {
+            union
+            {
                 simd<T, minwidth> tmp;
                 simd<T, Nout> r;
             } u{ tmp };
