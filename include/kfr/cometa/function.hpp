@@ -145,8 +145,8 @@ inline function<Ret(Args...)> cdispatch(cvals_t<T, v0, values...>, identity<T> v
 {
     if (value == v0)
     {
-        return [=](Args... args)
-                   CMT_INLINE_LAMBDA -> Ret { return fn(cval_t<T, v0>(), std::forward<Args>(args)...); };
+        return [=](Args... args) CMT_INLINE_LAMBDA -> Ret
+        { return fn(cval_t<T, v0>(), std::forward<Args>(args)...); };
     }
     else
     {

@@ -38,7 +38,7 @@ inline namespace CMT_ARCH_NAME
     template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>)>                                           \
     KFR_INTRINSIC vec<flt_type<T>, N> fn(const vec<T, N>& a) CMT_NOEXCEPT                                    \
     {                                                                                                        \
-        return intrinsics::fn(elemcast<flt_type<T>>(a));                                                     \
+        return intrinsics::fn(promoteto<flt_type<T>>(a));                                                     \
     }
 
 #define KFR_HANDLE_SCALAR(fn)                                                                                \

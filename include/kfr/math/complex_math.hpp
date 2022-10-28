@@ -25,13 +25,13 @@
  */
 #pragma once
 
-#include "../simd/complex.hpp"
 #include "../simd/abs.hpp"
+#include "../simd/complex.hpp"
+#include "../simd/min_max.hpp"
+#include "../simd/select.hpp"
 #include "atan.hpp"
 #include "hyperbolic.hpp"
 #include "log_exp.hpp"
-#include "../simd/min_max.hpp"
-#include "../simd/select.hpp"
 #include "sin_cos.hpp"
 #include "sqrt.hpp"
 

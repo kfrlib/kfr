@@ -22,8 +22,8 @@
  */
 #pragma once
 
-#include "function.hpp"
 #include "../operators.hpp"
+#include "function.hpp"
 
 namespace kfr
 {

@@ -238,7 +238,7 @@ typedef double kfr_c64;
                                              size_t size);
     KFR_API_SPEC void kfr_filter_process_f64(KFR_FILTER_F64* plan, kfr_f64* output, const kfr_f64* input,
                                              size_t size);
-                                             
+
     KFR_API_SPEC void kfr_filter_reset_f32(KFR_FILTER_F32* plan);
     KFR_API_SPEC void kfr_filter_reset_f64(KFR_FILTER_F64* plan);
 

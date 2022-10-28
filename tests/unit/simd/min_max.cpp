@@ -4,7 +4,7 @@
  * See LICENSE.txt for details
  */
 
-#include <kfr/math/min_max.hpp>
+#include <kfr/simd/min_max.hpp>
 
 #include <kfr/io.hpp>
 
@@ -45,7 +45,8 @@ TEST(absmin)
 {
     test_function2(
         test_catogories::all, [](auto x, auto y) { return kfr::absmin(x, y); },
-        [](auto x, auto y) -> common_type<decltype(x), decltype(y)> {
+        [](auto x, auto y) -> common_type<decltype(x), decltype(y)>
+        {
             x = x >= 0 ? x : -x;
             y = y >= 0 ? y : -y;
             return x <= y ? x : y;
@@ -57,7 +58,8 @@ TEST(absmax)
 {
     test_function2(
         test_catogories::all, [](auto x, auto y) { return kfr::absmax(x, y); },
-        [](auto x, auto y) -> common_type<decltype(x), decltype(y)> {
+        [](auto x, auto y) -> common_type<decltype(x), decltype(y)>
+        {
             x = x >= 0 ? x : -x;
             y = y >= 0 ? y : -y;
             return x >= y ? x : y;

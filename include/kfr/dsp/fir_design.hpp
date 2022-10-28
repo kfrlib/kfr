@@ -39,8 +39,7 @@ template <typename T>
 void fir_lowpass(univector_ref<T> taps, T cutoff, const expression_pointer<T>& window, bool normalize = true)
 {
     const T scale = 2.0 * cutoff;
-    taps          = bind_expression(fn::sinc(),
-                           symmlinspace<T, true>((taps.size() - 1) * cutoff * c_pi<T>, taps.size(), true)) *
+    taps = bind_expression(fn::sinc(), symmlinspace<T>((taps.size() - 1) * cutoff * c_pi<T>, taps.size())) *
            scale * window;
 
     if (is_odd(taps.size()))
@@ -57,7 +56,7 @@ void fir_highpass(univector_ref<T> taps, T cutoff, const expression_pointer<T>& 
 {
     const T scale = 2.0 * -cutoff;
     taps          = bind_expression(fn::sinc(),
-                           symmlinspace<T, true>((taps.size() - 1) * cutoff * c_pi<T>, taps.size(), true)) *
+                           symmlinspace<T>((taps.size() - 1) * cutoff * c_pi<T>, taps.size())) *
            scale * window;
 
     if (is_odd(taps.size()))
@@ -80,8 +79,8 @@ void fir_bandpass(univector_ref<T> taps, T frequency1, T frequency2, const expre
     const T start1 = sc * frequency1;
     const T start2 = sc * frequency2;
 
-    taps = (bind_expression(fn::sinc(), symmlinspace<T, true>(start2, taps.size(), true)) * scale2 -
-            bind_expression(fn::sinc(), symmlinspace<T, true>(start1, taps.size(), true)) * scale1) *
+    taps = (bind_expression(fn::sinc(), symmlinspace<T>(start2, taps.size())) * scale2 -
+            bind_expression(fn::sinc(), symmlinspace<T>(start1, taps.size())) * scale1) *
            window;
 
     if (is_odd(taps.size()))
@@ -104,8 +103,8 @@ void fir_bandstop(univector_ref<T> taps, T frequency1, T frequency2, const expre
     const T start1 = sc * frequency1;
     const T start2 = sc * frequency2;
 
-    taps = (bind_expression(fn::sinc(), symmlinspace<T, true>(start1, taps.size(), true)) * scale1 -
-            bind_expression(fn::sinc(), symmlinspace<T, true>(start2, taps.size(), true)) * scale2) *
+    taps = (bind_expression(fn::sinc(), symmlinspace<T>(start1, taps.size())) * scale1 -
+            bind_expression(fn::sinc(), symmlinspace<T>(start2, taps.size())) * scale2) *
            window;
 
     if (is_odd(taps.size()))

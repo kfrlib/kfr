@@ -93,6 +93,15 @@ struct alignas(next_poweroftwo(sizeof(T)) * next_poweroftwo(N)) portable_vec
 {
     static constexpr vec_shape<T, N> shape() CMT_NOEXCEPT { return {}; }
 
+    constexpr portable_vec() = default;
+
+    constexpr portable_vec(T value) : portable_vec(csizeseq<N>, value) {}
+
+    template <typename... Ts, size_t NN = N, KFR_ENABLE_IF(NN >= 2)>
+    constexpr portable_vec(T v1, T v2, Ts... args) : elem{ v1, v2, static_cast<T>(args)... }
+    {
+    }
+
     static_assert(N > 0 && N <= 1024, "Invalid vector size");
 
     static_assert(is_simd_type<T> || !compound_type_traits<T>::is_scalar, "Invalid vector type");
@@ -104,8 +113,18 @@ struct alignas(next_poweroftwo(sizeof(T)) * next_poweroftwo(N)) portable_vec
 
     T elem[N];
 
-    T operator[](size_t index) const { return elem[index]; }
-    T& operator[](size_t index) { return elem[index]; }
+    constexpr T operator[](size_t index) const { return elem[index]; }
+    constexpr T& operator[](size_t index) { return elem[index]; }
+    constexpr T front() const { return elem[0]; }
+    constexpr T& front() { return elem[0]; }
+    constexpr T back() const { return elem[N - 1]; }
+    constexpr T& back() { return elem[N - 1]; }
+
+private:
+    template <size_t... indices>
+    constexpr portable_vec(csizes_t<indices...>, T value) : elem{ (static_cast<void>(indices), value)... }
+    {
+    }
 };
 
 inline namespace CMT_ARCH_NAME
@@ -113,6 +132,9 @@ inline namespace CMT_ARCH_NAME
 
 template <typename T, size_t N>
 struct vec;
+
+template <typename T>
+constexpr inline size_t vec_rank = 0;
 
 template <typename T, size_t N>
 struct vec_halves
@@ -129,12 +151,22 @@ struct vec_halves<T, 1>
 
 namespace internal
 {
+enum class conv_t
+{
+    promote,
+    broadcast,
+};
 
 // scalar to scalar
-template <typename To, typename From>
+template <size_t ToRank, size_t FromRank, typename To, typename From, conv_t conv>
 struct conversion
 {
-    static_assert(is_convertible<From, To>, "");
+};
+
+template <typename To, typename From, conv_t conv>
+struct conversion<0, 0, To, From, conv>
+{
+    static_assert(is_convertible<From, To>);
 
     static To cast(const From& value) { return value; }
 };
@@ -161,14 +193,6 @@ struct compoundcast<vec<vec<T, N1>, N2>>
     static vec<T, N1 * N2> to_flat(const vec<vec<T, N1>, N2>& x) { return x.v; }
 
     static vec<vec<T, N1>, N2> from_flat(const vec<T, N1 * N2>& x) { return x.v; }
-};
-
-template <typename T, size_t N1, size_t N2, size_t N3>
-struct compoundcast<vec<vec<vec<T, N1>, N2>, N3>>
-{
-    static vec<T, N1 * N2 * N3> to_flat(const vec<vec<vec<T, N1>, N2>, N3>& x) { return x.v; }
-
-    static vec<vec<vec<T, N1>, N2>, N3> from_flat(const vec<T, N1 * N2 * N3>& x) { return x.v; }
 };
 
 template <typename T, size_t N_>
@@ -224,7 +248,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     // default
     KFR_MEM_INTRINSIC constexpr vec() CMT_NOEXCEPT {}
 
-#if defined(_MSC_VER) && !defined (__clang__)
+#if defined(_MSC_VER) && !defined(__clang__)
     // MSVC Internal Compiler Error workaround
     // copy
     KFR_MEM_INTRINSIC constexpr vec(const vec& value) CMT_NOEXCEPT : v(value.v) {}
@@ -294,19 +318,22 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     }
 
     // from lambda
-    template <typename Fn, KFR_ENABLE_IF(is_callable<Fn, size_t>)>
+    template <typename Fn, KFR_ENABLE_IF(std::is_invocable_r_v<T, Fn, size_t>)>
     KFR_MEM_INTRINSIC vec(Fn&& fn) CMT_NOEXCEPT
     {
         for (size_t i = 0; i < N; ++i)
         {
-            set(i, fn(i));
+            auto v = fn(i);
+            set(i, v);
         }
     }
 
     template <typename U, KFR_ENABLE_IF(is_convertible<U, value_type> &&
                                         !(compound_type_traits<T>::is_scalar && !is_bit<U>))>
     KFR_MEM_INTRINSIC vec(const vec<U, N>& x) CMT_NOEXCEPT
-        : v(internal::conversion<vec<T, N>, vec<U, N>>::cast(x).v)
+        : v(internal::conversion<vec_rank<T> + 1, vec_rank<U> + 1, vec<T, N>, vec<U, N>,
+                                 internal::conv_t::promote>::cast(x)
+                .v)
     {
     }
 
@@ -603,8 +630,8 @@ constexpr KFR_INTRINSIC vec<To, N> builtin_convertvector(const vec<From, N>& val
 }
 
 // vector to vector
-template <typename To, typename From, size_t N, size_t N2>
-struct conversion<vec<To, N>, vec<From, N2>>
+template <typename To, typename From, size_t N, size_t N2, conv_t conv>
+struct conversion<1, 1, vec<To, N>, vec<From, N2>, conv>
 {
     static_assert(N == N2, "");
     static_assert(!is_compound<To>, "");
@@ -614,8 +641,8 @@ struct conversion<vec<To, N>, vec<From, N2>>
 };
 
 // scalar to vector
-template <typename To, typename From, size_t N>
-struct conversion<vec<To, N>, From>
+template <typename To, typename From, size_t N, conv_t conv>
+struct conversion<1, 0, vec<To, N>, From, conv>
 {
     static_assert(is_convertible<From, To>, "");
 
@@ -655,13 +682,6 @@ constexpr KFR_INTRINSIC vec<vec<Tout, N1>, N2> cast(const vec<vec<Tin, N1>, N2>&
     return vec<vec<Tout, N1>, N2>(value);
 }
 
-template <typename Tout, typename Tin, size_t N1, size_t N2, size_t N3, KFR_ENABLE_IF(!is_same<Tin, Tout>)>
-constexpr KFR_INTRINSIC vec<vec<vec<Tout, N1>, N2>, N3> cast(const vec<vec<vec<Tin, N1>, N2>, N3>& value)
-    CMT_NOEXCEPT
-{
-    return vec<vec<vec<Tout, N1>, N2>, N3>(value);
-}
-
 template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(is_same<Tin, Tout>)>
 constexpr KFR_INTRINSIC const vec<Tin, N>& cast(const vec<Tin, N>& value) CMT_NOEXCEPT
 {
@@ -674,85 +694,67 @@ constexpr KFR_INTRINSIC const vec<vec<Tin, N1>, N2>& cast(const vec<vec<Tin, N1>
     return value;
 }
 
-template <typename Tout, typename Tin, size_t N1, size_t N2, size_t N3, KFR_ENABLE_IF(is_same<Tin, Tout>)>
-constexpr KFR_INTRINSIC const vec<vec<vec<Tin, N1>, N2>, N3>& cast(
-    const vec<vec<vec<Tin, N1>, N2>, N3>& value) CMT_NOEXCEPT
-{
-    return value;
-}
-
 //
 
 template <typename To, typename From,
           typename Tout = typename compound_type_traits<From>::template deep_rebind<To>>
-constexpr KFR_INTRINSIC Tout innercast(const From& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC Tout broadcastto(const From& value) CMT_NOEXCEPT
 {
     return static_cast<Tout>(value);
 }
 
 template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(!is_same<Tin, Tout>)>
-constexpr KFR_INTRINSIC vec<Tout, N> innercast(const vec<Tin, N>& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC vec<Tout, N> broadcastto(const vec<Tin, N>& value) CMT_NOEXCEPT
 {
-    return vec<Tout, N>(value);
+    return internal::conversion<vec_rank<Tout> + 1, 1, vec<Tout, N>, vec<Tin, N>,
+                                internal::conv_t::broadcast>::cast(value);
 }
 
 template <typename Tout, typename Tin, size_t N1, size_t N2, KFR_ENABLE_IF(!is_same<Tin, Tout>)>
-constexpr KFR_INTRINSIC vec<vec<Tout, N1>, N2> innercast(const vec<vec<Tin, N1>, N2>& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC vec<vec<Tout, N1>, N2> broadcastto(const vec<vec<Tin, N1>, N2>& value) CMT_NOEXCEPT
 {
-    return vec<vec<Tout, N1>, N2>(value);
-}
-
-template <typename Tout, typename Tin, size_t N1, size_t N2, size_t N3, KFR_ENABLE_IF(!is_same<Tin, Tout>)>
-constexpr KFR_INTRINSIC vec<vec<vec<Tout, N1>, N2>, N3> innercast(const vec<vec<vec<Tin, N1>, N2>, N3>& value)
-    CMT_NOEXCEPT
-{
-    return vec<vec<vec<Tout, N1>, N2>, N3>(value);
+    return internal::conversion<vec_rank<Tout> + 2, 2, vec<vec<Tout, N1>, N2>, vec<vec<Tin, N1>, N2>,
+                                internal::conv_t::broadcast>::cast(value);
 }
 
 template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(is_same<Tin, Tout>)>
-constexpr KFR_INTRINSIC const vec<Tin, N>& innercast(const vec<Tin, N>& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC const vec<Tin, N>& broadcastto(const vec<Tin, N>& value) CMT_NOEXCEPT
 {
     return value;
 }
 
 template <typename Tout, typename Tin, size_t N1, size_t N2, KFR_ENABLE_IF(is_same<Tin, Tout>)>
-constexpr KFR_INTRINSIC const vec<vec<Tin, N1>, N2>& innercast(const vec<vec<Tin, N1>, N2>& value)
+constexpr KFR_INTRINSIC const vec<vec<Tin, N1>, N2>& broadcastto(const vec<vec<Tin, N1>, N2>& value)
     CMT_NOEXCEPT
 {
     return value;
 }
 
-template <typename Tout, typename Tin, size_t N1, size_t N2, size_t N3, KFR_ENABLE_IF(is_same<Tin, Tout>)>
-constexpr KFR_INTRINSIC const vec<vec<vec<Tin, N1>, N2>, N3>& innercast(
-    const vec<vec<vec<Tin, N1>, N2>, N3>& value) CMT_NOEXCEPT
-{
-    return value;
-}
-
 //
-
-template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(!is_same<Tin, Tout>)>
-constexpr KFR_INTRINSIC vec<Tout, N> elemcast(const vec<Tin, N>& value) CMT_NOEXCEPT
+template <typename Tout, typename Tin>
+constexpr KFR_INTRINSIC Tout promoteto(const Tin& value) CMT_NOEXCEPT
 {
-    return vec<Tout, N>(value);
+    return static_cast<Tout>(value);
 }
 
-template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(is_same<Tin, Tout>)>
-constexpr KFR_INTRINSIC const vec<Tin, N>& elemcast(const vec<Tin, N>& value) CMT_NOEXCEPT
+template <typename Tout, typename Tin, size_t N>
+constexpr KFR_INTRINSIC vec<Tout, N> promoteto(const vec<Tin, N>& value) CMT_NOEXCEPT
 {
-    return value;
+    if constexpr (std::is_same_v<Tin, Tout>)
+        return value;
+    else
+        return internal::conversion<vec_rank<Tout> + 1, 1, vec<Tout, N>, vec<Tin, N>,
+                                    internal::conv_t::promote>::cast(value);
 }
 
-template <typename Tout, typename Tin, size_t N1, size_t N2, KFR_ENABLE_IF(!is_same<Tin, Tout>)>
-constexpr KFR_INTRINSIC vec<Tout, N2> elemcast(const vec<vec<Tin, N1>, N2>& value) CMT_NOEXCEPT
+template <typename Tout, typename Tin, size_t N1, size_t N2>
+constexpr KFR_INTRINSIC vec<Tout, N2> promoteto(const vec<vec<Tin, N1>, N2>& value) CMT_NOEXCEPT
 {
-    return vec<Tout, N2>(value);
-}
-
-template <typename Tout, typename Tin, size_t N1, size_t N2, size_t N3, KFR_ENABLE_IF(!is_same<Tin, Tout>)>
-constexpr KFR_INTRINSIC vec<Tout, N3> elemcast(const vec<vec<vec<Tin, N1>, N2>, N3>& value) CMT_NOEXCEPT
-{
-    return vec<Tout, N3>(value);
+    if constexpr (std::is_same_v<Tin, Tout>)
+        return value;
+    else
+        return internal::conversion<vec_rank<Tout> + 1, 2, vec<Tout, N2>, vec<vec<Tin, N1>, N2>,
+                                    internal::conv_t::promote>::cast(value);
 }
 
 template <typename To, typename From>
@@ -1226,7 +1228,8 @@ void test_function1(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
 {
     testo::matrix(
         named("value") = special_values(), named("type") = test_catogories::types(cat),
-        [&](special_value value, auto type) {
+        [&](special_value value, auto type)
+        {
             using T = typename decltype(type)::type;
             if (isapplicable(ctype<T>, value))
             {
@@ -1239,7 +1242,8 @@ void test_function1(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
                 const auto fn_x  = fn(x);
                 const auto ref_x = apply(reffn, x);
                 ::testo::active_test()->check(testo::deep_is_equal(ref_x, fn_x),
-                                              as_string(fn_x, " == ", ref_x), "fn(x) == apply(reffn, x)");
+                                              as_string(fn_x, " == ", ref_x), "fn(x) == apply(reffn, x)",
+                                              __FILE__, __LINE__);
                 //   CHECK(fn(x) == apply(reffn, x));
             }
         });
@@ -1253,22 +1257,29 @@ void test_function1(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
                   });
 }
 
-template <int Cat, typename Fn, typename RefFn, typename IsApplicable = fn_return_constant<bool, true>>
-void test_function2(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isapplicable = IsApplicable{})
+template <int Cat, typename Fn, typename RefFn, typename IsApplicable = fn_return_constant<bool, true>,
+          typename IsDefined = fn_return_constant<bool, true>>
+void test_function2(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isapplicable = IsApplicable{},
+                    IsDefined&& = IsDefined{})
 {
+    constexpr IsDefined isdefined{};
+
     testo::matrix(named("value1") = special_values(), //
                   named("value2") = special_values(), named("type") = test_catogories::types(cat),
                   [&](special_value value1, special_value value2, auto type)
                   {
                       using T = typename decltype(type)::type;
-                      const T x1(value1);
-                      const T x2(value2);
-                      if (isapplicable(ctype<T>, value1, value2))
+                      if constexpr (isdefined(ctype<T>))
                       {
-                          CHECK(is_same<decltype(fn(x1, x2)),
-                                        typename compound_type_traits<T>::template rebind<decltype(reffn(
-                                            std::declval<subtype<T>>(), std::declval<subtype<T>>()))>>);
-                          CHECK(fn(x1, x2) == apply(reffn, x1, x2));
+                          const T x1(value1);
+                          const T x2(value2);
+                          if (isapplicable(ctype<T>, value1, value2))
+                          {
+                              CHECK(is_same<decltype(fn(x1, x2)),
+                                            typename compound_type_traits<T>::template rebind<decltype(reffn(
+                                                std::declval<subtype<T>>(), std::declval<subtype<T>>()))>>);
+                              CHECK(fn(x1, x2) == apply(reffn, x1, x2));
+                          }
                       }
                   });
 
@@ -1278,7 +1289,10 @@ void test_function2(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
                       using T    = typename decltype(type)::type;
                       const T x1 = test_enumerate(T::shape(), csizeseq<T::size()>, 0, 1);
                       const T x2 = test_enumerate(T::shape(), csizeseq<T::size()>, 100, -1);
-                      CHECK(fn(x1, x2) == apply(reffn, x1, x2));
+                      if constexpr (isdefined(ctype<T>))
+                      {
+                          CHECK(fn(x1, x2) == apply(reffn, x1, x2));
+                      }
                   });
 }
 
@@ -1286,20 +1300,20 @@ void test_function2(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
 
 namespace internal
 {
-// vector to vector<vector>
-template <typename To, typename From, size_t N>
-struct conversion<vec<bit<To>, N>, vec<bit<From>, N>>
+// mask to mask
+template <typename To, typename From, size_t N, conv_t conv>
+struct conversion<1, 1, vec<bit<To>, N>, vec<bit<From>, N>, conv>
 {
     static vec<bit<To>, N> cast(const vec<bit<From>, N>& value)
     {
-        return vec<To, N>::frombits(innercast<itype<To>>(vec<itype<From>, N>::frombits(value.asvec())))
+        return vec<To, N>::frombits(broadcastto<itype<To>>(vec<itype<From>, N>::frombits(value.asvec())))
             .asmask();
     }
 };
 
 // vector to vector<vector>
 template <typename To, typename From, size_t N1, size_t N2, size_t Ns1>
-struct conversion<vec<vec<To, N1>, N2>, vec<From, Ns1>>
+struct conversion<2, 1, vec<vec<To, N1>, N2>, vec<From, Ns1>, conv_t::broadcast>
 {
     static_assert(N1 == Ns1, "");
     static_assert(!is_compound<To>, "");
@@ -1308,30 +1322,31 @@ struct conversion<vec<vec<To, N1>, N2>, vec<From, Ns1>>
     static vec<vec<To, N1>, N2> cast(const vec<From, N1>& value)
     {
         return vec<vec<To, N1>, N2>::from_flatten(
-            kfr::innercast<To>(value.flatten())
+            kfr::broadcastto<To>(value.flatten())
                 .shuffle(csizeseq<N2 * vec<From, N1>::scalar_size()> % csize<N2>));
     }
 };
 
-// vector to vector<vector<vector>>
-template <typename To, typename From, size_t N1, size_t N2, size_t N3, size_t Ns1>
-struct conversion<vec<vec<vec<To, N1>, N2>, N3>, vec<From, Ns1>>
+// vector to vector<vector>
+template <typename To, typename From, size_t N1, size_t N2, size_t Ns1>
+struct conversion<2, 1, vec<vec<To, N1>, N2>, vec<From, Ns1>, conv_t::promote>
 {
-    static_assert(N1 == Ns1, "");
+    static_assert(N2 == Ns1, "");
     static_assert(!is_compound<To>, "");
     static_assert(!is_compound<From>, "");
 
-    static vec<vec<vec<To, N1>, N2>, N3> cast(const vec<From, N1>& value)
+    static vec<vec<To, N1>, N2> cast(const vec<From, N2>& value)
     {
-        return vec<vec<vec<To, N1>, N2>, N3>::from_flatten(
-            kfr::innercast<To>(value.flatten())
-                .shuffle(csizeseq<N2 * vec<From, N1>::scalar_size()> % csize<N2>));
+        return vec<vec<To, N1>, N2>::from_flatten(
+            kfr::broadcastto<To>(value.flatten())
+                .shuffle(csizeseq<N2 * vec<From, N1>::scalar_size()> / csize<vec<From, N1>::scalar_size()> %
+                         csize<N2>));
     }
 };
 
 // vector<vector> to vector<vector>
-template <typename To, typename From, size_t N1, size_t N2, size_t NN1, size_t NN2>
-struct conversion<vec<vec<To, N1>, N2>, vec<vec<From, NN1>, NN2>>
+template <typename To, typename From, size_t N1, size_t N2, size_t NN1, size_t NN2, conv_t conv>
+struct conversion<2, 2, vec<vec<To, N1>, N2>, vec<vec<From, NN1>, NN2>, conv>
 {
     static_assert(N1 == NN1, "");
     static_assert(N2 == NN2, "");
@@ -1340,25 +1355,10 @@ struct conversion<vec<vec<To, N1>, N2>, vec<vec<From, NN1>, NN2>>
 
     static vec<vec<To, N1>, N2> cast(const vec<vec<From, N1>, N2>& value)
     {
-        return vec<vec<To, N1>, N2>::from_flatten(kfr::innercast<To>(value.flatten()));
+        return vec<vec<To, N1>, N2>::from_flatten(kfr::broadcastto<To>(value.flatten()));
     }
 };
 
-// vector<vector<vector>> to vector<vector<vector>>
-template <typename To, typename From, size_t N1, size_t N2, size_t N3, size_t NN1, size_t NN2, size_t NN3>
-struct conversion<vec<vec<vec<To, N1>, N2>, N3>, vec<vec<vec<From, NN1>, NN2>, NN3>>
-{
-    static_assert(N1 == NN1, "");
-    static_assert(N2 == NN2, "");
-    static_assert(N3 == NN3, "");
-    static_assert(!is_compound<To>, "");
-    static_assert(!is_compound<From>, "");
-
-    static vec<vec<vec<To, N1>, N2>, N3> cast(const vec<vec<vec<From, N1>, N2>, N3>& value)
-    {
-        return vec<vec<vec<To, N1>, N2>, N3>::from_flatten(kfr::innercast<To>(value.flatten()));
-    }
-};
 } // namespace internal
 
 template <typename T, size_t N1, size_t N2 = N1>
@@ -1417,20 +1417,31 @@ struct vecx_t<T, N1, N2>
     using type = vec<vec<T, N1>, N2>;
 };
 
-template <typename T, size_t N1, size_t N2, size_t N3>
-struct vecx_t<T, N1, N2, N3>
-{
-    using type = vec<vec<vec<T, N1>, N2>, N3>;
-};
 } // namespace internal
 
 template <typename T, size_t... Ns>
 using vecx = typename internal::vecx_t<T, Ns...>::type;
 
+template <typename T, size_t N>
+constexpr inline size_t vec_rank<vec<T, N>> = 1;
+
+template <typename T, size_t N1, size_t N2>
+constexpr inline size_t vec_rank<vec<vec<T, N1>, N2>> = 2;
+
+template <typename T, size_t N>
+KFR_INTRINSIC vec<T, N> v(const portable_vec<T, N>& pv)
+{
+    return pv;
+}
+
 } // namespace CMT_ARCH_NAME
 template <typename T1, typename T2, size_t N>
 struct common_type_impl<kfr::vec<T1, N>, kfr::vec<T2, N>>
     : common_type_from_subtypes<T1, T2, kfr::vec_template<N>::template type>
+{
+};
+template <typename T1, typename T2, size_t N1, size_t N2>
+struct common_type_impl<kfr::vec<T1, N1>, kfr::vec<T2, N2>>
 {
 };
 template <typename T1, typename T2, size_t N>

@@ -26,6 +26,7 @@
 #include "simd/clamp.hpp"
 #include "simd/comparison.hpp"
 #include "simd/complex.hpp"
+#include "simd/complex_type.hpp"
 #include "simd/constants.hpp"
 #include "simd/digitreverse.hpp"
 #include "simd/horizontal.hpp"

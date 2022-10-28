@@ -25,7 +25,7 @@
  */
 #pragma once
 
-#include "scaled.hpp"
+#include "impl/scaled.hpp"
 
 namespace kfr
 {

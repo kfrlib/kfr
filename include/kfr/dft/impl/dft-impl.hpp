@@ -25,9 +25,9 @@
  */
 #pragma once
 
-#include "dft-fft.hpp"
-#include "../../base/simd_expressions.hpp"
 #include "../../base/math_expressions.hpp"
+#include "../../base/simd_expressions.hpp"
+#include "dft-fft.hpp"
 
 CMT_PRAGMA_GNU(GCC diagnostic push)
 #if CMT_HAS_WARNING("-Wshadow")
@@ -96,9 +96,9 @@ struct dft_stage_fixed_impl : dft_stage<T>
 
     constexpr static size_t rradix = fixed_radix;
 
-    constexpr static size_t width = fixed_radix >= 7
-                                        ? fft_vector_width<T> / 2
-                                        : fixed_radix >= 4 ? fft_vector_width<T> : fft_vector_width<T> * 2;
+    constexpr static size_t width = fixed_radix >= 7   ? fft_vector_width<T> / 2
+                                    : fixed_radix >= 4 ? fft_vector_width<T>
+                                                       : fft_vector_width<T> * 2;
     virtual void do_initialize(size_t) override final { dft_stage_fixed_initialize(this, width); }
 
     DFT_STAGE_FN
@@ -132,9 +132,9 @@ struct dft_stage_fixed_final_impl : dft_stage<T>
         this->recursion   = false;
         this->can_inplace = false;
     }
-    constexpr static size_t width = fixed_radix >= 7
-                                        ? fft_vector_width<T> / 2
-                                        : fixed_radix >= 4 ? fft_vector_width<T> : fft_vector_width<T> * 2;
+    constexpr static size_t width = fixed_radix >= 7   ? fft_vector_width<T> / 2
+                                    : fixed_radix >= 4 ? fft_vector_width<T>
+                                                       : fft_vector_width<T> * 2;
 
     DFT_STAGE_FN
     template <bool inverse>
@@ -434,7 +434,8 @@ protected:
     {
         cswitch(
             dft_radices, radices[0],
-            [&](auto first_radix) {
+            [&](auto first_radix)
+            {
                 if (count == 3)
                 {
                     dft_permute(out, in, radices[2], radices[1], first_radix);
@@ -449,7 +450,8 @@ protected:
                     }
                 }
             },
-            [&]() {
+            [&]()
+            {
                 if (count == 3)
                 {
                     dft_permute(out, in, radices[2], radices[1], radices[0]);
@@ -473,14 +475,14 @@ void prepare_dft_stage(dft_plan<T>* self, size_t radix, size_t iterations, size_
 {
     return cswitch(
         dft_radices, radix,
-        [self, iterations, blocks](auto radix) CMT_INLINE_LAMBDA {
+        [self, iterations, blocks](auto radix) CMT_INLINE_LAMBDA
+        {
             add_stage<conditional<is_final, intrinsics::dft_stage_fixed_final_impl<T, val_of(radix)>,
                                   intrinsics::dft_stage_fixed_impl<T, val_of(radix)>>>(self, radix,
                                                                                        iterations, blocks);
         },
-        [self, radix, iterations, blocks]() {
-            add_stage<intrinsics::dft_stage_generic_impl<T, is_final>>(self, radix, iterations, blocks);
-        });
+        [self, radix, iterations, blocks]()
+        { add_stage<intrinsics::dft_stage_generic_impl<T, is_final>>(self, radix, iterations, blocks); });
 }
 
 template <typename T>
@@ -502,13 +504,15 @@ void init_dft(dft_plan<T>* self, size_t size, dft_order)
         int radices[32]                = { 0 };
         size_t radices_size            = 0;
 
-        cforeach(dft_radices[csizeseq<dft_radices.size(), dft_radices.size() - 1, -1>], [&](auto radix) {
-            while (cur_size && cur_size % val_of(radix) == 0)
-            {
-                count[val_of(radix)]++;
-                cur_size /= val_of(radix);
-            }
-        });
+        cforeach(dft_radices[csizeseq<dft_radices.size(), dft_radices.size() - 1, -1>],
+                 [&](auto radix)
+                 {
+                     while (cur_size && cur_size % val_of(radix) == 0)
+                     {
+                         count[val_of(radix)]++;
+                         cur_size /= val_of(radix);
+                     }
+                 });
 
         if (cur_size >= 101)
         {

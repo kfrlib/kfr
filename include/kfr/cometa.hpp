@@ -149,6 +149,9 @@ using remove_const = typename std::remove_const<T>::type;
 template <typename T>
 using underlying_type = typename std::underlying_type<T>::type;
 
+template <typename T1, typename T2>
+using or_type = std::conditional_t<std::is_same_v<T1, void>, T2, T1>;
+
 template <typename T>
 constexpr inline bool is_pod = std::is_pod<T>::value || details::is_pod_impl<T>::value;
 
@@ -267,7 +270,8 @@ struct compound_type_traits<std::pair<T, T>>
     using deep_rebind = std::pair<typename compound_type_traits<subtype>::template deep_rebind<U>,
                                   typename compound_type_traits<subtype>::template deep_rebind<U>>;
 
-    CMT_MEM_INTRINSIC static constexpr const subtype& at(const std::pair<subtype, subtype>& value, size_t index)
+    CMT_MEM_INTRINSIC static constexpr const subtype& at(const std::pair<subtype, subtype>& value,
+                                                         size_t index)
     {
         return index == 0 ? value.first : value.second;
     }
@@ -684,12 +688,12 @@ constexpr CMT_INTRINSIC Ret cfilter(cvals_t<T, vals...>, cvals_t<bool, flags...>
 #define CMT_UN_OP(op)                                                                                        \
     template <typename T1, T1... vals1,                                                                      \
               typename Ret = cvals_t<decltype(op std::declval<T1>()), (op vals1)...>>                        \
-    constexpr CMT_INTRINSIC Ret operator op(cvals_t<T1, vals1...>)                                                  \
+    constexpr CMT_INTRINSIC Ret operator op(cvals_t<T1, vals1...>)                                           \
     {                                                                                                        \
         return Ret{};                                                                                        \
     }                                                                                                        \
     template <typename T1, T1 val1, typename Ret = cval_t<decltype(op std::declval<T1>()), (op val1)>>       \
-    constexpr CMT_INTRINSIC Ret operator op(cval_t<T1, val1>)                                                       \
+    constexpr CMT_INTRINSIC Ret operator op(cval_t<T1, val1>)                                                \
     {                                                                                                        \
         return Ret{};                                                                                        \
     }
@@ -698,21 +702,21 @@ constexpr CMT_INTRINSIC Ret cfilter(cvals_t<T, vals...>, cvals_t<bool, flags...>
     template <typename T1, T1... vals1, typename T2, T2... vals2,                                            \
               typename Ret =                                                                                 \
                   cvals_t<decltype(std::declval<T1>() op std::declval<T2>()), (vals1 op vals2)...>>          \
-    constexpr CMT_INTRINSIC Ret operator op(cvals_t<T1, vals1...>, cvals_t<T2, vals2...>)                           \
+    constexpr CMT_INTRINSIC Ret operator op(cvals_t<T1, vals1...>, cvals_t<T2, vals2...>)                    \
     {                                                                                                        \
         return Ret{};                                                                                        \
     }                                                                                                        \
     template <typename T1, T1... vals1, typename T2, T2 val2,                                                \
               typename Ret =                                                                                 \
                   cvals_t<decltype(std::declval<T1>() op std::declval<T2>()), (vals1 op val2)...>>           \
-    constexpr CMT_INTRINSIC Ret operator op(cvals_t<T1, vals1...>, cval_t<T2, val2>)                                \
+    constexpr CMT_INTRINSIC Ret operator op(cvals_t<T1, vals1...>, cval_t<T2, val2>)                         \
     {                                                                                                        \
         return Ret{};                                                                                        \
     }                                                                                                        \
     template <typename T1, T1 val1, typename T2, T2... vals2,                                                \
               typename Ret =                                                                                 \
                   cvals_t<decltype(std::declval<T1>() op std::declval<T2>()), (val1 op vals2)...>>           \
-    constexpr CMT_INTRINSIC Ret operator op(cval_t<T1, val1>, cvals_t<T2, vals2...>)                                \
+    constexpr CMT_INTRINSIC Ret operator op(cval_t<T1, val1>, cvals_t<T2, vals2...>)                         \
     {                                                                                                        \
         return Ret{};                                                                                        \
     }
@@ -2119,6 +2123,9 @@ CMT_INTRINSIC constexpr Tout pack_elements(Arg x, Args... args)
     return static_cast<typename std::make_unsigned<Arg>::type>(x) |
            (pack_elements<Tout, Arg>(args...) << (sizeof(Arg) * 8));
 }
+
+template <typename T, bool reference>
+using value_or_ref = std::conditional_t<reference, const T&, T>;
 
 enum class special_constant
 {

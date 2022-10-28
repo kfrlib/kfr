@@ -72,14 +72,15 @@ constexpr inline const char version_full[] = KFR_VERSION_FULL;
 #ifdef KFR_FUNCTION_IS_INTRINSIC
 #define KFR_FUNCTION CMT_INTRINSIC
 #else
-#define KFR_FUNCTION 
+#define KFR_FUNCTION
 #endif
 #ifdef CMT_NATIVE_F64
 #define KFR_NATIVE_F64 CMT_NATIVE_F64
 #endif
 
 #if defined CMT_ARCH_ARM && !defined CMT_ARCH_NEON && !defined CMT_FORCE_GENERIC_CPU
-#error "ARM builds require NEON support. Add -march=native for native build or skip the check with CMT_FORCE_GENERIC_CPU=1"
+#error                                                                                                       \
+    "ARM builds require NEON support. Add -march=native for native build or skip the check with CMT_FORCE_GENERIC_CPU=1"
 #endif
 
 #if defined CMT_ARCH_ARM && !defined CMT_COMPILER_CLANG && !defined CMT_FORCE_NON_CLANG

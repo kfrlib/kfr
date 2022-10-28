@@ -23,8 +23,8 @@
 #pragma once
 
 #include "../abs.hpp"
-#include "function.hpp"
 #include "../operators.hpp"
+#include "function.hpp"
 
 namespace kfr
 {

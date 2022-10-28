@@ -192,9 +192,9 @@ TEST(complex_function_expressions)
     CHECK(uv3[1] == 2.f);
     CHECK(uv3[2] == 8.f);
     CHECK(uv3[3] == 18.f);
-    testo::assert_is_same<c32, value_type_of<decltype(uv2)>>();
-    testo::assert_is_same<f32, value_type_of<decltype(uv3)>>();
-    testo::assert_is_same<f32, value_type_of<decltype(real(uv2))>>();
+    testo::assert_is_same<c32, expression_value_type<decltype(uv2)>>();
+    testo::assert_is_same<f32, expression_value_type<decltype(uv3)>>();
+    testo::assert_is_same<f32, expression_value_type<decltype(real(uv2))>>();
 }
 
 TEST(static_tests)
@@ -218,10 +218,6 @@ TEST(static_tests)
     testo::assert_is_same<ftype<complex<i64>>, complex<f64>>();
     testo::assert_is_same<ftype<vec<complex<i32>, 4>>, vec<complex<f32>, 4>>();
     testo::assert_is_same<ftype<vec<complex<i64>, 8>>, vec<complex<f64>, 8>>();
-
-    testo::assert_is_same<kfr::internal::arg<int>, kfr::internal::expression_scalar<int>>();
-    testo::assert_is_same<kfr::internal::arg<complex<int>>,
-                          kfr::internal::expression_scalar<kfr::complex<int>>>();
 
     testo::assert_is_same<kfr::common_type<complex<int>, double>, complex<double>>();
 }

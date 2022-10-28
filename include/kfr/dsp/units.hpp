@@ -26,8 +26,8 @@
 #pragma once
 
 #include "../base/basic_expressions.hpp"
-#include "../math/abs.hpp"
 #include "../math/log_exp.hpp"
+#include "../simd/abs.hpp"
 #include "../simd/vec.hpp"
 
 namespace kfr
@@ -137,8 +137,8 @@ KFR_FUNCTION flt_type<T1> note_to_hertz(const T1& x)
     return intrinsics::note_to_hertz(x);
 }
 
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::note_to_hertz, E1> note_to_hertz(E1&& x)
+template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+KFR_FUNCTION expression_function<fn::note_to_hertz, E1> note_to_hertz(E1&& x)
 {
     return { fn::note_to_hertz(), std::forward<E1>(x) };
 }
@@ -149,8 +149,8 @@ KFR_FUNCTION flt_type<T1> hertz_to_note(const T1& x)
     return intrinsics::hertz_to_note(x);
 }
 
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::hertz_to_note, E1> hertz_to_note(E1&& x)
+template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+KFR_FUNCTION expression_function<fn::hertz_to_note, E1> hertz_to_note(E1&& x)
 {
     return { fn::hertz_to_note(), std::forward<E1>(x) };
 }
@@ -161,8 +161,8 @@ KFR_FUNCTION flt_type<T1> amp_to_dB(const T1& x)
     return intrinsics::amp_to_dB(x);
 }
 
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::amp_to_dB, E1> amp_to_dB(E1&& x)
+template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+KFR_FUNCTION expression_function<fn::amp_to_dB, E1> amp_to_dB(E1&& x)
 {
     return { fn::amp_to_dB(), std::forward<E1>(x) };
 }
@@ -173,8 +173,8 @@ KFR_FUNCTION flt_type<T1> dB_to_amp(const T1& x)
     return intrinsics::dB_to_amp(x);
 }
 
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::dB_to_amp, E1> dB_to_amp(E1&& x)
+template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+KFR_FUNCTION expression_function<fn::dB_to_amp, E1> dB_to_amp(E1&& x)
 {
     return { fn::dB_to_amp(), std::forward<E1>(x) };
 }
@@ -185,8 +185,8 @@ KFR_FUNCTION flt_type<T1> power_to_dB(const T1& x)
     return intrinsics::power_to_dB(x);
 }
 
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::power_to_dB, E1> power_to_dB(E1&& x)
+template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+KFR_FUNCTION expression_function<fn::power_to_dB, E1> power_to_dB(E1&& x)
 {
     return { fn::power_to_dB(), std::forward<E1>(x) };
 }
@@ -197,8 +197,8 @@ KFR_FUNCTION flt_type<T1> dB_to_power(const T1& x)
     return intrinsics::dB_to_power(x);
 }
 
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::dB_to_power, E1> dB_to_power(E1&& x)
+template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+KFR_FUNCTION expression_function<fn::dB_to_power, E1> dB_to_power(E1&& x)
 {
     return { fn::dB_to_power(), std::forward<E1>(x) };
 }

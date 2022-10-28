@@ -26,6 +26,7 @@
 #pragma once
 
 #include "impl/read_write.hpp"
+#include <array>
 
 namespace kfr
 {
@@ -95,9 +96,9 @@ KFR_INTRINSIC vec<T, Nout * groupsize> gather_stride(const T* base, size_t strid
     if constexpr (Nout > 2)
     {
         constexpr size_t Nlow = prev_poweroftwo(Nout - 1);
-        return concat(
-            internal::gather_stride_s<Nlow, groupsize>(base, stride, csizeseq<Nlow>),
-            internal::gather_stride_s<Nout - Nlow, groupsize>(base + Nlow * stride, stride, csizeseq<Nout - Nlow>));
+        return concat(internal::gather_stride_s<Nlow, groupsize>(base, stride, csizeseq<Nlow>),
+                      internal::gather_stride_s<Nout - Nlow, groupsize>(base + Nlow * stride, stride,
+                                                                        csizeseq<Nout - Nlow>));
     }
     else
         return internal::gather_stride_s<Nout, groupsize>(base, stride, csizeseq<Nout>);
@@ -117,7 +118,7 @@ KFR_INTRINSIC vec<T, N * groupsize> gather_helper(const T* base, const vec<IT, N
 {
     return concat(read<groupsize>(base + groupsize * offset[Indices])...);
 }
-}
+} // namespace internal
 template <size_t groupsize = 1, typename T, size_t N, typename IT>
 KFR_INTRINSIC vec<T, N * groupsize> gather(const T* base, const vec<IT, N>& offset)
 {
@@ -184,6 +185,12 @@ struct stride_pointer<const T, groupsize>
         return kfr::gather_stride<N, groupsize>(ptr, stride);
     }
 };
+
+template <typename T, size_t N>
+KFR_INTRINSIC vec<T, N> v(const std::array<T, N>& a)
+{
+    return read<N>(a.data());
+}
 
 template <typename T>
 constexpr T partial_masks[] = { constants<T>::allones(),

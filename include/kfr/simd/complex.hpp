@@ -57,6 +57,30 @@ KFR_INTRINSIC complex<T> operator/(const complex<T>& x, const complex<T>& y)
 {
     return (make_vector(x) / make_vector(y))[0];
 }
+template <typename T>
+KFR_INTRINSIC complex<T>& operator+=(complex<T>& x, const complex<T>& y)
+{
+    x = x + y;
+    return x;
+}
+template <typename T>
+KFR_INTRINSIC complex<T>& operator-=(complex<T>& x, const complex<T>& y)
+{
+    x = x - y;
+    return x;
+}
+template <typename T>
+KFR_INTRINSIC complex<T>& operator*=(complex<T>& x, const complex<T>& y)
+{
+    x = x * y;
+    return x;
+}
+template <typename T>
+KFR_INTRINSIC complex<T>& operator/=(complex<T>& x, const complex<T>& y)
+{
+    x = x / y;
+    return x;
+}
 
 template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = common_type<complex<T>, U>>
 KFR_INTRINSIC C operator+(const complex<T>& x, const U& y)
@@ -77,6 +101,30 @@ template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = comm
 KFR_INTRINSIC C operator/(const complex<T>& x, const U& y)
 {
     return static_cast<C>(x) / static_cast<C>(y);
+}
+template <typename T, typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>)>
+KFR_INTRINSIC complex<T>& operator+=(complex<T>& x, const U& y)
+{
+    x = x + y;
+    return x;
+}
+template <typename T, typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>)>
+KFR_INTRINSIC complex<T>& operator-=(complex<T>& x, const U& y)
+{
+    x = x - y;
+    return x;
+}
+template <typename T, typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>)>
+KFR_INTRINSIC complex<T>& operator*=(complex<T>& x, const U& y)
+{
+    x = x * y;
+    return x;
+}
+template <typename T, typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>)>
+KFR_INTRINSIC complex<T>& operator/=(complex<T>& x, const U& y)
+{
+    x = x / y;
+    return x;
 }
 
 template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = common_type<complex<T>, U>>
@@ -275,8 +323,8 @@ struct is_complex_impl<complex<T>> : std::true_type
 };
 
 // vector<complex> to vector<complex>
-template <typename To, typename From, size_t N>
-struct conversion<vec<complex<To>, N>, vec<complex<From>, N>>
+template <typename To, typename From, size_t N, conv_t conv>
+struct conversion<1, 1, vec<complex<To>, N>, vec<complex<From>, N>, conv>
 {
     static_assert(!is_compound<To>, "");
     static_assert(!is_compound<From>, "");
@@ -287,8 +335,8 @@ struct conversion<vec<complex<To>, N>, vec<complex<From>, N>>
 };
 
 // vector to vector<complex>
-template <typename To, typename From, size_t N>
-struct conversion<vec<complex<To>, N>, vec<From, N>>
+template <typename To, typename From, size_t N, conv_t conv>
+struct conversion<1, 1, vec<complex<To>, N>, vec<From, N>, conv>
 {
     static_assert(!is_compound<To>, "");
     static_assert(!is_compound<From>, "");
@@ -349,7 +397,7 @@ template <typename T1, typename T2 = T1, size_t N, typename T = common_type<T1, 
 constexpr KFR_INTRINSIC vec<complex<T>, N> make_complex(const vec<T1, N>& real,
                                                         const vec<T2, N>& imag = T2(0))
 {
-    return ccomp(interleave(innercast<T>(real), innercast<T>(imag)));
+    return ccomp(interleave(promoteto<T>(real), promoteto<T>(imag)));
 }
 
 /// @brief Constructs complex value from real and imaginary parts
@@ -357,7 +405,7 @@ template <typename T1, typename T2 = T1, typename T = common_type<T1, T2>,
           KFR_ENABLE_IF(is_numeric_args<T1, T2>)>
 constexpr KFR_INTRINSIC complex<T> make_complex(T1 real, T2 imag = T2(0))
 {
-    return complex<T>(innercast<T>(real), innercast<T>(imag));
+    return complex<T>(promoteto<T>(real), promoteto<T>(imag));
 }
 KFR_FN(make_complex)
 

@@ -106,7 +106,8 @@ set(ALL_TESTS_CPP
     expression_test.cpp
     intrinsic_test.cpp
     io_test.cpp
-    ${KFR_UNITTEST_SRC})
+    ${KFR_UNITTEST_SRC}
+    )
 
 if (KFR_ENABLE_DFT)
     list(APPEND ALL_TESTS_CPP dft_test.cpp)

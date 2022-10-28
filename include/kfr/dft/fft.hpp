@@ -163,7 +163,7 @@ struct dft_plan
         }
     }
     explicit dft_plan(size_t size, dft_order order = dft_order::normal)
-        :dft_plan(cpu_t::runtime, size, order)
+        : dft_plan(cpu_t::runtime, size, order)
     {
     }
 #else
@@ -173,7 +173,6 @@ struct dft_plan
         dft_initialize(*this);
     }
 #endif
-
 
     void dump() const
     {
@@ -291,11 +290,11 @@ protected:
             }
             else
             {
-                size_t offset   = 0;
+                size_t offset = 0;
                 while (offset < this->size)
                 {
                     stages[depth]->execute(cbool<inverse>, select_out(depth, out, scratch) + offset,
-                                       select_in(depth, out, in, scratch, in_scratch) + offset, temp);
+                                           select_in(depth, out, in, scratch, in_scratch) + offset, temp);
                     offset += stages[depth]->stage_size;
                 }
                 depth++;

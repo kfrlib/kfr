@@ -40,12 +40,15 @@ inline namespace CMT_ARCH_NAME
 template <typename T = int>
 auto unitimpulse()
 {
-    return lambda<T>([](cinput_t, size_t index, auto x) {
-        if (CMT_UNLIKELY(index == 0))
-            return onoff(x);
-        else
-            return zerovector(x);
-    });
+    return lambda<T>(
+        [](shape<1> index, auto x)
+        {
+            vec_shape<T, decltype(x)::value> sh{};
+            if (CMT_UNLIKELY(index[0] == 0))
+                return onoff(sh);
+            else
+                return zerovector(sh);
+        });
 }
 
 template <typename T = fbase>

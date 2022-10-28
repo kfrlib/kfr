@@ -24,12 +24,12 @@
 
 #include "../../simd/abs.hpp"
 #include "../../simd/clamp.hpp"
-#include "../../simd/min_max.hpp"
-#include "../../simd/round.hpp"
-#include "../../simd/select.hpp"
 #include "../../simd/constants.hpp"
 #include "../../simd/impl/function.hpp"
+#include "../../simd/min_max.hpp"
 #include "../../simd/operators.hpp"
+#include "../../simd/round.hpp"
+#include "../../simd/select.hpp"
 #include "../../simd/shuffle.hpp"
 
 namespace kfr
@@ -65,8 +65,8 @@ KFR_INTRINSIC vec<f32, N> vldexpk(const vec<f32, N>& x, const vec<i32, N>& q)
     m                    = (((m + q) >> 6) - m) << 4;
     const vec<i32, N> qq = q - (m << 2);
     m                    = clamp(m + 0x7f, vec<i32, N>(0xff));
-    vec<f32, N> u        = pow4(bitcast<f32>(innercast<i32>(m) << 23));
-    return x * u * bitcast<f32>((innercast<i32>(qq + 0x7f)) << 23);
+    vec<f32, N> u        = pow4(bitcast<f32>(broadcastto<i32>(m) << 23));
+    return x * u * bitcast<f32>((broadcastto<i32>(qq + 0x7f)) << 23);
 }
 
 template <size_t N>
@@ -76,8 +76,8 @@ KFR_INTRINSIC vec<f64, N> vldexpk(const vec<f64, N>& x, const vec<i64, N>& q)
     m                    = (((m + q) >> 9) - m) << 7;
     const vec<i64, N> qq = q - (m << 2);
     m                    = clamp(m + 0x3ff, i64(0x7ff));
-    vec<f64, N> u        = pow4(bitcast<f64>(innercast<i64>(m) << 52));
-    return x * u * bitcast<f64>((innercast<i64>(qq + 0x3ff)) << 52);
+    vec<f64, N> u        = pow4(bitcast<f64>(broadcastto<i64>(m) << 52));
+    return x * u * bitcast<f64>((broadcastto<i64>(qq + 0x3ff)) << 52);
 }
 
 template <typename T, size_t N>
@@ -98,12 +98,12 @@ KFR_INTRINSIC vec<f32, N> log(const vec<f32, N>& d)
     vec<f32, N> sp = select(d < 0, constants<f32>::qnan, constants<f32>::neginfinity);
 
     vec<f32, N> t;
-    t             = fmadd(0.2371599674224853515625f, x2, 0.285279005765914916992188f);
-    t             = fmadd(t, x2, 0.400005519390106201171875f);
-    t             = fmadd(t, x2, 0.666666567325592041015625f);
-    t             = fmadd(t, x2, 2.0f);
+    t = fmadd(0.2371599674224853515625f, x2, 0.285279005765914916992188f);
+    t = fmadd(t, x2, 0.400005519390106201171875f);
+    t = fmadd(t, x2, 0.666666567325592041015625f);
+    t = fmadd(t, x2, 2.0f);
 
-    x = x * t + c_log_2<f32> * innercast<f32>(e);
+    x = x * t + c_log_2<f32> * broadcastto<f32>(e);
     x = select(d > 0, x, sp);
 
     return x;
@@ -120,16 +120,16 @@ KFR_INTRINSIC vec<f64, N> log(const vec<f64, N>& d)
 
     vec<f64, N> sp = select(d < 0, constants<f64>::qnan, constants<f64>::neginfinity);
 
-    vec<f64, N> t; 
-    t             = fmadd(0.148197055177935105296783, x2, 0.153108178020442575739679);
-    t             = fmadd(t, x2, 0.181837339521549679055568);
-    t             = fmadd(t, x2, 0.22222194152736701733275);
-    t             = fmadd(t, x2, 0.285714288030134544449368);
-    t             = fmadd(t, x2, 0.399999999989941956712869);
-    t             = fmadd(t, x2, 0.666666666666685503450651);
-    t             = fmadd(t, x2, 2);
+    vec<f64, N> t;
+    t = fmadd(0.148197055177935105296783, x2, 0.153108178020442575739679);
+    t = fmadd(t, x2, 0.181837339521549679055568);
+    t = fmadd(t, x2, 0.22222194152736701733275);
+    t = fmadd(t, x2, 0.285714288030134544449368);
+    t = fmadd(t, x2, 0.399999999989941956712869);
+    t = fmadd(t, x2, 0.666666666666685503450651);
+    t = fmadd(t, x2, 2);
 
-    x = x * t + constants<f64>::log_2 * innercast<f64>(e);
+    x = x * t + constants<f64>::log_2 * broadcastto<f64>(e);
     x = select(d > 0, x, sp);
 
     return x;
@@ -138,12 +138,12 @@ KFR_INTRINSIC vec<f64, N> log(const vec<f64, N>& d)
 template <typename T, size_t N, typename Tout = flt_type<T>>
 KFR_INTRINSIC vec<Tout, N> log2(const vec<T, N>& x)
 {
-    return log(innercast<Tout>(x)) * constants<Tout>::recip_log_2;
+    return log(broadcastto<Tout>(x)) * constants<Tout>::recip_log_2;
 }
 template <typename T, size_t N, typename Tout = flt_type<T>>
 KFR_INTRINSIC vec<Tout, N> log10(const vec<T, N>& x)
 {
-    return log(innercast<Tout>(x)) * constants<Tout>::recip_log_10;
+    return log(broadcastto<Tout>(x)) * constants<Tout>::recip_log_10;
 }
 
 template <size_t N>
@@ -152,11 +152,11 @@ KFR_INTRINSIC vec<f32, N> exp(const vec<f32, N>& d)
     const f32 ln2_part1 = 0.6931457519f;
     const f32 ln2_part2 = 1.4286067653e-6f;
 
-    vec<i32, N> q = innercast<i32>(floor(d * constants<f32>::recip_log_2));
+    vec<i32, N> q = broadcastto<i32>(floor(d * constants<f32>::recip_log_2));
     vec<f32, N> s, u;
 
-    s = fmadd(innercast<f32>(q), -ln2_part1, d);
-    s = fmadd(innercast<f32>(q), -ln2_part2, s);
+    s = fmadd(broadcastto<f32>(q), -ln2_part1, d);
+    s = fmadd(broadcastto<f32>(q), -ln2_part2, s);
 
     const f32 c2 = 0.4999999105930328369140625f;
     const f32 c3 = 0.166668415069580078125f;
@@ -185,11 +185,11 @@ KFR_INTRINSIC vec<f64, N> exp(const vec<f64, N>& d)
     const f64 ln2_part1 = 0.69314717501401901245;
     const f64 ln2_part2 = 5.545926273775592108e-009;
 
-    vec<i64, N> q = innercast<i64>(floor(d * constants<f64>::recip_log_2));
+    vec<i64, N> q = broadcastto<i64>(floor(d * constants<f64>::recip_log_2));
     vec<f64, N> s, u;
 
-    s = fmadd(innercast<f64>(q), -ln2_part1, d);
-    s = fmadd(innercast<f64>(q), -ln2_part2, s);
+    s = fmadd(broadcastto<f64>(q), -ln2_part1, d);
+    s = fmadd(broadcastto<f64>(q), -ln2_part2, s);
 
     const f64 c2  = 0.499999999999994948485237955537741072475910186767578;
     const f64 c3  = 0.166666666667024204739888659787538927048444747924805;
@@ -235,7 +235,7 @@ KFR_INTRINSIC vec<T, N> pow(const vec<T, N>& a, const vec<T, N>& b)
 {
     const vec<T, N> t       = exp(b * log(abs(a)));
     const mask<T, N> isint  = floor(b) == b;
-    const mask<T, N> iseven = (innercast<itype<T>>(b) & 1) == 0;
+    const mask<T, N> iseven = (broadcastto<itype<T>>(b) & 1) == 0;
     return select(
         a > T(), t,
         select(a == T(), T(), select(isint, select(iseven, t, -t), broadcast<N>(constants<T>::qnan))));
@@ -256,7 +256,7 @@ KFR_INTRINSIC vec<T, N> cbrt(const vec<T, N>& x)
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>), typename Tout = flt_type<T>>
 KFR_INTRINSIC vec<Tout, N> cbrt(const vec<T, N>& x)
 {
-    return cbrt(innercast<Tout>(x));
+    return cbrt(broadcastto<Tout>(x));
 }
 
 KFR_HANDLE_SCALAR_1_T(exp, flt_type<T>)

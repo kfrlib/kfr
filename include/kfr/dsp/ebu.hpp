@@ -62,7 +62,7 @@ struct integrated_vec : public univector<T>
 private:
     void compute() const
     {
-        const T z_total = mean(*this);
+        const T z_total = mean(static_cast<const univector<T>&>(*this));
         T relative_gate = energy_to_loudness(z_total) - 10;
 
         T z        = 0;
@@ -130,7 +130,7 @@ private:
         static const T PRC_LOW  = T(0.10);
         static const T PRC_HIGH = T(0.95);
 
-        const T z_total       = mean(*this);
+        const T z_total       = mean(static_cast<const univector<T>&>(*this));
         const T relative_gate = energy_to_loudness(z_total) - 20;
 
         if (this->size() < 2)
@@ -184,7 +184,7 @@ private:
 };
 
 template <typename T>
-KFR_INTRINSIC expression_pointer<T> make_kfilter(int samplerate)
+KFR_INTRINSIC expression_pointer<T, 1> make_kfilter(int samplerate)
 {
     const biquad_params<T> bq[] = {
         biquad_highshelf(T(1681.81 / samplerate), T(+4.0)),
@@ -245,7 +245,7 @@ private:
     const Speaker m_speaker;
     const T m_input_gain;
     const size_t m_packet_size;
-    expression_pointer<T> m_kfilter;
+    expression_pointer<T, 1> m_kfilter;
     univector<T> m_short_sum_of_squares;
     univector<T> m_momentary_sum_of_squares;
     T m_output_energy_gain;
@@ -311,6 +311,7 @@ public:
         T shortterm = 0;
         for (size_t ch = 0; ch < m_channels.size(); ch++)
         {
+            // println(ch, "=> ", source[ch][0], " ", source[ch][10], " ", source[ch][20] );
             TESTO_ASSERT(source[ch].size() == m_packet_size);
             ebu_channel<T>& chan = m_channels[ch];
             chan.process_packet(source[ch].data());

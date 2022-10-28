@@ -23,12 +23,12 @@
 #pragma once
 
 #include "../../simd/abs.hpp"
-#include "../log_exp.hpp"
-#include "../../simd/min_max.hpp"
-#include "../../simd/select.hpp"
 #include "../../simd/constants.hpp"
 #include "../../simd/impl/function.hpp"
+#include "../../simd/min_max.hpp"
 #include "../../simd/operators.hpp"
+#include "../../simd/select.hpp"
+#include "../log_exp.hpp"
 
 namespace kfr
 {

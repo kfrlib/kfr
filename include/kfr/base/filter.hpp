@@ -78,12 +78,12 @@ public:
     void apply(T* dest, const T* src, size_t size) { process_buffer(dest, src, size); }
 
     template <univector_tag Tag>
-    void apply(univector<T, Tag>& dest, const expression_pointer<T>& src)
+    void apply(univector<T, Tag>& dest, const expression_pointer<T, 1>& src)
     {
         process_expression(dest.data(), src, size_min(dest.size(), src.size()));
     }
 
-    void apply(T* dest, const expression_pointer<T>& src, size_t size)
+    void apply(T* dest, const expression_pointer<T, 1>& src, size_t size)
     {
         process_expression(dest, src, size_min(size, src.size()));
     }
@@ -101,36 +101,36 @@ public:
     }
 
 protected:
-    virtual void process_buffer(T* dest, const T* src, size_t size)                         = 0;
-    virtual void process_expression(T* dest, const expression_pointer<T>& src, size_t size) = 0;
+    virtual void process_buffer(T* dest, const T* src, size_t size)                            = 0;
+    virtual void process_expression(T* dest, const expression_pointer<T, 1>& src, size_t size) = 0;
 };
 
 template <typename T>
 class expression_filter : public filter<T>
 {
 public:
-    explicit expression_filter(expression_pointer<T>&& filter_expr) : filter_expr(std::move(filter_expr)) {}
+    explicit expression_filter(expression_pointer<T, 1> filter_expr) : filter_expr(std::move(filter_expr)) {}
 
 protected:
     void process_buffer(T* dest, const T* src, size_t size) override
     {
         substitute(filter_expr, to_pointer(make_univector(src, size)));
-        process(make_univector(dest, size), filter_expr, 0, size);
+        process(make_univector(dest, size), filter_expr, shape<1>(0), shape<1>(size));
     }
-    void process_expression(T* dest, const expression_pointer<T>& src, size_t size) override
+    void process_expression(T* dest, const expression_pointer<T, 1>& src, size_t size) override
     {
         substitute(filter_expr, src);
-        process(make_univector(dest, size), filter_expr, 0, size);
+        process(make_univector(dest, size), filter_expr, shape<1>(0), shape<1>(size));
     }
 
-    expression_pointer<T> filter_expr;
+    expression_pointer<T, 1> filter_expr;
 };
 
 inline namespace CMT_ARCH_NAME
 {
 
 /// @brief Converts expression with placeholder to filter. Placeholder and filter must have the same type
-template <typename E, typename T = value_type_of<E>>
+template <typename E, typename T = expression_value_type<E>>
 KFR_INTRINSIC expression_filter<T> to_filter(E&& e)
 {
     return expression_filter<T>(to_pointer(std::move(e)));
@@ -139,7 +139,7 @@ KFR_INTRINSIC expression_filter<T> to_filter(E&& e)
 
 /// @brief Converts expression with placeholder to filter. Placeholder and filter must have the same type
 template <typename T, typename E>
-KFR_INTRINSIC expression_filter<T> to_filter(expression_pointer<T>&& e)
+KFR_INTRINSIC expression_filter<T> to_filter(expression_pointer<T, 1>&& e)
 {
     return expression_filter<T>(std::move(e));
 }

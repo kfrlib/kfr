@@ -25,8 +25,8 @@
  */
 #pragma once
 
-#include "../cometa/string.hpp"
-#include "../math.hpp"
+#include "../../cometa/string.hpp"
+#include "../../math.hpp"
 
 namespace kfr
 {

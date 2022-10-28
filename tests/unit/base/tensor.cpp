@@ -1,12 +1,13 @@
 /**
  * KFR (http://kfrlib.com)
- * Copyright (C) 2016  D Levin
+ * Copyright (C) 2016-2022 Fractalium Ltd
  * See LICENSE.txt for details
  */
 
-#include <kfr/base/simd_expressions.hpp>
-#include <kfr/base/math_expressions.hpp>
 #include <kfr/base/basic_expressions.hpp>
+#include <kfr/base/math_expressions.hpp>
+#include <kfr/base/reduce.hpp>
+#include <kfr/base/simd_expressions.hpp>
 #include <kfr/base/tensor.hpp>
 #include <kfr/io/tostring.hpp>
 #include <kfr/simd.hpp>
@@ -19,39 +20,6 @@ namespace kfr
 
 inline namespace CMT_ARCH_NAME
 {
-
-TEST(vec_deduction)
-{
-    vec v{ 1, 2, 3 };
-    static_assert(std::is_same_v<decltype(v), vec<int, 3>>);
-
-    tensor<float, 2> t2{ shape{ 20, 40 } };
-}
-
-TEST(shape)
-{
-    using internal_generic::increment_indices_return;
-    using internal_generic::null_index;
-    CHECK(size_of_shape(shape{ 4, 3 }) == 12);
-    CHECK(size_of_shape(shape{ 1 }) == 1);
-
-    CHECK(internal_generic::strides_for_shape(shape{ 2, 3, 4 }) == shape{ 12, 4, 1 });
-
-    CHECK(internal_generic::strides_for_shape(shape{ 2, 3, 4 }, 10) == shape{ 120, 40, 10 });
-
-    CHECK(increment_indices_return(shape{ 0, 0, 0 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) == shape{ 0, 0, 1 });
-    CHECK(increment_indices_return(shape{ 0, 0, 3 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) == shape{ 0, 1, 0 });
-    CHECK(increment_indices_return(shape{ 0, 2, 0 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) == shape{ 0, 2, 1 });
-    CHECK(increment_indices_return(shape{ 0, 2, 3 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) == shape{ 1, 0, 0 });
-    CHECK(increment_indices_return(shape{ 1, 2, 3 }, shape{ 0, 0, 0 }, shape{ 2, 3, 4 }) ==
-          shape{ null_index, null_index, null_index });
-
-    CHECK(shape{ 3, 4, 5 }.to_flat(shape{ 0, 0, 0 }) == 0);
-    CHECK(shape{ 3, 4, 5 }.to_flat(shape{ 2, 3, 4 }) == 59);
-
-    CHECK(shape{ 3, 4, 5 }.from_flat(0) == shape{ 0, 0, 0 });
-    CHECK(shape{ 3, 4, 5 }.from_flat(59) == shape{ 2, 3, 4 });
-}
 
 TEST(tensor_base)
 {
@@ -124,19 +92,7 @@ TEST(tensor_memory)
     CHECK(refs == 0);
 }
 
-// TEST(tensor_expression_assign)
-// {
-//     tensor<float, 1> t1{ shape{ 32 }, 0.f };
-
-//     t1 = counter();
-
-//     CHECK(t1.size() == 32);
-//     CHECK(t1(0) == 0.f);
-//     CHECK(t1(1) == 1.f);
-//     CHECK(t1(31) == 31.f);
-// }
-
-DTEST(tensor_expression)
+TEST(tensor_expression)
 {
     tensor<float, 1> t1{ shape{ 32 }, 0.f };
     tensor<float, 1> t2{ shape{ 32 }, 100.f };
@@ -161,6 +117,8 @@ DTEST(tensor_expression)
     t4 = 1.f;
     CHECK(t4(0, 0) == 1.f);
     CHECK(t4(5, 5) == 1.f);
+    CHECK(minof(t4) == 1);
+    CHECK(maxof(t4) == 1);
     CHECK(sum(t4) == 36);
 
     t4(trange(2, 4), trange(2, 4)) = scalar(10);
@@ -172,31 +130,17 @@ DTEST(tensor_expression)
     CHECK(t4(5, 5) == 1.f);
     CHECK(sum(t4) == 72);
 
-    t4(trange(2, 4), trange(2, 4)) = 10 + counter();
+    t4(trange(2, 4), trange(2, 4)) = 10 + counter(0, 2, 1);
 
     CHECK(t4(2, 2) == 10.f);
     CHECK(t4(2, 3) == 11.f);
     CHECK(t4(3, 2) == 12.f);
     CHECK(t4(3, 3) == 13.f);
+    CHECK(sum(t4) == 78);
 }
 
 TEST(tensor_broadcast)
 {
-    using internal_generic::can_assign_from;
-    using internal_generic::common_shape;
-    using internal_generic::same_layout;
-
-    CHECK(common_shape(shape{ 1, 5 }, shape{ 5, 1 }) == shape{ 5, 5 });
-    CHECK(common_shape(shape{ 5 }, shape{ 5, 1 }) == shape{ 5, 5 });
-    CHECK(common_shape(shape{ 1, 1, 1 }, shape{ 2, 5, 1 }) == shape{ 2, 5, 1 });
-    CHECK(common_shape(shape{ 1 }, shape{ 2, 5, 7 }) == shape{ 2, 5, 7 });
-
-    CHECK(can_assign_from(shape{ 1, 4 }, shape{ 1, 4 }));
-    CHECK(!can_assign_from(shape{ 1, 4 }, shape{ 4, 1 }));
-    CHECK(can_assign_from(shape{ 1, 4 }, shape{ 1, 1 }));
-    CHECK(can_assign_from(shape{ 1, 4 }, shape{ 1 }));
-    CHECK(can_assign_from(shape{ 1, 4 }, shape{}));
-
     tensor<float, 2> t1{ shape{ 1, 5 }, { 1.f, 2.f, 3.f, 4.f, 5.f } };
     tensor<float, 2> t2{ shape{ 5, 1 }, { 10.f, 20.f, 30.f, 40.f, 50.f } };
     tensor<float, 1> t4{ shape{ 5 }, { 1.f, 2.f, 3.f, 4.f, 5.f } };
@@ -211,15 +155,6 @@ TEST(tensor_broadcast)
     tensor<float, 2> t5 = tapply(t4, t2, fn::add{});
     // tensor<float, 2> t5 = t4 + t2;
     CHECK(t5 == tresult);
-
-    CHECK(same_layout(shape{ 2, 3, 4 }, shape{ 2, 3, 4 }));
-    CHECK(same_layout(shape{ 1, 2, 3, 4 }, shape{ 2, 3, 4 }));
-    CHECK(same_layout(shape{ 2, 3, 4 }, shape{ 2, 1, 1, 3, 4 }));
-    CHECK(same_layout(shape{ 2, 3, 4 }, shape{ 2, 3, 4, 1 }));
-    CHECK(same_layout(shape{ 2, 1, 3, 4 }, shape{ 1, 2, 3, 4, 1 }));
-
-    CHECK(!same_layout(shape{ 2, 1, 3, 4 }, shape{ 1, 2, 4, 3, 1 }));
-    CHECK(!same_layout(shape{ 2, 1, 3, 4 }, shape{ 1, 2, 4, 3, 0 }));
 }
 } // namespace CMT_ARCH_NAME
 
@@ -375,8 +310,9 @@ TEST(tensor_counter)
                    { { 102.0, 112.0, 122.0, 132.0 } },
                } });
 }
-
-DTEST(tensor_dims)
+namespace tests
+{
+TEST(tensor_dims)
 {
     tensor<double, 6> t12{ shape{ 2, 3, 4, 5, 6, 7 } };
 
@@ -387,6 +323,7 @@ DTEST(tensor_dims)
 
     CHECK(t12.reduce(std::plus<>{}, 0) == 1648888920);
 }
+} // namespace tests
 
 TEST(vec_from_cvals)
 {
@@ -397,13 +334,14 @@ TEST(vec_from_cvals)
 
 TEST(xfunction_test)
 {
-    auto f = xfunction{ xwitharguments{ 3.f, 4.f }, std::plus<>{} };
+    auto f = expression_function{ expression_with_arguments{ 3.f, 4.f }, std::plus<>{} };
     float v;
     process(v, f);
     CHECK(v == 7.f);
-    static_assert(std::is_same_v<decltype(f), xfunction<std::plus<>, float, float>>);
+    static_assert(std::is_same_v<decltype(f), expression_function<std::plus<>, float, float>>);
 
-    auto f2 = xfunction{ xwitharguments{ 10.f, std::array{ 1.f, 2.f, 3.f, 4.f, 5.f } }, std::plus<>{} };
+    auto f2 = expression_function{ expression_with_arguments{ 10.f, std::array{ 1.f, 2.f, 3.f, 4.f, 5.f } },
+                                   std::plus<>{} };
     std::array<float, 5> v2;
     process(v2, f2);
     CHECK(v2 == std::array{ 11.f, 12.f, 13.f, 14.f, 15.f });
@@ -413,9 +351,11 @@ TEST(xfunction_test)
     process(v3, f3);
     CHECK(v3 == std::array{ 11.f, 12.f, 13.f, 14.f, 15.f });
 
-    auto f4 = scalar(0) + std::array<std::array<float, 1>, 5>{
-        { { { 100.f } }, { { 200.f } }, { { 300.f } }, { { 400.f } }, { { 500.f } } }
-    } + std::array{ 1.f, 2.f, 3.f, 4.f, 5.f };
+    auto f4 = scalar(0) +
+              std::array<std::array<float, 1>, 5>{
+                  { { { 100.f } }, { { 200.f } }, { { 300.f } }, { { 400.f } }, { { 500.f } } }
+              } +
+              std::array{ 1.f, 2.f, 3.f, 4.f, 5.f };
     std::array<std::array<float, 5>, 5> v4;
 
     CHECK(expression_traits<decltype(f4)>::shapeof(f4) == shape{ 5, 5 });
@@ -435,9 +375,9 @@ TEST(xfunction_test2)
 }
 
 template <typename Type, index_t Dims>
-KFR_FUNCTION xcounter<Type, Dims> debug_counter(uint64_t scale = 10)
+KFR_FUNCTION expression_counter<Type, Dims> debug_counter(uint64_t scale = 10)
 {
-    xcounter<Type, Dims> result;
+    expression_counter<Type, Dims> result;
     result.start = 0;
     uint64_t val = 1;
     for (size_t i = 0; i < Dims; i++)
@@ -554,10 +494,10 @@ static void test_reshape(const tensor<T, dims1>& t1, const tensor<T, dims>&... t
     test_reshape(ts...);
 }
 
-TEST(xreshape)
+TEST(expression_reshape)
 {
     std::array<float, 12> x;
-    process(reshape(x, shape{ 3, 4 }), xcounter<float, 2>{ 0, { 10, 1 } });
+    process(reshape(x, shape{ 3, 4 }), expression_counter<float, 2>{ 0, { 10, 1 } });
     CHECK(x == std::array<float, 12>{ { 0, 1, 2, 3, 10, 11, 12, 13, 20, 21, 22, 23 } });
 
     test_reshape(tensor<float, 1>{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 }, //
@@ -642,7 +582,7 @@ extern "C" __declspec(dllexport) void assembly_test9(int64_t* dst, size_t stride
 }
 constexpr inline index_t rank = 1;
 extern "C" __declspec(dllexport) void assembly_test10(tensor<double, rank>& t12,
-                                                      const xcounter<double, rank>& ctr)
+                                                      const expression_counter<double, rank>& ctr)
 {
     process(t12, ctr);
 }
@@ -650,8 +590,8 @@ extern "C" __declspec(dllexport) void assembly_test11(f64x2& x, u64x2 y) { x = y
 
 extern "C" __declspec(dllexport) void assembly_test12(
     std::array<std::array<uint32_t, 4>, 4>& x,
-    const xfunction<std::plus<>, std::array<std::array<uint32_t, 1>, 4>&,
-                    std::array<std::array<uint32_t, 4>, 1>&>& y)
+    const expression_function<std::plus<>, std::array<std::array<uint32_t, 1>, 4>&,
+                              std::array<std::array<uint32_t, 4>, 1>&>& y)
 {
     process(x, y);
 }
@@ -667,13 +607,13 @@ using array2d = std::array<std::array<T, N2>, N1>;
 extern "C" __declspec(dllexport) void assembly_test14(std::array<float, 32>& x,
                                                       const std::array<float, 32>& y)
 {
-    process(x, x_reverse(y));
+    process(x, reverse(y));
 }
 
 extern "C" __declspec(dllexport) void assembly_test15(array2d<float, 32, 32>& x,
                                                       const array2d<float, 32, 32>& y)
 {
-    process(x, x_reverse(y));
+    process(x, reverse(y));
 }
 
 extern "C" __declspec(dllexport) void assembly_test16a(array2d<double, 8, 2>& x,
@@ -689,28 +629,28 @@ extern "C" __declspec(dllexport) void assembly_test16b(array2d<double, 8, 2>& x,
 
 extern "C" __declspec(dllexport) void assembly_test17a(const tensor<double, 2>& x, const tensor<double, 2>& y)
 {
-    xfunction ysqr = xfunction{ xwitharguments{ y }, fn::sqr{} };
+    expression_function ysqr = expression_function{ expression_with_arguments{ y }, fn::sqr{} };
     process<8, 0>(x, ysqr);
 }
 extern "C" __declspec(dllexport) void assembly_test17b(const tensor<double, 2>& x, const tensor<double, 2>& y)
 {
-    xfunction ysqr = xfunction{ xwitharguments{ y }, fn::sqr{} };
+    expression_function ysqr = expression_function{ expression_with_arguments{ y }, fn::sqr{} };
     process<2, 1>(x, ysqr);
 }
 
 extern "C" __declspec(dllexport) void assembly_test18a(const tensor<double, 2>& x, const tensor<double, 2>& y)
 {
-    xfunction ysqr = xfunction{ xwitharguments{ y }, fn::sqr{} };
-    process<8, 0>(fixshape(x, fixed_shape<8, 2>{}), fixshape(ysqr, fixed_shape<8, 2>{}));
+    expression_function ysqr = expression_function{ expression_with_arguments{ y }, fn::sqr{} };
+    process<8, 0>(fixshape(x, fixed_shape<8, 2>), fixshape(ysqr, fixed_shape<8, 2>));
 }
 extern "C" __declspec(dllexport) void assembly_test18b(const tensor<double, 2>& x, const tensor<double, 2>& y)
 {
-    xfunction ysqr = xfunction{ xwitharguments{ y }, fn::sqr{} };
-    process<2, 1>(fixshape(x, fixed_shape<8, 2>{}), fixshape(ysqr, fixed_shape<8, 2>{}));
+    expression_function ysqr = expression_function{ expression_with_arguments{ y }, fn::sqr{} };
+    process<2, 1>(fixshape(x, fixed_shape<8, 2>), fixshape(ysqr, fixed_shape<8, 2>));
 }
 
 extern "C" __declspec(dllexport) void assembly_test19(const tensor<double, 2>& x,
-                                                      const xreshape<tensor<double, 2>, 2>& y)
+                                                      const expression_reshape<tensor<double, 2>, 2>& y)
 {
     process(x, y);
 }
@@ -728,6 +668,12 @@ extern "C" __declspec(dllexport) shape<4> assembly_test21(const shape<4>& x, siz
 {
     return x.from_flat(fl);
 }
+extern "C" __declspec(dllexport) float assembly_test22(const std::array<float, 440>& x,
+                                                       const std::array<float, 440>& y)
+{
+    return dotproduct(x, y);
+}
+extern "C" __declspec(dllexport) float assembly_test23(const std::array<float, 440>& x) { return rms(x); }
 #endif
 
 struct val
@@ -750,15 +696,16 @@ val& lvint_func()
     static val v;
     return v;
 }
-TEST(xwitharguments)
+TEST(expression_with_arguments)
 {
-    xfunction fn1 = xfunction{ xwitharguments{ rvint_func() }, fn::add{} };
+    expression_function fn1 = expression_function{ expression_with_arguments{ rvint_func() }, fn::add{} };
     static_assert(std::is_same_v<decltype(fn1)::nth<0>, val>);
 
-    xfunction fn2 = xfunction{ xwitharguments{ lvint_func() }, fn::add{} };
+    expression_function fn2 = expression_function{ expression_with_arguments{ lvint_func() }, fn::add{} };
     static_assert(std::is_same_v<decltype(fn2)::nth<0>, val&>);
 
-    xfunction fn3 = xfunction{ xwitharguments{ std::as_const(lvint_func()) }, fn::add{} };
+    expression_function fn3 =
+        expression_function{ expression_with_arguments{ std::as_const(lvint_func()) }, fn::add{} };
     static_assert(std::is_same_v<decltype(fn3)::nth<0>, const val&>);
 }
 
@@ -804,13 +751,13 @@ TEST(complex_tensors)
     tensor<complex<float>, 1> t1{
         complex<float>(0, -1),
     };
-    CHECK(trender(xfunction{ xwitharguments{ t1, complex<float>(0, 1) }, fn::mul{} }) ==
+    CHECK(trender(expression_function{ expression_with_arguments{ t1, complex<float>(0, 1) }, fn::mul{} }) ==
           tensor<complex<float>, 1>{ complex<float>(1, 0) });
-    CHECK(trender(xfunction{ xwitharguments{ t1, complex<float>(1, 0) }, fn::mul{} }) ==
+    CHECK(trender(expression_function{ expression_with_arguments{ t1, complex<float>(1, 0) }, fn::mul{} }) ==
           tensor<complex<float>, 1>{ complex<float>(0, -1) });
-    CHECK(trender(xfunction{ xwitharguments{ t1, complex<float>(0, -1) }, fn::mul{} }) ==
+    CHECK(trender(expression_function{ expression_with_arguments{ t1, complex<float>(0, -1) }, fn::mul{} }) ==
           tensor<complex<float>, 1>{ complex<float>(-1, 0) });
-    CHECK(trender(xfunction{ xwitharguments{ t1, complex<float>(-1, 0) }, fn::mul{} }) ==
+    CHECK(trender(expression_function{ expression_with_arguments{ t1, complex<float>(-1, 0) }, fn::mul{} }) ==
           tensor<complex<float>, 1>{ complex<float>(0, 1) });
 }
 
@@ -829,12 +776,6 @@ TEST(from_ilist)
     CHECK(t4 == tensor<float, 3>(shape{ 2, 2, 2 }, { 10, 20, 30, 40, 50, 60, 70, 80 }));
 }
 
-TEST(enumerate)
-{
-    CHECK(enumerate(vec_shape<int, 4>{}, 4) == vec{ 0, 4, 8, 12 });
-    CHECK(enumerate(vec_shape<int, 8>{}, 3) == vec{ 0, 3, 6, 9, 12, 15, 18, 21 });
-    CHECK(enumerate(vec_shape<int, 7>{}, 3) == vec{ 0, 3, 6, 9, 12, 15, 18 });
-}
 } // namespace CMT_ARCH_NAME
 
 } // namespace kfr

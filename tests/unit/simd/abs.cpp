@@ -4,7 +4,7 @@
  * See LICENSE.txt for details
  */
 
-#include <kfr/math/abs.hpp>
+#include <kfr/simd/abs.hpp>
 
 #include <kfr/io.hpp>
 

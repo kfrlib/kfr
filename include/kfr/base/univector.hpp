@@ -97,29 +97,11 @@ struct univector_base<T, Class, true>
     template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
     KFR_MEM_INTRINSIC Class& operator=(Input&& input)
     {
+        constexpr index_t dims = expression_dims<Input>;
+        static_assert(dims <= 1, "univector accepts only expressions with dims <= 1");
         assign_expr(std::forward<Input>(input));
         return *derived_cast<Class>(this);
     }
-
-#define KFR_UVEC_ASGN_OP(aop, op)                                                                            \
-    template <typename Input>                                                                                \
-    KFR_MEM_INTRINSIC Class& aop(Input&& input)                                                              \
-    {                                                                                                        \
-        assign_expr(*derived_cast<Class>(this) op std::forward<Input>(input));                               \
-        return *derived_cast<Class>(this);                                                                   \
-    }
-    KFR_UVEC_ASGN_OP(operator+=, +)
-    KFR_UVEC_ASGN_OP(operator-=, -)
-    KFR_UVEC_ASGN_OP(operator*=, *)
-    KFR_UVEC_ASGN_OP(operator/=, /)
-    KFR_UVEC_ASGN_OP(operator%=, %)
-
-    KFR_UVEC_ASGN_OP(operator&=, &)
-    KFR_UVEC_ASGN_OP(operator|=, |)
-    KFR_UVEC_ASGN_OP(operator^=, ^)
-
-    KFR_UVEC_ASGN_OP(operator<<=, <<)
-    KFR_UVEC_ASGN_OP(operator>>=, >>)
 
     /// @brief Returns subrange of the vector.
     /// If start is greater or equal to this->size, returns empty univector
@@ -336,13 +318,14 @@ struct alignas(platform<>::maximum_vector_alignment) univector
 
     constexpr univector() CMT_NOEXCEPT_SPEC(noexcept(std::array<T, Size>())) = default;
     constexpr univector(size_t, const T& value) { std::fill(this->begin(), this->end(), value); }
-    constexpr static bool size_known   = true;
-    constexpr static bool is_array     = true;
-    constexpr static bool is_array_ref = false;
-    constexpr static bool is_vector    = false;
-    constexpr static bool is_aligned   = true;
-    constexpr static bool is_pod       = kfr::is_pod<T>;
-    using value_type                   = T;
+    constexpr static bool size_known    = true;
+    constexpr static size_t static_size = Size;
+    constexpr static bool is_array      = true;
+    constexpr static bool is_array_ref  = false;
+    constexpr static bool is_vector     = false;
+    constexpr static bool is_aligned    = true;
+    constexpr static bool is_pod        = kfr::is_pod<T>;
+    using value_type                    = T;
 
     value_type get(size_t index, value_type fallback_value) const CMT_NOEXCEPT
     {
@@ -384,6 +367,10 @@ struct univector<T, tag_array_ref> : array_ref<T>,
     constexpr univector(univector<U, Tag>& other) : array_ref<T>(other.data(), other.size())
     {
     }
+    template <typename U, univector_tag Tag, KFR_ENABLE_IF(is_same<remove_const<T>, U>&& is_const<T>)>
+    constexpr univector(univector<U, Tag>&& other) : array_ref<T>(other.data(), other.size())
+    {
+    }
     void resize(size_t) CMT_NOEXCEPT {}
     constexpr static bool size_known   = false;
     constexpr static bool is_array     = false;
@@ -417,7 +404,12 @@ struct univector<T, tag_dynamic_vector>
     univector(Input&& input)
     {
         static_assert(!is_infinite<Input>, "Dynamically sized vector requires finite input expression");
-        this->resize(input.size());
+        constexpr index_t dims = expression_dims<Input>;
+        static_assert(dims <= 1, "univector accepts only expressions with dims <= 1");
+        if constexpr (dims > 0)
+        {
+            this->resize(shapeof(input).front());
+        }
         this->assign_expr(std::forward<Input>(input));
     }
     constexpr univector() CMT_NOEXCEPT_SPEC(noexcept(std::vector<T, allocator<T>>())) = default;
@@ -452,12 +444,43 @@ struct univector<T, tag_dynamic_vector>
     template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
     KFR_MEM_INTRINSIC univector& operator=(Input&& input)
     {
-        if (input.size() != infinite_size)
-            this->resize(input.size());
+        constexpr index_t dims = expression_dims<Input>;
+        static_assert(dims <= 1, "univector accepts only expressions with dims <= 1");
+        if constexpr (dims > 0)
+        {
+            if (shapeof(input).front() != infinite_size)
+                this->resize(shapeof(input).front());
+        }
         this->assign_expr(std::forward<Input>(input));
         return *this;
     }
 };
+
+template <typename T, univector_tag Tag>
+struct expression_traits<univector<T, Tag>> : public expression_traits_defaults
+{
+    using value_type             = std::remove_const_t<T>;
+    constexpr static size_t dims = 1;
+    constexpr static shape<dims> shapeof(const univector<T, Tag>& u) { return shape<1>(u.size()); }
+    constexpr static shape<dims> shapeof()
+    {
+        if constexpr (univector<T, Tag>::size_known)
+            return shape<1>{ univector<T, Tag>::static_size };
+        else
+            return shape<1>{ undefined_size };
+    }
+};
+
+template <typename T, univector_tag T1, univector_tag T2>
+KFR_FUNCTION bool operator==(const univector<T, T1>& x, const univector<T, T2>& y)
+{
+    return std::equal(x.begin(), x.end(), y.begin(), y.end());
+}
+template <typename T, univector_tag T1, univector_tag T2>
+KFR_FUNCTION bool operator!=(const univector<T, T1>& x, const univector<T, T2>& y)
+{
+    return !operator==(x, y);
+}
 
 /// @brief Alias for ``univector<T, tag_array_ref>``;
 template <typename T>
@@ -586,35 +609,36 @@ inline namespace CMT_ARCH_NAME
 {
 
 template <typename T, univector_tag Tag, size_t N>
-KFR_INTRINSIC vec<T, N> get_elements(const univector<T, Tag>& self, const shape<1>& index,
-                                     const axis_params<0, N>&)
+KFR_INTRINSIC vec<std::remove_const_t<T>, N> get_elements(const univector<T, Tag>& self,
+                                                          const shape<1>& index, const axis_params<0, N>&)
 {
     const T* data = self.data();
-    return static_cast<vec<U, N>>(read<N>(ptr_cast<T>(data) + index.front()));
+    return read<N>(ptr_cast<T>(data) + index.front());
 }
 
-template <typename T, univector_tag Tag, size_t N>
+template <typename T, univector_tag Tag, size_t N, KFR_ENABLE_IF(!std::is_const_v<T>)>
 KFR_INTRINSIC void set_elements(univector<T, Tag>& self, const shape<1>& index, const axis_params<0, N>&,
                                 const identity<vec<T, N>>& value)
 {
     T* data = self.data();
-    write(ptr_cast<T>(data) + index.front(), vec<T, N>(value));
+    write(ptr_cast<T>(data) + index.front(), value);
 }
 
 /// @brief Converts an expression to univector
-template <typename Expr, typename T = value_type_of<Expr>>
+template <typename Expr, typename T = expression_value_type<Expr>>
 KFR_INTRINSIC univector<T> render(Expr&& expr)
 {
+    static_assert(expression_dims<Expr> == 1);
     static_assert(!is_infinite<Expr>,
                   "render: Can't process infinite expressions. Pass size as a second argument to render.");
     univector<T> result;
-    result.resize(expr.size());
+    result.resize(shapeof(expr).front());
     result = expr;
     return result;
 }
 
 /// @brief Converts an expression to univector
-template <typename Expr, typename T = value_type_of<Expr>>
+template <typename Expr, typename T = expression_value_type<Expr>>
 KFR_INTRINSIC univector<T> render(Expr&& expr, size_t size, size_t offset = 0)
 {
     univector<T> result;
@@ -624,7 +648,7 @@ KFR_INTRINSIC univector<T> render(Expr&& expr, size_t size, size_t offset = 0)
 }
 
 /// @brief Converts an expression to univector
-template <typename Expr, size_t Size, typename T = value_type_of<Expr>>
+template <typename Expr, size_t Size, typename T = expression_value_type<Expr>>
 KFR_INTRINSIC univector<T, Size> render(Expr&& expr, csize_t<Size>)
 {
     univector<T, Size> result;

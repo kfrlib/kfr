@@ -135,11 +135,13 @@ KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd2_t<T, N1, N2>, const simd<T, N1>& 
                                          csizes_t<indices...>, overload_generic)
 {
     constexpr size_t Nmax = (N1 > N2 ? N1 : N2);
-    return simd_shuffle(
-        simd2_t<T, Nmax, Nmax>{}, simd_shuffle(simd_t<T, N1>{}, x, csizeseq<Nmax>, overload_auto),
-        simd_shuffle(simd_t<T, N2>{}, y, csizeseq<Nmax>, overload_auto),
-        csizes<(indices < N1 ? indices : indices < N1 + N2 ? indices + (Nmax - N1) : index_undefined)...>,
-        overload_auto);
+    return simd_shuffle(simd2_t<T, Nmax, Nmax>{},
+                        simd_shuffle(simd_t<T, N1>{}, x, csizeseq<Nmax>, overload_auto),
+                        simd_shuffle(simd_t<T, N2>{}, y, csizeseq<Nmax>, overload_auto),
+                        csizes<(indices < N1        ? indices
+                                : indices < N1 + N2 ? indices + (Nmax - N1)
+                                                    : index_undefined)...>,
+                        overload_auto);
 }
 
 template <typename T, size_t N1>

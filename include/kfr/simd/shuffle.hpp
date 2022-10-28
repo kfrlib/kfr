@@ -630,6 +630,6 @@ KFR_FN(onoff)
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
 #define KFR_SHUFFLE_SPECIALIZATIONS 1
-#include "impl/specializations.i"
+#include "impl/specializations.hpp"
 
 CMT_PRAGMA_MSVC(warning(pop))

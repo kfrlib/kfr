@@ -39,6 +39,16 @@ inline namespace CMT_ARCH_NAME
 namespace intrinsics
 {
 
+#define KFR_DIV_MOD_FN(ty)                                                                                   \
+    KFR_INTRINSIC ty div(const ty& x, const ty& y)                                                           \
+    {                                                                                                        \
+        KFR_COMPONENTWISE_RET_I(ty, result[i] = y[i] ? x[i] / y[i] : 0);                                     \
+    }                                                                                                        \
+    KFR_INTRINSIC ty mod(const ty& x, const ty& y)                                                           \
+    {                                                                                                        \
+        KFR_COMPONENTWISE_RET_I(ty, result[i] = y[i] ? x[i] % y[i] : 0);                                     \
+    }
+
 #if defined CMT_ARCH_SSE2 && defined KFR_NATIVE_INTRINSICS
 
 KFR_INTRINSIC __m128 _mm_allones_ps()
@@ -76,17 +86,11 @@ KFR_INTRINSIC f64sse div(const f64sse& x, const f64sse& y) { return f64sse(_mm_d
 
 KFR_INTRINSIC u8sse add(const u8sse& x, const u8sse& y) { return _mm_add_epi8(x.v, y.v); }
 KFR_INTRINSIC u8sse sub(const u8sse& x, const u8sse& y) { return _mm_sub_epi8(x.v, y.v); }
-KFR_INTRINSIC u8sse div(const u8sse& x, const u8sse& y)
-{
-    KFR_COMPONENTWISE_RET_I(u8sse, result[i] = y[i] ? x[i] / y[i] : 0);
-}
+KFR_DIV_MOD_FN(u8sse)
 
 KFR_INTRINSIC i8sse add(const i8sse& x, const i8sse& y) { return _mm_add_epi8(x.v, y.v); }
 KFR_INTRINSIC i8sse sub(const i8sse& x, const i8sse& y) { return _mm_sub_epi8(x.v, y.v); }
-KFR_INTRINSIC i8sse div(const i8sse& x, const i8sse& y)
-{
-    KFR_COMPONENTWISE_RET_I(i8sse, result[i] = y[i] ? x[i] / y[i] : 0);
-}
+KFR_DIV_MOD_FN(i8sse)
 
 KFR_INTRINSIC __m128i mul_epi8(const __m128i& x, const __m128i& y)
 {
@@ -102,18 +106,12 @@ KFR_INTRINSIC i8sse mul(const i8sse& x, const i8sse& y) { return mul_epi8(x.v, y
 KFR_INTRINSIC u16sse add(const u16sse& x, const u16sse& y) { return _mm_add_epi16(x.v, y.v); }
 KFR_INTRINSIC u16sse sub(const u16sse& x, const u16sse& y) { return _mm_sub_epi16(x.v, y.v); }
 KFR_INTRINSIC u16sse mul(const u16sse& x, const u16sse& y) { return _mm_mullo_epi16(x.v, y.v); }
-KFR_INTRINSIC u16sse div(const u16sse& x, const u16sse& y)
-{
-    KFR_COMPONENTWISE_RET_I(u16sse, result[i] = y[i] ? x[i] / y[i] : 0);
-}
+KFR_DIV_MOD_FN(u16sse)
 
 KFR_INTRINSIC i16sse add(const i16sse& x, const i16sse& y) { return _mm_add_epi16(x.v, y.v); }
 KFR_INTRINSIC i16sse sub(const i16sse& x, const i16sse& y) { return _mm_sub_epi16(x.v, y.v); }
 KFR_INTRINSIC i16sse mul(const i16sse& x, const i16sse& y) { return _mm_mullo_epi16(x.v, y.v); }
-KFR_INTRINSIC i16sse div(const i16sse& x, const i16sse& y)
-{
-    KFR_COMPONENTWISE_RET_I(i16sse, result[i] = y[i] ? x[i] / y[i] : 0);
-}
+KFR_DIV_MOD_FN(i16sse)
 
 KFR_INTRINSIC u32sse add(const u32sse& x, const u32sse& y) { return _mm_add_epi32(x.v, y.v); }
 KFR_INTRINSIC u32sse sub(const u32sse& x, const u32sse& y) { return _mm_sub_epi32(x.v, y.v); }
@@ -140,24 +138,14 @@ KFR_INTRINSIC i32sse mul(const i32sse& x, const i32sse& y)
                               _mm_shuffle_epi32(tmp2, _MM_SHUFFLE(0, 0, 2, 0)));
 }
 #endif
-KFR_INTRINSIC u32sse div(const u32sse& x, const u32sse& y)
-{
-    KFR_COMPONENTWISE_RET_I(u32sse, result[i] = y[i] ? x[i] / y[i] : 0);
-}
-KFR_INTRINSIC i32sse div(const i32sse& x, const i32sse& y)
-{
-    KFR_COMPONENTWISE_RET_I(i32sse, result[i] = y[i] ? x[i] / y[i] : 0);
-}
+KFR_DIV_MOD_FN(u32sse)
+KFR_DIV_MOD_FN(i32sse)
 
 KFR_INTRINSIC u64sse add(const u64sse& x, const u64sse& y) { return _mm_add_epi64(x.v, y.v); }
 KFR_INTRINSIC u64sse sub(const u64sse& x, const u64sse& y) { return _mm_sub_epi64(x.v, y.v); }
 KFR_INTRINSIC u64sse mul(const u64sse& x, const u64sse& y)
 {
     KFR_COMPONENTWISE_RET_I(u64sse, result[i] = x[i] * y[i]);
-}
-KFR_INTRINSIC u64sse div(const u64sse& x, const u64sse& y)
-{
-    KFR_COMPONENTWISE_RET_I(u64sse, result[i] = y[i] ? x[i] / y[i] : 0);
 }
 
 KFR_INTRINSIC i64sse add(const i64sse& x, const i64sse& y) { return _mm_add_epi64(x.v, y.v); }
@@ -166,10 +154,8 @@ KFR_INTRINSIC i64sse mul(const i64sse& x, const i64sse& y)
 {
     KFR_COMPONENTWISE_RET_I(i64sse, result[i] = x[i] * y[i]);
 }
-KFR_INTRINSIC i64sse div(const i64sse& x, const i64sse& y)
-{
-    KFR_COMPONENTWISE_RET_I(i64sse, result[i] = y[i] ? x[i] / y[i] : 0);
-}
+KFR_DIV_MOD_FN(u64sse)
+KFR_DIV_MOD_FN(i64sse)
 
 KFR_INTRINSIC f32sse shl(const f32sse& x, unsigned y)
 {
@@ -600,33 +586,21 @@ KFR_INTRINSIC f64avx shr(const f64avx& x, unsigned y)
 
 KFR_INTRINSIC u8avx add(const u8avx& x, const u8avx& y) { return _mm256_add_epi8(x.v, y.v); }
 KFR_INTRINSIC u8avx sub(const u8avx& x, const u8avx& y) { return _mm256_sub_epi8(x.v, y.v); }
-KFR_INTRINSIC u8avx div(const u8avx& x, const u8avx& y)
-{
-    KFR_COMPONENTWISE_RET_I(u8avx, result[i] = x[i] / y[i]);
-}
+KFR_DIV_MOD_FN(u8avx)
 
 KFR_INTRINSIC i8avx add(const i8avx& x, const i8avx& y) { return _mm256_add_epi8(x.v, y.v); }
 KFR_INTRINSIC i8avx sub(const i8avx& x, const i8avx& y) { return _mm256_sub_epi8(x.v, y.v); }
-KFR_INTRINSIC i8avx div(const i8avx& x, const i8avx& y)
-{
-    KFR_COMPONENTWISE_RET_I(i8avx, result[i] = x[i] / y[i]);
-}
+KFR_DIV_MOD_FN(i8avx)
 
 KFR_INTRINSIC u16avx add(const u16avx& x, const u16avx& y) { return _mm256_add_epi16(x.v, y.v); }
 KFR_INTRINSIC u16avx sub(const u16avx& x, const u16avx& y) { return _mm256_sub_epi16(x.v, y.v); }
 KFR_INTRINSIC u16avx mul(const u16avx& x, const u16avx& y) { return _mm256_mullo_epi16(x.v, y.v); }
-KFR_INTRINSIC u16avx div(const u16avx& x, const u16avx& y)
-{
-    KFR_COMPONENTWISE_RET_I(u16avx, result[i] = x[i] / y[i]);
-}
+KFR_DIV_MOD_FN(u16avx)
 
 KFR_INTRINSIC i16avx add(const i16avx& x, const i16avx& y) { return _mm256_add_epi16(x.v, y.v); }
 KFR_INTRINSIC i16avx sub(const i16avx& x, const i16avx& y) { return _mm256_sub_epi16(x.v, y.v); }
 KFR_INTRINSIC i16avx mul(const i16avx& x, const i16avx& y) { return _mm256_mullo_epi16(x.v, y.v); }
-KFR_INTRINSIC i16avx div(const i16avx& x, const i16avx& y)
-{
-    KFR_COMPONENTWISE_RET_I(i16avx, result[i] = x[i] / y[i]);
-}
+KFR_DIV_MOD_FN(i16avx)
 
 KFR_INTRINSIC u32avx add(const u32avx& x, const u32avx& y) { return _mm256_add_epi32(x.v, y.v); }
 KFR_INTRINSIC u32avx sub(const u32avx& x, const u32avx& y) { return _mm256_sub_epi32(x.v, y.v); }
@@ -636,24 +610,14 @@ KFR_INTRINSIC i32avx sub(const i32avx& x, const i32avx& y) { return _mm256_sub_e
 
 KFR_INTRINSIC u32avx mul(const u32avx& x, const u32avx& y) { return _mm256_mullo_epi32(x.v, y.v); }
 KFR_INTRINSIC i32avx mul(const i32avx& x, const i32avx& y) { return _mm256_mullo_epi32(x.v, y.v); }
-KFR_INTRINSIC u32avx div(const u32avx& x, const u32avx& y)
-{
-    KFR_COMPONENTWISE_RET_I(u32avx, result[i] = x[i] / y[i]);
-}
-KFR_INTRINSIC i32avx div(const i32avx& x, const i32avx& y)
-{
-    KFR_COMPONENTWISE_RET_I(i32avx, result[i] = x[i] / y[i]);
-}
+KFR_DIV_MOD_FN(u32avx)
+KFR_DIV_MOD_FN(i32avx)
 
 KFR_INTRINSIC u64avx add(const u64avx& x, const u64avx& y) { return _mm256_add_epi64(x.v, y.v); }
 KFR_INTRINSIC u64avx sub(const u64avx& x, const u64avx& y) { return _mm256_sub_epi64(x.v, y.v); }
 KFR_INTRINSIC u64avx mul(const u64avx& x, const u64avx& y)
 {
     KFR_COMPONENTWISE_RET_I(u64avx, result[i] = x[i] * y[i]);
-}
-KFR_INTRINSIC u64avx div(const u64avx& x, const u64avx& y)
-{
-    KFR_COMPONENTWISE_RET_I(u64avx, result[i] = y[i] ? x[i] / y[i] : 0);
 }
 
 KFR_INTRINSIC i64avx add(const i64avx& x, const i64avx& y) { return _mm256_add_epi64(x.v, y.v); }
@@ -662,10 +626,8 @@ KFR_INTRINSIC i64avx mul(const i64avx& x, const i64avx& y)
 {
     KFR_COMPONENTWISE_RET_I(i64avx, result[i] = x[i] * y[i]);
 }
-KFR_INTRINSIC i64avx div(const i64avx& x, const i64avx& y)
-{
-    KFR_COMPONENTWISE_RET_I(i64avx, result[i] = y[i] ? x[i] / y[i] : 0);
-}
+KFR_DIV_MOD_FN(u64avx)
+KFR_DIV_MOD_FN(i64avx)
 
 KFR_INTRINSIC __m256i mul_epi8(const __m256i& x, const __m256i& y)
 {
@@ -1319,38 +1281,14 @@ KFR_INTRINSIC u16avx512 mul(const u16avx512& x, const u16avx512& y) { return _mm
 KFR_INTRINSIC u32avx512 mul(const u32avx512& x, const u32avx512& y) { return _mm512_mullo_epi32(x.v, y.v); }
 KFR_INTRINSIC u64avx512 mul(const u64avx512& x, const u64avx512& y) { return _mm512_mullo_epi64(x.v, y.v); }
 
-KFR_INTRINSIC i8avx512 div(const i8avx512& x, const i8avx512& y)
-{
-    KFR_COMPONENTWISE_RET_I(u8avx512, result[i] = y[i] ? x[i] / y[i] : 0);
-}
-KFR_INTRINSIC i16avx512 div(const i16avx512& x, const i16avx512& y)
-{
-    KFR_COMPONENTWISE_RET_I(u16avx512, result[i] = y[i] ? x[i] / y[i] : 0);
-}
-KFR_INTRINSIC i32avx512 div(const i32avx512& x, const i32avx512& y)
-{
-    KFR_COMPONENTWISE_RET_I(u32avx512, result[i] = y[i] ? x[i] / y[i] : 0);
-}
-KFR_INTRINSIC i64avx512 div(const i64avx512& x, const i64avx512& y)
-{
-    KFR_COMPONENTWISE_RET_I(u64avx512, result[i] = y[i] ? x[i] / y[i] : 0);
-}
-KFR_INTRINSIC u8avx512 div(const u8avx512& x, const u8avx512& y)
-{
-    KFR_COMPONENTWISE_RET_I(u8avx512, result[i] = y[i] ? x[i] / y[i] : 0);
-}
-KFR_INTRINSIC u16avx512 div(const u16avx512& x, const u16avx512& y)
-{
-    KFR_COMPONENTWISE_RET_I(u16avx512, result[i] = y[i] ? x[i] / y[i] : 0);
-}
-KFR_INTRINSIC u32avx512 div(const u32avx512& x, const u32avx512& y)
-{
-    KFR_COMPONENTWISE_RET_I(u32avx512, result[i] = y[i] ? x[i] / y[i] : 0);
-}
-KFR_INTRINSIC u64avx512 div(const u64avx512& x, const u64avx512& y)
-{
-    KFR_COMPONENTWISE_RET_I(u64avx512, result[i] = y[i] ? x[i] / y[i] : 0);
-}
+KFR_DIV_MOD_FN(i8avx512)
+KFR_DIV_MOD_FN(i16avx512)
+KFR_DIV_MOD_FN(i32avx512)
+KFR_DIV_MOD_FN(i64avx512)
+KFR_DIV_MOD_FN(u8avx512)
+KFR_DIV_MOD_FN(u16avx512)
+KFR_DIV_MOD_FN(u32avx512)
+KFR_DIV_MOD_FN(u64avx512)
 
 KFR_INTRINSIC i8avx512 band(const i8avx512& x, const i8avx512& y) { return _mm512_and_si512(x.v, y.v); }
 KFR_INTRINSIC i16avx512 band(const i16avx512& x, const i16avx512& y) { return _mm512_and_si512(x.v, y.v); }
@@ -1512,6 +1450,7 @@ KFR_HANDLE_ALL_SIZES_2(add)
 KFR_HANDLE_ALL_SIZES_2(sub)
 KFR_HANDLE_ALL_SIZES_2(mul)
 KFR_HANDLE_ALL_SIZES_2(div)
+KFR_HANDLE_ALL_SIZES_2(mod)
 
 KFR_HANDLE_ALL_SIZES_2(eq)
 KFR_HANDLE_ALL_SIZES_2(ne)
@@ -1619,6 +1558,11 @@ KFR_INTRINSIC vec<T, N> div(const vec<T, N>& x, const vec<T, N>& y)
 {
     KFR_COMPONENTWISE_RET(result[i] = x[i] / y[i]);
 }
+template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>)>
+KFR_INTRINSIC vec<T, N> mod(const vec<T, N>& x, const vec<T, N>& y)
+{
+    KFR_COMPONENTWISE_RET(result[i] = x[i] % y[i]);
+}
 
 #define KFR_HANDLE_VEC_SCA(fn)                                                                               \
     template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>)>                                          \
@@ -1636,6 +1580,7 @@ KFR_HANDLE_VEC_SCA(add)
 KFR_HANDLE_VEC_SCA(sub)
 KFR_HANDLE_VEC_SCA(mul)
 KFR_HANDLE_VEC_SCA(div)
+KFR_HANDLE_VEC_SCA(mod)
 KFR_HANDLE_VEC_SCA(band)
 KFR_HANDLE_VEC_SCA(bor)
 KFR_HANDLE_VEC_SCA(bxor)

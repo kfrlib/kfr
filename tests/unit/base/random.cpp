@@ -14,15 +14,15 @@ inline namespace CMT_ARCH_NAME
 {
 
 template <typename T, size_t N>
-static void test_random(kfr::random_bit_generator& gen, const vec<T, N>& value)
+static void test_random(random_state& state, const vec<T, N>& value)
 {
-    const vec<T, N> r = kfr::random_uniform<T, N>(gen);
+    const vec<T, N> r = kfr::random_uniform<T, N>(state);
     CHECK(r == value);
 }
 
 TEST(random_bit_generator)
 {
-    kfr::random_bit_generator gen(1, 2, 3, 4);
+    random_state gen = random_init(1, 2, 3, 4);
     test_random(gen, pack<u8>(21, 62, 88, 30, 46, 234, 205, 29, 41, 190, 212, 81, 217, 135, 218, 227));
     test_random(gen, pack<u16>(48589, 33814, 55928, 14799, 26904, 18521, 20808, 50888));
     test_random(gen, pack<u32>(1554764222, 1538765785, 2072590063, 2837641155));
@@ -66,11 +66,11 @@ TEST(random_bit_generator)
 
 TEST(gen_random_range)
 {
-    random_bit_generator gen(1, 2, 3, 4);
-    univector<fbase, 1000> v = kfr::gen_random_range<fbase>(std::ref(gen), -1.0, 1.0);
-    CHECK(kfr::minof(v) >= fbase(-1.0));
-    CHECK(kfr::maxof(v) <= fbase(1.0));
-    println(kfr::mean(v));
+    random_state gen         = random_init(1, 2, 3, 4);
+    univector<fbase, 1000> v = gen_random_range<fbase>(std::ref(gen), -1.0, 1.0);
+    CHECK(minof(v) >= fbase(-1.0));
+    CHECK(maxof(v) <= fbase(1.0));
+    // println(mean(v));
 }
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

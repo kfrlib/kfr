@@ -124,13 +124,11 @@ constexpr inline datatype operator&(datatype x, datatype y)
 }
 
 template <typename T>
-constexpr inline datatype typeclass = is_floating_point<typename compound_type_traits<T>::subtype>
-                                          ? datatype::f
-                                          : is_integral<typename compound_type_traits<T>::subtype>
-                                                ? (is_unsigned<typename compound_type_traits<T>::subtype>
-                                                       ? datatype::u
-                                                       : datatype::i)
-                                                : datatype();
+constexpr inline datatype typeclass =
+    is_floating_point<typename compound_type_traits<T>::subtype> ? datatype::f
+    : is_integral<typename compound_type_traits<T>::subtype>
+        ? (is_unsigned<typename compound_type_traits<T>::subtype> ? datatype::u : datatype::i)
+        : datatype();
 
 template <typename T>
 constexpr inline bool is_f_class = typeclass<T> == datatype::f;

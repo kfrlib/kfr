@@ -4,7 +4,7 @@
  * See LICENSE.txt for details
  */
 
-#include <kfr/math/select.hpp>
+#include <kfr/simd/select.hpp>
 
 namespace kfr
 {
@@ -14,7 +14,8 @@ TEST(select_true)
 {
     test_function2(
         test_catogories::vectors,
-        [](auto x, auto y) {
+        [](auto x, auto y)
+        {
             mask<subtype<decltype(x)>, decltype(x)::scalar_size()> m(true);
             return kfr::select(m, x, y);
         },
@@ -25,7 +26,8 @@ TEST(select_false)
 {
     test_function2(
         test_catogories::vectors,
-        [](auto x, auto y) {
+        [](auto x, auto y)
+        {
             mask<subtype<decltype(x)>, decltype(x)::scalar_size()> m(false);
             return kfr::select(m, x, y);
         },

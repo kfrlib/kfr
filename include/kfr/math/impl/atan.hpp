@@ -22,11 +22,11 @@
  */
 #pragma once
 #include "../../simd/abs.hpp"
-#include "../../simd/select.hpp"
-#include "../sin_cos.hpp"
 #include "../../simd/constants.hpp"
 #include "../../simd/impl/function.hpp"
 #include "../../simd/operators.hpp"
+#include "../../simd/select.hpp"
+#include "../sin_cos.hpp"
 
 namespace kfr
 {
@@ -59,7 +59,7 @@ KFR_INTRINSIC vec<f32, N> atan2k(const vec<f32, N>& yy, const vec<f32, N>& xx)
     u = fmadd(u, t, 0.199926957488059997558594f);
     u = fmadd(u, t, -0.333331018686294555664062f);
     t = u * t * s + s;
-    t = innercast<f32>(q) * 1.5707963267948966192313216916398f + t;
+    t = broadcastto<f32>(q) * 1.5707963267948966192313216916398f + t;
     return t;
 }
 
@@ -98,7 +98,7 @@ KFR_INTRINSIC vec<f64, N> atan2k(const vec<f64, N>& yy, const vec<f64, N>& xx)
     u = fmadd(u, t, 0.199999999996591265594148);
     u = fmadd(u, t, -0.333333333333311110369124);
     t = u * t * s + s;
-    t = innercast<f64>(q) * 1.5707963267948966192313216916398 + t;
+    t = broadcastto<f64>(q) * 1.5707963267948966192313216916398 + t;
     return t;
 }
 

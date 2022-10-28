@@ -4,6 +4,7 @@
  * See LICENSE.txt for details
  */
 
+#include <kfr/io/tostring.hpp>
 #include <kfr/simd/horizontal.hpp>
 #include <kfr/simd/operators.hpp>
 
@@ -22,7 +23,8 @@ TEST(bnot)
 {
     test_function1(
         test_catogories::vectors, [](auto x) -> decltype(x) { return ~x; },
-        [](auto x) -> decltype(x) {
+        [](auto x) -> decltype(x)
+        {
             utype<decltype(x)> u = ~ubitcast(x);
             return bitcast<decltype(x)>(u);
         });
@@ -59,19 +61,38 @@ TEST(div)
 {
     test_function2(
         test_catogories::vectors,
-        [](auto x, auto y) {
-            return is_safe_division<subtype<decltype(x)>>(x.front(), y.front()) ? x / y : 0;
-        },
+        [](auto x, auto y)
+        { return is_safe_division<subtype<decltype(x)>>(x.front(), y.front()) ? x / y : 0; },
         [](auto x, auto y) -> common_type<decltype(x), decltype(y)> {
             return is_safe_division(x, y) ? x / y : 0;
         });
+}
+struct not_f
+{
+    template <typename T>
+    constexpr bool operator()(ctype_t<T>) const
+    {
+        return !is_f_class<subtype<T>>;
+    }
+};
+TEST(mod)
+{
+    test_function2(
+        test_catogories::vectors,
+        [](auto x, auto y)
+        { return is_safe_division<subtype<decltype(x)>>(x.front(), y.front()) ? x % y : 0; },
+        [](auto x, auto y) -> common_type<decltype(x), decltype(y)> {
+            return is_safe_division(x, y) ? x % y : 0;
+        },
+        fn_return_constant<bool, true>{}, not_f{});
 }
 
 TEST(bor)
 {
     test_function2(
         test_catogories::vectors, [](auto x, auto y) { return x | y; },
-        [](auto x, auto y) -> common_type<decltype(x), decltype(y)> {
+        [](auto x, auto y) -> common_type<decltype(x), decltype(y)>
+        {
             using T = common_type<decltype(x), decltype(y)>;
             return bitcast<T>(static_cast<utype<T>>(ubitcast(T(x)) | ubitcast(T(y))));
         });
@@ -81,7 +102,8 @@ TEST(bxor)
 {
     test_function2(
         test_catogories::vectors, [](auto x, auto y) { return x ^ y; },
-        [](auto x, auto y) -> common_type<decltype(x), decltype(y)> {
+        [](auto x, auto y) -> common_type<decltype(x), decltype(y)>
+        {
             using T = common_type<decltype(x), decltype(y)>;
             return bitcast<T>(static_cast<utype<T>>(ubitcast(T(x)) ^ ubitcast(T(y))));
         });
@@ -91,7 +113,8 @@ TEST(band)
 {
     test_function2(
         test_catogories::vectors, [](auto x, auto y) { return x & y; },
-        [](auto x, auto y) -> common_type<decltype(x), decltype(y)> {
+        [](auto x, auto y) -> common_type<decltype(x), decltype(y)>
+        {
             using T = common_type<decltype(x), decltype(y)>;
             return bitcast<T>(static_cast<utype<T>>(ubitcast(T(x)) & ubitcast(T(y))));
         });
@@ -102,7 +125,8 @@ TEST(shl)
     testo::matrix(
         named("type") = test_catogories::types(test_catogories::vectors), named("value1") = special_values(),
         named("shift") = std::vector<unsigned>{ 1, 2, 7, 8, 9, 15, 16, 31, 32, 63, 64 },
-        [&](auto type, special_value value, unsigned shift) {
+        [&](auto type, special_value value, unsigned shift)
+        {
             using T = typename decltype(type)::type;
             if (shift < sizeof(subtype<T>))
             {
@@ -130,7 +154,8 @@ TEST(shr)
     testo::matrix(
         named("type") = test_catogories::types(test_catogories::vectors), named("value1") = special_values(),
         named("shift") = std::vector<unsigned>{ 1, 2, 7, 8, 9, 15, 16, 31, 32, 63, 64 },
-        [&](auto type, special_value value, unsigned shift) {
+        [&](auto type, special_value value, unsigned shift)
+        {
             using T = typename decltype(type)::type;
             if (shift < sizeof(subtype<T>))
             {
@@ -221,6 +246,10 @@ TEST(matrix)
     CHECK(m22 * 10 == i32x2x2{ i32x2{ 10, 20 }, i32x2{ 30, 40 } });
 
     CHECK(m22 * i32x2{ -1, 100 } == i32x2x2{ i32x2{ -1, 200 }, i32x2{ -3, 400 } });
+
+    CHECK(vec{ vec{ 1, 1 }, vec{ 1, 1 } } * vec{ -1, 100 } == vec{ vec{ -1, 100 }, vec{ -1, 100 } });
+    CHECK(vec{ vec{ 1, 1 }, vec{ 1, 1 }, vec{ 1, 1 } } * vec{ -1, 100 } ==
+          vec{ vec{ -1, 100 }, vec{ -1, 100 }, vec{ -1, 100 } });
 
     i32x2 xy{ 10, 20 };
     i32x2x2 m{ i32x2{ 1, 2 }, i32x2{ 3, 4 } };

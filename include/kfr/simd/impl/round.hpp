@@ -22,9 +22,9 @@
  */
 #pragma once
 
-#include "function.hpp"
 #include "../operators.hpp"
 #include "abs.hpp"
+#include "function.hpp"
 
 namespace kfr
 {
@@ -140,48 +140,48 @@ constexpr inline f32 fp_precision_limit<f32> = 16777216.0f;
 template <size_t N>
 KFR_INTRINSIC vec<f32, N> floor(const vec<f32, N>& x)
 {
-    vec<f32, N> t = innercast<f32>(innercast<i32>(x));
+    vec<f32, N> t = broadcastto<f32>(broadcastto<i32>(x));
     return select(abs(x) >= fp_precision_limit<f32>, x, t - select(x < t, 1.f, 0.f));
 }
 template <size_t N>
 KFR_INTRINSIC vec<f64, N> floor(const vec<f64, N>& x)
 {
-    vec<f64, N> t = innercast<f64>(innercast<i64>(x));
+    vec<f64, N> t = broadcastto<f64>(broadcastto<i64>(x));
     return select(abs(x) >= fp_precision_limit<f64>, x, t - select(x < t, 1., 0.));
 }
 template <size_t N>
 KFR_INTRINSIC vec<f32, N> ceil(const vec<f32, N>& x)
 {
-    vec<f32, N> t = innercast<f32>(innercast<i32>(x));
+    vec<f32, N> t = broadcastto<f32>(broadcastto<i32>(x));
     return select(abs(x) >= fp_precision_limit<f32>, x, t + select(x > t, 1.f, 0.f));
 }
 template <size_t N>
 KFR_INTRINSIC vec<f64, N> ceil(const vec<f64, N>& x)
 {
-    vec<f64, N> t = innercast<f64>(innercast<i64>(x));
+    vec<f64, N> t = broadcastto<f64>(broadcastto<i64>(x));
     return select(abs(x) >= fp_precision_limit<f64>, x, t + select(x > t, 1., 0.));
 }
 template <size_t N>
 KFR_INTRINSIC vec<f32, N> round(const vec<f32, N>& x)
 {
     return select(abs(x) >= fp_precision_limit<f32>, x,
-                  innercast<f32>(innercast<i32>(x + mulsign(broadcast<N>(0.5f), x))));
+                  broadcastto<f32>(broadcastto<i32>(x + mulsign(broadcast<N>(0.5f), x))));
 }
 template <size_t N>
 KFR_INTRINSIC vec<f64, N> round(const vec<f64, N>& x)
 {
     return select(abs(x) >= fp_precision_limit<f64>, x,
-                  innercast<f64>(innercast<i64>(x + mulsign(broadcast<N>(0.5), x))));
+                  broadcastto<f64>(broadcastto<i64>(x + mulsign(broadcast<N>(0.5), x))));
 }
 template <size_t N>
 KFR_INTRINSIC vec<f32, N> trunc(const vec<f32, N>& x)
 {
-    return select(abs(x) >= fp_precision_limit<f32>, x, innercast<f32>(innercast<i32>(x)));
+    return select(abs(x) >= fp_precision_limit<f32>, x, broadcastto<f32>(broadcastto<i32>(x)));
 }
 template <size_t N>
 KFR_INTRINSIC vec<f64, N> trunc(const vec<f64, N>& x)
 {
-    return select(abs(x) >= fp_precision_limit<f64>, x, innercast<f64>(innercast<i64>(x)));
+    return select(abs(x) >= fp_precision_limit<f64>, x, broadcastto<f64>(broadcastto<i64>(x)));
 }
 template <size_t N>
 KFR_INTRINSIC vec<f32, N> fract(const vec<f32, N>& x)
@@ -224,22 +224,22 @@ KFR_INTRINSIC vec<T, N> fract(const vec<T, N>&)
 template <typename T, size_t N, typename IT = itype<T>>
 KFR_INTRINSIC vec<IT, N> ifloor(const vec<T, N>& value)
 {
-    return innercast<IT>(floor(value));
+    return broadcastto<IT>(floor(value));
 }
 template <typename T, size_t N, typename IT = itype<T>>
 KFR_INTRINSIC vec<IT, N> iceil(const vec<T, N>& value)
 {
-    return innercast<IT>(ceil(value));
+    return broadcastto<IT>(ceil(value));
 }
 template <typename T, size_t N, typename IT = itype<T>>
 KFR_INTRINSIC vec<IT, N> itrunc(const vec<T, N>& value)
 {
-    return innercast<IT>(trunc(value));
+    return broadcastto<IT>(trunc(value));
 }
 template <typename T, size_t N, typename IT = itype<T>>
 KFR_INTRINSIC vec<IT, N> iround(const vec<T, N>& value)
 {
-    return innercast<IT>(round(value));
+    return broadcastto<IT>(round(value));
 }
 
 KFR_HANDLE_SCALAR(floor)

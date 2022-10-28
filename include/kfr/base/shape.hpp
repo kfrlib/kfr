@@ -2,7 +2,7 @@
  *  @{
  */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2022 Fractalium Ltd (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -27,6 +27,8 @@
 
 #include "impl/static_array.hpp"
 
+#include "../cometa/string.hpp"
+#include "../simd/logical.hpp"
 #include "../simd/min_max.hpp"
 #include "../simd/shuffle.hpp"
 #include "../simd/types.hpp"
@@ -83,11 +85,17 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
 
     static_assert(dims < maximum_dims);
 
+    template <int dummy = 0, KFR_ENABLE_IF(dummy == 0 && dims == 1)>
+    operator index_t() const
+    {
+        return this->front();
+    }
+
     bool ge(const shape& other) const
     {
         if constexpr (dims == 1)
         {
-            return front() >= other.front();
+            return this->front() >= other.front();
         }
         else
         {
@@ -109,7 +117,7 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
     {
         if constexpr (dims == 1)
         {
-            return front() <= other.front();
+            return this->front() <= other.front();
         }
         else
         {
@@ -267,7 +275,17 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
         return result;
     }
 
-    template <size_t odims>
+    template <index_t new_dims>
+    KFR_MEM_INTRINSIC shape<new_dims> extend(index_t value = infinite_size) const
+    {
+        static_assert(new_dims >= dims);
+        if constexpr (new_dims == dims)
+            return *this;
+        else
+            return concat(broadcast<new_dims - dims>(value), **this);
+    }
+
+    template <index_t odims>
     shape<odims> trim() const
     {
         static_assert(odims <= dims);
@@ -293,8 +311,6 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
         }
     }
 
-    shape<dims + 1> extend() const { return concat(**this, vec{ index_t(0) }); }
-
     KFR_MEM_INTRINSIC constexpr index_t revindex(size_t index) const
     {
         return index < dims ? this->operator[](dims - 1 - index) : 1;
@@ -313,8 +329,8 @@ struct shape<0>
 
     static constexpr size_t size() { return static_size; }
 
-    shape() = default;
-    shape(index_t value) {}
+    constexpr shape() = default;
+    constexpr shape(index_t value) {}
 
     constexpr bool has_infinity() const { return false; }
 
@@ -331,13 +347,20 @@ struct shape<0>
 
     KFR_MEM_INTRINSIC index_t dot(const shape& other) const { return 0; }
 
-    KFR_MEM_INTRINSIC size_t product() const { return 0; }
+    KFR_MEM_INTRINSIC index_t product() const { return 0; }
 
     KFR_MEM_INTRINSIC dimset tomask() const { return -1; }
 
-    shape<1> extend() const { return { 0 }; }
+    template <index_t new_dims>
+    KFR_MEM_INTRINSIC shape<new_dims> extend(index_t value = infinite_size) const
+    {
+        if constexpr (new_dims == 0)
+            return *this;
+        else
+            return shape<new_dims>{ value };
+    }
 
-    template <size_t new_dims>
+    template <index_t new_dims>
     shape<new_dims> trim() const
     {
         static_assert(new_dims == 0);
@@ -468,7 +491,7 @@ bool can_assign_from(const shape<dims1>& dst_shape, const shape<dims2>& src_shap
             vec<index_t, outdims> dst = padlow<outdims - dims1>(*dst_shape, 1);
             vec<index_t, outdims> src = padlow<outdims - dims2>(*src_shape, 1);
 
-            mask<index_t, outdims> match = src + 1 <= 2 || src == dst;
+            mask<index_t, outdims> match = src + 1 <= 2 || src == dst || dst == infinite_size;
             return all(match);
         }
         else
@@ -477,7 +500,8 @@ bool can_assign_from(const shape<dims1>& dst_shape, const shape<dims2>& src_shap
             {
                 index_t dst_size = dst_shape.revindex(i);
                 index_t src_size = src_shape.revindex(i);
-                if (src_size == 1 || src_size == infinite_size || src_size == dst_size)
+                if (src_size == 1 || src_size == infinite_size || src_size == dst_size ||
+                    dst_size == infinite_size)
                 {
                 }
                 else
@@ -497,13 +521,20 @@ constexpr shape<dims> common_shape(const shape<dims>& shape)
 }
 
 template <index_t dims1, index_t dims2, index_t outdims = const_max(dims1, dims2)>
-constexpr shape<outdims> common_shape(const shape<dims1>& shape1, const shape<dims2>& shape2)
+KFR_MEM_INTRINSIC constexpr shape<outdims> common_shape(const shape<dims1>& shape1,
+                                                        const shape<dims2>& shape2)
 {
     shape<outdims> result;
     for (size_t i = 0; i < outdims; ++i)
     {
         index_t size1 = shape1.revindex(i);
         index_t size2 = shape2.revindex(i);
+        if (!size1 || !size2)
+        {
+            result[outdims - 1 - i] = 0;
+            continue;
+        }
+
         if (size1 == infinite_size)
         {
             if (size2 == infinite_size)
@@ -512,14 +543,14 @@ constexpr shape<outdims> common_shape(const shape<dims1>& shape1, const shape<di
             }
             else
             {
-                result[outdims - 1 - i] = size2;
+                result[outdims - 1 - i] = size2 == 1 ? infinite_size : size2;
             }
         }
         else
         {
             if (size2 == infinite_size)
             {
-                result[outdims - 1 - i] = size1;
+                result[outdims - 1 - i] = size1 == 1 ? infinite_size : size1;
             }
             else
             {
@@ -540,9 +571,17 @@ constexpr shape<outdims> common_shape(const shape<dims1>& shape1, const shape<di
 }
 
 template <>
-KFR_MEM_INTRINSIC shape<0> common_shape(const shape<0>& shape1, const shape<0>& shape2)
+KFR_MEM_INTRINSIC constexpr shape<0> common_shape(const shape<0>& shape1, const shape<0>& shape2)
 {
     return {};
+}
+
+template <index_t dims1, index_t dims2, index_t... dims, index_t outdims = const_max(dims1, dims2, dims...)>
+KFR_MEM_INTRINSIC constexpr shape<outdims> common_shape(const shape<dims1>& shape1,
+                                                        const shape<dims2>& shape2,
+                                                        const shape<dims>&... shapes)
+{
+    return common_shape(shape1, common_shape(shape2, shapes...));
 }
 
 template <index_t dims1, index_t dims2>
@@ -745,6 +784,7 @@ struct axis_params
 {
     constexpr static index_t axis  = Axis;
     constexpr static index_t width = N;
+    constexpr static index_t value = N;
 
     constexpr axis_params() = default;
 };
@@ -753,3 +793,31 @@ template <index_t Axis, index_t N>
 constexpr inline const axis_params<Axis, N> axis_params_v{};
 
 } // namespace kfr
+
+namespace cometa
+{
+template <kfr::index_t dims>
+struct representation<kfr::shape<dims>>
+{
+    using type = std::string;
+    static std::string get(const kfr::shape<dims>& value)
+    {
+        if constexpr (dims == 0)
+        {
+            return "shape{}";
+        }
+        else
+        {
+            std::string s;
+            for (kfr::index_t i = 0; i < dims; ++i)
+            {
+                if (CMT_LIKELY(i > 0))
+                    s += ", ";
+                s += as_string(value[i]);
+            }
+            return "shape{" + s + "}";
+        }
+    }
+};
+
+} // namespace cometa

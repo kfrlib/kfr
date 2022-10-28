@@ -183,7 +183,7 @@ template <typename Tout, typename Tin, typename Tout_traits = audio_sample_trait
 inline Tout convert_sample(const Tin& in)
 {
     constexpr auto scale = Tout_traits::scale / Tin_traits::scale;
-    return innercast<Tout>(clamp(in * scale, -Tout_traits::scale, +Tout_traits::scale));
+    return broadcastto<Tout>(clamp(in * scale, -Tout_traits::scale, +Tout_traits::scale));
 }
 
 /// @brief Deinterleaves and converts audio samples
@@ -264,20 +264,24 @@ void convert(Tout* out, const Tin* in, size_t size)
 template <typename Tout, typename Tout_traits = audio_sample_traits<Tout>>
 void convert(Tout* out, const void* in, audio_sample_type in_type, size_t size)
 {
-    cswitch(audio_sample_type_clist{}, in_type, [&](auto t) {
-        using type = typename audio_sample_get_type<val_of(decltype(t)())>::type;
-        convert(out, reinterpret_cast<const type*>(in), size);
-    });
+    cswitch(audio_sample_type_clist{}, in_type,
+            [&](auto t)
+            {
+                using type = typename audio_sample_get_type<val_of(decltype(t)())>::type;
+                convert(out, reinterpret_cast<const type*>(in), size);
+            });
 }
 
 /// @brief Converts audio samples (output format is known at runtime)
 template <typename Tin, typename Tin_traits = audio_sample_traits<Tin>>
 void convert(void* out, audio_sample_type out_type, const Tin* in, size_t size)
 {
-    cswitch(audio_sample_type_clist{}, out_type, [&](auto t) {
-        using type = typename audio_sample_get_type<val_of(decltype(t)())>::type;
-        convert(reinterpret_cast<type*>(out), in, size);
-    });
+    cswitch(audio_sample_type_clist{}, out_type,
+            [&](auto t)
+            {
+                using type = typename audio_sample_get_type<val_of(decltype(t)())>::type;
+                convert(reinterpret_cast<type*>(out), in, size);
+            });
 }
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

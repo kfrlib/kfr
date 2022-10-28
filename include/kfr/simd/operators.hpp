@@ -36,39 +36,42 @@ inline namespace CMT_ARCH_NAME
 {
 
 #define KFR_VEC_OPERATOR1(op, fn)                                                                            \
-    template <typename T, size_t N>                                                                          \
+    template <typename T, size_t N /* , KFR_ENABLE_IF(!is_vec<T>) */>                                        \
     constexpr KFR_INTRINSIC vec<T, N> operator op(const vec<T, N>& x)                                        \
     {                                                                                                        \
         return intrinsics::fn(x);                                                                            \
     }
 
 #define KFR_VEC_OPERATOR2(op, asgnop, fn)                                                                    \
-    template <typename T1, typename T2, size_t N>                                                            \
+    template <typename T1, typename T2, size_t N, KFR_ENABLE_IF(vec_rank<T1> == vec_rank<T2>)>               \
     constexpr KFR_INTRINSIC vec<T1, N>& operator asgnop(vec<T1, N>& x, const vec<T2, N>& y)                  \
     {                                                                                                        \
-        x = intrinsics::fn(x, elemcast<T1>(y));                                                              \
+        x = intrinsics::fn(x, promoteto<T1>(y));                                                             \
         return x;                                                                                            \
     }                                                                                                        \
-    template <typename T1, typename T2, size_t N>                                                            \
+    template <typename T1, typename T2, size_t N, KFR_ENABLE_IF(1 + vec_rank<T1> > vec_rank<T2>)>            \
     constexpr KFR_INTRINSIC vec<T1, N>& operator asgnop(vec<T1, N>& x, const T2& y)                          \
     {                                                                                                        \
         x = intrinsics::fn(x, T1(y));                                                                        \
         return x;                                                                                            \
     }                                                                                                        \
-    template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>>                          \
+    template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>,                          \
+              KFR_ENABLE_IF(1 + vec_rank<T1> > vec_rank<T2>)>                                                \
     constexpr KFR_INTRINSIC vec<C, N> operator op(const vec<T1, N>& x, const T2& y)                          \
     {                                                                                                        \
-        return intrinsics::fn(elemcast<C>(x), C(y));                                                         \
+        return intrinsics::fn(promoteto<C>(x), C(y));                                                        \
     }                                                                                                        \
-    template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>>                          \
+    template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>,                          \
+              KFR_ENABLE_IF(vec_rank<T1> < 1 + vec_rank<T2>)>                                                \
     constexpr KFR_INTRINSIC vec<C, N> operator op(const T1& x, const vec<T2, N>& y)                          \
     {                                                                                                        \
-        return intrinsics::fn(C(x), elemcast<C>(y));                                                         \
+        return intrinsics::fn(C(x), promoteto<C>(y));                                                        \
     }                                                                                                        \
-    template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>>                          \
+    template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>,                          \
+              KFR_ENABLE_IF(vec_rank<T1> == vec_rank<T2>)>                                                   \
     constexpr KFR_INTRINSIC vec<C, N> operator op(const vec<T1, N>& x, const vec<T2, N>& y)                  \
     {                                                                                                        \
-        return intrinsics::fn(elemcast<C>(x), elemcast<C>(y));                                               \
+        return intrinsics::fn(promoteto<C>(x), promoteto<C>(y));                                             \
     }
 
 #define KFR_VEC_SHIFT_OPERATOR(op, asgnop, fn)                                                               \
@@ -78,43 +81,46 @@ inline namespace CMT_ARCH_NAME
         x = intrinsics::fn(x, y);                                                                            \
         return x;                                                                                            \
     }                                                                                                        \
-    template <typename T1, typename T2, size_t N>                                                            \
+    template <typename T1, typename T2, size_t N, KFR_ENABLE_IF(vec_rank<T1> == vec_rank<T2>)>               \
     constexpr KFR_INTRINSIC vec<T1, N>& operator asgnop(vec<T1, N>& x, const vec<T2, N>& y)                  \
     {                                                                                                        \
-        x = intrinsics::fn(x, elemcast<utype<T1>>(y));                                                       \
+        x = intrinsics::fn(x, promoteto<utype<T1>>(y));                                                      \
         return x;                                                                                            \
     }                                                                                                        \
-    template <typename T, size_t N>                                                                          \
-    constexpr KFR_INTRINSIC vec<T, N> operator op(const vec<T, N>& x, unsigned y)                            \
+    template <typename T1, size_t N>                                                                         \
+    constexpr KFR_INTRINSIC vec<T1, N> operator op(const vec<T1, N>& x, unsigned y)                          \
     {                                                                                                        \
         return intrinsics::fn(x, y);                                                                         \
     }                                                                                                        \
-    template <typename T, typename T2, size_t N>                                                             \
-    constexpr KFR_INTRINSIC vec<T, N> operator op(const T& x, const vec<T2, N>& y)                           \
+    template <typename T1, typename T2, size_t N, KFR_ENABLE_IF(vec_rank<T1> < 1 + vec_rank<T2>)>            \
+    constexpr KFR_INTRINSIC vec<T1, N> operator op(const T1& x, const vec<T2, N>& y)                         \
     {                                                                                                        \
-        return intrinsics::fn(innercast<T>(x), elemcast<utype<T>>(y));                                       \
+        return intrinsics::fn(broadcastto<T1>(x), promoteto<utype<T1>>(y));                                  \
     }                                                                                                        \
-    template <typename T, typename T2, size_t N>                                                             \
-    constexpr KFR_INTRINSIC vec<T, N> operator op(const vec<T, N>& x, const vec<T2, N>& y)                   \
+    template <typename T1, typename T2, size_t N, KFR_ENABLE_IF(vec_rank<T1> == vec_rank<T2>)>               \
+    constexpr KFR_INTRINSIC vec<T1, N> operator op(const vec<T1, N>& x, const vec<T2, N>& y)                 \
     {                                                                                                        \
-        return intrinsics::fn(x, elemcast<utype<T>>(y));                                                     \
+        return intrinsics::fn(x, promoteto<utype<T1>>(y));                                                   \
     }
 
 #define KFR_VEC_CMP_OPERATOR(op, fn)                                                                         \
-    template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>>                          \
+    template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>,                          \
+              KFR_ENABLE_IF(1 + vec_rank<T1> > vec_rank<T2>)>                                                \
     constexpr KFR_INTRINSIC mask<C, N> operator op(const vec<T1, N>& x, const T2& y)                         \
     {                                                                                                        \
-        return intrinsics::fn(elemcast<C>(x), vec<C, N>(y)).asmask();                                        \
+        return intrinsics::fn(promoteto<C>(x), vec<C, N>(y)).asmask();                                       \
     }                                                                                                        \
-    template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>>                          \
+    template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>,                          \
+              KFR_ENABLE_IF(vec_rank<T1> < 1 + vec_rank<T2>)>                                                \
     constexpr KFR_INTRINSIC mask<C, N> operator op(const T1& x, const vec<T2, N>& y)                         \
     {                                                                                                        \
-        return intrinsics::fn(vec<C, N>(x), elemcast<C>(y)).asmask();                                        \
+        return intrinsics::fn(vec<C, N>(x), promoteto<C>(y)).asmask();                                       \
     }                                                                                                        \
-    template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>>                          \
+    template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>,                          \
+              KFR_ENABLE_IF(vec_rank<T1> == vec_rank<T2>)>                                                   \
     constexpr KFR_INTRINSIC mask<C, N> operator op(const vec<T1, N>& x, const vec<T2, N>& y)                 \
     {                                                                                                        \
-        return intrinsics::fn(elemcast<C>(x), elemcast<C>(y)).asmask();                                      \
+        return intrinsics::fn(promoteto<C>(x), promoteto<C>(y)).asmask();                                    \
     }
 
 KFR_VEC_OPERATOR1(-, neg)
@@ -124,6 +130,7 @@ KFR_VEC_OPERATOR2(+, +=, add)
 KFR_VEC_OPERATOR2(-, -=, sub)
 KFR_VEC_OPERATOR2(*, *=, mul)
 KFR_VEC_OPERATOR2(/, /=, div)
+KFR_VEC_OPERATOR2(%, %=, mod)
 
 KFR_VEC_OPERATOR2(&, &=, band)
 KFR_VEC_OPERATOR2(|, |=, bor)
@@ -140,7 +147,7 @@ KFR_VEC_CMP_OPERATOR(<, lt)
 
 template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>,
           KFR_ENABLE_IF(sizeof(T1) == sizeof(T2))>
-KFR_INTRINSIC mask<C, N> operator&(const mask<T1, N>& x, const mask<T2, N>& y)CMT_NOEXCEPT
+KFR_INTRINSIC mask<C, N> operator&(const mask<T1, N>& x, const mask<T2, N>& y) CMT_NOEXCEPT
 {
     return mask<C, N>((bitcast<C>(vec<T1, N>(x.v)) & bitcast<C>(vec<T2, N>(y.v))).v);
 }
@@ -433,6 +440,13 @@ KFR_INTRINSIC Tout div(const T1& x, const T2& y)
 }
 KFR_FN(div)
 
+/// Modulo
+template <typename T1, typename T2, typename Tout = common_type<T1, T2>>
+KFR_INTRINSIC Tout mod(const T1& x, const T2& y)
+{
+    return static_cast<Tout>(x) % static_cast<Tout>(y);
+}
+KFR_FN(mod)
 /// Remainder
 template <typename T1, typename T2, typename Tout = common_type<T1, T2>>
 KFR_INTRINSIC Tout rem(const T1& x, const T2& y)

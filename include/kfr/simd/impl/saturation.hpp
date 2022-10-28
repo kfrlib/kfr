@@ -22,9 +22,9 @@
  */
 #pragma once
 
+#include "../operators.hpp"
 #include "../select.hpp"
 #include "function.hpp"
-#include "../operators.hpp"
 
 namespace kfr
 {

@@ -26,13 +26,13 @@
 #pragma once
 
 #include "../base/basic_expressions.hpp"
-#include "../base/simd_expressions.hpp"
 #include "../base/filter.hpp"
 #include "../base/memory.hpp"
 #include "../base/reduce.hpp"
+#include "../base/simd_expressions.hpp"
+#include "../base/state_holder.hpp"
 #include "../base/univector.hpp"
 #include "../simd/vec.hpp"
-#include "state_holder.hpp"
 
 namespace kfr
 {
@@ -87,115 +87,122 @@ struct moving_sum_state<U, tag_dynamic_vector>
     mutable size_t head_cursor, tail_cursor;
 };
 
-namespace internal
-{
-
 template <size_t tapcount, typename T, typename U, typename E1, bool stateless = false>
-struct expression_short_fir : expression_with_arguments<E1>
+struct expression_short_fir : expression_with_traits<E1>
 {
-    using value_type = U;
+    using value_type = U; // override value_type
+
+    static_assert(expression_traits<E1>::dims == 1, "expression_short_fir requires input with dims == 1");
+    constexpr static inline bool random_access = false;
 
     expression_short_fir(E1&& e1, const short_fir_state<tapcount, T, U>& state)
-        : expression_with_arguments<E1>(std::forward<E1>(e1)), state(state)
+        : expression_with_traits<E1>(std::forward<E1>(e1)), state(state)
     {
     }
 
     template <size_t N>
-    KFR_INTRINSIC friend vec<U, N> get_elements(const expression_short_fir& self, cinput_t cinput,
-                                                size_t index, vec_shape<U, N> x)
+    KFR_INTRINSIC friend vec<U, N> get_elements(const expression_short_fir& self, shape<1> index,
+                                                axis_params<0, N> sh)
     {
-        vec<U, N> in = self.argument_first(cinput, index, x);
+        vec<U, N> in = get_elements(self.first(), index, sh);
 
-        vec<U, N> out = in * self.state.s.taps.front();
-        cforeach(csizeseq<tapcount - 1, 1>, [&](auto I) {
-            out = out +
-                  concat_and_slice<tapcount - 1 - I, N>(self.state.s.delayline, in) * self.state.s.taps[I];
-        });
-        self.state.s.delayline = concat_and_slice<N, tapcount - 1>(self.state.s.delayline, in);
+        vec<U, N> out = in * self.state->taps.front();
+        cforeach(csizeseq<tapcount - 1, 1>,
+                 [&](auto I) {
+                     out = out + concat_and_slice<tapcount - 1 - I, N>(self.state->delayline, in) *
+                                     self.state->taps[I];
+                 });
+        self.state->delayline = concat_and_slice<N, tapcount - 1>(self.state->delayline, in);
 
         return out;
     }
-    state_holder<short_fir_state<tapcount, T, U>, stateless> state;
+    state_holder<const short_fir_state<tapcount, T, U>, stateless> state;
 };
 
 template <typename T, typename U, typename E1, bool stateless = false>
-struct expression_fir : expression_with_arguments<E1>
+struct expression_fir : expression_with_traits<E1>
 {
-    using value_type = U;
+    using value_type = U; // override value_type
+
+    static_assert(expression_traits<E1>::dims == 1, "expression_fir requires input with dims == 1");
+    constexpr static inline bool random_access = false;
 
     expression_fir(E1&& e1, const fir_state<T, U>& state)
-        : expression_with_arguments<E1>(std::forward<E1>(e1)), state(state)
+        : expression_with_traits<E1>(std::forward<E1>(e1)), state(state)
     {
     }
 
     template <size_t N>
-    KFR_INTRINSIC friend vec<U, N> get_elements(const expression_fir& self, cinput_t cinput, size_t index,
-                                                vec_shape<U, N> x)
+    KFR_INTRINSIC friend vec<U, N> get_elements(const expression_fir& self, shape<1> index,
+                                                axis_params<0, N> sh)
     {
-        const size_t tapcount = self.state.s.taps.size();
-        const vec<U, N> input = self.argument_first(cinput, index, x);
+        const size_t tapcount = self.state->taps.size();
+        const vec<U, N> input = get_elements(self.first(), index, sh);
 
         vec<U, N> output;
-        size_t cursor = self.state.s.delayline_cursor;
+        size_t cursor = self.state->delayline_cursor;
         CMT_LOOP_NOUNROLL
         for (size_t i = 0; i < N; i++)
         {
-            self.state.s.delayline.ringbuf_write(cursor, input[i]);
-            output[i] =
-                dotproduct(self.state.s.taps, self.state.s.delayline.slice(cursor) /*, tapcount - cursor*/) +
-                dotproduct(self.state.s.taps.slice(tapcount - cursor), self.state.s.delayline /*, cursor*/);
+            self.state->delayline.ringbuf_write(cursor, input[i]);
+            U v =
+                dotproduct(self.state->taps.slice(0, tapcount - cursor), self.state->delayline.slice(cursor));
+            if (cursor > 0)
+                v = v + dotproduct(self.state->taps.slice(tapcount - cursor),
+                                   self.state->delayline.slice(0, cursor));
+            output[i] = v;
         }
-        self.state.s.delayline_cursor = cursor;
+        self.state->delayline_cursor = cursor;
         return output;
     }
-    state_holder<fir_state<T, U>, stateless> state;
+    state_holder<const fir_state<T, U>, stateless> state;
 };
 
 template <typename U, typename E1, univector_tag STag, bool stateless = false>
-struct expression_moving_sum : expression_with_arguments<E1>
+struct expression_moving_sum : expression_with_traits<E1>
 {
-    using value_type = U;
+    using value_type = U; // override value_type
+
+    static_assert(expression_traits<E1>::dims == 1, "expression_moving_sum requires input with dims == 1");
+    constexpr static inline bool random_access = false;
 
     expression_moving_sum(E1&& e1, const moving_sum_state<U, STag>& state)
-        : expression_with_arguments<E1>(std::forward<E1>(e1)), state(state)
+        : expression_with_traits<E1>(std::forward<E1>(e1)), state(state)
     {
     }
 
     template <size_t N>
-    KFR_INTRINSIC friend vec<U, N> get_elements(const expression_moving_sum& self, cinput_t cinput,
-                                                size_t index, vec_shape<U, N> x)
+    KFR_INTRINSIC friend vec<U, N> get_elements(const expression_moving_sum& self, shape<1> index,
+                                                axis_params<0, N> sh)
     {
-        static_assert(N >= 1, "");
-
-        const vec<U, N> input = self.argument_first(cinput, index, x);
+        const vec<U, N> input = get_elements(self.first(), index, sh);
 
         vec<U, N> output;
-        size_t wcursor = self.state.s.head_cursor;
-        size_t rcursor = self.state.s.tail_cursor;
+        size_t wcursor = self.state->head_cursor;
+        size_t rcursor = self.state->tail_cursor;
 
         // initial summation
-        self.state.s.delayline.ringbuf_write(wcursor, input[0]);
-        auto s    = sum(self.state.s.delayline);
+        self.state->delayline.ringbuf_write(wcursor, input[0]);
+        auto s    = sum(self.state->delayline);
         output[0] = s;
 
         CMT_LOOP_NOUNROLL
         for (size_t i = 1; i < N; i++)
         {
             U nextout;
-            self.state.s.delayline.ringbuf_read(rcursor, nextout);
-            U const nextin = input[i];
-            self.state.s.delayline.ringbuf_write(wcursor, nextin);
+            self.state->delayline.ringbuf_read(rcursor, nextout);
+            const U nextin = input[i];
+            self.state->delayline.ringbuf_write(wcursor, nextin);
             s += nextin - nextout;
             output[i] = s;
         }
-        self.state.s.delayline.ringbuf_step(rcursor, 1);
-        self.state.s.head_cursor = wcursor;
-        self.state.s.tail_cursor = rcursor;
+        self.state->delayline.ringbuf_step(rcursor, 1);
+        self.state->head_cursor = wcursor;
+        self.state->tail_cursor = rcursor;
         return output;
     }
-    state_holder<moving_sum_state<U, STag>, stateless> state;
+    state_holder<const moving_sum_state<U, STag>, stateless> state;
 };
-} // namespace internal
 
 /**
  * @brief Returns template expression that applies FIR filter to the input
@@ -203,9 +210,9 @@ struct expression_moving_sum : expression_with_arguments<E1>
  * @param taps coefficients for the FIR filter
  */
 template <typename T, typename E1, univector_tag Tag>
-KFR_INTRINSIC internal::expression_fir<T, value_type_of<E1>, E1> fir(E1&& e1, const univector<T, Tag>& taps)
+KFR_INTRINSIC expression_fir<T, expression_value_type<E1>, E1> fir(E1&& e1, const univector<T, Tag>& taps)
 {
-    return internal::expression_fir<T, value_type_of<E1>, E1>(std::forward<E1>(e1), taps.ref());
+    return expression_fir<T, expression_value_type<E1>, E1>(std::forward<E1>(e1), taps.ref());
 }
 
 /**
@@ -214,21 +221,20 @@ KFR_INTRINSIC internal::expression_fir<T, value_type_of<E1>, E1> fir(E1&& e1, co
  * @param e1 an input expression
  */
 template <typename T, typename U, typename E1>
-KFR_INTRINSIC internal::expression_fir<T, U, E1, true> fir(fir_state<T, U>& state, E1&& e1)
+KFR_INTRINSIC expression_fir<T, U, E1, true> fir(fir_state<T, U>& state, E1&& e1)
 {
-    return internal::expression_fir<T, U, E1, true>(std::forward<E1>(e1), state);
+    return expression_fir<T, U, E1, true>(std::forward<E1>(e1), state);
 }
 
 /**
  * @brief Returns template expression that performs moving sum on the input
- * @param state moving sum state
  * @param e1 an input expression
  */
 template <size_t sum_length, typename E1>
-KFR_INTRINSIC internal::expression_moving_sum<value_type_of<E1>, E1, tag_dynamic_vector> moving_sum(E1&& e1)
+KFR_INTRINSIC expression_moving_sum<expression_value_type<E1>, E1, tag_dynamic_vector> moving_sum(E1&& e1)
 {
-    return internal::expression_moving_sum<value_type_of<E1>, E1, tag_dynamic_vector>(std::forward<E1>(e1),
-                                                                                      sum_length);
+    return expression_moving_sum<expression_value_type<E1>, E1, tag_dynamic_vector>(std::forward<E1>(e1),
+                                                                                    sum_length);
 }
 
 /**
@@ -237,10 +243,9 @@ KFR_INTRINSIC internal::expression_moving_sum<value_type_of<E1>, E1, tag_dynamic
  * @param e1 an input expression
  */
 template <typename U, typename E1, univector_tag STag>
-KFR_INTRINSIC internal::expression_moving_sum<U, E1, STag, true> moving_sum(moving_sum_state<U, STag>& state,
-                                                                            E1&& e1)
+KFR_INTRINSIC expression_moving_sum<U, E1, STag, true> moving_sum(moving_sum_state<U, STag>& state, E1&& e1)
 {
-    return internal::expression_moving_sum<U, E1, STag, true>(std::forward<E1>(e1), state);
+    return expression_moving_sum<U, E1, STag, true>(std::forward<E1>(e1), state);
 }
 
 /**
@@ -250,11 +255,11 @@ KFR_INTRINSIC internal::expression_moving_sum<U, E1, STag, true> moving_sum(movi
  * @param taps coefficients for the FIR filter
  */
 template <typename T, size_t TapCount, typename E1>
-KFR_INTRINSIC internal::expression_short_fir<next_poweroftwo(TapCount - 1) + 1, T, value_type_of<E1>, E1>
+KFR_INTRINSIC expression_short_fir<next_poweroftwo(TapCount - 1) + 1, T, expression_value_type<E1>, E1>
 short_fir(E1&& e1, const univector<T, TapCount>& taps)
 {
     static_assert(TapCount >= 2 && TapCount <= 33, "Use short_fir only for small FIR filters");
-    return internal::expression_short_fir<next_poweroftwo(TapCount - 1) + 1, T, value_type_of<E1>, E1>(
+    return expression_short_fir<next_poweroftwo(TapCount - 1) + 1, T, expression_value_type<E1>, E1>(
         std::forward<E1>(e1), taps);
 }
 
@@ -265,12 +270,11 @@ short_fir(E1&& e1, const univector<T, TapCount>& taps)
  * @param e1 an input expression
  */
 template <size_t TapCount, typename T, typename U, typename E1>
-KFR_INTRINSIC internal::expression_short_fir<next_poweroftwo(TapCount - 1) + 1, T, value_type_of<E1>, E1,
-                                             true>
-    short_fir(short_fir_state<next_poweroftwo(TapCount - 1) + 1, T, U>& state, E1&& e1)
+KFR_INTRINSIC expression_short_fir<next_poweroftwo(TapCount - 1) + 1, T, expression_value_type<E1>, E1, true>
+short_fir(short_fir_state<next_poweroftwo(TapCount - 1) + 1, T, U>& state, E1&& e1)
 {
     static_assert(TapCount >= 2 && TapCount <= 33, "Use short_fir only for small FIR filters");
-    return internal::expression_short_fir<next_poweroftwo(TapCount - 1) + 1, T, value_type_of<E1>, E1, true>(
+    return expression_short_fir<next_poweroftwo(TapCount - 1) + 1, T, expression_value_type<E1>, E1, true>(
         std::forward<E1>(e1), state);
 }
 
@@ -294,7 +298,7 @@ protected:
     {
         make_univector(dest, size) = fir(state, make_univector(src, size));
     }
-    void process_expression(U* dest, const expression_pointer<U>& src, size_t size) final
+    void process_expression(U* dest, const expression_pointer<U, 1>& src, size_t size) final
     {
         make_univector(dest, size) = fir(state, src);
     }

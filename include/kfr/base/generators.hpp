@@ -27,17 +27,29 @@
 
 #include "../math/log_exp.hpp"
 #include "../math/sin_cos.hpp"
+#include "../simd/complex.hpp"
 #include "../simd/impl/function.hpp"
 #include "../simd/select.hpp"
 #include "../simd/vec.hpp"
+#include "expression.hpp"
 #include "shape.hpp"
 
 namespace kfr
 {
 
-template <typename T, size_t VecWidth, typename Class, typename Twork = T>
-struct xgenerator
+inline namespace CMT_ARCH_NAME
 {
+
+template <typename T, size_t VecWidth, typename Class, typename Twork = T>
+struct generator : public expression_traits_defaults
+{
+    using value_type             = T;
+    constexpr static size_t dims = 1;
+    constexpr static shape<1> shapeof(const Class&) { return infinite_size; }
+    constexpr static shape<1> shapeof() { return infinite_size; }
+
+    constexpr static inline bool random_access = false;
+
     constexpr static size_t width = VecWidth;
 
     void resync(T start) const { ptr_cast<Class>(this)->sync(start); }
@@ -53,10 +65,11 @@ struct xgenerator
             value = slice<N, width>(oldvalue, value);
             return result;
         }
-        else if (N > width)
+        else if constexpr (N > width)
         {
-            const vec lo = generate(low(x));
-            const vec hi = generate(high(x));
+            constexpr size_t Nlow = prev_poweroftwo(N - 1);
+            const vec lo          = generate<Nlow>();
+            const vec hi          = generate<N - Nlow>();
             return concat(lo, hi);
         }
         else // N == width
@@ -67,6 +80,13 @@ struct xgenerator
         }
     }
     mutable vec<Twork, width> value;
+
+    template <size_t N>
+    friend KFR_INTRINSIC vec<T, N> get_elements(const generator& self, const shape<1>& index,
+                                                const axis_params<0, N>&)
+    {
+        return self.template generate<N>();
+    }
 
 private:
     KFR_MEM_INTRINSIC void call_next() const { ptr_cast<Class>(this)->next(); }
@@ -79,32 +99,10 @@ private:
     }
 };
 
-template <typename T, size_t VecWidth, typename Class>
-struct expression_traits<xgenerator<T, VecWidth, Class>> : public expression_traits_defaults
-{
-    using value_type             = T;
-    constexpr static size_t dims = 1;
-    constexpr static shape<1> shapeof(const T&) { return shape<1>(infinite_size); }
-    constexpr static shape<1> shapeof() { return shape<1>(infinite_size); }
-
-    constexpr static inline bool explicit_operand = true;
-    constexpr static inline bool random_access    = false;
-};
-
-inline namespace CMT_ARCH_NAME
-{
-template <typename T, size_t VecWidth, typename Class, size_t N>
-KFR_INTRINSIC vec<T, N> get_elements(const xgenerator<T, VecWidth, Class>& self, const shape<1>& index,
-                                     const axis_params<0, N>&)
-{
-    return self.template generate<N>();
-}
-} // namespace CMT_ARCH_NAME
-
 template <typename T, size_t VecWidth = vector_capacity<T> / 8>
-struct xgenlinear : public xgenerator<T, VecWidth, xgenlinear<T, VecWidth>>
+struct generator_linear : public generator<T, VecWidth, generator_linear<T, VecWidth>>
 {
-    xgenlinear(T start, T step) CMT_NOEXCEPT : step{ step }, vstep{ step * VecWidth } { sync(start); }
+    generator_linear(T start, T step) CMT_NOEXCEPT : vstep{ step * VecWidth } { sync(start); }
 
     KFR_MEM_INTRINSIC void sync(T start) const CMT_NOEXCEPT
     {
@@ -117,10 +115,10 @@ struct xgenlinear : public xgenerator<T, VecWidth, xgenlinear<T, VecWidth>>
 };
 
 template <typename T, size_t VecWidth = vector_capacity<T> / 8>
-struct xgenexp : public xgenerator<T, VecWidth, xgenexp<T, VecWidth>>
+struct generator_exp : public generator<T, VecWidth, generator_exp<T, VecWidth>>
 {
-    xgenexp(T start, T step) CMT_NOEXCEPT : step{ step },
-                                            vstep{ exp(make_vector(step * VecWidth)).front() - 1 }
+    generator_exp(T start, T step) CMT_NOEXCEPT : step{ step },
+                                                  vstep{ exp(make_vector(step * VecWidth)).front() - 1 }
     {
         this->resync(start);
     }
@@ -138,12 +136,12 @@ protected:
 };
 
 template <typename T, size_t VecWidth = vector_capacity<deep_subtype<T>> / 8 / 2>
-struct xgenexpj : public xgenerator<T, VecWidth, xgenexpj<T, VecWidth>>
+struct generator_expj : public generator<T, VecWidth, generator_expj<T, VecWidth>>
 {
     using ST = deep_subtype<T>;
-    static_assert(std::is_same_v<complex<deep_subtype<T>>, T>, "xgenexpj requires complex type");
+    static_assert(std::is_same_v<complex<deep_subtype<T>>, T>, "generator_expj requires complex type");
 
-    xgenexpj(ST start_, ST step_)
+    generator_expj(ST start_, ST step_)
         : step(step_), alpha(2 * sqr(sin(VecWidth * step / 2))), beta(-sin(VecWidth * step))
     {
         this->resync(T(start_));
@@ -162,14 +160,15 @@ protected:
     ST beta;
     CMT_NOINLINE static vec<T, VecWidth> init_cossin(ST w, ST phase)
     {
-        return ccomp(cossin(dup(phase + enumerate<ST, width>() * w)));
+        return ccomp(cossin(dup(phase + enumerate<ST, VecWidth>() * w)));
     }
 };
 
 template <typename T, size_t VecWidth = vector_capacity<T> / 8>
-struct xgenexp2 : public xgenerator<T, VecWidth, xgenexp2<T, VecWidth>>
+struct generator_exp2 : public generator<T, VecWidth, generator_exp2<T, VecWidth>>
 {
-    xgenexp2(T start, T step) CMT_NOEXCEPT : step{ step }, vstep{ exp2(make_vector(step * VecWidth))[0] - 1 }
+    generator_exp2(T start, T step) CMT_NOEXCEPT : step{ step },
+                                                   vstep{ exp2(make_vector(step * VecWidth))[0] - 1 }
     {
         this->resync(start);
     }
@@ -187,10 +186,10 @@ protected:
 };
 
 template <typename T, size_t VecWidth = vector_capacity<T> / 8>
-struct xgencossin : public xgenerator<T, VecWidth, xgencossin<T, VecWidth>>
+struct generator_cossin : public generator<T, VecWidth, generator_cossin<T, VecWidth>>
 {
     static_assert(VecWidth % 2 == 0);
-    xgencossin(T start, T step)
+    generator_cossin(T start, T step)
         : step(step), alpha(2 * sqr(sin(VecWidth / 2 * step / 2))), beta(-sin(VecWidth / 2 * step))
     {
         this->resync(start);
@@ -213,9 +212,9 @@ protected:
 };
 
 template <typename T, size_t VecWidth = vector_capacity<T> / 8 / 2>
-struct xgensin : public xgenerator<T, VecWidth, xgensin<T, VecWidth>, vec<T, 2>>
+struct generator_sin : public generator<T, VecWidth, generator_sin<T, VecWidth>, vec<T, 2>>
 {
-    xgensin(T start, T step)
+    generator_sin(T start, T step)
         : step(step), alpha(2 * sqr(sin(VecWidth * step / 2))), beta(sin(VecWidth * step))
     {
         this->resync(start);
@@ -248,9 +247,6 @@ protected:
     T beta;
 };
 
-inline namespace CMT_ARCH_NAME
-{
-
 /**
  * @brief Returns template expression that generates values starting from the start and using the step as the
  * increment between numbers.
@@ -260,9 +256,9 @@ inline namespace CMT_ARCH_NAME
    \f]
  */
 template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
-KFR_FUNCTION xgenlinear<TF> gen_linear(T1 start, T2 step)
+KFR_FUNCTION generator_linear<TF> gen_linear(T1 start, T2 step)
 {
-    return xgenlinear<TF>(start, step);
+    return generator_linear<TF>(start, step);
 }
 
 /**
@@ -272,9 +268,9 @@ KFR_FUNCTION xgenlinear<TF> gen_linear(T1 start, T2 step)
    \f]
  */
 template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
-KFR_FUNCTION xgenexp<TF> gen_exp(T1 start, T2 step)
+KFR_FUNCTION generator_exp<TF> gen_exp(T1 start, T2 step)
 {
-    return xgenexp<TF>(start, step);
+    return generator_exp<TF>(start, step);
 }
 
 /**
@@ -284,9 +280,9 @@ KFR_FUNCTION xgenexp<TF> gen_exp(T1 start, T2 step)
    \f]
  */
 template <typename T1, typename T2, typename TF = complex<ftype<common_type<T1, T2>>>>
-KFR_FUNCTION xgenexpj<TF> gen_expj(T1 start, T2 step)
+KFR_FUNCTION generator_expj<TF> gen_expj(T1 start, T2 step)
 {
-    return xgenexpj<TF>(start, step);
+    return generator_expj<TF>(start, step);
 }
 
 /**
@@ -296,9 +292,9 @@ KFR_FUNCTION xgenexpj<TF> gen_expj(T1 start, T2 step)
    \f]
  */
 template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
-KFR_FUNCTION xgenexp2<TF> gen_exp2(T1 start, T2 step)
+KFR_FUNCTION generator_exp2<TF> gen_exp2(T1 start, T2 step)
 {
-    return xgenexp2<TF>(start, step);
+    return generator_exp2<TF>(start, step);
 }
 
 /**
@@ -312,9 +308,9 @@ KFR_FUNCTION xgenexp2<TF> gen_exp2(T1 start, T2 step)
    \f]
  */
 template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
-KFR_FUNCTION xgencossin<TF> gen_cossin(T1 start, T2 step)
+KFR_FUNCTION generator_cossin<TF> gen_cossin(T1 start, T2 step)
 {
-    return xgencossin<TF>(start, step);
+    return generator_cossin<TF>(start, step);
 }
 
 /**
@@ -324,9 +320,9 @@ KFR_FUNCTION xgencossin<TF> gen_cossin(T1 start, T2 step)
    \f]
  */
 template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
-KFR_FUNCTION xgensin<TF> gen_sin(T1 start, T2 step)
+KFR_FUNCTION generator_sin<TF> gen_sin(T1 start, T2 step)
 {
-    return xgensin<TF>(start, step);
+    return generator_sin<TF>(start, step);
 }
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

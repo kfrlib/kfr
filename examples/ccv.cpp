@@ -26,8 +26,8 @@ int main()
 
     // Create filters.
     size_t const block_size = 256;
-    convolve_filter<complex<fbase>> conv_filter_complex(univector<complex<fbase>>(make_complex(taps127, zeros())),
-                                                block_size);
+    convolve_filter<complex<fbase>> conv_filter_complex(
+        univector<complex<fbase>>(make_complex(taps127, zeros())), block_size);
     convolve_filter<fbase> conv_filter_real(taps127, block_size);
 
     // Create noise to filter.
@@ -35,8 +35,7 @@ int main()
     univector<complex<fbase>> cnoise =
         make_complex(truncate(gen_random_range(random_bit_generator{ 1, 2, 3, 4 }, -1.f, +1.f), size),
                      truncate(gen_random_range(random_bit_generator{ 3, 4, 9, 8 }, -1.f, +1.f), size));
-    univector<fbase> noise =
-                     truncate(gen_random_range(random_bit_generator{ 3, 4, 9, 8 }, -1.f, +1.f), size);
+    univector<fbase> noise = truncate(gen_random_range(random_bit_generator{ 3, 4, 9, 8 }, -1.f, +1.f), size);
 
     // Filter results.
     univector<complex<fbase>> filtered_cnoise_ccv(size), filtered_cnoise_fir(size);
@@ -45,27 +44,29 @@ int main()
     // Complex filtering (time and compare).
     auto tic = std::chrono::high_resolution_clock::now();
     conv_filter_complex.apply(filtered_cnoise_ccv, cnoise);
-    auto toc           = std::chrono::high_resolution_clock::now();
-    auto const ccv_time_complex      = std::chrono::duration_cast<std::chrono::duration<float>>(toc - tic);
-    tic                = toc;
-    filtered_cnoise_fir = kfr::fir(cnoise, taps127);
-    toc                = std::chrono::high_resolution_clock::now();
-    auto const fir_time_complex      = std::chrono::duration_cast<std::chrono::duration<float>>(toc - tic);
-    auto const cdiff = rms(cabs(filtered_cnoise_fir - filtered_cnoise_ccv));
+    auto toc                    = std::chrono::high_resolution_clock::now();
+    auto const ccv_time_complex = std::chrono::duration_cast<std::chrono::duration<float>>(toc - tic);
+    tic                         = toc;
+    filtered_cnoise_fir         = kfr::fir(cnoise, taps127);
+    toc                         = std::chrono::high_resolution_clock::now();
+    auto const fir_time_complex = std::chrono::duration_cast<std::chrono::duration<float>>(toc - tic);
+    auto const cdiff            = rms(cabs(filtered_cnoise_fir - filtered_cnoise_ccv));
 
     // Real filtering (time and compare).
     tic = std::chrono::high_resolution_clock::now();
     conv_filter_real.apply(filtered_noise_ccv, noise);
-    toc           = std::chrono::high_resolution_clock::now();
-    auto const ccv_time_real      = std::chrono::duration_cast<std::chrono::duration<float>>(toc - tic);
-    tic                = toc;
-    filtered_noise_fir = kfr::fir(noise, taps127);
-    toc                = std::chrono::high_resolution_clock::now();
-    auto const fir_time_real      = std::chrono::duration_cast<std::chrono::duration<float>>(toc - tic);
-    auto const diff = rms(filtered_noise_fir - filtered_noise_ccv);
+    toc                      = std::chrono::high_resolution_clock::now();
+    auto const ccv_time_real = std::chrono::duration_cast<std::chrono::duration<float>>(toc - tic);
+    tic                      = toc;
+    filtered_noise_fir       = kfr::fir(noise, taps127);
+    toc                      = std::chrono::high_resolution_clock::now();
+    auto const fir_time_real = std::chrono::duration_cast<std::chrono::duration<float>>(toc - tic);
+    auto const diff          = rms(filtered_noise_fir - filtered_noise_ccv);
 
-    println("complex: convolution_filter ", ccv_time_complex.count(), " fir ", fir_time_complex.count(), " diff=", cdiff);
-    println("real: convolution_filter ", ccv_time_real.count(), " fir ", fir_time_real.count(), " diff=", diff);
+    println("complex: convolution_filter ", ccv_time_complex.count(), " fir ", fir_time_complex.count(),
+            " diff=", cdiff);
+    println("real: convolution_filter ", ccv_time_real.count(), " fir ", fir_time_real.count(),
+            " diff=", diff);
 
     return 0;
 }

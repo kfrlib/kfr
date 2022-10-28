@@ -10,6 +10,8 @@
 namespace kfr
 {
 
+inline bool show_measured_accuracy = false;
+
 using testo::test_data_entry;
 
 inline namespace CMT_ARCH_NAME
@@ -55,7 +57,7 @@ uint64_t ulps(vec<T, N> x, vec<T, N> y)
 inline const char* tname(ctype_t<f32>) { return "float"; }
 inline const char* tname(ctype_t<f64>) { return "double"; }
 
-#define CHECK_DIFF(x_arg, y_arg, threshold)                                                                  \
+#define CHECK_DIFF(x_arg, y_arg, threshold, file, line)                                                      \
     do                                                                                                       \
     {                                                                                                        \
         ++checks_count;                                                                                      \
@@ -67,57 +69,67 @@ inline const char* tname(ctype_t<f64>) { return "double"; }
         ::testo::active_test()->check(                                                                       \
             arg_diff <= threshold,                                                                           \
             ::cometa::as_string(x_arg_value, " ~= ", y_arg_value, " (", arg_diff, " <= ", threshold, ")"),   \
-            #x_arg " ~= " #y_arg);                                                                           \
+            #x_arg " ~= " #y_arg, file, line);                                                               \
     } while (0)
 
 #define KFR_AUTO_TEST_1(fn, datafile, maxulps, avgulps)                                                      \
     TEST(fn##_##datafile)                                                                                    \
     {                                                                                                        \
-        testo::matrix(named("type") = vector_types(), [&](auto type) {                                       \
-            using T               = typename decltype(type)::type;                                           \
-            using Tsub            = subtype<T>;                                                              \
-            double error_sum      = 0.0;                                                                     \
-            uint64_t error_peak   = 0;                                                                       \
-            uint64_t checks_count = 0;                                                                       \
-            std::shared_ptr<file_reader<test_data_entry<Tsub, 1>>> reader =                                  \
-                open_file_for_reading<test_data_entry<Tsub, 1>>(                                             \
-                    std::string(KFR_SRC_DIR "/tests/data/" #fn "_") + tname(ctype<Tsub>) + "_" #datafile);   \
-            test_data_entry<Tsub, 1> entry;                                                                  \
-            while (reader->read(entry))                                                                      \
-            {                                                                                                \
-                testo::scope s(as_string(entry.arguments[0]));                                               \
-                CHECK_DIFF(kfr::fn(entry.arguments[0]), entry.result, maxulps);                              \
-            }                                                                                                \
-            CHECK(checks_count > 0u);                                                                        \
-            CHECK(error_sum / checks_count <= avgulps);                                                      \
-            println("measured accuracy: ", tname(ctype<Tsub>), " ", error_sum / checks_count, "(peak ",      \
-                    error_peak, ")");                                                                        \
-        });                                                                                                  \
+        testo::matrix(named("type") = vector_types(),                                                        \
+                      [&](auto type)                                                                         \
+                      {                                                                                      \
+                          using T               = typename decltype(type)::type;                             \
+                          using Tsub            = subtype<T>;                                                \
+                          double error_sum      = 0.0;                                                       \
+                          uint64_t error_peak   = 0;                                                         \
+                          uint64_t checks_count = 0;                                                         \
+                          std::shared_ptr<file_reader<test_data_entry<Tsub, 1>>> reader =                    \
+                              open_file_for_reading<test_data_entry<Tsub, 1>>(                               \
+                                  std::string(KFR_SRC_DIR "/tests/data/" #fn "_") + tname(ctype<Tsub>) +     \
+                                  "_" #datafile);                                                            \
+                          test_data_entry<Tsub, 1> entry;                                                    \
+                          while (reader->read(entry))                                                        \
+                          {                                                                                  \
+                              testo::scope s(as_string(entry.arguments[0]));                                 \
+                              CHECK_DIFF(kfr::fn(entry.arguments[0]), entry.result, maxulps, __FILE__,       \
+                                         __LINE__);                                                          \
+                          }                                                                                  \
+                          CHECK(checks_count > 0u);                                                          \
+                          CHECK(error_sum / checks_count <= avgulps);                                        \
+                          if (show_measured_accuracy)                                                        \
+                              println("measured accuracy: ", tname(ctype<Tsub>), " ",                        \
+                                      error_sum / checks_count, "(peak ", error_peak, ")");                  \
+                      });                                                                                    \
     }
 
 #define KFR_AUTO_TEST_2(fn, datafile, maxulps, avgulps)                                                      \
     TEST(fn##_##datafile)                                                                                    \
     {                                                                                                        \
-        testo::matrix(named("type") = vector_types(), [&](auto type) {                                       \
-            using T               = typename decltype(type)::type;                                           \
-            using Tsub            = subtype<T>;                                                              \
-            double error_sum      = 0.0;                                                                     \
-            uint64_t error_peak   = 0;                                                                       \
-            uint64_t checks_count = 0;                                                                       \
-            std::shared_ptr<file_reader<test_data_entry<Tsub, 2>>> reader =                                  \
-                open_file_for_reading<test_data_entry<Tsub, 2>>(                                             \
-                    std::string(KFR_SRC_DIR "/tests/data/" #fn "_") + tname(ctype<Tsub>) + "_" #datafile);   \
-            test_data_entry<Tsub, 2> entry;                                                                  \
-            while (reader->read(entry))                                                                      \
-            {                                                                                                \
-                testo::scope s(as_string(entry.arguments[0], entry.arguments[1]));                           \
-                CHECK_DIFF(kfr::fn(entry.arguments[0], entry.arguments[1]), entry.result, maxulps);          \
-            }                                                                                                \
-            CHECK(checks_count > 0u);                                                                        \
-            CHECK(error_sum / checks_count <= avgulps);                                                      \
-            println("measured accuracy: ", tname(ctype<Tsub>), " ", error_sum / checks_count, "(peak ",      \
-                    error_peak, ")");                                                                        \
-        });                                                                                                  \
+        testo::matrix(named("type") = vector_types(),                                                        \
+                      [&](auto type)                                                                         \
+                      {                                                                                      \
+                          using T               = typename decltype(type)::type;                             \
+                          using Tsub            = subtype<T>;                                                \
+                          double error_sum      = 0.0;                                                       \
+                          uint64_t error_peak   = 0;                                                         \
+                          uint64_t checks_count = 0;                                                         \
+                          std::shared_ptr<file_reader<test_data_entry<Tsub, 2>>> reader =                    \
+                              open_file_for_reading<test_data_entry<Tsub, 2>>(                               \
+                                  std::string(KFR_SRC_DIR "/tests/data/" #fn "_") + tname(ctype<Tsub>) +     \
+                                  "_" #datafile);                                                            \
+                          test_data_entry<Tsub, 2> entry;                                                    \
+                          while (reader->read(entry))                                                        \
+                          {                                                                                  \
+                              testo::scope s(as_string(entry.arguments[0], entry.arguments[1]));             \
+                              CHECK_DIFF(kfr::fn(entry.arguments[0], entry.arguments[1]), entry.result,      \
+                                         maxulps, __FILE__, __LINE__);                                       \
+                          }                                                                                  \
+                          CHECK(checks_count > 0u);                                                          \
+                          CHECK(error_sum / checks_count <= avgulps);                                        \
+                          if (show_measured_accuracy)                                                        \
+                              println("measured accuracy: ", tname(ctype<Tsub>), " ",                        \
+                                      error_sum / checks_count, "(peak ", error_peak, ")");                  \
+                      });                                                                                    \
     }
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

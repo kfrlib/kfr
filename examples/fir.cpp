@@ -103,7 +103,7 @@ int main()
 
     // Prepare 10000 samples of white noise
     univector<float> noise =
-        truncate(gen_random_range(random_bit_generator{ 1, 2, 3, 4 }, -1.f, +1.f), 10000);
+        truncate(gen_random_range(random_init(1, 2, 3, 4), -1.f, +1.f), 10000);
 
     // Apply band stop filter
     univector<float> filtered_noise = fir(noise, taps127);

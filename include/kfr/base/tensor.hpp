@@ -2,7 +2,7 @@
  *  @{
  */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2022 Fractalium Ltd (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -29,13 +29,15 @@
 
 #include "../cometa/array.hpp"
 
-#include "../simd/logical.hpp"
-#include "../simd/min_max.hpp"
 #include "../simd/horizontal.hpp"
 #include "../simd/impl/function.hpp"
+#include "../simd/logical.hpp"
+#include "../simd/min_max.hpp"
 #include "../simd/read_write.hpp"
 #include "../simd/types.hpp"
+#include "expression.hpp"
 #include "memory.hpp"
+#include "shape.hpp"
 
 CMT_PRAGMA_MSVC(warning(push))
 CMT_PRAGMA_MSVC(warning(disable : 4324))
@@ -822,7 +824,7 @@ public:
             shape_type index{ 0 };
             std::string open_filler(open.size(), ' ');
             std::string separator_trimmed = separator.substr(0, 1 + separator.find_last_not_of(" \t"));
-            int columns = 0;
+            int columns                   = 0;
             do
             {
                 std::string str = as_string(wrap_fmt(access(index), ctype<Fmt>));
@@ -999,30 +1001,6 @@ tensor<typename Traits::value_type, Traits::dims> trender(const E& expr, shape<T
 
 namespace cometa
 {
-template <kfr::index_t dims>
-struct representation<kfr::shape<dims>>
-{
-    using type = std::string;
-    static std::string get(const kfr::shape<dims>& value)
-    {
-        if constexpr (dims == 0)
-        {
-            return "()";
-        }
-        else
-        {
-            std::string s;
-            for (kfr::index_t i = 0; i < dims; ++i)
-            {
-                if (CMT_LIKELY(i > 0))
-                    s += ", ";
-                s += as_string(value[i]);
-            }
-            return s;
-        }
-    }
-};
-
 template <typename T, kfr::index_t dims>
 struct representation<kfr::tensor<T, dims>>
 {

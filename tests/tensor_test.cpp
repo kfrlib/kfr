@@ -1,6 +1,6 @@
-#include "kfr/version.hpp"
 #include "kfr/runtime.hpp"
 #include "kfr/testo/testo.hpp"
+#include "kfr/version.hpp"
 
 using namespace kfr;
 

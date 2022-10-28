@@ -25,7 +25,7 @@
  */
 #pragma once
 
-#include "scaled.hpp"
+#include "impl/scaled.hpp"
 
 namespace kfr
 {
@@ -64,7 +64,8 @@ struct point
     constexpr point ceil() const { return kfr::ceil(v); }
     constexpr point trunc() const { return kfr::trunc(v); }
 
-    union {
+    union
+    {
         struct
         {
             T x;
@@ -114,7 +115,8 @@ struct size
 
     constexpr bool operator==(const size& c) const { return all(v == c.v); }
     constexpr bool operator!=(const size& c) const { return !operator==(c); }
-    union {
+    union
+    {
         struct
         {
             T x;
@@ -159,7 +161,8 @@ struct border
 
     constexpr bool operator==(const border& c) const { return all(v == c.v); }
     constexpr bool operator!=(const border& c) const { return !(operator==(c)); }
-    union {
+    union
+    {
         struct
         {
             T x1;
@@ -187,7 +190,8 @@ struct vector4
     constexpr bool operator==(const vector4& c) const { return all(v == c.v); }
     constexpr bool operator!=(const vector4& c) const { return !operator==(c); }
 
-    union {
+    union
+    {
         struct
         {
             T x;
@@ -378,7 +382,8 @@ struct rectangle
     rectangle& operator&=(const rectangle& c) { return *this = *this & c; }
     rectangle& operator|=(const rectangle& c) { return *this = *this | c; }
 
-    union {
+    union
+    {
         struct
         {
             T x1;
@@ -422,7 +427,8 @@ CMT_INTRINSIC size<T> max(const size<T>& a, const size<T>& b)
 template <typename T>
 struct matrix
 {
-    union {
+    union
+    {
         vec<T, 6> v;
         struct
         {
