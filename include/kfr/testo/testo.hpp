@@ -174,6 +174,7 @@ struct test_case
                         console_color cc(s.success ? Green : Red);
                         printfmt("    {} ", s.success ? "[success]" : "[fail]   ");
                     }
+                    printfmt("{}({}) ", s.file, s.line);
                     printfmt("{}\n", s.text);
                 }
             }
@@ -183,10 +184,10 @@ struct test_case
         return !failed;
     }
 
-    void check(bool result, const std::string& value, const char* expr)
+    void check(bool result, const std::string& value, const char* expr, const char* file, int line)
     {
         subtests.push_back(
-            subtest{ result, as_string(padleft(22, expr), " | ", value), current_scope_text() });
+            subtest{ result, as_string(padleft(22, expr), " | ", value), current_scope_text(), file, line });
         result ? success++ : failed++;
         if (show_progress)
         {
@@ -204,17 +205,17 @@ struct test_case
     }
 
     template <typename Op, typename L, typename R>
-    void check(const comparison<Op, L, R>& comparison, const char* expr)
+    void check(const comparison<Op, L, R>& comparison, const char* expr, const char* file, int line)
     {
         bool result = comparison();
-        check(result, as_string(comparison.left, " ", Op::op(), " ", comparison.right), expr);
+        check(result, as_string(comparison.left, " ", Op::op(), " ", comparison.right), expr, file, line);
     }
 
     template <typename L>
-    void check(const half_comparison<L>& comparison, const char* expr)
+    void check(const half_comparison<L>& comparison, const char* expr, const char* file, int line)
     {
         bool result = comparison.left ? true : false;
-        check(result, as_string(comparison.left), expr);
+        check(result, as_string(comparison.left), expr, file, line);
     }
 
     struct subtest
@@ -222,6 +223,8 @@ struct test_case
         bool success;
         std::string text;
         std::string comment;
+        std::string file;
+        int line = 0;
     };
 
     void scope_changed()
@@ -308,10 +311,12 @@ struct statistics
 template <typename Arg0, typename Fn>
 void matrix(named_arg<Arg0>&& arg0, Fn&& fn)
 {
-    cforeach(std::forward<Arg0>(arg0.value), [&](auto v0) {
-        scope s(as_string(arg0.name, " = ", v0));
-        fn(v0);
-    });
+    cforeach(std::forward<Arg0>(arg0.value),
+             [&](auto v0)
+             {
+                 scope s(as_string(arg0.name, " = ", v0));
+                 fn(v0);
+             });
     if (active_test() && active_test()->show_progress)
         println();
 }
@@ -319,10 +324,12 @@ void matrix(named_arg<Arg0>&& arg0, Fn&& fn)
 template <typename Arg0, typename Arg1, typename Fn>
 void matrix(named_arg<Arg0>&& arg0, named_arg<Arg1>&& arg1, Fn&& fn)
 {
-    cforeach(std::forward<Arg0>(arg0.value), std::forward<Arg1>(arg1.value), [&](auto v0, auto v1) {
-        scope s(as_string(arg0.name, " = ", v0, ", ", arg1.name, " = ", v1));
-        fn(v0, v1);
-    });
+    cforeach(std::forward<Arg0>(arg0.value), std::forward<Arg1>(arg1.value),
+             [&](auto v0, auto v1)
+             {
+                 scope s(as_string(arg0.name, " = ", v0, ", ", arg1.name, " = ", v1));
+                 fn(v0, v1);
+             });
     if (active_test()->show_progress)
         println();
 }
@@ -331,7 +338,8 @@ template <typename Arg0, typename Arg1, typename Arg2, typename Fn>
 void matrix(named_arg<Arg0>&& arg0, named_arg<Arg1>&& arg1, named_arg<Arg2>&& arg2, Fn&& fn)
 {
     cforeach(std::forward<Arg0>(arg0.value), std::forward<Arg1>(arg1.value), std::forward<Arg2>(arg2.value),
-             [&](auto v0, auto v1, auto v2) {
+             [&](auto v0, auto v1, auto v2)
+             {
                  scope s(
                      as_string(arg0.name, " = ", v0, ", ", arg1.name, " = ", v1, ", ", arg2.name, " = ", v2));
                  fn(v0, v1, v2);
@@ -345,7 +353,9 @@ void matrix(named_arg<Arg0>&& arg0, named_arg<Arg1>&& arg1, named_arg<Arg2>&& ar
             Fn&& fn)
 {
     cforeach(std::forward<Arg0>(arg0.value), std::forward<Arg1>(arg1.value), std::forward<Arg2>(arg2.value),
-             std::forward<Arg3>(arg3.value), [&](auto v0, auto v1, auto v2, auto v3) {
+             std::forward<Arg3>(arg3.value),
+             [&](auto v0, auto v1, auto v2, auto v3)
+             {
                  scope s(as_string(arg0.name, " = ", v0, ", ", arg1.name, " = ", v1, ", ", arg2.name, " = ",
                                    v2, arg3.name, " = ", v3));
                  fn(v0, v1, v2, v3);
@@ -413,7 +423,8 @@ struct test_data_entry
 #define TESTO_CHECK(...)                                                                                     \
     do                                                                                                       \
     {                                                                                                        \
-        ::testo::active_test()->check(::testo::make_comparison() <= __VA_ARGS__, #__VA_ARGS__);              \
+        ::testo::active_test()->check(::testo::make_comparison() <= __VA_ARGS__, #__VA_ARGS__, __FILE__,     \
+                                      __LINE__);                                                             \
     } while (0)
 
 #define TESTO_TEST(name)                                                                                     \

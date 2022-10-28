@@ -62,9 +62,10 @@ inline T& current_epsilon()
     return value;
 }
 
-template <typename T>
+template <typename T = void>
 struct eplison_scope
 {
+    static_assert(std::is_floating_point_v<T>);
     eplison_scope(T scale) { current_epsilon<T>() = std::numeric_limits<T>::epsilon() * scale; }
     ~eplison_scope() { current_epsilon<T>() = saved; }
     T saved = current_epsilon<T>();
