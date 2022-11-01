@@ -25,6 +25,7 @@
  */
 #pragma once
 
+#include "../except.hpp"
 #include "impl/static_array.hpp"
 
 #include "../cometa/string.hpp"
@@ -146,7 +147,7 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
     {
         for (index_t i = 0; i < dims; ++i)
         {
-            if (this->operator[](i) == infinite_size)
+            if (CMT_UNLIKELY(this->operator[](i) == infinite_size))
                 return true;
         }
         return false;
@@ -317,7 +318,7 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
     }
     KFR_MEM_INTRINSIC constexpr void set_revindex(size_t index, index_t val)
     {
-        if (index < dims)
+        if (CMT_LIKELY(index < dims))
             this->operator[](dims - 1 - index) = val;
     }
 };
@@ -469,7 +470,7 @@ constexpr KFR_INTRINSIC shape<outdims> compact_shape(const shape<dims>& in)
     size_t j = 0;
     for (size_t i = 0; i < dims; ++i)
     {
-        if (i >= flags.size() || flags[i])
+        if (CMT_LIKELY(i >= flags.size() || flags[i]))
         {
             result[j++] = in[i];
         }
@@ -500,8 +501,8 @@ bool can_assign_from(const shape<dims1>& dst_shape, const shape<dims2>& src_shap
             {
                 index_t dst_size = dst_shape.revindex(i);
                 index_t src_size = src_shape.revindex(i);
-                if (src_size == 1 || src_size == infinite_size || src_size == dst_size ||
-                    dst_size == infinite_size)
+                if (CMT_LIKELY(src_size == 1 || src_size == infinite_size || src_size == dst_size ||
+                               dst_size == infinite_size))
                 {
                 }
                 else
@@ -514,13 +515,13 @@ bool can_assign_from(const shape<dims1>& dst_shape, const shape<dims2>& src_shap
     }
 }
 
-template <index_t dims>
+template <bool checked = false, index_t dims>
 constexpr shape<dims> common_shape(const shape<dims>& shape)
 {
     return shape;
 }
 
-template <index_t dims1, index_t dims2, index_t outdims = const_max(dims1, dims2)>
+template <bool checked = false, index_t dims1, index_t dims2, index_t outdims = const_max(dims1, dims2)>
 KFR_MEM_INTRINSIC constexpr shape<outdims> common_shape(const shape<dims1>& shape1,
                                                         const shape<dims2>& shape2)
 {
@@ -529,15 +530,15 @@ KFR_MEM_INTRINSIC constexpr shape<outdims> common_shape(const shape<dims1>& shap
     {
         index_t size1 = shape1.revindex(i);
         index_t size2 = shape2.revindex(i);
-        if (!size1 || !size2)
+        if (CMT_UNLIKELY(!size1 || !size2))
         {
             result[outdims - 1 - i] = 0;
             continue;
         }
 
-        if (size1 == infinite_size)
+        if (CMT_UNLIKELY(size1 == infinite_size))
         {
-            if (size2 == infinite_size)
+            if (CMT_UNLIKELY(size2 == infinite_size))
             {
                 result[outdims - 1 - i] = infinite_size;
             }
@@ -548,21 +549,28 @@ KFR_MEM_INTRINSIC constexpr shape<outdims> common_shape(const shape<dims1>& shap
         }
         else
         {
-            if (size2 == infinite_size)
+            if (CMT_UNLIKELY(size2 == infinite_size))
             {
                 result[outdims - 1 - i] = size1 == 1 ? infinite_size : size1;
             }
             else
             {
-                if (size1 == 1 || size2 == 1 || size1 == size2)
+                if (CMT_LIKELY(size1 == 1 || size2 == 1 || size1 == size2))
                 {
                     result[outdims - 1 - i] = std::max(size1, size2);
                 }
                 else
                 {
                     // broadcast failed
-                    result = shape<outdims>(0);
-                    return result;
+                    if constexpr (checked)
+                    {
+                        KFR_LOGIC_CHECK(false, "invalid or incompatible shapes: ", shape1, " and ", shape2);
+                    }
+                    else
+                    {
+                        result = shape<outdims>(0);
+                        return result;
+                    }
                 }
             }
         }
@@ -570,18 +578,19 @@ KFR_MEM_INTRINSIC constexpr shape<outdims> common_shape(const shape<dims1>& shap
     return result;
 }
 
-template <>
+template <bool checked = false>
 KFR_MEM_INTRINSIC constexpr shape<0> common_shape(const shape<0>& shape1, const shape<0>& shape2)
 {
     return {};
 }
 
-template <index_t dims1, index_t dims2, index_t... dims, index_t outdims = const_max(dims1, dims2, dims...)>
+template <bool checked    = false, index_t dims1, index_t dims2, index_t... dims,
+          index_t outdims = const_max(dims1, dims2, dims...)>
 KFR_MEM_INTRINSIC constexpr shape<outdims> common_shape(const shape<dims1>& shape1,
                                                         const shape<dims2>& shape2,
                                                         const shape<dims>&... shapes)
 {
-    return common_shape(shape1, common_shape(shape2, shapes...));
+    return common_shape<checked>(shape1, common_shape(shape2, shapes...));
 }
 
 template <index_t dims1, index_t dims2>
@@ -691,7 +700,7 @@ KFR_INTRINSIC shape<dims> increment_indices_return(const shape<dims>& indices, c
                                                    const shape<dims>& stop, index_t dim = dims - 1)
 {
     shape<dims> result = indices;
-    if (increment_indices(result, start, stop, dim))
+    if (CMT_LIKELY(increment_indices(result, start, stop, dim)))
     {
         return result;
     }

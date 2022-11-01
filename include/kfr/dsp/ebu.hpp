@@ -264,6 +264,10 @@ public:
         : m_sample_rate(sample_rate), m_running(true), m_need_reset(false),
           m_packet_size(sample_rate / 10 / packet_size_factor)
     {
+        KFR_LOGIC_CHECK(!channels.empty(), "channels must not be empty");
+        KFR_LOGIC_CHECK(sample_rate > 0, "sample_rate must be greater than 0");
+        KFR_LOGIC_CHECK(packet_size_factor >= 1 && packet_size_factor <= 3,
+                        "packet_size_factor must be in range [1..3]");
         for (Speaker sp : channels)
         {
             m_channels.emplace_back(sample_rate, sp, packet_size_factor, T(1));
@@ -311,7 +315,6 @@ public:
         T shortterm = 0;
         for (size_t ch = 0; ch < m_channels.size(); ch++)
         {
-            // println(ch, "=> ", source[ch][0], " ", source[ch][10], " ", source[ch][20] );
             TESTO_ASSERT(source[ch].size() == m_packet_size);
             ebu_channel<T>& chan = m_channels[ch];
             chan.process_packet(source[ch].data());

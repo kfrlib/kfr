@@ -399,13 +399,12 @@ struct expression_function : expression_with_arguments<Args...>, expression_trai
     constexpr static shape<dims> shapeof(const expression_function& self)
     {
         return self.fold([&](auto&&... args) CMT_INLINE_LAMBDA constexpr->auto {
-            return internal_generic::common_shape(expression_traits<decltype(args)>::shapeof(args)...);
+            return internal_generic::common_shape<true>(expression_traits<decltype(args)>::shapeof(args)...);
         });
     }
     constexpr static shape<dims> shapeof()
     {
-        return expression_function<Fn,
-                                   Args...>::fold_idx([&](auto... args) CMT_INLINE_LAMBDA constexpr->auto {
+        return expression_function::fold_idx([&](auto... args) CMT_INLINE_LAMBDA constexpr->auto {
             return internal_generic::common_shape(
                 expression_traits<
                     typename expression_function::template nth<val_of(decltype(args)())>>::shapeof()...);
@@ -419,28 +418,14 @@ struct expression_function : expression_with_arguments<Args...>, expression_trai
     KFR_MEM_INTRINSIC expression_function(expression_with_arguments<Args...> args, Fn&& fn)
         : expression_with_arguments<Args...>{ std::move(args) }, fn(std::forward<Fn>(fn))
     {
-        check_shapes();
     }
     KFR_MEM_INTRINSIC expression_function(Fn&& fn, Args&&... args)
         : expression_with_arguments<Args...>{ std::forward<Args>(args)... }, fn(std::forward<Fn>(fn))
     {
-        check_shapes();
     }
     KFR_MEM_INTRINSIC expression_function(Args&&... args)
         : expression_with_arguments<Args...>{ std::forward<Args>(args)... }, fn{}
     {
-        check_shapes();
-    }
-    KFR_MEM_INTRINSIC void check_shapes()
-    {
-        if constexpr (dims > 0)
-        {
-            shape<dims> sh = shapeof(*this);
-            if (sh == shape<dims>(0))
-            {
-                // throw std::runtime_error("KFR: Invalid shapes in expression_function");
-            }
-        }
     }
 
     template <typename In, enable_if_input_expression<In>* = nullptr>
@@ -578,10 +563,9 @@ KFR_INTRINSIC static void tprocess_body(Out&& out, In&& in, size_t start, size_t
             {
                 outidx[OutAxis] = x;
                 inidx[InAxis]   = std::min(x, insize - 1);
-                auto v = get_elements(in, inidx, axis_params_v<InAxis, w>);
+                auto v          = get_elements(in, inidx, axis_params_v<InAxis, w>);
                 // println("## i=", x, "\n", v);
-                set_elements(out, outidx, axis_params_v<OutAxis, w>,
-                             v );
+                set_elements(out, outidx, axis_params_v<OutAxis, w>, v);
             }
         }
         CMT_LOOP_NOUNROLL

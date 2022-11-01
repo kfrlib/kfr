@@ -71,10 +71,7 @@ struct shuffle_mask<2, i0, i1>
 #if KFR_SHOW_NOT_OPTIMIZED
 CMT_PUBLIC_C CMT_DLL_EXPORT void not_optimized(const char* fn) CMT_NOEXCEPT;
 #else
-#define not_optimized(...)                                                                                   \
-    do                                                                                                       \
-    {                                                                                                        \
-    } while (0)
+#define not_optimized(...) CMT_NOOP
 #endif
 
 inline namespace CMT_ARCH_NAME

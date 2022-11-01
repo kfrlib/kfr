@@ -69,6 +69,12 @@ TEST(padded)
                      [](size_t i) { return i >= 501 ? -1 : i; });
 }
 
+TEST(concatenate)
+{
+    CHECK_EXPRESSION(concatenate(truncate(counter(5, 0), 5), truncate(counter(10, 0), 5)),
+                     { 5, 5, 5, 5, 5, 10, 10, 10, 10, 10 });
+}
+
 TEST(rebind)
 {
     auto c_minus_two  = counter() - 2;
@@ -119,7 +125,7 @@ TEST(assign_expression)
     univector<float> f = truncate(counter(0, 1), 10);
     f *= 10;
     CHECK_EXPRESSION(f, { 0, 10, 20, 30, 40, 50, 60, 70, 80, 90 });
-    
+
     univector<float> a = truncate(counter(0, 1), 10);
     univector<float> b = truncate(counter(100, 1), 10);
     pack(a, b) *= broadcast<2>(10.f);

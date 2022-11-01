@@ -9,6 +9,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/cometa.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/except.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/graphics.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math.hpp
@@ -317,6 +318,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/cometa.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/except.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/graphics.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math.hpp

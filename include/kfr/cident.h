@@ -457,13 +457,15 @@ extern char* gets(char* __s);
 #define CMT_HAS_BUILTIN(builtin) 0
 #endif
 
-#if CMT_HAS_BUILTIN(CMT_ASSUME)
-#define CMT_ASSUME(x) __builtin_assume(x)
-#else
-#define CMT_ASSUME(x)                                                                                        \
+#define CMT_NOOP                                                                                             \
     do                                                                                                       \
     {                                                                                                        \
     } while (0)
+
+#if CMT_HAS_BUILTIN(CMT_ASSUME)
+#define CMT_ASSUME(x) __builtin_assume(x)
+#else
+#define CMT_ASSUME(x) CMT_NOOP
 #endif
 
 #if CMT_HAS_BUILTIN(CMT_ASSUME)
