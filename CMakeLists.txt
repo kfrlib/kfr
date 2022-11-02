@@ -22,6 +22,20 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
+if (CPU_ARCH)
+    if (NOT KFR_ARCH)
+        message(
+            WARNING
+                "CPU_ARCH is deprecated. Use KFR_ARCH instead. KFR will use machine native architecture by default"
+        )
+    else ()
+        message(
+            WARNING
+                "Both KFR_ARCH and CPU_ARCH are defined. KFR will use architecture set by KFR_ARCH (${KFR_ARCH})"
+        )
+    endif ()
+endif ()
+
 if (WIN32 AND CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX
         ""
@@ -88,7 +102,10 @@ if (KFR_ARCH STREQUAL "detect" AND X86)
         COMPILE_OUTPUT_VARIABLE COMPILE_OUT
         RUN_OUTPUT_VARIABLE RUN_OUT)
     if (COMPILE_RESULT AND RUN_RESULT EQUAL 0)
-        message(STATUS "Default CPU architecture for KFR is ${RUN_OUT} (set KFR_ARCH to override)")
+        message(
+            STATUS
+                "Default CPU architecture for KFR is ${RUN_OUT} (set KFR_ARCH to override)"
+        )
         set(KFR_ARCH
             ${RUN_OUT}
             CACHE STRING "Detected CPU" FORCE)
@@ -99,7 +116,10 @@ if (KFR_ARCH STREQUAL "detect" AND X86)
         message(STATUS RUN_OUT = ${RUN_OUT})
     endif ()
 else ()
-    message(STATUS "Default CPU architecture for KFR is ${KFR_ARCH} (set by cmake variable)")
+    message(
+        STATUS
+            "Default CPU architecture for KFR is ${KFR_ARCH} (set by cmake variable)"
+    )
 endif ()
 
 include(cmake/target_set_arch.cmake)
@@ -141,7 +161,8 @@ if (APPLE)
 endif ()
 if (NOT IOS)
     if (NOT MSVC OR CLANG)
-        target_compile_options(kfr INTERFACE "${CLANG_ARG_PREFIX}-mstackrealign")
+        target_compile_options(kfr
+                               INTERFACE "${CLANG_ARG_PREFIX}-mstackrealign")
     endif ()
 endif ()
 if (MSVC)
@@ -154,7 +175,7 @@ if (KFR_DISABLE_CLANG_EXTENSIONS)
 endif ()
 if (KFR_STD_COMPLEX)
     target_compile_definitions(kfr INTERFACE -DKFR_STD_COMPLEX)
-endif()
+endif ()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(kfr INTERFACE -Wno-ignored-qualifiers -Wno-psabi)
 endif ()
@@ -255,13 +276,15 @@ endif ()
 
 set(kfr_defines)
 
-function(append_defines_from target)
+function (append_defines_from target)
     get_target_property(compile_defs ${target} INTERFACE_COMPILE_DEFINITIONS)
     if (compile_defs)
         list(APPEND kfr_defines "${compile_defs}")
     endif ()
-    set(kfr_defines ${kfr_defines} PARENT_SCOPE)
-endfunction()
+    set(kfr_defines
+        ${kfr_defines}
+        PARENT_SCOPE)
+endfunction ()
 
 append_defines_from(kfr)
 if (KFR_ENABLE_DFT)
@@ -297,8 +320,7 @@ install(DIRECTORY include/kfr DESTINATION include)
 install(
     FILES ${CMAKE_CURRENT_BINARY_DIR}/kfr_config.h
     DESTINATION include/kfr
-    RENAME config.h
-    )
+    RENAME config.h)
 
 # uninstall target
 if (NOT TARGET uninstall)

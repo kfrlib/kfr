@@ -16,7 +16,6 @@
 
 cmake_minimum_required(VERSION 3.10)
 
-
 add_definitions(-DKFR_TESTING=1)
 add_definitions(-DKFR_SRC_DIR=\"${CMAKE_SOURCE_DIR}\")
 
@@ -106,8 +105,7 @@ set(ALL_TESTS_CPP
     expression_test.cpp
     intrinsic_test.cpp
     io_test.cpp
-    ${KFR_UNITTEST_SRC}
-    )
+    ${KFR_UNITTEST_SRC})
 
 if (KFR_ENABLE_DFT)
     list(APPEND ALL_TESTS_CPP dft_test.cpp)
@@ -118,7 +116,9 @@ endif ()
 find_package(MPFR)
 find_package(GMP)
 
-if (MPFR_FOUND AND GMP_FOUND AND KFR_REGENERATE_TESTS)
+if (MPFR_FOUND
+    AND GMP_FOUND
+    AND KFR_REGENERATE_TESTS)
     message(STATUS "MPFR is found")
     add_executable(generate_data generate_data.cpp)
     target_link_libraries(generate_data kfr)
@@ -260,14 +260,13 @@ if (NOT KFR_SKIP_TESTS)
         endforeach ()
     endif ()
     if (USE_SDE)
-        add_test(NAME all_tests COMMAND ${SDE} ${SDE_ARCH_${KFR_ARCH}} -chip_check_exe_only
-                                    -- ${PROJECT_BINARY_DIR}/bin/all_tests)
-        add_test(NAME all_tests_on_avx512 COMMAND ${SDE} ${SDE_ARCH_avx512} -chip_check_exe_only
-                                    -- ${PROJECT_BINARY_DIR}/bin/all_tests)
+        add_test(NAME all_tests
+                 COMMAND ${SDE} ${SDE_ARCH_${KFR_ARCH}} -chip_check_exe_only --
+                         ${PROJECT_BINARY_DIR}/bin/all_tests)
+        add_test(NAME all_tests_on_avx512
+                 COMMAND ${SDE} ${SDE_ARCH_avx512} -chip_check_exe_only --
+                         ${PROJECT_BINARY_DIR}/bin/all_tests)
     else ()
         add_test(NAME all_tests COMMAND ${PROJECT_BINARY_DIR}/bin/all_tests)
     endif ()
 endif ()
-
-add_executable(tensor_test tensor_test.cpp unit/base/tensor.cpp)
-target_link_libraries(tensor_test kfr use_arch)
