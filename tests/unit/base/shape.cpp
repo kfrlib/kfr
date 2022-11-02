@@ -52,7 +52,7 @@ TEST(shape_broadcast)
     CHECK(common_shape(shape{}, shape{ 0 }) == shape{ 0 });
     CHECK(common_shape(shape{}, shape{ 0, 0 }) == shape{ 0, 0 });
     CHECK(common_shape(shape{ 0 }, shape{ 0, 0 }) == shape{ 0, 0 });
-    
+
     CHECK(common_shape<true>(shape{}, shape{ 0 }) == shape{ 0 });
     CHECK(common_shape<true>(shape{}, shape{ 0, 0 }) == shape{ 0, 0 });
     CHECK(common_shape<true>(shape{ 0 }, shape{ 0, 0 }) == shape{ 0, 0 });

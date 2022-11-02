@@ -4,7 +4,7 @@
 
 ```c++ linenums="1"
 // Initialize window function
-expression_pointer<fbase> kaiser = to_pointer(window_kaiser(taps.size(), 3.0));
+expression_handle<fbase> kaiser = to_handle(window_kaiser(taps.size(), 3.0));
 
 // Initialize taps
 univector<float, 7> taps;

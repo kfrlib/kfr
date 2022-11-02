@@ -298,7 +298,7 @@ protected:
     {
         make_univector(dest, size) = fir(state, make_univector(src, size));
     }
-    void process_expression(U* dest, const expression_pointer<U, 1>& src, size_t size) final
+    void process_expression(U* dest, const expression_handle<U, 1>& src, size_t size) final
     {
         make_univector(dest, size) = fir(state, src);
     }

@@ -26,9 +26,9 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/filter.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/fraction.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/generators.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/handle.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/math_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/memory.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/base/pointer.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/random.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/random_bits.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/reduce.hpp
@@ -244,9 +244,9 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/filter.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/fraction.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/generators.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/handle.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/math_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/memory.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/base/pointer.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/random.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/random_bits.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/reduce.hpp
@@ -335,9 +335,9 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/filter.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/fraction.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/generators.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/handle.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/math_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/memory.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/base/pointer.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/random.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/random_bits.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/reduce.hpp
@@ -496,7 +496,7 @@ set(
     ${PROJECT_SOURCE_DIR}/tests/unit/base/conversion.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/fraction.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/generators.cpp
-    ${PROJECT_SOURCE_DIR}/tests/unit/base/pointer.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/base/handle.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/random.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/reduce.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/shape.cpp

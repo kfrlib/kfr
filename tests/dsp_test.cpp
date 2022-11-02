@@ -77,7 +77,7 @@ TEST(phasor)
 template <typename E, typename T, size_t size>
 void test_ir(E&& e, const univector<T, size>& test_vector)
 {
-    substitute(e, to_pointer(unitimpulse<T>()));
+    substitute(e, to_handle(unitimpulse<T>()));
     const univector<T, size> ir = e;
     println(absmaxof(ir - test_vector));
 }

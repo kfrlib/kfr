@@ -25,7 +25,7 @@
  */
 #pragma once
 
-#include "../base/pointer.hpp"
+#include "../base/handle.hpp"
 #include "../math/log_exp.hpp"
 #include "../math/modzerobessel.hpp"
 #include "../math/sin_cos.hpp"
@@ -562,9 +562,9 @@ CMT_NOINLINE window_expr window(size_t size, cval_t<window_type, type>, identity
 }
 
 template <typename T = fbase>
-CMT_NOINLINE expression_pointer<T> window(size_t size, window_type type, identity<T> win_param,
-                                          window_symmetry symmetry = window_symmetry::symmetric,
-                                          ctype_t<T>               = ctype_t<T>())
+CMT_NOINLINE expression_handle<T> window(size_t size, window_type type, identity<T> win_param,
+                                         window_symmetry symmetry = window_symmetry::symmetric,
+                                         ctype_t<T>               = ctype_t<T>())
 {
     return cswitch(
         cvals_t<window_type, window_type::rectangular, window_type::triangular, window_type::bartlett,
@@ -575,9 +575,9 @@ CMT_NOINLINE expression_pointer<T> window(size_t size, window_type type, identit
         [size, win_param, symmetry](auto win)
         {
             constexpr window_type window = val_of(decltype(win)());
-            return to_pointer(typename window_by_type<window>::template type<T>(size, win_param, symmetry));
+            return to_handle(typename window_by_type<window>::template type<T>(size, win_param, symmetry));
         },
-        fn_generic::returns<expression_pointer<T>>());
+        fn_generic::returns<expression_handle<T>>());
 }
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

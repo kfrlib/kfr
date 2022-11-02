@@ -26,7 +26,7 @@
 #pragma once
 
 #include "../base/filter.hpp"
-#include "../base/pointer.hpp"
+#include "../base/handle.hpp"
 #include "../simd/impl/function.hpp"
 #include "../simd/operators.hpp"
 #include "../simd/vec.hpp"
@@ -305,7 +305,7 @@ KFR_FUNCTION expression_biquads<filters, T, E1> biquad(const biquad_params<T> (&
  * @note This implementation has zero latency
  */
 template <size_t maxfiltercount = 4, typename T, typename E1>
-KFR_FUNCTION expression_pointer<T, 1> biquad(const biquad_params<T>* bq, size_t count, E1&& e1)
+KFR_FUNCTION expression_handle<T, 1> biquad(const biquad_params<T>* bq, size_t count, E1&& e1)
 {
     constexpr csizes_t<1, 2, 4, 8, 16, 32, 64> sizes;
     return cswitch(
@@ -313,14 +313,14 @@ KFR_FUNCTION expression_pointer<T, 1> biquad(const biquad_params<T>* bq, size_t 
         [&](auto x)
         {
             constexpr size_t filters = x;
-            return to_pointer(expression_biquads<filters, T, E1>(biquad_block<T, filters>(bq, count),
-                                                                 std::forward<E1>(e1)));
+            return to_handle(expression_biquads<filters, T, E1>(biquad_block<T, filters>(bq, count),
+                                                                std::forward<E1>(e1)));
         },
-        [&] { return to_pointer(fixshape(zeros<T>(), fixed_shape<infinite_size>)); });
+        [&] { return to_handle(fixshape(zeros<T>(), fixed_shape<infinite_size>)); });
 }
 
 template <size_t maxfiltercount = 4, typename T, typename E1>
-KFR_FUNCTION expression_pointer<T, 1> biquad(const std::vector<biquad_params<T>>& bq, E1&& e1)
+KFR_FUNCTION expression_handle<T, 1> biquad(const std::vector<biquad_params<T>>& bq, E1&& e1)
 {
     return biquad<maxfiltercount>(bq.data(), bq.size(), std::forward<E1>(e1));
 }

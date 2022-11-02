@@ -21,7 +21,7 @@ int main()
 
     // low-pass filter
     univector<fbase, 1023> taps127;
-    expression_pointer<fbase> kaiser = to_pointer(window_kaiser(taps127.size(), 3.0));
+    expression_handle<fbase> kaiser = to_handle(window_kaiser(taps127.size(), 3.0));
     fir_lowpass(taps127, 0.2, kaiser, true);
 
     // Create filters.

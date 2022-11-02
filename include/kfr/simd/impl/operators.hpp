@@ -54,31 +54,31 @@ namespace intrinsics
               KFR_ENABLE_IF(is_simd_type<C>)>                                                                \
     KFR_INTRINSIC vec<vec<C, N1>, N2> fn(const vec<vec<T1, N1>, N2>& x, const vec<vec<T2, N1>, N2>& y)       \
     {                                                                                                        \
-        return fn(broadcastto<C>(x.flatten()), broadcastto<C>(y.flatten())).v;                                   \
+        return fn(broadcastto<C>(x.flatten()), broadcastto<C>(y.flatten())).v;                               \
     }                                                                                                        \
     template <typename T1, typename T2, size_t N1, size_t N2, typename C = common_type<T1, T2>,              \
               KFR_ENABLE_IF(is_simd_type<C>)>                                                                \
     KFR_INTRINSIC vec<vec<C, N1>, N2> fn(const vec<vec<T1, N1>, N2>& x, const T2& y)                         \
     {                                                                                                        \
-        return fn(broadcastto<C>(x.flatten()), broadcastto<C>(y)).v;                                             \
+        return fn(broadcastto<C>(x.flatten()), broadcastto<C>(y)).v;                                         \
     }                                                                                                        \
     template <typename T1, typename T2, size_t N1, size_t N2, typename C = common_type<T1, T2>,              \
               KFR_ENABLE_IF(is_simd_type<C>)>                                                                \
     KFR_INTRINSIC vec<vec<C, N1>, N2> fn(const vec<vec<T1, N1>, N2>& x, const vec<T2, N1>& y)                \
     {                                                                                                        \
-        return fn(broadcastto<C>(x.flatten()), repeat<N2>(broadcastto<C>(y.flatten()))).v;                       \
+        return fn(broadcastto<C>(x.flatten()), repeat<N2>(broadcastto<C>(y.flatten()))).v;                   \
     }                                                                                                        \
     template <typename T1, typename T2, size_t N1, size_t N2, typename C = common_type<T1, T2>,              \
               KFR_ENABLE_IF(is_simd_type<C>)>                                                                \
     KFR_INTRINSIC vec<vec<C, N1>, N2> fn(const T1& x, const vec<vec<T2, N1>, N2>& y)                         \
     {                                                                                                        \
-        return fn(broadcastto<C>(x), broadcastto<C>(y.flatten())).v;                                             \
+        return fn(broadcastto<C>(x), broadcastto<C>(y.flatten())).v;                                         \
     }                                                                                                        \
     template <typename T1, typename T2, size_t N1, size_t N2, typename C = common_type<T1, T2>,              \
               KFR_ENABLE_IF(is_simd_type<C>)>                                                                \
     KFR_INTRINSIC vec<vec<C, N1>, N2> fn(const vec<T1, N1>& x, const vec<vec<T2, N1>, N2>& y)                \
     {                                                                                                        \
-        return fn(repeat<N2>(broadcastto<C>(x.flatten())), broadcastto<C>(y.flatten())).v;                       \
+        return fn(repeat<N2>(broadcastto<C>(x.flatten())), broadcastto<C>(y.flatten())).v;                   \
     }
 
 KFR_VECVEC_OP1(neg)

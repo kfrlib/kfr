@@ -30,8 +30,8 @@
 #include "../simd/min_max.hpp"
 #include "../simd/operators.hpp"
 #include "../simd/vec.hpp"
-#include "simd_expressions.hpp"
 #include "basic_expressions.hpp"
+#include "simd_expressions.hpp"
 
 namespace kfr
 {

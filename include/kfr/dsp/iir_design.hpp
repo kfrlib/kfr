@@ -26,7 +26,7 @@
 #pragma once
 
 #include "../base/filter.hpp"
-#include "../base/pointer.hpp"
+#include "../base/handle.hpp"
 #include "../math/hyperbolic.hpp"
 #include "../simd/complex.hpp"
 #include "../simd/impl/function.hpp"

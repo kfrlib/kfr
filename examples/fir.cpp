@@ -34,11 +34,11 @@ int main()
     univector<fbase, 8191> taps8191;
 
     // Prepare window functions (only expression saved here, not data)
-    expression_pointer<fbase> hann = to_pointer(window_hann(taps15.size()));
+    expression_handle<fbase> hann = to_handle(window_hann(taps15.size()));
 
-    expression_pointer<fbase> kaiser = to_pointer(window_kaiser(taps127.size(), 3.0));
+    expression_handle<fbase> kaiser = to_handle(window_kaiser(taps127.size(), 3.0));
 
-    expression_pointer<fbase> blackman_harris = to_pointer(window_blackman_harris(taps8191.size()));
+    expression_handle<fbase> blackman_harris = to_handle(window_blackman_harris(taps8191.size()));
 
     // Fill taps15 with the low pass FIR filter coefficients using hann window and cutoff=0.15
     fir_lowpass(taps15, 0.15, hann, true);
@@ -102,8 +102,7 @@ int main()
     // --------------------------------------------------------------------------------------
 
     // Prepare 10000 samples of white noise
-    univector<float> noise =
-        truncate(gen_random_range(random_init(1, 2, 3, 4), -1.f, +1.f), 10000);
+    univector<float> noise = truncate(gen_random_range(random_init(1, 2, 3, 4), -1.f, +1.f), 10000);
 
     // Apply band stop filter
     univector<float> filtered_noise = fir(noise, taps127);

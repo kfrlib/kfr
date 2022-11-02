@@ -33,7 +33,7 @@ namespace kfr
 {
 
 template <typename T, index_t Dims>
-struct expression_pointer;
+struct expression_handle;
 
 template <typename T>
 constexpr size_t maximum_expression_width = vector_width_for<T, cpu_t::highest> * 2;
@@ -54,7 +54,7 @@ namespace internal
 {
 
 template <typename Expression, typename T, index_t Dims, size_t key = 0>
-KFR_INTRINSIC bool invoke_substitute(Expression& expr, expression_pointer<T, Dims> new_pointer,
+KFR_INTRINSIC bool invoke_substitute(Expression& expr, expression_handle<T, Dims> new_handle,
                                      csize_t<key> = {});
 }
 } // namespace CMT_ARCH_NAME
@@ -68,7 +68,7 @@ struct expression_vtable
     using func_get        = void (*)(void*, shape<Dims>, T*);
     using func_set        = void (*)(void*, shape<Dims>, const T*);
     using func_shapeof    = void (*)(void*, shape<Dims>&);
-    using func_substitute = bool (*)(void*, expression_pointer<T, Dims>);
+    using func_substitute = bool (*)(void*, expression_handle<T, Dims>);
     using func_pass       = void (*)(void*, shape<Dims>, shape<Dims>);
 
     func_shapeof fn_shapeof;
@@ -129,7 +129,7 @@ struct expression_vtable
         result = expression_traits<Expression>::shapeof(*static_cast<Expression*>(instance));
     }
     template <typename Expression>
-    static bool static_substitute(void* instance, expression_pointer<T, Dims> ptr)
+    static bool static_substitute(void* instance, expression_handle<T, Dims> ptr)
     {
         return internal::invoke_substitute(*static_cast<Expression*>(instance), std::move(ptr));
     }
@@ -176,33 +176,33 @@ KFR_INTRINSIC std::shared_ptr<expression_resource> make_resource(E&& e)
 }
 
 template <typename T, index_t Dims = 1>
-struct expression_pointer
+struct expression_handle
 {
     void* instance;
     const expression_vtable<T, Dims>* vtable;
     std::shared_ptr<expression_resource> resource;
 
-    expression_pointer() CMT_NOEXCEPT : instance(nullptr), vtable(nullptr) {}
-    expression_pointer(const void* instance, const expression_vtable<T, Dims>* vtable,
-                       std::shared_ptr<expression_resource> resource = nullptr)
+    expression_handle() CMT_NOEXCEPT : instance(nullptr), vtable(nullptr) {}
+    expression_handle(const void* instance, const expression_vtable<T, Dims>* vtable,
+                      std::shared_ptr<expression_resource> resource = nullptr)
         : instance(const_cast<void*>(instance)), vtable(vtable), resource(std::move(resource))
     {
     }
 
     explicit operator bool() const { return instance != nullptr; }
 
-    bool substitute(expression_pointer<T, Dims> new_pointer)
+    bool substitute(expression_handle<T, Dims> new_handle)
     {
-        return vtable->fn_substitute(instance, std::move(new_pointer));
+        return vtable->fn_substitute(instance, std::move(new_handle));
     }
 };
 
 template <typename T, index_t Dims>
-struct expression_traits<expression_pointer<T, Dims>> : expression_traits_defaults
+struct expression_traits<expression_handle<T, Dims>> : expression_traits_defaults
 {
     using value_type             = T;
     constexpr static size_t dims = Dims;
-    constexpr static shape<dims> shapeof(const expression_pointer<T, Dims>& self)
+    constexpr static shape<dims> shapeof(const expression_handle<T, Dims>& self)
     {
         shape<dims> result;
         self.vtable->fn_shapeof(self.instance, result);
@@ -217,18 +217,18 @@ inline namespace CMT_ARCH_NAME
 {
 
 template <typename T, index_t NDims>
-KFR_INTRINSIC void begin_pass(const expression_pointer<T, NDims>& self, shape<NDims> start, shape<NDims> stop)
+KFR_INTRINSIC void begin_pass(const expression_handle<T, NDims>& self, shape<NDims> start, shape<NDims> stop)
 {
     self.vtable->fn_begin_pass(self.instance, start, stop);
 }
 template <typename T, index_t NDims>
-KFR_INTRINSIC void end_pass(const expression_pointer<T, NDims>& self, shape<NDims> start, shape<NDims> stop)
+KFR_INTRINSIC void end_pass(const expression_handle<T, NDims>& self, shape<NDims> start, shape<NDims> stop)
 {
     self.vtable->fn_end_pass(self.instance, start, stop);
 }
 
 template <typename T, index_t NDims, index_t Axis, size_t N>
-KFR_INTRINSIC vec<T, N> get_elements(const expression_pointer<T, NDims>& self, const shape<NDims>& index,
+KFR_INTRINSIC vec<T, N> get_elements(const expression_handle<T, NDims>& self, const shape<NDims>& index,
                                      const axis_params<Axis, N>& sh)
 {
     static_assert(is_poweroftwo(N) && N >= 1);
@@ -247,7 +247,7 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_pointer<T, NDims>& self, c
 }
 
 template <typename T, index_t NDims, index_t Axis, size_t N>
-KFR_INTRINSIC void set_elements(const expression_pointer<T, NDims>& self, const shape<NDims>& index,
+KFR_INTRINSIC void set_elements(const expression_handle<T, NDims>& self, const shape<NDims>& index,
                                 const axis_params<Axis, N>& sh, const identity<vec<T, N>>& value)
 {
     static_assert(is_poweroftwo(N) && N >= 1);
@@ -285,9 +285,9 @@ KFR_INTRINSIC expression_vtable<T, Dims>* make_expression_vtable()
  *  @warning Use with caution with local variables.
  */
 template <typename E, typename T = expression_value_type<E>, index_t Dims = expression_dims<E>>
-KFR_INTRINSIC expression_pointer<T, Dims> to_pointer(E& expr)
+KFR_INTRINSIC expression_handle<T, Dims> to_handle(E& expr)
 {
-    return expression_pointer<T>(std::addressof(expr), internal::make_expression_vtable<T, Dims, E>());
+    return expression_handle<T>(std::addressof(expr), internal::make_expression_vtable<T, Dims, E>());
 }
 
 /** @brief Converts the given expression into an opaque object.
@@ -295,12 +295,12 @@ KFR_INTRINSIC expression_pointer<T, Dims> to_pointer(E& expr)
  *  @note Use std::move to force use of this overload.
  */
 template <typename E, typename T = expression_value_type<E>, index_t Dims = expression_dims<E>>
-KFR_INTRINSIC expression_pointer<T, Dims> to_pointer(E&& expr)
+KFR_INTRINSIC expression_handle<T, Dims> to_handle(E&& expr)
 {
     std::shared_ptr<expression_resource> ptr = make_resource(std::move(expr));
     void* instance                           = ptr->instance();
-    return expression_pointer<T, Dims>(instance, internal::make_expression_vtable<T, Dims, E>(),
-                                       std::move(ptr));
+    return expression_handle<T, Dims>(instance, internal::make_expression_vtable<T, Dims, E>(),
+                                      std::move(ptr));
 }
 
 template <typename T, index_t Dims = 1, size_t Key = 0>
@@ -309,7 +309,7 @@ struct expression_placeholder
 public:
     using value_type                      = T;
     expression_placeholder() CMT_NOEXCEPT = default;
-    expression_pointer<T, Dims> pointer;
+    expression_handle<T, Dims> handle;
 };
 
 template <typename T, index_t Dims, size_t Key>
@@ -319,7 +319,7 @@ struct expression_traits<expression_placeholder<T, Dims, Key>> : public expressi
     constexpr static size_t dims = Dims;
     constexpr static shape<dims> shapeof(const expression_placeholder<T, Dims, Key>& self)
     {
-        return self.pointer ? ::kfr::shapeof(self.pointer) : shape<dims>(infinite_size);
+        return self.handle ? ::kfr::shapeof(self.handle) : shape<dims>(infinite_size);
     }
     constexpr static shape<dims> shapeof() { return shape<dims>(undefined_size); }
 };
@@ -331,7 +331,7 @@ template <typename T, index_t Dims, size_t Key, index_t VecAxis, size_t N>
 KFR_INTRINSIC vec<T, N> get_elements(const expression_placeholder<T, Dims, Key>& self, shape<Dims> index,
                                      axis_params<VecAxis, N> sh)
 {
-    return self.pointer ? get_elements(self.pointer, index, sh) : 0;
+    return self.handle ? get_elements(self.handle, index, sh) : 0;
 }
 } // namespace CMT_ARCH_NAME
 
@@ -353,32 +353,32 @@ namespace internal
 {
 template <typename... Args, typename T, index_t Dims, size_t Key, size_t... indices>
 KFR_INTRINSIC bool substitute_helper(expression_with_arguments<Args...>& expr,
-                                     expression_pointer<T, Dims> new_pointer, csize_t<Key>,
+                                     expression_handle<T, Dims> new_handle, csize_t<Key>,
                                      csizes_t<indices...>);
 }
 } // namespace CMT_ARCH_NAME
 
 template <typename T, index_t Dims, size_t Key = 0>
 KFR_INTRINSIC bool substitute(expression_placeholder<T, Dims, Key>& expr,
-                              expression_pointer<T, Dims> new_pointer, csize_t<Key> = csize_t<Key>{})
+                              expression_handle<T, Dims> new_handle, csize_t<Key> = csize_t<Key>{})
 {
-    expr.pointer = std::move(new_pointer);
+    expr.handle = std::move(new_handle);
     return true;
 }
 
 template <typename... Args, typename T, index_t Dims, size_t Key = 0>
-KFR_INTRINSIC bool substitute(expression_with_arguments<Args...>& expr,
-                              expression_pointer<T, Dims> new_pointer, csize_t<Key> = csize_t<Key>{})
+KFR_INTRINSIC bool substitute(expression_with_arguments<Args...>& expr, expression_handle<T, Dims> new_handle,
+                              csize_t<Key> = csize_t<Key>{})
 {
-    return internal::substitute_helper(expr, std::move(new_pointer), csize_t<Key>{}, indicesfor_t<Args...>{});
+    return internal::substitute_helper(expr, std::move(new_handle), csize_t<Key>{}, indicesfor_t<Args...>{});
 }
 
 template <typename T, index_t Dims, size_t Key = 0>
-KFR_INTRINSIC bool substitute(expression_pointer<T, Dims>& expr, expression_pointer<T, Dims> new_pointer,
+KFR_INTRINSIC bool substitute(expression_handle<T, Dims>& expr, expression_handle<T, Dims> new_handle,
                               csize_t<Key> = csize_t<Key>{})
 {
-    static_assert(Key == 0, "expression_pointer supports only Key = 0");
-    return expr.substitute(std::move(new_pointer));
+    static_assert(Key == 0, "expression_handle supports only Key = 0");
+    return expr.substitute(std::move(new_handle));
 }
 
 inline namespace CMT_ARCH_NAME
@@ -388,16 +388,16 @@ namespace internal
 
 template <typename... Args, typename T, index_t Dims, size_t Key, size_t... indices>
 KFR_INTRINSIC bool substitute_helper(expression_with_arguments<Args...>& expr,
-                                     expression_pointer<T, Dims> new_pointer, csize_t<Key>,
+                                     expression_handle<T, Dims> new_handle, csize_t<Key>,
                                      csizes_t<indices...>)
 {
-    return (substitute(std::get<indices>(expr.args), std::move(new_pointer), csize_t<Key>()) || ...);
+    return (substitute(std::get<indices>(expr.args), std::move(new_handle), csize_t<Key>()) || ...);
 }
 
 template <typename Expression, typename T, index_t Dims, size_t Key>
-KFR_INTRINSIC bool invoke_substitute(Expression& expr, expression_pointer<T, Dims> new_pointer, csize_t<Key>)
+KFR_INTRINSIC bool invoke_substitute(Expression& expr, expression_handle<T, Dims> new_handle, csize_t<Key>)
 {
-    return kfr::substitute(expr, std::move(new_pointer), csize_t<Key>{});
+    return kfr::substitute(expr, std::move(new_handle), csize_t<Key>{});
 }
 
 } // namespace internal

@@ -184,13 +184,13 @@ private:
 };
 
 template <typename T>
-KFR_INTRINSIC expression_pointer<T, 1> make_kfilter(int samplerate)
+KFR_INTRINSIC expression_handle<T, 1> make_kfilter(int samplerate)
 {
     const biquad_params<T> bq[] = {
         biquad_highshelf(T(1681.81 / samplerate), T(+4.0)),
         biquad_highpass(T(38.1106678246655 / samplerate), T(0.5)).normalized_all()
     };
-    return to_pointer(biquad(bq, placeholder<T>()));
+    return to_handle(biquad(bq, placeholder<T>()));
 }
 
 template <typename T>
@@ -232,7 +232,7 @@ public:
 
     void process_packet(const T* src)
     {
-        substitute(m_kfilter, to_pointer(make_univector(src, m_packet_size) * m_input_gain));
+        substitute(m_kfilter, to_handle(make_univector(src, m_packet_size) * m_input_gain));
         const T filtered_sum_of_squares = sumsqr(truncate(m_kfilter, m_packet_size));
 
         m_short_sum_of_squares.ringbuf_write(m_short_sum_of_squares_cursor, filtered_sum_of_squares);
@@ -245,7 +245,7 @@ private:
     const Speaker m_speaker;
     const T m_input_gain;
     const size_t m_packet_size;
-    expression_pointer<T, 1> m_kfilter;
+    expression_handle<T, 1> m_kfilter;
     univector<T> m_short_sum_of_squares;
     univector<T> m_momentary_sum_of_squares;
     T m_output_energy_gain;

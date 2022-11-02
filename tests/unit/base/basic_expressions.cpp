@@ -133,10 +133,7 @@ TEST(assign_expression)
     CHECK_EXPRESSION(b, { 1000, 1010, 1020, 1030, 1040, 1050, 1060, 1070, 1080, 1090 });
 }
 
-TEST(trace)
-{
-    render(trace(counter()), 44);
-}
+TEST(trace) { render(trace(counter()), 44); }
 
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

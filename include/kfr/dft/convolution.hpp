@@ -109,7 +109,7 @@ public:
     size_t input_block_size() const { return block_size; }
 
 protected:
-    void process_expression(T* dest, const expression_pointer<T>& src, size_t size) final
+    void process_expression(T* dest, const expression_handle<T>& src, size_t size) final
     {
         univector<T> input = truncate(src, size);
         process_buffer(dest, input.data(), input.size());
