@@ -575,7 +575,7 @@ KFR_FN(horner_odd)
 template <typename T>
 constexpr KFR_INTRINSIC T reciprocal(const T& x)
 {
-    static_assert(is_floating_point<subtype<T>>, "T must be floating point type");
+    static_assert(std::is_floating_point_v<subtype<T>>, "T must be floating point type");
     return subtype<T>(1) / x;
 }
 KFR_FN(reciprocal)

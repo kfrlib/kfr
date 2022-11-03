@@ -500,6 +500,7 @@ set(
     ${PROJECT_SOURCE_DIR}/tests/unit/base/random.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/reduce.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/shape.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/base/std_ambiguities.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/tensor.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/biquad.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/biquad_design.cpp

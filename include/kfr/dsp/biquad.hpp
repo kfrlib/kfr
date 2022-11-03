@@ -62,9 +62,9 @@ struct biquad_params
                                                                        b2(static_cast<T>(bq.b2))
     {
     }
-    constexpr static bool is_pod = true;
+    constexpr static bool is_pod_like = true;
 
-    static_assert(is_floating_point<T>, "T must be a floating point type");
+    static_assert(std::is_floating_point_v<T>, "T must be a floating point type");
     constexpr biquad_params() CMT_NOEXCEPT : a0(1), a1(0), a2(0), b0(1), b1(0), b2(0) {}
     constexpr biquad_params(T a0, T a1, T a2, T b0, T b1, T b2) CMT_NOEXCEPT : a0(a0),
                                                                                a1(a1),

@@ -34,19 +34,19 @@ namespace kfr
 inline namespace CMT_ARCH_NAME
 {
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_integral<T>)>
+template <typename T, size_t N, KFR_ENABLE_IF(std::is_integral_v<T>)>
 KFR_INTRINSIC vec<T, N> random_uniform(random_state& state)
 {
     return bitcast<T>(random_bits<N * sizeof(T)>(state));
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_same<T, f32>)>
+template <typename T, size_t N, KFR_ENABLE_IF(std::is_same_v<T, f32>)>
 KFR_INTRINSIC vec<f32, N> randommantissa(random_state& state)
 {
     return bitcast<f32>((random_uniform<u32, N>(state) & u32(0x7FFFFFu)) | u32(0x3f800000u)) + 0.0f;
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_same<T, f64>)>
+template <typename T, size_t N, KFR_ENABLE_IF(std::is_same_v<T, f64>)>
 KFR_INTRINSIC vec<f64, N> randommantissa(random_state& state)
 {
     return bitcast<f64>((random_uniform<u64, N>(state) & u64(0x000FFFFFFFFFFFFFull)) |

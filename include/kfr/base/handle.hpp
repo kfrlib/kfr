@@ -170,7 +170,7 @@ private:
 template <typename E>
 KFR_INTRINSIC std::shared_ptr<expression_resource> make_resource(E&& e)
 {
-    using T = expression_resource_impl<decay<E>>;
+    using T = expression_resource_impl<std::decay_t<E>>;
     return std::static_pointer_cast<expression_resource>(std::shared_ptr<T>(
         new (aligned_allocate<T>()) T(std::move(e)), [](T* pi) { aligned_deallocate<T>(pi); }));
 }
@@ -273,7 +273,7 @@ namespace internal
 template <typename T, index_t Dims, typename E>
 KFR_INTRINSIC expression_vtable<T, Dims>* make_expression_vtable()
 {
-    static expression_vtable<T, Dims> vtable{ ctype_t<decay<E>>{} };
+    static expression_vtable<T, Dims> vtable{ ctype_t<std::decay_t<E>>{} };
     return &vtable;
 }
 } // namespace internal

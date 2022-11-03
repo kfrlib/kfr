@@ -31,7 +31,7 @@ struct IsNotMinInt
     template <typename T>
     bool operator()(ctype_t<T>, identity<T> x, identity<T> y) const
     {
-        return is_floating_point<T> || is_unsigned<T> ||
+        return std::is_floating_point_v<T> || std::is_unsigned_v<T> ||
                (x != std::numeric_limits<T>::min() && y != std::numeric_limits<T>::min());
     }
     template <typename T, size_t N>

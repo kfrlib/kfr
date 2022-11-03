@@ -63,30 +63,30 @@ TEST(cast)
               vec<float, 4>{ 1.f, 2.f, 3.f, 4.f }, vec<float, 4>{ 11.f, 22.f, 33.f, 44.f } }) ==
           vec<vec<double, 4>, 2>{ vec<double, 4>{ 1., 2., 3., 4. }, vec<double, 4>{ 11., 22., 33., 44. } });
 
-    static_assert(is_convertible<float, f32x4>, "");
-    static_assert(is_convertible<float, f64x8>, "");
-    static_assert(is_convertible<float, u8x3>, "");
+    static_assert(std::is_convertible_v<float, f32x4>, "");
+    static_assert(std::is_convertible_v<float, f64x8>, "");
+    static_assert(std::is_convertible_v<float, u8x3>, "");
 
-    static_assert(is_convertible<u16x4, i32x4>, "");
-    static_assert(!is_convertible<u16x4, i32x3>, "");
-    static_assert(!is_convertible<u16x1, u16x16>, "");
+    static_assert(std::is_convertible_v<u16x4, i32x4>, "");
+    static_assert(!std::is_convertible_v<u16x4, i32x3>, "");
+    static_assert(!std::is_convertible_v<u16x1, u16x16>, "");
 
-    static_assert(is_convertible<float, vecx<float, 2>>, "");
-    static_assert(is_convertible<float, vecx<float, 2, 2>>, "");
+    static_assert(std::is_convertible_v<float, vecx<float, 2>>, "");
+    static_assert(std::is_convertible_v<float, vecx<float, 2, 2>>, "");
 
-    static_assert(is_same<decltype(broadcastto<f64>(f32x4x4(1))), f64x4x4>, "");
-    static_assert(is_same<decltype(broadcastto<f64>(f32x4(1))), f64x4>, "");
-    static_assert(is_same<decltype(broadcastto<f64>(f32(1))), f64>, "");
+    static_assert(std::is_same_v<decltype(broadcastto<f64>(f32x4x4(1))), f64x4x4>, "");
+    static_assert(std::is_same_v<decltype(broadcastto<f64>(f32x4(1))), f64x4>, "");
+    static_assert(std::is_same_v<decltype(broadcastto<f64>(f32(1))), f64>, "");
 
-    // N/A static_assert(is_same<decltype(broadcastto<f64x4>(f32x4x4(1))), f64x4x4>, "");
-    static_assert(is_same<decltype(broadcastto<f64x4>(f32x4(1))), f64x4x4>, "");
-    static_assert(is_same<decltype(broadcastto<f64x4>(f32(1))), f64x4>, "");
+    // N/A static_assert(std::is_same_v<decltype(broadcastto<f64x4>(f32x4x4(1))), f64x4x4>, "");
+    static_assert(std::is_same_v<decltype(broadcastto<f64x4>(f32x4(1))), f64x4x4>, "");
+    static_assert(std::is_same_v<decltype(broadcastto<f64x4>(f32(1))), f64x4>, "");
 
-    // N/A static_assert(is_same<decltype(promoteto<f64>(f32x4x4(1))), f64x4>, "");
-    static_assert(is_same<decltype(promoteto<f64>(f32x4(1))), f64x4>, "");
+    // N/A static_assert(std::is_same_v<decltype(promoteto<f64>(f32x4x4(1))), f64x4>, "");
+    static_assert(std::is_same_v<decltype(promoteto<f64>(f32x4(1))), f64x4>, "");
 
-    static_assert(is_same<decltype(promoteto<f64x4>(f32x4x4(1))), f64x4x4>, "");
-    static_assert(is_same<decltype(promoteto<f64x4>(f32x4(1))), f64x4x4>, "");
+    static_assert(std::is_same_v<decltype(promoteto<f64x4>(f32x4x4(1))), f64x4x4>, "");
+    static_assert(std::is_same_v<decltype(promoteto<f64x4>(f32x4(1))), f64x4x4>, "");
 
     CHECK(cast<vecx<float, 2, 2>>(123.f) == vec{ vec{ 123.f, 123.f }, vec{ 123.f, 123.f } });
 

@@ -212,7 +212,7 @@ constexpr inline vec<T, 2> vcomplex(const complex<T>& v)
 template <typename T>
 constexpr inline simd<T, 2> vvcomplex(const complex<T>& v)
 {
-    return intrinsics::simd_make(ctype<T>, v.real(), v.imag());
+    return intrinsics::simd_make(cometa::ctype<T>, v.real(), v.imag());
 }
 } // namespace intrinsics
 
@@ -326,8 +326,8 @@ struct is_complex_impl<complex<T>> : std::true_type
 template <typename To, typename From, size_t N, conv_t conv>
 struct conversion<1, 1, vec<complex<To>, N>, vec<complex<From>, N>, conv>
 {
-    static_assert(!is_compound<To>, "");
-    static_assert(!is_compound<From>, "");
+    static_assert(!is_compound_type<To>, "");
+    static_assert(!is_compound_type<From>, "");
     static vec<complex<To>, N> cast(const vec<complex<From>, N>& value)
     {
         return vec<To, N * 2>(value.flatten()).v;
@@ -338,8 +338,8 @@ struct conversion<1, 1, vec<complex<To>, N>, vec<complex<From>, N>, conv>
 template <typename To, typename From, size_t N, conv_t conv>
 struct conversion<1, 1, vec<complex<To>, N>, vec<From, N>, conv>
 {
-    static_assert(!is_compound<To>, "");
-    static_assert(!is_compound<From>, "");
+    static_assert(!is_compound_type<To>, "");
+    static_assert(!is_compound_type<From>, "");
     static vec<complex<To>, N> cast(const vec<From, N>& value)
     {
         const vec<To, N> casted = static_cast<vec<To, N>>(value);

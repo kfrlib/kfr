@@ -31,8 +31,6 @@ namespace cometa
 using std::ptrdiff_t;
 using std::size_t;
 
-#if __cplusplus >= 201103L || CMT_MSC_VER >= 1900 || CMT_HAS_FEATURE(cxx_constexpr)
-
 template <typename T, size_t N>
 constexpr CMT_INTRINSIC static size_t arraysize(const T (&)[N]) CMT_NOEXCEPT
 {
@@ -45,24 +43,13 @@ constexpr CMT_INTRINSIC static std::integral_constant<size_t, N> carraysize(cons
     return {};
 }
 
-#define CMT_ARRAYSIZE(arr) decltype(carraysize(arr))::value
-#elif CMT_COMPILER_MSVC
-#define CMT_ARRAYSIZE(arr) _countof(arr)
-#elif __cplusplus >= 199711L &&                                                                              \
-    (defined(__INTEL_COMPILER) || defined(__clang__) ||                                                      \
-     (defined(__GNUC__) && ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 4))))
-template <typename T, size_t N>
-char (&COUNTOF_REQUIRES_ARRAY_ARGUMENT(T (&)[N]))[N];
-#define CMT_ARRAYSIZE(x) sizeof(COUNTOF_REQUIRES_ARRAY_ARGUMENT(x))
-#else
-#define CMT_ARRAYSIZE(arr) sizeof(arr) / sizeof(arr[0])
-#endif
-
 using pvoid      = void*;
 using pconstvoid = const void*;
 
+#ifdef CMT_CPP17_DEFINITIONS
 template <typename...>
 using void_t = void;
+#endif
 
 namespace details
 {
@@ -81,12 +68,13 @@ constexpr CMT_INTRINSIC bool args_and(bool x, Ts... rest)
 }
 
 template <typename T, typename Enable = void>
-struct is_pod_impl : std::false_type
+struct is_pod_like_impl : std::false_type
 {
 };
 
 template <typename T>
-struct is_pod_impl<T, void_t<decltype(T::is_pod)>> : std::integral_constant<bool, T::is_pod>
+struct is_pod_like_impl<T, std::void_t<decltype(T::is_pod_like)>>
+    : std::integral_constant<bool, T::is_pod_like>
 {
 };
 
@@ -114,6 +102,7 @@ struct and_t_impl<T, Ts...> : std::integral_constant<bool, T::value && and_t_imp
 
 constexpr size_t max_size_t = size_t(-1);
 
+#ifdef CMT_CPP17_DEFINITIONS
 template <typename... T>
 using common_type = typename std::common_type<T...>::type;
 
@@ -148,12 +137,6 @@ using remove_const = typename std::remove_const<T>::type;
 
 template <typename T>
 using underlying_type = typename std::underlying_type<T>::type;
-
-template <typename T1, typename T2>
-using or_type = std::conditional_t<std::is_same_v<T1, void>, T2, T1>;
-
-template <typename T>
-constexpr inline bool is_pod = std::is_pod<T>::value || details::is_pod_impl<T>::value;
 
 template <typename T>
 constexpr inline bool is_class = std::is_class<T>::value;
@@ -203,10 +186,18 @@ constexpr inline bool is_template_arg = std::is_integral<T>::value || std::is_en
 template <typename T>
 using decay = typename std::decay<T>::type;
 
+#endif
+
+template <typename T1, typename T2>
+using or_type = std::conditional_t<std::is_same_v<T1, void>, T2, T1>;
+
+template <typename T>
+constexpr inline bool is_pod_like = std::is_pod_v<T> || details::is_pod_like_impl<T>::value;
+
 template <typename T1, typename T2 = void, typename... Ts>
 constexpr size_t typeindex()
 {
-    return is_same<T1, T2>() ? 0 : 1 + typeindex<T1, Ts...>();
+    return std::is_same_v<T1, T2>() ? 0 : 1 + typeindex<T1, Ts...>();
 }
 
 template <typename T>
@@ -235,24 +226,17 @@ constexpr size_t widthof(T)
 template <typename T>
 constexpr size_t widthof()
 {
-    return compound_type_traits<decay<T>>::width;
+    return compound_type_traits<std::decay_t<T>>::width;
 }
 
 template <typename T>
-constexpr inline bool is_compound = !compound_type_traits<decay<T>>::is_scalar;
+constexpr inline bool is_compound_type = !compound_type_traits<std::decay_t<T>>::is_scalar;
 
 template <typename T>
 using subtype = typename compound_type_traits<T>::subtype;
 
 template <typename T>
 using deep_subtype = typename compound_type_traits<T>::deep_subtype;
-
-/*template <typename T, typename SubType>
-using rebind_subtype = typename compound_type_traits<T>::template rebind<SubType>;
-
-template <typename T, typename SubType>
-using deep_rebind = typename compound_type_traits<T>::template deep_rebind<SubType>;
- */
 
 template <typename T>
 struct compound_type_traits<std::pair<T, T>>
@@ -328,7 +312,7 @@ struct is_inheritable_impl : std::false_type
 };
 
 template <typename T>
-struct is_inheritable_impl<T, void_t<inherit<T>>> : std::true_type
+struct is_inheritable_impl<T, std::void_t<inherit<T>>> : std::true_type
 {
 };
 
@@ -578,6 +562,7 @@ struct concat_impl<T1, T2, T3, Ts...>
     using type = typename concat_impl<typename concat_impl<T1, T2>::type, T3, Ts...>::type;
 };
 
+#ifdef CMT_CPP17_DEFINITIONS
 template <typename Fn, typename Args, typename enable = void>
 struct is_invocable_impl : std::false_type
 {
@@ -598,12 +583,14 @@ template <typename Ret, typename Fn, typename... Args>
 struct is_invocable_r_impl<Ret, Fn, ctypes_t<Args...>,
                            void_t<decltype(std::declval<Fn>()(std::declval<Args>()...))>>
 {
-    static constexpr bool value = is_convertible<decltype(std::declval<Fn>()(std::declval<Args>()...)), Ret>;
+    static constexpr bool value =
+        std::is_convertible_v<decltype(std::declval<Fn>()(std::declval<Args>()...)), Ret>;
 };
+#endif
 
 } // namespace details
 template <typename T1, typename... Ts>
-using concat_lists = typename details::concat_impl<decay<T1>, decay<Ts>...>::type;
+using concat_lists = typename details::concat_impl<std::decay_t<T1>, std::decay_t<Ts>...>::type;
 
 template <typename T1, typename... Ts>
 constexpr CMT_INTRINSIC concat_lists<T1, Ts...> cconcat(T1, Ts...)
@@ -611,6 +598,7 @@ constexpr CMT_INTRINSIC concat_lists<T1, Ts...> cconcat(T1, Ts...)
     return {};
 }
 
+#ifdef CMT_CPP17_DEFINITIONS
 #ifdef __cpp_lib_is_invocable
 template <typename Fn, typename... Args>
 constexpr inline bool is_invocable = std::is_invocable<Fn, Args...>::value;
@@ -623,6 +611,7 @@ constexpr inline bool is_invocable = details::is_invocable_impl<Fn, ctypes_t<Arg
 
 template <typename Ret, typename Fn, typename... Args>
 constexpr inline bool is_invocable_r = details::is_invocable_r_impl<Ret, Fn, ctypes_t<Args...>>::value;
+#endif
 #endif
 
 namespace details
@@ -665,7 +654,7 @@ template <typename T, T value, T... values, bool flag, bool... flags>
 struct filter_impl<cvals_t<T, value, values...>, cvals_t<bool, flag, flags...>>
 {
     using filtered = typename filter_impl<cvals_t<T, values...>, cvals_t<bool, flags...>>::type;
-    using type     = conditional<flag, concat_lists<cvals_t<T, value>, filtered>, filtered>;
+    using type     = std::conditional_t<flag, concat_lists<cvals_t<T, value>, filtered>, filtered>;
 };
 } // namespace details
 
@@ -676,7 +665,7 @@ template <typename Fn>
 using function_result = typename details::function_arguments_impl<decltype(&Fn::operator())>::result;
 
 template <typename T1, typename T2>
-using cfilter_t = typename details::filter_impl<decay<T1>, decay<T2>>::type;
+using cfilter_t = typename details::filter_impl<std::decay_t<T1>, std::decay_t<T2>>::type;
 
 template <typename T, T... vals, bool... flags,
           typename Ret = cfilter_t<cvals_t<T, vals...>, cvals_t<bool, flags...>>>
@@ -818,34 +807,35 @@ constexpr CMT_INTRINSIC auto scale() CMT_NOEXCEPT
 namespace details
 {
 
-template <typename Ret, typename T, typename enable = void_t<>>
+template <typename Ret, typename T, typename enable = std::void_t<>>
 struct is_returning_type_impl : std::false_type
 {
 };
 
 template <typename Ret, typename Fn, typename... Args>
-struct is_returning_type_impl<Ret, Fn(Args...), void_t<invoke_result<Fn, Args...>>>
-    : std::is_same<Ret, invoke_result<Fn, Args...>>
+struct is_returning_type_impl<Ret, Fn(Args...), std::void_t<std::invoke_result_t<Fn, Args...>>>
+    : std::is_same<Ret, std::invoke_result_t<Fn, Args...>>
 {
 };
 
-template <typename Fn, typename Args, typename enable = void_t<>>
+template <typename Fn, typename Args, typename enable = std::void_t<>>
 struct is_callable_impl : std::false_type
 {
 };
 
 template <typename Fn, typename... Args>
-struct is_callable_impl<Fn, ctypes_t<Args...>, void_t<invoke_result<Fn, Args...>>> : std::true_type
+struct is_callable_impl<Fn, ctypes_t<Args...>, std::void_t<std::invoke_result_t<Fn, Args...>>>
+    : std::true_type
 {
 };
 
-template <typename T, typename enable = void_t<>>
+template <typename T, typename enable = std::void_t<>>
 struct is_enabled_impl : std::true_type
 {
 };
 
 template <typename Fn>
-struct is_enabled_impl<Fn, void_t<decltype(Fn::disabled)>> : std::integral_constant<bool, !Fn::disabled>
+struct is_enabled_impl<Fn, std::void_t<decltype(Fn::disabled)>> : std::integral_constant<bool, !Fn::disabled>
 {
 };
 
@@ -876,21 +866,25 @@ struct unique_enum_impl
 template <typename T>
 constexpr inline bool is_enabled = details::is_enabled_impl<T>::value;
 
+#ifdef CMT_CPP17_DEFINITIONS
+
 template <typename Fn, typename... Args>
 constexpr inline bool is_callable = details::is_callable_impl<Fn, ctypes_t<Args...>>::value;
 
 template <typename Ret, typename T>
 constexpr inline bool is_returning_type = details::is_returning_type_impl<Ret, T>::value;
 
+#endif
+
 namespace details
 {
-template <typename Fn, CMT_ENABLE_IF(is_callable<Fn()>)>
+template <typename Fn, CMT_ENABLE_IF(std::is_invocable_v<Fn>)>
 CMT_INTRINSIC auto call_if_callable(Fn&& fn)
 {
     return fn();
 }
 
-template <typename Fn, CMT_ENABLE_IF(!is_callable<Fn()>)>
+template <typename Fn, CMT_ENABLE_IF(!std::is_invocable_v<Fn>)>
 CMT_INTRINSIC auto call_if_callable(Fn&& fn)
 {
     return std::forward<Fn>(fn);
@@ -1004,9 +998,9 @@ namespace details
 {
 
 template <typename T>
-constexpr inline char typekind = is_floating_point<T> ? 'f'
-                                 : is_integral<T>     ? (is_unsigned<T> ? 'u' : 'i')
-                                                      : '?';
+constexpr inline char typekind = std::is_floating_point_v<T> ? 'f'
+                                 : std::is_integral_v<T>     ? (std::is_unsigned_v<T> ? 'u' : 'i')
+                                                             : '?';
 
 template <char kind, size_t bits>
 struct bits_to_type_impl;
@@ -1079,8 +1073,9 @@ struct findinttype_impl
 template <int64_t min, int64_t max, typename T, typename... Types>
 struct findinttype_impl<min, max, T, Types...>
 {
-    using type = conditional<(std::numeric_limits<T>::min() <= min && std::numeric_limits<T>::max() >= max),
-                             T, typename findinttype_impl<min, max, Types...>::type>;
+    using type =
+        std::conditional_t<(std::numeric_limits<T>::min() <= min && std::numeric_limits<T>::max() >= max), T,
+                           typename findinttype_impl<min, max, Types...>::type>;
 };
 template <int64_t min, int64_t max>
 struct findinttype_impl<min, max>
@@ -1106,10 +1101,10 @@ using findinttype = typename details::findinttype_impl<min, max, uint8_t, int8_t
                                                        int32_t, uint64_t, int64_t>::type;
 
 template <typename T>
-constexpr inline bool is_number = details::is_number_impl<decay<T>>::value;
+constexpr inline bool is_number = details::is_number_impl<std::decay_t<T>>::value;
 
 template <typename... Ts>
-constexpr inline bool is_numbers = (details::is_number_impl<decay<Ts>>::value && ...);
+constexpr inline bool is_numbers = (details::is_number_impl<std::decay_t<Ts>>::value && ...);
 
 /// @brief Check if the type argument is a number or a vector of numbers
 template <typename T>
@@ -1162,7 +1157,7 @@ struct carray<T, 1>
     CMT_MEM_INTRINSIC constexpr carray() CMT_NOEXCEPT = default;
     CMT_MEM_INTRINSIC constexpr carray(T val) CMT_NOEXCEPT : val(val) {}
 
-    template <typename Fn, size_t index = 0, CMT_ENABLE_IF(is_callable<Fn, csize_t<index>>)>
+    template <typename Fn, size_t index = 0, CMT_ENABLE_IF(std::is_invocable_v<Fn, csize_t<index>>)>
     CMT_MEM_INTRINSIC constexpr carray(Fn&& fn, csize_t<index> = csize_t<index>{}) CMT_NOEXCEPT
         : val(static_cast<T>(fn(csize_t<index>())))
     {
@@ -1401,7 +1396,8 @@ struct has_begin_end_impl : std::false_type
 };
 
 template <typename T>
-struct has_begin_end_impl<T, void_t<decltype(std::declval<T>().begin()), decltype(std::declval<T>().end())>>
+struct has_begin_end_impl<T,
+                          std::void_t<decltype(std::declval<T>().begin()), decltype(std::declval<T>().end())>>
     : std::true_type
 {
 };
@@ -1412,7 +1408,7 @@ struct has_value_type_impl : std::false_type
 };
 
 template <typename T>
-struct has_value_type_impl<T, void_t<typename T::value_type>> : std::true_type
+struct has_value_type_impl<T, std::void_t<typename T::value_type>> : std::true_type
 {
 };
 
@@ -1422,7 +1418,8 @@ struct has_data_size_impl : std::false_type
 };
 
 template <typename T>
-struct has_data_size_impl<T, void_t<decltype(std::declval<T>().size()), decltype(std::declval<T>().data())>>
+struct has_data_size_impl<T,
+                          std::void_t<decltype(std::declval<T>().size()), decltype(std::declval<T>().data())>>
     : std::true_type
 {
 };
@@ -1434,20 +1431,20 @@ struct value_type_impl
 };
 
 template <typename T, typename Fallback>
-struct value_type_impl<T, Fallback, void_t<typename T::value_type>>
+struct value_type_impl<T, Fallback, std::void_t<typename T::value_type>>
 {
     using type = typename T::value_type;
 };
 } // namespace details
 
 template <typename T>
-constexpr inline bool has_begin_end = details::has_begin_end_impl<decay<T>>::value;
+constexpr inline bool has_begin_end = details::has_begin_end_impl<std::decay_t<T>>::value;
 
 template <typename T>
-constexpr inline bool has_data_size = details::has_data_size_impl<decay<T>>::value;
+constexpr inline bool has_data_size = details::has_data_size_impl<std::decay_t<T>>::value;
 
 template <typename T>
-using value_type_of = typename decay<T>::value_type;
+using value_type_of = typename std::decay_t<T>::value_type;
 
 #ifndef CMT_COMPILER_CLANG
 namespace details
@@ -1633,7 +1630,7 @@ template <typename T, typename Fn1, typename Fn2, typename... Fns>
 CMT_INTRINSIC decltype(auto) cmatch_impl(T&& value, Fn1&& first, Fn2&& second, Fns&&... rest)
 {
     using first_arg        = typename function_arguments<Fn1>::template nth<0>;
-    constexpr bool is_same = cometa::is_same<decay<T>, decay<first_arg>>;
+    constexpr bool is_same = std::is_same_v<std::decay_t<T>, std::decay_t<first_arg>>;
     return cmatch_impl2(cbool_t<is_same>(), std::forward<T>(value), std::forward<Fn1>(first),
                         std::forward<Fn2>(second), std::forward<Fns>(rest)...);
 }
@@ -1665,7 +1662,7 @@ CMT_INTRINSIC size_t cfind(cvals_t<T, values...>, identity<T> value)
 }
 
 template <typename Fn, typename... Args>
-CMT_UNUSED CMT_NOINLINE static invoke_result<Fn, Args...> noinline(Fn&& fn, Args&&... args)
+CMT_UNUSED CMT_NOINLINE static std::invoke_result_t<Fn, Args...> noinline(Fn&& fn, Args&&... args)
 {
     return fn(std::forward<Args>(args)...);
 }
@@ -1674,7 +1671,7 @@ template <typename Fn>
 struct fn_noinline
 {
     template <typename... Args>
-    CMT_MEM_INTRINSIC invoke_result<Fn, Args...> operator()(Args&&... args) const
+    CMT_MEM_INTRINSIC std::invoke_result_t<Fn, Args...> operator()(Args&&... args) const
     {
         return noinline(Fn{}, std::forward<Args>(args)...);
     }
@@ -1706,12 +1703,12 @@ constexpr CMT_INTRINSIC T choose_const_fallback(C1 c1)
  * CHECK( choose_const<f64>( 32.0f, 64.0 ) == 64.0 );
  * @endcode
  */
-template <typename T, typename C1, typename... Cs, CMT_ENABLE_IF(is_same<T, C1>)>
+template <typename T, typename C1, typename... Cs, CMT_ENABLE_IF(std::is_same_v<T, C1>)>
 constexpr CMT_INTRINSIC T choose_const(C1 c1, Cs...)
 {
     return static_cast<T>(c1);
 }
-template <typename T, typename C1, typename... Cs, CMT_ENABLE_IF(!is_same<T, C1>)>
+template <typename T, typename C1, typename... Cs, CMT_ENABLE_IF(!std::is_same_v<T, C1>)>
 constexpr CMT_INTRINSIC T choose_const(C1, Cs... constants)
 {
     return choose_const<T>(constants...);
@@ -1720,7 +1717,7 @@ constexpr CMT_INTRINSIC T choose_const(C1, Cs... constants)
 template <typename T, typename C1, typename... Cs>
 constexpr CMT_INTRINSIC T choose_const_fallback(C1 c1, Cs... constants)
 {
-    return is_same<T, C1> ? static_cast<T>(c1) : choose_const_fallback<T>(constants...);
+    return std::is_same_v<T, C1> ? static_cast<T>(c1) : choose_const_fallback<T>(constants...);
 }
 
 template <typename Tfrom>
@@ -1750,7 +1747,7 @@ struct signed_type_impl
     using type = T;
 };
 template <typename T>
-struct signed_type_impl<T, void_t<enable_if<is_unsigned<T>>>>
+struct signed_type_impl<T, std::void_t<std::enable_if_t<std::is_unsigned_v<T>>>>
 {
     using type = findinttype<std::numeric_limits<T>::min(), std::numeric_limits<T>::max()>;
 };

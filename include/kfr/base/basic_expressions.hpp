@@ -1000,7 +1000,8 @@ struct expression_trace : public expression_with_traits<E>
                                                          axis_params<VecAxis, N> sh)
     {
         const vec<value_type, N> in = get_elements(self.first(), index, sh);
-        println("[", fmt<'s', 16>(as_string(index)), "] = ", in);
+        println("[", fmt<'s', 16>(array_to_string(dims, index.data(), INT_MAX, INT_MAX, ",", "", "")),
+                "] = ", in);
         return in;
     }
 };

@@ -405,12 +405,12 @@ CMT_UNUSED static int run_all(const std::string& name = std::string(), bool show
 template <typename T1, typename T2>
 void assert_is_same()
 {
-    static_assert(std::is_same<T1, T2>::value, "");
+    static_assert(std::is_same_v<T1, T2>, "");
 }
 template <typename T1, typename T2>
 void assert_is_same_decay()
 {
-    static_assert(std::is_same<cometa::decay<T1>, cometa::decay<T2>>::value, "");
+    static_assert(std::is_same_v<std::decay_t<T1>, std::decay_t<T2>>, "");
 }
 
 template <typename T, size_t NArgs>

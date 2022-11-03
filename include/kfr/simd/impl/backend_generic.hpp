@@ -1144,7 +1144,7 @@ KFR_INTRINSIC simd<Tout, N> simd_allones() CMT_NOEXCEPT
 template <typename Tout, typename Tin, size_t N, size_t Nout = (sizeof(Tin) * N / sizeof(Tout))
 #ifdef _MSC_VER
                                                      ,
-          KFR_ENABLE_IF((Nout == 1 || N == 1) && !is_same<Tout, Tin>)
+          KFR_ENABLE_IF((Nout == 1 || N == 1) && !std::is_same_v<Tout, Tin>)
 #else
                                                      ,
           KFR_ENABLE_IF(Nout == 1 || N == 1)
@@ -1160,7 +1160,7 @@ KFR_INTRINSIC simd<Tout, Nout> simd_bitcast(simd_cvt_t<Tout, Tin, N>, const simd
 template <typename Tout, typename Tin, size_t N, size_t Nout = (sizeof(Tin) * N / sizeof(Tout))
 #ifdef _MSC_VER
                                                      ,
-          KFR_ENABLE_IF(Nout > 1 && N > 1 && !is_same<Tout, Tin>)
+          KFR_ENABLE_IF(Nout > 1 && N > 1 && !std::is_same_v<Tout, Tin>)
 #else
                                                      ,
           KFR_ENABLE_IF(Nout > 1 && N > 1)
@@ -1220,7 +1220,8 @@ KFR_INTRINSIC const simd<T, N2>& simd_shuffle(simd2_t<T, N1, N2>, const simd<T, 
 
 // concat()
 template <typename T, size_t N,
-          KFR_ENABLE_IF(is_poweroftwo(N) && is_same<simd<T, N + N>, simd_halves<unwrap_bit<T>, N + N>>)>
+          KFR_ENABLE_IF(is_poweroftwo(N) &&
+                        std::is_same_v<simd<T, N + N>, simd_halves<unwrap_bit<T>, N + N>>)>
 KFR_INTRINSIC simd<T, N + N> simd_shuffle(simd2_t<T, N, N>, const simd<T, N>& x, const simd<T, N>& y,
                                           csizeseq_t<N + N>, overload_priority<8>) CMT_NOEXCEPT
 {
@@ -1241,7 +1242,7 @@ KFR_INTRINSIC simd<T, N> simd_broadcast(simd_t<T, N>, identity<T> value) CMT_NOE
 }
 
 template <typename T, size_t N,
-          KFR_ENABLE_IF(is_poweroftwo(N) && is_same<simd<T, N>, simd_halves<unwrap_bit<T>, N>>)>
+          KFR_ENABLE_IF(is_poweroftwo(N) && std::is_same_v<simd<T, N>, simd_halves<unwrap_bit<T>, N>>)>
 KFR_INTRINSIC simd<T, N / 2> simd_shuffle(simd_t<T, N>, const simd<T, N>& x, csizeseq_t<N / 2>,
                                           overload_priority<7>) CMT_NOEXCEPT
 {
@@ -1249,7 +1250,7 @@ KFR_INTRINSIC simd<T, N / 2> simd_shuffle(simd_t<T, N>, const simd<T, N>& x, csi
 }
 
 template <typename T, size_t N,
-          KFR_ENABLE_IF(is_poweroftwo(N) && is_same<simd<T, N>, simd_halves<unwrap_bit<T>, N>>)>
+          KFR_ENABLE_IF(is_poweroftwo(N) && std::is_same_v<simd<T, N>, simd_halves<unwrap_bit<T>, N>>)>
 KFR_INTRINSIC simd<T, N / 2> simd_shuffle(simd_t<T, N>, const simd<T, N>& x, csizeseq_t<N / 2, N / 2>,
                                           overload_priority<7>) CMT_NOEXCEPT
 {

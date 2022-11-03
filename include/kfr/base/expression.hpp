@@ -756,9 +756,9 @@ static auto process(Out&& out, In&& in, shape<outdims> start = shape<outdims>(0)
 }
 
 template <typename Fn, typename... Args>
-KFR_FUNCTION expression_function<decay<Fn>, Args...> bind_expression(Fn&& fn, Args&&... args)
+KFR_FUNCTION expression_function<std::decay_t<Fn>, Args...> bind_expression(Fn&& fn, Args&&... args)
 {
-    return expression_function<decay<Fn>, Args...>(std::forward<Fn>(fn), std::forward<Args>(args)...);
+    return expression_function<std::decay_t<Fn>, Args...>(std::forward<Fn>(fn), std::forward<Args>(args)...);
 }
 /**
  * @brief Construct a new expression using the same function as in @c e and new arguments

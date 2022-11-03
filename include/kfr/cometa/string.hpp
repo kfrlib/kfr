@@ -237,7 +237,7 @@ CMT_INLINE const std::string& build_fmt(const std::string& str, ctypes_t<>) { re
 template <typename Arg, typename... Args>
 CMT_INLINE auto build_fmt(const std::string& str, ctypes_t<Arg, Args...>)
 {
-    constexpr auto fmt = value_fmt(ctype_t<decay<Arg>>());
+    constexpr auto fmt = value_fmt(ctype_t<std::decay_t<Arg>>());
     return build_fmt(replace_one(str, "{}", std::string(fmt.data())), ctypes_t<Args...>());
 }
 } // namespace details
@@ -270,7 +270,7 @@ constexpr auto build_fmt_str(cchars_t<>, ctypes_t<>) { return make_cstring(""); 
 template <char... chars, typename Arg, typename... Args>
 constexpr auto build_fmt_str(cchars_t<'@', chars...>, ctypes_t<Arg, Args...>)
 {
-    return concat_cstring(details::value_fmt(ctype_t<decay<Arg>>()),
+    return concat_cstring(details::value_fmt(ctype_t<std::decay_t<Arg>>()),
                           build_fmt_str(cchars_t<chars...>(), ctypes_t<Args...>()));
 }
 
@@ -372,7 +372,7 @@ namespace details
 template <typename T>
 constexpr auto get_value_fmt()
 {
-    return details::value_fmt(ctype_t<decay<repr_type<T>>>());
+    return details::value_fmt(ctype_t<std::decay_t<repr_type<T>>>());
 }
 } // namespace details
 

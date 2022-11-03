@@ -515,7 +515,7 @@ struct fft_final_stage_impl : dft_stage<T>
         final_stage<inverse>(csize<size>, 1, cbool<splitin>, out, in, twiddle);
     }
 
-    template <bool inverse, typename U = T, KFR_ENABLE_IF(is_same<U, float>)>
+    template <bool inverse, typename U = T, KFR_ENABLE_IF(std::is_same_v<U, float>)>
     KFR_MEM_INTRINSIC void final_stage(csize_t<32>, size_t invN, cfalse_t, complex<T>* out, const complex<T>*,
                                        const complex<T>*& twiddle)
     {
@@ -523,7 +523,7 @@ struct fft_final_stage_impl : dft_stage<T>
                     cbool_t<prefetch>(), cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
     }
 
-    template <bool inverse, typename U = T, KFR_ENABLE_IF(is_same<U, float>)>
+    template <bool inverse, typename U = T, KFR_ENABLE_IF(std::is_same_v<U, float>)>
     KFR_MEM_INTRINSIC void final_stage(csize_t<16>, size_t invN, cfalse_t, complex<T>* out, const complex<T>*,
                                        const complex<T>*& twiddle)
     {

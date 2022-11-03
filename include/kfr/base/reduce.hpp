@@ -52,12 +52,12 @@ KFR_INTRINSIC T final_rootmean(T value, size_t size)
 }
 KFR_FN(final_rootmean)
 
-template <typename FinalFn, typename T, KFR_ENABLE_IF(is_callable<FinalFn, T, size_t>)>
+template <typename FinalFn, typename T, KFR_ENABLE_IF(std::is_invocable_v<FinalFn, T, size_t>)>
 KFR_INTRINSIC auto reduce_call_final(FinalFn&& finalfn, size_t size, T value)
 {
     return finalfn(value, size);
 }
-template <typename FinalFn, typename T, KFR_ENABLE_IF(!is_callable<FinalFn, T, size_t>)>
+template <typename FinalFn, typename T, KFR_ENABLE_IF(std::is_invocable_v<FinalFn, size_t>)>
 KFR_INTRINSIC auto reduce_call_final(FinalFn&& finalfn, size_t, T value)
 {
     return finalfn(value);
@@ -121,17 +121,17 @@ protected:
 
 template <typename ReduceFn, typename TransformFn = fn_generic::pass_through,
           typename FinalFn = fn_generic::pass_through, typename E1, typename Tin = expression_value_type<E1>,
-          typename Twork = decay<decltype(std::declval<TransformFn>()(std::declval<Tin>()))>,
-          typename Tout  = decay<decltype(reduce_call_final(std::declval<FinalFn>(), std::declval<size_t>(),
-                                                           std::declval<Twork>()))>,
+          typename Twork = std::decay_t<decltype(std::declval<TransformFn>()(std::declval<Tin>()))>,
+          typename Tout  = std::decay_t<decltype(reduce_call_final(
+              std::declval<FinalFn>(), std::declval<size_t>(), std::declval<Twork>()))>,
           KFR_ENABLE_IF(is_input_expression<E1>)>
 KFR_INTRINSIC Tout reduce(const E1& e1, ReduceFn&& reducefn,
                           TransformFn&& transformfn = fn_generic::pass_through(),
                           FinalFn&& finalfn         = fn_generic::pass_through())
 {
     static_assert(!is_infinite<E1>, "e1 must be a sized expression (use slice())");
-    using reducer_t = expression_reduce<Tout, expression_dims<E1>, Twork, Tin, decay<ReduceFn>,
-                                        decay<TransformFn>, decay<FinalFn>>;
+    using reducer_t = expression_reduce<Tout, expression_dims<E1>, Twork, Tin, std::decay_t<ReduceFn>,
+                                        std::decay_t<TransformFn>, std::decay_t<FinalFn>>;
     reducer_t red(std::forward<ReduceFn>(reducefn), std::forward<TransformFn>(transformfn),
                   std::forward<FinalFn>(finalfn));
     process(red, e1);
@@ -141,9 +141,9 @@ KFR_INTRINSIC Tout reduce(const E1& e1, ReduceFn&& reducefn,
 
 template <typename ReduceFn, typename TransformFn = fn_generic::pass_through,
           typename FinalFn = fn_generic::pass_through, typename E1, typename Tin = expression_value_type<E1>,
-          typename Twork = decay<decltype(std::declval<TransformFn>()(std::declval<Tin>()))>,
-          typename Tout  = decay<decltype(reduce_call_final(std::declval<FinalFn>(), std::declval<size_t>(),
-                                                           std::declval<Twork>()))>,
+          typename Twork = std::decay_t<decltype(std::declval<TransformFn>()(std::declval<Tin>()))>,
+          typename Tout  = std::decay_t<decltype(reduce_call_final(
+              std::declval<FinalFn>(), std::declval<size_t>(), std::declval<Twork>()))>,
           KFR_ENABLE_IF(!is_input_expression<E1>)>
 KFR_INTRINSIC Tout reduce(const E1& e1, ReduceFn&& reducefn,
                           TransformFn&& transformfn = fn_generic::pass_through(),

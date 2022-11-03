@@ -180,7 +180,7 @@ KFR_INTRINSIC vec<T, N> satadd(const vec<T, N>& a, const vec<T, N>& b)
 {
     return saturated_signed_add(a, b);
 }
-template <typename T, size_t N, KFR_ENABLE_IF(is_unsigned<T>)>
+template <typename T, size_t N, KFR_ENABLE_IF(std::is_unsigned_v<T>)>
 KFR_INTRINSIC vec<T, N> satadd(const vec<T, N>& a, const vec<T, N>& b)
 {
     return saturated_unsigned_add(a, b);
@@ -190,7 +190,7 @@ KFR_INTRINSIC vec<T, N> satsub(const vec<T, N>& a, const vec<T, N>& b)
 {
     return saturated_signed_sub(a, b);
 }
-template <typename T, size_t N, KFR_ENABLE_IF(is_unsigned<T>)>
+template <typename T, size_t N, KFR_ENABLE_IF(std::is_unsigned_v<T>)>
 KFR_INTRINSIC vec<T, N> satsub(const vec<T, N>& a, const vec<T, N>& b)
 {
     return saturated_unsigned_sub(a, b);
