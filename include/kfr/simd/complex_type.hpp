@@ -25,6 +25,7 @@
  */
 #pragma once
 
+#include "../cometa/string.hpp"
 #include "constants.hpp"
 
 #ifdef KFR_STD_COMPLEX
@@ -95,3 +96,27 @@ private:
 #endif
 
 } // namespace kfr
+
+namespace cometa
+{
+template <typename T>
+struct representation<kfr::complex<T>>
+{
+    using type = std::string;
+    static std::string get(const kfr::complex<T>& value)
+    {
+        return as_string(value.real()) + " + " + as_string(value.imag()) + "j";
+    }
+};
+
+template <char t, int width, int prec, typename T>
+struct representation<fmt_t<kfr::complex<T>, t, width, prec>>
+{
+    using type = std::string;
+    static std::string get(const fmt_t<kfr::complex<T>, t, width, prec>& value)
+    {
+        return as_string(fmt<t, width, prec>(value.value.real())) + " + " +
+               as_string(fmt<t, width, prec>(value.value.imag())) + "j";
+    }
+};
+} // namespace cometa

@@ -146,27 +146,6 @@ inline std::string array_to_string(const kfr::complex<T>* source, size_t N)
 }
 } // namespace details
 
-template <typename T>
-struct representation<kfr::complex<T>>
-{
-    using type = std::string;
-    static std::string get(const kfr::complex<T>& value)
-    {
-        return as_string(value.real()) + " + " + as_string(value.imag()) + "j";
-    }
-};
-
-template <char t, int width, int prec, typename T>
-struct representation<details::fmt_t<kfr::complex<T>, t, width, prec>>
-{
-    using type = std::string;
-    static std::string get(const details::fmt_t<kfr::complex<T>, t, width, prec>& value)
-    {
-        return as_string(fmt<t, width, prec>(value.value.real())) + " + " +
-               as_string(fmt<t, width, prec>(value.value.imag())) + "j";
-    }
-};
-
 template <>
 struct representation<kfr::cpu_t>
 {
@@ -174,56 +153,6 @@ struct representation<kfr::cpu_t>
     static std::string get(kfr::cpu_t value) { return kfr::cpu_name(value); }
 };
 
-template <typename T, size_t N>
-struct representation<kfr::vec<T, N>>
-{
-    using type = std::string;
-    static std::string get(const kfr::vec<T, N>& value)
-    {
-        return details::array_to_string(ptr_cast<T>(&value), value.size());
-    }
-};
-
-template <typename T, size_t N>
-struct representation<kfr::mask<T, N>>
-{
-    using type = std::string;
-    static std::string get(const kfr::mask<T, N>& value)
-    {
-        bool values[N];
-        for (size_t i = 0; i < N; i++)
-            values[i] = value[i];
-        return details::array_to_string(values, N);
-    }
-};
-
-template <typename T, kfr::univector_tag Tag>
-struct representation<kfr::univector<T, Tag>>
-{
-    using type = std::string;
-    static std::string get(const kfr::univector<T, Tag>& value)
-    {
-        return details::array_to_string(value.data(), value.size());
-    }
-};
-template <typename T, size_t Size>
-struct representation<std::array<T, Size>>
-{
-    using type = std::string;
-    static std::string get(const std::array<T, Size>& value)
-    {
-        return details::array_to_string(value.data(), value.size());
-    }
-};
-template <typename T, typename Allocator>
-struct representation<std::vector<T, Allocator>>
-{
-    using type = std::string;
-    static std::string get(const std::vector<T, Allocator>& value)
-    {
-        return details::array_to_string(value.data(), value.size());
-    }
-};
 } // namespace cometa
 
 namespace kfr

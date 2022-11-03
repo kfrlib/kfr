@@ -92,6 +92,22 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
         return this->front();
     }
 
+    template <typename TI>
+    static constexpr shape from_std_array(const std::array<TI, dims>& a)
+    {
+        shape result;
+        std::copy(a.begin(), a.end(), result.begin());
+        return result;
+    }
+
+    template <typename TI = index_t>
+    constexpr std::array<TI, dims> to_std_array() const
+    {
+        std::array<TI, dims> result;
+        std::copy(this->begin(), this->end(), result.begin());
+        return result;
+    }
+
     bool ge(const shape& other) const
     {
         if constexpr (dims == 1)
@@ -817,14 +833,7 @@ struct representation<kfr::shape<dims>>
         }
         else
         {
-            std::string s;
-            for (kfr::index_t i = 0; i < dims; ++i)
-            {
-                if (CMT_LIKELY(i > 0))
-                    s += ", ";
-                s += as_string(value[i]);
-            }
-            return "shape{" + s + "}";
+            return "shape" + array_to_string(dims, value.data());
         }
     }
 };

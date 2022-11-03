@@ -10,8 +10,11 @@
 #include <array>
 #include <cstdio>
 #include <memory>
+#include <numeric>
 #include <string>
+#include <string_view>
 #include <utility>
+#include <vector>
 
 CMT_PRAGMA_GNU(GCC diagnostic push)
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpragmas")
@@ -24,11 +27,7 @@ namespace cometa
 {
 
 template <typename T>
-struct representation
-{
-    using type = T;
-    static constexpr const T& get(const T& value) CMT_NOEXCEPT { return value; }
-};
+struct representation;
 
 template <typename T>
 using repr_type = typename representation<T>::type;
@@ -36,13 +35,14 @@ using repr_type = typename representation<T>::type;
 template <typename... Args>
 CMT_INLINE std::string as_string(const Args&... args);
 
-namespace details
-{
 template <typename T, char t = static_cast<char>(-1), int width = -1, int prec = -1>
 struct fmt_t
 {
     const T& value;
 };
+
+namespace details
+{
 
 template <int number, CMT_ENABLE_IF(number >= 0 && number < 10)>
 constexpr cstring<2> itoa()
@@ -242,16 +242,21 @@ CMT_INLINE auto build_fmt(const std::string& str, ctypes_t<Arg, Args...>)
 }
 } // namespace details
 
-using details::fmt_t;
+template <typename T>
+struct representation
+{
+    using type = T;
+    static constexpr auto get(const T& value) CMT_NOEXCEPT { return details::pack_value(value); }
+};
 
 template <char t, int width = -1, int prec = -1, typename T>
-CMT_INLINE details::fmt_t<T, t, width, prec> fmt(const T& value)
+CMT_INLINE fmt_t<T, t, width, prec> fmt(const T& value)
 {
     return { value };
 }
 
 template <int width = -1, int prec = -1, typename T>
-CMT_INLINE details::fmt_t<T, static_cast<char>(-1), width, prec> fmtwidth(const T& value)
+CMT_INLINE fmt_t<T, static_cast<char>(-1), width, prec> fmtwidth(const T& value)
 {
     return { value };
 }
@@ -527,6 +532,154 @@ struct representation<std::shared_ptr<void>>
             return as_string(type_name<std::shared_ptr<void>>(), "(nullptr)");
     }
 };
+
+namespace details
+{
+
+template <size_t dims>
+CMT_ALWAYS_INLINE size_t trailing_zeros(const std::array<size_t, dims>& indices)
+{
+    for (size_t i = 0; i < dims; ++i)
+    {
+        if (indices[dims - 1 - i] != 0)
+            return i;
+    }
+    return dims;
+}
+
+template <size_t dims>
+CMT_ALWAYS_INLINE bool increment_indices(std::array<size_t, dims>& indices,
+                                         const std::array<size_t, dims>& stop)
+{
+    indices[dims - 1] += 1;
+    CMT_LOOP_UNROLL
+    for (int i = dims - 1; i >= 0;)
+    {
+        if (CMT_LIKELY(indices[i] < stop[i]))
+            return true;
+        // carry
+        indices[i] = 0;
+        --i;
+        if (i < 0)
+        {
+            return false;
+        }
+        indices[i] += 1;
+    }
+    return true;
+}
+} // namespace details
+
+template <typename U, typename Fmt>
+CMT_ALWAYS_INLINE Fmt wrap_fmt(const U& val, ctype_t<Fmt>)
+{
+    return Fmt{ val };
+}
+template <typename U>
+CMT_ALWAYS_INLINE U wrap_fmt(const U& val, ctype_t<void>)
+{
+    return val;
+}
+
+template <typename Fmt = void, size_t Dims, typename Getter>
+std::string array_to_string(const std::array<size_t, Dims>& shape, Getter&& getter, int max_columns = 16,
+                            int max_dimensions = INT_MAX, std::string_view separator = ", ",
+                            std::string_view open = "{", std::string_view close = "}")
+{
+    using shape_type = std::array<size_t, Dims>;
+    using index_t    = size_t;
+
+    if (max_columns == 0)
+        max_columns = INT_MAX;
+    std::string ss;
+    for (index_t i = 0; i < Dims; ++i)
+        ss += open;
+
+    bool isempty = std::accumulate(shape.begin(), shape.end(), size_t(1), std::multiplies<size_t>{}) == 0;
+    if (!isempty)
+    {
+        shape_type index{ 0 };
+        std::string open_filler(open.size(), ' ');
+        std::string_view separator_trimmed = separator.substr(0, 1 + separator.find_last_not_of(" \t"));
+        int columns                        = 0;
+        do
+        {
+            std::string str = as_string(wrap_fmt(getter(index), ctype<Fmt>));
+            index_t z       = details::trailing_zeros(index);
+            if ((z > 0 && columns > 0) || columns >= max_columns)
+            {
+                for (index_t i = 0; i < z; ++i)
+                    ss += close;
+
+                if (z > max_dimensions || columns >= max_columns)
+                {
+                    if (columns > 0)
+                        ss += separator_trimmed;
+                    ss += "\n";
+                    for (index_t i = 0; i < Dims - z; ++i)
+                        ss += open_filler;
+                }
+                else
+                {
+                    if (columns > 0)
+                        ss += separator;
+                }
+                for (index_t i = 0; i < z; ++i)
+                    ss += open;
+
+                columns = 0;
+            }
+            else
+            {
+                if (columns > 0)
+                    ss += separator;
+            }
+            ss += str;
+            ++columns;
+        } while (details::increment_indices<Dims>(index, shape));
+    }
+    for (index_t i = 0; i < Dims; ++i)
+        ss += close;
+    return ss;
+}
+
+template <typename Fmt = void, typename Getter>
+std::string array_to_string(size_t size, Getter&& getter, int max_columns = 16, int max_dimensions = INT_MAX,
+                            std::string_view separator = ", ", std::string_view open = "{",
+                            std::string_view close = "}")
+{
+    return array_to_string(std::array<size_t, 1>{ size }, std::forward<Getter>(getter), max_columns,
+                           max_dimensions, std::move(separator), std::move(open), std::move(close));
+}
+template <typename Fmt = void, typename T>
+std::string array_to_string(size_t size, T* data, int max_columns = 16, int max_dimensions = INT_MAX,
+                            std::string_view separator = ", ", std::string_view open = "{",
+                            std::string_view close = "}")
+{
+    return array_to_string(
+        std::array<size_t, 1>{ size }, [data](std::array<size_t, 1> i) { return data[i.front()]; },
+        max_columns, max_dimensions, std::move(separator), std::move(open), std::move(close));
+}
+
+template <typename T, size_t Size>
+struct representation<std::array<T, Size>>
+{
+    using type = std::string;
+    static std::string get(const std::array<T, Size>& value)
+    {
+        return array_to_string(value.size(), value.data());
+    }
+};
+template <typename T, typename Allocator>
+struct representation<std::vector<T, Allocator>>
+{
+    using type = std::string;
+    static std::string get(const std::vector<T, Allocator>& value)
+    {
+        return array_to_string(value.size(), value.data());
+    }
+};
+
 } // namespace cometa
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)

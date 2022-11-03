@@ -393,6 +393,15 @@ static std::string nl = R"(
 
 TEST(tensor_tostring)
 {
+    CHECK(as_string(shape{}) == "shape{}");
+    CHECK(as_string(shape{ 1, 2, 3 }) == "shape{1, 2, 3}");
+
+    tensor<f32x2, 1> t0(shape{ 3 });
+    t0(0) = vec{ 1, 2 };
+    t0(1) = vec{ 3, 4 };
+    t0(2) = vec{ -1, 1000 };
+    CHECK(t0.to_string<fmt_t<f32x2, 'f', 0, 2>>() == "{{1, 2}, {3, 4}, {-1, 1000}}");
+
     tensor<float, 1> t1(shape{ 60 });
     t1 = debug_counter<float, 1>();
     CHECK(nl + t1.to_string<fmt_t<float, 'f', 2, 0>>(12, 0) + nl == R"(

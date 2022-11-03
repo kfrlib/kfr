@@ -25,6 +25,7 @@
  */
 #pragma once
 
+#include "../cometa/string.hpp"
 #include "../version.hpp"
 #include "constants.hpp"
 #include "impl/backend.hpp"
@@ -1511,11 +1512,47 @@ struct compound_type_traits<kfr::vec<T, N>>
 namespace details
 {
 template <typename T, size_t N>
-struct flt_type_impl<kfr::vec<T, N>>
+struct flt_type_impl<kfr::CMT_ARCH_NAME::vec<T, N>>
 {
-    using type = kfr::vec<typename flt_type_impl<T>::type, N>;
+    using type = kfr::CMT_ARCH_NAME::vec<typename flt_type_impl<T>::type, N>;
 };
 } // namespace details
+
+template <typename T, size_t N>
+struct representation<kfr::CMT_ARCH_NAME::vec<T, N>>
+{
+    using type = std::string;
+    static std::string get(const kfr::CMT_ARCH_NAME::vec<T, N>& value)
+    {
+        kfr::portable_vec<T, N> p = value;
+        return array_to_string(N, ptr_cast<T>(&p.front()));
+    }
+};
+
+template <char t, int width, int prec, typename T, size_t N>
+struct representation<fmt_t<kfr::CMT_ARCH_NAME::vec<T, N>, t, width, prec>>
+{
+    using type = std::string;
+    static std::string get(const fmt_t<kfr::CMT_ARCH_NAME::vec<T, N>, t, width, prec>& value)
+    {
+        kfr::portable_vec<T, N> p = value.value;
+        return array_to_string<fmt_t<T, t, width, prec>>(N, ptr_cast<T>(&p.front()));
+    }
+};
+
+template <typename T, size_t N>
+struct representation<kfr::CMT_ARCH_NAME::mask<T, N>>
+{
+    using type = std::string;
+    static std::string get(const kfr::CMT_ARCH_NAME::mask<T, N>& value)
+    {
+        bool values[N];
+        for (size_t i = 0; i < N; i++)
+            values[i] = value[i];
+        return array_to_string(N, values);
+    }
+};
+
 } // namespace cometa
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)

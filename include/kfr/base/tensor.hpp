@@ -798,72 +798,25 @@ public:
 
     KFR_MEM_INTRINSIC bool is_last_contiguous() const { return m_strides.back() == 1; }
 
-    template <typename U, typename Fmt>
-    static Fmt wrap_fmt(const U& val, ctype_t<Fmt>)
-    {
-        return Fmt{ val };
-    }
-    template <typename U>
-    static U wrap_fmt(const U& val, ctype_t<void>)
-    {
-        return val;
-    }
-
     template <typename Fmt = void>
     std::string to_string(int max_columns = 16, int max_dimensions = INT_MAX, std::string separator = ", ",
                           std::string open = "{", std::string close = "}") const
     {
-        if (max_columns == 0)
-            max_columns = INT_MAX;
-        std::stringstream ss;
-        for (index_t i = 0; i < dims; ++i)
-            ss << open;
-
-        if (!empty())
+        if constexpr (dims == 0)
         {
-            shape_type index{ 0 };
-            std::string open_filler(open.size(), ' ');
-            std::string separator_trimmed = separator.substr(0, 1 + separator.find_last_not_of(" \t"));
-            int columns                   = 0;
-            do
-            {
-                std::string str = as_string(wrap_fmt(access(index), ctype<Fmt>));
-                index_t z       = index.trailing_zeros();
-                if ((z > 0 && columns > 0) || columns >= max_columns)
-                {
-                    for (index_t i = 0; i < z; ++i)
-                        ss << close;
-
-                    if (z > max_dimensions || columns >= max_columns)
-                    {
-                        if (columns > 0)
-                            ss << separator_trimmed;
-                        ss << std::endl;
-                        for (index_t i = 0; i < dims - z; ++i)
-                            ss << open_filler;
-                    }
-                    else
-                    {
-                        if (columns > 0)
-                            ss << separator;
-                    }
-                    for (index_t i = 0; i < z; ++i)
-                        ss << open;
-
-                    columns = 0;
-                }
-                else
-                {
-                    if (columns > 0)
-                        ss << separator;
-                }
-                ss << str;
-                ++columns;
-            } while (internal_generic::increment_indices<dims>(index, shape_type{ 0 }, m_shape));
+            if (empty())
+                return {};
+            else
+                return as_string(wrap_fmt(access(shape_type{}), ctype<Fmt>));
         }
-        for (index_t i = 0; i < dims; ++i)
-            ss << close;
-        return ss.str();
+        else
+        {
+            return cometa::array_to_string<Fmt>(
+                m_shape.template to_std_array<size_t>(),
+                [this](std::array<size_t, dims> index) CMT_INLINE_LAMBDA
+                { return access(shape_type::from_std_array(index)); },
+                max_columns, max_dimensions, std::move(separator), std::move(open), std::move(close));
+        }
     }
 
 private:

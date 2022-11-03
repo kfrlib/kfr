@@ -658,4 +658,28 @@ KFR_INTRINSIC univector<T, Size> render(Expr&& expr, csize_t<Size>)
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
 
+namespace cometa
+{
+template <typename T, kfr::univector_tag Tag>
+struct representation<kfr::univector<T, Tag>>
+{
+    using type = std::string;
+    static std::string get(const kfr::univector<T, Tag>& value)
+    {
+        return array_to_string(value.size(), value.data());
+    }
+};
+
+template <char t, int width, int prec, typename T, kfr::univector_tag Tag>
+struct representation<fmt_t<kfr::univector<T, Tag>, t, width, prec>>
+{
+    using type = std::string;
+    static std::string get(const fmt_t<kfr::univector<T, Tag>, t, width, prec>& value)
+    {
+        return array_to_string<fmt_t<T, t, width, prec>>(value.size(), value.data());
+    }
+};
+
+} // namespace cometa
+
 CMT_PRAGMA_MSVC(warning(pop))
