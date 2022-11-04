@@ -286,10 +286,9 @@ struct expression_with_arguments
         }
         else
         {
-            constexpr shape<Traits::dims> sh = Traits::shapeof();
-            if constexpr (sh.cproduct() > 0)
+            if constexpr (Traits::shapeof().cproduct() > 0)
             {
-                return sh.tomask();
+                return Traits::shapeof().tomask();
             }
             else
             {
@@ -391,8 +390,11 @@ template <typename... Args>
 expression_with_arguments(Args&&... args) -> expression_with_arguments<Args...>;
 
 template <typename Arg>
-struct expression_with_traits : expression_with_arguments<Arg>, expression_traits_defaults
+struct expression_with_traits : expression_with_arguments<Arg>
 {
+    constexpr static inline bool explicit_operand = true;
+    constexpr static inline bool random_access    = true;
+
     using first_arg_traits       = expression_traits<Arg>;
     using value_type             = typename first_arg_traits::value_type;
     constexpr static size_t dims = first_arg_traits::dims;
@@ -413,6 +415,31 @@ struct expression_function : expression_with_arguments<Args...>, expression_trai
                                       vec<typename expression_traits<Args>::value_type, 1>...>::value_type;
     constexpr static size_t dims = const_max(expression_traits<Args>::dims...);
 
+#ifdef CMT_COMPILER_IS_MSVC
+    struct lambda_get_shape
+    {
+        template <size_t... idx>
+        constexpr auto operator()(csize_t<idx>...) const
+        {
+            return internal_generic::common_shape(
+                expression_traits<typename expression_function::template nth<idx>>::shapeof()...);
+        }
+    };
+    struct lambda_get_shape_self
+    {
+        const expression_function& self;
+        template <typename... Args>
+        constexpr auto operator()(const Args&... args) const
+        {
+            return internal_generic::common_shape<true>(expression_traits<Args>::shapeof(args)...);
+        }
+    };
+    constexpr static shape<dims> shapeof(const expression_function& self)
+    {
+        return self.fold(lambda_get_shape_self{ self });
+    }
+    constexpr static shape<dims> shapeof() { return expression_function::fold_idx(lambda_get_shape{}); }
+#else
     constexpr static shape<dims> shapeof(const expression_function& self)
     {
         return self.fold([&](auto&&... args) CMT_INLINE_LAMBDA constexpr->auto {
@@ -427,6 +454,7 @@ struct expression_function : expression_with_arguments<Args...>, expression_trai
                     typename expression_function::template nth<val_of(decltype(args)())>>::shapeof()...);
         });
     }
+#endif
 
     constexpr static inline bool random_access = (expression_traits<Args>::random_access && ...);
 

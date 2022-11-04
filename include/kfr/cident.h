@@ -393,7 +393,7 @@ extern char* gets(char* __s);
 #endif
 
 #define CMT_NODEBUG
-#define CMT_INLINE /*inline*/ CMT_ALWAYS_INLINE
+#define CMT_INLINE inline CMT_ALWAYS_INLINE
 #define CMT_INLINE_MEMBER CMT_ALWAYS_INLINE
 #if _MSC_VER >= 1927
 #define CMT_INLINE_LAMBDA CMT_ALWAYS_INLINE

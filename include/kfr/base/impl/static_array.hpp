@@ -58,10 +58,7 @@ struct static_array_base<T, csizes_t<indices...>>
     constexpr static_array_base(const static_array_base&) = default;
     constexpr static_array_base(static_array_base&&)      = default;
 
-    KFR_MEM_INTRINSIC constexpr static_array_base(type_for<value_type, indices>... args)
-    {
-        (static_cast<void>(array[indices] = args), ...);
-    }
+    KFR_MEM_INTRINSIC constexpr static_array_base(type_for<value_type, indices>... args) : array{ args... } {}
 
     template <typename U, typename otherindices_t>
     friend struct static_array_base;
@@ -69,13 +66,10 @@ struct static_array_base<T, csizes_t<indices...>>
     template <size_t... idx1, size_t... idx2>
     KFR_MEM_INTRINSIC constexpr static_array_base(const static_array_base<T, csizes_t<idx1...>>& first,
                                                   const static_array_base<T, csizes_t<idx2...>>& second)
+        : array{ (indices >= sizeof...(idx1) ? second.array[indices - sizeof...(idx1)]
+                                             : first.array[indices])... }
     {
-        constexpr size_t size1 = sizeof...(idx1);
-        constexpr size_t size2 = sizeof...(idx2);
-        static_assert(size1 + size2 == static_size);
-        (static_cast<void>(array[indices] =
-                               indices >= size1 ? second.array[indices - size1] : first.array[indices]),
-         ...);
+        static_assert(sizeof...(idx1) + sizeof...(idx2) == static_size);
     }
 
     template <size_t... idx>
@@ -95,8 +89,8 @@ struct static_array_base<T, csizes_t<indices...>>
 
     template <int dummy = 0, CMT_ENABLE_IF(dummy == 0 && static_size > 1)>
     KFR_MEM_INTRINSIC constexpr explicit static_array_base(value_type value)
+        : array{ (static_cast<void>(indices), value)... }
     {
-        (static_cast<void>(array[indices] = value), ...);
     }
 
     KFR_MEM_INTRINSIC vec<T, static_size> operator*() const { return read<static_size>(data()); }

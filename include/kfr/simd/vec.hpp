@@ -1267,7 +1267,6 @@ template <int Cat, typename Fn, typename RefFn, typename IsApplicable = fn_retur
 void test_function2(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isapplicable = IsApplicable{},
                     IsDefined&& = IsDefined{})
 {
-    constexpr IsDefined isdefined{};
 
     testo::matrix(
         named("value1") = special_values(), //
@@ -1275,7 +1274,7 @@ void test_function2(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
         [&](special_value value1, special_value value2, auto type)
         {
             using T = typename decltype(type)::type;
-            if constexpr (isdefined(ctype<T>))
+            if constexpr (IsDefined{}(ctype<T>))
             {
                 const T x1(value1);
                 const T x2(value2);
@@ -1295,7 +1294,7 @@ void test_function2(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
                       using T    = typename decltype(type)::type;
                       const T x1 = test_enumerate(T::shape(), csizeseq<T::size()>, 0, 1);
                       const T x2 = test_enumerate(T::shape(), csizeseq<T::size()>, 100, -1);
-                      if constexpr (isdefined(ctype<T>))
+                      if constexpr (IsDefined{}(ctype<T>))
                       {
                           CHECK(fn(x1, x2) == apply(reffn, x1, x2));
                       }

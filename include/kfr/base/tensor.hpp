@@ -83,7 +83,7 @@ public:
 
     constexpr static inline index_t dims = NDims;
 
-    using shape_type = shape<dims>;
+    using shape_type = kfr::shape<dims>;
 
     struct tensor_iterator
     {
@@ -101,9 +101,9 @@ public:
         KFR_MEM_INTRINSIC bool is_end() const { return indices.front() == internal_generic::null_index; }
 
         template <size_t num>
-        KFR_MEM_INTRINSIC shape<num> advance()
+        KFR_MEM_INTRINSIC kfr::shape<num> advance()
         {
-            shape<num> result;
+            kfr::shape<num> result;
             for (size_t i = 0; i < num; ++i)
             {
                 result[i] = src->calc_index(indices);
@@ -450,7 +450,7 @@ public:
     using tensor_subscript<T, tensor<T, NDims>, std::make_index_sequence<NDims>>::operator();
 
     template <index_t dims>
-    KFR_MEM_INTRINSIC tensor<T, dims> reshape_may_copy(const shape<dims>& new_shape,
+    KFR_MEM_INTRINSIC tensor<T, dims> reshape_may_copy(const kfr::shape<dims>& new_shape,
                                                        bool allow_copy = false) const
     {
         if (size_of_shape(new_shape) != m_size)
@@ -485,12 +485,12 @@ public:
     }
 
     template <index_t dims>
-    KFR_MEM_INTRINSIC tensor<T, dims> reshape(const shape<dims>& new_shape) const
+    KFR_MEM_INTRINSIC tensor<T, dims> reshape(const kfr::shape<dims>& new_shape) const
     {
         return reshape_may_copy(new_shape, false);
     }
 
-    KFR_MEM_INTRINSIC tensor<T, 1> flatten() const { return reshape(shape<1>{ m_size }, false); }
+    KFR_MEM_INTRINSIC tensor<T, 1> flatten() const { return reshape(kfr::shape<1>{ m_size }, false); }
 
     KFR_MEM_INTRINSIC tensor<T, 1> flatten_may_copy(bool allow_copy = false) const
     {
@@ -754,7 +754,7 @@ public:
     // }
 
     template <size_t N, bool only_last = false>
-    KFR_MEM_INTRINSIC shape<N> offsets(shape<dims> indices) const
+    KFR_MEM_INTRINSIC kfr::shape<N> offsets(kfr::shape<dims> indices) const
     {
         kfr::shape<N> result;
         if constexpr (only_last)
@@ -774,7 +774,7 @@ public:
     }
 
     template <size_t N, bool only_last = false>
-    KFR_MEM_INTRINSIC shape<N> offsets(size_t flat_index) const
+    KFR_MEM_INTRINSIC kfr::shape<N> offsets(size_t flat_index) const
     {
         kfr::shape<dims> indices;
         for (index_t i = 0; i < dims; ++i)
