@@ -34,7 +34,7 @@ inline namespace CMT_ARCH_NAME
 
 /// @brief Returns the first argument clamped to a range [lo, hi]
 template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>),
-          typename Tout = common_type<T1, T2, T3>>
+          typename Tout = std::common_type_t<T1, T2, T3>>
 KFR_INTRINSIC Tout clamp(const T1& x, const T2& lo, const T3& hi)
 {
     return intrinsics::clamp(static_cast<Tout>(x), static_cast<Tout>(lo), static_cast<Tout>(hi));
@@ -42,7 +42,7 @@ KFR_INTRINSIC Tout clamp(const T1& x, const T2& lo, const T3& hi)
 
 /// @brief Returns the first argument clamped to a range [0, hi]
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>),
-          typename Tout = common_type<T1, T2>>
+          typename Tout = std::common_type_t<T1, T2>>
 KFR_INTRINSIC Tout clamp(const T1& x, const T2& hi)
 {
     return intrinsics::clamp(static_cast<Tout>(x), static_cast<Tout>(hi));

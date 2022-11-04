@@ -94,7 +94,7 @@ struct simd_small_array
     constexpr static size_t size = N;
     using packed_type            = U;
 
-#ifdef _MSC_VER
+#ifdef CMT_COMPILER_IS_MSVC
     KFR_INTRINSIC constexpr simd_small_array() CMT_NOEXCEPT = default;
 #else
     KFR_INTRINSIC simd_small_array() CMT_NOEXCEPT {}
@@ -120,13 +120,13 @@ struct simd_small_array<f32, 2, f64>
     constexpr static size_t size = 2;
     using packed_type            = f64;
 
-#ifdef _MSC_VER
+#ifdef CMT_COMPILER_IS_MSVC
     KFR_MEM_INTRINSIC constexpr simd_small_array() CMT_NOEXCEPT = default;
 #else
     KFR_MEM_INTRINSIC simd_small_array() CMT_NOEXCEPT {}
 #endif
 
-#ifdef _MSC_VER
+#ifdef CMT_COMPILER_IS_MSVC
     // MSVC Internal Compiler Error workaround
     KFR_MEM_INTRINSIC constexpr simd_small_array(const simd_small_array& v) CMT_NOEXCEPT : whole(v.whole) {}
     KFR_MEM_INTRINSIC constexpr simd_small_array(simd_small_array&& v) CMT_NOEXCEPT : whole(v.whole) {}
@@ -146,7 +146,7 @@ struct simd_small_array<f32, 2, f64>
 
     KFR_MEM_INTRINSIC simd_small_array(f32 x, f32 y) CMT_NOEXCEPT
     {
-#ifdef _MSC_VER
+#ifdef CMT_COMPILER_IS_MSVC
 #ifdef CMT_ARCH_SSE2
         // whole = _mm_cvtsd_f64(_mm_castps_pd(_mm_setr_ps(x, y, x, y)));
         whole = _mm_cvtsd_f64(_mm_castps_pd(_mm_unpacklo_ps(_mm_set_ss(x), _mm_set_ss(y))));
@@ -289,7 +289,7 @@ KFR_SIMD_TYPE(f64, 2, float64x2_t);
 #endif // CMT_ARCH_NEON64
 #endif // CMT_ARCH_NEON
 
-#if defined CMT_COMPILER_MSVC
+#if defined CMT_COMPILER_IS_MSVC
 #define KFR_i8sse_INDEX(x, i) x.m128i_i8[i]
 #define KFR_i16sse_INDEX(x, i) x.m128i_i16[i]
 #define KFR_i32sse_INDEX(x, i) x.m128i_i32[i]
@@ -459,7 +459,7 @@ KFR_INTRIN_SHUFFLE_CONCAT(f32, 2, _mm_setr_ps(x.low, x.high, y.low, y.high))
 KFR_INTRIN_SHUFFLE_SWAP(f32, 2, simd<f32, 2>(x.high, x.low))
 #endif
 
-#if defined CMT_COMPILER_MSVC && !defined CMT_COMPILER_CLANG && defined CMT_ARCH_X32
+#if defined CMT_COMPILER_IS_MSVC && defined CMT_ARCH_X32
 KFR_INTRINSIC __m128i _mm_cvtsi64_si128(int64_t u)
 {
     __m128i r      = _mm_setzero_si128();
@@ -1058,7 +1058,7 @@ KFR_INTRINSIC simd_array<T, N> to_simd_array(const simd<T, N>& x) CMT_NOEXCEPT
     return bitcast_anything<simd_array<T, N>>(x);
 }
 
-#if defined CMT_COMPILER_MSVC
+#if defined CMT_COMPILER_IS_MSVC
 
 template <typename T, size_t N, KFR_ENABLE_IF(!is_simd_small_array<simd<T, N>>)>
 KFR_INTRINSIC simd<T, N> from_simd_array(const simd_array<T, N>& x) CMT_NOEXCEPT
@@ -1110,7 +1110,7 @@ template <typename T, size_t... indices, typename... Args, size_t N>
 KFR_INTRINSIC simd<T, N> simd_make_helper(csizes_t<indices...>, const Args&... args) CMT_NOEXCEPT
 {
     const T temp[] = { static_cast<T>(args)... };
-    return simd_make(ctype<T>, temp[indices]...);
+    return simd_make(cometa::ctype<T>, temp[indices]...);
 }
 
 /// @brief Returns vector with undefined value
@@ -1142,7 +1142,7 @@ KFR_INTRINSIC simd<Tout, N> simd_allones() CMT_NOEXCEPT
 
 /// @brief Converts input vector to vector with subtype Tout
 template <typename Tout, typename Tin, size_t N, size_t Nout = (sizeof(Tin) * N / sizeof(Tout))
-#ifdef _MSC_VER
+#ifdef CMT_COMPILER_IS_MSVC
                                                      ,
           KFR_ENABLE_IF((Nout == 1 || N == 1) && !std::is_same_v<Tout, Tin>)
 #else
@@ -1158,7 +1158,7 @@ KFR_INTRINSIC simd<Tout, Nout> simd_bitcast(simd_cvt_t<Tout, Tin, N>, const simd
 
 /// @brief Converts input vector to vector with subtype Tout
 template <typename Tout, typename Tin, size_t N, size_t Nout = (sizeof(Tin) * N / sizeof(Tout))
-#ifdef _MSC_VER
+#ifdef CMT_COMPILER_IS_MSVC
                                                      ,
           KFR_ENABLE_IF(Nout > 1 && N > 1 && !std::is_same_v<Tout, Tin>)
 #else
@@ -1296,7 +1296,7 @@ KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd_t<T, N>, const simd<T, N>& x, csiz
                                          overload_generic) CMT_NOEXCEPT
 {
     not_optimized(CMT_FUNC_SIGNATURE);
-#ifdef CMT_COMPILER_MSVC
+#ifdef CMT_COMPILER_IS_MSVC
     const simd_array<T, N> xx                 = to_simd_array<T, N>(x);
     constexpr static unsigned indices_array[] = { static_cast<unsigned>(indices)... };
     return from_simd_array<T, Nout>(simd_shuffle_generic<T, Nout, N>(xx, indices_array));
@@ -1312,7 +1312,7 @@ KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd2_t<T, N, N>, const simd<T, N>& x, 
 {
     static_assert(N == N2, "");
     not_optimized(CMT_FUNC_SIGNATURE);
-#ifdef CMT_COMPILER_MSVC
+#ifdef CMT_COMPILER_IS_MSVC
     const simd_array<T, N> xx                 = to_simd_array<T, N>(x);
     const simd_array<T, N> yy                 = to_simd_array<T, N>(y);
     constexpr static unsigned indices_array[] = { static_cast<unsigned>(indices)... };
@@ -1332,7 +1332,7 @@ KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd2_t<T, N1, N2>, const simd<T, N1>& 
 {
     not_optimized(CMT_FUNC_SIGNATURE);
 
-#ifdef CMT_COMPILER_MSVC
+#ifdef CMT_COMPILER_IS_MSVC
     const simd_array<T, N1> xx                = to_simd_array<T, N1>(x);
     const simd_array<T, N2> yy                = to_simd_array<T, N2>(y);
     constexpr static unsigned indices_array[] = { static_cast<unsigned>(indices)... };
@@ -1388,7 +1388,7 @@ KFR_INTRINSIC simd<Tout, N> simd_convert__(const simd<Tin, N>& x, csizes_t<indic
 template <typename Tout, typename Tin, KFR_ENABLE_IF(!std::is_same<Tout, Tin>::value)>
 KFR_INTRINSIC simd<Tout, 1> simd_convert(simd_cvt_t<Tout, Tin, 1>, const simd<Tin, 1>& x) CMT_NOEXCEPT
 {
-    return simd_make(ctype<Tout>, static_cast<Tout>(x));
+    return simd_make(cometa::ctype<Tout>, static_cast<Tout>(x));
 }
 
 /// @brief Converts input vector to vector with subtype Tout
@@ -1452,7 +1452,7 @@ KFR_INTRINSIC simd<T, N> simd_set_element(const simd<T, N>& value, size_t index,
 template <typename T, size_t Nout, size_t Nin>
 KFR_INTRINSIC simd<T, Nout> simd_from_partial(simd2_t<T, Nout, Nin>, const simd<T, Nin>& x)
 {
-#ifdef _MSC_VER
+#ifdef CMT_COMPILER_IS_MSVC
     union
     {
         simd<T, Nin> in;

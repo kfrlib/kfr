@@ -186,7 +186,7 @@ void convolve_filter<T>::process_buffer(T* output, const T* input, size_t size)
 
         // z_k = y_k + overlap
         process(make_univector(output + processed, processing),
-                scratch2.slice(input_position) + overlap.slice(input_position));
+                scratch2.slice(input_position, processing) + overlap.slice(input_position, processing));
 
         input_position += processing;
         processed += processing;

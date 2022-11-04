@@ -219,7 +219,7 @@ TEST(static_tests)
     testo::assert_is_same<ftype<vec<complex<i32>, 4>>, vec<complex<f32>, 4>>();
     testo::assert_is_same<ftype<vec<complex<i64>, 8>>, vec<complex<f64>, 8>>();
 
-    testo::assert_is_same<kfr::common_type<complex<int>, double>, complex<double>>();
+    testo::assert_is_same<std::common_type_t<complex<int>, double>, complex<double>>();
 }
 } // namespace CMT_ARCH_NAME
 

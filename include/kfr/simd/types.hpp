@@ -57,79 +57,18 @@ using namespace cometa;
 using cometa::fbase;
 using cometa::fmax;
 
-// primary template (used for zero types)
 template <typename... T>
-struct common_type_impl
+using decay_common = std::decay_t<std::common_type_t<T...>>;
+
+template <typename CT, template <typename T> typename Tpl, typename = void>
+struct construct_common_type
 {
 };
-
-template <typename... T>
-using decay_common = std::decay_t<common_type_impl<T...>>;
-
-template <typename T1, typename T2, template <typename TT> class result_type, typename = void>
-struct common_type_from_subtypes
+template <typename CT, template <typename T> typename Tpl>
+struct construct_common_type<CT, Tpl, std::void_t<typename CT::type>>
 {
+    using type = Tpl<typename CT::type>;
 };
-
-template <typename T1, typename T2, template <typename TT> class result_type>
-struct common_type_from_subtypes<T1, T2, result_type, std::void_t<typename common_type_impl<T1, T2>::type>>
-{
-    using type = result_type<typename common_type_impl<T1, T2>::type>;
-};
-
-template <typename T>
-struct common_type_impl<T>
-{
-    using type = std::decay_t<T>;
-};
-
-template <typename T1, typename T2>
-using common_for_two = decltype(false ? std::declval<T1>() : std::declval<T2>());
-
-template <typename T1, typename T2, typename = void>
-struct common_type_2_default
-{
-};
-
-template <typename T1, typename T2>
-struct common_type_2_default<T1, T2, std::void_t<common_for_two<T1, T2>>>
-{
-    using type = std::decay_t<common_for_two<T1, T2>>;
-};
-
-template <typename T1, typename T2, typename D1 = std::decay_t<T1>, typename D2 = std::decay_t<T2>>
-struct common_type_2_impl : common_type_impl<D1, D2>
-{
-};
-
-template <typename D1, typename D2>
-struct common_type_2_impl<D1, D2, D1, D2> : common_type_2_default<D1, D2>
-{
-};
-
-template <typename T1, typename T2>
-struct common_type_impl<T1, T2> : common_type_2_impl<T1, T2>
-{
-};
-
-template <typename AlwaysVoid, typename T1, typename T2, typename... R>
-struct common_type_multi_impl
-{
-};
-
-template <typename T1, typename T2, typename... R>
-struct common_type_multi_impl<std::void_t<typename common_type_impl<T1, T2>::type>, T1, T2, R...>
-    : common_type_impl<typename common_type_impl<T1, T2>::type, R...>
-{
-};
-
-template <typename T1, typename T2, typename... R>
-struct common_type_impl<T1, T2, R...> : common_type_multi_impl<void, T1, T2, R...>
-{
-};
-
-template <typename... T>
-using common_type = typename common_type_impl<T...>::type;
 
 constexpr ctypes_t<i8, i16, i32, i64> signed_types{};
 constexpr ctypes_t<u8, u16, u32, u64> unsigned_types{};

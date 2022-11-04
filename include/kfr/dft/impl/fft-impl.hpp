@@ -432,7 +432,7 @@ struct fft_stage_impl : dft_stage<T>
 {
     fft_stage_impl(size_t stage_size)
     {
-        this->name       = type_name<decltype(*this)>();
+        this->name       = dft_name(this);
         this->radix      = 4;
         this->stage_size = stage_size;
         this->repeats    = 4;
@@ -471,7 +471,7 @@ struct fft_final_stage_impl : dft_stage<T>
 {
     fft_final_stage_impl(size_t)
     {
-        this->name       = type_name<decltype(*this)>();
+        this->name       = dft_name(this);
         this->radix      = size;
         this->stage_size = size;
         this->out_offset = size;
@@ -568,7 +568,7 @@ struct fft_reorder_stage_impl : dft_stage<T>
 {
     fft_reorder_stage_impl(size_t stage_size)
     {
-        this->name       = type_name<decltype(*this)>();
+        this->name       = dft_name(this);
         this->stage_size = stage_size;
         this->user       = ilog2(stage_size);
         this->data_size  = 0;
@@ -590,7 +590,7 @@ struct fft_specialization;
 template <typename T>
 struct fft_specialization<T, 1> : dft_stage<T>
 {
-    fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
+    fft_specialization(size_t) { this->name = dft_name(this); }
 
     constexpr static bool aligned = false;
     DFT_STAGE_FN
@@ -607,7 +607,7 @@ struct fft_specialization<T, 1> : dft_stage<T>
 template <typename T>
 struct fft_specialization<T, 2> : dft_stage<T>
 {
-    fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
+    fft_specialization(size_t) { this->name = dft_name(this); }
 
     constexpr static bool aligned = false;
     DFT_STAGE_FN
@@ -624,7 +624,7 @@ struct fft_specialization<T, 2> : dft_stage<T>
 template <typename T>
 struct fft_specialization<T, 3> : dft_stage<T>
 {
-    fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
+    fft_specialization(size_t) { this->name = dft_name(this); }
 
     constexpr static bool aligned = false;
     DFT_STAGE_FN
@@ -640,7 +640,7 @@ struct fft_specialization<T, 3> : dft_stage<T>
 template <typename T>
 struct fft_specialization<T, 4> : dft_stage<T>
 {
-    fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
+    fft_specialization(size_t) { this->name = dft_name(this); }
 
     constexpr static bool aligned = false;
     DFT_STAGE_FN
@@ -656,7 +656,7 @@ struct fft_specialization<T, 4> : dft_stage<T>
 template <typename T>
 struct fft_specialization<T, 5> : dft_stage<T>
 {
-    fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
+    fft_specialization(size_t) { this->name = dft_name(this); }
 
     constexpr static bool aligned = false;
     DFT_STAGE_FN
@@ -672,7 +672,7 @@ struct fft_specialization<T, 5> : dft_stage<T>
 template <typename T>
 struct fft_specialization<T, 6> : dft_stage<T>
 {
-    fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
+    fft_specialization(size_t) { this->name = dft_name(this); }
 
     constexpr static bool aligned = false;
     DFT_STAGE_FN
@@ -689,7 +689,7 @@ struct fft_specialization<double, 7> : dft_stage<double>
     using T = double;
     fft_specialization(size_t)
     {
-        this->name       = type_name<decltype(*this)>();
+        this->name       = dft_name(this);
         this->stage_size = 128;
         this->data_size  = align_up(sizeof(complex<T>) * 128 * 3 / 2, platform<>::native_cache_alignment);
     }
@@ -730,7 +730,7 @@ struct fft_specialization<float, 7> : dft_stage<float>
     using T = float;
     fft_specialization(size_t)
     {
-        this->name       = type_name<decltype(*this)>();
+        this->name       = dft_name(this);
         this->stage_size = 128;
         this->data_size  = align_up(sizeof(complex<T>) * 128 * 3 / 2, platform<>::native_cache_alignment);
     }
@@ -769,7 +769,7 @@ struct fft_specialization<float, 8> : dft_stage<float>
 {
     fft_specialization(size_t)
     {
-        this->name      = type_name<decltype(*this)>();
+        this->name      = dft_name(this);
         this->temp_size = sizeof(complex<float>) * 256;
     }
 
@@ -812,7 +812,7 @@ struct fft_specialization<double, 8> : fft_final_stage_impl<double, false, 256>
     using T = double;
     fft_specialization(size_t stage_size) : fft_final_stage_impl<double, false, 256>(stage_size)
     {
-        this->name = type_name<decltype(*this)>();
+        this->name = dft_name(this);
     }
 
     DFT_STAGE_FN
@@ -830,7 +830,7 @@ struct fft_specialization<T, 9> : fft_final_stage_impl<T, false, 512>
 {
     fft_specialization(size_t stage_size) : fft_final_stage_impl<T, false, 512>(stage_size)
     {
-        this->name = type_name<decltype(*this)>();
+        this->name = dft_name(this);
     }
 
     DFT_STAGE_FN
@@ -848,7 +848,7 @@ struct fft_specialization<T, 10> : fft_final_stage_impl<T, false, 1024>
 {
     fft_specialization(size_t stage_size) : fft_final_stage_impl<T, false, 1024>(stage_size)
     {
-        this->name = type_name<decltype(*this)>();
+        this->name = dft_name(this);
     }
 
     DFT_STAGE_FN

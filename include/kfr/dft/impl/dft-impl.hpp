@@ -84,7 +84,7 @@ struct dft_stage_fixed_impl : dft_stage<T>
 {
     dft_stage_fixed_impl(size_t, size_t iterations, size_t blocks)
     {
-        this->name       = type_name<decltype(*this)>();
+        this->name       = dft_name(this);
         this->radix      = fixed_radix;
         this->blocks     = blocks;
         this->repeats    = iterations;
@@ -124,7 +124,7 @@ struct dft_stage_fixed_final_impl : dft_stage<T>
 {
     dft_stage_fixed_final_impl(size_t, size_t iterations, size_t blocks)
     {
-        this->name        = type_name<decltype(*this)>();
+        this->name        = dft_name(this);
         this->radix       = fixed_radix;
         this->blocks      = blocks;
         this->repeats     = iterations;
@@ -160,32 +160,30 @@ inline auto apply_conj(E& e, ctrue_t)
 
 /// [0, N - 1, N - 2, N - 3, ..., 3, 2, 1]
 template <typename E>
-struct fft_inverse : internal::expression_with_arguments<E>
+struct fft_inverse : expression_with_traits<E>
 {
-    using value_type = value_type_of<E>;
+    using value_type = typename expression_with_traits<E>::value_type;
 
-    KFR_MEM_INTRINSIC fft_inverse(E&& expr) CMT_NOEXCEPT
-        : internal::expression_with_arguments<E>(std::forward<E>(expr))
-    {
-    }
+    KFR_MEM_INTRINSIC fft_inverse(E&& expr) CMT_NOEXCEPT : expression_with_traits<E>(std::forward<E>(expr)) {}
 
-    friend KFR_INTRINSIC vec<value_type, 1> get_elements(const fft_inverse& self, cinput_t input,
-                                                         size_t index, vec_shape<value_type, 1>)
+    friend KFR_INTRINSIC vec<value_type, 1> get_elements(const fft_inverse& self, shape<1> index,
+                                                         axis_params<0, 1>)
     {
-        return self.argument_first(input, index == 0 ? 0 : self.size() - index, vec_shape<value_type, 1>());
+        const size_t size = shapeof(self).front();
+        return get_elements(self.first(), index.front() == 0 ? 0 : size - index, axis_params<0, 1>());
     }
 
     template <size_t N>
-    friend KFR_MEM_INTRINSIC vec<value_type, N> get_elements(const fft_inverse& self, cinput_t input,
-                                                             size_t index, vec_shape<value_type, N>)
+    friend KFR_MEM_INTRINSIC vec<value_type, N> get_elements(const fft_inverse& self, shape<1> index,
+                                                             axis_params<0, N>)
     {
-        if (index == 0)
+        const size_t size = shapeof(self).front();
+        if (index.front() == 0)
         {
-            return concat(
-                self.argument_first(input, index, vec_shape<value_type, 1>()),
-                reverse(self.argument_first(input, self.size() - (N - 1), vec_shape<value_type, N - 1>())));
+            return concat(get_elements(self.first(), index, axis_params<0, 1>()),
+                          reverse(get_elements(self.first(), size - (N - 1), axis_params<0, N - 1>())));
         }
-        return reverse(self.argument_first(input, self.size() - index - (N - 1), vec_shape<value_type, N>()));
+        return reverse(get_elements(self.first(), size - index - (N - 1), axis_params<0, N>()));
     }
 };
 
@@ -201,7 +199,7 @@ struct dft_arblen_stage_impl : dft_stage<T>
     dft_arblen_stage_impl(size_t size)
         : size(size), fftsize(next_poweroftwo(size) * 2), plan(fftsize, dft_order::internal)
     {
-        this->name        = type_name<decltype(*this)>();
+        this->name        = dft_name(this);
         this->radix       = size;
         this->blocks      = 1;
         this->repeats     = 1;
@@ -210,7 +208,7 @@ struct dft_arblen_stage_impl : dft_stage<T>
         this->temp_size   = plan.temp_size;
         this->stage_size  = size;
 
-        chirp_ = render(cexp(sqr(linspace(T(1) - size, size - T(1), size * 2 - 1, true, true)) *
+        chirp_ = render(cexp(sqr(linspace(T(1) - size, size - T(1), size * 2 - 1, true, ctrue)) *
                              complex<T>(0, -1) * c_pi<T> / size));
 
         ichirpp_ = render(truncate(padded(1 / slice(chirp_, 0, 2 * size - 1)), fftsize));
@@ -240,7 +238,7 @@ struct dft_arblen_stage_impl : dft_stage<T>
             xp_fft = xp_fft * ichirpp_;
         plan.execute(xp_fft.data(), xp_fft.data(), temp, ctrue);
 
-        make_univector(out, n) = xp_fft.slice(n - 1) * slice(chirp, n - 1) * invN2;
+        make_univector(out, n) = xp_fft.slice(n - 1, n) * slice(chirp, n - 1, n) * invN2;
     }
 
     const size_t size;
@@ -258,7 +256,7 @@ struct dft_special_stage_impl : dft_stage<T>
 {
     dft_special_stage_impl() : stage1(radix1, size / radix1, 1), stage2(radix2, 1, size / radix2)
     {
-        this->name        = type_name<decltype(*this)>();
+        this->name        = dft_name(this);
         this->radix       = size;
         this->blocks      = 1;
         this->repeats     = 1;
@@ -300,7 +298,7 @@ struct dft_stage_generic_impl : dft_stage<T>
 {
     dft_stage_generic_impl(size_t radix, size_t iterations, size_t blocks)
     {
-        this->name        = type_name<decltype(*this)>();
+        this->name        = dft_name(this);
         this->radix       = radix;
         this->blocks      = blocks;
         this->repeats     = iterations;
@@ -406,7 +404,7 @@ struct dft_reorder_stage_impl : dft_stage<T>
 {
     dft_reorder_stage_impl(const int* radices, size_t count) : count(count)
     {
-        this->name        = type_name<decltype(*this)>();
+        this->name        = dft_name(this);
         this->can_inplace = false;
         this->data_size   = 0;
         std::copy(radices, radices + count, this->radices);

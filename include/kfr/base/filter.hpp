@@ -91,7 +91,8 @@ public:
     template <univector_tag Tag, typename Expr, KFR_ENABLE_IF(is_input_expression<Expr>)>
     void apply(univector<T, Tag>& dest, const Expr& src)
     {
-        process_expression(dest.data(), to_handle(src), size_min(dest.size(), src.size()));
+        static_assert(expression_dims<Expr> == 1);
+        process_expression(dest.data(), to_handle(src), size_min(dest.size(), shapeof(src)));
     }
 
     template <typename Expr, KFR_ENABLE_IF(is_input_expression<Expr>)>

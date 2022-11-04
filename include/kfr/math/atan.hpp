@@ -56,7 +56,7 @@ KFR_FUNCTION flt_type<T1> atandeg(const T1& x)
  * @brief Returns the arc tangent of y/x using the signs of arguments to determine the correct quadrant.
  */
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>)>
-KFR_FUNCTION common_type<T1, T2> atan2(const T1& x, const T2& y)
+KFR_FUNCTION std::common_type_t<T1, T2> atan2(const T1& x, const T2& y)
 {
     return intrinsics::atan2(x, y);
 }
@@ -66,7 +66,7 @@ KFR_FUNCTION common_type<T1, T2> atan2(const T1& x, const T2& y)
  * correct quadrant.
  */
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>)>
-KFR_FUNCTION common_type<T1, T2> atan2deg(const T1& x, const T2& y)
+KFR_FUNCTION std::common_type_t<T1, T2> atan2deg(const T1& x, const T2& y)
 {
     return intrinsics::atan2deg(x, y);
 }

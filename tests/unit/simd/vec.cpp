@@ -10,8 +10,15 @@
 
 namespace kfr
 {
+
+static_assert(std::is_same_v<i32x4, std::common_type_t<i32x4, i32x4>>);
+static_assert(std::is_same_v<i32x4, std::common_type_t<i32x4>>);
+static_assert(std::is_same_v<u32x4, std::common_type_t<i32x4, u32x4>>);
+static_assert(std::is_same_v<f64x4, std::common_type_t<i32x4, u32x4, f64x4>>);
+
 inline namespace CMT_ARCH_NAME
 {
+
 TEST(mask_op)
 {
     mask<float, 4> m = make_mask<float>(true, false, true, false);
@@ -53,9 +60,6 @@ bool is_in_range_of(Tin x)
 
 TEST(cast)
 {
-    testo::assert_is_same<i32x4, kfr::common_type<i32x4>>();
-    testo::assert_is_same<u32x4, kfr::common_type<i32x4, u32x4>>();
-    testo::assert_is_same<f64x4, kfr::common_type<i32x4, u32x4, f64x4>>();
 
     CHECK(static_cast<i32x4>(u16x4{ 1, 2, 3, 4 }) == i32x4{ 1, 2, 3, 4 });
 

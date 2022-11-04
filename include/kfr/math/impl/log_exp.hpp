@@ -289,25 +289,25 @@ KFR_HANDLE_NOT_F_1(root)
 KFR_HANDLE_NOT_F_1(cbrt)
 
 template <typename T1, typename T2>
-KFR_INTRINSIC flt_type<common_type<T1, T2>> logn(const T1& a, const T2& b)
+KFR_INTRINSIC flt_type<std::common_type_t<T1, T2>> logn(const T1& a, const T2& b)
 {
     return log(a) / log(b);
 }
 
 template <typename T1, typename T2>
-KFR_INTRINSIC flt_type<common_type<T1, T2>> logm(const T1& a, const T2& b)
+KFR_INTRINSIC flt_type<std::common_type_t<T1, T2>> logm(const T1& a, const T2& b)
 {
     return log(a) * b;
 }
 
 template <typename T1, typename T2, typename T3>
-KFR_INTRINSIC flt_type<common_type<T1, T2, T3>> exp_fmadd(const T1& x, const T2& m, const T3& a)
+KFR_INTRINSIC flt_type<std::common_type_t<T1, T2, T3>> exp_fmadd(const T1& x, const T2& m, const T3& a)
 {
     return exp(fmadd(x, m, a));
 }
 
 template <typename T1, typename T2, typename T3>
-KFR_INTRINSIC flt_type<common_type<T1, T2, T3>> log_fmadd(const T1& x, const T2& m, const T3& a)
+KFR_INTRINSIC flt_type<std::common_type_t<T1, T2, T3>> log_fmadd(const T1& x, const T2& m, const T3& a)
 {
     return fmadd(log(x), m, a);
 }

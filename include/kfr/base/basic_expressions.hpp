@@ -137,6 +137,7 @@ template <typename Arg>
 struct expression_slice : public expression_with_arguments<Arg>
 {
     constexpr static index_t dims = expression_dims<Arg>;
+    static_assert(dims > 0);
     shape<dims> start;
     shape<dims> size;
 
@@ -166,12 +167,14 @@ template <typename Arg, KFR_ACCEPT_EXPRESSIONS(Arg), index_t Dims = expression_d
 KFR_INTRINSIC expression_slice<Arg> slice(Arg&& arg, identity<shape<Dims>> start,
                                           identity<shape<Dims>> size = shape<Dims>(infinite_size))
 {
+    static_assert(Dims > 0);
     return { std::forward<Arg>(arg), start, size };
 }
 
 template <typename Arg, KFR_ACCEPT_EXPRESSIONS(Arg), index_t Dims = expression_dims<Arg>>
 KFR_INTRINSIC expression_slice<Arg> truncate(Arg&& arg, identity<shape<Dims>> size)
 {
+    static_assert(Dims > 0);
     return { std::forward<Arg>(arg), shape<Dims>{ 0 }, size };
 }
 
@@ -1007,11 +1010,57 @@ struct expression_trace : public expression_with_traits<E>
 };
 
 /**
- * @brief Returns template expression that returns the result of calling \f$ fn(x_i, x_{i-1}) \f$
+ * @brief Returns template expression that prints all processed values for debug
  */
 template <typename E1>
 KFR_INTRINSIC expression_trace<E1> trace(E1&& e1)
 {
+    return { std::forward<E1>(e1) };
+}
+
+// ----------------------------------------------------------------------------
+
+template <index_t Dims, typename E>
+struct expression_dimensions : public expression_with_traits<E>
+{
+    using expression_with_traits<E>::expression_with_traits;
+    using value_type                        = typename expression_with_traits<E>::value_type;
+    constexpr static inline index_t in_dims = expression_with_traits<E>::dims;
+    constexpr static inline index_t dims    = Dims;
+    using first_arg_traits                  = typename expression_with_traits<E>::first_arg_traits;
+
+    constexpr static shape<dims> shapeof(const expression_dimensions& self)
+    {
+        return first_arg_traits::shapeof(self.first()).template extend<dims>(infinite_size);
+    }
+    constexpr static shape<dims> shapeof()
+    {
+        return first_arg_traits::shapeof().template extend<dims>(infinite_size);
+    }
+
+    template <size_t N, index_t VecAxis>
+    KFR_INTRINSIC friend vec<value_type, N> get_elements(const expression_dimensions& self, shape<dims> index,
+                                                         axis_params<VecAxis, N> sh)
+    {
+        shape<in_dims> inindex = index.template trim<in_dims>();
+        if constexpr (VecAxis >= in_dims)
+        {
+            return repeat<N>(get_elements(self.first(), inindex, axis_params_v<0, 1>));
+        }
+        else
+        {
+            return get_elements(self.first(), inindex, sh);
+        }
+    }
+};
+
+/**
+ * @brief Returns template expression with gien number of dimensions
+ */
+template <index_t Dims, typename E1>
+KFR_INTRINSIC expression_dimensions<Dims, E1> dimensions(E1&& e1)
+{
+    static_assert(Dims >= expression_dims<E1>, "Number of dimensions must be greater or equal");
     return { std::forward<E1>(e1) };
 }
 

@@ -40,6 +40,15 @@ namespace kfr
 inline namespace CMT_ARCH_NAME
 {
 
+namespace internal
+{
+template <typename T>
+constexpr size_t generator_width(size_t divisor)
+{
+    return const_max(1, vector_capacity<deep_subtype<T>> / 8 / divisor);
+}
+} // namespace internal
+
 template <typename T, size_t VecWidth, typename Class, typename Twork = T>
 struct generator : public expression_traits_defaults
 {
@@ -99,7 +108,7 @@ private:
     }
 };
 
-template <typename T, size_t VecWidth = vector_capacity<T> / 8>
+template <typename T, size_t VecWidth = internal::generator_width<T>(1)>
 struct generator_linear : public generator<T, VecWidth, generator_linear<T, VecWidth>>
 {
     generator_linear(T start, T step) CMT_NOEXCEPT : vstep{ step * VecWidth } { sync(start); }
@@ -114,7 +123,7 @@ struct generator_linear : public generator<T, VecWidth, generator_linear<T, VecW
     T vstep;
 };
 
-template <typename T, size_t VecWidth = vector_capacity<T> / 8>
+template <typename T, size_t VecWidth = internal::generator_width<T>(1)>
 struct generator_exp : public generator<T, VecWidth, generator_exp<T, VecWidth>>
 {
     generator_exp(T start, T step) CMT_NOEXCEPT : step{ step },
@@ -135,7 +144,7 @@ protected:
     T vstep;
 };
 
-template <typename T, size_t VecWidth = vector_capacity<deep_subtype<T>> / 8 / 2>
+template <typename T, size_t VecWidth = internal::generator_width<T>(2)>
 struct generator_expj : public generator<T, VecWidth, generator_expj<T, VecWidth>>
 {
     using ST = deep_subtype<T>;
@@ -164,7 +173,7 @@ protected:
     }
 };
 
-template <typename T, size_t VecWidth = vector_capacity<T> / 8>
+template <typename T, size_t VecWidth = internal::generator_width<T>(1)>
 struct generator_exp2 : public generator<T, VecWidth, generator_exp2<T, VecWidth>>
 {
     generator_exp2(T start, T step) CMT_NOEXCEPT : step{ step },
@@ -185,7 +194,7 @@ protected:
     T vstep;
 };
 
-template <typename T, size_t VecWidth = vector_capacity<T> / 8>
+template <typename T, size_t VecWidth = internal::generator_width<T>(1)>
 struct generator_cossin : public generator<T, VecWidth, generator_cossin<T, VecWidth>>
 {
     static_assert(VecWidth % 2 == 0);
@@ -211,7 +220,7 @@ protected:
     }
 };
 
-template <typename T, size_t VecWidth = vector_capacity<T> / 8 / 2>
+template <typename T, size_t VecWidth = internal::generator_width<T>(2)>
 struct generator_sin : public generator<T, VecWidth, generator_sin<T, VecWidth>, vec<T, 2>>
 {
     generator_sin(T start, T step)
@@ -255,7 +264,7 @@ protected:
     x_i = start + i \cdot step
    \f]
  */
-template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
+template <typename T1, typename T2, typename TF = ftype<std::common_type_t<T1, T2>>>
 KFR_FUNCTION generator_linear<TF> gen_linear(T1 start, T2 step)
 {
     return generator_linear<TF>(start, step);
@@ -267,7 +276,7 @@ KFR_FUNCTION generator_linear<TF> gen_linear(T1 start, T2 step)
     x_i = e^{ start + i \cdot step }
    \f]
  */
-template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
+template <typename T1, typename T2, typename TF = ftype<std::common_type_t<T1, T2>>>
 KFR_FUNCTION generator_exp<TF> gen_exp(T1 start, T2 step)
 {
     return generator_exp<TF>(start, step);
@@ -279,7 +288,7 @@ KFR_FUNCTION generator_exp<TF> gen_exp(T1 start, T2 step)
     x_i = e^{ j ( start + i \cdot step ) }
    \f]
  */
-template <typename T1, typename T2, typename TF = complex<ftype<common_type<T1, T2>>>>
+template <typename T1, typename T2, typename TF = complex<ftype<std::common_type_t<T1, T2>>>>
 KFR_FUNCTION generator_expj<TF> gen_expj(T1 start, T2 step)
 {
     return generator_expj<TF>(start, step);
@@ -291,7 +300,7 @@ KFR_FUNCTION generator_expj<TF> gen_expj(T1 start, T2 step)
     x_i = 2^{ start + i \cdot step }
    \f]
  */
-template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
+template <typename T1, typename T2, typename TF = ftype<std::common_type_t<T1, T2>>>
 KFR_FUNCTION generator_exp2<TF> gen_exp2(T1 start, T2 step)
 {
     return generator_exp2<TF>(start, step);
@@ -307,7 +316,7 @@ KFR_FUNCTION generator_exp2<TF> gen_exp2(T1 start, T2 step)
     \end{cases}
    \f]
  */
-template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
+template <typename T1, typename T2, typename TF = ftype<std::common_type_t<T1, T2>>>
 KFR_FUNCTION generator_cossin<TF> gen_cossin(T1 start, T2 step)
 {
     return generator_cossin<TF>(start, step);
@@ -319,7 +328,7 @@ KFR_FUNCTION generator_cossin<TF> gen_cossin(T1 start, T2 step)
     x_i = \sin( start + i \cdot step )
    \f]
  */
-template <typename T1, typename T2, typename TF = ftype<common_type<T1, T2>>>
+template <typename T1, typename T2, typename TF = ftype<std::common_type_t<T1, T2>>>
 KFR_FUNCTION generator_sin<TF> gen_sin(T1 start, T2 step)
 {
     return generator_sin<TF>(start, step);

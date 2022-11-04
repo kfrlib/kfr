@@ -55,19 +55,19 @@ inline namespace CMT_ARCH_NAME
         x = intrinsics::fn(x, T1(y));                                                                        \
         return x;                                                                                            \
     }                                                                                                        \
-    template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>,                          \
+    template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,                   \
               KFR_ENABLE_IF(1 + vec_rank<T1> > vec_rank<T2>)>                                                \
     constexpr KFR_INTRINSIC vec<C, N> operator op(const vec<T1, N>& x, const T2& y)                          \
     {                                                                                                        \
         return intrinsics::fn(promoteto<C>(x), C(y));                                                        \
     }                                                                                                        \
-    template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>,                          \
+    template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,                   \
               KFR_ENABLE_IF(vec_rank<T1> < 1 + vec_rank<T2>)>                                                \
     constexpr KFR_INTRINSIC vec<C, N> operator op(const T1& x, const vec<T2, N>& y)                          \
     {                                                                                                        \
         return intrinsics::fn(C(x), promoteto<C>(y));                                                        \
     }                                                                                                        \
-    template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>,                          \
+    template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,                   \
               KFR_ENABLE_IF(vec_rank<T1> == vec_rank<T2>)>                                                   \
     constexpr KFR_INTRINSIC vec<C, N> operator op(const vec<T1, N>& x, const vec<T2, N>& y)                  \
     {                                                                                                        \
@@ -104,19 +104,19 @@ inline namespace CMT_ARCH_NAME
     }
 
 #define KFR_VEC_CMP_OPERATOR(op, fn)                                                                         \
-    template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>,                          \
+    template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,                   \
               KFR_ENABLE_IF(1 + vec_rank<T1> > vec_rank<T2>)>                                                \
     constexpr KFR_INTRINSIC mask<C, N> operator op(const vec<T1, N>& x, const T2& y)                         \
     {                                                                                                        \
         return intrinsics::fn(promoteto<C>(x), vec<C, N>(y)).asmask();                                       \
     }                                                                                                        \
-    template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>,                          \
+    template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,                   \
               KFR_ENABLE_IF(vec_rank<T1> < 1 + vec_rank<T2>)>                                                \
     constexpr KFR_INTRINSIC mask<C, N> operator op(const T1& x, const vec<T2, N>& y)                         \
     {                                                                                                        \
         return intrinsics::fn(vec<C, N>(x), promoteto<C>(y)).asmask();                                       \
     }                                                                                                        \
-    template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>,                          \
+    template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,                   \
               KFR_ENABLE_IF(vec_rank<T1> == vec_rank<T2>)>                                                   \
     constexpr KFR_INTRINSIC mask<C, N> operator op(const vec<T1, N>& x, const vec<T2, N>& y)                 \
     {                                                                                                        \
@@ -145,31 +145,31 @@ KFR_VEC_CMP_OPERATOR(<=, le)
 KFR_VEC_CMP_OPERATOR(>, gt)
 KFR_VEC_CMP_OPERATOR(<, lt)
 
-template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>,
+template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,
           KFR_ENABLE_IF(sizeof(T1) == sizeof(T2))>
 KFR_INTRINSIC mask<C, N> operator&(const mask<T1, N>& x, const mask<T2, N>& y) CMT_NOEXCEPT
 {
     return mask<C, N>((bitcast<C>(vec<T1, N>(x.v)) & bitcast<C>(vec<T2, N>(y.v))).v);
 }
-template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>,
+template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,
           KFR_ENABLE_IF(sizeof(T1) == sizeof(T2))>
 KFR_INTRINSIC mask<C, N> operator|(const mask<T1, N>& x, const mask<T2, N>& y) CMT_NOEXCEPT
 {
     return mask<C, N>((bitcast<C>(vec<T1, N>(x.v)) | bitcast<C>(vec<T2, N>(y.v))).v);
 }
-template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>,
+template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,
           KFR_ENABLE_IF(sizeof(T1) == sizeof(T2))>
 KFR_INTRINSIC mask<C, N> operator&&(const mask<T1, N>& x, const mask<T2, N>& y) CMT_NOEXCEPT
 {
     return mask<C, N>((bitcast<C>(vec<T1, N>(x.v)) & bitcast<C>(vec<T2, N>(y.v))).v);
 }
-template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>,
+template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,
           KFR_ENABLE_IF(sizeof(T1) == sizeof(T2))>
 KFR_INTRINSIC mask<C, N> operator||(const mask<T1, N>& x, const mask<T2, N>& y) CMT_NOEXCEPT
 {
     return mask<C, N>((bitcast<C>(vec<T1, N>(x.v)) | bitcast<C>(vec<T2, N>(y.v))).v);
 }
-template <typename T1, typename T2, size_t N, typename C = common_type<T1, T2>,
+template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,
           KFR_ENABLE_IF(sizeof(T1) == sizeof(T2))>
 KFR_INTRINSIC mask<C, N> operator^(const mask<T1, N>& x, const mask<T2, N>& y) CMT_NOEXCEPT
 {
@@ -208,7 +208,7 @@ KFR_FN(bitwisenot)
 
 /// @brief Bitwise And
 template <typename T1, typename T2>
-KFR_INTRINSIC common_type<T1, T2> bitwiseand(const T1& x, const T2& y)
+KFR_INTRINSIC std::common_type_t<T1, T2> bitwiseand(const T1& x, const T2& y)
 {
     return x & y;
 }
@@ -221,7 +221,7 @@ KFR_FN(bitwiseand)
 
 /// @brief Bitwise And-Not
 template <typename T1, typename T2>
-KFR_INTRINSIC common_type<T1, T2> bitwiseandnot(const T1& x, const T2& y)
+KFR_INTRINSIC std::common_type_t<T1, T2> bitwiseandnot(const T1& x, const T2& y)
 {
     return x & ~y;
 }
@@ -234,7 +234,7 @@ KFR_FN(bitwiseandnot)
 
 /// @brief Bitwise Or
 template <typename T1, typename T2>
-KFR_INTRINSIC common_type<T1, T2> bitwiseor(const T1& x, const T2& y)
+KFR_INTRINSIC std::common_type_t<T1, T2> bitwiseor(const T1& x, const T2& y)
 {
     return x | y;
 }
@@ -247,7 +247,7 @@ KFR_FN(bitwiseor)
 
 /// @brief Bitwise Xor (Exclusive Or)
 template <typename T1, typename T2>
-KFR_INTRINSIC common_type<T1, T2> bitwisexor(const T1& x, const T2& y)
+KFR_INTRINSIC std::common_type_t<T1, T2> bitwisexor(const T1& x, const T2& y)
 {
     return x ^ y;
 }
@@ -300,7 +300,7 @@ constexpr KFR_INTRINSIC T add(const T& x)
  * @brief Returns sum of all the arguments passed to a function.
  */
 template <typename T1, typename T2, typename... Ts, KFR_ENABLE_IF(is_numeric_args<T1, T2, Ts...>)>
-constexpr KFR_INTRINSIC common_type<T1, T2, Ts...> add(const T1& x, const T2& y, const Ts&... rest)
+constexpr KFR_INTRINSIC std::common_type_t<T1, T2, Ts...> add(const T1& x, const T2& y, const Ts&... rest)
 {
     return x + add(y, rest...);
 }
@@ -312,7 +312,7 @@ constexpr KFR_INTRINSIC T add(initialvalue<T>)
 KFR_FN(add)
 
 template <typename T1, typename T2>
-constexpr KFR_INTRINSIC common_type<T1, T2> sub(const T1& x, const T2& y)
+constexpr KFR_INTRINSIC std::common_type_t<T1, T2> sub(const T1& x, const T2& y)
 {
     return x - y;
 }
@@ -333,7 +333,7 @@ constexpr KFR_INTRINSIC T1 mul(const T1& x)
  * @brief Returns product of all the arguments passed to a function.
  */
 template <typename T1, typename T2, typename... Ts>
-constexpr KFR_INTRINSIC common_type<T1, T2, Ts...> mul(const T1& x, const T2& y, const Ts&... rest)
+constexpr KFR_INTRINSIC std::common_type_t<T1, T2, Ts...> mul(const T1& x, const T2& y, const Ts&... rest)
 {
     return x * mul(y, rest...);
 }
@@ -419,13 +419,13 @@ KFR_FN(ipow)
 /// CHECK(sqrsum(1,2,3) == 36);
 /// @endcode
 template <typename T1, typename... Ts>
-constexpr inline common_type<T1, Ts...> sqrsum(const T1& x, const Ts&... rest)
+constexpr inline std::common_type_t<T1, Ts...> sqrsum(const T1& x, const Ts&... rest)
 {
     return sqr(add(x, rest...));
 }
 
 template <typename T1, typename T2>
-constexpr inline common_type<T1, T2> sqrdiff(const T1& x, const T2& y)
+constexpr inline std::common_type_t<T1, T2> sqrdiff(const T1& x, const T2& y)
 {
     return sqr(x - y);
 }
@@ -433,7 +433,7 @@ KFR_FN(sqrsum)
 KFR_FN(sqrdiff)
 
 /// Division
-template <typename T1, typename T2, typename Tout = common_type<T1, T2>>
+template <typename T1, typename T2, typename Tout = std::common_type_t<T1, T2>>
 KFR_INTRINSIC Tout div(const T1& x, const T2& y)
 {
     return static_cast<Tout>(x) / static_cast<Tout>(y);
@@ -441,14 +441,14 @@ KFR_INTRINSIC Tout div(const T1& x, const T2& y)
 KFR_FN(div)
 
 /// Modulo
-template <typename T1, typename T2, typename Tout = common_type<T1, T2>>
+template <typename T1, typename T2, typename Tout = std::common_type_t<T1, T2>>
 KFR_INTRINSIC Tout mod(const T1& x, const T2& y)
 {
     return static_cast<Tout>(x) % static_cast<Tout>(y);
 }
 KFR_FN(mod)
 /// Remainder
-template <typename T1, typename T2, typename Tout = common_type<T1, T2>>
+template <typename T1, typename T2, typename Tout = std::common_type_t<T1, T2>>
 KFR_INTRINSIC Tout rem(const T1& x, const T2& y)
 {
     return static_cast<Tout>(x) % static_cast<Tout>(y);
@@ -465,13 +465,13 @@ KFR_FN(neg)
 
 /// @brief Fused Multiply-Add
 template <typename T1, typename T2, typename T3>
-KFR_INTRINSIC constexpr common_type<T1, T2, T3> fmadd(const T1& x, const T2& y, const T3& z)
+KFR_INTRINSIC constexpr std::common_type_t<T1, T2, T3> fmadd(const T1& x, const T2& y, const T3& z)
 {
     return x * y + z;
 }
 /// @brief Fused Multiply-Sub
 template <typename T1, typename T2, typename T3>
-KFR_INTRINSIC constexpr common_type<T1, T2, T3> fmsub(const T1& x, const T2& y, const T3& z)
+KFR_INTRINSIC constexpr std::common_type_t<T1, T2, T3> fmsub(const T1& x, const T2& y, const T3& z)
 {
     return x * y - z;
 }
@@ -481,14 +481,14 @@ KFR_FN(fmsub)
 /// @brief Linear blend of `x` and `y` (`c` must be in the range 0...+1)
 /// Returns `x + ( y - x ) * c`
 template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>)>
-KFR_INTRINSIC constexpr common_type<T1, T2, T3> mix(const T1& c, const T2& x, const T3& y)
+KFR_INTRINSIC constexpr std::common_type_t<T1, T2, T3> mix(const T1& c, const T2& x, const T3& y)
 {
     return fmadd(c, y - x, x);
 }
 
 /// @brief Linear blend of `x` and `y` (`c` must be in the range -1...+1)
 template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>)>
-KFR_INTRINSIC constexpr common_type<T1, T2, T3> mixs(const T1& c, const T2& x, const T3& y)
+KFR_INTRINSIC constexpr std::common_type_t<T1, T2, T3> mixs(const T1& c, const T2& x, const T3& y)
 {
     return mix(fmadd(c, 0.5, 0.5), x, y);
 }
@@ -499,41 +499,41 @@ namespace intrinsics
 {
 
 template <typename T1, typename T2>
-constexpr KFR_INTRINSIC common_type<T1, T2> horner(const T1&, const T2& c0)
+constexpr KFR_INTRINSIC std::common_type_t<T1, T2> horner(const T1&, const T2& c0)
 {
     return c0;
 }
 
 template <typename T1, typename T2, typename T3, typename... Ts>
-constexpr KFR_INTRINSIC common_type<T1, T2, T3, Ts...> horner(const T1& x, const T2& c0, const T3& c1,
-                                                              const Ts&... values)
+constexpr KFR_INTRINSIC std::common_type_t<T1, T2, T3, Ts...> horner(const T1& x, const T2& c0, const T3& c1,
+                                                                     const Ts&... values)
 {
     return fmadd(horner(x, c1, values...), x, c0);
 }
 
 template <typename T1, typename T2>
-constexpr KFR_INTRINSIC common_type<T1, T2> horner_even(const T1&, const T2& c0)
+constexpr KFR_INTRINSIC std::common_type_t<T1, T2> horner_even(const T1&, const T2& c0)
 {
     return c0;
 }
 
 template <typename T1, typename T2, typename T3, typename... Ts>
-constexpr KFR_INTRINSIC common_type<T1, T2, T3, Ts...> horner_even(const T1& x, const T2& c0, const T3& c2,
-                                                                   const Ts&... values)
+constexpr KFR_INTRINSIC std::common_type_t<T1, T2, T3, Ts...> horner_even(const T1& x, const T2& c0,
+                                                                          const T3& c2, const Ts&... values)
 {
     const T1 x2 = x * x;
     return fmadd(horner(x2, c2, values...), x2, c0);
 }
 
 template <typename T1, typename T2>
-constexpr KFR_INTRINSIC common_type<T1, T2> horner_odd(const T1& x, const T2& c1)
+constexpr KFR_INTRINSIC std::common_type_t<T1, T2> horner_odd(const T1& x, const T2& c1)
 {
     return c1 * x;
 }
 
 template <typename T1, typename T2, typename T3, typename... Ts>
-constexpr KFR_INTRINSIC common_type<T1, T2, T3, Ts...> horner_odd(const T1& x, const T2& c1, const T3& c3,
-                                                                  const Ts&... values)
+constexpr KFR_INTRINSIC std::common_type_t<T1, T2, T3, Ts...> horner_odd(const T1& x, const T2& c1,
+                                                                         const T3& c3, const Ts&... values)
 {
     const T1 x2 = x * x;
     return fmadd(horner(x2, c3, values...), x2, c1) * x;
@@ -544,7 +544,7 @@ constexpr KFR_INTRINSIC common_type<T1, T2, T3, Ts...> horner_odd(const T1& x, c
 ///
 /// ``horner(x, 1, 2, 3)`` is equivalent to \(3x^2 + 2x + 1\)
 template <typename T1, typename... Ts, KFR_ENABLE_IF(is_numeric_args<T1, Ts...>)>
-constexpr KFR_INTRINSIC common_type<T1, Ts...> horner(const T1& x, const Ts&... c)
+constexpr KFR_INTRINSIC std::common_type_t<T1, Ts...> horner(const T1& x, const Ts&... c)
 {
     return intrinsics::horner(x, c...);
 }
@@ -554,7 +554,7 @@ KFR_FN(horner)
 ///
 /// ``horner_even(x, 1, 2, 3)`` is equivalent to \(3x^4 + 2x^2 + 1\)
 template <typename T1, typename... Ts, KFR_ENABLE_IF(is_numeric_args<T1, Ts...>)>
-constexpr KFR_INTRINSIC common_type<T1, Ts...> horner_even(const T1& x, const Ts&... c)
+constexpr KFR_INTRINSIC std::common_type_t<T1, Ts...> horner_even(const T1& x, const Ts&... c)
 {
     return intrinsics::horner_even(x, c...);
 }
@@ -564,7 +564,7 @@ KFR_FN(horner_even)
 ///
 /// ``horner_odd(x, 1, 2, 3)`` is equivalent to \(3x^5 + 2x^3 + 1x\)
 template <typename T1, typename... Ts, KFR_ENABLE_IF(is_numeric_args<T1, Ts...>)>
-constexpr KFR_INTRINSIC common_type<T1, Ts...> horner_odd(const T1& x, const Ts&... c)
+constexpr KFR_INTRINSIC std::common_type_t<T1, Ts...> horner_odd(const T1& x, const Ts&... c)
 {
     return intrinsics::horner_odd(x, c...);
 }
@@ -581,7 +581,7 @@ constexpr KFR_INTRINSIC T reciprocal(const T& x)
 KFR_FN(reciprocal)
 
 template <typename T1, typename T2>
-KFR_INTRINSIC common_type<T1, T2> mulsign(const T1& x, const T2& y)
+KFR_INTRINSIC std::common_type_t<T1, T2> mulsign(const T1& x, const T2& y)
 {
     return bitwisexor(x, bitwiseand(y, special_constants<T2>::highbitmask()));
 }

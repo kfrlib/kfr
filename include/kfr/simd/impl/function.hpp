@@ -42,7 +42,7 @@ inline namespace CMT_ARCH_NAME
     }
 
 #define KFR_HANDLE_SCALAR(fn)                                                                                \
-    template <typename T1, typename... Args, typename Tout = ::kfr::common_type<T1, Args...>,                \
+    template <typename T1, typename... Args, typename Tout = std::common_type_t<T1, Args...>,                \
               KFR_ENABLE_IF(!(is_vec<T1> || (is_vec<Args> || ...)))>                                         \
     KFR_INTRINSIC Tout fn(const T1& a, const Args&... b) CMT_NOEXCEPT                                        \
     {                                                                                                        \
@@ -51,7 +51,7 @@ inline namespace CMT_ARCH_NAME
     }
 
 #define KFR_HANDLE_SCALAR_1_T(fn, Tout)                                                                      \
-    template <typename T1, typename... Args, typename T = ::kfr::common_type<T1, Args...>,                   \
+    template <typename T1, typename... Args, typename T = std::common_type_t<T1, Args...>,                   \
               KFR_ENABLE_IF(!(is_vec<T1> || (is_vec<Args> || ...)))>                                         \
     KFR_INTRINSIC Tout fn(const T1& a, const Args&... b) CMT_NOEXCEPT                                        \
     {                                                                                                        \
@@ -60,7 +60,7 @@ inline namespace CMT_ARCH_NAME
     }
 
 #define KFR_HANDLE_ARGS_T(fn, Tout)                                                                          \
-    template <typename T1, typename... Args, typename T = ::kfr::common_type<T1, Args...>,                   \
+    template <typename T1, typename... Args, typename T = std::common_type_t<T1, Args...>,                   \
               KFR_ENABLE_IF((is_vec<T1> || (is_vec<Args> || ...)))>                                          \
     KFR_INTRINSIC Tout fn(const T1& a, const Args&... b) CMT_NOEXCEPT                                        \
     {                                                                                                        \

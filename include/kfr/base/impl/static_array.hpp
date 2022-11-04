@@ -63,6 +63,33 @@ struct static_array_base<T, csizes_t<indices...>>
         (static_cast<void>(array[indices] = args), ...);
     }
 
+    template <typename U, typename otherindices_t>
+    friend struct static_array_base;
+
+    template <size_t... idx1, size_t... idx2>
+    KFR_MEM_INTRINSIC constexpr static_array_base(const static_array_base<T, csizes_t<idx1...>>& first,
+                                                  const static_array_base<T, csizes_t<idx2...>>& second)
+    {
+        constexpr size_t size1 = sizeof...(idx1);
+        constexpr size_t size2 = sizeof...(idx2);
+        static_assert(size1 + size2 == static_size);
+        (static_cast<void>(array[indices] =
+                               indices >= size1 ? second.array[indices - size1] : first.array[indices]),
+         ...);
+    }
+
+    template <size_t... idx>
+    constexpr static_array_base<T, csizeseq_t<sizeof...(idx)>> shuffle(csizes_t<idx...>) const
+    {
+        return static_array_base<T, csizeseq_t<sizeof...(idx)>>{ array[idx]... };
+    }
+
+    template <size_t start, size_t size>
+    constexpr static_array_base<T, csizeseq_t<size>> slice() const
+    {
+        return shuffle(csizeseq<size, start>);
+    }
+
     constexpr static_array_base& operator=(const static_array_base&) = default;
     constexpr static_array_base& operator=(static_array_base&&) = default;
 

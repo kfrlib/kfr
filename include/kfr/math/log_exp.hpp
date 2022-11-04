@@ -83,42 +83,42 @@ KFR_FUNCTION flt_type<T1> logb(const T1& x)
 
 /// @brief Returns the logarithm of the x with base y.
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>)>
-KFR_FUNCTION flt_type<common_type<T1, T2>> logn(const T1& x, const T2& y)
+KFR_FUNCTION flt_type<std::common_type_t<T1, T2>> logn(const T1& x, const T2& y)
 {
     return intrinsics::logn(x, y);
 }
 
 /// @brief Returns log(x) * y.
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>)>
-KFR_FUNCTION flt_type<common_type<T1, T2>> logm(const T1& x, const T2& y)
+KFR_FUNCTION flt_type<std::common_type_t<T1, T2>> logm(const T1& x, const T2& y)
 {
     return intrinsics::logm(x, y);
 }
 
 /// @brief Returns exp(x * m + a).
 template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>)>
-KFR_FUNCTION flt_type<common_type<T1, T2, T3>> exp_fmadd(const T1& x, const T2& y, const T3& z)
+KFR_FUNCTION flt_type<std::common_type_t<T1, T2, T3>> exp_fmadd(const T1& x, const T2& y, const T3& z)
 {
     return intrinsics::exp_fmadd(x, y, z);
 }
 
 /// @brief Returns log(x) * m + a.
 template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>)>
-KFR_FUNCTION flt_type<common_type<T1, T2, T3>> log_fmadd(const T1& x, const T2& y, const T3& z)
+KFR_FUNCTION flt_type<std::common_type_t<T1, T2, T3>> log_fmadd(const T1& x, const T2& y, const T3& z)
 {
     return intrinsics::log_fmadd(x, y, z);
 }
 
 /// @brief Returns the x raised to the given power y.
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>)>
-KFR_FUNCTION flt_type<common_type<T1, T2>> pow(const T1& x, const T2& y)
+KFR_FUNCTION flt_type<std::common_type_t<T1, T2>> pow(const T1& x, const T2& y)
 {
     return intrinsics::pow(x, y);
 }
 
 /// @brief Returns the real nth root of the x.
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>)>
-KFR_FUNCTION flt_type<common_type<T1, T2>> root(const T1& x, const T2& y)
+KFR_FUNCTION flt_type<std::common_type_t<T1, T2>> root(const T1& x, const T2& y)
 {
     return intrinsics::root(x, y);
 }

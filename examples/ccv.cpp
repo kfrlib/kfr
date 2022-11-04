@@ -33,9 +33,9 @@ int main()
     // Create noise to filter.
     auto const size = 1024 * 100 + 33; // not a multiple of block_size
     univector<complex<fbase>> cnoise =
-        make_complex(truncate(gen_random_range(random_bit_generator{ 1, 2, 3, 4 }, -1.f, +1.f), size),
-                     truncate(gen_random_range(random_bit_generator{ 3, 4, 9, 8 }, -1.f, +1.f), size));
-    univector<fbase> noise = truncate(gen_random_range(random_bit_generator{ 3, 4, 9, 8 }, -1.f, +1.f), size);
+        make_complex(truncate(gen_random_range(random_init(1, 2, 3, 4), -1.f, +1.f), size),
+                     truncate(gen_random_range(random_init(3, 4, 9, 8), -1.f, +1.f), size));
+    univector<fbase> noise = truncate(gen_random_range(random_init(3, 4, 9, 8), -1.f, +1.f), size);
 
     // Filter results.
     univector<complex<fbase>> filtered_cnoise_ccv(size), filtered_cnoise_fir(size);

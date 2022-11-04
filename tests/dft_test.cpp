@@ -33,8 +33,8 @@ template <typename T>
 static void perf_test_t(int size)
 {
     print("[PERFORMANCE] DFT ", fmt<'s', 6>(type_name<T>()), " ", fmt<'d', 6>(size), "...");
-    random_bit_generator gen1(2247448713, 915890490, 864203735, 2982561);
-    random_bit_generator gen2(2982561, 2247448713, 915890490, 864203735);
+    random_state gen1 = random_init(2247448713, 915890490, 864203735, 2982561);
+    random_state gen2 = random_init(2982561, 2247448713, 915890490, 864203735);
     std::chrono::high_resolution_clock::duration duration(0);
     dft_plan<T> dft(size);
     univector<u8> tmp(dft.temp_size);
@@ -149,7 +149,7 @@ constexpr size_t dft_stopsize = 257;
 TEST(fft_real)
 {
     using float_type = double;
-    random_bit_generator gen(2247448713, 915890490, 864203735, 2982561);
+    random_state gen = random_init(2247448713, 915890490, 864203735, 2982561);
 
     constexpr size_t size = 64;
 
@@ -161,8 +161,10 @@ TEST(fft_real)
 
 TEST(fft_accuracy)
 {
+#ifdef DEBUG_DFT_PROGRESS
     testo::active_test()->show_progress = true;
-    random_bit_generator gen(2247448713, 915890490, 864203735, 2982561);
+#endif
+    random_state gen = random_init(2247448713, 915890490, 864203735, 2982561);
     std::set<size_t> size_set;
     univector<size_t> sizes = truncate(1 + counter(), fft_stopsize - 1);
     sizes                   = round(pow(2.0, sizes));
@@ -175,7 +177,9 @@ TEST(fft_accuracy)
             sizes.push_back(s);
     }
 #endif
+#ifdef DEBUG_DFT_PROGRESS
     println(sizes);
+#endif
 
     testo::matrix(named("type") = dft_float_types, //
                   named("size") = sizes, //
@@ -195,7 +199,9 @@ TEST(fft_accuracy)
                           const dft_plan<float_type> dft(size);
                           if (!inverse)
                           {
+#if DEBUG_DFT_PROGRESS
                               dft.dump();
+#endif
                           }
                           univector<u8> temp(dft.temp_size);
 
@@ -214,8 +220,8 @@ TEST(fft_accuracy)
                           univector<float_type> in =
                               truncate(gen_random_range<float_type>(gen, -1.0, +1.0), size);
 
-                          univector<complex<float_type>> out    = truncate(scalar(qnan), size);
-                          univector<complex<float_type>> refout = truncate(scalar(qnan), size);
+                          univector<complex<float_type>> out    = truncate(dimensions<1>(scalar(qnan)), size);
+                          univector<complex<float_type>> refout = truncate(dimensions<1>(scalar(qnan)), size);
                           const dft_plan_real<float_type> dft(size);
                           univector<u8> temp(dft.temp_size);
 

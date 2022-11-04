@@ -40,7 +40,7 @@ using sample_rate_t = double;
 namespace intrinsics
 {
 template <typename T1, typename T2>
-KFR_INTRINSIC common_type<T1, T2> fix_nans(const T1& val, const T2& replacement)
+KFR_INTRINSIC std::common_type_t<T1, T2> fix_nans(const T1& val, const T2& replacement)
 {
     return select(val != val, replacement, val);
 }
@@ -108,7 +108,7 @@ KFR_INTRINSIC TF hertz_to_note(const T& hertz)
     return intrinsics::log_fmadd(hertz, subtype<TF>(17.312340490667560888319096172023), offset);
 }
 
-template <typename T1, typename T2, typename T3, typename Tc = flt_type<common_type<T1, T2, T3, f32>>>
+template <typename T1, typename T2, typename T3, typename Tc = flt_type<std::common_type_t<T1, T2, T3, f32>>>
 KFR_INTRINSIC Tc note_to_hertz(const T1& note, const T2& tunenote, const T3& tunehertz)
 {
     const Tc offset = log(tunehertz) - tunenote * subtype<Tc>(0.05776226504666210911810267678818);
@@ -116,7 +116,7 @@ KFR_INTRINSIC Tc note_to_hertz(const T1& note, const T2& tunenote, const T3& tun
     return intrinsics::exp_fmadd(note, subtype<Tc>(0.05776226504666210911810267678818), offset);
 }
 
-template <typename T1, typename T2, typename T3, typename Tc = flt_type<common_type<T1, T2, T3, f32>>>
+template <typename T1, typename T2, typename T3, typename Tc = flt_type<std::common_type_t<T1, T2, T3, f32>>>
 KFR_INTRINSIC Tc hertz_to_note(const T1& hertz, const T2& tunenote, const T3& tunehertz)
 {
     const Tc offset = tunenote - log(tunehertz) * subtype<Tc>(17.312340490667560888319096172023);

@@ -35,32 +35,32 @@ inline namespace CMT_ARCH_NAME
 {
 
 template <typename T1, typename T2>
-inline maskfor<common_type<T1, T2>> equal(const T1& x, const T2& y)
+inline maskfor<std::common_type_t<T1, T2>> equal(const T1& x, const T2& y)
 {
     return x == y;
 }
 template <typename T1, typename T2>
-inline maskfor<common_type<T1, T2>> notequal(const T1& x, const T2& y)
+inline maskfor<std::common_type_t<T1, T2>> notequal(const T1& x, const T2& y)
 {
     return x != y;
 }
 template <typename T1, typename T2>
-inline maskfor<common_type<T1, T2>> less(const T1& x, const T2& y)
+inline maskfor<std::common_type_t<T1, T2>> less(const T1& x, const T2& y)
 {
     return x < y;
 }
 template <typename T1, typename T2>
-inline maskfor<common_type<T1, T2>> greater(const T1& x, const T2& y)
+inline maskfor<std::common_type_t<T1, T2>> greater(const T1& x, const T2& y)
 {
     return x > y;
 }
 template <typename T1, typename T2>
-inline maskfor<common_type<T1, T2>> lessorequal(const T1& x, const T2& y)
+inline maskfor<std::common_type_t<T1, T2>> lessorequal(const T1& x, const T2& y)
 {
     return x <= y;
 }
 template <typename T1, typename T2>
-inline maskfor<common_type<T1, T2>> greaterorequal(const T1& x, const T2& y)
+inline maskfor<std::common_type_t<T1, T2>> greaterorequal(const T1& x, const T2& y)
 {
     return x >= y;
 }
@@ -108,7 +108,7 @@ KFR_INTRINSIC mask<T, N> iszero(const vec<T, N>& x)
 }
 
 template <typename T1, typename T2, typename T3>
-KFR_INTRINSIC maskfor<common_type<T1, T2, T3>> inrange(const T1& x, const T2& min, const T3& max)
+KFR_INTRINSIC maskfor<std::common_type_t<T1, T2, T3>> inrange(const T1& x, const T2& min, const T3& max)
 {
     return x >= min && x <= max;
 }

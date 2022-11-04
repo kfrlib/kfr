@@ -36,7 +36,7 @@ template <typename Tout, int Mout, int Min, typename Tin, size_t N,
                         (std::is_floating_point<Tin>::value || std::is_floating_point<Tout>::value))>
 KFR_INTRINSIC vec<Tout, N> convert_scaled(const vec<Tin, N>& value)
 {
-    using Tcommon = common_type<Tin, Tout>;
+    using Tcommon = std::common_type_t<Tin, Tout>;
     return static_cast<vec<Tout, N>>(static_cast<vec<Tcommon, N>>(value) * Mout / Min);
 }
 

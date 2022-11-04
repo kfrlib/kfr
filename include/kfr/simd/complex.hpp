@@ -82,22 +82,22 @@ KFR_INTRINSIC complex<T>& operator/=(complex<T>& x, const complex<T>& y)
     return x;
 }
 
-template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = common_type<complex<T>, U>>
+template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = std::common_type_t<complex<T>, U>>
 KFR_INTRINSIC C operator+(const complex<T>& x, const U& y)
 {
     return static_cast<C>(x) + static_cast<C>(y);
 }
-template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = common_type<complex<T>, U>>
+template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = std::common_type_t<complex<T>, U>>
 KFR_INTRINSIC C operator-(const complex<T>& x, const U& y)
 {
     return static_cast<C>(x) - static_cast<C>(y);
 }
-template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = common_type<complex<T>, U>>
+template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = std::common_type_t<complex<T>, U>>
 KFR_INTRINSIC C operator*(const complex<T>& x, const U& y)
 {
     return static_cast<C>(x) * static_cast<C>(y);
 }
-template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = common_type<complex<T>, U>>
+template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = std::common_type_t<complex<T>, U>>
 KFR_INTRINSIC C operator/(const complex<T>& x, const U& y)
 {
     return static_cast<C>(x) / static_cast<C>(y);
@@ -127,22 +127,22 @@ KFR_INTRINSIC complex<T>& operator/=(complex<T>& x, const U& y)
     return x;
 }
 
-template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = common_type<complex<T>, U>>
+template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = std::common_type_t<complex<T>, U>>
 KFR_INTRINSIC C operator+(const U& x, const complex<T>& y)
 {
     return static_cast<C>(x) + static_cast<C>(y);
 }
-template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = common_type<complex<T>, U>>
+template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = std::common_type_t<complex<T>, U>>
 KFR_INTRINSIC C operator-(const U& x, const complex<T>& y)
 {
     return static_cast<C>(x) - static_cast<C>(y);
 }
-template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = common_type<complex<T>, U>>
+template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = std::common_type_t<complex<T>, U>>
 KFR_INTRINSIC C operator*(const U& x, const complex<T>& y)
 {
     return static_cast<C>(x) * static_cast<C>(y);
 }
-template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = common_type<complex<T>, U>>
+template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = std::common_type_t<complex<T>, U>>
 KFR_INTRINSIC C operator/(const U& x, const complex<T>& y)
 {
     return static_cast<C>(x) / static_cast<C>(y);
@@ -393,7 +393,7 @@ constexpr KFR_INTRINSIC vec<T, N> imag(const vec<complex<T>, N>& value)
 KFR_FN(imag)
 
 /// @brief Constructs complex value from real and imaginary parts
-template <typename T1, typename T2 = T1, size_t N, typename T = common_type<T1, T2>>
+template <typename T1, typename T2 = T1, size_t N, typename T = std::common_type_t<T1, T2>>
 constexpr KFR_INTRINSIC vec<complex<T>, N> make_complex(const vec<T1, N>& real,
                                                         const vec<T2, N>& imag = T2(0))
 {
@@ -401,7 +401,7 @@ constexpr KFR_INTRINSIC vec<complex<T>, N> make_complex(const vec<T1, N>& real,
 }
 
 /// @brief Constructs complex value from real and imaginary parts
-template <typename T1, typename T2 = T1, typename T = common_type<T1, T2>,
+template <typename T1, typename T2 = T1, typename T = std::common_type_t<T1, T2>,
           KFR_ENABLE_IF(is_numeric_args<T1, T2>)>
 constexpr KFR_INTRINSIC complex<T> make_complex(T1 real, T2 imag = T2(0))
 {
@@ -435,44 +435,24 @@ struct vec_of_complex
     using type = vec<complex<T>, N>;
 };
 } // namespace CMT_ARCH_NAME
+} // namespace kfr
+
+namespace std
+{
 
 template <typename T1, typename T2>
-struct common_type_impl<kfr::complex<T1>, kfr::complex<T2>> : common_type_from_subtypes<T1, T2, kfr::complex>
+struct common_type<kfr::complex<T1>, kfr::complex<T2>>
+    : kfr::construct_common_type<std::common_type<T1, T2>, kfr::complex>
 {
 };
 template <typename T1, typename T2>
-struct common_type_impl<kfr::complex<T1>, T2> : common_type_from_subtypes<T1, T2, kfr::complex>
+struct common_type<kfr::complex<T1>, T2> : kfr::construct_common_type<std::common_type<T1, T2>, kfr::complex>
 {
 };
 template <typename T1, typename T2>
-struct common_type_impl<T1, kfr::complex<T2>> : common_type_from_subtypes<T1, T2, kfr::complex>
+struct common_type<T1, kfr::complex<T2>> : kfr::construct_common_type<std::common_type<T1, T2>, kfr::complex>
 {
 };
-template <typename T1, typename T2, size_t N>
-struct common_type_impl<kfr::complex<T1>, kfr::vec<kfr::complex<T2>, N>>
-    : common_type_from_subtypes<T1, T2, kfr::vec_of_complex<N>::template type>
-{
-};
-template <typename T1, typename T2, size_t N>
-struct common_type_impl<kfr::vec<kfr::complex<T1>, N>, kfr::vec<kfr::complex<T2>, N>>
-    : common_type_from_subtypes<T1, T2, kfr::vec_of_complex<N>::template type>
-{
-};
-template <typename T1, typename T2, size_t N>
-struct common_type_impl<kfr::vec<kfr::complex<T1>, N>, kfr::complex<T2>>
-    : common_type_from_subtypes<T1, T2, kfr::vec_of_complex<N>::template type>
-{
-};
-template <typename T1, typename T2, size_t N>
-struct common_type_impl<kfr::complex<T1>, kfr::vec<T2, N>>
-    : common_type_from_subtypes<T1, T2, kfr::vec_of_complex<N>::template type>
-{
-};
-template <typename T1, typename T2, size_t N>
-struct common_type_impl<kfr::vec<T1, N>, kfr::complex<T2>>
-    : common_type_from_subtypes<T1, T2, kfr::vec_of_complex<N>::template type>
-{
-};
-} // namespace kfr
+} // namespace std
 
 CMT_PRAGMA_MSVC(warning(pop))

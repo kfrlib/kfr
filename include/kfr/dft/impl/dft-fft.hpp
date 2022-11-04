@@ -36,6 +36,32 @@
 namespace kfr
 {
 
+inline namespace CMT_ARCH_NAME
+{
+namespace intrinsics
+{
+struct name_test_impl
+{
+};
+} // namespace intrinsics
+} // namespace CMT_ARCH_NAME
+
+template <typename T, cpu_t cpu>
+struct dft_name_impl
+{
+};
+
+template <typename Class>
+inline const char* dft_name(Class*)
+{
+    constexpr static size_t prefix_len = ctype_name<intrinsics::name_test_impl>().length() - 14;
+    static constexpr cstring full_name = ctype_name<std::decay_t<Class>>();
+    static constexpr cstring name_arch =
+        concat_cstring(full_name.slice(csize<prefix_len>), make_cstring("("),
+                       make_cstring(CMT_STRINGIFY(CMT_ARCH_NAME)), make_cstring(")"));
+    return name_arch.c_str();
+}
+
 #define DFT_STAGE_FN                                                                                         \
     KFR_MEM_INTRINSIC void do_execute(cdirect_t, complex<T>* out, const complex<T>* in, u8* temp) final      \
     {                                                                                                        \

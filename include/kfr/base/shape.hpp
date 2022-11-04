@@ -66,6 +66,23 @@ constexpr inline index_t infinite_size = max_index_t;
 constexpr inline index_t undefined_size = 0;
 
 constexpr inline index_t maximum_dims = 8;
+CMT_INTRINSIC constexpr size_t size_add(size_t x, size_t y)
+{
+    return (x == infinite_size || y == infinite_size) ? infinite_size : x + y;
+}
+
+CMT_INTRINSIC constexpr size_t size_sub(size_t x, size_t y)
+{
+    return (x == infinite_size || y == infinite_size) ? infinite_size : (x > y ? x - y : 0);
+}
+
+CMT_INTRINSIC constexpr size_t size_min(size_t x) CMT_NOEXCEPT { return x; }
+
+template <typename... Ts>
+CMT_INTRINSIC constexpr size_t size_min(size_t x, size_t y, Ts... rest) CMT_NOEXCEPT
+{
+    return size_min(x < y ? x : y, rest...);
+}
 
 using dimset = vec<i8, maximum_dims>;
 
@@ -83,6 +100,11 @@ template <index_t dims>
 struct shape : static_array_base<index_t, csizeseq_t<dims>>
 {
     using static_array_base<index_t, csizeseq_t<dims>>::static_array_base;
+
+    constexpr shape(const static_array_base<index_t, csizeseq_t<dims>>& a)
+        : static_array_base<index_t, csizeseq_t<dims>>(a)
+    {
+    }
 
     static_assert(dims < maximum_dims);
 
@@ -293,22 +315,22 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
     }
 
     template <index_t new_dims>
-    KFR_MEM_INTRINSIC shape<new_dims> extend(index_t value = infinite_size) const
+    constexpr KFR_MEM_INTRINSIC shape<new_dims> extend(index_t value = infinite_size) const
     {
         static_assert(new_dims >= dims);
         if constexpr (new_dims == dims)
             return *this;
         else
-            return concat(broadcast<new_dims - dims>(value), **this);
+            return shape<new_dims>{ shape<new_dims - dims>(value), *this };
     }
 
     template <index_t odims>
-    shape<odims> trim() const
+    constexpr shape<odims> trim() const
     {
         static_assert(odims <= dims);
         if constexpr (odims > 0)
         {
-            return slice<dims - odims, odims>(**this);
+            return this->template slice<dims - odims, odims>();
         }
         else
         {
@@ -316,11 +338,11 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
         }
     }
 
-    KFR_MEM_INTRINSIC shape<dims - 1> trunc() const
+    constexpr KFR_MEM_INTRINSIC shape<dims - 1> trunc() const
     {
         if constexpr (dims > 1)
         {
-            return slice<0, dims - 1>(**this);
+            return this->template slice<0, dims - 1>();
         }
         else
         {
@@ -369,7 +391,7 @@ struct shape<0>
     KFR_MEM_INTRINSIC dimset tomask() const { return -1; }
 
     template <index_t new_dims>
-    KFR_MEM_INTRINSIC shape<new_dims> extend(index_t value = infinite_size) const
+    constexpr KFR_MEM_INTRINSIC shape<new_dims> extend(index_t value = infinite_size) const
     {
         if constexpr (new_dims == 0)
             return *this;
@@ -378,7 +400,7 @@ struct shape<0>
     }
 
     template <index_t new_dims>
-    shape<new_dims> trim() const
+    constexpr shape<new_dims> trim() const
     {
         static_assert(new_dims == 0);
         return {};

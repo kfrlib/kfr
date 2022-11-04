@@ -210,6 +210,23 @@ struct anything
 
 inline namespace CMT_ARCH_NAME
 {
+namespace internal
+{
+template <size_t width, typename Fn>
+KFR_INTRINSIC void block_process_impl(size_t& i, size_t size, Fn&& fn)
+{
+    CMT_LOOP_NOUNROLL
+    for (; i < size / width * width; i += width)
+        fn(i, csize_t<width>());
+}
+} // namespace internal
+
+template <size_t... widths, typename Fn>
+KFR_INTRINSIC void block_process(size_t size, csizes_t<widths...>, Fn&& fn)
+{
+    size_t i = 0;
+    swallow{ (internal::block_process_impl<widths>(i, size, std::forward<Fn>(fn)), 0)... };
+}
 
 template <index_t Dims>
 KFR_INTRINSIC void begin_pass(const internal_generic::anything&, shape<Dims> start, shape<Dims> stop)

@@ -75,7 +75,7 @@ struct dft_stage
 
     virtual void dump() const
     {
-        printf("%s: \n\t%5zu,%5zu,%5zu,%5zu,%5zu,%5zu,%5zu, %d, %d, %d, %d\n", name ? name : "unnamed", radix,
+        printf("%s: %zu, %zu, %zu, %zu, %zu, %zu, %zu, %d, %d, %d, %d\n", name ? name : "unnamed", radix,
                stage_size, data_size, temp_size, repeats, out_offset, blocks, recursion, can_inplace, inplace,
                to_scratch);
     }

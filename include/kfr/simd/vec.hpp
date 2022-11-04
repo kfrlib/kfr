@@ -883,7 +883,7 @@ struct conditional_common;
 template <typename Tfallback, typename... Args>
 struct conditional_common<true, Tfallback, Args...>
 {
-    using type = common_type<Args...>;
+    using type = std::common_type_t<Args...>;
 };
 
 template <typename Tfallback, typename... Args>
@@ -919,10 +919,10 @@ constexpr KFR_INTRINSIC vec<T, N> make_vector(cvals_t<T, Values...>)
     return make_vector<T>(Values...);
 }
 
-template <
-    typename Type = void, typename Arg, typename... Args, size_t N = (sizeof...(Args) + 1),
-    typename SubType = fix_type<std::conditional_t<std::is_void_v<Type>, common_type<Arg, Args...>, Type>>,
-    KFR_ENABLE_IF(is_number<subtype<SubType>>)>
+template <typename Type = void, typename Arg, typename... Args, size_t N = (sizeof...(Args) + 1),
+          typename SubType =
+              fix_type<std::conditional_t<std::is_void_v<Type>, std::common_type_t<Arg, Args...>, Type>>,
+          KFR_ENABLE_IF(is_number<subtype<SubType>>)>
 constexpr KFR_INTRINSIC vec<SubType, N> pack(const Arg& x, const Args&... rest)
 {
     return internal::make_vector_impl<SubType>(csizeseq<N>, static_cast<SubType>(x),
@@ -1441,39 +1441,32 @@ KFR_INTRINSIC vec<T, N> v(const portable_vec<T, N>& pv)
 }
 
 } // namespace CMT_ARCH_NAME
-template <typename T1, typename T2, size_t N>
-struct common_type_impl<kfr::vec<T1, N>, kfr::vec<T2, N>>
-    : common_type_from_subtypes<T1, T2, kfr::vec_template<N>::template type>
-{
-};
-template <typename T1, typename T2, size_t N1, size_t N2>
-struct common_type_impl<kfr::vec<T1, N1>, kfr::vec<T2, N2>>
-{
-};
-template <typename T1, typename T2, size_t N>
-struct common_type_impl<kfr::vec<T1, N>, T2>
-    : common_type_from_subtypes<T1, T2, kfr::vec_template<N>::template type>
-{
-};
-template <typename T1, typename T2, size_t N>
-struct common_type_impl<T1, kfr::vec<T2, N>>
-    : common_type_from_subtypes<T1, T2, kfr::vec_template<N>::template type>
-{
-};
-
-template <typename T1, typename T2, size_t N1, size_t N2>
-struct common_type_impl<kfr::vec<T1, N1>, kfr::vec<kfr::vec<T2, N1>, N2>>
-    : common_type_from_subtypes<T1, T2, kfr::vec_vec_template<N1, N2>::template type>
-{
-    using type = kfr::vec<kfr::vec<typename common_type_impl<T1, T2>::type, N1>, N2>;
-};
-template <typename T1, typename T2, size_t N1, size_t N2>
-struct common_type_impl<kfr::vec<kfr::vec<T1, N1>, N2>, kfr::vec<T2, N1>>
-    : common_type_from_subtypes<T1, T2, kfr::vec_vec_template<N1, N2>::template type>
-{
-};
 
 } // namespace kfr
+
+namespace std
+{
+
+// V x V (same N)
+template <typename T1, typename T2, size_t N>
+struct common_type<kfr::vec<T1, N>, kfr::vec<T2, N>>
+    : kfr::construct_common_type<std::common_type<T1, T2>, kfr::vec_template<N>::template type>
+{
+};
+// V x S
+template <typename T1, typename T2, size_t N>
+struct common_type<kfr::vec<T1, N>, T2>
+    : kfr::construct_common_type<std::common_type<T1, T2>, kfr::vec_template<N>::template type>
+{
+};
+// S x V
+template <typename T1, typename T2, size_t N>
+struct common_type<T1, kfr::vec<T2, N>>
+    : kfr::construct_common_type<std::common_type<T1, T2>, kfr::vec_template<N>::template type>
+{
+};
+
+} // namespace std
 
 namespace cometa
 {

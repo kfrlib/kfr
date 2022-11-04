@@ -55,6 +55,18 @@ TEST(adjacent)
                      [](size_t i) { return i > 0 ? i * (i - 1) : 0; });
 }
 
+TEST(dimensions)
+{
+    static_assert(expression_dims<decltype(scalar(0))> == 0);
+    static_assert(expression_dims<decltype(dimensions<1>(scalar(0)))> == 1);
+
+    static_assert(shapeof<decltype(scalar(0))>() == shape{});
+    static_assert(shapeof<decltype(dimensions<1>(scalar(0)))>() == shape{ infinite_size });
+    static_assert(shapeof<decltype(dimensions<2>(dimensions<1>(scalar(0))))>() ==
+                  shape{ infinite_size, infinite_size });
+    CHECK_EXPRESSION(truncate(dimensions<1>(scalar(1)), 10), { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
+}
+
 TEST(padded)
 {
     static_assert(is_infinite<decltype(padded(counter()))>, "");
@@ -131,6 +143,8 @@ TEST(assign_expression)
     pack(a, b) *= broadcast<2>(10.f);
     CHECK_EXPRESSION(a, { 0, 10, 20, 30, 40, 50, 60, 70, 80, 90 });
     CHECK_EXPRESSION(b, { 1000, 1010, 1020, 1030, 1040, 1050, 1060, 1070, 1080, 1090 });
+
+    static_assert(std::is_same_v<std::common_type_t<f32x2x2, f32x2x2>, f32x2x2>);
 }
 
 TEST(trace) { render(trace(counter()), 44); }
