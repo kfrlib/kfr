@@ -1235,7 +1235,7 @@ void test_function1(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
                   [&](special_value value, auto type)
                   {
                       using T = typename decltype(type)::type;
-                      if (isapplicable(ctype<T>, value))
+                      if (isapplicable(cometa::ctype<T>, value))
                       {
                           const T x(value);
 #if !defined(_MSC_VER) || defined(__clang__)
@@ -1274,11 +1274,11 @@ void test_function2(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
         [&](special_value value1, special_value value2, auto type)
         {
             using T = typename decltype(type)::type;
-            if constexpr (IsDefined{}(ctype<T>))
+            if constexpr (IsDefined{}(cometa::ctype<T>))
             {
                 const T x1(value1);
                 const T x2(value2);
-                if (isapplicable(ctype<T>, value1, value2))
+                if (isapplicable(cometa::ctype<T>, value1, value2))
                 {
                     CHECK(std::is_same_v<decltype(fn(x1, x2)),
                                          typename compound_type_traits<T>::template rebind<decltype(reffn(
@@ -1294,7 +1294,7 @@ void test_function2(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
                       using T    = typename decltype(type)::type;
                       const T x1 = test_enumerate(T::shape(), csizeseq<T::size()>, 0, 1);
                       const T x2 = test_enumerate(T::shape(), csizeseq<T::size()>, 100, -1);
-                      if constexpr (IsDefined{}(ctype<T>))
+                      if constexpr (IsDefined{}(cometa::ctype<T>))
                       {
                           CHECK(fn(x1, x2) == apply(reffn, x1, x2));
                       }

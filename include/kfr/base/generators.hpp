@@ -184,7 +184,7 @@ struct generator_exp2 : public generator<T, VecWidth, generator_exp2<T, VecWidth
 
     KFR_MEM_INTRINSIC void sync(T start) const CMT_NOEXCEPT
     {
-        this->value = exp2(start + enumerate(vec_shape<T, VecWidth>, step));
+        this->value = exp2(start + enumerate(vec_shape<T, VecWidth>{}, step));
     }
 
     KFR_MEM_INTRINSIC void next() const CMT_NOEXCEPT { this->value += this->value * vstep; }
@@ -216,7 +216,7 @@ protected:
     T beta;
     CMT_NOINLINE static vec<T, VecWidth> init_cossin(T w, T phase)
     {
-        return cossin(dup(phase + enumerate(vec_shape<T, VecWidth / 2>, w)));
+        return cossin(dup(phase + enumerate(vec_shape<T, VecWidth / 2>{}, w)));
     }
 };
 
@@ -230,7 +230,7 @@ struct generator_sin : public generator<T, VecWidth, generator_sin<T, VecWidth>,
     }
     KFR_MEM_INTRINSIC void sync(T start) const CMT_NOEXCEPT
     {
-        const vec<T, 2 * VecWidth> cs = cossin(dup(start + enumerate(vec_shape<T, VecWidth>, step)));
+        const vec<T, 2 * VecWidth> cs = cossin(dup(start + enumerate(vec_shape<T, VecWidth>{}, step)));
         this->value                   = vec<vec<T, 2>, VecWidth>::from_flatten(cs);
     }
 

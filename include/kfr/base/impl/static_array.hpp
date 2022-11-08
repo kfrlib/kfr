@@ -54,7 +54,7 @@ struct static_array_base<T, csizes_t<indices...>>
 
     constexpr static size_t static_size = sizeof...(indices);
 
-    constexpr static_array_base()                         = default;
+    constexpr static_array_base() : array{ (static_cast<void>(indices), 0)... } {}
     constexpr static_array_base(const static_array_base&) = default;
     constexpr static_array_base(static_array_base&&)      = default;
 

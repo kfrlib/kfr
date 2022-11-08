@@ -415,7 +415,7 @@ struct expression_function : expression_with_arguments<Args...>, expression_trai
                                       vec<typename expression_traits<Args>::value_type, 1>...>::value_type;
     constexpr static size_t dims = const_max(expression_traits<Args>::dims...);
 
-#ifdef CMT_COMPILER_IS_MSVC
+#if defined CMT_COMPILER_IS_MSVC || defined CMT_COMPILER_GCC
     struct lambda_get_shape
     {
         template <size_t... idx>
@@ -428,8 +428,8 @@ struct expression_function : expression_with_arguments<Args...>, expression_trai
     struct lambda_get_shape_self
     {
         const expression_function& self;
-        template <typename... Args>
-        constexpr auto operator()(const Args&... args) const
+        template <typename... TArgs>
+        constexpr auto operator()(const TArgs&... args) const
         {
             return internal_generic::common_shape<true>(expression_traits<Args>::shapeof(args)...);
         }

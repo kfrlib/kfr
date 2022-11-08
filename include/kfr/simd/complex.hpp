@@ -453,6 +453,16 @@ template <typename T1, typename T2>
 struct common_type<T1, kfr::complex<T2>> : kfr::construct_common_type<std::common_type<T1, T2>, kfr::complex>
 {
 };
+template <typename T1, typename T2, size_t N>
+struct common_type<kfr::complex<T1>, kfr::vec<T2, N>>
+    : kfr::construct_common_type<std::common_type<T1, T2>, kfr::vec_of_complex<N>::template type>
+{
+};
+template <typename T1, typename T2, size_t N>
+struct common_type<kfr::vec<T1, N>, kfr::complex<T2>>
+    : kfr::construct_common_type<std::common_type<T1, T2>, kfr::vec_of_complex<N>::template type>
+{
+};
 } // namespace std
 
 CMT_PRAGMA_MSVC(warning(pop))

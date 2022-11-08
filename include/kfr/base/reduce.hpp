@@ -74,8 +74,6 @@ struct expression_reduce : public expression_traits_defaults
 
     constexpr static size_t width = vector_width<Tin> * bitness_const(1, 2);
 
-    using value_type = Tin;
-
     expression_reduce(ReduceFn&& reducefn, TransformFn&& transformfn, FinalFn&& finalfn)
         : counter(0), reducefn(std::move(reducefn)), transformfn(std::move(transformfn)),
           finalfn(std::move(finalfn)), value(resize<width>(make_vector(reducefn(initialvalue<Twork>{}))))
@@ -156,7 +154,7 @@ KFR_INTRINSIC Tout reduce(const E1& e1, ReduceFn&& reducefn,
         result = reducefn(result, transformfn(in));
         ++counter;
     }
-    return internal::reduce_call_final(finalfn, counter, result);
+    return reduce_call_final(finalfn, counter, result);
 }
 
 /**

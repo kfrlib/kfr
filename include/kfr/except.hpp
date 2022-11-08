@@ -32,7 +32,12 @@ class exception : public std::exception
 {
 public:
     using std::exception::exception;
-    exception(const std::string& str) : exception(str.c_str()) {}
+    exception(std::string str) : m_what(std::move(str)) {}
+
+    const char* what() const noexcept final { return m_what.c_str(); }
+
+private:
+    std::string m_what;
 };
 class logic_error : public exception
 {

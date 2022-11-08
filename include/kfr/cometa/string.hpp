@@ -8,6 +8,7 @@
 #include "ctti.hpp"
 #include "named_arg.hpp"
 #include <array>
+#include <climits>
 #include <cstdio>
 #include <memory>
 #include <numeric>

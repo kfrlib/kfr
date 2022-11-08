@@ -807,7 +807,7 @@ public:
             if (empty())
                 return {};
             else
-                return as_string(wrap_fmt(access(shape_type{}), ctype<Fmt>));
+                return as_string(wrap_fmt(access(shape_type{}), cometa::ctype<Fmt>));
         }
         else
         {

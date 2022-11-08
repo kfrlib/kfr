@@ -271,7 +271,7 @@ struct expression_upsample<2, E> : expression_with_arguments<E>, expression_trai
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_upsample& self, shape<1> index,
                                                 axis_params<0, N>)
     {
-        const vec<T, N / 2> x = get_elements(self.first() index / 2, axis_params<0, N / 2>());
+        const vec<T, N / 2> x = get_elements(self.first(), index / 2, axis_params<0, N / 2>());
         return interleave(x, zerovector(x));
     }
     KFR_INTRINSIC friend vec<T, 1> get_elements(const expression_upsample& self, shape<1> index,
@@ -297,7 +297,7 @@ struct expression_upsample<4, E> : expression_with_arguments<E>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_upsample& self, shape<1> index,
                                                 axis_params<0, N>) CMT_NOEXCEPT
     {
-        const vec<T, N / 4> x  = self.argument_first(cinput, index / 4, axis_params<0, N / 4>());
+        const vec<T, N / 4> x  = get_elements(self.first(), index / 4, axis_params<0, N / 4>());
         const vec<T, N / 2> xx = interleave(x, zerovector(x));
         return interleave(xx, zerovector(xx));
     }
@@ -307,11 +307,9 @@ struct expression_upsample<4, E> : expression_with_arguments<E>
         switch (index & 3)
         {
         case 0:
-            return interleave(self.argument_first(cinput, index / 4, axis_params<0, 1>()),
-                              zerovector<T, 1>());
+            return interleave(get_elements(self.first(), index / 4, axis_params<0, 1>()), zerovector<T, 1>());
         case 3:
-            return interleave(zerovector<T, 1>(),
-                              self.argument_first(cinput, index / 4, axis_params<0, 1>()));
+            return interleave(zerovector<T, 1>(), get_elements(self.first(), index / 4, axis_params<0, 1>()));
         default:
             return 0;
         }
@@ -322,7 +320,7 @@ struct expression_upsample<4, E> : expression_with_arguments<E>
         if (index & 3)
             return 0;
         else
-            return self.argument_first(cinput, index / 4, axis_params<0, 1>());
+            return get_elements(self.first(), index / 4, axis_params<0, 1>());
     }
 };
 
@@ -339,7 +337,7 @@ struct expression_downsample<2, offset, E> : expression_with_arguments<E>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_downsample& self, size_t index,
                                                 axis_params<0, N>) CMT_NOEXCEPT
     {
-        const vec<T, N* 2> x = self.argument_first(cinput, index * 2, axis_params<0, N * 2>());
+        const vec<T, N* 2> x = get_elements(self.first(), index * 2, axis_params<0, N * 2>());
         return x.shuffle(csizeseq<N, offset, 2>);
     }
 };
@@ -357,7 +355,7 @@ struct expression_downsample<4, offset, E> : expression_with_arguments<E>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_downsample& self, shape<1> index,
                                                 axis_params<0, N>) CMT_NOEXCEPT
     {
-        const vec<T, N* 4> x = self.argument_first(cinput, index * 4, axis_params<0, N * 4>());
+        const vec<T, N* 4> x = get_elements(self.first(), index * 4, axis_params<0, N * 4>());
         return x.shuffle(csizeseq<N, offset, 4>);
     }
 };
