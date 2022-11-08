@@ -17,7 +17,7 @@ set(TGT_TRIPLET arm-linux-gnueabihf)
 
 set (ARM_ROOT "/usr/${TGT_TRIPLET}/include")
 if (NOT GCC_VER)
-    set (GCC_VER 5.4.0)
+    set (GCC_VER 7.5.0)
 endif ()
 set (SYS_PATHS "-isystem ${ARM_ROOT}/c++/${GCC_VER} -isystem ${ARM_ROOT}/c++/${GCC_VER}/backward -isystem ${ARM_ROOT}/c++/${GCC_VER}/${TGT_TRIPLET} -isystem ${ARM_ROOT}")
 

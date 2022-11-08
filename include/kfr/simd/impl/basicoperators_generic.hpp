@@ -502,19 +502,23 @@ KFR_INTRINSIC __m256i _mm256_allones_si256()
 {
     return _mm256_cmpeq_epi8(_mm256_setzero_si256(), _mm256_setzero_si256());
 }
+KFR_INTRINSIC __m256i _mm256_not_si256(const __m256i& x)
+{
+    return _mm256_xor_si256(x, _mm256_allones_si256());
+}
 #else
 KFR_INTRINSIC __m256i _mm256_allones_si256()
 {
     return _mm256_castps_si256(_mm256_cmp_ps(_mm256_setzero_ps(), _mm256_setzero_ps(), _CMP_EQ_UQ));
 }
+KFR_INTRINSIC __m256i _mm256_not_si256(const __m256i& x)
+{
+    return _mm256_castps_si256(_mm256_xor_ps(_mm256_castsi256_ps(x), _mm256_allones_ps()));
+}
 #endif
 
 KFR_INTRINSIC __m256 _mm256_not_ps(const __m256& x) { return _mm256_xor_ps(x, _mm256_allones_ps()); }
 KFR_INTRINSIC __m256d _mm256_not_pd(const __m256d& x) { return _mm256_xor_pd(x, _mm256_allones_pd()); }
-KFR_INTRINSIC __m256i _mm256_not_si256(const __m256i& x)
-{
-    return _mm256_xor_si256(x, _mm256_allones_si256());
-}
 
 KFR_INTRINSIC __m256i _mm256_highbit_epi8() { return _mm256_set1_epi8(static_cast<char>(0x80)); }
 KFR_INTRINSIC __m256i _mm256_highbit_epi16() { return _mm256_set1_epi16(static_cast<short>(0x8000)); }

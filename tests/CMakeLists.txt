@@ -209,7 +209,7 @@ if (KFR_ARCH_TESTS)
     endif ()
 endif ()
 
-if (USE_SDE)
+if (KFR_USE_SDE)
     if ("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
         find_program(SDE NAMES "sde64" "sde")
     else ()
@@ -248,7 +248,7 @@ if (NOT KFR_SKIP_TESTS)
 
     if (KFR_ARCH_TESTS)
         foreach (A IN LISTS ARCH_LIST)
-            if (USE_SDE)
+            if (KFR_USE_SDE)
                 add_test(NAME all_tests_${A}
                          COMMAND ${SDE} ${SDE_ARCH_${A}} -chip_check_exe_only
                                  -- ${PROJECT_BINARY_DIR}/bin/all_tests_${A})
@@ -259,7 +259,7 @@ if (NOT KFR_SKIP_TESTS)
             endif ()
         endforeach ()
     endif ()
-    if (USE_SDE)
+    if (KFR_USE_SDE)
         add_test(NAME all_tests
                  COMMAND ${SDE} ${SDE_ARCH_${KFR_ARCH}} -chip_check_exe_only --
                          ${PROJECT_BINARY_DIR}/bin/all_tests)
