@@ -6,7 +6,7 @@ echo Preparing directories...
 rmdir /s /q %build_dir%
 mkdir %build_dir%
 pushd %build_dir%
-set arguments=-DENABLE_DFT=ON -DENABLE_CAPI_BUILD=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=C:/LLVM9/bin/clang-cl.exe
+set arguments=-DKFR_ENABLE_DFT=ON -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=C:/LLVM9/bin/clang-cl.exe
 echo Running cmake -GNinja %arguments%  ..
 cmake -GNinja %arguments% .. || exit /b
 echo Running ninja...

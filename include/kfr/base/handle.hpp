@@ -25,6 +25,7 @@
  */
 #pragma once
 
+#include "../cometa/memory.hpp"
 #include "../simd/vec.hpp"
 #include "basic_expressions.hpp"
 #include <memory>
