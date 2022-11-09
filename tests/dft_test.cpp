@@ -24,10 +24,24 @@ constexpr ctypes_t<float, double> dft_float_types{};
 constexpr ctypes_t<float> dft_float_types{};
 #endif
 
-#if defined(__clang__) && defined(CMT_ARCH_X86)
+#if defined(CMT_ARCH_X86)
 
-static void full_barrier() { asm volatile("mfence" ::: "memory"); }
-static void dont_optimize(const void* in) { asm volatile("" : "+m"(in)); }
+static void full_barrier()
+{
+#ifdef CMT_COMPILER_GNU
+    asm volatile("mfence" ::: "memory");
+#else
+    _ReadWriteBarrier();
+#endif
+}
+static CMT_NOINLINE void dont_optimize(const void* in)
+{
+#ifdef CMT_COMPILER_GNU
+    asm volatile("" : "+m"(in));
+#else
+    volatile uint8_t a = *reinterpret_cast<const uint8_t*>(in);
+#endif
+}
 
 template <typename T>
 static void perf_test_t(int size)
@@ -69,10 +83,12 @@ TEST(test_performance)
         perf_test(size);
     }
 
+#ifndef KFR_DFT_NO_NPo2
     perf_test(210);
     perf_test(3150);
     perf_test(211);
     perf_test(3163);
+#endif
 }
 #endif
 

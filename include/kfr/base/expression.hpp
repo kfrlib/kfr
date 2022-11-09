@@ -565,10 +565,9 @@ template <typename Fn, typename... Args, index_t Axis, size_t N, index_t Dims,
 KFR_INTRINSIC vec<T, N> get_elements(const expression_function<Fn, Args...>& self, const shape<Dims>& index,
                                      const axis_params<Axis, N>& sh)
 {
-    constexpr index_t outdims = Tr::dims;
     return self.fold_idx(
         [&](auto... idx) CMT_INLINE_LAMBDA -> vec<T, N> {
-            return self.fn(internal::get_arg<outdims>(self, index, sh, idx)...);
+            return self.fn(internal::get_arg<Tr::dims>(self, index, sh, idx)...);
         });
 }
 

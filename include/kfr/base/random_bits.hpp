@@ -79,6 +79,8 @@ KFR_INTRINSIC void random_next(random_state& state)
     state.v = bitcast<u32>(rotateright<3>(
         bitcast<u8>(fmadd(static_cast<u32x4>(state.v), static_cast<u32x4>(mul), static_cast<u32x4>(add)))));
 }
+
+#ifndef KFR_DISABLE_READCYCLECOUNTER
 KFR_INTRINSIC random_state random_init()
 {
     random_state state;
@@ -87,6 +89,7 @@ KFR_INTRINSIC random_state random_init()
     random_next(state);
     return state;
 }
+#endif
 
 KFR_INTRINSIC random_state random_init(u32 x0, u32 x1, u32 x2, u32 x3)
 {

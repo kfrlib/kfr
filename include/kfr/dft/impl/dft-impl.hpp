@@ -527,7 +527,7 @@ void init_dft(dft_plan<T>* self, size_t size, dft_order)
                 for (size_t i = 0; i < count[r]; i++)
                 {
                     iterations /= r;
-                    radices[radices_size++] = r;
+                    radices[radices_size++] = static_cast<int>(r);
                     if (iterations == 1)
                         prepare_dft_stage(self, r, iterations, blocks, ctrue);
                     else
@@ -539,7 +539,7 @@ void init_dft(dft_plan<T>* self, size_t size, dft_order)
             if (cur_size > 1)
             {
                 iterations /= cur_size;
-                radices[radices_size++] = cur_size;
+                radices[radices_size++] = static_cast<int>(cur_size);
                 if (iterations == 1)
                     prepare_dft_stage(self, cur_size, iterations, blocks, ctrue);
                 else

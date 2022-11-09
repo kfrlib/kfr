@@ -21,7 +21,7 @@ if (NOT GCC_VER)
 endif ()
 set (SYS_PATHS "-isystem ${ARM_ROOT}/c++/${GCC_VER} -isystem ${ARM_ROOT}/c++/${GCC_VER}/backward -isystem ${ARM_ROOT}/c++/${GCC_VER}/${TGT_TRIPLET} -isystem ${ARM_ROOT}")
 
-set (ARM_COMMON_FLAGS "-target ${TGT_TRIPLET} -mcpu=cortex-a15 -mfpu=neon-vfpv4 -mfloat-abi=hard -static")
+set (ARM_COMMON_FLAGS "-std=gnu++17 -target ${TGT_TRIPLET} -mcpu=cortex-a15 -mfpu=neon-vfpv4 -mfloat-abi=hard -static")
 
 set (CMAKE_CXX_FLAGS "${SYS_PATHS} ${ARM_COMMON_FLAGS}" CACHE STRING "")
 set (CMAKE_C_FLAGS " ${SYS_PATHS} ${ARM_COMMON_FLAGS}" CACHE STRING "")

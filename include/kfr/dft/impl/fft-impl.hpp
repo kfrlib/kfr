@@ -1106,12 +1106,14 @@ KFR_INTRINSIC void initialize_stages(dft_plan<T>* self)
     {
         init_fft(self, self->size, dft_order::normal);
     }
-#ifndef KFR_DFT_NO_NPo2
     else
     {
+#ifndef KFR_DFT_NO_NPo2
         init_dft(self, self->size, dft_order::normal);
-    }
+#else
+        KFR_REPORT_ERROR(logic, "Non-power of 2 FFT is disabled");
 #endif
+    }
 }
 
 template <typename T>

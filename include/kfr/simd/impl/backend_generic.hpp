@@ -1695,10 +1695,10 @@ KFR_INTRINSIC simd<float, 8> simd_vec_shuffle(simd_t<float, 8>, const simd<float
         {
             return simd_from_halves(simd_t<float, 8>{},
                                     universal_shuffle(simd_t<float, 4>{}, simd_get_low(simd_t<float, 8>{}, x),
-                                                      shuffle_mask<8, I0, I1, I2, I3>::value),
+                                                      csizes<I0, I1, I2, I3>),
                                     universal_shuffle(simd_t<float, 4>{},
                                                       simd_get_high(simd_t<float, 8>{}, x),
-                                                      shuffle_mask<8, I4, I5, I6, I7>::value));
+                                                      csizes<I4, I5, I6, I7>));
         }
     }
     else
@@ -1735,10 +1735,9 @@ KFR_INTRINSIC simd<double, 4> simd_vec_shuffle(simd_t<double, 4>, const simd<dou
         {
             return simd_from_halves(
                 simd_t<double, 4>{},
-                universal_shuffle(simd_t<double, 2>{}, simd_get_low(simd_t<double, 4>{}, x),
-                                  shuffle_mask<2, I0, I1>::value),
+                universal_shuffle(simd_t<double, 2>{}, simd_get_low(simd_t<double, 4>{}, x), csizes<I0, I1>),
                 universal_shuffle(simd_t<double, 2>{}, simd_get_high(simd_t<double, 4>{}, x),
-                                  shuffle_mask<2, I2, I3>::value));
+                                  csizes<I2, I3>));
         }
     }
     else
