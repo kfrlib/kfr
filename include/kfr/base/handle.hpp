@@ -236,8 +236,9 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_handle<T, NDims>& self, co
     if constexpr (N > expression_vtable<T, NDims>::Nmax)
     {
         constexpr size_t Nhalf = N / 2;
-        return concat(get_elements(self, index, axis_params_v<Axis, Nhalf>),
-                      get_elements(self, index.add_at(Axis, Nhalf), axis_params_v<Axis, Nhalf>));
+        return concat(
+            get_elements(self, index, axis_params_v<Axis, Nhalf>),
+            get_elements(self, index.add_at(Nhalf, cval<index_t, Axis>), axis_params_v<Axis, Nhalf>));
     }
     else
     {
