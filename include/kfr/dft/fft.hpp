@@ -139,7 +139,7 @@ struct dft_plan
 
 #ifdef KFR_DFT_MULTI
     explicit dft_plan(cpu_t cpu, size_t size, dft_order order = dft_order::normal)
-        : size(size), temp_size(0), data_size(0)
+        : size(size), temp_size(0), data_size(0), arblen(false)
     {
         if (cpu == cpu_t::runtime)
             cpu = get_cpu();
@@ -168,7 +168,7 @@ struct dft_plan
     }
 #else
     explicit dft_plan(size_t size, dft_order order = dft_order::normal)
-        : size(size), temp_size(0), data_size(0)
+        : size(size), temp_size(0), data_size(0), arblen(false)
     {
         dft_initialize(*this);
     }
@@ -217,13 +217,14 @@ struct dft_plan
     autofree<u8> data;
     size_t data_size;
     std::vector<dft_stage_ptr<T>> stages;
+    bool arblen;
 
 protected:
     struct noinit
     {
     };
     explicit dft_plan(noinit, size_t size, dft_order order = dft_order::normal)
-        : size(size), temp_size(0), data_size(0)
+        : size(size), temp_size(0), data_size(0), arblen(false)
     {
     }
     const complex<T>* select_in(size_t stage, const complex<T>* out, const complex<T>* in,

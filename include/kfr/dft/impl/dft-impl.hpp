@@ -515,6 +515,7 @@ void init_dft(dft_plan<T>* self, size_t size, dft_order)
         if (cur_size >= 101)
         {
             add_stage<intrinsics::dft_arblen_stage_impl<T>>(self, size);
+            self->arblen = true;
         }
         else
         {

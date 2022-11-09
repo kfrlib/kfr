@@ -197,6 +197,7 @@ TEST(fft_accuracy)
                           univector<complex<float_type>> refout = out;
                           univector<complex<float_type>> outo   = in;
                           const dft_plan<float_type> dft(size);
+                          double min_prec2 = dft.arblen ? 2 * min_prec : min_prec;
                           if (!inverse)
                           {
 #if DEBUG_DFT_PROGRESS
@@ -210,9 +211,9 @@ TEST(fft_accuracy)
                           dft.execute(out, out, temp, inverse);
 
                           const float_type rms_diff_inplace = rms(cabs(refout - out));
-                          CHECK(rms_diff_inplace < min_prec);
+                          CHECK(rms_diff_inplace < min_prec2);
                           const float_type rms_diff_outofplace = rms(cabs(refout - outo));
-                          CHECK(rms_diff_outofplace < min_prec);
+                          CHECK(rms_diff_outofplace < min_prec2);
                       }
 
                       if (size >= 4 && is_poweroftwo(size))
