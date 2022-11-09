@@ -196,7 +196,7 @@ endif ()
 
 if (KFR_ARCH_TESTS)
 
-    foreach (A IN LISTS KFR_ARCH_LIST)
+    foreach (A IN LISTS ARCH_LIST)
         add_x86_test(${A})
     endforeach ()
 
