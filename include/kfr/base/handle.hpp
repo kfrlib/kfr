@@ -233,17 +233,18 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_handle<T, NDims>& self, co
                                      const axis_params<Axis, N>& sh)
 {
     static_assert(is_poweroftwo(N) && N >= 1);
-    if constexpr (N > expression_vtable<T, NDims>::Nmax)
+    constexpr size_t Nsize = ilog2(N);
+    if constexpr (Nsize >= expression_vtable<T, NDims>::Nsizes)
     {
         constexpr size_t Nhalf = N / 2;
-        return concat(
-            get_elements(self, index, axis_params_v<Axis, Nhalf>),
-            get_elements(self, index.add_at(Nhalf, cval<index_t, Axis>), axis_params_v<Axis, Nhalf>));
+        auto low  = get_elements(self, index, axis_params_v<Axis, Nhalf>);
+        auto high = get_elements(self, index.add_at(Nhalf, cval<index_t, Axis>), axis_params_v<Axis, Nhalf>);
+        return concat(low, high);
     }
     else
     {
         portable_vec<T, N> result;
-        self.vtable->fn_get_elements[Axis][ilog2(N)](self.instance, index, result.elem);
+        self.vtable->fn_get_elements[Axis][Nsize](self.instance, index, result.elem);
         return result;
     }
 }
@@ -253,15 +254,16 @@ KFR_INTRINSIC void set_elements(const expression_handle<T, NDims>& self, const s
                                 const axis_params<Axis, N>& sh, const identity<vec<T, N>>& value)
 {
     static_assert(is_poweroftwo(N) && N >= 1);
-    if constexpr (N > expression_vtable<T, NDims>::Nmax)
+    constexpr size_t Nsize = ilog2(N);
+    if constexpr (Nsize >= expression_vtable<T, NDims>::Nsizes)
     {
         constexpr size_t Nhalf = N / 2;
         set_elements(self, index, axis_params_v<Axis, Nhalf>, slice<0, Nhalf>(value));
-        set_elements(self, index.add_at(Axis, Nhalf), axis_params_v<Axis, Nhalf>, slice<Nhalf, Nhalf>(value));
+        set_elements(self, index.add_at(Nhalf, cval<index_t, Axis>), axis_params_v<Axis, Nhalf>, slice<Nhalf, Nhalf>(value));
     }
     else
     {
-        self.vtable->fn_set_elements[Axis][ilog2(N)](self.instance, index, &value.front());
+        self.vtable->fn_set_elements[Axis][Nsize](self.instance, index, &value.front());
     }
 }
 } // namespace CMT_ARCH_NAME
