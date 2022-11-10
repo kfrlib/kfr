@@ -42,10 +42,11 @@ namespace kfr
 {
 
 #ifndef KFR_32BIT_INDICES
-using index_t = size_t;
 #if SIZE_MAX == UINT64_MAX
+using index_t        = uint64_t;
 using signed_index_t = int64_t;
 #else
+using index_t        = uint32_t;
 using signed_index_t = int32_t;
 #endif
 #else
