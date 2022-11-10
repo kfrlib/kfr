@@ -360,8 +360,14 @@ extern char* gets(char* __s);
 #define CMT_ALWAYS_INLINE
 #endif
 
-#define CMT_INLINE __inline__ CMT_ALWAYS_INLINE
-#define CMT_INLINE_MEMBER CMT_ALWAYS_INLINE
+#ifdef NDEBUG
+#define CMT_INLINE_IN_RELEASE CMT_ALWAYS_INLINE
+#else
+#define CMT_INLINE_IN_RELEASE
+#endif
+
+#define CMT_INLINE __inline__ CMT_INLINE_IN_RELEASE
+#define CMT_INLINE_MEMBER CMT_INLINE_IN_RELEASE
 #if defined(CMT_COMPILER_GCC) &&                                                                             \
     (CMT_GCC_VERSION >= 900 && CMT_GCC_VERSION < 904 || CMT_GCC_VERSION >= 1000 && CMT_GCC_VERSION < 1002)
 // Workaround for GCC 9/10 bug https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90333
@@ -392,9 +398,15 @@ extern char* gets(char* __s);
 #define CMT_ALWAYS_INLINE
 #endif
 
+#ifdef NDEBUG
+#define CMT_INLINE_IN_RELEASE CMT_ALWAYS_INLINE
+#else
+#define CMT_INLINE_IN_RELEASE
+#endif
+
 #define CMT_NODEBUG
-#define CMT_INLINE inline CMT_ALWAYS_INLINE
-#define CMT_INLINE_MEMBER CMT_ALWAYS_INLINE
+#define CMT_INLINE inline CMT_INLINE_IN_RELEASE
+#define CMT_INLINE_MEMBER CMT_INLINE_IN_RELEASE
 #if _MSC_VER >= 1927
 #define CMT_INLINE_LAMBDA [[msvc::forceinline]]
 #else

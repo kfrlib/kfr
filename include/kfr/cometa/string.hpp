@@ -538,7 +538,7 @@ namespace details
 {
 
 template <size_t dims>
-CMT_ALWAYS_INLINE size_t trailing_zeros(const std::array<size_t, dims>& indices)
+CMT_INTRINSIC size_t trailing_zeros(const std::array<size_t, dims>& indices)
 {
     for (size_t i = 0; i < dims; ++i)
     {
@@ -549,7 +549,7 @@ CMT_ALWAYS_INLINE size_t trailing_zeros(const std::array<size_t, dims>& indices)
 }
 
 template <size_t dims>
-CMT_ALWAYS_INLINE bool increment_indices(std::array<size_t, dims>& indices,
+CMT_INTRINSIC bool increment_indices(std::array<size_t, dims>& indices,
                                          const std::array<size_t, dims>& stop)
 {
     indices[dims - 1] += 1;
@@ -572,12 +572,12 @@ CMT_ALWAYS_INLINE bool increment_indices(std::array<size_t, dims>& indices,
 } // namespace details
 
 template <typename U, typename Fmt>
-CMT_ALWAYS_INLINE Fmt wrap_fmt(const U& val, ctype_t<Fmt>)
+CMT_INTRINSIC Fmt wrap_fmt(const U& val, ctype_t<Fmt>)
 {
     return Fmt{ val };
 }
 template <typename U>
-CMT_ALWAYS_INLINE U wrap_fmt(const U& val, ctype_t<void>)
+CMT_INTRINSIC U wrap_fmt(const U& val, ctype_t<void>)
 {
     return val;
 }
