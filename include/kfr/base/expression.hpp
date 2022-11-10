@@ -186,7 +186,8 @@ constexpr inline bool is_input_output_expression<E, enable_if_input_output_expre
 
 #define KFR_ACCEPT_EXPRESSIONS(...) internal_generic::expressions_check<__VA_ARGS__>* = nullptr
 
-#define KFR_ACCEPT_ASGN_EXPRESSIONS(E1, E2) KFR_ENABLE_IF(is_input_output_expression<E1> && is_input_expression<E2>)
+#define KFR_ACCEPT_ASGN_EXPRESSIONS(E1, E2)                                                                  \
+    KFR_ENABLE_IF(is_input_output_expression<E1>&& is_input_expression<E2>)
 
 template <typename T>
 constexpr inline bool is_expr_element = std::is_same_v<std::remove_cv_t<T>, T>&& is_vec_element<T>;

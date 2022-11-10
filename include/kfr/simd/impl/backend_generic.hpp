@@ -1381,7 +1381,7 @@ template <typename Tout, typename Tin, size_t N, size_t... indices>
 KFR_INTRINSIC simd<Tout, N> simd_convert__(const simd<Tin, N>& x, csizes_t<indices...>) CMT_NOEXCEPT
 {
     const simd_array<Tin, N> xx = to_simd_array<Tin, N>(x);
-    return simd_make(ctype<Tout>, static_cast<Tout>(xx.val[indices])...);
+    return simd_make(cometa::ctype<Tout>, static_cast<Tout>(xx.val[indices])...);
 }
 
 /// @brief Converts input vector to vector with subtype Tout

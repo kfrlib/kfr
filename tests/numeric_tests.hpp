@@ -85,8 +85,8 @@ inline const char* tname(ctype_t<f64>) { return "double"; }
                           uint64_t checks_count = 0;                                                         \
                           std::shared_ptr<file_reader<test_data_entry<Tsub, 1>>> reader =                    \
                               open_file_for_reading<test_data_entry<Tsub, 1>>(                               \
-                                  std::string(KFR_SRC_DIR "/tests/data/" #fn "_") + tname(ctype<Tsub>) +     \
-                                  "_" #datafile);                                                            \
+                                  std::string(KFR_SRC_DIR "/tests/data/" #fn "_") +                          \
+                                  tname(cometa::ctype<Tsub>) + "_" #datafile);                               \
                           test_data_entry<Tsub, 1> entry;                                                    \
                           while (reader->read(entry))                                                        \
                           {                                                                                  \
@@ -97,7 +97,7 @@ inline const char* tname(ctype_t<f64>) { return "double"; }
                           CHECK(checks_count > 0u);                                                          \
                           CHECK(error_sum / checks_count <= avgulps);                                        \
                           if (show_measured_accuracy)                                                        \
-                              println("measured accuracy: ", tname(ctype<Tsub>), " ",                        \
+                              println("measured accuracy: ", tname(cometa::ctype<Tsub>), " ",                \
                                       error_sum / checks_count, "(peak ", error_peak, ")");                  \
                       });                                                                                    \
     }
@@ -115,8 +115,8 @@ inline const char* tname(ctype_t<f64>) { return "double"; }
                           uint64_t checks_count = 0;                                                         \
                           std::shared_ptr<file_reader<test_data_entry<Tsub, 2>>> reader =                    \
                               open_file_for_reading<test_data_entry<Tsub, 2>>(                               \
-                                  std::string(KFR_SRC_DIR "/tests/data/" #fn "_") + tname(ctype<Tsub>) +     \
-                                  "_" #datafile);                                                            \
+                                  std::string(KFR_SRC_DIR "/tests/data/" #fn "_") +                          \
+                                  tname(cometa::ctype<Tsub>) + "_" #datafile);                               \
                           test_data_entry<Tsub, 2> entry;                                                    \
                           while (reader->read(entry))                                                        \
                           {                                                                                  \
@@ -127,7 +127,7 @@ inline const char* tname(ctype_t<f64>) { return "double"; }
                           CHECK(checks_count > 0u);                                                          \
                           CHECK(error_sum / checks_count <= avgulps);                                        \
                           if (show_measured_accuracy)                                                        \
-                              println("measured accuracy: ", tname(ctype<Tsub>), " ",                        \
+                              println("measured accuracy: ", tname(cometa::ctype<Tsub>), " ",                \
                                       error_sum / checks_count, "(peak ", error_peak, ")");                  \
                       });                                                                                    \
     }

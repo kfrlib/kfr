@@ -126,7 +126,7 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
     template <typename TI = index_t>
     constexpr std::array<TI, dims> to_std_array() const
     {
-        std::array<TI, dims> result;
+        std::array<TI, dims> result{};
         std::copy(this->begin(), this->end(), result.begin());
         return result;
     }

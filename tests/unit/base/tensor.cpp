@@ -396,13 +396,13 @@ TEST(tensor_tostring)
     CHECK(as_string(shape{}) == "shape{}");
     CHECK(as_string(shape{ 1, 2, 3 }) == "shape{1, 2, 3}");
 
-    tensor<f32x2, 1> t0(shape{ 3 });
+    tensor<f32x2, 1> t0(shape<1>{ 3 });
     t0(0) = vec{ 1, 2 };
     t0(1) = vec{ 3, 4 };
     t0(2) = vec{ -1, 1000 };
     CHECK(t0.to_string<fmt_t<f32x2, 'f', 0, 2>>() == "{{1, 2}, {3, 4}, {-1, 1000}}");
 
-    tensor<float, 1> t1(shape{ 60 });
+    tensor<float, 1> t1(shape<1>{ 60 });
     t1 = debug_counter<float, 1>();
     CHECK(nl + t1.to_string<fmt_t<float, 'f', 2, 0>>(12, 0) + nl == R"(
 { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11,
@@ -412,7 +412,7 @@ TEST(tensor_tostring)
  48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59}
 )");
 
-    tensor<float, 2> t2(shape{ 12, 5 });
+    tensor<float, 2> t2(shape<2>{ 12, 5 });
     t2 = debug_counter<float, 2>();
     CHECK(nl + t2.to_string<fmt_t<float, 'f', 3, 0>>(16, 0) + nl == R"(
 {{  0,   1,   2,   3,   4},
@@ -429,7 +429,7 @@ TEST(tensor_tostring)
  {110, 111, 112, 113, 114}}
 )");
 
-    tensor<float, 3> t3(shape{ 3, 4, 5 });
+    tensor<float, 3> t3(shape<3>{ 3, 4, 5 });
     t3 = debug_counter<float, 3>();
     CHECK(nl + t3.to_string<fmt_t<float, 'f', 4, 0>>(16, 0) + nl == R"(
 {{{   0,    1,    2,    3,    4},
@@ -446,7 +446,7 @@ TEST(tensor_tostring)
   { 230,  231,  232,  233,  234}}}
 )");
 
-    tensor<float, 4> t4(shape{ 3, 2, 2, 5 });
+    tensor<float, 4> t4(shape<4>{ 3, 2, 2, 5 });
     t4 = debug_counter<float, 4>();
     CHECK(nl + t4.to_string<fmt_t<float, 'f', 5, 0>>(16, 0) + nl == R"(
 {{{{    0,     1,     2,     3,     4},
@@ -463,7 +463,7 @@ TEST(tensor_tostring)
    { 2110,  2111,  2112,  2113,  2114}}}}
 )");
 
-    tensor<float, 2> t5(shape{ 10, 1 });
+    tensor<float, 2> t5(shape<2>{ 10, 1 });
     t5 = debug_counter<float, 2>();
     CHECK(nl + t5.to_string<fmt_t<float, 'f', -1, 0>>(12, 1) + nl == R"(
 {{0}, {10}, {20}, {30}, {40}, {50}, {60}, {70}, {80}, {90}}

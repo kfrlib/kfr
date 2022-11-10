@@ -549,8 +549,7 @@ CMT_INTRINSIC size_t trailing_zeros(const std::array<size_t, dims>& indices)
 }
 
 template <size_t dims>
-CMT_INTRINSIC bool increment_indices(std::array<size_t, dims>& indices,
-                                         const std::array<size_t, dims>& stop)
+CMT_INTRINSIC bool increment_indices(std::array<size_t, dims>& indices, const std::array<size_t, dims>& stop)
 {
     indices[dims - 1] += 1;
     CMT_LOOP_UNROLL
@@ -605,7 +604,7 @@ std::string array_to_string(const std::array<size_t, Dims>& shape, Getter&& gett
         int columns                        = 0;
         do
         {
-            std::string str = as_string(wrap_fmt(getter(index), ctype<Fmt>));
+            std::string str = as_string(wrap_fmt(getter(index), cometa::ctype<Fmt>));
             index_t z       = details::trailing_zeros(index);
             if ((z > 0 && columns > 0) || columns >= max_columns)
             {

@@ -1184,6 +1184,13 @@ struct vec_template
     using type = vec<T, N>;
 };
 
+template <size_t N1, size_t N2>
+struct vecvec_template
+{
+    template <typename T>
+    using type = vec<vec<T, N1>, N2>;
+};
+
 #ifdef KFR_TESTING
 
 inline const std::vector<special_value>& special_values()
@@ -1462,6 +1469,24 @@ struct common_type<kfr::vec<T1, N>, T2>
 template <typename T1, typename T2, size_t N>
 struct common_type<T1, kfr::vec<T2, N>>
     : kfr::construct_common_type<std::common_type<T1, T2>, kfr::vec_template<N>::template type>
+{
+};
+// VV x V
+template <typename T1, typename T2, size_t N1, size_t N2>
+struct common_type<kfr::vec<kfr::vec<T1, N1>, N2>, kfr::vec<T2, N1>>
+    : kfr::construct_common_type<std::common_type<T1, T2>, kfr::vecvec_template<N1, N2>::template type>
+{
+};
+// V x VV
+template <typename T1, typename T2, size_t N1, size_t N2>
+struct common_type<kfr::vec<T1, N1>, kfr::vec<kfr::vec<T2, N1>, N2>>
+    : kfr::construct_common_type<std::common_type<T1, T2>, kfr::vecvec_template<N1, N2>::template type>
+{
+};
+// VV x VV
+template <typename T1, typename T2, size_t N1, size_t N2>
+struct common_type<kfr::vec<kfr::vec<T1, N1>, N2>, kfr::vec<kfr::vec<T2, N1>, N2>>
+    : kfr::construct_common_type<std::common_type<T1, T2>, kfr::vecvec_template<N1, N2>::template type>
 {
 };
 

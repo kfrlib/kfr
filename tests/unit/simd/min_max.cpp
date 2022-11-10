@@ -37,7 +37,7 @@ struct IsNotMinInt
     template <typename T, size_t N>
     bool operator()(ctype_t<vec<T, N>>, identity<T> x, identity<T> y) const
     {
-        return operator()(ctype<T>, x, y);
+        return operator()(cometa::ctype<T>, x, y);
     }
 };
 
