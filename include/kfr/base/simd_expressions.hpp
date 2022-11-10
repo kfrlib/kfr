@@ -423,71 +423,61 @@ KFR_INTRINSIC expression_function<fn::satsub, E1, E2> satsub(E1&& x, E2&& y)
     return { fn::satsub(), std::forward<E1>(x), std::forward<E2>(y) };
 }
 
-template <typename E1, typename E2, enable_if_input_output_expression<E1>* = nullptr,
-          enable_if_input_expression<E2>* = nullptr>
+template <typename E1, typename E2, KFR_ACCEPT_ASGN_EXPRESSIONS(E1, E2)>
 KFR_INTRINSIC E1& operator+=(E1&& e1, E2&& e2)
 {
     process(e1, operator+(e1, e2));
     return e1;
 }
-template <typename E1, typename E2, enable_if_input_output_expression<E1>* = nullptr,
-          enable_if_input_expression<E2>* = nullptr>
+template <typename E1, typename E2, KFR_ACCEPT_ASGN_EXPRESSIONS(E1, E2)>
 KFR_INTRINSIC E1& operator-=(E1&& e1, E2&& e2)
 {
     process(e1, operator-(e1, e2));
     return e1;
 }
-template <typename E1, typename E2, enable_if_input_output_expression<E1>* = nullptr,
-          enable_if_input_expression<E2>* = nullptr>
+template <typename E1, typename E2, KFR_ACCEPT_ASGN_EXPRESSIONS(E1, E2)>
 KFR_INTRINSIC E1& operator*=(E1&& e1, E2&& e2)
 {
     process(e1, operator*(e1, e2));
     return e1;
 }
-template <typename E1, typename E2, enable_if_input_output_expression<E1>* = nullptr,
-          enable_if_input_expression<E2>* = nullptr>
+template <typename E1, typename E2, KFR_ACCEPT_ASGN_EXPRESSIONS(E1, E2)>
 KFR_INTRINSIC E1& operator/=(E1&& e1, E2&& e2)
 {
     process(e1, operator/(e1, e2));
     return e1;
 }
-template <typename E1, typename E2, enable_if_input_output_expression<E1>* = nullptr,
-          enable_if_input_expression<E2>* = nullptr>
+template <typename E1, typename E2, KFR_ACCEPT_ASGN_EXPRESSIONS(E1, E2)>
 KFR_INTRINSIC E1& operator%=(E1&& e1, E2&& e2)
 {
     process(e1, operator%(e1, e2));
     return e1;
 }
-template <typename E1, typename E2, enable_if_input_output_expression<E1>* = nullptr,
-          enable_if_input_expression<E2>* = nullptr>
+template <typename E1, typename E2, KFR_ACCEPT_ASGN_EXPRESSIONS(E1, E2)>
 KFR_INTRINSIC E1& operator|=(E1&& e1, E2&& e2)
 {
     process(e1, operator|(e1, e2));
     return e1;
 }
-template <typename E1, typename E2, enable_if_input_output_expression<E1>* = nullptr,
-          enable_if_input_expression<E2>* = nullptr>
+template <typename E1, typename E2, KFR_ACCEPT_ASGN_EXPRESSIONS(E1, E2)>
 KFR_INTRINSIC E1& operator&=(E1&& e1, E2&& e2)
 {
     process(e1, operator&(e1, e2));
     return e1;
 }
-template <typename E1, typename E2, enable_if_input_output_expression<E1>* = nullptr,
-          enable_if_input_expression<E2>* = nullptr>
+template <typename E1, typename E2, KFR_ACCEPT_ASGN_EXPRESSIONS(E1, E2)>
 KFR_INTRINSIC E1& operator^=(E1&& e1, E2&& e2)
 {
     process(e1, operator^(e1, e2));
     return e1;
 }
-template <typename E1, typename E2, enable_if_input_output_expression<E1>* = nullptr,
-          enable_if_input_expression<E2>* = nullptr>
+template <typename E1, typename E2, KFR_ACCEPT_ASGN_EXPRESSIONS(E1, E2)>
 KFR_INTRINSIC E1& operator<<=(E1&& e1, E2&& e2)
 {
     process(e1, operator<<(e1, e2));
     return e1;
 }
-template <typename E1, typename E2, enable_if_input_output_expression<E1>* = nullptr,
-          enable_if_input_expression<E2>* = nullptr>
+template <typename E1, typename E2, KFR_ACCEPT_ASGN_EXPRESSIONS(E1, E2)>
 KFR_INTRINSIC E1& operator>>=(E1&& e1, E2&& e2)
 {
     process(e1, operator>>(e1, e2));
