@@ -102,8 +102,14 @@ struct expression_traits<expression_counter<T, Dims>> : expression_traits_defaul
 
 template <typename T = int, typename Arg = T, typename... Args,
           typename Tout = std::common_type_t<T, Arg, Args...>>
-KFR_INTRINSIC expression_counter<Tout, 1 + sizeof...(Args)> counter(T start = T(0), Arg step = 1,
-                                                                    Args... steps)
+KFR_INTRINSIC expression_counter<Tout, 1> counter(T start = 0)
+{
+    return { static_cast<Tout>(std::move(start)), { static_cast<Tout>(1) } };
+}
+
+template <typename T = int, typename Arg = T, typename... Args,
+          typename Tout = std::common_type_t<T, Arg, Args...>>
+KFR_INTRINSIC expression_counter<Tout, 1 + sizeof...(Args)> counter(T start, Arg step, Args... steps)
 {
     return { static_cast<Tout>(std::move(start)),
              { static_cast<Tout>(std::move(step)), static_cast<Tout>(std::move(steps))... } };

@@ -45,12 +45,32 @@ CMT_PRAGMA_MSVC(warning(disable : 4324))
 namespace kfr
 {
 
-using memory_finalizer = std::shared_ptr<void>;
+namespace internal_generic
+{
+struct memory_finalizer_base
+{
+    virtual ~memory_finalizer_base() {}
+};
+template <typename Data>
+struct memory_finalizer_data : public memory_finalizer_base
+{
+    constexpr KFR_INTRINSIC memory_finalizer_data(Data&& data) : data(std::move(data)) {}
+    Data data;
+};
+template <typename Func>
+struct memory_finalizer_func : public memory_finalizer_data<Func>
+{
+    using memory_finalizer_data<Func>::memory_finalizer_data;
+    KFR_INTRINSIC ~memory_finalizer_func() { this->data(); }
+};
+} // namespace internal_generic
+
+using memory_finalizer = std::shared_ptr<internal_generic::memory_finalizer_base>;
 
 template <typename Fn>
 memory_finalizer KFR_INTRINSIC make_memory_finalizer(Fn&& fn)
 {
-    return std::shared_ptr<void>(nullptr, [fn = std::move(fn)](void*) { fn(); });
+    return memory_finalizer(new internal_generic::memory_finalizer_func<Fn>{ std::move(fn) });
 }
 
 template <typename T, typename Derived, typename Dims>
@@ -842,20 +862,14 @@ private:
 
 template <typename Container, CMT_ENABLE_IF(kfr::has_data_size<Container>),
           typename T = typename Container::value_type>
-KFR_INTRINSIC tensor<T, 1> tensor_from_container(Container vector)
+KFR_INTRINSIC tensor<T, 1> tensor_from_container(Container container)
 {
-    struct vector_finalizer
-    {
-        mutable std::optional<Container> vector;
-        void operator()(void*) const { vector.reset(); }
-    };
+    using container_finalizer = internal_generic::memory_finalizer_data<Container>;
+    memory_finalizer mem      = memory_finalizer(new container_finalizer{ std::move(container) });
 
-    vector_finalizer finalizer{ std::move(vector) };
+    Container* ptr = &static_cast<container_finalizer*>(mem.get())->data;
 
-    memory_finalizer mem  = std::shared_ptr<void>(nullptr, std::move(finalizer));
-    vector_finalizer* fin = std::get_deleter<vector_finalizer>(mem);
-
-    return tensor<T, 1>(fin->vector->data(), make_vector<index_t>(fin->vector->size()), std::move(mem));
+    return tensor<T, 1>(ptr->data(), shape{ ptr->size() }, std::move(mem));
 }
 
 template <typename T, index_t Dims>

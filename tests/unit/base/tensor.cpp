@@ -785,6 +785,17 @@ TEST(from_ilist)
     CHECK(t4 == tensor<float, 3>(shape{ 2, 2, 2 }, { 10, 20, 30, 40, 50, 60, 70, 80 }));
 }
 
+TEST(tensor_from_container)
+{
+    std::vector<int> a{ 1, 2, 3 };
+    auto t = tensor_from_container(a);
+    CHECK(t.shape() == shape{ 3 });
+    CHECK(t == tensor<int, 1>{ 1, 2, 3 });
+    auto t2 = t; // share data
+    t(0)    = 100;
+    CHECK(t2 == tensor<int, 1>{ 100, 2, 3 });
+}
+
 } // namespace CMT_ARCH_NAME
 
 } // namespace kfr
