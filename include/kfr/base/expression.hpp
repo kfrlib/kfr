@@ -126,6 +126,12 @@ struct expression_traits_defaults
     constexpr static inline bool random_access    = true;
 };
 
+template <typename T, typename = void>
+constexpr inline bool has_expression_traits = false;
+
+template <typename T>
+constexpr inline bool has_expression_traits<T, std::void_t<typename expression_traits<T>::value_type>> = true;
+
 namespace internal_generic
 {
 template <typename... Xs>
