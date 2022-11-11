@@ -92,7 +92,7 @@ public:
     void apply(univector<T, Tag>& dest, const Expr& src)
     {
         static_assert(expression_dims<Expr> == 1);
-        process_expression(dest.data(), to_handle(src), size_min(dest.size(), shapeof(src)));
+        process_expression(dest.data(), to_handle(src), size_min(dest.size(), shapeof(src).front()));
     }
 
     template <typename Expr, KFR_ENABLE_IF(is_input_expression<Expr>)>
