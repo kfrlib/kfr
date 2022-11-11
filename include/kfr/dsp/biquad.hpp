@@ -245,7 +245,7 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_biquads<filters, T, E1>& s
     else
     {
         size_t i = 0;
-        for (; i < std::min(N, self.block_end - index.front()); i++)
+        for (; i < std::min(N, self.block_end - static_cast<size_t>(index.front())); i++)
         {
             const vec<T, 1> in =
                 get_elements(self.first(), index.add_at(i, cval<index_t, 0>), axis_params_v<0, 1>);
