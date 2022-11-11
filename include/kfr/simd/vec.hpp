@@ -1448,15 +1448,34 @@ KFR_INTRINSIC vec<T, N> v(const portable_vec<T, N>& pv)
 
 } // namespace CMT_ARCH_NAME
 
+template <typename T1, typename T2, size_t N1, size_t N2, typename = void>
+struct common_type_helper
+{
+};
+template <typename T1, typename T2, size_t N>
+struct common_type_helper<T1, T2, N, N>
+    : construct_common_type<std::common_type<T1, T2>, vec_template<N>::template type>
+{
+};
+template <typename T1, typename T2, size_t N1, size_t N2>
+struct common_type_helper<vec<T1, N2>, T2, N1, N2, std::enable_if_t<N1 != N2>>
+    : construct_common_type<std::common_type<T1, T2>, vecvec_template<N2, N1>::template type>
+{
+};
+template <typename T1, typename T2, size_t N1, size_t N2>
+struct common_type_helper<T1, vec<T2, N2>, N1, N2, std::enable_if_t<N1 != N2>>
+    : construct_common_type<std::common_type<T1, T2>, vecvec_template<N2, N1>::template type>
+{
+};
+
 } // namespace kfr
 
 namespace std
 {
 
-// V x V (same N)
-template <typename T1, typename T2, size_t N>
-struct common_type<kfr::vec<T1, N>, kfr::vec<T2, N>>
-    : kfr::construct_common_type<std::common_type<T1, T2>, kfr::vec_template<N>::template type>
+// V x V
+template <typename T1, typename T2, size_t N1, size_t N2>
+struct common_type<kfr::vec<T1, N1>, kfr::vec<T2, N2>> : kfr::common_type_helper<T1, T2, N1, N2>
 {
 };
 // V x S
@@ -1471,6 +1490,7 @@ struct common_type<T1, kfr::vec<T2, N>>
     : kfr::construct_common_type<std::common_type<T1, T2>, kfr::vec_template<N>::template type>
 {
 };
+#if 0
 // VV x V
 template <typename T1, typename T2, size_t N1, size_t N2>
 struct common_type<kfr::vec<kfr::vec<T1, N1>, N2>, kfr::vec<T2, N1>>
@@ -1489,6 +1509,7 @@ struct common_type<kfr::vec<kfr::vec<T1, N1>, N2>, kfr::vec<kfr::vec<T2, N1>, N2
     : kfr::construct_common_type<std::common_type<T1, T2>, kfr::vecvec_template<N1, N2>::template type>
 {
 };
+#endif
 
 } // namespace std
 

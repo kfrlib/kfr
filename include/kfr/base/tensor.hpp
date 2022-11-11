@@ -77,7 +77,7 @@ template <typename T, typename Derived, typename Dims>
 struct tensor_subscript;
 
 template <typename T, typename Derived, index_t... Dims>
-struct tensor_subscript<T, Derived, std::integer_sequence<size_t, Dims...>>
+struct tensor_subscript<T, Derived, std::integer_sequence<index_t, Dims...>>
 {
     constexpr static inline size_t dims = sizeof...(Dims);
 
@@ -91,7 +91,7 @@ struct tensor_subscript<T, Derived, std::integer_sequence<size_t, Dims...>>
 };
 
 template <typename T, index_t NDims>
-struct tensor : public tensor_subscript<T, tensor<T, NDims>, std::make_index_sequence<NDims>>
+struct tensor : public tensor_subscript<T, tensor<T, NDims>, std::make_integer_sequence<index_t, NDims>>
 {
 public:
     using value_type      = T;
@@ -116,23 +116,9 @@ public:
         const tensor* src;
         shape_type indices;
 
-        KFR_MEM_INTRINSIC index_t flat_index() const { return src->calc_index(indices); }
+        KFR_MEM_INTRINSIC intptr_t flat_index() const { return src->calc_index(indices); }
 
         KFR_MEM_INTRINSIC bool is_end() const { return indices.front() == internal_generic::null_index; }
-
-        template <size_t num>
-        KFR_MEM_INTRINSIC kfr::shape<num> advance()
-        {
-            kfr::shape<num> result;
-            for (size_t i = 0; i < num; ++i)
-            {
-                result[i] = src->calc_index(indices);
-                ++*this;
-                if (is_end())
-                    break;
-            }
-            return result;
-        }
 
         KFR_MEM_INTRINSIC T& operator*() { return src->m_data[flat_index()]; }
         KFR_MEM_INTRINSIC T* operator->() { return &operator*(); }
@@ -225,19 +211,19 @@ public:
     }
 
     template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>&& dims == 1)>
-    KFR_INTRINSIC tensor(const std::initializer_list<U>& values) : tensor(shape_type{ values.size() })
+    KFR_INTRINSIC tensor(const std::initializer_list<U>& values) : tensor(shape_type(values.size()))
     {
         internal_generic::list_copy_recursively(values, contiguous_begin_unsafe());
     }
     template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>&& dims == 2)>
     KFR_INTRINSIC tensor(const std::initializer_list<std::initializer_list<U>>& values)
-        : tensor(shape_type{ values.size(), values.begin()->size() })
+        : tensor(shape_type(values.size(), values.begin()->size()))
     {
         internal_generic::list_copy_recursively(values, contiguous_begin_unsafe());
     }
     template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>&& dims == 3)>
     KFR_INTRINSIC tensor(const std::initializer_list<std::initializer_list<std::initializer_list<U>>>& values)
-        : tensor(shape_type{ values.size(), values.begin()->size(), values.begin()->begin()->size() })
+        : tensor(shape_type(values.size(), values.begin()->size(), values.begin()->begin()->size()))
     {
         internal_generic::list_copy_recursively(values, contiguous_begin_unsafe());
     }
@@ -245,8 +231,8 @@ public:
     KFR_INTRINSIC tensor(
         const std::initializer_list<std::initializer_list<std::initializer_list<std::initializer_list<U>>>>&
             values)
-        : tensor(shape_type{ values.size(), values.begin()->size(), values.begin()->begin()->size(),
-                             values.begin()->begin()->begin()->size() })
+        : tensor(shape_type(values.size(), values.begin()->size(), values.begin()->begin()->size(),
+                            values.begin()->begin()->begin()->size()))
     {
         internal_generic::list_copy_recursively(values, contiguous_begin_unsafe());
     }
@@ -297,7 +283,10 @@ public:
     KFR_INTRINSIC contiguous_iterator contiguous_begin_unsafe() const { return m_data; }
     KFR_INTRINSIC contiguous_iterator contiguous_end_unsafe() const { return m_data + m_size; }
 
-    KFR_MEM_INTRINSIC index_t calc_index(const shape_type& indices) const { return indices.dot(m_strides); }
+    KFR_MEM_INTRINSIC intptr_t calc_index(const shape_type& indices) const
+    {
+        return static_cast<intptr_t>(static_cast<signed_index_t>(indices.dot(m_strides)));
+    }
 
     KFR_MEM_INTRINSIC reference access(const shape_type& indices) const
     {
@@ -767,44 +756,6 @@ public:
         return *this;
     }
 
-    // template <typename Input, KFR_ENABLE_IF(is_input_expression<Input>)>
-    // tensor(Input&& input) : tensor(make_vector<index_t>(input.size()))
-    // {
-    //     this->assign_expr(std::forward<Input>(input));
-    // }
-
-    template <size_t N, bool only_last = false>
-    KFR_MEM_INTRINSIC kfr::shape<N> offsets(kfr::shape<dims> indices) const
-    {
-        kfr::shape<N> result;
-        if constexpr (only_last)
-        {
-            index_t base = calc_index(indices);
-            result       = base + enumerate(vec_shape<index_t, N>{}, m_shape.back());
-        }
-        else
-        {
-            for (index_t i = 0; i < N; ++i)
-            {
-                result[i] = calc_index(indices);
-                internal_generic::increment_indices(indices, kfr::shape<dims>(0), m_shape);
-            }
-        }
-        return result;
-    }
-
-    template <size_t N, bool only_last = false>
-    KFR_MEM_INTRINSIC kfr::shape<N> offsets(size_t flat_index) const
-    {
-        kfr::shape<dims> indices;
-        for (index_t i = 0; i < dims; ++i)
-        {
-            indices[dims - 1 - i] = flat_index % m_shape[dims - 1 - i];
-            flat_index /= m_shape[dims - 1 - i];
-        }
-        return offsets<N, only_last>(indices);
-    }
-
     bool operator==(const tensor& other) const
     {
         return shape() == other.shape() && std::equal(begin(), end(), other.begin());
@@ -869,7 +820,7 @@ KFR_INTRINSIC tensor<T, 1> tensor_from_container(Container container)
 
     Container* ptr = &static_cast<container_finalizer*>(mem.get())->data;
 
-    return tensor<T, 1>(ptr->data(), shape{ ptr->size() }, std::move(mem));
+    return tensor<T, 1>(ptr->data(), shape<1>(ptr->size()), std::move(mem));
 }
 
 template <typename T, index_t Dims>

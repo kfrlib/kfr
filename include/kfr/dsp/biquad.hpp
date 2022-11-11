@@ -202,7 +202,7 @@ KFR_INTRINSIC void begin_pass(const expression_biquads<filters, T, E1>& self, sh
 {
     size_t size    = stop.front();
     self.block_end = size;
-    for (size_t i = 0; i < filters - 1; i++)
+    for (index_t i = 0; i < filters - 1; i++)
     {
         const vec<T, 1> in = i < size ? get_elements(self.first(), shape<1>{ i }, axis_params_v<0, 1>) : 0;
         self.state.out     = biquad_process(self.bq, self.state, insertleft(in[0], self.state.out));

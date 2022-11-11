@@ -294,7 +294,7 @@ KFR_INTRINSIC expression_lambda<T, Dims, Fn, false> lambda_generator(Fn&& fn)
 template <typename... Ts, typename T = std::common_type_t<Ts...>>
 KFR_INTRINSIC auto sequence(const Ts&... list)
 {
-    return lambda<T>([seq = std::array<T, sizeof...(Ts)>{ { static_cast<T>(list)... } }](size_t index) { //
+    return lambda<T>([seq = std::array<T, sizeof...(Ts)>{ { static_cast<T>(list)... } }](index_t index) { //
         return seq[index % seq.size()];
     });
 }
@@ -320,9 +320,6 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_lambda<T, Dims, Fn, Rnd>& 
             ++cur_index.back();
         }
         return result;
-        // return vec<T, N>{ [&](size_t idx) { //
-        // return self.fn(index.add(idx));
-        // } };
     }
     else if constexpr (std::is_invocable_v<Fn>)
         return apply<N>(self.fn);

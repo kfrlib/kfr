@@ -533,8 +533,9 @@ KFR_MEM_INTRINSIC vec<typename Traits::value_type, N> get_arg(const expression_f
         if constexpr (last_dim != undefined_size)
         {
             constexpr index_t last_dim_pot = prev_poweroftwo(last_dim);
-            return repeat<N / std::min(last_dim_pot, N)>(get_elements(
-                std::get<idx>(self.args), indices, axis_params<Axis, std::min(last_dim_pot, N)>{}));
+            return repeat<N / std::min(last_dim_pot, static_cast<index_t>(N))>(
+                get_elements(std::get<idx>(self.args), indices,
+                             axis_params<Axis, std::min(last_dim_pot, static_cast<index_t>(N))>{}));
         }
         else
         {
@@ -657,7 +658,7 @@ constexpr KFR_INTRINSIC size_t select_process_width(size_t width, size_t vec_wid
     if (last_dim_size == 0)
         return vec_width;
 
-    return std::min(vec_width, last_dim_size);
+    return std::min(vec_width, static_cast<size_t>(last_dim_size));
 }
 
 constexpr KFR_INTRINSIC index_t select_axis(index_t ndims, index_t axis)
@@ -853,7 +854,7 @@ void test_expression(const E& expr, size_t size, Fn&& fn, const char* expression
     test->check(c <= expr_size == size, expression, file, line);
     if (expr_size != size)
         return;
-    size                     = min(shape{ size }, shape{ 200 }).front();
+    size                     = min(shape<1>(size), shape<1>(200)).front();
     constexpr size_t maxsize = 2 + ilog2(vector_width<T> * 2);
     size_t g                 = 1;
     for (size_t i = 0; i < size;)

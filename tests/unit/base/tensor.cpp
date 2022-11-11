@@ -536,7 +536,7 @@ TEST(expression_reshape)
 
 } // namespace CMT_ARCH_NAME
 
-#ifdef _MSC_VER
+#if 0
 shape<4> sh{ 2, 3, 4, 5 };
 
 extern "C" __declspec(dllexport) bool assembly_test1(shape<4>& x)

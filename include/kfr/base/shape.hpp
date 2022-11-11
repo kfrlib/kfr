@@ -252,12 +252,12 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
     {
         if constexpr (dims == 1)
         {
-            return { index };
+            return { static_cast<index_t>(index) };
         }
         else if constexpr (dims == 2)
         {
             index_t sz = (*this)[1];
-            return { index / sz, index % sz };
+            return { static_cast<index_t>(index / sz), static_cast<index_t>(index % sz) };
         }
         else
         {
@@ -827,7 +827,7 @@ constexpr KFR_INTRINSIC index_t size_of_shape(const shape<dims>& shape)
     return n;
 }
 
-template <index_t Axis, index_t N>
+template <index_t Axis, size_t N>
 struct axis_params
 {
     constexpr static index_t axis  = Axis;
@@ -837,7 +837,7 @@ struct axis_params
     constexpr axis_params() = default;
 };
 
-template <index_t Axis, index_t N>
+template <index_t Axis, size_t N>
 constexpr inline const axis_params<Axis, N> axis_params_v{};
 
 } // namespace kfr
