@@ -79,11 +79,11 @@ struct complex
     KFR_MEM_INTRINSIC constexpr void real(T value) CMT_NOEXCEPT { re = value; }
     KFR_MEM_INTRINSIC constexpr void imag(T value) CMT_NOEXCEPT { im = value; }
 
-    KFR_MEM_INTRINSIC constexpr bool operator==(const complex& other) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr bool operator==(const complex& other) const CMT_NOEXCEPT
     {
         return re == other.re && im == other.im;
     }
-    KFR_MEM_INTRINSIC constexpr bool operator!=(const complex& other) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr bool operator!=(const complex& other) const CMT_NOEXCEPT
     {
         return !operator==(other);
     }
