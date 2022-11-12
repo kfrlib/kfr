@@ -43,8 +43,8 @@ struct expression_traits<expression_scalar<T>> : expression_traits_defaults
     using value_type             = T;
     constexpr static size_t dims = 0;
 
-    constexpr static shape<0> shapeof(const expression_scalar<T>& self) { return {}; }
-    constexpr static shape<0> shapeof() { return {}; }
+    constexpr static shape<0> get_shape(const expression_scalar<T>& self) { return {}; }
+    constexpr static shape<0> get_shape() { return {}; }
 };
 
 template <typename T>
@@ -93,11 +93,11 @@ struct expression_traits<expression_counter<T, Dims>> : expression_traits_defaul
     using value_type             = T;
     constexpr static size_t dims = Dims;
 
-    constexpr static shape<dims> shapeof(const expression_counter<T, Dims>& self)
+    constexpr static shape<dims> get_shape(const expression_counter<T, Dims>& self)
     {
         return shape<dims>(infinite_size);
     }
-    constexpr static shape<dims> shapeof() { return shape<dims>(infinite_size); }
+    constexpr static shape<dims> get_shape() { return shape<dims>(infinite_size); }
 };
 
 template <typename T = int, typename Arg = T, typename... Args,
@@ -162,11 +162,11 @@ struct expression_traits<expression_slice<Arg>> : expression_traits_defaults
     constexpr static size_t dims        = ArgTraits::dims;
     constexpr static bool random_access = ArgTraits::random_access;
 
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof(const expression_slice<Arg>& self)
+    KFR_MEM_INTRINSIC constexpr static shape<dims> get_shape(const expression_slice<Arg>& self)
     {
-        return min(sub_shape(ArgTraits::shapeof(self.first()), self.start), self.size);
+        return min(sub_shape(ArgTraits::get_shape(self.first()), self.start), self.size);
     }
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return shape<dims>(undefined_size); }
+    KFR_MEM_INTRINSIC constexpr static shape<dims> get_shape() { return shape<dims>(undefined_size); }
 };
 
 template <typename Arg, KFR_ACCEPT_EXPRESSIONS(Arg), index_t Dims = expression_dims<Arg>>
@@ -221,11 +221,11 @@ struct expression_traits<expression_cast<T, Arg>> : expression_traits_defaults
     constexpr static size_t dims        = ArgTraits::dims;
     constexpr static bool random_access = ArgTraits::random_access;
 
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof(const expression_cast<T, Arg>& self)
+    KFR_MEM_INTRINSIC constexpr static shape<dims> get_shape(const expression_cast<T, Arg>& self)
     {
-        return ArgTraits::shapeof(self.first());
+        return ArgTraits::get_shape(self.first());
     }
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return ArgTraits::shapeof(); }
+    KFR_MEM_INTRINSIC constexpr static shape<dims> get_shape() { return ArgTraits::get_shape(); }
 };
 
 template <typename T, typename Arg, KFR_ACCEPT_EXPRESSIONS(Arg)>
@@ -273,11 +273,11 @@ struct expression_traits<expression_lambda<T, Dims, Fn, Rnd>> : expression_trait
     constexpr static size_t dims               = Dims;
     constexpr static inline bool random_access = Rnd;
 
-    KFR_MEM_INTRINSIC constexpr static shape<Dims> shapeof(const expression_lambda<T, Dims, Fn, Rnd>& self)
+    KFR_MEM_INTRINSIC constexpr static shape<Dims> get_shape(const expression_lambda<T, Dims, Fn, Rnd>& self)
     {
         return shape<Dims>(infinite_size);
     }
-    KFR_MEM_INTRINSIC constexpr static shape<Dims> shapeof() { return shape<Dims>(infinite_size); }
+    KFR_MEM_INTRINSIC constexpr static shape<Dims> get_shape() { return shape<Dims>(infinite_size); }
 };
 
 template <typename T, index_t Dims = 1, typename Fn, bool RandomAccess = true>
@@ -346,7 +346,7 @@ struct expression_padded : public expression_with_arguments<Arg>
 
     KFR_MEM_INTRINSIC expression_padded(Arg&& arg, typename ArgTraits::value_type fill_value)
         : expression_with_arguments<Arg>{ std::forward<Arg>(arg) }, fill_value(std::move(fill_value)),
-          input_shape(ArgTraits::shapeof(this->first()))
+          input_shape(ArgTraits::get_shape(this->first()))
     {
     }
 };
@@ -367,11 +367,11 @@ struct expression_traits<expression_padded<Arg>> : expression_traits_defaults
     constexpr static size_t dims        = ArgTraits::dims;
     constexpr static bool random_access = ArgTraits::random_access;
 
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof(const expression_padded<Arg>& self)
+    KFR_MEM_INTRINSIC constexpr static shape<dims> get_shape(const expression_padded<Arg>& self)
     {
         return shape<dims>(infinite_size);
     }
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return shape<dims>(infinite_size); }
+    KFR_MEM_INTRINSIC constexpr static shape<dims> get_shape() { return shape<dims>(infinite_size); }
 };
 
 inline namespace CMT_ARCH_NAME
@@ -415,7 +415,7 @@ struct expression_reverse : public expression_with_arguments<Arg>
 
     KFR_MEM_INTRINSIC expression_reverse(Arg&& arg)
         : expression_with_arguments<Arg>{ std::forward<Arg>(arg) },
-          input_shape(ArgTraits::shapeof(this->first()))
+          input_shape(ArgTraits::get_shape(this->first()))
     {
     }
 };
@@ -436,11 +436,11 @@ struct expression_traits<expression_reverse<Arg>> : expression_traits_defaults
     constexpr static size_t dims = ArgTraits::dims;
     static_assert(ArgTraits::random_access, "expression_reverse requires an expression with random access");
 
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof(const expression_reverse<Arg>& self)
+    KFR_MEM_INTRINSIC constexpr static shape<dims> get_shape(const expression_reverse<Arg>& self)
     {
-        return ArgTraits::shapeof(self.first());
+        return ArgTraits::get_shape(self.first());
     }
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return ArgTraits::shapeof(); }
+    KFR_MEM_INTRINSIC constexpr static shape<dims> get_shape() { return ArgTraits::get_shape(); }
 };
 
 inline namespace CMT_ARCH_NAME
@@ -495,12 +495,15 @@ struct expression_traits<expression_fixshape<Arg, fixed_shape_t<ShapeValues...>>
     constexpr static size_t dims        = sizeof...(ShapeValues); // ArgTraits::dims;
     constexpr static bool random_access = ArgTraits::random_access;
 
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof(
+    KFR_MEM_INTRINSIC constexpr static shape<dims> get_shape(
         const expression_fixshape<Arg, fixed_shape_t<ShapeValues...>>& self)
     {
         return fixed_shape_t<ShapeValues...>::get();
     }
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return fixed_shape_t<ShapeValues...>::get(); }
+    KFR_MEM_INTRINSIC constexpr static shape<dims> get_shape()
+    {
+        return fixed_shape_t<ShapeValues...>::get();
+    }
 };
 
 inline namespace CMT_ARCH_NAME
@@ -544,7 +547,7 @@ struct expression_reshape : public expression_with_arguments<Arg>
     shape<OutDims> out_shape;
 
     KFR_MEM_INTRINSIC expression_reshape(Arg&& arg, const shape<OutDims>& out_shape)
-        : expression_with_arguments<Arg>{ std::forward<Arg>(arg) }, in_shape(ArgTraits::shapeof(arg)),
+        : expression_with_arguments<Arg>{ std::forward<Arg>(arg) }, in_shape(ArgTraits::get_shape(arg)),
           out_shape(out_shape)
     {
     }
@@ -565,11 +568,11 @@ struct expression_traits<expression_reshape<Arg, OutDims>> : expression_traits_d
     constexpr static size_t dims        = OutDims;
     constexpr static bool random_access = ArgTraits::random_access;
 
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof(const expression_reshape<Arg, OutDims>& self)
+    KFR_MEM_INTRINSIC constexpr static shape<dims> get_shape(const expression_reshape<Arg, OutDims>& self)
     {
         return self.out_shape;
     }
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return shape<dims>{ undefined_size }; }
+    KFR_MEM_INTRINSIC constexpr static shape<dims> get_shape() { return shape<dims>{ undefined_size }; }
 };
 
 inline namespace CMT_ARCH_NAME
@@ -712,11 +715,14 @@ struct expression_traits<expression_linspace<T, truncated>> : expression_traits_
     using value_type             = T;
     constexpr static size_t dims = 1;
 
-    constexpr static shape<dims> shapeof(const expression_linspace<T, truncated>& self)
+    constexpr static shape<dims> get_shape(const expression_linspace<T, truncated>& self)
     {
         return shape<dims>(truncated ? self.size : infinite_size);
     }
-    constexpr static shape<dims> shapeof() { return shape<dims>(truncated ? undefined_size : infinite_size); }
+    constexpr static shape<dims> get_shape()
+    {
+        return shape<dims>(truncated ? undefined_size : infinite_size);
+    }
 };
 
 /** @brief Returns evenly spaced numbers over a specified interval.
@@ -775,7 +781,7 @@ struct expression_concatenate : public expression_with_arguments<Arg1, Arg2>
 
     KFR_MEM_INTRINSIC expression_concatenate(Arg1&& arg1, Arg2&& arg2)
         : expression_with_arguments<Arg1, Arg2>{ std::forward<Arg1>(arg1), std::forward<Arg2>(arg2) },
-          size1(expression_traits<Arg1>::shapeof(arg1))
+          size1(expression_traits<Arg1>::get_shape(arg1))
     {
     }
 };
@@ -798,15 +804,15 @@ struct expression_traits<expression_concatenate<Arg1, Arg2, ConcatAxis>> : expre
         return result;
     }
 
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof(
+    KFR_MEM_INTRINSIC constexpr static shape<dims> get_shape(
         const expression_concatenate<Arg1, Arg2, ConcatAxis>& self)
     {
-        return concat_shape(ArgTraits1::shapeof(std::get<0>(self.args)),
-                            ArgTraits2::shapeof(std::get<1>(self.args)));
+        return concat_shape(ArgTraits1::get_shape(std::get<0>(self.args)),
+                            ArgTraits2::get_shape(std::get<1>(self.args)));
     }
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof()
+    KFR_MEM_INTRINSIC constexpr static shape<dims> get_shape()
     {
-        return concat_shape(ArgTraits1::shapeof(), ArgTraits2::shapeof());
+        return concat_shape(ArgTraits1::get_shape(), ArgTraits2::get_shape());
     }
 };
 
@@ -915,11 +921,11 @@ struct expression_unpack : expression_with_arguments<E...>, expression_traits_de
     static_assert(((expression_dims<E> == dims) && ...));
     static_assert(((std::is_same_v<expression_value_type<E>, first_value_type>)&&...));
 
-    constexpr static shape<dims> shapeof(const expression_unpack& self)
+    constexpr static shape<dims> get_shape(const expression_unpack& self)
     {
-        return first_arg_traits::shapeof(self.first());
+        return first_arg_traits::get_shape(self.first());
     }
-    constexpr static shape<dims> shapeof() { return first_arg_traits::shapeof(); }
+    constexpr static shape<dims> get_shape() { return first_arg_traits::get_shape(); }
 
     expression_unpack(E&&... e) : expression_with_arguments<E...>(std::forward<E>(e)...) {}
 
@@ -1032,13 +1038,13 @@ struct expression_dimensions : public expression_with_traits<E>
     constexpr static inline index_t dims    = Dims;
     using first_arg_traits                  = typename expression_with_traits<E>::first_arg_traits;
 
-    constexpr static shape<dims> shapeof(const expression_dimensions& self)
+    constexpr static shape<dims> get_shape(const expression_dimensions& self)
     {
-        return first_arg_traits::shapeof(self.first()).template extend<dims>(infinite_size);
+        return first_arg_traits::get_shape(self.first()).template extend<dims>(infinite_size);
     }
-    constexpr static shape<dims> shapeof()
+    constexpr static shape<dims> get_shape()
     {
-        return first_arg_traits::shapeof().template extend<dims>(infinite_size);
+        return first_arg_traits::get_shape().template extend<dims>(infinite_size);
     }
 
     template <size_t N, index_t VecAxis>

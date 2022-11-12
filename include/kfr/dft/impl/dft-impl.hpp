@@ -169,7 +169,7 @@ struct fft_inverse : expression_with_traits<E>
     friend KFR_INTRINSIC vec<value_type, 1> get_elements(const fft_inverse& self, shape<1> index,
                                                          axis_params<0, 1>)
     {
-        const size_t size = shapeof(self).front();
+        const size_t size = get_shape(self).front();
         return get_elements(self.first(), index.front() == 0 ? 0 : size - index, axis_params<0, 1>());
     }
 
@@ -177,7 +177,7 @@ struct fft_inverse : expression_with_traits<E>
     friend KFR_MEM_INTRINSIC vec<value_type, N> get_elements(const fft_inverse& self, shape<1> index,
                                                              axis_params<0, N>)
     {
-        const size_t size = shapeof(self).front();
+        const size_t size = get_shape(self).front();
         if (index.front() == 0)
         {
             return concat(get_elements(self.first(), index, axis_params<0, 1>()),

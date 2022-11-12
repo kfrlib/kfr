@@ -164,8 +164,8 @@ struct expression_traits<std::array<T, N1>> : expression_traits_defaults
     using value_type             = T;
     constexpr static size_t dims = 1;
 
-    constexpr static shape<1> shapeof(const std::array<T, N1>& self) { return shape<1>{ N1 }; }
-    constexpr static shape<1> shapeof() { return shape<1>{ N1 }; }
+    constexpr static shape<1> get_shape(const std::array<T, N1>& self) { return shape<1>{ N1 }; }
+    constexpr static shape<1> get_shape() { return shape<1>{ N1 }; }
 };
 
 template <typename T, size_t N1, size_t N2>
@@ -174,11 +174,11 @@ struct expression_traits<std::array<std::array<T, N1>, N2>> : expression_traits_
     using value_type             = T;
     constexpr static size_t dims = 2;
 
-    constexpr static shape<2> shapeof(const std::array<std::array<T, N1>, N2>& self)
+    constexpr static shape<2> get_shape(const std::array<std::array<T, N1>, N2>& self)
     {
         return shape<2>{ N2, N1 };
     }
-    constexpr static shape<2> shapeof() { return shape<2>{ N2, N1 }; }
+    constexpr static shape<2> get_shape() { return shape<2>{ N2, N1 }; }
 };
 
 inline namespace CMT_ARCH_NAME
@@ -272,12 +272,12 @@ TEST(tensor_expressions2)
 {
     auto aa = std::array<std::array<double, 2>, 2>{ { { { 1, 2 } }, { { 3, 4 } } } };
     static_assert(expression_traits<decltype(aa)>::dims == 2);
-    CHECK(expression_traits<decltype(aa)>::shapeof(aa) == shape{ 2, 2 });
+    CHECK(expression_traits<decltype(aa)>::get_shape(aa) == shape{ 2, 2 });
     CHECK(get_elements(aa, { 1, 1 }, axis_params<1, 1>{}) == vec{ 4. });
     CHECK(get_elements(aa, { 1, 0 }, axis_params<1, 2>{}) == vec{ 3., 4. });
 
     static_assert(expression_traits<decltype(1234.f)>::dims == 0);
-    CHECK(expression_traits<decltype(1234.f)>::shapeof(1234.f) == shape{});
+    CHECK(expression_traits<decltype(1234.f)>::get_shape(1234.f) == shape{});
     CHECK(get_elements(1234.f, {}, axis_params<0, 3>{}) == vec{ 1234.f, 1234.f, 1234.f });
 
     process(aa, 123.45f);
@@ -358,7 +358,7 @@ TEST(xfunction_test)
               std::array{ 1.f, 2.f, 3.f, 4.f, 5.f };
     std::array<std::array<float, 5>, 5> v4;
 
-    CHECK(expression_traits<decltype(f4)>::shapeof(f4) == shape{ 5, 5 });
+    CHECK(expression_traits<decltype(f4)>::get_shape(f4) == shape{ 5, 5 });
     process(v4, f4);
     CHECK(v4 == std::array<std::array<float, 5>, 5>{ { { { 101.f, 102.f, 103.f, 104.f, 105.f } },
                                                        { { 201.f, 202.f, 203.f, 204.f, 205.f } },
@@ -693,8 +693,8 @@ struct expression_traits<val> : expression_traits_defaults
 {
     using value_type             = float;
     constexpr static size_t dims = 0;
-    constexpr static shape<dims> shapeof(const val&) { return {}; }
-    constexpr static shape<dims> shapeof() { return {}; }
+    constexpr static shape<dims> get_shape(const val&) { return {}; }
+    constexpr static shape<dims> get_shape() { return {}; }
 };
 
 inline namespace CMT_ARCH_NAME
@@ -808,8 +808,8 @@ struct expression_traits<identity_matrix<T, Size>> : expression_traits_defaults
 {
     using value_type             = T;
     constexpr static size_t dims = 2;
-    constexpr static shape<2> shapeof(const identity_matrix<T, Size>& self) { return { Size, Size }; }
-    constexpr static shape<2> shapeof() { return { Size, Size }; }
+    constexpr static shape<2> get_shape(const identity_matrix<T, Size>& self) { return { Size, Size }; }
+    constexpr static shape<2> get_shape() { return { Size, Size }; }
 };
 
 template <typename T, index_t Size, index_t Axis, size_t N>

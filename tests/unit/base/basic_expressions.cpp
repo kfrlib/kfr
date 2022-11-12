@@ -19,7 +19,7 @@ TEST(linspace)
     testo::eplison_scope<> eps(10);
     CHECK_EXPRESSION(linspace(0.0, 1.0, 5, true, ctrue), { 0.0, 0.25, 0.50, 0.75, 1.0 });
     CHECK_EXPRESSION(linspace(0.0, 1.0, 4, false, ctrue), { 0.0, 0.25, 0.50, 0.75 });
-    CHECK(shapeof(linspace(0.0, 1.0, 5, true, cfalse)) == shape{ infinite_size });
+    CHECK(get_shape(linspace(0.0, 1.0, 5, true, cfalse)) == shape{ infinite_size });
     CHECK_EXPRESSION(linspace(0.0, 1.0, 4, false, ctrue), { 0.0, 0.25, 0.50, 0.75 });
     CHECK_EXPRESSION(symmlinspace(3.0, 4, ctrue), { -3.0, -1.00, 1.00, 3.00 });
 
@@ -29,10 +29,10 @@ TEST(linspace)
 
 TEST(counter_shape)
 {
-    CHECK(shapeof(1) == shape{});
-    CHECK(shapeof(counter()) == shape{ infinite_size });
-    CHECK(shapeof(counter() + 1) == shape{ infinite_size });
-    CHECK(shapeof(counter(0, 1, 1)) == shape{ infinite_size, infinite_size });
+    CHECK(get_shape(1) == shape{});
+    CHECK(get_shape(counter()) == shape{ infinite_size });
+    CHECK(get_shape(counter() + 1) == shape{ infinite_size });
+    CHECK(get_shape(counter(0, 1, 1)) == shape{ infinite_size, infinite_size });
 }
 
 TEST(pack)
@@ -60,9 +60,9 @@ TEST(dimensions)
     static_assert(expression_dims<decltype(scalar(0))> == 0);
     static_assert(expression_dims<decltype(dimensions<1>(scalar(0)))> == 1);
 
-    static_assert(shapeof<decltype(scalar(0))>() == shape{});
-    static_assert(shapeof<decltype(dimensions<1>(scalar(0)))>() == shape{ infinite_size });
-    static_assert(shapeof<decltype(dimensions<2>(dimensions<1>(scalar(0))))>() ==
+    static_assert(get_shape<decltype(scalar(0))>() == shape{});
+    static_assert(get_shape<decltype(dimensions<1>(scalar(0)))>() == shape{ infinite_size });
+    static_assert(get_shape<decltype(dimensions<2>(dimensions<1>(scalar(0))))>() ==
                   shape{ infinite_size, infinite_size });
     CHECK_EXPRESSION(truncate(dimensions<1>(scalar(1)), 10), { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
 }
@@ -110,13 +110,13 @@ TEST(test_arg_access)
 TEST(size_calc)
 {
     auto a = counter();
-    CHECK(shapeof(a) == shape{ infinite_size });
+    CHECK(get_shape(a) == shape{ infinite_size });
     auto b = slice(counter(), 100);
-    CHECK(shapeof(b) == shape{ infinite_size });
+    CHECK(get_shape(b) == shape{ infinite_size });
     auto c = slice(counter(), 100, 1000);
-    CHECK(shapeof(c) == shape{ 1000 });
+    CHECK(get_shape(c) == shape{ 1000 });
     auto d = slice(c, 100);
-    CHECK(shapeof(d) == shape{ 900 });
+    CHECK(get_shape(d) == shape{ 900 });
 }
 
 TEST(reverse_expression)

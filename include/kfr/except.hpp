@@ -79,7 +79,6 @@ public:
         if (CMT_UNLIKELY(!(cond)))                                                                           \
             KFR_REPORT_ERROR(kind, __VA_ARGS__);                                                             \
     } while (0)
-    
 
 #define KFR_REPORT_RUNTIME_ERROR(...) KFR_REPORT_ERROR(runtime, __VA_ARGS__)
 

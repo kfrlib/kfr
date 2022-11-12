@@ -127,11 +127,11 @@ struct expression_window : expression_traits_defaults
 {
     using value_type             = T;
     constexpr static size_t dims = 1;
-    constexpr static shape<dims> shapeof(const expression_window<T>& self)
+    constexpr static shape<dims> get_shape(const expression_window<T>& self)
     {
         return shape<dims>(self.m_size);
     }
-    constexpr static shape<dims> shapeof() { return shape<1>(undefined_size); }
+    constexpr static shape<dims> get_shape() { return shape<1>(undefined_size); }
 
     constexpr expression_window(size_t size) : m_size(size) {}
 

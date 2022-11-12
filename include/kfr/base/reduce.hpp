@@ -69,8 +69,8 @@ struct expression_reduce : public expression_traits_defaults
 {
     using value_type             = Tin;
     constexpr static size_t dims = Dims;
-    constexpr static shape<dims> shapeof(const expression_reduce&) { return shape<dims>(infinite_size); }
-    constexpr static shape<dims> shapeof() { return shape<dims>(infinite_size); }
+    constexpr static shape<dims> get_shape(const expression_reduce&) { return shape<dims>(infinite_size); }
+    constexpr static shape<dims> get_shape() { return shape<dims>(infinite_size); }
 
     constexpr static size_t width = vector_width<Tin> * bitness_const(1, 2);
 

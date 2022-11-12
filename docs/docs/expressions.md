@@ -104,12 +104,12 @@ struct expression_traits<identity_matrix<T, Size>> : expression_traits_defaults
     constexpr static size_t dims = 2;
 
     // function to retrieve shape (size) of matrix, runtime version
-    constexpr static shape<2> shapeof(const identity_matrix<T, Size>& self) { return { Size, Size }; }
+    constexpr static shape<2> get_shape(const identity_matrix<T, Size>& self) { return { Size, Size }; }
 
     // function to retrieve shape (size) of matrix, compile time version
     // if the size is unknown at compile time the function must be still defined
     // but return undefined_size for every axis with unknown size
-    constexpr static shape<2> shapeof() { return { Size, Size }; }
+    constexpr static shape<2> get_shape() { return { Size, Size }; }
 };
 
 template <typename T, index_t Size, index_t Axis, size_t N>
@@ -157,8 +157,8 @@ struct identity_matrix : expression_traits_defaults
     using value_type             = T;
 
     constexpr static size_t dims = 2;
-    constexpr static shape<2> shapeof(const identity_matrix& self) { return { Size, Size }; }
-    constexpr static shape<2> shapeof() { return { Size, Size }; }
+    constexpr static shape<2> get_shape(const identity_matrix& self) { return { Size, Size }; }
+    constexpr static shape<2> get_shape() { return { Size, Size }; }
 
     template <index_t Axis, size_t N>
     friend vec<T, N> get_elements(const identity_matrix& self, const shape<2>& index,
@@ -179,9 +179,9 @@ struct identity_matrix : expression_traits_defaults
     using value_type             = T;
 
     constexpr static size_t dims = 2;
-    constexpr static shape<2> shapeof(const identity_matrix& self) { return { self.size, self.size }; }
+    constexpr static shape<2> get_shape(const identity_matrix& self) { return { self.size, self.size }; }
     // undefined_size means size is not known at compile time
-    constexpr static shape<2> shapeof() { return { undefined_size, undefined_size }; }
+    constexpr static shape<2> get_shape() { return { undefined_size, undefined_size }; }
 
     template <index_t Axis, size_t N>
     friend vec<T, N> get_elements(const identity_matrix& self, const shape<2>& index,

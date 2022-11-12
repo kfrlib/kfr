@@ -412,7 +412,7 @@ struct univector<T, tag_dynamic_vector>
         static_assert(dims <= 1, "univector accepts only expressions with dims <= 1");
         if constexpr (dims > 0)
         {
-            this->resize(shapeof(input).front());
+            this->resize(get_shape(input).front());
         }
         this->assign_expr(std::forward<Input>(input));
     }
@@ -457,8 +457,8 @@ struct univector<T, tag_dynamic_vector>
         static_assert(dims <= 1, "univector accepts only expressions with dims <= 1");
         if constexpr (dims > 0)
         {
-            if (shapeof(input).front() != infinite_size)
-                this->resize(shapeof(input).front());
+            if (get_shape(input).front() != infinite_size)
+                this->resize(get_shape(input).front());
         }
         this->assign_expr(std::forward<Input>(input));
         return *this;
@@ -470,8 +470,8 @@ struct expression_traits<univector<T, Tag>> : public expression_traits_defaults
 {
     using value_type             = std::remove_const_t<T>;
     constexpr static size_t dims = 1;
-    constexpr static shape<dims> shapeof(const univector<T, Tag>& u) { return shape<1>(u.size()); }
-    constexpr static shape<dims> shapeof()
+    constexpr static shape<dims> get_shape(const univector<T, Tag>& u) { return shape<1>(u.size()); }
+    constexpr static shape<dims> get_shape()
     {
         if constexpr (univector<T, Tag>::size_known)
             return shape<1>{ univector<T, Tag>::static_size };
@@ -641,7 +641,7 @@ KFR_INTRINSIC univector<T> render(Expr&& expr)
     static_assert(!is_infinite<Expr>,
                   "render: Can't process infinite expressions. Pass size as a second argument to render.");
     univector<T> result;
-    result.resize(shapeof(expr).front());
+    result.resize(get_shape(expr).front());
     result = expr;
     return result;
 }

@@ -65,11 +65,11 @@ struct expression_delay : expression_with_arguments<E>, public expression_traits
     static_assert(ArgTraits::dims == 1, "expression_delay requires argument with dims == 1");
     using value_type             = typename ArgTraits::value_type;
     constexpr static size_t dims = 1;
-    constexpr static shape<dims> shapeof(const expression_delay& self)
+    constexpr static shape<dims> get_shape(const expression_delay& self)
     {
-        return ArgTraits::shapeof(self.first());
+        return ArgTraits::get_shape(self.first());
     }
-    constexpr static shape<dims> shapeof() { return ArgTraits::shapeof(); }
+    constexpr static shape<dims> get_shape() { return ArgTraits::get_shape(); }
     constexpr static inline bool random_access = false;
 
     using T = value_type;
@@ -121,11 +121,11 @@ struct expression_delay<1, E, stateless, STag> : expression_with_arguments<E>, e
     static_assert(ArgTraits::dims == 1, "expression_delay requires argument with dims == 1");
     using value_type             = typename ArgTraits::value_type;
     constexpr static size_t dims = 1;
-    constexpr static shape<dims> shapeof(const expression_delay& self)
+    constexpr static shape<dims> get_shape(const expression_delay& self)
     {
-        return ArgTraits::shapeof(self.first());
+        return ArgTraits::get_shape(self.first());
     }
-    constexpr static shape<dims> shapeof() { return ArgTraits::shapeof(); }
+    constexpr static shape<dims> get_shape() { return ArgTraits::get_shape(); }
     constexpr static inline bool random_access = false;
 
     using T = value_type;

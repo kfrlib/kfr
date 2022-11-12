@@ -829,11 +829,11 @@ struct expression_traits<tensor<T, Dims>> : expression_traits_defaults
     using value_type             = T;
     constexpr static size_t dims = Dims;
 
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof(const tensor<T, Dims>& self)
+    KFR_MEM_INTRINSIC constexpr static shape<dims> get_shape(const tensor<T, Dims>& self)
     {
         return self.shape();
     }
-    KFR_MEM_INTRINSIC constexpr static shape<dims> shapeof() { return shape<dims>{ undefined_size }; }
+    KFR_MEM_INTRINSIC constexpr static shape<dims> get_shape() { return shape<dims>{ undefined_size }; }
 };
 
 inline namespace CMT_ARCH_NAME
@@ -897,8 +897,8 @@ tensor<T, outdims> tapply(const tensor<T, dims1>& x, const tensor<T, dims2>& y, 
 template <size_t width = 0, index_t Axis = infinite_size, typename E, typename Traits = expression_traits<E>>
 tensor<typename Traits::value_type, Traits::dims> trender(const E& expr)
 {
-    static_assert(!Traits::shapeof().has_infinity());
-    shape sh = Traits::shapeof(expr);
+    static_assert(!Traits::get_shape().has_infinity());
+    shape sh = Traits::get_shape(expr);
     tensor<typename Traits::value_type, Traits::dims> result(sh);
     process<width, Axis>(result, expr);
     return result;
@@ -907,7 +907,7 @@ tensor<typename Traits::value_type, Traits::dims> trender(const E& expr)
 template <size_t width = 0, index_t Axis = infinite_size, typename E, typename Traits = expression_traits<E>>
 tensor<typename Traits::value_type, Traits::dims> trender(const E& expr, shape<Traits::dims> size)
 {
-    shape sh = min(Traits::shapeof(expr), size);
+    shape sh = min(Traits::get_shape(expr), size);
     tensor<typename Traits::value_type, Traits::dims> result(sh);
     process<width, Axis>(result, expr, shape<Traits::dims>{ 0 }, sh);
     return result;

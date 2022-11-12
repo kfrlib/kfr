@@ -70,14 +70,14 @@ template <typename T>
 constexpr inline size_t expression_dims = expression_traits<T>::dims;
 
 template <typename T>
-constexpr inline shape<expression_dims<T>> shapeof(T&& expr)
+constexpr inline shape<expression_dims<T>> get_shape(T&& expr)
 {
-    return expression_traits<T>::shapeof(expr);
+    return expression_traits<T>::get_shape(expr);
 }
 template <typename T>
-constexpr inline shape<expression_dims<T>> shapeof()
+constexpr inline shape<expression_dims<T>> get_shape()
 {
-    return expression_traits<T>::shapeof();
+    return expression_traits<T>::get_shape();
 }
 
 template <typename T>
@@ -104,12 +104,12 @@ struct expression_traits<const T&&, std::void_t<typename expression_traits<T>::v
 
 // This allows old style expressions+traits
 template <typename T>
-struct expression_traits<T, std::void_t<decltype(T::random_access), decltype(T::shapeof())>>
+struct expression_traits<T, std::void_t<decltype(T::random_access), decltype(T::get_shape())>>
 {
     using value_type             = typename T::value_type;
     constexpr static size_t dims = T::dims;
-    constexpr static shape<dims> shapeof(const T& self) { return T::shapeof(self); }
-    constexpr static shape<dims> shapeof() { return T::shapeof(); }
+    constexpr static shape<dims> get_shape(const T& self) { return T::get_shape(self); }
+    constexpr static shape<dims> get_shape() { return T::get_shape(); }
 
     constexpr static inline bool explicit_operand = T::explicit_operand;
     constexpr static inline bool random_access    = T::random_access;
@@ -119,8 +119,8 @@ struct expression_traits_defaults
 {
     // using value_type = accepts_any;
     // constexpr static size_t dims = 0;
-    // constexpr static shape<dims> shapeof(const T&);
-    // constexpr static shape<dims> shapeof();
+    // constexpr static shape<dims> get_shape(const T&);
+    // constexpr static shape<dims> get_shape();
 
     constexpr static inline bool explicit_operand = true;
     constexpr static inline bool random_access    = true;
@@ -193,7 +193,7 @@ template <typename T>
 constexpr inline bool is_expr_element = std::is_same_v<std::remove_cv_t<T>, T>&& is_vec_element<T>;
 
 template <typename E>
-constexpr inline bool is_infinite = expression_traits<E>::shapeof().has_infinity();
+constexpr inline bool is_infinite = expression_traits<E>::get_shape().has_infinity();
 
 template <typename T>
 struct expression_traits<T, std::enable_if_t<is_expr_element<T>>> : expression_traits_defaults
@@ -202,8 +202,8 @@ struct expression_traits<T, std::enable_if_t<is_expr_element<T>>> : expression_t
     constexpr static size_t dims                  = 0;
     constexpr static inline bool explicit_operand = false;
 
-    KFR_MEM_INTRINSIC constexpr static shape<0> shapeof(const T& self) { return {}; }
-    KFR_MEM_INTRINSIC constexpr static shape<0> shapeof() { return {}; }
+    KFR_MEM_INTRINSIC constexpr static shape<0> get_shape(const T& self) { return {}; }
+    KFR_MEM_INTRINSIC constexpr static shape<0> get_shape() { return {}; }
 };
 
 template <typename E, enable_if_input_expression<E>* = nullptr, index_t Dims = expression_dims<E>>
@@ -310,9 +310,9 @@ struct expression_with_arguments
         }
         else
         {
-            if constexpr (Traits::shapeof().cproduct() > 0)
+            if constexpr (Traits::get_shape().cproduct() > 0)
             {
-                return Traits::shapeof().tomask();
+                return Traits::get_shape().tomask();
             }
             else
             {
@@ -338,7 +338,7 @@ struct expression_with_arguments
                  [&](auto idx_) CMT_INLINE_LAMBDA
                  {
                      constexpr size_t idx = val_of(decltype(idx_)());
-                     shape sh             = expression_traits<nth<idx>>::shapeof(std::get<idx>(this->args));
+                     shape sh             = expression_traits<nth<idx>>::get_shape(std::get<idx>(this->args));
                      masks[idx]           = sh.tomask();
                  });
     }
@@ -422,11 +422,11 @@ struct expression_with_traits : expression_with_arguments<Arg>
     using first_arg_traits       = expression_traits<Arg>;
     using value_type             = typename first_arg_traits::value_type;
     constexpr static size_t dims = first_arg_traits::dims;
-    constexpr static shape<dims> shapeof(const expression_with_traits& self)
+    constexpr static shape<dims> get_shape(const expression_with_traits& self)
     {
-        return first_arg_traits::shapeof(self.first());
+        return first_arg_traits::get_shape(self.first());
     }
-    constexpr static shape<dims> shapeof() { return first_arg_traits::shapeof(); }
+    constexpr static shape<dims> get_shape() { return first_arg_traits::get_shape(); }
 
     using expression_with_arguments<Arg>::expression_with_arguments;
 };
@@ -446,7 +446,7 @@ struct expression_function : expression_with_arguments<Args...>, expression_trai
         constexpr auto operator()(csize_t<idx>...) const
         {
             return internal_generic::common_shape(
-                expression_traits<typename expression_function::template nth<idx>>::shapeof()...);
+                expression_traits<typename expression_function::template nth<idx>>::get_shape()...);
         }
     };
     struct lambda_get_shape_self
@@ -455,27 +455,28 @@ struct expression_function : expression_with_arguments<Args...>, expression_trai
         template <typename... TArgs>
         constexpr auto operator()(const TArgs&... args) const
         {
-            return internal_generic::common_shape<true>(expression_traits<Args>::shapeof(args)...);
+            return internal_generic::common_shape<true>(expression_traits<Args>::get_shape(args)...);
         }
     };
-    constexpr static shape<dims> shapeof(const expression_function& self)
+    constexpr static shape<dims> get_shape(const expression_function& self)
     {
         return self.fold(lambda_get_shape_self{ self });
     }
-    constexpr static shape<dims> shapeof() { return expression_function::fold_idx(lambda_get_shape{}); }
+    constexpr static shape<dims> get_shape() { return expression_function::fold_idx(lambda_get_shape{}); }
 #else
-    constexpr static shape<dims> shapeof(const expression_function& self)
+    constexpr static shape<dims> get_shape(const expression_function& self)
     {
         return self.fold([&](auto&&... args) CMT_INLINE_LAMBDA constexpr->auto {
-            return internal_generic::common_shape<true>(expression_traits<decltype(args)>::shapeof(args)...);
+            return internal_generic::common_shape<true>(
+                expression_traits<decltype(args)>::get_shape(args)...);
         });
     }
-    constexpr static shape<dims> shapeof()
+    constexpr static shape<dims> get_shape()
     {
         return expression_function::fold_idx([&](auto... args) CMT_INLINE_LAMBDA constexpr->auto {
             return internal_generic::common_shape(
                 expression_traits<
-                    typename expression_function::template nth<val_of(decltype(args)())>>::shapeof()...);
+                    typename expression_function::template nth<val_of(decltype(args)())>>::get_shape()...);
         });
     }
 #endif
@@ -544,7 +545,7 @@ KFR_MEM_INTRINSIC vec<typename Traits::value_type, N> get_arg(const expression_f
     else
     {
         auto indices               = internal_generic::adapt<Traits::dims>(index, self.getmask(csize<idx>));
-        constexpr index_t last_dim = Traits::shapeof().back();
+        constexpr index_t last_dim = Traits::get_shape().back();
         if constexpr (last_dim != undefined_size)
         {
             constexpr index_t last_dim_pot = prev_poweroftwo(last_dim);
@@ -724,7 +725,7 @@ static auto process(Out&& out, In&& in, shape<outdims> start = shape<outdims>(0)
     constexpr index_t indims = expression_dims<In>;
     static_assert(outdims >= indims);
 
-    constexpr index_t last_dim_size = prev_poweroftwo(Trout::shapeof().back());
+    constexpr index_t last_dim_size = prev_poweroftwo(Trout::get_shape().back());
 
 #ifdef NDEBUG
     constexpr size_t vec_width = maximum_vector_size<Tin>;
@@ -737,8 +738,8 @@ static auto process(Out&& out, In&& in, shape<outdims> start = shape<outdims>(0)
     constexpr index_t out_axis = internal::select_axis(outdims, Axis);
     constexpr index_t in_axis  = out_axis + indims - outdims;
 
-    const shape<outdims> outshape = Trout::shapeof(out);
-    const shape<indims> inshape   = Trin::shapeof(in);
+    const shape<outdims> outshape = Trout::get_shape(out);
+    const shape<indims> inshape   = Trin::get_shape(in);
     if (CMT_UNLIKELY(!internal_generic::can_assign_from(outshape, inshape)))
         return shape<outdims>{ 0 };
     shape<outdims> stop = min(min(add_shape(start, size), outshape), inshape.template extend<outdims>());
@@ -863,7 +864,7 @@ void test_expression(const E& expr, size_t size, Fn&& fn, const char* expression
 {
     static_assert(expression_dims<E> == 1, "CHECK_EXPRESSION supports only 1-dim expressions");
     using T                  = expression_value_type<E>;
-    size_t expr_size         = shapeof(expr).front();
+    size_t expr_size         = get_shape(expr).front();
     ::testo::test_case* test = ::testo::active_test();
     auto&& c                 = ::testo::make_comparison();
     test->check(c <= expr_size == size, expression, file, line);

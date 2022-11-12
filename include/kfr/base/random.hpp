@@ -81,11 +81,11 @@ struct expression_random_uniform : expression_traits_defaults
 {
     using value_type             = T;
     constexpr static size_t dims = Dims;
-    constexpr static shape<dims> shapeof(const expression_random_uniform&)
+    constexpr static shape<dims> get_shape(const expression_random_uniform&)
     {
         return shape<dims>(infinite_size);
     }
-    constexpr static shape<dims> shapeof() { return shape<dims>(infinite_size); }
+    constexpr static shape<dims> get_shape() { return shape<dims>(infinite_size); }
 
     mutable state_holder<random_state, Reference> state;
 
@@ -102,11 +102,11 @@ struct expression_random_range : expression_traits_defaults
 {
     using value_type             = T;
     constexpr static size_t dims = Dims;
-    constexpr static shape<dims> shapeof(const expression_random_range&)
+    constexpr static shape<dims> get_shape(const expression_random_range&)
     {
         return shape<dims>(infinite_size);
     }
-    constexpr static shape<dims> shapeof() { return shape<dims>(infinite_size); }
+    constexpr static shape<dims> get_shape() { return shape<dims>(infinite_size); }
 
     mutable state_holder<random_state, Reference> state;
     T min;

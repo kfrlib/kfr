@@ -127,7 +127,7 @@ struct expression_vtable
     template <typename Expression>
     static void static_shapeof(void* instance, shape<Dims>& result)
     {
-        result = expression_traits<Expression>::shapeof(*static_cast<Expression*>(instance));
+        result = expression_traits<Expression>::get_shape(*static_cast<Expression*>(instance));
     }
     template <typename Expression>
     static bool static_substitute(void* instance, expression_handle<T, Dims> ptr)
@@ -203,13 +203,13 @@ struct expression_traits<expression_handle<T, Dims>> : expression_traits_default
 {
     using value_type             = T;
     constexpr static size_t dims = Dims;
-    constexpr static shape<dims> shapeof(const expression_handle<T, Dims>& self)
+    constexpr static shape<dims> get_shape(const expression_handle<T, Dims>& self)
     {
         shape<dims> result;
         self.vtable->fn_shapeof(self.instance, result);
         return result;
     }
-    constexpr static shape<dims> shapeof() { return shape<dims>(undefined_size); }
+    constexpr static shape<dims> get_shape() { return shape<dims>(undefined_size); }
 
     constexpr static inline bool random_access = false;
 };
@@ -322,11 +322,11 @@ struct expression_traits<expression_placeholder<T, Dims, Key>> : public expressi
 {
     using value_type             = T;
     constexpr static size_t dims = Dims;
-    constexpr static shape<dims> shapeof(const expression_placeholder<T, Dims, Key>& self)
+    constexpr static shape<dims> get_shape(const expression_placeholder<T, Dims, Key>& self)
     {
-        return self.handle ? ::kfr::shapeof(self.handle) : shape<dims>(infinite_size);
+        return self.handle ? ::kfr::get_shape(self.handle) : shape<dims>(infinite_size);
     }
-    constexpr static shape<dims> shapeof() { return shape<dims>(undefined_size); }
+    constexpr static shape<dims> get_shape() { return shape<dims>(undefined_size); }
 };
 
 inline namespace CMT_ARCH_NAME

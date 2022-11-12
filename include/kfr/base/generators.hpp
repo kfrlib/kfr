@@ -54,8 +54,8 @@ struct generator : public expression_traits_defaults
 {
     using value_type             = T;
     constexpr static size_t dims = 1;
-    constexpr static shape<1> shapeof(const Class&) { return infinite_size; }
-    constexpr static shape<1> shapeof() { return infinite_size; }
+    constexpr static shape<1> get_shape(const Class&) { return infinite_size; }
+    constexpr static shape<1> get_shape() { return infinite_size; }
 
     constexpr static inline bool random_access = false;
 
