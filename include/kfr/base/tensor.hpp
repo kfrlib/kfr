@@ -456,7 +456,7 @@ public:
         };
     }
 
-    using tensor_subscript<T, tensor<T, NDims>, std::make_index_sequence<NDims>>::operator();
+    using tensor_subscript<T, tensor<T, NDims>, std::make_integer_sequence<index_t, NDims>>::operator();
 
     template <index_t dims>
     KFR_MEM_INTRINSIC tensor<T, dims> reshape_may_copy(const kfr::shape<dims>& new_shape,
