@@ -581,7 +581,13 @@ KFR_INTRIN_SHUFFLE_LINEAR_START(f32, 2, 4, 2,
 KFR_INTRIN_CONVERT(f32, i32, 4, _mm_cvtepi32_ps(x))
 KFR_INTRIN_CONVERT(i32, f32, 4, _mm_cvttps_epi32(x))
 KFR_INTRIN_CONVERT(i32, f64, 2, simd<i32, 2>::from(_mm_cvtsi128_si64(_mm_cvttpd_epi32(x))))
+#ifdef CMT_COMPILER_IS_MSVC
+KFR_INTRIN_CONVERT(f64, i32, 2,
+                   _mm_cvtepi32_pd(_mm_setr_epi32(bitcast_anything<simd_array<i32, 2>>(x).val[0],
+                                                  bitcast_anything<simd_array<i32, 2>>(x).val[1], 0, 0)))
+#else
 KFR_INTRIN_CONVERT(f64, i32, 2, _mm_cvtepi32_pd(KFR_mm_setr_epi64x(x.whole, 0)))
+#endif
 KFR_INTRIN_CONVERT(i64, f64, 2,
                    KFR_mm_setr_epi64x(_mm_cvttsd_si64(x), _mm_cvttsd_si64(_mm_unpackhi_pd(x, x))))
 KFR_INTRIN_CONVERT(f64, i64, 2,
