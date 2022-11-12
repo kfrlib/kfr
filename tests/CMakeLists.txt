@@ -113,25 +113,24 @@ if (KFR_ENABLE_DFT)
     add_executable(dft_test dft_test.cpp)
 endif ()
 
-find_package(MPFR)
-find_package(GMP)
+if (KFR_REGENERATE_TESTS)
+    find_package(MPFR)
+    find_package(GMP)
 
-if (MPFR_FOUND
-    AND GMP_FOUND
-    AND KFR_REGENERATE_TESTS)
-    message(STATUS "MPFR is found")
-    add_executable(generate_data generate_data.cpp)
-    target_link_libraries(generate_data kfr)
-    target_include_directories(generate_data PRIVATE ${MPFR_INCLUDE_DIR}
-                                                     ${GMP_INCLUDE_DIR})
-    target_link_libraries(generate_data ${MPFR_LIBRARIES} ${GMP_LIBRARIES})
-    if (KFR_REGENERATE_TESTS)
-        add_custom_command(
-            TARGET generate_data
-            POST_BUILD
-            COMMENT "Generating tests..."
-            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/data
-            COMMAND generate_data)
+    if (MPFR_FOUND AND GMP_FOUND)
+        add_executable(generate_data generate_data.cpp)
+        target_link_libraries(generate_data kfr)
+        target_include_directories(generate_data PRIVATE ${MPFR_INCLUDE_DIR}
+                                                         ${GMP_INCLUDE_DIR})
+        target_link_libraries(generate_data ${MPFR_LIBRARIES} ${GMP_LIBRARIES})
+        if (KFR_REGENERATE_TESTS)
+            add_custom_command(
+                TARGET generate_data
+                POST_BUILD
+                COMMENT "Generating tests..."
+                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/data
+                COMMAND generate_data)
+        endif ()
     endif ()
 endif ()
 

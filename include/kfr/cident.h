@@ -344,6 +344,10 @@ extern char* gets(char* __s);
 #endif
 #endif
 
+#if defined _MSC_VER && !defined(__clang__) && !defined(CMT_FORCE_INLINE_MSVC)
+#define CMT_NO_FORCE_INLINE 1
+#endif
+
 #if defined(CMT_COMPILER_INTEL) || defined(CMT_COMPILER_CLANG)
 #ifdef CMT_COMPILER_IS_MSVC
 #undef CMT_COMPILER_IS_MSVC
