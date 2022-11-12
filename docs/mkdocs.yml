@@ -51,17 +51,20 @@ nav:
   - types.md
   - expressions.md
   - DSP:
-    - conversion.md
-    - normalize.md
-    - convert_stereo.md
     - fir.md
     - bq.md
     - src.md
-    - convolution.md
+    - conv_reverb.md
     - ebur128.md
+    - conversion.md
+    - normalize.md
+    - convert_stereo.md
     - fir_gallery.md
+    - iir_gallery.md
     - bq_gallery.md
     - src_gallery.md
+    - window_gallery.md
+    - convolution.md
   - DFT:
     - dft.md
     - dft2.md
