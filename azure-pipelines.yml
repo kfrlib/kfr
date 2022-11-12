@@ -35,7 +35,7 @@ jobs:
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
       set PATH=%PATH:C:\Strawberry\c\bin;=%
       set PATH=C:\sde;%PATH%
-      ci\run.cmd build-release -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH_TESTS=ON -DKFR_ENABLE_DFT_MULTIARCH=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Release -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
+      ci\run.cmd build-release -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_DFT_MULTIARCH=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Release -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
 
 - job: Linux_x86_64_Clang8
   timeoutInMinutes: 180
