@@ -206,7 +206,7 @@ public:
     KFR_INTRINSIC tensor(const shape_type& shape, const std::initializer_list<T>& values) : tensor(shape)
     {
         if (values.size() != m_size)
-            throw std::runtime_error("Invalid initializer provided for kfr::tensor");
+            KFR_REPORT_LOGIC_ERROR("Invalid initializer provided for kfr::tensor");
         std::copy(values.begin(), values.end(), contiguous_begin_unsafe());
     }
 
@@ -241,7 +241,7 @@ public:
         : tensor(shape, strides)
     {
         if (values.size() != m_size)
-            throw std::runtime_error("Invalid initializer provided for kfr::tensor");
+            KFR_REPORT_LOGIC_ERROR("Invalid initializer provided for kfr::tensor");
         std::copy(values.begin(), values.end(), begin());
     }
 
@@ -266,7 +266,7 @@ public:
     KFR_INTRINSIC void require_contiguous() const
     {
         if (!m_is_contiguous)
-            throw std::runtime_error("Contiguous array is required");
+            KFR_REPORT_LOGIC_ERROR("Contiguous array is required");
     }
 
     KFR_INTRINSIC contiguous_iterator contiguous_begin() const
@@ -348,7 +348,7 @@ public:
     KFR_MEM_INTRINSIC void assign(const tensor& src) const
     {
         if (src.shape() != m_shape)
-            throw std::range_error("Tensors must have smae shape");
+            KFR_REPORT_LOGIC_ERROR("Tensors must have same shape");
         std::copy(src.begin(), src.end(), begin());
     }
     KFR_MEM_INTRINSIC void assign(const T& scalar) const { std::fill(begin(), end(), scalar); }
@@ -464,7 +464,7 @@ public:
     {
         if (size_of_shape(new_shape) != m_size)
         {
-            throw std::runtime_error("Invalid shape provided");
+            KFR_REPORT_LOGIC_ERROR("Invalid shape provided");
         }
         /*
             TODO: reshape must be possible with non-contiguous arrays:
@@ -482,7 +482,7 @@ public:
             }
             else
             {
-                throw std::runtime_error("reshape requires contiguous array");
+                KFR_REPORT_LOGIC_ERROR("reshape requires contiguous array");
             }
         }
         return tensor<T, dims>{
@@ -680,7 +680,7 @@ public:
     KFR_MEM_INTRINSIC std::array<T, Nout> to_array() const
     {
         if (m_size != Nout)
-            throw std::range_error("Nout != m_size");
+            KFR_REPORT_LOGIC_ERROR("Nout != m_size");
         std::array<T, Nout> result;
         if (is_contiguous())
             std::copy(contiguous_begin(), contiguous_end(), result.begin());

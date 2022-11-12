@@ -1111,7 +1111,7 @@ KFR_INTRINSIC void initialize_stages(dft_plan<T>* self)
 #ifndef KFR_DFT_NO_NPo2
         init_dft(self, self->size, dft_order::normal);
 #else
-        KFR_REPORT_ERROR(logic, "Non-power of 2 FFT is disabled");
+        KFR_REPORT_LOGIC_ERROR("Non-power of 2 FFT is disabled but ", self->size, " size is requested");
 #endif
     }
 }

@@ -79,6 +79,11 @@ public:
         if (CMT_UNLIKELY(!(cond)))                                                                           \
             KFR_REPORT_ERROR(kind, __VA_ARGS__);                                                             \
     } while (0)
+    
+
+#define KFR_REPORT_RUNTIME_ERROR(...) KFR_REPORT_ERROR(runtime, __VA_ARGS__)
+
+#define KFR_REPORT_LOGIC_ERROR(...) KFR_REPORT_ERROR(logic, __VA_ARGS__)
 
 #if !defined(KFR_DISABLE_CHECKS)
 
