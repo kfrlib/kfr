@@ -151,5 +151,7 @@ TEST(assign_expression)
 
 TEST(trace) { render(trace(counter()), 44); }
 
+TEST(get_element) { CHECK(get_element(counter(0, 1, 10, 100), { 1, 2, 3 }) == 321); }
+
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

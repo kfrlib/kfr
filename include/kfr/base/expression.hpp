@@ -206,6 +206,21 @@ struct expression_traits<T, std::enable_if_t<is_expr_element<T>>> : expression_t
     KFR_MEM_INTRINSIC constexpr static shape<0> shapeof() { return {}; }
 };
 
+template <typename E, enable_if_input_expression<E>* = nullptr, index_t Dims = expression_dims<E>>
+inline expression_value_type<E> get_element(E&& expr, shape<Dims> index)
+{
+    return get_elements(expr, index, axis_params_v<0, 1>).front();
+}
+
+template <index_t Axis, index_t Dims, index_t VecAxis, size_t N>
+inline vec<index_t, N> indices(const shape<Dims>& index, axis_params<VecAxis, N>)
+{
+    if constexpr (Axis == VecAxis)
+        return index[Axis] + enumerate<index_t, N, 0, 1>();
+    else
+        return index[Axis];
+}
+
 namespace internal_generic
 {
 struct anything

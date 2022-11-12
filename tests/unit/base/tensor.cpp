@@ -798,5 +798,36 @@ TEST(tensor_from_container)
 
 } // namespace CMT_ARCH_NAME
 
+template <typename T, index_t Size>
+struct identity_matrix
+{
+};
+
+template <typename T, index_t Size>
+struct expression_traits<identity_matrix<T, Size>> : expression_traits_defaults
+{
+    using value_type             = T;
+    constexpr static size_t dims = 2;
+    constexpr static shape<2> shapeof(const identity_matrix<T, Size>& self) { return { Size, Size }; }
+    constexpr static shape<2> shapeof() { return { Size, Size }; }
+};
+
+template <typename T, index_t Size, index_t Axis, size_t N>
+vec<T, N> get_elements(const identity_matrix<T, Size>& self, const shape<2>& index,
+                       const axis_params<Axis, N>& sh)
+{
+    return select(indices<0>(index, sh) == indices<1>(index, sh), 1, 0);
+}
+
+inline namespace CMT_ARCH_NAME
+{
+
+TEST(identity_matrix)
+{
+    CHECK(trender(identity_matrix<float, 3>{}) == tensor<float, 2>{ { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } });
+}
+
+} // namespace CMT_ARCH_NAME
+
 } // namespace kfr
 CMT_PRAGMA_MSVC(warning(pop))

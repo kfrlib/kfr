@@ -42,8 +42,8 @@ template <typename T1, size_t N, typename T2, typename T3, KFR_ENABLE_IF(is_nume
           typename Tout = subtype<std::common_type_t<T2, T3>>>
 KFR_INTRINSIC vec<Tout, N> select(const mask<T1, N>& m, const T2& x, const T3& y)
 {
-    static_assert(sizeof(T1) == sizeof(Tout), "select: incompatible types");
-    return intrinsics::select(bitcast<Tout>(m.asvec()).asmask(), broadcastto<Tout>(x), broadcastto<Tout>(y));
+    return intrinsics::select(bitcast<Tout>(cast<itype<Tout>>(bitcast<itype<T1>>(m.asvec()))).asmask(),
+                              broadcastto<Tout>(x), broadcastto<Tout>(y));
 }
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
