@@ -268,13 +268,13 @@ struct expression_upsample<2, E> : expression_with_arguments<E>, expression_trai
     KFR_MEM_INTRINSIC size_t size() const CMT_NOEXCEPT { return expression_with_arguments<E>::size() * 2; }
 
     template <size_t N>
-    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_upsample& self, shape<1> index,
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_upsample& self, index_t index,
                                                 axis_params<0, N>)
     {
         const vec<T, N / 2> x = get_elements(self.first(), index / 2, axis_params<0, N / 2>());
         return interleave(x, zerovector(x));
     }
-    KFR_INTRINSIC friend vec<T, 1> get_elements(const expression_upsample& self, shape<1> index,
+    KFR_INTRINSIC friend vec<T, 1> get_elements(const expression_upsample& self, index_t index,
                                                 axis_params<0, 1>)
     {
         if (index & 1)
@@ -294,14 +294,14 @@ struct expression_upsample<4, E> : expression_with_arguments<E>
     KFR_MEM_INTRINSIC size_t size() const CMT_NOEXCEPT { return expression_with_arguments<E>::size() * 4; }
 
     template <size_t N>
-    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_upsample& self, shape<1> index,
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_upsample& self, index_t index,
                                                 axis_params<0, N>) CMT_NOEXCEPT
     {
         const vec<T, N / 4> x  = get_elements(self.first(), index / 4, axis_params<0, N / 4>());
         const vec<T, N / 2> xx = interleave(x, zerovector(x));
         return interleave(xx, zerovector(xx));
     }
-    KFR_INTRINSIC friend vec<T, 2> get_elements(const expression_upsample& self, shape<1> index,
+    KFR_INTRINSIC friend vec<T, 2> get_elements(const expression_upsample& self, index_t index,
                                                 axis_params<0, 2>) CMT_NOEXCEPT
     {
         switch (index & 3)
@@ -314,7 +314,7 @@ struct expression_upsample<4, E> : expression_with_arguments<E>
             return 0;
         }
     }
-    KFR_INTRINSIC friend vec<T, 1> get_elements(const expression_upsample& self, shape<1> index,
+    KFR_INTRINSIC friend vec<T, 1> get_elements(const expression_upsample& self, index_t index,
                                                 axis_params<0, 1>) CMT_NOEXCEPT
     {
         if (index & 3)
@@ -352,7 +352,7 @@ struct expression_downsample<4, offset, E> : expression_with_arguments<E>
     KFR_MEM_INTRINSIC size_t size() const CMT_NOEXCEPT { return expression_with_arguments<E>::size() / 4; }
 
     template <size_t N>
-    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_downsample& self, shape<1> index,
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_downsample& self, index_t index,
                                                 axis_params<0, N>) CMT_NOEXCEPT
     {
         const vec<T, N* 4> x = get_elements(self.first(), index * 4, axis_params<0, N * 4>());
