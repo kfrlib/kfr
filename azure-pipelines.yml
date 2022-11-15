@@ -139,7 +139,7 @@ jobs:
       mkdir "$(Agent.TempDirectory)/sde-bin"
       tar -C "$(Agent.TempDirectory)/sde-bin" -xjf "$(Agent.TempDirectory)/sde.tar.bz2"  --strip 1
       sudo ln -s $(Agent.TempDirectory)/sde-bin/sde64 /usr/bin/sde
-      ci/run.sh build-release -DKFR_ARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DKFR_USE_SDE=ON -DKFR_ARCH=avx2 -DKFR_ENABLE_DFT=OFF -DCMAKE_CXX_COMPILER=g++-12 -DCMAKE_BUILD_TYPE=Release
+      ci/run.sh build-release -DKFR_ARCH_TESTS=sse2,sse3,sse41,avx,avx2 -DKFR_USE_SDE=ON -DKFR_ARCH=avx2 -DKFR_ENABLE_DFT=OFF -DCMAKE_CXX_COMPILER=g++-12 -DCMAKE_BUILD_TYPE=Release
 
 - job: Linux_ARM_Clang9_Release
   timeoutInMinutes: 180
