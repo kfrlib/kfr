@@ -26,6 +26,7 @@
 #pragma once
 
 #include "../simd/platform.hpp"
+#include "../simd/read_write.hpp"
 #include "../simd/shuffle.hpp"
 #include "../simd/types.hpp"
 #include "../simd/vec.hpp"
@@ -234,6 +235,13 @@ struct anything
 
 inline namespace CMT_ARCH_NAME
 {
+
+template <index_t Dims, typename U = unsigned_type<sizeof(index_t) * 8>>
+KFR_INTRINSIC vec<U, Dims> to_vec(const shape<Dims>& sh)
+{
+    return read<Dims>(reinterpret_cast<const U*>(sh.data()));
+}
+
 namespace internal
 {
 template <size_t width, typename Fn>
@@ -306,11 +314,11 @@ struct expression_with_arguments
         using Traits = expression_traits<nth<idx>>;
         if constexpr (sizeof...(Args) <= 1 || Traits::dims == 0)
         {
-            return -1;
+            return dimset(-1);
         }
         else
         {
-            if constexpr (Traits::get_shape().cproduct() > 0)
+            if constexpr (Traits::get_shape().product() > 0)
             {
                 return Traits::get_shape().tomask();
             }
@@ -381,7 +389,7 @@ struct expression_with_arguments<Arg>
     template <size_t idx>
     KFR_MEM_INTRINSIC dimset getmask(csize_t<idx> = {}) const
     {
-        return -1;
+        return dimset(-1);
     }
 
     template <typename Fn>

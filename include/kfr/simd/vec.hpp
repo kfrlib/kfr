@@ -1441,7 +1441,7 @@ template <typename T, size_t N1, size_t N2>
 constexpr inline size_t vec_rank<vec<vec<T, N1>, N2>> = 2;
 
 template <typename T, size_t N>
-KFR_INTRINSIC vec<T, N> v(const portable_vec<T, N>& pv)
+KFR_INTRINSIC vec<T, N> to_vec(const portable_vec<T, N>& pv)
 {
     return pv;
 }

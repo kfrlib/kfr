@@ -187,7 +187,7 @@ struct stride_pointer<const T, groupsize>
 };
 
 template <typename T, size_t N>
-KFR_INTRINSIC vec<T, N> v(const std::array<T, N>& a)
+KFR_INTRINSIC vec<T, N> to_vec(const std::array<T, N>& a)
 {
     return read<N>(a.data());
 }

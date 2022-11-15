@@ -33,7 +33,6 @@
 #include "../simd/min_max.hpp"
 #include "../simd/shuffle.hpp"
 #include "../simd/types.hpp"
-#include "../simd/vec.hpp"
 
 #include <bitset>
 #include <optional>
@@ -85,7 +84,7 @@ CMT_INTRINSIC constexpr size_t size_min(size_t x, size_t y, Ts... rest) CMT_NOEX
     return size_min(x < y ? x : y, rest...);
 }
 
-using dimset = vec<i8, maximum_dims>;
+using dimset = static_array_of_size<i8, maximum_dims>; // std::array<i8, maximum_dims>;
 
 template <index_t dims>
 struct shape;
@@ -100,12 +99,11 @@ KFR_INTRINSIC bool increment_indices(shape<dims>& indices, const shape<dims>& st
 template <index_t dims>
 struct shape : static_array_base<index_t, csizeseq_t<dims>>
 {
-    using static_array_base<index_t, csizeseq_t<dims>>::static_array_base;
+    using base = static_array_base<index_t, csizeseq_t<dims>>;
 
-    constexpr shape(const static_array_base<index_t, csizeseq_t<dims>>& a)
-        : static_array_base<index_t, csizeseq_t<dims>>(a)
-    {
-    }
+    using base::base;
+
+    constexpr shape(const base& a) : base(a) {}
 
     static_assert(dims < maximum_dims);
 
@@ -165,22 +163,22 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
         }
     }
 
-    shape add(index_t value) const
+    constexpr shape add(index_t value) const
     {
         shape result = *this;
         result.back() += value;
         return result;
     }
     template <index_t Axis>
-    shape add_at(index_t value, cval_t<index_t, Axis> = {}) const
+    constexpr shape add_at(index_t value, cval_t<index_t, Axis> = {}) const
     {
         shape result = *this;
         result[Axis] += value;
         return result;
     }
-    shape add(const shape& other) const { return **this + *other; }
-    shape sub(const shape& other) const { return **this - *other; }
-    index_t sum() const { return hsum(**this); }
+    constexpr shape add(const shape& other) const { return **this + *other; }
+    constexpr shape sub(const shape& other) const { return **this - *other; }
+    constexpr index_t sum() const { return (*this)->sum(); }
 
     constexpr bool has_infinity() const
     {
@@ -192,40 +190,43 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
         return false;
     }
 
-    friend shape add_shape(const shape& lhs, const shape& rhs)
+    friend constexpr shape add_shape(const shape& lhs, const shape& rhs)
     {
-        vec<index_t, dims> x    = *lhs;
-        vec<index_t, dims> y    = *rhs;
-        mask<index_t, dims> inf = max(x, y) == infinite_size;
-        return select(inf, infinite_size, x + y);
+        return lhs.bin(rhs, [](index_t x, index_t y) { return std::max(std::max(x, y), x + y); });
     }
-    friend shape sub_shape(const shape& lhs, const shape& rhs)
+    friend constexpr shape sub_shape(const shape& lhs, const shape& rhs)
     {
-        vec<index_t, dims> x    = *lhs;
-        vec<index_t, dims> y    = *rhs;
-        mask<index_t, dims> inf = max(x, y) == infinite_size;
-        return select(inf, infinite_size, x - y);
+        return lhs.bin(rhs, [](index_t x, index_t y)
+                       { return std::max(x, y) == infinite_size ? infinite_size : x - y; });
     }
-    friend shape add_shape_undef(const shape& lhs, const shape& rhs)
+    friend constexpr shape add_shape_undef(const shape& lhs, const shape& rhs)
     {
-        vec<index_t, dims> x      = *lhs;
-        vec<index_t, dims> y      = *rhs;
-        mask<index_t, dims> inf   = max(x, y) == infinite_size;
-        mask<index_t, dims> undef = min(x, y) == undefined_size;
-        return select(inf, infinite_size, select(undef, undefined_size, x + y));
+        return lhs.bin(rhs,
+                       [](index_t x, index_t y)
+                       {
+                           bool inf   = std::max(x, y) == infinite_size;
+                           bool undef = std::min(x, y) == undefined_size;
+                           return inf ? infinite_size : undef ? undefined_size : x + y;
+                       });
     }
-    friend shape sub_shape_undef(const shape& lhs, const shape& rhs)
+    friend constexpr shape sub_shape_undef(const shape& lhs, const shape& rhs)
     {
-        vec<index_t, dims> x      = *lhs;
-        vec<index_t, dims> y      = *rhs;
-        mask<index_t, dims> inf   = max(x, y) == infinite_size;
-        mask<index_t, dims> undef = min(x, y) == undefined_size;
-        return select(inf, infinite_size, select(undef, undefined_size, x - y));
+        return lhs.bin(rhs,
+                       [](index_t x, index_t y)
+                       {
+                           bool inf   = std::max(x, y) == infinite_size;
+                           bool undef = std::min(x, y) == undefined_size;
+                           return inf ? infinite_size : undef ? undefined_size : x - y;
+                       });
     }
 
-    friend shape min(const shape& x, const shape& y) { return kfr::min(*x, *y); }
+    friend constexpr shape min(const shape& x, const shape& y) { return x->min(*y); }
 
-    KFR_MEM_INTRINSIC size_t to_flat(const shape<dims>& indices) const
+    constexpr const base& operator*() const { return static_cast<const base&>(*this); }
+
+    constexpr const base* operator->() const { return static_cast<const base*>(this); }
+
+    KFR_MEM_INTRINSIC constexpr size_t to_flat(const shape<dims>& indices) const
     {
         if constexpr (dims == 1)
         {
@@ -248,7 +249,7 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
             return result;
         }
     }
-    KFR_MEM_INTRINSIC shape<dims> from_flat(size_t index) const
+    KFR_MEM_INTRINSIC constexpr shape<dims> from_flat(size_t index) const
     {
         if constexpr (dims == 1)
         {
@@ -273,41 +274,20 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
         }
     }
 
-    KFR_MEM_INTRINSIC index_t dot(const shape& other) const
-    {
-        if constexpr (dims == 1)
-        {
-            return (*this)[0] * other[0];
-        }
-        else if constexpr (dims == 2)
-        {
-            return (*this)[0] * other[0] + (*this)[1] * other[1];
-        }
-        else
-        {
-            return hdot(**this, *other);
-        }
-    }
+    KFR_MEM_INTRINSIC constexpr index_t dot(const shape& other) const { return (*this)->dot(*other); }
 
     template <index_t indims>
-    KFR_MEM_INTRINSIC shape adapt(const shape<indims>& other) const
+    KFR_MEM_INTRINSIC constexpr shape adapt(const shape<indims>& other) const
     {
         static_assert(indims >= dims);
-        return min(other.template trim<dims>(), **this - 1);
+        return other.template trim<dims>()->min(**this - 1);
     }
 
-    KFR_MEM_INTRINSIC index_t product() const { return hproduct(**this); }
-    KFR_MEM_INTRINSIC constexpr index_t cproduct() const
-    {
-        index_t result = this->front();
-        for (index_t i = 1; i < dims; i++)
-            result *= this->operator[](i);
-        return result;
-    }
+    KFR_MEM_INTRINSIC constexpr index_t product() const { return (*this)->product(); }
 
-    KFR_MEM_INTRINSIC dimset tomask() const
+    KFR_MEM_INTRINSIC constexpr dimset tomask() const
     {
-        dimset result = 0;
+        dimset result(0);
         for (index_t i = 0; i < dims; ++i)
         {
             result[i + maximum_dims - dims] = this->operator[](i) == 1 ? 0 : -1;
@@ -389,7 +369,7 @@ struct shape<0>
 
     KFR_MEM_INTRINSIC index_t product() const { return 0; }
 
-    KFR_MEM_INTRINSIC dimset tomask() const { return -1; }
+    KFR_MEM_INTRINSIC dimset tomask() const { return dimset(-1); }
 
     template <index_t new_dims>
     constexpr KFR_MEM_INTRINSIC shape<new_dims> extend(index_t value = infinite_size) const
@@ -430,8 +410,9 @@ KFR_MEM_INTRINSIC shape<outdims> adapt(const shape<indims>& in, const dimset& se
     }
     else
     {
-        const vec<std::make_signed_t<index_t>, maximum_dims> eset = cast<std::make_signed_t<index_t>>(set);
-        return slice<indims - outdims, outdims>(*in) & slice<maximum_dims - outdims, outdims>(eset);
+        const static_array_of_size<index_t, maximum_dims> eset = set.template cast<index_t>();
+        return in->template slice<indims - outdims, outdims>() &
+               eset.template slice<maximum_dims - outdims, outdims>();
     }
 }
 template <index_t outdims>
@@ -518,7 +499,7 @@ constexpr KFR_INTRINSIC shape<outdims> compact_shape(const shape<dims>& in)
 }
 
 template <index_t dims1, index_t dims2, index_t outdims = const_max(dims1, dims2)>
-bool can_assign_from(const shape<dims1>& dst_shape, const shape<dims2>& src_shape)
+constexpr bool can_assign_from(const shape<dims1>& dst_shape, const shape<dims2>& src_shape)
 {
     if constexpr (dims2 == 0)
     {
@@ -526,31 +507,20 @@ bool can_assign_from(const shape<dims1>& dst_shape, const shape<dims2>& src_shap
     }
     else
     {
-        if constexpr (outdims >= 2)
+        for (size_t i = 0; i < outdims; ++i)
         {
-            vec<index_t, outdims> dst = padlow<outdims - dims1>(*dst_shape, 1);
-            vec<index_t, outdims> src = padlow<outdims - dims2>(*src_shape, 1);
-
-            mask<index_t, outdims> match = src + 1 <= 2 || src == dst || dst == infinite_size;
-            return all(match);
-        }
-        else
-        {
-            for (size_t i = 0; i < outdims; ++i)
+            index_t dst_size = dst_shape.revindex(i);
+            index_t src_size = src_shape.revindex(i);
+            if (CMT_LIKELY(src_size == 1 || src_size == infinite_size || src_size == dst_size ||
+                           dst_size == infinite_size))
             {
-                index_t dst_size = dst_shape.revindex(i);
-                index_t src_size = src_shape.revindex(i);
-                if (CMT_LIKELY(src_size == 1 || src_size == infinite_size || src_size == dst_size ||
-                               dst_size == infinite_size))
-                {
-                }
-                else
-                {
-                    return false;
-                }
             }
-            return true;
+            else
+            {
+                return false;
+            }
         }
+        return true;
     }
 }
 

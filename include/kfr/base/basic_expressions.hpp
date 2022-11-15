@@ -131,7 +131,7 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_counter<T, dims>& self, co
                                      const axis_params<Axis, N>&)
 {
     T acc                 = self.start;
-    vec<T, dims> tindices = cast<T>(*index);
+    vec<T, dims> tindices = cast<T>(to_vec(index));
     cfor(csize<0>, csize<dims>, [&](auto i) CMT_INLINE_LAMBDA { acc += tindices[i] * self.steps[i]; });
     return acc + enumerate(vec_shape<T, N>(), self.steps[Axis]);
 }

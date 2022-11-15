@@ -147,12 +147,12 @@ TEST(tensor_broadcast)
     tensor<float, 2> tresult{ shape{ 5, 5 }, { 11, 12, 13, 14, 15, 21, 22, 23, 24, 25, 31, 32, 33,
                                                34, 35, 41, 42, 43, 44, 45, 51, 52, 53, 54, 55 } };
 
-    tensor<float, 2> t3 = tapply(t1, t2, fn::add{});
+    tensor<float, 2> t3 = t1 + t2;
 
     CHECK(t3.shape() == shape{ 5, 5 });
     CHECK(t3 == tresult);
 
-    tensor<float, 2> t5 = tapply(t4, t2, fn::add{});
+    tensor<float, 2> t5 = t4 + t2;
     // tensor<float, 2> t5 = t4 + t2;
     CHECK(t5 == tresult);
 }
@@ -785,15 +785,27 @@ TEST(from_ilist)
     CHECK(t4 == tensor<float, 3>(shape{ 2, 2, 2 }, { 10, 20, 30, 40, 50, 60, 70, 80 }));
 }
 
+TEST(sharing_data)
+{
+    tensor<int, 2> t{ { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } };
+    auto t2  = t; // share data
+    t2(0, 0) = 10;
+    CHECK(t == tensor<int, 2>{ { 10, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } });
+    auto t3 = t(0, tall());
+    CHECK(t3 == tensor<int, 1>{ 10, 2, 3 });
+    t3 *= 10;
+    CHECK(t3 == tensor<int, 1>{ 100, 20, 30 });
+    CHECK(t == tensor<int, 2>{ { 100, 20, 30 }, { 4, 5, 6 }, { 7, 8, 9 } });
+    t(trange(0, 2), trange(0, 2)) = 0;
+    CHECK(t == tensor<int, 2>{ { 0, 0, 30 }, { 0, 0, 6 }, { 7, 8, 9 } });
+}
+
 TEST(tensor_from_container)
 {
     std::vector<int> a{ 1, 2, 3 };
     auto t = tensor_from_container(a);
     CHECK(t.shape() == shape{ 3 });
     CHECK(t == tensor<int, 1>{ 1, 2, 3 });
-    auto t2 = t; // share data
-    t(0)    = 100;
-    CHECK(t2 == tensor<int, 1>{ 100, 2, 3 });
 }
 
 } // namespace CMT_ARCH_NAME

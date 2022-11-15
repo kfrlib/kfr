@@ -245,6 +245,13 @@ public:
         std::copy(values.begin(), values.end(), begin());
     }
 
+    template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
+    KFR_MEM_INTRINSIC tensor(Input&& input) : tensor(get_shape(input))
+    {
+        static_assert(expression_traits<Input>::dims == dims);
+        process(*this, input);
+    }
+
     KFR_INTRINSIC pointer data() const { return m_data; }
 
     KFR_INTRINSIC size_type size() const { return m_size; }
@@ -307,6 +314,8 @@ public:
 
     tensor(const tensor&) = default;
     tensor(tensor&&)      = default;
+    tensor(tensor& other) : tensor(const_cast<const tensor&>(other)) {}
+    tensor(const tensor&& other) : tensor(static_cast<const tensor&>(other)) {}
 
 #if defined(CMT_COMPILER_IS_MSVC)
     tensor& operator=(const tensor& src) &
@@ -743,14 +752,20 @@ public:
 
     KFR_MEM_INTRINSIC memory_finalizer finalizer() const { return m_finalizer; }
 
-    template <typename Input, index_t Dims = expression_traits<Input>::dims>
+    template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
     KFR_MEM_INTRINSIC const tensor& operator=(Input&& input) const&
     {
         process(*this, input);
         return *this;
     }
-    template <typename Input, index_t Dims = expression_traits<Input>::dims>
+    template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
     KFR_MEM_INTRINSIC tensor& operator=(Input&& input) &&
+    {
+        process(*this, input);
+        return *this;
+    }
+    template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
+    KFR_MEM_INTRINSIC tensor& operator=(Input&& input) &
     {
         process(*this, input);
         return *this;
@@ -873,25 +888,6 @@ KFR_INTRINSIC void set_elements(const tensor<T, NDims>& self, const shape<NDims>
             return write(data, value);
         scatter_stride(data, value, self.strides()[Axis]);
     }
-}
-
-template <typename T, index_t dims1, index_t dims2, typename Fn, index_t outdims = const_max(dims1, dims2)>
-tensor<T, outdims> tapply(const tensor<T, dims1>& x, const tensor<T, dims2>& y, Fn&& fn)
-{
-    shape<outdims> xyshape = internal_generic::common_shape(x.shape(), y.shape());
-
-    tensor<T, outdims> result(xyshape);
-
-    shape<outdims> xshape = padlow<outdims - dims1>(*x.shape(), 1);
-    shape<outdims> yshape = padlow<outdims - dims2>(*y.shape(), 1);
-
-    tensor<T, outdims> xx = x.reshape(xshape);
-    tensor<T, outdims> yy = y.reshape(yshape);
-
-    result.iterate([&](T& val, const shape<outdims>& index)
-                   { val = fn(xx.access(xshape.adapt(index)), yy.access(yshape.adapt(index))); });
-
-    return result;
 }
 
 template <size_t width = 0, index_t Axis = infinite_size, typename E, typename Traits = expression_traits<E>>
