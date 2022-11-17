@@ -189,8 +189,9 @@ KFR_INTRINSIC void cwrite_split(complex<T>* dest, const cvec<T, N>& value)
     v.write(ptr_cast<T>(dest), cbool_t<A>());
 }
 
+#ifdef CMT_COPMILER_CLANG
 template <>
-inline cvec<f32, 8> cread_split<8, false, true, f32>(const complex<f32>* src)
+KFR_INTRINSIC cvec<f32, 8> cread_split<8, false, true, f32>(const complex<f32>* src)
 {
     const cvec<f32, 4> l = concat(cread<2>(src), cread<2>(src + 4));
     const cvec<f32, 4> h = concat(cread<2>(src + 2), cread<2>(src + 6));
@@ -198,7 +199,7 @@ inline cvec<f32, 8> cread_split<8, false, true, f32>(const complex<f32>* src)
     return concat(shuffle<0, 2, 8 + 0, 8 + 2>(l, h), shuffle<1, 3, 8 + 1, 8 + 3>(l, h));
 }
 template <>
-inline cvec<f32, 8> cread_split<8, true, true, f32>(const complex<f32>* src)
+KFR_INTRINSIC cvec<f32, 8> cread_split<8, true, true, f32>(const complex<f32>* src)
 {
     const cvec<f32, 4> l = concat(cread<2, true>(src), cread<2, true>(src + 4));
     const cvec<f32, 4> h = concat(cread<2, true>(src + 2), cread<2, true>(src + 6));
@@ -207,7 +208,7 @@ inline cvec<f32, 8> cread_split<8, true, true, f32>(const complex<f32>* src)
 }
 
 template <>
-inline cvec<f64, 4> cread_split<4, false, true, f64>(const complex<f64>* src)
+KFR_INTRINSIC cvec<f64, 4> cread_split<4, false, true, f64>(const complex<f64>* src)
 {
     const cvec<f64, 2> l = concat(cread<1>(src), cread<1>(src + 2));
     const cvec<f64, 2> h = concat(cread<1>(src + 1), cread<1>(src + 3));
@@ -216,7 +217,7 @@ inline cvec<f64, 4> cread_split<4, false, true, f64>(const complex<f64>* src)
 }
 
 template <>
-inline void cwrite_split<8, false, true, f32>(complex<f32>* dest, const cvec<f32, 8>& x)
+KFR_INTRINSIC void cwrite_split<8, false, true, f32>(complex<f32>* dest, const cvec<f32, 8>& x)
 {
     const cvec<f32, 8> xx =
         concat(shuffle<0, 8 + 0, 1, 8 + 1>(low(x), high(x)), shuffle<2, 8 + 2, 3, 8 + 3>(low(x), high(x)));
@@ -229,7 +230,7 @@ inline void cwrite_split<8, false, true, f32>(complex<f32>* dest, const cvec<f32
     cwrite<2>(dest + 6, d);
 }
 template <>
-inline void cwrite_split<8, true, true, f32>(complex<f32>* dest, const cvec<f32, 8>& x)
+KFR_INTRINSIC void cwrite_split<8, true, true, f32>(complex<f32>* dest, const cvec<f32, 8>& x)
 {
     const cvec<f32, 8> xx =
         concat(shuffle<0, 8 + 0, 1, 8 + 1>(low(x), high(x)), shuffle<2, 8 + 2, 3, 8 + 3>(low(x), high(x)));
@@ -243,7 +244,7 @@ inline void cwrite_split<8, true, true, f32>(complex<f32>* dest, const cvec<f32,
 }
 
 template <>
-inline void cwrite_split<4, false, true, f64>(complex<f64>* dest, const cvec<f64, 4>& x)
+KFR_INTRINSIC void cwrite_split<4, false, true, f64>(complex<f64>* dest, const cvec<f64, 4>& x)
 {
     const cvec<f64, 4> xx =
         concat(shuffle<0, 4, 2, 6>(low(x), high(x)), shuffle<1, 5, 3, 7>(low(x), high(x)));
@@ -253,7 +254,7 @@ inline void cwrite_split<4, false, true, f64>(complex<f64>* dest, const cvec<f64
     cwrite<1>(dest + 3, part<4, 3>(xx));
 }
 template <>
-inline void cwrite_split<4, true, true, f64>(complex<f64>* dest, const cvec<f64, 4>& x)
+KFR_INTRINSIC void cwrite_split<4, true, true, f64>(complex<f64>* dest, const cvec<f64, 4>& x)
 {
     const cvec<f64, 4> xx =
         concat(shuffle<0, 4, 2, 6>(low(x), high(x)), shuffle<1, 5, 3, 7>(low(x), high(x)));
@@ -262,6 +263,7 @@ inline void cwrite_split<4, true, true, f64>(complex<f64>* dest, const cvec<f64,
     cwrite<1, true>(dest + 1, part<4, 2>(xx));
     cwrite<1, true>(dest + 3, part<4, 3>(xx));
 }
+#endif
 
 template <size_t N, size_t stride, typename T, size_t... Indices>
 KFR_INTRINSIC cvec<T, N> cgather_helper(const complex<T>* base, csizes_t<Indices...>)
@@ -1773,7 +1775,7 @@ KFR_INTRINSIC cvec<T, N> cdigitreverse4_read(const complex<T>* src)
     return digitreverse4<2>(cread<N, A>(src));
 }
 
-#if 1
+#ifdef CMT_COMPILER_CLANG
 
 template <>
 KFR_INTRINSIC cvec<f64, 16> cdigitreverse4_read<16, false, f64>(const complex<f64>* src)

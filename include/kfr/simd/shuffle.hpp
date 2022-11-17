@@ -68,28 +68,8 @@ KFR_INTRINSIC vec_shape<T, Nout> high(vec_shape<T, N>)
 template <typename T, size_t... Ns>
 KFR_INTRINSIC vec<T, csum<size_t, Ns...>()> concat(const vec<T, Ns>&... vs) CMT_NOEXCEPT
 {
-    return vec<T, csum<size_t, Ns...>()>(
-        intrinsics::simd_concat<typename vec<T, 1>::scalar_type, vec<T, Ns>::scalar_size()...>(vs.v...));
-}
-
-template <typename T, size_t N1, size_t N2>
-KFR_INTRINSIC vec<T, N1 + N2> concat2(const vec<T, N1>& x, const vec<T, N2>& y) CMT_NOEXCEPT
-{
-    return vec<T, csum<size_t, N1, N2>()>(
-        intrinsics::simd_concat<typename vec<T, 1>::scalar_type, vec<T, N1>::scalar_size(),
-                                vec<T, N2>::scalar_size()>(x.v, y.v));
-}
-
-template <typename T, size_t N>
-KFR_INTRINSIC vec<T, N * 4> concat4(const vec<T, N>& a, const vec<T, N>& b, const vec<T, N>& c,
-                                    const vec<T, N>& d) CMT_NOEXCEPT
-{
-    return intrinsics::simd_concat<typename vec<T, 1>::scalar_type, vec<T, N * 2>::scalar_size(),
-                                   vec<T, N * 2>::scalar_size()>(
-        intrinsics::simd_concat<typename vec<T, 1>::scalar_type, vec<T, N>::scalar_size(),
-                                vec<T, N>::scalar_size()>(a.v, b.v),
-        intrinsics::simd_concat<typename vec<T, 1>::scalar_type, vec<T, N>::scalar_size(),
-                                vec<T, N>::scalar_size()>(c.v, d.v));
+    return vec<T, csum<size_t, Ns...>()>(intrinsics::simd_concat(
+        intrinsics::simd_tag_v<typename vec<T, 1>::scalar_type, vec<T, Ns>::scalar_size()...>, vs.v...));
 }
 
 template <size_t count, typename T, size_t N, size_t Nout = N* count>

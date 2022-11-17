@@ -24,74 +24,6 @@ constexpr ctypes_t<float, double> dft_float_types{};
 constexpr ctypes_t<float> dft_float_types{};
 #endif
 
-#if defined(CMT_ARCH_X86)
-
-static void full_barrier()
-{
-#ifdef CMT_COMPILER_GNU
-    asm volatile("mfence" ::: "memory");
-#else
-    _ReadWriteBarrier();
-#endif
-}
-static CMT_NOINLINE void dont_optimize(const void* in)
-{
-#ifdef CMT_COMPILER_GNU
-    asm volatile("" : "+m"(in));
-#else
-    volatile uint8_t a = *reinterpret_cast<const uint8_t*>(in);
-#endif
-}
-
-template <typename T>
-static void perf_test_t(int size)
-{
-    print("[PERFORMANCE] DFT ", fmt<'s', 6>(type_name<T>()), " ", fmt<'d', 6>(size), "...");
-    random_state gen1 = random_init(2247448713, 915890490, 864203735, 2982561);
-    random_state gen2 = random_init(2982561, 2247448713, 915890490, 864203735);
-    std::chrono::high_resolution_clock::duration duration(0);
-    dft_plan<T> dft(size);
-    univector<u8> tmp(dft.temp_size);
-    uint64_t counter = 0;
-    while (duration < std::chrono::seconds(1))
-    {
-        univector<complex<T>> data(size);
-        data = make_complex(gen_random_range<T>(gen1, -1.0, +1.0), gen_random_range<T>(gen2, -1.0, +1.0));
-        full_barrier();
-        auto start = std::chrono::high_resolution_clock::now();
-        dft.execute(data, data, tmp);
-
-        full_barrier();
-        duration += std::chrono::high_resolution_clock::now() - start;
-        dont_optimize(data.data());
-        ++counter;
-    }
-    double opspersecond = counter / (std::chrono::nanoseconds(duration).count() / 1'000'000'000.0);
-    println(" ", fmt<'f', 12, 1>(opspersecond), " ops/second");
-}
-
-static void perf_test(int size)
-{
-    perf_test_t<float>(size);
-    perf_test_t<double>(size);
-}
-
-TEST(test_performance)
-{
-    for (int size = 16; size <= 16384; size <<= 1)
-    {
-        perf_test(size);
-    }
-
-#ifndef KFR_DFT_NO_NPo2
-    perf_test(210);
-    perf_test(3150);
-    perf_test(211);
-    perf_test(3163);
-#endif
-}
-#endif
-
 TEST(test_convolve)
 {
     univector<fbase, 5> a({ 1, 2, 3, 4, 5 });
@@ -269,24 +201,94 @@ TEST(dct)
     univector<u8> tmp(plan.temp_size);
     plan.execute(out, in, tmp, false);
 
-    univector<float, size> refout = { 120., -51.79283109806667,  0., -5.6781471211595695,
-                                      0.,   -1.9843883778092053, 0., -0.9603691873838152,
-                                      0.,   -0.5308329190495176, 0., -0.3030379000702155,
-                                      0.,   -0.1584982220313824, 0., -0.0494839805703826 };
+    univector<float, size> refout = { 120.f, -51.79283109806667f,  0.f, -5.6781471211595695f,
+                                      0.f,   -1.9843883778092053f, 0.f, -0.9603691873838152f,
+                                      0.f,   -0.5308329190495176f, 0.f, -0.3030379000702155f,
+                                      0.f,   -0.1584982220313824f, 0.f, -0.0494839805703826f };
 
     CHECK(rms(refout - out) < 0.00001f);
 
     plan.execute(outinv, in, tmp, true);
 
-    univector<float, size> refoutinv = { 59.00747544192212,  -65.54341437693878,  27.70332758523579,
-                                         -24.56124678824279, 15.546989102481612,  -14.293082621965974,
-                                         10.08224348063459,  -9.38097406470581,   6.795411054455922,
-                                         -6.320715753372687, 4.455202292297903,   -4.0896421269390455,
-                                         2.580439536964837,  -2.2695816108369176, 0.9311870090070382,
-                                         -0.643618159997807 };
+    univector<float, size> refoutinv = { 59.00747544192212f,  -65.54341437693878f,  27.70332758523579f,
+                                         -24.56124678824279f, 15.546989102481612f,  -14.293082621965974f,
+                                         10.08224348063459f,  -9.38097406470581f,   6.795411054455922f,
+                                         -6.320715753372687f, 4.455202292297903f,   -4.0896421269390455f,
+                                         2.580439536964837f,  -2.2695816108369176f, 0.9311870090070382f,
+                                         -0.643618159997807f };
 
     CHECK(rms(refoutinv - outinv) < 0.00001f);
 }
+
+
+#if defined(CMT_ARCH_X86)
+
+static void full_barrier()
+{
+#ifdef CMT_COMPILER_GNU
+    asm volatile("mfence" ::: "memory");
+#else
+    _ReadWriteBarrier();
+#endif
+}
+static CMT_NOINLINE void dont_optimize(const void* in)
+{
+#ifdef CMT_COMPILER_GNU
+    asm volatile("" : "+m"(in));
+#else
+    volatile uint8_t a = *reinterpret_cast<const uint8_t*>(in);
+#endif
+}
+
+template <typename T>
+static void perf_test_t(int size)
+{
+    print("[PERFORMANCE] DFT ", fmt<'s', 6>(type_name<T>()), " ", fmt<'d', 6>(size), "...");
+    random_state gen1 = random_init(2247448713, 915890490, 864203735, 2982561);
+    random_state gen2 = random_init(2982561, 2247448713, 915890490, 864203735);
+    std::chrono::high_resolution_clock::duration duration(0);
+    dft_plan<T> dft(size);
+    univector<u8> tmp(dft.temp_size);
+    uint64_t counter = 0;
+    while (duration < std::chrono::seconds(1))
+    {
+        univector<complex<T>> data(size);
+        data = make_complex(gen_random_range<T>(gen1, -1.0, +1.0), gen_random_range<T>(gen2, -1.0, +1.0));
+        full_barrier();
+        auto start = std::chrono::high_resolution_clock::now();
+        dft.execute(data, data, tmp);
+
+        full_barrier();
+        duration += std::chrono::high_resolution_clock::now() - start;
+        dont_optimize(data.data());
+        ++counter;
+    }
+    double opspersecond = counter / (std::chrono::nanoseconds(duration).count() / 1'000'000'000.0);
+    println(" ", fmt<'f', 12, 1>(opspersecond), " ops/second");
+}
+
+static void perf_test(int size)
+{
+    perf_test_t<float>(size);
+    perf_test_t<double>(size);
+}
+
+TEST(test_performance)
+{
+    for (int size = 16; size <= 16384; size <<= 1)
+    {
+        perf_test(size);
+    }
+
+#ifndef KFR_DFT_NO_NPo2
+    perf_test(210);
+    perf_test(3150);
+    perf_test(211);
+    perf_test(3163);
+#endif
+}
+#endif
+
 } // namespace CMT_ARCH_NAME
 
 #ifndef KFR_NO_MAIN

@@ -54,9 +54,11 @@ TEST(test_basic)
     const vec<int, 2> two = concat(one, make_vector(42));
     CHECK(two == vec<int, 2>{ 42, 42 });
 
+#if !defined CMT_COMPILER_IS_MSVC
     const vec<u8, 256> very_long_vector = repeat<64>(make_vector<u8>(1, 2, 4, 8));
     CHECK(slice<0, 17>(very_long_vector) ==
           vec<unsigned char, 17>{ 1, 2, 4, 8, 1, 2, 4, 8, 1, 2, 4, 8, 1, 2, 4, 8, 1 });
+#endif
 
     // * ...really any:
     using big_vector = vec<i16, 107>;
@@ -93,6 +95,7 @@ TEST(test_basic)
 }
 
 TEST(ctti) { CHECK(cometa::type_name<float>() == std::string("float")); }
+
 
 } // namespace CMT_ARCH_NAME
 

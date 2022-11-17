@@ -16,6 +16,8 @@ CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wexit-time-destructors")
 #endif
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpadded")
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
+CMT_PRAGMA_MSVC(warning(push))
+CMT_PRAGMA_MSVC(warning(disable : 4018))
 
 namespace testo
 {
@@ -243,4 +245,5 @@ struct make_comparison
 };
 } // namespace testo
 
+CMT_PRAGMA_MSVC(warning(pop))
 CMT_PRAGMA_GNU(GCC diagnostic pop)
