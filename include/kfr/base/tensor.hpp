@@ -311,11 +311,26 @@ public:
             m_finalizer,
         };
     }
-
+    
+#if defined(CMT_COMPILER_IS_MSVC)
+    tensor(const tensor& other)
+        : m_data(other.m_data), m_size(other.m_size), m_is_contiguous(other.m_is_contiguous),
+          m_shape(other.m_shape), m_strides(other.m_strides), m_finalizer(other.m_finalizer)
+    {
+    }
+    tensor(tensor&& other)
+        : m_data(other.m_data), m_size(other.m_size), m_is_contiguous(other.m_is_contiguous),
+          m_shape(other.m_shape), m_strides(other.m_strides), m_finalizer(std::move(other.m_finalizer))
+    {
+    }
+    tensor(tensor& other) : tensor(const_cast<const tensor&>(other)) {}
+    tensor(const tensor&& other) : tensor(static_cast<const tensor&>(other)) {}
+#else
     tensor(const tensor&) = default;
     tensor(tensor&&)      = default;
     tensor(tensor& other) : tensor(const_cast<const tensor&>(other)) {}
     tensor(const tensor&& other) : tensor(static_cast<const tensor&>(other)) {}
+#endif
 
 #if defined(CMT_COMPILER_IS_MSVC)
     tensor& operator=(const tensor& src) &

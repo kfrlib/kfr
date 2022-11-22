@@ -10,6 +10,10 @@
 #include <kfr/dsp/window.hpp>
 #include <kfr/io/tostring.hpp>
 
+CMT_PRAGMA_MSVC(warning(push))
+CMT_PRAGMA_MSVC(warning(disable : 4305))
+CMT_PRAGMA_MSVC(warning(disable : 4244))
+
 namespace kfr
 {
 inline namespace CMT_ARCH_NAME
@@ -187,3 +191,5 @@ TEST(window)
 }
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
+
+CMT_PRAGMA_MSVC(warning(pop))
