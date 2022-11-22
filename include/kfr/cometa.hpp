@@ -454,13 +454,6 @@ struct cvals_t<T>
     static CMT_MEM_INTRINSIC const T* array() { return nullptr; }
 };
 
-template <typename T, bool... flags, T... values1, T... values2>
-constexpr cvals_t<T, (flags ? values1 : values2)...> select(cvals_t<bool, flags...>, cvals_t<T, values1...>,
-                                                            cvals_t<T, values2...>)
-{
-    return {};
-}
-
 namespace details
 {
 template <size_t index, typename T, T... vals>

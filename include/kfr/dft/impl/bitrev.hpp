@@ -273,12 +273,12 @@ KFR_INTRINSIC void fft_reorder_swap_n4(T* inout, size_t i, size_t j, size_t N4, 
 template <typename T>
 KFR_INTRINSIC void fft_reorder(complex<T>* inout, size_t log2n, ctrue_t use_br2)
 {
-    const size_t N         = size_t(1) << log2n;
+    const size_t N         = 1 << log2n;
     const size_t N4        = N / 4;
     const size_t iend      = N / 16 * 4 * 2;
     constexpr size_t istep = 2 * 4;
     const size_t jstep1    = (1 << (log2n - 5)) * 4 * 2;
-    const size_t jstep2    = size_t(size_t(1) << (log2n - 5)) * 4 * 2 - size_t(size_t(1) << (log2n - 6)) * 4 * 2;
+    const size_t jstep2    = size_t(1 << (log2n - 5)) * 4 * 2 - size_t(1 << (log2n - 6)) * 4 * 2;
     T* io                  = ptr_cast<T>(inout);
 
     for (size_t i = 0; i < iend;)

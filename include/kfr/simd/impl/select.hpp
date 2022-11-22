@@ -176,6 +176,7 @@ template <typename T, size_t N, KFR_ENABLE_IF(N > vector_width<T>), typename = v
 KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& a, const vec<T, N>& b, const vec<T, N>& c)
 {
     return concat(select(low(a), low(b), low(c)), select(high(a), high(b), high(c)));
+    //    return concat2(select(a.h.low, b.h.low, c.h.low), select(a.h.high, b.h.high, c.h.high));
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T> && !is_simd_size<T>(N))>
@@ -187,7 +188,7 @@ KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& a, const T& b, const T& c)
 template <typename T, size_t N, KFR_ENABLE_IF(N > vector_width<T>), typename = void>
 KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& a, const T& b, const T& c)
 {
-    return concat(select(a.h.low, b, c), select(a.h.high, b, c));
+    return concat2(select(a.h.low, b, c), select(a.h.high, b, c));
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T> && !is_simd_size<T>(N))>
@@ -199,7 +200,7 @@ KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& a, const vec<T, N>& b, cons
 template <typename T, size_t N, KFR_ENABLE_IF(N > vector_width<T>), typename = void>
 KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& a, const vec<T, N>& b, const T& c)
 {
-    return concat(select(a.h.low, b.h.low, c), select(a.h.high, b.h.high, c));
+    return concat2(select(a.h.low, b.h.low, c), select(a.h.high, b.h.high, c));
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T> && !is_simd_size<T>(N))>
@@ -212,7 +213,7 @@ KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& a, const T& b, const vec<T,
 template <typename T, size_t N, KFR_ENABLE_IF(N > vector_width<T>), typename = void>
 KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& a, const T& b, const vec<T, N>& c)
 {
-    return concat(select(a.h.low, b, c.h.low), select(a.h.high, b, c.h.high));
+    return concat2(select(a.h.low, b, c.h.low), select(a.h.high, b, c.h.high));
 }
 
 #elif defined CMT_ARCH_NEON && defined KFR_NATIVE_INTRINSICS
@@ -276,7 +277,7 @@ KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& a, const vec<T, N>& b, cons
 template <typename T, size_t N, KFR_ENABLE_IF(N > vector_width<T>), typename = void>
 KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& a, const vec<T, N>& b, const vec<T, N>& c)
 {
-    return concat(select(a.h.low, b.h.low, c.h.low), select(a.h.high, b.h.high, c.h.high));
+    return concat2(select(a.h.low, b.h.low, c.h.low), select(a.h.high, b.h.high, c.h.high));
 }
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& m, const T& x, const T& y)

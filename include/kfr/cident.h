@@ -411,7 +411,7 @@ extern char* gets(char* __s);
 #define CMT_NODEBUG
 #define CMT_INLINE inline CMT_INLINE_IN_RELEASE
 #define CMT_INLINE_MEMBER CMT_INLINE_IN_RELEASE
-#if _MSC_VER >= 1927 && _MSVC_LANG >= 202002L
+#if _MSC_VER >= 1927
 #define CMT_INLINE_LAMBDA [[msvc::forceinline]]
 #else
 #define CMT_INLINE_LAMBDA

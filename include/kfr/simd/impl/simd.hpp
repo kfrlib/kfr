@@ -34,39 +34,32 @@ inline namespace CMT_ARCH_NAME
 namespace intrinsics
 {
 
-template <typename T, size_t... Ns>
-struct fallback_simd_tag
+template <typename T, size_t N>
+struct simd_t
 {
     using value_type = T;
 
-    constexpr static size_t sizes[sizeof...(Ns)]{ Ns... };
+    constexpr static size_t size() { return N; }
 };
 
-template <typename T, size_t... Ns>
-struct simd_tag : fallback_simd_tag<T, Ns...>
-{
-};
-
-template <typename T, size_t... Ns>
-constexpr inline const simd_tag<T, Ns...> simd_tag_v{};
-
-template <typename T>
-struct simd_tag<T>
+template <typename T, size_t N1, size_t N2>
+struct simd2_t
 {
     using value_type = T;
+
+    constexpr static size_t size1() { return N1; }
+
+    constexpr static size_t size2() { return N2; }
 };
 
 template <typename Tout, typename Tin, size_t N>
-struct simd_cvt_tag
+struct simd_cvt_t
 {
     using value_type_out = Tout;
     using value_type_in  = Tin;
 
     constexpr static size_t size() { return N; }
 };
-
-template <typename Tout, typename Tin, size_t N>
-constexpr inline const simd_cvt_tag<Tout, Tin, N> simd_cvt_tag_v{};
 
 template <typename T, size_t N>
 constexpr size_t alignment()

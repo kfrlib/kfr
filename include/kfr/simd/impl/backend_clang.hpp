@@ -39,11 +39,11 @@ template <typename TT, size_t NN>
 using simd = unwrap_bit<TT> __attribute__((ext_vector_type(NN)));
 
 template <typename T, size_t N1>
-KFR_INTRINSIC simd<T, N1> simd_concat(simd_tag<T, N1>, const simd<T, N1>& x);
+KFR_INTRINSIC simd<T, N1> simd_concat(const simd<T, N1>& x);
 
 template <typename T, size_t N1, size_t N2, size_t... Ns, size_t Nscount = csum(csizes<Ns...>)>
-KFR_INTRINSIC simd<T, N1 + N2 + Nscount> simd_concat(simd_tag<T, N1, N2, Ns...>, const simd<T, N1>& x,
-                                                     const simd<T, N2>& y, const simd<T, Ns>&... z);
+KFR_INTRINSIC simd<T, N1 + N2 + Nscount> simd_concat(const simd<T, N1>& x, const simd<T, N2>& y,
+                                                     const simd<T, Ns>&... z);
 
 template <typename Tout>
 KFR_INTRINSIC void simd_make(ctype_t<Tout>) = delete;
@@ -84,13 +84,13 @@ KFR_INTRINSIC simd<Tout, N> simd_allones()
 
 /// @brief Converts input vector to vector with subtype Tout
 template <typename Tout, typename Tin, size_t N, size_t Nout = (sizeof(Tin) * N / sizeof(Tout))>
-KFR_INTRINSIC simd<Tout, Nout> simd_bitcast(simd_cvt_tag<Tout, Tin, N>, const simd<Tin, N>& x)
+KFR_INTRINSIC simd<Tout, Nout> simd_bitcast(simd_cvt_t<Tout, Tin, N>, const simd<Tin, N>& x)
 {
     return (simd<Tout, Nout>)x;
 }
 
 template <typename T, size_t N>
-KFR_INTRINSIC simd<T, N> simd_bitcast(simd_cvt_tag<T, T, N>, const simd<T, N>& x)
+KFR_INTRINSIC simd<T, N> simd_bitcast(simd_cvt_t<T, T, N>, const simd<T, N>& x)
 {
     return x;
 }
@@ -109,59 +109,65 @@ KFR_INTRINSIC simd<T, N> simd_set_element(simd<T, N> value, csize_t<index>, T x)
 }
 
 template <typename T, size_t N>
-KFR_INTRINSIC simd<T, N> simd_broadcast(simd_tag<T, N>, identity<T> value)
+KFR_INTRINSIC simd<T, N> simd_broadcast(simd_t<T, N>, identity<T> value)
 {
     return static_cast<unwrap_bit<T>>(value);
 }
 
 template <typename T, size_t N, size_t... indices, size_t Nout = sizeof...(indices)>
-KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd_tag<T, N>, csizes_t<indices...>, const simd<T, N>& x)
+KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd_t<T, N>, const simd<T, N>& x, csizes_t<indices...>,
+                                         overload_generic)
 {
     return __builtin_shufflevector(x, x, (indices > N ? -1 : static_cast<int>(indices))...);
 }
 
-template <typename T, size_t N1, size_t N2, size_t... indices, size_t Nout = sizeof...(indices)>
-KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd_tag<T, N1, N2>, csizes_t<indices...>, const simd<T, N1>& x,
-                                         const simd<T, N2>& y)
+template <typename T, size_t N, size_t N2 = N, size_t... indices, size_t Nout = sizeof...(indices)>
+KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd2_t<T, N, N>, const simd<T, N>& x, const simd<T, N>& y,
+                                         csizes_t<indices...>, overload_generic)
 {
-    if constexpr (N1 == N2)
-        return __builtin_shufflevector(x, y, (indices > 2 * N1 ? -1 : static_cast<int>(indices))...);
-    else
-    {
-        constexpr size_t Nmax = (N1 > N2 ? N1 : N2);
-        return simd_shuffle(simd_tag_v<T, Nmax, Nmax>,
-                            csizes<(indices < N1        ? indices
-                                    : indices < N1 + N2 ? indices + (Nmax - N1)
-                                                        : index_undefined)...>,
-                            simd_shuffle(simd_tag_v<T, N1>, csizeseq<Nmax>, x),
-                            simd_shuffle(simd_tag_v<T, N2>, csizeseq<Nmax>, y));
-    }
+    static_assert(N == N2, "");
+    return __builtin_shufflevector(x, y, (indices > 2 * N ? -1 : static_cast<int>(indices))...);
+}
+
+template <typename T, size_t N1, size_t N2, size_t... indices, KFR_ENABLE_IF(N1 != N2),
+          size_t Nout = sizeof...(indices)>
+KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd2_t<T, N1, N2>, const simd<T, N1>& x, const simd<T, N2>& y,
+                                         csizes_t<indices...>, overload_generic)
+{
+    constexpr size_t Nmax = (N1 > N2 ? N1 : N2);
+    return simd_shuffle(simd2_t<T, Nmax, Nmax>{},
+                        simd_shuffle(simd_t<T, N1>{}, x, csizeseq<Nmax>, overload_auto),
+                        simd_shuffle(simd_t<T, N2>{}, y, csizeseq<Nmax>, overload_auto),
+                        csizes<(indices < N1        ? indices
+                                : indices < N1 + N2 ? indices + (Nmax - N1)
+                                                    : index_undefined)...>,
+                        overload_auto);
 }
 
 template <typename T, size_t N1>
-KFR_INTRINSIC simd<T, N1> simd_concat(simd_tag<T, N1>, const simd<T, N1>& x)
+KFR_INTRINSIC simd<T, N1> simd_concat(const simd<T, N1>& x)
 {
     return x;
 }
 
 template <typename T, size_t N1, size_t N2, size_t... Ns, size_t Nscount /*= csum(csizes<Ns...>)*/>
-KFR_INTRINSIC simd<T, N1 + N2 + Nscount> simd_concat(simd_tag<T, N1, N2, Ns...>, const simd<T, N1>& x,
-                                                     const simd<T, N2>& y, const simd<T, Ns>&... z)
+KFR_INTRINSIC simd<T, N1 + N2 + Nscount> simd_concat(const simd<T, N1>& x, const simd<T, N2>& y,
+                                                     const simd<T, Ns>&... z)
 {
-    return simd_shuffle(simd_tag_v<T, N1, N2 + Nscount>, csizeseq<N1 + N2 + Nscount>, x,
-                        simd_concat(simd_tag_v<T, N2, Ns...>, y, z...));
+    return simd_shuffle(simd2_t<T, N1, N2 + Nscount>{}, x, simd_concat<T, N2, Ns...>(y, z...),
+                        csizeseq<N1 + N2 + Nscount>, overload_auto);
 }
 
 /// @brief Converts input vector to vector with subtype Tout
 template <typename Tout, typename Tin, size_t N>
-KFR_INTRINSIC simd<Tout, N> simd_convert(simd_cvt_tag<Tout, Tin, N>, const simd<Tin, N>& x)
+KFR_INTRINSIC simd<Tout, N> simd_convert(simd_cvt_t<Tout, Tin, N>, const simd<Tin, N>& x)
 {
     return __builtin_convertvector(x, simd<Tout, N>);
 }
 
 /// @brief Converts input vector to vector with subtype Tout
 template <typename T, size_t N>
-KFR_INTRINSIC simd<T, N> simd_convert(simd_cvt_tag<T, T, N>, const simd<T, N>& x)
+KFR_INTRINSIC simd<T, N> simd_convert(simd_cvt_t<T, T, N>, const simd<T, N>& x)
 {
     return x;
 }

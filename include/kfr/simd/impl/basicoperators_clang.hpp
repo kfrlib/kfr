@@ -44,7 +44,7 @@ KFR_INTRINSIC vec<T, N> neg(const vec<T, N>& x)
 template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>)>
 KFR_INTRINSIC vec<T, N> bnot(const vec<T, N>& x)
 {
-    return simd_bitcast(simd_cvt_tag_v<T, utype<T>, N>, ~simd_bitcast(simd_cvt_tag_v<utype<T>, T, N>, x.v));
+    return simd_bitcast(simd_cvt_t<T, utype<T>, N>{}, ~simd_bitcast(simd_cvt_t<utype<T>, T, N>{}, x.v));
 }
 
 #define KFR_OP_SCALAR2(fn, op, resultprefix, operprefix, soperprefix)                                        \

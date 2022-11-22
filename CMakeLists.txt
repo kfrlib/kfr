@@ -210,9 +210,7 @@ endfunction ()
 
 if (KFR_ENABLE_DFT)
 
-    if (CLANG)
-        set(KFR_DFT_DEFS "${CLANG_ARG_PREFIX}-ffp-contract=fast")
-    endif ()
+    set(KFR_DFT_DEFS "${CLANG_ARG_PREFIX}-ffp-contract=fast")
 
     if (KFR_ENABLE_DFT_MULTIARCH)
         add_library(kfr_dft INTERFACE)

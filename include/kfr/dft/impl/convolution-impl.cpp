@@ -51,7 +51,7 @@ univector<T> convolve(const univector_ref<const T>& src1, const univector_ref<co
     dft->execute(src2padded, src2padded, temp);
     src1padded = src1padded * src2padded;
     dft->execute(src1padded, src1padded, temp, true);
-    const ST invsize = reciprocal<ST>(static_cast<ST>(size));
+    const ST invsize = reciprocal<ST>(size);
     return truncate(real(src1padded), src1.size() + src2.size() - 1) * invsize;
 }
 
@@ -70,7 +70,7 @@ univector<T> correlate(const univector_ref<const T>& src1, const univector_ref<c
     dft->execute(src2padded, src2padded, temp);
     src1padded = src1padded * src2padded;
     dft->execute(src1padded, src1padded, temp, true);
-    const ST invsize = reciprocal<ST>(static_cast<ST>(size));
+    const ST invsize = reciprocal<ST>(size);
     return truncate(real(src1padded), src1.size() + src2.size() - 1) * invsize;
 }
 
