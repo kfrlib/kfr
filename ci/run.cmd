@@ -7,7 +7,7 @@ pushd %build_dir%
 echo Running cmake -GNinja -DENABLE_TESTS=ON %* ..
 cmake -GNinja -DENABLE_TESTS=ON %* .. || exit /b
 echo Running ninja...
-ninja || exit /b
+ninja %JOBS% || exit /b
 echo Running tests...
 cd tests && ctest -V || exit /b
 popd

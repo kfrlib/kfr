@@ -355,4 +355,5 @@ jobs:
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
       set PATH=%PATH:C:\Program Files\LLVM\bin;=%
       set PATH=%PATH:C:\Strawberry\c\bin;=%
+      set JOBS=-j2
       ci\run.cmd build-release -DKFR_ARCH_TESTS=sse2,sse42,avx,avx2,avx512 -DKFR_ARCH=sse2 -DKFR_ENABLE_DFT=OFF -DCMAKE_BUILD_TYPE=Release
