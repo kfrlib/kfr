@@ -873,6 +873,7 @@ template <typename T, index_t NDims, index_t Axis, size_t N>
 KFR_INTRINSIC vec<T, N> get_elements(const tensor<T, NDims>& self, const shape<NDims>& index,
                                      const axis_params<Axis, N>&)
 {
+    static_assert(Axis < NDims || NDims == 0);
     const T* data = self.data() + self.calc_index(index);
     if constexpr (NDims == 0)
     {
@@ -891,6 +892,7 @@ template <typename T, index_t NDims, index_t Axis, size_t N>
 KFR_INTRINSIC void set_elements(const tensor<T, NDims>& self, const shape<NDims>& index,
                                 const axis_params<Axis, N>&, const identity<vec<T, N>>& value)
 {
+    static_assert(Axis < NDims || NDims == 0);
     T* data = self.data() + self.calc_index(index);
     if constexpr (NDims == 0)
     {
