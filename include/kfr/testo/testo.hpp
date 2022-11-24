@@ -148,6 +148,8 @@ struct test_case
         {
             console_color cc(Cyan);
             printfmt("[{}]", padcenter(11, std::string("RUN"), '-'));
+            std::fflush(stdout);
+            std::fflush(stderr);
         }
         printfmt(" {}...\n", name);
         time_point start = high_resolution_clock::now();
