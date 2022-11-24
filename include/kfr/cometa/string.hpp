@@ -552,6 +552,10 @@ template <size_t dims>
 CMT_INTRINSIC bool increment_indices(std::array<size_t, dims>& indices, const std::array<size_t, dims>& stop)
 {
     indices[dims - 1] += 1;
+    CMT_PRAGMA_GNU(clang diagnostic push)
+#if CMT_HAS_WARNING("-Wpass-failed")
+    CMT_PRAGMA_GNU(clang diagnostic ignored "-Wpass-failed")
+#endif
     CMT_LOOP_UNROLL
     for (int i = dims - 1; i >= 0;)
     {
@@ -566,6 +570,7 @@ CMT_INTRINSIC bool increment_indices(std::array<size_t, dims>& indices, const st
         }
         indices[i] += 1;
     }
+    CMT_PRAGMA_GNU(clang diagnostic pop)
     return true;
 }
 } // namespace details
