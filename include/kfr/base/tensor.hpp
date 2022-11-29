@@ -1,4 +1,4 @@
-/** @addtogroup expressions
+/** @addtogroup tensor
  *  @{
  */
 /*
@@ -90,6 +90,12 @@ struct tensor_subscript<T, Derived, std::integer_sequence<index_t, Dims...>>
     }
 };
 
+/// @brief tensor holds or references multidimensional data and 
+/// provides a way to access individual elements and perform complex operations on the data.
+///
+/// The number of elements in each axis of the array is defined by its shape.
+/// @tparam T element type
+/// @tparam NDims number of dimensions
 template <typename T, index_t NDims>
 struct tensor : public tensor_subscript<T, tensor<T, NDims>, std::make_integer_sequence<index_t, NDims>>
 {
@@ -105,6 +111,7 @@ public:
 
     using shape_type = kfr::shape<dims>;
 
+    /// @brief Tensor iterator. Iterates through flattened array
     struct tensor_iterator
     {
         using iterator_category = std::forward_iterator_tag;
@@ -154,11 +161,13 @@ public:
     using contiguous_iterator       = pointer;
     using const_contiguous_iterator = pointer;
 
+    /// @brief Default constructor. Creates tensor with null shape
     KFR_MEM_INTRINSIC constexpr tensor()
         : m_data(0), m_size(0), m_is_contiguous(false), m_shape{}, m_strides{}
     {
     }
 
+    /// @brief Construct from external pointer, shape, strides and finalizer
     KFR_MEM_INTRINSIC tensor(T* data, const shape_type& shape, const shape_type& strides,
                              memory_finalizer finalizer)
         : m_data(data), m_size(size_of_shape(shape)),
@@ -167,6 +176,7 @@ public:
     {
     }
 
+    /// @brief Construct from external pointer, shape and finalizer with default strides 
     KFR_MEM_INTRINSIC tensor(T* data, const shape_type& shape, memory_finalizer finalizer)
         : m_data(data), m_size(size_of_shape(shape)), m_is_contiguous(true), m_shape(shape),
           m_strides(internal_generic::strides_for_shape(shape)), m_finalizer(std::move(finalizer))
@@ -177,6 +187,7 @@ public:
 
     KFR_INTRINSIC static void deallocate(T* ptr) { aligned_deallocate(ptr); }
 
+    /// @brief Construct from shape and allocate memory
     KFR_INTRINSIC explicit tensor(const shape_type& shape)
         : m_size(size_of_shape(shape)), m_is_contiguous(true), m_shape(shape),
           m_strides(internal_generic::strides_for_shape(shape))
@@ -185,6 +196,8 @@ public:
         m_data      = ptr;
         m_finalizer = make_memory_finalizer([ptr]() { deallocate(ptr); });
     }
+
+    /// @brief Construct from shape, strides and allocate memory
     KFR_INTRINSIC tensor(const shape_type& shape, const shape_type& strides)
         : m_size(size_of_shape(shape)),
           m_is_contiguous(strides == internal_generic::strides_for_shape(shape)), m_shape(shape),
@@ -194,15 +207,20 @@ public:
         m_data      = ptr;
         m_finalizer = make_memory_finalizer([ptr]() { deallocate(ptr); });
     }
+
+    /// @brief Construct from shape, allocate memory and fill with value
     KFR_INTRINSIC tensor(const shape_type& shape, T value) : tensor(shape)
     {
         std::fill(contiguous_begin_unsafe(), contiguous_end_unsafe(), value);
     }
 
+    /// @brief Construct from shape, strides, allocate memory and fill with value
     KFR_INTRINSIC tensor(const shape_type& shape, const shape_type& strides, T value) : tensor(shape, strides)
     {
         std::fill(begin(), end(), value);
     }
+
+    /// @brief Construct from shape, allocate memory and fill with flat list
     KFR_INTRINSIC tensor(const shape_type& shape, const std::initializer_list<T>& values) : tensor(shape)
     {
         if (values.size() != m_size)
@@ -210,23 +228,30 @@ public:
         std::copy(values.begin(), values.end(), contiguous_begin_unsafe());
     }
 
+    /// @brief Initialize with braced list. Defined for 1D tensor only
     template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>&& dims == 1)>
     KFR_INTRINSIC tensor(const std::initializer_list<U>& values) : tensor(shape_type(values.size()))
     {
         internal_generic::list_copy_recursively(values, contiguous_begin_unsafe());
     }
+    
+    /// @brief Initialize with braced list. Defined for 2D tensor only
     template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>&& dims == 2)>
     KFR_INTRINSIC tensor(const std::initializer_list<std::initializer_list<U>>& values)
         : tensor(shape_type(values.size(), values.begin()->size()))
     {
         internal_generic::list_copy_recursively(values, contiguous_begin_unsafe());
     }
+    
+    /// @brief Initialize with braced list. Defined for 3D tensor only
     template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>&& dims == 3)>
     KFR_INTRINSIC tensor(const std::initializer_list<std::initializer_list<std::initializer_list<U>>>& values)
         : tensor(shape_type(values.size(), values.begin()->size(), values.begin()->begin()->size()))
     {
         internal_generic::list_copy_recursively(values, contiguous_begin_unsafe());
     }
+    
+    /// @brief Initialize with braced list. Defined for 4D tensor only
     template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>&& dims == 4)>
     KFR_INTRINSIC tensor(
         const std::initializer_list<std::initializer_list<std::initializer_list<std::initializer_list<U>>>>&

@@ -1,4 +1,4 @@
-/** @addtogroup types
+/** @addtogroup base
  *  @{
  */
 /*

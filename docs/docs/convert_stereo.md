@@ -2,7 +2,7 @@
 
 ## L/R to M/S
 
-Input/output data. [See how to pass data to KFR](types.md)
+Input/output data. [See how to pass data to KFR](basics.md)
 ```c++
 univector<float> left;
 univector<float> right;

@@ -1,4 +1,4 @@
-/** @addtogroup cometa
+/** @addtogroup memory
  *  @{
  */
 #pragma once

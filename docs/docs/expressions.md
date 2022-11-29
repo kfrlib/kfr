@@ -6,12 +6,12 @@ Expression can have specific size or have infinite size in any dimension. Its si
 
 The number of dimensions must be known at compile time.
 
-Normally, expressions do not own any data and can be seen as _data generators_ with arbitrary algorithm. But classes owning data (`tensor` and `univector`) provide expression interface as well. Since KFR5 you can make expression from any user defined or `std` type.
+Normally, expressions do not own any data and can be seen as _data generators_ with any algorithm under the hood. But classes owning data (`tensor` and `univector`) provide expression interface as well. Since KFR5 you can make expression from any user defined or `std` type.
 
 Expressions can refer to other expressions as its arguments.
 prvalue expressions are captured by value and moved to expression storage.
 lvalue expressions are captured by reference. 
-The latter may cause dangling references if resulting expression is used outside of its arguments scope. As always, `std::move` forces variable to be captured by value.
+The latter may cause dangling references if the resulting expression is used outside of its arguments scope. As always, `std::move` forces variable to be captured by value.
 
 The following function creates Expression that represents a virtual 3-dimensional array with elements starting from 0 at $(0,0,0)$ index
 and incremented by $1$, $10$ and $100$ along each axis.
@@ -29,27 +29,19 @@ This allows better optimization and does not require saving temporary data.
 
 Internally a C++ technique called [Expression templates](https://en.wikipedia.org/wiki/Expression_templates) is used but expressions processing is explicitly vectorized in KFR. You can control some aspects of vectorization.
 
-## univector - 1D data with compatibility with std::array or std::vector
-
-`univector<T, tag>` contains 1D data.
-
-## tensor - multidimensional data
-
-`tensor<T, dims>` contains multidimensional data.
-
 ## Functions and operators
 
-For example, subtracting one univector from another gives expression type, not univector:
+For example, subtracting one univector from another produces expression, not univector:
 
 ```c++
 univector<int, 5> x{1, 2, 3, 4, 5};
 univector<int, 5> y{0, 0, 1, 10, -5};
 
-auto z = x - y; // z is of type expression, not univector. 
+auto z = x - y; // z is of type expression_function<...>, not univector. 
                 // This only constructs an expression and does not perform any calculation
 ```
 
-But you can always convert expression back to univector to get actual data:
+You should assign expression to a univector (or tensor) to get the data:
 
 ```c++
 univector<int, 5> x{1, 2, 3, 4, 5};
@@ -59,15 +51,14 @@ univector<int, 5> z = x - y;
 ```
 
 !!! note
-    when an expression is assigned to a `univector` variable, expression is evaluated
-    and values are being written to the variable.
+    when an expression is assigned to a `univector` variable, expression is evaluated in `process` function and values are being written to the target storage.
 
 Same applies to calling KFR functions on univectors, this doesn't calculate values immediately. Instead, new expression will be created.
 
 ```c++
 univector<float, 5> x{1, 2, 3, 4, 5};
 sqrt(x);                                // only constructs an expression
-univector<float, 5> values = sqrt(x);   // constructs an expression and writes data to univector  
+univector<float, 5> values = sqrt(x);   // constructs an expression and writes data to univector
 ```
 
 Element type of an input expressions can be determined by using `expression_value_type<Expr>` (In KFR4 it was `value_type_of<Expr>`). Since KFR5 all expressions have their type specified.
@@ -133,10 +124,11 @@ int main()
     // And 0 dimensions collapsed (to_string).
     println(trender(identity_matrix<float, 9>{}).to_string(16, 0));
 }
+```
 
-```
 **Output**:
-```
+
+```c++
 {{1, 0, 0, 0, 0, 0, 0, 0, 0},
  {0, 1, 0, 0, 0, 0, 0, 0, 0},
  {0, 0, 1, 0, 0, 0, 0, 0, 0},
@@ -170,7 +162,7 @@ struct identity_matrix : expression_traits_defaults
 
 ```
 
-Now with size defined at runtime.
+The same class with the size defined at runtime.
 
 ```c++
 template <typename T>
@@ -194,3 +186,13 @@ struct identity_matrix : expression_traits_defaults
 };
 
 ```
+
+### Reducing functions
+
+Reducing functions accept 1D [Expression](expressions.md) and produce scalar.
+
+Some of the reducing functions are:
+`sum`, `rms`, `mean`, `dotproduct`, `product`, `sumsqr`.
+
+Some of reducing functions have the same names as corresponding regular functions but with `of` suffix to distinguish them: 
+`minof`, `maxof`, `absmaxof`, `absminof`

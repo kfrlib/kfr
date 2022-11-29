@@ -1,4 +1,4 @@
-/** @addtogroup utility
+/** @addtogroup sort
  *  @{
  */
 /*

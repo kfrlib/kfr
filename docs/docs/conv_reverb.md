@@ -2,7 +2,7 @@
 
 ### Mono version
 
-Input/Output data: [See how to pass data to KFR](types.md)
+Input/Output data: [See how to pass data to KFR](basics.md)
 ```c++
 univector<float> audio;
 univector<float> impulse_response;
@@ -14,7 +14,7 @@ reverb.apply(audio);
 ```
 
 !!! note
-    `convolve_filter` uses [Filter API](filters.md) and preserves its internal state between calls to `apply`.
+    `convolve_filter` uses [Filter API](auto/filter.md) and preserves its internal state between calls to `apply`.
     Audio can be processed in chunks.
     Use `reset` function to reset its internal state.
 

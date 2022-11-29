@@ -22,6 +22,8 @@
  */
 #pragma once
 
+#ifndef CMT_CLANG_EXT
+
 #include "simd.hpp"
 
 CMT_PRAGMA_GNU(GCC diagnostic push)
@@ -1920,3 +1922,4 @@ KFR_INTRINSIC simd<T, Nout> universal_shuffle(simd_t<T, Nin>, const simd<T, Nin>
 } // namespace kfr
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)
+#endif

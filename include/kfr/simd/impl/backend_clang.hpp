@@ -60,7 +60,7 @@ KFR_INTRINSIC simd<Tout, N> simd_make(ctype_t<Tout>, const Args&... args)
     return (simd<Tout, N>){ static_cast<unwrap_bit<Tout>>(args)... };
 }
 
-/// @brief Returns vector with undefined value
+// @brief Returns vector with undefined value
 template <typename Tout, size_t N>
 KFR_INTRINSIC simd<Tout, N> simd_undefined()
 {
@@ -68,21 +68,21 @@ KFR_INTRINSIC simd<Tout, N> simd_undefined()
     return x;
 }
 
-/// @brief Returns vector with all zeros
+// @brief Returns vector with all zeros
 template <typename Tout, size_t N>
 KFR_INTRINSIC simd<Tout, N> simd_zeros()
 {
     return Tout();
 }
 
-/// @brief Returns vector with all ones
+// @brief Returns vector with all ones
 template <typename Tout, size_t N>
 KFR_INTRINSIC simd<Tout, N> simd_allones()
 {
     return special_constants<Tout>::allones();
 }
 
-/// @brief Converts input vector to vector with subtype Tout
+// @brief Converts input vector to vector with subtype Tout
 template <typename Tout, typename Tin, size_t N, size_t Nout = (sizeof(Tin) * N / sizeof(Tout))>
 KFR_INTRINSIC simd<Tout, Nout> simd_bitcast(simd_cvt_t<Tout, Tin, N>, const simd<Tin, N>& x)
 {
@@ -158,14 +158,14 @@ KFR_INTRINSIC simd<T, N1 + N2 + Nscount> simd_concat(const simd<T, N1>& x, const
                         csizeseq<N1 + N2 + Nscount>, overload_auto);
 }
 
-/// @brief Converts input vector to vector with subtype Tout
+// @brief Converts input vector to vector with subtype Tout
 template <typename Tout, typename Tin, size_t N>
 KFR_INTRINSIC simd<Tout, N> simd_convert(simd_cvt_t<Tout, Tin, N>, const simd<Tin, N>& x)
 {
     return __builtin_convertvector(x, simd<Tout, N>);
 }
 
-/// @brief Converts input vector to vector with subtype Tout
+// @brief Converts input vector to vector with subtype Tout
 template <typename T, size_t N>
 KFR_INTRINSIC simd<T, N> simd_convert(simd_cvt_t<T, T, N>, const simd<T, N>& x)
 {

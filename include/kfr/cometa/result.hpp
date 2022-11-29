@@ -25,7 +25,7 @@ struct result
 
     constexpr result(ErrEnum error) CMT_NOEXCEPT : m_error(error) {}
 
-    template <typename ValueInit, CMT_ENABLE_IF(is_constructible<value_type, ValueInit>)>
+    template <typename ValueInit, CMT_ENABLE_IF(std::is_constructible_v<value_type, ValueInit>)>
     constexpr result(ValueInit&& value) CMT_NOEXCEPT : m_value(std::forward<ValueInit>(value)),
                                                        m_error(OkValue)
     {

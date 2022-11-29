@@ -27,6 +27,7 @@
 
 #include "../math/sqrt.hpp"
 #include "../simd/operators.hpp"
+#include "../base/expression.hpp"
 
 namespace kfr
 {

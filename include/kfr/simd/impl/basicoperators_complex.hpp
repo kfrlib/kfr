@@ -26,6 +26,7 @@
 #pragma once
 
 #include "../complex_type.hpp"
+#include "../operators.hpp"
 #include "../vec.hpp"
 
 namespace kfr
