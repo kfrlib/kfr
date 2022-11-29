@@ -58,6 +58,7 @@ extra_css:
 
 repo_url: https://github.com/kfrlib/kfr
 repo_name: KFR
+edit_uri: edit/master/docs/
 
 nav:
   - KFR:
