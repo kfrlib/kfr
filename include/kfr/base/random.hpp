@@ -25,6 +25,9 @@
  */
 #pragma once
 
+#include "../math/log_exp.hpp"
+#include "../math/sin_cos.hpp"
+#include "../math/sqrt.hpp"
 #include "random_bits.hpp"
 #include "state_holder.hpp"
 
@@ -76,6 +79,20 @@ KFR_INTRINSIC vec<T, N> random_range(random_state& state, T min, T max)
     return (tmp * (max - min) + min) >> typebits<T>::bits;
 }
 
+template <size_t N, typename T>
+KFR_INTRINSIC vec<T, N> random_normal(random_state& state, T mu, T sigma)
+{
+    static_assert(std::is_floating_point_v<T>, "random_normal requires floating point type");
+
+    constexpr size_t M = align_up(N, 2); // round up to 2
+
+    vec<T, M> u = random_uniform<T, M>(state);
+
+    vec<T, M / 2> mag = sigma * sqrt(T(-2.0) * log(even(u)));
+    vec<T, M> z       = dup(mag) * cossin(c_pi<T, 2> * dupodd(u)) + mu;
+    return slice<0, N>(z);
+}
+
 template <typename T, index_t Dims, bool Reference = false>
 struct expression_random_uniform : expression_traits_defaults
 {
@@ -117,6 +134,29 @@ struct expression_random_range : expression_traits_defaults
                                                 axis_params<VecAxis, N>)
     {
         return random_range<N, T>(*self.state, self.min, self.max);
+    }
+};
+
+template <typename T, index_t Dims, bool Reference = false>
+struct expression_random_normal : expression_traits_defaults
+{
+    using value_type             = T;
+    constexpr static size_t dims = Dims;
+    constexpr static shape<dims> get_shape(const expression_random_normal&)
+    {
+        return shape<dims>(infinite_size);
+    }
+    constexpr static shape<dims> get_shape() { return shape<dims>(infinite_size); }
+
+    mutable state_holder<random_state, Reference> state;
+    T sigma{ 1 };
+    T mu{ 0 };
+
+    template <size_t N, index_t VecAxis>
+    friend KFR_INTRINSIC vec<T, N> get_elements(const expression_random_normal& self, shape<Dims>,
+                                                axis_params<VecAxis, N>)
+    {
+        return random_normal<N, T>(*self.state, self.mu, self.sigma);
     }
 };
 
@@ -167,6 +207,33 @@ template <typename T, index_t Dims = 1>
 KFR_FUNCTION expression_random_range<T, Dims> gen_random_range(T min, T max)
 {
     return { {}, random_init(), min, max };
+}
+#endif
+
+/// @brief Returns expression that returns pseudorandom values from normal (gaussian) distribution. Copies the
+/// given generator
+template <typename T, index_t Dims = 1>
+KFR_FUNCTION expression_random_normal<T, Dims> gen_random_normal(const random_state& state, T sigma = 1,
+                                                                 T mu = 0)
+{
+    return { {}, state, sigma, mu };
+}
+
+/// @brief Returns expression that returns pseudorandom values from normal (gaussian) distribution. References
+/// the given generator. Use std::ref(gen) to force this overload
+template <typename T, index_t Dims = 1>
+KFR_FUNCTION expression_random_normal<T, Dims, true> gen_random_normal(
+    std::reference_wrapper<random_state> state, T sigma = 1, T mu = 0)
+{
+    return { {}, state, sigma, mu };
+}
+
+#ifndef KFR_DISABLE_READCYCLECOUNTER
+/// @brief Returns expression that returns pseudorandom values from normal (gaussian) distribution
+template <typename T, index_t Dims = 1>
+KFR_FUNCTION expression_random_normal<T, Dims> gen_random_normal(T sigma = 1, T mu = 0)
+{
+    return { {}, random_init(), sigma, mu };
 }
 #endif
 
