@@ -25,10 +25,10 @@
  */
 #pragma once
 
+#include "../base/expression.hpp"
 #include "../math/hyperbolic.hpp"
 #include "../simd/clamp.hpp"
 #include "../simd/operators.hpp"
-#include "../base/expression.hpp"
 
 namespace kfr
 {

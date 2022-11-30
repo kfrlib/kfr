@@ -835,6 +835,32 @@ static auto process(Out&& out, In&& in, shape<outdims> start = shape<outdims>(0)
     return stop;
 }
 
+template <typename Tin, index_t Dims>
+struct expression_discard : public expression_traits_defaults
+{
+    using value_type             = Tin;
+    constexpr static size_t dims = Dims;
+    constexpr static shape<dims> get_shape(const expression_discard&) { return shape<dims>(infinite_size); }
+    constexpr static shape<dims> get_shape() { return shape<dims>(infinite_size); }
+
+    template <size_t N, index_t VecAxis>
+    friend KFR_INTRINSIC void set_elements(const expression_discard& self, shape<Dims>,
+                                           axis_params<VecAxis, N>, const identity<vec<Tin, N>>& x)
+    {
+    }
+};
+
+/// @brief Read the expression @c expr through the whole range.
+/// @param expr the input expression
+/// @return the input expression is returned
+template <size_t width = 0, index_t Axis = infinite_size, typename E, typename Traits = expression_traits<E>>
+KFR_FUNCTION const E& sink(E&& expr)
+{
+    static_assert(!Traits::get_shape().has_infinity());
+    process<width, Axis>(expression_discard<expression_value_type<E>, expression_dims<E>>{}, expr);
+    return expr;
+}
+
 template <typename Fn, typename... Args>
 KFR_FUNCTION expression_function<std::decay_t<Fn>, Args...> bind_expression(Fn&& fn, Args&&... args)
 {

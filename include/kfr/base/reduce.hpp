@@ -157,6 +157,68 @@ KFR_INTRINSIC Tout reduce(const E1& e1, ReduceFn&& reducefn,
     return reduce_call_final(finalfn, counter, result);
 }
 
+template <size_t Bins = 0, typename TCount = uint32_t>
+struct histogram_data
+{
+    using vector_type = univector<TCount, Bins == 0 ? tag_dynamic_vector : 2 + Bins>;
+
+    KFR_MEM_INTRINSIC histogram_data(size_t steps)
+    {
+        if constexpr (Bins == 0)
+        {
+            m_values = vector_type(2 + steps, 0);
+        }
+    }
+
+    KFR_MEM_INTRINSIC TCount operator[](size_t n) const
+    {
+        KFR_LOGIC_CHECK(n < size() - 2, "n is outside histogram size");
+        return m_values[1 + n];
+    }
+    KFR_MEM_INTRINSIC TCount below() const { return m_values.front(); }
+    KFR_MEM_INTRINSIC TCount above() const { return m_values.back(); }
+    KFR_MEM_INTRINSIC size_t size() const { return m_values.size() - 2; }
+    KFR_MEM_INTRINSIC univector_ref<const TCount> values() const { return m_values.slice(1, size()); }
+
+    template <typename T>
+    KFR_MEM_INTRINSIC void put(T value)
+    {
+        const T x = 1 + value * size();
+        ++m_values[std::floor(clamp(x, 0, size() + 1))];
+    }
+
+private:
+    vector_type m_values{};
+};
+
+template <size_t Bins, typename E, typename TCount = uint32_t>
+struct expression_histogram : public expression_with_traits<E>
+{
+    mutable histogram_data<Bins, TCount> data{};
+
+    using expression_with_traits<E>::expression_with_traits;
+
+    KFR_MEM_INTRINSIC expression_histogram(E&& e, size_t steps)
+        : expression_with_traits<E>{ std::forward<E>(e) }, data(steps)
+    {
+    }
+
+    using value_type = typename expression_with_traits<E>::value_type;
+
+    template <index_t Axis, size_t N>
+    friend KFR_INTRINSIC vec<value_type, N> get_elements(const expression_histogram& self,
+                                                         const shape<expression_with_traits<E>::dims>& index,
+                                                         const axis_params<Axis, N>& sh)
+    {
+        vec<value_type, N> v = get_elements(self.first(), index, sh);
+        for (size_t i = 0; i < N; ++i)
+        {
+            self.data.template put<value_type>(v[i]);
+        }
+        return v;
+    }
+};
+
 /**
  * @brief Returns the sum of all the elements in x.
  *
@@ -297,6 +359,46 @@ KFR_FUNCTION T product(const E1& x)
 {
     static_assert(!is_infinite<E1>, "e1 must be a sized expression (use slice())");
     return reduce(x, fn::mul());
+}
+
+/**
+ * @brief Returns expression that computes histogram as data flows through it.
+ * Number of bins defined at runtime
+ */
+template <typename E, typename TCount = uint32_t>
+KFR_FUNCTION expression_histogram<0, E, TCount> histogram_expression(E&& expr, size_t bins)
+{
+    return { std::forward<E>(expr), bins };
+}
+
+/**
+ * @brief Returns expression that computes histogram as data flows through it.
+ * Number of bins defined at compile time
+ */
+template <size_t Bins, typename E, typename TCount = uint32_t>
+KFR_FUNCTION expression_histogram<Bins, E, TCount> histogram_expression(E&& expr)
+{
+    return { std::forward<E>(expr), Bins };
+}
+
+/**
+ * @brief Returns histogram of the expression data.
+ * Number of bins defined at runtime
+ */
+template <typename E, typename TCount = uint32_t>
+KFR_FUNCTION histogram_data<0, TCount> histogram(E&& expr, size_t bins)
+{
+    return sink(histogram_expression(std::forward<E>(expr), bins)).data;
+}
+
+/**
+ * @brief Returns histogram of the expression data.
+ * Number of bins defined at compile time
+ */
+template <size_t Bins, typename E, typename TCount = uint32_t>
+KFR_FUNCTION histogram_data<Bins, TCount> histogram(E&& expr)
+{
+    return sink(histogram_expression(std::forward<E>(expr), Bins)).data;
 }
 
 } // namespace CMT_ARCH_NAME

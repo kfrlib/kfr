@@ -90,7 +90,7 @@ struct tensor_subscript<T, Derived, std::integer_sequence<index_t, Dims...>>
     }
 };
 
-/// @brief tensor holds or references multidimensional data and 
+/// @brief tensor holds or references multidimensional data and
 /// provides a way to access individual elements and perform complex operations on the data.
 ///
 /// The number of elements in each axis of the array is defined by its shape.
@@ -176,7 +176,7 @@ public:
     {
     }
 
-    /// @brief Construct from external pointer, shape and finalizer with default strides 
+    /// @brief Construct from external pointer, shape and finalizer with default strides
     KFR_MEM_INTRINSIC tensor(T* data, const shape_type& shape, memory_finalizer finalizer)
         : m_data(data), m_size(size_of_shape(shape)), m_is_contiguous(true), m_shape(shape),
           m_strides(internal_generic::strides_for_shape(shape)), m_finalizer(std::move(finalizer))
@@ -234,7 +234,7 @@ public:
     {
         internal_generic::list_copy_recursively(values, contiguous_begin_unsafe());
     }
-    
+
     /// @brief Initialize with braced list. Defined for 2D tensor only
     template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>&& dims == 2)>
     KFR_INTRINSIC tensor(const std::initializer_list<std::initializer_list<U>>& values)
@@ -242,7 +242,7 @@ public:
     {
         internal_generic::list_copy_recursively(values, contiguous_begin_unsafe());
     }
-    
+
     /// @brief Initialize with braced list. Defined for 3D tensor only
     template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>&& dims == 3)>
     KFR_INTRINSIC tensor(const std::initializer_list<std::initializer_list<std::initializer_list<U>>>& values)
@@ -250,7 +250,7 @@ public:
     {
         internal_generic::list_copy_recursively(values, contiguous_begin_unsafe());
     }
-    
+
     /// @brief Initialize with braced list. Defined for 4D tensor only
     template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>&& dims == 4)>
     KFR_INTRINSIC tensor(
@@ -336,7 +336,7 @@ public:
             m_finalizer,
         };
     }
-    
+
 #if defined(CMT_COMPILER_IS_MSVC)
     tensor(const tensor& other)
         : m_data(other.m_data), m_size(other.m_size), m_is_contiguous(other.m_is_contiguous),

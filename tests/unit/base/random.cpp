@@ -73,64 +73,6 @@ TEST(gen_random_range)
     // println(mean(v));
 }
 
-template <size_t Bins, typename E, typename TCount = uint32_t>
-struct expression_histogram : public expression_with_traits<E>
-{
-    size_t size;
-    using vector_type = univector<TCount, Bins == 0 ? tag_dynamic_vector : Bins>;
-    mutable vector_type values{};
-
-    using expression_with_traits<E>::expression_with_traits;
-    
-    KFR_MEM_INTRINSIC expression_histogram(E&& e, size_t steps) : expression_with_traits<E>{ std::forward<E>(e) }
-    {
-        if constexpr (Bins == 0)
-        {
-            values = vector_type(steps, 0);
-        }
-    }
-
-    KFR_MEM_INTRINSIC TCount operator[](size_t n) const
-    {
-        KFR_LOGIC_CHECK(n < values.size() - 2, "n is outside histogram size");
-        return values[1 + n];
-    }
-    KFR_MEM_INTRINSIC TCount below() const { return values.front(); }
-    KFR_MEM_INTRINSIC TCount above() const { return values.back(); }
-    KFR_MEM_INTRINSIC univector_ref<const TCount> histogram() const 
-    {
-        return values.slice(1, values.size());
-    }
-
-    using value_type = typename expression_with_traits<E>::value_type;
-
-    template <index_t Axis, size_t N>
-    friend KFR_INTRINSIC vec<value_type, N> get_elements(const expression_histogram& self,
-                                                         const shape<expression_with_traits<E>::dims>& index,
-                                                         const axis_params<Axis, N>& sh)
-    {
-        vec<value_type, N> v = get_elements(self.first(), index, sh);
-        for (size_t i = 0; i < N; ++i)
-        {
-            int64_t n = 1 + std::floor(v[i] * (self.values.size() - 2));
-            ++self.values[clamp(n, 0, self.values.size() - 1)];
-        }
-        return v;
-    }
-};
-
-template <typename E, typename TCount = uint32_t>
-KFR_INTRINSIC expression_histogram<0, E, TCount> histogram(E&& expr, size_t bins)
-{
-    return { std::forward<E>(expr), bins };
-}
-
-template <size_t Bins, typename E, typename TCount = uint32_t>
-KFR_INTRINSIC expression_histogram<Bins, E, TCount> histogram(E&& expr)
-{
-    return { std::forward<E>(expr), Bins };
-}
-
 TEST(random_normal)
 {
     random_state gen = random_init(1, 2, 3, 4);
@@ -140,19 +82,19 @@ TEST(random_normal)
     vec<fbase, 11> r2 = random_normal<11, fbase>(gen, 0.0, 1.0);
     println(r2);
 
-    expression_histogram h = histogram<20>(gen_random_normal<double>() * 0.15 + 0.5);
-    render(truncate(h, 1000));
-    println(h.below());
-    println(h.histogram());
-    println(h.above());
-    render(truncate(h, 10000));
-    println(h.below());
-    println(h.histogram());
-    println(h.above());
-    render(truncate(h, 100000));
-    println(h.below());
-    println(h.histogram());
-    println(h.above());
+    expression_histogram h = histogram_expression<20>(gen_random_normal<double>() * 0.15 + 0.5);
+    sink(truncate(h, 1000));
+    println(h.data.below());
+    println(h.data.values());
+    println(h.data.above());
+    sink(truncate(h, 10000));
+    println(h.data.below());
+    println(h.data.values());
+    println(h.data.above());
+    auto hh = histogram(truncate(h, 100000), 20);
+    println(hh.below());
+    println(hh.values());
+    println(hh.above());
 }
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
