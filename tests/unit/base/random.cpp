@@ -82,7 +82,7 @@ TEST(random_normal)
     vec<fbase, 11> r2 = random_normal<11, fbase>(gen, 0.0, 1.0);
     println(r2);
 
-    expression_histogram h = histogram_expression<20>(gen_random_normal<double>() * 0.15 + 0.5);
+    expression_histogram h = histogram_expression<20>(gen_random_normal<double>(std::ref(gen)) * 0.15 + 0.5);
     sink(truncate(h, 1000));
     println(h.data.below());
     println(h.data.values());
