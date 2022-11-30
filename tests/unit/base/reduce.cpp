@@ -5,6 +5,8 @@
  */
 
 #include <kfr/base/reduce.hpp>
+#include <kfr/base/simd_expressions.hpp>
+#include <kfr/base/univector.hpp>
 
 namespace kfr
 {
@@ -49,6 +51,13 @@ TEST(reduce)
         CHECK(sumsqr(a) == 136);
         CHECK(product(a) == -1080);
     }
+}
+
+TEST(dotproduct)
+{
+    univector<float, 177> v1 = counter();
+    univector<float, 177> v2 = counter() * 2 + 10;
+    CHECK(dotproduct(v1, v2) == 3821312);
 }
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

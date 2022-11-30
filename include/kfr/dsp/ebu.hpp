@@ -62,7 +62,7 @@ struct integrated_vec : public univector<T>
 private:
     void compute() const
     {
-        const T z_total = mean(*this);
+        const T z_total = mean(static_cast<const univector<T>&>(*this));
         T relative_gate = energy_to_loudness(z_total) - 10;
 
         T z        = 0;
@@ -130,7 +130,7 @@ private:
         static const T PRC_LOW  = T(0.10);
         static const T PRC_HIGH = T(0.95);
 
-        const T z_total       = mean(*this);
+        const T z_total       = mean(static_cast<const univector<T>&>(*this));
         const T relative_gate = energy_to_loudness(z_total) - 20;
 
         if (this->size() < 2)
@@ -184,13 +184,13 @@ private:
 };
 
 template <typename T>
-KFR_INTRINSIC expression_pointer<T> make_kfilter(int samplerate)
+KFR_INTRINSIC expression_handle<T, 1> make_kfilter(int samplerate)
 {
     const biquad_params<T> bq[] = {
         biquad_highshelf(T(1681.81 / samplerate), T(+4.0)),
         biquad_highpass(T(38.1106678246655 / samplerate), T(0.5)).normalized_all()
     };
-    return to_pointer(biquad(bq, placeholder<T>()));
+    return to_handle(biquad(bq, placeholder<T>()));
 }
 
 template <typename T>
@@ -232,7 +232,7 @@ public:
 
     void process_packet(const T* src)
     {
-        substitute(m_kfilter, to_pointer(make_univector(src, m_packet_size) * m_input_gain));
+        substitute(m_kfilter, to_handle(make_univector(src, m_packet_size) * m_input_gain));
         const T filtered_sum_of_squares = sumsqr(truncate(m_kfilter, m_packet_size));
 
         m_short_sum_of_squares.ringbuf_write(m_short_sum_of_squares_cursor, filtered_sum_of_squares);
@@ -245,7 +245,7 @@ private:
     const Speaker m_speaker;
     const T m_input_gain;
     const size_t m_packet_size;
-    expression_pointer<T> m_kfilter;
+    expression_handle<T, 1> m_kfilter;
     univector<T> m_short_sum_of_squares;
     univector<T> m_momentary_sum_of_squares;
     T m_output_energy_gain;
@@ -264,6 +264,10 @@ public:
         : m_sample_rate(sample_rate), m_running(true), m_need_reset(false),
           m_packet_size(sample_rate / 10 / packet_size_factor)
     {
+        KFR_LOGIC_CHECK(!channels.empty(), "channels must not be empty");
+        KFR_LOGIC_CHECK(sample_rate > 0, "sample_rate must be greater than 0");
+        KFR_LOGIC_CHECK(packet_size_factor >= 1 && packet_size_factor <= 3,
+                        "packet_size_factor must be in range [1..3]");
         for (Speaker sp : channels)
         {
             m_channels.emplace_back(sample_rate, sp, packet_size_factor, T(1));

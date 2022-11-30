@@ -2,7 +2,7 @@
 
 ## One channel
 
-Input/Output data: [See how to pass data to KFR](types.md)
+Input/Output data: [See how to pass data to KFR](basics.md)
 ```c++
 univector<float> audio;
 ```

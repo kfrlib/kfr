@@ -57,79 +57,18 @@ using namespace cometa;
 using cometa::fbase;
 using cometa::fmax;
 
-// primary template (used for zero types)
 template <typename... T>
-struct common_type_impl
+using decay_common = std::decay_t<std::common_type_t<T...>>;
+
+template <typename CT, template <typename T> typename Tpl, typename = void>
+struct construct_common_type
 {
 };
-
-template <typename... T>
-using decay_common = decay<common_type_impl<T...>>;
-
-template <typename T1, typename T2, template <typename TT> class result_type, typename = void>
-struct common_type_from_subtypes
+template <typename CT, template <typename T> typename Tpl>
+struct construct_common_type<CT, Tpl, std::void_t<typename CT::type>>
 {
+    using type = Tpl<typename CT::type>;
 };
-
-template <typename T1, typename T2, template <typename TT> class result_type>
-struct common_type_from_subtypes<T1, T2, result_type, void_t<typename common_type_impl<T1, T2>::type>>
-{
-    using type = result_type<typename common_type_impl<T1, T2>::type>;
-};
-
-template <typename T>
-struct common_type_impl<T>
-{
-    using type = decay<T>;
-};
-
-template <typename T1, typename T2>
-using common_for_two = decltype(false ? std::declval<T1>() : std::declval<T2>());
-
-template <typename T1, typename T2, typename = void>
-struct common_type_2_default
-{
-};
-
-template <typename T1, typename T2>
-struct common_type_2_default<T1, T2, void_t<common_for_two<T1, T2>>>
-{
-    using type = std::decay_t<common_for_two<T1, T2>>;
-};
-
-template <typename T1, typename T2, typename D1 = decay<T1>, typename D2 = decay<T2>>
-struct common_type_2_impl : common_type_impl<D1, D2>
-{
-};
-
-template <typename D1, typename D2>
-struct common_type_2_impl<D1, D2, D1, D2> : common_type_2_default<D1, D2>
-{
-};
-
-template <typename T1, typename T2>
-struct common_type_impl<T1, T2> : common_type_2_impl<T1, T2>
-{
-};
-
-template <typename AlwaysVoid, typename T1, typename T2, typename... R>
-struct common_type_multi_impl
-{
-};
-
-template <typename T1, typename T2, typename... R>
-struct common_type_multi_impl<void_t<typename common_type_impl<T1, T2>::type>, T1, T2, R...>
-    : common_type_impl<typename common_type_impl<T1, T2>::type, R...>
-{
-};
-
-template <typename T1, typename T2, typename... R>
-struct common_type_impl<T1, T2, R...> : common_type_multi_impl<void, T1, T2, R...>
-{
-};
-
-template <typename... T>
-using common_type = typename common_type_impl<T...>::type;
 
 constexpr ctypes_t<i8, i16, i32, i64> signed_types{};
 constexpr ctypes_t<u8, u16, u32, u64> unsigned_types{};
@@ -248,8 +187,9 @@ struct f16
 template <size_t bits>
 struct bitmask
 {
-    using type = conditional<(bits > 32), uint64_t,
-                             conditional<(bits > 16), uint32_t, conditional<(bits > 8), uint16_t, uint8_t>>>;
+    using type = std::conditional_t<
+        (bits > 32), uint64_t,
+        std::conditional_t<(bits > 16), uint32_t, std::conditional_t<(bits > 8), uint16_t, uint8_t>>>;
 
     bitmask(type val) : value(val) {}
 
@@ -401,12 +341,27 @@ struct initialvalue
 
 template <typename T>
 constexpr inline bool is_simd_type =
-    is_same<T, float> || is_same<T, double> || is_same<T, signed char> || is_same<T, unsigned char> ||
-    is_same<T, short> || is_same<T, unsigned short> || is_same<T, int> || is_same<T, unsigned int> ||
-    is_same<T, long> || is_same<T, unsigned long> || is_same<T, long long> || is_same<T, unsigned long long>;
+    std::is_same_v<T, float> || std::is_same_v<T, double> || std::is_same_v<T, signed char> ||
+    std::is_same_v<T, unsigned char> || std::is_same_v<T, short> || std::is_same_v<T, unsigned short> ||
+    std::is_same_v<T, int> || std::is_same_v<T, unsigned int> || std::is_same_v<T, long> ||
+    std::is_same_v<T, unsigned long> || std::is_same_v<T, long long> || std::is_same_v<T, unsigned long long>;
+
+template <typename T>
+constexpr inline bool is_simd_float_type = std::is_same_v<T, float> || std::is_same_v<T, double>;
+
+template <typename T>
+constexpr inline bool is_simd_int_type =
+    std::is_same_v<T, signed char> || std::is_same_v<T, unsigned char> || std::is_same_v<T, short> ||
+    std::is_same_v<T, unsigned short> || std::is_same_v<T, int> || std::is_same_v<T, unsigned int> ||
+    std::is_same_v<T, long> || std::is_same_v<T, unsigned long> || std::is_same_v<T, long long> ||
+    std::is_same_v<T, unsigned long long>;
 
 template <typename T>
 constexpr inline bool is_simd_type<bit<T>> = is_simd_type<T>;
+template <typename T>
+constexpr inline bool is_simd_float_type<bit<T>> = is_simd_float_type<T>;
+template <typename T>
+constexpr inline bool is_simd_int_type<bit<T>> = is_simd_int_type<T>;
 
 template <typename T, size_t N>
 struct vec_shape

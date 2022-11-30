@@ -27,6 +27,9 @@
 
 #include "../base/memory.hpp"
 #include "../base/reduce.hpp"
+#include "../base/univector.hpp"
+#include "../math/modzerobessel.hpp"
+#include "../math/sqrt.hpp"
 #include "../simd/impl/function.hpp"
 #include "../simd/vec.hpp"
 #include "window.hpp"
@@ -203,14 +206,16 @@ public:
             }
             else if (input_start >= input_position)
             {
-                output[i] = dotproduct(input.slice(input_start - input_position, depth), tap_ptr);
+                output[i] =
+                    dotproduct(input.slice(input_start - input_position, depth), tap_ptr.truncate(depth));
             }
             else
             {
                 const itype prev_count = input_position - input_start;
-                output[i]              = dotproduct(delay.slice(size_t(depth - prev_count)), tap_ptr) +
-                            dotproduct(input.slice(0, size_t(depth - prev_count)),
-                                       tap_ptr.slice(size_t(prev_count), size_t(depth - prev_count)));
+                output[i] =
+                    dotproduct(delay.slice(size_t(depth - prev_count)), tap_ptr.truncate(prev_count)) +
+                    dotproduct(input.truncate(size_t(depth - prev_count)),
+                               tap_ptr.slice(size_t(prev_count), size_t(depth - prev_count)));
             }
         }
 
@@ -254,28 +259,28 @@ template <size_t factor, size_t offset, typename E>
 struct expression_downsample;
 
 template <typename E>
-struct expression_upsample<2, E> : expression_with_arguments<E>
+struct expression_upsample<2, E> : expression_with_arguments<E>, expression_traits_defaults
 {
     using expression_with_arguments<E>::expression_with_arguments;
-    using value_type = value_type_of<E>;
+    using value_type = expression_value_type<E>;
     using T          = value_type;
 
     KFR_MEM_INTRINSIC size_t size() const CMT_NOEXCEPT { return expression_with_arguments<E>::size() * 2; }
 
     template <size_t N>
-    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_upsample& self, cinput_t cinput,
-                                                size_t index, vec_shape<T, N>)
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_upsample& self, index_t index,
+                                                axis_params<0, N>)
     {
-        const vec<T, N / 2> x = self.argument_first(cinput, index / 2, vec_shape<T, N / 2>());
+        const vec<T, N / 2> x = get_elements(self.first(), index / 2, axis_params<0, N / 2>());
         return interleave(x, zerovector(x));
     }
-    KFR_INTRINSIC friend vec<T, 1> get_elements(const expression_upsample& self, cinput_t cinput,
-                                                size_t index, vec_shape<T, 1>)
+    KFR_INTRINSIC friend vec<T, 1> get_elements(const expression_upsample& self, index_t index,
+                                                axis_params<0, 1>)
     {
         if (index & 1)
             return 0;
         else
-            return self.argument_first(cinput, index / 2, vec_shape<T, 1>());
+            return get_elements(self.first(), index / 2, axis_params<0, 1>());
     }
 };
 
@@ -283,39 +288,39 @@ template <typename E>
 struct expression_upsample<4, E> : expression_with_arguments<E>
 {
     using expression_with_arguments<E>::expression_with_arguments;
-    using value_type = value_type_of<E>;
+    using value_type = expression_value_type<E>;
     using T          = value_type;
 
     KFR_MEM_INTRINSIC size_t size() const CMT_NOEXCEPT { return expression_with_arguments<E>::size() * 4; }
 
     template <size_t N>
-    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_upsample& self, cinput_t cinput,
-                                                size_t index, vec_shape<T, N>) CMT_NOEXCEPT
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_upsample& self, index_t index,
+                                                axis_params<0, N>) CMT_NOEXCEPT
     {
-        const vec<T, N / 4> x  = self.argument_first(cinput, index / 4, vec_shape<T, N / 4>());
+        const vec<T, N / 4> x  = get_elements(self.first(), index / 4, axis_params<0, N / 4>());
         const vec<T, N / 2> xx = interleave(x, zerovector(x));
         return interleave(xx, zerovector(xx));
     }
-    KFR_INTRINSIC friend vec<T, 2> get_elements(const expression_upsample& self, cinput_t cinput,
-                                                size_t index, vec_shape<T, 2>) CMT_NOEXCEPT
+    KFR_INTRINSIC friend vec<T, 2> get_elements(const expression_upsample& self, index_t index,
+                                                axis_params<0, 2>) CMT_NOEXCEPT
     {
         switch (index & 3)
         {
         case 0:
-            return interleave(self.argument_first(cinput, index / 4, vec_shape<T, 1>()), zerovector<T, 1>());
+            return interleave(get_elements(self.first(), index / 4, axis_params<0, 1>()), zerovector<T, 1>());
         case 3:
-            return interleave(zerovector<T, 1>(), self.argument_first(cinput, index / 4, vec_shape<T, 1>()));
+            return interleave(zerovector<T, 1>(), get_elements(self.first(), index / 4, axis_params<0, 1>()));
         default:
             return 0;
         }
     }
-    KFR_INTRINSIC friend vec<T, 1> get_elements(const expression_upsample& self, cinput_t cinput,
-                                                size_t index, vec_shape<T, 1>) CMT_NOEXCEPT
+    KFR_INTRINSIC friend vec<T, 1> get_elements(const expression_upsample& self, index_t index,
+                                                axis_params<0, 1>) CMT_NOEXCEPT
     {
         if (index & 3)
             return 0;
         else
-            return self.argument_first(cinput, index / 4, vec_shape<T, 1>());
+            return get_elements(self.first(), index / 4, axis_params<0, 1>());
     }
 };
 
@@ -323,16 +328,16 @@ template <typename E, size_t offset>
 struct expression_downsample<2, offset, E> : expression_with_arguments<E>
 {
     using expression_with_arguments<E>::expression_with_arguments;
-    using value_type = value_type_of<E>;
+    using value_type = expression_value_type<E>;
     using T          = value_type;
 
     KFR_MEM_INTRINSIC size_t size() const CMT_NOEXCEPT { return expression_with_arguments<E>::size() / 2; }
 
     template <size_t N>
-    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_downsample& self, cinput_t cinput,
-                                                size_t index, vec_shape<T, N>) CMT_NOEXCEPT
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_downsample& self, size_t index,
+                                                axis_params<0, N>) CMT_NOEXCEPT
     {
-        const vec<T, N* 2> x = self.argument_first(cinput, index * 2, vec_shape<T, N * 2>());
+        const vec<T, N* 2> x = get_elements(self.first(), index * 2, axis_params<0, N * 2>());
         return x.shuffle(csizeseq<N, offset, 2>);
     }
 };
@@ -341,16 +346,16 @@ template <typename E, size_t offset>
 struct expression_downsample<4, offset, E> : expression_with_arguments<E>
 {
     using expression_with_arguments<E>::expression_with_arguments;
-    using value_type = value_type_of<E>;
+    using value_type = expression_value_type<E>;
     using T          = value_type;
 
     KFR_MEM_INTRINSIC size_t size() const CMT_NOEXCEPT { return expression_with_arguments<E>::size() / 4; }
 
     template <size_t N>
-    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_downsample& self, cinput_t cinput,
-                                                size_t index, vec_shape<T, N>) CMT_NOEXCEPT
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_downsample& self, index_t index,
+                                                axis_params<0, N>) CMT_NOEXCEPT
     {
-        const vec<T, N* 4> x = self.argument_first(cinput, index * 4, vec_shape<T, N * 4>());
+        const vec<T, N* 4> x = get_elements(self.first(), index * 4, axis_params<0, N * 4>());
         return x.shuffle(csizeseq<N, offset, 4>);
     }
 };

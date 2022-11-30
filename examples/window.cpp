@@ -42,6 +42,9 @@ int main()
     output = window_cosine(output.size());
     plot_save("window_cosine", output, options + ", title='Cosine window'");
 
+    output = window_cosine_np(output.size());
+    plot_save("window_cosine_np", output, options + ", title='Cosine window (numpy compatible)'");
+
     output = window_bartlett_hann(output.size());
     plot_save("window_bartlett_hann", output, options + ", title='Bartlett-Hann window'");
 

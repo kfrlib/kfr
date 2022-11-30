@@ -36,13 +36,11 @@ inline namespace CMT_ARCH_NAME
  * @brief Returns template expression that returns the sum of all the inputs
  */
 template <typename... E>
-internal::expression_function<fn::add, E...> mixdown(E&&... e)
+expression_function<fn::add, E...> mixdown(E&&... e)
 {
-    return internal::expression_function<fn::add, E...>(fn::add(), std::forward<E>(e)...);
+    return expression_function<fn::add, E...>(fn::add(), std::forward<E>(e)...);
 }
 
-namespace internal
-{
 struct stereo_matrix
 {
     template <typename T, size_t N>
@@ -57,7 +55,6 @@ struct stereo_matrix
     }
     const f64x2x2 matrix;
 };
-} // namespace internal
 
 template <int = 0>
 CMT_GNU_CONSTEXPR f64x2x2 matrix_sum_diff()
@@ -75,12 +72,10 @@ CMT_GNU_CONSTEXPR f64x2x2 matrix_halfsum_halfdiff()
  * channels
  */
 template <typename Left, typename Right,
-          typename Result =
-              internal::expression_function<internal::stereo_matrix, internal::expression_pack<Left, Right>>>
+          typename Result = expression_function<stereo_matrix, expression_pack<Left, Right>>>
 Result mixdown_stereo(Left&& left, Right&& right, const f64x2x2& matrix)
 {
-    return Result(internal::stereo_matrix{ matrix },
-                  pack(std::forward<Left>(left), std::forward<Right>(right)));
+    return Result(stereo_matrix{ matrix }, pack(std::forward<Left>(left), std::forward<Right>(right)));
 }
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

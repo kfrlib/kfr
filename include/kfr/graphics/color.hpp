@@ -25,7 +25,7 @@
  */
 #pragma once
 
-#include "scaled.hpp"
+#include "impl/scaled.hpp"
 
 namespace kfr
 {
@@ -40,7 +40,8 @@ struct color
 
     using vec_type = vec<T, 4>;
 
-    static_assert(is_floating_point<T> || is_same<T, uint8_t> || is_same<T, uint16_t>, "Incorrect type");
+    static_assert(std::is_floating_point_v<T> || std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t>,
+                  "Incorrect type");
 
     constexpr color(int) = delete;
     constexpr explicit color(T grey, T alpha = maximum) : v(grey, grey, grey, alpha) {}
@@ -78,7 +79,7 @@ struct color
 
     constexpr T lightness() const
     {
-        using Tcommon = conditional<is_floating_point<T>, T, findinttype<min * 3, max * 3>>;
+        using Tcommon = std::conditional_t<std::is_floating_point_v<T>, T, findinttype<min * 3, max * 3>>;
         return (Tcommon(r) + g + b) / 3;
     }
 

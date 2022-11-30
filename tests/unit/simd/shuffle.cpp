@@ -180,5 +180,11 @@ TEST(low_high)
     CHECK(low(vec<u8, 2>(1, 2)) == vec<u8, 1>(1));
     CHECK(high(vec<u8, 2>(1, 2)) == vec<u8, 1>(2));
 }
+TEST(enumerate)
+{
+    CHECK(enumerate(vec_shape<int, 4>{}, 4) == vec{ 0, 4, 8, 12 });
+    CHECK(enumerate(vec_shape<int, 8>{}, 3) == vec{ 0, 3, 6, 9, 12, 15, 18, 21 });
+    CHECK(enumerate(vec_shape<int, 7>{}, 3) == vec{ 0, 3, 6, 9, 12, 15, 18 });
+}
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

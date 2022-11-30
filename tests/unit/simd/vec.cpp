@@ -10,8 +10,15 @@
 
 namespace kfr
 {
+
+static_assert(std::is_same_v<i32x4, std::common_type_t<i32x4, i32x4>>);
+static_assert(std::is_same_v<i32x4, std::common_type_t<i32x4>>);
+static_assert(std::is_same_v<u32x4, std::common_type_t<i32x4, u32x4>>);
+static_assert(std::is_same_v<f64x4, std::common_type_t<i32x4, u32x4, f64x4>>);
+
 inline namespace CMT_ARCH_NAME
 {
+
 TEST(mask_op)
 {
     mask<float, 4> m = make_mask<float>(true, false, true, false);
@@ -53,9 +60,6 @@ bool is_in_range_of(Tin x)
 
 TEST(cast)
 {
-    testo::assert_is_same<i32x4, kfr::common_type<i32x4>>();
-    testo::assert_is_same<u32x4, kfr::common_type<i32x4, u32x4>>();
-    testo::assert_is_same<f64x4, kfr::common_type<i32x4, u32x4, f64x4>>();
 
     CHECK(static_cast<i32x4>(u16x4{ 1, 2, 3, 4 }) == i32x4{ 1, 2, 3, 4 });
 
@@ -63,86 +67,94 @@ TEST(cast)
               vec<float, 4>{ 1.f, 2.f, 3.f, 4.f }, vec<float, 4>{ 11.f, 22.f, 33.f, 44.f } }) ==
           vec<vec<double, 4>, 2>{ vec<double, 4>{ 1., 2., 3., 4. }, vec<double, 4>{ 11., 22., 33., 44. } });
 
-    static_assert(is_convertible<float, f32x4>, "");
-    static_assert(is_convertible<float, f64x8>, "");
-    static_assert(is_convertible<float, u8x3>, "");
+    static_assert(std::is_convertible_v<float, f32x4>, "");
+    static_assert(std::is_convertible_v<float, f64x8>, "");
+    static_assert(std::is_convertible_v<float, u8x3>, "");
 
-    static_assert(is_convertible<u16x4, i32x4>, "");
-    static_assert(!is_convertible<u16x4, i32x3>, "");
-    static_assert(!is_convertible<u16x1, u16x16>, "");
+    static_assert(std::is_convertible_v<u16x4, i32x4>, "");
+    static_assert(!std::is_convertible_v<u16x4, i32x3>, "");
+    static_assert(!std::is_convertible_v<u16x1, u16x16>, "");
 
-    static_assert(is_same<decltype(innercast<f64>(f32x4x4(1))), f64x4x4>, "");
-    static_assert(is_same<decltype(innercast<f64>(f32x4(1))), f64x4>, "");
-    static_assert(is_same<decltype(innercast<f64>(f32(1))), f64>, "");
+    static_assert(std::is_convertible_v<float, vecx<float, 2>>, "");
+    static_assert(std::is_convertible_v<float, vecx<float, 2, 2>>, "");
 
-    // N/A static_assert(is_same<decltype(innercast<f64x4>(f32x4x4(1))), f64x4x4>, "");
-    static_assert(is_same<decltype(innercast<f64x4>(f32x4(1))), f64x4x4>, "");
-    static_assert(is_same<decltype(innercast<f64x4>(f32(1))), f64x4>, "");
+    static_assert(std::is_same_v<decltype(broadcastto<f64>(f32x4x4(1))), f64x4x4>, "");
+    static_assert(std::is_same_v<decltype(broadcastto<f64>(f32x4(1))), f64x4>, "");
+    static_assert(std::is_same_v<decltype(broadcastto<f64>(f32(1))), f64>, "");
 
-    // N/A static_assert(is_same<decltype(elemcast<f64>(f32x4x4(1))), f64x4>, "");
-    static_assert(is_same<decltype(elemcast<f64>(f32x4(1))), f64x4>, "");
+    // N/A static_assert(std::is_same_v<decltype(broadcastto<f64x4>(f32x4x4(1))), f64x4x4>, "");
+    static_assert(std::is_same_v<decltype(broadcastto<f64x4>(f32x4(1))), f64x4x4>, "");
+    static_assert(std::is_same_v<decltype(broadcastto<f64x4>(f32(1))), f64x4>, "");
 
-    static_assert(is_same<decltype(elemcast<f64x4>(f32x4x4(1))), f64x4x4>, "");
-    static_assert(is_same<decltype(elemcast<f64x4>(f32x4(1))), f64x4x4>, "");
+    // N/A static_assert(std::is_same_v<decltype(promoteto<f64>(f32x4x4(1))), f64x4>, "");
+    static_assert(std::is_same_v<decltype(promoteto<f64>(f32x4(1))), f64x4>, "");
+
+    static_assert(std::is_same_v<decltype(promoteto<f64x4>(f32x4x4(1))), f64x4x4>, "");
+    static_assert(std::is_same_v<decltype(promoteto<f64x4>(f32x4(1))), f64x4x4>, "");
+
+    CHECK(cast<vecx<float, 2, 2>>(123.f) == vec{ vec{ 123.f, 123.f }, vec{ 123.f, 123.f } });
+
+    CHECK(promoteto<vecx<float, 2>>(vecx<float, 4>{ 1.f, 2.f, 3.f, 4.f }) ==
+          vec{ vec{ 1.f, 1.f }, vec{ 2.f, 2.f }, vec{ 3.f, 3.f }, vec{ 4.f, 4.f } });
 
     testo::scope s("");
     s.text = ("target_type = u8");
     test_function1(
-        test_catogories::all, [](auto x) { return kfr::innercast<u8>(x); },
+        test_catogories::all, [](auto x) { return kfr::broadcastto<u8>(x); },
         [](auto x) -> u8 { return static_cast<u8>(x); },
         [](auto t, special_value x)
         { return is_in_range_of<u8>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = i8");
     test_function1(
-        test_catogories::all, [](auto x) { return kfr::innercast<i8>(x); },
+        test_catogories::all, [](auto x) { return kfr::broadcastto<i8>(x); },
         [](auto x) -> i8 { return static_cast<i8>(x); },
         [](auto t, special_value x)
         { return is_in_range_of<i8>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = u16");
     test_function1(
-        test_catogories::all, [](auto x) { return kfr::innercast<u16>(x); },
+        test_catogories::all, [](auto x) { return kfr::broadcastto<u16>(x); },
         [](auto x) -> u16 { return static_cast<u16>(x); },
         [](auto t, special_value x)
         { return is_in_range_of<u16>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = i16");
     test_function1(
-        test_catogories::all, [](auto x) { return kfr::innercast<i16>(x); },
+        test_catogories::all, [](auto x) { return kfr::broadcastto<i16>(x); },
         [](auto x) -> i16 { return static_cast<i16>(x); },
         [](auto t, special_value x)
         { return is_in_range_of<i16>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = u32");
     test_function1(
-        test_catogories::all, [](auto x) { return kfr::innercast<u32>(x); },
+        test_catogories::all, [](auto x) { return kfr::broadcastto<u32>(x); },
         [](auto x) -> u32 { return static_cast<u32>(x); },
         [](auto t, special_value x)
         { return is_in_range_of<u32>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = i32");
     test_function1(
-        test_catogories::all, [](auto x) { return kfr::innercast<i32>(x); },
+        test_catogories::all, [](auto x) { return kfr::broadcastto<i32>(x); },
         [](auto x) -> i32 { return static_cast<i32>(x); },
         [](auto t, special_value x)
         { return is_in_range_of<i32>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = u64");
     test_function1(
-        test_catogories::all, [](auto x) { return kfr::innercast<u64>(x); },
+        test_catogories::all, [](auto x) { return kfr::broadcastto<u64>(x); },
         [](auto x) -> u64 { return static_cast<u64>(x); },
         [](auto t, special_value x)
         { return is_in_range_of<u64>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = i64");
     test_function1(
-        test_catogories::all, [](auto x) { return kfr::innercast<i64>(x); },
+        test_catogories::all, [](auto x) { return kfr::broadcastto<i64>(x); },
         [](auto x) -> i64 { return static_cast<i64>(x); },
         [](auto t, special_value x)
         { return is_in_range_of<i64>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = f32");
     test_function1(
-        test_catogories::all, [](auto x) { return kfr::innercast<f32>(x); },
+        test_catogories::all, [](auto x) { return kfr::broadcastto<f32>(x); },
         [](auto x) -> f32 { return static_cast<f32>(x); },
         [](auto t, special_value x)
         { return is_in_range_of<f32>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = f64");
     test_function1(
-        test_catogories::all, [](auto x) { return kfr::innercast<f64>(x); },
+        test_catogories::all, [](auto x) { return kfr::broadcastto<f64>(x); },
         [](auto x) -> f64 { return static_cast<f64>(x); },
         [](auto t, special_value x)
         { return is_in_range_of<f64>(x.get<subtype<typename decltype(t)::type>>()); });
@@ -196,6 +208,12 @@ TEST(masks)
     CHECK(float(v[1]) == maskbits<float>(true));
     CHECK(float(v[2]) == maskbits<float>(false));
     CHECK(float(v[3]) == maskbits<float>(true));
+}
+
+TEST(vec_deduction)
+{
+    vec v{ 1, 2, 3 };
+    static_assert(std::is_same_v<decltype(v), vec<int, 3>>);
 }
 
 } // namespace CMT_ARCH_NAME

@@ -26,8 +26,9 @@
 #pragma once
 
 #include "../base/filter.hpp"
-#include "../base/pointer.hpp"
+#include "../base/handle.hpp"
 #include "../math/hyperbolic.hpp"
+#include "../simd/complex.hpp"
 #include "../simd/impl/function.hpp"
 #include "../simd/operators.hpp"
 #include "../simd/vec.hpp"
@@ -59,7 +60,7 @@ KFR_FUNCTION zpk<T> chebyshev1(int N, identity<T> rp)
     T eps = sqrt(exp10(0.1 * rp) - 1.0);
     T mu  = 1.0 / N * std::asinh(1 / eps);
 
-    univector<T> m = linspace(-N + 1, N + 1, N, false, true);
+    univector<T> m = linspace(-N + 1, N + 1, N, false, ctrue);
 
     univector<T> theta      = c_pi<T> * m / (2 * N);
     univector<complex<T>> p = -csinh(make_complex(mu, theta));
@@ -84,17 +85,17 @@ KFR_FUNCTION zpk<T> chebyshev2(int N, identity<T> rs)
 
     if (N % 2)
     {
-        m = concatenate(linspace(-N + 1, -2, N / 2, true, true), linspace(2, N - 1, N / 2, true, true));
+        m = concatenate(linspace(-N + 1, -2, N / 2, true, ctrue), linspace(2, N - 1, N / 2, true, ctrue));
     }
     else
     {
-        m = linspace(-N + 1, N + 1, N, false, true);
+        m = linspace(-N + 1, N + 1, N, false, ctrue);
     }
 
     univector<complex<T>> z = -cconj(complex<T>(0, 1) / sin(m * c_pi<T> / (2.0 * N)));
 
     univector<complex<T>> p =
-        -cexp(complex<T>(0, 1) * c_pi<T> * linspace(-N + 1, N + 1, N, false, true) / (2 * N));
+        -cexp(complex<T>(0, 1) * c_pi<T> * linspace(-N + 1, N + 1, N, false, ctrue) / (2 * N));
     p = make_complex(sinh(mu) * real(p), cosh(mu) * imag(p));
     p = 1.0 / p;
 
@@ -897,7 +898,8 @@ template <typename T>
 KFR_FUNCTION univector<complex<T>> cplxreal(const univector<complex<T>>& list)
 {
     univector<complex<T>> x = list;
-    std::sort(x.begin(), x.end(), [](const complex<T>& a, const complex<T>& b) { return a.real() < b.real(); });
+    std::sort(x.begin(), x.end(),
+              [](const complex<T>& a, const complex<T>& b) { return a.real() < b.real(); });
     T tol                        = std::numeric_limits<T>::epsilon() * 100;
     univector<complex<T>> result = x;
     for (size_t i = result.size(); i > 1; i--)

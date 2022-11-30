@@ -1,4 +1,4 @@
-/** @addtogroup memory
+/** @addtogroup base
  *  @{
  */
 /*

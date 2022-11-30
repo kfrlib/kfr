@@ -103,7 +103,7 @@ CMT_UNUSED static const char* cpu_name(cpu_t set)
 #ifdef CMT_ARCH_ARM
     static const char* names[] = { "generic", "neon", "neon64" };
 #endif
-    if (set >= cpu_t::lowest && set <= cpu_t::highest)
+    if (CMT_LIKELY(set >= cpu_t::lowest && set <= cpu_t::highest))
         return names[static_cast<size_t>(set)];
     return "-";
 }
@@ -271,7 +271,7 @@ constexpr static size_t minimum_vector_width =
 template <typename T>
 constexpr static size_t vector_capacity = platform<>::simd_register_count* vector_width<T>;
 
-#ifdef CMT_COMPILER_MSVC
+#ifdef CMT_COMPILER_IS_MSVC
 template <typename T>
 constexpr static size_t maximum_vector_size = const_min(static_cast<size_t>(32), vector_width<T> * 2);
 #else

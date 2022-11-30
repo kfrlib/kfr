@@ -94,9 +94,9 @@ struct function<R(Args...)>
 
     function(std::nullptr_t) noexcept {}
 
-    template <typename Fn,
-              typename = enable_if<is_invocable_r<R, Fn, Args...> && !is_same<decay<Fn>, function>>>
-    function(Fn fn) : impl(new details::function_impl<decay<Fn>, R, Args...>(std::move(fn)))
+    template <typename Fn, typename = std::enable_if_t<std::is_invocable_r_v<R, Fn, Args...> &&
+                                                       !std::is_same_v<std::decay_t<Fn>, function>>>
+    function(Fn fn) : impl(new details::function_impl<std::decay_t<Fn>, R, Args...>(std::move(fn)))
     {
     }
 
@@ -145,8 +145,8 @@ inline function<Ret(Args...)> cdispatch(cvals_t<T, v0, values...>, identity<T> v
 {
     if (value == v0)
     {
-        return [=](Args... args)
-                   CMT_INLINE_LAMBDA -> Ret { return fn(cval_t<T, v0>(), std::forward<Args>(args)...); };
+        return [=](Args... args) CMT_INLINE_LAMBDA -> Ret
+        { return fn(cval_t<T, v0>(), std::forward<Args>(args)...); };
     }
     else
     {

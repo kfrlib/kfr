@@ -25,7 +25,7 @@
  */
 #pragma once
 
-#include "../math/clamp.hpp"
+#include "../simd/clamp.hpp"
 #include "../simd/types.hpp"
 #include "../simd/vec.hpp"
 #include "univector.hpp"
@@ -172,18 +172,18 @@ struct audio_sample_traits<f64>
 };
 
 template <typename Tout, typename Tin, typename Tout_traits = audio_sample_traits<Tout>,
-          typename Tin_traits = audio_sample_traits<Tin>, KFR_ENABLE_IF(is_same<Tin, Tout>)>
+          typename Tin_traits = audio_sample_traits<Tin>, KFR_ENABLE_IF(std::is_same_v<Tin, Tout>)>
 inline Tout convert_sample(const Tin& in)
 {
     return in;
 }
 
 template <typename Tout, typename Tin, typename Tout_traits = audio_sample_traits<Tout>,
-          typename Tin_traits = audio_sample_traits<Tin>, KFR_ENABLE_IF(!is_same<Tin, Tout>)>
+          typename Tin_traits = audio_sample_traits<Tin>, KFR_ENABLE_IF(!std::is_same_v<Tin, Tout>)>
 inline Tout convert_sample(const Tin& in)
 {
     constexpr auto scale = Tout_traits::scale / Tin_traits::scale;
-    return innercast<Tout>(clamp(in * scale, -Tout_traits::scale, +Tout_traits::scale));
+    return broadcastto<Tout>(clamp(in * scale, -Tout_traits::scale, +Tout_traits::scale));
 }
 
 /// @brief Deinterleaves and converts audio samples
@@ -202,7 +202,7 @@ void deinterleave(Tout* out[], const Tin* in, size_t channels, size_t size)
 template <typename Tout, univector_tag Tag1, univector_tag Tag2, typename Tin, univector_tag Tag3>
 void deinterleave(univector2d<Tout, Tag1, Tag2>& out, const univector<Tin, Tag3>& in)
 {
-    if (in.empty() || out.empty())
+    if (CMT_UNLIKELY(in.empty() || out.empty()))
         return;
     std::vector<Tout*> ptrs(out.size());
     for (size_t i = 0; i < out.size(); ++i)
@@ -228,7 +228,7 @@ void interleave(Tout* out, const Tin* in[], size_t channels, size_t size)
 template <typename Tout, univector_tag Tag1, typename Tin, univector_tag Tag2, univector_tag Tag3>
 void interleave(univector<Tout, Tag1>& out, const univector2d<Tin, Tag2, Tag3>& in)
 {
-    if (in.empty() || out.empty())
+    if (CMT_UNLIKELY(in.empty() || out.empty()))
         return;
     std::vector<const Tin*> ptrs(in.size());
     for (size_t i = 0; i < in.size(); ++i)
@@ -242,7 +242,7 @@ void interleave(univector<Tout, Tag1>& out, const univector2d<Tin, Tag2, Tag3>& 
 template <typename Tin, univector_tag Tag1, univector_tag Tag2>
 univector<Tin> interleave(const univector2d<Tin, Tag1, Tag2>& in)
 {
-    if (in.empty())
+    if (CMT_UNLIKELY(in.empty()))
         return {};
     univector<Tin> result(in.size() * in[0].size());
     interleave(result, in);
@@ -264,20 +264,24 @@ void convert(Tout* out, const Tin* in, size_t size)
 template <typename Tout, typename Tout_traits = audio_sample_traits<Tout>>
 void convert(Tout* out, const void* in, audio_sample_type in_type, size_t size)
 {
-    cswitch(audio_sample_type_clist{}, in_type, [&](auto t) {
-        using type = typename audio_sample_get_type<val_of(decltype(t)())>::type;
-        convert(out, reinterpret_cast<const type*>(in), size);
-    });
+    cswitch(audio_sample_type_clist{}, in_type,
+            [&](auto t)
+            {
+                using type = typename audio_sample_get_type<val_of(decltype(t)())>::type;
+                convert(out, reinterpret_cast<const type*>(in), size);
+            });
 }
 
 /// @brief Converts audio samples (output format is known at runtime)
 template <typename Tin, typename Tin_traits = audio_sample_traits<Tin>>
 void convert(void* out, audio_sample_type out_type, const Tin* in, size_t size)
 {
-    cswitch(audio_sample_type_clist{}, out_type, [&](auto t) {
-        using type = typename audio_sample_get_type<val_of(decltype(t)())>::type;
-        convert(reinterpret_cast<type*>(out), in, size);
-    });
+    cswitch(audio_sample_type_clist{}, out_type,
+            [&](auto t)
+            {
+                using type = typename audio_sample_get_type<val_of(decltype(t)())>::type;
+                convert(reinterpret_cast<type*>(out), in, size);
+            });
 }
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

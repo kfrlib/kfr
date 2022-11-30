@@ -86,6 +86,12 @@ KFR_INTRINSIC vec<T, N> div(const vec<T, N>& x, const vec<T, N>& y)
     return x.v / y.v;
 }
 KFR_OP_SCALAR2(div, /, , , )
+template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>)>
+KFR_INTRINSIC vec<T, N> mod(const vec<T, N>& x, const vec<T, N>& y)
+{
+    return x.v % y.v;
+}
+KFR_OP_SCALAR2(mod, %, , , )
 
 template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>)>
 KFR_INTRINSIC vec<T, N> band(const vec<T, N>& x, const vec<T, N>& y)

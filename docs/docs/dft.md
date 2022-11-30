@@ -10,7 +10,7 @@ For power of 2 sizes, it uses Fast Fourier Transform.
 
 ### Complex input/output
 
-Apply the FFT to the complex input data: [See how to pass data to KFR](types.md)
+Apply the FFT to the complex input data: [See how to pass data to KFR](basics.md)
 
 ```c++
 // prepare data (0, 1, 2, ..., 255)

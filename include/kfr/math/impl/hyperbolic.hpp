@@ -22,13 +22,13 @@
  */
 #pragma once
 
-#include "../../math/abs.hpp"
-#include "../../math/log_exp.hpp"
-#include "../../math/min_max.hpp"
-#include "../../math/select.hpp"
+#include "../../simd/abs.hpp"
 #include "../../simd/constants.hpp"
 #include "../../simd/impl/function.hpp"
+#include "../../simd/min_max.hpp"
 #include "../../simd/operators.hpp"
+#include "../../simd/select.hpp"
+#include "../log_exp.hpp"
 
 namespace kfr
 {

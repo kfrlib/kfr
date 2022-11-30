@@ -306,6 +306,7 @@ extern char* gets(char* __s);
 #define CMT_COMPILER_MSVC 1
 #define CMT_MSVC_ATTRIBUTES 1
 #define CMT_MSC_VER _MSC_VER
+#define CMT_COMPILER_IS_MSVC 1
 #else
 #define CMT_MSC_VER 0
 #endif
@@ -343,31 +344,74 @@ extern char* gets(char* __s);
 #endif
 #endif
 
+#if defined _MSC_VER && !defined(__clang__) && !defined(CMT_FORCE_INLINE_MSVC)
+#define CMT_NO_FORCE_INLINE 1
+#endif
+
+#if defined(CMT_COMPILER_INTEL) || defined(CMT_COMPILER_CLANG)
+#ifdef CMT_COMPILER_IS_MSVC
+#undef CMT_COMPILER_IS_MSVC
+#endif
+#endif
+
 #if defined(CMT_GNU_ATTRIBUTES)
 
 #define CMT_NODEBUG
-// __attribute__((__nodebug__))
 
-// GCC 9 broke attributes on lambdas.
-#if defined(NDEBUG) && (!defined(__GNUC__) || __GNUC__ != 9)
+#ifndef CMT_NO_FORCE_INLINE
 #define CMT_ALWAYS_INLINE __attribute__((__always_inline__))
 #else
 #define CMT_ALWAYS_INLINE
 #endif
-#define CMT_INLINE __inline__ CMT_ALWAYS_INLINE
-#define CMT_INLINE_MEMBER CMT_ALWAYS_INLINE
+
+#ifdef NDEBUG
+#define CMT_INLINE_IN_RELEASE CMT_ALWAYS_INLINE
+#else
+#define CMT_INLINE_IN_RELEASE
+#endif
+
+#define CMT_INLINE __inline__ CMT_INLINE_IN_RELEASE
+#define CMT_INLINE_MEMBER CMT_INLINE_IN_RELEASE
+#if defined(CMT_COMPILER_GCC) &&                                                                             \
+    (CMT_GCC_VERSION >= 900 && CMT_GCC_VERSION < 904 || CMT_GCC_VERSION >= 1000 && CMT_GCC_VERSION < 1002)
+// Workaround for GCC 9/10 bug https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90333
+#define CMT_INLINE_LAMBDA
+#else
 #define CMT_INLINE_LAMBDA CMT_INLINE_MEMBER
+#endif
 #define CMT_NOINLINE __attribute__((__noinline__))
+#ifndef CMT_NO_FORCE_INLINE
 #define CMT_FLATTEN __attribute__((__flatten__))
+#else
+#define CMT_FLATTEN
+#endif
 #define CMT_RESTRICT __restrict__
+
+#define CMT_LIKELY(...) __builtin_expect(!!(__VA_ARGS__), 1)
+#define CMT_UNLIKELY(...) __builtin_expect(!!(__VA_ARGS__), 0)
 
 #elif defined(CMT_MSVC_ATTRIBUTES)
 
+#ifndef CMT_NO_FORCE_INLINE
+#if _MSC_VER >= 1927 && _MSVC_LANG >= 202002L
+#define CMT_ALWAYS_INLINE [[msvc::forceinline]]
+#else
 #define CMT_ALWAYS_INLINE __forceinline
+#endif
+#else
+#define CMT_ALWAYS_INLINE
+#endif
+
+#ifdef NDEBUG
+#define CMT_INLINE_IN_RELEASE CMT_ALWAYS_INLINE
+#else
+#define CMT_INLINE_IN_RELEASE
+#endif
+
 #define CMT_NODEBUG
-#define CMT_INLINE /*inline*/ __forceinline
-#define CMT_INLINE_MEMBER __forceinline
-#if _MSC_VER >= 1927
+#define CMT_INLINE inline CMT_INLINE_IN_RELEASE
+#define CMT_INLINE_MEMBER CMT_INLINE_IN_RELEASE
+#if _MSC_VER >= 1927 && _MSVC_LANG >= 202002L
 #define CMT_INLINE_LAMBDA [[msvc::forceinline]]
 #else
 #define CMT_INLINE_LAMBDA
@@ -375,6 +419,9 @@ extern char* gets(char* __s);
 #define CMT_NOINLINE __declspec(noinline)
 #define CMT_FLATTEN
 #define CMT_RESTRICT __restrict
+
+#define CMT_LIKELY(...) (__VA_ARGS__)
+#define CMT_UNLIKELY(...) (__VA_ARGS__)
 
 #endif
 
@@ -426,13 +473,15 @@ extern char* gets(char* __s);
 #define CMT_HAS_BUILTIN(builtin) 0
 #endif
 
-#if CMT_HAS_BUILTIN(CMT_ASSUME)
-#define CMT_ASSUME(x) __builtin_assume(x)
-#else
-#define CMT_ASSUME(x)                                                                                        \
+#define CMT_NOOP                                                                                             \
     do                                                                                                       \
     {                                                                                                        \
     } while (0)
+
+#if CMT_HAS_BUILTIN(CMT_ASSUME)
+#define CMT_ASSUME(x) __builtin_assume(x)
+#else
+#define CMT_ASSUME(x) CMT_NOOP
 #endif
 
 #if CMT_HAS_BUILTIN(CMT_ASSUME)
@@ -551,6 +600,8 @@ extern char* gets(char* __s);
 #define CMT_VEC_CC __vectorcall
 #endif
 #endif
+
+#define CMT_PRAGMA(...) _Pragma(#__VA_ARGS__)
 
 #if defined(CMT_GNU_ATTRIBUTES)
 #define CMT_FAST_CC __attribute__((fastcall))

@@ -37,11 +37,5 @@ KFR_FUNCTION T1 modzerobessel(const T1& x)
 {
     return intrinsics::modzerobessel(x);
 }
-
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::modzerobessel, E1> modzerobessel(E1&& x)
-{
-    return { fn::modzerobessel(), std::forward<E1>(x) };
-}
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

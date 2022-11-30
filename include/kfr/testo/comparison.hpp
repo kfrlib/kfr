@@ -16,6 +16,8 @@ CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wexit-time-destructors")
 #endif
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpadded")
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
+CMT_PRAGMA_MSVC(warning(push))
+CMT_PRAGMA_MSVC(warning(disable : 4018))
 
 namespace testo
 {
@@ -62,9 +64,10 @@ inline T& current_epsilon()
     return value;
 }
 
-template <typename T>
+template <typename T = void>
 struct eplison_scope
 {
+    static_assert(std::is_floating_point_v<T>);
     eplison_scope(T scale) { current_epsilon<T>() = std::numeric_limits<T>::epsilon() * scale; }
     ~eplison_scope() { current_epsilon<T>() = saved; }
     T saved = current_epsilon<T>();
@@ -242,4 +245,5 @@ struct make_comparison
 };
 } // namespace testo
 
+CMT_PRAGMA_MSVC(warning(pop))
 CMT_PRAGMA_GNU(GCC diagnostic pop)

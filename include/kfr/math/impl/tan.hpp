@@ -22,12 +22,12 @@
  */
 #pragma once
 
-#include "../../math/abs.hpp"
-#include "../../math/select.hpp"
-#include "../../math/sin_cos.hpp"
+#include "../../simd/abs.hpp"
 #include "../../simd/constants.hpp"
 #include "../../simd/impl/function.hpp"
 #include "../../simd/operators.hpp"
+#include "../../simd/select.hpp"
+#include "../sin_cos.hpp"
 
 namespace kfr
 {
@@ -46,7 +46,7 @@ KFR_INTRINSIC vec<T, N> trig_fold_simple(const vec<T, N>& x_full, mask<T, N>& in
     vec<T, N> scaled = y / pi_14;
 
     vec<T, N> k_real = floor(scaled);
-    vec<IT, N> k     = innercast<IT>(k_real);
+    vec<IT, N> k     = broadcastto<IT>(k_real);
 
     vec<T, N> x = y - k_real * pi_14;
 
@@ -143,6 +143,9 @@ KFR_INTRINSIC flt_type<T> tandeg(const T& x)
     return tan(x * c_degtorad<flt_type<T>>);
 }
 } // namespace intrinsics
+namespace fn
+{
+}
 KFR_I_FN(tan)
 KFR_I_FN(tandeg)
 } // namespace CMT_ARCH_NAME

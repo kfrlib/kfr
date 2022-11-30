@@ -23,6 +23,8 @@
   disclosing the source code of your own applications.
   See https://www.kfrlib.com for details.
  */
+#include "../../base/simd_expressions.hpp"
+#include "../../simd/complex.hpp"
 #include "../convolution.hpp"
 
 namespace kfr
@@ -49,7 +51,7 @@ univector<T> convolve(const univector_ref<const T>& src1, const univector_ref<co
     dft->execute(src2padded, src2padded, temp);
     src1padded = src1padded * src2padded;
     dft->execute(src1padded, src1padded, temp, true);
-    const ST invsize = reciprocal<ST>(size);
+    const ST invsize = reciprocal<ST>(static_cast<ST>(size));
     return truncate(real(src1padded), src1.size() + src2.size() - 1) * invsize;
 }
 
@@ -68,7 +70,7 @@ univector<T> correlate(const univector_ref<const T>& src1, const univector_ref<c
     dft->execute(src2padded, src2padded, temp);
     src1padded = src1padded * src2padded;
     dft->execute(src1padded, src1padded, temp, true);
-    const ST invsize = reciprocal<ST>(size);
+    const ST invsize = reciprocal<ST>(static_cast<ST>(size));
     return truncate(real(src1padded), src1.size() + src2.size() - 1) * invsize;
 }
 
@@ -105,7 +107,7 @@ void convolve_filter<T>::set_data(const univector_ref<const T>& data)
     segments.resize((data_size + block_size - 1) / block_size);
     ir_segments.resize(segments.size());
     univector<T> input(fft.size);
-    const ST ifftsize = reciprocal(ST(fft.size));
+    const ST ifftsize = reciprocal(static_cast<ST>(fft.size));
     for (size_t i = 0; i < ir_segments.size(); i++)
     {
         segments[i].resize(fft.csize());
@@ -184,7 +186,7 @@ void convolve_filter<T>::process_buffer(T* output, const T* input, size_t size)
 
         // z_k = y_k + overlap
         process(make_univector(output + processed, processing),
-                scratch2.slice(input_position) + overlap.slice(input_position));
+                scratch2.slice(input_position, processing) + overlap.slice(input_position, processing));
 
         input_position += processing;
         processed += processing;

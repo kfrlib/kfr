@@ -113,24 +113,22 @@ enum class datatype : int
 
 constexpr inline datatype operator|(datatype x, datatype y)
 {
-    using type = underlying_type<datatype>;
+    using type = std::underlying_type_t<datatype>;
     return static_cast<datatype>(static_cast<type>(x) | static_cast<type>(y));
 }
 
 constexpr inline datatype operator&(datatype x, datatype y)
 {
-    using type = underlying_type<datatype>;
+    using type = std::underlying_type_t<datatype>;
     return static_cast<datatype>(static_cast<type>(x) & static_cast<type>(y));
 }
 
 template <typename T>
-constexpr inline datatype typeclass = is_floating_point<typename compound_type_traits<T>::subtype>
-                                          ? datatype::f
-                                          : is_integral<typename compound_type_traits<T>::subtype>
-                                                ? (is_unsigned<typename compound_type_traits<T>::subtype>
-                                                       ? datatype::u
-                                                       : datatype::i)
-                                                : datatype();
+constexpr inline datatype typeclass =
+    std::is_floating_point_v<typename compound_type_traits<T>::subtype> ? datatype::f
+    : std::is_integral_v<typename compound_type_traits<T>::subtype>
+        ? (std::is_unsigned_v<typename compound_type_traits<T>::subtype> ? datatype::u : datatype::i)
+        : datatype();
 
 template <typename T>
 constexpr inline bool is_f_class = typeclass<T> == datatype::f;
@@ -158,7 +156,7 @@ using utype =
     typename compound_type_traits<T>::template deep_rebind<unsigned_type<typebits<deep_subtype<T>>::bits>>;
 
 template <typename T>
-using uitype = conditional<is_i_class<deep_subtype<T>>, T, utype<T>>;
+using uitype = std::conditional_t<is_i_class<deep_subtype<T>>, T, utype<T>>;
 
 template <typename T>
 using fsubtype = ftype<subtype<T>>;
@@ -171,7 +169,7 @@ namespace details
 template <typename T>
 struct flt_type_impl
 {
-    using type = conditional<sizeof(T) <= 2, float, fbase>;
+    using type = std::conditional_t<sizeof(T) <= 2, float, fbase>;
 };
 
 template <>

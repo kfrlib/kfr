@@ -1,4 +1,4 @@
-/** @addtogroup cometa
+/** @addtogroup memory
  *  @{
  */
 #pragma once
@@ -188,13 +188,13 @@ struct autofree
 #ifdef KFR_USE_STD_ALLOCATION
 
 template <typename T>
-using allocator = std::allocator<T>;
+using data_allocator = std::allocator<T>;
 
 #else
 
 /// @brief Aligned allocator
 template <typename T>
-struct allocator
+struct data_allocator
 {
     using value_type      = T;
     using pointer         = T*;
@@ -207,12 +207,12 @@ struct allocator
     template <typename U>
     struct rebind
     {
-        using other = allocator<U>;
+        using other = data_allocator<U>;
     };
-    constexpr allocator() CMT_NOEXCEPT                 = default;
-    constexpr allocator(const allocator&) CMT_NOEXCEPT = default;
+    constexpr data_allocator() CMT_NOEXCEPT                      = default;
+    constexpr data_allocator(const data_allocator&) CMT_NOEXCEPT = default;
     template <typename U>
-    constexpr allocator(const allocator<U>&) CMT_NOEXCEPT
+    constexpr data_allocator(const data_allocator<U>&) CMT_NOEXCEPT
     {
     }
     pointer allocate(size_type n) const
@@ -226,12 +226,12 @@ struct allocator
 };
 
 template <typename T1, typename T2>
-constexpr inline bool operator==(const allocator<T1>&, const allocator<T2>&) CMT_NOEXCEPT
+constexpr inline bool operator==(const data_allocator<T1>&, const data_allocator<T2>&) CMT_NOEXCEPT
 {
     return true;
 }
 template <typename T1, typename T2>
-constexpr inline bool operator!=(const allocator<T1>&, const allocator<T2>&) CMT_NOEXCEPT
+constexpr inline bool operator!=(const data_allocator<T1>&, const data_allocator<T2>&) CMT_NOEXCEPT
 {
     return false;
 }

@@ -432,7 +432,7 @@ struct fft_stage_impl : dft_stage<T>
 {
     fft_stage_impl(size_t stage_size)
     {
-        this->name       = type_name<decltype(*this)>();
+        this->name       = dft_name(this);
         this->radix      = 4;
         this->stage_size = stage_size;
         this->repeats    = 4;
@@ -471,7 +471,7 @@ struct fft_final_stage_impl : dft_stage<T>
 {
     fft_final_stage_impl(size_t)
     {
-        this->name       = type_name<decltype(*this)>();
+        this->name       = dft_name(this);
         this->radix      = size;
         this->stage_size = size;
         this->out_offset = size;
@@ -515,7 +515,7 @@ struct fft_final_stage_impl : dft_stage<T>
         final_stage<inverse>(csize<size>, 1, cbool<splitin>, out, in, twiddle);
     }
 
-    template <bool inverse, typename U = T, KFR_ENABLE_IF(is_same<U, float>)>
+    template <bool inverse, typename U = T, KFR_ENABLE_IF(std::is_same_v<U, float>)>
     KFR_MEM_INTRINSIC void final_stage(csize_t<32>, size_t invN, cfalse_t, complex<T>* out, const complex<T>*,
                                        const complex<T>*& twiddle)
     {
@@ -523,7 +523,7 @@ struct fft_final_stage_impl : dft_stage<T>
                     cbool_t<prefetch>(), cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
     }
 
-    template <bool inverse, typename U = T, KFR_ENABLE_IF(is_same<U, float>)>
+    template <bool inverse, typename U = T, KFR_ENABLE_IF(std::is_same_v<U, float>)>
     KFR_MEM_INTRINSIC void final_stage(csize_t<16>, size_t invN, cfalse_t, complex<T>* out, const complex<T>*,
                                        const complex<T>*& twiddle)
     {
@@ -568,7 +568,7 @@ struct fft_reorder_stage_impl : dft_stage<T>
 {
     fft_reorder_stage_impl(size_t stage_size)
     {
-        this->name       = type_name<decltype(*this)>();
+        this->name       = dft_name(this);
         this->stage_size = stage_size;
         this->user       = ilog2(stage_size);
         this->data_size  = 0;
@@ -590,7 +590,7 @@ struct fft_specialization;
 template <typename T>
 struct fft_specialization<T, 1> : dft_stage<T>
 {
-    fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
+    fft_specialization(size_t) { this->name = dft_name(this); }
 
     constexpr static bool aligned = false;
     DFT_STAGE_FN
@@ -607,7 +607,7 @@ struct fft_specialization<T, 1> : dft_stage<T>
 template <typename T>
 struct fft_specialization<T, 2> : dft_stage<T>
 {
-    fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
+    fft_specialization(size_t) { this->name = dft_name(this); }
 
     constexpr static bool aligned = false;
     DFT_STAGE_FN
@@ -624,7 +624,7 @@ struct fft_specialization<T, 2> : dft_stage<T>
 template <typename T>
 struct fft_specialization<T, 3> : dft_stage<T>
 {
-    fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
+    fft_specialization(size_t) { this->name = dft_name(this); }
 
     constexpr static bool aligned = false;
     DFT_STAGE_FN
@@ -640,7 +640,7 @@ struct fft_specialization<T, 3> : dft_stage<T>
 template <typename T>
 struct fft_specialization<T, 4> : dft_stage<T>
 {
-    fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
+    fft_specialization(size_t) { this->name = dft_name(this); }
 
     constexpr static bool aligned = false;
     DFT_STAGE_FN
@@ -656,7 +656,7 @@ struct fft_specialization<T, 4> : dft_stage<T>
 template <typename T>
 struct fft_specialization<T, 5> : dft_stage<T>
 {
-    fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
+    fft_specialization(size_t) { this->name = dft_name(this); }
 
     constexpr static bool aligned = false;
     DFT_STAGE_FN
@@ -672,7 +672,7 @@ struct fft_specialization<T, 5> : dft_stage<T>
 template <typename T>
 struct fft_specialization<T, 6> : dft_stage<T>
 {
-    fft_specialization(size_t) { this->name = type_name<decltype(*this)>(); }
+    fft_specialization(size_t) { this->name = dft_name(this); }
 
     constexpr static bool aligned = false;
     DFT_STAGE_FN
@@ -689,7 +689,7 @@ struct fft_specialization<double, 7> : dft_stage<double>
     using T = double;
     fft_specialization(size_t)
     {
-        this->name       = type_name<decltype(*this)>();
+        this->name       = dft_name(this);
         this->stage_size = 128;
         this->data_size  = align_up(sizeof(complex<T>) * 128 * 3 / 2, platform<>::native_cache_alignment);
     }
@@ -730,7 +730,7 @@ struct fft_specialization<float, 7> : dft_stage<float>
     using T = float;
     fft_specialization(size_t)
     {
-        this->name       = type_name<decltype(*this)>();
+        this->name       = dft_name(this);
         this->stage_size = 128;
         this->data_size  = align_up(sizeof(complex<T>) * 128 * 3 / 2, platform<>::native_cache_alignment);
     }
@@ -769,7 +769,7 @@ struct fft_specialization<float, 8> : dft_stage<float>
 {
     fft_specialization(size_t)
     {
-        this->name      = type_name<decltype(*this)>();
+        this->name      = dft_name(this);
         this->temp_size = sizeof(complex<float>) * 256;
     }
 
@@ -812,7 +812,7 @@ struct fft_specialization<double, 8> : fft_final_stage_impl<double, false, 256>
     using T = double;
     fft_specialization(size_t stage_size) : fft_final_stage_impl<double, false, 256>(stage_size)
     {
-        this->name = type_name<decltype(*this)>();
+        this->name = dft_name(this);
     }
 
     DFT_STAGE_FN
@@ -830,7 +830,7 @@ struct fft_specialization<T, 9> : fft_final_stage_impl<T, false, 512>
 {
     fft_specialization(size_t stage_size) : fft_final_stage_impl<T, false, 512>(stage_size)
     {
-        this->name = type_name<decltype(*this)>();
+        this->name = dft_name(this);
     }
 
     DFT_STAGE_FN
@@ -848,7 +848,7 @@ struct fft_specialization<T, 10> : fft_final_stage_impl<T, false, 1024>
 {
     fft_specialization(size_t stage_size) : fft_final_stage_impl<T, false, 1024>(stage_size)
     {
-        this->name = type_name<decltype(*this)>();
+        this->name = dft_name(this);
     }
 
     DFT_STAGE_FN
@@ -951,17 +951,21 @@ KFR_INTRINSIC void init_fft(dft_plan<T>* self, size_t size, dft_order)
     const size_t log2n = ilog2(size);
     cswitch(
         csizes_t<1, 2, 3, 4, 5, 6, 7, 8, 9, 10>(), log2n,
-        [&](auto log2n) {
+        [&](auto log2n)
+        {
             (void)log2n;
             constexpr size_t log2nv = val_of(decltype(log2n)());
             add_stage<intrinsics::fft_specialization<T, log2nv>>(self, size);
         },
-        [&]() {
-            cswitch(cfalse_true, is_even(log2n), [&](auto is_even) {
-                make_fft(self, size, is_even, ctrue);
-                constexpr size_t is_evenv = val_of(decltype(is_even)());
-                add_stage<intrinsics::fft_reorder_stage_impl<T, is_evenv>>(self, size);
-            });
+        [&]()
+        {
+            cswitch(cfalse_true, is_even(log2n),
+                    [&](auto is_even)
+                    {
+                        make_fft(self, size, is_even, ctrue);
+                        constexpr size_t is_evenv = val_of(decltype(is_even)());
+                        add_stage<intrinsics::fft_reorder_stage_impl<T, is_evenv>>(self, size);
+                    });
         });
 }
 
@@ -970,15 +974,19 @@ KFR_INTRINSIC void generate_real_twiddles(dft_plan_real<T>* self, size_t size)
 {
     using namespace intrinsics;
     constexpr size_t width = vector_width<T> * 2;
-    block_process(size / 4, csizes_t<width, 1>(), [=](size_t i, auto w) {
-        constexpr size_t width = val_of(decltype(w)());
-        cwrite<width>(self->rtwiddle.data() + i,
-                      cossin(dup(-constants<T>::pi * ((enumerate<T, width>() + i + size / 4) / (size / 2)))));
-    });
+    block_process(size / 4, csizes_t<width, 1>(),
+                  [=](size_t i, auto w)
+                  {
+                      constexpr size_t width = val_of(decltype(w)());
+                      cwrite<width>(self->rtwiddle.data() + i,
+                                    cossin(dup(-constants<T>::pi *
+                                               ((enumerate<T, width>() + i + size / 4) / (size / 2)))));
+                  });
 }
 
 template <typename T>
-#if (defined CMT_ARCH_X32 && defined CMT_ARCH_X86 && defined __clang__) && ((defined __APPLE__) || (__clang_major__ == 8))
+#if (defined CMT_ARCH_X32 && defined CMT_ARCH_X86 && defined __clang__) &&                                   \
+    ((defined __APPLE__) || (__clang_major__ == 8))
 // Fix for Clang 8.0 bug (x32 with FMA instructions)
 // Xcode has different versions but x86 is very rare on macOS these days, 
 // so disable inlining and FMA for x32 macOS and Clang 8.x
@@ -997,20 +1005,22 @@ to_fmt(size_t real_size, const complex<T>* rtwiddle, complex<T>* out, const comp
     const cvec<T, 1> dc    = cread<1>(out);
     const size_t count     = csize / 2;
 
-    block_process(count - 1, csizes_t<width, 1>(), [&](size_t i, auto w) {
-        i++;
-        constexpr size_t width    = val_of(decltype(w)());
-        constexpr size_t widthm1  = width - 1;
-        const cvec<T, width> tw   = cread<width>(rtwiddle + i);
-        const cvec<T, width> fpk  = cread<width>(in + i);
-        const cvec<T, width> fpnk = reverse<2>(negodd(cread<width>(in + csize - i - widthm1)));
+    block_process(count - 1, csizes_t<width, 1>(),
+                  [&](size_t i, auto w)
+                  {
+                      i++;
+                      constexpr size_t width    = val_of(decltype(w)());
+                      constexpr size_t widthm1  = width - 1;
+                      const cvec<T, width> tw   = cread<width>(rtwiddle + i);
+                      const cvec<T, width> fpk  = cread<width>(in + i);
+                      const cvec<T, width> fpnk = reverse<2>(negodd(cread<width>(in + csize - i - widthm1)));
 
-        const cvec<T, width> f1k = fpk + fpnk;
-        const cvec<T, width> f2k = fpk - fpnk;
-        const cvec<T, width> t   = cmul(f2k, tw);
-        cwrite<width>(out + i, T(0.5) * (f1k + t));
-        cwrite<width>(out + csize - i - widthm1, reverse<2>(negodd(T(0.5) * (f1k - t))));
-    });
+                      const cvec<T, width> f1k = fpk + fpnk;
+                      const cvec<T, width> f2k = fpk - fpnk;
+                      const cvec<T, width> t   = cmul(f2k, tw);
+                      cwrite<width>(out + i, T(0.5) * (f1k + t));
+                      cwrite<width>(out + csize - i - widthm1, reverse<2>(negodd(T(0.5) * (f1k - t))));
+                  });
 
     {
         size_t k              = csize / 2;
@@ -1030,7 +1040,8 @@ to_fmt(size_t real_size, const complex<T>* rtwiddle, complex<T>* out, const comp
 }
 
 template <typename T>
-#if (defined CMT_ARCH_X32 && defined CMT_ARCH_X86 && defined __clang__) && ((defined __APPLE__) || (__clang_major__ == 8))
+#if (defined CMT_ARCH_X32 && defined CMT_ARCH_X86 && defined __clang__) &&                                   \
+    ((defined __APPLE__) || (__clang_major__ == 8))
 // Fix for Clang 8.0 bug (x32 with FMA instructions)
 // Xcode has different versions but x86 is very rare on macOS these days, 
 // so disable inlining and FMA for x32 macOS and Clang 8.x
@@ -1059,20 +1070,22 @@ void from_fmt(size_t real_size, complex<T>* rtwiddle, complex<T>* out, const com
     constexpr size_t width = vector_width<T> * 2;
     const size_t count     = csize / 2;
 
-    block_process(count - 1, csizes_t<width, 1>(), [&](size_t i, auto w) {
-        i++;
-        constexpr size_t width    = val_of(decltype(w)());
-        constexpr size_t widthm1  = width - 1;
-        const cvec<T, width> tw   = cread<width>(rtwiddle + i);
-        const cvec<T, width> fpk  = cread<width>(in + i);
-        const cvec<T, width> fpnk = reverse<2>(negodd(cread<width>(in + csize - i - widthm1)));
+    block_process(count - 1, csizes_t<width, 1>(),
+                  [&](size_t i, auto w)
+                  {
+                      i++;
+                      constexpr size_t width    = val_of(decltype(w)());
+                      constexpr size_t widthm1  = width - 1;
+                      const cvec<T, width> tw   = cread<width>(rtwiddle + i);
+                      const cvec<T, width> fpk  = cread<width>(in + i);
+                      const cvec<T, width> fpnk = reverse<2>(negodd(cread<width>(in + csize - i - widthm1)));
 
-        const cvec<T, width> f1k = fpk + fpnk;
-        const cvec<T, width> f2k = fpk - fpnk;
-        const cvec<T, width> t   = cmul_conj(f2k, tw);
-        cwrite<width>(out + i, f1k + t);
-        cwrite<width>(out + csize - i - widthm1, reverse<2>(negodd(f1k - t)));
-    });
+                      const cvec<T, width> f1k = fpk + fpnk;
+                      const cvec<T, width> f2k = fpk - fpnk;
+                      const cvec<T, width> t   = cmul_conj(f2k, tw);
+                      cwrite<width>(out + i, f1k + t);
+                      cwrite<width>(out + csize - i - widthm1, reverse<2>(negodd(f1k - t)));
+                  });
 
     {
         size_t k              = csize / 2;
@@ -1093,12 +1106,14 @@ KFR_INTRINSIC void initialize_stages(dft_plan<T>* self)
     {
         init_fft(self, self->size, dft_order::normal);
     }
-#ifndef KFR_DFT_NO_NPo2
     else
     {
+#ifndef KFR_DFT_NO_NPo2
         init_dft(self, self->size, dft_order::normal);
-    }
+#else
+        KFR_REPORT_LOGIC_ERROR("Non-power of 2 FFT is disabled but ", self->size, " size is requested");
 #endif
+    }
 }
 
 template <typename T>
@@ -1125,12 +1140,15 @@ public:
         constexpr size_t width = vector_width<T> * 2;
         size_t real_size       = this->stage_size;
         complex<T>* rtwiddle   = ptr_cast<complex<T>>(this->data);
-        block_process(real_size / 4, csizes_t<width, 1>(), [=](size_t i, auto w) {
-            constexpr size_t width = val_of(decltype(w)());
-            cwrite<width>(rtwiddle + i,
-                          cossin(dup(-constants<T>::pi *
-                                     ((enumerate<T, width>() + i + real_size / 4) / (real_size / 2)))));
-        });
+        block_process(real_size / 4, csizes_t<width, 1>(),
+                      [=](size_t i, auto w)
+                      {
+                          constexpr size_t width = val_of(decltype(w)());
+                          cwrite<width>(
+                              rtwiddle + i,
+                              cossin(dup(-constants<T>::pi *
+                                         ((enumerate<T, width>() + i + real_size / 4) / (real_size / 2)))));
+                      });
     }
     void do_execute(cdirect_t, complex<T>* out, const complex<T>* in, u8* temp) override
     {
