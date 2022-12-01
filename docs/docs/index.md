@@ -39,3 +39,7 @@
 ## Function reference
 
 * [Function reference](auto/refindex.md)
+
+## KFR 4
+
+For KFR 4 documentation, see https://kfr.dev/docs/v4

@@ -116,7 +116,7 @@ See [fft benchmark](https://github.com/kfrlib/fft-benchmark) for details about b
 
 ### Biquad
 
- (*Higher is better*)
+(*Higher is better*)
 
 ![Biquad Performance](img/biquad.svg)
 
@@ -124,7 +124,11 @@ See [fft benchmark](https://github.com/kfrlib/fft-benchmark) for details about b
 
 Documentation home:
 
-https://www.kfrlib.com/newdocs/
+KFR 5 (latest)
+https://www.kfrlib.com/docs/latest/
+
+KFR 4
+https://www.kfrlib.com/docs/v4/
 
 Built with
 * [cxxdox - generates markdown docs from C++](https://github.com/kfrlib/cxxdox)
@@ -137,18 +141,8 @@ Built with
 
 `master` - current stable version passing all compiler/architecture tests.
 
+`v4` - previous version of KFR (no new features here, fixes only)
 
-## Tests
-
-Every commit is tested in various OS, compilers, compiler settings etc.
-
-You can run the tests using these commands:
-
-```bash
-cd <path_to_cmake_build_directory>
-cd tests
-ctest -V
-```
 
 ## License
 
