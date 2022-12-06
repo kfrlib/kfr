@@ -195,7 +195,7 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_slice<Arg>& self, const sh
     return static_cast<vec<T, N>>(get_elements(self.first(), index.add(self.start), sh));
 }
 
-template <typename Arg, index_t NDims, index_t Axis, size_t N,
+template <typename Arg, index_t NDims, index_t Axis, size_t N, enable_if_output_expression<Arg>* = nullptr,
           typename T = typename expression_traits<expression_slice<Arg>>::value_type>
 KFR_INTRINSIC void set_elements(const expression_slice<Arg>& self, const shape<NDims>& index,
                                 const axis_params<Axis, N>& sh, const identity<vec<T, N>>& value)

@@ -7,6 +7,7 @@
 * [Basics](basics.md)
 * [Expressions](expressions.md)
 * [C API](capi.md)
+* [Upgrade to KFR 5](upgrade5.md)
 
 ## Guides
 

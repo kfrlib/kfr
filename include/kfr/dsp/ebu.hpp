@@ -266,8 +266,8 @@ public:
     {
         KFR_LOGIC_CHECK(!channels.empty(), "channels must not be empty");
         KFR_LOGIC_CHECK(sample_rate > 0, "sample_rate must be greater than 0");
-        KFR_LOGIC_CHECK(packet_size_factor >= 1 && packet_size_factor <= 3,
-                        "packet_size_factor must be in range [1..3]");
+        KFR_LOGIC_CHECK(packet_size_factor >= 1 && packet_size_factor <= 6,
+                        "packet_size_factor must be in range [1..6]");
         for (Speaker sp : channels)
         {
             m_channels.emplace_back(sample_rate, sp, packet_size_factor, T(1));
