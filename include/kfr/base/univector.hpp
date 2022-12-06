@@ -399,7 +399,7 @@ struct univector<T, tag_dynamic_vector>
     using std::vector<T, data_allocator<T>>::size;
     using std::vector<T, data_allocator<T>>::vector;
     using size_type = size_t;
-#if !defined CMT_COMPILER_MSVC || defined CMT_COMPILER_CLANG
+#if !defined CMT_COMPILER_IS_MSVC
     univector(univector& v) : univector(const_cast<const univector&>(v)) {}
 #endif
     univector(const univector& v)   = default;
@@ -449,11 +449,26 @@ struct univector<T, tag_dynamic_vector>
         return index < this->size() ? this->operator[](index) : fallback_value;
     }
     using univector_base<T, univector, is_vec_element<T>>::operator=;
+#ifdef CMT_COMPILER_IS_MSVC
+    univector& operator=(const univector& other)
+    {
+        this->~univector();
+        new (this) univector(other);
+        return *this;
+    }
+    univector& operator=(univector&& other) 
+    {
+        this->~univector();
+        new (this) univector(std::move(other));
+        return *this;
+    }
+#else
     univector& operator=(const univector&) = default;
     univector& operator=(univector&&) = default;
-    KFR_MEM_INTRINSIC univector& operator=(univector& input)
+#endif
+    KFR_MEM_INTRINSIC univector& operator=(univector& other)
     {
-        return operator=(std::as_const(input));
+        return operator=(std::as_const(other));
     }
     template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
     KFR_MEM_INTRINSIC univector& operator=(Input&& input)

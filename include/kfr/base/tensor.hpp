@@ -362,11 +362,13 @@ public:
     {
         this->~tensor();
         new (this) tensor(src);
+        return *this;
     }
     tensor& operator=(tensor&& src) &
     {
         this->~tensor();
         new (this) tensor(std::move(src));
+        return *this;
     }
 #else
     tensor& operator=(const tensor& src) & = default;
