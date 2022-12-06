@@ -450,6 +450,11 @@ struct univector<T, tag_dynamic_vector>
     }
     using univector_base<T, univector, is_vec_element<T>>::operator=;
     univector& operator=(const univector&) = default;
+    univector& operator=(univector&&) = default;
+    KFR_MEM_INTRINSIC univector& operator=(univector& input)
+    {
+        return operator=(std::as_const(input));
+    }
     template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
     KFR_MEM_INTRINSIC univector& operator=(Input&& input)
     {
