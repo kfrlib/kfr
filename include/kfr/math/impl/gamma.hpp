@@ -50,7 +50,7 @@ KFR_INTRINSIC vec<T, N> gamma(const vec<T, N>& z)
     vec<T, N> accm         = gamma_precalc<T>[0];
     CMT_LOOP_UNROLL
     for (size_t k = 1; k < Count; k++)
-        accm += gamma_precalc<T>[k] / (z + innercast<utype<T>>(k));
+        accm += gamma_precalc<T>[k] / (z + broadcastto<utype<T>>(k));
     accm *= exp(-(z + Count)) * pow(z + Count, z + 0.5);
     return accm / z;
 }

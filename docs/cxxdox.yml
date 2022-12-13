@@ -16,6 +16,7 @@ clang:
     - '-DKFR_ENABLE_FLAC=1'
     - '-DCMT_FORCE_GENERIC_CPU=1'
     - '-std=gnu++17'
+    - '-DDOCUMENTATION'
 
 input_directory: ../include/kfr
 
@@ -26,8 +27,10 @@ repository: https://github.com/kfrlib/kfr/blob/{TAG}/include/kfr/{FILE}#L{LINE}
 groups:
   filter: "Filter API"
   cpuid: "Runtime CPU detection"
-  cometa: "CoMeta - metaprogramming"
-  testo: "Testo - unit test"
+  cometa: "CoMeta"
+  testo: "Testo - Unit testing"
+  univector: "Vector"
+  tensor: "Tensor"
   dft: "DFT"
   binary_io: "Generic IO"
   audio_io: "Audio IO"
@@ -61,6 +64,6 @@ groups:
   expressions: "Expressions"
   generators: "Generator expressions"
   random: "PRNG functions and expressions"
-  array: "Array functions"
+  reducing: "Reducing functions"
   utility: "Utility functions"
   

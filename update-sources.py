@@ -30,7 +30,15 @@ cmake = """
 # Use update-sources.py
 """
 
-list_sources("KFR_SRC", "include", ['*.hpp', '*.h', '*.i', '*.inc'])
+list_sources("KFR_SRC", "include", ['*.hpp', '*.h'])
+list_sources("KFR_SIMD_SRC", "include/kfr/simd", ['*.hpp', '*.h'])
+list_sources("KFR_MATH_SRC", "include/kfr/math", ['*.hpp', '*.h'])
+list_sources("KFR_BASE_SRC", "include/kfr/base", ['*.hpp', '*.h'])
+list_sources("KFR_DSP_SRC", "include/kfr/dsp", ['*.hpp', '*.h'])
+list_sources("KFR_IO_SRC", "include/kfr/io", ['*.hpp', '*.h'])
+list_sources("KFR_RUNTIME_SRC", "include/kfr/runtime", ['*.hpp', '*.h'])
+list_sources("KFR_GRAPHICS_SRC", "include/kfr/graphics", ['*.hpp', '*.h'])
+list_sources("KFR_SRC", "include", ['*.hpp', '*.h'])
 list_sources("KFR_DFT_SRC", "include/kfr/dft", ['*.cpp'], ["dft-src.cpp"])
 list_sources("KFR_IO_SRC", "include/kfr/io", ['*.cpp'])
 

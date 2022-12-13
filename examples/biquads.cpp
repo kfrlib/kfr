@@ -5,7 +5,9 @@
  */
 
 #include <kfr/base.hpp>
-#include <kfr/dsp.hpp>
+#include <kfr/dsp/biquad.hpp>
+#include <kfr/dsp/biquad_design.hpp>
+#include <kfr/dsp/special.hpp>
 #include <kfr/io.hpp>
 
 using namespace kfr;

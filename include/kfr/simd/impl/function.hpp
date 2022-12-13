@@ -22,7 +22,6 @@
  */
 #pragma once
 
-#include "../../base/expression.hpp"
 #include "../shuffle.hpp"
 #include "../types.hpp"
 #include "../vec.hpp"
@@ -39,11 +38,11 @@ inline namespace CMT_ARCH_NAME
     template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>)>                                           \
     KFR_INTRINSIC vec<flt_type<T>, N> fn(const vec<T, N>& a) CMT_NOEXCEPT                                    \
     {                                                                                                        \
-        return intrinsics::fn(elemcast<flt_type<T>>(a));                                                     \
+        return intrinsics::fn(promoteto<flt_type<T>>(a));                                                    \
     }
 
 #define KFR_HANDLE_SCALAR(fn)                                                                                \
-    template <typename T1, typename... Args, typename Tout = ::kfr::common_type<T1, Args...>,                \
+    template <typename T1, typename... Args, typename Tout = std::common_type_t<T1, Args...>,                \
               KFR_ENABLE_IF(!(is_vec<T1> || (is_vec<Args> || ...)))>                                         \
     KFR_INTRINSIC Tout fn(const T1& a, const Args&... b) CMT_NOEXCEPT                                        \
     {                                                                                                        \
@@ -52,7 +51,7 @@ inline namespace CMT_ARCH_NAME
     }
 
 #define KFR_HANDLE_SCALAR_1_T(fn, Tout)                                                                      \
-    template <typename T1, typename... Args, typename T = ::kfr::common_type<T1, Args...>,                   \
+    template <typename T1, typename... Args, typename T = std::common_type_t<T1, Args...>,                   \
               KFR_ENABLE_IF(!(is_vec<T1> || (is_vec<Args> || ...)))>                                         \
     KFR_INTRINSIC Tout fn(const T1& a, const Args&... b) CMT_NOEXCEPT                                        \
     {                                                                                                        \
@@ -61,7 +60,7 @@ inline namespace CMT_ARCH_NAME
     }
 
 #define KFR_HANDLE_ARGS_T(fn, Tout)                                                                          \
-    template <typename T1, typename... Args, typename T = ::kfr::common_type<T1, Args...>,                   \
+    template <typename T1, typename... Args, typename T = std::common_type_t<T1, Args...>,                   \
               KFR_ENABLE_IF((is_vec<T1> || (is_vec<Args> || ...)))>                                          \
     KFR_INTRINSIC Tout fn(const T1& a, const Args&... b) CMT_NOEXCEPT                                        \
     {                                                                                                        \
@@ -318,7 +317,7 @@ KFR_INTRINSIC void intrin(vec<T, N>& result, const T& a, const vec<T, N>& b, Fn&
     }
 
 template <typename T>
-using vec1 = conditional<is_vec<T>, T, vec<T, 1>>;
+using vec1 = std::conditional_t<is_vec<T>, T, vec<T, 1>>;
 
 template <typename T>
 inline const T& to_scalar(const T& value) CMT_NOEXCEPT

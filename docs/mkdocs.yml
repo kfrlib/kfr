@@ -4,6 +4,18 @@ theme:
   features:
     - navigation.tabs
     - navigation.top
+  palette: 
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
     
 extra:
   search:
@@ -32,6 +44,7 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.highlight
   - pymdownx.details
+  - pymdownx.magiclink
   - pymdownx.tabbed:
       alternate_style: true
 
@@ -45,23 +58,32 @@ extra_css:
 
 repo_url: https://github.com/kfrlib/kfr
 repo_name: KFR
+edit_uri: edit/master/docs/
 
 nav:
-  - index.md
-  - types.md
-  - expressions.md
+  - KFR:
+    - index.md
+    - whatsnew5.md
+    - installation.md
+    - basics.md
+    - expressions.md
+    - capi.md
+    - upgrade5.md
   - DSP:
-    - conversion.md
-    - normalize.md
-    - convert_stereo.md
     - fir.md
     - bq.md
     - src.md
-    - convolution.md
+    - conv_reverb.md
     - ebur128.md
+    - conversion.md
+    - normalize.md
+    - convert_stereo.md
     - fir_gallery.md
+    - iir_gallery.md
     - bq_gallery.md
     - src_gallery.md
+    - window_gallery.md
+    - convolution.md
   - DFT:
     - dft.md
     - dft2.md
@@ -73,9 +95,6 @@ nav:
   - Reference:
     - auto/refindex.md
     - Math:
-      - auto/types.md
-      - auto/memory.md
-      - auto/conversion.md
       - auto/complex.md
       - auto/constants.md
       - auto/logical.md
@@ -87,12 +106,19 @@ nav:
       - auto/hyperbolic.md
       - auto/horizontal.md
       - auto/other_math.md
+    - Base:
+      - auto/types.md
+      - auto/univector.md
+      - auto/tensor.md
       - auto/expressions.md
       - auto/generators.md
+      - auto/reducing.md
       - auto/random.md
-      - auto/array.md
+      - auto/memory.md
+      - auto/conversion.md
+      - auto/sort.md
       - auto/utility.md
-    - DSP:      
+    - DSP:
       - auto/filter.md
       - auto/biquad.md
       - auto/fir.md
@@ -102,7 +128,7 @@ nav:
     - DFT:
       - auto/convolution.md
       - auto/dft.md
-    - IO:      
+    - IO:
       - auto/binary_io.md
       - auto/audio_io.md
       - auto/plotting.md
@@ -112,4 +138,3 @@ nav:
     - auto/cometa.md
 
   - kfr.dev: https://kfr.dev
-  - github.com/kfrlib/kfr: https://github.com/kfrlib/kfr

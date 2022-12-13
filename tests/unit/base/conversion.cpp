@@ -7,6 +7,7 @@
 #include <kfr/base/conversion.hpp>
 
 #include <kfr/base/basic_expressions.hpp>
+#include <kfr/base/simd_expressions.hpp>
 
 #include <kfr/base/reduce.hpp>
 

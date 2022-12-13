@@ -1092,19 +1092,19 @@ template <typename T, bool inverse = false>
 static constexpr KFR_INTRINSIC cvec<T, 1> tw9_1()
 {
     return { T(0.76604444311897803520239265055541),
-                                  (inverse ? -1 : 1) * T(-0.64278760968653932632264340990727) };
+             (inverse ? -1 : 1) * T(-0.64278760968653932632264340990727) };
 }
 template <typename T, bool inverse = false>
 static constexpr KFR_INTRINSIC cvec<T, 1> tw9_2()
 {
     return { T(0.17364817766693034885171662676931),
-                                  (inverse ? -1 : 1) * T(-0.98480775301220805936674302458952) };
+             (inverse ? -1 : 1) * T(-0.98480775301220805936674302458952) };
 }
 template <typename T, bool inverse = false>
 static constexpr KFR_INTRINSIC cvec<T, 1> tw9_4()
 {
     return { T(-0.93969262078590838405410927732473),
-                                  (inverse ? -1 : 1) * T(-0.34202014332566873304409961468226) };
+             (inverse ? -1 : 1) * T(-0.34202014332566873304409961468226) };
 }
 
 template <size_t N, bool inverse = false, typename T>
@@ -1205,7 +1205,7 @@ KFR_INTRINSIC void butterfly7(cvec<T, N> a00, cvec<T, N> a01, cvec<T, N> a02, cv
     const cvec<T, N> d1 =
         dif1 * tw7i1<T, N, inverse>() + dif2 * tw7i2<T, N, inverse>() + dif3 * tw7i3<T, N, inverse>();
     const cvec<T, N> d2 =
-        dif1 * tw7i2<T, N, inverse>() - dif2 * tw7i3<T, N, inverse>()- dif3 * tw7i1<T, N, inverse>();
+        dif1 * tw7i2<T, N, inverse>() - dif2 * tw7i3<T, N, inverse>() - dif3 * tw7i1<T, N, inverse>();
     const cvec<T, N> d3 =
         dif1 * tw7i3<T, N, inverse>() - dif2 * tw7i1<T, N, inverse>() + dif3 * tw7i2<T, N, inverse>();
 
@@ -1729,15 +1729,18 @@ template <typename T, bool inverse, typename Tstride = csize_t<1>>
 KFR_INTRINSIC void generic_butterfly(size_t radix, cbool_t<inverse>, complex<T>* out, const complex<T>* in,
                                      complex<T>*, const complex<T>* twiddle, Tstride ostride = {})
 {
-    cswitch(csizes_t<11, 13>(), radix,
-            [&](auto radix_) CMT_INLINE_LAMBDA {
-                constexpr size_t width = vector_width<T>;
-                spec_generic_butterfly_w<width>(radix_, cbool_t<inverse>(), out, in, twiddle, ostride);
-            },
-            [&]() CMT_INLINE_LAMBDA {
-                constexpr size_t width = vector_width<T>;
-                generic_butterfly_w<width>(radix, cbool_t<inverse>(), out, in, twiddle, ostride);
-            });
+    cswitch(
+        csizes_t<11, 13>(), radix,
+        [&](auto radix_) CMT_INLINE_LAMBDA
+        {
+            constexpr size_t width = vector_width<T>;
+            spec_generic_butterfly_w<width>(radix_, cbool_t<inverse>(), out, in, twiddle, ostride);
+        },
+        [&]() CMT_INLINE_LAMBDA
+        {
+            constexpr size_t width = vector_width<T>;
+            generic_butterfly_w<width>(radix, cbool_t<inverse>(), out, in, twiddle, ostride);
+        });
 }
 
 template <typename T, size_t N>
@@ -1809,4 +1812,3 @@ KFR_INTRINSIC void cdigitreverse4_write<false, f64, 32>(complex<f64>* dest, cons
 } // namespace kfr
 
 CMT_PRAGMA_MSVC(warning(pop))
-

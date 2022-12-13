@@ -32,7 +32,7 @@ struct cstring
     constexpr size_type size() const CMT_NOEXCEPT { return N; }
 
     template <size_t start, size_t count>
-    constexpr cstring<count> slice(csize_t<start>, csize_t<count>) const CMT_NOEXCEPT
+    constexpr cstring<count + 1> slice(csize_t<start>, csize_t<count>) const CMT_NOEXCEPT
     {
         return slice_impl(csizeseq<count, start>);
     }
@@ -104,9 +104,9 @@ CMT_INTRINSIC cstring<N1 - Nfrom + Nto> str_replace_impl(size_t pos, const cstri
 {
     if (pos == size_t(-1))
         stop_constexpr();
-    return { { (indices < pos
-                    ? str[indices]
-                    : (indices < pos + Nto - 1) ? to[indices - pos] : str[indices - Nto + Nfrom])...,
+    return { { (indices < pos               ? str[indices]
+                : (indices < pos + Nto - 1) ? to[indices - pos]
+                                            : str[indices - Nto + Nfrom])...,
                0 } };
 }
 } // namespace details

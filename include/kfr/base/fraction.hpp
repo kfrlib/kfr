@@ -1,4 +1,4 @@
-/** @addtogroup types
+/** @addtogroup base
  *  @{
  */
 /*
@@ -36,7 +36,7 @@ struct fraction
     fraction(i64 num = 0, i64 den = 1) : numerator(num), denominator(den) { normalize(); }
     void normalize()
     {
-        if (denominator < 0)
+        if (CMT_UNLIKELY(denominator < 0))
         {
             denominator = -denominator;
             numerator   = -numerator;

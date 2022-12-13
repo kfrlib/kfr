@@ -118,4 +118,21 @@ struct simd_halves
 
 } // namespace intrinsics
 } // namespace CMT_ARCH_NAME
+
+#define KFR_COMPONENTWISE_RET(code)                                                                          \
+    vec<T, N> result;                                                                                        \
+    for (size_t i = 0; i < N; i++)                                                                           \
+        code;                                                                                                \
+    return result;
+
+#define KFR_COMPONENTWISE_RET_I(Tvec, code)                                                                  \
+    Tvec result;                                                                                             \
+    for (size_t i = 0; i < result.size(); i++)                                                               \
+        code;                                                                                                \
+    return result;
+
+#define KFR_COMPONENTWISE(code)                                                                              \
+    for (size_t i = 0; i < N; i++)                                                                           \
+        code;
+
 } // namespace kfr

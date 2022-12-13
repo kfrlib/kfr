@@ -143,7 +143,7 @@ using namespace kfr;
     {                                                                                                        \
         r = kfr::fn<n, true>(x);                                                                             \
     }                                                                                                        \
-    KFR_PUBLIC void asm__test__##fn##__##ty##__##n##__unaligned(vec<ty, n> & __restrict r,                   \
+    KFR_PUBLIC void asm__test__##fn##__##ty##__##n##__unaligned(vec<ty, n>& __restrict r,                    \
                                                                 const ty* __restrict x)                      \
     {                                                                                                        \
         r = kfr::fn<n, false>(x);                                                                            \
@@ -154,7 +154,7 @@ using namespace kfr;
     {                                                                                                        \
         kfr::fn<true>(p, x);                                                                                 \
     }                                                                                                        \
-    KFR_PUBLIC void asm__test__##fn##__##ty##__##n##__unaligned(ty * __restrict p, const vec<ty, n>& x)      \
+    KFR_PUBLIC void asm__test__##fn##__##ty##__##n##__unaligned(ty* __restrict p, const vec<ty, n>& x)       \
     {                                                                                                        \
         kfr::fn<false>(p, x);                                                                                \
     }

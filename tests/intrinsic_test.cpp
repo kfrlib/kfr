@@ -107,7 +107,8 @@ TEST(intrin_sqrt)
     CHECK(kfr::sqrt(make_vector(9)) == make_vector<fbase>(3.0));
     CHECK(kfr::sqrt(make_vector(-9)) == make_vector<fbase>(qnan));
     testo::matrix(named("type") = float_vector_types<vec>, named("value") = std::vector<int>{ 0, 2, 65536 },
-                  [](auto type, int value) {
+                  [](auto type, int value)
+                  {
                       using T = typename decltype(type)::type;
                       const T x(value);
                       CHECK(kfr::sqrt(x) == apply([](auto x) -> decltype(x) { return std::sqrt(x); }, x));
@@ -117,7 +118,8 @@ TEST(intrin_sqrt)
 TEST(intrin_satadd_satsub)
 {
     testo::matrix(named("type") = cconcat(signed_vector_types<vec>, unsigned_vector_types<vec>),
-                  [](auto type) {
+                  [](auto type)
+                  {
                       using T     = typename decltype(type)::type;
                       using Tsub  = subtype<T>;
                       const T min = std::numeric_limits<Tsub>::min();
@@ -144,23 +146,25 @@ TEST(intrin_satadd_satsub)
 
 TEST(intrin_any_all)
 {
-    testo::matrix(named("type") = unsigned_vector_types<vec>, [](auto type) {
-        using T                = typename decltype(type)::type;
-        constexpr size_t width = widthof<T>();
-        using Tsub             = subtype<T>;
-        const auto x           = enumerate<Tsub, width>() == Tsub(0);
-        CHECK(any(x) == true);
-        if (width == 1)
-            CHECK(all(x) == true);
-        else
-            CHECK(all(x) == false);
-        const auto y = zerovector<Tsub, width>() == Tsub(127);
-        CHECK(all(y) == false);
-        CHECK(any(y) == false);
-        const auto z = zerovector<Tsub, width>() == Tsub(0);
-        CHECK(all(z) == true);
-        CHECK(any(z) == true);
-    });
+    testo::matrix(named("type") = unsigned_vector_types<vec>,
+                  [](auto type)
+                  {
+                      using T                = typename decltype(type)::type;
+                      constexpr size_t width = widthof<T>();
+                      using Tsub             = subtype<T>;
+                      const auto x           = enumerate<Tsub, width>() == Tsub(0);
+                      CHECK(any(x) == true);
+                      if (width == 1)
+                          CHECK(all(x) == true);
+                      else
+                          CHECK(all(x) == false);
+                      const auto y = zerovector<Tsub, width>() == Tsub(127);
+                      CHECK(all(y) == false);
+                      CHECK(any(y) == false);
+                      const auto z = zerovector<Tsub, width>() == Tsub(0);
+                      CHECK(all(z) == true);
+                      CHECK(any(z) == true);
+                  });
 }
 
 } // namespace CMT_ARCH_NAME

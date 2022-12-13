@@ -1,62 +1,46 @@
-# KFR
+# KFR 5 Documentation
 
-## Features
+## Getting started
 
-* All code in the library is optimized for Intel, AMD (SSE2, SSE3, SSE4.x, AVX and AVX2 and AVX512) and ARM (NEON) processors
-* Mathematical and statistical functions
-* Template expressions (See examples)
-* All data types are supported including complex numbers
-* All vector lengths are also supported. `vec<float,1>`, `vec<unsigned,3>`, `vec<complex<float>, 11>` all are valid vector types in KFR
-* Most of the standard library functions are re-implemented to support vector of any length and data type and to support expressions 
-* Runtime cpu detection
-* C API: DFT, real DFT, DCT, FIR and IIR filters and convolution, memory allocation
-  * Built for SSE2, SSE4.1, AVX, AVX2, AVX512, x86 and x86_64, architecture is selected at runtime
-  * Can be used with any compiler and any language with ability to call C functions
-  * [Prebuilt Windows binaries](https://github.com/kfrlib/kfr/releases)
+* [What's new in KFR 5](whatsnew5.md)
+* [Installation](installation.md)
+* [Basics](basics.md)
+* [Expressions](expressions.md)
+* [C API](capi.md)
+* [Upgrade to KFR 5](upgrade5.md)
 
-### DSP/Audio algorithms
+## Guides
 
-* [FFT](dft.md)
-* DCT
-* [Convolution](convolution.md)
-* [FIR filtering](fir.md)
-* [FIR filter design using the window method](fir.md)
-* [Resampling with configurable quality](src.md) (See resampling.cpp from Examples directory)
-* IIR filter design
-  * Butterworth
-  * Chevyshev I and Chevyshev II
-  * Bessel
-  * Low pass, high pass, band pass, band stop
-  * Convert arbitrary filter from Z, P, K format to SOS suitable for biquad function
-* Goertzel algorithm
-* Fractional delay
-* [Biquad filtering](bq.md)
-* [Biquad design functions](bq.md)
-* Oscillators: Sine, Square, Sawtooth, Triangle
-* Window functions: Triangular, Bartlett, Cosine, Hann, Bartlett-Hann, Hamming, Bohman, Blackman, Blackman-Harris, Kaiser, Flattop, Gaussian, Lanczos, Rectangular
-* [Audio file reading/writing (wav, flac, mp3)](read_audio.md)
-* Pseudorandom number generator
-* Sorting
-* Color space conversion (sRGB, XYZ, Lab, LCH)
-* Ring (Circular) buffer
-* Simple waveshaper
-* Fast incremental sine/cosine generation
-* [EBU R 128](ebur128.md)
+### DSP
+* [How to apply a FIR filter](fir.md)
+* [How to apply a Biquad filter](bq.md)
+* [How to do Sample Rate Conversion](src.md)
+* [How to apply Convolution Reverb](conv_reverb.md)
+* [How to measure loudness according to EBU R 128](ebur128.md)
+* [How to convert sample type](conversion.md)
+* [How to normalize audio](normalize.md)
+* [How to mix stereo channels](convert_stereo.md)
+* [FIR filters code & examples](fir_gallery.md)
+* [IIR filters code & examples](iir_gallery.md)
+* [Biquad filters code & examples](bq_gallery.md)
+* [Sample Rate Converter code & examples](src_gallery.md)
+* [Window functions code & examples](window_gallery.md)
+* [Convolution filter details](convolution.md)
 
-## Installation
+### FFT
+* [How to apply Fast Fourier Transform](dft.md)
+* [More about FFT/DFT](dft2.md)
+* [DFT data layout](dft_format.md)
 
-[GitHub:kfrlib/kfr/blob/master/README.md](https://github.com/kfrlib/kfr/blob/master/README.md#usage)
+### I/O
+* [How to read WAV file](read_audio.md)
+* [File types support](file_support.md)
+* [How to plot filter impulse response](plot.md)
 
-## Compiler support
+## Function reference
 
-Xcode | Visual Studio | Clang | GCC | Intel Compiler
------ | ------------- | ----- | --- | --------------
-9+    | 2017          | 6+    | 7+  | Experimental
+* [Function reference](auto/refindex.md)
 
-Tested on macOS, Windows (MinGW, MSYS and MSVC), Linux, iOS, Android.
+## KFR 4
 
-## Architecture support
-
-x86, x86_64 | ARM, ARM64 |
------ | -------------
-Scalar, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX, AVX2, AVX512  | Scalar, NEON, NEON64
+For KFR 4 documentation, see https://kfr.dev/docs/v4

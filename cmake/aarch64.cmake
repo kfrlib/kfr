@@ -18,11 +18,11 @@ set(TGT_TRIPLET aarch64-linux-gnu)
 
 set (ARM_ROOT "/usr/${TGT_TRIPLET}/include")
 if (NOT GCC_VER)
-    set (GCC_VER 5.4.0)
+    set (GCC_VER 7.5.0)
 endif ()
 set (SYS_PATHS "-isystem ${ARM_ROOT}/c++/${GCC_VER} -isystem ${ARM_ROOT}/c++/${GCC_VER}/backward -isystem ${ARM_ROOT}/c++/${GCC_VER}/${TGT_TRIPLET} -isystem ${ARM_ROOT}")
 
-set (ARM_COMMON_FLAGS "-target ${TGT_TRIPLET} -mcpu=cortex-a72 -static")
+set (ARM_COMMON_FLAGS "-std=gnu++17 -target ${TGT_TRIPLET} -mcpu=cortex-a72 -static")
 
 set (CMAKE_CXX_FLAGS "${SYS_PATHS} ${ARM_COMMON_FLAGS}" CACHE STRING "")
 set (CMAKE_C_FLAGS " ${SYS_PATHS} ${ARM_COMMON_FLAGS}" CACHE STRING "")

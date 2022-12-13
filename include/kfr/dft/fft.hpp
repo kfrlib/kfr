@@ -75,7 +75,7 @@ struct dft_stage
 
     virtual void dump() const
     {
-        printf("%s: \n\t%5zu,%5zu,%5zu,%5zu,%5zu,%5zu,%5zu, %d, %d, %d, %d\n", name ? name : "unnamed", radix,
+        printf("%s: %zu, %zu, %zu, %zu, %zu, %zu, %zu, %d, %d, %d, %d\n", name ? name : "unnamed", radix,
                stage_size, data_size, temp_size, repeats, out_offset, blocks, recursion, can_inplace, inplace,
                to_scratch);
     }
@@ -139,7 +139,7 @@ struct dft_plan
 
 #ifdef KFR_DFT_MULTI
     explicit dft_plan(cpu_t cpu, size_t size, dft_order order = dft_order::normal)
-        : size(size), temp_size(0), data_size(0)
+        : size(size), temp_size(0), data_size(0), arblen(false)
     {
         if (cpu == cpu_t::runtime)
             cpu = get_cpu();
@@ -163,17 +163,16 @@ struct dft_plan
         }
     }
     explicit dft_plan(size_t size, dft_order order = dft_order::normal)
-        :dft_plan(cpu_t::runtime, size, order)
+        : dft_plan(cpu_t::runtime, size, order)
     {
     }
 #else
     explicit dft_plan(size_t size, dft_order order = dft_order::normal)
-        : size(size), temp_size(0), data_size(0)
+        : size(size), temp_size(0), data_size(0), arblen(false)
     {
         dft_initialize(*this);
     }
 #endif
-
 
     void dump() const
     {
@@ -218,13 +217,14 @@ struct dft_plan
     autofree<u8> data;
     size_t data_size;
     std::vector<dft_stage_ptr<T>> stages;
+    bool arblen;
 
 protected:
     struct noinit
     {
     };
     explicit dft_plan(noinit, size_t size, dft_order order = dft_order::normal)
-        : size(size), temp_size(0), data_size(0)
+        : size(size), temp_size(0), data_size(0), arblen(false)
     {
     }
     const complex<T>* select_in(size_t stage, const complex<T>* out, const complex<T>* in,
@@ -291,11 +291,11 @@ protected:
             }
             else
             {
-                size_t offset   = 0;
+                size_t offset = 0;
                 while (offset < this->size)
                 {
                     stages[depth]->execute(cbool<inverse>, select_out(depth, out, scratch) + offset,
-                                       select_in(depth, out, in, scratch, in_scratch) + offset, temp);
+                                           select_in(depth, out, in, scratch, in_scratch) + offset, temp);
                     offset += stages[depth]->stage_size;
                 }
                 depth++;

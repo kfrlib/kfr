@@ -5,7 +5,7 @@
 Code
 ```c++ linenums="1"
 univector<fbase, 127> taps127;
-expression_pointer<fbase> kaiser = to_pointer(window_kaiser(taps127.size(), 3.0));
+expression_handle<fbase> kaiser = to_handle(window_kaiser(taps127.size(), 3.0));
 
 // Fill taps127 with the band pass FIR filter coefficients using kaiser window and cutoff=0.2 and 0.4
 fir_bandpass(taps127, 0.2, 0.4, kaiser, true);
@@ -22,7 +22,7 @@ Result
 Code
 ```c++ linenums="1"
 univector<fbase, 127> taps127;
-expression_pointer<fbase> kaiser = to_pointer(window_kaiser(taps127.size(), 3.0));
+expression_handle<fbase> kaiser = to_handle(window_kaiser(taps127.size(), 3.0));
 
 // Fill taps127 with the band stop FIR filter coefficients using kaiser window and cutoff=0.2 and 0.4
 fir_bandstop(taps127, 0.2, 0.4, kaiser, true);
@@ -39,7 +39,7 @@ Result
 Code
 ```c++ linenums="1"
 univector<fbase, 127> taps127;
-expression_pointer<fbase> kaiser = to_pointer(window_kaiser(taps127.size(), 3.0));
+expression_handle<fbase> kaiser = to_handle(window_kaiser(taps127.size(), 3.0));
 
 // Fill taps127 with the high pass FIR filter coefficients using kaiser window and cutoff=0.2
 fir_highpass(taps127, 0.2, kaiser, true);
@@ -56,7 +56,7 @@ Result
 Code
 ```c++ linenums="1"
 univector<fbase, 8191> taps8191;
-expression_pointer<fbase> blackman_harris = to_pointer(window_blackman_harris(taps8191.size()));
+expression_handle<fbase> blackman_harris = to_handle(window_blackman_harris(taps8191.size()));
 
 // Fill taps8191 with the low pass FIR filter coefficients using blackman harris window and cutoff=0.15
 fir_lowpass(taps8191, 0.15, blackman_harris, true);
@@ -77,7 +77,7 @@ Result
 Code
 ```c++ linenums="1"
 univector<fbase, 15> taps15;
-expression_pointer<fbase> hann = to_pointer(window_hann(taps15.size()));
+expression_handle<fbase> hann = to_handle(window_hann(taps15.size()));
 
 // Fill taps15 with the low pass FIR filter coefficients using hann window and cutoff=0.15
 fir_lowpass(taps15, 0.15, hann, true);
@@ -95,7 +95,7 @@ Code
 
 ```c++ linenums="1"
 univector<fbase, 127> taps127;
-expression_pointer<fbase> kaiser = to_pointer(window_kaiser(taps127.size(), 3.0));
+expression_handle<fbase> kaiser = to_handle(window_kaiser(taps127.size(), 3.0));
 
 // Fill taps127 with the low pass FIR filter coefficients using kaiser window and cutoff=0.2
 fir_lowpass(taps127, 0.2, kaiser, true);
@@ -110,7 +110,7 @@ Result
 
 ```c++ linenums="1"
 univector<fbase, 127> taps127;
-expression_pointer<fbase> kaiser = to_pointer(window_kaiser(taps127.size(), 3.0));
+expression_handle<fbase> kaiser = to_handle(window_kaiser(taps127.size(), 3.0));
 fir_bandstop(taps127, 0.2, 0.4, kaiser, true);
 // Initialize FIR filter with float input/output and fbase taps
 filter_fir<fbase, float> fir_filter(taps127);
@@ -130,7 +130,7 @@ Result
 
 ```c++ linenums="1"
 univector<fbase, 127> taps127;
-expression_pointer<fbase> kaiser = to_pointer(window_kaiser(taps127.size(), 3.0));
+expression_handle<fbase> kaiser = to_handle(window_kaiser(taps127.size(), 3.0));
 fir_bandpass(taps127, 0.2, 0.4, kaiser, true);
 // Initialize FIR filter with float input/output and fbase taps
 filter_fir<fbase, float> fir_filter(taps127);
