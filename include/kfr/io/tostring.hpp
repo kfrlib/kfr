@@ -83,22 +83,22 @@ constexpr size_t number_columns         = 8;
 template <typename T>
 std::string fmtvalue(std::true_type, const T& x)
 {
-    std::string str = as_string(fmt<'g', number_width, number_precision>(x));
+    std::string str = as_string(cometa::fmt<'g', number_width, number_precision>(x));
     if (str.size() > number_width)
-        str = as_string(fmt<'g', number_width, number_precision_short>(x));
+        str = as_string(cometa::fmt<'g', number_width, number_precision_short>(x));
     return str;
 }
 
 template <typename T>
 std::string fmtvalue(std::true_type, const kfr::complex<T>& x)
 {
-    std::string restr = as_string(fmt<'g', number_width, number_precision>(x.real()));
+    std::string restr = as_string(cometa::fmt<'g', number_width, number_precision>(x.real()));
     if (restr.size() > number_width)
-        restr = as_string(fmt<'g', number_width, number_precision_short>(x.real()));
+        restr = as_string(cometa::fmt<'g', number_width, number_precision_short>(x.real()));
 
-    std::string imstr = as_string(fmt<'g', -1, number_precision>(std::abs(x.imag())));
+    std::string imstr = as_string(cometa::fmt<'g', -1, number_precision>(std::abs(x.imag())));
     if (imstr.size() > number_width)
-        imstr = as_string(fmt<'g', -1, number_precision_short>(std::abs(x.imag())));
+        imstr = as_string(cometa::fmt<'g', -1, number_precision_short>(std::abs(x.imag())));
 
     return restr + (x.imag() < T(0) ? "-" : "+") + padleft(number_width, imstr + "j");
 }

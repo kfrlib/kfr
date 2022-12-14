@@ -115,8 +115,8 @@ struct representation<fmt_t<kfr::complex<T>, t, width, prec>>
     using type = std::string;
     static std::string get(const fmt_t<kfr::complex<T>, t, width, prec>& value)
     {
-        return as_string(fmt<t, width, prec>(value.value.real())) + " + " +
-               as_string(fmt<t, width, prec>(value.value.imag())) + "j";
+        return as_string(cometa::fmt<t, width, prec>(value.value.real())) + " + " +
+               as_string(cometa::fmt<t, width, prec>(value.value.imag())) + "j";
     }
 };
 } // namespace cometa
