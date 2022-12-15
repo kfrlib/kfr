@@ -91,7 +91,7 @@ Result
 
 ![biquad_peak2](img/biquad_peak2.svg)
 
-## Biquad Peak filter (0.3, 3, -2dB)
+## Biquad band pass (0.25, 0.2)
 
 Code
 ```c++ linenums="1"
