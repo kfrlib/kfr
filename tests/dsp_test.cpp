@@ -66,6 +66,13 @@ TEST(mixdown_stereo)
     CHECK_EXPRESSION(side, 21, [](size_t i) { return i - (i * 2.0 + 100.0); });
 }
 
+TEST(sine_type)
+{
+    double ph = 0.0;
+    using T = decltype(sine(ph));
+    static_assert(std::is_same_v<T, double>);
+}
+
 TEST(phasor)
 {
     constexpr fbase sr       = 44100.0;

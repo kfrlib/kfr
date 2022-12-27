@@ -103,7 +103,7 @@ KFR_INTRINSIC T1 aweighting(const T1& x)
     return intrinsics::aweighting(x);
 }
 
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
+template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
 KFR_INTRINSIC expression_function<fn::aweighting, E1> aweighting(E1&& x)
 {
     return { fn::aweighting(), std::forward<E1>(x) };
@@ -115,7 +115,7 @@ KFR_INTRINSIC T1 bweighting(const T1& x)
     return intrinsics::bweighting(x);
 }
 
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
+template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
 KFR_INTRINSIC expression_function<fn::bweighting, E1> bweighting(E1&& x)
 {
     return { fn::bweighting(), std::forward<E1>(x) };
@@ -127,7 +127,7 @@ KFR_INTRINSIC T1 cweighting(const T1& x)
     return intrinsics::cweighting(x);
 }
 
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
+template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
 KFR_INTRINSIC expression_function<fn::cweighting, E1> cweighting(E1&& x)
 {
     return { fn::cweighting(), std::forward<E1>(x) };
