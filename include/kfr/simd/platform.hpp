@@ -242,6 +242,7 @@ struct platform<cpu_t::common>
 template <>
 struct platform<cpu_t::neon> : platform<cpu_t::common>
 {
+    constexpr static size_t simd_register_count = 32;
 };
 template <>
 struct platform<cpu_t::neon64> : platform<cpu_t::neon>
