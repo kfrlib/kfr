@@ -149,9 +149,7 @@ jobs:
   - bash: |
       set -e
       sudo apt-get update && sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf qemu qemu-system-arm qemu-user clang-12
-      sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-12 100
-      sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 100
-      ci/run.sh build-release -DENABLE_TESTS=ON -DENABLE_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=Release -DGCC_VER=9 -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
+      ci/run.sh build-release -DENABLE_TESTS=ON -DENABLE_EXAMPLES=OFF -DCLANG_SUFFIX=-12 -DCMAKE_BUILD_TYPE=Release -DGCC_VER=9 -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
 
 - job: Linux_ARM64_Clang12_Release
   timeoutInMinutes: 180
@@ -161,9 +159,7 @@ jobs:
   - bash: |
       set -e
       sudo apt-get update && sudo apt-get install -y ninja-build g++-aarch64-linux-gnu qemu qemu-system-arm qemu-user clang-12
-      sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-12 100
-      sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 100
-      ci/run.sh build-release -DENABLE_TESTS=ON -DENABLE_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=Release -DGCC_VER=9 -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
+      ci/run.sh build-release -DENABLE_TESTS=ON -DENABLE_EXAMPLES=OFF -DCLANG_SUFFIX=-12 -DCMAKE_BUILD_TYPE=Release -DGCC_VER=9 -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
 
 - job: macOSBigSur_x86_64_Clang_Release
   timeoutInMinutes: 180

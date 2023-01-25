@@ -8,9 +8,13 @@ set (AARCH64 True)
 set (CMAKE_SYSTEM_PROCESSOR aarch64)
 set (EMULATOR qemu-aarch64)
 
+if (NOT CLANG_SUFFIX)
+    set (CLANG_SUFFIX "")
+endif ()
+
 include (CMakeForceCompiler)
-CMAKE_FORCE_CXX_COMPILER (/usr/bin/clang++ Clang)
-CMAKE_FORCE_C_COMPILER (/usr/bin/clang Clang)
+CMAKE_FORCE_CXX_COMPILER (/usr/bin/clang++${CLANG_SUFFIX} Clang)
+CMAKE_FORCE_C_COMPILER (/usr/bin/clang${CLANG_SUFFIX} Clang)
 set (CMAKE_CXX_COMPILER_WORKS TRUE)
 set (CMAKE_C_COMPILER_WORKS TRUE)
 
