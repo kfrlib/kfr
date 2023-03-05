@@ -102,7 +102,8 @@ private:
 
     KFR_MEM_INTRINSIC vec<T, width> call_get_value() const { return ptr_cast<Class>(this)->get_value(); }
 
-    KFR_MEM_INTRINSIC std::enable_if_t<std::is_same_v<T, Twork>, vec<T, width>> get_value() const
+    template <typename U = T, KFR_ENABLE_IF(std::is_same_v<U, Twork>)>
+    KFR_MEM_INTRINSIC vec<T, width> get_value() const
     {
         return value;
     }
@@ -236,18 +237,15 @@ struct generator_sin : public generator<T, VecWidth, generator_sin<T, VecWidth>,
 
     KFR_MEM_INTRINSIC void next() const CMT_NOEXCEPT
     {
-        const vec<T, 2 * VecWidth> cs = flatten(this->value);
+        vec<T, 2 * VecWidth> cs = flatten(this->value);
 
         cs = cs - addsub(alpha * cs, beta * swap<2>(cs));
 
         this->value = vec<vec<T, 2>, VecWidth>::from_flatten(cs);
-
-        // const vec<T, VecWidth> c = even(flatten(this->value));
-        // const vec<T, VecWidth> s = odd(flatten(this->value));
-        // const vec<T, VecWidth> cc = alpha * c + beta * s;
-        // const vec<T, VecWidth> ss = alpha * s - beta * c;
-        // this->cos_value = c - cc;
-        // this->value     = s - ss;
+    }
+    KFR_MEM_INTRINSIC vec<T, VecWidth> get_value() const
+    {
+        return odd(flatten(this->value));
     }
 
 protected:
