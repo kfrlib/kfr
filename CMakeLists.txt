@@ -83,6 +83,8 @@ option(KFR_EXTENDED_TESTS "Extended tests (up to hour)" OFF)
 option(KFR_SKIP_TESTS "Build tests but don't run tests" OFF)
 option(KFR_STD_COMPLEX "Use std::complex instead of custom complex type" OFF)
 option(KFR_ENABLE_CAPI_BUILD "Enable KFR C API building" OFF)
+option(KFR_INSTALL_HEADERS "Include headers in installation" ON)
+option(KFR_INSTALL_LIBRARIES "Include libraries in installation" ON)
 mark_as_advanced(KFR_ENABLE_ASMTEST)
 mark_as_advanced(KFR_REGENERATE_TESTS)
 mark_as_advanced(KFR_DISABLE_CLANG_EXTENSIONS)
@@ -261,18 +263,20 @@ add_library(kfr_io ${KFR_IO_SRC})
 target_link_libraries(kfr_io kfr)
 target_link_libraries(kfr_io use_arch)
 
-install(
-    TARGETS kfr kfr_io
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION bin)
-
-if (KFR_ENABLE_DFT AND KFR_ENABLE_CAPI_BUILD)
+if (KFR_INSTALL_LIBRARIES)
     install(
-        TARGETS kfr_capi
+        TARGETS kfr kfr_io
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         RUNTIME DESTINATION bin)
+
+    if (KFR_ENABLE_DFT AND KFR_ENABLE_CAPI_BUILD)
+        install(
+            TARGETS kfr_capi
+            ARCHIVE DESTINATION lib
+            LIBRARY DESTINATION lib
+            RUNTIME DESTINATION bin)
+    endif ()
 endif ()
 
 set(kfr_defines)
@@ -299,7 +303,7 @@ set(kfr_defines "#define ${kfr_defines}\n")
 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/kfr_config.h "${kfr_defines}")
 
-if (KFR_ENABLE_DFT)
+if (KFR_ENABLE_DFT AND KFR_INSTALL_LIBRARIES)
     if (KFR_ENABLE_DFT_MULTIARCH)
         install(
             TARGETS kfr_dft_sse2 kfr_dft_sse41 kfr_dft_avx kfr_dft_avx2
@@ -316,12 +320,14 @@ if (KFR_ENABLE_DFT)
     endif ()
 endif ()
 
-install(DIRECTORY include/kfr DESTINATION include)
+if (KFR_INSTALL_HEADERS)
+    install(DIRECTORY include/kfr DESTINATION include)
 
-install(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/kfr_config.h
-    DESTINATION include/kfr
-    RENAME config.h)
+    install(
+        FILES ${CMAKE_CURRENT_BINARY_DIR}/kfr_config.h
+        DESTINATION include/kfr
+        RENAME config.h)
+endif ()
 
 # uninstall target
 if (NOT TARGET uninstall)
