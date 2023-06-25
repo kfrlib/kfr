@@ -36,6 +36,7 @@ const char* wins[] = {
     "gaussian       ",
     "lanczos        ",
     "cosine_np      ",
+    "planck_taper   ",
 };
 
 template <window_type type, typename T>
@@ -53,6 +54,7 @@ TEST(window)
     using s = window_symmetry;
     using u = univector<f32>;
     // clang-format
+    // 7 ; symmetric
     win<w::rectangular, f32>(7, 0.0, s::symmetric, u{ 1, 1, 1, 1, 1, 1, 1 });
     win<w::triangular, f32>(7, 0.0, s::symmetric, u{ 0.25, 0.5, 0.75, 1., 0.75, 0.5, 0.25 });
     win<w::bartlett, f32>(7, 0.0, s::symmetric,
@@ -80,7 +82,9 @@ TEST(window)
                          u{ -2.8e-08, 0.413497, 0.826993, 1, 0.826993, 0.413497, -2.8e-08 });
     win<w::cosine_np, f32>(7, 0.0, s::symmetric,
                            u{ 0.22252093, 0.6234898, 0.90096887, 1., 0.90096887, 0.6234898, 0.22252093 });
+    win<w::planck_taper, f32>(7, 0.25, s::symmetric, u{ 0, 0.817575, 1, 1, 1, 0.817574, 0 });
 
+    // 8 ; symmetric
     win<w::rectangular, f32>(8, 0.0, s::symmetric, u{ 1, 1, 1, 1, 1, 1, 1, 1 });
     win<w::triangular, f32>(8, 0.0, s::symmetric,
                             u{ 0.125, 0.375, 0.625, 0.875, 0.875, 0.625, 0.375, 0.125 });
@@ -119,7 +123,9 @@ TEST(window)
     win<w::cosine_np, f32>(
         8, 0.0, s::symmetric,
         u{ 0.19509032, 0.55557023, 0.83146961, 0.98078528, 0.98078528, 0.83146961, 0.55557023, 0.19509032 });
+    win<w::planck_taper, f32>(8, 0.25, s::symmetric, u{ 0, 0.641834, 1, 1, 1, 1, 0.641833, 0 });
 
+    // 7 ; periodic
     win<w::rectangular, f32>(7, 0.0, s::periodic, u{ 1, 1, 1, 1, 1, 1, 1 });
     win<w::triangular, f32>(7, 0.0, s::periodic, u{ 0.125, 0.375, 0.625, 0.875, 0.875, 0.625, 0.375 });
     win<w::bartlett, f32>(7, 0.0, s::periodic,
@@ -154,7 +160,9 @@ TEST(window)
     win<w::cosine_np, f32>(
         7, 0.0, s::periodic,
         u{ 0.19509032, 0.55557023, 0.83146961, 0.98078528, 0.98078528, 0.83146961, 0.55557023 });
+    win<w::planck_taper, f32>(7, 0.25, s::periodic, u{ 0, 0.641834, 1, 1, 1, 1, 0.641833 });
 
+    // 8 ; periodic
     win<w::rectangular, f32>(8, 0.0, s::periodic, u{ 1, 1, 1, 1, 1, 1, 1, 1 });
     win<w::triangular, f32>(8, 0.0, s::periodic, u{ 0.2, 0.4, 0.6, 0.8, 1., 0.8, 0.6, 0.4 });
     win<w::bartlett, f32>(8, 0.0, s::periodic, u{ 0., 0.25, 0.5, 0.75, 1., 0.75, 0.5, 0.25 });
@@ -187,6 +195,7 @@ TEST(window)
                          u{ -2.8e-08, 0.300105, 0.63662, 0.900316, 1, 0.900316, 0.63662, 0.300105 });
     win<w::cosine_np, f32>(8, 0.0, s::periodic,
                            u{ 0.17364818, 0.5, 0.76604444, 0.93969262, 1., 0.93969262, 0.76604444, 0.5 });
+    win<w::planck_taper, f32>(8, 0.25, s::periodic, u{ 0, 0.5, 1, 1, 1, 1, 1, 0.5 });
     // clang-format on
 }
 } // namespace CMT_ARCH_NAME

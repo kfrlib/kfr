@@ -60,6 +60,9 @@ int main()
     output = window_kaiser(output.size(), 2.5);
     plot_save("window_kaiser", output, options + ", title='Kaiser window'");
 
+    output = window_planck_taper(output.size(), 0.1);
+    plot_save("window_planck_taper", output, options + ", title='Planck-taper window'");
+
     println("SVG plots have been saved to svg directory");
 
     return 0;

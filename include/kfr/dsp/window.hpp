@@ -52,6 +52,7 @@ enum class window_type
     gaussian        = 13,
     lanczos         = 14,
     cosine_np       = 15,
+    planck_taper    = 16,
 };
 
 template <window_type type>
@@ -380,6 +381,23 @@ struct expression_lanczos : expression_window_with_metrics<T, window_metrics::me
     }
 };
 
+template <typename T>
+struct expression_planck_taper : expression_window_with_metrics<T, window_metrics::metrics_m1_1>
+{
+    expression_planck_taper(size_t size, T epsilon, window_symmetry symmetry = window_symmetry::symmetric)
+        : expression_window_with_metrics<T, window_metrics::metrics_m1_1>(size, epsilon, symmetry)
+    {
+    }
+    template <size_t N>
+    KFR_INTRINSIC friend vec<T, N> get_elements(const expression_planck_taper& self, shape<1> index,
+                                                axis_params<0, N> sh)
+    {
+        vec<T, N> x   = (T(1) - abs(get_elements(self.linspace, index, sh))) / (T(2) * self.arg);
+        vec<T, N> val = T(1) / (T(1) + exp(T(1) / x - T(1) / (T(1) - x)));
+        return select(x <= T(0), T(0), select(x >= T(1), T(1), val));
+    }
+};
+
 template <window_type>
 struct window_by_type;
 
@@ -405,6 +423,7 @@ KFR_WINDOW_BY_TYPE(flattop)
 KFR_WINDOW_BY_TYPE(gaussian)
 KFR_WINDOW_BY_TYPE(lanczos)
 KFR_WINDOW_BY_TYPE(cosine_np)
+KFR_WINDOW_BY_TYPE(planck_taper)
 #undef KFR_WINDOW_BY_TYPE
 
 /**
@@ -552,6 +571,17 @@ KFR_FUNCTION expression_lanczos<T> window_lanczos(size_t size, ctype_t<T> = ctyp
     return expression_lanczos<T>(size);
 }
 
+/**
+ * @brief Returns template expression that generates Planck-taper window of length @c size
+ */
+template <typename T = fbase>
+KFR_FUNCTION expression_planck_taper<T> window_planck_taper(
+    size_t size, identity<T> epsilon, window_symmetry symmetry = window_symmetry::symmetric,
+    ctype_t<T> = ctype_t<T>())
+{
+    return expression_planck_taper<T>(size, epsilon, symmetry);
+}
+
 template <typename T           = fbase, window_type type,
           typename window_expr = typename window_by_type<type>::template type<T>>
 CMT_NOINLINE window_expr window(size_t size, cval_t<window_type, type>, identity<T> win_param = T(),
@@ -570,7 +600,8 @@ CMT_NOINLINE expression_handle<T> window(size_t size, window_type type, identity
         cvals_t<window_type, window_type::rectangular, window_type::triangular, window_type::bartlett,
                 window_type::cosine, window_type::hann, window_type::bartlett_hann, window_type::hamming,
                 window_type::bohman, window_type::blackman, window_type::blackman_harris, window_type::kaiser,
-                window_type::flattop, window_type::gaussian, window_type::lanczos, window_type::cosine_np>(),
+                window_type::flattop, window_type::gaussian, window_type::lanczos, window_type::cosine_np,
+                window_type::planck_taper>(),
         type,
         [size, win_param, symmetry](auto win)
         {
