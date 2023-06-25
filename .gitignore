@@ -102,3 +102,6 @@ temp_audio_file.wav
 *.profdata
 *.lcov
 lcov.info
+
+# clangd
+.cache
