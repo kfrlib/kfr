@@ -207,14 +207,16 @@ public:
             else if (input_start >= input_position)
             {
                 output[i] =
-                    dotproduct(input.slice(input_start - input_position, depth), tap_ptr.truncate(depth));
+                    dotproduct(truncate(padded(input.slice(input_start - input_position, depth)), depth),
+                               tap_ptr.truncate(depth));
             }
             else
             {
                 const itype prev_count = input_position - input_start;
                 output[i] =
                     dotproduct(delay.slice(size_t(depth - prev_count)), tap_ptr.truncate(prev_count)) +
-                    dotproduct(input.truncate(size_t(depth - prev_count)),
+                    dotproduct(truncate(padded(input.truncate(size_t(depth - prev_count))),
+                                        size_t(depth - prev_count)),
                                tap_ptr.slice(size_t(prev_count), size_t(depth - prev_count)));
             }
         }
