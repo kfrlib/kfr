@@ -1,6 +1,6 @@
 /*
  * ccv, part of KFR (https://www.kfr.dev)
- * Copyright (C) 2016-2022 Fractalium Ltd
+ * Copyright (C) 2016-2023 Dan Cazarin
  * See LICENSE.txt for details
  */
 

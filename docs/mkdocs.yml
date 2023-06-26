@@ -27,7 +27,7 @@ extra:
     - icon: fontawesome/brands/twitter
       link: 'https://twitter.com/kfrlib'
 
-copyright: 'Copyright &copy; 2016 - 2022 KFR'
+copyright: 'Copyright &copy; 2016 - 2023 KFR'
 
 plugins:
     - search

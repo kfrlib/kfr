@@ -1,6 +1,6 @@
 /**
- * KFR (http://kfrlib.com)
- * Copyright (C) 2016-2022 Fractalium Ltd
+ * KFR (https://www.kfrlib.com)
+ * Copyright (C) 2016-2023 Dan Cazarin
  * See LICENSE.txt for details
  */
 #define _USE_MATH_DEFINES
