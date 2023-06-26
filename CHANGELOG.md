@@ -1,5 +1,111 @@
 # Changelog
 
+## 5.0.3
+
+2023-06-26
+
+#### Added
+
+- Planck-taper window function
+
+#### Fixed
+
+- Sample rate conversion: automatic zero padding 
+- DFT: incorrect result of real dft when input size != 4N https://github.com/kfrlib/kfr/pull/141
+- Add options for installing libraries and headers https://github.com/kfrlib/kfr/pull/182
+
+## 5.0.2
+
+2023-01-25
+
+#### Performance
+
+- ARM/ARM64 performance has been improved up to 2 times in various usage scenarios, including DFT.
+
+#### Fixed
+
+- Fix sine and other functions not accepting scalar references
+- Fix possible name conflict with fmt
+
+## 5.0.1
+
+2022-12-06
+
+#### Changed
+
+- Documentation updates
+
+#### Fixed
+
+- MSVC fixes
+- Ambiguous assign operator fixes
+
+## 5.0.0
+
+2022-11-30
+
+#### Added
+
+- New `tensor<T, dims>` class for multidimensional data (like numpy's nparray)
+- Histogram computation
+- Normal (gaussian) distribution for random number generator
+- All builtin expressions support multiple dimensions
+- Exception support (may be configured to call user-supplied function or std::abort)
+- [changes required] CMake variables now have `KFR_` prefix
+- Template parameter deduction for `vec`, so `vec{1, 2}` is the same as `vec<int, 2>{1, 2}`
+- [changes required] `random_state` is now architecture-agnostic and defined in `kfr` namespace
+- All expression classes have been moved from `kfr::CMT_ARCH_NAME::internal` to `kfr::CMT_ARCH_NAME` namespace
+- `expression_traits<T>` introduced to support interpreting any object as kfr expression
+- [changes required] User-defined expressions should be rewritten to be used in KFR5
+- Out-of-class assign operators for all input & output expressions
+- `round.hpp`, `clamp.hpp`, `select.hpp`, `sort.hpp`, `saturation.hpp`, `min_max.hpp`, `logical.hpp`, `abs.hpp` headers have been moved to `simd` module
+- `state_holder.hpp` has been moved to `base` module
+- All code related to expressions have been moved to `base` module
+- `vec<T, N>::front()` and `vec<T, N>::front()` are now writable
+- `set_elements` functions for output expressions like `get_elements` for input expressions
+
+#### Changed
+
+- Documentation updates
+
+## 4.3.1
+
+2022-11-23
+
+#### Fixed
+
+- C++20 compatibility fixes
+
+## 4.3.0
+
+2022-10-14
+
+#### Changed
+* Compile times improved and memory usage reduced for MSVC and GCC
+* `cxxdox` version updated
+* Tests for latest Clang, Azure Pipelines images are updated
+* .editorconfig file
+
+#### Fixed
+* Fixed incompatibility with latest GCC
+* Fixed various Internal Compiler Error in latest MSVC2019
+* Fixed tests for Clang 14
+* Fixed bugs in gather/scatter and read/write functions
+
+## 4.2.1
+
+2021-04-29
+
+#### Fixed
+
+- AVX512 intrinsics in MSVC and GCC
+- `carg`
+- Python 3.7 compatibility
+
+#### Changed
+
+- Global constants are now inline
+
 ## 4.2.0
 
 2020-02-17
@@ -13,8 +119,6 @@
 
 - `CMAKE_INSTALL_PREFIX` is reset to empty on Win32 (can be overriden in cmake command line)
 - C API binary is now installed using install command (`make install`, `ninja install` or `cmake --build . --target install`)
-
-#### Fixed
 
 ## 4.1.0
 
