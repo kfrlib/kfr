@@ -37,6 +37,7 @@ const char* wins[] = {
     "lanczos        ",
     "cosine_np      ",
     "planck_taper   ",
+    "tukey          ",
 };
 
 template <window_type type, typename T>
@@ -83,6 +84,7 @@ TEST(window)
     win<w::cosine_np, f32>(7, 0.0, s::symmetric,
                            u{ 0.22252093, 0.6234898, 0.90096887, 1., 0.90096887, 0.6234898, 0.22252093 });
     win<w::planck_taper, f32>(7, 0.25, s::symmetric, u{ 0, 0.817575, 1, 1, 1, 0.817574, 0 });
+    win<w::tukey, f32>(7, 0.5, s::symmetric, u{ 0., 0.75, 1., 1., 1., 0.75, 0. });
 
     // 8 ; symmetric
     win<w::rectangular, f32>(8, 0.0, s::symmetric, u{ 1, 1, 1, 1, 1, 1, 1, 1 });
@@ -124,6 +126,7 @@ TEST(window)
         8, 0.0, s::symmetric,
         u{ 0.19509032, 0.55557023, 0.83146961, 0.98078528, 0.98078528, 0.83146961, 0.55557023, 0.19509032 });
     win<w::planck_taper, f32>(8, 0.25, s::symmetric, u{ 0, 0.641834, 1, 1, 1, 1, 0.641833, 0 });
+    win<w::tukey, f32>(8, 0.5, s::symmetric, u{ 0., 0.61126047, 1., 1., 1., 1., 0.61126047, 0. });
 
     // 7 ; periodic
     win<w::rectangular, f32>(7, 0.0, s::periodic, u{ 1, 1, 1, 1, 1, 1, 1 });
@@ -161,6 +164,7 @@ TEST(window)
         7, 0.0, s::periodic,
         u{ 0.19509032, 0.55557023, 0.83146961, 0.98078528, 0.98078528, 0.83146961, 0.55557023 });
     win<w::planck_taper, f32>(7, 0.25, s::periodic, u{ 0, 0.641834, 1, 1, 1, 1, 0.641833 });
+    win<w::tukey, f32>(7, 0.5, s::periodic, u{ 0., 0.61126047, 1., 1., 1., 1., 0.61126047 });
 
     // 8 ; periodic
     win<w::rectangular, f32>(8, 0.0, s::periodic, u{ 1, 1, 1, 1, 1, 1, 1, 1 });
@@ -196,6 +200,7 @@ TEST(window)
     win<w::cosine_np, f32>(8, 0.0, s::periodic,
                            u{ 0.17364818, 0.5, 0.76604444, 0.93969262, 1., 0.93969262, 0.76604444, 0.5 });
     win<w::planck_taper, f32>(8, 0.25, s::periodic, u{ 0, 0.5, 1, 1, 1, 1, 1, 0.5 });
+    win<w::tukey, f32>(8, 0.5, s::periodic, u{ 0., 0.5, 1., 1., 1., 1., 1., 0.5 });
     // clang-format on
 }
 } // namespace CMT_ARCH_NAME
