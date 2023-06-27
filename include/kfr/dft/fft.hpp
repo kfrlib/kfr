@@ -434,6 +434,7 @@ struct dct_plan : dft_plan<T>
         else
         {
             mirrored = make_complex(make_univector(in, size) * cos(t), make_univector(in, size) * -sin(t));
+            mirrored[0] = mirrored[0] * 0.5;
             dft_plan<T>::execute(mirrored_dft.data(), mirrored.data(), temp, cfalse);
             for (size_t i = 0; i < halfSize; i++)
             {
