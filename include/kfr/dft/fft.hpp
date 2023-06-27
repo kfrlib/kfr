@@ -137,10 +137,10 @@ struct dft_plan
     size_t size;
     size_t temp_size;
 
-#ifdef KFR_DFT_MULTI
     explicit dft_plan(cpu_t cpu, size_t size, dft_order order = dft_order::normal)
         : size(size), temp_size(0), data_size(0), arblen(false)
     {
+#ifdef KFR_DFT_MULTI
         if (cpu == cpu_t::runtime)
             cpu = get_cpu();
         switch (cpu)
@@ -161,18 +161,15 @@ struct dft_plan
         default:
             CMT_IF_ENABLED_SSE2(sse2::dft_initialize(*this); break;);
         }
+#else
+        (void)cpu;
+        dft_initialize(*this);
+#endif
     }
     explicit dft_plan(size_t size, dft_order order = dft_order::normal)
         : dft_plan(cpu_t::runtime, size, order)
     {
     }
-#else
-    explicit dft_plan(size_t size, dft_order order = dft_order::normal)
-        : size(size), temp_size(0), data_size(0), arblen(false)
-    {
-        dft_initialize(*this);
-    }
-#endif
 
     void dump() const
     {
@@ -311,10 +308,10 @@ struct dft_plan_real : dft_plan<T>
     dft_pack_format fmt;
     dft_stage_ptr<T> fmt_stage;
 
-#ifdef KFR_DFT_MULTI
     explicit dft_plan_real(cpu_t cpu, size_t size, dft_pack_format fmt = dft_pack_format::CCs)
         : dft_plan<T>(typename dft_plan<T>::noinit{}, size / 2), size(size), fmt(fmt)
     {
+#ifdef KFR_DFT_MULTI
         if (cpu == cpu_t::runtime)
             cpu = get_cpu();
         switch (cpu)
@@ -335,13 +332,15 @@ struct dft_plan_real : dft_plan<T>
         default:
             CMT_IF_ENABLED_SSE2(sse2::dft_real_initialize(*this); break;);
         }
-    }
+#else
+        (void)cpu;
+        dft_real_initialize(*this);
 #endif
+    }
 
     explicit dft_plan_real(size_t size, dft_pack_format fmt = dft_pack_format::CCs)
-        : dft_plan<T>(typename dft_plan<T>::noinit{}, size / 2), size(size), fmt(fmt)
+        : dft_plan_real(cpu_t::runtime, size, fmt)
     {
-        dft_real_initialize(*this);
     }
 
     void execute(complex<T>*, const complex<T>*, u8*, bool = false) const = delete;
@@ -404,12 +403,10 @@ struct dct_plan : dft_plan<T>
 {
     dct_plan(size_t size) : dft_plan<T>(size) { this->temp_size += sizeof(complex<T>) * size * 2; }
 
-#ifdef KFR_DFT_MULTI
     dct_plan(cpu_t cpu, size_t size) : dft_plan<T>(cpu, size)
     {
         this->temp_size += sizeof(complex<T>) * size * 2;
     }
-#endif
 
     KFR_MEM_INTRINSIC void execute(T* out, const T* in, u8* temp, bool inverse = false) const
     {
