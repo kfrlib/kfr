@@ -156,10 +156,14 @@ TEST(test_complex_correlate)
 
 #if defined CMT_ARCH_ARM || !defined NDEBUG
 constexpr size_t fft_stopsize = 12;
+#ifndef KFR_DFT_NO_NPo2
 constexpr size_t dft_stopsize = 101;
+#endif
 #else
 constexpr size_t fft_stopsize = 20;
+#ifndef KFR_DFT_NO_NPo2
 constexpr size_t dft_stopsize = 257;
+#endif
 #endif
 
 TEST(fft_real)
@@ -175,6 +179,7 @@ TEST(fft_real)
     CHECK(rms(rev - in) <= 0.00001f);
 }
 
+#ifndef KFR_DFT_NO_NPo2
 TEST(fft_real_not_size_4N)
 {
     kfr::univector<double, 6> in = counter();
@@ -192,6 +197,7 @@ TEST(fft_real_not_size_4N)
     kfr::univector<double, size> rev2                       = irealdft(out2) / size;
     CHECK(rms(rev2 - in2) <= 0.00001f);
 }
+#endif
 
 TEST(fft_accuracy)
 {
