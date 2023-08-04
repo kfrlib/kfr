@@ -31,13 +31,19 @@
 namespace kfr
 {
 
+inline namespace CMT_ARCH_NAME
+{
+
 template <typename Tout, int Mout, int Min, typename Tin, size_t N,
           KFR_ENABLE_IF(Mout != Min &&
                         (std::is_floating_point<Tin>::value || std::is_floating_point<Tout>::value))>
 KFR_INTRINSIC vec<Tout, N> convert_scaled(const vec<Tin, N>& value)
 {
-    using Tcommon = std::common_type_t<Tin, Tout>;
-    return static_cast<vec<Tout, N>>(static_cast<vec<Tcommon, N>>(value) * Mout / Min);
+    using Tcommon     = std::common_type_t<Tin, Tout>;
+    vec<Tcommon, N> x = static_cast<vec<Tcommon, N>>(value) * Mout / Min;
+    if constexpr (!std::is_floating_point_v<Tout>)
+        x += 0.5f / Mout;
+    return static_cast<vec<Tout, N>>(x);
 }
 
 template <typename Tout, int Mout, int Min, typename Tin, size_t N,
@@ -53,6 +59,15 @@ KFR_INTRINSIC vec<Tout, N> convert_scaled(const vec<Tin, N>& value)
 template <typename Tout, int Mout, int Min, typename Tin, size_t N, KFR_ENABLE_IF(Mout == Min)>
 KFR_INTRINSIC vec<Tout, N> convert_scaled(const vec<Tin, N>& value)
 {
-    return static_cast<vec<Tout, N>>(value);
+    if constexpr (!std::is_floating_point_v<Tout>)
+    {
+        return static_cast<vec<Tout, N>>(round(value));
+    }
+    else
+    {
+        return static_cast<vec<Tout, N>>(value);
+    }
 }
+} // namespace CMT_ARCH_NAME
+
 } // namespace kfr

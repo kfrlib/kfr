@@ -26,6 +26,7 @@
 #pragma once
 
 #include "operators.hpp"
+#include "min_max.hpp"
 
 namespace kfr
 {
@@ -134,5 +135,21 @@ KFR_INTRINSIC T hrms(const vec<T, N>& value)
     return builtin_sqrt(hadd(value * value) / N);
 }
 KFR_FN(hrms)
+
+/// @brief Calculate the minimum of all elements in the vector
+template <typename T, size_t N>
+KFR_INTRINSIC T hmin(const vec<T, N>& value)
+{
+    return horizontal(value, fn::min());
+}
+KFR_FN(hmin)
+
+/// @brief Calculate the maximum of all elements in the vector
+template <typename T, size_t N>
+KFR_INTRINSIC T hmax(const vec<T, N>& value)
+{
+    return horizontal(value, fn::max());
+}
+KFR_FN(hmax)
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
