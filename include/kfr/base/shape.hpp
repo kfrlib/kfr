@@ -276,11 +276,14 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
 
     KFR_MEM_INTRINSIC constexpr index_t dot(const shape& other) const { return (*this)->dot(*other); }
 
-    template <index_t indims>
-    KFR_MEM_INTRINSIC constexpr shape adapt(const shape<indims>& other) const
+    template <index_t indims, bool stop = false>
+    KFR_MEM_INTRINSIC constexpr shape adapt(const shape<indims>& other, cbool_t<stop> = {}) const
     {
         static_assert(indims >= dims);
-        return other.template trim<dims>()->min(**this - 1);
+        if constexpr (stop)
+            return other.template trim<dims>()->min(**this);
+        else
+            return other.template trim<dims>()->min(**this - 1);
     }
 
     KFR_MEM_INTRINSIC constexpr index_t product() const { return (*this)->product(); }
@@ -357,8 +360,8 @@ struct shape<0>
     KFR_MEM_INTRINSIC size_t to_flat(const shape<0>& indices) const { return 0; }
     KFR_MEM_INTRINSIC shape<0> from_flat(size_t index) const { return {}; }
 
-    template <index_t odims>
-    KFR_MEM_INTRINSIC shape<0> adapt(const shape<odims>& other) const
+    template <index_t odims, bool stop = false>
+    KFR_MEM_INTRINSIC shape<0> adapt(const shape<odims>& other, cbool_t<stop> = {}) const
     {
         return {};
     }
