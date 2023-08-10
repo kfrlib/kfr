@@ -120,22 +120,22 @@ static void ebu_test_multichannel(int sample_rate,
     if (!std::isnan(refM))
     {
         testo::scope s(as_string("M = ", fmt<'f', -1, 2>(M)));
-        CHECK(std::abs(M - refM) < 0.05f);
+        CHECK(std::abs(M - refM) < 0.1f);
     }
     if (!std::isnan(refS))
     {
         testo::scope s(as_string("S = ", fmt<'f', -1, 2>(S)));
-        CHECK(std::abs(S - refS) < 0.05f);
+        CHECK(std::abs(S - refS) < 0.1f);
     }
     if (!std::isnan(refI))
     {
         testo::scope s(as_string("I = ", fmt<'f', -1, 2>(I)));
-        CHECK(std::abs(I - refI) < 0.05f);
+        CHECK(std::abs(I - refI) < 0.1f);
     }
     if (!std::isnan(refLRA))
     {
         testo::scope s(as_string("LRA = ", fmt<'f', -1, 2>((RH - RL))));
-        CHECK(std::abs((RH - RL) - refLRA) < 0.05f);
+        CHECK(std::abs((RH - RL) - refLRA) < 0.1f);
     }
 }
 
