@@ -63,6 +63,7 @@ struct point
     constexpr explicit point(const vec<T, 2>& v) noexcept : v(v) {}
     constexpr point(T x, T y) noexcept : v(x, y) {}
     constexpr point(const size<T>& sz) noexcept : v(sz.v) {}
+    constexpr point(const point& p) noexcept : v(p.v) {}
 
     template <typename U>
     operator point<U>() const
@@ -112,12 +113,12 @@ struct point
     {
         struct
         {
-            T x;
-            T y;
+            vec<T, 2> v;
         };
         struct
         {
-            vec<T, 2> v;
+            T x;
+            T y;
         };
         struct
         {
@@ -144,6 +145,7 @@ struct size
     constexpr size(T x, T y) noexcept : v(x, y) {}
     constexpr explicit size(T xy) noexcept : v(xy, xy) {}
     constexpr size(const vec<T, 2>& v) noexcept : v(v) {}
+    constexpr size(const size& s) noexcept : v(s.v) {}
 
     template <typename U>
     operator size<U>() const noexcept
@@ -216,6 +218,7 @@ struct border
     constexpr border(T h, T v) noexcept : v(h, v, h, v) {}
     constexpr border(T x1, T y1, T x2, T y2) noexcept : v(x1, y1, x2, y2) {}
     constexpr explicit border(const vec<T, 4>& v) : v(v) {}
+    constexpr border(const border& b) noexcept : v(b.v) {}
 
     template <typename U>
     operator border<U>() const
@@ -281,6 +284,7 @@ struct rectangle
 
     constexpr rectangle(T x1, T y1, T x2, T y2) : v(x1, y1, x2, y2) {}
     constexpr explicit rectangle(const vec<T, 4>& v) : v(v) {}
+    constexpr rectangle(const rectangle& r) noexcept : v(r.v) {}
 
     template <typename U>
     operator rectangle<U>() const
@@ -507,6 +511,7 @@ struct matrix2d
     matrix2d() : v{ 1, 0, 0, 1, 0, 0 } {}
 
     matrix2d(T a, T b, T c, T d, T e, T f) : v{ a, b, c, d, e, f } {}
+    constexpr matrix2d(const matrix2d& m) : v(m.v) {}
 
     explicit matrix2d(const vec<T, 6>& v) : v(v) {}
 
