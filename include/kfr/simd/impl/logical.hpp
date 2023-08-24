@@ -209,6 +209,7 @@ KFR_INTRINSIC bool bittestany(const mu16neon& a) { return bittestany(bitcast<bit
 KFR_INTRINSIC bool bittestany(const mu64neon& a) { return bittestany(bitcast<bit<u32>>(a)); }
 KFR_INTRINSIC bool bittestany(const mi8neon& a) { return bittestany(bitcast<bit<u32>>(a)); }
 KFR_INTRINSIC bool bittestany(const mi16neon& a) { return bittestany(bitcast<bit<u32>>(a)); }
+KFR_INTRINSIC bool bittestany(const mi32neon& a) { return bittestany(bitcast<bit<u32>>(a)); }
 KFR_INTRINSIC bool bittestany(const mi64neon& a) { return bittestany(bitcast<bit<u32>>(a)); }
 KFR_INTRINSIC bool bittestany(const mf32neon& a) { return bittestany(bitcast<bit<u32>>(a)); }
 KFR_INTRINSIC bool bittestany(const mf64neon& a) { return bittestany(bitcast<bit<u32>>(a)); }
@@ -218,6 +219,7 @@ KFR_INTRINSIC bool bittestall(const mu16neon& a) { return bittestall(bitcast<bit
 KFR_INTRINSIC bool bittestall(const mu64neon& a) { return bittestall(bitcast<bit<u32>>(a)); }
 KFR_INTRINSIC bool bittestall(const mi8neon& a) { return bittestall(bitcast<bit<u32>>(a)); }
 KFR_INTRINSIC bool bittestall(const mi16neon& a) { return bittestall(bitcast<bit<u32>>(a)); }
+KFR_INTRINSIC bool bittestall(const mi32neon& a) { return bittestall(bitcast<bit<u32>>(a)); }
 KFR_INTRINSIC bool bittestall(const mi64neon& a) { return bittestall(bitcast<bit<u32>>(a)); }
 KFR_INTRINSIC bool bittestall(const mf32neon& a) { return bittestall(bitcast<bit<u32>>(a)); }
 KFR_INTRINSIC bool bittestall(const mf64neon& a) { return bittestall(bitcast<bit<u32>>(a)); }
