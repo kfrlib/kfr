@@ -461,7 +461,7 @@ KFR_INTRINSIC vec<T, N> transpose(const vec<T, N>& x)
 template <typename T, size_t N>
 KFR_INTRINSIC vec<vec<T, N>, N> transpose(const vec<vec<T, N>, N>& x)
 {
-    return vec<vec<T, N>, N>::from_flatten(transpose<2>(x.flatten()));
+    return vec<vec<T, N>, N>::from_flatten(transpose<N>(x.flatten()));
 }
 KFR_FN(transpose)
 
