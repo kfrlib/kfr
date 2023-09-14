@@ -759,7 +759,7 @@ static auto process(Out&& out, In&& in, shape<outdims> start = shape<outdims>(0)
         in_size = inshape[in_axis];
 
     begin_pass(out, start, stop);
-    begin_pass(in, inshape.adapt(start), inshape.adapt(stop));
+    begin_pass(in, inshape.adapt(start), inshape.adapt(stop, ctrue));
 
     shape<outdims> outidx;
     if constexpr (outdims == 1)
@@ -830,7 +830,7 @@ static auto process(Out&& out, In&& in, shape<outdims> start = shape<outdims>(0)
             outidx[out_axis] = stop[out_axis] - 1;
         } while (internal_generic::increment_indices(outidx, start, stop));
     }
-    end_pass(in, inshape.adapt(start), inshape.adapt(stop));
+    end_pass(in, inshape.adapt(start), inshape.adapt(stop, ctrue));
     end_pass(out, start, stop);
     return stop;
 }
