@@ -412,12 +412,14 @@ struct alignas(internal::vec_alignment<T, N_>) vec
               KFR_ENABLE_IF(dummy == 0 && !compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC constexpr value_type get(size_t index) const CMT_NOEXCEPT
     {
+        value_type result{};
         union
         {
             simd_type v;
-            T s[N];
+            ST s[SN];
         } u{ this->v };
-        return u.s[index];
+        memcpy(&result, &u.s[index * (SN / N)], sizeof(ST) * (SN / N));
+        return result;
     }
 
     template <size_t index, KFR_ENABLE_IF(index < 1024 && compound_type_traits<T>::is_scalar)>
