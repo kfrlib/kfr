@@ -215,7 +215,7 @@ KFR_INTRINSIC std::common_type_t<T1, T2> bitwiseand(const T1& x, const T2& y)
 template <typename T>
 constexpr KFR_INTRINSIC T bitwiseand(initialvalue<T>)
 {
-    return constants<T>::allones();
+    return special_constants<T>::allones();
 }
 KFR_FN(bitwiseand)
 
@@ -228,7 +228,7 @@ KFR_INTRINSIC std::common_type_t<T1, T2> bitwiseandnot(const T1& x, const T2& y)
 template <typename T>
 constexpr inline T bitwiseandnot(initialvalue<T>)
 {
-    return constants<T>::allones();
+    return special_constants<T>::allones();
 }
 KFR_FN(bitwiseandnot)
 

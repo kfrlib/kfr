@@ -92,7 +92,7 @@ KFR_INTRINSIC mask<T, N> isfinite(const vec<T, N>& x)
 template <typename T, size_t N>
 KFR_INTRINSIC mask<T, N> isnegative(const vec<T, N>& x)
 {
-    return (x & constants<T>::highbitmask()) != 0;
+    return (x & special_constants<T>::highbitmask()) != 0;
 }
 
 template <typename T, size_t N>
