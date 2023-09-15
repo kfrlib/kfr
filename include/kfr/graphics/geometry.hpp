@@ -63,7 +63,7 @@ struct point
     constexpr explicit point(const vec<T, 2>& v) noexcept : v(v) {}
     constexpr point(T x, T y) noexcept : v(x, y) {}
     constexpr point(const size<T>& sz) noexcept : v(sz.v) {}
-    constexpr point(const point& p) noexcept : v(p.v) {}
+    constexpr point(const point& p) noexcept = default;
 
     template <typename U>
     operator point<U>() const
@@ -145,7 +145,7 @@ struct size
     constexpr size(T x, T y) noexcept : v(x, y) {}
     constexpr explicit size(T xy) noexcept : v(xy, xy) {}
     constexpr size(const vec<T, 2>& v) noexcept : v(v) {}
-    constexpr size(const size& s) noexcept : v(s.v) {}
+    constexpr size(const size& s) noexcept = default;
 
     template <typename U>
     operator size<U>() const noexcept
@@ -218,7 +218,7 @@ struct border
     constexpr border(T h, T v) noexcept : v(h, v, h, v) {}
     constexpr border(T x1, T y1, T x2, T y2) noexcept : v(x1, y1, x2, y2) {}
     constexpr explicit border(const vec<T, 4>& v) : v(v) {}
-    constexpr border(const border& b) noexcept : v(b.v) {}
+    constexpr border(const border& b) noexcept = default;
 
     template <typename U>
     operator border<U>() const
@@ -284,7 +284,7 @@ struct rectangle
 
     constexpr rectangle(T x1, T y1, T x2, T y2) : v(x1, y1, x2, y2) {}
     constexpr explicit rectangle(const vec<T, 4>& v) : v(v) {}
-    constexpr rectangle(const rectangle& r) noexcept : v(r.v) {}
+    constexpr rectangle(const rectangle& r) noexcept = default;
 
     template <typename U>
     operator rectangle<U>() const
