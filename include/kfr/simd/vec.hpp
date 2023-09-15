@@ -204,7 +204,19 @@ inline constexpr size_t vec_alignment =
                         next_poweroftwo(sizeof(typename compound_type_traits<T>::deep_subtype) *
                                         const_max(size_t(1), N_) * compound_type_traits<T>::deep_width)));
 
+template <typename T>
+struct is_vec_impl : std::false_type
+{
+};
+
+template <typename T, size_t N>
+struct is_vec_impl<vec<T, N>> : std::true_type
+{
+};
 } // namespace internal
+
+template <typename T>
+constexpr inline bool is_vec = internal::is_vec_impl<T>::value;
 
 template <typename T, size_t N_>
 struct alignas(internal::vec_alignment<T, N_>) vec
@@ -477,6 +489,20 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     {
         constexpr operator value_type() const CMT_NOEXCEPT { return v.get(index); }
 
+        template <typename U = T, CMT_ENABLE_IF(is_vec<U>)>
+        KFR_MEM_INTRINSIC typename U::value_type operator[](size_t index) CMT_NOEXCEPT
+        {
+            return v.get(this->index)[index];
+        }
+        KFR_MEM_INTRINSIC value_type operator+() CMT_NOEXCEPT
+        {
+            return v.get(index);
+        }
+        KFR_MEM_INTRINSIC value_type operator-() CMT_NOEXCEPT
+        {
+            return -v.get(index);
+        }
+
         KFR_MEM_INTRINSIC element& operator=(const value_type& s) CMT_NOEXCEPT
         {
             v.set(index, s);
@@ -596,22 +622,6 @@ KFR_INTRINSIC vec<T, sizeof...(indices)> shufflevectors(const vec<T, N>& x, cons
 {
     return intrinsics::simd_shuffle(intrinsics::simd2_t<T, N, N>{}, x.v, y.v, i, overload_auto);
 }
-
-namespace internal
-{
-template <typename T>
-struct is_vec_impl : std::false_type
-{
-};
-
-template <typename T, size_t N>
-struct is_vec_impl<vec<T, N>> : std::true_type
-{
-};
-} // namespace internal
-
-template <typename T>
-constexpr inline bool is_vec = internal::is_vec_impl<T>::value;
 
 CMT_PRAGMA_GNU(GCC diagnostic push)
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wold-style-cast")
