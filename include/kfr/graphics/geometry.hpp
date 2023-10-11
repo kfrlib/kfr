@@ -63,7 +63,11 @@ struct point
     constexpr explicit point(const vec<T, 2>& v) noexcept : v(v) {}
     constexpr point(T x, T y) noexcept : v(x, y) {}
     constexpr point(const size<T>& sz) noexcept : v(sz.v) {}
+#if CMT_COMPILER_IS_MSVC
+    constexpr point(const point& p) noexcept: v(p.v) {}
+#else
     constexpr point(const point& p) noexcept = default;
+#endif
 
     template <typename U>
     operator point<U>() const
@@ -145,7 +149,11 @@ struct size
     constexpr size(T x, T y) noexcept : v(x, y) {}
     constexpr explicit size(T xy) noexcept : v(xy, xy) {}
     constexpr size(const vec<T, 2>& v) noexcept : v(v) {}
-    constexpr size(const size& s) noexcept = default;
+#if CMT_COMPILER_IS_MSVC
+    constexpr size(const size& p) noexcept: v(p.v) {}
+#else
+    constexpr size(const size& p) noexcept = default;
+#endif
 
     template <typename U>
     operator size<U>() const noexcept
@@ -218,7 +226,11 @@ struct border
     constexpr border(T h, T v) noexcept : v(h, v, h, v) {}
     constexpr border(T x1, T y1, T x2, T y2) noexcept : v(x1, y1, x2, y2) {}
     constexpr explicit border(const vec<T, 4>& v) : v(v) {}
-    constexpr border(const border& b) noexcept = default;
+#if CMT_COMPILER_IS_MSVC
+    constexpr border(const border& p) noexcept: v(p.v) {}
+#else
+    constexpr border(const border& p) noexcept = default;
+#endif
 
     template <typename U>
     operator border<U>() const
@@ -284,7 +296,11 @@ struct rectangle
 
     constexpr rectangle(T x1, T y1, T x2, T y2) : v(x1, y1, x2, y2) {}
     constexpr explicit rectangle(const vec<T, 4>& v) : v(v) {}
-    constexpr rectangle(const rectangle& r) noexcept = default;
+#if CMT_COMPILER_IS_MSVC
+    constexpr rectangle(const rectangle& p) noexcept: v(p.v) {}
+#else
+    constexpr rectangle(const rectangle& p) noexcept = default;
+#endif
 
     template <typename U>
     operator rectangle<U>() const
