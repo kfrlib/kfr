@@ -1,5 +1,26 @@
 # Changelog
 
+## 5.1.0
+
+2023-10-11
+
+#### Added
+
+- Tukey window function
+- Subscript operator for `vec<>`
+- Unary operators for `vec<>`
+
+#### Fixed
+
+- Inverse DCT has been fixed
+- Allow C API to be built on non-x86 systems
+- Tensor iteration range has been fixed
+- `transpose(vec<vec<>>)` has been fixed
+- `vec<bit<>>` bug on GCC and MSVC
+- Internal constant `is_pod` has been removed
+- `root` and `cbrt` have been fixed for negative values
+- Fixed numerous warnings in MSVC
+
 ## 5.0.3
 
 2023-06-26
