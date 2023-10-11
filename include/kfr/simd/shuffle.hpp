@@ -365,12 +365,12 @@ namespace internal
 template <typename T, size_t N>
 KFR_INTRINSIC mask<T, N> evenmask()
 {
-    return broadcast<N>(maskbits<T>(true), maskbits<T>(false));
+    return mask<T, N>(broadcast<N>(maskbits<T>(true), maskbits<T>(false)));
 }
 template <typename T, size_t N>
 KFR_INTRINSIC mask<T, N> oddmask()
 {
-    return broadcast<N>(maskbits<T>(false), maskbits<T>(true));
+    return mask<T, N>(broadcast<N>(maskbits<T>(false), maskbits<T>(true)));
 }
 } // namespace internal
 

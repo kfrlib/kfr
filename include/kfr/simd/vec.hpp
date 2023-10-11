@@ -261,7 +261,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     // default
     KFR_MEM_INTRINSIC constexpr vec() CMT_NOEXCEPT {}
 
-#if defined(_MSC_VER) && !defined(__clang__)
+#ifdef CMT_COMPILER_IS_MSVC
     // MSVC Internal Compiler Error workaround
     // copy
     KFR_MEM_INTRINSIC constexpr vec(const vec& value) CMT_NOEXCEPT : v(value.v) {}
@@ -295,7 +295,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
               KFR_ENABLE_IF(std::is_convertible_v<U, value_type>&& compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC vec(const U& s) CMT_NOEXCEPT
         : v(intrinsics::simd_broadcast(intrinsics::simd_t<unwrap_bit<ST>, SN>{},
-                                       static_cast<unwrap_bit<ST>>(static_cast<ST>(s))))
+                                       unwrap_bit_value(static_cast<ST>(s))))
     {
     }
 
@@ -329,6 +329,19 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     KFR_MEM_INTRINSIC vec(const vec<U, N>& x) CMT_NOEXCEPT
         : v(intrinsics::simd_convert(
               intrinsics::simd_cvt_t<unwrap_bit<ST>, unwrap_bit<deep_subtype<U>>, SN>{}, x.v))
+    {
+    }
+
+    // from mask of the same type
+    template <typename U = T, KFR_ENABLE_IF(!is_bit<U> && compound_type_traits<T>::is_scalar)>
+    KFR_MEM_INTRINSIC explicit vec(const vec<bit<T>, N>& x) CMT_NOEXCEPT
+        : v(x.v)
+    {
+    }
+    // from vec to mask of the same type
+    template <typename U = T, KFR_ENABLE_IF(is_bit<U> && compound_type_traits<T>::is_scalar)>
+    KFR_MEM_INTRINSIC explicit vec(const vec<unwrap_bit<T>, N>& x) CMT_NOEXCEPT
+        : v(x.v)
     {
     }
 

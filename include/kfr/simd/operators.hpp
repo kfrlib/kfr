@@ -179,12 +179,12 @@ KFR_INTRINSIC mask<C, N> operator^(const mask<T1, N>& x, const mask<T2, N>& y) C
 template <typename T, size_t N>
 KFR_INTRINSIC mask<T, N> operator~(const mask<T, N>& x) CMT_NOEXCEPT
 {
-    return ~x.asvec();
+    return mask<T, N>(~x.asvec());
 }
 template <typename T, size_t N>
 KFR_INTRINSIC mask<T, N> operator!(const mask<T, N>& x) CMT_NOEXCEPT
 {
-    return ~x.asvec();
+    return mask<T, N>(~x.asvec());
 }
 
 KFR_INTRINSIC float bitwisenot(float x) { return fbitcast(~ubitcast(x)); }

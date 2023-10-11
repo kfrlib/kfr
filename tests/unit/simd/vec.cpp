@@ -208,6 +208,19 @@ TEST(masks)
     CHECK(float(v[1]) == maskbits<float>(true));
     CHECK(float(v[2]) == maskbits<float>(false));
     CHECK(float(v[3]) == maskbits<float>(true));
+
+    CHECK(bitcast_anything<std::array<int32_t, 1>>(mask<i32, 1>{ true }) == std::array<int32_t, 1>{ -1 });
+    CHECK(bitcast_anything<std::array<int32_t, 2>>(mask<i32, 2>{ true, true }) ==
+          std::array<int32_t, 2>{ -1, -1 });
+    CHECK(bitcast_anything<std::array<int32_t, 4>>(mask<i32, 4>{ true, true, true, true }) ==
+          std::array<int32_t, 4>{ -1, -1, -1, -1 });
+
+    CHECK(bitcast_anything<u8x16>(mask<f32, 4>{ true, true, true, true }) ==
+          u8x16{ 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 });
+    CHECK(bitcast_anything<u8x16>(bitcast<bit<u8>>(mask<i32, 4>{ true, true, true, true })) ==
+          u8x16{ 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 });
+    CHECK(bitcast_anything<u8x16>(bitcast<bit<u8>>(mask<f32, 4>{ true, true, true, true })) ==
+          u8x16{ 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 });
 }
 
 TEST(vec_deduction)

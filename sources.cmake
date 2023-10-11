@@ -522,6 +522,7 @@ set(
     ${PROJECT_SOURCE_DIR}/tests/unit/math/tan.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/abs.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/complex.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/simd/logical.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/min_max.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/operators.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/round.cpp

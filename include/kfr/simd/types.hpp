@@ -201,48 +201,37 @@ constexpr inline T maskbits(bool value)
 {
     return value ? special_constants<T>::allones() : special_constants<T>::allzeros();
 }
-
 template <typename T>
-struct bit_value;
+constexpr inline bool from_maskbits(T value)
+{
+    return bitcast_anything<itype<T>>(value) < 0;
+}
 
 template <typename T>
 struct bit
 {
-    alignas(T) bool value;
+    T value;
     bit() CMT_NOEXCEPT = default;
 
-    constexpr bit(const bit_value<T>& value) CMT_NOEXCEPT : value(static_cast<bool>(value)) {}
-
-    constexpr explicit bit(T value) CMT_NOEXCEPT : value(bitcast_anything<itype<T>>(value) < 0) {}
-    constexpr bit(bool value) CMT_NOEXCEPT : value(value) {}
+    constexpr bit(bool value) CMT_NOEXCEPT : value(maskbits<T>(value)) {}
 
     template <typename U>
-    constexpr bit(const bit<U>& value) CMT_NOEXCEPT : value(value.value)
-    {
-    }
-
-    constexpr operator bool() const CMT_NOEXCEPT { return value; }
-    constexpr explicit operator T() const CMT_NOEXCEPT { return maskbits<T>(value); }
-};
-
-template <typename T>
-struct bit_value
-{
-    T value;
-    bit_value() CMT_NOEXCEPT = default;
-
-    constexpr bit_value(const bit<T>& value) CMT_NOEXCEPT : bit_value(value.value) {}
-
-    constexpr bit_value(T value) CMT_NOEXCEPT : value(value) {}
-    constexpr bit_value(bool value) CMT_NOEXCEPT : value(maskbits<T>(value)) {}
-
-    template <typename U>
-    constexpr bit_value(const bit_value<U>& value) CMT_NOEXCEPT : bit_value(value.operator bool())
+    constexpr bit(const bit<U>& value) CMT_NOEXCEPT : value(value.operator bool())
     {
     }
 
     constexpr operator bool() const CMT_NOEXCEPT { return bitcast_anything<itype<T>>(value) < 0; }
-    constexpr explicit operator T() const CMT_NOEXCEPT { return value; }
+
+    constexpr bit(T value) CMT_NOEXCEPT       = delete;
+    constexpr operator T() const CMT_NOEXCEPT = delete;
+
+    constexpr bool operator==(const bit& other) const CMT_NOEXCEPT
+    {
+        return operator bool() == other.operator bool();
+    }
+    constexpr bool operator!=(const bit& other) const CMT_NOEXCEPT { return !operator==(other); }
+    constexpr bool operator==(bool other) const CMT_NOEXCEPT { return operator bool() == other; }
+    constexpr bool operator!=(bool other) const CMT_NOEXCEPT { return !operator==(other); }
 };
 
 template <typename T>
@@ -272,10 +261,36 @@ struct unwrap_bit<bit<T>>
 template <typename T>
 using unwrap_bit = typename internal_generic::unwrap_bit<T>::type;
 
+
 template <typename T>
 constexpr inline bool is_bit = false;
 template <typename T>
 constexpr inline bool is_bit<bit<T>> = true;
+
+template <typename T>
+CMT_INTRINSIC T unwrap_bit_value(const T& value)
+{
+    return value;
+}
+template <typename T>
+CMT_INTRINSIC T unwrap_bit_value(const bit<T>& value)
+{
+    return value.value;
+}
+
+template <typename T, KFR_ENABLE_IF(is_bit<T>)>
+CMT_INTRINSIC T wrap_bit_value(const unwrap_bit<T>& value)
+{
+    T result;
+    result.value = value;
+    return result;
+}
+
+template <typename T, KFR_ENABLE_IF(!is_bit<T>)>
+CMT_INTRINSIC T wrap_bit_value(const T& value)
+{
+    return value;
+}
 
 namespace fn_generic
 {

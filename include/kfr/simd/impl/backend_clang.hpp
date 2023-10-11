@@ -51,13 +51,13 @@ KFR_INTRINSIC void simd_make(ctype_t<Tout>) = delete;
 template <typename Tout, typename Arg>
 KFR_INTRINSIC simd<Tout, 1> simd_make(ctype_t<Tout>, const Arg& arg)
 {
-    return (simd<Tout, 1>){ static_cast<unwrap_bit<Tout>>(arg) };
+    return (simd<Tout, 1>){ unwrap_bit_value(arg) };
 }
 
 template <typename Tout, typename... Args, size_t N = sizeof...(Args), KFR_ENABLE_IF(N > 1)>
 KFR_INTRINSIC simd<Tout, N> simd_make(ctype_t<Tout>, const Args&... args)
 {
-    return (simd<Tout, N>){ static_cast<unwrap_bit<Tout>>(args)... };
+    return (simd<Tout, N>){ unwrap_bit_value(args)... };
 }
 
 // @brief Returns vector with undefined value
@@ -79,7 +79,7 @@ KFR_INTRINSIC simd<Tout, N> simd_zeros()
 template <typename Tout, size_t N>
 KFR_INTRINSIC simd<Tout, N> simd_allones()
 {
-    return special_constants<Tout>::allones();
+    return unwrap_bit_value(special_constants<Tout>::allones());
 }
 
 // @brief Converts input vector to vector with subtype Tout
@@ -98,20 +98,20 @@ KFR_INTRINSIC simd<T, N> simd_bitcast(simd_cvt_t<T, T, N>, const simd<T, N>& x)
 template <typename T, size_t N, size_t index>
 KFR_INTRINSIC T simd_get_element(const simd<T, N>& value, csize_t<index>)
 {
-    return value[index];
+    return wrap_bit_value<T>(value[index]);
 }
 
 template <typename T, size_t N, size_t index>
 KFR_INTRINSIC simd<T, N> simd_set_element(simd<T, N> value, csize_t<index>, T x)
 {
-    value[index] = x;
+    value[index] = unwrap_bit_value(x);
     return value;
 }
 
 template <typename T, size_t N>
 KFR_INTRINSIC simd<T, N> simd_broadcast(simd_t<T, N>, identity<T> value)
 {
-    return static_cast<unwrap_bit<T>>(value);
+    return unwrap_bit_value(value);
 }
 
 template <typename T, size_t N, size_t... indices, size_t Nout = sizeof...(indices)>
@@ -178,13 +178,13 @@ using simd_storage = struct_with_alignment<simd<T, N>, A>;
 template <typename T, size_t N>
 KFR_INTRINSIC T simd_get_element(const simd<T, N>& value, size_t index)
 {
-    return value[index];
+    return wrap_bit_value<T>(value[index]);
 }
 
 template <typename T, size_t N>
 KFR_INTRINSIC simd<T, N> simd_set_element(simd<T, N> value, size_t index, T x)
 {
-    value[index] = x;
+    value[index] = unwrap_bit_value(x);
     return value;
 }
 } // namespace intrinsics

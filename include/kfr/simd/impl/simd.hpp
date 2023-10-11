@@ -74,12 +74,6 @@ struct alignas(force_compiletime_size_t<alignment<T, N>()>) simd_array
 };
 
 template <typename T, size_t N>
-struct alignas(force_compiletime_size_t<alignment<T, N>()>) simd_array<bit<T>, N>
-{
-    bit_value<T> val[next_poweroftwo(N)];
-};
-
-template <typename T, size_t N>
 struct simd_type;
 
 template <typename T>
