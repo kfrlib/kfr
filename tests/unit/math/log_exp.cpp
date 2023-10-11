@@ -19,5 +19,15 @@ KFR_AUTO_TEST_1(log, narrow, 2, 1)
 KFR_AUTO_TEST_1(log2, narrow, 2, 1)
 KFR_AUTO_TEST_1(log10, narrow, 3, 1)
 KFR_AUTO_TEST_1(cbrt, narrow, 5, 1)
+
+TEST(cbrt)
+{
+    CHECK(kfr::cbrt(27.f) == 3.f);
+    CHECK(kfr::cbrt(-27.f) == -3.f);
+    
+    CHECK(kfr::root(32.f, 5.f) == 2.f);
+    CHECK(kfr::root(-32.f, 5.f) == -2.f);
+    CHECK(std::isnan(kfr::root(-32.f, 5.001f)));
+}
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

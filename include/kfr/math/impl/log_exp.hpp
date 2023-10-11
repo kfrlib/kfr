@@ -244,13 +244,19 @@ KFR_INTRINSIC vec<T, N> pow(const vec<T, N>& a, const vec<T, N>& b)
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> root(const vec<T, N>& x, const vec<T, N>& b)
 {
-    return exp(reciprocal(b) * log(x));
+    const vec<T, N> t       = exp(reciprocal(b) * log(abs(x)));
+    const mask<T, N> isint  = floor(b) == b;
+    const mask<T, N> iseven = (broadcastto<itype<T>>(b) & 1) == 0;
+    return select(x > T(), t,
+                  select(x == T(), T(),
+                         select(isint, select(iseven, broadcast<N>(constants<T>::qnan), -t),
+                                broadcast<N>(constants<T>::qnan))));
 }
 
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> cbrt(const vec<T, N>& x)
 {
-    return pow<T, N>(x, T(0.333333333333333333333333333333333));
+    return root<T, N>(x, T(3));
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>), typename Tout = flt_type<T>>
