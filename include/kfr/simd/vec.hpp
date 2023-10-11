@@ -334,14 +334,14 @@ struct alignas(internal::vec_alignment<T, N_>) vec
 
     // from mask of the same type
     template <typename U = T, KFR_ENABLE_IF(!is_bit<U> && compound_type_traits<T>::is_scalar)>
-    KFR_MEM_INTRINSIC explicit vec(const vec<bit<T>, N>& x) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC explicit vec(
+        const vec<std::conditional_t<compound_type_traits<T>::is_scalar, bit<T>, T>, N>& x) CMT_NOEXCEPT
         : v(x.v)
     {
     }
     // from vec to mask of the same type
-    template <typename U = T, KFR_ENABLE_IF(is_bit<U> && compound_type_traits<T>::is_scalar)>
-    KFR_MEM_INTRINSIC explicit vec(const vec<unwrap_bit<T>, N>& x) CMT_NOEXCEPT
-        : v(x.v)
+    template <typename U = T, KFR_ENABLE_IF(is_bit<U>&& compound_type_traits<T>::is_scalar)>
+    KFR_MEM_INTRINSIC explicit vec(const vec<unwrap_bit<T>, N>& x) CMT_NOEXCEPT : v(x.v)
     {
     }
 
@@ -507,14 +507,8 @@ struct alignas(internal::vec_alignment<T, N_>) vec
         {
             return v.get(this->index)[index];
         }
-        KFR_MEM_INTRINSIC value_type operator+() CMT_NOEXCEPT
-        {
-            return v.get(index);
-        }
-        KFR_MEM_INTRINSIC value_type operator-() CMT_NOEXCEPT
-        {
-            return -v.get(index);
-        }
+        KFR_MEM_INTRINSIC value_type operator+() CMT_NOEXCEPT { return v.get(index); }
+        KFR_MEM_INTRINSIC value_type operator-() CMT_NOEXCEPT { return -v.get(index); }
 
         KFR_MEM_INTRINSIC element& operator=(const value_type& s) CMT_NOEXCEPT
         {
