@@ -184,7 +184,7 @@ struct histogram_data
     KFR_MEM_INTRINSIC void put(T value)
     {
         const T x = 1 + value * size();
-        ++m_values[std::floor(clamp(x, 0, size() + 1))];
+        ++m_values[static_cast<uint64_t>(std::floor(clamp(x, 0, size() + 1)))];
     }
 
 private:

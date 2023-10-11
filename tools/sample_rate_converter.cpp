@@ -28,7 +28,7 @@ int main(int argc, char** argv)
 
     // Initialize WAV reader and get file sample rate
     audio_reader_wav<double> reader(open_file_for_reading(argv[1]));
-    const size_t input_sr = reader.format().samplerate;
+    const size_t input_sr = static_cast<size_t>(reader.format().samplerate);
 
     // Read channels of audio
     univector2d<double> input_channels = reader.read_channels(reader.format().length);

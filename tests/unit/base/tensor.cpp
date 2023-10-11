@@ -14,6 +14,7 @@
 
 CMT_PRAGMA_MSVC(warning(push))
 CMT_PRAGMA_MSVC(warning(disable : 5051))
+CMT_PRAGMA_MSVC(warning(disable : 4244))
 
 namespace kfr
 {

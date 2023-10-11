@@ -216,7 +216,7 @@ public:
             break;
         case Speaker::LeftSurround:
         case Speaker::RightSurround:
-            m_output_energy_gain = dB_to_power(+1.5);
+            m_output_energy_gain = static_cast<T>(dB_to_power(+1.5));
             break;
         default:
             break;

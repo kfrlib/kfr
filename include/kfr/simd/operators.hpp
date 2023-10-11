@@ -30,6 +30,9 @@
 #include <algorithm>
 #include <utility>
 
+CMT_PRAGMA_MSVC(warning(push))
+CMT_PRAGMA_MSVC(warning(disable : 4244))
+
 namespace kfr
 {
 inline namespace CMT_ARCH_NAME
@@ -659,3 +662,5 @@ KFR_I_CE vec<bit<T>, N>::vec(const base& v) CMT_NOEXCEPT
 
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
+
+CMT_PRAGMA_MSVC(warning(pop))

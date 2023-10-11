@@ -11,6 +11,9 @@
 #include <kfr/dsp/biquad_design.hpp>
 #include <kfr/dsp/special.hpp>
 
+CMT_PRAGMA_MSVC(warning(push))
+CMT_PRAGMA_MSVC(warning(disable : 4305))
+
 namespace kfr
 {
 inline namespace CMT_ARCH_NAME
@@ -111,3 +114,5 @@ TEST(biquad_lowpass2)
 }
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
+
+CMT_PRAGMA_MSVC(warning(pop))

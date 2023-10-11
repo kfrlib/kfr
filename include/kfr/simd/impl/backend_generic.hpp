@@ -1549,7 +1549,7 @@ KFR_INTRINSIC simd<double, 2> simd_vec_shuffle(simd_t<double, 2>, const simd<dou
 template <uint8_t max>
 KFR_INTRINSIC constexpr uint8_t vec_idx(size_t value)
 {
-    return value >= max ? 0 : value;
+    return value >= static_cast<size_t>(max) ? 0 : static_cast<uint8_t>(value);
 }
 
 #ifdef CMT_ARCH_AVX512
@@ -1826,8 +1826,6 @@ template <typename T, size_t Nin, size_t... indices, size_t Nout>
 KFR_INTRINSIC simd<T, Nout> universal_shuffle(simd_t<T, Nin>, const simd<T, Nin>& x, csizes_t<indices...>)
 {
     using Indices = csizes_t<indices...>;
-
-    constexpr bool floating = typeclass<T> == datatype::f;
 
     constexpr size_t minwidth = minimum_vector_width<T>;
     constexpr size_t maxwidth = vector_width<T>;

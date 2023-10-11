@@ -34,6 +34,9 @@
 #include "../base/univector.hpp"
 #include "../simd/vec.hpp"
 
+CMT_PRAGMA_MSVC(warning(push))
+CMT_PRAGMA_MSVC(warning(disable : 4244))
+
 namespace kfr
 {
 inline namespace CMT_ARCH_NAME
@@ -323,3 +326,5 @@ KFR_FUNCTION filter<U>* make_fir_filter(cpu_t cpu, const univector_ref<const T>&
 }
 #endif
 } // namespace kfr
+
+CMT_PRAGMA_MSVC(warning(pop))

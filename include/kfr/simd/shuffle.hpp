@@ -34,6 +34,7 @@
 
 CMT_PRAGMA_MSVC(warning(push))
 CMT_PRAGMA_MSVC(warning(disable : 5051))
+CMT_PRAGMA_MSVC(warning(disable : 4244))
 
 namespace kfr
 {
@@ -244,7 +245,7 @@ KFR_INTRINSIC vec<T, count> concat_and_slice(const vec<T, N1>& x, const vec<T, N
 template <size_t start, size_t count, typename T, size_t N1, size_t N2, KFR_ENABLE_IF(N1 < N2)>
 KFR_INTRINSIC vec<T, count> concat_and_slice(const vec<T, N1>& x, const vec<T, N2>& y)
 {
-    return x.shuffle(csizeseq<N2, -(N2 - N1)>)
+    return x.shuffle(csizeseq<N2, N1 - N2>)
         .shuffle(y, csizeseq<N2 * 2>)
         .shuffle(csizeseq<count, N2 - N1 + start>);
 }

@@ -27,6 +27,9 @@
 
 #include "impl/scaled.hpp"
 
+CMT_PRAGMA_MSVC(warning(push))
+CMT_PRAGMA_MSVC(warning(disable : 4244))
+
 namespace kfr
 {
 
@@ -405,3 +408,5 @@ struct representation<kfr::color<T>>
     }
 };
 } // namespace cometa
+
+CMT_PRAGMA_MSVC(warning(pop))

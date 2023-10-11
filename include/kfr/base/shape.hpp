@@ -662,7 +662,7 @@ KFR_INTRINSIC bool compare_indices(const shape<dims>& indices, const shape<dims>
                                    index_t dim = dims - 1)
 {
     CMT_LOOP_UNROLL
-    for (int i = dim; i >= 0; --i)
+    for (int i = static_cast<int>(dim); i >= 0; --i)
     {
         if (CMT_UNLIKELY(indices[i] >= stop[i]))
             return false;
@@ -685,7 +685,7 @@ KFR_INTRINSIC bool increment_indices(shape<dims>& indices, const shape<dims>& st
     {
         indices[dim] += 1;
         CMT_LOOP_UNROLL
-        for (int i = dim; i >= 0;)
+        for (int i = static_cast<int>(dim); i >= 0;)
         {
             if (CMT_LIKELY(indices[i] < stop[i]))
                 return true;

@@ -747,11 +747,11 @@ struct cvalseq_impl<T, 0, Nstart, Nstep> : cvals_t<T>
 {
 };
 template <typename T, T Nstart, ptrdiff_t Nstep>
-struct cvalseq_impl<T, 1, Nstart, Nstep> : cvals_t<T, static_cast<T>(Nstart)>
+struct cvalseq_impl<T, 1, Nstart, Nstep> : cvals_t<T, Nstart>
 {
 };
 template <typename T, T Nstart, ptrdiff_t Nstep>
-struct cvalseq_impl<T, 2, Nstart, Nstep> : cvals_t<T, static_cast<T>(Nstart), static_cast<T>(Nstart + Nstep)>
+struct cvalseq_impl<T, 2, Nstart, Nstep> : cvals_t<T, Nstart, static_cast<T>(Nstart + Nstep)>
 {
 };
 

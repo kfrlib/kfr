@@ -8,6 +8,9 @@
 
 #include <kfr/io.hpp>
 
+CMT_PRAGMA_MSVC(warning(push))
+CMT_PRAGMA_MSVC(warning(disable : 4146))
+
 namespace kfr
 {
 inline namespace CMT_ARCH_NAME
@@ -68,3 +71,6 @@ TEST(absmax)
 }
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
+
+
+CMT_PRAGMA_MSVC(warning(pop))

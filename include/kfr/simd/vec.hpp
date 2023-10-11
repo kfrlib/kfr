@@ -85,6 +85,7 @@ CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpacked")
 
 CMT_PRAGMA_MSVC(warning(push))
 CMT_PRAGMA_MSVC(warning(disable : 4814))
+CMT_PRAGMA_MSVC(warning(disable : 4244))
 
 namespace kfr
 {
