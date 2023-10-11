@@ -50,7 +50,6 @@ template <typename T>
 struct complex
 {
     static_assert(is_simd_type<T>, "Incorrect type for complex");
-    constexpr static bool is_pod_like = true;
     constexpr complex() CMT_NOEXCEPT  = default;
     KFR_MEM_INTRINSIC constexpr complex(T re) CMT_NOEXCEPT : re(re), im(0) {}
     KFR_MEM_INTRINSIC constexpr complex(T re, T im) CMT_NOEXCEPT : re(re), im(im) {}

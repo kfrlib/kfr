@@ -324,7 +324,6 @@ struct alignas(platform<>::maximum_vector_alignment) univector
     constexpr static bool is_array_ref  = false;
     constexpr static bool is_vector     = false;
     constexpr static bool is_aligned    = true;
-    constexpr static bool is_pod_like   = kfr::is_pod_like<T>;
     using value_type                    = T;
 
     value_type get(size_t index, value_type fallback_value) const CMT_NOEXCEPT

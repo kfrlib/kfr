@@ -68,17 +68,6 @@ constexpr CMT_INTRINSIC bool args_and(bool x, Ts... rest)
     return x && args_and(rest...);
 }
 
-template <typename T, typename Enable = void>
-struct is_pod_like_impl : std::false_type
-{
-};
-
-template <typename T>
-struct is_pod_like_impl<T, std::void_t<decltype(T::is_pod_like)>>
-    : std::integral_constant<bool, T::is_pod_like>
-{
-};
-
 template <typename... Ts>
 struct or_t_impl : std::false_type
 {
@@ -191,9 +180,6 @@ using decay = typename std::decay<T>::type;
 
 template <typename T1, typename T2>
 using or_type = std::conditional_t<std::is_same_v<T1, void>, T2, T1>;
-
-template <typename T>
-constexpr inline bool is_pod_like = std::is_pod_v<T> || details::is_pod_like_impl<T>::value;
 
 template <typename T1, typename T2 = void, typename... Ts>
 constexpr size_t typeindex()
