@@ -94,6 +94,23 @@ TEST(test_basic)
 
 TEST(ctti) { CHECK(cometa::type_name<float>() == std::string("float")); }
 
+#ifdef KFR_USE_STD_ALLOCATION
+TEST(std_allocation)
+{
+    univector<float> u;
+    std::vector<float>& v = u;
+
+    std::vector<float> v2{ 1, 2, 3, 4 };
+
+    // Technically an UB but ok with all sane compilers
+    reinterpret_cast<univector<float>&>(v2) += 100.f;
+    CHECK(v2[0] == 101);
+    CHECK(v2[1] == 102);
+    CHECK(v2[2] == 103);
+    CHECK(v2[3] == 104);
+}
+#endif
+
 } // namespace CMT_ARCH_NAME
 
 #ifndef KFR_NO_MAIN
