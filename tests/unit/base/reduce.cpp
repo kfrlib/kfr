@@ -15,7 +15,7 @@ inline namespace CMT_ARCH_NAME
 
 TEST(reduce)
 {
-    testo::eplison_scope<void> e(100);
+    testo::epsilon_scope<void> e(100);
     {
         univector<float, 6> a({ 1, 2, 3, 4, 5, -9 });
         CHECK(sum(a) == 6);

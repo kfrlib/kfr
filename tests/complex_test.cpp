@@ -99,7 +99,7 @@ TEST(complex_math)
     CHECK(carg(c32{ 0.f, -1.f }) == -c_pi<float> / 2);
     CHECK(carg(c32{ -1.f, 0.f }) == c_pi<float>);
 
-    testo::eplison_scope<void> eps(5);
+    testo::epsilon_scope<void> eps(5);
 
     CHECK(csin(c32{ 1.f, 1.f }) == c32{ 1.2984575814159773f, 0.634963914784736f });
     CHECK(ccos(c32{ 1.f, 1.f }) == c32{ 0.8337300251311489f, -0.9888977057628651f });

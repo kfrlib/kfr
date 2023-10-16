@@ -12,7 +12,7 @@ inline namespace CMT_ARCH_NAME
 {
 TEST(point)
 {
-    testo::eplison_scope<void> e(100);
+    testo::epsilon_scope<void> e(100);
 
     f32point p{ 0.f, 0.5f };
     CHECK(p.distance(i32point{ 1, 2 }) == 1.80277563773f);
@@ -47,7 +47,7 @@ TEST(border)
 
 TEST(rectangle)
 {
-    testo::eplison_scope<void> e(100);
+    testo::epsilon_scope<void> e(100);
     CHECK(f32rectangle{ f32point{ 1, 2 }, f32size{ 2, 2 } } == f32rectangle{ 1, 2, 3, 4 });
     CHECK(f32rectangle{ f32point{ 1, 2 }, f32point{ 3, 4 } } == f32rectangle{ 1, 2, 3, 4 });
     CHECK(f32rectangle{ f32point{ 1, 2 }, f32size{ 3, 4 }, f32point{ 0.5f, 0.5f } } ==

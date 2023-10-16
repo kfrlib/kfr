@@ -12,7 +12,7 @@ inline namespace CMT_ARCH_NAME
 {
 TEST(color)
 {
-    testo::eplison_scope<void> e(100);
+    testo::epsilon_scope<void> e(100);
 
     f32color c1 = f32color::from_argb(0xFF'FF00FF);
     CHECK(c1.r == 1);

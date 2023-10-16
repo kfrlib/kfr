@@ -20,7 +20,7 @@ namespace CMT_ARCH_NAME
 
 TEST(goertzel)
 {
-    testo::eplison_scope<float> e(100);
+    testo::epsilon_scope<float> e(100);
     univector<float, 16> a;
     a = sinenorm(phasor(0.125f));
 

@@ -16,7 +16,7 @@ inline namespace CMT_ARCH_NAME
 
 TEST(linspace)
 {
-    testo::eplison_scope<> eps(10);
+    testo::epsilon_scope<> eps(10);
     CHECK_EXPRESSION(linspace(0.0, 1.0, 5, true, ctrue), { 0.0, 0.25, 0.50, 0.75, 1.0 });
     CHECK_EXPRESSION(linspace(0.0, 1.0, 4, false, ctrue), { 0.0, 0.25, 0.50, 0.75 });
     CHECK(get_shape(linspace(0.0, 1.0, 5, true, cfalse)) == shape{ infinite_size });

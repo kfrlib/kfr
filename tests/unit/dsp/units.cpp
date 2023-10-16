@@ -13,7 +13,7 @@ inline namespace CMT_ARCH_NAME
 
 TEST(note_to_hertz)
 {
-    testo::eplison_scope<void> eps(2000);
+    testo::epsilon_scope<void> eps(2000);
     CHECK(kfr::note_to_hertz(60) == fbase(261.6255653005986346778499935233));
     CHECK(kfr::note_to_hertz(pack(60)) == pack(fbase(261.6255653005986346778499935233)));
 
@@ -23,7 +23,7 @@ TEST(note_to_hertz)
 
 TEST(hertz_to_note)
 {
-    testo::eplison_scope<void> eps(1000);
+    testo::epsilon_scope<void> eps(1000);
     CHECK(kfr::hertz_to_note(261.6255653005986346778499935233) == fbase(60));
     CHECK(kfr::hertz_to_note(pack(261.6255653005986346778499935233)) == pack(fbase(60)));
 
@@ -33,7 +33,7 @@ TEST(hertz_to_note)
 
 TEST(amp_to_dB)
 {
-    testo::eplison_scope<void> eps(1000);
+    testo::epsilon_scope<void> eps(1000);
 
     CHECK(kfr::amp_to_dB(fbase(2.0)) == fbase(6.0205999132796239042747778944899));
     CHECK(kfr::amp_to_dB(fbase(-2.0)) == fbase(6.0205999132796239042747778944899));
@@ -46,7 +46,7 @@ TEST(amp_to_dB)
 
 TEST(dB_to_amp)
 {
-    testo::eplison_scope<void> eps(1000);
+    testo::epsilon_scope<void> eps(1000);
 
     CHECK(kfr::dB_to_amp(fbase(-HUGE_VAL)) == fbase(0.0));
     CHECK(kfr::dB_to_amp(fbase(0.0)) == fbase(1.0));
