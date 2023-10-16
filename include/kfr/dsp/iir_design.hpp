@@ -935,7 +935,7 @@ KFR_FUNCTION size_t nearest_real_or_complex(const univector<complex<T>>& list, c
 
     size_t minidx = 0;
     T minval      = cabs(val - filtered[0]);
-    for (size_t i = 1; i < list.size(); i++)
+    for (size_t i = 1; i < filtered.size(); i++)
     {
         T newminval = cabs(val - filtered[i]);
         if (newminval < minval)
