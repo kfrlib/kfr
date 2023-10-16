@@ -38,10 +38,15 @@ inline namespace CMT_ARCH_NAME
 template <typename T>
 struct expression_goertzel : expression_traits_defaults
 {
-    using value_type = accepts_any;
+    constexpr static size_t dims = 1;    
+
+    using value_type = T;
+    
+    constexpr static shape<1> get_shape(const expression_goertzel&) { return shape<1>(infinite_size); }
+    constexpr static shape<1> get_shape() { return shape<1>(infinite_size); }
 
     expression_goertzel(complex<T>& result, T omega)
-        : result(result), omega(omega), coeff(2 * cos(omega)), q0(), q1(), q2()
+        : result(result), omega(omega), coeff(2 * cos(omega)), q0(0), q1(0), q2(0)
     {
     }
     ~expression_goertzel()
@@ -49,8 +54,10 @@ struct expression_goertzel : expression_traits_defaults
         result.real(q1 - q2 * cos(omega));
         result.imag(q2 * sin(omega));
     }
-    template <typename U, size_t N>
-    KFR_INTRINSIC friend void set_elements(expression_goertzel& self, shape<1>, const vec<U, N>& x)
+    
+    template <size_t N, index_t VecAxis>
+    friend KFR_INTRINSIC void set_elements(expression_goertzel& self, shape<1>, axis_params<VecAxis, N>,
+                                           const identity<vec<T, N>>& x)
     {
         vec<T, N> in = x;
         CMT_LOOP_UNROLL
@@ -72,10 +79,15 @@ struct expression_goertzel : expression_traits_defaults
 template <typename T, size_t width>
 struct expression_parallel_goertzel : expression_traits_defaults
 {
-    using value_type = accepts_any;
+    constexpr static size_t dims = 1;    
+
+    using value_type = T;
+    
+    constexpr static shape<1> get_shape(const expression_parallel_goertzel&) { return shape<1>(infinite_size); }
+    constexpr static shape<1> get_shape() { return shape<1>(infinite_size); }
 
     expression_parallel_goertzel(complex<T> result[], vec<T, width> omega)
-        : result(result), omega(omega), coeff(cos(omega)), q0(), q1(), q2()
+        : result(result), omega(omega), coeff(2 * cos(omega)), q0(T(0)), q1(T(0)), q2(T(0))
     {
     }
     ~expression_parallel_goertzel()
@@ -88,8 +100,9 @@ struct expression_parallel_goertzel : expression_traits_defaults
             result[i].imag(im[i]);
         }
     }
-    template <typename U, size_t N>
-    KFR_INTRINSIC friend void set_elements(expression_parallel_goertzel& self, shape<1>, const vec<U, N>& x)
+    template <size_t N, index_t VecAxis>
+    friend KFR_INTRINSIC void set_elements(expression_parallel_goertzel& self, shape<1>, axis_params<VecAxis, N>,
+                                           const identity<vec<T, N>>& x)
     {
         const vec<T, N> in = x;
         CMT_LOOP_UNROLL
