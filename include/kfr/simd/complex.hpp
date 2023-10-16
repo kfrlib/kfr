@@ -37,6 +37,7 @@ namespace kfr
 inline namespace CMT_ARCH_NAME
 {
 
+#ifndef KFR_STD_COMPLEX
 template <typename T>
 KFR_INTRINSIC complex<T> operator+(const complex<T>& x, const complex<T>& y)
 {
@@ -157,6 +158,7 @@ KFR_INTRINSIC complex<T> operator+(const complex<T>& x)
 {
     return x;
 }
+#endif
 
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
