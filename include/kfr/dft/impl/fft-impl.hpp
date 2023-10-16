@@ -591,6 +591,21 @@ template <typename T, size_t log2n>
 struct fft_specialization;
 
 template <typename T>
+struct fft_specialization<T, 0> : dft_stage<T>
+{
+    fft_specialization(size_t) { this->name = dft_name(this); }
+
+    constexpr static bool aligned = false;
+    DFT_STAGE_FN
+
+    template <bool inverse>
+    KFR_MEM_INTRINSIC void do_execute(complex<T>* out, const complex<T>* in, u8*)
+    {
+        out[0] = in[0];
+    }
+};
+
+template <typename T>
 struct fft_specialization<T, 1> : dft_stage<T>
 {
     fft_specialization(size_t) { this->name = dft_name(this); }
@@ -953,7 +968,7 @@ KFR_INTRINSIC void init_fft(dft_plan<T>* self, size_t size, dft_order)
 {
     const size_t log2n = ilog2(size);
     cswitch(
-        csizes_t<1, 2, 3, 4, 5, 6, 7, 8, 9, 10>(), log2n,
+        csizes_t<0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10>(), log2n,
         [&](auto log2n)
         {
             (void)log2n;
@@ -1123,6 +1138,8 @@ KFR_INTRINSIC void initialize_stages(dft_plan<T>* self)
 template <typename T>
 void dft_initialize(dft_plan<T>& plan)
 {
+    if (plan.size == 0)
+        return;
     initialize_stages(&plan);
     initialize_data(&plan);
     initialize_order(&plan);
@@ -1171,6 +1188,8 @@ public:
 template <typename T>
 void dft_real_initialize(dft_plan_real<T>& plan)
 {
+    if (plan.size == 0)
+        return;
     initialize_stages(&plan);
     plan.fmt_stage.reset(new dft_stage_real_repack<T>(plan.size, plan.fmt));
     plan.data_size += plan.fmt_stage->data_size;

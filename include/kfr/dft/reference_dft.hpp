@@ -42,6 +42,7 @@ template <typename Tnumber = double>
 void reference_fft_pass(Tnumber pi2, size_t N, size_t offset, size_t delta, int flag, Tnumber (*x)[2],
                         Tnumber (*X)[2], Tnumber (*XX)[2])
 {
+    KFR_LOGIC_CHECK(N >= 2, "reference_fft_pass: invalid N");
     const size_t N2 = N / 2;
     using std::cos;
     using std::sin;
@@ -84,8 +85,12 @@ template <typename Tnumber = double, typename T>
 void reference_fft(complex<T>* out, const complex<T>* in, size_t size, bool inversion = false)
 {
     using Tcmplx = Tnumber(*)[2];
-    if (size < 2)
+    if (size < 1)
         return;
+    if (size == 1) {
+        out[0] = in[0];
+        return;
+    }
     std::vector<complex<Tnumber>> datain(size);
     std::vector<complex<Tnumber>> dataout(size);
     std::vector<complex<Tnumber>> temp(size);
@@ -94,43 +99,6 @@ void reference_fft(complex<T>* out, const complex<T>* in, size_t size, bool inve
     reference_fft_pass<Tnumber>(pi2, size, 0, 1, inversion ? -1 : +1, Tcmplx(datain.data()),
                                 Tcmplx(dataout.data()), Tcmplx(temp.data()));
     std::copy(dataout.begin(), dataout.end(), out);
-}
-
-/// @brief Performs Direct Real FFT using reference implementation (slow, used for testing)
-template <typename Tnumber = double, typename T>
-void reference_fft(complex<T>* out, const T* in, size_t size)
-{
-    constexpr bool inversion = false;
-    using Tcmplx             = Tnumber(*)[2];
-    if (size < 2)
-        return;
-    std::vector<complex<Tnumber>> datain(size);
-    std::vector<complex<Tnumber>> dataout(size);
-    std::vector<complex<Tnumber>> temp(size);
-    std::copy(in, in + size, datain.begin());
-    const Tnumber pi2 = c_pi<Tnumber, 2, 1>;
-    reference_fft_pass<Tnumber>(pi2, size, 0, 1, inversion ? -1 : +1, Tcmplx(datain.data()),
-                                Tcmplx(dataout.data()), Tcmplx(temp.data()));
-    std::copy(dataout.begin(), dataout.end(), out);
-}
-
-/// @brief Performs Inverse Real FFT using reference implementation (slow, used for testing)
-template <typename Tnumber = double, typename T>
-void reference_fft(T* out, const complex<T>* in, size_t size)
-{
-    constexpr bool inversion = true;
-    using Tcmplx             = Tnumber(*)[2];
-    if (size < 2)
-        return;
-    std::vector<complex<Tnumber>> datain(size);
-    std::vector<complex<Tnumber>> dataout(size);
-    std::vector<complex<Tnumber>> temp(size);
-    std::copy(in, in + size, datain.begin());
-    const Tnumber pi2 = c_pi<Tnumber, 2, 1>;
-    reference_fft_pass<Tnumber>(pi2, size, 0, 1, inversion ? -1 : +1, Tcmplx(datain.data()),
-                                Tcmplx(dataout.data()), Tcmplx(temp.data()));
-    for (size_t i = 0; i < size; i++)
-        out[i] = dataout[i].real();
 }
 
 /// @brief Performs Complex DFT using reference implementation (slow, used for testing)
@@ -181,6 +149,29 @@ void reference_dft(complex<T>* out, const complex<T>* in, size_t size, bool inve
             out[i] = { static_cast<T>(sumr), static_cast<T>(sumi) };
         }
     }
+}
+
+/// @brief Performs Direct Real DFT using reference implementation (slow, used for testing)
+template <typename T>
+void reference_dft(complex<T>* out, const T* in, size_t size)
+{
+    if (size < 1)
+        return;
+    std::vector<complex<T>> datain(size);
+    std::copy(in, in + size, datain.begin());
+    reference_dft(out, datain.data(), size, false);
+}
+
+/// @brief Performs Inverse Real DFT using reference implementation (slow, used for testing)
+template <typename T>
+void reference_dft(T* out, const complex<T>* in, size_t size)
+{
+    if (size < 1)
+        return;
+    std::vector<complex<T>> dataout(size);
+    reference_dft(dataout.data(), in, size, true);    
+    for (size_t i = 0; i < size; i++)
+        out[i] = dataout[i].real();
 }
 
 /// @brief Performs DFT using reference implementation (slow, used for testing)

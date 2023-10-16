@@ -311,6 +311,7 @@ struct dft_plan_real : dft_plan<T>
     explicit dft_plan_real(cpu_t cpu, size_t size, dft_pack_format fmt = dft_pack_format::CCs)
         : dft_plan<T>(typename dft_plan<T>::noinit{}, size / 2), size(size), fmt(fmt)
     {
+        KFR_LOGIC_CHECK(is_even(size), "dft_plan_real requires size to be even");
 #ifdef KFR_DFT_MULTI
         if (cpu == cpu_t::runtime)
             cpu = get_cpu();
