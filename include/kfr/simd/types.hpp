@@ -54,6 +54,8 @@ namespace kfr
 // Include all from CoMeta library
 using namespace cometa;
 
+using cometa::identity;
+
 using cometa::fbase;
 using cometa::fmax;
 
