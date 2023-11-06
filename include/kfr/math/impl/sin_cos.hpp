@@ -64,10 +64,10 @@ KFR_INTRINSIC vec<T, N> trig_fold(const vec<T, N>& x, vec<itype<T>, N>& quadrant
     vec<T, N> y          = floor(xabs / div);
     quadrant             = broadcastto<itype<T>>(broadcastto<int>(y - floor(y * T(1.0 / 16.0)) * T(16.0)));
 
-    const mask<T, N> msk = (quadrant & 1) != 0;
-    quadrant             = kfr::select(msk, quadrant + 1, quadrant);
-    y                    = select(msk, y + T(1.0), y);
-    quadrant             = quadrant & 7;
+    const vec<itype<T>, N> odd = (quadrant & 1);
+    quadrant                   = quadrant + odd;
+    y                          = y + cast<T>(odd);
+    quadrant                   = quadrant & 7;
 
     constexpr T hi   = constants<T>::fold_constant_hi;
     constexpr T rem1 = constants<T>::fold_constant_rem1;
