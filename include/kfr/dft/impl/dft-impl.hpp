@@ -515,9 +515,11 @@ void init_dft(dft_plan<T>* self, size_t size, dft_order)
                      }
                  });
 
+        int num_stages = 0;
         if (cur_size >= 101)
         {
             add_stage<intrinsics::dft_arblen_stage_impl<T>>(self, size);
+            ++num_stages;
             self->arblen = true;
         }
         else
@@ -535,6 +537,7 @@ void init_dft(dft_plan<T>* self, size_t size, dft_order)
                         prepare_dft_stage(self, r, iterations, blocks, ctrue);
                     else
                         prepare_dft_stage(self, r, iterations, blocks, cfalse);
+                    ++num_stages;
                     blocks *= r;
                 }
             }
@@ -547,9 +550,10 @@ void init_dft(dft_plan<T>* self, size_t size, dft_order)
                     prepare_dft_stage(self, cur_size, iterations, blocks, ctrue);
                 else
                     prepare_dft_stage(self, cur_size, iterations, blocks, cfalse);
+                ++num_stages;
             }
 
-            if (self->stages.size() > 2)
+            if (num_stages > 2)
                 add_stage<intrinsics::dft_reorder_stage_impl<T>>(self, radices, radices_size);
         }
     }

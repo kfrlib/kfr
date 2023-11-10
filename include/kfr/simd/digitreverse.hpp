@@ -39,29 +39,37 @@ CMT_PRAGMA_GNU(GCC diagnostic push)
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshift-count-overflow")
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshift-count-negative")
 
-constexpr inline u32 bit_permute_step_impl(u32 x, cvals_t<u32>) { return x; }
+constexpr KFR_INTRINSIC u32 bit_permute_step_impl(u32 x, cvals_t<u32>) { return x; }
 
 template <u32 m, u32 shift, u32... values>
-constexpr inline u32 bit_permute_step_impl(u32 x, cvals_t<u32, m, shift, values...>)
+constexpr KFR_INTRINSIC u32 bit_permute_step_impl(u32 x, cvals_t<u32, m, shift, values...>)
 {
     return bit_permute_step_impl(((x & m) << shift) | ((x >> shift) & m), cvals_t<u32, values...>());
 }
 
 template <size_t bits>
-constexpr inline u32 digitreverse_impl(u32 x, csize_t<2>)
+constexpr KFR_INTRINSIC u32 digitreverse_impl(u32 x, csize_t<2>)
 {
-    return bit_permute_step_impl(
-               x,
-               cvals_t<u32, 0x55555555, 1, 0x33333333, 2, 0x0f0f0f0f, 4, 0x00ff00ff, 8, 0x0000ffff, 16>()) >>
-           (32 - bits);
+    constexpr cvals_t<u32, 0x55555555, 1, 0x33333333, 2, 0x0f0f0f0f, 4, 0x00ff00ff, 8, 0x0000ffff, 16>
+        steps{};
+    if constexpr (bits > 16)
+        return bit_permute_step_impl(x, steps) >> (32 - bits);
+    else if constexpr (bits > 8)
+        return bit_permute_step_impl(x, steps[csizeseq<8>]) >> (16 - bits);
+    else
+        return bit_permute_step_impl(x, steps[csizeseq<6>]) >> (8 - bits);
 }
 
 template <size_t bits>
-constexpr inline u32 digitreverse_impl(u32 x, csize_t<4>)
+constexpr KFR_INTRINSIC u32 digitreverse_impl(u32 x, csize_t<4>)
 {
-    return bit_permute_step_impl(
-               x, cvals_t<u32, 0x33333333, 2, 0x0f0f0f0f, 4, 0x00ff00ff, 8, 0x0000ffff, 16>()) >>
-           (32 - bits);
+    constexpr cvals_t<u32, 0x33333333, 2, 0x0f0f0f0f, 4, 0x00ff00ff, 8, 0x0000ffff, 16> steps{};
+    if constexpr (bits > 16)
+        return bit_permute_step_impl(x, steps) >> (32 - bits);
+    else if constexpr (bits > 8)
+        return bit_permute_step_impl(x, steps[csizeseq<6>]) >> (16 - bits);
+    else
+        return bit_permute_step_impl(x, steps[csizeseq<4>]) >> (8 - bits);
 }
 
 CMT_PRAGMA_GNU(GCC diagnostic pop)
@@ -69,7 +77,7 @@ CMT_PRAGMA_GNU(GCC diagnostic pop)
 template <size_t radix, size_t bits>
 struct shuffle_index_digitreverse
 {
-    constexpr inline size_t operator()(size_t index) const CMT_NOEXCEPT
+    constexpr KFR_INTRINSIC size_t operator()(size_t index) const CMT_NOEXCEPT
     {
         return digitreverse_impl<bits>(static_cast<u32>(index), csize_t<radix>());
     }
@@ -96,13 +104,13 @@ KFR_INTRINSIC vec<T, N> digitreverse4(const vec<T, N>& x)
 }
 
 template <size_t bits>
-constexpr inline u32 bitreverse(u32 x)
+constexpr KFR_INTRINSIC u32 bitreverse(u32 x)
 {
     return internal::digitreverse_impl<bits>(x, csize_t<2>());
 }
 
 template <size_t bits>
-constexpr inline u32 digitreverse4(u32 x)
+constexpr KFR_INTRINSIC u32 digitreverse4(u32 x)
 {
     return internal::digitreverse_impl<bits>(x, csize_t<4>());
 }

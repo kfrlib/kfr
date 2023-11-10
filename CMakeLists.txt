@@ -163,8 +163,8 @@ if (APPLE)
 endif ()
 if (NOT IOS)
     if (NOT MSVC OR CLANG)
-        target_compile_options(kfr
-                               INTERFACE "${CLANG_ARG_PREFIX}-mstackrealign")
+        # target_compile_options(kfr
+                            #    INTERFACE "${CLANG_ARG_PREFIX}-mstackrealign")
     endif ()
 endif ()
 if (MSVC)
@@ -221,7 +221,7 @@ endfunction ()
 
 if (KFR_ENABLE_DFT)
 
-    set(KFR_DFT_DEFS "${CLANG_ARG_PREFIX}-ffp-contract=fast")
+    set(KFR_DFT_DEFS "${CLANG_ARG_PREFIX}-ffp-contract=fast -Xclang -O3 -mllvm -x86-use-vzeroupper=0")
 
     if (KFR_ENABLE_DFT_MULTIARCH)
         add_library(kfr_dft INTERFACE)

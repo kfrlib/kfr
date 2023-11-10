@@ -18,6 +18,15 @@ using namespace kfr;
 namespace CMT_ARCH_NAME
 {
 
+TEST(print_vector_capacity)
+{
+    println("vector_capacity<float> = ", vector_capacity<float>);
+    println("vector_capacity<double> = ", vector_capacity<double>);
+
+    println("fft_config<float>::process_width = ", vector_capacity<float> / 16);
+    println("fft_config<double>::process_width = ", vector_capacity<double> / 16);
+}
+
 #ifdef CMT_NATIVE_F64
 constexpr ctypes_t<float, double> dft_float_types{};
 #else
@@ -78,7 +87,7 @@ static void perf_test(int size)
 
 TEST(test_performance)
 {
-    for (int size = 16; size <= 16384; size <<= 1)
+    for (int size = 16; size <= 65536; size <<= 1)
     {
         perf_test(size);
     }
@@ -160,7 +169,7 @@ constexpr size_t fft_stopsize = 12;
 constexpr size_t dft_stopsize = 101;
 #endif
 #else
-constexpr size_t fft_stopsize = 20;
+constexpr size_t fft_stopsize = 21;
 #ifndef KFR_DFT_NO_NPo2
 constexpr size_t dft_stopsize = 257;
 #endif
@@ -183,15 +192,14 @@ TEST(fft_real)
 TEST(fft_real_not_size_4N)
 {
     kfr::univector<double, 6> in = counter();
-    auto out = realdft(in);
-    kfr::univector<kfr::complex<double>> expected { 
-        15.0, { -3, 5.19615242}, {-3, +1.73205081}, -3.0 };
+    auto out                     = realdft(in);
+    kfr::univector<kfr::complex<double>> expected{ 15.0, { -3, 5.19615242 }, { -3, +1.73205081 }, -3.0 };
     CHECK(rms(cabs(out - expected)) <= 0.00001f);
     kfr::univector<double, 6> rev = irealdft(out) / 6;
     CHECK(rms(rev - in) <= 0.00001f);
 
-    random_state gen = random_init(2247448713, 915890490, 864203735, 2982561);
-    constexpr size_t size = 66;
+    random_state gen                 = random_init(2247448713, 915890490, 864203735, 2982561);
+    constexpr size_t size            = 66;
     kfr::univector<double, size> in2 = gen_random_range<double>(gen, -1.0, +1.0);
     kfr::univector<kfr::complex<double>, size / 2 + 1> out2 = realdft(in2);
     kfr::univector<double, size> rev2                       = irealdft(out2) / size;

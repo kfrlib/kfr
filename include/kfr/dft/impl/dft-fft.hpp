@@ -94,14 +94,19 @@ CMT_PRAGMA_GNU(GCC diagnostic push)
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wassume")
 #endif
 
-template <typename Stage, typename T, typename... Args>
-void add_stage(dft_plan<T>* self, Args... args)
+template <typename Stage, bool add_stages = true, typename T, typename... Args>
+void add_stage(dft_plan<T>* plan, Args... args)
 {
     dft_stage<T>* stage = new Stage(args...);
     stage->need_reorder = true;
-    self->data_size += stage->data_size;
-    self->temp_size += stage->temp_size;
-    self->stages.push_back(dft_stage_ptr<T>(stage));
+    plan->data_size += stage->data_size;
+    plan->temp_size += stage->temp_size;
+    plan->all_stages.push_back(dft_stage_ptr<T>(stage));
+    if constexpr (add_stages)
+    {
+        plan->stages[0].push_back(stage);
+        plan->stages[1].push_back(stage);
+    }
 }
 
 } // namespace CMT_ARCH_NAME

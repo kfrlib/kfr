@@ -34,6 +34,7 @@
 #include "../simd/constants.hpp"
 #include "../simd/read_write.hpp"
 #include "../simd/vec.hpp"
+#include <bitset>
 
 CMT_PRAGMA_GNU(GCC diagnostic push)
 #if CMT_HAS_WARNING("-Wshadow")
@@ -48,6 +49,8 @@ CMT_PRAGMA_MSVC(warning(disable : 4100))
 
 namespace kfr
 {
+
+#define DFT_MAX_STAGES 32
 
 using cdirect_t = cfalse_t;
 using cinvert_t = ctrue_t;
@@ -67,17 +70,14 @@ struct dft_stage
     const char* name  = nullptr;
     bool recursion    = false;
     bool can_inplace  = true;
-    bool inplace      = false;
-    bool to_scratch   = false;
     bool need_reorder = true;
 
     void initialize(size_t size) { do_initialize(size); }
 
     virtual void dump() const
     {
-        printf("%s: %zu, %zu, %zu, %zu, %zu, %zu, %zu, %d, %d, %d, %d\n", name ? name : "unnamed", radix,
-               stage_size, data_size, temp_size, repeats, out_offset, blocks, recursion, can_inplace, inplace,
-               to_scratch);
+        printf("%s: %zu, %zu, %zu, %zu, %zu, %zu, %zu, %d, %d\n", name ? name : "unnamed", radix, stage_size,
+               data_size, temp_size, repeats, out_offset, blocks, recursion, can_inplace);
     }
 
     KFR_MEM_INTRINSIC void execute(cdirect_t, complex<T>* out, const complex<T>* in, u8* temp)
@@ -173,7 +173,7 @@ struct dft_plan
 
     void dump() const
     {
-        for (const std::unique_ptr<dft_stage<T>>& s : stages)
+        for (const std::unique_ptr<dft_stage<T>>& s : all_stages)
         {
             s->dump();
         }
@@ -213,8 +213,89 @@ struct dft_plan
 
     autofree<u8> data;
     size_t data_size;
-    std::vector<dft_stage_ptr<T>> stages;
+
+    std::vector<dft_stage_ptr<T>> all_stages;
+    std::array<std::vector<dft_stage<T>*>, 2> stages;
     bool arblen;
+    using bitset = std::bitset<DFT_MAX_STAGES>;
+    std::array<bitset, 2> disposition_inplace;
+    std::array<bitset, 2> disposition_outofplace;
+
+    void calc_disposition()
+    {
+        for (bool inverse : { false, true })
+        {
+            auto&& stages = this->stages[inverse];
+            bitset can_inplace_per_stage;
+            for (int i = 0; i < stages.size(); ++i)
+            {
+                can_inplace_per_stage[i] = stages[i]->can_inplace;
+            }
+
+            disposition_inplace[static_cast<int>(inverse)] =
+                precompute_disposition(stages.size(), can_inplace_per_stage, true);
+            disposition_outofplace[static_cast<int>(inverse)] =
+                precompute_disposition(stages.size(), can_inplace_per_stage, false);
+        }
+    }
+
+    static bitset precompute_disposition(int num_stages, bitset can_inplace_per_stage, bool inplace_requested)
+    {
+        static bitset even{ 0x5555555555555555ull };
+        bitset mask = ~bitset() >> (DFT_MAX_STAGES - num_stages);
+        bitset result;
+        // disposition indicates where is input for corresponding stage
+        // first bit : 0 - input,  1 - scratch
+        // other bits: 0 - output, 1 - scratch
+
+        // build disposition that works always
+        if (num_stages % 2 == 0)
+        { // even
+            result = ~even & mask;
+        }
+        else
+        { // odd
+            result = even & mask;
+        }
+
+        int num_inplace = can_inplace_per_stage.count();
+
+#ifdef KFR_DFT_ELIMINATE_MEMCPY
+        if (num_inplace > 0 && inplace_requested)
+        {
+            if (result.test(0)) // input is in scratch
+            {
+                // num_inplace must be odd
+                if (num_inplace % 2 == 0)
+                    --num_inplace;
+            }
+            else
+            {
+                // num_inplace must be even
+                if (num_inplace % 2 != 0)
+                    --num_inplace;
+            }
+        }
+#endif
+        if (num_inplace > 0)
+        {
+            for (int i = num_stages - 1; i >= 0; --i)
+            {
+                if (can_inplace_per_stage.test(i))
+                {
+                    result ^= ~bitset() >> (DFT_MAX_STAGES - (i + 1));
+
+                    if (--num_inplace == 0)
+                        break;
+                }
+            }
+        }
+
+        if (!inplace_requested) // out-of-place first stage; IN->OUT
+            result.reset(0);
+
+        return result;
+    }
 
 protected:
     struct noinit
@@ -224,32 +305,35 @@ protected:
         : size(size), temp_size(0), data_size(0), arblen(false)
     {
     }
-    const complex<T>* select_in(size_t stage, const complex<T>* out, const complex<T>* in,
-                                const complex<T>* scratch, bool in_scratch) const
+    const complex<T>* select_in(bitset disposition, size_t stage, const complex<T>* out, const complex<T>* in,
+                                const complex<T>* scratch) const
     {
-        if (stage == 0)
-            return in_scratch ? scratch : in;
-        return stages[stage - 1]->to_scratch ? scratch : out;
+        return disposition.test(stage) ? scratch : stage == 0 ? in : out;
     }
-    complex<T>* select_out(size_t stage, complex<T>* out, complex<T>* scratch) const
+    complex<T>* select_out(bitset disposition, size_t stage, size_t total_stages, complex<T>* out,
+                           complex<T>* scratch) const
     {
-        return stages[stage]->to_scratch ? scratch : out;
+        return stage == total_stages - 1 ? out : disposition.test(stage + 1) ? scratch : out;
     }
 
     template <bool inverse>
     void execute_dft(cbool_t<inverse>, complex<T>* out, const complex<T>* in, u8* temp) const
     {
+        auto&& stages = this->stages[inverse];
         if (stages.size() == 1 && (stages[0]->can_inplace || in != out))
         {
             return stages[0]->execute(cbool<inverse>, out, in, temp);
         }
-        size_t stack[32] = { 0 };
+        size_t stack[DFT_MAX_STAGES] = { 0 };
+
+        bitset disposition =
+            in == out ? this->disposition_inplace[inverse] : this->disposition_outofplace[inverse];
 
         complex<T>* scratch = ptr_cast<complex<T>>(
             temp + this->temp_size -
             align_up(sizeof(complex<T>) * this->size, platform<>::native_cache_alignment));
 
-        bool in_scratch = !stages[0]->can_inplace && in == out;
+        bool in_scratch = disposition.test(0);
         if (in_scratch)
         {
             builtin_memcpy(scratch, in, sizeof(complex<T>) * this->size);
@@ -273,8 +357,8 @@ protected:
                     }
                     else
                     {
-                        complex<T>* rout      = select_out(rdepth, out, scratch);
-                        const complex<T>* rin = select_in(rdepth, out, in, scratch, in_scratch);
+                        complex<T>* rout      = select_out(disposition, rdepth, stages.size(), out, scratch);
+                        const complex<T>* rin = select_in(disposition, rdepth, out, in, scratch);
                         stages[rdepth]->execute(cbool<inverse>, rout + offset, rin + offset, temp);
                         offset += stages[rdepth]->out_offset;
                         stack[rdepth]++;
@@ -291,8 +375,9 @@ protected:
                 size_t offset = 0;
                 while (offset < this->size)
                 {
-                    stages[depth]->execute(cbool<inverse>, select_out(depth, out, scratch) + offset,
-                                           select_in(depth, out, in, scratch, in_scratch) + offset, temp);
+                    stages[depth]->execute(
+                        cbool<inverse>, select_out(disposition, depth, stages.size(), out, scratch) + offset,
+                        select_in(disposition, depth, out, in, scratch) + offset, temp);
                     offset += stages[depth]->stage_size;
                 }
                 depth++;
@@ -306,7 +391,6 @@ struct dft_plan_real : dft_plan<T>
 {
     size_t size;
     dft_pack_format fmt;
-    dft_stage_ptr<T> fmt_stage;
 
     explicit dft_plan_real(cpu_t cpu, size_t size, dft_pack_format fmt = dft_pack_format::CCs)
         : dft_plan<T>(typename dft_plan<T>::noinit{}, size / 2), size(size), fmt(fmt)
@@ -360,13 +444,10 @@ struct dft_plan_real : dft_plan<T>
     KFR_MEM_INTRINSIC void execute(complex<T>* out, const T* in, u8* temp, cdirect_t = {}) const
     {
         this->execute_dft(cfalse, out, ptr_cast<complex<T>>(in), temp);
-        fmt_stage->execute(cfalse, out, out, nullptr);
     }
     KFR_MEM_INTRINSIC void execute(T* out, const complex<T>* in, u8* temp, cinvert_t = {}) const
     {
-        complex<T>* outdata = ptr_cast<complex<T>>(out);
-        fmt_stage->execute(ctrue, outdata, in, nullptr);
-        this->execute_dft(ctrue, outdata, outdata, temp);
+        this->execute_dft(ctrue, ptr_cast<complex<T>>(out), in, temp);
     }
 
     template <univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
@@ -374,15 +455,12 @@ struct dft_plan_real : dft_plan<T>
                                    univector<u8, Tag3>& temp, cdirect_t = {}) const
     {
         this->execute_dft(cfalse, out.data(), ptr_cast<complex<T>>(in.data()), temp.data());
-        fmt_stage->execute(cfalse, out.data(), out.data(), nullptr);
     }
     template <univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
     KFR_MEM_INTRINSIC void execute(univector<T, Tag1>& out, const univector<complex<T>, Tag2>& in,
                                    univector<u8, Tag3>& temp, cinvert_t = {}) const
     {
-        complex<T>* outdata = ptr_cast<complex<T>>(out.data());
-        fmt_stage->execute(ctrue, outdata, in.data(), nullptr);
-        this->execute_dft(ctrue, outdata, outdata, temp.data());
+        this->execute_dft(ctrue, ptr_cast<complex<T>>(out.data()), in.data(), temp.data());
     }
 
     // Deprecated. fmt must be passed to constructor instead
@@ -434,7 +512,7 @@ struct dct_plan : dft_plan<T>
         }
         else
         {
-            mirrored = make_complex(make_univector(in, size) * cos(t), make_univector(in, size) * -sin(t));
+            mirrored    = make_complex(make_univector(in, size) * cos(t), make_univector(in, size) * -sin(t));
             mirrored[0] = mirrored[0] * T(0.5);
             dft_plan<T>::execute(mirrored_dft.data(), mirrored.data(), temp, cfalse);
             for (size_t i = 0; i < halfSize; i++)

@@ -37,7 +37,6 @@
 #include "../../base/memory.hpp"
 #include "../data/sincos.hpp"
 
-
 CMT_PRAGMA_GNU(GCC diagnostic push)
 #if CMT_HAS_WARNING("-Wpass-failed")
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpass-failed")
@@ -181,7 +180,7 @@ template <size_t N, bool A = false, bool split = false, typename T>
 KFR_INTRINSIC cvec<T, N> cread_split(const complex<T>* src)
 {
     cvec<T, N> temp = cvec<T, N>(ptr_cast<T>(src), cbool_t<A>());
-    if (split)
+    if constexpr (split)
         temp = splitpairs(temp);
     return temp;
 }
@@ -190,7 +189,7 @@ template <size_t N, bool A = false, bool split = false, typename T>
 KFR_INTRINSIC void cwrite_split(complex<T>* dest, const cvec<T, N>& value)
 {
     cvec<T, N> v = value;
-    if (split)
+    if constexpr (split)
         v = interleavehalves(v);
     v.write(ptr_cast<T>(dest), cbool_t<A>());
 }
@@ -278,12 +277,14 @@ KFR_INTRINSIC cvec<T, N> cgather_helper(const complex<T>* base, csizes_t<Indices
 template <size_t N, size_t stride, typename T>
 KFR_INTRINSIC cvec<T, N> cgather(const complex<T>* base)
 {
-    if (stride == 1)
+    if constexpr (stride == 1)
     {
         return ref_cast<cvec<T, N>>(*base);
     }
     else
+    {
         return cgather_helper<N, stride, T>(base, csizeseq_t<N>());
+    }
 }
 
 KFR_INTRINSIC size_t cgather_next(size_t& index, size_t stride, size_t size, size_t)
@@ -342,7 +343,7 @@ KFR_INTRINSIC void cscatter_helper(complex<T>* base, const cvec<T, N>& value, cs
 template <size_t N, size_t stride, typename T>
 KFR_INTRINSIC void cscatter(complex<T>* base, const cvec<T, N>& value)
 {
-    if (stride == 1)
+    if constexpr (stride == 1)
     {
         cwrite<N>(base, value);
     }
@@ -510,35 +511,35 @@ template <size_t k, size_t size, bool inverse = false, typename T, size_t width,
 KFR_INTRINSIC vec<T, width> cmul_by_twiddle(const vec<T, width>& x)
 {
     constexpr T isqrt2 = static_cast<T>(0.70710678118654752440084436210485);
-    if (kk == 0)
+    if constexpr (kk == 0)
     {
         return x;
     }
-    else if (kk == size * 1 / 8)
+    else if constexpr (kk == size * 1 / 8)
     {
         return swap<2>(subadd(swap<2>(x), x)) * isqrt2;
     }
-    else if (kk == size * 2 / 8)
+    else if constexpr (kk == size * 2 / 8)
     {
         return negodd(swap<2>(x));
     }
-    else if (kk == size * 3 / 8)
+    else if constexpr (kk == size * 3 / 8)
     {
         return subadd(x, swap<2>(x)) * -isqrt2;
     }
-    else if (kk == size * 4 / 8)
+    else if constexpr (kk == size * 4 / 8)
     {
         return -x;
     }
-    else if (kk == size * 5 / 8)
+    else if constexpr (kk == size * 5 / 8)
     {
         return swap<2>(subadd(swap<2>(x), x)) * -isqrt2;
     }
-    else if (kk == size * 6 / 8)
+    else if constexpr (kk == size * 6 / 8)
     {
         return swap<2>(negodd(x));
     }
-    else if (kk == size * 7 / 8)
+    else if constexpr (kk == size * 7 / 8)
     {
         return subadd(x, swap<2>(x)) * isqrt2;
     }
@@ -582,7 +583,7 @@ KFR_INTRINSIC void butterfly4(cfalse_t /*split_format*/, const cvec<T, N>& a0, c
     diff13 = high(diff0213);
     w0     = sum02 + sum13;
     w2     = sum02 - sum13;
-    if (inverse)
+    if constexpr (inverse)
     {
         diff13 = (diff13 ^ broadcast<N * 2, T>(T(), -T()));
         diff13 = swap<2>(diff13);
@@ -679,7 +680,7 @@ KFR_INTRINSIC void butterfly8(cvec<T, 2>& a01, cvec<T, 2>& a23, cvec<T, 2>& a45,
 }
 
 template <bool inverse = false, typename T>
-KFR_INTRINSIC void butterfly8(cvec<T, 8>& v8)
+KFR_INTRINSIC void butterfly8_packed(cvec<T, 8>& v8)
 {
     cvec<T, 2> w0, w1, w2, w3;
     split<T, 16>(v8, w0, w1, w2, w3);
@@ -688,7 +689,7 @@ KFR_INTRINSIC void butterfly8(cvec<T, 8>& v8)
 }
 
 template <bool inverse = false, typename T>
-KFR_INTRINSIC void butterfly32(cvec<T, 32>& v32)
+KFR_INTRINSIC void butterfly32_packed(cvec<T, 32>& v32)
 {
     cvec<T, 4> w0, w1, w2, w3, w4, w5, w6, w7;
     split(v32, w0, w1, w2, w3, w4, w5, w6, w7);
@@ -710,7 +711,7 @@ KFR_INTRINSIC void butterfly32(cvec<T, 32>& v32)
 }
 
 template <size_t N, bool inverse = false, typename T>
-KFR_INTRINSIC void butterfly4(cvec<T, N * 4>& a0123)
+KFR_INTRINSIC void butterfly4_packed(cvec<T, N * 4>& a0123)
 {
     cvec<T, N> a0;
     cvec<T, N> a1;
@@ -722,7 +723,7 @@ KFR_INTRINSIC void butterfly4(cvec<T, N * 4>& a0123)
 }
 
 template <size_t N, typename T>
-KFR_INTRINSIC void butterfly2(cvec<T, N * 2>& a01)
+KFR_INTRINSIC void butterfly2_packed(cvec<T, N * 2>& a01)
 {
     cvec<T, N> a0;
     cvec<T, N> a1;
@@ -734,14 +735,14 @@ KFR_INTRINSIC void butterfly2(cvec<T, N * 2>& a01)
 template <size_t N, bool inverse = false, bool split_format = false, typename T>
 KFR_INTRINSIC void apply_twiddle(const cvec<T, N>& a1, const cvec<T, N>& tw1, cvec<T, N>& w1)
 {
-    if (split_format)
+    if constexpr (split_format)
     {
         vec<T, N> re1, im1, tw1re, tw1im;
         split<T, 2 * N>(a1, re1, im1);
         split<T, 2 * N>(tw1, tw1re, tw1im);
         vec<T, N> b1re = re1 * tw1re;
         vec<T, N> b1im = im1 * tw1re;
-        if (inverse)
+        if constexpr (inverse)
             w1 = concat(b1re + im1 * tw1im, b1im - re1 * tw1im);
         else
             w1 = concat(b1re - im1 * tw1im, b1im + re1 * tw1im);
@@ -752,7 +753,7 @@ KFR_INTRINSIC void apply_twiddle(const cvec<T, N>& a1, const cvec<T, N>& tw1, cv
         const cvec<T, N> a1_ = swap<2>(a1);
 
         cvec<T, N> tw1_ = tw1;
-        if (inverse)
+        if constexpr (inverse)
             tw1_ = -(tw1_);
         w1 = subadd(b1, a1_ * dupodd(tw1_));
     }
@@ -839,37 +840,38 @@ KFR_INTRINSIC void apply_twiddles4(cvec<T, N * 4>& __restrict a0123)
 }
 
 template <bool inverse, bool aligned, typename T>
-KFR_INTRINSIC void butterfly64(cbool_t<inverse>, cbool_t<aligned>, complex<T>* out, const complex<T>* in)
+KFR_INTRINSIC void butterfly64_memory(cbool_t<inverse>, cbool_t<aligned>, complex<T>* out,
+                                      const complex<T>* in)
 {
     cvec<T, 16> w0, w1, w2, w3;
 
     w0 = cread_group<4, 4, 16, aligned>(
         in); // concat(cread<4>(in + 0), cread<4>(in + 16), cread<4>(in + 32), cread<4>(in + 48));
-    butterfly4<4, inverse>(w0);
+    butterfly4_packed<4, inverse>(w0);
     apply_twiddles4<0, 1, 4, inverse>(w0);
 
     w1 = cread_group<4, 4, 16, aligned>(
         in + 4); // concat(cread<4>(in + 4), cread<4>(in + 20), cread<4>(in + 36), cread<4>(in + 52));
-    butterfly4<4, inverse>(w1);
+    butterfly4_packed<4, inverse>(w1);
     apply_twiddles4<4, 1, 4, inverse>(w1);
 
     w2 = cread_group<4, 4, 16, aligned>(
         in + 8); // concat(cread<4>(in + 8), cread<4>(in + 24), cread<4>(in + 40), cread<4>(in + 56));
-    butterfly4<4, inverse>(w2);
+    butterfly4_packed<4, inverse>(w2);
     apply_twiddles4<8, 1, 4, inverse>(w2);
 
     w3 = cread_group<4, 4, 16, aligned>(
         in + 12); // concat(cread<4>(in + 12), cread<4>(in + 28), cread<4>(in + 44), cread<4>(in + 60));
-    butterfly4<4, inverse>(w3);
+    butterfly4_packed<4, inverse>(w3);
     apply_twiddles4<12, 1, 4, inverse>(w3);
 
     transpose4(w0, w1, w2, w3);
     // pass 2:
 
-    butterfly4<4, inverse>(w0);
-    butterfly4<4, inverse>(w1);
-    butterfly4<4, inverse>(w2);
-    butterfly4<4, inverse>(w3);
+    butterfly4_packed<4, inverse>(w0);
+    butterfly4_packed<4, inverse>(w1);
+    butterfly4_packed<4, inverse>(w2);
+    butterfly4_packed<4, inverse>(w3);
 
     transpose4(w0, w1, w2, w3);
 
@@ -881,26 +883,26 @@ KFR_INTRINSIC void butterfly64(cbool_t<inverse>, cbool_t<aligned>, complex<T>* o
     apply_vertical_twiddles4<4, inverse>(w1, w2, w3);
 
     // pass 3:
-    butterfly4<4, inverse>(w3);
+    butterfly4_packed<4, inverse>(w3);
     cwrite_group<4, 4, 16, aligned>(out + 12, w3); //        split(w3, out[3], out[7], out[11], out[15]);
 
-    butterfly4<4, inverse>(w2);
+    butterfly4_packed<4, inverse>(w2);
     cwrite_group<4, 4, 16, aligned>(out + 8, w2); //        split(w2, out[2], out[6], out[10], out[14]);
 
-    butterfly4<4, inverse>(w1);
+    butterfly4_packed<4, inverse>(w1);
     cwrite_group<4, 4, 16, aligned>(out + 4, w1); //     split(w1, out[1], out[5], out[9], out[13]);
 
-    butterfly4<4, inverse>(w0);
+    butterfly4_packed<4, inverse>(w0);
     cwrite_group<4, 4, 16, aligned>(out, w0); //     split(w0, out[0], out[4], out[8], out[12]);
 }
 
 template <bool inverse = false, typename T>
-KFR_INTRINSIC void butterfly16(cvec<T, 16>& v16)
+KFR_INTRINSIC void butterfly16_packed(cvec<T, 16>& v16)
 {
-    butterfly4<4, inverse>(v16);
+    butterfly4_packed<4, inverse>(v16);
     apply_twiddles4<0, 4, 4, inverse>(v16);
     v16 = digitreverse4<2>(v16);
-    butterfly4<4, inverse>(v16);
+    butterfly4_packed<4, inverse>(v16);
 }
 
 template <size_t index, bool inverse = false, typename T>
@@ -1505,7 +1507,7 @@ template <bool transposed, typename T, size_t... N, size_t Nout = csum<size_t, N
 KFR_INTRINSIC void cread_transposed(cbool_t<transposed>, const complex<T>* ptr, vec<T, N>&... w)
 {
     vec<T, Nout> temp = read(cunaligned, csize<Nout>, ptr_cast<T>(ptr));
-    if (transposed)
+    if constexpr (transposed)
         temp = ctranspose<sizeof...(N)>(temp);
     split(temp, w...);
 }
@@ -1533,7 +1535,7 @@ template <bool transposed, typename T, size_t... N, size_t Nout = csum<size_t, N
 KFR_INTRINSIC void cwrite_transposed(cbool_t<transposed>, complex<T>* ptr, vec<T, N>... args)
 {
     auto temp = concat(args...);
-    if (transposed)
+    if constexpr (transposed)
         temp = ctransposeinverse<sizeof...(N)>(temp);
     write(ptr_cast<T>(ptr), temp);
 }
@@ -1634,16 +1636,13 @@ KFR_INTRINSIC void generic_butterfly_cycle(csize_t<width>, Tradix radix, cbool_t
             const cvec<T, 1> ina = cread<1>(in + (1 + j));
             const cvec<T, 1> inb = cread<1>(in + radix - (j + 1));
             cvec<T, width> tw    = cread<width>(twiddle);
-            if (inverse)
+            if constexpr (inverse)
                 tw = negodd /*cconj*/ (tw);
 
             cmul_2conj(sum0, sum1, ina, inb, tw);
             twiddle += halfradix;
         }
         twiddle = twiddle - halfradix_sqr + width;
-
-        //        if (inverse)
-        //            std::swap(sum0, sum1);
 
         if (is_constant_val(ostride))
         {
