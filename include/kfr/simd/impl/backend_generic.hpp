@@ -521,7 +521,11 @@ KFR_INTRIN_SHUFFLE_LINEAR(i32, 4, 2, _mm_cvtsi64_si128(x.whole))
 // slice
 KFR_INTRIN_SHUFFLE_LINEAR(i32, 1, 4, _mm_cvtsi128_si32(x))
 KFR_INTRIN_SHUFFLE_LINEAR(u32, 1, 4, _mm_cvtsi128_si32(x))
+#if defined CMT_COMPILER_IS_MSVC && _MSC_VER > 1936
+KFR_INTRIN_SHUFFLE_LINEAR(i64, 1, 2, i64(x.m128i_i64[0]))
+#else
 KFR_INTRIN_SHUFFLE_LINEAR(i64, 1, 2, _mm_cvtsi128_si64(x))
+#endif
 KFR_INTRIN_SHUFFLE_LINEAR(u64, 1, 2, _mm_cvtsi128_si64(x))
 KFR_INTRIN_SHUFFLE_LINEAR(f32, 1, 4, _mm_cvtss_f32(x))
 KFR_INTRIN_SHUFFLE_LINEAR(f32, 2, 4, bitcast_anything<simd<float, 2>>(_mm_cvtsd_f64(_mm_castps_pd(x))))
