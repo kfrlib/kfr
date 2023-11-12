@@ -221,7 +221,7 @@ endfunction ()
 
 if (KFR_ENABLE_DFT)
 
-    set(KFR_DFT_DEFS "${CLANG_ARG_PREFIX}-ffp-contract=fast -Xclang -O3 -mllvm -x86-use-vzeroupper=0")
+    set(KFR_DFT_DEFS ${CLANG_ARG_PREFIX}-ffp-contract=fast -Xclang -O3 -mllvm -x86-use-vzeroupper=0)
 
     if (KFR_ENABLE_DFT_MULTIARCH)
         add_library(kfr_dft INTERFACE)
@@ -248,7 +248,7 @@ if (KFR_ENABLE_DFT)
     else ()
         add_library(kfr_dft ${KFR_DFT_SRC})
         target_link_libraries(kfr_dft kfr use_arch)
-        target_compile_options(kfr_dft PRIVATE "${KFR_DFT_DEFS}")
+        target_compile_options(kfr_dft PRIVATE ${KFR_DFT_DEFS})
         if (KFR_ENABLE_DFT_NP)
             target_compile_definitions(kfr_dft PUBLIC -DKFR_DFT_NPo2)
         else ()
