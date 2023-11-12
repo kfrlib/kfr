@@ -49,23 +49,23 @@ constexpr inline static size_t bitrev_table_log2N = ilog2(arraysize(data::bitrev
 template <size_t Bits>
 CMT_GNU_CONSTEXPR inline u32 bitrev_using_table(u32 x)
 {
-    if (Bits > bitrev_table_log2N)
+    if constexpr (Bits > bitrev_table_log2N)
         return bitreverse<Bits>(x);
 
     return data::bitrev_table[x] >> (bitrev_table_log2N - Bits);
 }
 
-CMT_GNU_CONSTEXPR inline u32 bitrev_using_table(u32 x, size_t bits)
+template <bool use_table>
+CMT_GNU_CONSTEXPR inline u32 bitrev_using_table(u32 x, size_t bits, cbool_t<use_table>)
 {
-    if (bits > bitrev_table_log2N)
+    if constexpr (use_table)
     {
-        if (bits <= 16)
-            return bitreverse<16>(x) >> (16 - bits);
-        else
-            return bitreverse<32>(x) >> (32 - bits);
+        return data::bitrev_table[x] >> (bitrev_table_log2N - bits);
     }
-
-    return data::bitrev_table[x] >> (bitrev_table_log2N - bits);
+    else
+    {
+        return bitreverse<32>(x) >> (32 - bits);
+    }
 }
 
 CMT_GNU_CONSTEXPR inline u32 dig4rev_using_table(u32 x, size_t bits)
@@ -332,8 +332,8 @@ KFR_INTRINSIC void fft_reorder_swap_n4(T* inout, size_t i, size_t j, size_t N4, 
     cwrite_reordered(inout + i, vj, N4, cbool_t<use_br2>());
 }
 
-template <typename T>
-KFR_INTRINSIC void fft_reorder(complex<T>* inout, size_t log2n, ctrue_t use_br2)
+template <typename T, bool use_table>
+KFR_INTRINSIC void fft_reorder(complex<T>* inout, size_t log2n, ctrue_t use_br2, cbool_t<use_table>)
 {
     const size_t N         = size_t(1) << log2n;
     const size_t N4        = N / 4;
@@ -345,7 +345,7 @@ KFR_INTRINSIC void fft_reorder(complex<T>* inout, size_t log2n, ctrue_t use_br2)
 
     for (size_t i = 0; i < iend;)
     {
-        size_t j = bitrev_using_table(static_cast<u32>(i >> 3), log2n - 4) << 3;
+        size_t j = bitrev_using_table(static_cast<u32>(i >> 3), log2n - 4, cbool<use_table>) << 3;
         if (i >= j)
         {
             fft_reorder_swap_n4(io, i, j, N4, use_br2);
@@ -377,6 +377,19 @@ KFR_INTRINSIC void fft_reorder(complex<T>* inout, size_t log2n, ctrue_t use_br2)
             fft_reorder_swap_n4(io, i, j, N4, use_br2);
         }
         i += istep;
+    }
+}
+
+template <typename T>
+KFR_INTRINSIC void fft_reorder(complex<T>* inout, size_t log2n, ctrue_t use_br2)
+{
+    if (log2n - 4 > bitrev_table_log2N)
+    {
+        fft_reorder(inout, log2n, ctrue, cfalse);
+    }
+    else
+    {
+        fft_reorder(inout, log2n, ctrue, ctrue);
     }
 }
 

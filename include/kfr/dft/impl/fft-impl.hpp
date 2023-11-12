@@ -53,6 +53,7 @@ constexpr bool inline use_autosort = false;
 #define KFR_AUTOSORT_FOR_256D
 #define KFR_AUTOSORT_FOR_512
 #define KFR_AUTOSORT_FOR_1024
+#define KFR_AUTOSORT_FOR_2048
 
 #ifdef CMT_ARCH_AVX
 template <>
@@ -1634,6 +1635,8 @@ struct fft_specialization<T, 11> : dft_stage<T>
         radix8_autosort_pass_last(256, csize<width>, no, no, no, cbool<inverse>, out, out, tw);
     }
 };
+
+#else
 #endif
 
 } // namespace intrinsics
@@ -1736,7 +1739,7 @@ KFR_INTRINSIC void init_fft(dft_plan<T>* self, size_t size, dft_order)
 {
     const size_t log2n = ilog2(size);
     cswitch(
-        csizes_t<0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10>(), log2n,
+        csizes_t<0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11>(), log2n,
         [&](auto log2n)
         {
             (void)log2n;
