@@ -273,6 +273,8 @@ constexpr CMT_INTRINSIC T val_of(T value)
     return value;
 }
 
+#define CMT_CVAL(...) ::cometa::val_of(decltype(__VA_ARGS__)())
+
 template <typename T>
 constexpr CMT_INTRINSIC bool is_constant_val(T)
 {
