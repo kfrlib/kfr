@@ -46,8 +46,22 @@ namespace kfr
 inline namespace CMT_ARCH_NAME
 {
 
-constexpr bool inline always_br2   = true;
-constexpr bool inline use_autosort = false;
+constexpr bool inline always_br2 = true;
+
+template <typename T>
+inline std::bitset<DFT_MAX_STAGES> fft_algorithm_selection;
+
+template <>
+inline std::bitset<DFT_MAX_STAGES> fft_algorithm_selection<float>{ (1ull << 15) - 1 };
+
+template <>
+inline std::bitset<DFT_MAX_STAGES> fft_algorithm_selection<double>{ 0 };
+
+template <typename T>
+constexpr bool inline use_autosort(size_t log2n)
+{
+    return fft_algorithm_selection<T>[log2n];
+}
 
 #define KFR_AUTOSORT_FOR_128D
 #define KFR_AUTOSORT_FOR_256D
@@ -1639,27 +1653,26 @@ struct fft_specialization<T, 11> : dft_stage<T>
 #else
 #endif
 
-} // namespace intrinsics
-
-template <bool is_even, bool first, typename T>
-void make_fft(dft_plan<T>* self, size_t stage_size, cbool_t<is_even>, cbool_t<first>)
+template <bool is_even, bool first, typename T, bool autosort>
+void make_fft_stages(dft_plan<T>* self, cbool_t<autosort>, size_t stage_size, cbool_t<is_even>,
+                     cbool_t<first>)
 {
-    if constexpr (use_autosort)
+    if constexpr (autosort)
     {
         if (stage_size >= 16)
         {
-            add_stage<intrinsics::fft_autosort_stage_impl<T, first, false, false>>(self, stage_size,
-                                                                                   self->size / stage_size);
-            make_fft(self, stage_size / 4, cbool_t<is_even>(), cfalse);
+            add_stage<fft_autosort_stage_impl<T, first, false, false>>(self, stage_size,
+                                                                       self->size / stage_size);
+            make_fft_stages(self, ctrue, stage_size / 4, cbool_t<is_even>(), cfalse);
         }
         else
         {
             if (stage_size == 8)
-                add_stage<intrinsics::fft_autosort_stage_impl<T, false, true, true>>(self, stage_size,
-                                                                                     self->size / stage_size);
+                add_stage<fft_autosort_stage_impl<T, false, true, true>>(self, stage_size,
+                                                                         self->size / stage_size);
             else
-                add_stage<intrinsics::fft_autosort_stage_impl<T, false, true, false>>(
-                    self, stage_size, self->size / stage_size);
+                add_stage<fft_autosort_stage_impl<T, false, true, false>>(self, stage_size,
+                                                                          self->size / stage_size);
         }
     }
     else
@@ -1668,15 +1681,30 @@ void make_fft(dft_plan<T>* self, size_t stage_size, cbool_t<is_even>, cbool_t<fi
 
         if (stage_size >= 2048)
         {
-            add_stage<intrinsics::fft_stage_impl<T, !first, is_even>>(self, stage_size);
+            add_stage<fft_stage_impl<T, !first, is_even>>(self, stage_size);
 
-            make_fft(self, stage_size / 4, cbool_t<is_even>(), cfalse);
+            make_fft_stages(self, cfalse, stage_size / 4, cbool_t<is_even>(), cfalse);
         }
         else
         {
-            add_stage<intrinsics::fft_final_stage_impl<T, !first, final_size>>(self, final_size);
-            add_stage<intrinsics::fft_reorder_stage_impl<T, is_even>>(self, self->size);
+            add_stage<fft_final_stage_impl<T, !first, final_size>>(self, final_size);
+            add_stage<fft_reorder_stage_impl<T, is_even>>(self, self->size);
         }
+    }
+}
+
+} // namespace intrinsics
+
+template <bool is_even, typename T>
+void make_fft(dft_plan<T>* self, size_t stage_size, cbool_t<is_even>)
+{
+    if (use_autosort<T>(ilog2(stage_size)))
+    {
+        intrinsics::make_fft_stages(self, ctrue, stage_size, cbool<is_even>, ctrue);
+    }
+    else
+    {
+        intrinsics::make_fft_stages(self, cfalse, stage_size, cbool<is_even>, ctrue);
     }
 }
 
@@ -1746,9 +1774,8 @@ KFR_INTRINSIC void init_fft(dft_plan<T>* self, size_t size, dft_order)
             constexpr size_t log2nv = val_of(decltype(log2n)());
             add_stage<intrinsics::fft_specialization<T, log2nv>>(self, size);
         },
-        [&]() {
-            cswitch(cfalse_true, is_even(log2n), [&](auto is_even) { make_fft(self, size, is_even, ctrue); });
-        });
+        [&]()
+        { cswitch(cfalse_true, is_even(log2n), [&](auto is_even) { make_fft(self, size, is_even); }); });
 }
 
 template <typename T>
