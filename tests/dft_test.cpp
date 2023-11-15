@@ -33,7 +33,7 @@ constexpr ctypes_t<float, double> dft_float_types{};
 constexpr ctypes_t<float> dft_float_types{};
 #endif
 
-#if defined(CMT_ARCH_X86)
+#if defined(CMT_ARCH_X86) && !defined(KFR_NO_PERF_TESTS)
 
 static void full_barrier()
 {

@@ -148,6 +148,12 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_compile_options(all_tests PRIVATE /Zc:lambda)
 endif ()
 
+option(KFR_NO_PERF_TESTS "Disable performance tests" OFF)
+
+if (KFR_NO_PERF_TESTS)
+    add_compile_definitions(KFR_NO_PERF_TESTS=1)
+endif ()
+
 function (add_x86_test ARCH)
     set(NAME ${ARCH})
 
