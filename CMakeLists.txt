@@ -207,7 +207,6 @@ function (add_arch_library NAME ARCH SRCS DEFS)
     target_set_arch(${NAME}_${ARCH} PRIVATE ${ARCH})
     target_compile_options(${NAME}_${ARCH} PRIVATE ${DEFS})
     target_link_libraries(${NAME}_all INTERFACE ${NAME}_${ARCH})
-    target_compile_options(${NAME}_${ARCH} PRIVATE -flto)
 endfunction ()
 
 if (KFR_ENABLE_DFT)
