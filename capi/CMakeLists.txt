@@ -86,6 +86,11 @@ add_c_library(avx)
 add_c_library(avx2)
 add_c_library(avx512)
 
+link_as_whole(kfr_capi_all INTERFACE kfr_capi_sse2)
+if (NOT WIN32)
+    link_as_whole(kfr_capi_all_pic INTERFACE kfr_capi_sse2_pic)
+endif()
+
 target_compile_definitions(
     kfr_capi
     PRIVATE -DKFR_DFT_MULTI=1
