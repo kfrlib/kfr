@@ -221,7 +221,11 @@ endfunction ()
 
 if (KFR_ENABLE_DFT)
 
-    set(KFR_DFT_DEFS ${CLANG_ARG_PREFIX}-ffp-contract=fast -Xclang -O3 -mllvm -x86-use-vzeroupper=0)
+    if (X86)
+        set(KFR_DFT_DEFS ${CLANG_ARG_PREFIX}-ffp-contract=fast -Xclang -O3 -mllvm -x86-use-vzeroupper=0)
+    else()
+        set(KFR_DFT_DEFS ${CLANG_ARG_PREFIX}-ffp-contract=fast -Xclang -O3)
+    endif ()
 
     if (KFR_ENABLE_DFT_MULTIARCH)
         add_library(kfr_dft INTERFACE)
