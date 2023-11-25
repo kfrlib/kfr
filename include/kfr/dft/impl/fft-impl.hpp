@@ -1353,7 +1353,8 @@ struct fft_specialization<float, 7> : dft_stage<float>
     }
 
     constexpr static bool aligned        = false;
-    constexpr static size_t width        = const_min(fft_config<T>::process_width, size_t(16));
+    constexpr static size_t width1       = fft_config<T>::process_width;
+    constexpr static size_t width2       = const_min(width1, size_t(8));
     constexpr static bool use_br2        = true;
     constexpr static bool prefetch       = false;
     constexpr static size_t final_size   = 32;
@@ -1362,9 +1363,8 @@ struct fft_specialization<float, 7> : dft_stage<float>
     virtual void do_initialize(size_t total_size) override final
     {
         complex<T>* twiddle = ptr_cast<complex<T>>(this->data);
-        initialize_twiddles<T, width>(twiddle, 128, total_size, split_format);
-        initialize_twiddles<T, width>(twiddle, 32, total_size, split_format);
-        initialize_twiddles<T, width>(twiddle, 8, total_size, split_format);
+        initialize_twiddles<T, width1>(twiddle, 128, total_size, split_format);
+        initialize_twiddles<T, width2>(twiddle, 32, total_size, split_format);
     }
 
     DFT_STAGE_FN
@@ -1372,11 +1372,11 @@ struct fft_specialization<float, 7> : dft_stage<float>
     KFR_MEM_INTRINSIC void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
         const complex<T>* twiddle = ptr_cast<complex<T>>(this->data);
-        radix4_pass(128, 1, csize_t<width>(), cfalse, cfalse, cbool_t<use_br2>(), cbool_t<prefetch>(),
+        radix4_pass(128, 1, csize_t<width1>(), cfalse, cfalse, cbool_t<use_br2>(), cbool_t<prefetch>(),
                     cbool_t<inverse>(), cbool_t<aligned>(), out, in, twiddle);
-        radix4_pass(32, 4, csize_t<width>(), cfalse, cfalse, cbool_t<use_br2>(), cbool_t<prefetch>(),
+        radix4_pass(32, 4, csize_t<width2>(), cfalse, cfalse, cbool_t<use_br2>(), cbool_t<prefetch>(),
                     cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
-        radix4_pass(csize_t<8>(), 16, csize_t<width>(), cfalse, cfalse, cbool_t<use_br2>(),
+        radix4_pass(csize_t<8>(), 16, csize_t<width2>(), cfalse, cfalse, cbool_t<use_br2>(),
                     cbool_t<prefetch>(), cbool_t<inverse>(), cbool_t<aligned>(), out, out, twiddle);
         if (this->need_reorder)
             fft_reorder(out, csize_t<7>());
