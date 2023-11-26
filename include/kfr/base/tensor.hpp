@@ -38,6 +38,7 @@
 #include "expression.hpp"
 #include "memory.hpp"
 #include "shape.hpp"
+#include "transpose.hpp"
 
 CMT_PRAGMA_MSVC(warning(push))
 CMT_PRAGMA_MSVC(warning(disable : 4324))
@@ -372,7 +373,7 @@ public:
     }
 #else
     tensor& operator=(const tensor& src) & = default;
-    tensor& operator=(tensor&& src) & = default;
+    tensor& operator=(tensor&& src) &      = default;
 #endif
 
     KFR_MEM_INTRINSIC const tensor& operator=(const tensor& src) const&
@@ -508,6 +509,23 @@ public:
     }
 
     using tensor_subscript<T, tensor<T, NDims>, std::make_integer_sequence<index_t, NDims>>::operator();
+
+    KFR_MEM_INTRINSIC tensor transpose() const
+    {
+        if constexpr (dims <= 1)
+        {
+            return *this;
+        }
+        else
+        {
+            return tensor<T, dims>{
+                m_data,
+                m_shape.transpose(),
+                m_strides.transpose(),
+                m_finalizer,
+            };
+        }
+    }
 
     template <index_t dims>
     KFR_MEM_INTRINSIC tensor<T, dims> reshape_may_copy(const kfr::shape<dims>& new_shape,

@@ -344,6 +344,11 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
         if (CMT_LIKELY(index < dims))
             this->operator[](dims - 1 - index) = val;
     }
+
+    KFR_MEM_INTRINSIC constexpr shape transpose() const
+    {
+        return this->shuffle(csizeseq<dims, dims - 1, -1>);
+    }
 };
 
 template <>
