@@ -54,6 +54,18 @@ KFR_INTRINSIC vec_shape<T, Nout> low(vec_shape<T, N>)
     return {};
 }
 
+template <typename T, size_t N, size_t Nout = N / 2>
+KFR_INTRINSIC vec<T, Nout> lowhalf(const vec<T, N>& x)
+{
+    return x.shuffle(csizeseq<Nout>);
+}
+
+template <typename T, size_t N, size_t Nout = N / 2>
+KFR_INTRINSIC vec_shape<T, Nout> lowhalf(vec_shape<T, N>)
+{
+    return {};
+}
+
 template <typename T, size_t N, size_t Nout = N - prev_poweroftwo(N - 1)>
 KFR_INTRINSIC vec<T, Nout> high(const vec<T, N>& x)
 {
@@ -62,6 +74,18 @@ KFR_INTRINSIC vec<T, Nout> high(const vec<T, N>& x)
 
 template <typename T, size_t N, size_t Nout = N - prev_poweroftwo(N - 1)>
 KFR_INTRINSIC vec_shape<T, Nout> high(vec_shape<T, N>)
+{
+    return {};
+}
+
+template <typename T, size_t N, size_t Nout = N - N / 2>
+KFR_INTRINSIC vec<T, Nout> highhalf(const vec<T, N>& x)
+{
+    return x.shuffle(csizeseq<Nout, N / 2>);
+}
+
+template <typename T, size_t N, size_t Nout = N - N / 2>
+KFR_INTRINSIC vec_shape<T, Nout> highhalf(vec_shape<T, N>)
 {
     return {};
 }
