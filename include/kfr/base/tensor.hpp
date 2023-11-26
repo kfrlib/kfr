@@ -550,7 +550,7 @@ public:
         return reshape_may_copy(new_shape, false);
     }
 
-    KFR_MEM_INTRINSIC tensor<T, 1> flatten() const { return reshape(kfr::shape<1>{ m_size }, false); }
+    KFR_MEM_INTRINSIC tensor<T, 1> flatten() const { return reshape(kfr::shape<1>{ m_size }); }
 
     KFR_MEM_INTRINSIC tensor<T, 1> flatten_may_copy(bool allow_copy = false) const
     {
