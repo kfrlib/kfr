@@ -229,5 +229,14 @@ TEST(vec_deduction)
     static_assert(std::is_same_v<decltype(v), vec<int, 3>>);
 }
 
+TEST(vec2d_element)
+{
+    auto v = vec{ vec{ 1, 2 }, vec{ 3, 4 } };
+    CHECK(v[0][0] == 1);
+    CHECK(v[0][1] == 2);
+    CHECK(v[1][0] == 3);
+    CHECK(v[1][1] == 4);
+}
+
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
