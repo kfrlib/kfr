@@ -46,6 +46,34 @@ KFR_INTRINSIC void write(T* dest, const vec<T, N>& value)
     intrinsics::write(cbool<A>, ptr_cast<deep_subtype<T>>(dest), value.flatten());
 }
 
+namespace internal
+{
+template <size_t group, size_t count, size_t N, bool A, typename T, size_t... indices>
+KFR_INTRINSIC vec<T, group * count * N> read_group_impl(const T* src, size_t stride, csizes_t<indices...>)
+{
+    return concat(intrinsics::read(cbool<A>, csize<N * group>, src + group * stride * indices)...);
+}
+template <size_t group, size_t count, size_t N, bool A, typename T, size_t... indices>
+KFR_INTRINSIC void write_group_impl(T* dest, size_t stride, const vec<T, group * count * N>& value,
+                                    csizes_t<indices...>)
+{
+    swallow{ (write<A>(dest + group * stride * indices, slice<group * indices * N, group * N>(value)),
+              0)... };
+}
+} // namespace internal
+
+template <size_t count, size_t N, size_t group = 1, bool A = false, typename T>
+KFR_INTRINSIC vec<T, group * count * N> read_group(const T* src, size_t stride)
+{
+    return internal::read_group_impl<group, count, N, A>(ptr_cast<T>(src), stride, csizeseq_t<count>());
+}
+
+template <size_t count, size_t N, size_t group = 1, bool A = false, typename T>
+KFR_INTRINSIC void write_group(T* dest, size_t stride, const vec<T, group * count * N>& value)
+{
+    return internal::write_group_impl<group, count, N, A>(dest, stride, value, csizeseq_t<count>());
+}
+
 template <typename... Indices, typename T, size_t Nout = 1 + sizeof...(Indices)>
 KFR_INTRINSIC vec<T, Nout> gather(const T* base, size_t index, Indices... indices)
 {

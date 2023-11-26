@@ -104,13 +104,13 @@ KFR_INTRINSIC void fft_reorder_swap_two(T* inout, size_t i, size_t j)
     constexpr size_t N  = 1 << log2n;
     constexpr size_t N4 = 2 * N / 4;
 
-    cxx vi = cread_group<4, 4, N4 / 2, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + i));
-    cxx vj = cread_group<4, 4, N4 / 2, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + j));
+    cxx vi = cread_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + i), N4 / 2);
+    cxx vj = cread_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + j), N4 / 2);
 
     vi = digitreverse<bitrev, 2>(vi);
-    cwrite_group<4, 4, N4 / 2, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + i), vi);
+    cwrite_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + i), N4 / 2, vi);
     vj = digitreverse<bitrev, 2>(vj);
-    cwrite_group<4, 4, N4 / 2, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + j), vj);
+    cwrite_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + j), N4 / 2, vj);
 }
 
 template <size_t log2n, size_t bitrev, typename T>
@@ -121,13 +121,13 @@ KFR_INTRINSIC void fft_reorder_swap(T* inout, size_t i, size_t j)
     constexpr size_t N  = 1 << log2n;
     constexpr size_t N4 = 2 * N / 4;
 
-    cxx vi = cread_group<4, 4, N4 / 2, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + i));
-    cxx vj = cread_group<4, 4, N4 / 2, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + j));
+    cxx vi = cread_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + i), N4 / 2);
+    cxx vj = cread_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + j), N4 / 2);
 
     vi = digitreverse<bitrev, 2>(vi);
-    cwrite_group<4, 4, N4 / 2, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + j), vi);
+    cwrite_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + j), N4 / 2, vi);
     vj = digitreverse<bitrev, 2>(vj);
-    cwrite_group<4, 4, N4 / 2, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + i), vj);
+    cwrite_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + i), N4 / 2, vj);
 }
 
 template <size_t log2n, size_t bitrev, typename T>
