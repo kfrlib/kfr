@@ -172,23 +172,44 @@ struct histogram_data
 
     KFR_MEM_INTRINSIC TCount operator[](size_t n) const
     {
-        KFR_LOGIC_CHECK(n < size() - 2, "n is outside histogram size");
+        KFR_LOGIC_CHECK(n < size(), "n is outside histogram size");
         return m_values[1 + n];
     }
     KFR_MEM_INTRINSIC TCount below() const { return m_values.front(); }
     KFR_MEM_INTRINSIC TCount above() const { return m_values.back(); }
     KFR_MEM_INTRINSIC size_t size() const { return m_values.size() - 2; }
     KFR_MEM_INTRINSIC univector_ref<const TCount> values() const { return m_values.slice(1, size()); }
+    KFR_MEM_INTRINSIC uint64_t total() const { return m_total; }
 
+    template <typename T, size_t N>
+    KFR_MEM_INTRINSIC void put(const vec<T, N>& value)
+    {
+        vec<u64, N> indices;
+        if constexpr (is_f_class<T>)
+        {
+            const vec<T, N> x = value * size();
+            indices           = cast<uint64_t>(round(clamp(x, 0, size() - 1)));
+            indices           = select(value < 0, 0, select(value > 1, size() + 1, 1 + indices));
+        }
+        else
+        {
+            const vec<T, N> x = 1 + value;
+            indices           = cast<uint64_t>(clamp(x, T(0), T(size() + 1)));
+        }
+        CMT_LOOP_UNROLL
+        for (size_t i = 0; i < N; ++i)
+            ++m_values[indices[i]];
+        m_total += N;
+    }
     template <typename T>
     KFR_MEM_INTRINSIC void put(T value)
     {
-        const T x = 1 + value * size();
-        ++m_values[static_cast<uint64_t>(std::floor(clamp(x, 0, size() + 1)))];
+        put(vec{ value });
     }
 
 private:
     vector_type m_values{};
+    uint64_t m_total = 0;
 };
 
 template <size_t Bins, typename E, typename TCount = uint32_t>
@@ -211,10 +232,7 @@ struct expression_histogram : public expression_with_traits<E>
                                                          const axis_params<Axis, N>& sh)
     {
         vec<value_type, N> v = get_elements(self.first(), index, sh);
-        for (size_t i = 0; i < N; ++i)
-        {
-            self.data.template put<value_type>(v[i]);
-        }
+        self.data.put(v);
         return v;
     }
 };
@@ -398,7 +416,7 @@ KFR_FUNCTION histogram_data<0, TCount> histogram(E&& expr, size_t bins)
 template <size_t Bins, typename E, typename TCount = uint32_t>
 KFR_FUNCTION histogram_data<Bins, TCount> histogram(E&& expr)
 {
-    return sink(histogram_expression(std::forward<E>(expr), Bins)).data;
+    return sink(histogram_expression<Bins>(std::forward<E>(expr))).data;
 }
 
 } // namespace CMT_ARCH_NAME
