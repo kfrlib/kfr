@@ -511,7 +511,7 @@ public:
 
     template <index_t dims>
     KFR_MEM_INTRINSIC tensor<T, dims> reshape_may_copy(const kfr::shape<dims>& new_shape,
-                                                       bool allow_copy = false) const
+                                                       bool allow_copy = true) const
     {
         if (size_of_shape(new_shape) != m_size)
         {
@@ -552,7 +552,7 @@ public:
 
     KFR_MEM_INTRINSIC tensor<T, 1> flatten() const { return reshape(kfr::shape<1>{ m_size }); }
 
-    KFR_MEM_INTRINSIC tensor<T, 1> flatten_may_copy(bool allow_copy = false) const
+    KFR_MEM_INTRINSIC tensor<T, 1> flatten_may_copy(bool allow_copy = true) const
     {
         return reshape_may_copy(kfr::shape<1>{ m_size }, allow_copy);
     }
