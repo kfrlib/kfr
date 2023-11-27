@@ -33,7 +33,7 @@
 #include "cident.h"
 
 #define KFR_VERSION_MAJOR 5
-#define KFR_VERSION_MINOR 1
+#define KFR_VERSION_MINOR 2
 #define KFR_VERSION_PATCH 0
 #define KFR_VERSION_LABEL ""
 

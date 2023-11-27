@@ -1,5 +1,33 @@
 # Changelog
 
+## 5.2.0
+
+2023-11-27
+
+#### Changed
+
+- The performance of DFT has been increased up to 40% compared to KFR 5 on x86 and x86_64
+in single and double precision, inplace and out of place processing.
+
+#### Added
+
+- `KFR_NO_PERF_TESTS` define can now disable performance tests
+- `CMT_CVAL` for extracting constexpr-enabled value from `cval_t`
+- `fft_algorithm_selection` to select FFT algorithm for given FFT size.
+
+#### Fixed
+
+- Warnings in Clang 10 https://github.com/kfrlib/kfr/issues/198
+- `std::is_pov` is peprecated in C++20 https://github.com/kfrlib/kfr/issues/190
+- DFT sizes 0 and 1 were not processed correctly https://github.com/kfrlib/kfr/issues/195
+- Internal compiler error in Visual Studio Compiler 19.37 https://github.com/kfrlib/kfr/issues/194
+- Goertzel issue https://github.com/kfrlib/kfr/issues/121
+- Bug in `nearest_real_or_complex` https://github.com/kfrlib/kfr/issues/137
+- Fixed operators in `KFR_STD_COMPLEX` mode
+- Testo library: typo in `epsilon_scope`
+- Fix ambiguities with std::identity (c++20)
+- Force linking in correct order for multi-architecture binaries
+
 ## 5.1.0
 
 2023-10-11
