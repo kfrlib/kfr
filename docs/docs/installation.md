@@ -31,7 +31,7 @@ pip install -r requirements.txt
 
 Clang is highly recommended and proven to provide the best performance for KFR. 
 
-#### Linux
+#### Installing Clang on Linux
 
 Install clang using your package manager and add the following defines to the cmake command line:
 
@@ -39,17 +39,17 @@ Install clang using your package manager and add the following defines to the cm
 cmake -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang ...
 ```
 
-#### macOS
+#### Installing Clang on macOS
 
 On macOS clang is the default compiler and already included in the official Xcode toolchain. No additional setup required.
 
-#### Windows
+#### Installing Clang on Windows
 
 Download and install the latest `win64` build from the official LLVM GitHub page:
 
 https://github.com/llvm/llvm-project/releases
 
-## Getting the source code and binaries
+## Getting KFR source code and binaries
 
 ### Git (recommended)
 
@@ -59,7 +59,7 @@ To obtain the full source code, including examples and tests, you can clone the 
 git clone https://github.com/kfrlib/kfr.git
 ```
 
-The repository default branch `master` is stable and passes all tests. Latest features reside in `dev`.
+The repository default branch `main` is stable and passes all tests. Latest features reside in `dev`.
 
 #### Update
 
@@ -80,12 +80,12 @@ Re-download tarball and unpack it to the same location.
 
 ### vcpkg
 
-#### Linux/macOS
+#### vcpkg on Linux/macOS
 ```bash
 ./vcpkg install kfr
 ```
 
-#### Windows
+#### vcpkg on Windows
 
 ```cmd
 vcpkg install kfr
@@ -105,7 +105,7 @@ Prebuilt binaries will be available soon.
 
 ## Usage
 
-### Including in CMake project
+### Including in CMake project (add_subdirectory)
 
 `CMakeLists.txt` contains these libraries:
 * `kfr` - header only interface library
@@ -255,3 +255,94 @@ mkdir build && cd build
 cmake -GNinja -DENABLE_TESTS=ON -DCMAKE_BUILD_TYPE=Release ..
 ninja
 ```
+
+## Compile for multiple architectures
+
+### Linux/macOS
+
+There are two ways to use KFR. Use one architecture everywhere (but it must match in static library and your project) or use multiple architectures (selected at runtime).
+
+#### 1. Single architecture (simpler setup)
+Use -DKFR_ARCH=avx2 (or avx or sse41 or even sse2) when you run CMake to install KFR.
+Example:
+```
+cmake -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DKFR_ARCH=avx2 ..
+ninja
+sudo ninja install # This installs libkfr_dft.a
+```
+The same architecture should be used when building source files:
+Example:
+```
+g++ -mavx2 ... your_source.cpp -lkfr_dft
+```
+
+Then linking works well and KFR will use avx2 instructions for both DFT and other functions (built in your code).
+
+Code from `examples/dft.cpp` will show:
+```
+KFR 5.1.0 avx2 64-bit (gcc-11.4.0/linux) +in
+fft_specialization<double, 7>(avx2): 0, 128, 3072, 0, 1, 0, 0, 0, 1, 0, 0
+```
+
+#### 2. Multiple architectures (best performance)
+
+Setting `KFR_ENABLE_DFT_MULTIARCH` to `ON` enables multiple architectures.
+In this case instead of a single `libkfr_dft.a` multiple arch-specific libraries will be installed.
+```
+cmake -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DKFR_ENABLE_DFT_MULTIARCH=ON ..
+ninja
+sudo ninja install # This installs libkfr_dft_sse2.a libkfr_dft_sse41.a libkfr_dft_avx.a libkfr_dft_avx2.a libkfr_dft_avx512.a
+```
+
+Then you can compile your code using any architecture settings but should link all KFR DFT libraries:
+Example (gcc will select sse2 for `your_source.cpp`):
+```
+g++ your_source.cpp -Wl,--push-state,--whole-archive -lkfr_dft_sse2 -Wl,--pop-state -lkfr_dft_sse41 -lkfr_dft_avx -lkfr_dft_avx2 -lkfr_dft_avx512
+```
+`whole-archive` flag is needed to link inline and template functions with correct architecture.
+
+KFR code will detect cpu at runtime and select appropriate code path for DFT.
+
+Code from `examples/dft.cpp` will show:
+```
+KFR 5.1.0 sse2 64-bit (gcc-11.4.0/linux) +in
+fft_specialization<double, 7>(avx2): 0, 128, 3072, 0, 1, 0, 0, 0, 1, 0, 0
+```
+
+Notice that first mentioned architecture is sse2 (architecture used for `your_source.cpp`) while the second is now avx2 (dft source selected at runtime)
+
+### Windows
+
+For Windows build instructions are similar but below are exact commands.
+
+#### 1. Single architecture (simpler setup)
+
+```
+:: Warning: VS Path and LLVM Path may be different on your machine
+call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+cmake -GNinja -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_BUILD_TYPE=Release -DKFR_ARCH=avx2 -DCMAKE_INSTALL_PREFIX=install ..
+ninja
+ninja install # This installs kfr_dft.lib to CMAKE_BINARY_DIR/install
+```
+
+Then, the following compile options must be added (through VS Project Properties or CMake target_compile_options)
+
+```
+/arch:AVX2 "PATH-TO-INSTALLED-KFR/lib/kfr_dft.lib"
+```
+As always `/arch` must match `KFR_ARCH` argument in CMake call.
+
+#### 2. Multiple architectures (best performance)
+
+```
+:: Warning: VS Path and LLVM Path may be different on your machine
+call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+cmake -GNinja -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_BUILD_TYPE=Release -DKFR_ENABLE_DFT_MULTIARCH=ON -DCMAKE_INSTALL_PREFIX=install ..
+ninja
+ninja install # This installs kfr_dft_sse2.lib kfr_dft_sse41.lib kfr_dft_avx.lib kfr_dft_avx2.lib kfr_dft_avx512.lib to CMAKE_BINARY_DIR/install
+```
+`KFR_ENABLE_DFT_MULTIARCH=ON` is the key option here.
+```
+/WHOLEARCHIVE:"PATH-TO-INSTALLED-KFR/lib/kfr_dft_sse2.lib" "PATH-TO-INSTALLED-KFR/lib/kfr_dft_sse41.lib" "PATH-TO-INSTALLED-KFR/lib/kfr_dft_avx.lib" "PATH-TO-INSTALLED-KFR/lib/kfr_dft_avx2.lib" "PATH-TO-INSTALLED-KFR/lib/kfr_dft_avx512.lib"
+```
+`/WHOLEARCHIVE` for sse2 lib is required here for the same reason as linux code has `--whole-archive`: to force compiler to select correct inline/template functions from multiple similar libraries. Without this a runtime invalid instruction exception may occur.
