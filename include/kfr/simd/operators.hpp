@@ -597,25 +597,10 @@ constexpr KFR_INTRINSIC vec<T, N> copysign(const vec<T, N>& x, const vec<T, N>& 
 }
 
 /// @brief Swap byte order
-template <typename T, size_t N, KFR_ENABLE_IF(sizeof(vec<T, N>) > 8)>
-KFR_INTRINSIC vec<T, N> swapbyteorder(const vec<T, N>& x)
-{
-    return bitcast<T>(swap<sizeof(T)>(bitcast<u8>(x)));
-}
-template <typename T, KFR_ENABLE_IF(sizeof(T) == 8)>
+template <typename T>
 KFR_INTRINSIC T swapbyteorder(const T& x)
 {
-    return reinterpret_cast<const T&>(__builtin_bswap64(reinterpret_cast<const u64&>(x)));
-}
-template <typename T, KFR_ENABLE_IF(sizeof(T) == 4)>
-KFR_INTRINSIC T swapbyteorder(const T& x)
-{
-    return reinterpret_cast<const T&>(__builtin_bswap32(reinterpret_cast<const u32&>(x)));
-}
-template <typename T, KFR_ENABLE_IF(sizeof(T) == 2)>
-KFR_INTRINSIC T swapbyteorder(const T& x)
-{
-    return reinterpret_cast<const T&>(__builtin_bswap16(reinterpret_cast<const u16&>(x)));
+    return bitcast_anything<T>(swap<sizeof(deep_subtype<T>)>(bitcast_anything<vec<u8, sizeof(T)>>(x)));
 }
 KFR_FN(swapbyteorder)
 
