@@ -27,6 +27,7 @@
 #include "constants.hpp"
 #include "impl/function.hpp"
 #include "operators.hpp"
+#include <complex>
 
 CMT_PRAGMA_MSVC(warning(push))
 CMT_PRAGMA_MSVC(warning(disable : 4814))
@@ -183,6 +184,29 @@ struct compound_type_traits<kfr::complex<T>>
         return index == 0 ? value.real() : value.imag();
     }
 };
+
+#ifndef KFR_STD_COMPLEX
+template <typename T>
+struct compound_type_traits<std::complex<T>>
+{
+    constexpr static size_t width      = 2;
+    constexpr static size_t deep_width = width * compound_type_traits<T>::width;
+    using subtype                      = T;
+    using deep_subtype                 = cometa::deep_subtype<T>;
+    constexpr static bool is_scalar    = false;
+    constexpr static size_t depth      = cometa::compound_type_traits<T>::depth + 1;
+    template <typename U>
+    using rebind = std::complex<U>;
+    template <typename U>
+    using deep_rebind = std::complex<typename compound_type_traits<subtype>::template deep_rebind<U>>;
+
+    static constexpr subtype at(const std::complex<T>& value, size_t index)
+    {
+        return index == 0 ? value.real() : value.imag();
+    }
+};
+#endif
+
 } // namespace cometa
 namespace kfr
 {
