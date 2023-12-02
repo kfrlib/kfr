@@ -20,6 +20,12 @@ if (WIN32)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif ()
 
+if (X86)
+    set(CAPI_ARCHS sse2 sse41 avx avx2 avx512)
+else ()
+    set(CAPI_ARCHS ${KFR_ARCH})
+endif ()
+
 set(CMAKE_CXX_VISIBILITY_PRESET "default")
 set(CMAKE_C_VISIBILITY_PRESET "default")
 
@@ -75,15 +81,15 @@ endfunction ()
 
 add_library(kfr_capi SHARED capi.cpp)
 
-add_c_library(sse2)
-add_c_library(sse41)
-add_c_library(avx)
-add_c_library(avx2)
-add_c_library(avx512)
+foreach (A IN LISTS CAPI_ARCHS)
+    add_c_library(${A})
+endforeach()
 
-link_as_whole(kfr_capi_all INTERFACE kfr_capi_sse2)
+list(GET CAPI_ARCHS 0 FIRST_ARCH)
+
+link_as_whole(kfr_capi_all INTERFACE kfr_capi_${FIRST_ARCH})
 if (NOT WIN32)
-    link_as_whole(kfr_capi_all_pic INTERFACE kfr_capi_sse2_pic)
+    link_as_whole(kfr_capi_all_pic INTERFACE kfr_capi_${FIRST_ARCH}_pic)
 endif ()
 
 target_compile_definitions(
@@ -97,7 +103,7 @@ target_compile_definitions(
             -DCMT_MULTI_ENABLED_AVX512=1
             -DKFR_BUILDING_DLL=1)
 
-target_set_arch(kfr_capi PRIVATE sse2)
+target_set_arch(kfr_capi PRIVATE ${FIRST_ARCH})
 
 if (WIN32)
     target_link_libraries(kfr_capi PRIVATE kfr kfr_capi_all)
