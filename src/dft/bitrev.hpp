@@ -25,12 +25,12 @@
  */
 #pragma once
 
-#include "../../simd/complex.hpp"
-#include "../../simd/constants.hpp"
-#include "../../simd/digitreverse.hpp"
-#include "../../simd/vec.hpp"
+#include <kfr/simd/complex.hpp>
+#include <kfr/simd/constants.hpp>
+#include <kfr/simd/digitreverse.hpp>
+#include <kfr/simd/vec.hpp>
 
-#include "../data/bitrev.hpp"
+#include "data/bitrev.hpp"
 
 #include "ft.hpp"
 

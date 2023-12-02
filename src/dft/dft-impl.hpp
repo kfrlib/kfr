@@ -25,8 +25,8 @@
  */
 #pragma once
 
-#include "../../base/math_expressions.hpp"
-#include "../../base/simd_expressions.hpp"
+#include <kfr/base/math_expressions.hpp>
+#include <kfr/base/simd_expressions.hpp>
 #include "dft-fft.hpp"
 
 CMT_PRAGMA_GNU(GCC diagnostic push)

@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with KFR.
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.12)
 
 if (WIN32)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
@@ -54,31 +54,26 @@ if (NOT WIN32)
 endif ()
 
 function (add_c_library ARCH)
-    add_library(
-        kfr_capi_${ARCH} STATIC
-        ${KFR_DFT_SRC}
-        ${CMAKE_CURRENT_SOURCE_DIR}/../include/kfr/dsp/impl/dsp-impl.cpp)
+    add_library(kfr_capi_${ARCH} STATIC ${KFR_DFT_SRC} dsp.cpp)
     target_link_libraries(kfr_capi_${ARCH} kfr)
     target_set_arch(kfr_capi_${ARCH} PRIVATE ${ARCH})
-    target_compile_options(kfr_capi_${ARCH} PRIVATE "${CLANG_ARG_PREFIX}-ffp-contract=fast")
     target_link_libraries(kfr_capi_all INTERFACE kfr_capi_${ARCH})
+    dft_compile_options(kfr_capi_${ARCH})
 
     if (NOT WIN32)
-        add_library(
-            kfr_capi_${ARCH}_pic STATIC
-            ${KFR_DFT_SRC}
-            ${CMAKE_CURRENT_SOURCE_DIR}/../include/kfr/dsp/impl/dsp-impl.cpp)
+        add_library(kfr_capi_${ARCH}_pic STATIC ${KFR_DFT_SRC} dsp.cpp)
         set_property(TARGET kfr_capi_${ARCH}_pic
                      PROPERTY POSITION_INDEPENDENT_CODE 1)
         target_link_libraries(kfr_capi_${ARCH}_pic kfr)
         target_set_arch(kfr_capi_${ARCH}_pic PRIVATE ${ARCH})
-        target_compile_options(kfr_capi_${ARCH}_pic PRIVATE "${CLANG_ARG_PREFIX}-ffp-contract=fast")
 
         target_link_libraries(kfr_capi_all_pic INTERFACE kfr_capi_${ARCH}_pic)
+        dft_compile_options(kfr_capi_${ARCH}_pic)
     endif ()
+
 endfunction ()
 
-add_library(kfr_capi SHARED ${PROJECT_SOURCE_DIR}/capi/capi.cpp)
+add_library(kfr_capi SHARED capi.cpp)
 
 add_c_library(sse2)
 add_c_library(sse41)
@@ -89,7 +84,7 @@ add_c_library(avx512)
 link_as_whole(kfr_capi_all INTERFACE kfr_capi_sse2)
 if (NOT WIN32)
     link_as_whole(kfr_capi_all_pic INTERFACE kfr_capi_sse2_pic)
-endif()
+endif ()
 
 target_compile_definitions(
     kfr_capi
@@ -117,7 +112,8 @@ else ()
         message(STATUS "Set CMAKE_OSX_DEPLOYMENT_TARGET variable to change")
     else ()
         set_property(
-            TARGET kfr_capi APPEND
+            TARGET kfr_capi
+            APPEND
             PROPERTY LINK_LIBRARIES
                      -nodefaultlibs
                      -Wl,-Bdynamic

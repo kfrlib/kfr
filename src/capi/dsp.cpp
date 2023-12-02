@@ -1,5 +1,5 @@
-#include "../biquad.hpp"
-#include "../fir.hpp"
+#include <kfr/dsp/biquad.hpp>
+#include <kfr/dsp/fir.hpp>
 
 namespace kfr
 {

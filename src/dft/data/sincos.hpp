@@ -22,8 +22,8 @@
  */
 #pragma once
 
-#include "../../kfr.h"
-#include "../../simd/types.hpp"
+#include <kfr/kfr.h>
+#include <kfr/simd/types.hpp>
 #include <cstdint>
 
 namespace kfr

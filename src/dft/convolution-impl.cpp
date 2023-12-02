@@ -23,9 +23,9 @@
   disclosing the source code of your own applications.
   See https://www.kfrlib.com for details.
  */
-#include "../../base/simd_expressions.hpp"
-#include "../../simd/complex.hpp"
-#include "../convolution.hpp"
+#include <kfr/base/simd_expressions.hpp>
+#include <kfr/simd/complex.hpp>
+#include <kfr/dft/convolution.hpp>
 
 namespace kfr
 {

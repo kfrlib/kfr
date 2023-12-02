@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with KFR.
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.12)
 
 project(kfr CXX)
 
@@ -61,6 +61,8 @@ endif ()
 include(sources.cmake)
 include(CMakeDependentOption)
 
+add_subdirectory(src/io)
+
 option(ENABLE_TESTS "Enable KFR tests" OFF)
 cmake_dependent_option(ENABLE_EXAMPLES "Enable KFR examples" ON "ENABLE_TESTS" OFF)
 if (CLANG)
@@ -88,6 +90,35 @@ option(KFR_INSTALL_LIBRARIES "Include libraries in installation" ON)
 mark_as_advanced(KFR_ENABLE_ASMTEST)
 mark_as_advanced(KFR_REGENERATE_TESTS)
 mark_as_advanced(KFR_DISABLE_CLANG_EXTENSIONS)
+
+if (KFR_ENABLE_CAPI_BUILD AND NOT KFR_ENABLE_DFT)
+    message(FATAL_ERROR "KFR_ENABLE_CAPI_BUILD requires KFR_ENABLE_DFT to be enabled")
+endif ()
+if (KFR_ENABLE_CAPI_BUILD AND NOT KFR_ENABLE_DFT_NP)
+    message(FATAL_ERROR "KFR_ENABLE_CAPI_BUILD requires KFR_ENABLE_DFT_NP to be enabled")
+endif ()
+if (KFR_ENABLE_CAPI_BUILD AND KFR_ENABLE_DFT_MULTIARCH)
+    message(FATAL_ERROR "KFR_ENABLE_CAPI_BUILD requires KFR_ENABLE_DFT_MULTIARCH to be disabled")
+endif ()
+
+include(cmake/target_set_arch.cmake)
+
+function (link_as_whole TARGET TYPE LIBRARY)
+    if (APPLE)
+        target_link_options(${TARGET} ${TYPE} -Wl,-force_load $<TARGET_FILE:${LIBRARY}>)
+    elseif (WIN32)
+        target_link_options(${TARGET} ${TYPE} /WHOLEARCHIVE:$<TARGET_FILE:${LIBRARY}>)
+    else ()
+        target_link_options(${TARGET} ${TYPE} -Wl,--push-state,--whole-archive $<TARGET_FILE:${LIBRARY}> -Wl,--pop-state)
+    endif ()
+endfunction()
+
+if (KFR_ENABLE_DFT)
+    add_subdirectory(src/dft)
+endif ()
+if (KFR_ENABLE_CAPI_BUILD)
+    add_subdirectory(src/capi)
+endif ()
 
 if (NOT KFR_ARCH)
     set(KFR_ARCH detect)
@@ -124,8 +155,6 @@ else ()
     )
 endif ()
 
-include(cmake/target_set_arch.cmake)
-
 add_library(use_arch INTERFACE)
 target_set_arch(use_arch INTERFACE ${KFR_ARCH})
 
@@ -145,12 +174,6 @@ if (ANDROID)
     set(PTHREAD_LIB)
 else ()
     set(PTHREAD_LIB pthread)
-endif ()
-
-if (MSVC AND CLANG)
-    set(CLANG_ARG_PREFIX "SHELL:-Xclang ")
-else ()
-    set(CLANG_ARG_PREFIX "")
 endif ()
 
 # KFR library
@@ -201,16 +224,6 @@ if (X86)
     target_set_arch(detect_cpu PRIVATE generic)
 endif ()
 
-function (link_as_whole TARGET TYPE LIBRARY)
-    if (APPLE)
-        target_link_options(${TARGET} ${TYPE} -Wl,-force_load $<TARGET_FILE:${LIBRARY}>)
-    elseif (WIN32)
-        target_link_options(${TARGET} ${TYPE} /WHOLEARCHIVE:$<TARGET_FILE:${LIBRARY}>)
-    else ()
-        target_link_options(${TARGET} ${TYPE} -Wl,--push-state,--whole-archive $<TARGET_FILE:${LIBRARY}> -Wl,--pop-state)
-    endif ()
-endfunction()
-
 function (add_arch_library NAME ARCH SRCS DEFS)
     add_library(${NAME}_${ARCH} ${SRCS})
     target_link_libraries(${NAME}_${ARCH} kfr)
@@ -218,53 +231,6 @@ function (add_arch_library NAME ARCH SRCS DEFS)
     target_compile_options(${NAME}_${ARCH} PRIVATE ${DEFS})
     target_link_libraries(${NAME}_all INTERFACE ${NAME}_${ARCH})
 endfunction ()
-
-if (KFR_ENABLE_DFT)
-
-    if (X86)
-        set(KFR_DFT_DEFS ${CLANG_ARG_PREFIX}-ffp-contract=fast -Xclang -O3 -mllvm -x86-use-vzeroupper=0)
-    else()
-        set(KFR_DFT_DEFS ${CLANG_ARG_PREFIX}-ffp-contract=fast -Xclang -O3)
-    endif ()
-
-    if (KFR_ENABLE_DFT_MULTIARCH)
-        add_library(kfr_dft INTERFACE)
-        add_library(kfr_dft_all INTERFACE)
-        target_link_libraries(kfr_dft INTERFACE kfr kfr_dft_all)
-        target_compile_definitions(
-            kfr_dft
-            INTERFACE -DKFR_DFT_MULTI=1
-                      -DCMT_MULTI=1
-                      -DCMT_MULTI_ENABLED_SSE2=1
-                      -DCMT_MULTI_ENABLED_SSE41=1
-                      -DCMT_MULTI_ENABLED_AVX=1
-                      -DCMT_MULTI_ENABLED_AVX2=1
-                      -DCMT_MULTI_ENABLED_AVX512=1)
-
-        add_arch_library(kfr_dft sse2 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
-        add_arch_library(kfr_dft sse41 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
-        add_arch_library(kfr_dft avx "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
-        add_arch_library(kfr_dft avx2 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
-        add_arch_library(kfr_dft avx512 "${KFR_DFT_SRC}" "${KFR_DFT_DEFS}")
-
-        link_as_whole(kfr_dft_all INTERFACE kfr_dft_sse2)
-
-    else ()
-        add_library(kfr_dft ${KFR_DFT_SRC})
-        target_link_libraries(kfr_dft kfr use_arch)
-        target_compile_options(kfr_dft PRIVATE ${KFR_DFT_DEFS})
-        if (KFR_ENABLE_DFT_NP)
-            target_compile_definitions(kfr_dft PUBLIC -DKFR_DFT_NPo2)
-        else ()
-            target_compile_definitions(kfr_dft PUBLIC -DKFR_DFT_NO_NPo2)
-        endif ()
-
-    endif ()
-
-    if (KFR_ENABLE_CAPI_BUILD)
-        add_subdirectory(capi)
-    endif ()
-endif ()
 
 if (ENABLE_EXAMPLES)
     add_subdirectory(examples)
@@ -317,23 +283,6 @@ string(REPLACE ";" "\n#define " kfr_defines "${kfr_defines}")
 set(kfr_defines "#define ${kfr_defines}\n")
 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/kfr_config.h "${kfr_defines}")
-
-if (KFR_ENABLE_DFT AND KFR_INSTALL_LIBRARIES)
-    if (KFR_ENABLE_DFT_MULTIARCH)
-        install(
-            TARGETS kfr_dft_sse2 kfr_dft_sse41 kfr_dft_avx kfr_dft_avx2
-                    kfr_dft_avx512
-            ARCHIVE DESTINATION lib
-            LIBRARY DESTINATION lib
-            RUNTIME DESTINATION bin)
-    else ()
-        install(
-            TARGETS kfr_dft
-            ARCHIVE DESTINATION lib
-            LIBRARY DESTINATION lib
-            RUNTIME DESTINATION bin)
-    endif ()
-endif ()
 
 if (KFR_INSTALL_HEADERS)
     install(DIRECTORY include/kfr DESTINATION include)

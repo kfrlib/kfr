@@ -10,7 +10,7 @@ import glob
 path = os.path.dirname(os.path.realpath(__file__))
 
 masks = ['*.hpp', '*.h', '*.cpp', '*.c', '*.cxx']
-ignore = ['build/*', 'build-*', 'cmake-*', '.*', 'include/kfr/io/dr']
+ignore = ['build/*', 'build-*', 'cmake-*', '.*', 'src/io/dr']
 
 filenames = []
 for root, dirnames, files in os.walk(path, path):

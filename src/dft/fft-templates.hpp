@@ -1,4 +1,4 @@
-/** @addtogroup io
+/** @addtogroup dft
  *  @{
  */
 /*
@@ -24,26 +24,16 @@
   See https://www.kfrlib.com for details.
  */
 
-#include "../audiofile.hpp"
-CMT_PRAGMA_GNU(GCC diagnostic push)
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wimplicit-fallthrough")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wunused-function")
+#ifdef FLOAT
+#include <kfr/dft/fft.hpp>
 
-#ifndef KFR_DISABLE_WAV
-#define DR_WAV_NO_STDIO
-#define DR_WAV_NO_CONVERSION_API
-#define DR_WAV_IMPLEMENTATION
-#include "../dr/dr_wav.h"
-#endif
-#ifndef KFR_DISABLE_FLAC
-#define DR_FLAC_IMPLEMENTATION
-#define DR_FLAC_NO_STDIO
-#include "../dr/dr_flac.h"
-#endif
-#ifndef KFR_DISABLE_MP3
-#define DR_MP3_IMPLEMENTATION
-#define DR_MP3_NO_STDIO
-#include "../dr/dr_mp3.h"
-#endif
+namespace kfr
+{
+inline namespace CMT_ARCH_NAME
+{
+template void dft_initialize<FLOAT>(dft_plan<FLOAT>& plan);
+template void dft_real_initialize<FLOAT>(dft_plan_real<FLOAT>& plan);
+} // namespace CMT_ARCH_NAME
+} // namespace kfr
 
-CMT_PRAGMA_GNU(GCC diagnostic pop)
+#endif

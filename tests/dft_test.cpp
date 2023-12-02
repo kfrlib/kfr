@@ -10,7 +10,7 @@
 #include <kfr/base.hpp>
 #include <kfr/dft.hpp>
 #include <kfr/dsp.hpp>
-#include <kfr/io.hpp>
+#include <kfr/io/tostring.hpp>
 #include <set>
 
 using namespace kfr;

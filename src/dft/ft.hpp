@@ -25,16 +25,16 @@
  */
 #pragma once
 
-#include "../../base/univector.hpp"
-#include "../../math/sin_cos.hpp"
-#include "../../simd/complex.hpp"
-#include "../../simd/constants.hpp"
-#include "../../simd/digitreverse.hpp"
-#include "../../simd/read_write.hpp"
-#include "../../simd/vec.hpp"
+#include <kfr/base/univector.hpp>
+#include <kfr/math/sin_cos.hpp>
+#include <kfr/simd/complex.hpp>
+#include <kfr/simd/constants.hpp>
+#include <kfr/simd/digitreverse.hpp>
+#include <kfr/simd/read_write.hpp>
+#include <kfr/simd/vec.hpp>
 
-#include "../../base/memory.hpp"
-#include "../data/sincos.hpp"
+#include <kfr/base/memory.hpp>
+#include "data/sincos.hpp"
 
 CMT_PRAGMA_GNU(GCC diagnostic push)
 #if CMT_HAS_WARNING("-Wpass-failed")

@@ -25,14 +25,16 @@
  */
 
 #ifdef FLOAT
-#include "../fft.hpp"
+#include <kfr/dft/fft.hpp>
 
 namespace kfr
 {
 inline namespace CMT_ARCH_NAME
 {
-template void dft_initialize<FLOAT>(dft_plan<FLOAT>& plan);
-template void dft_real_initialize<FLOAT>(dft_plan_real<FLOAT>& plan);
+
+#ifndef KFR_DFT_NO_NPo2
+template void init_dft(dft_plan<FLOAT>*, size_t, dft_order);
+#endif
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
 

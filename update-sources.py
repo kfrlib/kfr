@@ -39,8 +39,8 @@ list_sources("KFR_IO_SRC", "include/kfr/io", ['*.hpp', '*.h'])
 list_sources("KFR_RUNTIME_SRC", "include/kfr/runtime", ['*.hpp', '*.h'])
 list_sources("KFR_GRAPHICS_SRC", "include/kfr/graphics", ['*.hpp', '*.h'])
 list_sources("KFR_SRC", "include", ['*.hpp', '*.h'])
-list_sources("KFR_DFT_SRC", "include/kfr/dft", ['*.cpp'], ["dft-src.cpp"])
-list_sources("KFR_IO_SRC", "include/kfr/io", ['*.cpp'])
+list_sources("KFR_DFT_SRC", "src/dft", ['*.cpp'], ["dft-src.cpp"])
+list_sources("KFR_IO_SRC", "src/io", ['*.cpp'])
 
 list_sources("KFR_UNITTEST_SRC", "tests/unit", ['*.cpp'])
 

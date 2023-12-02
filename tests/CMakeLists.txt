@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with KFR.
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.12)
 
 add_definitions(-DKFR_TESTING=1)
 add_definitions(-DKFR_SRC_DIR=\"${CMAKE_SOURCE_DIR}\")

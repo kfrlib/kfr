@@ -32,35 +32,6 @@
 #include "../simd/vec.hpp"
 #include "file.hpp"
 
-#if !defined CMT_ARCH_SSE2 && !defined CMT_ARCH_ARM64
-#define DR_MP3_NO_SIMD 1
-#define DR_FLAC_NO_SIMD 1
-#endif
-
-#if !defined CMT_ARCH_SSE2
-#define DRFLAC_NO_SSE2 1
-#endif
-
-#if !defined CMT_ARCH_SSE41
-#define DRFLAC_NO_SSE41 1
-#endif
-
-#ifndef KFR_DISABLE_WAV
-#define DR_WAV_NO_STDIO
-#define DR_WAV_NO_CONVERSION_API
-#include "dr/dr_wav.h"
-#endif
-#ifndef KFR_DISABLE_FLAC
-#define DR_FLAC_NO_STDIO
-#define DR_FLAC_NO_CONVERSION_API
-#include "dr/dr_flac.h"
-#endif
-#ifndef KFR_DISABLE_MP3
-#define DR_MP3_NO_STDIO
-#define DR_MP3_NO_CONVERSION_API
-#include "dr/dr_mp3.h"
-#endif
-
 namespace kfr
 {
 
@@ -122,113 +93,33 @@ struct audio_writer : public abstract_writer<T>
     virtual void close() = 0;
 };
 
+#ifndef KFR_DISABLE_WAV
+
 namespace internal_generic
 {
-#ifndef KFR_DISABLE_WAV
-static inline size_t drwav_writer_write_proc(abstract_writer<void>* file, const void* pData,
-                                             size_t bytesToWrite)
+struct wav_file;
+struct wav_file_deleter
 {
-    return file->write(pData, bytesToWrite);
-}
-static inline drwav_bool32 drwav_writer_seek_proc(abstract_writer<void>* file, int offset,
-                                                  drwav_seek_origin origin)
-{
-    return file->seek(offset, origin == drwav_seek_origin_start ? seek_origin::begin : seek_origin::current);
-}
-static inline size_t drwav_reader_read_proc(abstract_reader<void>* file, void* pBufferOut, size_t bytesToRead)
-{
-    return file->read(pBufferOut, bytesToRead);
-}
-static inline drwav_bool32 drwav_reader_seek_proc(abstract_reader<void>* file, int offset,
-                                                  drwav_seek_origin origin)
-{
-    return file->seek(offset, origin == drwav_seek_origin_start ? seek_origin::begin : seek_origin::current);
-}
-#endif
-#ifndef KFR_DISABLE_FLAC
-static inline size_t drflac_reader_read_proc(abstract_reader<void>* file, void* pBufferOut,
-                                             size_t bytesToRead)
-{
-    return file->read(pBufferOut, bytesToRead);
-}
-static inline drflac_bool32 drflac_reader_seek_proc(abstract_reader<void>* file, int offset,
-                                                    drflac_seek_origin origin)
-{
-    return file->seek(offset, origin == drflac_seek_origin_start ? seek_origin::begin : seek_origin::current);
-}
-#endif
-#ifndef KFR_DISABLE_MP3
-static inline size_t drmp3_reader_read_proc(abstract_reader<void>* file, void* pBufferOut, size_t bytesToRead)
-{
-    return file->read(pBufferOut, bytesToRead);
-}
-static inline drmp3_bool32 drmp3_reader_seek_proc(abstract_reader<void>* file, int offset,
-                                                  drmp3_seek_origin origin)
-{
-    return file->seek(offset, origin == drmp3_seek_origin_start ? seek_origin::begin : seek_origin::current);
-}
-#endif
-
+    void operator()(wav_file*);
+};
 } // namespace internal_generic
 
-#ifndef KFR_DISABLE_WAV
 /// @brief WAV format writer
 template <typename T>
 struct audio_writer_wav : audio_writer<T>
 {
     /// @brief Constructs WAV writer using target writer and format
-    audio_writer_wav(std::shared_ptr<abstract_writer<>>&& writer, const audio_format& fmt)
-        : writer(std::move(writer)), fmt(fmt)
-    {
-        drwav_data_format wav_fmt;
-        wav_fmt.channels   = static_cast<drwav_uint32>(fmt.channels);
-        wav_fmt.sampleRate = static_cast<drwav_uint32>(fmt.samplerate);
-        wav_fmt.format =
-            fmt.type >= audio_sample_type::first_float ? DR_WAVE_FORMAT_IEEE_FLOAT : DR_WAVE_FORMAT_PCM;
-        wav_fmt.bitsPerSample = static_cast<drwav_uint32>(audio_sample_bit_depth(fmt.type));
-        wav_fmt.container     = fmt.use_w64 ? drwav_container_w64 : drwav_container_riff;
-        closed = !drwav_init_write(&f, &wav_fmt, (drwav_write_proc)&internal_generic::drwav_writer_write_proc,
-                                   (drwav_seek_proc)&internal_generic::drwav_writer_seek_proc,
-                                   this->writer.get(), nullptr);
-    }
-    ~audio_writer_wav() override { close(); }
+    audio_writer_wav(std::shared_ptr<abstract_writer<>>&& writer, const audio_format& fmt);
+    ~audio_writer_wav() override;
 
     using audio_writer<T>::write;
 
     /// @brief Write data to underlying binary writer
     /// data is PCM samples in interleaved format
     /// size is the number of samples (PCM frames * channels)
-    size_t write(const T* data, size_t size) override
-    {
-        if (closed)
-            return 0;
-        if (fmt.type == audio_sample_type::unknown)
-            return 0;
-        if (fmt.type == audio_sample_traits<T>::type)
-        {
-            const size_t sz = drwav_write_pcm_frames_le(&f, size, data);
-            fmt.length += sz;
-            return sz * fmt.channels;
-        }
-        else
-        {
-            univector<uint8_t> native(size * audio_sample_sizeof(fmt.type));
-            convert(native.data(), fmt.type, data, size);
-            const size_t sz = drwav_write_pcm_frames_le(&f, size / fmt.channels, native.data());
-            fmt.length += sz;
-            return sz * fmt.channels;
-        }
-    }
+    size_t write(const T* data, size_t size) override;
 
-    void close() override
-    {
-        if (!closed)
-        {
-            drwav_uninit(&f);
-            writer.reset();
-            closed = true;
-        }
-    }
+    void close() override;
 
     const audio_format_and_length& format() const override { return fmt; }
 
@@ -238,10 +129,15 @@ struct audio_writer_wav : audio_writer<T>
 
 private:
     std::shared_ptr<abstract_writer<>> writer;
-    drwav f;
+    std::unique_ptr<internal_generic::wav_file, internal_generic::wav_file_deleter> f;
     audio_format_and_length fmt;
-    bool closed = false;
 };
+
+extern template struct audio_writer_wav<i16>;
+extern template struct audio_writer_wav<i24>;
+extern template struct audio_writer_wav<i32>;
+extern template struct audio_writer_wav<f32>;
+extern template struct audio_writer_wav<f64>;
 
 /// @brief WAV format reader
 template <typename T>
@@ -250,249 +146,131 @@ struct audio_reader_wav : audio_reader<T>
     using audio_reader<T>::read;
 
     /// @brief Constructs WAV reader
-    audio_reader_wav(std::shared_ptr<abstract_reader<>>&& reader) : reader(std::move(reader))
-    {
-        drwav_init(&f, (drwav_read_proc)&internal_generic::drwav_reader_read_proc,
-                   (drwav_seek_proc)&internal_generic::drwav_reader_seek_proc, this->reader.get(), nullptr);
-        fmt.channels   = f.channels;
-        fmt.samplerate = f.sampleRate;
-        fmt.length     = static_cast<imax>(f.totalPCMFrameCount);
-        switch (f.translatedFormatTag)
-        {
-        case DR_WAVE_FORMAT_IEEE_FLOAT:
-            switch (f.bitsPerSample)
-            {
-            case 32:
-                fmt.type = audio_sample_type::f32;
-                break;
-            case 64:
-                fmt.type = audio_sample_type::f64;
-                break;
-            default:
-                fmt.type = audio_sample_type::unknown;
-                break;
-            }
-            break;
-        case DR_WAVE_FORMAT_PCM:
-            switch (f.bitsPerSample)
-            {
-            case 8:
-                fmt.type = audio_sample_type::i8;
-                break;
-            case 16:
-                fmt.type = audio_sample_type::i16;
-                break;
-            case 24:
-                fmt.type = audio_sample_type::i24;
-                break;
-            case 32:
-                fmt.type = audio_sample_type::i32;
-                break;
-            case 64:
-                fmt.type = audio_sample_type::i64;
-                break;
-            default:
-                fmt.type = audio_sample_type::unknown;
-                break;
-            }
-            break;
-        default:
-            fmt.type = audio_sample_type::unknown;
-            break;
-        }
-    }
-    ~audio_reader_wav() override { drwav_uninit(&f); }
+    audio_reader_wav(std::shared_ptr<abstract_reader<>>&& reader);
+    ~audio_reader_wav() override;
+
+    /// @brief Reads and decodes audio data
+    size_t read(T* data, size_t size) override;
+
+    /// @brief Seeks to specific sample
+    bool seek(imax offset, seek_origin origin) override;
 
     /// @brief Returns audio format description
     const audio_format_and_length& format() const override { return fmt; }
 
-    /// @brief Reads and decodes audio data
-    size_t read(T* data, size_t size) override
-    {
-        if (fmt.type == audio_sample_type::unknown)
-            return 0;
-        if (fmt.type == audio_sample_traits<T>::type)
-        {
-            const size_t sz = drwav_read_pcm_frames(&f, size / fmt.channels, data);
-            position += sz;
-            return sz * fmt.channels;
-        }
-        else
-        {
-            univector<uint8_t> native(size * audio_sample_sizeof(fmt.type));
-            const size_t sz = drwav_read_pcm_frames(&f, size / fmt.channels, native.data());
-            position += sz;
-            convert(data, native.data(), fmt.type, sz * fmt.channels);
-            return sz * fmt.channels;
-        }
-    }
-
     /// @brief Returns current position
     imax tell() const override { return position; }
 
-    /// @brief Seeks to specific sample
-    bool seek(imax offset, seek_origin origin) override
-    {
-        switch (origin)
-        {
-        case seek_origin::current:
-            return drwav_seek_to_pcm_frame(&f, static_cast<drmp3_uint64>(this->position + offset));
-        case seek_origin::begin:
-            return drwav_seek_to_pcm_frame(&f, static_cast<drmp3_uint64>(offset));
-        case seek_origin::end:
-            return drwav_seek_to_pcm_frame(&f, static_cast<drmp3_uint64>(fmt.length + offset));
-        }
-        return false;
-    }
-
 private:
     std::shared_ptr<abstract_reader<>> reader;
-    drwav f;
+    std::unique_ptr<internal_generic::wav_file> f;
     audio_format_and_length fmt;
     imax position = 0;
 };
+
+extern template struct audio_reader_wav<i16>;
+extern template struct audio_reader_wav<i24>;
+extern template struct audio_reader_wav<i32>;
+extern template struct audio_reader_wav<f32>;
+extern template struct audio_reader_wav<f64>;
 #endif
 
 #ifndef KFR_DISABLE_FLAC
+
+namespace internal_generic
+{
+struct flac_file;
+struct flac_file_deleter
+{
+    void operator()(flac_file*);
+};
+} // namespace internal_generic
 
 /// @brief FLAC format reader
 template <typename T>
 struct audio_reader_flac : audio_reader<T>
 {
     /// @brief Constructs FLAC reader
-    audio_reader_flac(std::shared_ptr<abstract_reader<>>&& reader) : reader(std::move(reader))
-    {
-        f              = drflac_open((drflac_read_proc)&internal_generic::drflac_reader_read_proc,
-                                     (drflac_seek_proc)&internal_generic::drflac_reader_seek_proc, this->reader.get(),
-                                     nullptr);
-        fmt.channels   = f->channels;
-        fmt.samplerate = f->sampleRate;
-        fmt.length     = static_cast<imax>(f->totalPCMFrameCount);
-        fmt.type       = audio_sample_type::i32;
-    }
-    ~audio_reader_flac() override { drflac_close(f); }
+    audio_reader_flac(std::shared_ptr<abstract_reader<>>&& reader);
+    ~audio_reader_flac() override;
+
+    /// @brief Reads and decodes audio data
+    size_t read(T* data, size_t size) override;
+
+    /// @brief Seeks to specific sample
+    bool seek(imax offset, seek_origin origin) override;
 
     /// @brief Returns audio format description
     const audio_format_and_length& format() const override { return fmt; }
 
-    /// @brief Reads and decodes audio data
-    size_t read(T* data, size_t size) override
-    {
-        if (fmt.type == audio_sample_type::unknown)
-            return 0;
-        if (audio_sample_traits<T>::type == audio_sample_type::i32)
-        {
-            const size_t sz =
-                drflac_read_pcm_frames_s32(f, size / fmt.channels, reinterpret_cast<i32*>(data));
-            position += sz;
-            return sz * fmt.channels;
-        }
-        else
-        {
-            univector<i32> native(size * sizeof(i32));
-            const size_t sz = drflac_read_pcm_frames_s32(f, size / fmt.channels, native.data());
-            position += sz;
-            convert(data, native.data(), sz * fmt.channels);
-            return sz * fmt.channels;
-        }
-    }
-
     /// @brief Returns current position
     imax tell() const override { return position; }
 
-    /// @brief Seeks to specific sample
-    bool seek(imax offset, seek_origin origin) override
-    {
-        switch (origin)
-        {
-        case seek_origin::current:
-            return drflac_seek_to_pcm_frame(f, static_cast<drmp3_uint64>(this->position + offset));
-        case seek_origin::begin:
-            return drflac_seek_to_pcm_frame(f, static_cast<drmp3_uint64>(offset));
-        case seek_origin::end:
-            return drflac_seek_to_pcm_frame(f, static_cast<drmp3_uint64>(fmt.length + offset));
-        }
-        return false;
-    }
-
 private:
     std::shared_ptr<abstract_reader<>> reader;
-    drflac* f;
+    std::unique_ptr<internal_generic::flac_file, internal_generic::flac_file_deleter> f;
     audio_format_and_length fmt;
     imax position = 0;
 };
+
+extern template struct audio_reader_flac<i16>;
+extern template struct audio_reader_flac<i24>;
+extern template struct audio_reader_flac<i32>;
+extern template struct audio_reader_flac<f32>;
+extern template struct audio_reader_flac<f64>;
 #endif
 
 #ifndef KFR_DISABLE_MP3
+
+struct mp3_config
+{
+    uint32_t outputChannels;
+    uint32_t outputSampleRate;
+};
+
+namespace internal_generic
+{
+struct mp3_file;
+struct mp3_file_deleter
+{
+    void operator()(mp3_file*);
+};
+} // namespace internal_generic
 
 /// @brief MP3 format reader
 template <typename T>
 struct audio_reader_mp3 : audio_reader<T>
 {
     /// @brief Constructs MP3 reader
-    audio_reader_mp3(std::shared_ptr<abstract_reader<>>&& reader) : reader(std::move(reader))
-    {
-        drmp3_init(&f, (drmp3_read_proc)&internal_generic::drmp3_reader_read_proc,
-                   (drmp3_seek_proc)&internal_generic::drmp3_reader_seek_proc, this->reader.get(), &config,
-                   nullptr);
-        fmt.channels   = f.channels;
-        fmt.samplerate = f.sampleRate;
-        fmt.length     = static_cast<imax>(drmp3_get_pcm_frame_count(&f));
-        fmt.type       = audio_sample_type::i16;
-    }
-    ~audio_reader_mp3() override { drmp3_uninit(&f); }
+    audio_reader_mp3(std::shared_ptr<abstract_reader<>>&& reader);
+    ~audio_reader_mp3() override;
 
-    drmp3_config config{ 0, 0 };
+    /// @brief Reads and decodes audio data
+    size_t read(T* data, size_t size) override;
+
+    /// @brief Seeks to specific sample
+    bool seek(imax offset, seek_origin origin) override;
+
+    mp3_config config{ 0, 0 };
 
     /// @brief Returns audio format description
     const audio_format_and_length& format() const override { return fmt; }
 
-    /// @brief Reads and decodes audio data
-    size_t read(T* data, size_t size) override
-    {
-        if (fmt.type == audio_sample_type::unknown)
-            return 0;
-        if (audio_sample_traits<T>::type == audio_sample_type::i16)
-        {
-            const size_t sz =
-                drmp3_read_pcm_frames_s16(&f, size / fmt.channels, reinterpret_cast<i16*>(data));
-            position += sz;
-            return sz * fmt.channels;
-        }
-        else
-        {
-            univector<i16> native(size * sizeof(i16));
-            const size_t sz = drmp3_read_pcm_frames_s16(&f, size / fmt.channels, native.data());
-            position += sz;
-            convert(data, native.data(), sz * fmt.channels);
-            return sz * fmt.channels;
-        }
-    }
-
     /// @brief Returns current position
     imax tell() const override { return position; }
 
-    /// @brief Seeks to specific sample
-    bool seek(imax offset, seek_origin origin) override
-    {
-        switch (origin)
-        {
-        case seek_origin::current:
-            return drmp3_seek_to_pcm_frame(&f, static_cast<drmp3_uint64>(this->position + offset));
-        case seek_origin::begin:
-            return drmp3_seek_to_pcm_frame(&f, static_cast<drmp3_uint64>(offset));
-        case seek_origin::end:
-            return drmp3_seek_to_pcm_frame(&f, static_cast<drmp3_uint64>(fmt.length + offset));
-        }
-        return false;
-    }
-
 private:
     std::shared_ptr<abstract_reader<>> reader;
-    drmp3 f;
+    std::unique_ptr<internal_generic::mp3_file, internal_generic::mp3_file_deleter> f;
     audio_format_and_length fmt;
     imax position = 0;
 };
+
+extern template struct audio_reader_mp3<i16>;
+extern template struct audio_reader_mp3<i24>;
+extern template struct audio_reader_mp3<i32>;
+extern template struct audio_reader_mp3<f32>;
+extern template struct audio_reader_mp3<f64>;
 #endif
 
 } // namespace kfr

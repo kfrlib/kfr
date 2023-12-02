@@ -25,11 +25,11 @@
  */
 #pragma once
 
-#include "../../base/basic_expressions.hpp"
-#include "../../math/complex_math.hpp"
-#include "../../testo/assert.hpp"
-#include "../cache.hpp"
-#include "../fft.hpp"
+#include <kfr/base/basic_expressions.hpp>
+#include <kfr/math/complex_math.hpp>
+#include <kfr/testo/assert.hpp>
+#include <kfr/dft/cache.hpp>
+#include <kfr/dft/fft.hpp>
 #include "bitrev.hpp"
 #include "ft.hpp"
 

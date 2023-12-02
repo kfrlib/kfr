@@ -22,6 +22,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/kfr.h
     ${PROJECT_SOURCE_DIR}/include/kfr/base/basic_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/conversion.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/endianness.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/expression.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/filter.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/fraction.hpp
@@ -37,6 +38,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/small_buffer.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/state_holder.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/tensor.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/transpose.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/univector.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/static_array.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/cometa/array.hpp
@@ -54,15 +56,6 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/convolution.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/fft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/reference_dft.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/data/bitrev.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/data/sincos.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/bitrev.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/dft-fft.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/dft-impl.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/dft-templates.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/fft-impl.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/fft-templates.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/ft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/biquad.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/biquad_design.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/dcremove.hpp
@@ -89,9 +82,6 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/io/file.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/python_plot.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/tostring.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/io/dr/dr_flac.h
-    ${PROJECT_SOURCE_DIR}/include/kfr/io/dr/dr_mp3.h
-    ${PROJECT_SOURCE_DIR}/include/kfr/io/dr/dr_wav.h
     ${PROJECT_SOURCE_DIR}/include/kfr/math/asin_acos.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/atan.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/compiletime.hpp
@@ -240,6 +230,7 @@ set(
     KFR_BASE_SRC
     ${PROJECT_SOURCE_DIR}/include/kfr/base/basic_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/conversion.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/endianness.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/expression.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/filter.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/fraction.hpp
@@ -255,6 +246,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/small_buffer.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/state_holder.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/tensor.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/transpose.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/univector.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/static_array.hpp
 )
@@ -290,9 +282,6 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/io/file.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/python_plot.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/tostring.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/io/dr/dr_flac.h
-    ${PROJECT_SOURCE_DIR}/include/kfr/io/dr/dr_mp3.h
-    ${PROJECT_SOURCE_DIR}/include/kfr/io/dr/dr_wav.h
 )
 
     
@@ -331,6 +320,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/kfr.h
     ${PROJECT_SOURCE_DIR}/include/kfr/base/basic_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/conversion.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/endianness.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/expression.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/filter.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/fraction.hpp
@@ -346,6 +336,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/small_buffer.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/state_holder.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/tensor.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/transpose.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/univector.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/static_array.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/cometa/array.hpp
@@ -363,15 +354,6 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/convolution.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/fft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/reference_dft.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/data/bitrev.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/data/sincos.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/bitrev.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/dft-fft.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/dft-impl.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/dft-templates.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/fft-impl.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/fft-templates.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/ft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/biquad.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/biquad_design.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/dcremove.hpp
@@ -398,9 +380,6 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/io/file.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/python_plot.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/tostring.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/io/dr/dr_flac.h
-    ${PROJECT_SOURCE_DIR}/include/kfr/io/dr/dr_mp3.h
-    ${PROJECT_SOURCE_DIR}/include/kfr/io/dr/dr_wav.h
     ${PROJECT_SOURCE_DIR}/include/kfr/math/asin_acos.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/atan.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math/compiletime.hpp
@@ -475,17 +454,17 @@ set(
     
 set(
     KFR_DFT_SRC
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/convolution-impl.cpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/dft-impl-f32.cpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/dft-impl-f64.cpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/fft-impl-f32.cpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dft/impl/fft-impl-f64.cpp
+    ${PROJECT_SOURCE_DIR}/src/dft/convolution-impl.cpp
+    ${PROJECT_SOURCE_DIR}/src/dft/dft-impl-f32.cpp
+    ${PROJECT_SOURCE_DIR}/src/dft/dft-impl-f64.cpp
+    ${PROJECT_SOURCE_DIR}/src/dft/fft-impl-f32.cpp
+    ${PROJECT_SOURCE_DIR}/src/dft/fft-impl-f64.cpp
 )
 
     
 set(
     KFR_IO_SRC
-    ${PROJECT_SOURCE_DIR}/include/kfr/io/impl/audiofile-impl.cpp
+    ${PROJECT_SOURCE_DIR}/src/io/audiofile-impl.cpp
 )
 
     
