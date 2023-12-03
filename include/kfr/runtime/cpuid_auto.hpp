@@ -59,4 +59,11 @@ static char dummyvar = init_dummyvar();
  */
 inline cpu_t get_cpu() { return internal_generic::cpu_v(); }
 
+inline cpu_t override_cpu(cpu_t cpu)
+{
+    cpu_t previous            = internal_generic::cpu_v();
+    internal_generic::cpu_v() = cpu;
+    return previous;
+}
+
 } // namespace kfr
