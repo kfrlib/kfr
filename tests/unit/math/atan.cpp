@@ -4,7 +4,7 @@
  * See LICENSE.txt for details
  */
 
-#include "../../numeric_tests.hpp"
+#include "../numeric_tests.hpp"
 
 #include <kfr/math/atan.hpp>
 

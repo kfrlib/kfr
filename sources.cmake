@@ -64,7 +64,6 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/ebu.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fir.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fir_design.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fracdelay.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/goertzel.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/iir_design.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/mixdown.hpp
@@ -262,7 +261,6 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/ebu.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fir.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fir_design.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fracdelay.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/goertzel.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/iir_design.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/mixdown.hpp
@@ -363,7 +361,6 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/ebu.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fir.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fir_design.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fracdelay.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/goertzel.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/iir_design.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/mixdown.hpp
@@ -481,30 +478,40 @@ set(
     
 set(
     KFR_UNITTEST_SRC
+    ${PROJECT_SOURCE_DIR}/tests/unit/cometa.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/base.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/basic_expressions.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/conversion.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/fraction.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/generators.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/handle.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/base/math_expressions.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/random.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/reduce.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/shape.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/base/simd_expressions.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/std_ambiguities.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/tensor.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/base/univector.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/biquad.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/biquad_design.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/dsp/delay.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/dsp.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/ebu.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/fir.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/dsp/goertzel.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/dsp/mixdown.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/dsp/oscillators.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/sample_rate_conversion.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/units.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/window.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/graphics/color.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/graphics/geometry.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/graphics/graphics.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/io/audiofile.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/asin_acos.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/atan.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/math/complex_math.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/hyperbolic.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/log_exp.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/math.cpp

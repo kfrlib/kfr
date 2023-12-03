@@ -26,6 +26,7 @@
 
 #include "base/basic_expressions.hpp"
 #include "base/conversion.hpp"
+#include "base/endianness.hpp"
 #include "base/expression.hpp"
 #include "base/filter.hpp"
 #include "base/fraction.hpp"
@@ -41,4 +42,5 @@
 #include "base/small_buffer.hpp"
 #include "base/state_holder.hpp"
 #include "base/tensor.hpp"
+#include "base/transpose.hpp"
 #include "base/univector.hpp"

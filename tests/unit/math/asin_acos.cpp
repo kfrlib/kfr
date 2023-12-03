@@ -3,7 +3,7 @@
  * Copyright (C) 2016-2023 Dan Cazarin
  * See LICENSE.txt for details
  */
-#include "../../numeric_tests.hpp"
+#include "../numeric_tests.hpp"
 
 #include <kfr/math/asin_acos.hpp>
 

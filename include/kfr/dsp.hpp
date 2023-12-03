@@ -31,7 +31,6 @@
 #include "dsp/ebu.hpp"
 #include "dsp/fir.hpp"
 #include "dsp/fir_design.hpp"
-#include "dsp/fracdelay.hpp"
 #include "dsp/goertzel.hpp"
 #include "dsp/iir_design.hpp"
 #include "dsp/mixdown.hpp"

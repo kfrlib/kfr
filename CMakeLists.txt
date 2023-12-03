@@ -107,23 +107,6 @@ if (KFR_ENABLE_CAPI_BUILD AND NOT KFR_ENABLE_DFT_NP)
             "KFR_ENABLE_CAPI_BUILD requires KFR_ENABLE_DFT_NP to be enabled")
 endif ()
 
-function (add_arch_library NAME ARCH SRCS DEFS)
-    add_library(${NAME}_${ARCH} ${SRCS})
-    target_link_libraries(${NAME}_${ARCH} kfr)
-    target_set_arch(${NAME}_${ARCH} PRIVATE ${ARCH})
-    target_compile_options(${NAME}_${ARCH} PRIVATE ${DEFS})
-    target_link_libraries(${NAME}_all INTERFACE ${NAME}_${ARCH})
-endfunction ()
-
-add_subdirectory(src/dsp)
-add_subdirectory(src/io)
-if (KFR_ENABLE_DFT)
-    add_subdirectory(src/dft)
-endif ()
-if (KFR_ENABLE_CAPI_BUILD)
-    add_subdirectory(src/capi)
-endif ()
-
 if (NOT KFR_ARCH)
     set(KFR_ARCH target)
 endif ()
@@ -179,7 +162,7 @@ if (KFR_ARCH IN_LIST DETECT_NAMES)
 else ()
     message(
         STATUS
-            "Default CPU architecture for KFR is ${KFR_ARCH} (set by cmake variable)"
+            "Default CPU architecture for KFR is ${KFR_ARCH} (set by KFR_ARCH)"
     )
 endif ()
 
@@ -195,7 +178,19 @@ if (NOT KFR_ARCHS)
     endif ()
 endif ()
 
-string (REPLACE ";" ", " KFR_ARCHS_COMMA "${KFR_ARCHS}")
+if (KFR_ENABLE_MULTIARCH)
+    message(
+        STATUS
+            "Runtime dispatch is enabled for architectures: ${KFR_ARCHS} (set KFR_ARCHS to change, set KFR_ENABLE_MULTIARCH=OFF to disable)"
+    )
+else ()
+    message(
+        STATUS
+            "Runtime dispatch is disabled. Set KFR_ENABLE_MULTIARCH=ON to enable"
+    )
+endif ()
+
+string(REPLACE ";" ", " KFR_ARCHS_COMMA "${KFR_ARCHS}")
 
 if (KFR_ENABLE_MULTIARCH)
     add_compile_definitions(KFR_ENABLED_ARCHS="${KFR_ARCHS_COMMA}")
@@ -260,10 +255,14 @@ if (KFR_EXTENDED_TESTS)
     target_compile_definitions(kfr INTERFACE -DKFR_EXTENDED_TESTS)
 endif ()
 
-# if (X86) add_executable(detect_cpu
-# ${CMAKE_CURRENT_SOURCE_DIR}/cmake/detect_cpu.cpp)
-# target_link_libraries(detect_cpu PRIVATE kfr) target_set_arch(detect_cpu
-# PRIVATE generic) endif ()
+add_subdirectory(src/dsp)
+add_subdirectory(src/io)
+if (KFR_ENABLE_DFT)
+    add_subdirectory(src/dft)
+endif ()
+if (KFR_ENABLE_CAPI_BUILD)
+    add_subdirectory(src/capi)
+endif ()
 
 if (ENABLE_EXAMPLES)
     add_subdirectory(examples)

@@ -25,6 +25,7 @@
 #include "../../simd/constants.hpp"
 #include "../../simd/impl/function.hpp"
 #include "../../simd/operators.hpp"
+#include "../../simd/comparison.hpp"
 #include "../../simd/select.hpp"
 #include "../sin_cos.hpp"
 

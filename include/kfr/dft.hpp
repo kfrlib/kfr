@@ -24,6 +24,7 @@
 
 #include "base.hpp"
 
+#include "dft/cache.hpp"
 #include "dft/convolution.hpp"
 #include "dft/fft.hpp"
 #include "dft/reference_dft.hpp"

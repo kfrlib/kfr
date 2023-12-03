@@ -4,15 +4,11 @@
  * See LICENSE.txt for details
  */
 
+#include <kfr/io/audiofile.hpp>
 #include <kfr/testo/testo.hpp>
-
 #include <kfr/base.hpp>
-#include <kfr/cometa/function.hpp>
-#include <kfr/io.hpp>
 
-using namespace kfr;
-
-namespace CMT_ARCH_NAME
+namespace kfr
 {
 
 #ifndef KFR_DISABLE_WAV
@@ -73,13 +69,4 @@ TEST(read_mp3_file)
     CHECK(absmaxof(data - render(sin(counter() * 0.01f), data.size())) < 0.005f);
 }
 #endif
-} // namespace CMT_ARCH_NAME
-
-#ifndef KFR_NO_MAIN
-int main()
-{
-    println(library_version());
-
-    return testo::run_all("", true);
-}
-#endif
+} // namespace kfr

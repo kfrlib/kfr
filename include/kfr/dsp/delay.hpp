@@ -29,6 +29,7 @@
 #include "../base/expression.hpp"
 #include "../base/state_holder.hpp"
 #include "../base/univector.hpp"
+#include "fir.hpp"
 
 namespace kfr
 {
@@ -179,6 +180,20 @@ KFR_INTRINSIC expression_delay<samples, E1, true, STag> delay(delay_state<T, sam
 {
     static_assert(STag == tag_dynamic_vector || (samples >= 1 && samples < 1024), "");
     return expression_delay<samples, E1, true, STag>(std::forward<E1>(e1), state);
+}
+
+/**
+ * @brief Returns template expression that applies a fractional delay to the input
+ * @param e1 an input expression
+ * @param e1 a fractional delay in range 0..1
+ */
+template <typename T, typename E1>
+KFR_INTRINSIC expression_short_fir<2, T, expression_value_type<E1>, E1> fracdelay(E1&& e1, T delay)
+{
+    if (CMT_UNLIKELY(delay < 0))
+        delay = 0;
+    univector<T, 2> taps({ 1 - delay, delay });
+    return expression_short_fir<2, T, expression_value_type<E1>, E1>(std::forward<E1>(e1), taps);
 }
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

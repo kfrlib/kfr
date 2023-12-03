@@ -60,7 +60,7 @@ if (KFR_ENABLE_CAPI_BUILD)
 endif ()
 
 if (KFR_ENABLE_ASMTEST)
-    add_executable(asm_test asm_test.cpp)
+    add_executable(asm_test internal/asm_test.cpp)
     target_link_libraries(asm_test kfr)
     target_set_arch(asm_test PRIVATE avx2)
     target_compile_definitions(asm_test PRIVATE KFR_SHOW_NOT_OPTIMIZED)
@@ -80,11 +80,6 @@ if (KFR_ENABLE_ASMTEST)
 endif ()
 
 set(ALL_TESTS_CPP
-    base_test.cpp
-    complex_test.cpp
-    dsp_test.cpp
-    expression_test.cpp
-    io_test.cpp
     ${KFR_UNITTEST_SRC})
 
 if (KFR_ENABLE_DFT)
@@ -98,7 +93,7 @@ if (KFR_REGENERATE_TESTS)
     find_package(GMP)
 
     if (MPFR_FOUND AND GMP_FOUND)
-        add_executable(generate_data generate_data.cpp)
+        add_executable(generate_data internal/generate_data.cpp)
         target_link_libraries(generate_data kfr)
         target_include_directories(generate_data PRIVATE ${MPFR_INCLUDE_DIR}
                                                          ${GMP_INCLUDE_DIR})

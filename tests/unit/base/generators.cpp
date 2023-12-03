@@ -30,4 +30,20 @@ TEST(test_gen_expj)
     // In most cases error is much lower (less than 0.00001)
 }
 
+TEST(gen_sin)
+{
+    kfr::univector<kfr::fbase> x;
+    constexpr size_t size = 132;
+    kfr::fbase step       = kfr::c_pi<kfr::fbase> / (size + 1);
+    kfr::univector<kfr::fbase> up;
+    up = kfr::truncate(kfr::gen_sin<kfr::fbase>(kfr::c_pi<kfr::fbase> / 2, step), size);
+
+    kfr::univector<kfr::fbase> up2(size);
+    for (int i = 0; i < size; ++i)
+    {
+        up2[i] = std::sin(kfr::c_pi<kfr::fbase> / 2 + i * step);
+    }
+    CHECK(rms(up - up2) < 0.00001);
+}
+
 } // namespace CMT_ARCH_NAME
