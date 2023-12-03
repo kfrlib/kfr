@@ -509,6 +509,7 @@ set(
     ${PROJECT_SOURCE_DIR}/tests/unit/math/log_exp.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/math.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/sin_cos.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/math/sqrt.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/tan.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/abs.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/complex.cpp
@@ -516,6 +517,7 @@ set(
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/min_max.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/operators.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/round.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/simd/saturation.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/select.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/shuffle.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/simd.cpp

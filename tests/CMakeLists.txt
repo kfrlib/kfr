@@ -79,32 +79,11 @@ if (KFR_ENABLE_ASMTEST)
         COMMAND objconv -fyasm $<TARGET_FILE:asm_test>)
 endif ()
 
-if (X86)
-    if (MSVC AND NOT CLANG)
-        add_executable(multiarch multiarch.cpp multiarch_fir_sse2.cpp
-                                 multiarch_fir_avx.cpp)
-        set_source_files_properties(multiarch_fir_sse2.cpp
-                                    PROPERTIES COMPILE_FLAGS /arch:SSE2)
-        set_source_files_properties(multiarch_fir_avx.cpp
-                                    PROPERTIES COMPILE_FLAGS /arch:AVX)
-    else ()
-        add_executable(multiarch multiarch.cpp multiarch_fir_sse2.cpp
-                                 multiarch_fir_avx.cpp)
-        set_source_files_properties(
-            multiarch_fir_sse2.cpp PROPERTIES COMPILE_FLAGS
-                                              "-mno-avx -mno-sse3 -msse2")
-        set_source_files_properties(multiarch_fir_avx.cpp
-                                    PROPERTIES COMPILE_FLAGS "-mavx -mno-avx2")
-    endif ()
-    target_link_libraries(multiarch kfr)
-endif ()
-
 set(ALL_TESTS_CPP
     base_test.cpp
     complex_test.cpp
     dsp_test.cpp
     expression_test.cpp
-    intrinsic_test.cpp
     io_test.cpp
     ${KFR_UNITTEST_SRC})
 
@@ -166,21 +145,6 @@ function (add_x86_test ARCH)
     target_set_arch(all_tests_${NAME} PRIVATE ${ARCH})
     target_compile_definitions(all_tests_${NAME} PRIVATE KFR_NO_MAIN)
     target_compile_definitions(all_tests_${NAME} PUBLIC KFR_ENABLE_FLAC=1)
-
-    if (KFR_ARCH_TESTS_MULTI)
-        add_library(all_tests_multiarch_${NAME} STATIC ${ALL_TESTS_MERGED_CPP}
-                                                       ${KFR_IO_SRC})
-        if (KFR_ENABLE_DFT)
-            target_sources(all_tests_multiarch_${NAME} PRIVATE ${KFR_DFT_SRC})
-        endif ()
-        target_link_libraries(all_tests_multiarch_${NAME} kfr)
-        target_set_arch(all_tests_multiarch_${NAME} PRIVATE ${ARCH})
-        target_compile_definitions(all_tests_multiarch_${NAME}
-                                   PRIVATE KFR_NO_MAIN)
-        target_compile_definitions(all_tests_multiarch_${NAME}
-                                   PUBLIC KFR_ENABLE_FLAC=1)
-    endif ()
-
 endfunction ()
 
 if (KFR_ARCH_TESTS AND KFR_ARCH_TESTS STREQUAL "ON")
@@ -201,18 +165,9 @@ if (MSVC AND NOT CLANG)
 endif ()
 
 if (KFR_ARCH_TESTS)
-
     foreach (A IN LISTS ARCH_LIST)
         add_x86_test(${A})
     endforeach ()
-
-    if (KFR_ARCH_TESTS_MULTI)
-        add_executable(all_tests_multiarch all_tests.cpp)
-        target_compile_definitions(all_tests_multiarch PRIVATE KFR_MULTI_ARCH)
-        foreach (A IN LISTS ARCH_LIST)
-            target_link_libraries(all_tests_multiarch all_tests_multiarch_${A})
-        endforeach ()
-    endif ()
 endif ()
 
 if (KFR_USE_SDE)
@@ -243,9 +198,6 @@ if (NOT KFR_SKIP_TESTS)
     enable_testing()
 
     if (X86)
-        add_test(NAME multiarch COMMAND ${EMULATOR}
-                                        ${PROJECT_BINARY_DIR}/bin/multiarch)
-
         if (KFR_ENABLE_CAPI_BUILD)
             add_test(NAME capi_test COMMAND ${EMULATOR}
                                             ${PROJECT_BINARY_DIR}/bin/capi_test)

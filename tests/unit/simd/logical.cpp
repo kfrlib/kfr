@@ -25,5 +25,28 @@ TEST(logical_any)
     CHECK(any(mask<f32, 4>{ false, true, false, true }) == true);
     CHECK(any(mask<f32, 4>{ false, false, false, false }) == false);
 }
+
+TEST(intrin_any_all)
+{
+    testo::matrix(named("type") = unsigned_vector_types<vec>,
+                  [](auto type)
+                  {
+                      using T                = typename decltype(type)::type;
+                      constexpr size_t width = widthof<T>();
+                      using Tsub             = subtype<T>;
+                      const auto x           = enumerate<Tsub, width>() == Tsub(0);
+                      CHECK(any(x) == true);
+                      if (width == 1)
+                          CHECK(all(x) == true);
+                      else
+                          CHECK(all(x) == false);
+                      const auto y = zerovector<Tsub, width>() == Tsub(127);
+                      CHECK(all(y) == false);
+                      CHECK(any(y) == false);
+                      const auto z = zerovector<Tsub, width>() == Tsub(0);
+                      CHECK(all(z) == true);
+                      CHECK(any(z) == true);
+                  });
+}
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
