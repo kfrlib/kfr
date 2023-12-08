@@ -79,8 +79,7 @@ if (KFR_ENABLE_ASMTEST)
         COMMAND objconv -fyasm $<TARGET_FILE:asm_test>)
 endif ()
 
-set(ALL_TESTS_CPP
-    ${KFR_UNITTEST_SRC})
+set(ALL_TESTS_CPP ${KFR_UNITTEST_SRC})
 
 if (KFR_ENABLE_DFT)
     list(APPEND ALL_TESTS_CPP dft_test.cpp)

@@ -492,6 +492,7 @@ set(
     ${PROJECT_SOURCE_DIR}/tests/unit/base/simd_expressions.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/std_ambiguities.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/tensor.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/base/transpose.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/univector.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/biquad.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/biquad_design.cpp
