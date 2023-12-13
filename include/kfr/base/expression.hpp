@@ -280,6 +280,12 @@ KFR_INTRINSIC void set_elements(T& self, const shape<0>& index, const axis_param
     self = val.front();
 }
 
+template <typename T>
+constexpr inline bool is_arg = is_numeric_or_bool<std::decay_t<T>>;
+
+template <typename T>
+using arg = std::conditional_t<is_arg<T>, std::decay_t<T>, T>;
+
 template <typename... Args>
 struct expression_with_arguments
 {
@@ -336,7 +342,7 @@ struct expression_with_arguments
         return fold_idx_impl(std::forward<Fn>(fn), csizeseq<count>);
     }
 
-    KFR_INTRINSIC expression_with_arguments(Args&&... args) : args{ std::forward<Args>(args)... }
+    KFR_INTRINSIC expression_with_arguments(arg<Args&&>... args) : args{ std::forward<Args>(args)... }
     {
         cforeach(csizeseq<count>,
                  [&](auto idx_) CMT_INLINE_LAMBDA
@@ -496,11 +502,11 @@ struct expression_function : expression_with_arguments<Args...>, expression_trai
         : expression_with_arguments<Args...>{ std::move(args) }, fn(std::forward<Fn>(fn))
     {
     }
-    KFR_MEM_INTRINSIC expression_function(Fn&& fn, Args&&... args)
+    KFR_MEM_INTRINSIC expression_function(Fn&& fn, arg<Args&&>... args)
         : expression_with_arguments<Args...>{ std::forward<Args>(args)... }, fn(std::forward<Fn>(fn))
     {
     }
-    KFR_MEM_INTRINSIC expression_function(Args&&... args)
+    KFR_MEM_INTRINSIC expression_function(arg<Args&&>... args)
         : expression_with_arguments<Args...>{ std::forward<Args>(args)... }, fn{}
     {
     }
@@ -521,6 +527,9 @@ template <typename... Args, typename Fn>
 expression_function(expression_with_arguments<Args...>&& args, Fn&& fn) -> expression_function<Fn, Args...>;
 template <typename... Args, typename Fn>
 expression_function(expression_with_arguments<Args...>& args, Fn&& fn) -> expression_function<Fn, Args...>;
+
+template <typename Fn, typename... Args>
+using expression_make_function = expression_function<Fn, arg<Args>...>;
 
 namespace internal
 {

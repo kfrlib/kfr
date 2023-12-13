@@ -1099,6 +1099,9 @@ using findinttype = typename details::findinttype_impl<min, max, uint8_t, int8_t
 template <typename T>
 constexpr inline bool is_number = details::is_number_impl<std::decay_t<T>>::value;
 
+template <typename T>
+constexpr inline bool is_number_or_bool = is_number<T> || std::is_same_v<std::decay_t<T>, bool>;
+
 template <typename... Ts>
 constexpr inline bool is_numbers = (details::is_number_impl<std::decay_t<Ts>>::value && ...);
 
@@ -1109,6 +1112,10 @@ constexpr inline bool is_numeric = is_number<deep_subtype<T>>;
 /// @brief Check if the type arguments are a numbers or a vectors of numbers
 template <typename... Ts>
 constexpr inline bool is_numeric_args = (is_numeric<Ts> && ...);
+
+/// @brief Check if the type argument is a number, bool or a vector of numbers of bool
+template <typename T>
+constexpr inline bool is_numeric_or_bool = is_number_or_bool<deep_subtype<T>>;
 
 namespace details
 {

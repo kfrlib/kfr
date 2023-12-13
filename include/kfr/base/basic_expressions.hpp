@@ -872,7 +872,7 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_concatenate<Arg1, Arg2, Co
 // ----------------------------------------------------------------------------
 
 template <typename... Args>
-using expression_pack = expression_function<fn::packtranspose, Args...>;
+using expression_pack = expression_make_function<fn::packtranspose, Args...>;
 
 template <typename... Args, KFR_ACCEPT_EXPRESSIONS(Args...)>
 KFR_INTRINSIC expression_pack<Args...> pack(Args&&... args)
