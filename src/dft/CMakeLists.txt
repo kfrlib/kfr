@@ -17,7 +17,8 @@ endforeach ()
 
 if (KFR_INSTALL_LIBRARIES)
     install(
-        TARGETS ${kfr_dft_LIBS}
+        TARGETS ${kfr_dft_TARGETS}
+        EXPORT kfr_export
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         RUNTIME DESTINATION bin)

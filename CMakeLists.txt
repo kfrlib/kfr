@@ -85,13 +85,15 @@ if (KFR_WITH_CLANG)
     message(STATUS "Clang ${CLANG_VERSION} is set up successfully")
 endif ()
 
-project(kfr CXX)
-
-file(STRINGS include/kfr/kfr.h KFR_VERSION
+file(STRINGS ${CMAKE_CURRENT_LIST_DIR}/include/kfr/kfr.h KFR_VERSION
      REGEX "#define KFR_VERSION_(MINOR|MAJOR|PATCH)")
 string(REGEX MATCHALL "[0-9]+" KFR_VERSION_MATCH ${KFR_VERSION})
 string(REPLACE ";" "." KFR_VERSION "${KFR_VERSION_MATCH}")
-message("KFR_VERSION = ${KFR_VERSION}")
+
+project(
+    kfr
+    VERSION ${KFR_VERSION}
+    LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -293,15 +295,17 @@ endif ()
 
 # KFR library
 add_library(kfr INTERFACE)
-target_sources(kfr INTERFACE ${KFR_SRC})
-target_include_directories(kfr INTERFACE include)
+# target_sources(kfr INTERFACE ${KFR_SRC})
+target_include_directories(
+    kfr INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+                  $<INSTALL_INTERFACE:include>)
 target_compile_options(kfr INTERFACE "$<$<CONFIG:DEBUG>:-DKFR_DEBUG>")
 if (APPLE)
     target_compile_options(kfr INTERFACE -faligned-allocation)
 endif ()
 
 if (MSVC)
-    target_compile_options(kfr INTERFACE -bigobj -EHsc)
+    target_compile_options(kfr INTERFACE -bigobj)
 else ()
     target_link_libraries(kfr INTERFACE ${STD_LIB} ${PTHREAD_LIB} m)
 endif ()
@@ -312,14 +316,14 @@ if (KFR_STD_COMPLEX)
     target_compile_definitions(kfr INTERFACE -DKFR_STD_COMPLEX)
 endif ()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(kfr INTERFACE -Wno-ignored-qualifiers -Wno-psabi)
+    add_compile_options(-Wno-ignored-qualifiers -Wno-psabi)
 endif ()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(kfr INTERFACE -Wno-c++1z-extensions -Wno-psabi
-                                         -Wno-unknown-warning-option)
+    add_compile_options(-Wno-c++1z-extensions -Wno-psabi
+                        -Wno-unknown-warning-option)
 endif ()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    target_compile_options(kfr INTERFACE /wd4141)
+    add_compile_options(/wd4141)
 endif ()
 
 if (NOT KFR_ENABLE_DFT)
@@ -391,3 +395,29 @@ if (NOT TARGET uninstall)
         COMMAND ${CMAKE_COMMAND} -P
                 ${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake)
 endif ()
+
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+set(KFR_INSTALL_CMAKEDIR
+    "${CMAKE_INSTALL_LIBDIR}/cmake/kfr"
+    CACHE STRING "Path to KFR CMake files")
+
+configure_package_config_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config.cmake.in
+    "${CMAKE_CURRENT_BINARY_DIR}/KFRConfig.cmake"
+    INSTALL_DESTINATION "lib/cmake/kfr"
+    NO_SET_AND_CHECK_MACRO NO_CHECK_REQUIRED_COMPONENTS_MACRO)
+
+install(TARGETS kfr EXPORT kfr_export)
+
+install(
+    EXPORT kfr_export
+    DESTINATION "${KFR_INSTALL_CMAKEDIR}"
+    FILE KFRConfig.cmake)
+
+# write_basic_package_version_file( KFRConfigVersion.cmake VERSION
+# ${KFR_VERSION} COMPATIBILITY SameMajorVersion)
+
+# install(FILES "${CMAKE_CURRENT_BINARY_DIR}/KFRConfigVersion.cmake" DESTINATION
+# "${KFR_INSTALL_CMAKEDIR}" )

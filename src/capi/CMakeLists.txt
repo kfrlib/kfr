@@ -49,8 +49,10 @@ if (KFR_INSTALL_LIBRARIES)
     if (KFR_ENABLE_CAPI_BUILD)
         install(
             TARGETS kfr_capi
+            EXPORT kfr_export
             ARCHIVE DESTINATION lib
             LIBRARY DESTINATION lib
-            RUNTIME DESTINATION bin)
+            RUNTIME DESTINATION bin
+            )
     endif ()
 endif ()
