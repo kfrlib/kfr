@@ -75,14 +75,14 @@ KFR_INTRINSIC vec<float, 32> ctranspose<4, float, 32>(const vec<float, 32>& v16)
 {
     cvec<float, 4> r0, r1, r2, r3;
     split(v16, r0, r1, r2, r3);
-    const __m256d t0 = _mm256_unpacklo_pd(r0.v, r1.v);
-    const __m256d t1 = _mm256_unpacklo_pd(r2.v, r3.v);
-    const __m256d t2 = _mm256_unpackhi_pd(r0.v, r1.v);
-    const __m256d t3 = _mm256_unpackhi_pd(r2.v, r3.v);
-    r0.v             = _mm256_permute2f128_pd(t0, t1, 0x20);
-    r1.v             = _mm256_permute2f128_pd(t2, t3, 0x20);
-    r2.v             = _mm256_permute2f128_pd(t0, t1, 0x31);
-    r3.v             = _mm256_permute2f128_pd(t2, t3, 0x31);
+    const __m256d t0 = _mm256_unpacklo_pd(_mm256_castps_pd(r0.v), _mm256_castps_pd(r1.v));
+    const __m256d t1 = _mm256_unpacklo_pd(_mm256_castps_pd(r2.v), _mm256_castps_pd(r3.v));
+    const __m256d t2 = _mm256_unpackhi_pd(_mm256_castps_pd(r0.v), _mm256_castps_pd(r1.v));
+    const __m256d t3 = _mm256_unpackhi_pd(_mm256_castps_pd(r2.v), _mm256_castps_pd(r3.v));
+    r0.v             = _mm256_castpd_ps(_mm256_permute2f128_pd(t0, t1, 0x20));
+    r1.v             = _mm256_castpd_ps(_mm256_permute2f128_pd(t2, t3, 0x20));
+    r2.v             = _mm256_castpd_ps(_mm256_permute2f128_pd(t0, t1, 0x31));
+    r3.v             = _mm256_castpd_ps(_mm256_permute2f128_pd(t2, t3, 0x31));
     return concat(r0, r1, r2, r3);
 }
 #endif
