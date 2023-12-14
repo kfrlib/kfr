@@ -459,6 +459,7 @@ set(
     ${PROJECT_SOURCE_DIR}/src/dft/dft.cpp
     ${PROJECT_SOURCE_DIR}/src/dft/fft-impl-f32.cpp
     ${PROJECT_SOURCE_DIR}/src/dft/fft-impl-f64.cpp
+    ${PROJECT_SOURCE_DIR}/src/dft/version.cpp
 )
 
     
@@ -467,12 +468,14 @@ set(
     ${PROJECT_SOURCE_DIR}/src/dsp/biquad.cpp
     ${PROJECT_SOURCE_DIR}/src/dsp/fir.cpp
     ${PROJECT_SOURCE_DIR}/src/dsp/sample_rate_conversion.cpp
+    ${PROJECT_SOURCE_DIR}/src/dsp/version.cpp
 )
 
     
 set(
     KFR_IO_SRC
     ${PROJECT_SOURCE_DIR}/src/io/audiofile-impl.cpp
+    ${PROJECT_SOURCE_DIR}/src/io/version.cpp
 )
 
     
