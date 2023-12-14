@@ -16,6 +16,51 @@
 
 cmake_minimum_required(VERSION 3.12)
 
+if (KFR_WITH_CLANG)
+    set(CLANG_VERSION 17.0.6)
+    if (WIN32)
+        set(CLANG_URL
+            https://github.com/llvm/llvm-project/releases/download/llvmorg-${CLANG_VERSION}/LLVM-${CLANG_VERSION}-win64.exe
+        )
+        set(CLANG_ARCH_FILE "${CMAKE_CURRENT_BINARY_DIR}/clang-prebuilt.exe")
+        set(CLANG_DEST_DIR "${CMAKE_CURRENT_BINARY_DIR}/clang")
+
+        set(SEVENZIP_URL https://www.7-zip.org/a/7z2301-x64.msi)
+        set(SEVENZIP_ARCH_FILE "${CMAKE_CURRENT_BINARY_DIR}/7z2301-x64.msi")
+        set(SEVENZIP_DEST_DIR "${CMAKE_CURRENT_BINARY_DIR}/7z")
+        message(STATUS "Downloading 7zip from ${SEVENZIP_URL}")
+        file(DOWNLOAD ${SEVENZIP_URL} ${SEVENZIP_ARCH_FILE} EXPECTED_HASH SHA256=0BA639B6DACDF573D847C911BD147C6384381A54DAC082B1E8C77BC73D58958B SHOW_PROGRESS)
+
+        cmake_path(NATIVE_PATH SEVENZIP_ARCH_FILE NORMALIZE SEVENZIP_ARCH_FILE_W)
+        cmake_path(NATIVE_PATH SEVENZIP_DEST_DIR NORMALIZE SEVENZIP_DEST_DIR_W)
+        execute_process(COMMAND msiexec /a "${SEVENZIP_ARCH_FILE_W}"
+                                "TARGETDIR=${SEVENZIP_DEST_DIR_W}" /qn)
+
+        message(STATUS "Downloading Clang ${CLANG_VERSION} from ${CLANG_URL}")
+        file(DOWNLOAD ${CLANG_URL} ${CLANG_ARCH_FILE} EXPECTED_HASH SHA256=89dc351af8e8fa1cafc6b48411e608aa9457c930a10f984aad5d21ab020165b2 SHOW_PROGRESS)
+
+        message(STATUS "Unpacking Clang ${CLANG_VERSION}")
+        execute_process(COMMAND ${SEVENZIP_DEST_DIR}/Files/7-Zip/7z.exe x  -bb0 -bd -aos -o${CLANG_DEST_DIR} ${CLANG_ARCH_FILE} OUTPUT_QUIET)
+
+        set(CMAKE_CXX_COMPILER ${CLANG_DEST_DIR}/bin/clang-cl.exe CACHE STRING "Clang" FORCE)
+        set(CMAKE_C_COMPILER ${CLANG_DEST_DIR}/bin/clang-cl.exe CACHE STRING "Clang" FORCE)
+    endif()
+    if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
+        set(CLANG_URL
+            https://github.com/llvm/llvm-project/releases/download/llvmorg-${CLANG_VERSION}/clang+llvm-${CLANG_VERSION}-x86_64-linux-gnu-ubuntu-22.04.tar.xz
+        )
+        set(CLANG_ARCH_FILE "${CMAKE_CURRENT_BINARY_DIR}/clang-prebuilt.tar.xz")
+        set(CLANG_DEST_DIR "${CMAKE_CURRENT_BINARY_DIR}/clang")
+        message(STATUS "Downloading Clang ${CLANG_VERSION} from ${CLANG_URL}")
+        file(DOWNLOAD ${CLANG_URL} ${CLANG_ARCH_FILE} EXPECTED_HASH SHA256=884ee67d647d77e58740c1e645649e29ae9e8a6fe87c1376be0f3a30f3cc9ab3 SHOW_PROGRESS)
+        message(STATUS "Unpacking Clang ${CLANG_VERSION}")
+        file(ARCHIVE_EXTRACT INPUT ${CLANG_ARCH_FILE} DESTINATION ${CLANG_DEST_DIR})
+        set(CMAKE_CXX_COMPILER ${CLANG_DEST_DIR}/clang+llvm-${CLANG_VERSION}-x86_64-linux-gnu-ubuntu-22.04/bin/clang++ CACHE STRING "Clang" FORCE)
+        set(CMAKE_C_COMPILER ${CLANG_DEST_DIR}/clang+llvm-${CLANG_VERSION}-x86_64-linux-gnu-ubuntu-22.04/bin/clang CACHE STRING "Clang" FORCE)
+    endif ()
+    message(STATUS "Clang ${CLANG_VERSION} is set up successfully")
+endif()
+
 project(kfr CXX)
 
 set(CMAKE_CXX_STANDARD 17)
