@@ -33,9 +33,7 @@
 #include "shape.hpp"
 
 #include <tuple>
-#ifdef KFR_STD_COMPLEX
 #include <complex>
-#endif
 
 CMT_PRAGMA_GNU(GCC diagnostic push)
 CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
@@ -44,17 +42,9 @@ CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wparentheses")
 namespace kfr
 {
 
-#ifdef KFR_STD_COMPLEX
-
+#ifndef KFR_CUSTOM_COMPLEX
 template <typename T>
 using complex = std::complex<T>;
-
-#else
-#ifndef KFR_CUSTOM_COMPLEX
-
-template <typename>
-struct complex;
-#endif
 #endif
 
 template <typename T, typename V = void>

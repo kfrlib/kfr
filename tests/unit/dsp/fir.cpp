@@ -180,31 +180,6 @@ TEST(fir_different)
 }
 #endif
 
-#ifdef KFR_STD_COMPLEX
-template <typename T>
-inline std::complex<T> to_std(const std::complex<T>& c)
-{
-    return c;
-}
-template <typename T>
-inline std::complex<T> from_std(const std::complex<T>& c)
-{
-    return c;
-}
-#else
-template <typename T>
-inline std::complex<T> to_std(const kfr::complex<T>& c)
-{
-    return { c.real(), c.imag() };
-}
-
-template <typename T>
-inline kfr::complex<T> from_std(const std::complex<T>& c)
-{
-    return { c.real(), c.imag() };
-}
-#endif
-
 TEST(fir_complex)
 {
     const univector<complex<float>, 100> data =
@@ -216,8 +191,8 @@ TEST(fir_complex)
                      {
                          std::complex<float> result = 0.0;
                          for (size_t i = 0; i < taps.size(); i++)
-                             result = result + to_std(data.get(index - i, 0.0)) * taps[i];
-                         return from_std(result);
+                             result = result + data.get(index - i, 0.0) * taps[i];
+                         return result;
                      });
 
     CHECK_EXPRESSION(short_fir(data, taps), 100,
@@ -225,8 +200,8 @@ TEST(fir_complex)
                      {
                          std::complex<float> result = 0.0;
                          for (size_t i = 0; i < taps.size(); i++)
-                             result = result + to_std(data.get(index - i, 0.0)) * taps[i];
-                         return from_std(result);
+                             result = result + data.get(index - i, 0.0) * taps[i];
+                         return result;
                      });
 }
 } // namespace CMT_ARCH_NAME
