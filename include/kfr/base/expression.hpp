@@ -57,10 +57,6 @@ struct complex;
 #endif
 #endif
 
-struct accepts_any
-{
-};
-
 template <typename T, typename V = void>
 struct expression_traits;
 
@@ -118,7 +114,7 @@ struct expression_traits<T, std::void_t<decltype(T::random_access), decltype(T::
 
 struct expression_traits_defaults
 {
-    // using value_type = accepts_any;
+    // using value_type = /* ... */;
     // constexpr static size_t dims = 0;
     // constexpr static shape<dims> get_shape(const T&);
     // constexpr static shape<dims> get_shape();
