@@ -31,6 +31,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/handle.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/math_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/memory.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/npy.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/random.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/random_bits.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/reduce.hpp
@@ -238,6 +239,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/handle.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/math_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/memory.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/npy.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/random.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/random_bits.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/reduce.hpp
@@ -328,6 +330,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/handle.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/math_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/memory.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/npy.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/random.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/random_bits.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/reduce.hpp
@@ -489,6 +492,7 @@ set(
     ${PROJECT_SOURCE_DIR}/tests/unit/base/generators.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/handle.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/math_expressions.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/base/npy.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/random.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/reduce.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/shape.cpp

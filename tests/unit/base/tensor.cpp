@@ -6,6 +6,7 @@
 
 #include <kfr/base/basic_expressions.hpp>
 #include <kfr/base/math_expressions.hpp>
+#include <kfr/base/npy.hpp>
 #include <kfr/base/reduce.hpp>
 #include <kfr/base/simd_expressions.hpp>
 #include <kfr/base/tensor.hpp>
