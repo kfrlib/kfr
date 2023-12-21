@@ -357,7 +357,7 @@ public:
     tensor(const tensor&& other) : tensor(static_cast<const tensor&>(other)) {}
 #endif
 
-#if defined(CMT_COMPILER_IS_MSVC)
+#if defined(CMT_COMPILER_IS_MSVC) || true
     tensor& operator=(const tensor& src) &
     {
         this->~tensor();
