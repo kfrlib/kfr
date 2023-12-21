@@ -437,6 +437,10 @@ struct vec_of_complex
     using type = vec<complex<T>, N>;
 };
 } // namespace CMT_ARCH_NAME
+
+template <typename T>
+constexpr bool is_complex = internal::is_complex_impl<T>::value;
+
 } // namespace kfr
 
 namespace std
