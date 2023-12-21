@@ -1348,34 +1348,39 @@ struct fn_return_constant
 };
 
 template <typename T1, typename T2>
-CMT_INTRINSIC bool is_equal(const T1& x, const T2& y)
+CMT_INTRINSIC constexpr bool is_equal(const T1& x, const T2& y)
 {
     return x == y;
 }
 template <typename T1, typename T2>
-CMT_INTRINSIC bool is_notequal(const T1& x, const T2& y)
+CMT_INTRINSIC constexpr bool is_notequal(const T1& x, const T2& y)
 {
     return x != y;
 }
 template <typename T1, typename T2>
-CMT_INTRINSIC bool is_less(const T1& x, const T2& y)
+CMT_INTRINSIC constexpr bool is_less(const T1& x, const T2& y)
 {
     return x < y;
 }
 template <typename T1, typename T2>
-CMT_INTRINSIC bool is_greater(const T1& x, const T2& y)
+CMT_INTRINSIC constexpr bool is_greater(const T1& x, const T2& y)
 {
     return x > y;
 }
 template <typename T1, typename T2>
-CMT_INTRINSIC bool is_lessorequal(const T1& x, const T2& y)
+CMT_INTRINSIC constexpr bool is_lessorequal(const T1& x, const T2& y)
 {
     return x <= y;
 }
 template <typename T1, typename T2>
-CMT_INTRINSIC bool is_greaterorequal(const T1& x, const T2& y)
+CMT_INTRINSIC constexpr bool is_greaterorequal(const T1& x, const T2& y)
 {
     return x >= y;
+}
+template <typename T>
+CMT_INTRINSIC constexpr bool is_between(T value, identity<T> min, identity<T> max)
+{
+    return value >= min && value <= max;
 }
 CMT_FN(is_equal)
 CMT_FN(is_notequal)
@@ -1383,6 +1388,7 @@ CMT_FN(is_less)
 CMT_FN(is_greater)
 CMT_FN(is_lessorequal)
 CMT_FN(is_greaterorequal)
+CMT_FN(is_between)
 
 namespace details
 {
