@@ -475,7 +475,7 @@ namespace internal_generic
 
 constexpr inline index_t null_index = max_index_t;
 
-template <index_t dims>
+template <index_t dims, bool fortran_order = false>
 constexpr KFR_INTRINSIC shape<dims> strides_for_shape(const shape<dims>& sh, index_t stride = 1)
 {
     shape<dims> strides;
@@ -484,8 +484,8 @@ constexpr KFR_INTRINSIC shape<dims> strides_for_shape(const shape<dims>& sh, ind
         index_t n = stride;
         for (index_t i = 0; i < dims; ++i)
         {
-            strides[dims - 1 - i] = n;
-            n *= sh[dims - 1 - i];
+            strides[fortran_order ? i : dims - 1 - i] = n;
+            n *= sh[fortran_order ? i : dims - 1 - i];
         }
     }
     return strides;
