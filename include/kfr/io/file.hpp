@@ -258,21 +258,24 @@ struct file_writer : abstract_writer<T>
 template <typename T = void>
 inline std::shared_ptr<file_reader<T>> open_file_for_reading(const filepath& path)
 {
-    return std::make_shared<file_reader<T>>(fopen_portable(path.c_str(), KFR_FILEPATH("rb")));
+    std::FILE* f = fopen_portable(path.c_str(), KFR_FILEPATH("rb"));
+    return f ? std::make_shared<file_reader<T>>(f) : nullptr;
 }
 
 /// @brief Opens typed file for writing
 template <typename T = void>
 inline std::shared_ptr<file_writer<T>> open_file_for_writing(const filepath& path)
 {
-    return std::make_shared<file_writer<T>>(fopen_portable(path.c_str(), KFR_FILEPATH("wb")));
+    std::FILE* f = fopen_portable(path.c_str(), KFR_FILEPATH("wb"));
+    return f ? std::make_shared<file_writer<T>>(f) : nullptr;
 }
 
 /// @brief Opens typed file for appending
 template <typename T = void>
 inline std::shared_ptr<file_writer<T>> open_file_for_appending(const filepath& path)
 {
-    return std::make_shared<file_writer<T>>(fopen_portable(path.c_str(), KFR_FILEPATH("ab")));
+    std::FILE* f = fopen_portable(path.c_str(), KFR_FILEPATH("ab"));
+    return f ? std::make_shared<file_writer<T>>(f) : nullptr;
 }
 
 #ifdef CMT_OS_WIN
@@ -280,21 +283,24 @@ inline std::shared_ptr<file_writer<T>> open_file_for_appending(const filepath& p
 template <typename T = void>
 inline std::shared_ptr<file_reader<T>> open_file_for_reading(const std::string& path)
 {
-    return std::make_shared<file_reader<T>>(fopen(path.c_str(), "rb"));
+    std::FILE* f = fopen(path.c_str(), "rb");
+    return f ? std::make_shared<file_reader<T>>(f) : nullptr;
 }
 
 /// @brief Opens typed file for writing
 template <typename T = void>
 inline std::shared_ptr<file_writer<T>> open_file_for_writing(const std::string& path)
 {
-    return std::make_shared<file_writer<T>>(fopen(path.c_str(), "wb"));
+    std::FILE* f = fopen(path.c_str(), "wb");
+    return f ? std::make_shared<file_writer<T>>(f) : nullptr;
 }
 
 /// @brief Opens typed file for appending
 template <typename T = void>
 inline std::shared_ptr<file_writer<T>> open_file_for_appending(const std::string& path)
 {
-    return std::make_shared<file_writer<T>>(fopen(path.c_str(), "ab"));
+    std::FILE* f = fopen(path.c_str(), "ab");
+    return f ? std::make_shared<file_writer<T>>(f) : nullptr;
 }
 #endif
 
