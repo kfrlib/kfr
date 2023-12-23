@@ -46,12 +46,20 @@ TEST(amp_to_dB)
 
 TEST(dB_to_amp)
 {
+#if defined __clang__ && defined(CMT_ARCH_ARM) && __clang_major__ >= 13
+    // Clang 13+ compiler bug on ARM
+#else
     testo::epsilon_scope<void> eps(1000);
+
+    CHECK(kfr::exp(fbase(-HUGE_VAL)) == fbase(0.0));
+    CHECK(kfr::exp2(fbase(-HUGE_VAL)) == fbase(0.0));
+    CHECK(kfr::exp10(fbase(-HUGE_VAL)) == fbase(0.0));
 
     CHECK(kfr::dB_to_amp(fbase(-HUGE_VAL)) == fbase(0.0));
     CHECK(kfr::dB_to_amp(fbase(0.0)) == fbase(1.0));
     CHECK(kfr::dB_to_amp(fbase(6.0205999132796239042747778944899)) == fbase(2.0));
     CHECK(kfr::dB_to_amp(fbase(-6.0205999132796239042747778944899)) == fbase(0.5));
+#endif
 }
 
 } // namespace CMT_ARCH_NAME
