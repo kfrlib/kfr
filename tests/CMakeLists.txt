@@ -56,7 +56,7 @@ if (KFR_ENABLE_CAPI_BUILD)
     add_executable(capi_test capi_test.cpp)
     target_include_directories(capi_test
                                PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include)
-    target_link_libraries(capi_test PUBLIC kfr_capi)
+    target_link_libraries(capi_test PRIVATE kfr_capi)
 endif ()
 
 if (KFR_ENABLE_ASMTEST)
@@ -191,10 +191,16 @@ set(SDE_ARCH_avx512 -skx)
 if (NOT KFR_SKIP_TESTS)
     enable_testing()
 
-    if (X86)
-        if (KFR_ENABLE_CAPI_BUILD)
-            add_test(NAME capi_test COMMAND ${EMULATOR}
-                                            ${PROJECT_BINARY_DIR}/bin/capi_test)
+    if (KFR_ENABLE_CAPI_BUILD)
+        add_test(NAME capi_test COMMAND ${EMULATOR}
+                                        ${PROJECT_BINARY_DIR}/bin/capi_test)
+        if (UNIX)
+            set_tests_properties(
+                capi_test
+                PROPERTIES
+                    ENVIRONMENT
+                    "LD_LIBRARY_PATH=${PROJECT_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}"
+            )
         endif ()
     endif ()
 
@@ -219,6 +225,7 @@ if (NOT KFR_SKIP_TESTS)
                  COMMAND ${SDE} ${SDE_ARCH_avx512} -chip_check_exe_only --
                          ${PROJECT_BINARY_DIR}/bin/all_tests)
     else ()
-        add_test(NAME all_tests COMMAND ${PROJECT_BINARY_DIR}/bin/all_tests)
+        add_test(NAME all_tests COMMAND ${EMULATOR}
+                                        ${PROJECT_BINARY_DIR}/bin/all_tests)
     endif ()
 endif ()
