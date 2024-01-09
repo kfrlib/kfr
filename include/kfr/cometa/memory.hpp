@@ -124,8 +124,10 @@ inline void* aligned_reallocate(void* ptr, size_t new_size, size_t alignment)
 }
 } // namespace details
 
+constexpr inline size_t default_memory_alignment = 64;
+
 /// @brief Allocates aligned memory
-template <typename T = void, size_t alignment = 64>
+template <typename T = void, size_t alignment = default_memory_alignment>
 CMT_INTRINSIC T* aligned_allocate(size_t size = 1)
 {
     T* ptr = static_cast<T*>(CMT_ASSUME_ALIGNED(
@@ -246,7 +248,8 @@ struct aligned_new
 #ifdef __cpp_aligned_new
     inline static void* operator new(size_t size, std::align_val_t al) noexcept
     {
-        return details::aligned_malloc(size, std::max(size_t(64), static_cast<size_t>(al)));
+        return details::aligned_malloc(size,
+                                       std::max(size_t(default_memory_alignment), static_cast<size_t>(al)));
     }
     inline static void operator delete(void* ptr, std::align_val_t al) noexcept
     {
@@ -269,4 +272,31 @@ public:                                                                         
                                                                                                              \
 private:                                                                                                     \
     mutable std::atomic_uintptr_t m_refcount = ATOMIC_VAR_INIT(0);
+
+namespace details
+{
+
+template <typename T, typename Fn>
+CMT_ALWAYS_INLINE static void call_with_temp_heap(size_t temp_size, Fn&& fn)
+{
+    autofree<T> temp(temp_size);
+    fn(temp.data());
+}
+
+template <size_t stack_size, typename T, typename Fn>
+CMT_NOINLINE static void call_with_temp_stack(size_t temp_size, Fn&& fn)
+{
+    alignas(default_memory_alignment) T temp[stack_size];
+    fn(&temp[0]);
+}
+
+} // namespace details
+
+template <size_t stack_size = 4096, typename T = u8, typename Fn>
+CMT_ALWAYS_INLINE static void call_with_temp(size_t temp_size, Fn&& fn)
+{
+    if (temp_size <= stack_size)
+        return details::call_with_temp_stack<stack_size, T>(temp_size, std::forward<Fn>(fn));
+    return details::call_with_temp_heap<T>(temp_size, std::forward<Fn>(fn));
+}
 } // namespace cometa
