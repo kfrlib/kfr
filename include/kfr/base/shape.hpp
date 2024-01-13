@@ -65,7 +65,8 @@ constexpr inline index_t infinite_size = max_index_t;
 
 constexpr inline index_t undefined_size = 0;
 
-constexpr inline index_t maximum_dims = 8;
+constexpr inline index_t maximum_dims = 16;
+
 CMT_INTRINSIC constexpr size_t size_add(size_t x, size_t y)
 {
     return (x == infinite_size || y == infinite_size) ? infinite_size : x + y;
