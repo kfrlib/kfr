@@ -966,6 +966,16 @@ struct representation<kfr::tensor<T, dims>>
     static std::string get(const kfr::tensor<T, dims>& value) { return value.to_string(); }
 };
 
+template <char t, int width, int prec, typename T, kfr::index_t dims>
+struct representation<fmt_t<kfr::tensor<T, dims>, t, width, prec>>
+{
+    using type = std::string;
+    static std::string get(const fmt_t<kfr::tensor<T, dims>, t, width, prec>& value)
+    {
+        return array_to_string<fmt_t<T, t, width, prec>>(value.value.size(), value.value.data());
+    }
+};
+
 } // namespace cometa
 
 CMT_PRAGMA_MSVC(warning(pop))

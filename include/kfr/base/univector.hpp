@@ -704,7 +704,7 @@ struct representation<fmt_t<kfr::univector<T, Tag>, t, width, prec>>
     using type = std::string;
     static std::string get(const fmt_t<kfr::univector<T, Tag>, t, width, prec>& value)
     {
-        return array_to_string<fmt_t<T, t, width, prec>>(value.size(), value.data());
+        return array_to_string<fmt_t<T, t, width, prec>>(value.value.size(), value.value.data());
     }
 };
 
