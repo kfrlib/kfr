@@ -23,20 +23,44 @@
   disclosing the source code of your own applications.
   See https://www.kfrlib.com for details.
  */
-
-#ifdef FLOAT
-#include <kfr/dft/fft.hpp>
+#include <kfr/multiarch.h>
+#include <kfr/dsp/biquad.hpp>
 
 namespace kfr
 {
+
+CMT_MULTI_PROTO(namespace impl {
+    template <typename T>
+    expression_handle<T, 1> create_biquad_filter(const biquad_params<T>* bq, size_t count);
+} // namespace impl
+)
+
 inline namespace CMT_ARCH_NAME
 {
 namespace impl
 {
-template void dft_initialize<FLOAT>(dft_plan<FLOAT>& plan);
-template void dft_real_initialize<FLOAT>(dft_plan_real<FLOAT>& plan);
+template <typename T>
+expression_handle<T, 1> create_biquad_filter(const biquad_params<T>* bq, size_t count)
+{
+    KFR_LOGIC_CHECK(count <= 64, "Too many biquad filters: ", count);
+    return biquad<64>(bq, count, placeholder<T>());
+}
+template expression_handle<float, 1> create_biquad_filter<float>(const biquad_params<float>*, size_t);
+template expression_handle<double, 1> create_biquad_filter<double>(const biquad_params<double>*, size_t);
 } // namespace impl
 } // namespace CMT_ARCH_NAME
-} // namespace kfr
+
+#ifdef CMT_MULTI_NEEDS_GATE
+
+template <typename T>
+biquad_filter<T>::biquad_filter(const biquad_params<T>* bq, size_t count)
+{
+    CMT_MULTI_GATE(this->filter_expr = ns::impl::create_biquad_filter<T>(bq, count));
+}
+
+template biquad_filter<float>::biquad_filter(const biquad_params<float>*, size_t);
+template biquad_filter<double>::biquad_filter(const biquad_params<double>*, size_t);
 
 #endif
+
+} // namespace kfr

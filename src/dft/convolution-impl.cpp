@@ -24,65 +24,12 @@
   See https://www.kfrlib.com for details.
  */
 #include <kfr/base/simd_expressions.hpp>
-#include <kfr/simd/complex.hpp>
 #include <kfr/dft/convolution.hpp>
+#include <kfr/simd/complex.hpp>
+#include <kfr/multiarch.h>
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
-{
-
-namespace intrinsics
-{
-
-template <typename T>
-univector<T> convolve(const univector_ref<const T>& src1, const univector_ref<const T>& src2)
-{
-    using ST                          = subtype<T>;
-    const size_t size                 = next_poweroftwo(src1.size() + src2.size() - 1);
-    univector<complex<ST>> src1padded = src1;
-    univector<complex<ST>> src2padded = src2;
-    src1padded.resize(size);
-    src2padded.resize(size);
-
-    dft_plan_ptr<ST> dft = dft_cache::instance().get(ctype_t<ST>(), size);
-    univector<u8> temp(dft->temp_size);
-    dft->execute(src1padded, src1padded, temp);
-    dft->execute(src2padded, src2padded, temp);
-    src1padded = src1padded * src2padded;
-    dft->execute(src1padded, src1padded, temp, true);
-    const ST invsize = reciprocal<ST>(static_cast<ST>(size));
-    return truncate(real(src1padded), src1.size() + src2.size() - 1) * invsize;
-}
-
-template <typename T>
-univector<T> correlate(const univector_ref<const T>& src1, const univector_ref<const T>& src2)
-{
-    using ST                          = subtype<T>;
-    const size_t size                 = next_poweroftwo(src1.size() + src2.size() - 1);
-    univector<complex<ST>> src1padded = src1;
-    univector<complex<ST>> src2padded = reverse(src2);
-    src1padded.resize(size);
-    src2padded.resize(size);
-    dft_plan_ptr<ST> dft = dft_cache::instance().get(ctype_t<ST>(), size);
-    univector<u8> temp(dft->temp_size);
-    dft->execute(src1padded, src1padded, temp);
-    dft->execute(src2padded, src2padded, temp);
-    src1padded = src1padded * src2padded;
-    dft->execute(src1padded, src1padded, temp, true);
-    const ST invsize = reciprocal<ST>(static_cast<ST>(size));
-    return truncate(real(src1padded), src1.size() + src2.size() - 1) * invsize;
-}
-
-template <typename T>
-univector<T> autocorrelate(const univector_ref<const T>& src1)
-{
-    univector<T> result = correlate(src1, src1);
-    result              = result.slice(result.size() / 2);
-    return result;
-}
-
-} // namespace intrinsics
 
 template <typename T>
 convolve_filter<T>::convolve_filter(size_t size_, size_t block_size_)
@@ -121,97 +68,6 @@ void convolve_filter<T>::set_data(const univector_ref<const T>& data)
 }
 
 template <typename T>
-void convolve_filter<T>::process_buffer(T* output, const T* input, size_t size)
-{
-    // Note that the conditionals in the following algorithm are meant to
-    // reduce complexity in the common cases of either processing complete
-    // blocks (processing == block_size) or only one segment.
-
-    // For complex filtering, use CCs pack format to omit special processing in fft_multiply[_accumulate].
-    const dft_pack_format fft_multiply_pack = this->real_fft ? dft_pack_format::Perm : dft_pack_format::CCs;
-
-    size_t processed = 0;
-    while (processed < size)
-    {
-        // Calculate how many samples to process this iteration.
-        auto const processing = std::min(size - processed, block_size - input_position);
-
-        // Prepare input to forward FFT:
-        if (processing == block_size)
-        {
-            // No need to work with saved_input.
-            builtin_memcpy(scratch1.data(), input + processed, processing * sizeof(T));
-        }
-        else
-        {
-            // Append this iteration's input to the saved_input current block.
-            builtin_memcpy(saved_input.data() + input_position, input + processed, processing * sizeof(T));
-            builtin_memcpy(scratch1.data(), saved_input.data(), block_size * sizeof(T));
-        }
-
-        // Forward FFT saved_input block.
-        fft.execute(segments[position], scratch1, temp);
-
-        if (segments.size() == 1)
-        {
-            // Just one segment/block of history.
-            // Y_k = H * X_k
-            fft_multiply(cscratch, ir_segments[0], segments[0], fft_multiply_pack);
-        }
-        else
-        {
-            // More than one segment/block of history so this is more involved.
-            if (input_position == 0)
-            {
-                // At the start of an input block, we premultiply the history from
-                // previous input blocks with the extended filter blocks.
-
-                // Y_(k-i,i) = H_i * X_(k-i)
-                // premul += Y_(k-i,i) for i=1,...,N
-
-                fft_multiply(premul, ir_segments[1], segments[(position + 1) % segments.size()],
-                             fft_multiply_pack);
-                for (size_t i = 2; i < segments.size(); i++)
-                {
-                    const size_t n = (position + i) % segments.size();
-                    fft_multiply_accumulate(premul, ir_segments[i], segments[n], fft_multiply_pack);
-                }
-            }
-            // Y_(k,0) = H_0 * X_k
-            // Y_k = premul + Y_(k,0)
-            fft_multiply_accumulate(cscratch, premul, ir_segments[0], segments[position], fft_multiply_pack);
-        }
-        // y_k = IFFT( Y_k )
-        fft.execute(scratch2, cscratch, temp, cinvert_t{});
-
-        // z_k = y_k + overlap
-        process(make_univector(output + processed, processing),
-                scratch2.slice(input_position, processing) + overlap.slice(input_position, processing));
-
-        input_position += processing;
-        processed += processing;
-
-        // If a whole block was processed, prepare for next block.
-        if (input_position == block_size)
-        {
-            // Input block k is complete. Move to (k+1)-th input block.
-            input_position = 0;
-
-            // Zero out the saved_input if it will be used in the next iteration.
-            auto const remaining = size - processed;
-            if (remaining < block_size && remaining > 0)
-            {
-                process(saved_input, zeros());
-            }
-
-            builtin_memcpy(overlap.data(), scratch2.data() + block_size, block_size * sizeof(T));
-
-            position = position > 0 ? position - 1 : segments.size() - 1;
-        }
-    }
-}
-
-template <typename T>
 void convolve_filter<T>::reset()
 {
     for (auto& segment : segments)
@@ -224,84 +80,186 @@ void convolve_filter<T>::reset()
     process(overlap, zeros());
 }
 
-namespace intrinsics
+//-------------------------------------------------------------------------------------
+
+CMT_MULTI_PROTO(namespace impl {
+    template <typename T>
+    univector<T> convolve(const univector_ref<const T>&, const univector_ref<const T>&, bool);
+
+    template <typename T>
+    class convolve_filter : public kfr::convolve_filter<T>
+    {
+    public:
+        void process_buffer_impl(T* output, const T* input, size_t size);
+    };
+})
+
+inline namespace CMT_ARCH_NAME
 {
 
-template univector<float> convolve<float>(const univector_ref<const float>&,
-                                          const univector_ref<const float>&);
-template univector<complex<float>> convolve<complex<float>>(const univector_ref<const complex<float>>&,
-                                                            const univector_ref<const complex<float>>&);
-template univector<float> correlate<float>(const univector_ref<const float>&,
-                                           const univector_ref<const float>&);
-template univector<complex<float>> correlate<complex<float>>(const univector_ref<const complex<float>>&,
-                                                             const univector_ref<const complex<float>>&);
-
-template univector<float> autocorrelate<float>(const univector_ref<const float>&);
-template univector<complex<float>> autocorrelate<complex<float>>(const univector_ref<const complex<float>>&);
-
-} // namespace intrinsics
-
-template convolve_filter<float>::convolve_filter(size_t, size_t);
-template convolve_filter<complex<float>>::convolve_filter(size_t, size_t);
-
-template convolve_filter<float>::convolve_filter(const univector_ref<const float>&, size_t);
-template convolve_filter<complex<float>>::convolve_filter(const univector_ref<const complex<float>>&, size_t);
-
-template void convolve_filter<float>::set_data(const univector_ref<const float>&);
-template void convolve_filter<complex<float>>::set_data(const univector_ref<const complex<float>>&);
-
-template void convolve_filter<float>::process_buffer(float* output, const float* input, size_t size);
-template void convolve_filter<complex<float>>::process_buffer(complex<float>* output,
-                                                              const complex<float>* input, size_t size);
-
-template void convolve_filter<float>::reset();
-template void convolve_filter<complex<float>>::reset();
-
-namespace intrinsics
+namespace impl
 {
-
-template univector<double> convolve<double>(const univector_ref<const double>&,
-                                            const univector_ref<const double>&);
-template univector<complex<double>> convolve<complex<double>>(const univector_ref<const complex<double>>&,
-                                                              const univector_ref<const complex<double>>&);
-template univector<double> correlate<double>(const univector_ref<const double>&,
-                                             const univector_ref<const double>&);
-template univector<complex<double>> correlate<complex<double>>(const univector_ref<const complex<double>>&,
-                                                               const univector_ref<const complex<double>>&);
-
-template univector<double> autocorrelate<double>(const univector_ref<const double>&);
-template univector<complex<double>> autocorrelate<complex<double>>(
-    const univector_ref<const complex<double>>&);
-
-} // namespace intrinsics
-
-template convolve_filter<double>::convolve_filter(size_t, size_t);
-template convolve_filter<complex<double>>::convolve_filter(size_t, size_t);
-
-template convolve_filter<double>::convolve_filter(const univector_ref<const double>&, size_t);
-template convolve_filter<complex<double>>::convolve_filter(const univector_ref<const complex<double>>&,
-                                                           size_t);
-
-template void convolve_filter<double>::set_data(const univector_ref<const double>&);
-template void convolve_filter<complex<double>>::set_data(const univector_ref<const complex<double>>&);
-
-template void convolve_filter<double>::process_buffer(double* output, const double* input, size_t size);
-template void convolve_filter<complex<double>>::process_buffer(complex<double>* output,
-                                                               const complex<double>* input, size_t size);
-
-template void convolve_filter<double>::reset();
-template void convolve_filter<complex<double>>::reset();
 
 template <typename T>
-filter<T>* make_convolve_filter(const univector_ref<const T>& taps, size_t block_size)
+univector<T> convolve(const univector_ref<const T>& src1, const univector_ref<const T>& src2, bool correlate)
 {
-    return new convolve_filter<T>(taps, block_size);
+    using ST                          = subtype<T>;
+    const size_t size                 = next_poweroftwo(src1.size() + src2.size() - 1);
+    univector<complex<ST>> src1padded = src1;
+    univector<complex<ST>> src2padded;
+    if (correlate)
+        src2padded = reverse(src2);
+    else
+        src2padded = src2;
+    src1padded.resize(size);
+    src2padded.resize(size);
+
+    dft_plan_ptr<ST> dft = dft_cache::instance().get(ctype_t<ST>(), size);
+    univector<u8> temp(dft->temp_size);
+    dft->execute(src1padded, src1padded, temp);
+    dft->execute(src2padded, src2padded, temp);
+    src1padded = src1padded * src2padded;
+    dft->execute(src1padded, src1padded, temp, true);
+    const ST invsize = reciprocal<ST>(static_cast<ST>(size));
+    return truncate(real(src1padded), src1.size() + src2.size() - 1) * invsize;
+}
+template univector<f32> convolve<f32>(const univector_ref<const f32>&, const univector_ref<const f32>&, bool);
+template univector<f64> convolve<f64>(const univector_ref<const f64>&, const univector_ref<const f64>&, bool);
+template univector<c32> convolve<c32>(const univector_ref<const c32>&, const univector_ref<const c32>&, bool);
+template univector<c64> convolve<c64>(const univector_ref<const c64>&, const univector_ref<const c64>&, bool);
+
+template <typename T>
+void convolve_filter<T>::process_buffer_impl(T* output, const T* input, size_t size)
+{
+    // Note that the conditionals in the following algorithm are meant to
+    // reduce complexity in the common cases of either processing complete
+    // blocks (processing == block_size) or only one segment.
+
+    // For complex filtering, use CCs pack format to omit special processing in fft_multiply[_accumulate].
+    const dft_pack_format fft_multiply_pack = this->real_fft ? dft_pack_format::Perm : dft_pack_format::CCs;
+
+    size_t processed = 0;
+    while (processed < size)
+    {
+        // Calculate how many samples to process this iteration.
+        auto const processing = std::min(size - processed, this->block_size - this->input_position);
+
+        // Prepare input to forward FFT:
+        if (processing == this->block_size)
+        {
+            // No need to work with saved_input.
+            builtin_memcpy(this->scratch1.data(), input + processed, processing * sizeof(T));
+        }
+        else
+        {
+            // Append this iteration's input to the saved_input current block.
+            builtin_memcpy(this->saved_input.data() + this->input_position, input + processed,
+                           processing * sizeof(T));
+            builtin_memcpy(this->scratch1.data(), this->saved_input.data(), this->block_size * sizeof(T));
+        }
+
+        // Forward FFT saved_input block.
+        this->fft.execute(this->segments[this->position], this->scratch1, this->temp);
+
+        if (this->segments.size() == 1)
+        {
+            // Just one segment/block of history.
+            // Y_k = H * X_k
+            fft_multiply(this->cscratch, this->ir_segments[0], this->segments[0], fft_multiply_pack);
+        }
+        else
+        {
+            // More than one segment/block of history so this is more involved.
+            if (this->input_position == 0)
+            {
+                // At the start of an input block, we premultiply the history from
+                // previous input blocks with the extended filter blocks.
+
+                // Y_(k-i,i) = H_i * X_(k-i)
+                // premul += Y_(k-i,i) for i=1,...,N
+
+                fft_multiply(this->premul, this->ir_segments[1],
+                             this->segments[(this->position + 1) % this->segments.size()], fft_multiply_pack);
+                for (size_t i = 2; i < this->segments.size(); i++)
+                {
+                    const size_t n = (this->position + i) % this->segments.size();
+                    fft_multiply_accumulate(this->premul, this->ir_segments[i], this->segments[n],
+                                            fft_multiply_pack);
+                }
+            }
+            // Y_(k,0) = H_0 * X_k
+            // Y_k = premul + Y_(k,0)
+            fft_multiply_accumulate(this->cscratch, this->premul, this->ir_segments[0],
+                                    this->segments[this->position], fft_multiply_pack);
+        }
+        // y_k = IFFT( Y_k )
+        this->fft.execute(this->scratch2, this->cscratch, this->temp, cinvert_t{});
+
+        // z_k = y_k + overlap
+        process(make_univector(output + processed, processing),
+                this->scratch2.slice(this->input_position, processing) +
+                    this->overlap.slice(this->input_position, processing));
+
+        this->input_position += processing;
+        processed += processing;
+
+        // If a whole block was processed, prepare for next block.
+        if (this->input_position == this->block_size)
+        {
+            // Input block k is complete. Move to (k+1)-th input block.
+            this->input_position = 0;
+
+            // Zero out the saved_input if it will be used in the next iteration.
+            auto const remaining = size - processed;
+            if (remaining < this->block_size && remaining > 0)
+            {
+                process(this->saved_input, zeros());
+            }
+
+            builtin_memcpy(this->overlap.data(), this->scratch2.data() + this->block_size,
+                           this->block_size * sizeof(T));
+
+            this->position = this->position > 0 ? this->position - 1 : this->segments.size() - 1;
+        }
+    }
 }
 
-template filter<float>* make_convolve_filter(const univector_ref<const float>&, size_t);
-template filter<complex<float>>* make_convolve_filter(const univector_ref<const complex<float>>&, size_t);
-template filter<double>* make_convolve_filter(const univector_ref<const double>&, size_t);
-template filter<complex<double>>* make_convolve_filter(const univector_ref<const complex<double>>&, size_t);
+template class convolve_filter<float>;
+template class convolve_filter<double>;
+template class convolve_filter<complex<float>>;
+template class convolve_filter<complex<double>>;
+
+} // namespace impl
 
 } // namespace CMT_ARCH_NAME
+
+#ifdef CMT_MULTI_NEEDS_GATE
+namespace internal_generic
+{
+template <typename T>
+univector<T> convolve(const univector_ref<const T>& src1, const univector_ref<const T>& src2, bool correlate)
+{
+    CMT_MULTI_GATE(return ns::impl::convolve(src1, src2, correlate));
+}
+
+template univector<f32> convolve<f32>(const univector_ref<const f32>&, const univector_ref<const f32>&, bool);
+template univector<f64> convolve<f64>(const univector_ref<const f64>&, const univector_ref<const f64>&, bool);
+template univector<c32> convolve<c32>(const univector_ref<const c32>&, const univector_ref<const c32>&, bool);
+template univector<c64> convolve<c64>(const univector_ref<const c64>&, const univector_ref<const c64>&, bool);
+
+} // namespace internal_generic
+
+template <typename T>
+void convolve_filter<T>::process_buffer(T* output, const T* input, size_t size)
+{
+    CMT_MULTI_GATE(
+        reinterpret_cast<ns::impl::convolve_filter<T>*>(this)->process_buffer_impl(output, input, size));
+}
+
+template class convolve_filter<float>;
+template class convolve_filter<double>;
+template class convolve_filter<complex<float>>;
+template class convolve_filter<complex<double>>;
+#endif
+
 } // namespace kfr

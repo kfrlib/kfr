@@ -24,19 +24,37 @@
   See https://www.kfrlib.com for details.
  */
 
-#ifdef FLOAT
 #include <kfr/dft/fft.hpp>
+#include <kfr/multiarch.h>
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+
+CMT_MULTI_PROTO(namespace impl {
+    template <typename T>
+    void dft_initialize(dft_plan<T> & plan);
+    template <typename T>
+    void dft_real_initialize(dft_plan_real<T> & plan);
+})
+
+#ifdef CMT_MULTI_NEEDS_GATE
+
+template <typename T>
+void dft_initialize(dft_plan<T>& plan)
 {
-namespace impl
+    CMT_MULTI_GATE(ns::impl::dft_initialize(plan));
+}
+template <typename T>
+void dft_real_initialize(dft_plan_real<T>& plan)
 {
-template void dft_initialize<FLOAT>(dft_plan<FLOAT>& plan);
-template void dft_real_initialize<FLOAT>(dft_plan_real<FLOAT>& plan);
-} // namespace impl
-} // namespace CMT_ARCH_NAME
-} // namespace kfr
+    CMT_MULTI_GATE(ns::impl::dft_real_initialize(plan));
+}
+
+template void dft_initialize<float>(dft_plan<float>&);
+template void dft_initialize<double>(dft_plan<double>&);
+template void dft_real_initialize<float>(dft_plan_real<float>&);
+template void dft_real_initialize<double>(dft_plan_real<double>&);
 
 #endif
+
+} // namespace kfr

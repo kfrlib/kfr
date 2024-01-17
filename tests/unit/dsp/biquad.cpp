@@ -112,6 +112,14 @@ TEST(biquad_lowpass2)
                       CHECK(absmaxof(choose_array<T>(test_vector_f32, test_vector_f64) - ir) == 0);
                   });
 }
+
+TEST(biquad_filter)
+{
+    biquad_params<float> params[16];
+    auto f = biquad_filter<float>(params);
+    float buf[256];
+    f.apply(buf);
+}
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
 

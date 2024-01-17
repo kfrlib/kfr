@@ -113,6 +113,7 @@ public:
     explicit expression_filter(expression_handle<T, 1> filter_expr) : filter_expr(std::move(filter_expr)) {}
 
 protected:
+    expression_filter() = default;
     void process_buffer(T* dest, const T* src, size_t size) override
     {
         substitute(filter_expr, to_handle(make_univector(src, size)));

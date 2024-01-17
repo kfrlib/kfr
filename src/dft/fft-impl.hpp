@@ -1906,8 +1906,10 @@ void from_fmt(size_t real_size, complex<T>* rtwiddle, complex<T>* out, const com
     cwrite<1>(out, dc);
 }
 
+#ifndef KFR_DFT_NO_NPo2
 template <typename T>
 void init_dft(dft_plan<T>* self, size_t size, dft_order);
+#endif
 
 template <typename T>
 KFR_INTRINSIC void initialize_stages(dft_plan<T>* self)
@@ -1926,6 +1928,8 @@ KFR_INTRINSIC void initialize_stages(dft_plan<T>* self)
     }
 }
 
+namespace impl
+{
 template <typename T>
 void dft_initialize(dft_plan<T>& plan)
 {
@@ -1935,6 +1939,7 @@ void dft_initialize(dft_plan<T>& plan)
     initialize_data(&plan);
     initialize_order(&plan);
 }
+} // namespace impl
 
 template <typename T>
 struct dft_stage_real_repack : dft_stage<T>
@@ -1977,6 +1982,8 @@ public:
     }
 };
 
+namespace impl
+{
 template <typename T>
 void dft_real_initialize(dft_plan_real<T>& plan)
 {
@@ -1989,6 +1996,7 @@ void dft_real_initialize(dft_plan_real<T>& plan)
     initialize_data(&plan);
     initialize_order(&plan);
 }
+} // namespace impl
 
 } // namespace CMT_ARCH_NAME
 

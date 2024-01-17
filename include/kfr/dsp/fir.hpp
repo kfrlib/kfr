@@ -39,8 +39,6 @@ CMT_PRAGMA_MSVC(warning(disable : 4244))
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
-{
 
 template <typename T, size_t Size>
 using fir_taps = univector<T, Size>;
@@ -89,6 +87,9 @@ struct moving_sum_state<U, tag_dynamic_vector>
     mutable univector<U> delayline;
     mutable size_t head_cursor, tail_cursor;
 };
+
+inline namespace CMT_ARCH_NAME
+{
 
 template <size_t tapcount, typename T, typename U, typename E1, bool stateless = false>
 struct expression_short_fir : expression_with_traits<E1>
@@ -281,6 +282,8 @@ short_fir(short_fir_state<next_poweroftwo(TapCount - 1) + 1, T, U>& state, E1&& 
         std::forward<E1>(e1), state);
 }
 
+} // namespace CMT_ARCH_NAME
+
 template <typename T, typename U = T>
 class fir_filter : public filter<U>
 {
@@ -297,34 +300,15 @@ public:
     }
 
 protected:
-    void process_buffer(U* dest, const U* src, size_t size) final
-    {
-        make_univector(dest, size) = fir(state, make_univector(src, size));
-    }
-    void process_expression(U* dest, const expression_handle<U, 1>& src, size_t size) final
-    {
-        make_univector(dest, size) = fir(state, src);
-    }
+    void process_buffer(U* dest, const U* src, size_t size) final;
+    void process_expression(U* dest, const expression_handle<U, 1>& src, size_t size) final;
 
-private:
     fir_state<T, U> state;
 };
 
 template <typename T, typename U = T>
 using filter_fir = fir_filter<T, U>;
 
-} // namespace CMT_ARCH_NAME
-
-CMT_MULTI_PROTO(template <typename U, typename T>
-                filter<U>* make_fir_filter(const univector_ref<const T>& taps);)
-
-#ifdef CMT_MULTI
-template <typename U, typename T>
-KFR_FUNCTION filter<U>* make_fir_filter(cpu_t cpu, const univector_ref<const T>& taps)
-{
-    CMT_MULTI_PROTO_GATE(make_fir_filter<U>(taps))
-}
-#endif
 } // namespace kfr
 
 CMT_PRAGMA_MSVC(warning(pop))

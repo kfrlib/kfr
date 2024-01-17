@@ -286,7 +286,7 @@ fft_specialization<double, 7>(avx2): 0, 128, 3072, 0, 1, 0, 0, 0, 1, 0, 0
 
 #### 2. Multiple architectures (best performance)
 
-Setting `KFR_ENABLE_DFT_MULTIARCH` to `ON` enables multiple architectures.
+Setting `KFR_ENABLE_MULTIARCH` to `ON` enables multiple architectures.
 In this case instead of a single `libkfr_dft.a` multiple arch-specific libraries will be installed.
 ```
 cmake -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DKFR_ENABLE_DFT_MULTIARCH=ON ..
@@ -341,7 +341,7 @@ cmake -GNinja -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCM
 ninja
 ninja install # This installs kfr_dft_sse2.lib kfr_dft_sse41.lib kfr_dft_avx.lib kfr_dft_avx2.lib kfr_dft_avx512.lib to CMAKE_BINARY_DIR/install
 ```
-`KFR_ENABLE_DFT_MULTIARCH=ON` is the key option here.
+`KFR_ENABLE_MULTIARCH=ON` is the key option here.
 ```
 /WHOLEARCHIVE:"PATH-TO-INSTALLED-KFR/lib/kfr_dft_sse2.lib" "PATH-TO-INSTALLED-KFR/lib/kfr_dft_sse41.lib" "PATH-TO-INSTALLED-KFR/lib/kfr_dft_avx.lib" "PATH-TO-INSTALLED-KFR/lib/kfr_dft_avx2.lib" "PATH-TO-INSTALLED-KFR/lib/kfr_dft_avx512.lib"
 ```

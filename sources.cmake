@@ -20,6 +20,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/cident.h
     ${PROJECT_SOURCE_DIR}/include/kfr/config.h
     ${PROJECT_SOURCE_DIR}/include/kfr/kfr.h
+    ${PROJECT_SOURCE_DIR}/include/kfr/multiarch.h
     ${PROJECT_SOURCE_DIR}/include/kfr/base/basic_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/conversion.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/endianness.hpp
@@ -318,6 +319,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/cident.h
     ${PROJECT_SOURCE_DIR}/include/kfr/config.h
     ${PROJECT_SOURCE_DIR}/include/kfr/kfr.h
+    ${PROJECT_SOURCE_DIR}/include/kfr/multiarch.h
     ${PROJECT_SOURCE_DIR}/include/kfr/base/basic_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/conversion.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/endianness.hpp
@@ -457,8 +459,17 @@ set(
     ${PROJECT_SOURCE_DIR}/src/dft/convolution-impl.cpp
     ${PROJECT_SOURCE_DIR}/src/dft/dft-impl-f32.cpp
     ${PROJECT_SOURCE_DIR}/src/dft/dft-impl-f64.cpp
+    ${PROJECT_SOURCE_DIR}/src/dft/dft.cpp
     ${PROJECT_SOURCE_DIR}/src/dft/fft-impl-f32.cpp
     ${PROJECT_SOURCE_DIR}/src/dft/fft-impl-f64.cpp
+)
+
+    
+set(
+    KFR_DSP_SRC
+    ${PROJECT_SOURCE_DIR}/src/dsp/biquad.cpp
+    ${PROJECT_SOURCE_DIR}/src/dsp/fir.cpp
+    ${PROJECT_SOURCE_DIR}/src/dsp/sample_rate_conversion.cpp
 )
 
     

@@ -42,41 +42,40 @@ CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
-{
 
-namespace intrinsics
+namespace internal_generic
 {
 template <typename T>
-univector<T> convolve(const univector_ref<const T>& src1, const univector_ref<const T>& src2);
-template <typename T>
-univector<T> correlate(const univector_ref<const T>& src1, const univector_ref<const T>& src2);
-template <typename T>
-univector<T> autocorrelate(const univector_ref<const T>& src1);
-} // namespace intrinsics
+univector<T> convolve(const univector_ref<const T>& src1, const univector_ref<const T>& src2,
+                      bool correlate = false);
+}
 
 /// @brief Convolution
-template <typename T, univector_tag Tag1, univector_tag Tag2>
-univector<T> convolve(const univector<T, Tag1>& src1, const univector<T, Tag2>& src2)
+template <typename T1, typename T2, univector_tag Tag1, univector_tag Tag2,
+          CMT_ENABLE_IF(std::is_same_v<std::remove_const_t<T1>, std::remove_const_t<T2>>)>
+univector<std::remove_const_t<T1>> convolve(const univector<T1, Tag1>& src1, const univector<T2, Tag2>& src2)
 {
-    return intrinsics::convolve(src1.slice(), src2.slice());
+    return internal_generic::convolve(src1.slice(), src2.slice());
 }
 
 /// @brief Correlation
-template <typename T, univector_tag Tag1, univector_tag Tag2>
-univector<T> correlate(const univector<T, Tag1>& src1, const univector<T, Tag2>& src2)
+template <typename T1, typename T2, univector_tag Tag1, univector_tag Tag2,
+          CMT_ENABLE_IF(std::is_same_v<std::remove_const_t<T1>, std::remove_const_t<T2>>)>
+univector<std::remove_const_t<T1>> correlate(const univector<T1, Tag1>& src1, const univector<T2, Tag2>& src2)
 {
-    return intrinsics::correlate(src1.slice(), src2.slice());
+    return internal_generic::convolve(src1.slice(), src2.slice(), true);
 }
 
 /// @brief Auto-correlation
 template <typename T, univector_tag Tag1>
-univector<T> autocorrelate(const univector<T, Tag1>& src)
+univector<std::remove_const_t<T>> autocorrelate(const univector<T, Tag1>& src)
 {
-    return intrinsics::autocorrelate(src.slice());
+    univector<std::remove_const_t<T>> result = internal_generic::convolve(src.slice(), src.slice(), true);
+    result                                   = result.slice(result.size() / 2);
+    return result;
 }
 
-namespace internal
+namespace internal_generic
 {
 /// @brief Utility class to abstract real/complex differences
 template <typename T>
@@ -94,7 +93,7 @@ struct dft_conv_plan<complex<T>> : public dft_plan<T>
 
     size_t csize() const { return this->size; }
 };
-} // namespace internal
+} // namespace internal_generic
 
 /// @brief Convolution using Filter API
 template <typename T>
@@ -118,7 +117,7 @@ protected:
 
     using ST                       = subtype<T>;
     constexpr static bool real_fft = !std::is_same_v<T, complex<ST>>;
-    using plan_t                   = internal::dft_conv_plan<T>;
+    using plan_t                   = internal_generic::dft_conv_plan<T>;
 
     // Length of filter data.
     size_t data_size;
@@ -147,17 +146,6 @@ protected:
     // Overlap saved from previous block to add into current block.
     univector<T> overlap;
 };
-} // namespace CMT_ARCH_NAME
 
-CMT_MULTI_PROTO(template <typename T>
-                filter<T>* make_convolve_filter(const univector_ref<const T>& taps, size_t block_size);)
-
-#ifdef CMT_MULTI
-template <typename T>
-KFR_FUNCTION filter<T>* make_convolve_filter(cpu_t cpu, const univector_ref<const T>& taps, size_t block_size)
-{
-    CMT_MULTI_PROTO_GATE(make_convolve_filter<T>(taps, block_size))
-}
-#endif
 } // namespace kfr
 CMT_PRAGMA_GNU(GCC diagnostic pop)

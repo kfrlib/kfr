@@ -89,9 +89,6 @@ struct biquad_params
     biquad_params<T> normalized_all() const { return normalized_a0().normalized_b0(); }
 };
 
-inline namespace CMT_ARCH_NAME
-{
-
 template <typename T, size_t filters>
 struct biquad_state
 {
@@ -139,6 +136,9 @@ struct biquad_block
     }
 };
 
+inline namespace CMT_ARCH_NAME
+{
+
 template <size_t filters, typename T, typename E1>
 struct expression_biquads_l : public expression_with_traits<E1>
 {
@@ -170,13 +170,14 @@ struct expression_biquads : expression_with_traits<E1>
 };
 
 template <size_t filters, typename T>
-KFR_INTRINSIC vec<T, filters> biquad_process(const biquad_block<T, filters>& bq,
-                                             biquad_state<T, filters>& state, const vec<T, filters>& in)
+KFR_INTRINSIC T biquad_process(vec<T, filters>& out, const biquad_block<T, filters>& bq,
+                               biquad_state<T, filters>& state, T in0, const vec<T, filters>& delayline)
 {
-    const vec<T, filters> out = bq.b0 * in + state.s1;
-    state.s1                  = state.s2 + bq.b1 * in - bq.a1 * out;
-    state.s2                  = bq.b2 * in - bq.a2 * out;
-    return out;
+    vec<T, filters> in = insertleft(in0, delayline);
+    out                = bq.b0 * in + state.s1;
+    state.s1           = state.s2 + bq.b1 * in - bq.a1 * out;
+    state.s2           = bq.b2 * in - bq.a2 * out;
+    return out[filters - 1];
 }
 
 template <size_t filters, typename T, typename E1, size_t N>
@@ -189,8 +190,7 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_biquads_l<filters, T, E1>&
     CMT_LOOP_UNROLL
     for (size_t i = 0; i < N; i++)
     {
-        self.state.out = biquad_process(self.bq, self.state, insertleft(in[i], self.state.out));
-        out[i]         = self.state.out[filters - 1];
+        out[i] = biquad_process(self.state.out, self.bq, self.state, in[i], self.state.out);
     }
 
     return out;
@@ -204,7 +204,7 @@ KFR_INTRINSIC void begin_pass(const expression_biquads<filters, T, E1>& self, sh
     for (index_t i = 0; i < filters - 1; i++)
     {
         const vec<T, 1> in = i < size ? get_elements(self.first(), shape<1>{ i }, axis_params_v<0, 1>) : 0;
-        self.state.out     = biquad_process(self.bq, self.state, insertleft(in[0], self.state.out));
+        biquad_process(self.state.out, self.bq, self.state, in[0], self.state.out);
     }
 }
 template <size_t filters, typename T, typename E1>
@@ -226,8 +226,7 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_biquads<filters, T, E1>& s
         CMT_LOOP_UNROLL
         for (size_t i = 0; i < N; i++)
         {
-            self.state.out = biquad_process(self.bq, self.state, insertleft(in[i], self.state.out));
-            out[i]         = self.state.out[filters - 1];
+            out[i] = biquad_process(self.state.out, self.bq, self.state, in[i], self.state.out);
         }
         if (index.front() + N == self.block_end)
             self.saved_state = self.state;
@@ -237,8 +236,7 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_biquads<filters, T, E1>& s
         CMT_LOOP_UNROLL
         for (size_t i = 0; i < N; i++)
         {
-            self.state.out = biquad_process(self.bq, self.state, insertleft(T(0), self.state.out));
-            out[i]         = self.state.out[filters - 1];
+            out[i] = biquad_process(self.state.out, self.bq, self.state, T(0), self.state.out);
         }
     }
     else
@@ -248,14 +246,12 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_biquads<filters, T, E1>& s
         {
             const vec<T, 1> in =
                 get_elements(self.first(), index.add_at(i, cval<index_t, 0>), axis_params_v<0, 1>);
-            self.state.out = biquad_process(self.bq, self.state, insertleft(in[0], self.state.out));
-            out[i]         = self.state.out[filters - 1];
+            out[i] = biquad_process(self.state.out, self.bq, self.state, in[0], self.state.out);
         }
         self.saved_state = self.state;
         for (; i < N; i++)
         {
-            self.state.out = biquad_process(self.bq, self.state, insertleft(T(0), self.state.out));
-            out[i]         = self.state.out[filters - 1];
+            out[i] = biquad_process(self.state.out, self.bq, self.state, T(0), self.state.out);
         }
     }
     return out;
@@ -324,14 +320,13 @@ KFR_FUNCTION expression_handle<T, 1> biquad(const std::vector<biquad_params<T>>&
     return biquad<maxfiltercount>(bq.data(), bq.size(), std::forward<E1>(e1));
 }
 
-template <typename T, size_t maxfiltercount = 4>
+} // namespace CMT_ARCH_NAME
+
+template <typename T>
 class biquad_filter : public expression_filter<T>
 {
 public:
-    biquad_filter(const biquad_params<T>* bq, size_t count)
-        : expression_filter<T>(biquad<maxfiltercount>(bq, count, placeholder<T>()))
-    {
-    }
+    biquad_filter(const biquad_params<T>* bq, size_t count);
 
     template <size_t N>
     biquad_filter(const biquad_params<T> (&bq)[N]) : biquad_filter(bq, N)
@@ -340,17 +335,4 @@ public:
 
     biquad_filter(const std::vector<biquad_params<T>>& bq) : biquad_filter(bq.data(), bq.size()) {}
 };
-
-} // namespace CMT_ARCH_NAME
-
-CMT_MULTI_PROTO(template <typename T, size_t maxfiltercount>
-                filter<T>* make_biquad_filter(const biquad_params<T>* bq, size_t count);)
-
-#ifdef CMT_MULTI
-template <typename T, size_t maxfiltercount>
-KFR_FUNCTION filter<T>* make_biquad_filter(cpu_t cpu, const biquad_params<T>* bq, size_t count)
-{
-    CMT_MULTI_PROTO_GATE(make_biquad_filter<T, maxfiltercount>(bq, count))
-}
-#endif
 } // namespace kfr

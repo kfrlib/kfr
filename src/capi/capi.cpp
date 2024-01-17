@@ -28,349 +28,452 @@
 #include <kfr/capi.h>
 #include <kfr/dft.hpp>
 #include <kfr/dsp.hpp>
+#include <kfr/multiarch.h>
 
 namespace kfr
 {
+static thread_local std::array<char, 256> error;
+
+void reset_error() { std::fill(error.begin(), error.end(), 0); }
+void set_error(std::string_view s)
+{
+    size_t n = std::min(s.size(), error.size() - 1);
+    auto end = std::copy_n(s.begin(), n, error.begin());
+    std::fill(end, error.end(), 0);
+}
+
+template <typename Fn, typename R = std::invoke_result_t<Fn>, typename T>
+static R try_fn(Fn&& fn, T fallback)
+{
+    try
+    {
+        auto result = fn();
+        reset_error();
+        return result;
+    }
+    catch (std::exception& e)
+    {
+        set_error(e.what());
+        return fallback;
+    }
+    catch (...)
+    {
+        set_error("(unknown exception)");
+        return fallback;
+    }
+}
+
+template <typename Fn>
+static void try_fn(Fn&& fn)
+{
+    try
+    {
+        fn();
+        reset_error();
+    }
+    catch (std::exception& e)
+    {
+        set_error(e.what());
+    }
+    catch (...)
+    {
+        set_error("(unknown exception)");
+    }
+}
 
 extern "C"
 {
-#define KFR_ENABLED_ARCHS "sse2,sse3,ssse3,sse4.1,avx,avx2,avx512"
-    const char* kfr_version_string()
+    KFR_API_SPEC const char* kfr_version_string()
     {
-        return "KFR " KFR_VERSION_STRING KFR_DEBUG_STR " " KFR_ENABLED_ARCHS " " CMT_ARCH_BITNESS_NAME
+        return "KFR " KFR_VERSION_STRING KFR_DEBUG_STR " " KFR_ENABLED_ARCHS_LIST " " CMT_ARCH_BITNESS_NAME
                " (" CMT_COMPILER_FULL_NAME "/" CMT_OS_NAME ")" KFR_BUILD_DETAILS_1 KFR_BUILD_DETAILS_2;
     }
-    uint32_t kfr_version() { return KFR_VERSION; }
-    const char* kfr_enabled_archs() { return KFR_ENABLED_ARCHS; }
-    int kfr_current_arch() { return static_cast<int>(get_cpu()); }
+    KFR_API_SPEC uint32_t kfr_version() { return KFR_VERSION; }
+    KFR_API_SPEC const char* kfr_enabled_archs() { return KFR_ENABLED_ARCHS_LIST; }
+    KFR_API_SPEC int kfr_current_arch() { return static_cast<int>(get_cpu()); }
 
-    void* kfr_allocate(size_t size) { return details::aligned_malloc(size, KFR_DEFAULT_ALIGNMENT); }
-    void* kfr_allocate_aligned(size_t size, size_t alignment)
+    KFR_API_SPEC const char* kfr_last_error() { return error.data(); }
+
+    KFR_API_SPEC void* kfr_allocate(size_t size)
+    {
+        return details::aligned_malloc(size, KFR_DEFAULT_ALIGNMENT);
+    }
+    KFR_API_SPEC void* kfr_allocate_aligned(size_t size, size_t alignment)
     {
         return details::aligned_malloc(size, alignment);
     }
-    void kfr_deallocate(void* ptr) { return details::aligned_free(ptr); }
-    size_t kfr_allocated_size(void* ptr) { return details::aligned_size(ptr); }
+    KFR_API_SPEC void kfr_deallocate(void* ptr) { return details::aligned_free(ptr); }
+    KFR_API_SPEC size_t kfr_allocated_size(void* ptr) { return details::aligned_size(ptr); }
 
-    void* kfr_add_ref(void* ptr)
+    KFR_API_SPEC void* kfr_add_ref(void* ptr)
     {
         details::aligned_add_ref(ptr);
         return ptr;
     }
-    void kfr_release(void* ptr) { details::aligned_release(ptr); }
+    KFR_API_SPEC void kfr_release(void* ptr) { details::aligned_release(ptr); }
 
-    void* kfr_reallocate(void* ptr, size_t new_size)
+    KFR_API_SPEC void* kfr_reallocate(void* ptr, size_t new_size)
     {
         return details::aligned_reallocate(ptr, new_size, KFR_DEFAULT_ALIGNMENT);
     }
-    void* kfr_reallocate_aligned(void* ptr, size_t new_size, size_t alignment)
+    KFR_API_SPEC void* kfr_reallocate_aligned(void* ptr, size_t new_size, size_t alignment)
     {
         return details::aligned_reallocate(ptr, new_size, alignment);
     }
 
-    KFR_DFT_PLAN_F32* kfr_dft_create_plan_f32(size_t size)
+    KFR_API_SPEC KFR_DFT_PLAN_F32* kfr_dft_create_plan_f32(size_t size)
     {
-        if (size < 2)
-            return nullptr;
-        if (size > 16777216)
-            return nullptr;
-        return reinterpret_cast<KFR_DFT_PLAN_F32*>(new kfr::dft_plan<float>(cpu_t::runtime, size));
+        return try_fn([&]() { return reinterpret_cast<KFR_DFT_PLAN_F32*>(new kfr::dft_plan<float>(size)); },
+                      nullptr);
     }
-    KFR_DFT_PLAN_F64* kfr_dft_create_plan_f64(size_t size)
+    KFR_API_SPEC KFR_DFT_PLAN_F64* kfr_dft_create_plan_f64(size_t size)
     {
-        if (size < 2)
-            return nullptr;
-        if (size > 16777216)
-            return nullptr;
-        return reinterpret_cast<KFR_DFT_PLAN_F64*>(new kfr::dft_plan<double>(cpu_t::runtime, size));
+        return try_fn([&]() { return reinterpret_cast<KFR_DFT_PLAN_F64*>(new kfr::dft_plan<double>(size)); },
+                      nullptr);
     }
 
-    void kfr_dft_dump_f32(KFR_DFT_PLAN_F32* plan) { reinterpret_cast<kfr::dft_plan<float>*>(plan)->dump(); }
-    void kfr_dft_dump_f64(KFR_DFT_PLAN_F64* plan) { reinterpret_cast<kfr::dft_plan<double>*>(plan)->dump(); }
-
-    size_t kfr_dft_get_size_f32(KFR_DFT_PLAN_F32* plan)
+    KFR_API_SPEC void kfr_dft_dump_f32(KFR_DFT_PLAN_F32* plan)
     {
-        return reinterpret_cast<kfr::dft_plan<float>*>(plan)->size;
+        try_fn([&] { reinterpret_cast<kfr::dft_plan<float>*>(plan)->dump(); });
     }
-    size_t kfr_dft_get_size_f64(KFR_DFT_PLAN_F64* plan)
+    KFR_API_SPEC void kfr_dft_dump_f64(KFR_DFT_PLAN_F64* plan)
     {
-        return reinterpret_cast<kfr::dft_plan<double>*>(plan)->size;
+        try_fn([&] { reinterpret_cast<kfr::dft_plan<double>*>(plan)->dump(); });
     }
 
-    size_t kfr_dft_get_temp_size_f32(KFR_DFT_PLAN_F32* plan)
+    KFR_API_SPEC size_t kfr_dft_get_size_f32(KFR_DFT_PLAN_F32* plan)
     {
-        return reinterpret_cast<kfr::dft_plan<float>*>(plan)->temp_size;
+        return try_fn([&]() { return reinterpret_cast<kfr::dft_plan<float>*>(plan)->size; }, 0);
     }
-    size_t kfr_dft_get_temp_size_f64(KFR_DFT_PLAN_F64* plan)
+    KFR_API_SPEC size_t kfr_dft_get_size_f64(KFR_DFT_PLAN_F64* plan)
     {
-        return reinterpret_cast<kfr::dft_plan<double>*>(plan)->temp_size;
-    }
-
-    void kfr_dft_execute_f32(KFR_DFT_PLAN_F32* plan, kfr_c32* out, const kfr_c32* in, uint8_t* temp)
-    {
-        reinterpret_cast<kfr::dft_plan<float>*>(plan)->execute(
-            reinterpret_cast<kfr::complex<float>*>(out), reinterpret_cast<const kfr::complex<float>*>(in),
-            temp, kfr::cfalse);
-    }
-    void kfr_dft_execute_f64(KFR_DFT_PLAN_F64* plan, kfr_c64* out, const kfr_c64* in, uint8_t* temp)
-    {
-        reinterpret_cast<kfr::dft_plan<double>*>(plan)->execute(
-            reinterpret_cast<kfr::complex<double>*>(out), reinterpret_cast<const kfr::complex<double>*>(in),
-            temp, kfr::cfalse);
-    }
-    void kfr_dft_execute_inverse_f32(KFR_DFT_PLAN_F32* plan, kfr_c32* out, const kfr_c32* in, uint8_t* temp)
-    {
-        reinterpret_cast<kfr::dft_plan<float>*>(plan)->execute(
-            reinterpret_cast<kfr::complex<float>*>(out), reinterpret_cast<const kfr::complex<float>*>(in),
-            temp, kfr::ctrue);
-    }
-    void kfr_dft_execute_inverse_f64(KFR_DFT_PLAN_F64* plan, kfr_c64* out, const kfr_c64* in, uint8_t* temp)
-    {
-        reinterpret_cast<kfr::dft_plan<double>*>(plan)->execute(
-            reinterpret_cast<kfr::complex<double>*>(out), reinterpret_cast<const kfr::complex<double>*>(in),
-            temp, kfr::ctrue);
+        return try_fn([&]() { return reinterpret_cast<kfr::dft_plan<double>*>(plan)->size; }, 0);
     }
 
-    void kfr_dft_delete_plan_f32(KFR_DFT_PLAN_F32* plan)
+    KFR_API_SPEC size_t kfr_dft_get_temp_size_f32(KFR_DFT_PLAN_F32* plan)
     {
-        delete reinterpret_cast<kfr::dft_plan<float>*>(plan);
+        return try_fn([&]() { return reinterpret_cast<kfr::dft_plan<float>*>(plan)->temp_size; }, 0);
     }
-    void kfr_dft_delete_plan_f64(KFR_DFT_PLAN_F64* plan)
+    KFR_API_SPEC size_t kfr_dft_get_temp_size_f64(KFR_DFT_PLAN_F64* plan)
     {
-        delete reinterpret_cast<kfr::dft_plan<double>*>(plan);
+        return try_fn([&]() { return reinterpret_cast<kfr::dft_plan<double>*>(plan)->temp_size; }, 0);
+    }
+
+    KFR_API_SPEC void kfr_dft_execute_f32(KFR_DFT_PLAN_F32* plan, kfr_c32* out, const kfr_c32* in,
+                                          uint8_t* temp)
+    {
+        try_fn(
+            [&]()
+            {
+                reinterpret_cast<kfr::dft_plan<float>*>(plan)->execute(
+                    reinterpret_cast<kfr::complex<float>*>(out),
+                    reinterpret_cast<const kfr::complex<float>*>(in), temp, kfr::cfalse);
+            });
+    }
+    KFR_API_SPEC void kfr_dft_execute_f64(KFR_DFT_PLAN_F64* plan, kfr_c64* out, const kfr_c64* in,
+                                          uint8_t* temp)
+    {
+        try_fn(
+            [&]()
+            {
+                reinterpret_cast<kfr::dft_plan<double>*>(plan)->execute(
+                    reinterpret_cast<kfr::complex<double>*>(out),
+                    reinterpret_cast<const kfr::complex<double>*>(in), temp, kfr::cfalse);
+            });
+    }
+    KFR_API_SPEC void kfr_dft_execute_inverse_f32(KFR_DFT_PLAN_F32* plan, kfr_c32* out, const kfr_c32* in,
+                                                  uint8_t* temp)
+    {
+        try_fn(
+            [&]()
+            {
+                reinterpret_cast<kfr::dft_plan<float>*>(plan)->execute(
+                    reinterpret_cast<kfr::complex<float>*>(out),
+                    reinterpret_cast<const kfr::complex<float>*>(in), temp, kfr::ctrue);
+            });
+    }
+    KFR_API_SPEC void kfr_dft_execute_inverse_f64(KFR_DFT_PLAN_F64* plan, kfr_c64* out, const kfr_c64* in,
+                                                  uint8_t* temp)
+    {
+        try_fn(
+            [&]()
+            {
+                reinterpret_cast<kfr::dft_plan<double>*>(plan)->execute(
+                    reinterpret_cast<kfr::complex<double>*>(out),
+                    reinterpret_cast<const kfr::complex<double>*>(in), temp, kfr::ctrue);
+            });
+    }
+
+    KFR_API_SPEC void kfr_dft_delete_plan_f32(KFR_DFT_PLAN_F32* plan)
+    {
+        try_fn([&]() { delete reinterpret_cast<kfr::dft_plan<float>*>(plan); });
+    }
+    KFR_API_SPEC void kfr_dft_delete_plan_f64(KFR_DFT_PLAN_F64* plan)
+    {
+        try_fn([&]() { delete reinterpret_cast<kfr::dft_plan<double>*>(plan); });
     }
 
     // Real DFT plans
 
-    KFR_DFT_REAL_PLAN_F32* kfr_dft_real_create_plan_f32(size_t size, KFR_DFT_PACK_FORMAT pack_format)
+    KFR_API_SPEC KFR_DFT_REAL_PLAN_F32* kfr_dft_real_create_plan_f32(size_t size,
+                                                                     KFR_DFT_PACK_FORMAT pack_format)
     {
-        if (size < 4)
-            return nullptr;
-        if (size > 16777216)
-            return nullptr;
-        return reinterpret_cast<KFR_DFT_REAL_PLAN_F32*>(
-            new kfr::dft_plan_real<float>(cpu_t::runtime, size, static_cast<dft_pack_format>(pack_format)));
+        return try_fn(
+            [&]()
+            {
+                return reinterpret_cast<KFR_DFT_REAL_PLAN_F32*>(
+                    new kfr::dft_plan_real<float>(size, static_cast<dft_pack_format>(pack_format)));
+            },
+            nullptr);
     }
-    KFR_DFT_REAL_PLAN_F64* kfr_dft_real_create_plan_f64(size_t size, KFR_DFT_PACK_FORMAT pack_format)
+    KFR_API_SPEC KFR_DFT_REAL_PLAN_F64* kfr_dft_real_create_plan_f64(size_t size,
+                                                                     KFR_DFT_PACK_FORMAT pack_format)
     {
-        if (size < 4)
-            return nullptr;
-        if (size > 16777216)
-            return nullptr;
-        return reinterpret_cast<KFR_DFT_REAL_PLAN_F64*>(
-            new kfr::dft_plan_real<double>(cpu_t::runtime, size, static_cast<dft_pack_format>(pack_format)));
-    }
-
-    void kfr_dft_real_dump_f32(KFR_DFT_REAL_PLAN_F32* plan)
-    {
-        reinterpret_cast<kfr::dft_plan_real<float>*>(plan)->dump();
-    }
-    void kfr_dft_real_dump_f64(KFR_DFT_REAL_PLAN_F64* plan)
-    {
-        reinterpret_cast<kfr::dft_plan_real<double>*>(plan)->dump();
+        return try_fn(
+            [&]()
+            {
+                return reinterpret_cast<KFR_DFT_REAL_PLAN_F64*>(
+                    new kfr::dft_plan_real<double>(size, static_cast<dft_pack_format>(pack_format)));
+            },
+            nullptr);
     }
 
-    size_t kfr_dft_real_get_size_f32(KFR_DFT_REAL_PLAN_F32* plan)
+    KFR_API_SPEC void kfr_dft_real_dump_f32(KFR_DFT_REAL_PLAN_F32* plan)
     {
-        return reinterpret_cast<kfr::dft_plan<float>*>(plan)->size;
+        try_fn([&]() { reinterpret_cast<kfr::dft_plan_real<float>*>(plan)->dump(); });
     }
-    size_t kfr_dft_real_get_size_f64(KFR_DFT_REAL_PLAN_F64* plan)
+    KFR_API_SPEC void kfr_dft_real_dump_f64(KFR_DFT_REAL_PLAN_F64* plan)
     {
-        return reinterpret_cast<kfr::dft_plan<double>*>(plan)->size;
-    }
-
-    size_t kfr_dft_real_get_temp_size_f32(KFR_DFT_REAL_PLAN_F32* plan)
-    {
-        return reinterpret_cast<kfr::dft_plan<float>*>(plan)->temp_size;
-    }
-    size_t kfr_dft_real_get_temp_size_f64(KFR_DFT_REAL_PLAN_F64* plan)
-    {
-        return reinterpret_cast<kfr::dft_plan<double>*>(plan)->temp_size;
+        try_fn([&]() { reinterpret_cast<kfr::dft_plan_real<double>*>(plan)->dump(); });
     }
 
-    void kfr_dft_real_execute_f32(KFR_DFT_REAL_PLAN_F32* plan, kfr_c32* out, const float* in, uint8_t* temp)
+    KFR_API_SPEC size_t kfr_dft_real_get_size_f32(KFR_DFT_REAL_PLAN_F32* plan)
     {
-        reinterpret_cast<kfr::dft_plan_real<float>*>(plan)->execute(
-            reinterpret_cast<kfr::complex<float>*>(out), in, temp);
+        return try_fn([&]() { return reinterpret_cast<kfr::dft_plan<float>*>(plan)->size; }, 0);
     }
-    void kfr_dft_real_execute_f64(KFR_DFT_REAL_PLAN_F64* plan, kfr_c64* out, const double* in, uint8_t* temp)
+    KFR_API_SPEC size_t kfr_dft_real_get_size_f64(KFR_DFT_REAL_PLAN_F64* plan)
     {
-        reinterpret_cast<kfr::dft_plan_real<double>*>(plan)->execute(
-            reinterpret_cast<kfr::complex<double>*>(out), in, temp);
-    }
-    void kfr_dft_real_execute_inverse_f32(KFR_DFT_REAL_PLAN_F32* plan, float* out, const kfr_c32* in,
-                                          uint8_t* temp)
-    {
-        reinterpret_cast<kfr::dft_plan_real<float>*>(plan)->execute(
-            out, reinterpret_cast<const kfr::complex<float>*>(in), temp);
-    }
-    void kfr_dft_real_execute_inverse_f64(KFR_DFT_REAL_PLAN_F64* plan, double* out, const kfr_c64* in,
-                                          uint8_t* temp)
-    {
-        reinterpret_cast<kfr::dft_plan_real<double>*>(plan)->execute(
-            out, reinterpret_cast<const kfr::complex<double>*>(in), temp);
+        return try_fn([&]() { return reinterpret_cast<kfr::dft_plan<double>*>(plan)->size; }, 0);
     }
 
-    void kfr_dft_real_delete_plan_f32(KFR_DFT_REAL_PLAN_F32* plan)
+    KFR_API_SPEC size_t kfr_dft_real_get_temp_size_f32(KFR_DFT_REAL_PLAN_F32* plan)
     {
-        delete reinterpret_cast<kfr::dft_plan_real<float>*>(plan);
+        return try_fn([&]() { return reinterpret_cast<kfr::dft_plan<float>*>(plan)->temp_size; }, 0);
     }
-    void kfr_dft_real_delete_plan_f64(KFR_DFT_REAL_PLAN_F64* plan)
+    KFR_API_SPEC size_t kfr_dft_real_get_temp_size_f64(KFR_DFT_REAL_PLAN_F64* plan)
     {
-        delete reinterpret_cast<kfr::dft_plan_real<double>*>(plan);
+        return try_fn([&]() { return reinterpret_cast<kfr::dft_plan<double>*>(plan)->temp_size; }, 0);
+    }
+
+    KFR_API_SPEC void kfr_dft_real_execute_f32(KFR_DFT_REAL_PLAN_F32* plan, kfr_c32* out, const float* in,
+                                               uint8_t* temp)
+    {
+        try_fn(
+            [&]()
+            {
+                reinterpret_cast<kfr::dft_plan_real<float>*>(plan)->execute(
+                    reinterpret_cast<kfr::complex<float>*>(out), in, temp);
+            });
+    }
+    KFR_API_SPEC void kfr_dft_real_execute_f64(KFR_DFT_REAL_PLAN_F64* plan, kfr_c64* out, const double* in,
+                                               uint8_t* temp)
+    {
+        try_fn(
+            [&]()
+            {
+                reinterpret_cast<kfr::dft_plan_real<double>*>(plan)->execute(
+                    reinterpret_cast<kfr::complex<double>*>(out), in, temp);
+            });
+    }
+    KFR_API_SPEC void kfr_dft_real_execute_inverse_f32(KFR_DFT_REAL_PLAN_F32* plan, float* out,
+                                                       const kfr_c32* in, uint8_t* temp)
+    {
+        try_fn(
+            [&]()
+            {
+                reinterpret_cast<kfr::dft_plan_real<float>*>(plan)->execute(
+                    out, reinterpret_cast<const kfr::complex<float>*>(in), temp);
+            });
+    }
+    KFR_API_SPEC void kfr_dft_real_execute_inverse_f64(KFR_DFT_REAL_PLAN_F64* plan, double* out,
+                                                       const kfr_c64* in, uint8_t* temp)
+    {
+        try_fn(
+            [&]()
+            {
+                reinterpret_cast<kfr::dft_plan_real<double>*>(plan)->execute(
+                    out, reinterpret_cast<const kfr::complex<double>*>(in), temp);
+            });
+    }
+
+    KFR_API_SPEC void kfr_dft_real_delete_plan_f32(KFR_DFT_REAL_PLAN_F32* plan)
+    {
+        try_fn([&]() { delete reinterpret_cast<kfr::dft_plan_real<float>*>(plan); });
+    }
+    KFR_API_SPEC void kfr_dft_real_delete_plan_f64(KFR_DFT_REAL_PLAN_F64* plan)
+    {
+        try_fn([&]() { delete reinterpret_cast<kfr::dft_plan_real<double>*>(plan); });
     }
 
     // Discrete Cosine Transform
 
-    KFR_DCT_PLAN_F32* kfr_dct_create_plan_f32(size_t size)
+    KFR_API_SPEC KFR_DCT_PLAN_F32* kfr_dct_create_plan_f32(size_t size)
     {
-        if (size < 4)
-            return nullptr;
-        if (size > 16777216)
-            return nullptr;
-        return reinterpret_cast<KFR_DCT_PLAN_F32*>(new kfr::dct_plan<float>(cpu_t::runtime, size));
+        return try_fn([&]() { return reinterpret_cast<KFR_DCT_PLAN_F32*>(new kfr::dct_plan<float>(size)); },
+                      nullptr);
     }
-    KFR_DCT_PLAN_F64* kfr_dct_create_plan_f64(size_t size)
+    KFR_API_SPEC KFR_DCT_PLAN_F64* kfr_dct_create_plan_f64(size_t size)
     {
-        if (size < 4)
-            return nullptr;
-        if (size > 16777216)
-            return nullptr;
-        return reinterpret_cast<KFR_DCT_PLAN_F64*>(new kfr::dct_plan<double>(cpu_t::runtime, size));
+        return try_fn([&]() { return reinterpret_cast<KFR_DCT_PLAN_F64*>(new kfr::dct_plan<double>(size)); },
+                      nullptr);
     }
 
-    void kfr_dct_dump_f32(KFR_DCT_PLAN_F32* plan) { reinterpret_cast<kfr::dct_plan<float>*>(plan)->dump(); }
-    void kfr_dct_dump_f64(KFR_DCT_PLAN_F64* plan) { reinterpret_cast<kfr::dct_plan<double>*>(plan)->dump(); }
-
-    size_t kfr_dct_get_size_f32(KFR_DCT_PLAN_F32* plan)
+    KFR_API_SPEC void kfr_dct_dump_f32(KFR_DCT_PLAN_F32* plan)
     {
-        return reinterpret_cast<kfr::dft_plan<float>*>(plan)->size;
+        try_fn([&]() { reinterpret_cast<kfr::dct_plan<float>*>(plan)->dump(); });
     }
-    size_t kfr_dct_get_size_f64(KFR_DCT_PLAN_F64* plan)
+    KFR_API_SPEC void kfr_dct_dump_f64(KFR_DCT_PLAN_F64* plan)
     {
-        return reinterpret_cast<kfr::dft_plan<double>*>(plan)->size;
+        try_fn([&]() { reinterpret_cast<kfr::dct_plan<double>*>(plan)->dump(); });
     }
 
-    size_t kfr_dct_get_temp_size_f32(KFR_DCT_PLAN_F32* plan)
+    KFR_API_SPEC size_t kfr_dct_get_size_f32(KFR_DCT_PLAN_F32* plan)
     {
-        return reinterpret_cast<kfr::dft_plan<float>*>(plan)->temp_size;
+        return try_fn([&]() { return reinterpret_cast<kfr::dft_plan<float>*>(plan)->size; }, 0);
     }
-    size_t kfr_dct_get_temp_size_f64(KFR_DCT_PLAN_F64* plan)
+    KFR_API_SPEC size_t kfr_dct_get_size_f64(KFR_DCT_PLAN_F64* plan)
     {
-        return reinterpret_cast<kfr::dft_plan<double>*>(plan)->temp_size;
-    }
-
-    void kfr_dct_execute_f32(KFR_DCT_PLAN_F32* plan, float* out, const float* in, uint8_t* temp)
-    {
-        reinterpret_cast<kfr::dct_plan<float>*>(plan)->execute(out, in, temp, kfr::cfalse);
-    }
-    void kfr_dct_execute_f64(KFR_DCT_PLAN_F64* plan, double* out, const double* in, uint8_t* temp)
-    {
-        reinterpret_cast<kfr::dct_plan<double>*>(plan)->execute(out, in, temp, kfr::cfalse);
-    }
-    void kfr_dct_execute_inverse_f32(KFR_DCT_PLAN_F32* plan, float* out, const float* in, uint8_t* temp)
-    {
-        reinterpret_cast<kfr::dct_plan<float>*>(plan)->execute(out, in, temp, kfr::ctrue);
-    }
-    void kfr_dct_execute_inverse_f64(KFR_DCT_PLAN_F64* plan, double* out, const double* in, uint8_t* temp)
-    {
-        reinterpret_cast<kfr::dct_plan<double>*>(plan)->execute(out, in, temp, kfr::ctrue);
+        return try_fn([&]() { return reinterpret_cast<kfr::dft_plan<double>*>(plan)->size; }, 0);
     }
 
-    void kfr_dct_delete_plan_f32(KFR_DCT_PLAN_F32* plan)
+    KFR_API_SPEC size_t kfr_dct_get_temp_size_f32(KFR_DCT_PLAN_F32* plan)
     {
-        delete reinterpret_cast<kfr::dct_plan<float>*>(plan);
+        return try_fn([&]() { return reinterpret_cast<kfr::dft_plan<float>*>(plan)->temp_size; }, 0);
     }
-    void kfr_dct_delete_plan_f64(KFR_DCT_PLAN_F64* plan)
+    KFR_API_SPEC size_t kfr_dct_get_temp_size_f64(KFR_DCT_PLAN_F64* plan)
     {
-        delete reinterpret_cast<kfr::dct_plan<double>*>(plan);
+        return try_fn([&]() { return reinterpret_cast<kfr::dft_plan<double>*>(plan)->temp_size; }, 0);
+    }
+
+    KFR_API_SPEC void kfr_dct_execute_f32(KFR_DCT_PLAN_F32* plan, float* out, const float* in, uint8_t* temp)
+    {
+        try_fn([&]() { reinterpret_cast<kfr::dct_plan<float>*>(plan)->execute(out, in, temp, kfr::cfalse); });
+    }
+    KFR_API_SPEC void kfr_dct_execute_f64(KFR_DCT_PLAN_F64* plan, double* out, const double* in,
+                                          uint8_t* temp)
+    {
+        try_fn([&]()
+               { reinterpret_cast<kfr::dct_plan<double>*>(plan)->execute(out, in, temp, kfr::cfalse); });
+    }
+    KFR_API_SPEC void kfr_dct_execute_inverse_f32(KFR_DCT_PLAN_F32* plan, float* out, const float* in,
+                                                  uint8_t* temp)
+    {
+        try_fn([&]() { reinterpret_cast<kfr::dct_plan<float>*>(plan)->execute(out, in, temp, kfr::ctrue); });
+    }
+    KFR_API_SPEC void kfr_dct_execute_inverse_f64(KFR_DCT_PLAN_F64* plan, double* out, const double* in,
+                                                  uint8_t* temp)
+    {
+        try_fn([&]() { reinterpret_cast<kfr::dct_plan<double>*>(plan)->execute(out, in, temp, kfr::ctrue); });
+    }
+
+    KFR_API_SPEC void kfr_dct_delete_plan_f32(KFR_DCT_PLAN_F32* plan)
+    {
+        try_fn([&]() { delete reinterpret_cast<kfr::dct_plan<float>*>(plan); });
+    }
+    KFR_API_SPEC void kfr_dct_delete_plan_f64(KFR_DCT_PLAN_F64* plan)
+    {
+        try_fn([&]() { delete reinterpret_cast<kfr::dct_plan<double>*>(plan); });
     }
 
     // Filters
 
-    KFR_FILTER_F32* kfr_filter_create_fir_plan_f32(const kfr_f32* taps, size_t size)
+    KFR_API_SPEC KFR_FILTER_F32* kfr_filter_create_fir_plan_f32(const kfr_f32* taps, size_t size)
     {
-#ifndef CMT_MULTI
-        return reinterpret_cast<KFR_FILTER_F32*>(make_fir_filter<float>(make_univector(taps, size)));
-#else
-        return reinterpret_cast<KFR_FILTER_F32*>(
-            make_fir_filter<float>(cpu_t::runtime, make_univector(taps, size)));
-#endif
+        return try_fn(
+            [&]()
+            { return reinterpret_cast<KFR_FILTER_F32*>(new fir_filter<float>(make_univector(taps, size))); },
+            nullptr);
     }
-    KFR_FILTER_F64* kfr_filter_create_fir_plan_f64(const kfr_f64* taps, size_t size)
+    KFR_API_SPEC KFR_FILTER_F64* kfr_filter_create_fir_plan_f64(const kfr_f64* taps, size_t size)
     {
-#ifndef CMT_MULTI
-        return reinterpret_cast<KFR_FILTER_F64*>(make_fir_filter<double>(make_univector(taps, size)));
-#else
-        return reinterpret_cast<KFR_FILTER_F64*>(
-            make_fir_filter<double>(cpu_t::runtime, make_univector(taps, size)));
-#endif
+        return try_fn(
+            [&]()
+            { return reinterpret_cast<KFR_FILTER_F64*>(new fir_filter<double>(make_univector(taps, size))); },
+            nullptr);
     }
 
-    KFR_FILTER_F32* kfr_filter_create_convolution_plan_f32(const kfr_f32* taps, size_t size,
-                                                           size_t block_size)
+    KFR_API_SPEC KFR_FILTER_F32* kfr_filter_create_convolution_plan_f32(const kfr_f32* taps, size_t size,
+                                                                        size_t block_size)
     {
-#ifndef CMT_MULTI
-        return reinterpret_cast<KFR_FILTER_F32*>(
-            make_convolve_filter<float>(make_univector(taps, size), block_size ? block_size : 1024));
-#else
-        return reinterpret_cast<KFR_FILTER_F32*>(make_convolve_filter<float>(
-            cpu_t::runtime, make_univector(taps, size), block_size ? block_size : 1024));
-#endif
+        return try_fn(
+            [&]()
+            {
+                return reinterpret_cast<KFR_FILTER_F32*>(
+                    new convolve_filter<float>(make_univector(taps, size), block_size ? block_size : 1024));
+            },
+            nullptr);
     }
-    KFR_FILTER_F64* kfr_filter_create_convolution_plan_f64(const kfr_f64* taps, size_t size,
-                                                           size_t block_size)
+    KFR_API_SPEC KFR_FILTER_F64* kfr_filter_create_convolution_plan_f64(const kfr_f64* taps, size_t size,
+                                                                        size_t block_size)
     {
-#ifndef CMT_MULTI
-        return reinterpret_cast<KFR_FILTER_F64*>(
-            make_convolve_filter<double>(make_univector(taps, size), block_size ? block_size : 1024));
-#else
-        return reinterpret_cast<KFR_FILTER_F64*>(make_convolve_filter<double>(
-            cpu_t::runtime, make_univector(taps, size), block_size ? block_size : 1024));
-#endif
-    }
-
-    KFR_FILTER_F32* kfr_filter_create_iir_plan_f32(const kfr_f32* sos, size_t sos_count)
-    {
-        if (sos_count < 1 || sos_count > 64)
-            return nullptr;
-
-#ifndef CMT_MULTI
-        return reinterpret_cast<KFR_FILTER_F32*>(
-            make_biquad_filter<float, 64>(reinterpret_cast<const biquad_params<float>*>(sos), sos_count));
-#else
-        return reinterpret_cast<KFR_FILTER_F32*>(make_biquad_filter<float, 64>(
-            cpu_t::runtime, reinterpret_cast<const biquad_params<float>*>(sos), sos_count));
-#endif
-    }
-    KFR_FILTER_F64* kfr_filter_create_iir_plan_f64(const kfr_f64* sos, size_t sos_count)
-    {
-        if (sos_count < 1 || sos_count > 64)
-            return nullptr;
-
-#ifndef CMT_MULTI
-        return reinterpret_cast<KFR_FILTER_F64*>(
-            make_biquad_filter<double, 64>(reinterpret_cast<const biquad_params<double>*>(sos), sos_count));
-#else
-        return reinterpret_cast<KFR_FILTER_F64*>(make_biquad_filter<double, 64>(
-            cpu_t::runtime, reinterpret_cast<const biquad_params<double>*>(sos), sos_count));
-#endif
+        return try_fn(
+            [&]()
+            {
+                return reinterpret_cast<KFR_FILTER_F64*>(
+                    new convolve_filter<double>(make_univector(taps, size), block_size ? block_size : 1024));
+            },
+            nullptr);
     }
 
-    void kfr_filter_process_f32(KFR_FILTER_F32* plan, kfr_f32* output, const kfr_f32* input, size_t size)
+    KFR_API_SPEC KFR_FILTER_F32* kfr_filter_create_iir_plan_f32(const kfr_f32* sos, size_t sos_count)
     {
-        reinterpret_cast<filter<float>*>(plan)->apply(output, input, size);
+        return try_fn(
+            [&]()
+            {
+                return reinterpret_cast<KFR_FILTER_F32*>(
+                    new biquad_filter<float>(reinterpret_cast<const biquad_params<float>*>(sos), sos_count));
+            },
+            nullptr);
     }
-    void kfr_filter_process_f64(KFR_FILTER_F64* plan, kfr_f64* output, const kfr_f64* input, size_t size)
+    KFR_API_SPEC KFR_FILTER_F64* kfr_filter_create_iir_plan_f64(const kfr_f64* sos, size_t sos_count)
     {
-        reinterpret_cast<filter<double>*>(plan)->apply(output, input, size);
+        return try_fn(
+            [&]()
+            {
+                return reinterpret_cast<KFR_FILTER_F64*>(new biquad_filter<double>(
+                    reinterpret_cast<const biquad_params<double>*>(sos), sos_count));
+            },
+            nullptr);
     }
 
-    void kfr_filter_reset_f32(KFR_FILTER_F32* plan) { reinterpret_cast<filter<float>*>(plan)->reset(); }
-    void kfr_filter_reset_f64(KFR_FILTER_F64* plan) { reinterpret_cast<filter<double>*>(plan)->reset(); }
+    KFR_API_SPEC void kfr_filter_process_f32(KFR_FILTER_F32* plan, kfr_f32* output, const kfr_f32* input,
+                                             size_t size)
+    {
+        try_fn([&]() { reinterpret_cast<filter<float>*>(plan)->apply(output, input, size); });
+    }
+    KFR_API_SPEC void kfr_filter_process_f64(KFR_FILTER_F64* plan, kfr_f64* output, const kfr_f64* input,
+                                             size_t size)
+    {
+        try_fn([&]() { reinterpret_cast<filter<double>*>(plan)->apply(output, input, size); });
+    }
 
-    void kfr_filter_delete_plan_f32(KFR_FILTER_F32* plan) { delete reinterpret_cast<filter<f32>*>(plan); }
-    void kfr_filter_delete_plan_f64(KFR_FILTER_F64* plan) { delete reinterpret_cast<filter<f64>*>(plan); }
+    KFR_API_SPEC void kfr_filter_reset_f32(KFR_FILTER_F32* plan)
+    {
+        try_fn([&]() { reinterpret_cast<filter<float>*>(plan)->reset(); });
+    }
+    KFR_API_SPEC void kfr_filter_reset_f64(KFR_FILTER_F64* plan)
+    {
+        try_fn([&]() { reinterpret_cast<filter<double>*>(plan)->reset(); });
+    }
+
+    KFR_API_SPEC void kfr_filter_delete_plan_f32(KFR_FILTER_F32* plan)
+    {
+        try_fn([&]() { delete reinterpret_cast<filter<f32>*>(plan); });
+    }
+    KFR_API_SPEC void kfr_filter_delete_plan_f64(KFR_FILTER_F64* plan)
+    {
+        try_fn([&]() { delete reinterpret_cast<filter<f64>*>(plan); });
+    }
 }
 
 } // namespace kfr

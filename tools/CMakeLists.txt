@@ -21,7 +21,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${PROJECT_BINARY_DIR}/bin)
 
 add_executable(sample_rate_converter sample_rate_converter.cpp)
-target_link_libraries(sample_rate_converter kfr kfr_io use_arch)
+target_link_libraries(sample_rate_converter kfr kfr_dsp kfr_io use_arch)
 
 add_executable(ebu_test ebu_test.cpp)
 target_link_libraries(ebu_test kfr kfr_io use_arch)

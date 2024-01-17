@@ -103,7 +103,7 @@ enum class dft_type
 enum class dft_order
 {
     normal,
-    internal, // possibly bit/digit-reversed, implementation-defined, faster to compute
+    internal, // possibly bit/digit-reversed, implementation-defined, may be faster to compute
 };
 
 enum class dft_pack_format
@@ -124,8 +124,10 @@ struct dft_stage;
 template <typename T>
 using dft_stage_ptr = std::unique_ptr<dft_stage<T>>;
 
-CMT_MULTI_PROTO(template <typename T> void dft_initialize(dft_plan<T>& plan);)
-CMT_MULTI_PROTO(template <typename T> void dft_real_initialize(dft_plan_real<T>& plan);)
+template <typename T>
+void dft_initialize(dft_plan<T>& plan);
+template <typename T>
+void dft_real_initialize(dft_plan_real<T>& plan);
 
 /// @brief 1D DFT/FFT
 template <typename T>
@@ -146,38 +148,17 @@ struct dft_plan
 
     bool is_initialized() const { return size != 0; }
 
-    explicit dft_plan(cpu_t cpu, size_t size, dft_order order = dft_order::normal)
-        : size(size), temp_size(0), data_size(0), arblen(false)
+    [[deprecated("cpu parameter is deprecated. Runtime dispatch is used if built with "
+                 "KFR_ENABLE_MULTIARCH")]] explicit dft_plan(cpu_t cpu, size_t size,
+                                                             dft_order order = dft_order::normal)
+        : dft_plan(size, order)
     {
-#ifdef KFR_DFT_MULTI
-        if (cpu == cpu_t::runtime)
-            cpu = get_cpu();
-        switch (cpu)
-        {
-        case cpu_t::avx512:
-            CMT_IF_ENABLED_AVX512(avx512::dft_initialize(*this); break;)
-        case cpu_t::avx2:
-            CMT_IF_ENABLED_AVX2(avx2::dft_initialize(*this); break;)
-        case cpu_t::avx:
-            CMT_IF_ENABLED_AVX(avx::dft_initialize(*this); break;)
-        case cpu_t::sse42:
-        case cpu_t::sse41:
-            CMT_IF_ENABLED_SSE41(sse41::dft_initialize(*this); break;)
-        case cpu_t::ssse3:
-            CMT_IF_ENABLED_SSSE3(ssse3::dft_initialize(*this); break;)
-        case cpu_t::sse3:
-            CMT_IF_ENABLED_SSE3(sse3::dft_initialize(*this); break;)
-        default:
-            CMT_IF_ENABLED_SSE2(sse2::dft_initialize(*this); break;);
-        }
-#else
         (void)cpu;
-        dft_initialize(*this);
-#endif
     }
     explicit dft_plan(size_t size, dft_order order = dft_order::normal)
-        : dft_plan(cpu_t::runtime, size, order)
+        : size(size), temp_size(0), data_size(0), arblen(false)
     {
+        dft_initialize(*this);
     }
 
     void dump() const
@@ -411,40 +392,19 @@ struct dft_plan_real : dft_plan<T>
 
     bool is_initialized() const { return size != 0; }
 
-    explicit dft_plan_real(cpu_t cpu, size_t size, dft_pack_format fmt = dft_pack_format::CCs)
-        : dft_plan<T>(typename dft_plan<T>::noinit{}, size / 2), size(size), fmt(fmt)
+    [[deprecated("cpu parameter is deprecated. Runtime dispatch is used if built with "
+                 "KFR_ENABLE_MULTIARCH")]] explicit dft_plan_real(cpu_t cpu, size_t size,
+                                                                  dft_pack_format fmt = dft_pack_format::CCs)
+        : dft_plan_real(size, fmt)
     {
-        KFR_LOGIC_CHECK(is_even(size), "dft_plan_real requires size to be even");
-#ifdef KFR_DFT_MULTI
-        if (cpu == cpu_t::runtime)
-            cpu = get_cpu();
-        switch (cpu)
-        {
-        case cpu_t::avx512:
-            CMT_IF_ENABLED_AVX512(avx512::dft_real_initialize(*this); break;)
-        case cpu_t::avx2:
-            CMT_IF_ENABLED_AVX2(avx2::dft_real_initialize(*this); break;)
-        case cpu_t::avx:
-            CMT_IF_ENABLED_AVX(avx::dft_real_initialize(*this); break;)
-        case cpu_t::sse42:
-        case cpu_t::sse41:
-            CMT_IF_ENABLED_SSE41(sse41::dft_real_initialize(*this); break;)
-        case cpu_t::ssse3:
-            CMT_IF_ENABLED_SSSE3(ssse3::dft_real_initialize(*this); break;)
-        case cpu_t::sse3:
-            CMT_IF_ENABLED_SSE3(sse3::dft_real_initialize(*this); break;)
-        default:
-            CMT_IF_ENABLED_SSE2(sse2::dft_real_initialize(*this); break;);
-        }
-#else
         (void)cpu;
-        dft_real_initialize(*this);
-#endif
     }
 
     explicit dft_plan_real(size_t size, dft_pack_format fmt = dft_pack_format::CCs)
-        : dft_plan_real(cpu_t::runtime, size, fmt)
+        : dft_plan<T>(typename dft_plan<T>::noinit{}, size / 2), size(size), fmt(fmt)
     {
+        KFR_LOGIC_CHECK(is_even(size), "dft_plan_real requires size to be even");
+        dft_real_initialize(*this);
     }
 
     void execute(complex<T>*, const complex<T>*, u8*, bool = false) const = delete;
@@ -501,9 +461,10 @@ struct dct_plan : dft_plan<T>
 {
     dct_plan(size_t size) : dft_plan<T>(size) { this->temp_size += sizeof(complex<T>) * size * 2; }
 
-    dct_plan(cpu_t cpu, size_t size) : dft_plan<T>(cpu, size)
+    [[deprecated("cpu parameter is deprecated. Runtime dispatch is used if built with "
+                 "KFR_ENABLE_MULTIARCH")]] dct_plan(cpu_t cpu, size_t size)
+        : dct_plan(size)
     {
-        this->temp_size += sizeof(complex<T>) * size * 2;
     }
 
     KFR_MEM_INTRINSIC void execute(T* out, const T* in, u8* temp, bool inverse = false) const
