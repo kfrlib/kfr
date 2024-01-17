@@ -1811,7 +1811,7 @@ to_fmt(size_t real_size, const complex<T>* rtwiddle, complex<T>* out, const comp
     size_t csize = real_size / 2; // const size_t causes internal compiler error: in tsubst_copy in GCC 5.2
 
     constexpr size_t width = vector_width<T> * 2;
-    const cvec<T, 1> dc    = cread<1>(out);
+    const cvec<T, 1> dc    = cread<1>(in);
     const size_t count     = (csize + 1) / 2;
 
     block_process(count - 1, csizes_t<width, 1>(),
@@ -1876,6 +1876,7 @@ void from_fmt(size_t real_size, complex<T>* rtwiddle, complex<T>* out, const com
     {
         dc = pack(in[0].real() + in[0].imag(), in[0].real() - in[0].imag());
     }
+    cvec<T, 1> inmid = cread<1>(in + csize / 2);
 
     constexpr size_t width = vector_width<T> * 2;
     const size_t count     = (csize + 1) / 2;
@@ -1899,7 +1900,7 @@ void from_fmt(size_t real_size, complex<T>* rtwiddle, complex<T>* out, const com
     if (is_even(csize))
     {
         size_t k              = csize / 2;
-        const cvec<T, 1> fpk  = cread<1>(in + k);
+        const cvec<T, 1> fpk  = inmid;
         const cvec<T, 1> fpnk = 2 * negodd(fpk);
         cwrite<1>(out + k, fpnk);
     }
@@ -1941,6 +1942,9 @@ void dft_initialize(dft_plan<T>& plan)
 }
 } // namespace impl
 
+namespace intrinsics
+{
+
 template <typename T>
 struct dft_stage_real_repack : dft_stage<T>
 {
@@ -1950,10 +1954,11 @@ public:
         this->user         = static_cast<int>(fmt);
         this->stage_size   = real_size;
         this->can_inplace  = true;
+        this->name         = dft_name(this);
         const size_t count = (real_size / 2 + 1) / 2;
         this->data_size    = align_up(sizeof(complex<T>) * count, platform<>::native_cache_alignment);
     }
-    void do_initialize(size_t) override
+    void do_initialize(size_t) final
     {
         using namespace intrinsics;
         constexpr size_t width = vector_width<T> * 2;
@@ -1970,17 +1975,18 @@ public:
                                                               (real_size / 2)))));
                       });
     }
-    void do_execute(cdirect_t, complex<T>* out, const complex<T>* in, u8* temp) override
+    void do_execute(cdirect_t, complex<T>* out, const complex<T>* in, u8* temp) final
     {
         to_fmt(this->stage_size, ptr_cast<complex<T>>(this->data), out, in,
                static_cast<dft_pack_format>(this->user));
     }
-    void do_execute(cinvert_t, complex<T>* out, const complex<T>* in, u8* temp) override
+    void do_execute(cinvert_t, complex<T>* out, const complex<T>* in, u8* temp) final
     {
         from_fmt(this->stage_size, ptr_cast<complex<T>>(this->data), out, in,
                  static_cast<dft_pack_format>(this->user));
     }
 };
+} // namespace intrinsics
 
 namespace impl
 {
@@ -1990,7 +1996,7 @@ void dft_real_initialize(dft_plan_real<T>& plan)
     if (plan.size == 0)
         return;
     initialize_stages(&plan);
-    add_stage<dft_stage_real_repack<T>, false>(&plan, plan.size, plan.fmt);
+    add_stage<intrinsics::dft_stage_real_repack<T>, false>(&plan, plan.size, plan.fmt);
     plan.stages[0].push_back(plan.all_stages.back().get());
     plan.stages[1].insert(plan.stages[1].begin(), plan.all_stages.back().get());
     initialize_data(&plan);
