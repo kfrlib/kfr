@@ -27,13 +27,10 @@
 
 #include "../base/basic_expressions.hpp"
 #include "../base/memory.hpp"
-#include "../base/small_buffer.hpp"
 #include "../base/univector.hpp"
 #include "../math/sin_cos.hpp"
 #include "../simd/complex.hpp"
 #include "../simd/constants.hpp"
-#include "../simd/read_write.hpp"
-#include "../simd/vec.hpp"
 #include <bitset>
 
 CMT_PRAGMA_GNU(GCC diagnostic push)
@@ -130,12 +127,24 @@ using dft_stage_ptr = std::unique_ptr<dft_stage<T>>;
 CMT_MULTI_PROTO(template <typename T> void dft_initialize(dft_plan<T>& plan);)
 CMT_MULTI_PROTO(template <typename T> void dft_real_initialize(dft_plan_real<T>& plan);)
 
-/// @brief Class for performing DFT/FFT
+/// @brief 1D DFT/FFT
 template <typename T>
 struct dft_plan
 {
     size_t size;
     size_t temp_size;
+
+    dft_plan()
+        : size(0), temp_size(0), data_size(0), arblen(false), disposition_inplace{}, disposition_outofplace{}
+    {
+    }
+
+    dft_plan(const dft_plan&)            = delete;
+    dft_plan(dft_plan&&)                 = default;
+    dft_plan& operator=(const dft_plan&) = delete;
+    dft_plan& operator=(dft_plan&&)      = default;
+
+    bool is_initialized() const { return size != 0; }
 
     explicit dft_plan(cpu_t cpu, size_t size, dft_order order = dft_order::normal)
         : size(size), temp_size(0), data_size(0), arblen(false)
@@ -386,11 +395,24 @@ protected:
     }
 };
 
+/// @brief Real-to-complex and Complex-to-real 1D DFT
 template <typename T>
 struct dft_plan_real : dft_plan<T>
 {
     size_t size;
     dft_pack_format fmt;
+
+    dft_plan_real()
+        : size(0), fmt(dft_pack_format::CCs)
+    {
+    }
+
+    dft_plan_real(const dft_plan_real&)            = delete;
+    dft_plan_real(dft_plan_real&&)                 = default;
+    dft_plan_real& operator=(const dft_plan_real&) = delete;
+    dft_plan_real& operator=(dft_plan_real&&)      = default;
+
+    bool is_initialized() const { return size != 0; }
 
     explicit dft_plan_real(cpu_t cpu, size_t size, dft_pack_format fmt = dft_pack_format::CCs)
         : dft_plan<T>(typename dft_plan<T>::noinit{}, size / 2), size(size), fmt(fmt)

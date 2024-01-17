@@ -25,7 +25,6 @@
  */
 #pragma once
 
-#include "../../base/small_buffer.hpp"
 #include "../../base/univector.hpp"
 #include "../../math/sin_cos.hpp"
 #include "../../simd/complex.hpp"

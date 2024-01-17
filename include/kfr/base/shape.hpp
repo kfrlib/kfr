@@ -99,6 +99,7 @@ KFR_INTRINSIC bool increment_indices(shape<dims>& indices, const shape<dims>& st
 template <index_t dims>
 struct shape : static_array_base<index_t, csizeseq_t<dims>>
 {
+    static_assert(dims <= 256, "Too many dimensions");
     using base = static_array_base<index_t, csizeseq_t<dims>>;
 
     using base::base;
