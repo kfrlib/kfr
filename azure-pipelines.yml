@@ -16,7 +16,7 @@ jobs:
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
       set PATH=%PATH:C:\Strawberry\c\bin;=%
       set PATH=C:\sde;%PATH%
-      ci\run.cmd build-release -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_DFT_MULTIARCH=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_FLAGS=-m64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
+      ci\run.cmd build-release -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_MULTIARCH=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
 
 - job: Windows_MSVC_x86_AVX512_Clang16_Release
   timeoutInMinutes: 180
@@ -35,7 +35,8 @@ jobs:
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
       set PATH=%PATH:C:\Strawberry\c\bin;=%
       set PATH=C:\sde;%PATH%
-      ci\run.cmd build-release -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_DFT_MULTIARCH=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Release -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
+      set CXXFLAGS=-m32
+      ci\run.cmd build-release -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_MULTIARCH=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
 
 - job: Linux_x86_64_Clang8
   timeoutInMinutes: 180
@@ -49,7 +50,7 @@ jobs:
       mkdir "$(Agent.TempDirectory)/sde-bin"
       tar -C "$(Agent.TempDirectory)/sde-bin" -xjf "$(Agent.TempDirectory)/sde.tar.bz2"  --strip 1
       sudo ln -s $(Agent.TempDirectory)/sde-bin/sde64 /usr/bin/sde
-      ci/run.sh build-release -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DKFR_ARCH=avx2 -DKFR_USE_SDE=ON -DCMAKE_CXX_COMPILER=clang++-8 -DCMAKE_BUILD_TYPE=Release
+      ci/run.sh build-release -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DKFR_ARCH=avx2 -DKFR_USE_SDE=ON -DCMAKE_CXX_COMPILER=clang++-8 -DCMAKE_BUILD_TYPE=Release
 
 - job: Linux_x86_64_Clang10
   timeoutInMinutes: 180
@@ -73,7 +74,7 @@ jobs:
       mkdir "$(Agent.TempDirectory)/sde-bin"
       tar -C "$(Agent.TempDirectory)/sde-bin" -xjf "$(Agent.TempDirectory)/sde.tar.bz2"  --strip 1
       sudo ln -s $(Agent.TempDirectory)/sde-bin/sde64 /usr/bin/sde
-      ci/run.sh build-release -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DKFR_ARCH=avx2 -DKFR_USE_SDE=ON -DCMAKE_CXX_COMPILER=clang++-12 -DCMAKE_BUILD_TYPE=Release
+      ci/run.sh build-release -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DKFR_ARCH=avx2 -DKFR_USE_SDE=ON -DCMAKE_CXX_COMPILER=clang++-12 -DCMAKE_BUILD_TYPE=Release
 
 - job: Linux_x86_64_Clang14
   timeoutInMinutes: 180
@@ -87,7 +88,7 @@ jobs:
       mkdir "$(Agent.TempDirectory)/sde-bin"
       tar -C "$(Agent.TempDirectory)/sde-bin" -xjf "$(Agent.TempDirectory)/sde.tar.bz2"  --strip 1
       sudo ln -s $(Agent.TempDirectory)/sde-bin/sde64 /usr/bin/sde
-      ci/run.sh build-release -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DKFR_ARCH=avx2 -DKFR_USE_SDE=ON -DCMAKE_CXX_COMPILER=clang++-14 -DCMAKE_BUILD_TYPE=Release
+      ci/run.sh build-release -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DKFR_ARCH=avx2 -DKFR_USE_SDE=ON -DCMAKE_CXX_COMPILER=clang++-14 -DCMAKE_BUILD_TYPE=Release
 
 - job: Linux_x86_64_GCC7
   timeoutInMinutes: 180
@@ -170,7 +171,7 @@ jobs:
       set -e
       /bin/bash -c "sudo xcode-select -s /Applications/Xcode_13.1.app/Contents/Developer"
       brew install ninja
-      ci/run.sh build-release -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse41,avx -DKFR_ARCH=detect -DKFR_ENABLE_DFT_MULTIARCH=ON -DCMAKE_BUILD_TYPE=Release      
+      ci/run.sh build-release -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse41,avx -DKFR_ARCH=detect -DKFR_ENABLE_MULTIARCH=ON -DCMAKE_BUILD_TYPE=Release      
 
 - job: macOS15_x86_64_Clang_Release
   timeoutInMinutes: 180
@@ -187,7 +188,7 @@ jobs:
       set -e
       /bin/bash -c "sudo xcode-select -s /Applications/Xcode_$(XCODE_VER).app/Contents/Developer"
       brew install ninja
-      ci/run.sh build-release -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse41,avx -DKFR_ARCH=detect -DKFR_ENABLE_DFT_MULTIARCH=ON -DCMAKE_BUILD_TYPE=Release      
+      ci/run.sh build-release -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse41,avx -DKFR_ARCH=detect -DKFR_ENABLE_MULTIARCH=ON -DCMAKE_BUILD_TYPE=Release      
 
 - job: macOS_x86_64_Clang_Release
   timeoutInMinutes: 180
@@ -215,7 +216,7 @@ jobs:
 
       /bin/bash -c "sudo xcode-select -s /Applications/Xcode_$(XCODE_VER).app/Contents/Developer"
       brew install ninja
-      ci/run.sh build-release -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_USE_SDE=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse41,avx,avx2,avx512 -DKFR_ARCH=sse2 -DKFR_ENABLE_DFT_MULTIARCH=ON -DCMAKE_BUILD_TYPE=Release      
+      ci/run.sh build-release -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_USE_SDE=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse41,avx,avx2,avx512 -DKFR_ARCH=sse2 -DKFR_ENABLE_MULTIARCH=ON -DCMAKE_BUILD_TYPE=Release      
 
 - job: iOS_ARM_Clang_Release
   timeoutInMinutes: 180
@@ -264,21 +265,6 @@ jobs:
       echo > "%USERPROFILE%\.android\repositories.cfg"
       call "%ANDROID_HOME%\tools\bin\sdkmanager.bat" "ndk-bundle" < %TMP%\always_yes
       ci\run.cmd build-release -DCMAKE_TOOLCHAIN_FILE="%ANDROID_HOME%\ndk-bundle\build\cmake\android.toolchain.cmake" -DANDROID_ABI=arm64-v8a -DANDROID_ARM_NEON=TRUE -DKFR_SKIP_TESTS=ON -DCMAKE_BUILD_TYPE=Release
-
-- job: Windows_MinGW_x86_64_Clang16_Release
-  timeoutInMinutes: 180
-  pool:
-    vmImage: 'windows-2019'
-  steps:
-  - script: |
-      choco uninstall mingw
-      choco install msys2
-      choco install ninja
-      choco install llvm
-      set PATH=C:\ProgramData\Chocolatey\bin;C:\Program Files\CMake\bin;C:\tools\msys64\usr\local\bin;C:\tools\msys64\usr\bin;C:\tools\msys64\mingw64\bin;C:\windows;C:\windows\system32;C:\Windows;C:\Windows\System32\WindowsPowerShell\v1.0
-      call C:\tools\msys64\msys2_shell.cmd -defterm -mingw64 -no-start -full-path -here -c "pacman -S --noconfirm mingw64/mingw-w64-x86_64-gcc"
-      call C:\tools\msys64\msys2_shell.cmd -defterm -mingw64 -no-start -full-path -here -c "pacman -S --noconfirm mingw64/mingw-w64-x86_64-ninja"
-      call C:\tools\msys64\msys2_shell.cmd -defterm -mingw64 -no-start -full-path -here -c "ci/run.sh build-release -DCMAKE_CXX_COMPILER=""C:/Program Files/LLVM/bin/clang++.exe"" -DKFR_ARCH=avx -DCMAKE_CXX_FLAGS=--target=x86_64-w64-windows-gnu -DCMAKE_BUILD_TYPE=Release"
 
 - job: Windows_MSVC_x86_64_AVX512_MSVC2019_Release
   timeoutInMinutes: 180
