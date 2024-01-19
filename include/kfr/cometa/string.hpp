@@ -407,6 +407,7 @@ CMT_INLINE void errorln(const Args&... args)
     constexpr const auto format_str = concat_cstring(details::get_value_fmt<Args>()..., make_cstring("\n"));
     const char* str                 = format_str.data();
     std::fprintf(stderr, str, details::pack_value(representation<Args>::get(args))...);
+    std::fflush(stderr);
 }
 
 template <typename... Args>
