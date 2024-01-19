@@ -61,13 +61,11 @@ public:
 #define KFR_PRINT_AND_ABORT(kind, ...)                                                                       \
     do                                                                                                       \
     {                                                                                                        \
-        std::string s = kfr::as_string(__VA_ARGS__);                                                         \
-        std::fprintf(stderr, "KFR " CMT_STRINGIFY(kind) " error: %s\n", s.c_str());                          \
-        std::fflush(stderr);                                                                                 \
+        kfr::errorln("KFR " CMT_STRINGIFY(kind) " error: ", __VA_ARGS__);                                    \
         std::abort();                                                                                        \
     } while (0)
 
-#if defined __cpp_exceptions || defined _HAS_EXCEPTIONS || defined _EXCEPTIONS
+#if CMT_HAS_EXCEPTIONS
 #define KFR_REPORT_ERROR KFR_THROW_EXCEPTION
 #else
 #define KFR_REPORT_ERROR KFR_PRINT_AND_ABORT
