@@ -117,7 +117,7 @@ protected:
     void process_buffer(T* output, const T* input, size_t size) final;
 
     using ST                       = subtype<T>;
-    static constexpr auto real_fft = !std::is_same<T, complex<ST>>::value;
+    constexpr static bool real_fft = !std::is_same_v<T, complex<ST>>;
     using plan_t                   = internal::dft_conv_plan<T>;
 
     // Length of filter data.

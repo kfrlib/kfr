@@ -128,7 +128,7 @@ void convolve_filter<T>::process_buffer(T* output, const T* input, size_t size)
     // blocks (processing == block_size) or only one segment.
 
     // For complex filtering, use CCs pack format to omit special processing in fft_multiply[_accumulate].
-    static constexpr auto fft_multiply_pack = real_fft ? dft_pack_format::Perm : dft_pack_format::CCs;
+    const dft_pack_format fft_multiply_pack = this->real_fft ? dft_pack_format::Perm : dft_pack_format::CCs;
 
     size_t processed = 0;
     while (processed < size)
