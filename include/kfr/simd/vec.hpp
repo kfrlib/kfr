@@ -680,7 +680,7 @@ constexpr size_t size_of() CMT_NOEXCEPT
 }
 
 template <typename From, size_t N, typename Tsub = deep_subtype<From>,
-          size_t Nout = N* size_of<From>() / size_of<Tsub>()>
+          size_t Nout = N * size_of<From>() / size_of<Tsub>()>
 constexpr KFR_INTRINSIC vec<Tsub, Nout> flatten(const vec<From, N>& x) CMT_NOEXCEPT
 {
     return x.flatten();

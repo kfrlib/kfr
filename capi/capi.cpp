@@ -291,8 +291,7 @@ extern "C"
     KFR_FILTER_F32* kfr_filter_create_fir_plan_f32(const kfr_f32* taps, size_t size)
     {
 #ifndef CMT_MULTI
-        return reinterpret_cast<KFR_FILTER_F32*>(
-            make_fir_filter<float>(make_univector(taps, size)));
+        return reinterpret_cast<KFR_FILTER_F32*>(make_fir_filter<float>(make_univector(taps, size)));
 #else
         return reinterpret_cast<KFR_FILTER_F32*>(
             make_fir_filter<float>(cpu_t::runtime, make_univector(taps, size)));
@@ -301,8 +300,7 @@ extern "C"
     KFR_FILTER_F64* kfr_filter_create_fir_plan_f64(const kfr_f64* taps, size_t size)
     {
 #ifndef CMT_MULTI
-        return reinterpret_cast<KFR_FILTER_F64*>(
-            make_fir_filter<double>(make_univector(taps, size)));
+        return reinterpret_cast<KFR_FILTER_F64*>(make_fir_filter<double>(make_univector(taps, size)));
 #else
         return reinterpret_cast<KFR_FILTER_F64*>(
             make_fir_filter<double>(cpu_t::runtime, make_univector(taps, size)));
@@ -313,8 +311,8 @@ extern "C"
                                                            size_t block_size)
     {
 #ifndef CMT_MULTI
-        return reinterpret_cast<KFR_FILTER_F32*>(make_convolve_filter<float>(
-            make_univector(taps, size), block_size ? block_size : 1024));
+        return reinterpret_cast<KFR_FILTER_F32*>(
+            make_convolve_filter<float>(make_univector(taps, size), block_size ? block_size : 1024));
 #else
         return reinterpret_cast<KFR_FILTER_F32*>(make_convolve_filter<float>(
             cpu_t::runtime, make_univector(taps, size), block_size ? block_size : 1024));
@@ -324,8 +322,8 @@ extern "C"
                                                            size_t block_size)
     {
 #ifndef CMT_MULTI
-        return reinterpret_cast<KFR_FILTER_F64*>(make_convolve_filter<double>(
-            make_univector(taps, size), block_size ? block_size : 1024));
+        return reinterpret_cast<KFR_FILTER_F64*>(
+            make_convolve_filter<double>(make_univector(taps, size), block_size ? block_size : 1024));
 #else
         return reinterpret_cast<KFR_FILTER_F64*>(make_convolve_filter<double>(
             cpu_t::runtime, make_univector(taps, size), block_size ? block_size : 1024));
@@ -338,8 +336,8 @@ extern "C"
             return nullptr;
 
 #ifndef CMT_MULTI
-        return reinterpret_cast<KFR_FILTER_F32*>(make_biquad_filter<float, 64>(
-            reinterpret_cast<const biquad_params<float>*>(sos), sos_count));
+        return reinterpret_cast<KFR_FILTER_F32*>(
+            make_biquad_filter<float, 64>(reinterpret_cast<const biquad_params<float>*>(sos), sos_count));
 #else
         return reinterpret_cast<KFR_FILTER_F32*>(make_biquad_filter<float, 64>(
             cpu_t::runtime, reinterpret_cast<const biquad_params<float>*>(sos), sos_count));
@@ -351,8 +349,8 @@ extern "C"
             return nullptr;
 
 #ifndef CMT_MULTI
-        return reinterpret_cast<KFR_FILTER_F64*>(make_biquad_filter<double, 64>(
-            reinterpret_cast<const biquad_params<double>*>(sos), sos_count));
+        return reinterpret_cast<KFR_FILTER_F64*>(
+            make_biquad_filter<double, 64>(reinterpret_cast<const biquad_params<double>*>(sos), sos_count));
 #else
         return reinterpret_cast<KFR_FILTER_F64*>(make_biquad_filter<double, 64>(
             cpu_t::runtime, reinterpret_cast<const biquad_params<double>*>(sos), sos_count));

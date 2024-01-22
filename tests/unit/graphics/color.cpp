@@ -64,7 +64,7 @@ TEST(color)
     CHECK(c6.g == 0.213161f);
 #endif
     CHECK(c6.b == 1.f);
-    
+
     f32color c7 = u16color(0, 32767, 65535);
     CHECK(c7.r == 0.f);
     CHECK(c7.g == 0.499992370489f);

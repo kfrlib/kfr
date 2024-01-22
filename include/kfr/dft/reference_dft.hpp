@@ -87,7 +87,8 @@ void reference_fft(complex<T>* out, const complex<T>* in, size_t size, bool inve
     using Tcmplx = Tnumber(*)[2];
     if (size < 1)
         return;
-    if (size == 1) {
+    if (size == 1)
+    {
         out[0] = in[0];
         return;
     }
@@ -169,7 +170,7 @@ void reference_dft(T* out, const complex<T>* in, size_t size)
     if (size < 1)
         return;
     std::vector<complex<T>> dataout(size);
-    reference_dft(dataout.data(), in, size, true);    
+    reference_dft(dataout.data(), in, size, true);
     for (size_t i = 0; i < size; i++)
         out[i] = dataout[i].real();
 }

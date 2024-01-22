@@ -187,7 +187,7 @@ constexpr inline bool is_input_output_expression<E, enable_if_input_output_expre
     KFR_ENABLE_IF(is_input_output_expression<E1>&& is_input_expression<E2>)
 
 template <typename T>
-constexpr inline bool is_expr_element = std::is_same_v<std::remove_cv_t<T>, T>&& is_vec_element<T>;
+constexpr inline bool is_expr_element = std::is_same_v<std::remove_cv_t<T>, T> && is_vec_element<T>;
 
 template <typename E>
 constexpr inline bool is_infinite = expression_traits<E>::get_shape().has_infinity();
@@ -470,18 +470,21 @@ struct expression_function : expression_with_arguments<Args...>, expression_trai
 #else
     constexpr static shape<dims> get_shape(const expression_function& self)
     {
-        return self.fold([&](auto&&... args) CMT_INLINE_LAMBDA constexpr->auto {
-            return internal_generic::common_shape<true>(
-                expression_traits<decltype(args)>::get_shape(args)...);
-        });
+        return self.fold(
+            [&](auto&&... args) CMT_INLINE_LAMBDA constexpr -> auto {
+                return internal_generic::common_shape<true>(
+                    expression_traits<decltype(args)>::get_shape(args)...);
+            });
     }
     constexpr static shape<dims> get_shape()
     {
-        return expression_function::fold_idx([&](auto... args) CMT_INLINE_LAMBDA constexpr->auto {
-            return internal_generic::common_shape(
-                expression_traits<
-                    typename expression_function::template nth<val_of(decltype(args)())>>::get_shape()...);
-        });
+        return expression_function::fold_idx(
+            [&](auto... args) CMT_INLINE_LAMBDA constexpr -> auto
+            {
+                return internal_generic::common_shape(
+                    expression_traits<typename expression_function::template nth<val_of(decltype(args)())>>::
+                        get_shape()...);
+            });
     }
 #endif
 
@@ -597,10 +600,8 @@ template <typename Fn, typename... Args, index_t Axis, size_t N, index_t Dims,
 KFR_INTRINSIC vec<T, N> get_elements(const expression_function<Fn, Args...>& self, const shape<Dims>& index,
                                      const axis_params<Axis, N>& sh)
 {
-    return self.fold_idx(
-        [&](auto... idx) CMT_INLINE_LAMBDA -> vec<T, N> {
-            return self.fn(internal::get_arg<Tr::dims>(self, index, sh, idx)...);
-        });
+    return self.fold_idx([&](auto... idx) CMT_INLINE_LAMBDA -> vec<T, N>
+                         { return self.fn(internal::get_arg<Tr::dims>(self, index, sh, idx)...); });
 }
 
 template <typename Out, typename In, index_t OutAxis, size_t w, size_t gw, typename Tin, index_t outdims,

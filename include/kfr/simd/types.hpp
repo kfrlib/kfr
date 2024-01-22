@@ -263,7 +263,6 @@ struct unwrap_bit<bit<T>>
 template <typename T>
 using unwrap_bit = typename internal_generic::unwrap_bit<T>::type;
 
-
 template <typename T>
 constexpr inline bool is_bit = false;
 template <typename T>

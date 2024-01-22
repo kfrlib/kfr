@@ -352,7 +352,7 @@ public:
     tensor(const tensor&& other) : tensor(static_cast<const tensor&>(other)) {}
 #else
     tensor(const tensor&) = default;
-    tensor(tensor&&)      = default;
+    tensor(tensor&&) = default;
     tensor(tensor& other) : tensor(const_cast<const tensor&>(other)) {}
     tensor(const tensor&& other) : tensor(static_cast<const tensor&>(other)) {}
 #endif

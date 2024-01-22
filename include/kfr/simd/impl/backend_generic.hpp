@@ -306,11 +306,11 @@ KFR_SIMD_TYPE(f64, 2, float64x2_t);
 #define KFR_i8sse_INDEX(x, i) bitcast_anything<simd_array<i8, 16>>(x).val[i]
 #define KFR_i16sse_INDEX(x, i) bitcast_anything<simd_array<i16, 8>>(x).val[i]
 #define KFR_i32sse_INDEX(x, i) _mm_cvtsi128_si32(_mm_shuffle_epi32(x, _MM_SHUFFLE(3, 2, 1, i)))
-#define KFR_i64sse_INDEX(x, i) _mm_cvtsi128_si64(_mm_shuffle_epi32(x, _MM_SHUFFLE(3, 2, (i)*2 + 1, i * 2)))
+#define KFR_i64sse_INDEX(x, i) _mm_cvtsi128_si64(_mm_shuffle_epi32(x, _MM_SHUFFLE(3, 2, (i) * 2 + 1, i * 2)))
 #define KFR_u8sse_INDEX(x, i) bitcast_anything<simd_array<u8, 16>>(x).val[i]
 #define KFR_u16sse_INDEX(x, i) bitcast_anything<simd_array<u16, 8>>(x).val[i]
 #define KFR_u32sse_INDEX(x, i) _mm_cvtsi128_si32(_mm_shuffle_epi32(x, _MM_SHUFFLE(3, 2, 1, i)))
-#define KFR_u64sse_INDEX(x, i) _mm_cvtsi128_si64(_mm_shuffle_epi32(x, _MM_SHUFFLE(3, 2, (i)*2 + 1, i * 2)))
+#define KFR_u64sse_INDEX(x, i) _mm_cvtsi128_si64(_mm_shuffle_epi32(x, _MM_SHUFFLE(3, 2, (i) * 2 + 1, i * 2)))
 #define KFR_f32sse_INDEX(x, i) _mm_cvtss_f32(_mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, i)))
 #define KFR_f64sse_INDEX(x, i) _mm_cvtsd_f64(_mm_shuffle_pd(x, x, _MM_SHUFFLE2(1, i)))
 #endif

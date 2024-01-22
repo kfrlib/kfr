@@ -64,7 +64,7 @@ struct point
     constexpr point(T x, T y) noexcept : v(x, y) {}
     constexpr point(const size<T>& sz) noexcept : v(sz.v) {}
 #if CMT_COMPILER_IS_MSVC
-    constexpr point(const point& p) noexcept: v(p.v) {}
+    constexpr point(const point& p) noexcept : v(p.v) {}
 #else
     constexpr point(const point& p) noexcept = default;
 #endif
@@ -150,7 +150,7 @@ struct size
     constexpr explicit size(T xy) noexcept : v(xy, xy) {}
     constexpr size(const vec<T, 2>& v) noexcept : v(v) {}
 #if CMT_COMPILER_IS_MSVC
-    constexpr size(const size& p) noexcept: v(p.v) {}
+    constexpr size(const size& p) noexcept : v(p.v) {}
 #else
     constexpr size(const size& p) noexcept = default;
 #endif
@@ -227,7 +227,7 @@ struct border
     constexpr border(T x1, T y1, T x2, T y2) noexcept : v(x1, y1, x2, y2) {}
     constexpr explicit border(const vec<T, 4>& v) : v(v) {}
 #if CMT_COMPILER_IS_MSVC
-    constexpr border(const border& p) noexcept: v(p.v) {}
+    constexpr border(const border& p) noexcept : v(p.v) {}
 #else
     constexpr border(const border& p) noexcept = default;
 #endif
@@ -297,7 +297,7 @@ struct rectangle
     constexpr rectangle(T x1, T y1, T x2, T y2) : v(x1, y1, x2, y2) {}
     constexpr explicit rectangle(const vec<T, 4>& v) : v(v) {}
 #if CMT_COMPILER_IS_MSVC
-    constexpr rectangle(const rectangle& p) noexcept: v(p.v) {}
+    constexpr rectangle(const rectangle& p) noexcept : v(p.v) {}
 #else
     constexpr rectangle(const rectangle& p) noexcept = default;
 #endif
@@ -342,7 +342,10 @@ struct rectangle
         return rectangle(
             concat(cast<T>(p1.v + this->size().v * point1.v), cast<T>(p1.v + this->size().v * point2)));
     }
-    rectangle split(Tfloat x, Tfloat y, Tfloat w, Tfloat h) const noexcept { return split({ x, y }, { w, h }); }
+    rectangle split(Tfloat x, Tfloat y, Tfloat w, Tfloat h) const noexcept
+    {
+        return split({ x, y }, { w, h });
+    }
 
     rectangle cut_h_start(T width, bool partial = false)
     {

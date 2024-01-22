@@ -50,7 +50,7 @@ template <typename T>
 struct complex
 {
     static_assert(is_simd_type<T>, "Incorrect type for complex");
-    constexpr complex() CMT_NOEXCEPT  = default;
+    constexpr complex() CMT_NOEXCEPT = default;
     KFR_MEM_INTRINSIC constexpr complex(T re) CMT_NOEXCEPT : re(re), im(0) {}
     KFR_MEM_INTRINSIC constexpr complex(T re, T im) CMT_NOEXCEPT : re(re), im(im) {}
     constexpr complex(const complex&) CMT_NOEXCEPT = default;
@@ -68,10 +68,10 @@ struct complex
     }
 #ifdef CMT_COMPILER_GNU
     constexpr complex& operator=(const complex&) CMT_NOEXCEPT = default;
-    constexpr complex& operator=(complex&&) CMT_NOEXCEPT = default;
+    constexpr complex& operator=(complex&&) CMT_NOEXCEPT      = default;
 #else
     complex& operator=(const complex&) = default;
-    complex& operator=(complex&&) = default;
+    complex& operator=(complex&&)      = default;
 #endif
     KFR_MEM_INTRINSIC constexpr const T& real() const CMT_NOEXCEPT { return re; }
     KFR_MEM_INTRINSIC constexpr const T& imag() const CMT_NOEXCEPT { return im; }

@@ -117,7 +117,7 @@ KFR_INTRINSIC vec<T, N * 4> concat4(const vec<T, N>& a, const vec<T, N>& b, cons
                                 vec<T, N>::scalar_size()>(c.v, d.v));
 }
 
-template <size_t count, typename T, size_t N, size_t Nout = N* count>
+template <size_t count, typename T, size_t N, size_t Nout = N * count>
 KFR_INTRINSIC vec<T, Nout> repeat(const vec<T, N>& x)
 {
     return x.shuffle(csizeseq<Nout> % csize<N>);

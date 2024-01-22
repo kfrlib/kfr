@@ -66,19 +66,19 @@ KFR_INTRINSIC vec<complex<T>, N> ccosh(const vec<complex<T>, N>& x)
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> cabssqr(const vec<complex<T>, N>& x)
 {
-    const vec<T, N* 2> xx = sqr(cdecom(x));
+    const vec<T, N * 2> xx = sqr(cdecom(x));
     return even(xx) + odd(xx);
 }
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> cabs(const vec<complex<T>, N>& x)
 {
-    const vec<T, N* 2> xx = sqr(cdecom(x));
+    const vec<T, N * 2> xx = sqr(cdecom(x));
     return sqrt(even(xx) + odd(xx));
 }
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> carg(const vec<complex<T>, N>& x)
 {
-    const vec<T, N* 2> xx = cdecom(x);
+    const vec<T, N * 2> xx = cdecom(x);
     return atan2(odd(xx), even(xx));
 }
 

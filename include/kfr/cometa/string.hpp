@@ -655,7 +655,7 @@ std::string array_to_string(size_t size, Getter&& getter, int max_columns = 16, 
                             std::string_view close = "}")
 {
     return array_to_string<Fmt>(std::array<size_t, 1>{ size }, std::forward<Getter>(getter), max_columns,
-                           max_dimensions, std::move(separator), std::move(open), std::move(close));
+                                max_dimensions, std::move(separator), std::move(open), std::move(close));
 }
 template <typename Fmt = void, typename T>
 std::string array_to_string(size_t size, T* data, int max_columns = 16, int max_dimensions = INT_MAX,

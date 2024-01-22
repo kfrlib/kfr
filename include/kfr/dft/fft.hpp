@@ -402,10 +402,7 @@ struct dft_plan_real : dft_plan<T>
     size_t size;
     dft_pack_format fmt;
 
-    dft_plan_real()
-        : size(0), fmt(dft_pack_format::CCs)
-    {
-    }
+    dft_plan_real() : size(0), fmt(dft_pack_format::CCs) {}
 
     dft_plan_real(const dft_plan_real&)            = delete;
     dft_plan_real(dft_plan_real&&)                 = default;

@@ -1069,17 +1069,17 @@ KFR_INTRINSIC void butterfly6(const cvec<T, N>& a0, const cvec<T, N>& a1, const 
                               cvec<T, N>& w0, cvec<T, N>& w1, cvec<T, N>& w2, cvec<T, N>& w3, cvec<T, N>& w4,
                               cvec<T, N>& w5)
 {
-    cvec<T, N* 2> a03 = concat(a0, a3);
-    cvec<T, N* 2> a25 = concat(a2, a5);
-    cvec<T, N* 2> a41 = concat(a4, a1);
+    cvec<T, N * 2> a03 = concat(a0, a3);
+    cvec<T, N * 2> a25 = concat(a2, a5);
+    cvec<T, N * 2> a41 = concat(a4, a1);
     butterfly3<N * 2, inverse>(a03, a25, a41, a03, a25, a41);
     cvec<T, N> t0, t1, t2, t3, t4, t5;
     split(a03, t0, t1);
     split(a25, t2, t3);
     split(a41, t4, t5);
-    t3                = -t3;
-    cvec<T, N* 2> a04 = concat(t0, t4);
-    cvec<T, N* 2> a15 = concat(t1, t5);
+    t3                 = -t3;
+    cvec<T, N * 2> a04 = concat(t0, t4);
+    cvec<T, N * 2> a15 = concat(t1, t5);
     cvec<T, N * 2> w02, w35;
     butterfly2<N * 2>(a04, a15, w02, w35);
     split(w02, w0, w2);
@@ -1121,9 +1121,9 @@ KFR_INTRINSIC void butterfly9(const cvec<T, N>& a0, const cvec<T, N>& a1, const 
                               cvec<T, N>& w0, cvec<T, N>& w1, cvec<T, N>& w2, cvec<T, N>& w3, cvec<T, N>& w4,
                               cvec<T, N>& w5, cvec<T, N>& w6, cvec<T, N>& w7, cvec<T, N>& w8)
 {
-    cvec<T, N* 3> a012 = concat(a0, a1, a2);
-    cvec<T, N* 3> a345 = concat(a3, a4, a5);
-    cvec<T, N* 3> a678 = concat(a6, a7, a8);
+    cvec<T, N * 3> a012 = concat(a0, a1, a2);
+    cvec<T, N * 3> a345 = concat(a3, a4, a5);
+    cvec<T, N * 3> a678 = concat(a6, a7, a8);
     butterfly3<N * 3, inverse>(a012, a345, a678, a012, a345, a678);
     cvec<T, N> t0, t1, t2, t3, t4, t5, t6, t7, t8;
     split(a012, t0, t1, t2);
@@ -1135,9 +1135,9 @@ KFR_INTRINSIC void butterfly9(const cvec<T, N>& a0, const cvec<T, N>& a1, const 
     t7 = cmul(t7, tw9_2<T, inverse>());
     t8 = cmul(t8, tw9_4<T, inverse>());
 
-    cvec<T, N* 3> t036 = concat(t0, t3, t6);
-    cvec<T, N* 3> t147 = concat(t1, t4, t7);
-    cvec<T, N* 3> t258 = concat(t2, t5, t8);
+    cvec<T, N * 3> t036 = concat(t0, t3, t6);
+    cvec<T, N * 3> t147 = concat(t1, t4, t7);
+    cvec<T, N * 3> t258 = concat(t2, t5, t8);
 
     butterfly3<N * 3, inverse>(t036, t147, t258, t036, t147, t258);
     split(t036, w0, w1, w2);
@@ -1381,11 +1381,11 @@ KFR_INTRINSIC void butterfly10(const cvec<T, N>& a0, const cvec<T, N>& a1, const
                                cvec<T, N>& w3, cvec<T, N>& w4, cvec<T, N>& w5, cvec<T, N>& w6, cvec<T, N>& w7,
                                cvec<T, N>& w8, cvec<T, N>& w9)
 {
-    cvec<T, N* 2> a05 = concat(a0, a5);
-    cvec<T, N* 2> a27 = concat(a2, a7);
-    cvec<T, N* 2> a49 = concat(a4, a9);
-    cvec<T, N* 2> a61 = concat(a6, a1);
-    cvec<T, N* 2> a83 = concat(a8, a3);
+    cvec<T, N * 2> a05 = concat(a0, a5);
+    cvec<T, N * 2> a27 = concat(a2, a7);
+    cvec<T, N * 2> a49 = concat(a4, a9);
+    cvec<T, N * 2> a61 = concat(a6, a1);
+    cvec<T, N * 2> a83 = concat(a8, a3);
     butterfly5<N * 2, inverse>(a05, a27, a49, a61, a83, a05, a27, a49, a61, a83);
     cvec<T, N> t0, t1, t2, t3, t4, t5, t6, t7, t8, t9;
     split(a05, t0, t1);

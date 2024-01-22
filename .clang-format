@@ -14,8 +14,7 @@ Cpp11BracedListStyle: false
 AllowShortIfStatementsOnASingleLine: false
 AllowShortFunctionsOnASingleLine : true
 AlignOperands: true
-Standard: Cpp11
-IndentCaseLabels: false
+Standard: c++17
 AlignTrailingComments : false
 ConstructorInitializerAllOnOneLineOrOnePerLine : false
 ColumnLimit: 110
@@ -25,3 +24,5 @@ AlwaysBreakTemplateDeclarations : true
 AlignConsecutiveAssignments : true
 PenaltyReturnTypeOnItsOwnLine: 50000
 CommentPragmas: '^ >'
+IndentExternBlock: NoIndent
+SortIncludes: false

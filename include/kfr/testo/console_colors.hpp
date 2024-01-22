@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <cstdio>
 
-//#define CONSOLE_COLORS_FORCE_ASCII
+// #define CONSOLE_COLORS_FORCE_ASCII
 
 #if defined _WIN32 && !defined PRINT_COLORED_FORCE_ASCII
 #define USE_WIN32_API

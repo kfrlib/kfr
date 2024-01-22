@@ -33,10 +33,10 @@ public:
     constexpr array_ref(array_ref&&) CMT_NOEXCEPT      = default;
 #ifdef CMT_COMPILER_GNU
     constexpr array_ref& operator=(const array_ref&) CMT_NOEXCEPT = default;
-    constexpr array_ref& operator=(array_ref&&) CMT_NOEXCEPT = default;
+    constexpr array_ref& operator=(array_ref&&) CMT_NOEXCEPT      = default;
 #else
     array_ref& operator=(const array_ref&) = default;
-    array_ref& operator=(array_ref&&) = default;
+    array_ref& operator=(array_ref&&)      = default;
 #endif
 
     template <size_t N>

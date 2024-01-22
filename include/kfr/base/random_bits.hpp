@@ -50,9 +50,9 @@ constexpr seed_from_rdtsc_t seed_from_rdtsc{};
 struct random_state
 {
     constexpr random_state() : v{ 0, 0, 0, 0 } {}
-    constexpr random_state(random_state&&)      = default;
-    constexpr random_state(const random_state&) = default;
-    constexpr random_state& operator=(random_state&&) = default;
+    constexpr random_state(random_state&&)                 = default;
+    constexpr random_state(const random_state&)            = default;
+    constexpr random_state& operator=(random_state&&)      = default;
     constexpr random_state& operator=(const random_state&) = default;
     // internal field
     portable_vec<u32, 4> v;

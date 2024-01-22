@@ -74,7 +74,7 @@ bool builtin_sub_overflow<i64>(i64 x, i64 y, i64* r)
     return ((x ^ y) & 0x8000000000000000ull) && ((*r ^ x) & 0x8000000000000000ull);
 #endif
 }
-//#endif
+// #endif
 template <typename T>
 inline T ref_satadd(T x, T y)
 {

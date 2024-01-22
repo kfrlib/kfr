@@ -127,7 +127,7 @@ KFR_INTRINSIC vec<T, N * groupsize> gather(const T* base, const vec<IT, N>& offs
 
 namespace internal
 {
-template <size_t groupsize, typename T, size_t N, size_t Nout = N* groupsize, typename IT, size_t... Indices>
+template <size_t groupsize, typename T, size_t N, size_t Nout = N * groupsize, typename IT, size_t... Indices>
 KFR_INTRINSIC void scatter_helper(T* base, const vec<IT, N>& offset, const vec<T, Nout>& value,
                                   csizes_t<Indices...>)
 {
@@ -142,7 +142,7 @@ KFR_INTRINSIC void scatter_helper_s(T* base, size_t stride, const vec<T, N>& val
 }
 } // namespace internal
 
-template <size_t groupsize = 1, typename T, size_t N, size_t Nout = N* groupsize, typename IT>
+template <size_t groupsize = 1, typename T, size_t N, size_t Nout = N * groupsize, typename IT>
 KFR_INTRINSIC void scatter(T* base, const vec<IT, N>& offset, const vec<T, Nout>& value)
 {
     return internal::scatter_helper<groupsize>(base, offset, value, csizeseq<N>);

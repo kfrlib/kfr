@@ -583,11 +583,11 @@ inline number horner(number x, number c0, number c1, Ts... values)
 
 struct complex
 {
-    inline complex() noexcept               = default;
-    inline complex(const complex&) noexcept = default;
-    inline complex(complex&&) noexcept      = default;
+    inline complex() noexcept                          = default;
+    inline complex(const complex&) noexcept            = default;
+    inline complex(complex&&) noexcept                 = default;
     inline complex& operator=(const complex&) noexcept = default;
-    inline complex& operator=(complex&&) noexcept = default;
+    inline complex& operator=(complex&&) noexcept      = default;
     inline complex(const number& real) noexcept : real(real), imag(zero()) {}
     inline complex(const number& real, const number& imag) noexcept : real(real), imag(imag) {}
     inline bool isreal() const { return imag.iszero(); }

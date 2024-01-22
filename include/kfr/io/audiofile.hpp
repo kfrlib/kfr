@@ -363,8 +363,8 @@ struct audio_reader_flac : audio_reader<T>
     audio_reader_flac(std::shared_ptr<abstract_reader<>>&& reader) : reader(std::move(reader))
     {
         f              = drflac_open((drflac_read_proc)&internal_generic::drflac_reader_read_proc,
-                        (drflac_seek_proc)&internal_generic::drflac_reader_seek_proc, this->reader.get(),
-                        nullptr);
+                                     (drflac_seek_proc)&internal_generic::drflac_reader_seek_proc, this->reader.get(),
+                                     nullptr);
         fmt.channels   = f->channels;
         fmt.samplerate = f->sampleRate;
         fmt.length     = static_cast<imax>(f->totalPCMFrameCount);

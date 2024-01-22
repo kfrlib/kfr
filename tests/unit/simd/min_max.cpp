@@ -72,5 +72,4 @@ TEST(absmax)
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
 
-
 CMT_PRAGMA_MSVC(warning(pop))

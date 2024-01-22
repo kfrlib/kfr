@@ -98,10 +98,11 @@ struct static_array_base<T, csizes_t<indices...>>
     }
 
     constexpr static_array_base& operator=(const static_array_base&) = default;
-    constexpr static_array_base& operator=(static_array_base&&) = default;
+    constexpr static_array_base& operator=(static_array_base&&)      = default;
 
     template <size_t index>
-    constexpr static value_type just_value(value_type value) {
+    constexpr static value_type just_value(value_type value)
+    {
         // Workaround for MSVC2019 Internal compiler error
         return value;
     }

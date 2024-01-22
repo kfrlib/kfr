@@ -164,9 +164,9 @@ struct autofree
 {
     CMT_MEM_INTRINSIC autofree() {}
     explicit CMT_MEM_INTRINSIC autofree(size_t size) : ptr(aligned_allocate<T>(size)) {}
-    autofree(const autofree&) = delete;
-    autofree& operator=(const autofree&) = delete;
-    autofree(autofree&&) CMT_NOEXCEPT    = default;
+    autofree(const autofree&)                    = delete;
+    autofree& operator=(const autofree&)         = delete;
+    autofree(autofree&&) CMT_NOEXCEPT            = default;
     autofree& operator=(autofree&&) CMT_NOEXCEPT = default;
     CMT_MEM_INTRINSIC T& operator[](size_t index) CMT_NOEXCEPT { return ptr[index]; }
     CMT_MEM_INTRINSIC const T& operator[](size_t index) const CMT_NOEXCEPT { return ptr[index]; }

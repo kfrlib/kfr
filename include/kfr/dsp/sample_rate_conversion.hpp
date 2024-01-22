@@ -339,7 +339,7 @@ struct expression_downsample<2, offset, E> : expression_with_arguments<E>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_downsample& self, size_t index,
                                                 axis_params<0, N>) CMT_NOEXCEPT
     {
-        const vec<T, N* 2> x = get_elements(self.first(), index * 2, axis_params<0, N * 2>());
+        const vec<T, N * 2> x = get_elements(self.first(), index * 2, axis_params<0, N * 2>());
         return x.shuffle(csizeseq<N, offset, 2>);
     }
 };
@@ -357,7 +357,7 @@ struct expression_downsample<4, offset, E> : expression_with_arguments<E>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_downsample& self, index_t index,
                                                 axis_params<0, N>) CMT_NOEXCEPT
     {
-        const vec<T, N* 4> x = get_elements(self.first(), index * 4, axis_params<0, N * 4>());
+        const vec<T, N * 4> x = get_elements(self.first(), index * 4, axis_params<0, N * 4>());
         return x.shuffle(csizeseq<N, offset, 4>);
     }
 };

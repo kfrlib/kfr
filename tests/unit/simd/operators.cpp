@@ -66,9 +66,8 @@ TEST(div)
         test_catogories::vectors,
         [](auto x, auto y)
         { return is_safe_division<subtype<decltype(x)>>(x.front(), y.front()) ? x / y : 0; },
-        [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)> {
-            return is_safe_division(x, y) ? x / y : 0;
-        });
+        [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)>
+        { return is_safe_division(x, y) ? x / y : 0; });
 }
 struct not_f
 {
@@ -84,9 +83,8 @@ TEST(mod)
         test_catogories::vectors,
         [](auto x, auto y)
         { return is_safe_division<subtype<decltype(x)>>(x.front(), y.front()) ? x % y : 0; },
-        [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)> {
-            return is_safe_division(x, y) ? x % y : 0;
-        },
+        [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)>
+        { return is_safe_division(x, y) ? x % y : 0; },
         fn_return_constant<bool, true>{}, not_f{});
 }
 
@@ -185,54 +183,48 @@ TEST(eq)
 {
     test_function2(
         test_catogories::vectors, [](auto x, auto y) { return (x == y).asvec(); },
-        [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)> {
-            return maskbits<subtype<decltype(x)>>(x == y);
-        });
+        [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)>
+        { return maskbits<subtype<decltype(x)>>(x == y); });
 }
 
 TEST(ne)
 {
     test_function2(
         test_catogories::vectors, [](auto x, auto y) { return (x != y).asvec(); },
-        [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)> {
-            return maskbits<subtype<decltype(x)>>(x != y);
-        });
+        [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)>
+        { return maskbits<subtype<decltype(x)>>(x != y); });
 }
 
 TEST(ge)
 {
     test_function2(
         test_catogories::vectors, [](auto x, auto y) { return (x >= y).asvec(); },
-        [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)> {
-            return maskbits<subtype<decltype(x)>>(x >= y);
-        });
+        [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)>
+        { return maskbits<subtype<decltype(x)>>(x >= y); });
 }
 
 TEST(le)
 {
     test_function2(
         test_catogories::vectors, [](auto x, auto y) { return (x <= y).asvec(); },
-        [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)> {
-            return maskbits<subtype<decltype(x)>>(x <= y);
-        });
+        [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)>
+        { return maskbits<subtype<decltype(x)>>(x <= y); });
 }
 
 TEST(gt)
 {
     test_function2(
         test_catogories::vectors, [](auto x, auto y) { return (x > y).asvec(); },
-        [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)> {
-            return maskbits<subtype<decltype(x)>>(x > y);
-        });
+        [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)>
+        { return maskbits<subtype<decltype(x)>>(x > y); });
 }
 
 TEST(lt)
 {
     test_function2(
         test_catogories::vectors, [](auto x, auto y) { return (x < y).asvec(); },
-        [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)> {
-            return maskbits<subtype<decltype(x)>>(x < y);
-        });
+        [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)>
+        { return maskbits<subtype<decltype(x)>>(x < y); });
 }
 
 TEST(horner)
@@ -271,6 +263,5 @@ TEST(apply)
 }
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
-
 
 CMT_PRAGMA_MSVC(warning(pop))

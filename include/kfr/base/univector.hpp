@@ -455,7 +455,7 @@ struct univector<T, tag_dynamic_vector>
         new (this) univector(other);
         return *this;
     }
-    univector& operator=(univector&& other) 
+    univector& operator=(univector&& other)
     {
         this->~univector();
         new (this) univector(std::move(other));
@@ -463,12 +463,9 @@ struct univector<T, tag_dynamic_vector>
     }
 #else
     univector& operator=(const univector&) = default;
-    univector& operator=(univector&&) = default;
+    univector& operator=(univector&&)      = default;
 #endif
-    KFR_MEM_INTRINSIC univector& operator=(univector& other)
-    {
-        return operator=(std::as_const(other));
-    }
+    KFR_MEM_INTRINSIC univector& operator=(univector& other) { return operator=(std::as_const(other)); }
     template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
     KFR_MEM_INTRINSIC univector& operator=(Input&& input)
     {

@@ -94,7 +94,7 @@ struct dft_stage_fixed_impl : dft_stage<T>
         this->recursion  = false; // true;
         this->stage_size = fixed_radix * iterations * blocks;
         this->data_size  = align_up((this->repeats * (fixed_radix - 1)) * sizeof(complex<T>),
-                                   platform<>::native_cache_alignment);
+                                    platform<>::native_cache_alignment);
     }
 
     constexpr static size_t rradix = fixed_radix;
@@ -254,7 +254,7 @@ struct dft_arblen_stage_impl : dft_stage<T>
     univector<complex<T>> xp_fft;
 };
 
-template <typename T, size_t radix1, size_t radix2, size_t size = radix1* radix2>
+template <typename T, size_t radix1, size_t radix2, size_t size = radix1 * radix2>
 struct dft_special_stage_impl : dft_stage<T>
 {
     dft_special_stage_impl() : stage1(radix1, size / radix1, 1), stage2(radix2, 1, size / radix2)

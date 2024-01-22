@@ -243,10 +243,7 @@ struct generator_sin : public generator<T, VecWidth, generator_sin<T, VecWidth>,
 
         this->value = vec<vec<T, 2>, VecWidth>::from_flatten(cs);
     }
-    KFR_MEM_INTRINSIC vec<T, VecWidth> get_value() const
-    {
-        return odd(flatten(this->value));
-    }
+    KFR_MEM_INTRINSIC vec<T, VecWidth> get_value() const { return odd(flatten(this->value)); }
 
 protected:
     T step;
