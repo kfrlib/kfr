@@ -165,7 +165,7 @@ if (KFR_ARCH_TESTS)
 endif ()
 
 if (KFR_USE_SDE)
-    if ("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
+    if (BITNESS64)
         find_program(SDE NAMES "sde64" "sde")
     else ()
         find_program(SDE NAMES "sde")

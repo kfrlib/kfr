@@ -94,6 +94,14 @@ project(
     kfr
     VERSION ${KFR_VERSION}
     LANGUAGES CXX)
+    
+if (DEBUG_CMAKE)
+    get_cmake_property(VARS VARIABLES)
+    list (SORT VARS)
+    foreach (VAR ${VARS})
+        message(STATUS "${VAR}=${${VAR}}")
+    endforeach()
+endif ()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -129,6 +137,12 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
 endif ()
 if (CMAKE_OSX_ARCHITECTURES MATCHES "x86_64")
     set(X86 TRUE)
+endif ()
+
+if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(BITNESS64 TRUE)
+else ()
+    set(BITNESS64 FALSE)
 endif ()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL
@@ -205,6 +219,16 @@ if (X86)
         avx512)
 else ()
     set(ALLOWED_ARCHS generic neon neon64)
+endif ()
+
+if (NOT X86)
+    if (KFR_ARCH IN_LIST DETECT_NAMES)
+        if (BITNESS64)
+            set(KFR_ARCH neon64)
+        else ()
+            set(KFR_ARCH neon)
+        endif ()
+    endif ()
 endif ()
 
 if (KFR_ARCH IN_LIST DETECT_NAMES)

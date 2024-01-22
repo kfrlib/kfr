@@ -12,7 +12,7 @@ if (X86)
         set(ARCH_FLAGS_GNU_avx2    -msse4.2 -mavx2 -mfma)
         set(ARCH_FLAGS_GNU_avx512  -msse4.2 -mavx2 -mfma -mavx512f -mavx512cd -mavx512bw -mavx512dq -mavx512vl)
 
-        if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+        if (BITNESS64)
             # SSE2 is part of x86_64
             set(ARCH_FLAG_MS_SSE2)
         else()
@@ -36,7 +36,7 @@ if (X86)
         endif()
         if (CLANG OR NOT MSVC)
             # Reset previous arch flags
-            if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+            if (BITNESS64)
                 target_compile_options(${TARGET} ${MODE} -mno-sse3)
             else()
                 target_compile_options(${TARGET} ${MODE} -mno-sse)
