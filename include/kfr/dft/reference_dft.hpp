@@ -26,7 +26,6 @@
 #pragma once
 
 #include "../base/memory.hpp"
-#include "../base/small_buffer.hpp"
 #include "../base/univector.hpp"
 #include "../simd/complex.hpp"
 #include "../simd/constants.hpp"

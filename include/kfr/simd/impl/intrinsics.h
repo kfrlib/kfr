@@ -38,12 +38,17 @@ CMT_INLINE void builtin_memcpy(void* dest, const void* src, size_t size)
 {
     __builtin_memcpy(dest, src, size);
 }
+CMT_INLINE void builtin_memmove(void* dest, const void* src, size_t size)
+{
+    __builtin_memmove(dest, src, size);
+}
 CMT_INLINE void builtin_memset(void* dest, int val, size_t size) { __builtin_memset(dest, val, size); }
 #else
 CMT_INLINE float builtin_sqrt(float x) { return ::sqrtf(x); }
 CMT_INLINE double builtin_sqrt(double x) { return ::sqrt(x); }
 CMT_INLINE long double builtin_sqrt(long double x) { return ::sqrtl(x); }
 CMT_INLINE void builtin_memcpy(void* dest, const void* src, size_t size) { ::memcpy(dest, src, size); }
+CMT_INLINE void builtin_memmove(void* dest, const void* src, size_t size) { ::memmove(dest, src, size); }
 CMT_INLINE void builtin_memset(void* dest, int val, size_t size) { ::memset(dest, val, size); }
 #endif
 

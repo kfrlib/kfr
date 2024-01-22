@@ -97,26 +97,28 @@ KFR_INTRINSIC bool increment_indices(shape<dims>& indices, const shape<dims>& st
                                      index_t dim = dims - 1);
 } // namespace internal_generic
 
-template <index_t dims>
-struct shape : static_array_base<index_t, csizeseq_t<dims>>
+template <index_t Dims>
+struct shape : static_array_base<index_t, csizeseq_t<Dims>>
 {
-    static_assert(dims <= 256, "Too many dimensions");
-    using base = static_array_base<index_t, csizeseq_t<dims>>;
+    static_assert(Dims <= 256, "Too many dimensions");
+    using base = static_array_base<index_t, csizeseq_t<Dims>>;
 
     using base::base;
 
     constexpr shape(const base& a) : base(a) {}
 
-    static_assert(dims < maximum_dims);
+    static_assert(Dims <= maximum_dims);
 
-    template <int dummy = 0, KFR_ENABLE_IF(dummy == 0 && dims == 1)>
+    static constexpr size_t dims() { return base::static_size; }
+
+    template <int dummy = 0, KFR_ENABLE_IF(dummy == 0 && Dims == 1)>
     operator index_t() const
     {
         return this->front();
     }
 
     template <typename TI>
-    static constexpr shape from_std_array(const std::array<TI, dims>& a)
+    static constexpr shape from_std_array(const std::array<TI, Dims>& a)
     {
         shape result;
         std::copy(a.begin(), a.end(), result.begin());
@@ -124,16 +126,16 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
     }
 
     template <typename TI = index_t>
-    constexpr std::array<TI, dims> to_std_array() const
+    constexpr std::array<TI, Dims> to_std_array() const
     {
-        std::array<TI, dims> result{};
+        std::array<TI, Dims> result{};
         std::copy(this->begin(), this->end(), result.begin());
         return result;
     }
 
     bool ge(const shape& other) const
     {
-        if constexpr (dims == 1)
+        if constexpr (Dims == 1)
         {
             return this->front() >= other.front();
         }
@@ -145,17 +147,17 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
 
     index_t trailing_zeros() const
     {
-        for (index_t i = 0; i < dims; ++i)
+        for (index_t i = 0; i < Dims; ++i)
         {
             if (revindex(i) != 0)
                 return i;
         }
-        return dims;
+        return Dims;
     }
 
     bool le(const shape& other) const
     {
-        if constexpr (dims == 1)
+        if constexpr (Dims == 1)
         {
             return this->front() <= other.front();
         }
@@ -184,7 +186,7 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
 
     constexpr bool has_infinity() const
     {
-        for (index_t i = 0; i < dims; ++i)
+        for (index_t i = 0; i < Dims; ++i)
         {
             if (CMT_UNLIKELY(this->operator[](i) == infinite_size))
                 return true;
@@ -228,13 +230,13 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
 
     constexpr const base* operator->() const { return static_cast<const base*>(this); }
 
-    KFR_MEM_INTRINSIC constexpr size_t to_flat(const shape<dims>& indices) const
+    KFR_MEM_INTRINSIC constexpr size_t to_flat(const shape<Dims>& indices) const
     {
-        if constexpr (dims == 1)
+        if constexpr (Dims == 1)
         {
             return indices[0];
         }
-        else if constexpr (dims == 2)
+        else if constexpr (Dims == 2)
         {
             return (*this)[1] * indices[0] + indices[1];
         }
@@ -243,33 +245,33 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
             size_t result = 0;
             size_t scale  = 1;
             CMT_LOOP_UNROLL
-            for (size_t i = 0; i < dims; ++i)
+            for (size_t i = 0; i < Dims; ++i)
             {
-                result += scale * indices[dims - 1 - i];
-                scale *= (*this)[dims - 1 - i];
+                result += scale * indices[Dims - 1 - i];
+                scale *= (*this)[Dims - 1 - i];
             }
             return result;
         }
     }
-    KFR_MEM_INTRINSIC constexpr shape<dims> from_flat(size_t index) const
+    KFR_MEM_INTRINSIC constexpr shape<Dims> from_flat(size_t index) const
     {
-        if constexpr (dims == 1)
+        if constexpr (Dims == 1)
         {
             return { static_cast<index_t>(index) };
         }
-        else if constexpr (dims == 2)
+        else if constexpr (Dims == 2)
         {
             index_t sz = (*this)[1];
             return { static_cast<index_t>(index / sz), static_cast<index_t>(index % sz) };
         }
         else
         {
-            shape<dims> indices;
+            shape<Dims> indices;
             CMT_LOOP_UNROLL
-            for (size_t i = 0; i < dims; ++i)
+            for (size_t i = 0; i < Dims; ++i)
             {
-                size_t sz             = (*this)[dims - 1 - i];
-                indices[dims - 1 - i] = index % sz;
+                size_t sz             = (*this)[Dims - 1 - i];
+                indices[Dims - 1 - i] = index % sz;
                 index /= sz;
             }
             return indices;
@@ -281,11 +283,11 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
     template <index_t indims, bool stop = false>
     KFR_MEM_INTRINSIC constexpr shape adapt(const shape<indims>& other, cbool_t<stop> = {}) const
     {
-        static_assert(indims >= dims);
+        static_assert(indims >= Dims);
         if constexpr (stop)
-            return other.template trim<dims>()->min(**this);
+            return other.template trim<Dims>()->min(**this);
         else
-            return other.template trim<dims>()->min(**this - 1);
+            return other.template trim<Dims>()->min(**this - 1);
     }
 
     KFR_MEM_INTRINSIC constexpr index_t product() const { return (*this)->product(); }
@@ -293,9 +295,9 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
     KFR_MEM_INTRINSIC constexpr dimset tomask() const
     {
         dimset result(0);
-        for (index_t i = 0; i < dims; ++i)
+        for (index_t i = 0; i < Dims; ++i)
         {
-            result[i + maximum_dims - dims] = this->operator[](i) == 1 ? 0 : -1;
+            result[i + maximum_dims - Dims] = this->operator[](i) == 1 ? 0 : -1;
         }
         return result;
     }
@@ -303,20 +305,20 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
     template <index_t new_dims>
     constexpr KFR_MEM_INTRINSIC shape<new_dims> extend(index_t value = infinite_size) const
     {
-        static_assert(new_dims >= dims);
-        if constexpr (new_dims == dims)
+        static_assert(new_dims >= Dims);
+        if constexpr (new_dims == Dims)
             return *this;
         else
-            return shape<new_dims>{ shape<new_dims - dims>(value), *this };
+            return shape<new_dims>{ shape<new_dims - Dims>(value), *this };
     }
 
     template <index_t odims>
     constexpr shape<odims> trim() const
     {
-        static_assert(odims <= dims);
+        static_assert(odims <= Dims);
         if constexpr (odims > 0)
         {
-            return this->template slice<dims - odims, odims>();
+            return this->template slice<Dims - odims, odims>();
         }
         else
         {
@@ -324,31 +326,56 @@ struct shape : static_array_base<index_t, csizeseq_t<dims>>
         }
     }
 
-    constexpr KFR_MEM_INTRINSIC shape<dims - 1> trunc() const
+    // 0,1,2,3 -> 1,2,3,0
+    constexpr KFR_MEM_INTRINSIC shape rotate_left() const
     {
-        if constexpr (dims > 1)
+        return this->shuffle(csizeseq<Dims, 1> % csize<Dims>);
+    }
+
+    // 0,1,2,3 -> 3,0,1,2
+    constexpr KFR_MEM_INTRINSIC shape rotate_right() const
+    {
+        return this->shuffle(csizeseq<Dims, Dims - 1> % csize<Dims>);
+    }
+
+    constexpr KFR_MEM_INTRINSIC shape<Dims - 1> remove_back() const
+    {
+        if constexpr (Dims > 1)
         {
-            return this->template slice<0, dims - 1>();
+            return this->template slice<0, Dims - 1>();
         }
         else
         {
             return {};
         }
     }
+    constexpr KFR_MEM_INTRINSIC shape<Dims - 1> remove_front() const
+    {
+        if constexpr (Dims > 1)
+        {
+            return this->template slice<1, Dims - 1>();
+        }
+        else
+        {
+            return {};
+        }
+    }
+
+    constexpr KFR_MEM_INTRINSIC shape<Dims - 1> trunc() const { return remove_back(); }
 
     KFR_MEM_INTRINSIC constexpr index_t revindex(size_t index) const
     {
-        return index < dims ? this->operator[](dims - 1 - index) : 1;
+        return index < Dims ? this->operator[](Dims - 1 - index) : 1;
     }
     KFR_MEM_INTRINSIC constexpr void set_revindex(size_t index, index_t val)
     {
-        if (CMT_LIKELY(index < dims))
-            this->operator[](dims - 1 - index) = val;
+        if (CMT_LIKELY(index < Dims))
+            this->operator[](Dims - 1 - index) = val;
     }
 
     KFR_MEM_INTRINSIC constexpr shape transpose() const
     {
-        return this->shuffle(csizeseq<dims, dims - 1, -1>);
+        return this->shuffle(csizeseq<Dims, Dims - 1, -1>);
     }
 };
 
@@ -358,6 +385,8 @@ struct shape<0>
     static constexpr size_t static_size = 0;
 
     static constexpr size_t size() { return static_size; }
+
+    static constexpr size_t dims() { return static_size; }
 
     constexpr shape() = default;
     constexpr shape(index_t value) {}
@@ -402,6 +431,76 @@ struct shape<0>
 
     KFR_MEM_INTRINSIC constexpr index_t revindex(size_t index) const { return 1; }
     KFR_MEM_INTRINSIC void set_revindex(size_t index, index_t val) {}
+};
+
+constexpr inline size_t dynamic_shape = std::numeric_limits<size_t>::max();
+
+template <>
+struct shape<dynamic_shape> : protected std::vector<index_t>
+{
+    using std::vector<index_t>::vector;
+
+    using std::vector<index_t>::begin;
+    using std::vector<index_t>::end;
+    using std::vector<index_t>::data;
+    using std::vector<index_t>::size;
+    using std::vector<index_t>::front;
+    using std::vector<index_t>::back;
+    using std::vector<index_t>::operator[];
+
+    template <index_t Dims, CMT_ENABLE_IF(Dims != dynamic_shape)>
+    shape(shape<Dims> sh) : shape(sh.begin(), sh.end())
+    {
+    }
+
+    size_t dims() const { return size(); }
+
+    KFR_MEM_INTRINSIC index_t product() const
+    {
+        if (std::vector<index_t>::empty())
+            return 0;
+        index_t p = this->front();
+        for (size_t i = 1; i < size(); ++i)
+        {
+            p *= this->operator[](i);
+        }
+        return p;
+    }
+
+    // 0,1,2,3 -> 1,2,3,0
+    KFR_MEM_INTRINSIC shape rotate_left() const
+    {
+        shape result = *this;
+        if (result.size() > 1)
+            std::rotate(result.begin(), result.begin() + 1, result.end());
+        return result;
+    }
+
+    // 0,1,2,3 -> 3,0,1,2
+    KFR_MEM_INTRINSIC shape rotate_right() const
+    {
+        shape result = *this;
+        if (result.size() > 1)
+            std::rotate(result.begin(), result.end() - 1, result.end());
+        return result;
+    }
+
+    KFR_MEM_INTRINSIC shape remove_back() const
+    {
+        shape result = *this;
+        if (!result.empty())
+            result.erase(result.end() - 1);
+        return result;
+    }
+    KFR_MEM_INTRINSIC shape remove_front() const
+    {
+        shape result = *this;
+        if (!result.empty())
+        {
+            result.erase(result.begin());
+        }
+        return result;
+    }
 };
 
 template <typename... Args>

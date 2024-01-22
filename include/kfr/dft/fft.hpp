@@ -27,11 +27,13 @@
 
 #include "../base/basic_expressions.hpp"
 #include "../base/memory.hpp"
+#include "../base/tensor.hpp"
 #include "../base/univector.hpp"
 #include "../math/sin_cos.hpp"
 #include "../simd/complex.hpp"
 #include "../simd/constants.hpp"
 #include <bitset>
+#include <functional>
 
 CMT_PRAGMA_GNU(GCC diagnostic push)
 #if CMT_HAS_WARNING("-Wshadow")
@@ -75,6 +77,10 @@ struct dft_stage
     {
         printf("%s: %zu, %zu, %zu, %zu, %zu, %zu, %zu, %d, %d\n", name ? name : "unnamed", radix, stage_size,
                data_size, temp_size, repeats, out_offset, blocks, recursion, can_inplace);
+    }
+    virtual void copy_input(bool invert, complex<T>* out, const complex<T>* in, size_t size)
+    {
+        builtin_memcpy(out, in, sizeof(complex<T>) * size);
     }
 
     KFR_MEM_INTRINSIC void execute(cdirect_t, complex<T>* out, const complex<T>* in, u8* temp)
@@ -201,6 +207,22 @@ struct dft_plan
         execute_dft(inv, out.data(), in.data(), temp.data());
     }
 
+    template <univector_tag Tag1, univector_tag Tag2>
+    KFR_MEM_INTRINSIC void execute(univector<complex<T>, Tag1>& out, const univector<complex<T>, Tag2>& in,
+                                   u8* temp, bool inverse = false) const
+    {
+        if (inverse)
+            execute_dft(ctrue, out.data(), in.data(), temp);
+        else
+            execute_dft(cfalse, out.data(), in.data(), temp);
+    }
+    template <bool inverse, univector_tag Tag1, univector_tag Tag2>
+    KFR_MEM_INTRINSIC void execute(univector<complex<T>, Tag1>& out, const univector<complex<T>, Tag2>& in,
+                                   u8* temp, cbool_t<inverse> inv) const
+    {
+        execute_dft(inv, out.data(), in.data(), temp);
+    }
+
     autofree<u8> data;
     size_t data_size;
 
@@ -309,6 +331,11 @@ protected:
     template <bool inverse>
     void execute_dft(cbool_t<inverse>, complex<T>* out, const complex<T>* in, u8* temp) const
     {
+        if (temp == nullptr && temp_size > 0)
+        {
+            return call_with_temp(temp_size, std::bind(&dft_plan<T>::execute_dft<inverse>, this,
+                                                       cbool_t<inverse>{}, out, in, std::placeholders::_1));
+        }
         auto&& stages = this->stages[inverse];
         if (stages.size() == 1 && (stages[0]->can_inplace || in != out))
         {
@@ -321,12 +348,12 @@ protected:
 
         complex<T>* scratch = ptr_cast<complex<T>>(
             temp + this->temp_size -
-            align_up(sizeof(complex<T>) * this->size, platform<>::native_cache_alignment));
+            align_up(sizeof(complex<T>) * (this->size + 1), platform<>::native_cache_alignment));
 
         bool in_scratch = disposition.test(0);
         if (in_scratch)
         {
-            builtin_memcpy(scratch, in, sizeof(complex<T>) * this->size);
+            stages[0]->copy_input(inverse, scratch, in, this->size);
         }
 
         const size_t count = stages.size();
@@ -392,6 +419,9 @@ struct dft_plan_real : dft_plan<T>
 
     bool is_initialized() const { return size != 0; }
 
+    size_t complex_size() const { return complex_size_for(size); }
+    constexpr static size_t complex_size_for(size_t size) { return size / 2 + 1; }
+
     [[deprecated("cpu parameter is deprecated. Runtime dispatch is used if built with "
                  "KFR_ENABLE_MULTIARCH")]] explicit dft_plan_real(cpu_t cpu, size_t size,
                                                                   dft_pack_format fmt = dft_pack_format::CCs)
@@ -420,6 +450,14 @@ struct dft_plan_real : dft_plan<T>
     void execute(univector<complex<T>, Tag1>&, const univector<complex<T>, Tag2>&, univector<u8, Tag3>&,
                  cbool_t<inverse>) const = delete;
 
+    template <univector_tag Tag1, univector_tag Tag2>
+    void execute(univector<complex<T>, Tag1>& out, const univector<complex<T>, Tag2>& in, u8* temp,
+                 bool inverse = false) const = delete;
+
+    template <bool inverse, univector_tag Tag1, univector_tag Tag2>
+    void execute(univector<complex<T>, Tag1>& out, const univector<complex<T>, Tag2>& in, u8* temp,
+                 cbool_t<inverse> inv) const = delete;
+
     KFR_MEM_INTRINSIC void execute(complex<T>* out, const T* in, u8* temp, cdirect_t = {}) const
     {
         this->execute_dft(cfalse, out, ptr_cast<complex<T>>(in), temp);
@@ -442,17 +480,373 @@ struct dft_plan_real : dft_plan<T>
         this->execute_dft(ctrue, ptr_cast<complex<T>>(out.data()), in.data(), temp.data());
     }
 
-    // Deprecated. fmt must be passed to constructor instead
-    void execute(complex<T>*, const T*, u8*, dft_pack_format) const = delete;
-    void execute(T*, const complex<T>*, u8*, dft_pack_format) const = delete;
+    template <univector_tag Tag1, univector_tag Tag2>
+    KFR_MEM_INTRINSIC void execute(univector<complex<T>, Tag1>& out, const univector<T, Tag2>& in, u8* temp,
+                                   cdirect_t = {}) const
+    {
+        this->execute_dft(cfalse, out.data(), ptr_cast<complex<T>>(in.data()), temp);
+    }
+    template <univector_tag Tag1, univector_tag Tag2>
+    KFR_MEM_INTRINSIC void execute(univector<T, Tag1>& out, const univector<complex<T>, Tag2>& in, u8* temp,
+                                   cinvert_t = {}) const
+    {
+        this->execute_dft(ctrue, ptr_cast<complex<T>>(out.data()), in.data(), temp);
+    }
+};
 
-    // Deprecated. fmt must be passed to constructor instead
-    template <univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
-    void execute(univector<complex<T>, Tag1>&, const univector<T, Tag2>&, univector<u8, Tag3>&,
-                 dft_pack_format) const = delete;
-    template <univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
-    void execute(univector<T, Tag1>&, const univector<complex<T>, Tag2>&, univector<u8, Tag3>&,
-                 dft_pack_format) const = delete;
+/// @brief Multidimensional DFT
+template <typename T, index_t Dims>
+struct dft_plan_md
+{
+    shape<Dims> size;
+    size_t temp_size;
+
+    dft_plan_md(const dft_plan_md&)            = delete;
+    dft_plan_md(dft_plan_md&&)                 = default;
+    dft_plan_md& operator=(const dft_plan_md&) = delete;
+    dft_plan_md& operator=(dft_plan_md&&)      = default;
+
+    bool is_initialized() const { return size.product() != 0; }
+
+    void dump() const
+    {
+        for (const auto& d : dfts)
+        {
+            d.dump();
+        }
+    }
+
+    explicit dft_plan_md(shape<Dims> size) : size(std::move(size)), temp_size(0)
+    {
+        if constexpr (Dims == dynamic_shape)
+        {
+            dfts.resize(this->size.dims());
+        }
+        for (index_t i = 0; i < this->size.dims(); ++i)
+        {
+            dfts[i]   = dft_plan<T>(this->size[i]);
+            temp_size = std::max(temp_size, dfts[i].temp_size);
+        }
+    }
+
+    void execute(complex<T>* out, const complex<T>* in, u8* temp, bool inverse = false) const
+    {
+        if (inverse)
+            execute_dft(ctrue, out, in, temp);
+        else
+            execute_dft(cfalse, out, in, temp);
+    }
+
+    template <index_t UDims = Dims, CMT_ENABLE_IF(UDims != dynamic_shape)>
+    void execute(const tensor<complex<T>, Dims>& out, const tensor<complex<T>, Dims>& in, u8* temp,
+                 bool inverse = false) const
+    {
+        KFR_LOGIC_CHECK(in.shape() == this->size && out.shape() == this->size,
+                        "dft_plan_md: incorrect tensor shapes");
+        KFR_LOGIC_CHECK(in.is_contiguous() && out.is_contiguous(), "dft_plan_md: tensors must be contiguous");
+        if (inverse)
+            execute_dft(ctrue, out.data(), in.data(), temp);
+        else
+            execute_dft(cfalse, out.data(), in.data(), temp);
+    }
+    template <bool inverse = false>
+    void execute(complex<T>* out, const complex<T>* in, u8* temp, cbool_t<inverse> = {}) const
+    {
+        execute_dft(cbool<inverse>, out, in, temp);
+    }
+
+private:
+    template <bool inverse>
+    KFR_INTRINSIC void execute_dft(cbool_t<inverse>, complex<T>* out, const complex<T>* in, u8* temp) const
+    {
+        if (temp == nullptr && temp_size > 0)
+        {
+            return call_with_temp(temp_size, std::bind(&dft_plan_md<T, Dims>::execute_dft<inverse>, this,
+                                                       cbool_t<inverse>{}, out, in, std::placeholders::_1));
+        }
+        if (size.dims() == 1)
+        {
+            dfts[0].execute(out, in, temp, cbool<inverse>);
+        }
+        else
+        {
+            execute_dim(cbool<inverse>, out, in, temp);
+        }
+    }
+    KFR_INTRINSIC void execute_dim(cfalse_t, complex<T>* out, const complex<T>* in, u8* temp) const
+    {
+        shape<Dims> sh = size;
+        index_t total  = size.product();
+        index_t axis   = size.dims() - 1;
+        for (;;)
+        {
+            if (size[axis] > 1)
+            {
+                for (index_t o = 0; o < total; o += sh.back())
+                    dfts[axis].execute(out + o, in + o, temp, cfalse);
+            }
+            else
+            {
+                builtin_memcpy(out, in, sizeof(complex<T>) * total);
+            }
+
+            matrix_transpose(out, out, shape{ sh.remove_back().product(), sh.back() });
+
+            if (axis == 0)
+                break;
+
+            sh = sh.rotate_right();
+            in = out;
+            --axis;
+        }
+    }
+    KFR_INTRINSIC void execute_dim(ctrue_t, complex<T>* out, const complex<T>* in, u8* temp) const
+    {
+        shape<Dims> sh = size;
+        index_t total  = size.product();
+        index_t axis   = 0;
+        for (;;)
+        {
+            matrix_transpose(out, in, shape{ sh.front(), sh.remove_front().product() });
+
+            if (size[axis] > 1)
+            {
+                for (index_t o = 0; o < total; o += sh.front())
+                    dfts[axis].execute(out + o, out + o, temp, ctrue);
+            }
+
+            if (axis == size.dims() - 1)
+                break;
+
+            sh = sh.rotate_left();
+            in = out;
+            ++axis;
+        }
+    }
+    using dft_list =
+        std::conditional_t<Dims == dynamic_shape, std::vector<dft_plan<T>>, std::array<dft_plan<T>, Dims>>;
+    dft_list dfts;
+};
+
+/// @brief Multidimensional DFT
+template <typename T, index_t Dims>
+struct dft_plan_md_real
+{
+    shape<Dims> size;
+    size_t temp_size;
+    bool real_out_is_enough;
+
+    dft_plan_md_real(const dft_plan_md_real&)            = delete;
+    dft_plan_md_real(dft_plan_md_real&&)                 = default;
+    dft_plan_md_real& operator=(const dft_plan_md_real&) = delete;
+    dft_plan_md_real& operator=(dft_plan_md_real&&)      = default;
+
+    bool is_initialized() const { return size.product() != 0; }
+
+    void dump() const
+    {
+        for (const auto& d : dfts)
+        {
+            d.dump();
+        }
+        dft_real.dump();
+    }
+
+    shape<Dims> complex_size() const { return complex_size_for(size); }
+    constexpr static shape<Dims> complex_size_for(shape<Dims> size)
+    {
+        if (size.dims() > 0)
+            size.back() = dft_plan_real<T>::complex_size_for(size.back());
+        return size;
+    }
+
+    size_t real_out_size() const { return real_out_size_for(size); }
+    constexpr static size_t real_out_size_for(shape<Dims> size)
+    {
+        return complex_size_for(size).product() * 2;
+    }
+
+    explicit dft_plan_md_real(shape<Dims> size, bool real_out_is_enough = false)
+        : size(std::move(size)), temp_size(0), real_out_is_enough(real_out_is_enough)
+    {
+        if (this->size.dims() > 0)
+        {
+            if constexpr (Dims == dynamic_shape)
+            {
+                dfts.resize(this->size.dims());
+            }
+            for (index_t i = 0; i < this->size.dims() - 1; ++i)
+            {
+                dfts[i]   = dft_plan<T>(this->size[i]);
+                temp_size = std::max(temp_size, dfts[i].temp_size);
+            }
+            dft_real  = dft_plan_real<T>(this->size.back());
+            temp_size = std::max(temp_size, dft_real.temp_size);
+        }
+        if (!this->real_out_is_enough)
+        {
+            temp_size += complex_size().product() * sizeof(complex<T>);
+        }
+    }
+
+    void execute(complex<T>* out, const T* in, u8* temp, cdirect_t = {}) const
+    {
+        execute_dft(cfalse, out, in, temp);
+    }
+    void execute(T* out, const complex<T>* in, u8* temp, cinvert_t = {}) const
+    {
+        execute_dft(ctrue, out, in, temp);
+    }
+
+    template <index_t UDims = Dims, CMT_ENABLE_IF(UDims != dynamic_shape)>
+    void execute(const tensor<complex<T>, Dims>& out, const tensor<T, Dims>& in, u8* temp,
+                 cdirect_t = {}) const
+    {
+        KFR_LOGIC_CHECK(in.shape() == this->size && out.shape() == complex_size(),
+                        "dft_plan_md_real: incorrect tensor shapes");
+        KFR_LOGIC_CHECK(in.is_contiguous() && out.is_contiguous(),
+                        "dft_plan_md_real: tensors must be contiguous");
+        execute_dft(cfalse, out.data(), in.data(), temp);
+    }
+    template <index_t UDims = Dims, CMT_ENABLE_IF(UDims != dynamic_shape)>
+    void execute(const tensor<T, Dims>& out, const tensor<complex<T>, Dims>& in, u8* temp,
+                 cinvert_t = {}) const
+    {
+        KFR_LOGIC_CHECK(in.shape() == complex_size() && out.shape() == this->size,
+                        "dft_plan_md_real: incorrect tensor shapes");
+        KFR_LOGIC_CHECK(in.is_contiguous() && out.is_contiguous(),
+                        "dft_plan_md_real: tensors must be contiguous");
+        execute_dft(ctrue, out.data(), in.data(), temp);
+    }
+    void execute(complex<T>* out, const T* in, u8* temp, bool inverse) const
+    {
+        KFR_LOGIC_CHECK(inverse, "dft_plan_md_real: incorrect usage");
+        execute_dft(cfalse, out, in, temp);
+    }
+    void execute(T* out, const complex<T>* in, u8* temp, bool inverse) const
+    {
+        KFR_LOGIC_CHECK(!inverse, "dft_plan_md_real: incorrect usage");
+        execute_dft(ctrue, out, in, temp);
+    }
+
+private:
+    template <bool inverse, typename Tout, typename Tin>
+    KFR_INTRINSIC void execute_dft(cbool_t<inverse>, Tout* out, const Tin* in, u8* temp) const
+    {
+        if (temp == nullptr && temp_size > 0)
+        {
+            return call_with_temp(temp_size,
+                                  std::bind(&dft_plan_md_real<T, Dims>::execute_dft<inverse, Tout, Tin>, this,
+                                            cbool_t<inverse>{}, out, in, std::placeholders::_1));
+        }
+        if (this->size.dims() == 1)
+        {
+            dft_real.execute(out, in, temp, cbool<inverse>);
+        }
+        else
+        {
+            execute_dim(cbool<inverse>, out, in, temp);
+        }
+    }
+    void expand(T* out, const T* in, size_t count, size_t last_axis) const
+    {
+        size_t last_axis_ex = dft_real.complex_size() * 2;
+        if (in != out)
+        {
+            builtin_memmove(out, in, last_axis * sizeof(T));
+        }
+        in += last_axis * (count - 1);
+        out += last_axis_ex * (count - 1);
+        for (size_t i = 1; i < count; ++i)
+        {
+            builtin_memmove(out, in, last_axis * sizeof(T));
+            in -= last_axis;
+            out -= last_axis_ex;
+        }
+#ifdef KFR_DEBUG
+        for (size_t i = 0; i < count; ++i)
+        {
+            builtin_memset(out + last_axis, 0xFF, (last_axis_ex - last_axis) * sizeof(T));
+            out += last_axis_ex;
+        }
+#endif
+    }
+    void contract(T* out, const T* in, size_t count, size_t last_axis) const
+    {
+        size_t last_axis_ex = dft_real.complex_size() * 2;
+        if (in != out)
+            builtin_memmove(out, in, last_axis * sizeof(T));
+        in += last_axis_ex;
+        out += last_axis;
+        for (size_t i = 1; i < count; ++i)
+        {
+            builtin_memmove(out, in, last_axis * sizeof(T));
+            in += last_axis_ex;
+            out += last_axis;
+        }
+    }
+    KFR_INTRINSIC void execute_dim(cfalse_t, complex<T>* out, const T* in_real, u8* temp) const
+    {
+        shape<Dims> sh = complex_size();
+        index_t total  = sh.product();
+        index_t axis   = size.dims() - 1;
+        expand(ptr_cast<T>(out), in_real, size.remove_back().product(), size.back());
+        for (;;)
+        {
+            if (size[axis] > 1)
+            {
+                if (axis == size.dims() - 1)
+                    for (index_t o = 0; o < total; o += sh.back())
+                        dft_real.execute(out + o, ptr_cast<T>(out + o), temp, cfalse);
+                else
+                    for (index_t o = 0; o < total; o += sh.back())
+                        dfts[axis].execute(out + o, out + o, temp, cfalse);
+            }
+
+            matrix_transpose(out, out, shape{ sh.remove_back().product(), sh.back() });
+
+            if (axis == 0)
+                break;
+
+            sh = sh.rotate_right();
+            --axis;
+        }
+    }
+    KFR_INTRINSIC void execute_dim(ctrue_t, T* out_real, const complex<T>* in, u8* temp) const
+    {
+        shape<Dims> sh  = complex_size();
+        index_t total   = sh.product();
+        complex<T>* out = real_out_is_enough
+                              ? ptr_cast<complex<T>>(out_real)
+                              : ptr_cast<complex<T>>(temp + temp_size - total * sizeof(complex<T>));
+        index_t axis    = 0;
+        for (;;)
+        {
+            matrix_transpose(out, in, shape{ sh.front(), sh.remove_front().product() });
+
+            if (size[axis] > 1)
+            {
+                if (axis == size.dims() - 1)
+                    for (index_t o = 0; o < total; o += sh.front())
+                        dft_real.execute(ptr_cast<T>(out + o), out + o, temp, ctrue);
+                else
+                    for (index_t o = 0; o < total; o += sh.front())
+                        dfts[axis].execute(out + o, out + o, temp, ctrue);
+            }
+
+            if (axis == size.dims() - 1)
+                break;
+
+            sh = sh.rotate_left();
+            in = out;
+            ++axis;
+        }
+        contract(out_real, ptr_cast<T>(out), size.remove_back().product(), size.back());
+    }
+    using dft_list = std::conditional_t<Dims == dynamic_shape, std::vector<dft_plan<T>>,
+                                        std::array<dft_plan<T>, const_max(Dims, 1) - 1>>;
+    dft_list dfts;
+    dft_plan_real<T> dft_real;
 };
 
 /// @brief DCT type 2 (unscaled)

@@ -880,6 +880,12 @@ private:
     memory_finalizer m_finalizer;
 };
 
+template <typename T>
+struct tensor<T, dynamic_shape>
+{
+    // Not implemented yet
+};
+
 // template <typename T>
 // struct tensor<T, 0>
 // {

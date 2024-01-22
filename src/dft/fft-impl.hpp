@@ -1759,7 +1759,8 @@ KFR_INTRINSIC void initialize_order(dft_plan<T>* self)
     typename dft_plan<T>::bitset ored = self->disposition_inplace[0] | self->disposition_inplace[1] |
                                         self->disposition_outofplace[0] | self->disposition_outofplace[1];
     if (ored.any()) // if scratch needed
-        self->temp_size += align_up(sizeof(complex<T>) * self->size, platform<>::native_cache_alignment);
+        self->temp_size +=
+            align_up(sizeof(complex<T>) * (self->size + 1), platform<>::native_cache_alignment);
 }
 
 template <typename T>
@@ -1812,6 +1813,7 @@ to_fmt(size_t real_size, const complex<T>* rtwiddle, complex<T>* out, const comp
 
     constexpr size_t width = vector_width<T> * 2;
     const cvec<T, 1> dc    = cread<1>(in);
+    cvec<T, 1> inmid       = cread<1>(in + csize / 2);
     const size_t count     = (csize + 1) / 2;
 
     block_process(count - 1, csizes_t<width, 1>(),
@@ -1833,10 +1835,7 @@ to_fmt(size_t real_size, const complex<T>* rtwiddle, complex<T>* out, const comp
 
     if (is_even(csize))
     {
-        size_t k              = csize / 2;
-        const cvec<T, 1> fpk  = cread<1>(in + k);
-        const cvec<T, 1> fpnk = negodd(fpk);
-        cwrite<1>(out + k, fpnk);
+        cwrite<1>(out + csize / 2, negodd(inmid));
     }
     if (fmt == dft_pack_format::CCs)
     {
@@ -1899,10 +1898,7 @@ void from_fmt(size_t real_size, complex<T>* rtwiddle, complex<T>* out, const com
                   });
     if (is_even(csize))
     {
-        size_t k              = csize / 2;
-        const cvec<T, 1> fpk  = inmid;
-        const cvec<T, 1> fpnk = 2 * negodd(fpk);
-        cwrite<1>(out + k, fpnk);
+        cwrite<1>(out + csize / 2, 2 * negodd(inmid));
     }
     cwrite<1>(out, dc);
 }
@@ -1984,6 +1980,11 @@ public:
     {
         from_fmt(this->stage_size, ptr_cast<complex<T>>(this->data), out, in,
                  static_cast<dft_pack_format>(this->user));
+    }
+    void copy_input(bool invert, complex<T>* out, const complex<T>* in, size_t size) final
+    {
+        size_t extra = invert && static_cast<dft_pack_format>(this->user) == dft_pack_format::CCs ? 1 : 0;
+        builtin_memcpy(out, in, sizeof(complex<T>) * (size + extra));
     }
 };
 } // namespace intrinsics

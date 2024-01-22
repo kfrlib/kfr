@@ -175,38 +175,6 @@ constexpr size_t dft_stopsize = 257;
 #endif
 #endif
 
-TEST(fft_real)
-{
-    using float_type = double;
-    random_state gen = random_init(2247448713, 915890490, 864203735, 2982561);
-
-    constexpr size_t size = 64;
-
-    kfr::univector<float_type, size> in = gen_random_range<float_type>(gen, -1.0, +1.0);
-    kfr::univector<kfr::complex<float_type>, size / 2 + 1> out = realdft(in);
-    kfr::univector<float_type, size> rev                       = irealdft(out) / size;
-    CHECK(rms(rev - in) <= 0.00001f);
-}
-
-#ifndef KFR_DFT_NO_NPo2
-TEST(fft_real_not_size_4N)
-{
-    kfr::univector<double, 6> in = counter();
-    auto out                     = realdft(in);
-    kfr::univector<kfr::complex<double>> expected{ 15.0, { -3, 5.19615242 }, { -3, +1.73205081 }, -3.0 };
-    CHECK(rms(cabs(out - expected)) <= 0.00001f);
-    kfr::univector<double, 6> rev = irealdft(out) / 6;
-    CHECK(rms(rev - in) <= 0.00001f);
-
-    random_state gen                 = random_init(2247448713, 915890490, 864203735, 2982561);
-    constexpr size_t size            = 66;
-    kfr::univector<double, size> in2 = gen_random_range<double>(gen, -1.0, +1.0);
-    kfr::univector<kfr::complex<double>, size / 2 + 1> out2 = realdft(in2);
-    kfr::univector<double, size> rev2                       = irealdft(out2) / size;
-    CHECK(rms(rev2 - in2) <= 0.00001f);
-}
-#endif
-
 TEST(fft_accuracy)
 {
 #ifdef DEBUG_DFT_PROGRESS
@@ -229,66 +197,85 @@ TEST(fft_accuracy)
     println(sizes);
 #endif
 
-    testo::matrix(named("type") = dft_float_types, //
-                  named("size") = sizes, //
-                  [&gen](auto type, size_t size)
-                  {
-                      using float_type      = type_of<decltype(type)>;
-                      const double min_prec = 0.000001 * std::log(size) * size;
+    testo::matrix(
+        named("type") = dft_float_types, //
+        named("size") = sizes, //
+        [&gen](auto type, size_t size)
+        {
+            using float_type      = type_of<decltype(type)>;
+            const double min_prec = 0.000001 * std::log(size) * size;
 
-                      for (bool inverse : { false, true })
-                      {
-                          testo::scope s(inverse ? "complex-inverse" : "complex-direct");
-                          univector<complex<float_type>> in =
-                              truncate(gen_random_range<float_type>(gen, -1.0, +1.0), size);
-                          univector<complex<float_type>> out    = in;
-                          univector<complex<float_type>> refout = out;
-                          univector<complex<float_type>> outo   = in;
-                          const dft_plan<float_type> dft(size);
-                          double min_prec2 = dft.arblen ? 2 * min_prec : min_prec;
-                          if (!inverse)
-                          {
+            for (bool inverse : { false, true })
+            {
+                testo::scope s(inverse ? "complex-inverse" : "complex-direct");
+                univector<complex<float_type>> in =
+                    truncate(gen_random_range<float_type>(gen, -1.0, +1.0), size);
+                univector<complex<float_type>> out    = in;
+                univector<complex<float_type>> refout = out;
+                univector<complex<float_type>> outo   = in;
+                const dft_plan<float_type> dft(size);
+                double min_prec2 = dft.arblen ? 2 * min_prec : min_prec;
+                if (!inverse)
+                {
 #if DEBUG_DFT_PROGRESS
-                              dft.dump();
+                    dft.dump();
 #endif
-                          }
-                          univector<u8> temp(dft.temp_size);
+                }
+                univector<u8> temp(dft.temp_size);
 
-                          reference_dft(refout.data(), in.data(), size, inverse);
-                          dft.execute(outo, in, temp, inverse);
-                          dft.execute(out, out, temp, inverse);
+                reference_dft(refout.data(), in.data(), size, inverse);
+                dft.execute(outo, in, temp, inverse);
+                dft.execute(out, out, temp, inverse);
 
-                          const float_type rms_diff_inplace = rms(cabs(refout - out));
-                          CHECK(rms_diff_inplace <= min_prec2);
-                          const float_type rms_diff_outofplace = rms(cabs(refout - outo));
-                          CHECK(rms_diff_outofplace <= min_prec2);
-                      }
+                const float_type rms_diff_inplace = rms(cabs(refout - out));
+                CHECK(rms_diff_inplace <= min_prec2);
+                const float_type rms_diff_outofplace = rms(cabs(refout - outo));
+                CHECK(rms_diff_outofplace <= min_prec2);
+            }
 
-                      if (is_even(size))
-                      {
-                          univector<float_type> in =
-                              truncate(gen_random_range<float_type>(gen, -1.0, +1.0), size);
+            if (is_even(size))
+            {
+                index_t csize            = dft_plan_real<float_type>::complex_size_for(size);
+                univector<float_type> in = truncate(gen_random_range<float_type>(gen, -1.0, +1.0), size);
 
-                          univector<complex<float_type>> out    = truncate(dimensions<1>(scalar(qnan)), size);
-                          univector<complex<float_type>> refout = truncate(dimensions<1>(scalar(qnan)), size);
-                          const dft_plan_real<float_type> dft(size);
-                          univector<u8> temp(dft.temp_size);
+                univector<complex<float_type>> out    = truncate(dimensions<1>(scalar(qnan)), csize);
+                univector<complex<float_type>> refout = truncate(dimensions<1>(scalar(qnan)), csize);
+                const dft_plan_real<float_type> dft(size);
+                univector<u8> temp(dft.temp_size);
 
-                          testo::scope s("real-direct");
-                          reference_dft(refout.data(), in.data(), size);
-                          dft.execute(out, in, temp);
-                          float_type rms_diff =
-                              rms(cabs(refout.truncate(size / 2 + 1) - out.truncate(size / 2 + 1)));
-                          CHECK(rms_diff <= min_prec);
+                {
+                    testo::scope s("real-direct");
+                    reference_dft(refout.data(), in.data(), size);
+                    dft.execute(out, in, temp);
+                    float_type rms_diff_outofplace = rms(cabs(refout - out));
+                    CHECK(rms_diff_outofplace <= min_prec);
 
-                          univector<float_type> out2(size, 0.f);
-                          s.text = "real-inverse";
-                          dft.execute(out2, out, temp);
-                          out2     = out2 / size;
-                          rms_diff = rms(in - out2);
-                          CHECK(rms_diff <= min_prec);
-                      }
-                  });
+                    univector<complex<float_type>> outi(csize);
+                    outi = padded(make_univector(ptr_cast<complex<float_type>>(in.data()), size / 2),
+                                  complex<float_type>{ 0.f });
+                    dft.execute(outi.data(), ptr_cast<float_type>(outi.data()), temp.data());
+                    float_type rms_diff_inplace = rms(cabs(refout - outi.truncate(csize)));
+                    CHECK(rms_diff_inplace <= min_prec);
+                }
+
+                {
+                    testo::scope s("real-inverse");
+                    univector<float_type> out2(size, 0.f);
+                    dft.execute(out2, out, temp);
+                    out2                           = out2 / size;
+                    float_type rms_diff_outofplace = rms(in - out2);
+                    CHECK(rms_diff_outofplace <= min_prec);
+
+                    univector<float_type> outi(2 * csize);
+                    outi = make_univector(ptr_cast<float_type>(out.data()), 2 * csize);
+
+                    dft.execute(outi.data(), ptr_cast<complex<float_type>>(outi.data()), temp.data());
+                    outi                        = outi / size;
+                    float_type rms_diff_inplace = rms(in - outi.truncate(size));
+                    CHECK(rms_diff_inplace <= min_prec);
+                }
+            }
+        });
 }
 
 TEST(dct)
@@ -319,6 +306,180 @@ TEST(dct)
 
     CHECK(rms(refoutinv - outinv) < 0.00001f);
 }
+
+template <typename T, index_t Dims, typename dft_type, typename dft_real_type>
+static void test_dft_md_t(random_state& gen, shape<Dims> shape)
+{
+    index_t size = shape.product();
+    testo::scope s(as_string("shape=", shape));
+
+    const double min_prec = 0.000002 * std::log(size) * size;
+
+    {
+        const dft_type dft(shape);
+#if DEBUG_DFT_PROGRESS
+        dft.dump();
+#endif
+        univector<complex<T>> in = truncate(gen_random_range<T>(gen, -1.0, +1.0), size);
+        for (bool inverse : { false, true })
+        {
+            testo::scope s(inverse ? "complex-inverse" : "complex-direct");
+            univector<complex<T>> out    = in;
+            univector<complex<T>> refout = out;
+            univector<complex<T>> outo   = in;
+            univector<u8> temp(dft.temp_size);
+
+            reference_dft_md(refout.data(), in.data(), shape, inverse);
+            dft.execute(outo.data(), in.data(), temp.data(), inverse);
+            dft.execute(out.data(), out.data(), temp.data(), inverse);
+
+            const T rms_diff_inplace = rms(cabs(refout - out));
+            CHECK(rms_diff_inplace <= min_prec);
+            const T rms_diff_outofplace = rms(cabs(refout - outo));
+            CHECK(rms_diff_outofplace <= min_prec);
+        }
+    }
+
+    if (is_even(shape.back()))
+    {
+        index_t csize   = dft_plan_md_real<float, Dims>::complex_size_for(shape).product();
+        univector<T> in = truncate(gen_random_range<T>(gen, -1.0, +1.0), size);
+
+        univector<complex<T>> out    = truncate(dimensions<1>(scalar(qnan)), csize);
+        univector<complex<T>> refout = truncate(dimensions<1>(scalar(qnan)), csize);
+        const dft_real_type dft(shape, true);
+#if DEBUG_DFT_PROGRESS
+        dft.dump();
+#endif
+        univector<u8> temp(dft.temp_size);
+
+        {
+            testo::scope s("real-direct");
+            reference_dft_md(refout.data(), in.data(), shape);
+            dft.execute(out.data(), in.data(), temp.data());
+            T rms_diff_outofplace = rms(cabs(refout - out));
+            CHECK(rms_diff_outofplace <= min_prec);
+
+            univector<complex<T>> outi(csize);
+            outi = padded(make_univector(ptr_cast<complex<T>>(in.data()), size / 2), complex<T>{ 0.f });
+            dft.execute(outi.data(), ptr_cast<T>(outi.data()), temp.data());
+            T rms_diff_inplace = rms(cabs(refout - outi));
+            CHECK(rms_diff_inplace <= min_prec);
+        }
+
+        {
+            testo::scope s("real-inverse");
+            univector<T> out2(dft.real_out_size(), 0.f);
+            dft.execute(out2.data(), out.data(), temp.data());
+            out2                  = out2 / size;
+            T rms_diff_outofplace = rms(in - out2.truncate(size));
+            CHECK(rms_diff_outofplace <= min_prec);
+
+            univector<T> outi(2 * csize);
+            outi = make_univector(ptr_cast<T>(out.data()), 2 * csize);
+            dft.execute(outi.data(), ptr_cast<complex<T>>(outi.data()), temp.data());
+            outi               = outi / size;
+            T rms_diff_inplace = rms(in - outi.truncate(size));
+            CHECK(rms_diff_inplace <= min_prec);
+        }
+    }
+}
+
+template <typename T, index_t Dims>
+static void test_dft_md(random_state& gen, shape<Dims> shape)
+{
+    {
+        testo::scope s("compile-time dims");
+        test_dft_md_t<T, Dims, dft_plan_md<T, Dims>, dft_plan_md_real<T, Dims>>(gen, shape);
+    }
+    {
+        testo::scope s("runtime dims");
+        test_dft_md_t<T, Dims, dft_plan_md<T, dynamic_shape>, dft_plan_md_real<T, dynamic_shape>>(gen, shape);
+    }
+}
+
+TEST(dft_md)
+{
+    random_state gen = random_init(2247448713, 915890490, 864203735, 2982561);
+
+    testo::matrix(named("type") = dft_float_types, //
+                  [&gen](auto type)
+                  {
+                      using float_type = type_of<decltype(type)>;
+                      test_dft_md<float_type>(gen, shape{ 120 });
+                      test_dft_md<float_type>(gen, shape{ 2, 60 });
+                      test_dft_md<float_type>(gen, shape{ 3, 40 });
+                      test_dft_md<float_type>(gen, shape{ 4, 30 });
+                      test_dft_md<float_type>(gen, shape{ 5, 24 });
+                      test_dft_md<float_type>(gen, shape{ 6, 20 });
+                      test_dft_md<float_type>(gen, shape{ 8, 15 });
+                      test_dft_md<float_type>(gen, shape{ 10, 12 });
+                      test_dft_md<float_type>(gen, shape{ 12, 10 });
+                      test_dft_md<float_type>(gen, shape{ 15, 8 });
+                      test_dft_md<float_type>(gen, shape{ 20, 6 });
+                      test_dft_md<float_type>(gen, shape{ 24, 5 });
+                      test_dft_md<float_type>(gen, shape{ 30, 4 });
+                      test_dft_md<float_type>(gen, shape{ 40, 3 });
+                      test_dft_md<float_type>(gen, shape{ 60, 2 });
+
+                      test_dft_md<float_type>(gen, shape{ 2, 3, 24 });
+                      test_dft_md<float_type>(gen, shape{ 12, 5, 2 });
+                      test_dft_md<float_type>(gen, shape{ 5, 12, 2 });
+
+                      test_dft_md<float_type>(gen, shape{ 2, 3, 2, 12 });
+                      test_dft_md<float_type>(gen, shape{ 3, 4, 5, 2 });
+                      test_dft_md<float_type>(gen, shape{ 5, 4, 3, 2 });
+
+                      test_dft_md<float_type>(gen, shape{ 5, 2, 2, 3, 2 });
+                      test_dft_md<float_type>(gen, shape{ 2, 5, 2, 2, 3 });
+
+                      test_dft_md<float_type>(gen, shape{ 1, 120 });
+                      test_dft_md<float_type>(gen, shape{ 120, 1 });
+                      test_dft_md<float_type>(gen, shape{ 2, 1, 1, 60 });
+                      test_dft_md<float_type>(gen, shape{ 1, 2, 10, 2, 1, 3 });
+
+                      test_dft_md<float_type>(gen, shape{ 4, 4 });
+                      test_dft_md<float_type>(gen, shape{ 4, 4, 4 });
+                      test_dft_md<float_type>(gen, shape{ 4, 4, 4, 4 });
+                      test_dft_md<float_type>(gen, shape{ 4, 4, 4, 4, 4 });
+                      test_dft_md<float_type>(gen, shape{ 4, 4, 4, 4, 4, 4 });
+                      test_dft_md<float_type>(gen, shape{ 4, 4, 4, 4, 4, 4, 4 });
+                      test_dft_md<float_type>(gen, shape{ 4, 4, 4, 4, 4, 4, 4, 4 });
+                      test_dft_md<float_type>(gen, shape{ 4, 4, 4, 4, 4, 4, 4, 4, 4 });
+                      test_dft_md<float_type>(gen, shape{ 4, 4, 4, 4, 4, 4, 4, 4, 4, 4 });
+#if defined NDEBUG
+                      test_dft_md<float_type>(gen, shape{ 512, 512 });
+                      test_dft_md<float_type>(gen, shape{ 32, 32, 32 });
+                      test_dft_md<float_type>(gen, shape{ 8, 8, 8, 8 });
+                      test_dft_md<float_type>(gen, shape{ 2, 2, 2, 2, 2, 2 });
+
+                      test_dft_md<float_type>(gen, shape{ 1, 65536 });
+                      test_dft_md<float_type>(gen, shape{ 2, 65536 });
+                      test_dft_md<float_type>(gen, shape{ 3, 65536 });
+                      test_dft_md<float_type>(gen, shape{ 4, 65536 });
+                      test_dft_md<float_type>(gen, shape{ 65536, 1 });
+                      test_dft_md<float_type>(gen, shape{ 65536, 2 });
+                      test_dft_md<float_type>(gen, shape{ 65536, 3 });
+                      test_dft_md<float_type>(gen, shape{ 65536, 4 });
+
+                      test_dft_md<float_type>(gen, shape{ 1, 2 });
+                      test_dft_md<float_type>(gen, shape{ 1, 2, 3 });
+                      test_dft_md<float_type>(gen, shape{ 1, 2, 3, 4 });
+                      test_dft_md<float_type>(gen, shape{ 1, 2, 3, 4, 5 });
+                      test_dft_md<float_type>(gen, shape{ 1, 2, 3, 4, 5, 6 });
+                      test_dft_md<float_type>(gen, shape{ 1, 2, 3, 4, 5, 6, 7 });
+                      test_dft_md<float_type>(gen, shape{ 1, 2, 3, 4, 5, 6, 7, 8 });
+                      test_dft_md<float_type>(gen, shape{ 2, 1 });
+                      test_dft_md<float_type>(gen, shape{ 3, 2, 1 });
+                      test_dft_md<float_type>(gen, shape{ 4, 3, 2, 1 });
+                      test_dft_md<float_type>(gen, shape{ 5, 4, 3, 2, 1 });
+                      test_dft_md<float_type>(gen, shape{ 6, 5, 4, 3, 2, 1 });
+                      test_dft_md<float_type>(gen, shape{ 7, 6, 5, 4, 3, 2, 1 });
+                      test_dft_md<float_type>(gen, shape{ 8, 7, 6, 5, 4, 3, 2, 1 });
+#endif
+                  });
+}
+
 } // namespace CMT_ARCH_NAME
 
 #ifndef KFR_NO_MAIN
