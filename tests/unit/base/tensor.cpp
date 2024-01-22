@@ -401,7 +401,7 @@ TEST(tensor_tostring)
     t0(0) = vec{ 1, 2 };
     t0(1) = vec{ 3, 4 };
     t0(2) = vec{ -1, 1000 };
-    CHECK(t0.to_string<fmt_t<f32x2, 'f', 0, 2>>() == "{{1, 2}, {3, 4}, {-1, 1000}}");
+    CHECK(t0.to_string<fmt_t<f32x2, 'f', 0, 0>>() == "{{1, 2}, {3, 4}, {-1, 1000}}");
 
     tensor<float, 1> t1(shape<1>{ 60 });
     t1 = debug_counter<float, 1>();
