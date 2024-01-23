@@ -171,7 +171,7 @@ jobs:
       set -e
       /bin/bash -c "sudo xcode-select -s /Applications/Xcode_13.1.app/Contents/Developer"
       brew install ninja
-      ci/run.sh build-release -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse41,avx -DKFR_ARCH=detect -DKFR_ENABLE_MULTIARCH=ON -DCMAKE_BUILD_TYPE=Release      
+      ci/run.sh build-release -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse41,avx -DKFR_ARCH=detect -DKFR_ENABLE_MULTIARCH=ON -DCMAKE_BUILD_TYPE=Release      
 
 - job: macOS15_x86_64_Clang_Release
   timeoutInMinutes: 180
@@ -188,7 +188,7 @@ jobs:
       set -e
       /bin/bash -c "sudo xcode-select -s /Applications/Xcode_$(XCODE_VER).app/Contents/Developer"
       brew install ninja
-      ci/run.sh build-release -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse41,avx -DKFR_ARCH=detect -DKFR_ENABLE_MULTIARCH=ON -DCMAKE_BUILD_TYPE=Release      
+      ci/run.sh build-release -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse42,avx -DKFR_ARCH=detect -DKFR_ENABLE_MULTIARCH=ON -DCMAKE_BUILD_TYPE=Release      
 
 - job: macOS_x86_64_Clang_Release
   timeoutInMinutes: 180
@@ -216,7 +216,7 @@ jobs:
 
       /bin/bash -c "sudo xcode-select -s /Applications/Xcode_$(XCODE_VER).app/Contents/Developer"
       brew install ninja
-      ci/run.sh build-release -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_USE_SDE=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse41,avx,avx2,avx512 -DKFR_ARCH=sse2 -DKFR_ENABLE_MULTIARCH=ON -DCMAKE_BUILD_TYPE=Release      
+      ci/run.sh build-release -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_USE_SDE=ON -DKFR_ARCH_TESTS=sse42,avx,avx2,avx512 -DKFR_ARCH=sse42 -DKFR_ENABLE_MULTIARCH=ON -DCMAKE_BUILD_TYPE=Release      
 
 - job: iOS_ARM_Clang_Release
   timeoutInMinutes: 180
