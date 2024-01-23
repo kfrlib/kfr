@@ -923,8 +923,15 @@ static inline __m512i KFR_mm512_setr_epi16(i16 x0, i16 x1, i16 x2, i16 x3, i16 x
                                            i16 x22, i16 x23, i16 x24, i16 x25, i16 x26, i16 x27, i16 x28,
                                            i16 x29, i16 x30, i16 x31)
 {
+#ifdef CMT_COMPILER_GCC
+    typedef short v32hi __attribute__((__vector_size__(64)));
+    return __extension__(__m512i)(v32hi){ x0,  x1,  x2,  x3,  x4,  x5,  x6,  x7,  x8,  x9,  x10,
+                                          x11, x12, x13, x14, x15, x16, x17, x18, x19, x20, x21,
+                                          x22, x23, x24, x25, x26, x27, x28, x29, x30, x31 };
+#else
     return _mm512_set_epi16(x31, x30, x29, x28, x27, x26, x25, x24, x23, x22, x21, x20, x19, x18, x17, x16,
                             x15, x14, x13, x12, x11, x10, x9, x8, x7, x6, x5, x4, x3, x2, x1, x0);
+#endif
 }
 static inline __m512i KFR_mm512_setr_epi8(i8 x0, i8 x1, i8 x2, i8 x3, i8 x4, i8 x5, i8 x6, i8 x7, i8 x8,
                                           i8 x9, i8 x10, i8 x11, i8 x12, i8 x13, i8 x14, i8 x15, i8 x16,
@@ -935,10 +942,19 @@ static inline __m512i KFR_mm512_setr_epi8(i8 x0, i8 x1, i8 x2, i8 x3, i8 x4, i8 
                                           i8 x49, i8 x50, i8 x51, i8 x52, i8 x53, i8 x54, i8 x55, i8 x56,
                                           i8 x57, i8 x58, i8 x59, i8 x60, i8 x61, i8 x62, i8 x63)
 {
+#ifdef CMT_COMPILER_GCC
+    typedef char v64qi __attribute__((__vector_size__(64)));
+    return __extension__(__m512i)(v64qi){ x0,  x1,  x2,  x3,  x4,  x5,  x6,  x7,  x8,  x9,  x10, x11, x12,
+                                          x13, x14, x15, x16, x17, x18, x19, x20, x21, x22, x23, x24, x25,
+                                          x26, x27, x28, x29, x30, x31, x32, x33, x34, x35, x36, x37, x38,
+                                          x39, x40, x41, x42, x43, x44, x45, x46, x47, x48, x49, x50, x51,
+                                          x52, x53, x54, x55, x56, x57, x58, x59, x60, x61, x62, x63 };
+#else
     return _mm512_set_epi8(x63, x62, x61, x60, x59, x58, x57, x56, x55, x54, x53, x52, x51, x50, x49, x48,
                            x47, x46, x45, x44, x43, x42, x41, x40, x39, x38, x37, x36, x35, x34, x33, x32,
                            x31, x30, x29, x28, x27, x26, x25, x24, x23, x22, x21, x20, x19, x18, x17, x16,
                            x15, x14, x13, x12, x11, x10, x9, x8, x7, x6, x5, x4, x3, x2, x1, x0);
+#endif
 }
 
 KFR_INTRINSIC __m512 KFR_mm512_setr_m256(__m256 x, __m256 y)
