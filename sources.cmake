@@ -10,7 +10,6 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/except.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/graphics.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/runtime.hpp
@@ -76,9 +75,6 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/waveshaper.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/weighting.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/window.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/graphics/color.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/graphics/geometry.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/graphics/impl/scaled.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/audiofile.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/file.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/python_plot.hpp
@@ -294,14 +290,6 @@ set(
 
     
 set(
-    KFR_GRAPHICS_SRC
-    ${PROJECT_SOURCE_DIR}/include/kfr/graphics/color.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/graphics/geometry.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/graphics/impl/scaled.hpp
-)
-
-    
-set(
     KFR_SRC
     ${PROJECT_SOURCE_DIR}/include/kfr/all.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base.hpp
@@ -309,7 +297,6 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/except.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/graphics.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/math.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/runtime.hpp
@@ -375,9 +362,6 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/waveshaper.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/weighting.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/window.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/graphics/color.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/graphics/geometry.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/graphics/impl/scaled.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/audiofile.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/file.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/io/python_plot.hpp
@@ -513,9 +497,6 @@ set(
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/sample_rate_conversion.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/units.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/window.cpp
-    ${PROJECT_SOURCE_DIR}/tests/unit/graphics/color.cpp
-    ${PROJECT_SOURCE_DIR}/tests/unit/graphics/geometry.cpp
-    ${PROJECT_SOURCE_DIR}/tests/unit/graphics/graphics.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/io/audiofile.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/asin_acos.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/atan.cpp

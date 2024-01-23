@@ -24,7 +24,6 @@
 #include "base.hpp"
 #include "dft.hpp"
 #include "dsp.hpp"
-#include "graphics.hpp"
 #include "io.hpp"
 
 /** @defgroup cometa Cometa
