@@ -117,10 +117,6 @@ if (KFR_ENABLE_DFT)
 endif ()
 target_link_libraries(all_tests kfr_io)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    target_compile_options(all_tests PRIVATE /Zc:lambda)
-endif ()
-
 option(KFR_NO_PERF_TESTS "Disable performance tests" OFF)
 
 if (KFR_NO_PERF_TESTS)

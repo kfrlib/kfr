@@ -347,6 +347,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 endif ()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(/wd4141)
+    target_compile_options(kfr INTERFACE /Zc:lambda)
 endif ()
 
 if (NOT KFR_ENABLE_DFT)
