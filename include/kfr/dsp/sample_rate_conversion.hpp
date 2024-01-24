@@ -60,8 +60,11 @@ protected:
     {
         return modzerobessel(kaiser_beta * sqrt(1 - sqr(2 * n - 1))) * reciprocal(modzerobessel(kaiser_beta));
     }
-    KFR_MEM_INTRINSIC ftype sidelobe_att() const { return kaiser_beta / 0.1102 + 8.7; }
-    KFR_MEM_INTRINSIC ftype transition_width() const { return (sidelobe_att() - 8) / (depth - 1) / 2.285; }
+    KFR_MEM_INTRINSIC ftype sidelobe_att() const { return static_cast<ftype>(kaiser_beta / 0.1102 + 8.7); }
+    KFR_MEM_INTRINSIC ftype transition_width() const
+    {
+        return static_cast<ftype>((sidelobe_att() - 8) / (depth - 1) / 2.285);
+    }
 
 public:
     static KFR_MEM_INTRINSIC size_t filter_order(sample_rate_conversion_quality quality)
