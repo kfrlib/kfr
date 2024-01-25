@@ -1,0 +1,19 @@
+name: Tests
+on: push
+jobs:
+  ubuntu22-gcc11:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Tests
+      run: ci/run.sh build-release -DKFR_ARCH=target -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=Release
+
+  ubuntu22-clang14:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Tests
+      run: ci/run.sh build-release -DKFR_ARCH=target -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release
+
