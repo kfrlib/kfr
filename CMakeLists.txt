@@ -394,7 +394,9 @@ append_defines_from(kfr_io)
 
 string(REPLACE "=" " " kfr_defines "${kfr_defines}")
 string(REPLACE ";" "\n#define " kfr_defines "${kfr_defines}")
-set(kfr_defines "#define ${kfr_defines}\n")
+if (kfr_defines)
+    set(kfr_defines "#define ${kfr_defines}\n")
+endif ()
 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/kfr_config.h "${kfr_defines}")
 
@@ -438,10 +440,13 @@ install(TARGETS kfr EXPORT kfr_export)
 install(
     EXPORT kfr_export
     DESTINATION "${KFR_INSTALL_CMAKEDIR}"
+    CONFIGURATIONS Debug Release
     FILE KFRConfig.cmake)
 
-# write_basic_package_version_file( KFRConfigVersion.cmake VERSION
-# ${KFR_VERSION} COMPATIBILITY SameMajorVersion)
+write_basic_package_version_file(KFRConfigVersion.cmake
+    VERSION ${KFR_VERSION} 
+    COMPATIBILITY SameMinorVersion)
 
-# install(FILES "${CMAKE_CURRENT_BINARY_DIR}/KFRConfigVersion.cmake" DESTINATION
-# "${KFR_INSTALL_CMAKEDIR}" )
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/KFRConfigVersion.cmake"
+    DESTINATION
+    "${KFR_INSTALL_CMAKEDIR}" )
