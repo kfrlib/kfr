@@ -1,0 +1,83 @@
+name: Build
+on: push
+jobs:
+  binaries-linux-x86_64:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Build
+      run: |
+        set -e
+        sudo apt-get update && sudo apt-get install -y ninja-build
+        wget -O - https://apt.llvm.org/llvm.sh | sudo bash -s - 17
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER=clang++-17
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER=clang++-17
+        ninja -C build-release install
+        ninja -C build-debug install
+    - name: Binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-x86_64
+        path: ${{ github.workspace }}/dist
+
+  binaries-windows-x86:
+    runs-on: windows-2022
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Build
+      shell: cmd
+      run: |
+        choco install llvm --version 17.0.6 --no-progress -y
+        choco install ninja --no-progress -y
+        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+        set CXXFLAGS=-m32
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
+        ninja -C build-release install
+        ninja -C build-debug install  
+    - name: Binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-x86
+        path: ${{ github.workspace }}/dist
+
+  binaries-windows-x86_64:
+    runs-on: windows-2022
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Build
+      shell: cmd
+      run: |
+        choco install llvm --version 17.0.6 --no-progress -y
+        choco install ninja --no-progress -y
+        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
+        ninja -C build-release install
+        ninja -C build-debug install
+    - name: Binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-x86_64
+        path: ${{ github.workspace }}/dist
+
+  binaries-macos-x86_64:
+    runs-on: macos-13
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Build
+      run: |
+        brew install ninja
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse41
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse41
+        ninja -C build-release install
+        ninja -C build-debug install
+    - name: Binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-x86_64
+        path: ${{ github.workspace }}/dist
