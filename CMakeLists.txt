@@ -168,10 +168,8 @@ cmake_dependent_option(ENABLE_EXAMPLES "Enable KFR examples" ON "ENABLE_TESTS"
                        OFF)
 if (CLANG)
     option(KFR_ENABLE_DFT "Enable DFT and related algorithms." ON)
-    option(KFR_ENABLE_DFT_NP "Enable Non-power of 2 DFT" ON)
 else ()
     option(KFR_ENABLE_DFT "Enable DFT and related algorithms." OFF)
-    option(KFR_ENABLE_DFT_NP "Enable Non-power of 2 DFT" OFF)
 endif ()
 option(KFR_ENABLE_ASMTEST "Enable writing disassembly" OFF)
 option(KFR_REGENERATE_TESTS "Regenerate auto tests" OFF)
@@ -189,11 +187,6 @@ if (KFR_ENABLE_CAPI_BUILD AND NOT KFR_ENABLE_DFT)
     message(
         FATAL_ERROR
             "KFR_ENABLE_CAPI_BUILD requires KFR_ENABLE_DFT to be enabled")
-endif ()
-if (KFR_ENABLE_CAPI_BUILD AND NOT KFR_ENABLE_DFT_NP)
-    message(
-        FATAL_ERROR
-            "KFR_ENABLE_CAPI_BUILD requires KFR_ENABLE_DFT_NP to be enabled")
 endif ()
 
 if (NOT KFR_ARCH)
