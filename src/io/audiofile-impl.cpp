@@ -38,6 +38,9 @@ CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wunused-function")
 #ifndef KFR_DISABLE_FLAC
 #define DR_FLAC_IMPLEMENTATION
 #define DR_FLAC_NO_STDIO
+#ifndef CMT_ARCH_SSE41
+#define DRFLAC_NO_SSE41
+#endif
 #include "dr/dr_flac.h"
 #endif
 #ifndef KFR_DISABLE_MP3
