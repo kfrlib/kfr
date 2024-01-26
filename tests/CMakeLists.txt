@@ -127,11 +127,11 @@ function (add_x86_test ARCH)
     set(NAME ${ARCH})
 
     add_executable(all_tests_${NAME} all_tests.cpp ${ALL_TESTS_CPP}
-                                     ${KFR_IO_SRC})
+                                     ${KFR_IO_SRC} ${KFR_DSP_SRC})
     if (KFR_ENABLE_DFT)
         target_sources(all_tests_${NAME} PRIVATE ${KFR_DFT_SRC})
     endif ()
-    target_link_libraries(all_tests_${NAME} kfr kfr_dsp)
+    target_link_libraries(all_tests_${NAME} kfr)
     target_set_arch(all_tests_${NAME} PRIVATE ${ARCH})
     target_compile_definitions(all_tests_${NAME} PRIVATE KFR_NO_MAIN)
     target_compile_definitions(all_tests_${NAME} PUBLIC KFR_ENABLE_FLAC=1)
