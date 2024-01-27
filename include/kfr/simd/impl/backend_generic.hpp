@@ -716,8 +716,7 @@ KFR_INTRINSIC __m256i KFR_mm256_setr_m128i(__m128i x, __m128i y)
 #ifdef CMT_ARCH_AVX2
     return _mm256_inserti128_si256(_mm256_castsi128_si256(x), y, 1);
 #else
-    return _mm256_castps_si256(
-        _mm256_insertf128_ps(_mm256_castps128_ps256(_mm_castsi128_ps(x)), _mm_castsi128_ps(y), 1));
+    return _mm256_insertf128_si256(_mm256_castsi128_si256(x), y, 1);
 #endif
 }
 
