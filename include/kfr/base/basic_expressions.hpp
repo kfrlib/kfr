@@ -100,8 +100,7 @@ struct expression_traits<expression_counter<T, Dims>> : expression_traits_defaul
     constexpr static shape<dims> get_shape() { return shape<dims>(infinite_size); }
 };
 
-template <typename T = int, typename Arg = T, typename... Args,
-          typename Tout = std::common_type_t<T, Arg, Args...>>
+template <typename T = int, typename Tout = T>
 KFR_INTRINSIC expression_counter<Tout, 1> counter(T start = 0)
 {
     return { static_cast<Tout>(std::move(start)), { static_cast<Tout>(1) } };
