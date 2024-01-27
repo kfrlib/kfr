@@ -685,6 +685,15 @@ struct representation<std::vector<T, Allocator>>
         return array_to_string(value.size(), value.data());
     }
 };
+template <>
+struct representation<std::string_view>
+{
+    using type = std::string;
+    static std::string get(const std::string_view& value)
+    {
+        return std::string(value);
+    }
+};
 
 } // namespace cometa
 
