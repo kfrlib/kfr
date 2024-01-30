@@ -81,3 +81,21 @@ jobs:
       with:
         name: macos-x86_64
         path: ${{ github.workspace }}/dist
+
+  binaries-macos-arm64:
+    runs-on: macos-13
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Build
+      run: |
+        brew install ninja
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target
+        ninja -C build-release install
+        ninja -C build-debug install
+    - name: Binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-arm64
+        path: ${{ github.workspace }}/dist

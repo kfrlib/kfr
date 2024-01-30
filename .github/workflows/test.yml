@@ -162,6 +162,17 @@ jobs:
         brew install ninja
         ci/run.sh build-release -DCMAKE_OSX_ARCHITECTURES=x86_64 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse42,avx -DKFR_ARCH=target -DCMAKE_BUILD_TYPE=Release      
 
+  macos13-xcode14-arm64:
+    runs-on: macos-13
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Tests
+      run: |
+        set -e
+        brew install ninja
+        ci/run.sh build-release -DCMAKE_OSX_ARCHITECTURES=arm64 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_BUILD_TYPE=Release  -DKFR_SKIP_TESTS=ON
+
   macos11-xcode13-x86_64:
     runs-on: macos-11
     steps:
