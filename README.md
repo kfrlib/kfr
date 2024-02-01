@@ -4,8 +4,11 @@
   <img width="300" height="auto" src="img/KFR1.png">
 </p>
 
-![Build Status](https://img.shields.io/azure-devops/build/dlevin256/dlevin256/1/master.svg?style=flat-square)
-![License](https://img.shields.io/github/license/kfrlib/kfr.svg?style=flat-square)
+![Build](https://img.shields.io/github/actions/workflow/status/kfrlib/kfr/build.yml?style=flat-square&label=Build)
+![Test](https://img.shields.io/github/actions/workflow/status/kfrlib/kfr/test.yml?style=flat-square&label=Test)
+
+![License](https://img.shields.io/github/license/kfrlib/kfr.svg?style=flat-square&label=License)
+![Release](https://img.shields.io/github/release-date/kfrlib/kfr?style=flat-square&label=Latest+release)
 
 https://www.kfr.dev
 
@@ -15,10 +18,10 @@ KFR is an open source C++ DSP framework that contains high performance building 
 
 Compiler support:
 
-![Clang 9+](https://img.shields.io/badge/Clang-9%2B-brightgreen.svg?style=flat-square)
-![Xcode 10.3+](https://img.shields.io/badge/Xcode-10%2B-brightgreen.svg?style=flat-square)
+![Clang 11+](https://img.shields.io/badge/Clang-11%2B-brightgreen.svg?style=flat-square)
 ![GCC 7+](https://img.shields.io/badge/GCC-7%2B-brightgreen.svg?style=flat-square)
 ![MSVC 2019](https://img.shields.io/badge/MSVC-2019%2B-brightgreen.svg?style=flat-square)
+![Xcode 12+](https://img.shields.io/badge/Xcode-12%2B-brightgreen.svg?style=flat-square)
 
 KFR has no external dependencies except a C++17 compatible standard C++ library.
 CMake is used as build system.
@@ -34,7 +37,8 @@ _Note_: Building DFT module requires Clang at this moment due to internal compil
 ### FFT/DFT
 * Optimized DFT implementation for any size (non-power of two sizes are supported)
 * DFT performance is on par with the most performant implementation currently available [See Benchmarks](#benchmark-results)
-* Real Forward and Inverse DFT
+* Real forward and inverse DFT
+* Multidimensional complex and real DFT
 * Discrete Cosine Transform type II (and its inverse, also called DCT type III)
 * Convolution using FFT
 * Convolution filter
@@ -139,9 +143,9 @@ Built with
 
 `dev` - current development version. Pull requests should go to `dev`.
 
-`master` - current stable version passing all compiler/architecture tests.
+`main` - current stable version passing all compiler/architecture tests.
 
-`v4` - previous version of KFR (no new features here, fixes only)
+`v5` - previous version of KFR (no new features, fixes only)
 
 
 ## License
