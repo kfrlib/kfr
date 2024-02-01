@@ -28,6 +28,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/fraction.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/generators.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/handle.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/inline_vector.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/math_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/memory.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/npy.hpp
@@ -233,6 +234,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/fraction.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/generators.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/handle.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/base/inline_vector.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/math_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/memory.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/npy.hpp
