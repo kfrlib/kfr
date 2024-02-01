@@ -37,6 +37,9 @@ TEST(complex_math)
     CHECK(cabs(-3.f) == 3.f);
     CHECK(cabs(make_vector(-3.f)) == make_vector(3.f));
 
+    CHECK(vec<c32, 4>{ 100, 100, 100, 100 } + vec<c32, 4>{ 1, 2, 3, 4 } == vec<c32, 4>{ 101, 102, 103, 104 });
+    CHECK(c32{ 100 } + vec<c32, 4>{ 1, 2, 3, 4 } == vec<c32, 4>{ 101, 102, 103, 104 });
+
     CHECK(carg(c32{ +1.f, 0.f }) == 0.f);
     CHECK(carg(c32{ 0.f, +1.f }) == c_pi<float> / 2);
     CHECK(carg(c32{ 0.f, -1.f }) == -c_pi<float> / 2);
