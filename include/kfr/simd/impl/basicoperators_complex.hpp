@@ -99,6 +99,8 @@ KFR_INTRINSIC vec<complex<T>, N> band(const vec<complex<T>, N>& x, const vec<com
         return fn(vec<complex<T>, N>(x), y);                                                                 \
     }
 
+KFR_COMPLEX_OP_CVT(add)
+KFR_COMPLEX_OP_CVT(sub)
 KFR_COMPLEX_OP_CVT(mul)
 KFR_COMPLEX_OP_CVT(div)
 KFR_COMPLEX_OP_CVT(band)
