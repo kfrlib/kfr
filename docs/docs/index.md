@@ -1,4 +1,4 @@
-# KFR 5 Documentation
+# KFR 6 Documentation
 
 ## Getting started
 
@@ -41,6 +41,6 @@
 
 * [Function reference](auto/refindex.md)
 
-## KFR 4
+## KFR 5
 
-For KFR 4 documentation, see https://kfr.dev/docs/v4
+For KFR 5 documentation, see https://kfr.dev/docs/v5
