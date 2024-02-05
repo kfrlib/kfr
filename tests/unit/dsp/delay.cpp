@@ -22,10 +22,10 @@ TEST(delay)
     CHECK_EXPRESSION(delay<3>(v1), 33, [](size_t i) { return i < 3 ? 0.f : (i - 3) + 100.f; });
 
     delay_state<float, 3> state1;
-    CHECK_EXPRESSION(delay(state1, v1), 33, [](size_t i) { return i < 3 ? 0.f : (i - 3) + 100.f; });
+    CHECK_EXPRESSION(delay(v1, std::ref(state1)), 33, [](size_t i) { return i < 3 ? 0.f : (i - 3) + 100.f; });
 
     delay_state<float, 3, tag_dynamic_vector> state2;
-    CHECK_EXPRESSION(delay(state2, v1), 33, [](size_t i) { return i < 3 ? 0.f : (i - 3) + 100.f; });
+    CHECK_EXPRESSION(delay(v1, std::ref(state2)), 33, [](size_t i) { return i < 3 ? 0.f : (i - 3) + 100.f; });
 }
 
 TEST(fracdelay)

@@ -100,7 +100,7 @@ TEST(fir)
                           counter() + sequence(1, 2, -10, 100) + sequence(0, -7, 0.5);
                       const univector<T, 6> taps{ 1, 2, -2, 0.5, 0.0625, 4 };
 
-                      CHECK_EXPRESSION(fir(data, taps), 100,
+                      CHECK_EXPRESSION(fir(data, fir_params{ taps }), 100,
                                        [&](size_t index) -> T
                                        {
                                            T result = 0;
@@ -111,7 +111,7 @@ TEST(fir)
 
                       fir_state<T> state(taps.ref());
 
-                      CHECK_EXPRESSION(fir(state, data), 100,
+                      CHECK_EXPRESSION(fir(data, std::ref(state)), 100,
                                        [&](size_t index) -> T
                                        {
                                            T result = 0;
@@ -131,7 +131,7 @@ TEST(fir)
 
                       short_fir_state<9, T> state2(taps);
 
-                      CHECK_EXPRESSION(short_fir<taps.size()>(state2, data), 100,
+                      CHECK_EXPRESSION(short_fir(data, std::ref(state2)), 100,
                                        [&](size_t index) -> T
                                        {
                                            T result = 0;
@@ -140,7 +140,7 @@ TEST(fir)
                                            return result;
                                        });
 
-                      CHECK_EXPRESSION(moving_sum<taps.size()>(data), 100,
+                      CHECK_EXPRESSION(moving_sum(data, taps.size()), 100,
                                        [&](size_t index) -> T
                                        {
                                            T result = 0;
@@ -151,7 +151,7 @@ TEST(fir)
 
                       moving_sum_state<T, 131> msstate1;
 
-                      CHECK_EXPRESSION(moving_sum(msstate1, data), 100,
+                      CHECK_EXPRESSION(moving_sum(data, std::ref(msstate1)), 100,
                                        [&](size_t index) -> T
                                        {
                                            T result = 0;
@@ -162,7 +162,7 @@ TEST(fir)
 
                       moving_sum_state<T> msstate2(133);
 
-                      CHECK_EXPRESSION(moving_sum(msstate2, data), 100,
+                      CHECK_EXPRESSION(moving_sum(data, std::ref(msstate2)), 100,
                                        [&](size_t index) -> T
                                        {
                                            T result = 0;
@@ -181,7 +181,7 @@ TEST(fir_different)
     //    const univector<double, 6> taps{ 1, 2, -2, 0.5, 0.0625, 4 };
     const univector<double, 4> taps{ 1, 2, 3, 4 };
 
-    CHECK_EXPRESSION(fir(data, taps), 100,
+    CHECK_EXPRESSION(fir(data, fir_params{ taps }), 100,
                      [&](size_t index) -> float
                      {
                          double result = 0.0;
@@ -207,7 +207,7 @@ TEST(fir_complex)
         counter() * complex<float>{ 0.f, 1.f } + sequence(1, 2, -10, 100) + sequence(0, -7, 0.5f);
     const univector<float, 6> taps{ 1, 2, -2, 0.5, 0.0625, 4 };
 
-    CHECK_EXPRESSION(fir(data, taps), 100,
+    CHECK_EXPRESSION(fir(data, fir_params{ taps }), 100,
                      [&](size_t index) -> complex<float>
                      {
                          std::complex<float> result = 0.0;

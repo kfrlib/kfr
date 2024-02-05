@@ -38,7 +38,7 @@ TEST(biquad_lowpass1)
                   {
                       using T = typename decltype(type)::type;
 
-                      const biquad_params<T> bq = biquad_lowpass<T>(0.1, 0.7);
+                      const biquad_section<T> bq = biquad_lowpass<T>(0.1, 0.7);
 
                       constexpr size_t size = 32;
 
@@ -66,11 +66,9 @@ TEST(biquad_lowpass1)
                           +0xb.5f265b1be1728p-23, +0xd.d2cb83f8483f8p-24,
                       };
 
-                      const univector<T, size> ir  = biquad(bq, unitimpulse<T>());
-                      const univector<T, size> ir2 = iir(unitimpulse<T>(), iir_params{ bq });
+                      const univector<T, size> ir = iir(unitimpulse<T>(), iir_params{ bq });
 
                       CHECK(absmaxof(choose_array<T>(test_vector_f32, test_vector_f64) - ir) == 0);
-                      CHECK(absmaxof(choose_array<T>(test_vector_f32, test_vector_f64) - ir2) == 0);
                   });
 }
 
@@ -81,7 +79,7 @@ TEST(biquad_lowpass2)
                   {
                       using T = typename decltype(type)::type;
 
-                      const biquad_params<T> bq = biquad_lowpass<T>(0.45, 0.2);
+                      const biquad_section<T> bq = biquad_lowpass<T>(0.45, 0.2);
 
                       constexpr size_t size = 32;
 
@@ -109,16 +107,16 @@ TEST(biquad_lowpass2)
                           +0xd.94f05f80af008p-15, -0xc.b66c0799b21a8p-15,
                       };
 
-                      const univector<T, size> ir = biquad(bq, unitimpulse<T>());
+                      const univector<T, size> ir = iir(unitimpulse<T>(), iir_params{ bq });
 
                       CHECK(absmaxof(choose_array<T>(test_vector_f32, test_vector_f64) - ir) == 0);
                   });
 }
 
-TEST(biquad_filter)
+TEST(iir_filter)
 {
-    biquad_params<float> params[16];
-    auto f = biquad_filter<float>(params);
+    biquad_section<float> params[16];
+    auto f = iir_filter<float>(iir_params{ params });
     float buf[256];
     f.apply(buf);
 }

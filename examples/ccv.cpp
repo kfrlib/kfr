@@ -47,7 +47,7 @@ int main()
     auto toc                    = std::chrono::high_resolution_clock::now();
     auto const ccv_time_complex = std::chrono::duration_cast<std::chrono::duration<float>>(toc - tic);
     tic                         = toc;
-    filtered_cnoise_fir         = kfr::fir(cnoise, taps127);
+    filtered_cnoise_fir         = kfr::fir(cnoise, fir_params{ taps127 });
     toc                         = std::chrono::high_resolution_clock::now();
     auto const fir_time_complex = std::chrono::duration_cast<std::chrono::duration<float>>(toc - tic);
     auto const cdiff            = rms(cabs(filtered_cnoise_fir - filtered_cnoise_ccv));
@@ -58,7 +58,7 @@ int main()
     toc                      = std::chrono::high_resolution_clock::now();
     auto const ccv_time_real = std::chrono::duration_cast<std::chrono::duration<float>>(toc - tic);
     tic                      = toc;
-    filtered_noise_fir       = kfr::fir(noise, taps127);
+    filtered_noise_fir       = kfr::fir(noise, fir_params{ taps127 });
     toc                      = std::chrono::high_resolution_clock::now();
     auto const fir_time_real = std::chrono::duration_cast<std::chrono::duration<float>>(toc - tic);
     auto const diff          = rms(filtered_noise_fir - filtered_noise_ccv);

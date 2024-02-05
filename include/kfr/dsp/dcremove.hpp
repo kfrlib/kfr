@@ -34,7 +34,7 @@ namespace kfr
 template <typename E1, typename T = flt_type<expression_value_type<E1>>>
 KFR_INTRINSIC expression_iir<1, T, E1> dcremove(E1&& e1, double cutoff = 0.00025)
 {
-    const biquad_params<T> bqs[1] = { biquad_highpass(cutoff, 0.5) };
+    const biquad_section<T> bqs[1] = { biquad_highpass(cutoff, 0.5) };
     return expression_iir<1, T, E1>(bqs, std::forward<E1>(e1));
 }
 

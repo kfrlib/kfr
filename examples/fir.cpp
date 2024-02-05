@@ -105,7 +105,7 @@ int main()
     univector<float> noise = truncate(gen_random_range(random_init(1, 2, 3, 4), -1.f, +1.f), 10000);
 
     // Apply band stop filter
-    univector<float> filtered_noise = fir(noise, taps127);
+    univector<float> filtered_noise = fir(noise, fir_params{ taps127 });
 
 #if PYTHON_IS_INSTALLED
     // Plot results

@@ -186,11 +186,11 @@ private:
 template <typename T>
 KFR_INTRINSIC expression_handle<T, 1> make_kfilter(int samplerate)
 {
-    const biquad_params<T> bq[] = {
+    const biquad_section<T> bq[] = {
         biquad_highshelf(T(1681.81 / samplerate), T(+4.0)),
         biquad_highpass(T(38.1106678246655 / samplerate), T(0.5)).normalized_all()
     };
-    return to_handle(biquad(bq, placeholder<T>()));
+    return to_handle(iir(placeholder<T>(), iir_params{ bq }));
 }
 
 template <typename T>

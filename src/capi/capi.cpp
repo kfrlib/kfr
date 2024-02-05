@@ -430,8 +430,8 @@ extern "C"
         return try_fn(
             [&]()
             {
-                return reinterpret_cast<KFR_FILTER_F32*>(
-                    new biquad_filter<float>(reinterpret_cast<const biquad_params<float>*>(sos), sos_count));
+                return reinterpret_cast<KFR_FILTER_F32*>(new iir_filter<float>(
+                    iir_params{ reinterpret_cast<const biquad_section<float>*>(sos), sos_count }));
             },
             nullptr);
     }
@@ -440,8 +440,8 @@ extern "C"
         return try_fn(
             [&]()
             {
-                return reinterpret_cast<KFR_FILTER_F64*>(new biquad_filter<double>(
-                    reinterpret_cast<const biquad_params<double>*>(sos), sos_count));
+                return reinterpret_cast<KFR_FILTER_F64*>(new iir_filter<double>(
+                    iir_params{ reinterpret_cast<const biquad_section<double>*>(sos), sos_count }));
             },
             nullptr);
     }

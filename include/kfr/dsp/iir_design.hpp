@@ -886,7 +886,7 @@ KFR_FUNCTION vec<T, 3> zpk2tf_poly(const complex<T>& x, const complex<T>& y)
 }
 
 template <typename T>
-KFR_FUNCTION biquad_params<T> zpk2tf(const zero_pole_pairs<T>& pairs, identity<T> k)
+KFR_FUNCTION biquad_section<T> zpk2tf(const zero_pole_pairs<T>& pairs, identity<T> k)
 {
     vec<T, 3> zz = k * zpk2tf_poly(pairs.z1, pairs.z2);
     vec<T, 3> pp = zpk2tf_poly(pairs.p1, pairs.p2);
@@ -1082,7 +1082,7 @@ template <typename T>
 KFR_FUNCTION iir_params<T> to_sos(const zpk<T>& filter)
 {
     if (filter.p.empty() && filter.z.empty())
-        return { biquad_params<T>(filter.k, T(0.), T(0.), T(1.), T(0.), 0) };
+        return { biquad_section<T>(filter.k, T(0.), T(0.), T(1.), T(0.), 0) };
 
     zpk<T> filt   = filter;
     size_t length = std::max(filter.p.size(), filter.z.size());
