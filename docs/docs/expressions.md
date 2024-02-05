@@ -51,7 +51,7 @@ univector<int, 5> z = x - y;
 ```
 
 !!! note
-    when an expression is assigned to a `univector` variable, expression is evaluated in `process` function and values are being written to the target storage.
+    When an expression is assigned to a `univector` variable, expression is evaluated in `process` function and values are being written to the target storage.
 
 Same applies to calling KFR functions on univectors, this doesn't calculate values immediately. Instead, new expression will be created.
 

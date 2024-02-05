@@ -59,12 +59,12 @@ i24 s = convert_sample<i24, f32>(1.f);
 
 ## Supported formats
 
-Constant | Type | Description | Range
--------- | ---- | ----------- | -----
-audio_sample_type::i8  | i8  | 8-bit signed  | -127..+127
-audio_sample_type::i16 | i16 | 16-bit signed | -32767..+32767
-audio_sample_type::i24 | i24 | 24-bit signed | -8388607..+8388607
-audio_sample_type::i32 | i32 | 32-bit signed | -2147483647..+2147483647
-audio_sample_type::i64 | i64 | 64-bit signed | -9223372036854775807..+9223372036854775807
-audio_sample_type::f32 | f32 | 32-bit IEEE   | -1..+1
-audio_sample_type::f64 | f64 | 64-bit IEEE   | -1..+1
+| Constant               | Type | Description   | Range                                      |
+|------------------------|------|---------------|--------------------------------------------|
+| audio_sample_type::i8  | i8   | 8-bit signed  | -127..+127                                 |
+| audio_sample_type::i16 | i16  | 16-bit signed | -32767..+32767                             |
+| audio_sample_type::i24 | i24  | 24-bit signed | -8388607..+8388607                         |
+| audio_sample_type::i32 | i32  | 32-bit signed | -2147483647..+2147483647                   |
+| audio_sample_type::i64 | i64  | 64-bit signed | -9223372036854775807..+9223372036854775807 |
+| audio_sample_type::f32 | f32  | 32-bit IEEE   | -1..+1                                     |
+| audio_sample_type::f64 | f64  | 64-bit IEEE   | -1..+1                                     |

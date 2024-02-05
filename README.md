@@ -14,7 +14,15 @@ https://www.kfr.dev
 
 KFR is an open source C++ DSP framework that contains high performance building blocks for DSP, audio, scientific and other applications. It is distributed under dual GPLv2/v3 and [commercial license](https://kfr.dev/purchase).
 
-## [Installation](docs/docs/installation.md)
+## KFR6
+
+New features, performance improvements, easier setup.
+
+:arrow_right: [What's new in KFR6](docs/docs/whatsnew6.md)
+
+:arrow_right: [Upgrade from a previous version](docs/docs/upgrade6.md)
+
+## Installation
 
 Compiler support:
 
@@ -23,14 +31,13 @@ Compiler support:
 ![MSVC 2019](https://img.shields.io/badge/MSVC-2019%2B-brightgreen.svg?style=flat-square)
 ![Xcode 12+](https://img.shields.io/badge/Xcode-12%2B-brightgreen.svg?style=flat-square)
 
-KFR has no external dependencies except a C++17 compatible standard C++ library.
-CMake is used as build system.
+KFR has no external dependencies except for a C++17-compatible standard C++ library. CMake is used as the build system.
 
-Clang is highly recommended and proven to provide the best performance for KFR. You can use clang as a drop-in replacement of both GCC on Linux and MSVC on Windows. On macOS clang is the default compiler and included in the official Xcode toolchain.
+Clang is highly recommended and proven to provide the best performance for KFR. You can use Clang as a drop-in replacement for both GCC on Linux and MSVC on Windows. On macOS, Clang is the default compiler and included in the official Xcode toolchain.
 
-_Note_: Building DFT module requires Clang at this moment due to internal compiler errors and lack of optimization in GCC and MSVC.
+_Note_: Building the DFT module currently requires Clang due to internal compiler errors and a lack of optimization in GCC and MSVC.
 
-:arrow_right: See [Installation](docs/docs/installation.md)   for more details
+:arrow_right: See [Installation](docs/docs/installation.md) docs for more details
 
 ## Features
 
@@ -38,7 +45,7 @@ _Note_: Building DFT module requires Clang at this moment due to internal compil
 * Optimized DFT implementation for any size (non-power of two sizes are supported)
 * DFT performance is on par with the most performant implementation currently available [See Benchmarks](#benchmark-results)
 * Real forward and inverse DFT
-* Multidimensional complex and real DFT
+* [:star2: new in KFR6] Multidimensional complex and real DFT
 * Discrete Cosine Transform type II (and its inverse, also called DCT type III)
 * Convolution using FFT
 * Convolution filter
@@ -65,6 +72,8 @@ _Note_: Building DFT module requires Clang at this moment due to internal compil
 ### Base
 
 * Tensors (multidimensional arrays)
+* [:star2: new in KFR6] .npy support (reading/writing)
+* [:star2: new in KFR6] Matrix transpose
 * Statistical functions
 * Random number generation
 * Template expressions (See examples)
@@ -91,9 +100,17 @@ _Note_: Building DFT module requires Clang at this moment due to internal compil
 * FLAC
 * MP3
 
+### Multiarchitecture
+
+Multiarchitecture mode enables building algorithms for multiple architectures with runtime dispatch to detect the CPU of the target machine and select the best code path.
+
+* [:star2: new in KFR6] Multiarchitecture for DFT, resampling, FIR and IIR filters.
+
 ### C API
 
 C API is available and includes a subset of KFR features including FFT and filter processing.
+
+[:star2: new in KFR6] Support for non x86 systems.
 
 ## Benchmark results
 
@@ -126,13 +143,11 @@ See [fft benchmark](https://github.com/kfrlib/fft-benchmark) for details about b
 
 ## Documentation
 
-Documentation home:
-
-KFR 5 (latest)
+KFR 6 (latest)
 https://www.kfrlib.com/docs/latest/
 
-KFR 4
-https://www.kfrlib.com/docs/v4/
+KFR 5
+https://www.kfrlib.com/docs/v5/
 
 Built with
 * [cxxdox - generates markdown docs from C++](https://github.com/kfrlib/cxxdox)
@@ -147,9 +162,8 @@ Built with
 
 `v5` - previous version of KFR (no new features, fixes only)
 
-
 ## License
 
 KFR is dual-licensed, available under both commercial and open-source GPL 2+ license.
 
-If you want to use KFR in a commercial product or a closed-source project, you need to [purchase a Commercial License](https://kfr.dev/purchase-license)
+If you want to use KFR in a commercial product or a closed-source project, you need to [purchase a Commercial License](https://kfr.dev/purchase-license).

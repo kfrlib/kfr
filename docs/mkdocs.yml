@@ -27,7 +27,7 @@ extra:
     - icon: fontawesome/brands/twitter
       link: 'https://twitter.com/kfrlib'
 
-copyright: 'Copyright &copy; 2016 - 2023 KFR'
+copyright: 'Copyright &copy; 2016 - 2024 KFR'
 
 plugins:
     - search
@@ -63,12 +63,12 @@ edit_uri: edit/master/docs/
 nav:
   - KFR:
     - index.md
-    - whatsnew5.md
+    - whatsnew6.md
     - installation.md
     - basics.md
     - expressions.md
     - capi.md
-    - upgrade5.md
+    - upgrade6.md
   - DSP:
     - fir.md
     - bq.md
