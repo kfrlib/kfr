@@ -1452,6 +1452,10 @@ constexpr inline bool has_begin_end = details::has_begin_end_impl<std::decay_t<T
 template <typename T>
 constexpr inline bool has_data_size = details::has_data_size_impl<std::decay_t<T>>::value;
 
+#define CMT_HAS_DATA_SIZE(CONTAINER)                                                                         \
+    std::void_t<decltype(std::size(std::declval<CONTAINER>())),                                              \
+                decltype(std::data(std::declval<CONTAINER>()))>* = nullptr
+
 template <typename T>
 using value_type_of = typename std::decay_t<T>::value_type;
 
