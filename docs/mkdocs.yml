@@ -107,6 +107,7 @@ nav:
       - auto/horizontal.md
       - auto/other_math.md
     - Base:
+      - auto/base.md
       - auto/types.md
       - auto/univector.md
       - auto/tensor.md
