@@ -66,9 +66,11 @@ TEST(biquad_lowpass1)
                           +0xb.5f265b1be1728p-23, +0xd.d2cb83f8483f8p-24,
                       };
 
-                      const univector<T, size> ir = biquad(bq, unitimpulse<T>());
+                      const univector<T, size> ir  = biquad(bq, unitimpulse<T>());
+                      const univector<T, size> ir2 = iir(unitimpulse<T>(), iir_params{ bq });
 
                       CHECK(absmaxof(choose_array<T>(test_vector_f32, test_vector_f64) - ir) == 0);
+                      CHECK(absmaxof(choose_array<T>(test_vector_f32, test_vector_f64) - ir2) == 0);
                   });
 }
 

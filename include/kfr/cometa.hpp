@@ -1433,6 +1433,18 @@ struct has_data_size_impl<T,
 {
 };
 
+template <typename, typename = void>
+struct has_data_size_free_impl : std::false_type
+{
+};
+
+template <typename T>
+struct has_data_size_free_impl<
+    T, std::void_t<decltype(std::size(std::declval<T>())), decltype(std::data(std::declval<T>()))>>
+    : std::true_type
+{
+};
+
 template <typename, typename Fallback, typename = void>
 struct value_type_impl
 {
@@ -1453,8 +1465,7 @@ template <typename T>
 constexpr inline bool has_data_size = details::has_data_size_impl<std::decay_t<T>>::value;
 
 #define CMT_HAS_DATA_SIZE(CONTAINER)                                                                         \
-    std::void_t<decltype(std::size(std::declval<CONTAINER>())),                                              \
-                decltype(std::data(std::declval<CONTAINER>()))>* = nullptr
+    std::enable_if_t<details::has_data_size_free_impl<CONTAINER>::value>* = nullptr
 
 template <typename T>
 using value_type_of = typename std::decay_t<T>::value_type;

@@ -66,6 +66,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fir.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fir_design.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/goertzel.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/dsp/iir.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/iir_design.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/mixdown.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/oscillators.hpp
@@ -262,6 +263,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fir.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/fir_design.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/goertzel.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/dsp/iir.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/iir_design.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/mixdown.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/oscillators.hpp

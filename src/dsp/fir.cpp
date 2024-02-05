@@ -50,12 +50,12 @@ namespace impl
 template <typename T, typename U>
 void fir_filter<T, U>::process_buffer_impl(U* dest, const U* src, size_t size)
 {
-    make_univector(dest, size) = fir(this->state, make_univector(src, size));
+    make_univector(dest, size) = fir(make_univector(src, size), std::ref(this->state));
 }
 template <typename T, typename U>
 void fir_filter<T, U>::process_expression_impl(U* dest, const expression_handle<U, 1>& src, size_t size)
 {
-    make_univector(dest, size) = fir(this->state, src);
+    make_univector(dest, size) = fir(src, std::ref(this->state));
 }
 
 template class fir_filter<float, float>;
@@ -73,12 +73,12 @@ template class fir_filter<double, complex<double>>;
 template <typename T, typename U>
 void fir_filter<T, U>::process_buffer(U* dest, const U* src, size_t size)
 {
-    make_univector(dest, size) = fir(this->state, make_univector(src, size));
+    make_univector(dest, size) = fir(make_univector(src, size), std::ref(this->state));
 }
 template <typename T, typename U>
 void fir_filter<T, U>::process_expression(U* dest, const expression_handle<U, 1>& src, size_t size)
 {
-    make_univector(dest, size) = fir(this->state, src);
+    make_univector(dest, size) = fir(src, std::ref(this->state));
 }
 template class fir_filter<float, float>;
 template class fir_filter<double, double>;

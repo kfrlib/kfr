@@ -12,6 +12,27 @@ namespace kfr
 inline namespace CMT_ARCH_NAME
 {
 
+TEST(fir_state)
+{
+    fir_state<float, float> state(univector<float>{ 1, 2, 3, 4, 5, 6 });
+    {
+        const expression_fir<float, float, expression_dimensions<1, float>, false> stateful(
+            dimensions<1>(0.f), state);
+        CHECK(&stateful.state->delayline_cursor != &state.delayline_cursor);
+
+        const expression_fir<float, float, expression_dimensions<1, float>, true> stateless(
+            dimensions<1>(0.f), std::ref(state));
+        CHECK(&stateless.state->delayline_cursor == &state.delayline_cursor);
+    }
+    {
+        auto stateful = fir(dimensions<1>(0.f), state.params);
+        CHECK(&stateful.state->delayline_cursor != &state.delayline_cursor);
+
+        auto stateless = fir(dimensions<1>(0.f), std::ref(state));
+        CHECK(&stateless.state->delayline_cursor == &state.delayline_cursor);
+    }
+}
+
 TEST(fir)
 {
 #ifdef CMT_COMPILER_IS_MSVC

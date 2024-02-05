@@ -31,7 +31,7 @@ namespace kfr
 
 CMT_MULTI_PROTO(namespace impl {
     template <typename T>
-    expression_handle<T, 1> create_biquad_filter(const biquad_params<T>* bq, size_t count);
+    expression_handle<T, 1> create_iir_filter(const iir_params<T>& params);
 } // namespace impl
 )
 
@@ -40,26 +40,25 @@ inline namespace CMT_ARCH_NAME
 namespace impl
 {
 template <typename T>
-expression_handle<T, 1> create_biquad_filter(const biquad_params<T>* bq, size_t count)
+expression_handle<T, 1> create_iir_filter(const iir_params<T>& params)
 {
-    KFR_LOGIC_CHECK(count <= 64, "Too many biquad filters: ", count);
-    return biquad<64>(bq, count, placeholder<T>());
+    return iir(placeholder<T>(), params);
 }
-template expression_handle<float, 1> create_biquad_filter<float>(const biquad_params<float>*, size_t);
-template expression_handle<double, 1> create_biquad_filter<double>(const biquad_params<double>*, size_t);
+template expression_handle<float, 1> create_iir_filter<float>(const iir_params<float>& params);
+template expression_handle<double, 1> create_iir_filter<double>(const iir_params<double>& params);
 } // namespace impl
 } // namespace CMT_ARCH_NAME
 
 #ifdef CMT_MULTI_NEEDS_GATE
 
 template <typename T>
-biquad_filter<T>::biquad_filter(const biquad_params<T>* bq, size_t count)
+iir_filter<T>::iir_filter(const iir_params<T>& params)
 {
-    CMT_MULTI_GATE(this->filter_expr = ns::impl::create_biquad_filter<T>(bq, count));
+    CMT_MULTI_GATE(this->filter_expr = ns::impl::create_iir_filter<T>(params));
 }
 
-template biquad_filter<float>::biquad_filter(const biquad_params<float>*, size_t);
-template biquad_filter<double>::biquad_filter(const biquad_params<double>*, size_t);
+template iir_filter<float>::iir_filter(const iir_params<float>&);
+template iir_filter<double>::iir_filter(const iir_params<double>&);
 
 #endif
 

@@ -1079,7 +1079,7 @@ KFR_FUNCTION zpk<T> iir_bandstop(const zpk<T>& filter, identity<T> lowfreq, iden
 }
 
 template <typename T>
-KFR_FUNCTION std::vector<biquad_params<T>> to_sos(const zpk<T>& filter)
+KFR_FUNCTION iir_params<T> to_sos(const zpk<T>& filter)
 {
     if (filter.p.empty() && filter.z.empty())
         return { biquad_params<T>(filter.k, T(0.), T(0.), T(1.), T(0.), 0) };
@@ -1206,13 +1206,26 @@ KFR_FUNCTION std::vector<biquad_params<T>> to_sos(const zpk<T>& filter)
         pairs[si].z2 = z2;
     }
 
-    std::vector<biquad_params<T>> result(n_sections);
+    iir_params<T> result(n_sections);
     for (size_t si = 0; si < n_sections; si++)
     {
         result[si] = internal::zpk2tf(pairs[n_sections - 1 - si], si == 0 ? filt.k : T(1));
     }
     return result;
 }
+
+/**
+ * @brief Returns template expressions that applies biquad filter to the input.
+ * @param e1 Input expression
+ * @param params IIR filter in ZPK form
+ * @remark This overload converts ZPK to biquad coefficients using to_sos function at every call
+ */
+template <typename T, typename E1>
+KFR_FUNCTION expression_handle<T, 1> iir(E1&& e1, const zpk<T>& params)
+{
+    return iir(std::forward<E1>(e1), to_sos(params));
+}
+
 } // namespace CMT_ARCH_NAME
 
 } // namespace kfr
