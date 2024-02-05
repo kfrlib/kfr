@@ -26,6 +26,8 @@ repository: https://github.com/kfrlib/kfr/blob/{TAG}/include/kfr/{FILE}#L{LINE}
 
 groups:
   filter: "Filter API"
+  array: "Array functions"
+  base: "Base expressions"
   cpuid: "Runtime CPU detection"
   cometa: "CoMeta"
   testo: "Testo - Unit testing"

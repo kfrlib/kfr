@@ -119,6 +119,7 @@ nav:
       - auto/conversion.md
       - auto/sort.md
       - auto/utility.md
+      - auto/array.md
     - DSP:
       - auto/filter.md
       - auto/biquad.md
