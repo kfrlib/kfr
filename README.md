@@ -41,11 +41,13 @@ _Note_: Building the DFT module currently requires Clang due to internal compile
 
 ## Features
 
+:star2: — new in KFR6
+
 ### FFT/DFT
 * Optimized DFT implementation for any size (non-power of two sizes are supported)
 * DFT performance is on par with the most performant implementation currently available [See Benchmarks](#benchmark-results)
 * Real forward and inverse DFT
-* [:star2: new in KFR6] Multidimensional complex and real DFT
+* :star2: Multidimensional complex and real DFT
 * Discrete Cosine Transform type II (and its inverse, also called DCT type III)
 * Convolution using FFT
 * Convolution filter
@@ -68,12 +70,11 @@ _Note_: Building the DFT module currently requires Clang due to internal compile
 * Sample rate conversion with configurable quality and linear phase
 * Oscillators, fast incremental sine/cosine generation,  Goertzel algorithm, fractional delay
 
-
 ### Base
 
 * Tensors (multidimensional arrays)
-* [:star2: new in KFR6] .npy support (reading/writing)
-* [:star2: new in KFR6] Matrix transpose
+* :star2: .npy support (reading/writing)
+* :star2: Matrix transpose
 * Statistical functions
 * Random number generation
 * Template expressions (See examples)
@@ -92,7 +93,6 @@ _Note_: Building the DFT module currently requires Clang due to internal compile
 * All vector lengths are also supported. `vec<float,1>`, `vec<unsigned,3>`, `vec<complex<float>, 11>` all are valid vector types in KFR
 * Sorting
 
-
 ### IO
 
 * Audio file reading/writing
@@ -104,13 +104,13 @@ _Note_: Building the DFT module currently requires Clang due to internal compile
 
 Multiarchitecture mode enables building algorithms for multiple architectures with runtime dispatch to detect the CPU of the target machine and select the best code path.
 
-* [:star2: new in KFR6] Multiarchitecture for DFT, resampling, FIR and IIR filters.
+* :star2: Multiarchitecture for DFT, resampling, FIR and IIR filters.
 
 ### C API
 
 C API is available and includes a subset of KFR features including FFT and filter processing.
 
-[:star2: new in KFR6] Support for non x86 systems.
+* :star2: Support for non x86 systems.
 
 ## Benchmark results
 
