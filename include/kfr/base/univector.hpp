@@ -298,6 +298,8 @@ struct alignas(platform<>::maximum_vector_alignment) univector
     : std::array<T, Size>,
       univector_base<T, univector<T, Size>, is_vec_element<T>>
 {
+    static_assert(!std::is_const_v<T>, "Static vector doesn't allow T to be const");
+    
     using std::array<T, Size>::size;
     using size_type = size_t;
 #if !defined CMT_COMPILER_MSVC || defined CMT_COMPILER_CLANG
@@ -395,6 +397,8 @@ struct univector<T, tag_dynamic_vector>
     : std::vector<T, data_allocator<T>>,
       univector_base<T, univector<T, tag_dynamic_vector>, is_vec_element<T>>
 {
+    static_assert(!std::is_const_v<T>, "Dynamic vector doesn't allow T to be const");
+
     using std::vector<T, data_allocator<T>>::size;
     using std::vector<T, data_allocator<T>>::vector;
     using size_type = size_t;
