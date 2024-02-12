@@ -1936,6 +1936,99 @@ void dft_initialize(dft_plan<T>& plan)
     initialize_data(&plan);
     initialize_order(&plan);
 }
+
+template <typename T>
+const complex<T>* select_in(const dft_plan<T>& plan, typename dft_plan<T>::bitset disposition, size_t stage,
+                            const complex<T>* out, const complex<T>* in, const complex<T>* scratch)
+{
+    return disposition.test(stage) ? scratch : stage == 0 ? in : out;
+}
+template <typename T>
+complex<T>* select_out(const dft_plan<T>& plan, typename dft_plan<T>::bitset disposition, size_t stage,
+                       size_t total_stages, complex<T>* out, complex<T>* scratch)
+{
+    return stage == total_stages - 1 ? out : disposition.test(stage + 1) ? scratch : out;
+}
+
+template <typename T, bool inverse>
+void dft_execute(const dft_plan<T>& plan, cbool_t<inverse>, complex<T>* out, const complex<T>* in, u8* temp)
+{
+    if (temp == nullptr && plan.temp_size > 0)
+    {
+        return call_with_temp(plan.temp_size, std::bind(&impl::dft_execute<T, inverse>, std::cref(plan),
+                                                        cbool_t<inverse>{}, out, in, std::placeholders::_1));
+    }
+    auto&& stages = plan.stages[inverse];
+    if (stages.size() == 1 && (stages[0]->can_inplace || in != out))
+    {
+        return stages[0]->execute(cbool<inverse>, out, in, temp);
+    }
+    size_t stack[DFT_MAX_STAGES] = { 0 };
+
+    typename dft_plan<T>::bitset disposition =
+        in == out ? plan.disposition_inplace[inverse] : plan.disposition_outofplace[inverse];
+
+    complex<T>* scratch = ptr_cast<complex<T>>(
+        temp + plan.temp_size -
+        align_up(sizeof(complex<T>) * (plan.size + 1), platform<>::native_cache_alignment));
+
+    bool in_scratch = disposition.test(0);
+    if (in_scratch)
+    {
+        stages[0]->copy_input(inverse, scratch, in, plan.size);
+    }
+
+    const size_t count = stages.size();
+
+    for (size_t depth = 0; depth < count;)
+    {
+        if (stages[depth]->recursion)
+        {
+            size_t offset   = 0;
+            size_t rdepth   = depth;
+            size_t maxdepth = depth;
+            do
+            {
+                if (stack[rdepth] == stages[rdepth]->repeats)
+                {
+                    stack[rdepth] = 0;
+                    rdepth--;
+                }
+                else
+                {
+                    complex<T>* rout = select_out(plan, disposition, rdepth, stages.size(), out, scratch);
+                    const complex<T>* rin = select_in(plan, disposition, rdepth, out, in, scratch);
+                    stages[rdepth]->execute(cbool<inverse>, rout + offset, rin + offset, temp);
+                    offset += stages[rdepth]->out_offset;
+                    stack[rdepth]++;
+                    if (rdepth < count - 1 && stages[rdepth + 1]->recursion)
+                        rdepth++;
+                    else
+                        maxdepth = rdepth;
+                }
+            } while (rdepth != depth);
+            depth = maxdepth + 1;
+        }
+        else
+        {
+            size_t offset = 0;
+            while (offset < plan.size)
+            {
+                stages[depth]->execute(cbool<inverse>,
+                                       select_out(plan, disposition, depth, stages.size(), out, scratch) +
+                                           offset,
+                                       select_in(plan, disposition, depth, out, in, scratch) + offset, temp);
+                offset += stages[depth]->stage_size;
+            }
+            depth++;
+        }
+    }
+}
+template <typename T>
+void dft_initialize_transpose(internal_generic::fn_transpose<T>& transpose)
+{
+    transpose = &kfr::CMT_ARCH_NAME::matrix_transpose;
+}
 } // namespace impl
 
 namespace intrinsics

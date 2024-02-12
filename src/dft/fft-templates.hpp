@@ -35,6 +35,11 @@ namespace impl
 {
 template void dft_initialize<FLOAT>(dft_plan<FLOAT>& plan);
 template void dft_real_initialize<FLOAT>(dft_plan_real<FLOAT>& plan);
+template void dft_execute<FLOAT>(const dft_plan<FLOAT>&, cbool_t<false>, complex<FLOAT>*,
+                                 const complex<FLOAT>*, u8*);
+template void dft_execute<FLOAT>(const dft_plan<FLOAT>&, cbool_t<true>, complex<FLOAT>*,
+                                 const complex<FLOAT>*, u8*);
+template void dft_initialize_transpose<FLOAT>(internal_generic::fn_transpose<FLOAT>& transpose);
 } // namespace impl
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
