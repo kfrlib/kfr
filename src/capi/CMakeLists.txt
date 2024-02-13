@@ -50,9 +50,9 @@ if (KFR_INSTALL_LIBRARIES)
         install(
             TARGETS kfr_capi
             EXPORT kfr_export
-            ARCHIVE DESTINATION lib$<$<CONFIG:Debug>:/debug>
-            LIBRARY DESTINATION lib$<$<CONFIG:Debug>:/debug>
-            RUNTIME DESTINATION bin$<$<CONFIG:Debug>:/debug>
+            ARCHIVE DESTINATION lib$<$<CONFIG:Debug>:${KFR_DEBUG_INSTALL_SUFFIX}>
+            LIBRARY DESTINATION lib$<$<CONFIG:Debug>:${KFR_DEBUG_INSTALL_SUFFIX}>
+            RUNTIME DESTINATION bin$<$<CONFIG:Debug>:${KFR_DEBUG_INSTALL_SUFFIX}>
             )
     endif ()
 endif ()
