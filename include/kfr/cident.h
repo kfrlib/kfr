@@ -7,14 +7,14 @@
 extern char* gets(char* __s);
 #endif
 
-#if defined(_M_IX86) || defined(__i386__) || defined(_M_X64) || defined(__x86_64__)
+#if defined(_M_IX86) || defined(__i386__) || defined(_M_X64) || defined(__x86_64__) || defined(__wasm)
 #define CMT_ARCH_X86 1
 #elif defined(__arm__) || defined(__arm64__) || defined(_M_ARM) || defined(__aarch64__)
 #define CMT_ARCH_ARM 1
 #endif
 
 #ifdef CMT_ARCH_X86
-#if defined(_M_X64) || defined(__x86_64__)
+#if defined(_M_X64) || defined(__x86_64__) || defined(__wasm64)
 #define CMT_ARCH_X64 1
 #define CMT_ARCH_BITNESS_NAME "64-bit"
 #else

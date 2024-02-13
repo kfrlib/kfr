@@ -35,8 +35,34 @@
 
 namespace kfr
 {
-#ifdef CMT_ARCH_X86
-
+#if defined(__wasm)
+namespace internal_generic
+{
+template <size_t = 0>
+cpu_t detect_cpu()
+{
+    #if defined(__AVX512F__)
+        return cpu_t::avx512;
+    #elif defined(__AVX2__)
+        return cpu_t::avx2;
+    #elif defined(__AVX__)
+        return cpu_t::avx1;
+    #elif defined(__SSE42__)
+        return cpu_t::sse42;
+    #elif defined(__SSE41__)
+        return cpu_t::sse41;
+    #elif defined(__SSSE3__)
+        return cpu_t::ssse3;
+    #elif defined(__SSE3__)
+        return cpu_t::sse3;
+    #elif defined(__SSE2__)
+        return cpu_t::sse2;
+    #else
+        return cpu_t::lowest;
+    #endif
+}
+}
+#elif defined(CMT_ARCH_X86)
 struct cpu_features
 {
     u32 max;
