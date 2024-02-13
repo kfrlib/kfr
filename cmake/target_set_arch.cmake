@@ -1,4 +1,8 @@
-if (X86)
+if (EMSCRIPTEN)
+    function(target_set_arch TARGET MODE ARCH)
+        target_compile_options(${TARGET} ${MODE} -msse4.1)
+    endfunction()
+elseif (X86)
 
     function(target_set_arch TARGET MODE ARCH)
 

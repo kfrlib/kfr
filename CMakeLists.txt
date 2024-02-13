@@ -131,6 +131,11 @@ if (CPU_ARCH)
     endif ()
 endif ()
 
+if (EMSCRIPTEN)
+    set(KFR_ARCH "sse41" CACHE STRING "")
+    set(KFR_ENABLE_MULTIARCH OFF CACHE BOOL "")
+endif ()
+
 set(X86 FALSE)
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
     set(X86 TRUE)
@@ -324,6 +329,10 @@ target_include_directories(
 target_compile_options(kfr INTERFACE "$<$<CONFIG:DEBUG>:-DKFR_DEBUG>")
 if (APPLE)
     target_compile_options(kfr INTERFACE -faligned-allocation)
+endif ()
+
+if (EMSCRIPTEN)
+    target_compile_options(kfr INTERFACE -msimd128)
 endif ()
 
 if (MSVC)
