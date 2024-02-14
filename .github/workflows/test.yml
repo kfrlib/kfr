@@ -93,6 +93,19 @@ jobs:
         set PATH=C:\sde;%PATH%
         ci\run.cmd build-release -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_MULTIARCH=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
 
+  windows2022-clang17-arm64:
+    runs-on: windows-2022
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Tests
+      shell: cmd
+      run: |
+        choco install llvm --version 17.0.6 --no-progress -y
+        choco install ninja --no-progress -y
+        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsamd64_arm64.bat"
+        ci\run.cmd build-release -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_CXX_COMPILER_TARGET=arm64-pc-windows-msvc -DKFR_ARCH=target -DKFR_SKIP_TESTS=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
+
   windows2022-msvc2022-x86:
     runs-on: windows-2022
     steps:

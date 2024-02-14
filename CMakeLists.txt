@@ -147,6 +147,10 @@ if (CMAKE_OSX_ARCHITECTURES MATCHES "^[Aa][Rr][Mm]64$")
     set(X86 FALSE)
 endif ()
 
+if (CMAKE_CXX_COMPILER_TARGET MATCHES "^arm")
+    set(X86 FALSE)
+endif ()
+
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(BITNESS64 TRUE)
 else ()
