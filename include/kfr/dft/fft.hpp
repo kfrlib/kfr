@@ -275,8 +275,11 @@ struct dft_plan_real : dft_plan<T>
 
     bool is_initialized() const { return size != 0; }
 
-    size_t complex_size() const { return complex_size_for(size); }
-    constexpr static size_t complex_size_for(size_t size) { return size / 2 + 1; }
+    size_t complex_size() const { return complex_size_for(size, fmt); }
+    constexpr static size_t complex_size_for(size_t size, dft_pack_format fmt)
+    {
+        return fmt == dft_pack_format::CCs ? size / 2 + 1 : size / 2;
+    }
 
     [[deprecated("cpu parameter is deprecated. Runtime dispatch is used if built with "
                  "KFR_ENABLE_MULTIARCH")]] explicit dft_plan_real(cpu_t cpu, size_t size,
@@ -514,7 +517,7 @@ struct dft_plan_md_real
     constexpr static shape<Dims> complex_size_for(shape<Dims> size)
     {
         if (size.dims() > 0)
-            size.back() = dft_plan_real<T>::complex_size_for(size.back());
+            size.back() = dft_plan_real<T>::complex_size_for(size.back(), dft_pack_format::CCs);
         return size;
     }
 

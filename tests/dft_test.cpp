@@ -235,7 +235,7 @@ TEST(fft_accuracy)
 
             if (is_even(size))
             {
-                index_t csize            = dft_plan_real<float_type>::complex_size_for(size);
+                index_t csize            = dft_plan_real<float_type>::complex_size_for(size, dft_pack_format::CCs);
                 univector<float_type> in = truncate(gen_random_range<float_type>(gen, -1.0, +1.0), size);
 
                 univector<complex<float_type>> out    = truncate(dimensions<1>(scalar(qnan)), csize);
