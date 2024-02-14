@@ -1,10 +1,8 @@
 # How to apply Fast Fourier Transform
 
-This article shows how to use Fast Fourier Transform and how to apply forward and inverse FFT on complex and real data using the KFR framework.
+This article demonstrates how to use the Fast Fourier Transform and apply both forward and inverse FFT on complex and real data using the KFR framework.
 
-KFR DFT supports all sizes, KFR automatically chooses the best algorithm to perform DFT for the given size.
-
-For power of 2 sizes, it uses Fast Fourier Transform.
+KFR DFT supports all sizes, and KFR automatically chooses the best algorithm to perform DFT for the given size.
 
 ## Quick example
 
@@ -30,13 +28,13 @@ Scaling is not performed by KFR. To get output in the same scale as input, divid
 
 ### Real input, complex output
 
-Frequency data are stored in [CCS or Perm format](dft_format.md).
+Frequency data is stored in [CCS or Perm format](dft_format.md).
 
 The size of the output data is equal to `size/2+1` for CCS and `size/2` for Perm format.
 
 For the inverse FFT, you have to prepare frequency data in the CCS or Perm format as well.
 
-For CCS format, you must ensure that freq[0] and freq[N/2] are real numbers to get correct real result.
+For CCS format, you must ensure that freq[0] and freq[N/2] are real numbers to get the correct real result.
 
 ```c++
 data = irealdft(freq);
@@ -45,26 +43,26 @@ data = irealdft(freq) / data.size();
 ```
 
 !!! note
-    Real to complex and complex to real transforms are only available for even sizes.
-    This is caused by the way real DFT is calculated. Pair of real values are interpreted as complex for high performance, so there is limitation for real DFT size, it must be even.
+    Real-to-complex and complex-to-real transforms are only available for even sizes.
+    This is caused by the way real DFT is calculated. A pair of real values are interpreted as complex for high performance, so there is a limitation for real DFT size; it must be even.
     Use complex transform and data conversion instead.
     ```c++
     const dft_plan<double> dft(N); // N is odd
     univector<complex<double>> output(N);
     univector<double> input;
-    univector<u8> temp(dft.temp_size);
+    univector<u8> temp(dft.temp_size); // temporary buffer
     dft.execute(output, univector<complex<double>>(input), temp);
     ```
 
 ## Creating FFT plan
 
-Implementation of FFT requires twiddle coefficients to be prepared before actual processing occurs. If FFT will be performed more than once, then it makes sense to store the coefficients and reuse it every time.
+The implementation of FFT requires twiddle coefficients to be prepared before actual processing occurs. If FFT will be performed more than once, then it makes sense to keep dft plan and reuse it every time.
 
 ## FFT Plan caching
 
 If you are using `dft`, `idft`, `realdft` or `irealdft` functions, all plans will be kept in memory, so the next call to these functions will reuse the saved data.
 
-You can manually get the plan from the cache (or create a new if it doesn’t exist in the cache):
+You can manually get plan from the cache (or create a new if it doesn’t exist in the cache):
 
 ```c++
 dft_plan_ptr<T> dft = dft_cache::instance().get(ctype<T>, size);
@@ -123,7 +121,7 @@ dft_plan<double> plan(1024);
 univector<complex<double>, 1024> in;
 univector<complex<double>, 1024> out;
 // here fill `in` array with our data (samples)
-univector<u8> temp(plan.temp_size);
+univector<u8> temp(plan.temp_size); // temporary buffer
 plan.execute(out, in, temp, false); // direct FFT
 // `out` now contains frequencies which have to be processed
 plan.execute(in, out, temp, true);  // inverse FFT
@@ -133,17 +131,55 @@ plan.execute(in, out, temp, true);  // inverse FFT
 plan.execute(out, in, temp, false); // direct FFT
 ```
 
-### Real to complex and complex to real transform
+### Real-to-complex and complex-to-real transform
 
 ```c++
 dft_plan_real<double> plan(1024); // dft_plan_real for real transform
 univector<double, 1024> in;
 univector<complex<double>, 1024> out;
 // here fill `in` array with our data (samples)
-univector<u8> temp(plan.temp_size);
+univector<u8> temp(plan.temp_size); // temporary buffer
 plan.execute(out, in, temp); // direct FFT
 // `out` now contains frequencies which have to be processed
 plan.execute(in, out, temp); // inverse FFT
 // `in` now contains processed data (samples)
 ```
 
+## Multidimensional DFT
+
+The multidimensional DFT can be performed the same way as the 1D transform but using the `dft_plan_md` class.
+
+```c++
+dft_plan_md<double> plan(shape{ 64, 256 });
+const std::complex<double>* in = ...; // the number of samples for in and out must be 
+                                      // the product of sizes (here is 16384)
+std::complex<double>* out = ...;
+// here fill `in` array with our data (samples)
+univector<u8> temp(plan.temp_size); // temporary buffer
+plan.execute(out, in, temp, false); // direct FFT
+// `out` now contains frequencies which have to be processed
+plan.execute(in, out, temp, true);  // inverse FFT
+// `in` now contains processed data (samples)
+...
+// process new data
+plan.execute(out, in, temp, false); // direct FFT
+```
+
+`dft_plan_md` class also supports passing [tensors](basics.md#tensor-multidimensional-array) as `in` and `out`.
+
+## Multidimensional Real DFT
+
+For multidimensional real-to-complex transforms, the DFT performs a real-to-complex transform for the last axis, followed by a number of complex-to-complex transforms for the other axes. The size of the last axis must be even.
+
+Multidimensional DFT is always performed in [CCS format](dft_format.md).
+
+Thus, given the size of the input as $(S_0, S_1, ..., S_{n-1})$, the total number of input samples equals $S_0 \cdot S_1 \cdot ... \cdot S_{n-1}$. The output size will be $(S_0, S_1, ..., \dfrac{S_{n-1}}{2}+1)$.
+
+Use `plan.complex_size(real_size)` to get the exact size of the complex output for a given real input size.
+
+The KFR FFT implementation supports in-place processing for Multidimensional Real DFT.
+
+!!! note
+    For performance reasons, it is advantageous to use a slightly larger output buffer for the complex-to-real transform.
+    `plan.real_out_size()` returns the size of the buffer (in real numbers) required for fast processing.
+    Pass `true` as a second argument to the `dft_plan_md_real` constructor to indicate that the output buffer has enough space for fast processing.

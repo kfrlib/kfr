@@ -9,6 +9,8 @@
 * `.npy` format support (reading/writing, v1/v2, c/fortran order, real/complex, bigendian/littleendian)
 * Multidimensional DFT: real/complex
 * `inline_vector`
+* Windows arm64 support
+* Emscripten (wasm/wasm64) support
 
 ### Other changes
 

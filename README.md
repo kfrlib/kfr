@@ -79,6 +79,8 @@ _Note_: Building the DFT module currently requires Clang due to internal compile
 * Random number generation
 * Template expressions (See examples)
 * Ring (Circular) buffer
+* :star2: Windows arm64 support
+* :star2: Emscripten (wasm/wasm64) support
 
 ### Math
 
@@ -102,7 +104,7 @@ _Note_: Building the DFT module currently requires Clang due to internal compile
 
 ### Multiarchitecture
 
-Multiarchitecture mode enables building algorithms for multiple architectures with runtime dispatch to detect the CPU of the target machine and select the best code path.
+The multiarchitecture mode enables building algorithms for multiple architectures with runtime dispatch to detect the CPU of the target machine and select the best code path
 
 * :star2: Multiarchitecture for DFT, resampling, FIR and IIR filters.
 
