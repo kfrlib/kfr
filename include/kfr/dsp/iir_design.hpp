@@ -1,4 +1,4 @@
-/** @addtogroup biquad
+/** @addtogroup iir
  *  @{
  */
 /*
