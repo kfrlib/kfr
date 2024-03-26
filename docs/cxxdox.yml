@@ -40,6 +40,7 @@ groups:
   string_io: "String conversion/printing values"
   biquad: "Biquad filter and design functions"
   fir: "FIR filter and design functions"
+  iir: "IIR filter and design functions"
   window: "Window functions"
   sample_rate_conversion: "Sample rate conversion"
   oscillators: "Oscillator functions"

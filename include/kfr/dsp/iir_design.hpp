@@ -1,4 +1,4 @@
-/** @addtogroup biquad
+/** @addtogroup iir
  *  @{
  */
 /*
@@ -1030,6 +1030,13 @@ KFR_FUNCTION T warp_freq(T frequency, T fs)
 
 } // namespace internal
 
+/**
+ * @brief Calculates zero-pole-gain coefficients for the low-pass IIR filter
+ * @param filter Filter type: chebyshev1, chebyshev2, bessel, butterworth
+ * @param frequency Cutoff frequency (Hz)
+ * @param fs Sampling frequency (Hz)
+ * @return The resulting zpk filter
+ */
 template <typename T>
 KFR_FUNCTION zpk<T> iir_lowpass(const zpk<T>& filter, identity<T> frequency, identity<T> fs = T(2.0))
 {
@@ -1041,6 +1048,14 @@ KFR_FUNCTION zpk<T> iir_lowpass(const zpk<T>& filter, identity<T> frequency, ide
     return result;
 }
 
+
+/**
+ * @brief Calculates zero-pole-gain coefficients for the high-pass IIR filter
+ * @param filter Filter type: chebyshev1, chebyshev2, bessel, butterworth
+ * @param frequency Cutoff frequency (Hz)
+ * @param fs Sampling frequency (Hz)
+ * @return The resulting zpk filter
+ */
 template <typename T>
 KFR_FUNCTION zpk<T> iir_highpass(const zpk<T>& filter, identity<T> frequency, identity<T> fs = T(2.0))
 {
@@ -1052,6 +1067,14 @@ KFR_FUNCTION zpk<T> iir_highpass(const zpk<T>& filter, identity<T> frequency, id
     return result;
 }
 
+/**
+ * @brief Calculates zero-pole-gain coefficients for the band-pass IIR filter
+ * @param filter Filter type: chebyshev1, chebyshev2, bessel, butterworth
+ * @param lowfreq Low cutoff frequency (Hz)
+ * @param lowfreq High cutoff frequency (Hz)
+ * @param fs Sampling frequency (Hz)
+ * @return The resulting zpk filter
+ */
 template <typename T>
 KFR_FUNCTION zpk<T> iir_bandpass(const zpk<T>& filter, identity<T> lowfreq, identity<T> highfreq,
                                  identity<T> fs = T(2.0))
@@ -1065,6 +1088,14 @@ KFR_FUNCTION zpk<T> iir_bandpass(const zpk<T>& filter, identity<T> lowfreq, iden
     return result;
 }
 
+/**
+ * @brief Calculates zero-pole-gain coefficients for the band-stop IIR filter
+ * @param filter Filter type: chebyshev1, chebyshev2, bessel, butterworth
+ * @param lowfreq Low cutoff frequency (Hz)
+ * @param lowfreq High cutoff frequency (Hz)
+ * @param fs Sampling frequency (Hz)
+ * @return The resulting zpk filter
+ */
 template <typename T>
 KFR_FUNCTION zpk<T> iir_bandstop(const zpk<T>& filter, identity<T> lowfreq, identity<T> highfreq,
                                  identity<T> fs = T(2.0))
