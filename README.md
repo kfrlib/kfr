@@ -10,9 +10,9 @@
 ![License](https://img.shields.io/github/license/kfrlib/kfr.svg?style=flat-square&label=License)
 ![Release](https://img.shields.io/github/release-date/kfrlib/kfr?style=flat-square&label=Latest+release)
 
-https://www.kfr.dev
+https://www.kfrlib.com
 
-KFR is an open source C++ DSP framework that contains high performance building blocks for DSP, audio, scientific and other applications. It is distributed under dual GPLv2/v3 and [commercial license](https://kfr.dev/purchase).
+KFR is an open source C++ DSP framework that contains high performance building blocks for DSP, audio, scientific and other applications. It is distributed under dual GPLv2/v3 and [commercial license](https://kfrlib.com/purchase).
 
 ## KFR6
 
@@ -168,4 +168,4 @@ Built with
 
 KFR is dual-licensed, available under both commercial and open-source GPL 2+ license.
 
-If you want to use KFR in a commercial product or a closed-source project, you need to [purchase a Commercial License](https://kfr.dev/purchase-license).
+If you want to use KFR in a commercial product or a closed-source project, you need to [purchase a Commercial License](https://kfrlib.com/purchase-license).
