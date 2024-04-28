@@ -354,7 +354,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-Wno-c++1z-extensions -Wno-psabi
                         -Wno-unknown-warning-option)
 endif ()
-if (WIN32)
+if (MSVC)
     add_compile_options(/wd4141)
     target_compile_options(kfr INTERFACE $<$<CXX_COMPILER_ID:MSVC>:/Zc:lambda>)
 endif ()
