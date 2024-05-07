@@ -292,20 +292,20 @@ KFR_INTRINSIC vec<T, N> biquad_process(iir_state<T, filters>& state, const vec<T
 }
 } // namespace internal
 
-template <size_t filters, typename T, typename E1, size_t N>
-KFR_INTRINSIC vec<T, N> get_elements(const expression_iir_l<filters, T, E1>& self, shape<1> index,
+template <size_t filters, typename T, typename E1, bool Stateless, size_t N>
+KFR_INTRINSIC vec<T, N> get_elements(const expression_iir_l<filters, T, E1, Stateless>& self, shape<1> index,
                                      axis_params<0, N> t)
 {
     const vec<T, N> in = get_elements(self.first(), index, t);
     return internal::biquad_process(*self.state, in);
 }
 
-template <typename T, typename E1>
-KFR_INTRINSIC void begin_pass(const expression_iir<1, T, E1>&, shape<1>, shape<1>)
+template <typename T, typename E1, bool Stateless>
+KFR_INTRINSIC void begin_pass(const expression_iir<1, T, E1, Stateless>&, shape<1>, shape<1>)
 {
 }
-template <size_t filters, typename T, typename E1>
-KFR_INTRINSIC void begin_pass(const expression_iir<filters, T, E1>& self, shape<1> start, shape<1> stop)
+template <size_t filters, typename T, typename E1, bool Stateless>
+KFR_INTRINSIC void begin_pass(const expression_iir<filters, T, E1, Stateless>& self, shape<1> start, shape<1> stop)
 {
     size_t size           = stop.front();
     self.state->block_end = size;
@@ -317,26 +317,26 @@ KFR_INTRINSIC void begin_pass(const expression_iir<filters, T, E1>& self, shape<
     internal::biquad_process(*self.state, in);
 }
 
-template <typename T, typename E1>
-KFR_INTRINSIC void end_pass(const expression_iir<1, T, E1>&, shape<1>, shape<1>)
+template <typename T, typename E1, bool Stateless>
+KFR_INTRINSIC void end_pass(const expression_iir<1, T, E1, Stateless>&, shape<1>, shape<1>)
 {
 }
-template <size_t filters, typename T, typename E1>
-KFR_INTRINSIC void end_pass(const expression_iir<filters, T, E1>& self, shape<1> start, shape<1> stop)
+template <size_t filters, typename T, typename E1, bool Stateless>
+KFR_INTRINSIC void end_pass(const expression_iir<filters, T, E1, Stateless>& self, shape<1> start, shape<1> stop)
 {
     self.state->state = self.state->saved_state;
 }
 
-template <typename T, typename E1, size_t N>
-KFR_INTRINSIC vec<T, N> get_elements(const expression_iir<1, T, E1>& self, shape<1> index,
+template <typename T, typename E1, bool Stateless, size_t N>
+KFR_INTRINSIC vec<T, N> get_elements(const expression_iir<1, T, E1, Stateless>& self, shape<1> index,
                                      axis_params<0, N> t)
 {
     const vec<T, N> in = get_elements(self.first(), index, t);
     return internal::biquad_process(*self.state, in);
 }
 
-template <size_t filters, typename T, typename E1, size_t N>
-KFR_INTRINSIC vec<T, N> get_elements(const expression_iir<filters, T, E1>& self, shape<1> index,
+template <size_t filters, typename T, typename E1, bool Stateless, size_t N>
+KFR_INTRINSIC vec<T, N> get_elements(const expression_iir<filters, T, E1, Stateless>& self, shape<1> index,
                                      axis_params<0, N> t)
 {
     using internal::biquad_process;
