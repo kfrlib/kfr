@@ -44,8 +44,8 @@ jobs:
         wget -O - https://apt.llvm.org/llvm.sh | sudo bash -s - 17
         ci/run.sh build-release -DENABLE_EXAMPLES=OFF -DCLANG_SUFFIX=-17 -DCMAKE_BUILD_TYPE=Release -DGCC_VER=11 -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
       
-  ubuntu22-gcc13-x86_64:
-    runs-on: ubuntu-22.04
+  ubuntu24-gcc13-x86_64:
+    runs-on: ubuntu-24.04
     steps:
     - name: Checkout
       uses: actions/checkout@v4
