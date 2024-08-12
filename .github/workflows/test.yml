@@ -186,29 +186,6 @@ jobs:
         brew install ninja
         ci/run.sh build-release -DCMAKE_OSX_ARCHITECTURES=arm64 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_BUILD_TYPE=Release  -DKFR_SKIP_TESTS=ON
 
-  macos11-xcode13-x86_64:
-    runs-on: macos-11
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Tests
-      env:
-        SDE_MACOS: ${{ secrets.SDE_MACOS }}
-        TMP_DIR: ${{ runner.temp }}
-      run: |
-        set -e
-        brew install ninja
-
-        curl -o "$TMP_DIR/sde.tar.xz" -L $SDE_MACOS
-        mkdir -p "$TMP_DIR/sde-bin"
-        tar -C "$TMP_DIR/sde-bin" -xJf "$TMP_DIR/sde.tar.xz" --strip 1
-        export PATH=$PATH:$TMP_DIR/sde-bin
-        sde64 -help || true
-        sudo security authorizationdb write system.privilege.taskport allow
-        sde64 -chip_check_exe_only -- $TMP_DIR/sde-bin/intel64/nullapp
-
-        ci/run.sh build-release -DCMAKE_OSX_ARCHITECTURES=x86_64 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse42,avx,avx2,avx512 -DKFR_USE_SDE=ON  -DKFR_ARCH=target -DCMAKE_BUILD_TYPE=Release      
-
   macos13-xcode14-ios-arm64:
     runs-on: macos-13
     steps:
