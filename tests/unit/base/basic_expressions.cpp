@@ -87,6 +87,8 @@ TEST(concatenate)
                      { 5, 5, 5, 5, 5, 10, 10, 10, 10, 10 });
 }
 
+#ifndef CMT_COMPILER_IS_MSVC
+// The following test causes ICE in recent MSVC
 TEST(rebind)
 {
     auto c_minus_two  = counter() - 2;
@@ -95,6 +97,7 @@ TEST(rebind)
     CHECK_EXPRESSION(c_minus_two, infinite_size, [](size_t i) { return i - 2; });
     CHECK_EXPRESSION(four_minus_c, infinite_size, [](size_t i) { return 4 - i; });
 }
+#endif
 
 TEST(test_arg_access)
 {
