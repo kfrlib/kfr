@@ -6,6 +6,6 @@ function (link_as_whole TARGET TYPE LIBRARY)
         target_link_options(${TARGET} ${TYPE}
                             /WHOLEARCHIVE:$<TARGET_FILE:${LIBRARY}>)
     else ()
-        target_link_options(${TARGET} ${TYPE} "LINKER:--push-state,--whole-archive,$<TARGET_FILE:${LIBRARY}>,--pop-state")
+        target_link_options(${TARGET} ${TYPE} -Wl,--whole-archive,$<TARGET_FILE:${LIBRARY}>,--no-whole-archive)
     endif ()
 endfunction ()
