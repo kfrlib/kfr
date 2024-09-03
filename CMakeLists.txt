@@ -151,6 +151,10 @@ if (CMAKE_CXX_COMPILER_TARGET MATCHES "^arm")
     set(X86 FALSE)
 endif ()
 
+if (CMAKE_ANDROID_ARCH_ABI MATCHES "x86")
+    set(X86 TRUE)
+endif ()
+
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(BITNESS64 TRUE)
 else ()
@@ -195,6 +199,10 @@ mark_as_advanced(KFR_ENABLE_ASMTEST)
 mark_as_advanced(KFR_REGENERATE_TESTS)
 mark_as_advanced(KFR_DISABLE_CLANG_EXTENSIONS)
 
+if (CMAKE_ANDROID_ARCH_ABI)
+    set(KFR_ENABLE_MULTIARCH OFF CACHE INTERNAL "" FORCE)
+endif ()
+
 if (KFR_ENABLE_CAPI_BUILD AND NOT KFR_ENABLE_DFT)
     message(
         FATAL_ERROR
@@ -236,7 +244,7 @@ if (NOT X86)
     endif ()
 endif ()
 
-if (KFR_ARCH IN_LIST DETECT_NAMES)
+if (KFR_ARCH IN_LIST DETECT_NAMES AND NOT CMAKE_CROSSCOMPILING)
     message(STATUS "Detecting ${KFR_ARCH} architecture")
     try_run(
         RUN_RESULT COMPILE_RESULT "${CMAKE_CURRENT_BINARY_DIR}/tmpdir"
@@ -256,7 +264,7 @@ if (KFR_ARCH IN_LIST DETECT_NAMES)
         )
         set(KFR_ARCH
             ${RUN_OUT}
-            CACHE STRING "Detected CPU" FORCE)
+            CACHE INTERNAL "Detected CPU" FORCE)
     else ()
         message(STATUS COMPILE_RESULT = ${COMPILE_RESULT})
         message(STATUS RUN_RESULT = ${RUN_RESULT})
@@ -267,6 +275,11 @@ else ()
     message(
         STATUS
             "Default CPU architecture for KFR is ${KFR_ARCH} (set by KFR_ARCH)")
+endif ()
+
+
+if (X86 AND KFR_ARCH STREQUAL "target")
+    set(KFR_ARCH sse2 CACHE INTERNAL "Default CPU" FORCE)
 endif ()
 
 if (NOT KFR_ARCH IN_LIST ALLOWED_ARCHS)
