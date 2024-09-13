@@ -325,9 +325,8 @@ if (WIN32)
     add_definitions(-D_ENABLE_EXTENDED_ALIGNED_STORAGE)
 endif ()
 
-if (IOS)
-    set(STD_LIB)
-else ()
+set(STD_LIB)
+if (NOT IOS AND NOT ANDROID)
     set(STD_LIB stdc++)
 endif ()
 
