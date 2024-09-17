@@ -17,10 +17,10 @@ namespace details
 
 struct memory_statistics
 {
-    std::atomic_uintptr_t allocation_count   = ATOMIC_VAR_INIT(0);
-    std::atomic_uintptr_t allocation_size    = ATOMIC_VAR_INIT(0);
-    std::atomic_uintptr_t deallocation_count = ATOMIC_VAR_INIT(0);
-    std::atomic_uintptr_t deallocation_size  = ATOMIC_VAR_INIT(0);
+    std::atomic_uintptr_t allocation_count{ 0 };
+    std::atomic_uintptr_t allocation_size{ 0 };
+    std::atomic_uintptr_t deallocation_count{ 0 };
+    std::atomic_uintptr_t deallocation_size{ 0 };
 };
 
 inline memory_statistics& get_memory_statistics()
