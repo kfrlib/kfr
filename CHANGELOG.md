@@ -1,5 +1,19 @@
 # Changelog
 
+## 6.0.3
+
+#### Changed
+
+- Added more Doxygen documentation for filter functions (@Jalmenara)
+- Examples now include detailed comments
+
+#### Fixed
+
+- Fixed stateless parameter
+- Fixed build with non-MSVC on Win32 (@jcelerier)
+- Resolved Android building issues
+- Removed deprecated atomic initialization
+
 ## 6.0.2
 
 #### Added
