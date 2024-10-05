@@ -496,7 +496,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
               KFR_ENABLE_IF(index < 1024 && !compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC constexpr void set(csize_t<index>, const value_type& s) CMT_NOEXCEPT
     {
-        this->s[index] = s;
+        this->v[index] = s;
     }
 
     struct element
