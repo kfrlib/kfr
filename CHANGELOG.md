@@ -1,5 +1,11 @@
 # Changelog
 
+## 6.0.4
+
+#### Fixed
+
+- Clang 19 compatibility fix
+
 ## 6.0.3
 
 #### Changed
