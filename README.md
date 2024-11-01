@@ -22,7 +22,17 @@ New features, performance improvements, easier setup.
 
 :arrow_right: [Upgrade from a previous version](docs/docs/upgrade6.md)
 
-## Installation
+## Our other projects
+
+<div align="center">
+
+[**🟣 Brisk**](https://github.com/brisklib/brisk) is a modern, cross-platform C++ framework for efficient GUI development.<br> A fresh approach to creating GUI apps in C++. *(GPL/Commercial)*
+
+[**🟢 CxxDox**](https://github.com/kfrlib/cxxdox) — C++ documentation generator. *(MIT)*
+
+</div>
+
+## KFR Installation
 
 Compiler support:
 
