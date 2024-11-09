@@ -1,14 +1,15 @@
 site_name: KFR
 theme:
-  name: 'material'
+  name: "material"
   features:
     - navigation.tabs
     - navigation.top
-  palette: 
+    - content.code.copy
+  palette:
     # Palette toggle for light mode
     - scheme: default
       toggle:
-        icon: material/brightness-7 
+        icon: material/brightness-7
         name: Switch to dark mode
 
     # Palette toggle for dark mode
@@ -16,21 +17,22 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
-    
+
 extra:
   search:
     language: en
 
   social:
     - icon: fontawesome/brands/github-alt
-      link: 'https://github.com/kfrlib'
+      link: "https://github.com/kfrlib"
     - icon: fontawesome/brands/twitter
-      link: 'https://twitter.com/kfrlib'
+      link: "https://twitter.com/kfrlib"
 
-copyright: 'Copyright &copy; 2016 - 2024 KFR'
+copyright: "Copyright &copy; 2016 - 2024 KFR"
 
 plugins:
-    - search
+  - search
+  - privacy
 
 markdown_extensions:
   - admonition
@@ -47,6 +49,9 @@ markdown_extensions:
   - pymdownx.magiclink
   - pymdownx.tabbed:
       alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 extra_javascript:
   - js/math.js
@@ -62,81 +67,82 @@ edit_uri: edit/main/docs/
 
 nav:
   - KFR:
-    - index.md
-    - whatsnew6.md
-    - installation.md
-    - basics.md
-    - expressions.md
-    - capi.md
-    - upgrade6.md
+      - index.md
+      - whatsnew6.md
+      - installation.md
+      - basics.md
+      - expressions.md
+      - capi.md
+      - upgrade6.md
   - DSP:
-    - fir.md
-    - bq.md
-    - src.md
-    - conv_reverb.md
-    - ebur128.md
-    - conversion.md
-    - normalize.md
-    - convert_stereo.md
-    - fir_gallery.md
-    - iir_gallery.md
-    - bq_gallery.md
-    - src_gallery.md
-    - window_gallery.md
-    - convolution.md
+      - fir.md
+      - bq.md
+      - src.md
+      - conv_reverb.md
+      - ebur128.md
+      - conversion.md
+      - normalize.md
+      - convert_stereo.md
+      - fir_gallery.md
+      - iir_gallery.md
+      - bq_gallery.md
+      - src_gallery.md
+      - window_gallery.md
+      - convolution.md
   - DFT:
-    - dft.md
-    - dft2.md
-    - dft_format.md
+      - dft.md
+      - dft2.md
+      - dft_format.md
   - I/O:
-    - read_audio.md
-    - file_support.md
-    - plot.md
+      - read_audio.md
+      - file_support.md
+      - plot.md
   - Reference:
-    - auto/refindex.md
-    - Math:
-      - auto/complex.md
-      - auto/constants.md
-      - auto/logical.md
-      - auto/basic_math.md
-      - auto/exponential.md
-      - auto/round.md
-      - auto/saturation.md
-      - auto/trigonometric.md
-      - auto/hyperbolic.md
-      - auto/horizontal.md
-      - auto/other_math.md
-    - Base:
-      - auto/base.md
-      - auto/types.md
-      - auto/univector.md
-      - auto/tensor.md
-      - auto/expressions.md
-      - auto/generators.md
-      - auto/reducing.md
-      - auto/random.md
-      - auto/memory.md
-      - auto/conversion.md
-      - auto/sort.md
-      - auto/utility.md
-      - auto/array.md
-    - DSP:
-      - auto/filter.md
-      - auto/biquad.md
-      - auto/fir.md
-      - auto/window.md
-      - auto/dsp.md
-      - auto/dsp_extra.md
-    - DFT:
-      - auto/convolution.md
-      - auto/dft.md
-    - IO:
-      - auto/binary_io.md
-      - auto/audio_io.md
-      - auto/plotting.md
-      - auto/string_io.md
-    - Other functions: auto/default.md
-    - auto/cpuid.md
-    - auto/cometa.md
+      - auto/refindex.md
+      - auto/capi.md
+      - Math:
+          - auto/complex.md
+          - auto/constants.md
+          - auto/logical.md
+          - auto/basic_math.md
+          - auto/exponential.md
+          - auto/round.md
+          - auto/saturation.md
+          - auto/trigonometric.md
+          - auto/hyperbolic.md
+          - auto/horizontal.md
+          - auto/other_math.md
+      - Base:
+          - auto/base.md
+          - auto/types.md
+          - auto/univector.md
+          - auto/tensor.md
+          - auto/expressions.md
+          - auto/generators.md
+          - auto/reducing.md
+          - auto/random.md
+          - auto/memory.md
+          - auto/conversion.md
+          - auto/sort.md
+          - auto/utility.md
+          - auto/array.md
+      - DSP:
+          - auto/filter.md
+          - auto/biquad.md
+          - auto/fir.md
+          - auto/window.md
+          - auto/dsp.md
+          - auto/dsp_extra.md
+      - DFT:
+          - auto/convolution.md
+          - auto/dft.md
+      - IO:
+          - auto/binary_io.md
+          - auto/audio_io.md
+          - auto/plotting.md
+          - auto/string_io.md
+      - Other functions: auto/default.md
+      - auto/cpuid.md
+      - auto/cometa.md
 
   - kfr.dev: https://kfr.dev

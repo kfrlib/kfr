@@ -1,4 +1,4 @@
-/** @addtogroup dft
+/** @addtogroup capi
  *  @{
  */
 /*

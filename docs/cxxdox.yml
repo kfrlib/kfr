@@ -20,7 +20,7 @@ clang:
 
 input_directory: ../include/kfr
 
-masks: ['**/*.hpp']
+masks: ['**/*.hpp', '**/*.h']
 
 repository: https://github.com/kfrlib/kfr/blob/{TAG}/include/kfr/{FILE}#L{LINE}
 

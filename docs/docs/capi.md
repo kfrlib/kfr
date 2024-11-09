@@ -26,3 +26,7 @@ cd <path_to_kfr_repository>
 cmake -B build -GNinja -DCMAKE_INSTALL_PREFIX=path/to/install/dir -DENABLE_CAPI_BUILD=ON -DDCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=clang++ ..
 ninja -C build install
 ```
+
+## C API Reference
+
+See [C API Reference](auto/capi.md).
