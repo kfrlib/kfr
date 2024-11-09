@@ -26,7 +26,7 @@ New features, performance improvements, easier setup.
 
 <div align="center">
 
-[**🟣 Brisk**](https://github.com/brisklib/brisk) is a modern, cross-platform C++ framework for efficient GUI development.<br> A fresh approach to creating GUI apps in C++. *(GPL/Commercial)*
+[**🟣 Brisk**](https://github.com/brisklib/brisk) is a cross-platform C++20 GUI framework featuring MVVM architecture, reactive capabilities, and scalable, accelerated GPU rendering. *(GPL/Commercial)*
 
 [**🟢 CxxDox**](https://github.com/kfrlib/cxxdox) — C++ documentation generator. *(MIT)*
 
