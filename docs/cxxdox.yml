@@ -1,26 +1,40 @@
 title: KFR
 
-postprocessor:
-  ignore: 
-    - CMT_INLINE
-    - KFR_INTRINSIC
-    - KFR_MEM_INTRINSIC
-    - KFR_FUNCTION
-    - CMT_INTRINSIC
-    - CMT_MEM_INTRINSIC
-    - CMT_UNUSED
-    - CMT_INLINE
-
-clang:
-  arguments: 
-    - '-DKFR_ENABLE_FLAC=1'
-    - '-DCMT_FORCE_GENERIC_CPU=1'
-    - '-std=gnu++17'
-    - '-DDOCUMENTATION'
-
-input_directory: ../include/kfr
-
-masks: ['**/*.hpp', '**/*.h']
+input:
+  - include:
+      - include/kfr/**/*.h
+    hide_tokens:
+      - CMT_INLINE
+      - KFR_INTRINSIC
+      - KFR_MEM_INTRINSIC
+      - KFR_FUNCTION
+      - CMT_INTRINSIC
+      - CMT_MEM_INTRINSIC
+      - CMT_UNUSED
+      - CMT_INLINE
+      - KFR_API_SPEC
+    compile_options:
+      - "-DKFR_ENABLE_FLAC=1"
+      - "-DCMT_FORCE_GENERIC_CPU=1"
+      - "-std=gnu99"
+      - "-DDOCUMENTATION"
+  - include:
+      - include/kfr/**/*.hpp
+    hide_tokens:
+      - CMT_INLINE
+      - KFR_INTRINSIC
+      - KFR_MEM_INTRINSIC
+      - KFR_FUNCTION
+      - CMT_INTRINSIC
+      - CMT_MEM_INTRINSIC
+      - CMT_UNUSED
+      - CMT_INLINE
+      - KFR_API_SPEC
+    compile_options:
+      - "-DKFR_ENABLE_FLAC=1"
+      - "-DCMT_FORCE_GENERIC_CPU=1"
+      - "-std=gnu++17"
+      - "-DDOCUMENTATION"
 
 repository: https://github.com/kfrlib/kfr/blob/{TAG}/include/kfr/{FILE}#L{LINE}
 
@@ -69,4 +83,4 @@ groups:
   random: "PRNG functions and expressions"
   reducing: "Reducing functions"
   utility: "Utility functions"
-  
+  capi: "C API"
