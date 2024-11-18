@@ -354,7 +354,7 @@ struct dft_plan_real : dft_plan<T>
 };
 
 /// @brief Multidimensional DFT
-template <typename T, index_t Dims>
+template <typename T, index_t Dims = dynamic_shape>
 struct dft_plan_md
 {
     shape<Dims> size;
@@ -490,7 +490,7 @@ private:
 };
 
 /// @brief Multidimensional DFT
-template <typename T, index_t Dims>
+template <typename T, index_t Dims = dynamic_shape>
 struct dft_plan_md_real
 {
     shape<Dims> size;

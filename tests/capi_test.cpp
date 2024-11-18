@@ -47,24 +47,26 @@ void test_memory()
 
 #define DFT_SIZE 32
 
-void test_dft_f32()
+static void init_data_f32(kfr_f32* buf)
 {
-    printf("[TEST] DFT f32\n");
-    const float eps        = 0.00001f;
-    KFR_DFT_PLAN_F32* plan = kfr_dft_create_plan_f32(DFT_SIZE);
-    // kfr_dft_dump_f32(plan);
-    kfr_f32 buf[DFT_SIZE * 2];
     for (int i = 0; i < DFT_SIZE; i++)
     {
         buf[i * 2 + 0] = (float)(i) / DFT_SIZE;
         buf[i * 2 + 1] = (float)(-i) / DFT_SIZE;
     }
-    uint8_t* tmp = (uint8_t*)kfr_allocate(kfr_dft_get_temp_size_f32(plan));
-    kfr_dft_execute_f32(plan, buf, buf, tmp);
-    kfr_dft_execute_inverse_f32(plan, buf, buf, tmp);
-    kfr_dft_delete_plan_f32(plan);
-    kfr_deallocate(tmp);
+}
+static void init_data_f64(kfr_f64* buf)
+{
+    for (int i = 0; i < DFT_SIZE; i++)
+    {
+        buf[i * 2 + 0] = (double)(i) / DFT_SIZE;
+        buf[i * 2 + 1] = (double)(-i) / DFT_SIZE;
+    }
+}
 
+static void test_data_f32(kfr_f32* buf)
+{
+    const float eps = 0.00001f;
     for (int i = 0; i < DFT_SIZE; i++)
     {
         CHECK(fabsf(buf[i * 2 + 0] - (float)(i)) < eps, "DFT: wrong result at %d: re = %f", i,
@@ -73,25 +75,9 @@ void test_dft_f32()
               buf[i * 2 + 1]);
     }
 }
-
-void test_dft_f64()
+static void test_data_f64(kfr_f64* buf)
 {
-    printf("[TEST] DFT f64\n");
-    const float eps        = 0.00000001;
-    KFR_DFT_PLAN_F64* plan = kfr_dft_create_plan_f64(DFT_SIZE);
-    // kfr_dft_dump_f64(plan);
-    kfr_f64 buf[DFT_SIZE * 2];
-    for (int i = 0; i < DFT_SIZE; i++)
-    {
-        buf[i * 2 + 0] = (double)(i) / DFT_SIZE;
-        buf[i * 2 + 1] = (double)(-i) / DFT_SIZE;
-    }
-    uint8_t* tmp = (uint8_t*)kfr_allocate(kfr_dft_get_temp_size_f64(plan));
-    kfr_dft_execute_f64(plan, buf, buf, tmp);
-    kfr_dft_execute_inverse_f64(plan, buf, buf, tmp);
-    kfr_dft_delete_plan_f64(plan);
-    kfr_deallocate(tmp);
-
+    const double eps = 0.00001;
     for (int i = 0; i < DFT_SIZE; i++)
     {
         CHECK(fabs(buf[i * 2 + 0] - (double)(i)) < eps, "DFT: wrong result at %d: re = %f", i,
@@ -99,6 +85,98 @@ void test_dft_f64()
         CHECK(fabs(buf[i * 2 + 1] - (double)(-i)) < eps, "DFT: wrong result at %d: im = %f", i,
               buf[i * 2 + 1]);
     }
+}
+
+void test_dft_f32()
+{
+    printf("[TEST] DFT f32\n");
+    // kfr_dft_dump_f32(plan);
+    kfr_f32 buf[DFT_SIZE * 2];
+    KFR_DFT_PLAN_F32* plan;
+    uint8_t* tmp;
+
+    init_data_f32(buf);
+    plan = kfr_dft_create_plan_f32(DFT_SIZE);
+    tmp  = (uint8_t*)kfr_allocate(kfr_dft_get_temp_size_f32(plan));
+    kfr_dft_execute_f32(plan, buf, buf, tmp);
+    kfr_dft_execute_inverse_f32(plan, buf, buf, tmp);
+    kfr_deallocate(tmp);
+    kfr_dft_delete_plan_f32(plan);
+    test_data_f32(buf);
+
+    init_data_f32(buf);
+    plan = kfr_dft_create_2d_plan_f32(8, 4);
+    tmp  = (uint8_t*)kfr_allocate(kfr_dft_get_temp_size_f32(plan));
+    kfr_dft_execute_f32(plan, buf, buf, tmp);
+    kfr_dft_execute_inverse_f32(plan, buf, buf, tmp);
+    kfr_deallocate(tmp);
+    kfr_dft_delete_plan_f32(plan);
+    test_data_f32(buf);
+
+    init_data_f32(buf);
+    plan = kfr_dft_create_3d_plan_f32(4, 4, 2);
+    tmp  = (uint8_t*)kfr_allocate(kfr_dft_get_temp_size_f32(plan));
+    kfr_dft_execute_f32(plan, buf, buf, tmp);
+    kfr_dft_execute_inverse_f32(plan, buf, buf, tmp);
+    kfr_deallocate(tmp);
+    kfr_dft_delete_plan_f32(plan);
+    test_data_f32(buf);
+
+    unsigned sizes[4] = { 2, 2, 2, 4 };
+    init_data_f32(buf);
+    plan = kfr_dft_create_md_plan_f32(4, sizes);
+    tmp  = (uint8_t*)kfr_allocate(kfr_dft_get_temp_size_f32(plan));
+    kfr_dft_execute_f32(plan, buf, buf, tmp);
+    kfr_dft_execute_inverse_f32(plan, buf, buf, tmp);
+    kfr_deallocate(tmp);
+    kfr_dft_delete_plan_f32(plan);
+    test_data_f32(buf);
+}
+
+void test_dft_f64()
+{
+    printf("[TEST] DFT f64\n");
+    // kfr_dft_dump_f64(plan);
+    kfr_f64 buf[DFT_SIZE * 2];
+    KFR_DFT_PLAN_F64* plan;
+    uint8_t* tmp;
+
+    init_data_f64(buf);
+    plan = kfr_dft_create_plan_f64(DFT_SIZE);
+    tmp  = (uint8_t*)kfr_allocate(kfr_dft_get_temp_size_f64(plan));
+    kfr_dft_execute_f64(plan, buf, buf, tmp);
+    kfr_dft_execute_inverse_f64(plan, buf, buf, tmp);
+    kfr_deallocate(tmp);
+    kfr_dft_delete_plan_f64(plan);
+    test_data_f64(buf);
+
+    init_data_f64(buf);
+    plan = kfr_dft_create_2d_plan_f64(8, 4);
+    tmp  = (uint8_t*)kfr_allocate(kfr_dft_get_temp_size_f64(plan));
+    kfr_dft_execute_f64(plan, buf, buf, tmp);
+    kfr_dft_execute_inverse_f64(plan, buf, buf, tmp);
+    kfr_deallocate(tmp);
+    kfr_dft_delete_plan_f64(plan);
+    test_data_f64(buf);
+
+    init_data_f64(buf);
+    plan = kfr_dft_create_3d_plan_f64(4, 4, 2);
+    tmp  = (uint8_t*)kfr_allocate(kfr_dft_get_temp_size_f64(plan));
+    kfr_dft_execute_f64(plan, buf, buf, tmp);
+    kfr_dft_execute_inverse_f64(plan, buf, buf, tmp);
+    kfr_deallocate(tmp);
+    kfr_dft_delete_plan_f64(plan);
+    test_data_f64(buf);
+
+    unsigned sizes[4] = { 2, 2, 2, 4 };
+    init_data_f64(buf);
+    plan = kfr_dft_create_md_plan_f64(4, sizes);
+    tmp  = (uint8_t*)kfr_allocate(kfr_dft_get_temp_size_f64(plan));
+    kfr_dft_execute_f64(plan, buf, buf, tmp);
+    kfr_dft_execute_inverse_f64(plan, buf, buf, tmp);
+    kfr_deallocate(tmp);
+    kfr_dft_delete_plan_f64(plan);
+    test_data_f64(buf);
 }
 
 #define FILTER_SIZE 256

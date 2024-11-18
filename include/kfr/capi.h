@@ -185,11 +185,61 @@ typedef enum KFR_DFT_PACK_FORMAT
 KFR_API_SPEC KFR_DFT_PLAN_F32* kfr_dft_create_plan_f32(size_t size);
 
 /**
+ * @brief Create a 2D complex DFT plan (Single precision).
+ * @param size1 Size of the first dimension.
+ * @param size2 Size of the second dimension.
+ * @return Pointer to the created 2D DFT plan. Use `kfr_dft_delete_plan_f**` to free.
+ */
+KFR_API_SPEC KFR_DFT_PLAN_F32* kfr_dft_create_2d_plan_f32(size_t size1, size_t size2);
+
+/**
+ * @brief Create a 3D complex DFT plan (Single precision).
+ * @param size1 Size of the first dimension.
+ * @param size2 Size of the second dimension.
+ * @param size3 Size of the third dimension.
+ * @return Pointer to the created 3D DFT plan. Use `kfr_dft_delete_plan_f**` to free.
+ */
+KFR_API_SPEC KFR_DFT_PLAN_F32* kfr_dft_create_3d_plan_f32(size_t size1, size_t size2, size_t size3);
+
+/**
+ * @brief Create an N-dimensional complex DFT plan (Single precision).
+ * @param dims Number of dimensions.
+ * @param shape Array of sizes for each dimension.
+ * @return Pointer to the created N-dimensional DFT plan. Use `kfr_dft_delete_plan_f**` to free.
+ */
+KFR_API_SPEC KFR_DFT_PLAN_F32* kfr_dft_create_md_plan_f32(size_t dims, const unsigned* shape);
+
+/**
  * @brief Create a complex DFT plan (Double precision).
  * @param size Size of the DFT.
  * @return Pointer to the created DFT plan. Use `kfr_dft_delete_plan_f**` to free.
  */
 KFR_API_SPEC KFR_DFT_PLAN_F64* kfr_dft_create_plan_f64(size_t size);
+
+/**
+ * @brief Create a 2D complex DFT plan (Double precision).
+ * @param size1 Size of the first dimension.
+ * @param size2 Size of the second dimension.
+ * @return Pointer to the created 2D DFT plan. Use `kfr_dft_delete_plan_f**` to free.
+ */
+KFR_API_SPEC KFR_DFT_PLAN_F64* kfr_dft_create_2d_plan_f64(size_t size1, size_t size2);
+
+/**
+ * @brief Create a 3D complex DFT plan (Double precision).
+ * @param size1 Size of the first dimension.
+ * @param size2 Size of the second dimension.
+ * @param size3 Size of the third dimension.
+ * @return Pointer to the created 3D DFT plan. Use `kfr_dft_delete_plan_f**` to free.
+ */
+KFR_API_SPEC KFR_DFT_PLAN_F64* kfr_dft_create_3d_plan_f64(size_t size1, size_t size2, size_t size3);
+
+/**
+ * @brief Create an N-dimensional complex DFT plan (Double precision).
+ * @param dims Number of dimensions.
+ * @param shape Array of sizes for each dimension.
+ * @return Pointer to the created N-dimensional DFT plan. Use `kfr_dft_delete_plan_f**` to free.
+ */
+KFR_API_SPEC KFR_DFT_PLAN_F64* kfr_dft_create_md_plan_f64(size_t dims, const unsigned* shape);
 
 /**
  * @brief Dump details of the DFT plan to stdout for inspection.
@@ -308,6 +358,13 @@ KFR_API_SPEC void kfr_dft_delete_plan_f64(KFR_DFT_PLAN_F64* plan);
 KFR_API_SPEC KFR_DFT_REAL_PLAN_F32* kfr_dft_real_create_plan_f32(size_t size,
                                                                  KFR_DFT_PACK_FORMAT pack_format);
 
+KFR_API_SPEC KFR_DFT_REAL_PLAN_F32* kfr_dft_real_create_2d_plan_f32(size_t size1, size_t size2,
+                                                                    bool real_out_is_enough);
+KFR_API_SPEC KFR_DFT_REAL_PLAN_F32* kfr_dft_real_create_3d_plan_f32(size_t size1, size_t size2, size_t size3,
+                                                                    bool real_out_is_enough);
+KFR_API_SPEC KFR_DFT_REAL_PLAN_F32* kfr_dft_real_create_md_plan_f32(size_t dims, const unsigned* shape,
+                                                                    bool real_out_is_enough);
+
 /**
  * @brief Create a real DFT plan (Double precision).
  * @param size Size of the real DFT. Must be even.
@@ -316,6 +373,13 @@ KFR_API_SPEC KFR_DFT_REAL_PLAN_F32* kfr_dft_real_create_plan_f32(size_t size,
  */
 KFR_API_SPEC KFR_DFT_REAL_PLAN_F64* kfr_dft_real_create_plan_f64(size_t size,
                                                                  KFR_DFT_PACK_FORMAT pack_format);
+
+KFR_API_SPEC KFR_DFT_REAL_PLAN_F64* kfr_dft_real_create_2d_plan_f64(size_t size1, size_t size2,
+                                                                    bool real_out_is_enough);
+KFR_API_SPEC KFR_DFT_REAL_PLAN_F64* kfr_dft_real_create_3d_plan_f64(size_t size1, size_t size2, size_t size3,
+                                                                    bool real_out_is_enough);
+KFR_API_SPEC KFR_DFT_REAL_PLAN_F64* kfr_dft_real_create_md_plan_f64(size_t dims, const unsigned* shape,
+                                                                    bool real_out_is_enough);
 
 /**
  * @brief Dump details of the real DFT plan to stdout for inspection.
