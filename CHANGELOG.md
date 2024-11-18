@@ -1,5 +1,17 @@
 # Changelog
 
+## 6.1.0
+
+#### Added
+
+- C API now supports Multidimensional DFT
+
+#### Changed
+
+- Documentation update
+- Update to latest CxxDox
+- `Dims` template parameter in `dft_plan_md` and `dft_plan_md_real` now defaults to `dynamic_shape`
+
 ## 6.0.4
 
 #### Fixed
