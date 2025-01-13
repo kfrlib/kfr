@@ -1,5 +1,12 @@
 # Changelog
 
+## 6.1.1
+
+#### Changed
+
+- DFT performance has been improved by 30-80% for ARM and ARM64 cpus
+- DFT benchmark is now enabled for non-x86 builds
+
 ## 6.1.0
 
 #### Added
