@@ -33,11 +33,13 @@ constexpr ctypes_t<float, double> dft_float_types{};
 constexpr ctypes_t<float> dft_float_types{};
 #endif
 
-#if defined(CMT_ARCH_X86) && !defined(KFR_NO_PERF_TESTS)
+#if !defined(KFR_NO_PERF_TESTS)
 
 static void full_barrier()
 {
-#ifdef CMT_COMPILER_GNU
+#if defined(CMT_ARCH_NEON)
+    asm volatile("dmb ish" ::: "memory");
+#elif defined(CMT_COMPILER_GNU)
     asm volatile("mfence" ::: "memory");
 #else
     _ReadWriteBarrier();
@@ -235,7 +237,7 @@ TEST(fft_accuracy)
 
             if (is_even(size))
             {
-                index_t csize            = dft_plan_real<float_type>::complex_size_for(size, dft_pack_format::CCs);
+                index_t csize = dft_plan_real<float_type>::complex_size_for(size, dft_pack_format::CCs);
                 univector<float_type> in = truncate(gen_random_range<float_type>(gen, -1.0, +1.0), size);
 
                 univector<complex<float_type>> out    = truncate(dimensions<1>(scalar(qnan)), csize);

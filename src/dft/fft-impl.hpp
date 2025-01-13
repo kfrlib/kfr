@@ -52,22 +52,30 @@ template <typename T>
 inline std::bitset<DFT_MAX_STAGES> fft_algorithm_selection;
 
 template <>
-inline std::bitset<DFT_MAX_STAGES> fft_algorithm_selection<float>{ (1ull << 15) - 1 };
+inline std::bitset<DFT_MAX_STAGES> fft_algorithm_selection<float>{
+#ifdef CMT_ARCH_NEON
+    0
+#else
+    (1ull << 15) - 1
+#endif
+};
 
 template <>
 inline std::bitset<DFT_MAX_STAGES> fft_algorithm_selection<double>{ 0 };
 
 template <typename T>
-constexpr bool inline use_autosort(size_t log2n)
+inline bool use_autosort(size_t log2n)
 {
     return fft_algorithm_selection<T>[log2n];
 }
 
+#ifndef CMT_ARCH_NEON
+#define KFR_AUTOSORT_FOR_2048
 #define KFR_AUTOSORT_FOR_128D
 #define KFR_AUTOSORT_FOR_256D
 #define KFR_AUTOSORT_FOR_512
 #define KFR_AUTOSORT_FOR_1024
-#define KFR_AUTOSORT_FOR_2048
+#endif
 
 #ifdef CMT_ARCH_AVX
 template <>
@@ -855,7 +863,11 @@ template <typename T>
 struct fft_config
 {
     constexpr static inline const bool recursion = true;
-    constexpr static inline const bool prefetch  = true;
+#ifdef CMT_ARCH_NEON
+    constexpr static inline const bool prefetch = false;
+#else
+    constexpr static inline const bool prefetch = true;
+#endif
     constexpr static inline const size_t process_width =
         const_max(static_cast<size_t>(1), vector_capacity<T> / 16);
 };
@@ -1606,7 +1618,7 @@ struct fft_specialization<T, 10> : fft_final_stage_impl<T, false, 1024>
     {
         fft_final_stage_impl<T, false, 1024>::template do_execute<inverse>(out, in, nullptr);
         if (this->need_reorder)
-            fft_reorder(out, 10, cfalse);
+            fft_reorder(out, csize_t<10>{}, cbool_t<always_br2>{});
     }
 };
 #endif
@@ -1649,8 +1661,6 @@ struct fft_specialization<T, 11> : dft_stage<T>
         radix8_autosort_pass_last(256, csize<width>, no, no, no, cbool<inverse>, out, out, tw);
     }
 };
-
-#else
 #endif
 
 template <bool is_even, bool first, typename T, bool autosort>
@@ -1768,7 +1778,13 @@ KFR_INTRINSIC void init_fft(dft_plan<T>* self, size_t size, dft_order)
 {
     const size_t log2n = ilog2(size);
     cswitch(
-        csizes_t<0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11>(), log2n,
+        csizes_t<0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+#ifdef KFR_AUTOSORT_FOR_2048
+                 ,
+                 11
+#endif
+                 >(),
+        log2n,
         [&](auto log2n)
         {
             (void)log2n;

@@ -49,15 +49,22 @@ constexpr inline static size_t bitrev_table_log2N = ilog2(arraysize(data::bitrev
 template <size_t Bits>
 CMT_GNU_CONSTEXPR inline u32 bitrev_using_table(u32 x)
 {
+#ifdef CMT_ARCH_NEON
+    return __builtin_bitreverse32(x) >> (32 - Bits);
+#else
     if constexpr (Bits > bitrev_table_log2N)
         return bitreverse<Bits>(x);
 
     return data::bitrev_table[x] >> (bitrev_table_log2N - Bits);
+#endif
 }
 
 template <bool use_table>
 CMT_GNU_CONSTEXPR inline u32 bitrev_using_table(u32 x, size_t bits, cbool_t<use_table>)
 {
+#ifdef CMT_ARCH_NEON
+    return __builtin_bitreverse32(x) >> (32 - bits);
+#else
     if constexpr (use_table)
     {
         return data::bitrev_table[x] >> (bitrev_table_log2N - bits);
@@ -66,10 +73,17 @@ CMT_GNU_CONSTEXPR inline u32 bitrev_using_table(u32 x, size_t bits, cbool_t<use_
     {
         return bitreverse<32>(x) >> (32 - bits);
     }
+#endif
 }
 
 CMT_GNU_CONSTEXPR inline u32 dig4rev_using_table(u32 x, size_t bits)
 {
+#ifdef CMT_ARCH_NEON
+    x = __builtin_bitreverse32(x);
+    x = (((x & 0xaaaaaaaa) >> 1) | ((x & 0x55555555) << 1));
+    x = x >> (32 - bits);
+    return x;
+#else
     if (bits > bitrev_table_log2N)
     {
         if (bits <= 16)
@@ -82,6 +96,7 @@ CMT_GNU_CONSTEXPR inline u32 dig4rev_using_table(u32 x, size_t bits)
     x = (((x & 0xaaaaaaaa) >> 1) | ((x & 0x55555555) << 1));
     x = x >> (bitrev_table_log2N - bits);
     return x;
+#endif
 }
 
 template <size_t log2n, size_t bitrev, typename T>
