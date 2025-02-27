@@ -54,6 +54,7 @@ namespace kfr
 using cdirect_t = cfalse_t;
 using cinvert_t = ctrue_t;
 
+/// @brief Internal structure representing a single DFT stage
 template <typename T>
 struct dft_stage
 {
@@ -106,16 +107,29 @@ enum class dft_type
     inverse
 };
 
+/**
+ * @brief Specifies the desired order for DFT output (and IDFT input)
+ *
+ * Currenly ignored.
+ */
 enum class dft_order
 {
-    normal,
+    normal, // Normal order
     internal, // possibly bit/digit-reversed, implementation-defined, may be faster to compute
 };
 
+/**
+ * @brief Specifies the packing format for real DFT output data.
+ * See https://www.kfr.dev/docs/latest/dft_format/ for details
+ */
 enum class dft_pack_format
 {
-    Perm, // {X[0].r, X[N].r}, ... {X[i].r, X[i].i}, ... {X[N-1].r, X[N-1].i}
-    CCs // {X[0].r, 0}, ... {X[i].r, X[i].i}, ... {X[N-1].r, X[N-1].i},  {X[N].r, 0}
+    /// Packed format: {X[0].r, X[N].r}, ... {X[i].r, X[i].i}, ... {X[N-1].r, X[N-1].i}
+    /// Number of complex samples is $\frac{N}{2}$ where N is the number of real samples
+    Perm,
+    /// Conjugate-symmetric format: {X[0].r, 0}, ... {X[i].r, X[i].i}, ... {X[N-1].r, X[N-1].i}, {X[N].r, 0}
+    /// Number of complex samples is $\frac{N}{2}+1$ where N is the number of real samples
+    CCs,
 };
 
 template <typename T>
@@ -123,9 +137,6 @@ struct dft_plan;
 
 template <typename T>
 struct dft_plan_real;
-
-template <typename T>
-struct dft_stage;
 
 template <typename T>
 using dft_stage_ptr = std::unique_ptr<dft_stage<T>>;
@@ -146,23 +157,66 @@ void dft_initialize_transpose(fn_transpose<T>& transpose);
 
 } // namespace internal_generic
 
-/// @brief 1D DFT/FFT
+/**
+ * @brief Class for performing 1D DFT/FFT.
+ *
+ * The same plan is used for both direct DFT and inverse DFT. The type is default-constructible and movable
+ * but non-copyable. It is advisable to create an instance of the `dft_plan` with a specific size
+ * beforehand and reuse this instance in all subsequent DFT operations.
+ *
+ * @tparam T Template parameter specifying the floating-point type. Must be either `float` or `double`;
+ *           other types are not supported.
+ */
 template <typename T>
 struct dft_plan
 {
+    /// The size of the DFT as passed to the contructor.
     size_t size;
+
+    /// The temporary (scratch) buffer size for the DFT plan.
+    /// @note Preallocating a byte buffer of this size and passing its pointer to the
+    /// `execute` function may improve performance.
     size_t temp_size;
 
+    /**
+     * @brief Constructs an empty DFT plan.
+     *
+     * This default constructor ensures the type is default-constructible.
+     */
     dft_plan()
         : size(0), temp_size(0), data_size(0), arblen(false), disposition_inplace{}, disposition_outofplace{}
     {
     }
 
-    dft_plan(const dft_plan&)            = delete;
-    dft_plan(dft_plan&&)                 = default;
-    dft_plan& operator=(const dft_plan&) = delete;
-    dft_plan& operator=(dft_plan&&)      = default;
+    /**
+     * @brief Copy constructor (deleted).
+     *
+     * Copying of `dft_plan` instances is not allowed.
+     */
+    dft_plan(const dft_plan&) = delete;
 
+    /**
+     * @brief Copy assignment operator (deleted).
+     *
+     * Copy assignment of `dft_plan` instances is not allowed.
+     */
+    dft_plan& operator=(const dft_plan&) = delete;
+
+    /**
+     * @brief Move constructor.
+     */
+    dft_plan(dft_plan&&) = default;
+
+    /**
+     * @brief Move assignment operator.
+     */
+    dft_plan& operator=(dft_plan&&) = default;
+
+    /**
+     * @brief Checks whether the plan is non-empty.
+     *
+     * @return `true` if the plan was constructed with a specific DFT size, `false` otherwise.
+     */
     bool is_initialized() const { return size != 0; }
 
     [[deprecated("cpu parameter is deprecated. Runtime dispatch is used if built with "
@@ -172,14 +226,36 @@ struct dft_plan
     {
         (void)cpu;
     }
+
+    /**
+     * @brief Constructs a DFT plan with the specified size and order.
+     *
+     * @param size The size of the DFT.
+     * @param order The order of the DFT samples. See `dft_order`.
+     */
     explicit dft_plan(size_t size, dft_order order = dft_order::normal)
         : size(size), temp_size(0), data_size(0), arblen(false)
     {
         internal_generic::dft_initialize(*this);
     }
 
+    /**
+     * @brief Dumps details of the DFT plan to stdout for inspection.
+     *
+     * May be used to determine the selected architecture at runtime and the chosen DFT algorithms.
+     */
     void dump() const;
 
+    /**
+     * @brief Execute the complex DFT on `in` and write the result to `out`.
+     * @param out Pointer to the output data.
+     * @param in Pointer to the input data.
+     * @param temp Temporary (scratch) buffer. If `NULL`, scratch buffer of size
+     * `plan->temp_size` will be allocated on stack or heap.
+     * @param inverse If true, apply the inverse DFT.
+     * @note No scaling is applied. This function reads $N$ complex values from `in` and writes $N$ complex
+     * values to `out`, where $N$ is the size passed to the constructor.
+     */
     KFR_MEM_INTRINSIC void execute(complex<T>* out, const complex<T>* in, u8* temp,
                                    bool inverse = false) const
     {
@@ -188,7 +264,24 @@ struct dft_plan
         else
             execute_dft(cfalse, out, in, temp);
     }
+
+    /**
+     * @brief Destructor.
+     *
+     * Deallocates internal data.
+     */
     ~dft_plan() {}
+
+    /**
+     * @brief Execute the complex DFT on `in` and write the result to `out`.
+     * @param out Pointer to the output data.
+     * @param in Pointer to the input data.
+     * @param temp Temporary (scratch) buffer. If `NULL`, scratch buffer of size
+     * `plan->temp_size` will be allocated on stack or heap.
+     * @tparam inverse If true, apply the inverse DFT.
+     * @note No scaling is applied. This function reads $N$ complex values from `in` and writes $N$ complex
+     * values to `out`, where $N$ is the size passed to the constructor.
+     */
     template <bool inverse>
     KFR_MEM_INTRINSIC void execute(complex<T>* out, const complex<T>* in, u8* temp,
                                    cbool_t<inverse> inv) const
@@ -196,6 +289,16 @@ struct dft_plan
         execute_dft(inv, out, in, temp);
     }
 
+    /**
+     * @brief Execute the complex DFT on `in` and write the result to `out`.
+     * @param out Pointer to the output data.
+     * @param in Pointer to the input data.
+     * @param temp Temporary (scratch) buffer. If `NULL`, scratch buffer of size
+     * `plan->temp_size` will be allocated on stack or heap.
+     * @param inverse If true, apply the inverse DFT.
+     * @note No scaling is applied. This function reads $N$ complex values from `in` and writes $N$ complex
+     * values to `out`, where $N$ is the size passed to the constructor.
+     */
     template <univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
     KFR_MEM_INTRINSIC void execute(univector<complex<T>, Tag1>& out, const univector<complex<T>, Tag2>& in,
                                    univector<u8, Tag3>& temp, bool inverse = false) const
@@ -205,6 +308,17 @@ struct dft_plan
         else
             execute_dft(cfalse, out.data(), in.data(), temp.data());
     }
+
+    /**
+     * @brief Execute the complex DFT on `in` and write the result to `out`.
+     * @param out Pointer to the output data.
+     * @param in Pointer to the input data.
+     * @param temp Temporary (scratch) buffer. If `NULL`, scratch buffer of size
+     * `plan->temp_size` will be allocated on stack or heap.
+     * @tparam inverse If true, apply the inverse DFT.
+     * @note No scaling is applied. This function reads $N$ complex values from `in` and writes $N$ complex
+     * values to `out`, where $N$ is the size passed to the constructor.
+     */
     template <bool inverse, univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
     KFR_MEM_INTRINSIC void execute(univector<complex<T>, Tag1>& out, const univector<complex<T>, Tag2>& in,
                                    univector<u8, Tag3>& temp, cbool_t<inverse> inv) const
@@ -212,6 +326,16 @@ struct dft_plan
         execute_dft(inv, out.data(), in.data(), temp.data());
     }
 
+    /**
+     * @brief Execute the complex DFT on `in` and write the result to `out`.
+     * @param out Pointer to the output data.
+     * @param in Pointer to the input data.
+     * @param temp Temporary (scratch) buffer. If `NULL`, scratch buffer of size
+     * `plan->temp_size` will be allocated on stack or heap.
+     * @param inverse If true, apply the inverse DFT.
+     * @note No scaling is applied. This function reads $N$ complex values from `in` and writes $N$ complex
+     * values to `out`, where $N$ is the size passed to the constructor.
+     */
     template <univector_tag Tag1, univector_tag Tag2>
     KFR_MEM_INTRINSIC void execute(univector<complex<T>, Tag1>& out, const univector<complex<T>, Tag2>& in,
                                    u8* temp, bool inverse = false) const
@@ -221,6 +345,17 @@ struct dft_plan
         else
             execute_dft(cfalse, out.data(), in.data(), temp);
     }
+
+    /**
+     * @brief Execute the complex DFT on `in` and write the result to `out`.
+     * @param out Pointer to the output data.
+     * @param in Pointer to the input data.
+     * @param temp Temporary (scratch) buffer. If `NULL`, scratch buffer of size
+     * `plan->temp_size` will be allocated on stack or heap.
+     * @tparam inverse If true, apply the inverse DFT.
+     * @note No scaling is applied. This function reads $N$ complex values from `in` and writes $N$ complex
+     * values to `out`, where $N$ is the size passed to the constructor.
+     */
     template <bool inverse, univector_tag Tag1, univector_tag Tag2>
     KFR_MEM_INTRINSIC void execute(univector<complex<T>, Tag1>& out, const univector<complex<T>, Tag2>& in,
                                    u8* temp, cbool_t<inverse> inv) const
@@ -228,18 +363,20 @@ struct dft_plan
         execute_dft(inv, out.data(), in.data(), temp);
     }
 
-    autofree<u8> data;
-    size_t data_size;
+    autofree<u8> data; /**< Internal data. */
+    size_t data_size; /**< Internal data size. */
 
-    std::vector<dft_stage_ptr<T>> all_stages;
-    std::array<std::vector<dft_stage<T>*>, 2> stages;
-    bool arblen;
-    using bitset = std::bitset<DFT_MAX_STAGES>;
-    std::array<bitset, 2> disposition_inplace;
-    std::array<bitset, 2> disposition_outofplace;
+    std::vector<dft_stage_ptr<T>> all_stages; /**< Internal data. */
+    std::array<std::vector<dft_stage<T>*>, 2> stages; /**< Internal data. */
+    bool arblen; /**< True if Bluestein's FFT algorithm is selected. */
+    using bitset = std::bitset<DFT_MAX_STAGES>; /**< Internal typedef. */
+    std::array<bitset, 2> disposition_inplace; /**< Internal data. */
+    std::array<bitset, 2> disposition_outofplace; /**< Internal data. */
 
+    /// Internal function
     void calc_disposition();
 
+    /// Internal function
     static bitset precompute_disposition(int num_stages, bitset can_inplace_per_stage,
                                          bool inplace_requested);
 

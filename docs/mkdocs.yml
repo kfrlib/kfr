@@ -74,6 +74,7 @@ nav:
       - expressions.md
       - capi.md
       - upgrade6.md
+      - benchmarking.md
   - DSP:
       - fir.md
       - bq.md
