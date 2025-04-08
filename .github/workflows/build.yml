@@ -1,5 +1,11 @@
 name: Build
-on: push
+on: 
+  push:
+    tags:
+      - '**'
+    branches:
+      - '**'
+
 jobs:
   binaries-linux-x86_64:
     runs-on: ubuntu-22.04
@@ -236,3 +242,47 @@ jobs:
       with:
         name: macos-arm64
         path: ${{ github.workspace }}/dist
+
+  upload-release:
+    # if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    needs:
+      - binaries-android-arm64-v8a
+      - binaries-android-armeabi-v7a
+      - binaries-android-x86
+      - binaries-android-x86_64
+      - binaries-linux-arm
+      - binaries-linux-arm64
+      - binaries-linux-x86_64
+      - binaries-macos-arm64
+      - binaries-macos-x86_64
+      - binaries-windows-arm64
+      - binaries-windows-x86
+      - binaries-windows-x86_64
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+    - name: Release
+      env:
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      run: |
+        set -e
+        ls -laR ${{github.workspace}}
+        sudo apt-get update && sudo apt-get install -y zip
+        zip -r android-arm64-v8a.zip   android-arm64-v8a
+        zip -r android-armeabi-v7a.zip android-armeabi-v7a
+        zip -r android-x86.zip         android-x86
+        zip -r android-x86_64.zip      android-x86_64
+        zip -r linux-arm.zip           linux-arm
+        zip -r linux-arm64.zip         linux-arm64
+        zip -r linux-x86_64.zip        linux-x86_64
+        zip -r macos-arm64.zip         macos-arm64
+        zip -r macos-x86_64.zip        macos-x86_64
+        zip -r windows-arm64.zip       windows-arm64
+        zip -r windows-x86.zip         windows-x86
+        zip -r windows-x86_64.zip      windows-x86_64
+        gh release create --draft --notes "Draft Release" --title "KFR ${{github.ref_name}}" ${{github.ref_name}} *.zip
