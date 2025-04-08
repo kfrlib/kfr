@@ -1,5 +1,20 @@
 # Changelog
 
+## 6.2.0
+
+#### Added
+
+- Android x86 and x86_64 builds
+- Linux arm and aarch64 (arm64) builds
+
+#### Changed
+
+- Documentation update
+
+#### Fixed
+
+- Minor fixes to `small_buffer` and `npy.hpp`.
+
 ## 6.1.1
 
 #### Changed
