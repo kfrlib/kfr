@@ -85,7 +85,7 @@ jobs:
         name: windows-arm64
         path: ${{ github.workspace }}/dist
 
-  binaries-android-arm:
+  binaries-android-armeabi-v7a:
     runs-on: windows-2022
     steps:
     - name: Checkout
@@ -101,10 +101,10 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
-        name: android-arm
+        name: android-armeabi-v7a
         path: ${{ github.workspace }}/dist
 
-  binaries-android-arm64:
+  binaries-android-arm64-v8a:
     runs-on: windows-2022
     steps:
     - name: Checkout
@@ -120,7 +120,45 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
-        name: android-arm64
+        name: android-arm64-v8a
+        path: ${{ github.workspace }}/dist
+
+  binaries-android-x86:
+    runs-on: windows-2022
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Build
+      shell: cmd
+      run: |
+        choco install ninja --no-progress -y
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=ssse3 -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=ssse3 -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86
+        ninja -C build-release install
+        ninja -C build-debug install
+    - name: Binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-x86
+        path: ${{ github.workspace }}/dist
+
+  binaries-android-x86_64:
+    runs-on: windows-2022
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Build
+      shell: cmd
+      run: |
+        choco install ninja --no-progress -y
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse42 -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86_64
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse42 -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86_64
+        ninja -C build-release install
+        ninja -C build-debug install
+    - name: Binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-x86_64
         path: ${{ github.workspace }}/dist
 
   binaries-macos-x86_64:
