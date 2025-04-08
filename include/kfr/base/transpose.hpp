@@ -207,8 +207,8 @@ CMT_ALWAYS_INLINE void ranges_swap(vec<T, N>* x, vec<T, N>* y, size_t size)
                   [x, y](size_t index, auto w) CMT_INLINE_LAMBDA
                   {
                       constexpr size_t width = CMT_CVAL(w);
-                      vec<T, N* width> xx    = read<N * width>(ptr_cast<T>(x + index));
-                      vec<T, N* width> yy    = read<N * width>(ptr_cast<T>(y + index));
+                      vec<T, N * width> xx   = read<N * width>(ptr_cast<T>(x + index));
+                      vec<T, N * width> yy   = read<N * width>(ptr_cast<T>(y + index));
                       write(ptr_cast<T>(x + index), yy);
                       write(ptr_cast<T>(y + index), xx);
                   });
@@ -398,10 +398,10 @@ private:
     shape<2> size;
     size_t flat_size;
     word_t* data;
-CMT_PRAGMA_GNU(GCC diagnostic push)
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wattributes")
+    CMT_PRAGMA_GNU(GCC diagnostic push)
+    CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wattributes")
     [[maybe_unused]] uint8_t cache_line__[64];
-CMT_PRAGMA_GNU(GCC diagnostic pop)    
+    CMT_PRAGMA_GNU(GCC diagnostic pop)
     alignas(16) word_t on_stack[1024];
 
     CMT_INLINE_MEMBER void set(size_t index)
@@ -628,8 +628,19 @@ void matrix_transpose(vec<T, N>* out, const vec<T, N>* in, shape<Dims> tshape)
 }
 } // namespace internal
 
-/// @brief Matrix transpose.
-/// Accepts vec, complex and other compound types
+/**
+ * @brief Transposes a matrix (supports scalar and compound types).
+ *
+ * Works with both scalar types (e.g., float, int) and compound types (e.g., vec, complex).
+ * The input matrix must be packed in memory (no padding between rows or columns).
+ * In-place transpose (when in and out point to the same buffer) is supported.
+ *
+ * @tparam T      Element type (scalar or compound).
+ * @tparam Dims   Number of dimensions (2 or greater).
+ * @param out     Output buffer (transposed matrix).
+ * @param in      Input buffer (original matrix).
+ * @param shape   Shape of the input matrix.
+ */
 template <typename T, index_t Dims>
 void matrix_transpose(T* out, const T* in, shape<Dims> shape)
 {

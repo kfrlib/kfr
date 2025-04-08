@@ -348,10 +348,21 @@ inline bool npy_decode_dict(std::string_view data, npy_header& hdr)
     return !data.empty() && data[0] == '}';
 }
 
-inline std::string_view npy_magic = "\x93NUMPY";
+inline const std::string_view npy_magic = "\x93NUMPY";
 
 } // namespace internal_generic
 
+/**
+ * @brief Saves a tensor to `.npy` format using a custom write callback.
+ *
+ * The write callback must match the signature: `void(const void* data, size_t write_size)`
+ *
+ * @tparam T Element type of the tensor.
+ * @tparam Dims Number of dimensions.
+ * @tparam Fn Write callback type.
+ * @param t Tensor to save.
+ * @param write_callback Callback used to write binary data.
+ */
 template <typename T, index_t Dims, typename Fn>
 void save_to_npy(const tensor<T, Dims>& t, Fn&& write_callback)
 {
@@ -383,15 +394,30 @@ void save_to_npy(const tensor<T, Dims>& t, Fn&& write_callback)
     }
 }
 
+/**
+ * @brief Status returned by the `.npy` loading function.
+ */
 enum class npy_decode_result
 {
-    ok,
-    cannot_read,
-    invalid_header,
-    invalid_type,
-    invalid_shape,
+    ok, ///< Successfully loaded
+    cannot_read, ///< Failed to read data or header
+    invalid_header, ///< Malformed header
+    invalid_type, ///< Type mismatch
+    invalid_shape ///< Shape mismatch
 };
 
+/**
+ * @brief Loads a tensor from `.npy` format using a custom read callback.
+ *
+ * The read callback must match the signature: `bool(void* data, size_t read_size)`
+ *
+ * @tparam T Element type of the tensor.
+ * @tparam Dims Number of dimensions.
+ * @tparam Fn Read callback type.
+ * @param result Tensor to populate with loaded data.
+ * @param read_callback Callback used to read binary data.
+ * @return Status code indicating success or failure reason.
+ */
 template <typename T, index_t Dims, typename Fn>
 npy_decode_result load_from_npy(tensor<T, Dims>& result, Fn&& read_callback)
 {

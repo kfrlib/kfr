@@ -77,7 +77,10 @@ public:
         {
             m_newdata = aligned_allocate<T>(newsize);
         }
-        std::copy_n(std::make_move_iterator(m_data), std::min(newsize, m_size), m_newdata);
+        if (m_newdata != m_data)
+        {
+            std::copy_n(std::make_move_iterator(m_data), std::min(newsize, m_size), m_newdata);
+        }
         if (m_data != m_preallocated)
             aligned_deallocate(m_data);
         m_data = m_newdata;

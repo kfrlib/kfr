@@ -34,7 +34,9 @@ inline namespace CMT_ARCH_NAME
 {
 
 /**
- * @brief Returns x[0] && x[1] && ... && x[N-1]
+ * @brief Returns true if all elements are true.
+ *
+ * Equivalent to x[0] && x[1] && ... && x[N-1].
  */
 template <typename T, size_t N>
 KFR_INTRINSIC bool all(const mask<T, N>& x)
@@ -43,12 +45,15 @@ KFR_INTRINSIC bool all(const mask<T, N>& x)
 }
 
 /**
- * @brief Returns x[0] || x[1] || ... || x[N-1]
+ * @brief Returns true if any element is true.
+ *
+ * Equivalent to x[0] || x[1] || ... || x[N-1].
  */
 template <typename T, size_t N>
 KFR_INTRINSIC bool any(const mask<T, N>& x)
 {
     return intrinsics::bittestany(x);
 }
+
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

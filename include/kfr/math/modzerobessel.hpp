@@ -31,7 +31,14 @@ namespace kfr
 {
 inline namespace CMT_ARCH_NAME
 {
-
+/**
+ * @brief Computes the modified zeroth-order Bessel function of the first kind.
+ * This function calculates I₀(x), the modified Bessel function of the first kind
+ * with order zero, for the given input value.
+ * @tparam T1 The numeric type of the input parameter.
+ * @param x The input value for which to compute the modified Bessel function
+ * @return The computed value of I₀(x)
+ */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION T1 modzerobessel(const T1& x)
 {

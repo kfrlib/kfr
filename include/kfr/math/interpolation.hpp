@@ -33,24 +33,44 @@ namespace kfr
 inline namespace CMT_ARCH_NAME
 {
 
+/**
+ * @brief Nearest-neighbor interpolation.
+ *
+ * Returns x1 if mu < 0.5, else x2.
+ */
 template <typename T, typename M>
 KFR_FUNCTION T nearest(M mu, T x1, T x2)
 {
     return select(mu < M(0.5), x1, x2);
 }
 
+/**
+ * @brief Linear interpolation.
+ *
+ * Linearly blends between x1 and x2 by mu.
+ */
 template <typename T, typename M>
 KFR_FUNCTION T linear(M mu, T x1, T x2)
 {
     return mix(mu, x1, x2);
 }
 
+/**
+ * @brief Cosine interpolation.
+ *
+ * Smooth interpolation between x1 and x2 using a cosine curve.
+ */
 template <typename T, typename M>
 KFR_FUNCTION T cosine(M mu, T x1, T x2)
 {
     return mix((M(1) - fastcos(mu * c_pi<T>)) * M(0.5), x1, x2);
 }
 
+/**
+ * @brief Cubic interpolation.
+ *
+ * Uses four points for smooth curve fitting.
+ */
 template <typename T, typename M>
 KFR_FUNCTION T cubic(M mu, T x0, T x1, T x2, T x3)
 {
@@ -61,6 +81,11 @@ KFR_FUNCTION T cubic(M mu, T x0, T x1, T x2, T x3)
     return horner(mu, a0, a1, a2, a3);
 }
 
+/**
+ * @brief Catmull-Rom spline interpolation.
+ *
+ * Smooth curve that passes through x1 and x2.
+ */
 template <typename T, typename M>
 KFR_FUNCTION T catmullrom(M mu, T x0, T x1, T x2, T x3)
 {
@@ -70,5 +95,6 @@ KFR_FUNCTION T catmullrom(M mu, T x0, T x1, T x2, T x3)
     const T a3 = x1;
     return horner(mu, a0, a1, a2, a3);
 }
+
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

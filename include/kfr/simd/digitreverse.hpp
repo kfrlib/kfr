@@ -84,6 +84,18 @@ struct shuffle_index_digitreverse
 };
 } // namespace internal
 
+/**
+ * @brief Reorders the elements of a vector by reversing the digits of their indices in the specified radix.
+ *
+ * Optionally groups elements before reversing.
+ *
+ * @tparam radix The numeric base used for digit reversal (2 or 4).
+ * @tparam group The grouping size; elements are grouped before index reversal.
+ * @tparam T The element type of the vector.
+ * @tparam N The number of elements in the vector.
+ * @param x The input vector to be reordered.
+ * @return A vector with elements reordered based on digit-reversed indices.
+ */
 template <size_t radix, size_t group = 1, typename T, size_t N>
 KFR_INTRINSIC vec<T, N> digitreverse(const vec<T, N>& x)
 {
@@ -91,28 +103,68 @@ KFR_INTRINSIC vec<T, N> digitreverse(const vec<T, N>& x)
         csizeseq<N / group>.map(internal::shuffle_index_digitreverse<radix, ilog2(N / group)>())));
 }
 
+/**
+ * @brief Reorders the elements of a vector by reversing the bits of their indices.
+ *
+ * A specialization of digitreverse with radix 2 (binary). Optionally supports grouped bit reversal.
+ *
+ * @tparam groupsize Number of elements per group before applying bit reversal.
+ * @tparam T The element type of the vector.
+ * @tparam N The number of elements in the vector.
+ * @param x The input vector to be reordered.
+ * @return A vector with bit-reversed indices.
+ */
 template <size_t groupsize = 1, typename T, size_t N>
 KFR_INTRINSIC vec<T, N> bitreverse(const vec<T, N>& x)
 {
     return digitreverse<2, groupsize>(x);
 }
 
+/**
+ * @brief Reorders the elements of a vector by reversing base-4 (quaternary) digits of their indices.
+ *
+ * Similar to bitreverse, but uses radix 4 for digit reversal.
+ *
+ * @tparam groupsize Number of elements per group before applying reversal.
+ * @tparam T The element type of the vector.
+ * @tparam N The number of elements in the vector.
+ * @param x The input vector to be reordered.
+ * @return A vector with base-4 digit-reversed indices.
+ */
 template <size_t groupsize = 1, typename T, size_t N>
 KFR_INTRINSIC vec<T, N> digitreverse4(const vec<T, N>& x)
 {
     return digitreverse<4, groupsize>(x);
 }
 
+/**
+ * @brief Reverses the lowest `bits` bits of the given unsigned integer.
+ *
+ * @tparam bits Number of bits to reverse.
+ * @param x The input 32-bit unsigned integer.
+ * @return The bit-reversed integer.
+ */
 template <size_t bits>
 constexpr KFR_INTRINSIC u32 bitreverse(u32 x)
 {
     return internal::digitreverse_impl<bits>(x, csize_t<2>());
 }
 
+/**
+ * @brief Reverses the digits of the given unsigned integer in base-4 (quaternary), using the lowest `bits`
+ * digits.
+ *
+ * Useful for radix-4 FFT or similar algorithms.
+ *
+ * @tparam bits Number of base-4 digits to reverse.
+ * @param x The input 32-bit unsigned integer.
+ * @return The base-4 digit-reversed integer.
+ */
 template <size_t bits>
 constexpr KFR_INTRINSIC u32 digitreverse4(u32 x)
 {
     return internal::digitreverse_impl<bits>(x, csize_t<4>());
 }
+
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

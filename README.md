@@ -45,7 +45,7 @@ KFR has no external dependencies except for a C++17-compatible standard C++ libr
 
 Clang is highly recommended and proven to provide the best performance for KFR. You can use Clang as a drop-in replacement for both GCC on Linux and MSVC on Windows. On macOS, Clang is the default compiler and included in the official Xcode toolchain.
 
-_Note_: Building the DFT module currently requires Clang due to internal compiler errors and a lack of optimization in GCC and MSVC.
+_Note_: ARM/AArch64 support and building the DFT module currently requires Clang due to internal compiler errors and a lack of some optimizations in GCC and MSVC.
 
 :arrow_right: See [Installation](docs/docs/installation.md) docs for more details
 

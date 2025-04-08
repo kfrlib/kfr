@@ -90,6 +90,21 @@ CMT_PRAGMA_MSVC(warning(disable : 4244))
 namespace kfr
 {
 
+/**
+ * @brief A portable vector type with fixed size and layout compatible with `vec<T, N>`.
+ *
+ * This structure is designed to be *architecture-agnostic*, meaning it can be safely
+ * passed between translation units (TUs) compiled for different architectures.
+ *
+ * Its memory layout exactly matches that of the corresponding `vec<T, N>` type,
+ * making it safe to use `reinterpret_cast` between them for performance or platform-specific purposes.
+ *
+ * The structure enforces alignment to the next power of two of both the element type size and the number of
+ * elements, ensuring compatibility and performance.
+ *
+ * @tparam T The scalar element type.
+ * @tparam N The number of elements in the vector (must be between 1 and 1024).
+ */
 template <typename T, size_t N>
 struct alignas(next_poweroftwo(sizeof(T)) * next_poweroftwo(N)) portable_vec
 {

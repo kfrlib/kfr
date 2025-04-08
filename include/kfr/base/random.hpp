@@ -57,18 +57,50 @@ KFR_INTRINSIC vec<f64, N> randommantissa(random_state& state)
            0.0;
 }
 
+/**
+ * @brief Generates a vector of uniformly distributed floating-point numbers in [0.0, 1.0).
+ *
+ * This is derived by generating mantissas in [1.0, 2.0) and subtracting 1.0.
+ *
+ * @tparam T Floating-point type (f32 or f64).
+ * @tparam N Number of random floats to generate.
+ * @param state Reference to the random number generator state.
+ * @return Vector of N floats in the range [0.0, 1.0).
+ */
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> random_uniform(random_state& state)
 {
     return randommantissa<T, N>(state) - 1.f;
 }
 
+/**
+ * @brief Generates random values uniformly distributed in the range [min, max) for floating-point types.
+ *
+ * @tparam N Number of values to generate.
+ * @tparam T Floating-point type.
+ * @param state Reference to the random number generator state.
+ * @param min Lower bound of range.
+ * @param max Upper bound of range.
+ * @return Vector of N values in the range [min, max).
+ */
 template <size_t N, typename T, KFR_ENABLE_IF(is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> random_range(random_state& state, T min, T max)
 {
     return mix(random_uniform<T, N>(state), min, max);
 }
 
+/**
+ * @brief Generates random values uniformly distributed in the range [min, max) for integral types.
+ *
+ * Uses integer scaling and rounding for range generation.
+ *
+ * @tparam N Number of values to generate.
+ * @tparam T Integral type.
+ * @param state Reference to the random number generator state.
+ * @param min Lower bound of range.
+ * @param max Upper bound of range.
+ * @return Vector of N values in the range [min, max).
+ */
 template <size_t N, typename T, KFR_ENABLE_IF(!is_f_class<T>)>
 KFR_INTRINSIC vec<T, N> random_range(random_state& state, T min, T max)
 {
@@ -79,6 +111,18 @@ KFR_INTRINSIC vec<T, N> random_range(random_state& state, T min, T max)
     return (tmp * (max - min) + min) >> typebits<T>::bits;
 }
 
+/**
+ * @brief Generates N normally distributed (Gaussian) random values using Box-Muller transform.
+ *
+ * Uses 2x uniform samples to generate normal values, rounded to the nearest power-of-two vector length.
+ *
+ * @tparam N Number of normal values to generate.
+ * @tparam T Floating-point type.
+ * @param state Reference to the random number generator state.
+ * @param mu Mean of the distribution.
+ * @param sigma Standard deviation of the distribution.
+ * @return Vector of N values from N(mu, sigma^2).
+ */
 template <size_t N, typename T>
 KFR_INTRINSIC vec<T, N> random_normal(random_state& state, T mu, T sigma)
 {
@@ -160,15 +204,19 @@ struct expression_random_normal : expression_traits_defaults
     }
 };
 
-/// @brief Returns expression that returns pseudorandom values. Copies the given generator
+/**
+ * @brief Returns expression that produces uniform pseudorandom values using a copied state.
+ */
 template <typename T, index_t Dims = 1>
 KFR_FUNCTION expression_random_uniform<T, Dims> gen_random_uniform(const random_state& state)
 {
     return { {}, state };
 }
 
-/// @brief Returns expression that returns pseudorandom values. References the given
-/// generator. Use std::ref(gen) to force this overload
+/**
+ * @brief Returns expression that produces uniform pseudorandom values using a referenced state.
+ * Use std::ref(gen) to use this overload.
+ */
 template <typename T, index_t Dims = 1>
 KFR_FUNCTION expression_random_range<T, Dims, true> gen_random_uniform(
     std::reference_wrapper<random_state> state)
@@ -177,7 +225,7 @@ KFR_FUNCTION expression_random_range<T, Dims, true> gen_random_uniform(
 }
 
 #ifndef KFR_DISABLE_READCYCLECOUNTER
-/// @brief Returns expression that returns pseudorandom values
+/// @brief Returns expression that produces uniform pseudorandom values using cycle counter entropy.
 template <typename T, index_t Dims = 1>
 KFR_FUNCTION expression_random_range<T, Dims> gen_random_uniform()
 {
@@ -185,15 +233,17 @@ KFR_FUNCTION expression_random_range<T, Dims> gen_random_uniform()
 }
 #endif
 
-/// @brief Returns expression that returns pseudorandom values of the given range. Copies the given generator
+/// @brief Returns expression that produces random values in [min, max) using a copied state.
 template <typename T, index_t Dims = 1>
 KFR_FUNCTION expression_random_range<T, Dims> gen_random_range(const random_state& state, T min, T max)
 {
     return { {}, state, min, max };
 }
 
-/// @brief Returns expression that returns pseudorandom values of the given range. References the given
-/// generator. Use std::ref(gen) to force this overload
+/**
+ * @brief Returns expression that produces random values in [min, max) using a referenced state.
+ * Use std::ref(gen) to use this overload.
+ */
 template <typename T, index_t Dims = 1>
 KFR_FUNCTION expression_random_range<T, Dims, true> gen_random_range(
     std::reference_wrapper<random_state> state, T min, T max)
@@ -202,7 +252,7 @@ KFR_FUNCTION expression_random_range<T, Dims, true> gen_random_range(
 }
 
 #ifndef KFR_DISABLE_READCYCLECOUNTER
-/// @brief Returns expression that returns pseudorandom values of the given range
+/// @brief Returns expression that produces random values in [min, max) using cycle counter entropy
 template <typename T, index_t Dims = 1>
 KFR_FUNCTION expression_random_range<T, Dims> gen_random_range(T min, T max)
 {
@@ -210,8 +260,7 @@ KFR_FUNCTION expression_random_range<T, Dims> gen_random_range(T min, T max)
 }
 #endif
 
-/// @brief Returns expression that returns pseudorandom values from normal (gaussian) distribution. Copies the
-/// given generator
+/// @brief Returns expression that produces normally distributed values using a copied state.
 template <typename T, index_t Dims = 1>
 KFR_FUNCTION expression_random_normal<T, Dims> gen_random_normal(const random_state& state, T sigma = 1,
                                                                  T mu = 0)
@@ -219,8 +268,7 @@ KFR_FUNCTION expression_random_normal<T, Dims> gen_random_normal(const random_st
     return { {}, state, sigma, mu };
 }
 
-/// @brief Returns expression that returns pseudorandom values from normal (gaussian) distribution. References
-/// the given generator. Use std::ref(gen) to force this overload
+/// @brief Returns expression that produces normally distributed values using a referenced state.
 template <typename T, index_t Dims = 1>
 KFR_FUNCTION expression_random_normal<T, Dims, true> gen_random_normal(
     std::reference_wrapper<random_state> state, T sigma = 1, T mu = 0)
@@ -229,7 +277,7 @@ KFR_FUNCTION expression_random_normal<T, Dims, true> gen_random_normal(
 }
 
 #ifndef KFR_DISABLE_READCYCLECOUNTER
-/// @brief Returns expression that returns pseudorandom values from normal (gaussian) distribution
+/// @brief Returns expression that produces normally distributed values using cycle counter entropy.
 template <typename T, index_t Dims = 1>
 KFR_FUNCTION expression_random_normal<T, Dims> gen_random_normal(T sigma = 1, T mu = 0)
 {

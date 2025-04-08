@@ -32,16 +32,31 @@ namespace kfr
 inline namespace CMT_ARCH_NAME
 {
 
+/**
+ * @brief Computes the tangent of the input (in radians).
+ *
+ * @tparam T1 The type of the input.
+ * @param x Input value in radians.
+ * @return The tangent of the input.
+ */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> tan(const T1& x)
 {
     return intrinsics::tan(x);
 }
 
+/**
+ * @brief Computes the tangent of the input (in degrees).
+ *
+ * @tparam T1 The type of the input.
+ * @param x Input value in degrees.
+ * @return The tangent of the input.
+ */
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> tandeg(const T1& x)
 {
     return intrinsics::tandeg(x);
 }
+
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

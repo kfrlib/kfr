@@ -161,29 +161,42 @@ struct aligned_deleter
 };
 } // namespace details
 
+/// @brief Smart pointer for aligned memory with automatic deallocation.
 template <typename T>
 struct autofree
 {
+    /// @brief Default constructor.
     CMT_MEM_INTRINSIC autofree() {}
+
+    /// @brief Allocates aligned memory for given size.
     explicit CMT_MEM_INTRINSIC autofree(size_t size) : ptr(aligned_allocate<T>(size)) {}
+
     autofree(const autofree&)                    = delete;
     autofree& operator=(const autofree&)         = delete;
     autofree(autofree&&) CMT_NOEXCEPT            = default;
     autofree& operator=(autofree&&) CMT_NOEXCEPT = default;
+
+    /// @brief Access element at index.
     CMT_MEM_INTRINSIC T& operator[](size_t index) CMT_NOEXCEPT { return ptr[index]; }
+
+    /// @brief Const access to element at index.
     CMT_MEM_INTRINSIC const T& operator[](size_t index) const CMT_NOEXCEPT { return ptr[index]; }
 
+    /// @brief Returns pointer to underlying data.
     template <typename U = T>
     CMT_MEM_INTRINSIC U* data() CMT_NOEXCEPT
     {
         return ptr_cast<U>(ptr.get());
     }
+
+    /// @brief Returns const pointer to underlying data.
     template <typename U = T>
     CMT_MEM_INTRINSIC const U* data() const CMT_NOEXCEPT
     {
         return ptr_cast<U>(ptr.get());
     }
 
+    /// @brief Unique pointer with custom deleter for aligned memory.
     std::unique_ptr<T[], details::aligned_deleter<T>> ptr;
 };
 
@@ -292,6 +305,15 @@ CMT_NOINLINE static void call_with_temp_stack(size_t temp_size, Fn&& fn)
 
 } // namespace details
 
+/**
+ * @brief Calls a function with a temporary buffer, allocated on the stack if small enough, otherwise on the
+ * heap.
+ * @tparam stack_size Maximum size to use stack allocation (in elements).
+ * @tparam T Type of temporary buffer elements (default: u8).
+ * @tparam Fn Callable type.
+ * @param temp_size Number of elements requested.
+ * @param fn Function to call with a pointer to the buffer.
+ */
 template <size_t stack_size = 4096, typename T = u8, typename Fn>
 CMT_ALWAYS_INLINE static void call_with_temp(size_t temp_size, Fn&& fn)
 {
