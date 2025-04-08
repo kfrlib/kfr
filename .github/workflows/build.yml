@@ -21,6 +21,46 @@ jobs:
         name: linux-x86_64
         path: ${{ github.workspace }}/dist
 
+  binaries-linux-arm:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Build
+      run: |
+        set -e
+        sudo apt-get update && sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf
+        wget -O - https://apt.llvm.org/llvm.sh | sudo bash -s - 17
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCLANG_SUFFIX=-17 -DGCC_VER=11 -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCLANG_SUFFIX=-17 -DGCC_VER=11 -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
+        ninja -C build-release install
+        ninja -C build-debug install
+    - name: Binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-arm
+        path: ${{ github.workspace }}/dist
+
+  binaries-linux-arm64:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Build
+      run: |
+        set -e
+        sudo apt-get update && sudo apt-get install -y ninja-build g++-aarch64-linux-gnu
+        wget -O - https://apt.llvm.org/llvm.sh | sudo bash -s - 17
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCLANG_SUFFIX=-17 -DGCC_VER=11 -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCLANG_SUFFIX=-17 -DGCC_VER=11 -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
+        ninja -C build-release install
+        ninja -C build-debug install
+    - name: Binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-arm64
+        path: ${{ github.workspace }}/dist
+
   binaries-windows-x86:
     runs-on: windows-2022
     steps:
