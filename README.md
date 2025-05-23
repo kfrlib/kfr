@@ -14,6 +14,8 @@ https://www.kfrlib.com
 
 KFR is an open source C++ DSP framework that contains high performance building blocks for DSP, audio, scientific and other applications. It is distributed under dual GPLv2/v3 and [commercial license](https://kfrlib.com/purchase).
 
+:star2: **New**: Explore benchmark results from the LIGO, Virgo, and KAGRA collaborations, comparing KFR performance against FFTW for signal processing in gravitational-wave research: https://ar5iv.labs.arxiv.org/html/2503.14292
+
 ## KFR6
 
 New features, performance improvements, easier setup.
