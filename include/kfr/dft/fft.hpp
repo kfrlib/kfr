@@ -92,6 +92,13 @@ struct dft_stage
     {
         do_execute(cinvert_t(), out, in, temp);
     }
+    KFR_MEM_INTRINSIC void execute(bool inverse, complex<T>* out, const complex<T>* in, u8* temp)
+    {
+        if (inverse)
+            do_execute(cinvert_t(), out, in, temp);
+        else
+            do_execute(cdirect_t(), out, in, temp);
+    }
     virtual ~dft_stage() {}
 
 protected:
@@ -154,6 +161,12 @@ template <typename T>
 using fn_transpose = void (*)(complex<T>*, const complex<T>*, shape<2>);
 template <typename T>
 void dft_initialize_transpose(fn_transpose<T>& transpose);
+
+template <typename T>
+void dft_progressive_start(const dft_plan<T>& plan, typename dft_plan<T>::progressive& progressive,
+                           bool inverse, complex<T>* out, const complex<T>* in, u8* temp);
+template <typename T>
+void dft_progressive_step(const dft_plan<T>& plan, typename dft_plan<T>::progressive& progressive);
 
 } // namespace internal_generic
 
@@ -232,9 +245,10 @@ struct dft_plan
      *
      * @param size The size of the DFT.
      * @param order The order of the DFT samples. See `dft_order`.
+     * @param progressive_optimized If true, the plan will be optimized for progressive execution.
      */
-    explicit dft_plan(size_t size, dft_order order = dft_order::normal)
-        : size(size), temp_size(0), data_size(0), arblen(false)
+    explicit dft_plan(size_t size, dft_order order = dft_order::normal, bool progressive_optimized = false)
+        : size(size), temp_size(0), data_size(0), arblen(false), progressive_optimized(progressive_optimized)
     {
         internal_generic::dft_initialize(*this);
     }
@@ -369,6 +383,7 @@ struct dft_plan
     std::vector<dft_stage_ptr<T>> all_stages; /**< Internal data. */
     std::array<std::vector<dft_stage<T>*>, 2> stages; /**< Internal data. */
     bool arblen; /**< True if Bluestein's FFT algorithm is selected. */
+    bool progressive_optimized; /**< True if the plan is for progressive execution of the DFT. */
     using bitset = std::bitset<DFT_MAX_STAGES>; /**< Internal typedef. */
     std::array<bitset, 2> disposition_inplace; /**< Internal data. */
     std::array<bitset, 2> disposition_outofplace; /**< Internal data. */
@@ -380,12 +395,64 @@ struct dft_plan
     static bitset precompute_disposition(int num_stages, bitset can_inplace_per_stage,
                                          bool inplace_requested);
 
+    /** Internal data structure for progressive execution of the DFT.
+        Do not access the members directly as they may change in future versions.
+     */
+    struct progressive
+    {
+        bool inverse;
+        complex<T>* out;
+        const complex<T>* in;
+        u8* temp;
+        bitset disposition;
+        complex<T>* scratch;
+        size_t step = 0;
+    };
+
+    /// @brief Returns the number of steps for progressive execution of the DFT.
+    /// @return The number of steps for progressive execution.
+    size_t progressive_total_steps() const;
+
+    /**
+     * @brief Initiates the progressive execution of the DFT.
+     * @param inverse If true, applies the inverse DFT.
+     * @param out Pointer to the output data.
+     * @param in Pointer to the input data.
+     * @param temp Temporary (scratch) buffer. A scratch buffer of size
+     * `plan->temp_size` must be provided.
+     * @return A `progressive` structure that can be used with `progressive_step`.
+     * @note Ensure that the entire input data is available in the `in` buffer before calling this function.
+     * The `out` buffer will contain the result data after the final step of the progressive execution.
+     */
+    KFR_MEM_INTRINSIC progressive progressive_start(bool inverse, complex<T>* out, const complex<T>* in,
+                                                    u8* temp) const
+    {
+        KFR_LOGIC_CHECK(is_initialized(), "dft_plan is not initialized");
+        KFR_LOGIC_CHECK(temp_size == 0 || temp != nullptr,
+                        "Temporary buffer must be provided for progressive execution");
+        progressive result{};
+        internal_generic::dft_progressive_start(*this, result, inverse, out, in, temp);
+        return result;
+    }
+
+    /**
+     * @brief Steps the progressive execution of the DFT.
+     * @param progressive A `progressive` structure returned by `progressive_start`.
+     * @return `true` if there are more steps to execute, `false` if the DFT is complete.
+     */
+    KFR_MEM_INTRINSIC bool progressive_step(progressive& progressive) const
+    {
+        internal_generic::dft_progressive_step(*this, progressive);
+        return ++progressive.step < stages[progressive.inverse].size();
+    }
+
 protected:
     struct noinit
     {
     };
-    explicit dft_plan(noinit, size_t size, dft_order order = dft_order::normal)
-        : size(size), temp_size(0), data_size(0), arblen(false)
+    explicit dft_plan(noinit, size_t size, dft_order order = dft_order::normal,
+                      bool progressive_optimized = false)
+        : size(size), temp_size(0), data_size(0), arblen(false), progressive_optimized(progressive_optimized)
     {
     }
 
@@ -426,8 +493,10 @@ struct dft_plan_real : dft_plan<T>
         (void)cpu;
     }
 
-    explicit dft_plan_real(size_t size, dft_pack_format fmt = dft_pack_format::CCs)
-        : dft_plan<T>(typename dft_plan<T>::noinit{}, size / 2), size(size), fmt(fmt)
+    explicit dft_plan_real(size_t size, dft_pack_format fmt = dft_pack_format::CCs,
+                           bool progressive_optimized = false)
+        : dft_plan<T>(typename dft_plan<T>::noinit{}, size / 2, dft_order::normal, progressive_optimized),
+          size(size), fmt(fmt)
     {
         KFR_LOGIC_CHECK(is_even(size), "dft_plan_real requires size to be even");
         internal_generic::dft_real_initialize(*this);
@@ -487,6 +556,28 @@ struct dft_plan_real : dft_plan<T>
                                    cinvert_t = {}) const
     {
         this->execute_dft(ctrue, ptr_cast<complex<T>>(out.data()), in.data(), temp);
+    }
+
+    using progressive = typename dft_plan<T>::progressive;
+
+    KFR_MEM_INTRINSIC progressive progressive_start(T* out, const complex<T>* in, u8* temp) const
+    {
+        KFR_LOGIC_CHECK(is_initialized(), "dft_plan_real is not initialized");
+        KFR_LOGIC_CHECK(this->temp_size == 0 || temp != nullptr,
+                        "Temporary buffer must be provided for progressive execution");
+        progressive result{};
+        internal_generic::dft_progressive_start(*this, result, true, ptr_cast<complex<T>>(out), in, temp);
+        return result;
+    }
+    KFR_MEM_INTRINSIC progressive progressive_start(complex<T>* out, const T* in, u8* temp) const
+    {
+        KFR_LOGIC_CHECK(is_initialized(), "dft_plan_real is not initialized");
+        KFR_LOGIC_CHECK(this->temp_size == 0 || temp != nullptr,
+                        "Temporary buffer must be provided for progressive execution");
+        progressive result{};
+        internal_generic::dft_progressive_start(*this, result, false, out, ptr_cast<const complex<T>>(in),
+                                                temp);
+        return result;
     }
 };
 

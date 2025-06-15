@@ -862,7 +862,6 @@ KFR_INTRINSIC ctrue_t radix4_pass(csize_t<4>, size_t blocks, csize_t<width>, cfa
 template <typename T>
 struct fft_config
 {
-    constexpr static inline const bool recursion = true;
 #ifdef CMT_ARCH_NEON
     constexpr static inline const bool prefetch = false;
 #else
@@ -881,7 +880,7 @@ struct fft_stage_impl : dft_stage<T>
         this->radix      = 4;
         this->stage_size = stage_size;
         this->repeats    = 4;
-        this->recursion  = fft_config<T>::recursion;
+        this->recursion  = true;
         this->data_size =
             align_up(sizeof(complex<T>) * stage_size / 4 * 3, platform<>::native_cache_alignment);
     }
@@ -922,7 +921,7 @@ struct fft_final_stage_impl : dft_stage<T>
         this->stage_size = size;
         this->out_offset = size;
         this->repeats    = 4;
-        this->recursion  = fft_config<T>::recursion;
+        this->recursion  = true;
         this->data_size  = align_up(sizeof(complex<T>) * size * 3 / 2, platform<>::native_cache_alignment);
     }
 
@@ -1706,9 +1705,9 @@ void make_fft_stages(dft_plan<T>* self, cbool_t<autosort>, size_t stage_size, cb
 } // namespace intrinsics
 
 template <bool is_even, typename T>
-void make_fft(dft_plan<T>* self, size_t stage_size, cbool_t<is_even>)
+void make_fft(dft_plan<T>* self, size_t stage_size, cbool_t<is_even>, bool autosort)
 {
-    if (use_autosort<T>(ilog2(stage_size)))
+    if (autosort)
     {
         intrinsics::make_fft_stages(self, ctrue, stage_size, cbool<is_even>, ctrue);
     }
@@ -1776,7 +1775,8 @@ KFR_INTRINSIC void initialize_order(dft_plan<T>* self)
 template <typename T>
 KFR_INTRINSIC void init_fft(dft_plan<T>* self, size_t size, dft_order)
 {
-    const size_t log2n = ilog2(size);
+    const size_t log2n  = ilog2(size);
+    const bool autosort = use_autosort<T>(ilog2(size)) || self->progressive_optimized;
     cswitch(
         csizes_t<0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
 #ifdef KFR_AUTOSORT_FOR_2048
@@ -1791,8 +1791,10 @@ KFR_INTRINSIC void init_fft(dft_plan<T>* self, size_t size, dft_order)
             constexpr size_t log2nv = val_of(decltype(log2n)());
             add_stage<intrinsics::fft_specialization<T, log2nv>>(self, size);
         },
-        [&]()
-        { cswitch(cfalse_true, is_even(log2n), [&](auto is_even) { make_fft(self, size, is_even); }); });
+        [&]() {
+            cswitch(cfalse_true, is_even(log2n),
+                    [&](auto is_even) { make_fft(self, size, is_even, autosort); });
+        });
 }
 
 template <typename T>
@@ -2027,14 +2029,14 @@ void dft_execute(const dft_plan<T>& plan, cbool_t<inverse>, complex<T>* out, con
         }
         else
         {
-            size_t offset = 0;
+            size_t offset            = 0;
+            complex<T>* cur_out      = select_out(plan, disposition, depth, stages.size(), out, scratch);
+            const complex<T>* cur_in = select_in(plan, disposition, depth, out, in, scratch);
+            dft_stage<T>* stage      = stages[depth];
             while (offset < plan.size)
             {
-                stages[depth]->execute(cbool<inverse>,
-                                       select_out(plan, disposition, depth, stages.size(), out, scratch) +
-                                           offset,
-                                       select_in(plan, disposition, depth, out, in, scratch) + offset, temp);
-                offset += stages[depth]->stage_size;
+                stage->execute(cbool<inverse>, cur_out + offset, cur_in + offset, temp);
+                offset += stage->stage_size;
             }
             depth++;
         }
@@ -2044,6 +2046,47 @@ template <typename T>
 void dft_initialize_transpose(internal_generic::fn_transpose<T>& transpose)
 {
     transpose = &kfr::CMT_ARCH_NAME::matrix_transpose;
+}
+
+template <typename T>
+void dft_progressive_start(const dft_plan<T>& plan, typename dft_plan<T>::progressive& prog, bool inverse,
+                           complex<T>* out, const complex<T>* in, u8* temp)
+{
+    prog.inverse = inverse;
+    prog.out     = out;
+    prog.in      = in;
+    prog.temp    = temp;
+    prog.scratch = ptr_cast<complex<T>>(
+        temp + plan.temp_size -
+        align_up(sizeof(complex<T>) * (plan.size + 1), platform<>::native_cache_alignment));
+
+    prog.disposition = in == out ? plan.disposition_inplace[inverse] : plan.disposition_outofplace[inverse];
+
+    bool in_scratch = prog.disposition.test(0);
+    if (in_scratch)
+    {
+        plan.stages[inverse][0]->copy_input(inverse, prog.scratch, in, plan.size);
+    }
+    prog.step = 0;
+}
+
+template <typename T>
+void dft_progressive_step(const dft_plan<T>& plan, typename dft_plan<T>::progressive& progressive)
+{
+    auto&& stages  = plan.stages[progressive.inverse];
+    uint32_t depth = progressive.step;
+    complex<T>* cur_out =
+        select_out(plan, progressive.disposition, depth, stages.size(), progressive.out, progressive.scratch);
+    const complex<T>* cur_in =
+        select_in(plan, progressive.disposition, depth, progressive.out, progressive.in, progressive.scratch);
+
+    size_t offset       = 0;
+    dft_stage<T>* stage = stages[depth];
+    while (offset < plan.size)
+    {
+        stage->execute(progressive.inverse, cur_out + offset, cur_in + offset, progressive.temp);
+        offset += stage->stage_size;
+    }
 }
 } // namespace impl
 

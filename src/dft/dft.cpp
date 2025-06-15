@@ -40,6 +40,12 @@ void dft_plan<T>::dump() const
 }
 
 template <typename T>
+size_t dft_plan<T>::progressive_total_steps() const
+{
+    return stages[0].size();
+}
+
+template <typename T>
 void dft_plan<T>::calc_disposition()
 {
     for (bool inverse : { false, true })
@@ -131,6 +137,13 @@ CMT_MULTI_PROTO(namespace impl {
                      u8* temp);
     template <typename T>
     void dft_initialize_transpose(internal_generic::fn_transpose<T> & transpose);
+
+    template <typename T>
+    void dft_progressive_start(const dft_plan<T>& plan, typename dft_plan<T>::progressive& progressive,
+                               bool inverse, complex<T>* out, const complex<T>* in, u8* temp);
+
+    template <typename T>
+    void dft_progressive_step(const dft_plan<T>& plan, typename dft_plan<T>::progressive& progressive);
 })
 
 #ifdef CMT_MULTI_NEEDS_GATE
@@ -159,6 +172,19 @@ void dft_initialize_transpose(fn_transpose<T>& transpose)
     CMT_MULTI_GATE(ns::impl::dft_initialize_transpose(transpose));
 }
 
+template <typename T>
+void dft_progressive_start(const dft_plan<T>& plan, typename dft_plan<T>::progressive& progressive,
+                           bool inverse, complex<T>* out, const complex<T>* in, u8* temp)
+{
+    CMT_MULTI_GATE(ns::impl::dft_progressive_start(plan, progressive, inverse, out, in, temp));
+}
+
+template <typename T>
+void dft_progressive_step(const dft_plan<T>& plan, typename dft_plan<T>::progressive& progressive)
+{
+    CMT_MULTI_GATE(ns::impl::dft_progressive_step(plan, progressive));
+}
+
 template void dft_initialize<float>(dft_plan<float>&);
 template void dft_initialize<double>(dft_plan<double>&);
 template void dft_real_initialize<float>(dft_plan_real<float>&);
@@ -173,6 +199,16 @@ template void dft_execute<double>(const dft_plan<double>&, cbool_t<true>, comple
                                   const complex<double>*, u8*);
 template void dft_initialize_transpose<float>(fn_transpose<float>&);
 template void dft_initialize_transpose<double>(fn_transpose<double>&);
+template void dft_progressive_start(const dft_plan<float>& plan,
+                                    typename dft_plan<float>::progressive& progressive, bool inverse,
+                                    complex<float>* out, const complex<float>* in, u8* temp);
+template void dft_progressive_start(const dft_plan<double>& plan,
+                                    typename dft_plan<double>::progressive& progressive, bool inverse,
+                                    complex<double>* out, const complex<double>* in, u8* temp);
+template void dft_progressive_step(const dft_plan<float>& plan,
+                                   typename dft_plan<float>::progressive& progressive);
+template void dft_progressive_step(const dft_plan<double>& plan,
+                                   typename dft_plan<double>::progressive& progressive);
 
 } // namespace internal_generic
 
