@@ -511,8 +511,8 @@ struct expression_function : expression_with_arguments<Args...>, expression_trai
 };
 
 template <typename... Args, typename Fn>
-expression_function(const expression_with_arguments<Args...>& args, Fn&& fn)
-    -> expression_function<Fn, Args...>;
+expression_function(const expression_with_arguments<Args...>& args,
+                    Fn&& fn) -> expression_function<Fn, Args...>;
 template <typename... Args, typename Fn>
 expression_function(expression_with_arguments<Args...>&& args, Fn&& fn) -> expression_function<Fn, Args...>;
 template <typename... Args, typename Fn>
@@ -614,18 +614,20 @@ KFR_INTRINSIC static void tprocess_body(Out&& out, In&& in, size_t start, size_t
         const vec<Tin, 1> val = get_elements(in, inidx, axis_params_v<0, 1>);
         if constexpr (w > gw)
         {
+            const auto valvec = repeat<w>(val);
             CMT_LOOP_NOUNROLL
             for (; x < stop / w * w; x += w)
             {
                 outidx[OutAxis] = x;
-                set_elements(out, outidx, axis_params_v<OutAxis, w>, repeat<w>(val));
+                set_elements(out, outidx, axis_params_v<OutAxis, w>, valvec);
             }
         }
+        const auto valvec = repeat<gw>(val);
         CMT_LOOP_NOUNROLL
         for (; x < stop / gw * gw; x += gw)
         {
             outidx[OutAxis] = x;
-            set_elements(out, outidx, axis_params_v<OutAxis, gw>, repeat<gw>(val));
+            set_elements(out, outidx, axis_params_v<OutAxis, gw>, valvec);
         }
     }
     else
@@ -929,8 +931,7 @@ template <typename E, typename T = expression_value_type<E>>
 void test_expression(const E& expr, std::initializer_list<cometa::identity<T>> list,
                      const char* expression = nullptr, const char* file = nullptr, int line = 0)
 {
-    test_expression(
-        expr, list.size(), [&](size_t i) { return list.begin()[i]; }, expression, file, line);
+    test_expression(expr, list.size(), [&](size_t i) { return list.begin()[i]; }, expression, file, line);
 }
 #define TESTO_CHECK_EXPRESSION(expr, ...) ::kfr::test_expression(expr, __VA_ARGS__, #expr, __FILE__, __LINE__)
 
