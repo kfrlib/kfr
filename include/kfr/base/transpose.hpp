@@ -43,7 +43,7 @@ template <typename T, size_t N, index_t Dims>
 void matrix_transpose(vec<T, N>* out, const vec<T, N>* in, shape<Dims> tshape);
 
 template <typename T, size_t width, size_t N>
-void matrix_transpose_block_one(vec<T, N>* out, const vec<T, N>* in, size_t i, size_t stride)
+KFR_INTRINSIC void matrix_transpose_block_one(vec<T, N>* out, const vec<T, N>* in, size_t i, size_t stride)
 {
     if constexpr (width == 1)
     {
@@ -58,7 +58,8 @@ void matrix_transpose_block_one(vec<T, N>* out, const vec<T, N>* in, size_t i, s
 }
 
 template <typename T, size_t width, size_t N>
-void matrix_transpose_block_two(vec<T, N>* out, const vec<T, N>* in, size_t i, size_t j, size_t stride)
+KFR_INTRINSIC void matrix_transpose_block_two(vec<T, N>* out, const vec<T, N>* in, size_t i, size_t j,
+                                              size_t stride)
 {
     if constexpr (width == 1)
     {
@@ -93,7 +94,7 @@ template <typename T, size_t N>
 void matrix_transpose_square(vec<T, N>* out, const vec<T, N>* in, size_t n, size_t stride)
 {
 #if 1
-    constexpr size_t width = 4;
+    constexpr size_t width = vector_capacity<T> / N >= 64 ? 8 : 4;
     const size_t nw        = align_down(n, width);
     const size_t wstride   = width * stride;
 
@@ -600,14 +601,14 @@ void matrix_transpose(vec<T, N>* out, const vec<T, N>* in, shape<Dims> tshape)
     {
         const index_t rows = tshape[0];
         const index_t cols = tshape[1];
-        if (cols == 1 || rows == 1)
+        if (CMT_UNLIKELY(cols == 1 || rows == 1))
         {
             return internal::matrix_transpose_noop(out, in, tshape.product());
         }
         // TODO: special cases for tall or wide matrices
-        if (cols == rows)
+        if (CMT_LIKELY(cols == rows))
         {
-            if (cols <= 6)
+            if (CMT_UNLIKELY(cols <= 6))
                 return internal::matrix_transpose_square_small(out, in, cols);
             return internal::matrix_transpose_square(out, in, cols, cols);
         }
