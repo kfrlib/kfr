@@ -1,5 +1,16 @@
 # Changelog
 
+## 6.3.0
+
+#### Added
+
+- Progressive DFT execution
+
+#### Changed
+
+- Matrix transpose performance has been improved by 10-30%
+- Optimize scalar to expression assignment for msvc
+
 ## 6.2.0
 
 #### Added
