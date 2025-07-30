@@ -27,6 +27,8 @@
 
 #include "../base/filter.hpp"
 #include "../base/handle.hpp"
+#include "../base/reduce.hpp"
+#include "../math/complex_math.hpp"
 #include "../math/hyperbolic.hpp"
 #include "../simd/complex.hpp"
 #include "../simd/impl/function.hpp"
