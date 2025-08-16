@@ -1781,10 +1781,7 @@ template <typename T>
 CMT_ALWAYS_INLINE cvec<T, 1> calculate_twiddle_impl(size_t n, size_t size)
 {
     T kth = c_pi<T, 2> * (n / static_cast<T>(size));
-    if constexpr (std::is_same_v<T, float>)
-        return make_vector(std::cosf(kth), -std::sinf(kth));
-    else
-        return make_vector(std::cos(kth), -std::sin(kth));
+    return make_vector<T>(std::cos(kth), -std::sin(kth));
 }
 
 template <typename T>
