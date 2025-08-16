@@ -95,6 +95,8 @@ TEST(test_performance)
     }
 
 #ifndef KFR_DFT_NO_NPo2
+    perf_test(9990);
+    perf_test(96001);
     perf_test(210);
     perf_test(3150);
     perf_test(211);
@@ -177,6 +179,48 @@ constexpr size_t dft_stopsize = 257;
 #endif
 #endif
 
+template <typename T>
+static void reconstruction_test(size_t size)
+{
+    dft_plan<T> dft(size);
+    univector<std::complex<T>> in(size);
+    univector<std::complex<T>> out(size);
+    univector<std::complex<T>> reconstructed(size);
+    univector<u8> temp(dft.temp_size);
+    in = sin(counter(T(0), T(1 / 96.0)) * c_pi<T, 2>);
+
+    dft.execute(out, in, temp, false);
+    dft.execute(reconstructed, out, temp, true);
+
+    reconstructed = reconstructed * (T(1.0) / size);
+
+    T reconstructed_rms       = rms(real(reconstructed) - real(in));
+    T reconstructed_maxabs    = absmaxof(real(reconstructed) - real(in));
+    univector<T> real_absdiff = abs(real(reconstructed) - real(in));
+
+    CHECK(reconstructed_rms < 0.000001);
+    CHECK(reconstructed_maxabs < 0.00001);
+}
+
+TEST(fft_reconstruction)
+{
+    for (size_t size = 2; size <= 256; size++)
+    {
+        reconstruction_test<float>(size);
+        reconstruction_test<double>(size);
+    }
+    for (size_t size = 9988; size <= 9999; size++)
+    {
+        reconstruction_test<float>(size);
+        reconstruction_test<double>(size);
+    }
+    for (size_t size : { 96001, 96002, 96003, 96004, 96005, 96006, 96007, 96008, 96009, 96010 })
+    {
+        reconstruction_test<float>(size);
+        reconstruction_test<double>(size);
+    }
+}
+
 TEST(fft_accuracy)
 {
 #ifdef DEBUG_DFT_PROGRESS
@@ -205,7 +249,7 @@ TEST(fft_accuracy)
         [&gen](auto type, size_t size)
         {
             using float_type      = type_of<decltype(type)>;
-            const double min_prec = 0.000001 * std::log(size) * size;
+            const double min_prec = choose_const<float_type>(1e-6f, 1e-14) * size;// * size;
 
             for (bool inverse : { false, true })
             {
@@ -220,7 +264,6 @@ TEST(fft_accuracy)
                     univector<complex<float_type>> refout = out;
                     univector<complex<float_type>> outo   = in;
                     const dft_plan<float_type> dft(size, dft_order::normal, progressive_optimized);
-                    double min_prec2 = dft.arblen ? 2 * min_prec : min_prec;
                     if (!inverse)
                     {
 #if DEBUG_DFT_PROGRESS
@@ -235,9 +278,9 @@ TEST(fft_accuracy)
                     dft.execute(outo, in, temp, inverse);
                     dft.execute(out, out, temp, inverse);
                     const float_type rms_diff_inplace = rms(cabs(refout - out));
-                    CHECK(rms_diff_inplace <= min_prec2);
+                    CHECK(rms_diff_inplace <= min_prec);
                     const float_type rms_diff_outofplace = rms(cabs(refout - outo));
-                    CHECK(rms_diff_outofplace <= min_prec2);
+                    CHECK(rms_diff_outofplace <= min_prec);
 
                     // Test progressive (step-by-step) execution
                     int steps = dft.progressive_total_steps();
@@ -258,9 +301,9 @@ TEST(fft_accuracy)
                     CHECK(steps == 1);
 
                     const float_type rms_diff_inplace_progressive = rms(cabs(refout - out));
-                    CHECK(rms_diff_inplace_progressive <= min_prec2);
+                    CHECK(rms_diff_inplace_progressive <= min_prec);
                     const float_type rms_diff_outofplace_progressive = rms(cabs(refout - outo));
-                    CHECK(rms_diff_outofplace_progressive <= min_prec2);
+                    CHECK(rms_diff_outofplace_progressive <= min_prec);
                 }
             }
 
@@ -559,11 +602,17 @@ TEST(dft_md)
 
 } // namespace CMT_ARCH_NAME
 
+namespace kfr
+{
+const char* library_version_dft();
+}
+
 #ifndef KFR_NO_MAIN
-int main()
+int main(int argc, char* argv[])
 {
     println(library_version(), " running on ", cpu_runtime());
+    println("DFT: ", library_version_dft());
 
-    return testo::run_all("", false);
+    return testo::run_all(argc >= 2 ? argv[1] : "", false);
 }
 #endif

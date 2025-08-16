@@ -250,34 +250,6 @@ KFR_INTRINSIC void radix4_body(size_t N, csize_t<width>, ctrue_t, cbool_t<splito
                                            cread<width, true>(twiddle + width * 2)));
 }
 
-template <typename T>
-CMT_NOINLINE cvec<T, 1> calculate_twiddle(size_t n, size_t size)
-{
-    if (n == 0)
-    {
-        return make_vector(static_cast<T>(1), static_cast<T>(0));
-    }
-    else if (n == size / 4)
-    {
-        return make_vector(static_cast<T>(0), static_cast<T>(-1));
-    }
-    else if (n == size / 2)
-    {
-        return make_vector(static_cast<T>(-1), static_cast<T>(0));
-    }
-    else if (n == size * 3 / 4)
-    {
-        return make_vector(static_cast<T>(0), static_cast<T>(1));
-    }
-    else
-    {
-        fbase kth  = c_pi<fbase, 2> * (n / static_cast<fbase>(size));
-        fbase tcos = +kfr::cos(kth);
-        fbase tsin = -kfr::sin(kth);
-        return make_vector(static_cast<T>(tcos), static_cast<T>(tsin));
-    }
-}
-
 template <typename T, size_t width>
 KFR_INTRINSIC void initialize_twiddles_impl(complex<T>*& twiddle, size_t nn, size_t nnstep, size_t size,
                                             bool split_format)

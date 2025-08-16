@@ -1776,6 +1776,43 @@ KFR_INTRINSIC void cdigitreverse4_write<false, f64, 32>(complex<f64>* dest, cons
     cwrite<1>(dest + 15, part<16, 15>(x));
 }
 #endif
+
+template <typename T>
+CMT_ALWAYS_INLINE cvec<T, 1> calculate_twiddle_impl(size_t n, size_t size)
+{
+    T kth = c_pi<T, 2> * (n / static_cast<T>(size));
+    if constexpr (std::is_same_v<T, float>)
+        return make_vector(std::cosf(kth), -std::sinf(kth));
+    else
+        return make_vector(std::cos(kth), -std::sin(kth));
+}
+
+template <typename T>
+CMT_NOINLINE cvec<T, 1> calculate_twiddle(size_t n, size_t size)
+{
+    n     = n % size;
+    int q = 0;
+    if (size % 2 == 0 && n >= size / 2)
+    {
+        q += 2;
+        n -= size / 2;
+    }
+    if (size % 4 == 0 && n >= size / 4)
+    {
+        q += 1;
+        n -= size / 4;
+    }
+    vec<T, 2> result = make_vector<T>(1, 0);
+    if (n != 0)
+        result = calculate_twiddle_impl<T>(n, size);
+    if (q & 1)
+        result = negodd(swap<2>(result));
+    if (q & 2)
+        result = -result;
+
+    return result;
+}
+
 } // namespace intrinsics
 } // namespace CMT_ARCH_NAME
 } // namespace kfr

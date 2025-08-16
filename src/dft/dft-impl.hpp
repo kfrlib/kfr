@@ -72,7 +72,7 @@ void dft_stage_fixed_initialize(dft_stage<T>* stage, size_t width)
                 CMT_LOOP_NOUNROLL
                 for (size_t k = 0; k < width; k++)
                 {
-                    cvec<T, 1> xx = cossin_conj(broadcast<2, T>(c_pi<T, 2> * (i + k) * j / N));
+                    cvec<T, 1> xx                    = calculate_twiddle<T>((i + k) * j, N);
                     ref_cast<cvec<T, 1>>(twiddle[k]) = xx;
                 }
                 twiddle += width;
@@ -150,15 +150,15 @@ struct dft_stage_fixed_final_impl : dft_stage<T>
 };
 
 template <typename E>
-inline E& apply_conj(E& e, cfalse_t)
+inline decltype(auto) apply_conj(E&& e, cfalse_t)
 {
-    return e;
+    return std::forward<E>(e);
 }
 
 template <typename E>
-inline auto apply_conj(E& e, ctrue_t)
+inline auto apply_conj(E&& e, ctrue_t)
 {
-    return cconj(e);
+    return cconj(std::forward<E>(e));
 }
 
 /// [0, N - 1, N - 2, N - 3, ..., 3, 2, 1]
@@ -199,8 +199,18 @@ inline auto apply_fft_inverse(E&& e)
 template <typename T>
 struct dft_arblen_stage_impl : dft_stage<T>
 {
+    static complex<T> accurate_cexp(size_t k, size_t N)
+    {
+        size_t kk = k % (N / 2);
+        complex<T> result{ std::cos(kk * c_pi<T, 2> / N), -std::sin(kk * c_pi<T, 2> / N) };
+
+        if (k >= N / 2)
+            result = -result;
+        return result;
+    }
+
     dft_arblen_stage_impl(size_t size)
-        : size(size), fftsize(next_poweroftwo(size) * 2), plan(fftsize, dft_order::internal)
+        : size(size), fftsize(next_poweroftwo(size * 2 - 1)), plan(fftsize, dft_order::internal)
     {
         this->name        = dft_name(this);
         this->radix       = size;
@@ -208,19 +218,29 @@ struct dft_arblen_stage_impl : dft_stage<T>
         this->repeats     = 1;
         this->recursion   = false;
         this->can_inplace = false;
-        this->temp_size   = plan.temp_size;
+        this->temp_size   = plan.temp_size + fftsize * sizeof(complex<T>);
         this->stage_size  = size;
 
-        chirp_ = render(cexp(sqr(linspace(T(1) - size, size - T(1), size * 2 - 1, true, ctrue)) *
-                             complex<T>(0, -1) * c_pi<T> / size));
+        chirp_.resize(size);
+        chirp_[0] = complex<T>(1, 0);
+        size_t k  = 0;
+        for (size_t m = 1; m < size; ++m)
+        {
+            k += 2 * m - 1;
+            if (k >= 2 * size)
+                k -= 2 * size;
+            chirp_[m] = accurate_cexp(k, size * 2);
+        }
 
-        ichirpp_ = render(truncate(padded(1 / slice(chirp_, 0, 2 * size - 1)), fftsize));
+        T fct = T(1) / fftsize;
+        ichirpp_.resize(fftsize, 0);
+        ichirpp_.slice(0, size)                      = chirp_ * fct;
+        ichirpp_.slice(fftsize - size + 1, size - 1) = reverse(chirp_.slice(1) * fct);
 
         univector<u8> temp(plan.temp_size);
         plan.execute(ichirpp_, ichirpp_, temp);
-        xp.resize(fftsize, 0);
-        xp_fft.resize(fftsize);
-        invN2 = T(1) / fftsize;
+
+        ichirpp_.resize(fftsize / 2 + 1);
     }
 
     DFT_STAGE_FN
@@ -229,29 +249,32 @@ struct dft_arblen_stage_impl : dft_stage<T>
     {
         const size_t n = this->size;
 
+        auto xp = make_univector(ptr_cast<complex<T>>(temp), fftsize);
+        u8* tmp = ptr_cast<u8>(ptr_cast<complex<T>>(temp) + fftsize);
+
         auto&& chirp = apply_conj(chirp_, cbool<inverse>);
 
-        xp.slice(0, n) = make_univector(in, n) * slice(chirp, n - 1);
+        xp.slice(0, n)           = make_univector(in, n) * chirp;
+        xp.slice(n, fftsize - n) = scalar(complex<T>(0, 0));
 
-        plan.execute(xp_fft.data(), xp.data(), temp);
+        plan.execute(xp.data(), xp.data(), tmp);
 
-        if (inverse)
-            xp_fft = xp_fft * cconj(apply_fft_inverse(ichirpp_));
-        else
-            xp_fft = xp_fft * ichirpp_;
-        plan.execute(xp_fft.data(), xp_fft.data(), temp, ctrue);
+        xp[0] *= apply_conj(ichirpp_[0], cbool<!inverse>);
+        xp.slice(1, fftsize / 2 - 1) *= apply_conj(ichirpp_.slice(1, fftsize / 2 - 1), cbool<!inverse>);
+        xp.slice(fftsize / 2 + 1, fftsize / 2 - 1) *=
+            apply_conj(reverse(ichirpp_.slice(1, fftsize / 2 - 1)), cbool<!inverse>);
+        xp[fftsize / 2] *= apply_conj(ichirpp_[fftsize / 2], cbool<!inverse>);
 
-        make_univector(out, n) = xp_fft.slice(n - 1, n) * slice(chirp, n - 1, n) * invN2;
+        plan.execute(xp.data(), xp.data(), tmp, ctrue);
+
+        make_univector(out, n) = xp.slice(0, n) * chirp;
     }
 
     const size_t size;
     const size_t fftsize;
-    T invN2;
     dft_plan<T> plan;
     univector<complex<T>> chirp_;
     univector<complex<T>> ichirpp_;
-    univector<complex<T>> xp;
-    univector<complex<T>> xp_fft;
 };
 
 template <typename T, size_t radix1, size_t radix2, size_t size = radix1 * radix2>
@@ -323,7 +346,7 @@ protected:
             CMT_LOOP_NOUNROLL
             for (size_t j = 0; j < this->radix / 2; j++)
             {
-                cwrite<1>(twiddle++, cossin_conj(broadcast<2>((i + 1) * (j + 1) * c_pi<T, 2> / this->radix)));
+                cwrite<1>(twiddle++, calculate_twiddle<T>((i + 1) * (j + 1), this->radix));
             }
         }
     }
