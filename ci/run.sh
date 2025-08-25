@@ -9,7 +9,7 @@ rm -r $build_dir || true
 mkdir $build_dir
 pushd $build_dir
 echo Running cmake -GNinja -DENABLE_TESTS=ON "$@" $src_dir
-cmake -GNinja -DENABLE_TESTS=ON -DCMAKE_INSTALL_PREFIX=dist "$@" $src_dir
+cmake -GNinja -DENABLE_TESTS=ON -DKFR_EXTENDED_TESTS=ON -DCMAKE_INSTALL_PREFIX=dist "$@" $src_dir
 echo Running ninja...
 ninja
 ninja install
