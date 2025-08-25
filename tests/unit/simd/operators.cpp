@@ -129,7 +129,7 @@ TEST(shl)
         [&](auto type, special_value value, unsigned shift)
         {
             using T = typename decltype(type)::type;
-            if (shift < sizeof(subtype<T>))
+            if (shift < sizeof(subtype<T>) * 8)
             {
                 const T x(value);
                 CHECK(std::is_same<decltype(x << shift), T>::value);
@@ -158,10 +158,10 @@ TEST(shr)
         [&](auto type, special_value value, unsigned shift)
         {
             using T = typename decltype(type)::type;
-            if (shift < sizeof(subtype<T>))
+            if (shift < sizeof(subtype<T>) * 8)
             {
                 const T x(value);
-                CHECK(std::is_same<decltype(x << shift), T>::value);
+                CHECK(std::is_same<decltype(x >> shift), T>::value);
                 CHECK((x >> shift) == apply(
                                           [=](auto x) -> decltype(x) {
                                               return bitcast<decltype(x)>(

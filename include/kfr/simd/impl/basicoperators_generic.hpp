@@ -189,43 +189,61 @@ KFR_INTRINSIC i32sse shr(const i32sse& x, unsigned y) { return _mm_srai_epi32(x.
 
 KFR_INTRINSIC u8sse shl(const u8sse& x, unsigned y)
 {
-    __m128i l = _mm_unpacklo_epi8(_mm_setzero_si128(), x.v);
-    __m128i h = _mm_unpackhi_epi8(_mm_setzero_si128(), x.v);
-
-    __m128i ll = _mm_slli_epi16(l, y);
-    __m128i hh = _mm_slli_epi16(h, y);
-
-    return _mm_packs_epi16(ll, hh);
+    __m128i x0  = x.v;
+    __m128i cnt = _mm_cvtsi32_si128((int)y);
+    x0          = _mm_sll_epi16(x0, cnt);
+    __m128i x2  = _mm_set1_epi32(-1);
+    x2          = _mm_sll_epi16(x2, cnt);
+    x2          = _mm_unpacklo_epi8(x2, x2);
+    __m128i x1  = _mm_shufflelo_epi16(x2, 0x00);
+    x1          = _mm_shuffle_epi32(x1, 0x00);
+    x1          = _mm_and_si128(x1, x0);
+    return x1;
 }
 KFR_INTRINSIC i8sse shl(const i8sse& x, unsigned y)
 {
-    __m128i l = _mm_unpacklo_epi8(_mm_setzero_si128(), x.v);
-    __m128i h = _mm_unpackhi_epi8(_mm_setzero_si128(), x.v);
-
-    __m128i ll = _mm_slli_epi16(l, y);
-    __m128i hh = _mm_slli_epi16(h, y);
-
-    return _mm_packs_epi16(ll, hh);
+    __m128i x0  = x.v;
+    __m128i cnt = _mm_cvtsi32_si128((int)y);
+    x0          = _mm_sll_epi16(x0, cnt);
+    __m128i x2  = _mm_set1_epi32(-1);
+    x2          = _mm_sll_epi16(x2, cnt);
+    x2          = _mm_unpacklo_epi8(x2, x2);
+    __m128i x1  = _mm_shufflelo_epi16(x2, 0x00);
+    x1          = _mm_shuffle_epi32(x1, 0x00);
+    x1          = _mm_and_si128(x1, x0);
+    return x1;
 }
 KFR_INTRINSIC u8sse shr(const u8sse& x, unsigned y)
 {
-    __m128i l = _mm_unpacklo_epi8(_mm_setzero_si128(), x.v);
-    __m128i h = _mm_unpackhi_epi8(_mm_setzero_si128(), x.v);
-
-    __m128i ll = _mm_srli_epi16(l, y);
-    __m128i hh = _mm_srli_epi16(h, y);
-
-    return _mm_packs_epi16(ll, hh);
+    __m128i x0  = x.v;
+    __m128i cnt = _mm_cvtsi32_si128((int)y);
+    x0          = _mm_srl_epi16(x0, cnt);
+    __m128i x2  = _mm_set1_epi32(-1);
+    x2          = _mm_srl_epi16(x2, cnt);
+    x2          = _mm_srli_epi16(x2, 8);
+    x2          = _mm_unpacklo_epi8(x2, x2);
+    __m128i x1  = _mm_shufflelo_epi16(x2, 0x00);
+    x1          = _mm_shuffle_epi32(x1, 0x00);
+    x1          = _mm_and_si128(x1, x0);
+    return x1;
 }
 KFR_INTRINSIC i8sse shr(const i8sse& x, unsigned y)
 {
-    __m128i l = _mm_unpacklo_epi8(_mm_setzero_si128(), x.v);
-    __m128i h = _mm_unpackhi_epi8(_mm_setzero_si128(), x.v);
-
-    __m128i ll = _mm_srai_epi16(l, y);
-    __m128i hh = _mm_srai_epi16(h, y);
-
-    return _mm_packs_epi16(ll, hh);
+    __m128i x0  = x.v;
+    __m128i cnt = _mm_cvtsi32_si128((int)y);
+    x0          = _mm_srl_epi16(x0, cnt);
+    __m128i x2  = _mm_set1_epi32(-1);
+    x2          = _mm_srl_epi16(x2, cnt);
+    __m128i x3  = _mm_set1_epi8((char)0x80);
+    x3          = _mm_srl_epi16(x3, cnt);
+    x2          = _mm_srli_epi16(x2, 8);
+    x2          = _mm_unpacklo_epi8(x2, x2);
+    __m128i x1  = _mm_shufflelo_epi16(x2, 0x00);
+    x1          = _mm_shuffle_epi32(x1, 0x00);
+    x1          = _mm_and_si128(x1, x0);
+    x1          = _mm_xor_si128(x1, x3);
+    x1          = _mm_sub_epi8(x1, x3);
+    return x1;
 }
 
 KFR_INTRINSIC i64sse shr(const i64sse& x, unsigned y)
@@ -687,39 +705,54 @@ KFR_INTRINSIC i64avx shr(const i64avx& x, unsigned y)
 
 KFR_INTRINSIC u8avx shl(const u8avx& x, unsigned y)
 {
-    __m256i l  = _mm256_unpacklo_epi8(_mm256_setzero_si256(), x.v);
-    __m256i h  = _mm256_unpackhi_epi8(_mm256_setzero_si256(), x.v);
-    __m256i ll = _mm256_slli_epi16(l, y);
-    __m256i hh = _mm256_slli_epi16(h, y);
-
-    return _mm256_packs_epi16(ll, hh);
+    __m256i v           = x.v;
+    __m128i cnt128      = _mm_cvtsi32_si128((int)y);
+    v                   = _mm256_sll_epi16(v, cnt128);
+    __m128i ones128     = _mm_set1_epi32(-1);
+    __m128i wordmask128 = _mm_sll_epi16(ones128, cnt128);
+    __m256i bytemask256 = _mm256_broadcastb_epi8(wordmask128);
+    v                   = _mm256_and_si256(v, bytemask256);
+    return v;
 }
 KFR_INTRINSIC i8avx shl(const i8avx& x, unsigned y)
 {
-    __m256i l  = _mm256_unpacklo_epi8(_mm256_setzero_si256(), x.v);
-    __m256i h  = _mm256_unpackhi_epi8(_mm256_setzero_si256(), x.v);
-    __m256i ll = _mm256_slli_epi16(l, y);
-    __m256i hh = _mm256_slli_epi16(h, y);
-
-    return _mm256_packs_epi16(ll, hh);
+    __m256i v           = x.v;
+    __m128i cnt128      = _mm_cvtsi32_si128((int)y);
+    v                   = _mm256_sll_epi16(v, cnt128);
+    __m128i ones128     = _mm_set1_epi32(-1);
+    __m128i wordmask128 = _mm_sll_epi16(ones128, cnt128);
+    __m256i bytemask256 = _mm256_broadcastb_epi8(wordmask128);
+    v                   = _mm256_and_si256(v, bytemask256);
+    return v;
 }
 KFR_INTRINSIC u8avx shr(const u8avx& x, unsigned y)
 {
-    __m256i l  = _mm256_unpacklo_epi8(_mm256_setzero_si256(), x.v);
-    __m256i h  = _mm256_unpackhi_epi8(_mm256_setzero_si256(), x.v);
-    __m256i ll = _mm256_srli_epi16(l, y);
-    __m256i hh = _mm256_srli_epi16(h, y);
-
-    return _mm256_packs_epi16(ll, hh);
+    __m256i v           = x.v;
+    __m128i cnt128      = _mm_cvtsi32_si128((int)y);
+    v                   = _mm256_srl_epi16(v, cnt128);
+    __m128i ones128     = _mm_set1_epi32(-1);
+    __m128i wordmask128 = _mm_srl_epi16(ones128, cnt128);
+    wordmask128         = _mm_srli_epi16(wordmask128, 8);
+    __m256i bytemask256 = _mm256_broadcastb_epi8(wordmask128);
+    v                   = _mm256_and_si256(v, bytemask256);
+    return v;
 }
 KFR_INTRINSIC i8avx shr(const i8avx& x, unsigned y)
 {
-    __m256i l  = _mm256_unpacklo_epi8(_mm256_setzero_si256(), x.v);
-    __m256i h  = _mm256_unpackhi_epi8(_mm256_setzero_si256(), x.v);
-    __m256i ll = _mm256_srai_epi16(l, y);
-    __m256i hh = _mm256_srai_epi16(h, y);
-
-    return _mm256_packs_epi16(ll, hh);
+    __m128i cnt128           = _mm_cvtsi32_si128((int)y);
+    __m256i v                = x.v;
+    v                        = _mm256_srl_epi16(v, cnt128);
+    __m128i ones128          = _mm_set1_epi32(-1);
+    __m128i wordmask128      = _mm_srl_epi16(ones128, cnt128);
+    __m128i const80          = _mm_cvtsi32_si128(0x80);
+    __m256i signmask256      = _mm256_broadcastb_epi8(const80);
+    __m256i shifted_signmask = _mm256_srl_epi16(signmask256, cnt128);
+    wordmask128              = _mm_srli_epi16(wordmask128, 8);
+    __m256i bytemask256      = _mm256_broadcastb_epi8(wordmask128);
+    v                        = _mm256_and_si256(v, bytemask256);
+    v                        = _mm256_xor_si256(v, shifted_signmask);
+    v                        = _mm256_sub_epi8(v, shifted_signmask);
+    return v;
 }
 
 KFR_INTRINSIC u32sse shl(const u32sse& x, const u32sse& y) { return _mm_sllv_epi32(x.v, y.v); }
@@ -1357,39 +1390,51 @@ KFR_INTRINSIC i64avx512 shr(const i64avx512& x, unsigned y)
 
 KFR_INTRINSIC u8avx512 shl(const u8avx512& x, unsigned y)
 {
-    __m512i l  = _mm512_unpacklo_epi8(_mm512_setzero_si512(), x.v);
-    __m512i h  = _mm512_unpackhi_epi8(_mm512_setzero_si512(), x.v);
-    __m512i ll = _mm512_slli_epi16(l, y);
-    __m512i hh = _mm512_slli_epi16(h, y);
-
-    return _mm512_packs_epi16(ll, hh);
+    __m512i v            = x.v;
+    __m128i cnt128       = _mm_cvtsi32_si128((int)y);
+    v                    = _mm512_sll_epi16(v, cnt128);
+    __m128i ones128      = _mm_set1_epi32(-1);
+    __m128i word_mask128 = _mm_sll_epi16(ones128, cnt128);
+    __m512i byte_mask512 = _mm512_broadcastb_epi8(word_mask128);
+    return _mm512_and_si512(v, byte_mask512);
 }
 KFR_INTRINSIC i8avx512 shl(const i8avx512& x, unsigned y)
 {
-    __m512i l  = _mm512_unpacklo_epi8(_mm512_setzero_si512(), x.v);
-    __m512i h  = _mm512_unpackhi_epi8(_mm512_setzero_si512(), x.v);
-    __m512i ll = _mm512_slli_epi16(l, y);
-    __m512i hh = _mm512_slli_epi16(h, y);
-
-    return _mm512_packs_epi16(ll, hh);
+    __m512i v            = x.v;
+    __m128i cnt128       = _mm_cvtsi32_si128((int)y);
+    v                    = _mm512_sll_epi16(v, cnt128);
+    __m128i ones128      = _mm_set1_epi32(-1);
+    __m128i word_mask128 = _mm_sll_epi16(ones128, cnt128);
+    __m512i byte_mask512 = _mm512_broadcastb_epi8(word_mask128);
+    return _mm512_and_si512(v, byte_mask512);
 }
 KFR_INTRINSIC u8avx512 shr(const u8avx512& x, unsigned y)
 {
-    __m512i l  = _mm512_unpacklo_epi8(_mm512_setzero_si512(), x.v);
-    __m512i h  = _mm512_unpackhi_epi8(_mm512_setzero_si512(), x.v);
-    __m512i ll = _mm512_srli_epi16(l, y);
-    __m512i hh = _mm512_srli_epi16(h, y);
-
-    return _mm512_packs_epi16(ll, hh);
+    __m512i v            = x.v;
+    __m128i cnt128       = _mm_cvtsi32_si128((int)y);
+    v                    = _mm512_srl_epi16(v, cnt128);
+    __m128i ones128      = _mm_set1_epi32(-1);
+    __m128i word_mask128 = _mm_srl_epi16(ones128, cnt128);
+    word_mask128         = _mm_srli_epi16(word_mask128, 8);
+    __m512i byte_mask512 = _mm512_broadcastb_epi8(word_mask128);
+    v                    = _mm512_and_si512(v, byte_mask512);
+    return v;
 }
 KFR_INTRINSIC i8avx512 shr(const i8avx512& x, unsigned y)
 {
-    __m512i l  = _mm512_unpacklo_epi8(_mm512_setzero_si512(), x.v);
-    __m512i h  = _mm512_unpackhi_epi8(_mm512_setzero_si512(), x.v);
-    __m512i ll = _mm512_srai_epi16(l, y);
-    __m512i hh = _mm512_srai_epi16(h, y);
-
-    return _mm512_packs_epi16(ll, hh);
+    __m512i z0       = x.v;
+    __m128i cnt128   = _mm_cvtsi32_si128((int)y);
+    z0               = _mm512_srl_epi16(z0, cnt128);
+    __m128i const80  = _mm_cvtsi32_si128(0x80);
+    __m512i z2       = _mm512_broadcastb_epi8(const80);
+    z2               = _mm512_srl_epi16(z2, cnt128);
+    __m128i ones128  = _mm_set1_epi32(-1);
+    __m128i wmask128 = _mm_srl_epi16(ones128, cnt128);
+    wmask128         = _mm_srli_epi16(wmask128, 8);
+    __m512i z1       = _mm512_broadcastb_epi8(wmask128);
+    z1               = _mm512_ternarylogic_epi64(z1, z2, z0, 108);
+    z0               = _mm512_sub_epi8(z1, z2);
+    return z0;
 }
 
 KFR_INTRINSIC u32avx512 shl(const u32avx512& x, const u32avx512& y) { return _mm512_sllv_epi32(x.v, y.v); }
