@@ -1,5 +1,13 @@
 # Changelog
 
+## 6.3.1
+
+#### Fixed
+
+- Fix u8/i8 shifts on x86
+- Refactor Bluestein's algorithm to make accuracy stable across all sizes
+- Improve test coverage for large SIMD vector types
+
 ## 6.3.0
 
 #### Added
