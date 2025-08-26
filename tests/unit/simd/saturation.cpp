@@ -93,6 +93,9 @@ inline T ref_satsub(T x, T y)
 
 TEST(intrin_satadd_satsub)
 {
+#if defined CMT_COMPILER_IS_MSVC && defined CMT_ARCH_X32
+    println("Skipping saturation tests on MSVC x86 due to compiler optimization error");
+#else
     testo::matrix(named("type") = cconcat(signed_vector_types<vec>, unsigned_vector_types<vec>),
                   [](auto type)
                   {
@@ -118,6 +121,7 @@ TEST(intrin_satadd_satsub)
                       CHECK(kfr::satsub(max, min) ==
                             apply([](auto x, auto y) -> decltype(x) { return ref_satsub(x, y); }, max, min));
                   });
+#endif
 }
 } // namespace CMT_ARCH_NAME
 } // namespace kfr
