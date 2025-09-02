@@ -55,9 +55,9 @@ jobs:
         TMP_DIR: ${{ runner.temp }}
       run: |
         sudo apt-get update && sudo apt-get install -y ninja-build g++-14
-        curl -o "$TMP_DIR/sde.tar.bz2" -L "$SDE_LINUX"
+        curl -o "$TMP_DIR/sde.tar.xz" -L "$SDE_LINUX"
         mkdir "$TMP_DIR/sde-bin"
-        tar -C "$TMP_DIR/sde-bin" -xjf "$TMP_DIR/sde.tar.bz2" --strip 1
+        tar -C "$TMP_DIR/sde-bin" -xJf "$TMP_DIR/sde.tar.xz" --strip 1
         sudo ln -s $TMP_DIR/sde-bin/sde64 /usr/bin/sde
         ci/run.sh build-release -DKFR_ARCH=target -DCMAKE_CXX_COMPILER=g++-14 -DKFR_ARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DCMAKE_BUILD_TYPE=Release -DKFR_USE_SDE=ON
 
