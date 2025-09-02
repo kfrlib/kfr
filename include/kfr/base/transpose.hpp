@@ -182,7 +182,7 @@ void matrix_transpose_square(vec<T, N>* out, const vec<T, N>* in, size_t n, size
 }
 
 template <typename T, size_t N>
-CMT_ALWAYS_INLINE void do_reverse(vec<T, N>* first, vec<T, N>* last)
+CMT_INLINE void do_reverse(vec<T, N>* first, vec<T, N>* last)
 {
     constexpr size_t width = vector_capacity<T> / 4 / N;
     for (; first + width - 1 < last - width; first += width, last -= width)
@@ -202,7 +202,7 @@ CMT_ALWAYS_INLINE void do_reverse(vec<T, N>* first, vec<T, N>* last)
 }
 
 template <typename T, size_t N>
-CMT_ALWAYS_INLINE void ranges_swap(vec<T, N>* x, vec<T, N>* y, size_t size)
+CMT_INLINE void ranges_swap(vec<T, N>* x, vec<T, N>* y, size_t size)
 {
     block_process(size, csizes<const_max(vector_capacity<T> / 4 / N, 2), 1>,
                   [x, y](size_t index, auto w) CMT_INLINE_LAMBDA
@@ -216,12 +216,12 @@ CMT_ALWAYS_INLINE void ranges_swap(vec<T, N>* x, vec<T, N>* y, size_t size)
 }
 
 template <typename T>
-CMT_ALWAYS_INLINE void do_swap(T* arr, size_t a, size_t b, size_t k)
+CMT_INLINE void do_swap(T* arr, size_t a, size_t b, size_t k)
 {
     ranges_swap(arr + a, arr + b, k);
 }
 template <typename T>
-CMT_ALWAYS_INLINE void do_block_swap(T* arr, size_t k, size_t n)
+CMT_INLINE void do_block_swap(T* arr, size_t k, size_t n)
 {
     if (k == 0 || k == n)
         return;
@@ -250,7 +250,7 @@ CMT_ALWAYS_INLINE void do_block_swap(T* arr, size_t k, size_t n)
 }
 
 template <typename T, size_t N>
-CMT_ALWAYS_INLINE void range_rotate(vec<T, N>* first, vec<T, N>* middle, vec<T, N>* last)
+CMT_INLINE void range_rotate(vec<T, N>* first, vec<T, N>* middle, vec<T, N>* last)
 {
 #ifndef KFR_T_REV
     do_block_swap(first, middle - first, last - first);
