@@ -27,7 +27,7 @@
 
 #include "function.hpp"
 
-#ifdef CMT_CLANG_EXT
+#ifdef CMT_VEC_EXT
 #include "basicoperators_clang.hpp"
 #else
 #include "basicoperators_generic.hpp"

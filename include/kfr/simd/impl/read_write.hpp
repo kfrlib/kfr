@@ -37,7 +37,7 @@ inline namespace CMT_ARCH_NAME
 namespace intrinsics
 {
 
-#ifndef CMT_CLANG_EXT
+#ifndef CMT_VEC_EXT
 
 #ifdef CMT_ARCH_SSE2
 

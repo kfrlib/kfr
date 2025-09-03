@@ -23,8 +23,8 @@
 #pragma once
 
 #include "simd.hpp"
-#ifdef CMT_CLANG_EXT
-#include "backend_clang.hpp"
+#ifdef CMT_VEC_EXT
+#include "backend_vecext.hpp"
 #else
 #include "backend_generic.hpp"
 #endif

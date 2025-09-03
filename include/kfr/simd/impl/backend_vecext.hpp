@@ -35,8 +35,21 @@ inline namespace CMT_ARCH_NAME
 namespace intrinsics
 {
 
+#ifdef __clang__
 template <typename TT, size_t NN>
 using simd = unwrap_bit<TT> __attribute__((ext_vector_type(NN)));
+#else
+
+template <typename TT, size_t NN>
+struct simd_
+{
+    typedef unwrap_bit<TT> __attribute__((vector_size(sizeof(TT) * next_poweroftwo(NN)))) type;
+};
+
+template <typename TT, size_t NN>
+using simd = typename simd_<TT, NN>::type;
+
+#endif
 
 template <typename T, size_t N1>
 KFR_INTRINSIC simd<T, N1> simd_concat(const simd<T, N1>& x);
@@ -72,14 +85,22 @@ KFR_INTRINSIC simd<Tout, N> simd_undefined()
 template <typename Tout, size_t N>
 KFR_INTRINSIC simd<Tout, N> simd_zeros()
 {
+#ifdef __clang__
     return Tout();
+#else
+    return simd<Tout, N>{};
+#endif
 }
 
 // @brief Returns vector with all ones
 template <typename Tout, size_t N>
 KFR_INTRINSIC simd<Tout, N> simd_allones()
 {
+#ifdef __clang__
     return unwrap_bit_value(special_constants<Tout>::allones());
+#else
+    return unwrap_bit_value(special_constants<Tout>::allones()) - simd<Tout, N>{};
+#endif
 }
 
 // @brief Converts input vector to vector with subtype Tout
@@ -111,14 +132,33 @@ KFR_INTRINSIC simd<T, N> simd_set_element(simd<T, N> value, csize_t<index>, T x)
 template <typename T, size_t N>
 KFR_INTRINSIC simd<T, N> simd_broadcast(simd_t<T, N>, identity<T> value)
 {
+#ifdef __clang__
     return unwrap_bit_value(value);
+#else
+    return unwrap_bit_value(value) - simd<T, N>{};
+#endif
 }
 
 template <typename T, size_t N, size_t... indices, size_t Nout = sizeof...(indices)>
 KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd_t<T, N>, const simd<T, N>& x, csizes_t<indices...>,
                                          overload_generic)
 {
-    return __builtin_shufflevector(x, x, (indices > N ? -1 : static_cast<int>(indices))...);
+#ifdef __clang__
+    return __builtin_shufflevector(x, x, (indices >= N ? -1 : static_cast<int>(indices))...);
+#else
+    if constexpr (is_poweroftwo(Nout))
+    {
+        return __builtin_shufflevector(x, x, (indices >= N ? -1 : static_cast<int>(indices))...);
+    }
+    else
+    {
+        return [&]<size_t... i>(csizes_t<i...>) CMT_INLINE_LAMBDA
+        {
+            return __builtin_shufflevector(x, x, (indices >= N ? -1 : static_cast<int>(indices))...,
+                                           (static_cast<void>(i), -1)...);
+        }(csizeseq<next_poweroftwo(Nout) - Nout>);
+    }
+#endif
 }
 
 template <typename T, size_t N, size_t N2 = N, size_t... indices, size_t Nout = sizeof...(indices)>
@@ -126,7 +166,29 @@ KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd2_t<T, N, N>, const simd<T, N>& x, 
                                          csizes_t<indices...>, overload_generic)
 {
     static_assert(N == N2, "");
-    return __builtin_shufflevector(x, y, (indices > 2 * N ? -1 : static_cast<int>(indices))...);
+#ifdef __clang__
+    return __builtin_shufflevector(x, y, (indices >= 2 * N ? -1 : static_cast<int>(indices))...);
+#else
+    constexpr size_t Np = next_poweroftwo(N);
+    if constexpr (is_poweroftwo(Nout))
+    {
+        return __builtin_shufflevector(x, y,
+                                       (indices >= 2 * N ? -1
+                                        : indices >= N   ? static_cast<int>(indices - N + Np)
+                                                         : static_cast<int>(indices))...);
+    }
+    else
+    {
+        return [&]<size_t... i>(csizes_t<i...>) CMT_INLINE_LAMBDA
+        {
+            return __builtin_shufflevector(x, y,
+                                           (indices >= 2 * N ? -1
+                                            : indices >= N   ? static_cast<int>(indices - N + Np)
+                                                             : static_cast<int>(indices))...,
+                                           (static_cast<void>(i), -1)...);
+        }(csizeseq<next_poweroftwo(Nout) - Nout>);
+    }
+#endif
 }
 
 template <typename T, size_t N1, size_t N2, size_t... indices, KFR_ENABLE_IF(N1 != N2),

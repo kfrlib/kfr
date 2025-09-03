@@ -53,7 +53,7 @@
 #define KFR_NATIVE_INTRINSICS 1
 
 #if defined CMT_COMPILER_CLANG && !defined CMT_DISABLE_CLANG_EXT
-#define CMT_CLANG_EXT
+#define CMT_VEC_EXT
 #endif
 
 #ifdef KFR_NATIVE_INTRINSICS
@@ -62,7 +62,7 @@
 #define KFR_BUILD_DETAILS_1 ""
 #endif
 
-#ifdef CMT_CLANG_EXT
+#ifdef CMT_VEC_EXT
 #define KFR_BUILD_DETAILS_2 " +ve"
 #else
 #define KFR_BUILD_DETAILS_2 ""

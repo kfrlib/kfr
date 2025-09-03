@@ -22,7 +22,7 @@
  */
 #pragma once
 
-#ifndef CMT_CLANG_EXT
+#ifndef CMT_VEC_EXT
 
 #include "simd.hpp"
 

@@ -127,7 +127,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/vec.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/abs.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/backend.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/backend_clang.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/backend_vecext.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/backend_generic.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/basicoperators_clang.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/basicoperators_complex.hpp
