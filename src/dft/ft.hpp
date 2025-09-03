@@ -1778,7 +1778,7 @@ KFR_INTRINSIC void cdigitreverse4_write<false, f64, 32>(complex<f64>* dest, cons
 #endif
 
 template <typename T>
-CMT_ALWAYS_INLINE cvec<T, 1> calculate_twiddle_impl(size_t n, size_t size)
+CMT_INLINE cvec<T, 1> calculate_twiddle_impl(size_t n, size_t size)
 {
     T kth = c_pi<T, 2> * (n / static_cast<T>(size));
     return make_vector<T>(std::cos(kth), -std::sin(kth));

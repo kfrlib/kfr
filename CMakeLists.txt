@@ -361,6 +361,7 @@ if (KFR_DISABLE_CLANG_EXTENSIONS)
 endif ()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wno-ignored-qualifiers -Wno-psabi)
+    target_compile_options(kfr INTERFACE -flax-vector-conversions)
 endif ()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-Wno-c++1z-extensions -Wno-psabi

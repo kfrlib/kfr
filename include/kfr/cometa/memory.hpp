@@ -290,7 +290,7 @@ namespace details
 {
 
 template <typename T, typename Fn>
-CMT_ALWAYS_INLINE static void call_with_temp_heap(size_t temp_size, Fn&& fn)
+CMT_INLINE static void call_with_temp_heap(size_t temp_size, Fn&& fn)
 {
     autofree<T> temp(temp_size);
     fn(temp.data());
@@ -315,7 +315,7 @@ CMT_NOINLINE static void call_with_temp_stack(size_t temp_size, Fn&& fn)
  * @param fn Function to call with a pointer to the buffer.
  */
 template <size_t stack_size = 4096, typename T = u8, typename Fn>
-CMT_ALWAYS_INLINE static void call_with_temp(size_t temp_size, Fn&& fn)
+CMT_INLINE static void call_with_temp(size_t temp_size, Fn&& fn)
 {
     if (temp_size <= stack_size)
         return details::call_with_temp_stack<stack_size, T>(temp_size, std::forward<Fn>(fn));
