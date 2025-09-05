@@ -14,9 +14,9 @@ jobs:
         set -e
         sudo apt-get update && sudo apt-get install -y ninja-build
         wget -O - https://apt.llvm.org/llvm.sh | sudo bash -s - 17
-        curl -o "$TMP_DIR/sde.tar.bz2" -L "$SDE_LINUX"
+        curl -o "$TMP_DIR/sde.tar.xz" -L "$SDE_LINUX"
         mkdir "$TMP_DIR/sde-bin"
-        tar -C "$TMP_DIR/sde-bin" -xjf "$TMP_DIR/sde.tar.bz2" --strip 1
+        tar -C "$TMP_DIR/sde-bin" -xJf "$TMP_DIR/sde.tar.xz" --strip 1
         sudo ln -s $TMP_DIR/sde-bin/sde64 /usr/bin/sde
         ci/run.sh build-release -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DKFR_ARCH=avx2 -DKFR_USE_SDE=ON -DCMAKE_CXX_COMPILER=clang++-17 -DCMAKE_BUILD_TYPE=Release
 
