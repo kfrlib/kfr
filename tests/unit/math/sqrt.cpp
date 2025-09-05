@@ -10,7 +10,7 @@
 
 using namespace kfr;
 
-namespace CMT_ARCH_NAME
+namespace KFR_ARCH_NAME
 {
 
 TEST(intrin_sqrt)
@@ -33,5 +33,4 @@ TEST(intrin_sqrt)
                   });
 }
 
-
-}
+} // namespace KFR_ARCH_NAME

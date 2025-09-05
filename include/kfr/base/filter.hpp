@@ -128,7 +128,7 @@ protected:
     expression_handle<T, 1> filter_expr;
 };
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 /// @brief Converts expression with placeholder to filter. Placeholder and filter must have the same type
@@ -137,7 +137,7 @@ KFR_INTRINSIC expression_filter<T> to_filter(E&& e)
 {
     return expression_filter<T>(to_handle(std::move(e)));
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 /// @brief Converts expression with placeholder to filter. Placeholder and filter must have the same type
 template <typename T, typename E>

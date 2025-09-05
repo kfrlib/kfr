@@ -29,7 +29,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 namespace impl
 {
@@ -44,7 +44,7 @@ template void dft_progressive_start(const dft_plan<FLOAT>&, typename dft_plan<FL
                                     complex<FLOAT>*, const complex<FLOAT>*, u8*);
 template void dft_progressive_step(const dft_plan<FLOAT>&, typename dft_plan<FLOAT>::progressive&);
 } // namespace impl
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr
 
 #endif

@@ -1,11 +1,11 @@
-/** @addtogroup cometa
+/** @addtogroup meta
  *  @{
  */
 #pragma once
 
-#include "../cometa.hpp"
+#include "../meta.hpp"
 
-namespace cometa
+namespace kfr
 {
 
 /// @brief Short names for common types
@@ -25,7 +25,7 @@ using imax = int64_t;
 using fmax = double;
 using f80  = long double;
 
-#if defined(CMT_BASETYPE_F32) || defined(CMT_NO_NATIVE_F64)
+#if defined(KFR_BASETYPE_F32) || defined(KFR_NO_NATIVE_F64)
 using fbase = float;
 #else
 using fbase = double;
@@ -185,7 +185,7 @@ struct flt_type_impl<double>
 } // namespace details
 
 template <typename T>
-using flt_type = typename cometa::compound_type_traits<T>::template deep_rebind<
+using flt_type = typename kfr::compound_type_traits<T>::template deep_rebind<
     typename details::flt_type_impl<deep_subtype<T>>::type>;
 
-} // namespace cometa
+} // namespace kfr

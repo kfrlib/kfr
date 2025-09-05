@@ -291,7 +291,7 @@ protected:
     size_t process_impl(univector_ref<T> output, univector_ref<const T> input);
 };
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace internal
@@ -310,7 +310,7 @@ struct expression_upsample<2, E> : expression_with_arguments<E>, expression_trai
     using value_type = expression_value_type<E>;
     using T          = value_type;
 
-    KFR_MEM_INTRINSIC size_t size() const CMT_NOEXCEPT { return expression_with_arguments<E>::size() * 2; }
+    KFR_MEM_INTRINSIC size_t size() const KFR_NOEXCEPT { return expression_with_arguments<E>::size() * 2; }
 
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_upsample& self, index_t index,
@@ -336,18 +336,18 @@ struct expression_upsample<4, E> : expression_with_arguments<E>
     using value_type = expression_value_type<E>;
     using T          = value_type;
 
-    KFR_MEM_INTRINSIC size_t size() const CMT_NOEXCEPT { return expression_with_arguments<E>::size() * 4; }
+    KFR_MEM_INTRINSIC size_t size() const KFR_NOEXCEPT { return expression_with_arguments<E>::size() * 4; }
 
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_upsample& self, index_t index,
-                                                axis_params<0, N>) CMT_NOEXCEPT
+                                                axis_params<0, N>) KFR_NOEXCEPT
     {
         const vec<T, N / 4> x  = get_elements(self.first(), index / 4, axis_params<0, N / 4>());
         const vec<T, N / 2> xx = interleave(x, zerovector(x));
         return interleave(xx, zerovector(xx));
     }
     KFR_INTRINSIC friend vec<T, 2> get_elements(const expression_upsample& self, index_t index,
-                                                axis_params<0, 2>) CMT_NOEXCEPT
+                                                axis_params<0, 2>) KFR_NOEXCEPT
     {
         switch (index & 3)
         {
@@ -360,7 +360,7 @@ struct expression_upsample<4, E> : expression_with_arguments<E>
         }
     }
     KFR_INTRINSIC friend vec<T, 1> get_elements(const expression_upsample& self, index_t index,
-                                                axis_params<0, 1>) CMT_NOEXCEPT
+                                                axis_params<0, 1>) KFR_NOEXCEPT
     {
         if (index & 3)
             return 0;
@@ -376,11 +376,11 @@ struct expression_downsample<2, offset, E> : expression_with_arguments<E>
     using value_type = expression_value_type<E>;
     using T          = value_type;
 
-    KFR_MEM_INTRINSIC size_t size() const CMT_NOEXCEPT { return expression_with_arguments<E>::size() / 2; }
+    KFR_MEM_INTRINSIC size_t size() const KFR_NOEXCEPT { return expression_with_arguments<E>::size() / 2; }
 
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_downsample& self, size_t index,
-                                                axis_params<0, N>) CMT_NOEXCEPT
+                                                axis_params<0, N>) KFR_NOEXCEPT
     {
         const vec<T, N * 2> x = get_elements(self.first(), index * 2, axis_params<0, N * 2>());
         return x.shuffle(csizeseq<N, offset, 2>);
@@ -394,11 +394,11 @@ struct expression_downsample<4, offset, E> : expression_with_arguments<E>
     using value_type = expression_value_type<E>;
     using T          = value_type;
 
-    KFR_MEM_INTRINSIC size_t size() const CMT_NOEXCEPT { return expression_with_arguments<E>::size() / 4; }
+    KFR_MEM_INTRINSIC size_t size() const KFR_NOEXCEPT { return expression_with_arguments<E>::size() / 4; }
 
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_downsample& self, index_t index,
-                                                axis_params<0, N>) CMT_NOEXCEPT
+                                                axis_params<0, N>) KFR_NOEXCEPT
     {
         const vec<T, N * 4> x = get_elements(self.first(), index * 4, axis_params<0, N * 4>());
         return x.shuffle(csizeseq<N, offset, 4>);
@@ -464,5 +464,5 @@ KFR_FUNCTION samplerate_converter<T> resampler(sample_rate_conversion_quality qu
     return samplerate_converter<T>(quality, itype(interpolation_factor), itype(decimation_factor), scale,
                                    cutoff);
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

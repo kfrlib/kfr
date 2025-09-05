@@ -31,7 +31,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace intrinsics
@@ -223,5 +223,5 @@ KFR_I_FN(atan)
 KFR_I_FN(atandeg)
 KFR_I_FN(atan2)
 KFR_I_FN(atan2deg)
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

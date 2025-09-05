@@ -27,13 +27,13 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace intrinsics
 {
 
-#if defined CMT_ARCH_SSE41 && defined KFR_NATIVE_INTRINSICS
+#if defined KFR_ARCH_SSE41 && defined KFR_NATIVE_INTRINSICS
 
 KFR_INTRINSIC u8sse select(const mu8sse& m, const u8sse& x, const u8sse& y)
 {
@@ -76,7 +76,7 @@ KFR_INTRINSIC f64sse select(const mf64sse& m, const f64sse& x, const f64sse& y)
     return _mm_blendv_pd(y.v, x.v, m.v);
 }
 
-#if defined CMT_ARCH_AVX
+#if defined KFR_ARCH_AVX
 KFR_INTRINSIC f64avx select(const mf64avx& m, const f64avx& x, const f64avx& y)
 {
     return _mm256_blendv_pd(y.v, x.v, m.v);
@@ -87,7 +87,7 @@ KFR_INTRINSIC f32avx select(const mf32avx& m, const f32avx& x, const f32avx& y)
 }
 #endif
 
-#if defined CMT_ARCH_AVX2
+#if defined KFR_ARCH_AVX2
 KFR_INTRINSIC u8avx select(const mu8avx& m, const u8avx& x, const u8avx& y)
 {
     return _mm256_blendv_epi8(y.v, x.v, m.v);
@@ -122,7 +122,7 @@ KFR_INTRINSIC i64avx select(const mi64avx& m, const i64avx& x, const i64avx& y)
 }
 #endif
 
-#if defined CMT_ARCH_AVX512
+#if defined KFR_ARCH_AVX512
 KFR_INTRINSIC f64avx512 select(const mf64avx512& m, const f64avx512& x, const f64avx512& y)
 {
     return _mm512_mask_blend_pd(_mm512_movepi64_mask(_mm512_castpd_si512(m.v)), y.v, x.v);
@@ -216,7 +216,7 @@ KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& a, const T& b, const vec<T,
     return concat2(select(a.h.low, b, c.h.low), select(a.h.high, b, c.h.high));
 }
 
-#elif defined CMT_ARCH_NEON && defined KFR_NATIVE_INTRINSICS
+#elif defined KFR_ARCH_NEON && defined KFR_NATIVE_INTRINSICS
 
 KFR_INTRINSIC f32neon select(const mf32neon& m, const f32neon& x, const f32neon& y)
 {
@@ -255,7 +255,7 @@ KFR_INTRINSIC u64neon select(const mu64neon& m, const u64neon& x, const u64neon&
     return vbslq_u64(m.v, x.v, y.v);
 }
 
-#ifdef CMT_ARCH_NEON64
+#ifdef KFR_ARCH_NEON64
 KFR_INTRINSIC f64neon select(const mf64neon& m, const f64neon& x, const f64neon& y)
 {
     return vbslq_f64(m.v, x.v, y.v);
@@ -327,5 +327,5 @@ KFR_INTRINSIC std::common_type_t<T1, T2> select(bool m, const T1& x, const T2& y
 
 } // namespace intrinsics
 KFR_I_FN(select)
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

@@ -11,7 +11,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 TEST(linspace)
@@ -44,9 +44,7 @@ TEST(pack)
     CHECK_EXPRESSION(pack(v1, v2), 21, [](float i) { return f32x2{ 1 + i, (1 + i) * 11 }; });
 
     CHECK_EXPRESSION(bind_expression(fn::reverse(), pack(v1, v2)), 21,
-                     [](float i) {
-                         return f32x2{ (1 + i) * 11, 1 + i };
-                     });
+                     [](float i) { return f32x2{ (1 + i) * 11, 1 + i }; });
 }
 
 TEST(adjacent)
@@ -87,7 +85,7 @@ TEST(concatenate)
                      { 5, 5, 5, 5, 5, 10, 10, 10, 10, 10 });
 }
 
-#ifndef CMT_COMPILER_IS_MSVC
+#ifndef KFR_COMPILER_IS_MSVC
 // The following test causes ICE in recent MSVC
 TEST(rebind)
 {
@@ -130,9 +128,7 @@ TEST(reverse_expression)
 TEST(sequence)
 {
     CHECK_EXPRESSION(sequence(0, 0.5f, 1, 0.5f), infinite_size,
-                     [](size_t i) {
-                         return std::array<float, 4>{ 0, 0.5f, 1, 0.5f }[i % 4];
-                     });
+                     [](size_t i) { return std::array<float, 4>{ 0, 0.5f, 1, 0.5f }[i % 4]; });
 }
 
 TEST(assign_expression)
@@ -156,5 +152,5 @@ TEST(trace) { render(trace(counter()), 44); }
 
 TEST(get_element) { CHECK(get_element(counter(0, 1, 10, 100), { 1, 2, 3 }) == 321); }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

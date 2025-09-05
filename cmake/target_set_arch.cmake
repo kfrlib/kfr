@@ -6,7 +6,7 @@ elseif (X86)
 
     function(target_set_arch TARGET MODE ARCH)
 
-        set(ARCH_FLAGS_GNU_generic -DCMT_FORCE_GENERIC_CPU)
+        set(ARCH_FLAGS_GNU_generic -DKFR_FORCE_GENERIC_CPU)
         set(ARCH_FLAGS_GNU_sse2    -msse2)
         set(ARCH_FLAGS_GNU_sse3    -msse3)
         set(ARCH_FLAGS_GNU_ssse3   -mssse3)
@@ -23,7 +23,7 @@ elseif (X86)
             set(ARCH_FLAG_MS_SSE2 -arch:SSE2)
         endif()
 
-        set(ARCH_FLAGS_MS_generic  ${ARCH_FLAG_MS_SSE2} -DCMT_FORCE_GENERIC_CPU)
+        set(ARCH_FLAGS_MS_generic  ${ARCH_FLAG_MS_SSE2} -DKFR_FORCE_GENERIC_CPU)
         set(ARCH_FLAGS_MS_sse2     ${ARCH_FLAG_MS_SSE2})
         set(ARCH_FLAGS_MS_sse3     ${ARCH_FLAG_MS_SSE2} -D__SSE3__)
         set(ARCH_FLAGS_MS_ssse3    ${ARCH_FLAG_MS_SSE2} -D__SSSE3__)

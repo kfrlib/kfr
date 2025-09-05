@@ -29,7 +29,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 /**
@@ -71,5 +71,5 @@ KFR_INTRINSIC Tout absmax(const T1& x, const T2& y)
 {
     return intrinsics::absmax(x, y);
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

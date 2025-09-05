@@ -8,7 +8,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 TEST(select_true)
 {
@@ -33,5 +33,5 @@ TEST(select_false)
         },
         [](auto, auto y) { return y; });
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

@@ -29,7 +29,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 /**
@@ -57,12 +57,12 @@ struct stereo_matrix
 };
 
 template <int = 0>
-CMT_GNU_CONSTEXPR f64x2x2 matrix_sum_diff()
+KFR_GNU_CONSTEXPR f64x2x2 matrix_sum_diff()
 {
     return { f64x2{ 1, 1 }, f64x2{ 1, -1 } };
 }
 template <int = 0>
-CMT_GNU_CONSTEXPR f64x2x2 matrix_halfsum_halfdiff()
+KFR_GNU_CONSTEXPR f64x2x2 matrix_halfsum_halfdiff()
 {
     return { f64x2{ 0.5, 0.5 }, f64x2{ 0.5, -0.5 } };
 }
@@ -77,5 +77,5 @@ Result mixdown_stereo(Left&& left, Right&& right, const f64x2x2& matrix)
 {
     return Result(stereo_matrix{ matrix }, pack(std::forward<Left>(left), std::forward<Right>(right)));
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

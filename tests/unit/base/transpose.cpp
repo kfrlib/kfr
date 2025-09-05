@@ -12,14 +12,14 @@
 #include <kfr/io/tostring.hpp>
 #include <kfr/simd.hpp>
 
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 5051))
-CMT_PRAGMA_MSVC(warning(disable : 4244))
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 5051))
+KFR_PRAGMA_MSVC(warning(disable : 4244))
 
 namespace kfr
 {
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 template <typename T, bool Transposed = false>
 struct expression_test_matrix : public expression_traits_defaults
@@ -124,7 +124,7 @@ TEST(matrix_transpose)
                                                              2, 14, 6, 18, 10, 22, 3, 15, 7, 19, 11, 23 });
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr
 
-CMT_PRAGMA_MSVC(warning(pop))
+KFR_PRAGMA_MSVC(warning(pop))

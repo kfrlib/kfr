@@ -34,7 +34,7 @@ namespace kfr
 enum class cpu_t : int
 {
     generic = 0,
-#ifdef CMT_ARCH_X86
+#ifdef KFR_ARCH_X86
     sse2    = 1,
     sse3    = 2,
     ssse3   = 3,
@@ -47,15 +47,15 @@ enum class cpu_t : int
     lowest  = static_cast<int>(sse2),
     highest = static_cast<int>(avx512),
 #endif
-#ifdef CMT_ARCH_ARM
+#ifdef KFR_ARCH_ARM
     neon    = 1,
     neon64  = 2,
     lowest  = static_cast<int>(neon),
     highest = static_cast<int>(neon64),
 #endif
-    native = static_cast<int>(CMT_ARCH_NAME),
+    native = static_cast<int>(KFR_ARCH_NAME),
 
-#ifdef CMT_ARCH_AVX
+#ifdef KFR_ARCH_AVX
 #define KFR_HAS_SECONDARY_PLATFORM
     secondary = static_cast<int>(sse42),
 #else
@@ -77,7 +77,7 @@ namespace internal_generic
 constexpr cpu_t older(cpu_t x) { return static_cast<cpu_t>(static_cast<int>(x) - 1); }
 constexpr cpu_t newer(cpu_t x) { return static_cast<cpu_t>(static_cast<int>(x) + 1); }
 
-#ifdef CMT_ARCH_X86
+#ifdef KFR_ARCH_X86
 constexpr auto cpu_list = cvals_t<cpu_t, cpu_t::avx512, cpu_t::avx2, cpu_t::avx1, cpu_t::sse41, cpu_t::ssse3,
                                   cpu_t::sse3, cpu_t::sse2>();
 #else
@@ -94,21 +94,21 @@ constexpr auto cpu_all =
     cfilter(internal_generic::cpu_list, internal_generic::cpu_list >= cpuval_t<cpu_t::native>());
 
 /// @brief Returns name of the cpu instruction set
-CMT_UNUSED static const char* cpu_name(cpu_t set)
+KFR_UNUSED static const char* cpu_name(cpu_t set)
 {
-#ifdef CMT_ARCH_X86
+#ifdef KFR_ARCH_X86
     static const char* names[] = { "generic", "sse2", "sse3", "ssse3", "sse41",
                                    "sse42",   "avx",  "avx2", "avx512" };
 #endif
-#ifdef CMT_ARCH_ARM
+#ifdef KFR_ARCH_ARM
     static const char* names[] = { "generic", "neon", "neon64" };
 #endif
-    if (CMT_LIKELY(set >= cpu_t::lowest && set <= cpu_t::highest))
+    if (KFR_LIKELY(set >= cpu_t::lowest && set <= cpu_t::highest))
         return names[static_cast<size_t>(set)];
     return "-";
 }
 
-#ifdef CMT_ARCH_X64
+#ifdef KFR_ARCH_X64
 template <int = 0>
 constexpr inline const char* bitness_const(const char*, const char* x64)
 {
@@ -135,7 +135,7 @@ constexpr inline const T& bitness_const(const T& x32, const T&)
 template <cpu_t c = cpu_t::native>
 struct platform;
 
-#ifdef CMT_ARCH_X86
+#ifdef KFR_ARCH_X86
 template <>
 struct platform<cpu_t::common>
 {
@@ -212,7 +212,7 @@ struct platform<cpu_t::avx512> : platform<cpu_t::avx2>
     constexpr static bool mask_registers = true;
 };
 #endif
-#ifdef CMT_ARCH_ARM
+#ifdef KFR_ARCH_ARM
 template <>
 struct platform<cpu_t::common>
 {
@@ -250,7 +250,7 @@ struct platform<cpu_t::neon64> : platform<cpu_t::neon>
 };
 #endif
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 /// @brief SIMD vector width for the given cpu instruction set
@@ -272,7 +272,7 @@ constexpr static size_t minimum_vector_width =
 template <typename T>
 constexpr static size_t vector_capacity = platform<>::simd_register_count * vector_width<T>;
 
-#ifdef CMT_COMPILER_IS_MSVC
+#ifdef KFR_COMPILER_IS_MSVC
 template <typename T>
 constexpr static size_t maximum_vector_size = const_min(static_cast<size_t>(32), vector_width<T> * 2);
 #else
@@ -293,5 +293,5 @@ struct vec;
 template <typename T, size_t N = vector_width<T>>
 using mask = vec<bit<T>, N>;
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

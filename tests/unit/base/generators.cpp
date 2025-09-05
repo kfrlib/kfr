@@ -13,7 +13,7 @@
 
 using namespace kfr;
 
-namespace CMT_ARCH_NAME
+namespace KFR_ARCH_NAME
 {
 
 TEST(test_gen_expj)
@@ -46,4 +46,4 @@ TEST(gen_sin)
     CHECK(rms(up - up2) < 0.00001);
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME

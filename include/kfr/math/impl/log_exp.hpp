@@ -34,7 +34,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace intrinsics
@@ -332,5 +332,5 @@ KFR_I_FN(log_fmadd)
 KFR_I_FN(pow)
 KFR_I_FN(root)
 KFR_I_FN(cbrt)
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

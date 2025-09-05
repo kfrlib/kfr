@@ -8,7 +8,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 TEST(shape)
@@ -37,7 +37,7 @@ TEST(shape)
 
     CHECK(shape{ 3, 4, 5 }.from_flat(0) == shape{ 0, 0, 0 });
     CHECK(shape{ 3, 4, 5 }.from_flat(59) == shape{ 2, 3, 4 });
-    
+
     CHECK(shape{ 3, 4, 5 }.transpose() == shape{ 5, 4, 3 });
 }
 TEST(shape_broadcast)
@@ -74,5 +74,5 @@ TEST(shape_broadcast)
     CHECK(!same_layout(shape{ 2, 1, 3, 4 }, shape{ 1, 2, 4, 3, 1 }));
     CHECK(!same_layout(shape{ 2, 1, 3, 4 }, shape{ 1, 2, 4, 3, 0 }));
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

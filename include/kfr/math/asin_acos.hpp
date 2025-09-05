@@ -29,7 +29,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 /**
@@ -48,6 +48,6 @@ KFR_INTRINSIC flt_type<T1> acos(const T1& x)
 {
     return intrinsics::acos(x);
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 } // namespace kfr

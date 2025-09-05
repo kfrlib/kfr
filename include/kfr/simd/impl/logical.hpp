@@ -28,15 +28,15 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace intrinsics
 {
 
-#if defined CMT_ARCH_SSE2 && defined KFR_NATIVE_INTRINSICS
+#if defined KFR_ARCH_SSE2 && defined KFR_NATIVE_INTRINSICS
 
-#if defined CMT_ARCH_SSE41
+#if defined KFR_ARCH_SSE41
 
 // horizontal OR
 KFR_INTRINSIC bool bittestany(const mu8sse& x) { return !_mm_testz_si128(x.v, x.v); }
@@ -59,7 +59,7 @@ KFR_INTRINSIC bool bittestall(const mi32sse& x) { return _mm_testc_si128(x.v, al
 KFR_INTRINSIC bool bittestall(const mi64sse& x) { return _mm_testc_si128(x.v, allonesvector(x).v); }
 #endif
 
-#if defined CMT_ARCH_AVX
+#if defined KFR_ARCH_AVX
 // horizontal OR
 KFR_INTRINSIC bool bittestany(const mf32sse& x) { return !_mm_testz_ps(x.v, x.v); }
 KFR_INTRINSIC bool bittestany(const mf64sse& x) { return !_mm_testz_pd(x.v, x.v); }
@@ -92,7 +92,7 @@ KFR_INTRINSIC bool bittestall(const mi16avx& x) { return _mm256_testc_si256(x.v,
 KFR_INTRINSIC bool bittestall(const mi32avx& x) { return _mm256_testc_si256(x.v, allonesvector(x).v); }
 KFR_INTRINSIC bool bittestall(const mi64avx& x) { return _mm256_testc_si256(x.v, allonesvector(x).v); }
 
-#if defined CMT_ARCH_AVX512
+#if defined KFR_ARCH_AVX512
 // horizontal OR
 KFR_INTRINSIC bool bittestany(const mf32avx512& x) { return _mm512_movepi32_mask(_mm512_castps_si512(x.v)); }
 KFR_INTRINSIC bool bittestany(const mf64avx512& x) { return _mm512_movepi64_mask(_mm512_castpd_si512(x.v)); }
@@ -125,7 +125,7 @@ KFR_INTRINSIC bool bittestall(const mi64avx512& x) { return !uint8_t(~_mm512_mov
 
 #endif
 
-#elif defined CMT_ARCH_SSE41
+#elif defined KFR_ARCH_SSE41
 KFR_INTRINSIC bool bittestany(const mf32sse& x)
 {
     return !_mm_testz_si128(bitcast<bit<u8>>(x).v, bitcast<bit<u8>>(x).v);
@@ -144,7 +144,7 @@ KFR_INTRINSIC bool bittestall(const mf64sse& x)
 }
 #endif
 
-#if !defined CMT_ARCH_SSE41
+#if !defined KFR_ARCH_SSE41
 
 KFR_INTRINSIC bool bittestany(const mf32sse& x) { return _mm_movemask_ps(x.v); }
 KFR_INTRINSIC bool bittestany(const mf64sse& x) { return _mm_movemask_pd(x.v); }
@@ -191,7 +191,7 @@ KFR_INTRINSIC bool bittestany(const mask<T, N>& a)
     return bittestany(low(a)) || bittestany(high(a));
 }
 
-#elif CMT_ARCH_NEON && defined KFR_NATIVE_INTRINSICS
+#elif KFR_ARCH_NEON && defined KFR_NATIVE_INTRINSICS
 
 KFR_INTRINSIC bool bittestall(const mu32neon& a)
 {
@@ -282,5 +282,5 @@ KFR_INTRINSIC bool bittestall(const mask<T, N>& x, const mask<T, N>& y)
 }
 #endif
 } // namespace intrinsics
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

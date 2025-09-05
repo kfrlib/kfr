@@ -30,7 +30,7 @@
 namespace kfr
 {
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 /**
@@ -55,5 +55,5 @@ KFR_INTRINSIC bool any(const mask<T, N>& x)
     return intrinsics::bittestany(x);
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

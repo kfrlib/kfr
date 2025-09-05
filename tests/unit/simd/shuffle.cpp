@@ -9,7 +9,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 TEST(concat)
 {
@@ -289,5 +289,5 @@ TEST(test_basic)
     CHECK(inrange(pack(1, 2, 3), 1, 2) == make_mask<int>(true, true, false));
     CHECK(inrange(pack(1, 2, 3), 1, 1) == make_mask<int>(true, false, false));
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

@@ -26,7 +26,7 @@
 #include "dsp.hpp"
 #include "io.hpp"
 
-/** @defgroup cometa Cometa
+/** @defgroup meta Metaprogramming
  * @brief Metaprogramming
  */
 

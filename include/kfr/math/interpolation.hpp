@@ -30,7 +30,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 /**
@@ -96,5 +96,5 @@ KFR_FUNCTION T catmullrom(M mu, T x0, T x1, T x2, T x3)
     return horner(mu, a0, a1, a2, a3);
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

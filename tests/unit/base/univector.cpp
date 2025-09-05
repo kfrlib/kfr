@@ -10,7 +10,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 TEST(univector_assignment)
@@ -40,5 +40,5 @@ TEST(std_allocation)
 }
 #endif
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

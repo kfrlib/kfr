@@ -35,7 +35,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <typename T>
@@ -196,7 +196,7 @@ struct histogram_data
             const vec<T, N> x = 1 + value;
             indices           = cast<uint64_t>(clamp(x, T(0), T(size() + 1)));
         }
-        CMT_LOOP_UNROLL
+        KFR_LOOP_UNROLL
         for (size_t i = 0; i < N; ++i)
             ++m_values[indices[i]];
         m_total += N;
@@ -419,5 +419,5 @@ KFR_FUNCTION histogram_data<Bins, TCount> histogram(E&& expr)
     return sink(histogram_expression<Bins>(std::forward<E>(expr))).data;
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

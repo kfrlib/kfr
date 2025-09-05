@@ -42,7 +42,7 @@
 namespace kfr
 {
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 /**
@@ -280,7 +280,7 @@ KFR_FUNCTION expression_make_function<fn::cconj, E1> cconj(E1&& x)
 }
 
 template <typename E1, typename E2, KFR_ACCEPT_EXPRESSIONS(E1, E2)>
-CMT_INTRINSIC expression_make_function<fn::interleave, E1, E2> interleave(E1&& x, E2&& y)
+KFR_INTRINSIC expression_make_function<fn::interleave, E1, E2> interleave(E1&& x, E2&& y)
 {
     return { fn::interleave(), std::forward<E1>(x), std::forward<E2>(y) };
 }
@@ -484,6 +484,6 @@ KFR_INTRINSIC E1& operator>>=(E1&& e1, E2&& e2)
     return e1;
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 } // namespace kfr

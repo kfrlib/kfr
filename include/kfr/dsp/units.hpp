@@ -32,7 +32,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 using sample_rate_t = double;
@@ -86,7 +86,7 @@ KFR_INTRINSIC Tout power_to_dB(const T& x)
 template <typename T, typename Tout = flt_type<T>>
 KFR_INTRINSIC Tout dB_to_power(const T& x)
 {
-    if (CMT_UNLIKELY(x == -c_infinity<Tout>))
+    if (KFR_UNLIKELY(x == -c_infinity<Tout>))
         return 0.0;
     else
         return exp(x * (c_log_10<Tout> / 10.0));
@@ -202,5 +202,5 @@ KFR_FUNCTION expression_function<fn::dB_to_power, E1> dB_to_power(E1&& x)
 {
     return { fn::dB_to_power(), std::forward<E1>(x) };
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

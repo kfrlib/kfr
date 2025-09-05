@@ -29,7 +29,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 /**
  * @brief Computes the modified zeroth-order Bessel function of the first kind.
@@ -44,5 +44,5 @@ KFR_FUNCTION T1 modzerobessel(const T1& x)
 {
     return intrinsics::modzerobessel(x);
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

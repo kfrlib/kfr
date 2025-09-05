@@ -30,7 +30,7 @@
 namespace kfr
 {
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <typename T>
@@ -58,5 +58,5 @@ constexpr KFR_INTRINSIC vec<bit<T>, Nout> make_mask(bool arg, Args... args)
     return vec<bit<T>, Nout>(arg, static_cast<bool>(args)...);
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

@@ -9,7 +9,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 KFR_AUTO_TEST_1(gamma, narrow, 2200, 321)
 KFR_AUTO_TEST_1(exp, narrow, 4, 2)
@@ -29,5 +29,5 @@ TEST(cbrt)
     CHECK(kfr::root(-32.f, 5.f) == -2.f);
     CHECK(std::isnan(kfr::root(-32.f, 5.001f)));
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

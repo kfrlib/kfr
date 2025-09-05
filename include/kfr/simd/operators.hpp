@@ -30,12 +30,12 @@
 #include <algorithm>
 #include <utility>
 
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 4244))
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 4244))
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 #define KFR_VEC_OPERATOR1(op, fn)                                                                            \
@@ -150,42 +150,42 @@ KFR_VEC_CMP_OPERATOR(<, lt)
 
 template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,
           KFR_ENABLE_IF(sizeof(T1) == sizeof(T2))>
-KFR_INTRINSIC mask<C, N> operator&(const mask<T1, N>& x, const mask<T2, N>& y) CMT_NOEXCEPT
+KFR_INTRINSIC mask<C, N> operator&(const mask<T1, N>& x, const mask<T2, N>& y) KFR_NOEXCEPT
 {
     return mask<C, N>((bitcast<C>(vec<T1, N>(x.v)) & bitcast<C>(vec<T2, N>(y.v))).v);
 }
 template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,
           KFR_ENABLE_IF(sizeof(T1) == sizeof(T2))>
-KFR_INTRINSIC mask<C, N> operator|(const mask<T1, N>& x, const mask<T2, N>& y) CMT_NOEXCEPT
+KFR_INTRINSIC mask<C, N> operator|(const mask<T1, N>& x, const mask<T2, N>& y) KFR_NOEXCEPT
 {
     return mask<C, N>((bitcast<C>(vec<T1, N>(x.v)) | bitcast<C>(vec<T2, N>(y.v))).v);
 }
 template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,
           KFR_ENABLE_IF(sizeof(T1) == sizeof(T2))>
-KFR_INTRINSIC mask<C, N> operator&&(const mask<T1, N>& x, const mask<T2, N>& y) CMT_NOEXCEPT
+KFR_INTRINSIC mask<C, N> operator&&(const mask<T1, N>& x, const mask<T2, N>& y) KFR_NOEXCEPT
 {
     return mask<C, N>((bitcast<C>(vec<T1, N>(x.v)) & bitcast<C>(vec<T2, N>(y.v))).v);
 }
 template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,
           KFR_ENABLE_IF(sizeof(T1) == sizeof(T2))>
-KFR_INTRINSIC mask<C, N> operator||(const mask<T1, N>& x, const mask<T2, N>& y) CMT_NOEXCEPT
+KFR_INTRINSIC mask<C, N> operator||(const mask<T1, N>& x, const mask<T2, N>& y) KFR_NOEXCEPT
 {
     return mask<C, N>((bitcast<C>(vec<T1, N>(x.v)) | bitcast<C>(vec<T2, N>(y.v))).v);
 }
 template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,
           KFR_ENABLE_IF(sizeof(T1) == sizeof(T2))>
-KFR_INTRINSIC mask<C, N> operator^(const mask<T1, N>& x, const mask<T2, N>& y) CMT_NOEXCEPT
+KFR_INTRINSIC mask<C, N> operator^(const mask<T1, N>& x, const mask<T2, N>& y) KFR_NOEXCEPT
 {
     return mask<C, N>((bitcast<C>(vec<T1, N>(x.v)) ^ bitcast<C>(vec<T2, N>(y.v))).v);
 }
 
 template <typename T, size_t N>
-KFR_INTRINSIC mask<T, N> operator~(const mask<T, N>& x) CMT_NOEXCEPT
+KFR_INTRINSIC mask<T, N> operator~(const mask<T, N>& x) KFR_NOEXCEPT
 {
     return mask<T, N>(~x.asvec());
 }
 template <typename T, size_t N>
-KFR_INTRINSIC mask<T, N> operator!(const mask<T, N>& x) CMT_NOEXCEPT
+KFR_INTRINSIC mask<T, N> operator!(const mask<T, N>& x) KFR_NOEXCEPT
 {
     return mask<T, N>(~x.asvec());
 }
@@ -639,13 +639,13 @@ KFR_FN(packtranspose)
 
 #if 0
 template <typename T, size_t N>
-KFR_I_CE vec<bit<T>, N>::vec(const base& v) CMT_NOEXCEPT
+KFR_I_CE vec<bit<T>, N>::vec(const base& v) KFR_NOEXCEPT
 {
     this->v = base::frombits((vec<itype<T>, N>::frombits(v) < itype<T>(0)).asvec()).v;
 }
 #endif
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr
 
-CMT_PRAGMA_MSVC(warning(pop))
+KFR_PRAGMA_MSVC(warning(pop))

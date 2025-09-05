@@ -5,7 +5,7 @@
 
 #include "comparison.hpp"
 
-#if defined(CMT_COMPILER_MSVC)
+#if defined(KFR_COMPILER_MSVC)
 #include <intrin.h>
 #define TESTO_BREAKPOINT __debugbreak()
 #else

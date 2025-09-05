@@ -34,14 +34,14 @@
 #include "speaker.hpp"
 #include "units.hpp"
 
-CMT_PRAGMA_GNU(GCC diagnostic push)
-#if CMT_HAS_WARNING("-Winaccessible-base")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Winaccessible-base")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+#if KFR_HAS_WARNING("-Winaccessible-base")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Winaccessible-base")
 #endif
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <typename T>
@@ -358,7 +358,7 @@ private:
     lra_vec<T> m_lra_buffer;
 };
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr
 
-CMT_PRAGMA_GNU(GCC diagnostic pop)
+KFR_PRAGMA_GNU(GCC diagnostic pop)

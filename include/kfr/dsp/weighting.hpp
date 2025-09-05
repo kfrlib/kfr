@@ -31,7 +31,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace intrinsics
@@ -132,5 +132,5 @@ KFR_INTRINSIC expression_function<fn::cweighting, E1> cweighting(E1&& x)
 {
     return { fn::cweighting(), std::forward<E1>(x) };
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

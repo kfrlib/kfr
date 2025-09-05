@@ -25,7 +25,7 @@
  */
 #pragma once
 
-#include "../cometa/string.hpp"
+#include "../meta/string.hpp"
 #include "../simd/types.hpp"
 
 namespace kfr
@@ -36,7 +36,7 @@ struct fraction
     fraction(i64 num = 0, i64 den = 1) : numerator(num), denominator(den) { normalize(); }
     void normalize()
     {
-        if (CMT_UNLIKELY(denominator < 0))
+        if (KFR_UNLIKELY(denominator < 0))
         {
             denominator = -denominator;
             numerator   = -numerator;
@@ -135,7 +135,7 @@ private:
 };
 } // namespace kfr
 
-namespace cometa
+namespace kfr
 {
 template <>
 struct representation<kfr::fraction>
@@ -149,4 +149,4 @@ struct representation<kfr::fraction>
             return as_string(value.numerator, "/", value.denominator);
     }
 };
-} // namespace cometa
+} // namespace kfr

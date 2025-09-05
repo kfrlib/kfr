@@ -32,7 +32,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace intrinsics
@@ -95,5 +95,5 @@ KFR_I_FN(tanh)
 KFR_I_FN(coth)
 KFR_I_FN(sinhcosh)
 KFR_I_FN(coshsinh)
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

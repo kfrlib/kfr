@@ -29,13 +29,13 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 #ifndef KFR_DFT_NO_NPo2
 template void init_dft(dft_plan<FLOAT>*, size_t, dft_order);
 #endif
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr
 
 #endif

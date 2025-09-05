@@ -29,7 +29,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 /// @brief Returns e raised to the given power x.
@@ -129,5 +129,5 @@ KFR_FUNCTION flt_type<T1> cbrt(const T1& x)
 {
     return intrinsics::cbrt(x);
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

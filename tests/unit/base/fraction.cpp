@@ -9,7 +9,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 TEST(fraction)
@@ -45,5 +45,5 @@ TEST(fraction)
 
     CHECK(fraction{ 100, 200 } == fraction{ 1, 2 });
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

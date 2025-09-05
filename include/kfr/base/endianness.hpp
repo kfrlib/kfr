@@ -38,7 +38,7 @@ void convert_endianess(T* data, size_t size)
     block_process(size, csizes<2 * vector_width<T>, 1>,
                   [&](size_t i, auto w)
                   {
-                      constexpr size_t width = CMT_CVAL(w);
+                      constexpr size_t width = KFR_CVAL(w);
                       vec<T, width> value    = read<width>(data + i);
                       value                  = swapbyteorder(value);
                       write(data + i, value);

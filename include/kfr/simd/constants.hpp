@@ -28,22 +28,22 @@
 #include "types.hpp"
 #include <limits>
 
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 4309))
-CMT_PRAGMA_MSVC(warning(disable : 4146))
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 4309))
+KFR_PRAGMA_MSVC(warning(disable : 4146))
 
 namespace kfr
 {
 
-#if CMT_COMPILER_GNU
+#if KFR_COMPILER_GNU
 constexpr double infinity = __builtin_inf();
 constexpr double qnan     = __builtin_nan("");
 #else
 constexpr double infinity = HUGE_VAL;
 constexpr double qnan     = NAN;
 #endif
-CMT_PRAGMA_GNU(GCC diagnostic push)
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Woverflow")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Woverflow")
 
 template <typename T>
 struct scalar_constants
@@ -118,16 +118,16 @@ struct scalar_constants
     constexpr static T sqrt_2 = static_cast<T>(1.4142135623730950488016887242097);
 
     constexpr static T fold_constant_div = choose_const<T>(
-        CMT_FP(0x1.921fb6p-1f, 7.8539818525e-01f), CMT_FP(0x1.921fb54442d18p-1, 7.853981633974482790e-01));
+        KFR_FP(0x1.921fb6p-1f, 7.8539818525e-01f), KFR_FP(0x1.921fb54442d18p-1, 7.853981633974482790e-01));
 
     constexpr static T fold_constant_hi = choose_const<T>(
-        CMT_FP(0x1.922000p-1f, 7.8540039062e-01f), CMT_FP(0x1.921fb40000000p-1, 7.853981256484985352e-01));
+        KFR_FP(0x1.922000p-1f, 7.8540039062e-01f), KFR_FP(0x1.921fb40000000p-1, 7.853981256484985352e-01));
     constexpr static T fold_constant_rem1 =
-        choose_const<T>(CMT_FP(-0x1.2ae000p-19f, -2.2267922759e-06f),
-                        CMT_FP(0x1.4442d00000000p-25, 3.774894707930798177e-08));
+        choose_const<T>(KFR_FP(-0x1.2ae000p-19f, -2.2267922759e-06f),
+                        KFR_FP(0x1.4442d00000000p-25, 3.774894707930798177e-08));
     constexpr static T fold_constant_rem2 =
-        choose_const<T>(CMT_FP(-0x1.de973ep-32f, -4.3527578764e-10f),
-                        CMT_FP(0x1.8469898cc5170p-49, 2.695151429079059484e-15));
+        choose_const<T>(KFR_FP(-0x1.de973ep-32f, -4.3527578764e-10f),
+                        KFR_FP(0x1.8469898cc5170p-49, 2.695151429079059484e-15));
     /**
      * @brief The machine epsilon — the smallest value such that 1 + epsilon ≠ 1.
      * @tparam T The numeric type.
@@ -164,7 +164,7 @@ public:
 template <size_t Value>
 constexpr inline size_t force_compiletime_size_t = Value;
 
-CMT_PRAGMA_GNU(GCC diagnostic pop)
+KFR_PRAGMA_GNU(GCC diagnostic pop)
 
 /**
  * @brief The mathematical constant π (pi), scaled by m/d.
@@ -306,4 +306,4 @@ constexpr inline subtype<T> c_sqrt_2 = subtype<T>(1.4142135623730950488016887242
 
 } // namespace kfr
 
-CMT_PRAGMA_MSVC(warning(pop))
+KFR_PRAGMA_MSVC(warning(pop))

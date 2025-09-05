@@ -24,14 +24,14 @@
 #include "../../math/log_exp.hpp"
 #include "../../simd/impl/function.hpp"
 
-CMT_PRAGMA_GNU(GCC diagnostic push)
-#if CMT_HAS_WARNING("-Wc99-extensions")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wc99-extensions")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+#if KFR_HAS_WARNING("-Wc99-extensions")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wc99-extensions")
 #endif
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace intrinsics
@@ -48,7 +48,7 @@ KFR_INTRINSIC vec<T, N> gamma(const vec<T, N>& z)
 {
     constexpr size_t Count = arraysize(gamma_precalc<T>);
     vec<T, N> accm         = gamma_precalc<T>[0];
-    CMT_LOOP_UNROLL
+    KFR_LOOP_UNROLL
     for (size_t k = 1; k < Count; k++)
         accm += gamma_precalc<T>[k] / (z + broadcastto<utype<T>>(k));
     accm *= exp(-(z + Count)) * pow(z + Count, z + 0.5);
@@ -65,7 +65,7 @@ KFR_HANDLE_SCALAR(factorial_approx)
 } // namespace intrinsics
 KFR_I_FN(gamma)
 KFR_I_FN(factorial_approx)
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr
 
-CMT_PRAGMA_GNU(GCC diagnostic pop)
+KFR_PRAGMA_GNU(GCC diagnostic pop)

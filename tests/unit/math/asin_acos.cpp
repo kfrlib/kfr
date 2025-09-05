@@ -9,10 +9,10 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 KFR_AUTO_TEST_1(asin, narrow, 6, 1)
 KFR_AUTO_TEST_1(acos, narrow, 800, 1)
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 } // namespace kfr

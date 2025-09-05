@@ -10,7 +10,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <typename T, size_t N>
@@ -96,5 +96,5 @@ TEST(random_normal)
     println(hh.values());
     println(hh.above());
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

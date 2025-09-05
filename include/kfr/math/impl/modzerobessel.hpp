@@ -25,14 +25,14 @@
 #include "../../math/log_exp.hpp"
 #include "../../simd/impl/function.hpp"
 
-CMT_PRAGMA_GNU(GCC diagnostic push)
-#if CMT_HAS_WARNING("-Wc99-extensions")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wc99-extensions")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+#if KFR_HAS_WARNING("-Wc99-extensions")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wc99-extensions")
 #endif
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace intrinsics
@@ -87,7 +87,7 @@ KFR_INTRINSIC vec<T, N> modzerobessel(const vec<T, N>& x)
     vec<T, N> result;
     result = 1 + x_2_sqr;
 
-    CMT_LOOP_UNROLL
+    KFR_LOOP_UNROLL
     for (size_t i = 0; i < (sizeof(T) == 4 ? 20 : 39); i++)
     {
         result = fmadd((num *= x_2_sqr), bessel_coef[i], result);
@@ -98,7 +98,7 @@ KFR_INTRINSIC vec<T, N> modzerobessel(const vec<T, N>& x)
 KFR_HANDLE_SCALAR(modzerobessel)
 } // namespace intrinsics
 KFR_I_FN(modzerobessel)
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr
 
-CMT_PRAGMA_GNU(GCC diagnostic pop)
+KFR_PRAGMA_GNU(GCC diagnostic pop)

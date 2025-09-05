@@ -13,14 +13,14 @@
 #include <kfr/io/tostring.hpp>
 #include <kfr/simd.hpp>
 
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 5051))
-CMT_PRAGMA_MSVC(warning(disable : 4244))
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 5051))
+KFR_PRAGMA_MSVC(warning(disable : 4244))
 
 namespace kfr
 {
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 TEST(tensor_base)
@@ -158,7 +158,7 @@ TEST(tensor_broadcast)
     // tensor<float, 2> t5 = t4 + t2;
     CHECK(t5 == tresult);
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 template <typename T, size_t N1>
 struct expression_traits<std::array<T, N1>> : expression_traits_defaults
@@ -183,30 +183,30 @@ struct expression_traits<std::array<std::array<T, N1>, N2>> : expression_traits_
     constexpr static shape<2> get_shape() { return shape<2>{ N2, N1 }; }
 };
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <typename T, size_t N1, index_t Axis, size_t N>
-KFR_INTRINSIC vec<T, N> get_elements(const std::array<T, N1>& CMT_RESTRICT self, const shape<1>& index,
+KFR_INTRINSIC vec<T, N> get_elements(const std::array<T, N1>& KFR_RESTRICT self, const shape<1>& index,
                                      const axis_params<Axis, N>&)
 {
-    const T* CMT_RESTRICT const data = self.data();
+    const T* KFR_RESTRICT const data = self.data();
     return read<N>(data + index[0]);
 }
 
 template <typename T, size_t N1, index_t Axis, size_t N>
-KFR_INTRINSIC void set_elements(std::array<T, N1>& CMT_RESTRICT self, const shape<1>& index,
+KFR_INTRINSIC void set_elements(std::array<T, N1>& KFR_RESTRICT self, const shape<1>& index,
                                 const axis_params<Axis, N>&, const identity<vec<T, N>>& val)
 {
-    T* CMT_RESTRICT const data = self.data();
+    T* KFR_RESTRICT const data = self.data();
     write(data + index[0], val);
 }
 
 template <typename T, size_t N1, size_t N2, index_t Axis, size_t N>
-KFR_INTRINSIC vec<T, N> get_elements(const std::array<std::array<T, N1>, N2>& CMT_RESTRICT self,
+KFR_INTRINSIC vec<T, N> get_elements(const std::array<std::array<T, N1>, N2>& KFR_RESTRICT self,
                                      const shape<2>& index, const axis_params<Axis, N>&)
 {
-    const T* CMT_RESTRICT const data = self.front().data() + index.front() * N1 + index.back();
+    const T* KFR_RESTRICT const data = self.front().data() + index.front() * N1 + index.back();
     if constexpr (Axis == 1)
     {
         return read<N>(data);
@@ -218,10 +218,10 @@ KFR_INTRINSIC vec<T, N> get_elements(const std::array<std::array<T, N1>, N2>& CM
 }
 
 template <typename T, size_t N1, size_t N2, index_t Axis, size_t N>
-KFR_INTRINSIC void set_elements(std::array<std::array<T, N1>, N2>& CMT_RESTRICT self, const shape<2>& index,
+KFR_INTRINSIC void set_elements(std::array<std::array<T, N1>, N2>& KFR_RESTRICT self, const shape<2>& index,
                                 const axis_params<Axis, N>&, const identity<vec<T, N>>& val)
 {
-    T* CMT_RESTRICT data = self.front().data() + index.front() * N1 + index.back();
+    T* KFR_RESTRICT data = self.front().data() + index.front() * N1 + index.back();
     if constexpr (Axis == 1)
     {
         write(data, val);
@@ -536,7 +536,7 @@ TEST(expression_reshape)
             { { { 12, 13 }, { 14, 15 } }, { { 16, 17 }, { 18, 19 } }, { { 20, 21 }, { 22, 23 } } } });
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 #if 0
 shape<4> sh{ 2, 3, 4, 5 };
@@ -699,7 +699,7 @@ struct expression_traits<val> : expression_traits_defaults
     constexpr static shape<dims> get_shape() { return {}; }
 };
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 val rvint_func() { return val{}; }
 val& lvint_func()
@@ -810,7 +810,7 @@ TEST(tensor_from_container)
     CHECK(t == tensor<int, 1>{ 1, 2, 3 });
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 template <typename T, index_t Size>
 struct identity_matrix
@@ -833,7 +833,7 @@ vec<T, N> get_elements(const identity_matrix<T, Size>& self, const shape<2>& ind
     return select(indices<0>(index, sh) == indices<1>(index, sh), 1, 0);
 }
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 TEST(identity_matrix)
@@ -841,7 +841,7 @@ TEST(identity_matrix)
     CHECK(trender(identity_matrix<float, 3>{}) == tensor<float, 2>{ { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } });
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 } // namespace kfr
-CMT_PRAGMA_MSVC(warning(pop))
+KFR_PRAGMA_MSVC(warning(pop))

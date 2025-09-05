@@ -1,14 +1,14 @@
-/** @addtogroup cometa
+/** @addtogroup meta
  *  @{
  */
 #pragma once
 
-#include "../cometa.hpp"
+#include "../meta.hpp"
 
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 4814))
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 4814))
 
-namespace cometa
+namespace kfr
 {
 template <typename T>
 struct named_arg
@@ -19,10 +19,10 @@ struct named_arg
 
 struct named
 {
-    constexpr named(const char* name) CMT_NOEXCEPT : name(name) {}
+    constexpr named(const char* name) KFR_NOEXCEPT : name(name) {}
 
     template <typename T>
-    CMT_MEM_INTRINSIC constexpr named_arg<T> operator=(T&& value)
+    KFR_MEM_INTRINSIC constexpr named_arg<T> operator=(T&& value)
     {
         return named_arg<T>{ std::forward<T>(value), name };
     }
@@ -30,6 +30,6 @@ struct named
 };
 
 inline named operator""_arg(const char* name, size_t) { return name; }
-} // namespace cometa
+} // namespace kfr
 
-CMT_PRAGMA_MSVC(warning(pop))
+KFR_PRAGMA_MSVC(warning(pop))

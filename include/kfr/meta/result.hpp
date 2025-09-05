@@ -1,11 +1,11 @@
-/** @addtogroup cometa
+/** @addtogroup meta
  *  @{
  */
 #pragma once
 
-#include "../cometa.hpp"
+#include "../meta.hpp"
 
-namespace cometa
+namespace kfr
 {
 template <typename Type, typename ErrEnum, ErrEnum OkValue = static_cast<ErrEnum>(0)>
 struct result
@@ -21,18 +21,18 @@ struct result
     constexpr static error_type ok_value = OkValue;
 
     constexpr result(const result&)         = default;
-    constexpr result(result&&) CMT_NOEXCEPT = default;
+    constexpr result(result&&) KFR_NOEXCEPT = default;
 
-    constexpr result(ErrEnum error) CMT_NOEXCEPT : m_error(error) {}
+    constexpr result(ErrEnum error) KFR_NOEXCEPT : m_error(error) {}
 
-    template <typename ValueInit, CMT_ENABLE_IF(std::is_constructible_v<value_type, ValueInit>)>
-    constexpr result(ValueInit&& value) CMT_NOEXCEPT : m_value(std::forward<ValueInit>(value)),
+    template <typename ValueInit, KFR_ENABLE_IF(std::is_constructible_v<value_type, ValueInit>)>
+    constexpr result(ValueInit&& value) KFR_NOEXCEPT : m_value(std::forward<ValueInit>(value)),
                                                        m_error(OkValue)
     {
     }
 
-    constexpr result(const Type& value) CMT_NOEXCEPT : m_value(value), m_error(OkValue) {}
-    constexpr result(Type&& value) CMT_NOEXCEPT : m_value(std::move(value)), m_error(OkValue) {}
+    constexpr result(const Type& value) KFR_NOEXCEPT : m_value(value), m_error(OkValue) {}
+    constexpr result(Type&& value) KFR_NOEXCEPT : m_value(std::move(value)), m_error(OkValue) {}
 
     constexpr explicit operator bool() const { return m_error == OkValue; }
     constexpr const_reference operator*() const { return m_value; }
@@ -49,4 +49,4 @@ private:
     Type m_value;
     ErrEnum m_error;
 };
-} // namespace cometa
+} // namespace kfr

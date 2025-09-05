@@ -1,11 +1,11 @@
-/** @addtogroup cometa
+/** @addtogroup meta
  *  @{
  */
 #pragma once
 
-#include "../cometa.hpp"
+#include "../meta.hpp"
 
-namespace cometa
+namespace kfr
 {
 
 /// @brief Iterable range
@@ -19,7 +19,7 @@ struct range
     using const_pointer   = const T*;
     using diff_type       = decltype(std::declval<T>() - std::declval<T>());
 
-    constexpr range(value_type begin, value_type end, diff_type step) CMT_NOEXCEPT : min(begin),
+    constexpr range(value_type begin, value_type end, diff_type step) KFR_NOEXCEPT : min(begin),
                                                                                      max(end),
                                                                                      step(step)
     {
@@ -69,4 +69,4 @@ constexpr range<std::common_type_t<T, D>> make_range(T begin, T end, D step)
 {
     return range<std::common_type_t<T, D>>(begin, end, step);
 }
-} // namespace cometa
+} // namespace kfr

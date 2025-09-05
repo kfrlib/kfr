@@ -11,7 +11,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <index_t Dims>
@@ -122,5 +122,5 @@ TEST(npy_all)
     test_npy(shape{ 2, 5, 11 });
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

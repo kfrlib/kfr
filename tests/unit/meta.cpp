@@ -4,8 +4,8 @@
  * See LICENSE.txt for details
  */
 
-#include <kfr/cometa.hpp>
-#include <kfr/cometa/ctti.hpp>
+#include <kfr/meta.hpp>
+#include <kfr/meta/ctti.hpp>
 #include <kfr/testo/testo.hpp>
 
 namespace kfr
@@ -13,7 +13,7 @@ namespace kfr
 
 TEST(ctti)
 {
-    CHECK(cometa::type_name<float>() == std::string("float"));
-    CHECK(cometa::type_name<int>() == std::string("int"));
+    CHECK(kfr::type_name<float>() == std::string("float"));
+    CHECK(kfr::type_name<int>() == std::string("int"));
 }
 } // namespace kfr

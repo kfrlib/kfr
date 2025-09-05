@@ -7,12 +7,12 @@
 #include <kfr/dsp/ebu.hpp>
 #include <kfr/dsp/oscillators.hpp>
 
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 4244))
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 4244))
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 struct TestFragment
@@ -268,8 +268,8 @@ TEST(ebu_lra_1_2_3_and_4)
                                          NAN, NAN, NAN, 15.f);
                   });
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 } // namespace kfr
 
-CMT_PRAGMA_MSVC(warning(pop))
+KFR_PRAGMA_MSVC(warning(pop))

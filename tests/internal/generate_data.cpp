@@ -6,9 +6,9 @@
 #define _USE_MATH_DEFINES
 
 #include "mpfr/mpfrplus.hpp"
-#include <kfr/cometa.hpp>
-#include <kfr/cometa/ctti.hpp>
-#include <kfr/cometa/function.hpp>
+#include <kfr/meta.hpp>
+#include <kfr/meta/ctti.hpp>
+#include <kfr/meta/function.hpp>
 #include <kfr/io/file.hpp>
 #include <random>
 
@@ -36,7 +36,7 @@ struct fuzz_sampler
 
 template <typename T, typename Sampler>
 void generate_table(const std::shared_ptr<file_writer<test_data_entry<T, 1>>>& writer,
-                    cometa::function<mpfr::number(const mpfr::number&)> func, Sampler&& sampler)
+                    kfr::function<mpfr::number(const mpfr::number&)> func, Sampler&& sampler)
 {
     for (size_t i = 0; i < points; i++)
     {
@@ -49,7 +49,7 @@ void generate_table(const std::shared_ptr<file_writer<test_data_entry<T, 1>>>& w
 
 template <typename T, typename Sampler>
 void generate_table(const std::shared_ptr<file_writer<test_data_entry<T, 2>>>& writer,
-                    cometa::function<mpfr::number(const mpfr::number&, const mpfr::number&)> func,
+                    kfr::function<mpfr::number(const mpfr::number&, const mpfr::number&)> func,
                     Sampler&& sampler)
 {
     for (size_t i = 0; i < points_2arg; i++)
@@ -84,48 +84,29 @@ int main()
     using num = mpfr::number;
     mpfr::scoped_precision prec(512);
 
-    generate_test(
-        cint<1>, "sin", [](const num& x) { return mpfr::sin(x); }, 0, M_PI * 2);
-    generate_test(
-        cint<1>, "cos", [](const num& x) { return mpfr::cos(x); }, 0, M_PI * 2);
-    generate_test(
-        cint<1>, "tan", [](const num& x) { return mpfr::tan(x); }, 0, M_PI);
+    generate_test(cint<1>, "sin", [](const num& x) { return mpfr::sin(x); }, 0, M_PI * 2);
+    generate_test(cint<1>, "cos", [](const num& x) { return mpfr::cos(x); }, 0, M_PI * 2);
+    generate_test(cint<1>, "tan", [](const num& x) { return mpfr::tan(x); }, 0, M_PI);
 
-    generate_test(
-        cint<1>, "asin", [](const num& x) { return mpfr::asin(x); }, 0, 1);
-    generate_test(
-        cint<1>, "acos", [](const num& x) { return mpfr::acos(x); }, 0, 1);
-    generate_test(
-        cint<1>, "atan", [](const num& x) { return mpfr::atan(x); }, 0, 1);
-    generate_test(
-        cint<2>, "atan2", [](const num& x, const num& y) { return mpfr::atan2(x, y); }, 0, 10);
+    generate_test(cint<1>, "asin", [](const num& x) { return mpfr::asin(x); }, 0, 1);
+    generate_test(cint<1>, "acos", [](const num& x) { return mpfr::acos(x); }, 0, 1);
+    generate_test(cint<1>, "atan", [](const num& x) { return mpfr::atan(x); }, 0, 1);
+    generate_test(cint<2>, "atan2", [](const num& x, const num& y) { return mpfr::atan2(x, y); }, 0, 10);
 
-    generate_test(
-        cint<1>, "sinh", [](const num& x) { return mpfr::sinh(x); }, 0, 10 * 2);
-    generate_test(
-        cint<1>, "cosh", [](const num& x) { return mpfr::cosh(x); }, 0, 10 * 2);
-    generate_test(
-        cint<1>, "tanh", [](const num& x) { return mpfr::tanh(x); }, 0, 10 * 2);
-    generate_test(
-        cint<1>, "coth", [](const num& x) { return mpfr::coth(x); }, 0, 10 * 2);
+    generate_test(cint<1>, "sinh", [](const num& x) { return mpfr::sinh(x); }, 0, 10 * 2);
+    generate_test(cint<1>, "cosh", [](const num& x) { return mpfr::cosh(x); }, 0, 10 * 2);
+    generate_test(cint<1>, "tanh", [](const num& x) { return mpfr::tanh(x); }, 0, 10 * 2);
+    generate_test(cint<1>, "coth", [](const num& x) { return mpfr::coth(x); }, 0, 10 * 2);
 
-    generate_test(
-        cint<1>, "gamma", [](const num& x) { return mpfr::gamma(x); }, 0, 10);
+    generate_test(cint<1>, "gamma", [](const num& x) { return mpfr::gamma(x); }, 0, 10);
 
-    generate_test(
-        cint<1>, "log", [](const num& x) { return mpfr::log(x); }, 0, 100);
-    generate_test(
-        cint<1>, "log2", [](const num& x) { return mpfr::log2(x); }, 0, 100);
-    generate_test(
-        cint<1>, "log10", [](const num& x) { return mpfr::log10(x); }, 0, 100);
+    generate_test(cint<1>, "log", [](const num& x) { return mpfr::log(x); }, 0, 100);
+    generate_test(cint<1>, "log2", [](const num& x) { return mpfr::log2(x); }, 0, 100);
+    generate_test(cint<1>, "log10", [](const num& x) { return mpfr::log10(x); }, 0, 100);
 
-    generate_test(
-        cint<1>, "exp", [](const num& x) { return mpfr::exp(x); }, -10, 10);
-    generate_test(
-        cint<1>, "exp2", [](const num& x) { return mpfr::exp2(x); }, -10, 10);
-    generate_test(
-        cint<1>, "exp10", [](const num& x) { return mpfr::exp10(x); }, -10, 10);
+    generate_test(cint<1>, "exp", [](const num& x) { return mpfr::exp(x); }, -10, 10);
+    generate_test(cint<1>, "exp2", [](const num& x) { return mpfr::exp2(x); }, -10, 10);
+    generate_test(cint<1>, "exp10", [](const num& x) { return mpfr::exp10(x); }, -10, 10);
 
-    generate_test(
-        cint<1>, "cbrt", [](const num& x) { return mpfr::cbrt(x); }, 0, 1000);
+    generate_test(cint<1>, "cbrt", [](const num& x) { return mpfr::cbrt(x); }, 0, 1000);
 }

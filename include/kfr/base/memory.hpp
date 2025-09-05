@@ -25,5 +25,5 @@
  */
 #pragma once
 
-#include "../cometa/memory.hpp"
+#include "../meta/memory.hpp"
 #include "../simd/types.hpp"

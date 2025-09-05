@@ -31,7 +31,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <typename T1, typename T2>
@@ -112,5 +112,5 @@ KFR_INTRINSIC maskfor<std::common_type_t<T1, T2, T3>> inrange(const T1& x, const
 {
     return x >= min && x <= max;
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

@@ -31,7 +31,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 /**
@@ -44,7 +44,7 @@ auto unitimpulse()
         [](shape<1> index, auto x)
         {
             vec_shape<T, decltype(x)::value> sh{};
-            if (CMT_UNLIKELY(index[0] == 0))
+            if (KFR_UNLIKELY(index[0] == 0))
                 return onoff(sh);
             else
                 return zerovector(sh);
@@ -84,5 +84,5 @@ auto swept(identity<T> magn, size_t size)
 {
     return magn * sin(swept_arg<T>(size));
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

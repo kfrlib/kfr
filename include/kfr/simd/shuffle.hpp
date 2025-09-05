@@ -32,14 +32,14 @@
 #include <tuple>
 #include <utility>
 
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 5051))
-CMT_PRAGMA_MSVC(warning(disable : 4244))
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 5051))
+KFR_PRAGMA_MSVC(warning(disable : 4244))
 
 namespace kfr
 {
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <typename T, size_t N, size_t Nout = prev_poweroftwo(N - 1)>
@@ -91,14 +91,14 @@ KFR_INTRINSIC vec_shape<T, Nout> highhalf(vec_shape<T, N>)
 }
 
 template <typename T, size_t... Ns>
-KFR_INTRINSIC vec<T, csum<size_t, Ns...>()> concat(const vec<T, Ns>&... vs) CMT_NOEXCEPT
+KFR_INTRINSIC vec<T, csum<size_t, Ns...>()> concat(const vec<T, Ns>&... vs) KFR_NOEXCEPT
 {
     return vec<T, csum<size_t, Ns...>()>(
         intrinsics::simd_concat<typename vec<T, 1>::scalar_type, vec<T, Ns>::scalar_size()...>(vs.v...));
 }
 
 template <typename T, size_t N1, size_t N2>
-KFR_INTRINSIC vec<T, N1 + N2> concat2(const vec<T, N1>& x, const vec<T, N2>& y) CMT_NOEXCEPT
+KFR_INTRINSIC vec<T, N1 + N2> concat2(const vec<T, N1>& x, const vec<T, N2>& y) KFR_NOEXCEPT
 {
     return vec<T, csum<size_t, N1, N2>()>(
         intrinsics::simd_concat<typename vec<T, 1>::scalar_type, vec<T, N1>::scalar_size(),
@@ -107,7 +107,7 @@ KFR_INTRINSIC vec<T, N1 + N2> concat2(const vec<T, N1>& x, const vec<T, N2>& y) 
 
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N * 4> concat4(const vec<T, N>& a, const vec<T, N>& b, const vec<T, N>& c,
-                                    const vec<T, N>& d) CMT_NOEXCEPT
+                                    const vec<T, N>& d) KFR_NOEXCEPT
 {
     return intrinsics::simd_concat<typename vec<T, 1>::scalar_type, vec<T, N * 2>::scalar_size(),
                                    vec<T, N * 2>::scalar_size()>(
@@ -433,7 +433,10 @@ KFR_INTRINSIC vec<T, N> swap(const vec<T, N>& x)
 {
     return x.shuffle(csizeseq_t<N>() ^ csize_t<elements - 1>());
 }
-CMT_FN_TPL((size_t elements), (elements), swap)
+namespace fn
+{
+KFR_META_FN_TPL((size_t elements), (elements), swap)
+}
 
 template <size_t shift, typename T, size_t N>
 KFR_INTRINSIC vec<T, N> rotatetwo(const vec<T, N>& lo, const vec<T, N>& hi)
@@ -628,7 +631,7 @@ KFR_INTRINSIC vec<T, N> enumerate(vec_shape<T, N> sh, identity<T> step)
 
         vec<T, N> acc = blend(zz, vv, csizeseq<N> % csize<2>);
         cfor(csize<0>, csize<ilog2(N) - 1>,
-             [&](auto idx) CMT_INLINE_LAMBDA
+             [&](auto idx) KFR_INLINE_LAMBDA
              {
                  vv = vv + vv;
                  acc += blend(zz, vv, csizeseq<N> / (csize<2 << (idx)>) % csize<2>);
@@ -652,9 +655,9 @@ constexpr KFR_INTRINSIC vec<T, N> onoff(vec_shape<T, N>, cint_t<on> = cint_t<on>
 }
 KFR_FN(onoff)
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr
 #define KFR_SHUFFLE_SPECIALIZATIONS 1
 #include "impl/specializations.hpp"
 
-CMT_PRAGMA_MSVC(warning(pop))
+KFR_PRAGMA_MSVC(warning(pop))

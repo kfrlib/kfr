@@ -36,7 +36,7 @@
 namespace kfr
 {
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 namespace intrinsics
 {
@@ -44,7 +44,7 @@ struct name_test_impl
 {
 };
 } // namespace intrinsics
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 template <typename T, cpu_t cpu>
 struct dft_name_impl
@@ -58,7 +58,7 @@ inline const char* dft_name(Class*)
     static constexpr cstring full_name = ctype_name<std::decay_t<Class>>();
     static constexpr cstring name_arch =
         concat_cstring(full_name.slice(csize<prefix_len>), make_cstring("("),
-                       make_cstring(CMT_STRINGIFY(CMT_ARCH_NAME)), make_cstring(")"));
+                       make_cstring(KFR_STRINGIFY(KFR_ARCH_NAME)), make_cstring(")"));
     return name_arch.c_str();
 }
 
@@ -81,7 +81,7 @@ inline const char* dft_name(Class*)
         return do_execute<true>(out, in, temp);                                                              \
     }
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 #define DFT_ASSERT TESTO_ASSERT_INACTIVE
@@ -89,9 +89,9 @@ inline namespace CMT_ARCH_NAME
 template <typename T>
 constexpr size_t fft_vector_width = vector_width<T>;
 
-CMT_PRAGMA_GNU(GCC diagnostic push)
-#if CMT_HAS_WARNING("-Wassume")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wassume")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+#if KFR_HAS_WARNING("-Wassume")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wassume")
 #endif
 
 template <typename Stage, bool add_stages = true, typename T, typename... Args>
@@ -109,6 +109,6 @@ void add_stage(dft_plan<T>* plan, Args... args)
     }
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 } // namespace kfr

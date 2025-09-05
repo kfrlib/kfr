@@ -30,7 +30,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 /**
@@ -245,5 +245,5 @@ KFR_FUNCTION biquad_section<T> biquad_highshelf(identity<T> frequency, identity<
     }
     return result;
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

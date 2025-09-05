@@ -128,7 +128,7 @@ class var_dft_plan_impl final : public var_dft_plan<T>
 {
 public:
     template <typename... Args>
-    CMT_ALWAYS_INLINE var_dft_plan_impl(Args&&... args) : plan(std::forward<Args>(args)...)
+    KFR_ALWAYS_INLINE var_dft_plan_impl(Args&&... args) : plan(std::forward<Args>(args)...)
     {
     }
     typename var_dft_plan_select<T, Dims>::complex plan;
@@ -152,7 +152,7 @@ class var_dft_plan_real_impl final : public var_dft_plan<T>
 {
 public:
     template <typename... Args>
-    CMT_ALWAYS_INLINE var_dft_plan_real_impl(Args&&... args) : plan(std::forward<Args>(args)...)
+    KFR_ALWAYS_INLINE var_dft_plan_real_impl(Args&&... args) : plan(std::forward<Args>(args)...)
     {
     }
     typename var_dft_plan_select<T, Dims>::real plan;
@@ -173,8 +173,8 @@ extern "C"
 {
 KFR_API_SPEC const char* kfr_version_string()
 {
-    return "KFR " KFR_VERSION_STRING KFR_DEBUG_STR " " KFR_ENABLED_ARCHS_LIST " " CMT_ARCH_BITNESS_NAME
-           " (" CMT_COMPILER_FULL_NAME "/" CMT_OS_NAME ")" KFR_BUILD_DETAILS_1 KFR_BUILD_DETAILS_2;
+    return "KFR " KFR_VERSION_STRING KFR_DEBUG_STR " " KFR_ENABLED_ARCHS_LIST " " KFR_ARCH_BITNESS_NAME
+           " (" KFR_COMPILER_FULL_NAME "/" KFR_OS_NAME ")" KFR_BUILD_DETAILS_1 KFR_BUILD_DETAILS_2;
 }
 KFR_API_SPEC uint32_t kfr_version() { return KFR_VERSION; }
 KFR_API_SPEC const char* kfr_enabled_archs() { return KFR_ENABLED_ARCHS_LIST; }
@@ -216,7 +216,8 @@ KFR_API_SPEC KFR_DFT_PLAN_F32* kfr_dft_create_plan_f32(size_t size)
 KFR_API_SPEC KFR_DFT_PLAN_F32* kfr_dft_create_2d_plan_f32(size_t size1, size_t size2)
 {
     return try_fn(
-        [&]() {
+        [&]()
+        {
             return reinterpret_cast<KFR_DFT_PLAN_F32*>(
                 new var_dft_plan_impl<float, 2>(shape{ size1, size2 }));
         },
@@ -251,7 +252,8 @@ KFR_API_SPEC KFR_DFT_PLAN_F64* kfr_dft_create_plan_f64(size_t size)
 KFR_API_SPEC KFR_DFT_PLAN_F64* kfr_dft_create_2d_plan_f64(size_t size1, size_t size2)
 {
     return try_fn(
-        [&]() {
+        [&]()
+        {
             return reinterpret_cast<KFR_DFT_PLAN_F64*>(
                 new var_dft_plan_impl<double, 2>(shape{ size1, size2 }));
         },
@@ -394,8 +396,8 @@ KFR_API_SPEC KFR_DFT_REAL_PLAN_F32* kfr_dft_real_create_md_plan_f32(size_t dims,
     return try_fn(
         [&]()
         {
-            return reinterpret_cast<KFR_DFT_REAL_PLAN_F32*>(
-                new var_dft_plan_real_impl<float, dynamic_shape>(init_shape(dims, shape), real_out_is_enough));
+            return reinterpret_cast<KFR_DFT_REAL_PLAN_F32*>(new var_dft_plan_real_impl<float, dynamic_shape>(
+                init_shape(dims, shape), real_out_is_enough));
         },
         nullptr);
 }
@@ -449,7 +451,8 @@ KFR_API_SPEC void kfr_dft_real_execute_f64(KFR_DFT_REAL_PLAN_F64* plan, kfr_c64*
                                            uint8_t* temp)
 {
     try_fn(
-        [&]() {
+        [&]()
+        {
             reinterpret_cast<var_dft_plan<double>*>(plan)->execute(reinterpret_cast<double*>(out), in, temp);
         });
 }

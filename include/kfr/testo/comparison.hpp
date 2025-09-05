@@ -3,26 +3,26 @@
  */
 #pragma once
 
-#include "../cometa/tuple.hpp"
+#include "../meta/tuple.hpp"
 
-#include "../cometa.hpp"
-#include "../cometa/range.hpp"
-#include "../cometa/string.hpp"
+#include "../meta.hpp"
+#include "../meta/range.hpp"
+#include "../meta/string.hpp"
 #include <cmath>
 
-CMT_PRAGMA_GNU(GCC diagnostic push)
-#if CMT_HAS_WARNING("-Wexit-time-destructors")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wexit-time-destructors")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+#if KFR_HAS_WARNING("-Wexit-time-destructors")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wexit-time-destructors")
 #endif
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpadded")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 4018))
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wpadded")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 4018))
 
 namespace testo
 {
 
-using namespace cometa;
+using namespace kfr;
 
 template <typename Fn, typename L, typename R>
 struct comparison
@@ -54,8 +54,8 @@ struct equality_comparer
     bool operator()(const L& l, const R& r) const { return l == r; }
 };
 
-CMT_PRAGMA_GNU(GCC diagnostic push)
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wfloat-equal")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wfloat-equal")
 
 template <typename T>
 inline T& current_epsilon()
@@ -84,10 +84,10 @@ struct epsilon_scope<void>
     epsilon_scope<long double> ld;
 };
 
-CMT_PRAGMA_GNU(GCC diagnostic pop)
+KFR_PRAGMA_GNU(GCC diagnostic pop)
 
 template <typename T1, typename T2,
-          CMT_ENABLE_IF(compound_type_traits<T1>::is_scalar&& compound_type_traits<T2>::is_scalar &&
+          KFR_ENABLE_IF(compound_type_traits<T1>::is_scalar&& compound_type_traits<T2>::is_scalar &&
                         (std::is_floating_point<T1>::value || std::is_floating_point<T2>::value))>
 constexpr bool deep_is_equal(const T1& x, const T2& y)
 {
@@ -103,7 +103,7 @@ constexpr bool deep_is_equal(const T1& x, const T2& y)
 }
 
 template <typename T1, typename T2,
-          CMT_ENABLE_IF(compound_type_traits<T1>::is_scalar&& compound_type_traits<T2>::is_scalar &&
+          KFR_ENABLE_IF(compound_type_traits<T1>::is_scalar&& compound_type_traits<T2>::is_scalar &&
                         !std::is_floating_point<T1>::value && !std::is_floating_point<T2>::value)>
 constexpr bool deep_is_equal(const T1& x, const T2& y)
 {
@@ -111,7 +111,7 @@ constexpr bool deep_is_equal(const T1& x, const T2& y)
 }
 
 template <typename T1, typename T2,
-          CMT_ENABLE_IF(!compound_type_traits<T1>::is_scalar || !compound_type_traits<T2>::is_scalar)>
+          KFR_ENABLE_IF(!compound_type_traits<T1>::is_scalar || !compound_type_traits<T2>::is_scalar)>
 constexpr bool deep_is_equal(const T1& x, const T2& y)
 {
     static_assert(compound_type_traits<T1>::width == compound_type_traits<T2>::width ||
@@ -245,5 +245,5 @@ struct make_comparison
 };
 } // namespace testo
 
-CMT_PRAGMA_MSVC(warning(pop))
-CMT_PRAGMA_GNU(GCC diagnostic pop)
+KFR_PRAGMA_MSVC(warning(pop))
+KFR_PRAGMA_GNU(GCC diagnostic pop)

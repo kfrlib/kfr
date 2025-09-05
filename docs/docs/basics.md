@@ -64,7 +64,7 @@ vec(T&&...) -> vec<std::common_type_t<T...>, sizeof...(T)>;
 ```
 
 !!! note
-    The class implementation is specific to the target cpu, so `vec` class definition resides in `kfr::CMT_ARCH_NAME` namespace. For avx2 architecture it's `kfr::avx2`. The architecture namespace is declared inline, you should not use it directly, `kfr::vec` as treated by compiler as an alias for `kfr::CMT_ARCH_NAME::vec`.
+    The class implementation is specific to the target cpu, so `vec` class definition resides in `kfr::KFR_ARCH_NAME` namespace. For avx2 architecture it's `kfr::avx2`. The architecture namespace is declared inline, you should not use it directly, `kfr::vec` as treated by compiler as an alias for `kfr::KFR_ARCH_NAME::vec`.
 
 
 Use can omit the template parameters and let compiler deduce them for you:

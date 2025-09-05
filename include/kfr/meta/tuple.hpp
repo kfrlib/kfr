@@ -1,4 +1,4 @@
-/** @addtogroup cometa
+/** @addtogroup meta
  *  @{
  */
 #pragma once
@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <tuple>
 
-namespace cometa
+namespace kfr
 {
 
 using std::ptrdiff_t;
@@ -41,6 +41,6 @@ void cforeach(const std::tuple<Ts...>& tuple, Fn&& fn)
     details::cforeach_tuple_impl(tuple, std::forward<Fn>(fn),
                                  typename details::cvalseq_impl<size_t, sizeof...(Ts), 0, 1>::type());
 }
-} // namespace cometa
+} // namespace kfr
 
-#include "../cometa.hpp"
+#include "../meta.hpp"

@@ -30,7 +30,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace intrinsics
@@ -252,5 +252,5 @@ KFR_INTRINSIC T hmax(const vec<T, N>& value)
 }
 KFR_FN(hmax)
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

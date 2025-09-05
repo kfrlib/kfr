@@ -1,4 +1,4 @@
-/** @addtogroup cometa
+/** @addtogroup meta
  *  @{
  */
 #pragma once
@@ -14,32 +14,32 @@
 #include <type_traits>
 #include <utility>
 
-CMT_PRAGMA_GNU(GCC diagnostic push)
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpragmas")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wunknown-warning-option")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wmaybe-uninitialized")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wdeprecated-declarations")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wpragmas")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wunknown-warning-option")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wmaybe-uninitialized")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wdeprecated-declarations")
 
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 4814))
-CMT_PRAGMA_MSVC(warning(disable : 4308))
-CMT_PRAGMA_MSVC(warning(disable : 4014))
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 4814))
+KFR_PRAGMA_MSVC(warning(disable : 4308))
+KFR_PRAGMA_MSVC(warning(disable : 4014))
 
-namespace cometa
+namespace kfr
 {
 
 using std::ptrdiff_t;
 using std::size_t;
 
 template <typename T, size_t N>
-constexpr CMT_INTRINSIC static size_t arraysize(const T (&)[N]) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC static size_t arraysize(const T (&)[N]) KFR_NOEXCEPT
 {
     return N;
 }
 
 template <typename T, size_t N>
-constexpr CMT_INTRINSIC static std::integral_constant<size_t, N> carraysize(const T (&)[N]) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC static std::integral_constant<size_t, N> carraysize(const T (&)[N]) KFR_NOEXCEPT
 {
     return {};
 }
@@ -47,23 +47,18 @@ constexpr CMT_INTRINSIC static std::integral_constant<size_t, N> carraysize(cons
 using pvoid      = void*;
 using pconstvoid = const void*;
 
-#ifdef CMT_CPP17_DEFINITIONS
-template <typename...>
-using void_t = void;
-#endif
-
 namespace details
 {
-constexpr CMT_INTRINSIC bool args_or() { return false; }
+constexpr KFR_INTRINSIC bool args_or() { return false; }
 template <typename... Ts>
-constexpr CMT_INTRINSIC bool args_or(bool x, Ts... rest)
+constexpr KFR_INTRINSIC bool args_or(bool x, Ts... rest)
 {
     return x || args_or(rest...);
 }
 
-constexpr CMT_INTRINSIC bool args_and() { return true; }
+constexpr KFR_INTRINSIC bool args_and() { return true; }
 template <typename... Ts>
-constexpr CMT_INTRINSIC bool args_and(bool x, Ts... rest)
+constexpr KFR_INTRINSIC bool args_and(bool x, Ts... rest)
 {
     return x && args_and(rest...);
 }
@@ -92,92 +87,6 @@ struct and_t_impl<T, Ts...> : std::integral_constant<bool, T::value && and_t_imp
 
 constexpr size_t max_size_t = size_t(-1);
 
-#ifdef CMT_CPP17_DEFINITIONS
-template <typename... T>
-using common_type = typename std::common_type<T...>::type;
-
-#if __cplusplus >= 201703L
-template <typename T, typename... Args>
-using invoke_result = typename std::invoke_result<T, Args...>::type;
-#else
-template <typename T, typename... Args>
-using invoke_result = typename std::result_of<T(Args...)>::type;
-#endif
-
-template <bool Condition, typename Type = void>
-using enable_if = typename std::enable_if<Condition, Type>::type;
-
-template <bool Condition, typename T, typename F>
-using conditional = typename std::conditional<Condition, T, F>::type;
-
-template <typename T>
-using remove_reference = typename std::remove_reference<T>::type;
-
-template <typename T>
-using remove_cv = typename std::remove_cv<T>::type;
-
-template <typename T>
-using remove_pointer = typename std::remove_pointer<T>::type;
-
-template <typename T>
-using remove_extent = typename std::remove_extent<T>::type;
-
-template <typename T>
-using remove_const = typename std::remove_const<T>::type;
-
-template <typename T>
-using underlying_type = typename std::underlying_type<T>::type;
-
-template <typename T>
-constexpr inline bool is_class = std::is_class<T>::value;
-
-template <typename T>
-constexpr inline bool is_const = std::is_const<T>::value;
-
-template <typename T>
-constexpr inline bool is_pointer = std::is_pointer<T>::value;
-
-template <typename T>
-constexpr inline bool is_array = std::is_array<T>::value;
-
-template <typename T>
-constexpr inline bool is_void = std::is_void<T>::value;
-
-template <typename T>
-constexpr inline bool is_floating_point = std::is_floating_point<T>::value;
-
-template <typename T>
-constexpr inline bool is_unsigned = std::is_unsigned<T>::value;
-
-template <typename T>
-constexpr inline bool is_signed = std::is_signed<T>::value;
-
-template <typename T>
-constexpr inline bool is_scalar = std::is_scalar<T>::value;
-
-template <typename T>
-constexpr inline bool is_integral = std::is_integral<T>::value;
-
-template <typename T1, typename T2>
-constexpr inline bool is_same = std::is_same<T1, T2>::value;
-
-template <typename Tbase, typename Tderived>
-constexpr inline bool is_base_of = std::is_base_of<Tbase, Tderived>::value;
-
-template <typename Tfrom, typename Tto>
-constexpr inline bool is_convertible = std::is_convertible<Tfrom, Tto>::value;
-
-template <typename T, typename... Args>
-constexpr inline bool is_constructible = std::is_constructible<T, Args...>::value;
-
-template <typename T>
-constexpr inline bool is_template_arg = std::is_integral<T>::value || std::is_enum<T>::value;
-
-template <typename T>
-using decay = typename std::decay<T>::type;
-
-#endif
-
 template <typename T1, typename T2>
 using or_type = std::conditional_t<std::is_same_v<T1, void>, T2, T1>;
 
@@ -202,7 +111,7 @@ struct compound_type_traits
     template <typename U>
     using deep_rebind = U;
 
-    CMT_MEM_INTRINSIC static constexpr const subtype& at(const T& value, size_t /*index*/) { return value; }
+    KFR_MEM_INTRINSIC static constexpr const subtype& at(const T& value, size_t /*index*/) { return value; }
 };
 
 template <typename T>
@@ -231,9 +140,9 @@ struct compound_type_traits<std::pair<T, T>>
     constexpr static size_t width      = 2;
     constexpr static size_t deep_width = width * compound_type_traits<T>::width;
     using subtype                      = T;
-    using deep_subtype                 = cometa::deep_subtype<T>;
+    using deep_subtype                 = kfr::deep_subtype<T>;
     constexpr static bool is_scalar    = false;
-    constexpr static size_t depth      = cometa::compound_type_traits<T>::depth + 1;
+    constexpr static size_t depth      = kfr::compound_type_traits<T>::depth + 1;
 
     template <typename U>
     using rebind = std::pair<U, U>;
@@ -241,7 +150,7 @@ struct compound_type_traits<std::pair<T, T>>
     using deep_rebind = std::pair<typename compound_type_traits<subtype>::template deep_rebind<U>,
                                   typename compound_type_traits<subtype>::template deep_rebind<U>>;
 
-    CMT_MEM_INTRINSIC static constexpr const subtype& at(const std::pair<subtype, subtype>& value,
+    KFR_MEM_INTRINSIC static constexpr const subtype& at(const std::pair<subtype, subtype>& value,
                                                          size_t index)
     {
         return index == 0 ? value.first : value.second;
@@ -252,37 +161,37 @@ template <typename T, T val>
 struct cval_t
 {
     constexpr static T value = val;
-    constexpr CMT_MEM_INTRINSIC cval_t() CMT_NOEXCEPT {}
-    constexpr CMT_MEM_INTRINSIC cval_t(const cval_t&) CMT_NOEXCEPT = default;
-    constexpr CMT_MEM_INTRINSIC cval_t(cval_t&&) CMT_NOEXCEPT      = default;
+    constexpr KFR_MEM_INTRINSIC cval_t() KFR_NOEXCEPT {}
+    constexpr KFR_MEM_INTRINSIC cval_t(const cval_t&) KFR_NOEXCEPT = default;
+    constexpr KFR_MEM_INTRINSIC cval_t(cval_t&&) KFR_NOEXCEPT      = default;
     typedef T value_type;
     typedef cval_t type;
-    constexpr CMT_MEM_INTRINSIC operator value_type() const { return value; }
-    constexpr CMT_MEM_INTRINSIC value_type operator()() const { return value; }
+    constexpr KFR_MEM_INTRINSIC operator value_type() const { return value; }
+    constexpr KFR_MEM_INTRINSIC value_type operator()() const { return value; }
 };
 
 template <typename T, T value>
-constexpr CMT_INTRINSIC T val_of(cval_t<T, value>)
+constexpr KFR_INTRINSIC T val_of(cval_t<T, value>)
 {
     return value;
 }
 
 template <typename T>
-constexpr CMT_INTRINSIC T val_of(T value)
+constexpr KFR_INTRINSIC T val_of(T value)
 {
     return value;
 }
 
-#define CMT_CVAL(...) (decltype(__VA_ARGS__)::value)
+#define KFR_CVAL(...) (decltype(__VA_ARGS__)::value)
 
 template <typename T>
-constexpr CMT_INTRINSIC bool is_constant_val(T)
+constexpr KFR_INTRINSIC bool is_constant_val(T)
 {
     return false;
 }
 
 template <typename T, T value>
-constexpr CMT_INTRINSIC bool is_constant_val(cval_t<T, value>)
+constexpr KFR_INTRINSIC bool is_constant_val(cval_t<T, value>)
 {
     return true;
 }
@@ -379,33 +288,33 @@ struct get_nth_type<index>
 template <typename T, T... values>
 struct cvals_t
 {
-    constexpr CMT_MEM_INTRINSIC cvals_t() CMT_NOEXCEPT = default;
+    constexpr KFR_MEM_INTRINSIC cvals_t() KFR_NOEXCEPT = default;
 
     using type = cvals_t<T, values...>;
-    constexpr CMT_MEM_INTRINSIC static size_t size() { return sizeof...(values); }
+    constexpr KFR_MEM_INTRINSIC static size_t size() { return sizeof...(values); }
     template <size_t index>
-    constexpr CMT_MEM_INTRINSIC T operator[](csize_t<index>) const
+    constexpr KFR_MEM_INTRINSIC T operator[](csize_t<index>) const
     {
         return get(csize_t<index>());
     }
     template <size_t index>
-    constexpr CMT_MEM_INTRINSIC static T get(csize_t<index> = csize_t<index>())
+    constexpr KFR_MEM_INTRINSIC static T get(csize_t<index> = csize_t<index>())
     {
         return details::get_nth<index, T, values...>::value;
     }
-    constexpr CMT_MEM_INTRINSIC static T front() { return get(csize_t<0>()); }
-    constexpr CMT_MEM_INTRINSIC static T back() { return get(csize_t<size() - 1>()); }
+    constexpr KFR_MEM_INTRINSIC static T front() { return get(csize_t<0>()); }
+    constexpr KFR_MEM_INTRINSIC static T back() { return get(csize_t<size() - 1>()); }
 
-    static CMT_MEM_INTRINSIC const T* begin() { return array(); }
-    static CMT_MEM_INTRINSIC const T* end() { return array() + size(); }
+    static KFR_MEM_INTRINSIC const T* begin() { return array(); }
+    static KFR_MEM_INTRINSIC const T* end() { return array() + size(); }
 
-    static CMT_MEM_INTRINSIC const T* array()
+    static KFR_MEM_INTRINSIC const T* array()
     {
         static const T arr[] = { values... };
         return &arr[0];
     }
     template <size_t... indices>
-    constexpr CMT_MEM_INTRINSIC cvals_t<T, details::get_nth_e<indices, type>::value...> operator[](
+    constexpr KFR_MEM_INTRINSIC cvals_t<T, details::get_nth_e<indices, type>::value...> operator[](
         cvals_t<size_t, indices...>) const
     {
         //        static_assert(sizeof(T)==0, "+++++++++++++++++++++++++++++");
@@ -414,20 +323,20 @@ struct cvals_t
 
     // MSVC requires static_cast<T> here:
     template <typename Fn>
-    constexpr CMT_MEM_INTRINSIC auto map(Fn&&) const -> cvals_t<T, static_cast<T>(Fn()(values))...>
+    constexpr KFR_MEM_INTRINSIC auto map(Fn&&) const -> cvals_t<T, static_cast<T>(Fn()(values))...>
     {
         return {};
     }
 
-    constexpr CMT_MEM_INTRINSIC bool equal(cvals_t<T, values...>) const noexcept { return true; }
+    constexpr KFR_MEM_INTRINSIC bool equal(cvals_t<T, values...>) const noexcept { return true; }
     template <T... values2>
-    constexpr CMT_MEM_INTRINSIC bool equal(cvals_t<T, values2...>) const noexcept
+    constexpr KFR_MEM_INTRINSIC bool equal(cvals_t<T, values2...>) const noexcept
     {
         return false;
     }
 
     template <T... values2>
-    constexpr CMT_MEM_INTRINSIC bool notequal(cvals_t<T, values...> ind) const noexcept
+    constexpr KFR_MEM_INTRINSIC bool notequal(cvals_t<T, values...> ind) const noexcept
     {
         return !equal(ind);
     }
@@ -437,9 +346,9 @@ template <typename T>
 struct cvals_t<T>
 {
     using type = cvals_t<T>;
-    constexpr CMT_MEM_INTRINSIC static size_t size() { return 0; }
+    constexpr KFR_MEM_INTRINSIC static size_t size() { return 0; }
 
-    static CMT_MEM_INTRINSIC const T* array() { return nullptr; }
+    static KFR_MEM_INTRINSIC const T* array() { return nullptr; }
 };
 
 template <typename T, bool... flags, T... values1, T... values2>
@@ -479,25 +388,25 @@ template <size_t... values>
 using elements_t = cvals_t<size_t, values...>;
 
 template <typename T>
-constexpr CMT_INTRINSIC T csum(cvals_t<T> = cvals_t<T>())
+constexpr KFR_INTRINSIC T csum(cvals_t<T> = cvals_t<T>())
 {
     return 0;
 }
 
 template <typename T, T first, T... rest>
-constexpr CMT_INTRINSIC T csum(cvals_t<T, first, rest...> = cvals_t<T, first, rest...>())
+constexpr KFR_INTRINSIC T csum(cvals_t<T, first, rest...> = cvals_t<T, first, rest...>())
 {
     return first + csum(cvals_t<T, rest...>());
 }
 
 template <typename T>
-constexpr CMT_INTRINSIC T cprod(cvals_t<T>)
+constexpr KFR_INTRINSIC T cprod(cvals_t<T>)
 {
     return 1;
 }
 
 template <typename T, T first, T... rest>
-constexpr CMT_INTRINSIC T cprod(cvals_t<T, first, rest...>)
+constexpr KFR_INTRINSIC T cprod(cvals_t<T, first, rest...>)
 {
     return first * cprod(cvals_t<T, rest...>());
 }
@@ -505,9 +414,9 @@ constexpr CMT_INTRINSIC T cprod(cvals_t<T, first, rest...>)
 template <typename T>
 struct ctype_t
 {
-#ifdef CMT_COMPILER_INTEL
-    constexpr ctype_t() CMT_NOEXCEPT               = default;
-    constexpr ctype_t(const ctype_t&) CMT_NOEXCEPT = default;
+#ifdef KFR_COMPILER_INTEL
+    constexpr ctype_t() KFR_NOEXCEPT               = default;
+    constexpr ctype_t(const ctype_t&) KFR_NOEXCEPT = default;
 #endif
     using type = T;
 };
@@ -558,57 +467,15 @@ struct concat_impl<T1, T2, T3, Ts...>
     using type = typename concat_impl<typename concat_impl<T1, T2>::type, T3, Ts...>::type;
 };
 
-#ifdef CMT_CPP17_DEFINITIONS
-template <typename Fn, typename Args, typename enable = void>
-struct is_invocable_impl : std::false_type
-{
-};
-
-template <typename Fn, typename... Args>
-struct is_invocable_impl<Fn, ctypes_t<Args...>, void_t<decltype(std::declval<Fn>()(std::declval<Args>()...))>>
-    : std::true_type
-{
-};
-
-template <typename Ret, typename Fn, typename Args, typename enable = void>
-struct is_invocable_r_impl : std::false_type
-{
-};
-
-template <typename Ret, typename Fn, typename... Args>
-struct is_invocable_r_impl<Ret, Fn, ctypes_t<Args...>,
-                           void_t<decltype(std::declval<Fn>()(std::declval<Args>()...))>>
-{
-    static constexpr bool value =
-        std::is_convertible_v<decltype(std::declval<Fn>()(std::declval<Args>()...)), Ret>;
-};
-#endif
-
 } // namespace details
 template <typename T1, typename... Ts>
 using concat_lists = typename details::concat_impl<std::decay_t<T1>, std::decay_t<Ts>...>::type;
 
 template <typename T1, typename... Ts>
-constexpr CMT_INTRINSIC concat_lists<T1, Ts...> cconcat(T1, Ts...)
+constexpr KFR_INTRINSIC concat_lists<T1, Ts...> cconcat(T1, Ts...)
 {
     return {};
 }
-
-#ifdef CMT_CPP17_DEFINITIONS
-#ifdef __cpp_lib_is_invocable
-template <typename Fn, typename... Args>
-constexpr inline bool is_invocable = std::is_invocable<Fn, Args...>::value;
-
-template <typename Ret, typename Fn, typename... Args>
-constexpr inline bool is_invocable_r = std::is_invocable_r<Ret, Fn, Args...>::value;
-#else
-template <typename Fn, typename... Args>
-constexpr inline bool is_invocable = details::is_invocable_impl<Fn, ctypes_t<Args...>>::value;
-
-template <typename Ret, typename Fn, typename... Args>
-constexpr inline bool is_invocable_r = details::is_invocable_r_impl<Ret, Fn, ctypes_t<Args...>>::value;
-#endif
-#endif
 
 namespace details
 {
@@ -665,71 +532,71 @@ using cfilter_t = typename details::filter_impl<std::decay_t<T1>, std::decay_t<T
 
 template <typename T, T... vals, bool... flags,
           typename Ret = cfilter_t<cvals_t<T, vals...>, cvals_t<bool, flags...>>>
-constexpr CMT_INTRINSIC Ret cfilter(cvals_t<T, vals...>, cvals_t<bool, flags...>)
+constexpr KFR_INTRINSIC Ret cfilter(cvals_t<T, vals...>, cvals_t<bool, flags...>)
 {
     return Ret{};
 }
 
-#define CMT_UN_OP(op)                                                                                        \
+#define KFR_UN_OP(op)                                                                                        \
     template <typename T1, T1... vals1,                                                                      \
               typename Ret = cvals_t<decltype(op std::declval<T1>()), (op vals1)...>>                        \
-    constexpr CMT_INTRINSIC Ret operator op(cvals_t<T1, vals1...>)                                           \
+    constexpr KFR_INTRINSIC Ret operator op(cvals_t<T1, vals1...>)                                           \
     {                                                                                                        \
         return Ret{};                                                                                        \
     }                                                                                                        \
     template <typename T1, T1 val1, typename Ret = cval_t<decltype(op std::declval<T1>()), (op val1)>>       \
-    constexpr CMT_INTRINSIC Ret operator op(cval_t<T1, val1>)                                                \
+    constexpr KFR_INTRINSIC Ret operator op(cval_t<T1, val1>)                                                \
     {                                                                                                        \
         return Ret{};                                                                                        \
     }
 
-#define CMT_BIN_OP(op)                                                                                       \
+#define KFR_BIN_OP(op)                                                                                       \
     template <typename T1, T1... vals1, typename T2, T2... vals2,                                            \
               typename Ret =                                                                                 \
                   cvals_t<decltype(std::declval<T1>() op std::declval<T2>()), (vals1 op vals2)...>>          \
-    constexpr CMT_INTRINSIC Ret operator op(cvals_t<T1, vals1...>, cvals_t<T2, vals2...>)                    \
+    constexpr KFR_INTRINSIC Ret operator op(cvals_t<T1, vals1...>, cvals_t<T2, vals2...>)                    \
     {                                                                                                        \
         return Ret{};                                                                                        \
     }                                                                                                        \
     template <typename T1, T1... vals1, typename T2, T2 val2,                                                \
               typename Ret =                                                                                 \
                   cvals_t<decltype(std::declval<T1>() op std::declval<T2>()), (vals1 op val2)...>>           \
-    constexpr CMT_INTRINSIC Ret operator op(cvals_t<T1, vals1...>, cval_t<T2, val2>)                         \
+    constexpr KFR_INTRINSIC Ret operator op(cvals_t<T1, vals1...>, cval_t<T2, val2>)                         \
     {                                                                                                        \
         return Ret{};                                                                                        \
     }                                                                                                        \
     template <typename T1, T1 val1, typename T2, T2... vals2,                                                \
               typename Ret =                                                                                 \
                   cvals_t<decltype(std::declval<T1>() op std::declval<T2>()), (val1 op vals2)...>>           \
-    constexpr CMT_INTRINSIC Ret operator op(cval_t<T1, val1>, cvals_t<T2, vals2...>)                         \
+    constexpr KFR_INTRINSIC Ret operator op(cval_t<T1, val1>, cvals_t<T2, vals2...>)                         \
     {                                                                                                        \
         return Ret{};                                                                                        \
     }
 
 // clang-format off
-CMT_UN_OP(-)
-CMT_UN_OP(+)
-CMT_UN_OP(~)
-CMT_UN_OP(!)
+KFR_UN_OP(-)
+KFR_UN_OP(+)
+KFR_UN_OP(~)
+KFR_UN_OP(!)
 
-CMT_BIN_OP(&&)
-CMT_BIN_OP(||)
-CMT_BIN_OP(==)
-CMT_BIN_OP(!=)
-CMT_BIN_OP(<)
-CMT_BIN_OP(>)
-CMT_BIN_OP(<=)
-CMT_BIN_OP(>=)
-CMT_BIN_OP(+)
-CMT_BIN_OP(-)
-CMT_BIN_OP(*)
-CMT_BIN_OP(/)
-CMT_BIN_OP(%)
-CMT_BIN_OP(<<)
-CMT_BIN_OP(>>)
-CMT_BIN_OP(&)
-CMT_BIN_OP(|)
-CMT_BIN_OP(^)
+KFR_BIN_OP(&&)
+KFR_BIN_OP(||)
+KFR_BIN_OP(==)
+KFR_BIN_OP(!=)
+KFR_BIN_OP(<)
+KFR_BIN_OP(>)
+KFR_BIN_OP(<=)
+KFR_BIN_OP(>=)
+KFR_BIN_OP(+)
+KFR_BIN_OP(-)
+KFR_BIN_OP(*)
+KFR_BIN_OP(/)
+KFR_BIN_OP(%)
+KFR_BIN_OP(<<)
+KFR_BIN_OP(>>)
+KFR_BIN_OP(&)
+KFR_BIN_OP(|)
+KFR_BIN_OP(^)
 // clang-format on
 
 namespace details
@@ -787,14 +654,14 @@ template <typename... List>
 using indicesfor_t = cvalseq_t<size_t, sizeof...(List), 0>;
 
 template <size_t group, size_t... indices, size_t N = group * sizeof...(indices)>
-constexpr CMT_INTRINSIC auto scale(csizes_t<indices...>) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC auto scale(csizes_t<indices...>) KFR_NOEXCEPT
 {
     using Tlist = typename details::concat_impl<csizeseq_t<group, group * indices>...>::type;
     return Tlist{};
 }
 
 template <size_t group, size_t... indices, size_t N = group * sizeof...(indices)>
-constexpr CMT_INTRINSIC auto scale() CMT_NOEXCEPT
+constexpr KFR_INTRINSIC auto scale() KFR_NOEXCEPT
 {
     using Tlist = typename details::concat_impl<csizeseq_t<group, group * indices>...>::type;
     return Tlist{};
@@ -844,102 +711,92 @@ struct unique_enum_impl
     };
 };
 
-#if defined CMT_COMPILER_MSVC && !defined CMT_COMPILER_CLANG
-#define CMT_ENABLE_IF_IMPL(N, ...)                                                                           \
+#if defined KFR_COMPILER_MSVC && !defined KFR_COMPILER_CLANG
+#define KFR_ENABLE_IF_IMPL(N, ...)                                                                           \
     bool enable_ = (__VA_ARGS__), typename enabled_ = typename ::std::enable_if<enable_>::type,              \
-         typename cometa::details::unique_enum_impl<N>::type dummy_ =                                        \
-             ::cometa::details::unique_enum_impl<N>::value
+         typename kfr::details::unique_enum_impl<N>::type dummy_ =                                           \
+             ::kfr::details::unique_enum_impl<N>::value
 
 #else
-#define CMT_ENABLE_IF_IMPL(N, ...)                                                                           \
-    typename ::std::enable_if<(__VA_ARGS__), typename ::cometa::details::unique_enum_impl<N>::type>::type =  \
-        ::cometa::details::unique_enum_impl<N>::value
+#define KFR_ENABLE_IF_IMPL(N, ...)                                                                           \
+    typename ::std::enable_if<(__VA_ARGS__), typename ::kfr::details::unique_enum_impl<N>::type>::type =     \
+        ::kfr::details::unique_enum_impl<N>::value
 
 #endif
-#define CMT_ENABLE_IF(...) CMT_ENABLE_IF_IMPL(__LINE__, __VA_ARGS__)
+#define KFR_ENABLE_IF(...) KFR_ENABLE_IF_IMPL(__LINE__, __VA_ARGS__)
 } // namespace details
 
 template <typename T>
 constexpr inline bool is_enabled = details::is_enabled_impl<T>::value;
 
-#ifdef CMT_CPP17_DEFINITIONS
-
-template <typename Fn, typename... Args>
-constexpr inline bool is_callable = details::is_callable_impl<Fn, ctypes_t<Args...>>::value;
-
-template <typename Ret, typename T>
-constexpr inline bool is_returning_type = details::is_returning_type_impl<Ret, T>::value;
-
-#endif
-
 namespace details
 {
-template <typename Fn, CMT_ENABLE_IF(std::is_invocable_v<Fn>)>
-CMT_INTRINSIC auto call_if_callable(Fn&& fn)
+template <typename Fn, KFR_ENABLE_IF(std::is_invocable_v<Fn>)>
+KFR_INTRINSIC auto call_if_callable(Fn&& fn)
 {
     return fn();
 }
 
-template <typename Fn, CMT_ENABLE_IF(!std::is_invocable_v<Fn>)>
-CMT_INTRINSIC auto call_if_callable(Fn&& fn)
+template <typename Fn, KFR_ENABLE_IF(!std::is_invocable_v<Fn>)>
+KFR_INTRINSIC auto call_if_callable(Fn&& fn)
 {
     return std::forward<Fn>(fn);
 }
 } // namespace details
 
 template <typename Fn, typename... Args>
-CMT_INTRINSIC auto bind_func(Fn&& fn, Args&&... args)
+KFR_INTRINSIC auto bind_func(Fn&& fn, Args&&... args)
 {
-    return [=]() CMT_INLINE_LAMBDA { return fn(details::call_if_callable(std::forward<Args>(args))...); };
+    return [=]() KFR_INLINE_LAMBDA { return fn(details::call_if_callable(std::forward<Args>(args))...); };
 }
 
 template <typename T>
-constexpr CMT_INTRINSIC bool is_even(T x)
+constexpr KFR_INTRINSIC bool is_even(T x)
 {
     return (x % 2) == 0;
 }
 
 template <typename T>
-constexpr CMT_INTRINSIC bool is_odd(T x)
+constexpr KFR_INTRINSIC bool is_odd(T x)
 {
     return !is_even(x);
 }
 
 template <typename T>
-constexpr CMT_INTRINSIC bool is_poweroftwo(T x)
+constexpr KFR_INTRINSIC bool is_poweroftwo(T x)
 {
     return ((x != 0) && !(x & (x - 1)));
 }
 
 template <typename T>
-constexpr CMT_INTRINSIC unsigned ilog2(T n, unsigned p = 0)
+constexpr KFR_INTRINSIC unsigned ilog2(T n, unsigned p = 0)
 {
     return (n <= 1) ? p : ilog2(n / 2, p + 1);
 }
 
 /// @brief Returns a nearest power of two that is greater or equal than n
 template <typename T>
-constexpr CMT_INTRINSIC T next_poweroftwo(T n)
+constexpr KFR_INTRINSIC T next_poweroftwo(T n)
 {
     return n > 2 ? T(1) << (ilog2(n - 1) + 1) : n;
 }
 
 /// @brief Returns a nearest power of two that is less or equal than n
 template <typename T>
-constexpr CMT_INTRINSIC T prev_poweroftwo(T n)
+constexpr KFR_INTRINSIC T prev_poweroftwo(T n)
 {
     return n > 2 ? T(1) << (ilog2(n)) : n;
 }
 
 template <typename T>
-constexpr CMT_INTRINSIC bool is_divisible(T x, T divisor)
+constexpr KFR_INTRINSIC bool is_divisible(T x, T divisor)
 {
     return x % divisor == 0;
 }
 
 /// @brief Greatest common divisor
 template <typename T>
-constexpr CMT_INTRINSIC T gcd(T a)
+constexpr KFR_INTRINSIC T gcd(T a)
 {
     return a;
 }
@@ -953,33 +810,33 @@ constexpr inline T gcd(T a, T b)
 
 /// @brief Greatest common divisor
 template <typename T, typename... Ts>
-constexpr CMT_INTRINSIC T gcd(T a, T b, T c, Ts... rest)
+constexpr KFR_INTRINSIC T gcd(T a, T b, T c, Ts... rest)
 {
     return gcd(a, gcd(b, c, rest...));
 }
 
 /// @brief Least common multiple
 template <typename T>
-constexpr CMT_INTRINSIC T lcm(T a)
+constexpr KFR_INTRINSIC T lcm(T a)
 {
     return a;
 }
 
 /// @brief Least common multiple
 template <typename T>
-constexpr CMT_INTRINSIC T lcm(T a, T b)
+constexpr KFR_INTRINSIC T lcm(T a, T b)
 {
     return a * b / gcd(a, b);
 }
 
 /// @brief Least common multiple
 template <typename T, typename... Ts>
-constexpr CMT_INTRINSIC T lcm(T a, T b, T c, Ts... rest)
+constexpr KFR_INTRINSIC T lcm(T a, T b, T c, Ts... rest)
 {
     return lcm(a, lcm(b, c, rest...));
 }
 
-CMT_INTRINSIC std::lldiv_t floor_div(long long a, long long b)
+KFR_INTRINSIC std::lldiv_t floor_div(long long a, long long b)
 {
     std::lldiv_t d = std::lldiv(a, b);
     if (d.rem < 0)
@@ -1146,7 +1003,7 @@ using identity = typename details::identity_impl<T>::type;
 struct swallow
 {
     template <typename... T>
-    CMT_MEM_INTRINSIC constexpr swallow(T&&...) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr swallow(T&&...) KFR_NOEXCEPT
     {
     }
 };
@@ -1157,52 +1014,52 @@ struct carray;
 template <typename T>
 struct carray<T, 1>
 {
-    CMT_MEM_INTRINSIC constexpr carray() CMT_NOEXCEPT = default;
-    CMT_MEM_INTRINSIC constexpr carray(T val) CMT_NOEXCEPT : val(val) {}
+    KFR_MEM_INTRINSIC constexpr carray() KFR_NOEXCEPT = default;
+    KFR_MEM_INTRINSIC constexpr carray(T val) KFR_NOEXCEPT : val(val) {}
 
-    template <typename Fn, size_t index = 0, CMT_ENABLE_IF(std::is_invocable_v<Fn, csize_t<index>>)>
-    CMT_MEM_INTRINSIC constexpr carray(Fn&& fn, csize_t<index> = csize_t<index>{}) CMT_NOEXCEPT
+    template <typename Fn, size_t index = 0, KFR_ENABLE_IF(std::is_invocable_v<Fn, csize_t<index>>)>
+    KFR_MEM_INTRINSIC constexpr carray(Fn&& fn, csize_t<index> = csize_t<index>{}) KFR_NOEXCEPT
         : val(static_cast<T>(fn(csize_t<index>())))
     {
     }
 
-    CMT_MEM_INTRINSIC constexpr carray(const carray&) CMT_NOEXCEPT = default;
-    CMT_MEM_INTRINSIC constexpr carray(carray&&) CMT_NOEXCEPT      = default;
-    CMT_MEM_INTRINSIC static constexpr size_t size() CMT_NOEXCEPT { return 1; }
+    KFR_MEM_INTRINSIC constexpr carray(const carray&) KFR_NOEXCEPT = default;
+    KFR_MEM_INTRINSIC constexpr carray(carray&&) KFR_NOEXCEPT      = default;
+    KFR_MEM_INTRINSIC static constexpr size_t size() KFR_NOEXCEPT { return 1; }
 
     template <size_t index>
-    CMT_MEM_INTRINSIC constexpr T& get(csize_t<index>) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr T& get(csize_t<index>) KFR_NOEXCEPT
     {
         static_assert(index == 0, "carray: Array index is out of range");
         return val;
     }
     template <size_t index>
-    CMT_MEM_INTRINSIC constexpr const T& get(csize_t<index>) const CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr const T& get(csize_t<index>) const KFR_NOEXCEPT
     {
         static_assert(index == 0, "carray: Array index is out of range");
         return val;
     }
     template <size_t index>
-    CMT_MEM_INTRINSIC constexpr T& get() CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr T& get() KFR_NOEXCEPT
     {
         return get(csize_t<index>());
     }
     template <size_t index>
-    CMT_MEM_INTRINSIC constexpr const T& get() const CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr const T& get() const KFR_NOEXCEPT
     {
         return get(csize_t<index>());
     }
-    CMT_MEM_INTRINSIC constexpr const T* front() const CMT_NOEXCEPT { return val; }
-    CMT_MEM_INTRINSIC constexpr T* front() CMT_NOEXCEPT { return val; }
-    CMT_MEM_INTRINSIC constexpr const T* back() const CMT_NOEXCEPT { return val; }
-    CMT_MEM_INTRINSIC constexpr T* back() CMT_NOEXCEPT { return val; }
-    CMT_MEM_INTRINSIC constexpr const T* begin() const CMT_NOEXCEPT { return &val; }
-    CMT_MEM_INTRINSIC constexpr const T* end() const CMT_NOEXCEPT { return &val + 1; }
-    CMT_MEM_INTRINSIC constexpr T* begin() CMT_NOEXCEPT { return &val; }
-    CMT_MEM_INTRINSIC constexpr T* end() CMT_NOEXCEPT { return &val + 1; }
-    CMT_MEM_INTRINSIC constexpr const T* data() const CMT_NOEXCEPT { return begin(); }
-    CMT_MEM_INTRINSIC constexpr T* data() CMT_NOEXCEPT { return begin(); }
-    CMT_MEM_INTRINSIC constexpr bool empty() const CMT_NOEXCEPT { return false; }
+    KFR_MEM_INTRINSIC constexpr const T* front() const KFR_NOEXCEPT { return val; }
+    KFR_MEM_INTRINSIC constexpr T* front() KFR_NOEXCEPT { return val; }
+    KFR_MEM_INTRINSIC constexpr const T* back() const KFR_NOEXCEPT { return val; }
+    KFR_MEM_INTRINSIC constexpr T* back() KFR_NOEXCEPT { return val; }
+    KFR_MEM_INTRINSIC constexpr const T* begin() const KFR_NOEXCEPT { return &val; }
+    KFR_MEM_INTRINSIC constexpr const T* end() const KFR_NOEXCEPT { return &val + 1; }
+    KFR_MEM_INTRINSIC constexpr T* begin() KFR_NOEXCEPT { return &val; }
+    KFR_MEM_INTRINSIC constexpr T* end() KFR_NOEXCEPT { return &val + 1; }
+    KFR_MEM_INTRINSIC constexpr const T* data() const KFR_NOEXCEPT { return begin(); }
+    KFR_MEM_INTRINSIC constexpr T* data() KFR_NOEXCEPT { return begin(); }
+    KFR_MEM_INTRINSIC constexpr bool empty() const KFR_NOEXCEPT { return false; }
     T val;
 };
 
@@ -1210,139 +1067,139 @@ template <typename T, size_t N>
 struct carray : carray<T, N - 1>
 {
     template <typename... Ts>
-    CMT_MEM_INTRINSIC constexpr carray(T first, Ts... list) CMT_NOEXCEPT : carray<T, N - 1>(list...),
+    KFR_MEM_INTRINSIC constexpr carray(T first, Ts... list) KFR_NOEXCEPT : carray<T, N - 1>(list...),
                                                                            val(first)
     {
         static_assert(sizeof...(list) + 1 == N, "carray: Argument count is invalid");
     }
 
     template <typename Fn, size_t index = N - 1>
-    CMT_MEM_INTRINSIC constexpr carray(Fn&& fn, csize_t<index> = csize_t<index>{}) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr carray(Fn&& fn, csize_t<index> = csize_t<index>{}) KFR_NOEXCEPT
         : carray<T, N - 1>(std::forward<Fn>(fn), csize_t<index - 1>()),
           val(static_cast<T>(fn(csize_t<index>())))
     {
     }
 
-    CMT_MEM_INTRINSIC constexpr carray() CMT_NOEXCEPT              = default;
-    CMT_MEM_INTRINSIC constexpr carray(const carray&) CMT_NOEXCEPT = default;
-    CMT_MEM_INTRINSIC constexpr carray(carray&&) CMT_NOEXCEPT      = default;
-    CMT_MEM_INTRINSIC static constexpr size_t size() CMT_NOEXCEPT { return N; }
-    CMT_MEM_INTRINSIC constexpr T& get(csize_t<N - 1>) CMT_NOEXCEPT { return val; }
+    KFR_MEM_INTRINSIC constexpr carray() KFR_NOEXCEPT              = default;
+    KFR_MEM_INTRINSIC constexpr carray(const carray&) KFR_NOEXCEPT = default;
+    KFR_MEM_INTRINSIC constexpr carray(carray&&) KFR_NOEXCEPT      = default;
+    KFR_MEM_INTRINSIC static constexpr size_t size() KFR_NOEXCEPT { return N; }
+    KFR_MEM_INTRINSIC constexpr T& get(csize_t<N - 1>) KFR_NOEXCEPT { return val; }
     template <size_t index>
-    CMT_MEM_INTRINSIC constexpr T& get(csize_t<index>) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr T& get(csize_t<index>) KFR_NOEXCEPT
     {
         return carray<T, N - 1>::get(csize_t<index>());
     }
-    CMT_MEM_INTRINSIC constexpr const T& get(csize_t<N - 1>) const CMT_NOEXCEPT { return val; }
+    KFR_MEM_INTRINSIC constexpr const T& get(csize_t<N - 1>) const KFR_NOEXCEPT { return val; }
     template <size_t index>
-    CMT_MEM_INTRINSIC constexpr const T& get(csize_t<index>) const CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr const T& get(csize_t<index>) const KFR_NOEXCEPT
     {
         return carray<T, N - 1>::get(csize_t<index>());
     }
     template <size_t index>
-    CMT_MEM_INTRINSIC constexpr T& get() CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr T& get() KFR_NOEXCEPT
     {
         return get(csize_t<index>());
     }
     template <size_t index>
-    CMT_MEM_INTRINSIC constexpr const T& get() const CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr const T& get() const KFR_NOEXCEPT
     {
         return get(csize_t<index>());
     }
-    CMT_MEM_INTRINSIC constexpr const T* front() const CMT_NOEXCEPT { return carray<T, N - 1>::front(); }
-    CMT_MEM_INTRINSIC constexpr T* front() CMT_NOEXCEPT { return carray<T, N - 1>::front(); }
-    CMT_MEM_INTRINSIC constexpr const T* back() const CMT_NOEXCEPT { return val; }
-    CMT_MEM_INTRINSIC constexpr T* back() CMT_NOEXCEPT { return val; }
-    CMT_MEM_INTRINSIC constexpr const T* begin() const CMT_NOEXCEPT { return carray<T, N - 1>::begin(); }
-    CMT_MEM_INTRINSIC constexpr const T* end() const CMT_NOEXCEPT { return &val + 1; }
-    CMT_MEM_INTRINSIC constexpr T* begin() CMT_NOEXCEPT { return carray<T, N - 1>::begin(); }
-    CMT_MEM_INTRINSIC constexpr T* end() CMT_NOEXCEPT { return &val + 1; }
-    CMT_MEM_INTRINSIC constexpr const T* data() const CMT_NOEXCEPT { return begin(); }
-    CMT_MEM_INTRINSIC constexpr T* data() CMT_NOEXCEPT { return begin(); }
-    CMT_MEM_INTRINSIC constexpr bool empty() const CMT_NOEXCEPT { return false; }
+    KFR_MEM_INTRINSIC constexpr const T* front() const KFR_NOEXCEPT { return carray<T, N - 1>::front(); }
+    KFR_MEM_INTRINSIC constexpr T* front() KFR_NOEXCEPT { return carray<T, N - 1>::front(); }
+    KFR_MEM_INTRINSIC constexpr const T* back() const KFR_NOEXCEPT { return val; }
+    KFR_MEM_INTRINSIC constexpr T* back() KFR_NOEXCEPT { return val; }
+    KFR_MEM_INTRINSIC constexpr const T* begin() const KFR_NOEXCEPT { return carray<T, N - 1>::begin(); }
+    KFR_MEM_INTRINSIC constexpr const T* end() const KFR_NOEXCEPT { return &val + 1; }
+    KFR_MEM_INTRINSIC constexpr T* begin() KFR_NOEXCEPT { return carray<T, N - 1>::begin(); }
+    KFR_MEM_INTRINSIC constexpr T* end() KFR_NOEXCEPT { return &val + 1; }
+    KFR_MEM_INTRINSIC constexpr const T* data() const KFR_NOEXCEPT { return begin(); }
+    KFR_MEM_INTRINSIC constexpr T* data() KFR_NOEXCEPT { return begin(); }
+    KFR_MEM_INTRINSIC constexpr bool empty() const KFR_NOEXCEPT { return false; }
 
 private:
     T val;
 };
 
-#define CMT_FN(fn)                                                                                           \
+#define KFR_META_FN(fn)                                                                                      \
     struct fn_##fn                                                                                           \
     {                                                                                                        \
         template <typename... Args>                                                                          \
-        CMT_INLINE_MEMBER decltype(fn(std::declval<Args>()...)) operator()(Args&&... args) const             \
+        KFR_INLINE_MEMBER decltype(fn(std::declval<Args>()...)) operator()(Args&&... args) const             \
         {                                                                                                    \
             return fn(std::forward<Args>(args)...);                                                          \
         }                                                                                                    \
     };
 
-#define CMT_ESC(...) __VA_ARGS__
+#define KFR_ESC(...) __VA_ARGS__
 
-#define CMT_FN_TPL(tpl_list, tpl_args, fn)                                                                   \
-    template <CMT_ESC tpl_list>                                                                              \
+#define KFR_META_FN_TPL(tpl_list, tpl_args, fn)                                                              \
+    template <KFR_ESC tpl_list>                                                                              \
     struct fn_##fn                                                                                           \
     {                                                                                                        \
         template <typename... Args>                                                                          \
-        CMT_INLINE_MEMBER decltype(fn<CMT_ESC tpl_args>(std::declval<Args>()...)) operator()(                \
+        KFR_INLINE_MEMBER decltype(fn<KFR_ESC tpl_args>(std::declval<Args>()...)) operator()(                \
             Args&&... args) const                                                                            \
         {                                                                                                    \
-            return fn<CMT_ESC tpl_args>(std::forward<Args>(args)...);                                        \
+            return fn<KFR_ESC tpl_args>(std::forward<Args>(args)...);                                        \
         }                                                                                                    \
     };
 
 /// @brief Function that returns its first argument
 template <typename T>
-CMT_INTRINSIC constexpr T&& pass_through(T&& x) CMT_NOEXCEPT
+KFR_INTRINSIC constexpr T&& pass_through(T&& x) KFR_NOEXCEPT
 {
     return std::forward<T>(x);
 }
 
 /// @brief Function that returns void and ignores all its arguments
 template <typename... Ts>
-CMT_INTRINSIC constexpr void noop(Ts&&...) CMT_NOEXCEPT
+KFR_INTRINSIC constexpr void noop(Ts&&...) KFR_NOEXCEPT
 {
 }
 
 /// @brief Function that returns its first argument and ignores all other arguments
 template <typename T1, typename... Ts>
-CMT_INTRINSIC constexpr T1&& get_first(T1&& x, Ts&&...) CMT_NOEXCEPT
+KFR_INTRINSIC constexpr T1&& get_first(T1&& x, Ts&&...) KFR_NOEXCEPT
 {
     return std::forward<T1>(x);
 }
 
 /// @brief Function that returns its second argument and ignores all other arguments
 template <typename T1, typename T2, typename... Ts>
-CMT_INTRINSIC constexpr T2&& get_second(T1, T2&& x, Ts&&...) CMT_NOEXCEPT
+KFR_INTRINSIC constexpr T2&& get_second(T1, T2&& x, Ts&&...) KFR_NOEXCEPT
 {
     return std::forward<T2>(x);
 }
 
 /// @brief Function that returns its third argument and ignores all other arguments
 template <typename T1, typename T2, typename T3, typename... Ts>
-CMT_INTRINSIC constexpr T3&& get_third(T1&&, T2&&, T3&& x, Ts&&...) CMT_NOEXCEPT
+KFR_INTRINSIC constexpr T3&& get_third(T1&&, T2&&, T3&& x, Ts&&...) KFR_NOEXCEPT
 {
     return std::forward<T3>(x);
 }
 
 /// @brief Function that returns value-initialization of type T and ignores all its arguments
 template <typename T, typename... Ts>
-CMT_INTRINSIC constexpr T returns(Ts&&...)
+KFR_INTRINSIC constexpr T returns(Ts&&...)
 {
     return T();
 }
 
 /// @brief Function that returns constant of type T and ignores all its arguments
 template <typename T, T value, typename... Args>
-CMT_INTRINSIC constexpr T return_constant(Args&&...)
+KFR_INTRINSIC constexpr T return_constant(Args&&...)
 {
     return value;
 }
 
-CMT_FN(pass_through)
-CMT_FN(noop)
-CMT_FN(get_first)
-CMT_FN(get_second)
-CMT_FN(get_third)
-CMT_FN_TPL((typename T), (T), returns)
+KFR_META_FN(pass_through)
+KFR_META_FN(noop)
+KFR_META_FN(get_first)
+KFR_META_FN(get_second)
+KFR_META_FN(get_third)
+KFR_META_FN_TPL((typename T), (T), returns)
 
 template <typename T, T value>
 struct fn_return_constant
@@ -1355,47 +1212,47 @@ struct fn_return_constant
 };
 
 template <typename T1, typename T2>
-CMT_INTRINSIC constexpr bool is_equal(const T1& x, const T2& y)
+KFR_INTRINSIC constexpr bool is_equal(const T1& x, const T2& y)
 {
     return x == y;
 }
 template <typename T1, typename T2>
-CMT_INTRINSIC constexpr bool is_notequal(const T1& x, const T2& y)
+KFR_INTRINSIC constexpr bool is_notequal(const T1& x, const T2& y)
 {
     return x != y;
 }
 template <typename T1, typename T2>
-CMT_INTRINSIC constexpr bool is_less(const T1& x, const T2& y)
+KFR_INTRINSIC constexpr bool is_less(const T1& x, const T2& y)
 {
     return x < y;
 }
 template <typename T1, typename T2>
-CMT_INTRINSIC constexpr bool is_greater(const T1& x, const T2& y)
+KFR_INTRINSIC constexpr bool is_greater(const T1& x, const T2& y)
 {
     return x > y;
 }
 template <typename T1, typename T2>
-CMT_INTRINSIC constexpr bool is_lessorequal(const T1& x, const T2& y)
+KFR_INTRINSIC constexpr bool is_lessorequal(const T1& x, const T2& y)
 {
     return x <= y;
 }
 template <typename T1, typename T2>
-CMT_INTRINSIC constexpr bool is_greaterorequal(const T1& x, const T2& y)
+KFR_INTRINSIC constexpr bool is_greaterorequal(const T1& x, const T2& y)
 {
     return x >= y;
 }
 template <typename T>
-CMT_INTRINSIC constexpr bool is_between(T value, identity<T> min, identity<T> max)
+KFR_INTRINSIC constexpr bool is_between(T value, identity<T> min, identity<T> max)
 {
     return value >= min && value <= max;
 }
-CMT_FN(is_equal)
-CMT_FN(is_notequal)
-CMT_FN(is_less)
-CMT_FN(is_greater)
-CMT_FN(is_lessorequal)
-CMT_FN(is_greaterorequal)
-CMT_FN(is_between)
+KFR_META_FN(is_equal)
+KFR_META_FN(is_notequal)
+KFR_META_FN(is_less)
+KFR_META_FN(is_greater)
+KFR_META_FN(is_lessorequal)
+KFR_META_FN(is_greaterorequal)
+KFR_META_FN(is_between)
 
 namespace details
 {
@@ -1464,13 +1321,13 @@ constexpr inline bool has_begin_end = details::has_begin_end_impl<std::decay_t<T
 template <typename T>
 constexpr inline bool has_data_size = details::has_data_size_impl<std::decay_t<T>>::value;
 
-#define CMT_HAS_DATA_SIZE(CONTAINER)                                                                         \
+#define KFR_HAS_DATA_SIZE(CONTAINER)                                                                         \
     std::enable_if_t<details::has_data_size_free_impl<CONTAINER>::value>* = nullptr
 
 template <typename T>
 using value_type_of = typename std::decay_t<T>::value_type;
 
-#ifndef CMT_COMPILER_CLANG
+#ifndef KFR_COMPILER_CLANG
 namespace details
 {
 template <typename T, T value, typename Fn>
@@ -1482,17 +1339,17 @@ void cforeach_impl(Fn&& fn)
 #endif
 
 template <typename T, T... values, typename Fn>
-CMT_INTRINSIC void cforeach(cvals_t<T, values...>, Fn&& fn)
+KFR_INTRINSIC void cforeach(cvals_t<T, values...>, Fn&& fn)
 {
-#ifdef CMT_COMPILER_CLANG
+#ifdef KFR_COMPILER_CLANG
     swallow{ (fn(cval_t<T, values>()), void(), 0)... };
 #else
     swallow{ (details::cforeach_impl<T, values>(std::forward<Fn>(fn)), void(), 0)... };
 #endif
 }
 
-template <typename T, typename Fn, CMT_ENABLE_IF(has_begin_end<T>)>
-CMT_INTRINSIC void cforeach(T&& list, Fn&& fn)
+template <typename T, typename Fn, KFR_ENABLE_IF(has_begin_end<T>)>
+KFR_INTRINSIC void cforeach(T&& list, Fn&& fn)
 {
     for (const auto& v : list)
     {
@@ -1501,7 +1358,7 @@ CMT_INTRINSIC void cforeach(T&& list, Fn&& fn)
 }
 
 template <typename T, size_t N, typename Fn>
-CMT_INTRINSIC void cforeach(const T (&array)[N], Fn&& fn)
+KFR_INTRINSIC void cforeach(const T (&array)[N], Fn&& fn)
 {
     for (size_t i = 0; i < N; i++)
     {
@@ -1513,30 +1370,30 @@ namespace details
 {
 
 template <size_t index, typename... types>
-CMT_INTRINSIC auto get_type_arg(ctypes_t<types...>)
+KFR_INTRINSIC auto get_type_arg(ctypes_t<types...>)
 {
     return ctype_t<typename details::get_nth_type<index, types...>::type>();
 }
 
 template <typename T0, typename... types, typename Fn, size_t... indices>
-CMT_INTRINSIC void cforeach_types_impl(ctypes_t<T0, types...> type_list, Fn&& fn, csizes_t<indices...>)
+KFR_INTRINSIC void cforeach_types_impl(ctypes_t<T0, types...> type_list, Fn&& fn, csizes_t<indices...>)
 {
     swallow{ (fn(get_type_arg<indices>(type_list)), void(), 0)... };
 }
 template <typename Fn>
-CMT_INTRINSIC void cforeach_types_impl(ctypes_t<>, Fn&&, csizes_t<>)
+KFR_INTRINSIC void cforeach_types_impl(ctypes_t<>, Fn&&, csizes_t<>)
 {
 }
 } // namespace details
 
 template <typename... Ts, typename Fn>
-CMT_INTRINSIC void cforeach(ctypes_t<Ts...> types, Fn&& fn)
+KFR_INTRINSIC void cforeach(ctypes_t<Ts...> types, Fn&& fn)
 {
     details::cforeach_types_impl(types, std::forward<Fn>(fn), csizeseq_t<sizeof...(Ts)>());
 }
 
 template <typename A0, typename A1, typename Fn>
-CMT_INTRINSIC void cforeach(A0&& a0, A1&& a1, Fn&& fn)
+KFR_INTRINSIC void cforeach(A0&& a0, A1&& a1, Fn&& fn)
 {
     // Default capture causes ICE in Intel C++
     cforeach(std::forward<A0>(a0), //
@@ -1547,7 +1404,7 @@ CMT_INTRINSIC void cforeach(A0&& a0, A1&& a1, Fn&& fn)
 }
 
 template <typename A0, typename A1, typename A2, typename Fn>
-CMT_INTRINSIC void cforeach(A0&& a0, A1&& a1, A2&& a2, Fn&& fn)
+KFR_INTRINSIC void cforeach(A0&& a0, A1&& a1, A2&& a2, Fn&& fn)
 {
     // Default capture causes ICE in Intel C++
     cforeach(std::forward<A0>(a0), //
@@ -1563,7 +1420,7 @@ CMT_INTRINSIC void cforeach(A0&& a0, A1&& a1, A2&& a2, Fn&& fn)
 }
 
 template <typename A0, typename A1, typename A2, typename A3, typename Fn>
-CMT_INTRINSIC void cforeach(A0&& a0, A1&& a1, A2&& a2, A3&& a3, Fn&& fn)
+KFR_INTRINSIC void cforeach(A0&& a0, A1&& a1, A2&& a2, A3&& a3, Fn&& fn)
 {
     // Default capture causes ICE in Intel C++
     cforeach(std::forward<A0>(a0), //
@@ -1581,25 +1438,25 @@ CMT_INTRINSIC void cforeach(A0&& a0, A1&& a1, A2&& a2, A3&& a3, Fn&& fn)
 }
 
 template <typename TrueFn, typename FalseFn = fn_noop>
-CMT_INTRINSIC decltype(auto) cif(cbool_t<true>, TrueFn&& truefn, FalseFn&& = FalseFn())
+KFR_INTRINSIC decltype(auto) cif(cbool_t<true>, TrueFn&& truefn, FalseFn&& = FalseFn())
 {
     return truefn(ctrue);
 }
 
 template <typename TrueFn, typename FalseFn = fn_noop>
-CMT_INTRINSIC decltype(auto) cif(cbool_t<false>, TrueFn&&, FalseFn&& falsefn = FalseFn())
+KFR_INTRINSIC decltype(auto) cif(cbool_t<false>, TrueFn&&, FalseFn&& falsefn = FalseFn())
 {
     return falsefn(cfalse);
 }
 
 template <typename T, T start, T stop, typename BodyFn>
-CMT_INTRINSIC decltype(auto) cfor(cval_t<T, start>, cval_t<T, stop>, BodyFn&& bodyfn)
+KFR_INTRINSIC decltype(auto) cfor(cval_t<T, start>, cval_t<T, stop>, BodyFn&& bodyfn)
 {
     return cforeach(cvalseq_t<T, stop - start, start>(), std::forward<BodyFn>(bodyfn));
 }
 
 template <typename T, T... vs, typename U, typename Function, typename Fallback = fn_noop>
-CMT_INTRINSIC void cswitch(cvals_t<T, vs...>, const U& value, Function&& function,
+KFR_INTRINSIC void cswitch(cvals_t<T, vs...>, const U& value, Function&& function,
                            Fallback&& fallback = Fallback())
 {
     bool result = false;
@@ -1610,14 +1467,14 @@ CMT_INTRINSIC void cswitch(cvals_t<T, vs...>, const U& value, Function&& functio
 }
 
 template <typename T, typename Fn, typename DefFn = fn_noop, typename CmpFn = fn_is_equal>
-CMT_INTRINSIC decltype(auto) cswitch(cvals_t<T>, identity<T>, Fn&&, DefFn&& deffn = DefFn(),
+KFR_INTRINSIC decltype(auto) cswitch(cvals_t<T>, identity<T>, Fn&&, DefFn&& deffn = DefFn(),
                                      CmpFn&& = CmpFn())
 {
     return deffn();
 }
 
 template <typename T, T v0, T... values, typename Fn, typename DefFn = fn_noop, typename CmpFn = fn_is_equal>
-CMT_INTRINSIC decltype(auto) cswitch(cvals_t<T, v0, values...>, identity<T> value, Fn&& fn,
+KFR_INTRINSIC decltype(auto) cswitch(cvals_t<T, v0, values...>, identity<T> value, Fn&& fn,
                                      DefFn&& deffn = DefFn(), CmpFn&& cmpfn = CmpFn())
 {
     if (cmpfn(value, v0))
@@ -1634,24 +1491,24 @@ CMT_INTRINSIC decltype(auto) cswitch(cvals_t<T, v0, values...>, identity<T> valu
 namespace details
 {
 template <typename T, typename Fn1, typename Fn2, typename... Fns>
-CMT_INTRINSIC decltype(auto) cmatch_impl(T&& value, Fn1&& first, Fn2&& second, Fns&&... rest);
+KFR_INTRINSIC decltype(auto) cmatch_impl(T&& value, Fn1&& first, Fn2&& second, Fns&&... rest);
 template <typename T, typename Fn, typename... Ts>
-CMT_INTRINSIC decltype(auto) cmatch_impl(T&& value, Fn&& last);
+KFR_INTRINSIC decltype(auto) cmatch_impl(T&& value, Fn&& last);
 
 template <typename T, typename Fn, typename... Fns>
-CMT_INTRINSIC decltype(auto) cmatch_impl2(cbool_t<true>, T&& value, Fn&& fn, Fns&&...)
+KFR_INTRINSIC decltype(auto) cmatch_impl2(cbool_t<true>, T&& value, Fn&& fn, Fns&&...)
 {
     return fn(std::forward<T>(value));
 }
 
 template <typename T, typename Fn, typename... Fns>
-CMT_INTRINSIC decltype(auto) cmatch_impl2(cbool_t<false>, T&& value, Fn&&, Fns&&... rest)
+KFR_INTRINSIC decltype(auto) cmatch_impl2(cbool_t<false>, T&& value, Fn&&, Fns&&... rest)
 {
     return cmatch_impl(std::forward<T>(value), std::forward<Fns>(rest)...);
 }
 
 template <typename T, typename Fn1, typename Fn2, typename... Fns>
-CMT_INTRINSIC decltype(auto) cmatch_impl(T&& value, Fn1&& first, Fn2&& second, Fns&&... rest)
+KFR_INTRINSIC decltype(auto) cmatch_impl(T&& value, Fn1&& first, Fn2&& second, Fns&&... rest)
 {
     using first_arg        = typename function_arguments<Fn1>::template nth<0>;
     constexpr bool is_same = std::is_same_v<std::decay_t<T>, std::decay_t<first_arg>>;
@@ -1660,20 +1517,20 @@ CMT_INTRINSIC decltype(auto) cmatch_impl(T&& value, Fn1&& first, Fn2&& second, F
 }
 
 template <typename T, typename Fn, typename... Ts>
-CMT_INTRINSIC decltype(auto) cmatch_impl(T&& value, Fn&& last)
+KFR_INTRINSIC decltype(auto) cmatch_impl(T&& value, Fn&& last)
 {
     return last(std::forward<T>(value));
 }
 } // namespace details
 
 template <typename T, typename Fn, typename... Args>
-CMT_INTRINSIC decltype(auto) cmatch(T&& value, Fn&& fn, Args... args)
+KFR_INTRINSIC decltype(auto) cmatch(T&& value, Fn&& fn, Args... args)
 {
     return details::cmatch_impl(std::forward<T>(value), std::forward<Fn>(fn), std::forward<Args>(args)...);
 }
 
 template <typename T, T... values>
-CMT_INTRINSIC size_t cfind(cvals_t<T, values...>, identity<T> value)
+KFR_INTRINSIC size_t cfind(cvals_t<T, values...>, identity<T> value)
 {
     static constexpr T temp[]    = { values... };
     static constexpr size_t size = sizeof...(values);
@@ -1686,7 +1543,7 @@ CMT_INTRINSIC size_t cfind(cvals_t<T, values...>, identity<T> value)
 }
 
 template <typename Fn, typename... Args>
-CMT_UNUSED CMT_NOINLINE static std::invoke_result_t<Fn, Args...> noinline(Fn&& fn, Args&&... args)
+KFR_UNUSED KFR_NOINLINE static std::invoke_result_t<Fn, Args...> noinline(Fn&& fn, Args&&... args)
 {
     return fn(std::forward<Args>(args)...);
 }
@@ -1695,27 +1552,27 @@ template <typename Fn>
 struct fn_noinline
 {
     template <typename... Args>
-    CMT_MEM_INTRINSIC std::invoke_result_t<Fn, Args...> operator()(Args&&... args) const
+    KFR_MEM_INTRINSIC std::invoke_result_t<Fn, Args...> operator()(Args&&... args) const
     {
         return noinline(Fn{}, std::forward<Args>(args)...);
     }
-}; // namespace cometa
+}; // namespace kfr
 
 template <typename... Args, typename Fn, typename Ret = decltype(std::declval<Fn>()(std::declval<Args>()...)),
           typename NonMemFn = Ret (*)(Fn*, Args...)>
-CMT_INTRINSIC NonMemFn make_nonmember(const Fn&)
+KFR_INTRINSIC NonMemFn make_nonmember(const Fn&)
 {
     return [](Fn* fn, Args... args) -> Ret { return fn->operator()(std::forward<Args>(args)...); };
 }
 
 template <typename T>
-constexpr CMT_INTRINSIC T choose_const()
+constexpr KFR_INTRINSIC T choose_const()
 {
     static_assert(sizeof(T) != 0, "T not found in the list of template arguments");
     return T();
 }
 template <typename T, typename C1>
-constexpr CMT_INTRINSIC T choose_const_fallback(C1 c1)
+constexpr KFR_INTRINSIC T choose_const_fallback(C1 c1)
 {
     return static_cast<T>(c1);
 }
@@ -1727,19 +1584,19 @@ constexpr CMT_INTRINSIC T choose_const_fallback(C1 c1)
  * CHECK( choose_const<f64>( 32.0f, 64.0 ) == 64.0 );
  * @endcode
  */
-template <typename T, typename C1, typename... Cs, CMT_ENABLE_IF(std::is_same_v<T, C1>)>
-constexpr CMT_INTRINSIC T choose_const(C1 c1, Cs...)
+template <typename T, typename C1, typename... Cs, KFR_ENABLE_IF(std::is_same_v<T, C1>)>
+constexpr KFR_INTRINSIC T choose_const(C1 c1, Cs...)
 {
     return static_cast<T>(c1);
 }
-template <typename T, typename C1, typename... Cs, CMT_ENABLE_IF(!std::is_same_v<T, C1>)>
-constexpr CMT_INTRINSIC T choose_const(C1, Cs... constants)
+template <typename T, typename C1, typename... Cs, KFR_ENABLE_IF(!std::is_same_v<T, C1>)>
+constexpr KFR_INTRINSIC T choose_const(C1, Cs... constants)
 {
     return choose_const<T>(constants...);
 }
 
 template <typename T, typename C1, typename... Cs>
-constexpr CMT_INTRINSIC T choose_const_fallback(C1 c1, Cs... constants)
+constexpr KFR_INTRINSIC T choose_const_fallback(C1 c1, Cs... constants)
 {
     return std::is_same_v<T, C1> ? static_cast<T>(c1) : choose_const_fallback<T>(constants...);
 }
@@ -1749,14 +1606,14 @@ struct autocast_impl
 {
     const Tfrom value;
     template <typename T>
-    CMT_MEM_INTRINSIC constexpr operator T() const CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr operator T() const KFR_NOEXCEPT
     {
         return static_cast<T>(value);
     }
 };
 
 template <typename Tfrom>
-CMT_INTRINSIC constexpr autocast_impl<Tfrom> autocast(const Tfrom& value) CMT_NOEXCEPT
+KFR_INTRINSIC constexpr autocast_impl<Tfrom> autocast(const Tfrom& value) KFR_NOEXCEPT
 {
     return { value };
 }
@@ -1781,91 +1638,91 @@ template <typename T>
 using signed_type = typename details::signed_type_impl<T>::type;
 
 template <typename T>
-constexpr CMT_INTRINSIC T align_down(T x, identity<T> alignment)
+constexpr KFR_INTRINSIC T align_down(T x, identity<T> alignment)
 {
     return (x) & ~(alignment - 1);
 }
 template <typename T>
-constexpr CMT_INTRINSIC T* align_down(T* x, size_t alignment)
+constexpr KFR_INTRINSIC T* align_down(T* x, size_t alignment)
 {
     return reinterpret_cast<T*>(align_down(reinterpret_cast<size_t>(x), alignment));
 }
 
 template <typename T>
-constexpr CMT_INTRINSIC T align_up(T x, identity<T> alignment)
+constexpr KFR_INTRINSIC T align_up(T x, identity<T> alignment)
 {
     return (x + alignment - 1) & ~(alignment - 1);
 }
 template <typename T>
-constexpr CMT_INTRINSIC T* align_up(T* x, size_t alignment)
+constexpr KFR_INTRINSIC T* align_up(T* x, size_t alignment)
 {
     return reinterpret_cast<T*>(align_up(reinterpret_cast<size_t>(x), alignment));
 }
 
 template <typename T>
-constexpr CMT_INTRINSIC T* advance(T* x, ptrdiff_t offset)
+constexpr KFR_INTRINSIC T* advance(T* x, ptrdiff_t offset)
 {
     return x + offset;
 }
-constexpr CMT_INTRINSIC void* advance(void* x, ptrdiff_t offset)
+constexpr KFR_INTRINSIC void* advance(void* x, ptrdiff_t offset)
 {
     return advance(static_cast<unsigned char*>(x), offset);
 }
 
-constexpr CMT_INTRINSIC ptrdiff_t distance(const void* x, const void* y)
+constexpr KFR_INTRINSIC ptrdiff_t distance(const void* x, const void* y)
 {
     return static_cast<const unsigned char*>(x) - static_cast<const unsigned char*>(y);
 }
 
-CMT_PRAGMA_GNU(GCC diagnostic push)
-#if CMT_HAS_WARNING("-Wundefined-reinterpret-cast")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wundefined-reinterpret-cast")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+#if KFR_HAS_WARNING("-Wundefined-reinterpret-cast")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wundefined-reinterpret-cast")
 #endif
 
 template <typename T, typename U>
-CMT_INTRINSIC constexpr static T& ref_cast(U& ptr)
+KFR_INTRINSIC constexpr static T& ref_cast(U& ptr)
 {
     return reinterpret_cast<T&>(ptr);
 }
 
 template <typename T, typename U>
-CMT_INTRINSIC constexpr static const T& ref_cast(const U& ptr)
+KFR_INTRINSIC constexpr static const T& ref_cast(const U& ptr)
 {
     return reinterpret_cast<const T&>(ptr);
 }
 
 template <typename T, typename U>
-CMT_INTRINSIC constexpr static T* ptr_cast(U* ptr)
+KFR_INTRINSIC constexpr static T* ptr_cast(U* ptr)
 {
     return reinterpret_cast<T*>(ptr);
 }
 
 template <typename T, typename U>
-CMT_INTRINSIC constexpr static const T* ptr_cast(const U* ptr)
+KFR_INTRINSIC constexpr static const T* ptr_cast(const U* ptr)
 {
     return reinterpret_cast<const T*>(ptr);
 }
 
 template <typename T, typename U>
-CMT_INTRINSIC constexpr static T* ptr_cast(U* ptr, ptrdiff_t offset)
+KFR_INTRINSIC constexpr static T* ptr_cast(U* ptr, ptrdiff_t offset)
 {
     return ptr_cast<T>(ptr_cast<unsigned char>(ptr) + offset);
 }
 
 template <typename T, typename U>
-CMT_INTRINSIC constexpr static T* derived_cast(U* ptr)
+KFR_INTRINSIC constexpr static T* derived_cast(U* ptr)
 {
     return static_cast<T*>(ptr);
 }
 
 template <typename T, typename U>
-CMT_INTRINSIC constexpr static const T* derived_cast(const U* ptr)
+KFR_INTRINSIC constexpr static const T* derived_cast(const U* ptr)
 {
     return static_cast<const T*>(ptr);
 }
 
 template <typename T, typename U>
-CMT_INTRINSIC constexpr static T implicit_cast(U&& value)
+KFR_INTRINSIC constexpr static T implicit_cast(U&& value)
 {
     return std::forward<T>(value);
 }
@@ -1873,20 +1730,20 @@ CMT_INTRINSIC constexpr static T implicit_cast(U&& value)
 namespace details
 {
 template <size_t start, size_t count>
-constexpr CMT_INTRINSIC std::true_type test_sequence(csizeseq_t<count, start>)
+constexpr KFR_INTRINSIC std::true_type test_sequence(csizeseq_t<count, start>)
 {
     return {};
 }
 
 template <size_t, size_t>
-constexpr CMT_INTRINSIC std::false_type test_sequence(...)
+constexpr KFR_INTRINSIC std::false_type test_sequence(...)
 {
     return {};
 }
 } // namespace details
 
 template <size_t number, size_t... numbers>
-constexpr CMT_INTRINSIC bool is_sequence(csizes_t<number, numbers...>)
+constexpr KFR_INTRINSIC bool is_sequence(csizes_t<number, numbers...>)
 {
     return details::test_sequence<number, 1 + sizeof...(numbers)>(csizes_t<number, numbers...>()).value;
 }
@@ -1960,47 +1817,47 @@ template <typename... List>
 constexpr indicesfor_t<List...> indicesfor{};
 
 template <typename T>
-constexpr CMT_INTRINSIC T const_max(T x)
+constexpr KFR_INTRINSIC T const_max(T x)
 {
     return x;
 }
 template <typename T1, typename T2, typename... Ts>
-constexpr CMT_INTRINSIC std::common_type_t<T1, T2, Ts...> const_max(T1 x, T2 y, Ts... z)
+constexpr KFR_INTRINSIC std::common_type_t<T1, T2, Ts...> const_max(T1 x, T2 y, Ts... z)
 {
     auto yz = const_max(y, z...);
     return x > yz ? x : yz;
 }
 
 template <typename T>
-constexpr CMT_INTRINSIC T const_min(T x)
+constexpr KFR_INTRINSIC T const_min(T x)
 {
     return x;
 }
 template <typename T1, typename T2, typename... Ts>
-constexpr CMT_INTRINSIC std::common_type_t<T1, T2, Ts...> const_min(T1 x, T2 y, Ts... z)
+constexpr KFR_INTRINSIC std::common_type_t<T1, T2, Ts...> const_min(T1 x, T2 y, Ts... z)
 {
     auto yz = const_min(y, z...);
     return x < yz ? x : yz;
 }
 
 template <typename T>
-constexpr CMT_INTRINSIC T cminof(cvals_t<T>)
+constexpr KFR_INTRINSIC T cminof(cvals_t<T>)
 {
     return std::numeric_limits<T>::max();
 }
 template <typename T, T val, T... vals>
-constexpr CMT_INTRINSIC T cminof(cvals_t<T, val, vals...>)
+constexpr KFR_INTRINSIC T cminof(cvals_t<T, val, vals...>)
 {
     T m = cminof(cvals<T, vals...>);
     return val < m ? val : m;
 }
 template <typename T>
-constexpr CMT_INTRINSIC T cmaxof(cvals_t<T>)
+constexpr KFR_INTRINSIC T cmaxof(cvals_t<T>)
 {
     return std::numeric_limits<T>::min();
 }
 template <typename T, T val, T... vals>
-constexpr CMT_INTRINSIC T cmaxof(cvals_t<T, val, vals...>)
+constexpr KFR_INTRINSIC T cmaxof(cvals_t<T, val, vals...>)
 {
     T m = cmaxof(cvals<T, vals...>);
     return val > m ? val : m;
@@ -2020,90 +1877,90 @@ constexpr overload_priority<> overload_auto{};
 
 using overload_generic = overload_priority<0>;
 
-#define CMT_GEN_LIST1(m, ...) m(0, __VA_ARGS__)
-#define CMT_GEN_LIST2(m, ...) CMT_GEN_LIST1(m, __VA_ARGS__), m(1, __VA_ARGS__)
-#define CMT_GEN_LIST3(m, ...) CMT_GEN_LIST2(m, __VA_ARGS__), m(2, __VA_ARGS__)
-#define CMT_GEN_LIST4(m, ...) CMT_GEN_LIST3(m, __VA_ARGS__), m(3, __VA_ARGS__)
-#define CMT_GEN_LIST5(m, ...) CMT_GEN_LIST4(m, __VA_ARGS__), m(4, __VA_ARGS__)
-#define CMT_GEN_LIST6(m, ...) CMT_GEN_LIST5(m, __VA_ARGS__), m(5, __VA_ARGS__)
-#define CMT_GEN_LIST7(m, ...) CMT_GEN_LIST6(m, __VA_ARGS__), m(6, __VA_ARGS__)
-#define CMT_GEN_LIST8(m, ...) CMT_GEN_LIST7(m, __VA_ARGS__), m(7, __VA_ARGS__)
-#define CMT_GEN_LIST9(m, ...) CMT_GEN_LIST8(m, __VA_ARGS__), m(8, __VA_ARGS__)
-#define CMT_GEN_LIST10(m, ...) CMT_GEN_LIST9(m, __VA_ARGS__), m(9, __VA_ARGS__)
+#define KFR_GEN_LIST1(m, ...) m(0, __VA_ARGS__)
+#define KFR_GEN_LIST2(m, ...) KFR_GEN_LIST1(m, __VA_ARGS__), m(1, __VA_ARGS__)
+#define KFR_GEN_LIST3(m, ...) KFR_GEN_LIST2(m, __VA_ARGS__), m(2, __VA_ARGS__)
+#define KFR_GEN_LIST4(m, ...) KFR_GEN_LIST3(m, __VA_ARGS__), m(3, __VA_ARGS__)
+#define KFR_GEN_LIST5(m, ...) KFR_GEN_LIST4(m, __VA_ARGS__), m(4, __VA_ARGS__)
+#define KFR_GEN_LIST6(m, ...) KFR_GEN_LIST5(m, __VA_ARGS__), m(5, __VA_ARGS__)
+#define KFR_GEN_LIST7(m, ...) KFR_GEN_LIST6(m, __VA_ARGS__), m(6, __VA_ARGS__)
+#define KFR_GEN_LIST8(m, ...) KFR_GEN_LIST7(m, __VA_ARGS__), m(7, __VA_ARGS__)
+#define KFR_GEN_LIST9(m, ...) KFR_GEN_LIST8(m, __VA_ARGS__), m(8, __VA_ARGS__)
+#define KFR_GEN_LIST10(m, ...) KFR_GEN_LIST9(m, __VA_ARGS__), m(9, __VA_ARGS__)
 
-#define CMT_GEN_LIST11(m, ...) CMT_GEN_LIST10(m, __VA_ARGS__), m(10, __VA_ARGS__)
-#define CMT_GEN_LIST12(m, ...) CMT_GEN_LIST11(m, __VA_ARGS__), m(11, __VA_ARGS__)
-#define CMT_GEN_LIST13(m, ...) CMT_GEN_LIST12(m, __VA_ARGS__), m(12, __VA_ARGS__)
-#define CMT_GEN_LIST14(m, ...) CMT_GEN_LIST13(m, __VA_ARGS__), m(13, __VA_ARGS__)
-#define CMT_GEN_LIST15(m, ...) CMT_GEN_LIST14(m, __VA_ARGS__), m(14, __VA_ARGS__)
-#define CMT_GEN_LIST16(m, ...) CMT_GEN_LIST15(m, __VA_ARGS__), m(15, __VA_ARGS__)
-#define CMT_GEN_LIST17(m, ...) CMT_GEN_LIST16(m, __VA_ARGS__), m(16, __VA_ARGS__)
-#define CMT_GEN_LIST18(m, ...) CMT_GEN_LIST17(m, __VA_ARGS__), m(17, __VA_ARGS__)
-#define CMT_GEN_LIST19(m, ...) CMT_GEN_LIST18(m, __VA_ARGS__), m(18, __VA_ARGS__)
-#define CMT_GEN_LIST20(m, ...) CMT_GEN_LIST19(m, __VA_ARGS__), m(19, __VA_ARGS__)
+#define KFR_GEN_LIST11(m, ...) KFR_GEN_LIST10(m, __VA_ARGS__), m(10, __VA_ARGS__)
+#define KFR_GEN_LIST12(m, ...) KFR_GEN_LIST11(m, __VA_ARGS__), m(11, __VA_ARGS__)
+#define KFR_GEN_LIST13(m, ...) KFR_GEN_LIST12(m, __VA_ARGS__), m(12, __VA_ARGS__)
+#define KFR_GEN_LIST14(m, ...) KFR_GEN_LIST13(m, __VA_ARGS__), m(13, __VA_ARGS__)
+#define KFR_GEN_LIST15(m, ...) KFR_GEN_LIST14(m, __VA_ARGS__), m(14, __VA_ARGS__)
+#define KFR_GEN_LIST16(m, ...) KFR_GEN_LIST15(m, __VA_ARGS__), m(15, __VA_ARGS__)
+#define KFR_GEN_LIST17(m, ...) KFR_GEN_LIST16(m, __VA_ARGS__), m(16, __VA_ARGS__)
+#define KFR_GEN_LIST18(m, ...) KFR_GEN_LIST17(m, __VA_ARGS__), m(17, __VA_ARGS__)
+#define KFR_GEN_LIST19(m, ...) KFR_GEN_LIST18(m, __VA_ARGS__), m(18, __VA_ARGS__)
+#define KFR_GEN_LIST20(m, ...) KFR_GEN_LIST19(m, __VA_ARGS__), m(19, __VA_ARGS__)
 
-#define CMT_GEN_LIST21(m, ...) CMT_GEN_LIST20(m, __VA_ARGS__), m(20, __VA_ARGS__)
-#define CMT_GEN_LIST22(m, ...) CMT_GEN_LIST21(m, __VA_ARGS__), m(21, __VA_ARGS__)
-#define CMT_GEN_LIST23(m, ...) CMT_GEN_LIST22(m, __VA_ARGS__), m(22, __VA_ARGS__)
-#define CMT_GEN_LIST24(m, ...) CMT_GEN_LIST23(m, __VA_ARGS__), m(23, __VA_ARGS__)
-#define CMT_GEN_LIST25(m, ...) CMT_GEN_LIST24(m, __VA_ARGS__), m(24, __VA_ARGS__)
-#define CMT_GEN_LIST26(m, ...) CMT_GEN_LIST25(m, __VA_ARGS__), m(25, __VA_ARGS__)
-#define CMT_GEN_LIST27(m, ...) CMT_GEN_LIST26(m, __VA_ARGS__), m(26, __VA_ARGS__)
-#define CMT_GEN_LIST28(m, ...) CMT_GEN_LIST27(m, __VA_ARGS__), m(27, __VA_ARGS__)
-#define CMT_GEN_LIST29(m, ...) CMT_GEN_LIST28(m, __VA_ARGS__), m(28, __VA_ARGS__)
-#define CMT_GEN_LIST30(m, ...) CMT_GEN_LIST29(m, __VA_ARGS__), m(29, __VA_ARGS__)
+#define KFR_GEN_LIST21(m, ...) KFR_GEN_LIST20(m, __VA_ARGS__), m(20, __VA_ARGS__)
+#define KFR_GEN_LIST22(m, ...) KFR_GEN_LIST21(m, __VA_ARGS__), m(21, __VA_ARGS__)
+#define KFR_GEN_LIST23(m, ...) KFR_GEN_LIST22(m, __VA_ARGS__), m(22, __VA_ARGS__)
+#define KFR_GEN_LIST24(m, ...) KFR_GEN_LIST23(m, __VA_ARGS__), m(23, __VA_ARGS__)
+#define KFR_GEN_LIST25(m, ...) KFR_GEN_LIST24(m, __VA_ARGS__), m(24, __VA_ARGS__)
+#define KFR_GEN_LIST26(m, ...) KFR_GEN_LIST25(m, __VA_ARGS__), m(25, __VA_ARGS__)
+#define KFR_GEN_LIST27(m, ...) KFR_GEN_LIST26(m, __VA_ARGS__), m(26, __VA_ARGS__)
+#define KFR_GEN_LIST28(m, ...) KFR_GEN_LIST27(m, __VA_ARGS__), m(27, __VA_ARGS__)
+#define KFR_GEN_LIST29(m, ...) KFR_GEN_LIST28(m, __VA_ARGS__), m(28, __VA_ARGS__)
+#define KFR_GEN_LIST30(m, ...) KFR_GEN_LIST29(m, __VA_ARGS__), m(29, __VA_ARGS__)
 
-#define CMT_GEN_LIST31(m, ...) CMT_GEN_LIST30(m, __VA_ARGS__), m(30, __VA_ARGS__)
-#define CMT_GEN_LIST32(m, ...) CMT_GEN_LIST31(m, __VA_ARGS__), m(31, __VA_ARGS__)
-#define CMT_GEN_LIST33(m, ...) CMT_GEN_LIST32(m, __VA_ARGS__), m(32, __VA_ARGS__)
-#define CMT_GEN_LIST34(m, ...) CMT_GEN_LIST33(m, __VA_ARGS__), m(33, __VA_ARGS__)
-#define CMT_GEN_LIST35(m, ...) CMT_GEN_LIST34(m, __VA_ARGS__), m(34, __VA_ARGS__)
-#define CMT_GEN_LIST36(m, ...) CMT_GEN_LIST35(m, __VA_ARGS__), m(35, __VA_ARGS__)
-#define CMT_GEN_LIST37(m, ...) CMT_GEN_LIST36(m, __VA_ARGS__), m(36, __VA_ARGS__)
-#define CMT_GEN_LIST38(m, ...) CMT_GEN_LIST37(m, __VA_ARGS__), m(37, __VA_ARGS__)
-#define CMT_GEN_LIST39(m, ...) CMT_GEN_LIST38(m, __VA_ARGS__), m(38, __VA_ARGS__)
-#define CMT_GEN_LIST40(m, ...) CMT_GEN_LIST39(m, __VA_ARGS__), m(39, __VA_ARGS__)
+#define KFR_GEN_LIST31(m, ...) KFR_GEN_LIST30(m, __VA_ARGS__), m(30, __VA_ARGS__)
+#define KFR_GEN_LIST32(m, ...) KFR_GEN_LIST31(m, __VA_ARGS__), m(31, __VA_ARGS__)
+#define KFR_GEN_LIST33(m, ...) KFR_GEN_LIST32(m, __VA_ARGS__), m(32, __VA_ARGS__)
+#define KFR_GEN_LIST34(m, ...) KFR_GEN_LIST33(m, __VA_ARGS__), m(33, __VA_ARGS__)
+#define KFR_GEN_LIST35(m, ...) KFR_GEN_LIST34(m, __VA_ARGS__), m(34, __VA_ARGS__)
+#define KFR_GEN_LIST36(m, ...) KFR_GEN_LIST35(m, __VA_ARGS__), m(35, __VA_ARGS__)
+#define KFR_GEN_LIST37(m, ...) KFR_GEN_LIST36(m, __VA_ARGS__), m(36, __VA_ARGS__)
+#define KFR_GEN_LIST38(m, ...) KFR_GEN_LIST37(m, __VA_ARGS__), m(37, __VA_ARGS__)
+#define KFR_GEN_LIST39(m, ...) KFR_GEN_LIST38(m, __VA_ARGS__), m(38, __VA_ARGS__)
+#define KFR_GEN_LIST40(m, ...) KFR_GEN_LIST39(m, __VA_ARGS__), m(39, __VA_ARGS__)
 
-#define CMT_GEN_LIST41(m, ...) CMT_GEN_LIST40(m, __VA_ARGS__), m(40, __VA_ARGS__)
-#define CMT_GEN_LIST42(m, ...) CMT_GEN_LIST41(m, __VA_ARGS__), m(41, __VA_ARGS__)
-#define CMT_GEN_LIST43(m, ...) CMT_GEN_LIST42(m, __VA_ARGS__), m(42, __VA_ARGS__)
-#define CMT_GEN_LIST44(m, ...) CMT_GEN_LIST43(m, __VA_ARGS__), m(43, __VA_ARGS__)
-#define CMT_GEN_LIST45(m, ...) CMT_GEN_LIST44(m, __VA_ARGS__), m(44, __VA_ARGS__)
-#define CMT_GEN_LIST46(m, ...) CMT_GEN_LIST45(m, __VA_ARGS__), m(45, __VA_ARGS__)
-#define CMT_GEN_LIST47(m, ...) CMT_GEN_LIST46(m, __VA_ARGS__), m(46, __VA_ARGS__)
-#define CMT_GEN_LIST48(m, ...) CMT_GEN_LIST47(m, __VA_ARGS__), m(47, __VA_ARGS__)
-#define CMT_GEN_LIST49(m, ...) CMT_GEN_LIST48(m, __VA_ARGS__), m(48, __VA_ARGS__)
-#define CMT_GEN_LIST50(m, ...) CMT_GEN_LIST49(m, __VA_ARGS__), m(49, __VA_ARGS__)
+#define KFR_GEN_LIST41(m, ...) KFR_GEN_LIST40(m, __VA_ARGS__), m(40, __VA_ARGS__)
+#define KFR_GEN_LIST42(m, ...) KFR_GEN_LIST41(m, __VA_ARGS__), m(41, __VA_ARGS__)
+#define KFR_GEN_LIST43(m, ...) KFR_GEN_LIST42(m, __VA_ARGS__), m(42, __VA_ARGS__)
+#define KFR_GEN_LIST44(m, ...) KFR_GEN_LIST43(m, __VA_ARGS__), m(43, __VA_ARGS__)
+#define KFR_GEN_LIST45(m, ...) KFR_GEN_LIST44(m, __VA_ARGS__), m(44, __VA_ARGS__)
+#define KFR_GEN_LIST46(m, ...) KFR_GEN_LIST45(m, __VA_ARGS__), m(45, __VA_ARGS__)
+#define KFR_GEN_LIST47(m, ...) KFR_GEN_LIST46(m, __VA_ARGS__), m(46, __VA_ARGS__)
+#define KFR_GEN_LIST48(m, ...) KFR_GEN_LIST47(m, __VA_ARGS__), m(47, __VA_ARGS__)
+#define KFR_GEN_LIST49(m, ...) KFR_GEN_LIST48(m, __VA_ARGS__), m(48, __VA_ARGS__)
+#define KFR_GEN_LIST50(m, ...) KFR_GEN_LIST49(m, __VA_ARGS__), m(49, __VA_ARGS__)
 
-#define CMT_GEN_LIST51(m, ...) CMT_GEN_LIST50(m, __VA_ARGS__), m(50, __VA_ARGS__)
-#define CMT_GEN_LIST52(m, ...) CMT_GEN_LIST51(m, __VA_ARGS__), m(51, __VA_ARGS__)
-#define CMT_GEN_LIST53(m, ...) CMT_GEN_LIST52(m, __VA_ARGS__), m(52, __VA_ARGS__)
-#define CMT_GEN_LIST54(m, ...) CMT_GEN_LIST53(m, __VA_ARGS__), m(53, __VA_ARGS__)
-#define CMT_GEN_LIST55(m, ...) CMT_GEN_LIST54(m, __VA_ARGS__), m(54, __VA_ARGS__)
-#define CMT_GEN_LIST56(m, ...) CMT_GEN_LIST55(m, __VA_ARGS__), m(55, __VA_ARGS__)
-#define CMT_GEN_LIST57(m, ...) CMT_GEN_LIST56(m, __VA_ARGS__), m(56, __VA_ARGS__)
-#define CMT_GEN_LIST58(m, ...) CMT_GEN_LIST57(m, __VA_ARGS__), m(57, __VA_ARGS__)
-#define CMT_GEN_LIST59(m, ...) CMT_GEN_LIST58(m, __VA_ARGS__), m(58, __VA_ARGS__)
-#define CMT_GEN_LIST60(m, ...) CMT_GEN_LIST59(m, __VA_ARGS__), m(59, __VA_ARGS__)
+#define KFR_GEN_LIST51(m, ...) KFR_GEN_LIST50(m, __VA_ARGS__), m(50, __VA_ARGS__)
+#define KFR_GEN_LIST52(m, ...) KFR_GEN_LIST51(m, __VA_ARGS__), m(51, __VA_ARGS__)
+#define KFR_GEN_LIST53(m, ...) KFR_GEN_LIST52(m, __VA_ARGS__), m(52, __VA_ARGS__)
+#define KFR_GEN_LIST54(m, ...) KFR_GEN_LIST53(m, __VA_ARGS__), m(53, __VA_ARGS__)
+#define KFR_GEN_LIST55(m, ...) KFR_GEN_LIST54(m, __VA_ARGS__), m(54, __VA_ARGS__)
+#define KFR_GEN_LIST56(m, ...) KFR_GEN_LIST55(m, __VA_ARGS__), m(55, __VA_ARGS__)
+#define KFR_GEN_LIST57(m, ...) KFR_GEN_LIST56(m, __VA_ARGS__), m(56, __VA_ARGS__)
+#define KFR_GEN_LIST58(m, ...) KFR_GEN_LIST57(m, __VA_ARGS__), m(57, __VA_ARGS__)
+#define KFR_GEN_LIST59(m, ...) KFR_GEN_LIST58(m, __VA_ARGS__), m(58, __VA_ARGS__)
+#define KFR_GEN_LIST60(m, ...) KFR_GEN_LIST59(m, __VA_ARGS__), m(59, __VA_ARGS__)
 
-#define CMT_GEN_LIST61(m, ...) CMT_GEN_LIST60(m, __VA_ARGS__), m(60, __VA_ARGS__)
-#define CMT_GEN_LIST62(m, ...) CMT_GEN_LIST61(m, __VA_ARGS__), m(61, __VA_ARGS__)
-#define CMT_GEN_LIST63(m, ...) CMT_GEN_LIST62(m, __VA_ARGS__), m(62, __VA_ARGS__)
-#define CMT_GEN_LIST64(m, ...) CMT_GEN_LIST63(m, __VA_ARGS__), m(63, __VA_ARGS__)
-#define CMT_GEN_LIST65(m, ...) CMT_GEN_LIST64(m, __VA_ARGS__), m(64, __VA_ARGS__)
-#define CMT_GEN_LIST66(m, ...) CMT_GEN_LIST65(m, __VA_ARGS__), m(65, __VA_ARGS__)
-#define CMT_GEN_LIST67(m, ...) CMT_GEN_LIST66(m, __VA_ARGS__), m(66, __VA_ARGS__)
-#define CMT_GEN_LIST68(m, ...) CMT_GEN_LIST67(m, __VA_ARGS__), m(67, __VA_ARGS__)
-#define CMT_GEN_LIST69(m, ...) CMT_GEN_LIST68(m, __VA_ARGS__), m(68, __VA_ARGS__)
-#define CMT_GEN_LIST70(m, ...) CMT_GEN_LIST69(m, __VA_ARGS__), m(69, __VA_ARGS__)
+#define KFR_GEN_LIST61(m, ...) KFR_GEN_LIST60(m, __VA_ARGS__), m(60, __VA_ARGS__)
+#define KFR_GEN_LIST62(m, ...) KFR_GEN_LIST61(m, __VA_ARGS__), m(61, __VA_ARGS__)
+#define KFR_GEN_LIST63(m, ...) KFR_GEN_LIST62(m, __VA_ARGS__), m(62, __VA_ARGS__)
+#define KFR_GEN_LIST64(m, ...) KFR_GEN_LIST63(m, __VA_ARGS__), m(63, __VA_ARGS__)
+#define KFR_GEN_LIST65(m, ...) KFR_GEN_LIST64(m, __VA_ARGS__), m(64, __VA_ARGS__)
+#define KFR_GEN_LIST66(m, ...) KFR_GEN_LIST65(m, __VA_ARGS__), m(65, __VA_ARGS__)
+#define KFR_GEN_LIST67(m, ...) KFR_GEN_LIST66(m, __VA_ARGS__), m(66, __VA_ARGS__)
+#define KFR_GEN_LIST68(m, ...) KFR_GEN_LIST67(m, __VA_ARGS__), m(67, __VA_ARGS__)
+#define KFR_GEN_LIST69(m, ...) KFR_GEN_LIST68(m, __VA_ARGS__), m(68, __VA_ARGS__)
+#define KFR_GEN_LIST70(m, ...) KFR_GEN_LIST69(m, __VA_ARGS__), m(69, __VA_ARGS__)
 
-#define CMT_GEN_LIST(c, m, ...) CMT_GEN_LIST##c(m, __VA_ARGS__)
+#define KFR_GEN_LIST(c, m, ...) KFR_GEN_LIST##c(m, __VA_ARGS__)
 
 template <typename Tout, typename Tin>
-CMT_INTRINSIC Tout bitcast_anything(const Tin& in)
+KFR_INTRINSIC Tout bitcast_anything(const Tin& in)
 {
     static_assert(sizeof(Tin) == sizeof(Tout), "Invalid arguments for bitcast_anything");
-#if defined CMT_COMPILER_INTEL
+#if defined KFR_COMPILER_INTEL
     const union
     {
         const Tin in;
@@ -2121,25 +1978,25 @@ CMT_INTRINSIC Tout bitcast_anything(const Tin& in)
 }
 
 template <typename T>
-CMT_INTRINSIC constexpr T dont_deduce(T x)
+KFR_INTRINSIC constexpr T dont_deduce(T x)
 {
     return x;
 }
 
 template <typename Ty, typename T>
-CMT_INTRINSIC constexpr T just_value(T value)
+KFR_INTRINSIC constexpr T just_value(T value)
 {
     return value;
 }
 
 template <typename Tout, typename>
-CMT_INTRINSIC constexpr Tout pack_elements()
+KFR_INTRINSIC constexpr Tout pack_elements()
 {
     return 0;
 }
 
 template <typename Tout, typename Arg, typename... Args>
-CMT_INTRINSIC constexpr Tout pack_elements(Arg x, Args... args)
+KFR_INTRINSIC constexpr Tout pack_elements(Arg x, Args... args)
 {
     return static_cast<typename std::make_unsigned<Arg>::type>(x) |
            (pack_elements<Tout, Arg>(args...) << (sizeof(Arg) * 8));
@@ -2163,9 +2020,9 @@ enum class special_constant
     random_bits,
 };
 
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 4700))
-CMT_PRAGMA_MSVC(warning(disable : 4146))
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 4700))
+KFR_PRAGMA_MSVC(warning(disable : 4146))
 struct special_value
 {
     constexpr special_value(const special_value&) = default;
@@ -2175,7 +2032,7 @@ struct special_value
     constexpr special_value(int i) : c(special_constant::integer), ll(i), d(0) {}
 
     template <typename T>
-    constexpr T get() const CMT_NOEXCEPT
+    constexpr T get() const KFR_NOEXCEPT
     {
         switch (c)
         {
@@ -2211,7 +2068,7 @@ struct special_value
     }
 
     template <typename T>
-    constexpr operator T() const CMT_NOEXCEPT
+    constexpr operator T() const KFR_NOEXCEPT
     {
         return get<T>();
     }
@@ -2240,11 +2097,11 @@ struct special_value
         return u.value;
     }
 };
-CMT_PRAGMA_MSVC(warning(pop))
+KFR_PRAGMA_MSVC(warning(pop))
 
-CMT_PRAGMA_GNU(GCC diagnostic pop)
-} // namespace cometa
+KFR_PRAGMA_GNU(GCC diagnostic pop)
+} // namespace kfr
 
-CMT_PRAGMA_GNU(GCC diagnostic pop)
+KFR_PRAGMA_GNU(GCC diagnostic pop)
 
-CMT_PRAGMA_MSVC(warning(pop))
+KFR_PRAGMA_MSVC(warning(pop))

@@ -29,7 +29,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 /**
@@ -191,5 +191,5 @@ KFR_INTRINSIC T cos3x(const T& sinx, const T& cosx)
 {
     return cosx * (1 - 4 * sqr(sinx));
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

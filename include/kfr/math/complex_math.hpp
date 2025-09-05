@@ -37,7 +37,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace intrinsics
@@ -335,5 +335,5 @@ KFR_FUNCTION T1 csqr(const T1& x)
     return intrinsics::csqr(x);
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

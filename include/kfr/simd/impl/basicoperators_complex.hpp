@@ -31,7 +31,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 namespace intrinsics
 {
@@ -108,6 +108,6 @@ KFR_COMPLEX_OP_CVT(bxor)
 KFR_COMPLEX_OP_CVT(bor)
 
 } // namespace intrinsics
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 } // namespace kfr

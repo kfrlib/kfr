@@ -36,17 +36,17 @@
 #include <kfr/base/memory.hpp>
 #include "data/sincos.hpp"
 
-CMT_PRAGMA_GNU(GCC diagnostic push)
-#if CMT_HAS_WARNING("-Wpass-failed")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpass-failed")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+#if KFR_HAS_WARNING("-Wpass-failed")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wpass-failed")
 #endif
 
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 4127))
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 4127))
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <typename T, size_t N>
@@ -459,13 +459,13 @@ constexpr static inline cvec<T, N> twiddleimagmask()
     return inverse ? broadcast<N * 2, T>(-1, +1) : broadcast<N * 2, T>(+1, -1);
 }
 
-CMT_PRAGMA_GNU(GCC diagnostic push)
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wconversion")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wconversion")
 
-CMT_PRAGMA_GNU(GCC diagnostic pop)
+KFR_PRAGMA_GNU(GCC diagnostic pop)
 
 template <typename T, size_t N>
-CMT_NOINLINE static vec<T, N> cossin_conj(const vec<T, N>& x)
+KFR_NOINLINE static vec<T, N> cossin_conj(const vec<T, N>& x)
 {
     return negodd(cossin(x));
 }
@@ -1561,7 +1561,7 @@ KFR_INTRINSIC void butterfly_cycle(size_t&, size_t, csize_t<0>, Args&&...)
 template <size_t width, typename... Args>
 KFR_INTRINSIC void butterfly_cycle(size_t& i, size_t count, csize_t<width>, Args&&... args)
 {
-    CMT_LOOP_NOUNROLL
+    KFR_LOOP_NOUNROLL
     for (; i < count / width * width; i += width)
         butterfly(i, csize_t<width>(), std::forward<Args>(args)...);
     butterfly_cycle(i, count, csize_t<width / 2>(), std::forward<Args>(args)...);
@@ -1570,7 +1570,7 @@ KFR_INTRINSIC void butterfly_cycle(size_t& i, size_t count, csize_t<width>, Args
 template <size_t width, typename... Args>
 KFR_INTRINSIC void butterflies(size_t count, csize_t<width>, Args&&... args)
 {
-    CMT_ASSUME(count > 0);
+    KFR_ASSUME(count > 0);
     size_t i = 0;
     butterfly_cycle(i, count, csize_t<width>(), std::forward<Args>(args)...);
 }
@@ -1588,7 +1588,7 @@ KFR_INTRINSIC void generic_butterfly_cycle(csize_t<width>, Tradix radix, cbool_t
                                            const complex<T>* in, Tstride ostride, Thalfradix halfradix,
                                            Thalfradixsqr halfradix_sqr, const complex<T>* twiddle, size_t i)
 {
-    CMT_LOOP_NOUNROLL
+    KFR_LOOP_NOUNROLL
     for (; i < halfradix / width * width; i += width)
     {
         const cvec<T, 1> in0 = cread<1>(in);
@@ -1639,17 +1639,17 @@ template <size_t width, typename T, bool inverse, typename Tstride = csize_t<1>>
 KFR_INTRINSIC void generic_butterfly_w(size_t radix, cbool_t<inverse>, complex<T>* out, const complex<T>* in,
                                        const complex<T>* twiddle, Tstride ostride = Tstride{})
 {
-    CMT_ASSUME(radix > 0);
+    KFR_ASSUME(radix > 0);
     {
         cvec<T, width> sum = T();
         size_t j           = 0;
-        CMT_LOOP_NOUNROLL
+        KFR_LOOP_NOUNROLL
         for (; j < radix / width * width; j += width)
         {
             sum += cread<width>(in + j);
         }
         cvec<T, 1> sums = T();
-        CMT_LOOP_NOUNROLL
+        KFR_LOOP_NOUNROLL
         for (; j < radix; j++)
         {
             sums += cread<1>(in + j);
@@ -1657,7 +1657,7 @@ KFR_INTRINSIC void generic_butterfly_w(size_t radix, cbool_t<inverse>, complex<T
         cwrite<1>(out, hcadd(sum) + sums);
     }
     const auto halfradix = radix / 2;
-    CMT_ASSUME(halfradix > 0);
+    KFR_ASSUME(halfradix > 0);
     size_t i = 0;
 
     generic_butterfly_cycle(csize_t<width>(), radix, cbool_t<inverse>(), out, in, ostride, halfradix,
@@ -1672,13 +1672,13 @@ KFR_INTRINSIC void spec_generic_butterfly_w(csize_t<radix>, cbool_t<inverse>, co
     {
         cvec<T, width> sum = T();
         size_t j           = 0;
-        CMT_LOOP_UNROLL
+        KFR_LOOP_UNROLL
         for (; j < radix / width * width; j += width)
         {
             sum += cread<width>(in + j);
         }
         cvec<T, 1> sums = T();
-        CMT_LOOP_UNROLL
+        KFR_LOOP_UNROLL
         for (; j < radix; j++)
         {
             sums += cread<1>(in + j);
@@ -1687,7 +1687,7 @@ KFR_INTRINSIC void spec_generic_butterfly_w(csize_t<radix>, cbool_t<inverse>, co
     }
     const size_t halfradix     = radix / 2;
     const size_t halfradix_sqr = halfradix * halfradix;
-    CMT_ASSUME(halfradix > 0);
+    KFR_ASSUME(halfradix > 0);
     size_t i = 0;
 
     generic_butterfly_cycle(csize_t<width>(), radix, cbool_t<inverse>(), out, in, ostride, halfradix,
@@ -1700,12 +1700,12 @@ KFR_INTRINSIC void generic_butterfly(size_t radix, cbool_t<inverse>, complex<T>*
 {
     cswitch(
         csizes_t<11, 13>(), radix,
-        [&](auto radix_) CMT_INLINE_LAMBDA
+        [&](auto radix_) KFR_INLINE_LAMBDA
         {
             constexpr size_t width = vector_width<T>;
             spec_generic_butterfly_w<width>(radix_, cbool_t<inverse>(), out, in, twiddle, ostride);
         },
-        [&]() CMT_INLINE_LAMBDA
+        [&]() KFR_INLINE_LAMBDA
         {
             constexpr size_t width = vector_width<T>;
             generic_butterfly_w<width>(radix, cbool_t<inverse>(), out, in, twiddle, ostride);
@@ -1778,14 +1778,14 @@ KFR_INTRINSIC void cdigitreverse4_write<false, f64, 32>(complex<f64>* dest, cons
 #endif
 
 template <typename T>
-CMT_INLINE cvec<T, 1> calculate_twiddle_impl(size_t n, size_t size)
+KFR_INLINE cvec<T, 1> calculate_twiddle_impl(size_t n, size_t size)
 {
     T kth = c_pi<T, 2> * (n / static_cast<T>(size));
     return make_vector<T>(std::cos(kth), -std::sin(kth));
 }
 
 template <typename T>
-CMT_NOINLINE cvec<T, 1> calculate_twiddle(size_t n, size_t size)
+KFR_NOINLINE cvec<T, 1> calculate_twiddle(size_t n, size_t size)
 {
     n     = n % size;
     int q = 0;
@@ -1811,9 +1811,9 @@ CMT_NOINLINE cvec<T, 1> calculate_twiddle(size_t n, size_t size)
 }
 
 } // namespace intrinsics
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr
 
-CMT_PRAGMA_MSVC(warning(pop))
+KFR_PRAGMA_MSVC(warning(pop))
 
-CMT_PRAGMA_GNU(GCC diagnostic pop)
+KFR_PRAGMA_GNU(GCC diagnostic pop)

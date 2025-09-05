@@ -28,7 +28,7 @@
 #include "../base/basic_expressions.hpp"
 #include "../base/conversion.hpp"
 #include "../base/univector.hpp"
-#include "../cometa/ctti.hpp"
+#include "../meta/ctti.hpp"
 #include "../simd/vec.hpp"
 #include "file.hpp"
 
@@ -46,7 +46,7 @@ struct audio_format
 struct audio_format_and_length : audio_format
 {
     using audio_format::audio_format;
-    constexpr audio_format_and_length() CMT_NOEXCEPT {}
+    constexpr audio_format_and_length() KFR_NOEXCEPT {}
     constexpr audio_format_and_length(const audio_format& fmt) : audio_format(fmt) {}
 
     imax length = 0; // in samples

@@ -25,9 +25,9 @@
  */
 
 #include <kfr/io/audiofile.hpp>
-CMT_PRAGMA_GNU(GCC diagnostic push)
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wimplicit-fallthrough")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wunused-function")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wimplicit-fallthrough")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wunused-function")
 
 #ifndef KFR_DISABLE_WAV
 #define DR_WAV_NO_STDIO
@@ -38,7 +38,7 @@ CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wunused-function")
 #ifndef KFR_DISABLE_FLAC
 #define DR_FLAC_IMPLEMENTATION
 #define DR_FLAC_NO_STDIO
-#ifndef CMT_ARCH_SSE41
+#ifndef KFR_ARCH_SSE41
 #define DRFLAC_NO_SSE41
 #endif
 #include "dr/dr_flac.h"
@@ -109,10 +109,7 @@ void wav_file_deleter::operator()(wav_file* f)
     delete f;
 }
 
-void flac_file_deleter::operator()(flac_file* f)
-{
-    drflac_close(f);
-}
+void flac_file_deleter::operator()(flac_file* f) { drflac_close(f); }
 void mp3_file_deleter::operator()(mp3_file* f)
 {
     drmp3_uninit(f);
@@ -407,4 +404,4 @@ template struct audio_reader_mp3<f64>;
 
 } // namespace kfr
 
-CMT_PRAGMA_GNU(GCC diagnostic pop)
+KFR_PRAGMA_GNU(GCC diagnostic pop)

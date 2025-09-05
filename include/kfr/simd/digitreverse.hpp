@@ -29,15 +29,15 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace internal
 {
 
-CMT_PRAGMA_GNU(GCC diagnostic push)
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshift-count-overflow")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshift-count-negative")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wshift-count-overflow")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wshift-count-negative")
 
 constexpr KFR_INTRINSIC u32 bit_permute_step_impl(u32 x, cvals_t<u32>) { return x; }
 
@@ -72,12 +72,12 @@ constexpr KFR_INTRINSIC u32 digitreverse_impl(u32 x, csize_t<4>)
         return bit_permute_step_impl(x, steps[csizeseq<4>]) >> (8 - bits);
 }
 
-CMT_PRAGMA_GNU(GCC diagnostic pop)
+KFR_PRAGMA_GNU(GCC diagnostic pop)
 
 template <size_t radix, size_t bits>
 struct shuffle_index_digitreverse
 {
-    constexpr KFR_INTRINSIC size_t operator()(size_t index) const CMT_NOEXCEPT
+    constexpr KFR_INTRINSIC size_t operator()(size_t index) const KFR_NOEXCEPT
     {
         return digitreverse_impl<bits>(static_cast<u32>(index), csize_t<radix>());
     }
@@ -166,5 +166,5 @@ constexpr KFR_INTRINSIC u32 digitreverse4(u32 x)
     return internal::digitreverse_impl<bits>(x, csize_t<4>());
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

@@ -31,7 +31,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace intrinsics
@@ -66,19 +66,19 @@ KFR_INTRINSIC vec<f32, N> tan(const vec<f32, N>& x_full)
     const vec<f32, N> x = trig_fold(x_full, quad); // trig_fold_simple(x_full, inverse);
     inverse             = quad == 2 || quad == 6;
 
-    constexpr f32 tan_c2  = CMT_FP(0x5.555378p-4, 3.333315551280975342e-01);
-    constexpr f32 tan_c4  = CMT_FP(0x2.225bb8p-4, 1.333882510662078857e-01);
-    constexpr f32 tan_c6  = CMT_FP(0xd.ac3fep-8, 5.340956896543502808e-02);
-    constexpr f32 tan_c8  = CMT_FP(0x6.41644p-8, 2.443529665470123291e-02);
-    constexpr f32 tan_c10 = CMT_FP(0xc.bfe7ep-12, 3.112703096121549606e-03);
-    constexpr f32 tan_c12 = CMT_FP(0x2.6754dp-8, 9.389210492372512817e-03);
+    constexpr f32 tan_c2  = KFR_FP(0x5.555378p-4, 3.333315551280975342e-01);
+    constexpr f32 tan_c4  = KFR_FP(0x2.225bb8p-4, 1.333882510662078857e-01);
+    constexpr f32 tan_c6  = KFR_FP(0xd.ac3fep-8, 5.340956896543502808e-02);
+    constexpr f32 tan_c8  = KFR_FP(0x6.41644p-8, 2.443529665470123291e-02);
+    constexpr f32 tan_c10 = KFR_FP(0xc.bfe7ep-12, 3.112703096121549606e-03);
+    constexpr f32 tan_c12 = KFR_FP(0x2.6754dp-8, 9.389210492372512817e-03);
 
-    constexpr f32 cot_c2  = CMT_FP(-0x5.555558p-4, -3.333333432674407959e-01);
-    constexpr f32 cot_c4  = CMT_FP(-0x5.b0581p-8, -2.222204580903053284e-02);
-    constexpr f32 cot_c6  = CMT_FP(-0x8.ac5ccp-12, -2.117502503097057343e-03);
-    constexpr f32 cot_c8  = CMT_FP(-0xd.aaa01p-16, -2.085343148792162538e-04);
-    constexpr f32 cot_c10 = CMT_FP(-0x1.a9a9b4p-16, -2.537148611736483872e-05);
-    constexpr f32 cot_c12 = CMT_FP(-0x6.f7d4dp-24, -4.153305894760705996e-07);
+    constexpr f32 cot_c2  = KFR_FP(-0x5.555558p-4, -3.333333432674407959e-01);
+    constexpr f32 cot_c4  = KFR_FP(-0x5.b0581p-8, -2.222204580903053284e-02);
+    constexpr f32 cot_c6  = KFR_FP(-0x8.ac5ccp-12, -2.117502503097057343e-03);
+    constexpr f32 cot_c8  = KFR_FP(-0xd.aaa01p-16, -2.085343148792162538e-04);
+    constexpr f32 cot_c10 = KFR_FP(-0x1.a9a9b4p-16, -2.537148611736483872e-05);
+    constexpr f32 cot_c12 = KFR_FP(-0x6.f7d4dp-24, -4.153305894760705996e-07);
 
     const vec<f32, N> x2  = x * x;
     const vec<f32, N> val = trig_horner(x2, inverse, 1.0f, 1.0f, cot_c2, tan_c2, cot_c4, tan_c4, cot_c6,
@@ -148,5 +148,5 @@ namespace fn
 }
 KFR_I_FN(tan)
 KFR_I_FN(tandeg)
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

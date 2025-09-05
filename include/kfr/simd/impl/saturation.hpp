@@ -28,7 +28,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace intrinsics
@@ -71,7 +71,7 @@ KFR_INTRINSIC vec<T, N> saturated_unsigned_sub(const vec<T, N>& a, const vec<T, 
     return select(a < b, zerovector(a), a - b);
 }
 
-#if defined CMT_ARCH_SSE2 && defined KFR_NATIVE_INTRINSICS
+#if defined KFR_ARCH_SSE2 && defined KFR_NATIVE_INTRINSICS
 
 KFR_INTRINSIC u8sse satadd(const u8sse& x, const u8sse& y) { return _mm_adds_epu8(x.v, y.v); }
 KFR_INTRINSIC i8sse satadd(const i8sse& x, const i8sse& y) { return _mm_adds_epi8(x.v, y.v); }
@@ -93,7 +93,7 @@ KFR_INTRINSIC i64sse satsub(const i64sse& a, const i64sse& b) { return saturated
 KFR_INTRINSIC u32sse satsub(const u32sse& a, const u32sse& b) { return saturated_unsigned_sub(a, b); }
 KFR_INTRINSIC u64sse satsub(const u64sse& a, const u64sse& b) { return saturated_unsigned_sub(a, b); }
 
-#if defined CMT_ARCH_AVX2
+#if defined KFR_ARCH_AVX2
 KFR_INTRINSIC u8avx satadd(const u8avx& x, const u8avx& y) { return _mm256_adds_epu8(x.v, y.v); }
 KFR_INTRINSIC i8avx satadd(const i8avx& x, const i8avx& y) { return _mm256_adds_epi8(x.v, y.v); }
 KFR_INTRINSIC u16avx satadd(const u16avx& x, const u16avx& y) { return _mm256_adds_epu16(x.v, y.v); }
@@ -115,7 +115,7 @@ KFR_INTRINSIC u32avx satsub(const u32avx& a, const u32avx& b) { return saturated
 KFR_INTRINSIC u64avx satsub(const u64avx& a, const u64avx& b) { return saturated_unsigned_sub(a, b); }
 #endif
 
-#if defined CMT_ARCH_AVX512
+#if defined KFR_ARCH_AVX512
 KFR_INTRINSIC u8avx512 satadd(const u8avx512& x, const u8avx512& y) { return _mm512_adds_epu8(x.v, y.v); }
 KFR_INTRINSIC i8avx512 satadd(const i8avx512& x, const i8avx512& y) { return _mm512_adds_epi8(x.v, y.v); }
 KFR_INTRINSIC u16avx512 satadd(const u16avx512& x, const u16avx512& y) { return _mm512_adds_epu16(x.v, y.v); }
@@ -150,7 +150,7 @@ KFR_INTRINSIC u64avx512 satsub(const u64avx512& a, const u64avx512& b)
 KFR_HANDLE_ALL_SIZES_2(satadd)
 KFR_HANDLE_ALL_SIZES_2(satsub)
 
-#elif defined CMT_ARCH_NEON && defined KFR_NATIVE_INTRINSICS
+#elif defined KFR_ARCH_NEON && defined KFR_NATIVE_INTRINSICS
 
 KFR_INTRINSIC u8neon satadd(const u8neon& x, const u8neon& y) { return vqaddq_u8(x.v, y.v); }
 KFR_INTRINSIC i8neon satadd(const i8neon& x, const i8neon& y) { return vqaddq_s8(x.v, y.v); }
@@ -201,5 +201,5 @@ KFR_HANDLE_SCALAR(satsub)
 } // namespace intrinsics
 KFR_I_FN(satadd)
 KFR_I_FN(satsub)
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

@@ -30,7 +30,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace internal
@@ -218,5 +218,5 @@ KFR_INTRINSIC void fir_bandstop(const univector_ref<T>& taps, identity<T> freque
 {
     return internal::fir_bandstop(taps, frequency1, frequency2, window, normalize);
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

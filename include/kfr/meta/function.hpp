@@ -1,19 +1,19 @@
-/** @addtogroup cometa
+/** @addtogroup meta
  *  @{
  */
 #pragma once
 
-#include "../cometa.hpp"
+#include "../meta.hpp"
 #include "memory.hpp"
 #include <cstddef>
 #include <cstdlib>
 #include <memory>
 #include <type_traits>
-#if CMT_HAS_EXCEPTIONS
+#if KFR_HAS_EXCEPTIONS
 #include <functional>
 #endif
 
-namespace cometa
+namespace kfr
 {
 
 namespace details
@@ -31,13 +31,13 @@ struct func_filter<Result(Args...)>
 };
 
 template <typename T>
-constexpr CMT_INTRINSIC T return_val() CMT_NOEXCEPT
+constexpr KFR_INTRINSIC T return_val() KFR_NOEXCEPT
 {
     return {};
 }
 
 template <>
-constexpr CMT_INTRINSIC void return_val<void>() CMT_NOEXCEPT
+constexpr KFR_INTRINSIC void return_val<void>() KFR_NOEXCEPT
 {
 }
 } // namespace details
@@ -110,7 +110,7 @@ struct function<R(Args...)>
 
     R operator()(Args... args) const
     {
-#if CMT_HAS_EXCEPTIONS
+#if KFR_HAS_EXCEPTIONS
         if (impl)
         {
             return impl->operator()(std::forward<Args>(args)...);
@@ -133,9 +133,9 @@ struct function<R(Args...)>
 };
 
 template <typename Ret, typename... Args, typename T, typename Fn, typename DefFn = fn_noop>
-CMT_INLINE function<Ret(Args...)> cdispatch(cvals_t<T>, identity<T>, Fn&&, DefFn&& deffn = DefFn())
+KFR_INLINE function<Ret(Args...)> cdispatch(cvals_t<T>, identity<T>, Fn&&, DefFn&& deffn = DefFn())
 {
-    return [=](Args... args) CMT_INLINE_LAMBDA -> Ret { return deffn(std::forward<Args>(args)...); };
+    return [=](Args... args) KFR_INLINE_LAMBDA -> Ret { return deffn(std::forward<Args>(args)...); };
 }
 
 template <typename Ret, typename... Args, typename T, T v0, T... values, typename Fn,
@@ -145,7 +145,7 @@ inline function<Ret(Args...)> cdispatch(cvals_t<T, v0, values...>, identity<T> v
 {
     if (value == v0)
     {
-        return [=](Args... args) CMT_INLINE_LAMBDA -> Ret
+        return [=](Args... args) KFR_INLINE_LAMBDA -> Ret
         { return fn(cval_t<T, v0>(), std::forward<Args>(args)...); };
     }
     else
@@ -154,4 +154,4 @@ inline function<Ret(Args...)> cdispatch(cvals_t<T, v0, values...>, identity<T> v
                                        std::forward<DefFn>(deffn));
     }
 }
-} // namespace cometa
+} // namespace kfr

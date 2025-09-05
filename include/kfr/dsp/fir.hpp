@@ -34,8 +34,8 @@
 #include "../base/univector.hpp"
 #include "../simd/vec.hpp"
 
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 4244))
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 4244))
 
 namespace kfr
 {
@@ -77,7 +77,7 @@ struct fir_params
         std::reverse(this->taps.begin(), this->taps.end());
     }
 
-    template <typename Cont, CMT_HAS_DATA_SIZE(Cont)>
+    template <typename Cont, KFR_HAS_DATA_SIZE(Cont)>
     fir_params(Cont&& taps) : fir_params(std::data(taps), std::size(taps))
     {
     }
@@ -98,11 +98,11 @@ struct fir_state
         : params(std::move(params)), delayline(this->params.taps.size(), U(0)), delayline_cursor(0)
     {
     }
-    template <typename Cont, CMT_HAS_DATA_SIZE(Cont)>
+    template <typename Cont, KFR_HAS_DATA_SIZE(Cont)>
     fir_state(Cont&& taps) : params(std::move(taps)), delayline(params.taps.size(), U(0)), delayline_cursor(0)
     {
     }
-    template <typename Cont, CMT_HAS_DATA_SIZE(Cont)>
+    template <typename Cont, KFR_HAS_DATA_SIZE(Cont)>
     void push_delayline(Cont&& state)
     {
         delayline.ringbuf_write(delayline_cursor, std::data(state), std::size(state));
@@ -130,7 +130,7 @@ struct moving_sum_state<U, tag_dynamic_vector>
     size_t head_cursor, tail_cursor;
 };
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <size_t tapcount, typename T, typename U, typename E1, bool stateless = false>
@@ -154,7 +154,8 @@ struct expression_short_fir : expression_with_traits<E1>
 
         vec<U, N> out = in * self.state->taps.front();
         cforeach(csizeseq<tapcount - 1, 1>,
-                 [&](auto I) {
+                 [&](auto I)
+                 {
                      out = out + concat_and_slice<tapcount - 1 - I, N>(self.state->delayline, in) *
                                      self.state->taps[I];
                  });
@@ -187,7 +188,7 @@ struct expression_fir : expression_with_traits<E1>
 
         vec<U, N> output;
         size_t cursor = self.state->delayline_cursor;
-        CMT_LOOP_NOUNROLL
+        KFR_LOOP_NOUNROLL
         for (size_t i = 0; i < N; i++)
         {
             self.state->delayline.ringbuf_write(cursor, input[i]);
@@ -232,7 +233,7 @@ struct expression_moving_sum : expression_with_traits<E1>
         auto s    = sum(self.state->delayline);
         output[0] = s;
 
-        CMT_LOOP_NOUNROLL
+        KFR_LOOP_NOUNROLL
         for (size_t i = 1; i < N; i++)
         {
             U nextout;
@@ -396,7 +397,7 @@ template <size_t TapCount, size_t InternalTapCount = next_poweroftwo(TapCount - 
     return short_fir(std::forward<E1>(e1), std::ref(state));
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 template <typename T, typename U = T>
 class fir_filter : public filter<U>
@@ -426,4 +427,4 @@ using filter_fir = fir_filter<T, U>;
 
 } // namespace kfr
 
-CMT_PRAGMA_MSVC(warning(pop))
+KFR_PRAGMA_MSVC(warning(pop))

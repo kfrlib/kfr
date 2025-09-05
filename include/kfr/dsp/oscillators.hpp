@@ -32,7 +32,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <typename T = fbase>
@@ -279,6 +279,6 @@ KFR_FUNCTION expression_function<fn::isawtoothnorm, E1> isawtoothnorm(E1&& x)
 {
     return { fn::isawtoothnorm(), std::forward<E1>(x) };
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 } // namespace kfr

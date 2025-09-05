@@ -32,7 +32,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <typename E1>
@@ -92,5 +92,5 @@ inline auto waveshaper_poly(E1&& input, fbase c1, fbase c3, Cs... cs)
 {
     return horner_odd(input, c1, c3, static_cast<fbase>(cs)...);
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

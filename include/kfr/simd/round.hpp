@@ -29,7 +29,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 /// @brief Returns the largest integer value not greater than x
@@ -104,5 +104,5 @@ KFR_INTRINSIC vec<T, N> rem(const vec<T, N>& x, const vec<T, N>& y)
 {
     return fmod(x, y);
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

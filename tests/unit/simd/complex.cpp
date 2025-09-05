@@ -9,7 +9,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 TEST(complex_convertible)
@@ -133,5 +133,5 @@ TEST(complex_vector)
     CHECK(c32s.flatten()[1] == 0.f);
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

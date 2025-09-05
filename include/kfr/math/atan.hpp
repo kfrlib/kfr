@@ -29,7 +29,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 /**
@@ -70,5 +70,5 @@ KFR_FUNCTION std::common_type_t<T1, T2> atan2deg(const T1& x, const T2& y)
 {
     return intrinsics::atan2deg(x, y);
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

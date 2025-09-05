@@ -8,7 +8,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 TEST(note_to_hertz)
@@ -46,7 +46,7 @@ TEST(amp_to_dB)
 
 TEST(dB_to_amp)
 {
-#if defined __clang__ && defined(CMT_ARCH_ARM) && __clang_major__ >= 13
+#if defined __clang__ && defined(KFR_ARCH_ARM) && __clang_major__ >= 13
     // Clang 13+ compiler bug on ARM
 #else
     testo::epsilon_scope<void> eps(1000);
@@ -62,5 +62,5 @@ TEST(dB_to_amp)
 #endif
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

@@ -34,7 +34,7 @@
 namespace kfr
 {
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <typename T, size_t N, KFR_ENABLE_IF(std::is_integral_v<T>)>
@@ -285,6 +285,6 @@ KFR_FUNCTION expression_random_normal<T, Dims> gen_random_normal(T sigma = 1, T 
 }
 #endif
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 } // namespace kfr

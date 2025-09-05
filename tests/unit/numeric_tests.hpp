@@ -14,7 +14,7 @@ inline bool show_measured_accuracy = false;
 
 using testo::test_data_entry;
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 using vector_types =
@@ -34,8 +34,8 @@ uint64_t ulps(T x, T y)
     if ((x < 0) != (y < 0))
         return ulps<T>(std::abs(x), 0) + ulps<T>(std::abs(y), 0);
 
-    utype<T> ix = cometa::bitcast_anything<utype<T>>(x);
-    utype<T> iy = cometa::bitcast_anything<utype<T>>(y);
+    utype<T> ix = kfr::bitcast_anything<utype<T>>(x);
+    utype<T> iy = kfr::bitcast_anything<utype<T>>(y);
     if (std::abs(x) < std::numeric_limits<T>::min() && y > std::numeric_limits<T>::min())
         return 1 + ulps<T>(std::numeric_limits<T>::min(), y);
     if (std::abs(x) > std::numeric_limits<T>::min() && y < std::numeric_limits<T>::min())
@@ -68,7 +68,7 @@ inline const char* tname(ctype_t<f64>) { return "double"; }
         error_peak = std::max(error_peak, arg_diff);                                                         \
         ::testo::active_test()->check(                                                                       \
             arg_diff <= threshold,                                                                           \
-            ::cometa::as_string(x_arg_value, " ~= ", y_arg_value, " (", arg_diff, " <= ", threshold, ")"),   \
+            ::kfr::as_string(x_arg_value, " ~= ", y_arg_value, " (", arg_diff, " <= ", threshold, ")"),      \
             #x_arg " ~= " #y_arg, file, line);                                                               \
     } while (0)
 
@@ -86,7 +86,7 @@ inline const char* tname(ctype_t<f64>) { return "double"; }
                           std::shared_ptr<file_reader<test_data_entry<Tsub, 1>>> reader =                    \
                               open_file_for_reading<test_data_entry<Tsub, 1>>(                               \
                                   std::string(KFR_SRC_DIR "/tests/data/" #fn "_") +                          \
-                                  tname(cometa::ctype<Tsub>) + "_" #datafile);                               \
+                                  tname(kfr::ctype<Tsub>) + "_" #datafile);                                  \
                           test_data_entry<Tsub, 1> entry;                                                    \
                           while (reader->read(entry))                                                        \
                           {                                                                                  \
@@ -97,7 +97,7 @@ inline const char* tname(ctype_t<f64>) { return "double"; }
                           CHECK(checks_count > 0u);                                                          \
                           CHECK(error_sum / checks_count <= avgulps);                                        \
                           if (show_measured_accuracy)                                                        \
-                              println("measured accuracy: ", tname(cometa::ctype<Tsub>), " ",                \
+                              println("measured accuracy: ", tname(kfr::ctype<Tsub>), " ",                   \
                                       error_sum / checks_count, "(peak ", error_peak, ")");                  \
                       });                                                                                    \
     }
@@ -116,7 +116,7 @@ inline const char* tname(ctype_t<f64>) { return "double"; }
                           std::shared_ptr<file_reader<test_data_entry<Tsub, 2>>> reader =                    \
                               open_file_for_reading<test_data_entry<Tsub, 2>>(                               \
                                   std::string(KFR_SRC_DIR "/tests/data/" #fn "_") +                          \
-                                  tname(cometa::ctype<Tsub>) + "_" #datafile);                               \
+                                  tname(kfr::ctype<Tsub>) + "_" #datafile);                                  \
                           test_data_entry<Tsub, 2> entry;                                                    \
                           while (reader->read(entry))                                                        \
                           {                                                                                  \
@@ -127,9 +127,9 @@ inline const char* tname(ctype_t<f64>) { return "double"; }
                           CHECK(checks_count > 0u);                                                          \
                           CHECK(error_sum / checks_count <= avgulps);                                        \
                           if (show_measured_accuracy)                                                        \
-                              println("measured accuracy: ", tname(cometa::ctype<Tsub>), " ",                \
+                              println("measured accuracy: ", tname(kfr::ctype<Tsub>), " ",                   \
                                       error_sum / checks_count, "(peak ", error_peak, ")");                  \
                       });                                                                                    \
     }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

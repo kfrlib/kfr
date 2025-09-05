@@ -8,12 +8,12 @@
 #include <kfr/simd/horizontal.hpp>
 #include <kfr/simd/operators.hpp>
 
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 4146))
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 4146))
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 TEST(neg)
 {
@@ -63,8 +63,7 @@ inline bool is_safe_division(T x, T y)
 TEST(div)
 {
     test_function2(
-        test_catogories::vectors,
-        [](auto x, auto y)
+        test_catogories::vectors, [](auto x, auto y)
         { return is_safe_division<subtype<decltype(x)>>(x.front(), y.front()) ? x / y : 0; },
         [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)>
         { return is_safe_division(x, y) ? x / y : 0; });
@@ -80,12 +79,10 @@ struct not_f
 TEST(mod)
 {
     test_function2(
-        test_catogories::vectors,
-        [](auto x, auto y)
+        test_catogories::vectors, [](auto x, auto y)
         { return is_safe_division<subtype<decltype(x)>>(x.front(), y.front()) ? x % y : 0; },
         [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)>
-        { return is_safe_division(x, y) ? x % y : 0; },
-        fn_return_constant<bool, true>{}, not_f{});
+        { return is_safe_division(x, y) ? x % y : 0; }, fn_return_constant<bool, true>{}, not_f{});
 }
 
 TEST(bor)
@@ -134,14 +131,16 @@ TEST(shl)
                 const T x(value);
                 CHECK(std::is_same<decltype(x << shift), T>::value);
                 CHECK((x << shift) == apply(
-                                          [=](auto x) -> decltype(x) {
+                                          [=](auto x) -> decltype(x)
+                                          {
                                               return bitcast<decltype(x)>(
                                                   static_cast<uitype<decltype(x)>>(uibitcast(x) << shift));
                                           },
                                           x));
                 CHECK((x << broadcast<T::scalar_size()>(utype<subtype<T>>(shift))) ==
                       apply(
-                          [=](auto x) -> decltype(x) {
+                          [=](auto x) -> decltype(x)
+                          {
                               return bitcast<decltype(x)>(
                                   static_cast<uitype<decltype(x)>>(uibitcast(x) << shift));
                           },
@@ -163,14 +162,16 @@ TEST(shr)
                 const T x(value);
                 CHECK(std::is_same<decltype(x >> shift), T>::value);
                 CHECK((x >> shift) == apply(
-                                          [=](auto x) -> decltype(x) {
+                                          [=](auto x) -> decltype(x)
+                                          {
                                               return bitcast<decltype(x)>(
                                                   static_cast<uitype<decltype(x)>>(uibitcast(x) >> shift));
                                           },
                                           x));
                 CHECK((x >> broadcast<T::scalar_size()>(utype<subtype<T>>(shift))) ==
                       apply(
-                          [=](auto x) -> decltype(x) {
+                          [=](auto x) -> decltype(x)
+                          {
                               return bitcast<decltype(x)>(
                                   static_cast<uitype<decltype(x)>>(uibitcast(x) >> shift));
                           },
@@ -261,7 +262,7 @@ TEST(apply)
     CHECK(apply([](int x) { return x + 1; }, make_vector(1, 2, 3, 4, 5)) == make_vector(2, 3, 4, 5, 6));
     CHECK(apply(fn::sqr(), make_vector(1, 2, 3, 4, 5)) == make_vector(1, 4, 9, 16, 25));
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr
 
-CMT_PRAGMA_MSVC(warning(pop))
+KFR_PRAGMA_MSVC(warning(pop))

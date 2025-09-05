@@ -19,10 +19,10 @@
 
 using namespace kfr;
 
-#ifdef CMT_COMPILER_MSVC
-#define KFR_PUBLIC CMT_PUBLIC_C CMT_DLL_EXPORT
+#ifdef KFR_COMPILER_MSVC
+#define KFR_PUBLIC KFR_PUBLIC_C KFR_DLL_EXPORT
 #else
-#define KFR_PUBLIC CMT_PUBLIC_C
+#define KFR_PUBLIC KFR_PUBLIC_C
 #endif
 
 #define TEST_ASM_8(fn, ty, MACRO)                                                                            \
@@ -105,13 +105,13 @@ using namespace kfr;
 #define GEN_arg(n, ty) arg##n
 
 #define TEST_ASM_MAKE_VECTOR(fn, ty, n)                                                                      \
-    KFR_PUBLIC void asm__test__##fn##__##ty##__##n(vec<ty, n>& r, CMT_GEN_LIST(n, GEN_arg_def, ty))          \
+    KFR_PUBLIC void asm__test__##fn##__##ty##__##n(vec<ty, n>& r, KFR_GEN_LIST(n, GEN_arg_def, ty))          \
     {                                                                                                        \
-        r = kfr::fn(CMT_GEN_LIST(n, GEN_arg, ty));                                                           \
+        r = kfr::fn(KFR_GEN_LIST(n, GEN_arg, ty));                                                           \
     }                                                                                                        \
     KFR_PUBLIC void asm__test__##fn##__##ty##__##n##__imm(vec<ty, n>& r)                                     \
     {                                                                                                        \
-        r = kfr::fn(CMT_GEN_LIST(n, GEN_ty, ty));                                                            \
+        r = kfr::fn(KFR_GEN_LIST(n, GEN_ty, ty));                                                            \
     }
 
 #define TEST_ASM_BROADCAST(fn, ty, n)                                                                        \
@@ -313,7 +313,7 @@ namespace kfr
 {
 
 #ifdef KFR_SHOW_NOT_OPTIMIZED
-KFR_PUBLIC void not_optimized(const char* fn) CMT_NOEXCEPT { puts(fn); }
+KFR_PUBLIC void not_optimized(const char* fn) KFR_NOEXCEPT { puts(fn); }
 #endif
 
 } // namespace kfr

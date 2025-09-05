@@ -82,7 +82,7 @@ void convolve_filter<T>::reset()
 
 //-------------------------------------------------------------------------------------
 
-CMT_MULTI_PROTO(namespace impl {
+KFR_MULTI_PROTO(namespace impl {
     template <typename T>
     univector<T> convolve(const univector_ref<const T>&, const univector_ref<const T>&, bool);
 
@@ -94,7 +94,7 @@ CMT_MULTI_PROTO(namespace impl {
     };
 })
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace impl
@@ -231,15 +231,15 @@ template class convolve_filter<complex<double>>;
 
 } // namespace impl
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
-#ifdef CMT_MULTI_NEEDS_GATE
+#ifdef KFR_MULTI_NEEDS_GATE
 namespace internal_generic
 {
 template <typename T>
 univector<T> convolve(const univector_ref<const T>& src1, const univector_ref<const T>& src2, bool correlate)
 {
-    CMT_MULTI_GATE(return ns::impl::convolve(src1, src2, correlate));
+    KFR_MULTI_GATE(return ns::impl::convolve(src1, src2, correlate));
 }
 
 template univector<f32> convolve<f32>(const univector_ref<const f32>&, const univector_ref<const f32>&, bool);
@@ -252,7 +252,7 @@ template univector<c64> convolve<c64>(const univector_ref<const c64>&, const uni
 template <typename T>
 void convolve_filter<T>::process_buffer(T* output, const T* input, size_t size)
 {
-    CMT_MULTI_GATE(
+    KFR_MULTI_GATE(
         reinterpret_cast<ns::impl::convolve_filter<T>*>(this)->process_buffer_impl(output, input, size));
 }
 

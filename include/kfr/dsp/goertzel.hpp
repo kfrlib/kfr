@@ -32,7 +32,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <typename T>
@@ -60,7 +60,7 @@ struct expression_goertzel : expression_traits_defaults
                                            const identity<vec<T, N>>& x)
     {
         vec<T, N> in = x;
-        CMT_LOOP_UNROLL
+        KFR_LOOP_UNROLL
         for (size_t i = 0; i < N; i++)
         {
             self.q0 = self.coeff * self.q1 - self.q2 + in[i];
@@ -108,7 +108,7 @@ struct expression_parallel_goertzel : expression_traits_defaults
                                            axis_params<VecAxis, N>, const identity<vec<T, N>>& x)
     {
         const vec<T, N> in = x;
-        CMT_LOOP_UNROLL
+        KFR_LOOP_UNROLL
         for (size_t i = 0; i < N; i++)
         {
             self.q0 = self.coeff * self.q1 - self.q2 + in[i];
@@ -136,5 +136,5 @@ KFR_INTRINSIC expression_parallel_goertzel<T, width> goertzel(complex<T> (&resul
 {
     return expression_parallel_goertzel<T, width>(result, read<width>(omega));
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

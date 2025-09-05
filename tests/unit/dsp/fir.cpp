@@ -9,7 +9,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 TEST(fir_state)
@@ -35,7 +35,7 @@ TEST(fir_state)
 
 TEST(fir)
 {
-#ifdef CMT_COMPILER_IS_MSVC
+#ifdef KFR_COMPILER_IS_MSVC
     // testo::matrix causes error in MSVC
     {
         using T = float;
@@ -87,7 +87,7 @@ TEST(fir)
     }
 #else
     testo::matrix(named("type") = ctypes_t<float
-#ifdef CMT_NATIVE_F64
+#ifdef KFR_NATIVE_F64
                                            ,
                                            double
 #endif
@@ -174,7 +174,7 @@ TEST(fir)
 #endif
 }
 
-#ifdef CMT_NATIVE_F64
+#ifdef KFR_NATIVE_F64
 TEST(fir_different)
 {
     const univector<float, 100> data = counter() + sequence(1, 2, -10, 100) + sequence(0, -7, 0.5f);
@@ -225,6 +225,6 @@ TEST(fir_complex)
                          return result;
                      });
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 } // namespace kfr

@@ -6,7 +6,7 @@ set(
     KFR_HDR
     ${PROJECT_SOURCE_DIR}/include/kfr/all.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/cometa.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/meta.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/except.hpp
@@ -43,17 +43,17 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/transpose.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/univector.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/static_array.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/cometa/array.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/cometa/cstring.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/cometa/ctti.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/cometa/function.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/cometa/memory.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/cometa/named_arg.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/cometa/numeric.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/cometa/range.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/cometa/result.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/cometa/string.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/cometa/tuple.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/meta/array.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/meta/cstring.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/meta/ctti.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/meta/function.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/meta/memory.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/meta/named_arg.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/meta/numeric.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/meta/range.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/meta/result.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/meta/string.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/meta/tuple.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/cache.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/convolution.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/fft.hpp
@@ -323,7 +323,7 @@ set(
     
 set(
     KFR_UNITTEST_SRC
-    ${PROJECT_SOURCE_DIR}/tests/unit/cometa.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/meta.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/base.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/basic_expressions.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/conversion.cpp

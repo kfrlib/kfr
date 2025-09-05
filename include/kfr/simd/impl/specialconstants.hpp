@@ -22,37 +22,37 @@
  */
 #pragma once
 
-#include "../../cometa/numeric.hpp"
+#include "../../meta/numeric.hpp"
 #include "intrinsics.h"
 
 namespace kfr
 {
-using namespace cometa;
+using namespace kfr;
 
-#if defined CMT_COMPILER_GNU
-constexpr f32 allones_f32() CMT_NOEXCEPT { return -__builtin_nanf("0xFFFFFFFF"); }
-constexpr f64 allones_f64() CMT_NOEXCEPT { return -__builtin_nan("0xFFFFFFFFFFFFFFFF"); }
-constexpr f32 invhighbit_f32() CMT_NOEXCEPT { return __builtin_nanf("0x7FFFFFFF"); }
-constexpr f64 invhighbit_f64() CMT_NOEXCEPT { return __builtin_nan("0x7FFFFFFFFFFFFFFF"); }
-#elif defined CMT_COMPILER_MSVC
-constexpr f32 allones_f32() CMT_NOEXCEPT { return -__builtin_nanf("-1"); }
-constexpr f64 allones_f64() CMT_NOEXCEPT { return -__builtin_nan("-1"); }
-constexpr f32 invhighbit_f32() CMT_NOEXCEPT { return __builtin_nanf("-1"); }
-constexpr f64 invhighbit_f64() CMT_NOEXCEPT { return __builtin_nan("-1"); }
+#if defined KFR_COMPILER_GNU
+constexpr f32 allones_f32() KFR_NOEXCEPT { return -__builtin_nanf("0xFFFFFFFF"); }
+constexpr f64 allones_f64() KFR_NOEXCEPT { return -__builtin_nan("0xFFFFFFFFFFFFFFFF"); }
+constexpr f32 invhighbit_f32() KFR_NOEXCEPT { return __builtin_nanf("0x7FFFFFFF"); }
+constexpr f64 invhighbit_f64() KFR_NOEXCEPT { return __builtin_nan("0x7FFFFFFFFFFFFFFF"); }
+#elif defined KFR_COMPILER_MSVC
+constexpr f32 allones_f32() KFR_NOEXCEPT { return -__builtin_nanf("-1"); }
+constexpr f64 allones_f64() KFR_NOEXCEPT { return -__builtin_nan("-1"); }
+constexpr f32 invhighbit_f32() KFR_NOEXCEPT { return __builtin_nanf("-1"); }
+constexpr f64 invhighbit_f64() KFR_NOEXCEPT { return __builtin_nan("-1"); }
 #else
-inline f32 allones_f32() CMT_NOEXCEPT
+inline f32 allones_f32() KFR_NOEXCEPT
 {
     return _mm_cvtss_f32(_mm_castsi128_ps(_mm_cvtsi32_si128(0xFFFFFFFFu)));
 }
-inline f64 allones_f64() CMT_NOEXCEPT
+inline f64 allones_f64() KFR_NOEXCEPT
 {
     return _mm_cvtsd_f64(_mm_castsi128_pd(_mm_cvtsi64x_si128(0xFFFFFFFFFFFFFFFFull)));
 }
-inline f32 invhighbit_f32() CMT_NOEXCEPT
+inline f32 invhighbit_f32() KFR_NOEXCEPT
 {
     return _mm_cvtss_f32(_mm_castsi128_ps(_mm_cvtsi32_si128(0x7FFFFFFFu)));
 }
-inline f64 invhighbit_f64() CMT_NOEXCEPT
+inline f64 invhighbit_f64() KFR_NOEXCEPT
 {
     return _mm_cvtsd_f64(_mm_castsi128_pd(_mm_cvtsi64x_si128(0x7FFFFFFFFFFFFFFFull)));
 }
@@ -67,7 +67,7 @@ struct special_scalar_constants
     constexpr static T invhighbitmask() { return static_cast<T>((1ull << (sizeof(T) * 8 - 1)) - 1); }
 };
 
-#ifndef CMT_COMPILER_INTEL
+#ifndef KFR_COMPILER_INTEL
 #define KFR_CONSTEXPR_NON_INTEL constexpr
 #else
 #define KFR_CONSTEXPR_NON_INTEL

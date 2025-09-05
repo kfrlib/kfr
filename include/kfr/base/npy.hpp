@@ -38,7 +38,6 @@ namespace internal_generic
 template <typename T>
 std::string_view npy_format()
 {
-    using namespace cometa;
     static_assert(is_poweroftwo(sizeof(T)) && is_between(sizeof(T), 1, 16));
     if constexpr (std::is_floating_point_v<T>)
     {
@@ -104,12 +103,12 @@ struct npy_writer
     void operator()(std::initializer_list<uint8_t> b) { operator()(&*b.begin(), b.size()); }
 
     template <typename Num>
-    void operator()(cometa::ctype_t<Num>, cometa::identity<Num> n)
+    void operator()(kfr::ctype_t<Num>, kfr::identity<Num> n)
     {
         operator()(&n, sizeof(Num));
     }
     template <typename Num>
-    void operator()(cometa::ctype_t<Num>, const Num* n, size_t count)
+    void operator()(kfr::ctype_t<Num>, const Num* n, size_t count)
     {
         operator()(n, sizeof(Num) * count);
     }
@@ -123,7 +122,7 @@ struct npy_reader
     bool operator()(void* d, size_t size) { return fn(d, size); }
 
     template <typename Num>
-    Num operator()(cometa::ctype_t<Num>)
+    Num operator()(kfr::ctype_t<Num>)
     {
         Num result;
         if (!operator()(&result, sizeof(Num)))
@@ -131,20 +130,20 @@ struct npy_reader
         return result;
     }
     template <typename Num>
-    bool operator()(cometa::ctype_t<Num>, Num& n)
+    bool operator()(kfr::ctype_t<Num>, Num& n)
     {
         return operator()(&n, sizeof(Num));
     }
     template <typename Num>
-    bool operator()(cometa::ctype_t<Num>, Num* n, size_t count)
+    bool operator()(kfr::ctype_t<Num>, Num* n, size_t count)
     {
         return operator()(n, sizeof(Num) * count);
     }
 
-    std::string operator()(cometa::ctype_t<char>, size_t count)
+    std::string operator()(kfr::ctype_t<char>, size_t count)
     {
         std::string result(count, ' ');
-        if (!operator()(cometa::ctype<char>, result.data(), count))
+        if (!operator()(kfr::ctype<char>, result.data(), count))
             return {};
         return result;
     }
@@ -377,20 +376,20 @@ void save_to_npy(const tensor<T, Dims>& t, Fn&& write_callback)
 
     std::string_view padding = "                                                               ";
 
-    size_t total_header = cometa::align_up(wr.written + 2 + header.size() + 1, 64);
+    size_t total_header = kfr::align_up(wr.written + 2 + header.size() + 1, 64);
     header += padding.substr(0, total_header - (wr.written + 2 + header.size() + 1));
     header += '\n';
     uint16_t header_len = header.size();
-    wr(cometa::ctype<uint16_t>, header_len);
+    wr(kfr::ctype<uint16_t>, header_len);
     wr(header);
     if (t.is_contiguous())
     {
-        wr(cometa::ctype<T>, t.data(), t.size());
+        wr(kfr::ctype<T>, t.data(), t.size());
     }
     else
     {
         tensor<T, Dims> copy = t.copy();
-        wr(cometa::ctype<T>, copy.data(), copy.size());
+        wr(kfr::ctype<T>, copy.data(), copy.size());
     }
 }
 
@@ -492,7 +491,7 @@ npy_decode_result load_from_npy(tensor<T, Dims>& result, Fn&& read_callback)
 }
 } // namespace kfr
 
-namespace cometa
+namespace kfr
 {
 template <>
 struct representation<kfr::npy_decode_result>
@@ -517,4 +516,4 @@ struct representation<kfr::npy_decode_result>
         }
     }
 };
-} // namespace cometa
+} // namespace kfr

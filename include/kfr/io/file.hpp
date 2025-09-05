@@ -35,7 +35,7 @@
 namespace kfr
 {
 
-#ifdef CMT_OS_WIN
+#ifdef KFR_OS_WIN
 using filepath_char = wchar_t;
 #define KFR_FILEPATH_PREFIX_CONCAT(x, y) x##y
 #define KFR_FILEPATH(s) KFR_FILEPATH_PREFIX_CONCAT(L, s)
@@ -60,7 +60,7 @@ using filepath = std::basic_string<filepath_char>;
 /// @brief Opens file using portable path (char* on posix, wchar_t* on windows)
 inline FILE* fopen_portable(const filepath_char* path, const filepath_char* mode)
 {
-#ifdef CMT_OS_WIN
+#ifdef KFR_OS_WIN
     FILE* f   = nullptr;
     errno_t e = _wfopen_s(&f, path, mode);
     (void)e;
@@ -278,7 +278,7 @@ inline std::shared_ptr<file_writer<T>> open_file_for_appending(const filepath& p
     return f ? std::make_shared<file_writer<T>>(f) : nullptr;
 }
 
-#ifdef CMT_OS_WIN
+#ifdef KFR_OS_WIN
 /// @brief Opens typed file for reading
 template <typename T = void>
 inline std::shared_ptr<file_reader<T>> open_file_for_reading(const std::string& path)

@@ -127,7 +127,7 @@ typename dft_plan<T>::bitset dft_plan<T>::precompute_disposition(int num_stages,
 template struct dft_plan<float>;
 template struct dft_plan<double>;
 
-CMT_MULTI_PROTO(namespace impl {
+KFR_MULTI_PROTO(namespace impl {
     template <typename T>
     void dft_initialize(dft_plan<T> & plan);
     template <typename T>
@@ -146,7 +146,7 @@ CMT_MULTI_PROTO(namespace impl {
     void dft_progressive_step(const dft_plan<T>& plan, typename dft_plan<T>::progressive& progressive);
 })
 
-#ifdef CMT_MULTI_NEEDS_GATE
+#ifdef KFR_MULTI_NEEDS_GATE
 
 namespace internal_generic
 {
@@ -154,35 +154,35 @@ namespace internal_generic
 template <typename T>
 void dft_initialize(dft_plan<T>& plan)
 {
-    CMT_MULTI_GATE(ns::impl::dft_initialize(plan));
+    KFR_MULTI_GATE(ns::impl::dft_initialize(plan));
 }
 template <typename T>
 void dft_real_initialize(dft_plan_real<T>& plan)
 {
-    CMT_MULTI_GATE(ns::impl::dft_real_initialize(plan));
+    KFR_MULTI_GATE(ns::impl::dft_real_initialize(plan));
 }
 template <typename T, bool inverse>
 void dft_execute(const dft_plan<T>& plan, cbool_t<inverse>, complex<T>* out, const complex<T>* in, u8* temp)
 {
-    CMT_MULTI_GATE(ns::impl::dft_execute(plan, cbool<inverse>, out, in, temp));
+    KFR_MULTI_GATE(ns::impl::dft_execute(plan, cbool<inverse>, out, in, temp));
 }
 template <typename T>
 void dft_initialize_transpose(fn_transpose<T>& transpose)
 {
-    CMT_MULTI_GATE(ns::impl::dft_initialize_transpose(transpose));
+    KFR_MULTI_GATE(ns::impl::dft_initialize_transpose(transpose));
 }
 
 template <typename T>
 void dft_progressive_start(const dft_plan<T>& plan, typename dft_plan<T>::progressive& progressive,
                            bool inverse, complex<T>* out, const complex<T>* in, u8* temp)
 {
-    CMT_MULTI_GATE(ns::impl::dft_progressive_start(plan, progressive, inverse, out, in, temp));
+    KFR_MULTI_GATE(ns::impl::dft_progressive_start(plan, progressive, inverse, out, in, temp));
 }
 
 template <typename T>
 void dft_progressive_step(const dft_plan<T>& plan, typename dft_plan<T>::progressive& progressive)
 {
-    CMT_MULTI_GATE(ns::impl::dft_progressive_step(plan, progressive));
+    KFR_MULTI_GATE(ns::impl::dft_progressive_step(plan, progressive));
 }
 
 template void dft_initialize<float>(dft_plan<float>&);

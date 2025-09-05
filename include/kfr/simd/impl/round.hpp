@@ -28,7 +28,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace intrinsics
@@ -56,7 +56,7 @@ namespace intrinsics
 #define KFR_mm256_trunc_pd(V) _mm256_round_pd((V), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC)
 #define KFR_mm256_roundnearest_pd(V) _mm256_round_pd((V), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)
 
-#if defined CMT_ARCH_SSE41 && defined KFR_NATIVE_INTRINSICS
+#if defined KFR_ARCH_SSE41 && defined KFR_NATIVE_INTRINSICS
 
 KFR_INTRINSIC f32sse floor(const f32sse& value) { return _mm_floor_ps(value.v); }
 KFR_INTRINSIC f32sse ceil(const f32sse& value) { return _mm_ceil_ps(value.v); }
@@ -69,7 +69,7 @@ KFR_INTRINSIC f64sse round(const f64sse& value) { return KFR_mm_roundnearest_pd(
 KFR_INTRINSIC f32sse fract(const f32sse& x) { return x - floor(x); }
 KFR_INTRINSIC f64sse fract(const f64sse& x) { return x - floor(x); }
 
-#if defined CMT_ARCH_AVX
+#if defined KFR_ARCH_AVX
 
 KFR_INTRINSIC f32avx floor(const f32avx& value) { return _mm256_floor_ps(value.v); }
 KFR_INTRINSIC f32avx ceil(const f32avx& value) { return _mm256_ceil_ps(value.v); }
@@ -84,7 +84,7 @@ KFR_INTRINSIC f64avx fract(const f64avx& x) { return x - floor(x); }
 
 #endif
 
-#if defined CMT_ARCH_AVX512
+#if defined KFR_ARCH_AVX512
 
 KFR_INTRINSIC f32avx512 floor(const f32avx512& value)
 {
@@ -261,7 +261,7 @@ KFR_I_FN(ifloor)
 KFR_I_FN(iceil)
 KFR_I_FN(iround)
 KFR_I_FN(itrunc)
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr
 
 #undef KFR_mm_trunc_ps

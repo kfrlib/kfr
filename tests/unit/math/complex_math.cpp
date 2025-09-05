@@ -8,7 +8,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 TEST(complex_math)
@@ -60,7 +60,7 @@ TEST(complex_math)
     CHECK(cexp2(c32{ 1.f, 1.f }) == c32{ 1.5384778027279442f, 1.2779225526272695f });
     CHECK(cexp10(c32{ 1.f, 1.f }) == c32{ -6.682015101903131f, 7.439803369574931f });
 
-#ifdef CMT_NATIVE_F64
+#ifdef KFR_NATIVE_F64
     CHECK(csin(c64{ 1.0, 1.0 }) == c64{ 1.2984575814159773, 0.634963914784736 });
     CHECK(ccos(c64{ 1.0, 1.0 }) == c64{ 0.8337300251311489, -0.9888977057628651 });
     CHECK(csinh(c64{ 1.0, 1.0 }) == c64{ 0.634963914784736, 1.2984575814159773 });
@@ -83,5 +83,5 @@ TEST(complex_functions)
     CHECK(csqrt(complex<f32>(-15.f, -8.f)) == c32{ 1.f, -4.f });
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

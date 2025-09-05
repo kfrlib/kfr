@@ -29,7 +29,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 /**
@@ -53,5 +53,5 @@ KFR_INTRINSIC Tout clamp(const T1& x, const T2& hi)
 {
     return intrinsics::clamp(static_cast<Tout>(x), static_cast<Tout>(hi));
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

@@ -48,7 +48,7 @@ struct zpk
     T k;
 };
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <typename T>
@@ -1050,7 +1050,6 @@ KFR_FUNCTION zpk<T> iir_lowpass(const zpk<T>& filter, identity<T> frequency, ide
     return result;
 }
 
-
 /**
  * @brief Calculates zero-pole-gain coefficients for the high-pass IIR filter
  * @param filter Filter type: chebyshev1, chebyshev2, bessel, butterworth
@@ -1259,6 +1258,6 @@ KFR_FUNCTION expression_handle<T, 1> iir(E1&& e1, const zpk<T>& params)
     return iir(std::forward<E1>(e1), to_sos(params));
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 } // namespace kfr

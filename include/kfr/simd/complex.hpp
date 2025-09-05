@@ -29,14 +29,14 @@
 #include "operators.hpp"
 #include <complex>
 
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 4814))
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 4814))
 
 namespace kfr
 {
 
 } // namespace kfr
-namespace cometa
+namespace kfr
 {
 template <typename T>
 struct compound_type_traits<std::complex<T>>
@@ -44,9 +44,9 @@ struct compound_type_traits<std::complex<T>>
     constexpr static size_t width      = 2;
     constexpr static size_t deep_width = width * compound_type_traits<T>::width;
     using subtype                      = T;
-    using deep_subtype                 = cometa::deep_subtype<T>;
+    using deep_subtype                 = kfr::deep_subtype<T>;
     constexpr static bool is_scalar    = false;
-    constexpr static size_t depth      = cometa::compound_type_traits<T>::depth + 1;
+    constexpr static size_t depth      = kfr::compound_type_traits<T>::depth + 1;
     template <typename U>
     using rebind = std::complex<U>;
     template <typename U>
@@ -57,7 +57,7 @@ struct compound_type_traits<std::complex<T>>
         return index == 0 ? value.real() : value.imag();
     }
 };
-} // namespace cometa
+} // namespace kfr
 namespace kfr
 {
 
@@ -70,7 +70,7 @@ using c64 = complex<f64>;
 /// @brief Alias for complex<fbase>
 using cbase = complex<fbase>;
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace intrinsics
@@ -88,13 +88,13 @@ constexpr inline vec<T, 2> vcomplex(const complex<T>& v)
 template <typename T>
 constexpr inline simd<T, 2> vvcomplex(const complex<T>& v)
 {
-    return intrinsics::simd_make(cometa::ctype<T>, v.real(), v.imag());
+    return intrinsics::simd_make(kfr::ctype<T>, v.real(), v.imag());
 }
 } // namespace intrinsics
 
 template <typename T, size_t N, size_t... indices>
 KFR_INTRINSIC vec<complex<T>, sizeof...(indices)> shufflevector(const vec<complex<T>, N>& x,
-                                                                csizes_t<indices...>) CMT_NOEXCEPT
+                                                                csizes_t<indices...>) KFR_NOEXCEPT
 {
     return intrinsics::simd_shuffle(intrinsics::simd_t<unwrap_bit<T>, N>{}, x.v, scale<2, indices...>(),
                                     overload_auto);
@@ -102,7 +102,7 @@ KFR_INTRINSIC vec<complex<T>, sizeof...(indices)> shufflevector(const vec<comple
 template <typename T, size_t N, size_t... indices>
 KFR_INTRINSIC vec<complex<T>, sizeof...(indices)> shufflevectors(const vec<complex<T>, N>& x,
                                                                  const vec<T, N>& y,
-                                                                 csizes_t<indices...>) CMT_NOEXCEPT
+                                                                 csizes_t<indices...>) KFR_NOEXCEPT
 {
     return intrinsics::simd_shuffle(intrinsics::simd2_t<unwrap_bit<T>, N, N>{}, x.v, y.v,
                                     scale<2, indices...>(), overload_auto);
@@ -310,7 +310,7 @@ struct vec_of_complex
     template <typename T>
     using type = vec<complex<T>, N>;
 };
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 template <typename T>
 constexpr bool is_complex = internal::is_complex_impl<T>::value;
@@ -345,4 +345,4 @@ struct common_type<kfr::vec<T1, N>, kfr::complex<T2>>
 };
 } // namespace std
 
-CMT_PRAGMA_MSVC(warning(pop))
+KFR_PRAGMA_MSVC(warning(pop))

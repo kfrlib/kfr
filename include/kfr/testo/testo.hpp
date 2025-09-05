@@ -20,17 +20,17 @@
 #include <chrono>
 #include <cmath>
 
-CMT_PRAGMA_GNU(GCC diagnostic push)
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpragmas")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wexit-time-destructors")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpadded")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wparentheses")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wpragmas")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wexit-time-destructors")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wpadded")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wparentheses")
 
 namespace testo
 {
 
-using namespace cometa;
+using namespace kfr;
 
 #ifdef TESTO_MPFR
 using reference_number = mpfr::number;
@@ -64,7 +64,7 @@ inline std::string number_to_string(const mpfr::number& reference, int precision
 template <typename T>
 inline double ulp_distance(long double reference, T test)
 {
-#if defined CMT_COMPILER_MSVC && !defined CMT_COMPILER_CLANG
+#if defined KFR_COMPILER_MSVC && !defined KFR_COMPILER_CLANG
 #define TESTO__ISNAN(x) std::isnan(x)
 #define TESTO__ISINF(x) std::isinf(x)
 #else
@@ -286,7 +286,7 @@ struct statistics
     void reset() { *this = statistics<Number>(); }
     std::string str()
     {
-        return format("{} ... {} (avg={}, median={})\n", minimum, maximum, cometa::fmt<'f', 2>(average()),
+        return format("{} ... {} (avg={}, median={})\n", minimum, maximum, kfr::fmt<'f', 2>(average()),
                       median());
     }
     double average() const { return sum / count; }
@@ -366,7 +366,7 @@ void matrix(named_arg<Arg0>&& arg0, named_arg<Arg1>&& arg1, named_arg<Arg2>&& ar
         println();
 }
 
-CMT_UNUSED static int run_all(const std::string& name = std::string(), bool show_successful = false)
+KFR_UNUSED static int run_all(const std::string& name = std::string(), bool show_successful = false)
 {
     console_color c(White);
     std::vector<test_case*> success;
@@ -432,7 +432,7 @@ struct test_data_entry
 #define TESTO_TEST(name)                                                                                     \
     static void test_function_##name();                                                                      \
     ::testo::test_case test_case_##name(&test_function_##name, #name);                                       \
-    static void CMT_NOINLINE test_function_##name()
+    static void KFR_NOINLINE test_function_##name()
 
 #define TESTO_DTEST(name)                                                                                    \
     template <typename>                                                                                      \
@@ -446,4 +446,4 @@ struct test_data_entry
 
 } // namespace testo
 
-CMT_PRAGMA_GNU(GCC diagnostic pop)
+KFR_PRAGMA_GNU(GCC diagnostic pop)

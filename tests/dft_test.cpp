@@ -15,7 +15,7 @@
 
 using namespace kfr;
 
-namespace CMT_ARCH_NAME
+namespace KFR_ARCH_NAME
 {
 
 TEST(print_vector_capacity)
@@ -27,7 +27,7 @@ TEST(print_vector_capacity)
     println("fft_config<double>::process_width = ", vector_capacity<double> / 16);
 }
 
-#ifdef CMT_NATIVE_F64
+#ifdef KFR_NATIVE_F64
 constexpr ctypes_t<float, double> dft_float_types{};
 #else
 constexpr ctypes_t<float> dft_float_types{};
@@ -37,17 +37,17 @@ constexpr ctypes_t<float> dft_float_types{};
 
 static void full_barrier()
 {
-#if defined(CMT_ARCH_NEON)
+#if defined(KFR_ARCH_NEON)
     asm volatile("dmb ish" ::: "memory");
-#elif defined(CMT_COMPILER_GNU)
+#elif defined(KFR_COMPILER_GNU)
     asm volatile("mfence" ::: "memory");
 #else
     _ReadWriteBarrier();
 #endif
 }
-static CMT_NOINLINE void dont_optimize(const void* in)
+static KFR_NOINLINE void dont_optimize(const void* in)
 {
-#ifdef CMT_COMPILER_GNU
+#ifdef KFR_COMPILER_GNU
     asm volatile("" : "+m"(in));
 #else
     volatile uint8_t a = *reinterpret_cast<const uint8_t*>(in);
@@ -167,7 +167,7 @@ TEST(test_complex_correlate)
     CHECK(rms(cabs(c - univector<fbase>({ 1.5, 1., 1.5, 2.5, 3.75, -4., 7.75, 3.5, 1.25 }))) < 0.0001);
 }
 
-#if defined CMT_ARCH_ARM || !defined NDEBUG
+#if defined KFR_ARCH_ARM || !defined NDEBUG
 constexpr size_t fft_stopsize = 12;
 #ifndef KFR_DFT_NO_NPo2
 constexpr size_t dft_stopsize = 101;
@@ -249,7 +249,7 @@ TEST(fft_accuracy)
         [&gen](auto type, size_t size)
         {
             using float_type      = type_of<decltype(type)>;
-            const double min_prec = choose_const<float_type>(1e-6f, 1e-14) * size;// * size;
+            const double min_prec = choose_const<float_type>(1e-6f, 1e-14) * size; // * size;
 
             for (bool inverse : { false, true })
             {
@@ -600,7 +600,7 @@ TEST(dft_md)
                   });
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 namespace kfr
 {

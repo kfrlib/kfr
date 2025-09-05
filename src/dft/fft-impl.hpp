@@ -27,23 +27,23 @@
 
 #include "dft-fft.hpp"
 
-CMT_PRAGMA_GNU(GCC diagnostic push)
-#if CMT_HAS_WARNING("-Wshadow")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+#if KFR_HAS_WARNING("-Wshadow")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
 #endif
-#if CMT_HAS_WARNING("-Wunused-lambda-capture")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wunused-lambda-capture")
+#if KFR_HAS_WARNING("-Wunused-lambda-capture")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wunused-lambda-capture")
 #endif
-#if CMT_HAS_WARNING("-Wpass-failed")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpass-failed")
+#if KFR_HAS_WARNING("-Wpass-failed")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wpass-failed")
 #endif
 
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 4100))
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 4100))
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 constexpr bool inline always_br2 = true;
@@ -53,7 +53,7 @@ inline std::bitset<DFT_MAX_STAGES> fft_algorithm_selection;
 
 template <>
 inline std::bitset<DFT_MAX_STAGES> fft_algorithm_selection<float>{
-#ifdef CMT_ARCH_NEON
+#ifdef KFR_ARCH_NEON
     0
 #else
     (1ull << 15) - 1
@@ -69,7 +69,7 @@ inline bool use_autosort(size_t log2n)
     return fft_algorithm_selection<T>[log2n];
 }
 
-#ifndef CMT_ARCH_NEON
+#ifndef KFR_ARCH_NEON
 #define KFR_AUTOSORT_FOR_2048
 #define KFR_AUTOSORT_FOR_128D
 #define KFR_AUTOSORT_FOR_256D
@@ -77,7 +77,7 @@ inline bool use_autosort(size_t log2n)
 #define KFR_AUTOSORT_FOR_1024
 #endif
 
-#ifdef CMT_ARCH_AVX
+#ifdef KFR_ARCH_AVX
 template <>
 KFR_INTRINSIC vec<float, 32> ctranspose<4, float, 32>(const vec<float, 32>& v16)
 {
@@ -256,7 +256,7 @@ KFR_INTRINSIC void initialize_twiddles_impl(complex<T>*& twiddle, size_t nn, siz
 {
     static_assert(width > 0, "width cannot be zero");
     vec<T, 2 * width> result = T();
-    CMT_LOOP_UNROLL
+    KFR_LOOP_UNROLL
     for (size_t i = 0; i < width; i++)
     {
         const cvec<T, 1> r = calculate_twiddle<T>(nn + nnstep * i, size);
@@ -271,13 +271,13 @@ KFR_INTRINSIC void initialize_twiddles_impl(complex<T>*& twiddle, size_t nn, siz
 }
 
 template <typename T, size_t width>
-CMT_NOINLINE void initialize_twiddles(complex<T>*& twiddle, size_t stage_size, size_t size, bool split_format)
+KFR_NOINLINE void initialize_twiddles(complex<T>*& twiddle, size_t stage_size, size_t size, bool split_format)
 {
     static_assert(width > 0, "width cannot be zero");
     const size_t count = stage_size / 4;
     size_t nnstep      = size / stage_size;
     DFT_ASSERT(width <= count);
-    CMT_LOOP_NOUNROLL
+    KFR_LOOP_NOUNROLL
     for (size_t n = 0; n < count; n += width)
     {
         initialize_twiddles_impl<T, width>(twiddle, n * nnstep * 1, nnstep * 1, size, split_format);
@@ -294,8 +294,8 @@ CMT_NOINLINE void initialize_twiddles(complex<T>*& twiddle, size_t stage_size, s
     } while (0)
 #else
 
-#if defined CMT_ARCH_SSE
-#ifdef CMT_COMPILER_GNU
+#if defined KFR_ARCH_SSE
+#ifdef KFR_COMPILER_GNU
 #define KFR_PREFETCH(addr) __builtin_prefetch(::kfr::ptr_cast<void>(addr), 0, _MM_HINT_T0);
 #else
 #define KFR_PREFETCH(addr) _mm_prefetch(::kfr::ptr_cast<char>(addr), _MM_HINT_T0);
@@ -350,13 +350,13 @@ KFR_INTRINSIC cfalse_t radix4_pass(Ntype N, size_t blocks, csize_t<width>, cbool
     constexpr static size_t prefetch_cycles = 8;
     const auto N4                           = N / csize_t<4>();
     const auto N43                          = N4 * csize_t<3>();
-    CMT_ASSUME(blocks > 0);
-    CMT_ASSUME(N > 0);
-    CMT_ASSUME(N4 > 0);
+    KFR_ASSUME(blocks > 0);
+    KFR_ASSUME(N > 0);
+    KFR_ASSUME(N4 > 0);
     DFT_ASSERT(width <= N4);
-    CMT_LOOP_NOUNROLL for (size_t b = 0; b < blocks; b++)
+    KFR_LOOP_NOUNROLL for (size_t b = 0; b < blocks; b++)
     {
-        CMT_LOOP_NOUNROLL
+        KFR_LOOP_NOUNROLL
         for (size_t n2 = 0; n2 < N4;)
         {
             if constexpr (prefetch)
@@ -499,7 +499,7 @@ KFR_INTRINSIC void radix4_autosort_pass_first(size_t N, csize_t<width_>, cbool_t
     static_assert(!split);
     constexpr static size_t prefetch_cycles = 8;
 
-    // CMT_LOOP_NOUNROLL
+    // KFR_LOOP_NOUNROLL
     for (size_t b = 0; b < N4; b += width)
     {
         if constexpr (prefetch)
@@ -536,7 +536,7 @@ KFR_INTRINSIC void radix4_autosort_pass_last(size_t stride, csize_t<width>, cboo
     constexpr bool write_split              = !splitout && split;
     static_assert(!splitout);
 
-    CMT_PRAGMA_CLANG(clang loop unroll_count(4))
+    KFR_PRAGMA_CLANG(clang loop unroll_count(4))
     for (size_t n = 0; n < stride; n += width)
     {
         if constexpr (prefetch)
@@ -569,7 +569,7 @@ KFR_INTRINSIC void radix8_autosort_pass_last(size_t stride, csize_t<width>, cboo
     constexpr bool write_split              = !splitout && split;
     static_assert(!splitout);
 
-    CMT_PRAGMA_CLANG(clang loop unroll_count(4))
+    KFR_PRAGMA_CLANG(clang loop unroll_count(4))
     for (size_t n = 0; n < stride; n += width)
     {
         if constexpr (prefetch)
@@ -633,7 +633,7 @@ KFR_INTRINSIC void radix4_autosort_pass(size_t N, size_t stride, csize_t<width>,
         out += stride3;
     }
 
-    // CMT_LOOP_NOUNROLL
+    // KFR_LOOP_NOUNROLL
     for (size_t b = 1; b < N4; b++)
     {
         cvec<T, width> tw1 = read_twiddle<width, split>(twiddle);
@@ -690,12 +690,12 @@ KFR_INTRINSIC ctrue_t radix4_pass(csize_t<8>, size_t blocks, csize_t<width>, cfa
                                   cbool_t<use_br2>, cbool_t<prefetch>, cbool_t<inverse>, cbool_t<aligned>,
                                   complex<T>* out, const complex<T>*, const complex<T>*& /*twiddle*/)
 {
-    CMT_ASSUME(blocks > 0);
+    KFR_ASSUME(blocks > 0);
     DFT_ASSERT(4 <= blocks);
     constexpr static size_t prefetch_cycles = 8;
     if constexpr (vector_capacity<T> >= 128)
     {
-        CMT_PRAGMA_CLANG(clang loop unroll(disable))
+        KFR_PRAGMA_CLANG(clang loop unroll(disable))
         for (size_t b = 0; b < blocks; b += 4)
         {
             if constexpr (prefetch)
@@ -715,7 +715,7 @@ KFR_INTRINSIC ctrue_t radix4_pass(csize_t<8>, size_t blocks, csize_t<width>, cfa
     }
     else
     {
-        CMT_PRAGMA_CLANG(clang loop unroll(disable))
+        KFR_PRAGMA_CLANG(clang loop unroll(disable))
         for (size_t b = 0; b < blocks; b += 2)
         {
             if constexpr (prefetch)
@@ -741,12 +741,12 @@ KFR_INTRINSIC ctrue_t radix4_pass(csize_t<16>, size_t blocks, csize_t<width>, cf
                                   cbool_t<use_br2>, cbool_t<prefetch>, cbool_t<inverse>, cbool_t<aligned>,
                                   complex<T>* out, const complex<T>*, const complex<T>*& /*twiddle*/)
 {
-    CMT_ASSUME(blocks > 0);
+    KFR_ASSUME(blocks > 0);
     constexpr static size_t prefetch_cycles = 4;
     DFT_ASSERT(4 <= blocks);
     if constexpr (vector_capacity<T> >= 128)
     {
-        CMT_PRAGMA_CLANG(clang loop unroll(disable))
+        KFR_PRAGMA_CLANG(clang loop unroll(disable))
         for (size_t b = 0; b < blocks; b += 4)
         {
             if constexpr (prefetch)
@@ -782,7 +782,7 @@ KFR_INTRINSIC ctrue_t radix4_pass(csize_t<16>, size_t blocks, csize_t<width>, cf
     }
     else
     {
-        CMT_PRAGMA_CLANG(clang loop unroll(disable))
+        KFR_PRAGMA_CLANG(clang loop unroll(disable))
         for (size_t b = 0; b < blocks; b += 2)
         {
             if constexpr (prefetch)
@@ -813,7 +813,7 @@ KFR_INTRINSIC ctrue_t radix4_pass(csize_t<4>, size_t blocks, csize_t<width>, cfa
                                   complex<T>* out, const complex<T>*, const complex<T>*& /*twiddle*/)
 {
     constexpr static size_t prefetch_cycles = 8;
-    CMT_ASSUME(blocks > 8);
+    KFR_ASSUME(blocks > 8);
     DFT_ASSERT(8 <= blocks);
     for (size_t b = 0; b < blocks; b += 4)
     {
@@ -834,7 +834,7 @@ KFR_INTRINSIC ctrue_t radix4_pass(csize_t<4>, size_t blocks, csize_t<width>, cfa
 template <typename T>
 struct fft_config
 {
-#ifdef CMT_ARCH_NEON
+#ifdef KFR_ARCH_NEON
     constexpr static inline const bool prefetch = false;
 #else
     constexpr static inline const bool prefetch = true;
@@ -876,8 +876,8 @@ struct fft_stage_impl : dft_stage<T>
         if constexpr (splitin)
             in = out;
         const size_t stg_size = this->stage_size;
-        CMT_ASSUME(stg_size >= 2048);
-        CMT_ASSUME(stg_size % 2048 == 0);
+        KFR_ASSUME(stg_size >= 2048);
+        KFR_ASSUME(stg_size % 2048 == 0);
         radix4_pass(stg_size, 1, csize_t<width>(), ctrue, cbool_t<splitin>(), cbool_t<use_br2>(),
                     cbool_t<prefetch>(), cbool_t<inverse>(), cbool_t<aligned>(), out, in, twiddle);
     }
@@ -898,7 +898,7 @@ struct fft_final_stage_impl : dft_stage<T>
     }
 
     constexpr static size_t width  = fft_config<T>::process_width;
-    constexpr static bool is_even  = cometa::is_even(ilog2(size));
+    constexpr static bool is_even  = kfr::is_even(ilog2(size));
     constexpr static bool use_br2  = !is_even || always_br2;
     constexpr static bool aligned  = false;
     constexpr static bool prefetch = fft_config<T>::prefetch && splitin;
@@ -1763,7 +1763,8 @@ KFR_INTRINSIC void init_fft(dft_plan<T>* self, size_t size, dft_order)
             constexpr size_t log2nv = val_of(decltype(log2n)());
             add_stage<intrinsics::fft_specialization<T, log2nv>>(self, size);
         },
-        [&]() {
+        [&]()
+        {
             cswitch(cfalse_true, is_even(log2n),
                     [&](auto is_even) { make_fft(self, size, is_even, autosort); });
         });
@@ -1785,7 +1786,7 @@ KFR_INTRINSIC void generate_real_twiddles(dft_plan_real<T>* self, size_t size)
 }
 
 template <typename T>
-#if (defined CMT_ARCH_X32 && defined CMT_ARCH_X86 && defined __clang__) &&                                   \
+#if (defined KFR_ARCH_X32 && defined KFR_ARCH_X86 && defined __clang__) &&                                   \
     ((defined __APPLE__) || (__clang_major__ == 8))
 // Fix for Clang 8.0 bug (x32 with FMA instructions)
 // Xcode has different versions but x86 is very rare on macOS these days, 
@@ -1839,7 +1840,7 @@ to_fmt(size_t real_size, const complex<T>* rtwiddle, complex<T>* out, const comp
 }
 
 template <typename T>
-#if (defined CMT_ARCH_X32 && defined CMT_ARCH_X86 && defined __clang__) &&                                   \
+#if (defined KFR_ARCH_X32 && defined KFR_ARCH_X86 && defined __clang__) &&                                   \
     ((defined __APPLE__) || (__clang_major__ == 8))
 // Fix for Clang 8.0 bug (x32 with FMA instructions)
 // Xcode has different versions but x86 is very rare on macOS these days, 
@@ -2017,7 +2018,7 @@ void dft_execute(const dft_plan<T>& plan, cbool_t<inverse>, complex<T>* out, con
 template <typename T>
 void dft_initialize_transpose(internal_generic::fn_transpose<T>& transpose)
 {
-    transpose = &kfr::CMT_ARCH_NAME::matrix_transpose;
+    transpose = &kfr::KFR_ARCH_NAME::matrix_transpose;
 }
 
 template <typename T>
@@ -2129,10 +2130,10 @@ void dft_real_initialize(dft_plan_real<T>& plan)
 }
 } // namespace impl
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 } // namespace kfr
 
-CMT_PRAGMA_GNU(GCC diagnostic pop)
+KFR_PRAGMA_GNU(GCC diagnostic pop)
 
-CMT_PRAGMA_MSVC(warning(pop))
+KFR_PRAGMA_MSVC(warning(pop))

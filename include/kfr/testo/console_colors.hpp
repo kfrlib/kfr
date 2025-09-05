@@ -31,11 +31,11 @@ typedef int WINBOOL;
 
 extern "C"
 {
-    WIN32_LITE_DECLSPEC_IMPORT WINBOOL WIN32_LITE_WINAPI GetConsoleMode(HANDLE hConsole, DWORD* dwMode);
-    WIN32_LITE_DECLSPEC_IMPORT WINBOOL WIN32_LITE_WINAPI SetConsoleMode(HANDLE hConsole, DWORD dwMode);
-    WIN32_LITE_DECLSPEC_IMPORT HANDLE WIN32_LITE_WINAPI GetStdHandle(DWORD nStdHandle);
-    WIN32_LITE_DECLSPEC_IMPORT WINBOOL WIN32_LITE_WINAPI SetConsoleTextAttribute(HANDLE hConsoleOutput,
-                                                                                 WORD wAttributes);
+WIN32_LITE_DECLSPEC_IMPORT WINBOOL WIN32_LITE_WINAPI GetConsoleMode(HANDLE hConsole, DWORD* dwMode);
+WIN32_LITE_DECLSPEC_IMPORT WINBOOL WIN32_LITE_WINAPI SetConsoleMode(HANDLE hConsole, DWORD dwMode);
+WIN32_LITE_DECLSPEC_IMPORT HANDLE WIN32_LITE_WINAPI GetStdHandle(DWORD nStdHandle);
+WIN32_LITE_DECLSPEC_IMPORT WINBOOL WIN32_LITE_WINAPI SetConsoleTextAttribute(HANDLE hConsoleOutput,
+                                                                             WORD wAttributes);
 }
 } // namespace win32_lite
 

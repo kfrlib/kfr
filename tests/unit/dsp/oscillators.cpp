@@ -11,7 +11,7 @@
 
 using namespace kfr;
 
-namespace CMT_ARCH_NAME
+namespace KFR_ARCH_NAME
 {
 
 TEST(sine_type)
@@ -28,4 +28,4 @@ TEST(phasor)
     univector<fbase, 100> v2 = sin(constants<fbase>::pi_s(2) * counter(0, 15000 / sr));
     CHECK(rms(v1 - v2) < 1.e-5);
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME

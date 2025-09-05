@@ -12,7 +12,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 TEST(to_handle)
 {
@@ -53,5 +53,5 @@ TEST(placeholders_handle)
     CHECK_EXPRESSION(expr, infinite_size, [](size_t i) { return 10.f * i; });
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

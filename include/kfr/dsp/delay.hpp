@@ -33,7 +33,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <typename T, size_t samples, univector_tag Tag = samples>
@@ -210,11 +210,11 @@ template <size_t samples, typename T, typename E1, univector_tag STag>
 template <typename T, typename E1>
 KFR_INTRINSIC expression_short_fir<2, T, expression_value_type<E1>, E1> fracdelay(E1&& e1, T delay)
 {
-    if (CMT_UNLIKELY(delay < 0))
+    if (KFR_UNLIKELY(delay < 0))
         delay = 0;
     univector<T, 2> taps({ 1 - delay, delay });
     return expression_short_fir<2, T, expression_value_type<E1>, E1>(
         std::forward<E1>(e1), short_fir_state<2, T, expression_value_type<E1>>{ taps });
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

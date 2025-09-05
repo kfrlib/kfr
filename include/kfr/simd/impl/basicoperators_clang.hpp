@@ -29,7 +29,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace intrinsics
@@ -180,5 +180,5 @@ KFR_INTRINSIC vec<T, N> gt(const vec<T, N>& x, const vec<T, N>& y)
 }
 KFR_OP_SCALAR2(gt, >, (simd<T, N>), , )
 } // namespace intrinsics
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

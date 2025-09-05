@@ -11,7 +11,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 TEST(reduce)
@@ -107,5 +107,5 @@ TEST(reduce_multidim)
     CHECK(product(tensor<int, 3>(shape{ 2, 2, 2 }, { 1, 2, 3, 4, 5, 6, 7, 8 })) == 40320); //
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

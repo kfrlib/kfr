@@ -68,7 +68,7 @@ enum class window_symmetry
     symmetric
 };
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 enum class window_metrics
@@ -614,7 +614,7 @@ KFR_FUNCTION expression_tukey<T> window_tukey(size_t size, identity<T> alpha,
 
 template <typename T           = fbase, window_type type,
           typename window_expr = typename window_by_type<type>::template type<T>>
-CMT_NOINLINE window_expr window(size_t size, cval_t<window_type, type>, identity<T> win_param = T(),
+KFR_NOINLINE window_expr window(size_t size, cval_t<window_type, type>, identity<T> win_param = T(),
                                 window_symmetry symmetry = window_symmetry::symmetric,
                                 ctype_t<T>               = ctype_t<T>())
 {
@@ -622,7 +622,7 @@ CMT_NOINLINE window_expr window(size_t size, cval_t<window_type, type>, identity
 }
 
 template <typename T = fbase>
-CMT_NOINLINE expression_handle<T> window(size_t size, window_type type, identity<T> win_param,
+KFR_NOINLINE expression_handle<T> window(size_t size, window_type type, identity<T> win_param,
                                          window_symmetry symmetry = window_symmetry::symmetric,
                                          ctype_t<T>               = ctype_t<T>())
 {
@@ -640,5 +640,5 @@ CMT_NOINLINE expression_handle<T> window(size_t size, window_type type, identity
         },
         fn_generic::returns<expression_handle<T>>());
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

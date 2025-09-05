@@ -25,7 +25,7 @@
  */
 #pragma once
 
-#include "../cometa/string.hpp"
+#include "../meta/string.hpp"
 #include "constants.hpp"
 
 #include <complex>
@@ -39,7 +39,7 @@ using complex = std::complex<T>;
 
 } // namespace kfr
 
-namespace cometa
+namespace kfr
 {
 template <typename T>
 struct representation<kfr::complex<T>>
@@ -57,8 +57,8 @@ struct representation<fmt_t<kfr::complex<T>, t, width, prec>>
     using type = std::string;
     static std::string get(const fmt_t<kfr::complex<T>, t, width, prec>& value)
     {
-        return as_string(cometa::fmt<t, width, prec>(value.value.real())) + " + " +
-               as_string(cometa::fmt<t, width, prec>(value.value.imag())) + "j";
+        return as_string(kfr::fmt<t, width, prec>(value.value.real())) + " + " +
+               as_string(kfr::fmt<t, width, prec>(value.value.imag())) + "j";
     }
 };
-} // namespace cometa
+} // namespace kfr

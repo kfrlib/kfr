@@ -24,12 +24,12 @@
 
 #include "simd.hpp"
 
-CMT_PRAGMA_GNU(GCC diagnostic push)
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wc99-extensions")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wc99-extensions")
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace intrinsics
@@ -152,7 +152,7 @@ KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd_t<T, N>, const simd<T, N>& x, csiz
     }
     else
     {
-        return [&]<size_t... i>(csizes_t<i...>) CMT_INLINE_LAMBDA
+        return [&]<size_t... i>(csizes_t<i...>) KFR_INLINE_LAMBDA
         {
             return __builtin_shufflevector(x, x, (indices >= N ? -1 : static_cast<int>(indices))...,
                                            (static_cast<void>(i), -1)...);
@@ -179,7 +179,7 @@ KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd2_t<T, N, N>, const simd<T, N>& x, 
     }
     else
     {
-        return [&]<size_t... i>(csizes_t<i...>) CMT_INLINE_LAMBDA
+        return [&]<size_t... i>(csizes_t<i...>) KFR_INLINE_LAMBDA
         {
             return __builtin_shufflevector(x, y,
                                            (indices >= 2 * N ? -1
@@ -250,8 +250,8 @@ KFR_INTRINSIC simd<T, N> simd_set_element(simd<T, N> value, size_t index, T x)
     return value;
 }
 } // namespace intrinsics
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 } // namespace kfr
 
-CMT_PRAGMA_GNU(GCC diagnostic pop)
+KFR_PRAGMA_GNU(GCC diagnostic pop)

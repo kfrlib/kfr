@@ -26,7 +26,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace intrinsics
@@ -51,5 +51,5 @@ KFR_INTRINSIC vec<T, N> clamp(const vec<T, N>& x, const vec<T, N>& hi)
 }
 } // namespace intrinsics
 KFR_I_FN(clamp)
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

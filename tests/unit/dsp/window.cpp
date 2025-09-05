@@ -10,13 +10,13 @@
 #include <kfr/dsp/window.hpp>
 #include <kfr/io/tostring.hpp>
 
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 4305))
-CMT_PRAGMA_MSVC(warning(disable : 4244))
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 4305))
+KFR_PRAGMA_MSVC(warning(disable : 4244))
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 const char* wins[] = {
@@ -43,7 +43,7 @@ const char* wins[] = {
 template <window_type type, typename T>
 void win(size_t len, T arg, window_symmetry sym, univector<T> ref)
 {
-    univector<T> calc = render(window(len, cval_t<window_type, type>{}, arg, sym, cometa::ctype<T>));
+    univector<T> calc = render(window(len, cval_t<window_type, type>{}, arg, sym, kfr::ctype<T>));
     testo::scope sc(as_string("win=", wins[static_cast<int>(type)], " len=", len, " sym=",
                               sym == window_symmetry::symmetric, "\n    calc=", calc, "\n    ref =", ref));
     CHECK(rms(calc - ref) < 0.00001f);
@@ -203,7 +203,7 @@ TEST(window)
     win<w::tukey, f32>(8, 0.5, s::periodic, u{ 0., 0.5, 1., 1., 1., 1., 1., 0.5 });
     // clang-format on
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr
 
-CMT_PRAGMA_MSVC(warning(pop))
+KFR_PRAGMA_MSVC(warning(pop))

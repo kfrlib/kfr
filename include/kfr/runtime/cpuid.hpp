@@ -35,7 +35,7 @@
 
 namespace kfr
 {
-#if defined(CMT_ARCH_X86) && !defined(__wasm)
+#if defined(KFR_ARCH_X86) && !defined(__wasm)
 struct cpu_features
 {
     u32 max;
@@ -113,7 +113,7 @@ struct cpu_data
     u32 data[4];
 };
 
-#if defined CMT_COMPILER_GNU || defined CMT_COMPILER_CLANG
+#if defined KFR_COMPILER_GNU || defined KFR_COMPILER_CLANG
 #if defined __i386__
 KFR_INTRINSIC u32 get_cpuid(u32 func, u32 subfunc, u32* eax, u32* ebx, u32* ecx, u32* edx)
 {
@@ -141,7 +141,7 @@ KFR_INTRINSIC u32 get_xcr0()
     __asm__ __volatile__("xgetbv" : "=a"(xcr0) : "c"(0) : "%edx");
     return xcr0;
 }
-#elif defined CMT_COMPILER_MSVC
+#elif defined KFR_COMPILER_MSVC
 
 KFR_INTRINSIC void cpuid(u32* ptr, u32 func, u32 subfunc = 0)
 {

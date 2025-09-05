@@ -16,7 +16,7 @@ static_assert(std::is_same_v<i32x4, std::common_type_t<i32x4>>);
 static_assert(std::is_same_v<u32x4, std::common_type_t<i32x4, u32x4>>);
 static_assert(std::is_same_v<f64x4, std::common_type_t<i32x4, u32x4, f64x4>>);
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 TEST(mask_op)
@@ -101,62 +101,52 @@ TEST(cast)
     s.text = ("target_type = u8");
     test_function1(
         test_catogories::all, [](auto x) { return kfr::broadcastto<u8>(x); },
-        [](auto x) -> u8 { return static_cast<u8>(x); },
-        [](auto t, special_value x)
+        [](auto x) -> u8 { return static_cast<u8>(x); }, [](auto t, special_value x)
         { return is_in_range_of<u8>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = i8");
     test_function1(
         test_catogories::all, [](auto x) { return kfr::broadcastto<i8>(x); },
-        [](auto x) -> i8 { return static_cast<i8>(x); },
-        [](auto t, special_value x)
+        [](auto x) -> i8 { return static_cast<i8>(x); }, [](auto t, special_value x)
         { return is_in_range_of<i8>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = u16");
     test_function1(
         test_catogories::all, [](auto x) { return kfr::broadcastto<u16>(x); },
-        [](auto x) -> u16 { return static_cast<u16>(x); },
-        [](auto t, special_value x)
+        [](auto x) -> u16 { return static_cast<u16>(x); }, [](auto t, special_value x)
         { return is_in_range_of<u16>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = i16");
     test_function1(
         test_catogories::all, [](auto x) { return kfr::broadcastto<i16>(x); },
-        [](auto x) -> i16 { return static_cast<i16>(x); },
-        [](auto t, special_value x)
+        [](auto x) -> i16 { return static_cast<i16>(x); }, [](auto t, special_value x)
         { return is_in_range_of<i16>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = u32");
     test_function1(
         test_catogories::all, [](auto x) { return kfr::broadcastto<u32>(x); },
-        [](auto x) -> u32 { return static_cast<u32>(x); },
-        [](auto t, special_value x)
+        [](auto x) -> u32 { return static_cast<u32>(x); }, [](auto t, special_value x)
         { return is_in_range_of<u32>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = i32");
     test_function1(
         test_catogories::all, [](auto x) { return kfr::broadcastto<i32>(x); },
-        [](auto x) -> i32 { return static_cast<i32>(x); },
-        [](auto t, special_value x)
+        [](auto x) -> i32 { return static_cast<i32>(x); }, [](auto t, special_value x)
         { return is_in_range_of<i32>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = u64");
     test_function1(
         test_catogories::all, [](auto x) { return kfr::broadcastto<u64>(x); },
-        [](auto x) -> u64 { return static_cast<u64>(x); },
-        [](auto t, special_value x)
+        [](auto x) -> u64 { return static_cast<u64>(x); }, [](auto t, special_value x)
         { return is_in_range_of<u64>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = i64");
     test_function1(
         test_catogories::all, [](auto x) { return kfr::broadcastto<i64>(x); },
-        [](auto x) -> i64 { return static_cast<i64>(x); },
-        [](auto t, special_value x)
+        [](auto x) -> i64 { return static_cast<i64>(x); }, [](auto t, special_value x)
         { return is_in_range_of<i64>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = f32");
     test_function1(
         test_catogories::all, [](auto x) { return kfr::broadcastto<f32>(x); },
-        [](auto x) -> f32 { return static_cast<f32>(x); },
-        [](auto t, special_value x)
+        [](auto x) -> f32 { return static_cast<f32>(x); }, [](auto t, special_value x)
         { return is_in_range_of<f32>(x.get<subtype<typename decltype(t)::type>>()); });
     s.text = ("target_type = f64");
     test_function1(
         test_catogories::all, [](auto x) { return kfr::broadcastto<f64>(x); },
-        [](auto x) -> f64 { return static_cast<f64>(x); },
-        [](auto t, special_value x)
+        [](auto x) -> f64 { return static_cast<f64>(x); }, [](auto t, special_value x)
         { return is_in_range_of<f64>(x.get<subtype<typename decltype(t)::type>>()); });
 }
 
@@ -238,5 +228,5 @@ TEST(vec2d_element)
     CHECK(v[1][1] == 4);
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

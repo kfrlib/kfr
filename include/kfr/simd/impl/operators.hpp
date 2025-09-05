@@ -27,7 +27,7 @@
 
 #include "function.hpp"
 
-#ifdef CMT_VEC_EXT
+#ifdef KFR_VEC_EXT
 #include "basicoperators_clang.hpp"
 #else
 #include "basicoperators_generic.hpp"
@@ -37,7 +37,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 namespace intrinsics
 {
@@ -93,5 +93,5 @@ KFR_VECVEC_OP2(bor)
 KFR_VECVEC_OP2(bxor)
 
 } // namespace intrinsics
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

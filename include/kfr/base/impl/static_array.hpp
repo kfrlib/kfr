@@ -25,12 +25,11 @@
  */
 #pragma once
 
-#include "../../cometa.hpp"
+#include "../../meta.hpp"
 #include "../../kfr.h"
 
 namespace kfr
 {
-using namespace cometa;
 
 template <typename T, size_t>
 using type_for = T;
@@ -107,7 +106,7 @@ struct static_array_base<T, csizes_t<indices...>>
         return value;
     }
 
-    template <int dummy = 0, CMT_ENABLE_IF(dummy == 0 && static_size > 1)>
+    template <int dummy = 0, KFR_ENABLE_IF(dummy == 0 && static_size > 1)>
     KFR_MEM_INTRINSIC constexpr explicit static_array_base(value_type value) noexcept
         : array{ just_value<indices>(value)... }
     {

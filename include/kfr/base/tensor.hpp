@@ -27,7 +27,7 @@
 
 #include <optional>
 
-#include "../cometa/array.hpp"
+#include "../meta/array.hpp"
 
 #include "../simd/horizontal.hpp"
 #include "../simd/impl/function.hpp"
@@ -40,8 +40,8 @@
 #include "shape.hpp"
 #include "transpose.hpp"
 
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 4324))
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 4324))
 
 namespace kfr
 {
@@ -102,8 +102,8 @@ struct tensor : public tensor_subscript<T, tensor<T, NDims>, std::make_integer_s
 {
 public:
     using value_type      = T;
-    using pointer         = T* CMT_RESTRICT;
-    using const_pointer   = const T* CMT_RESTRICT;
+    using pointer         = T* KFR_RESTRICT;
+    using const_pointer   = const T* KFR_RESTRICT;
     using reference       = T&;
     using const_reference = const T&;
     using size_type       = index_t;
@@ -338,7 +338,7 @@ public:
         };
     }
 
-#if defined(CMT_COMPILER_IS_MSVC)
+#if defined(KFR_COMPILER_IS_MSVC)
     tensor(const tensor& other)
         : m_data(other.m_data), m_size(other.m_size), m_is_contiguous(other.m_is_contiguous),
           m_shape(other.m_shape), m_strides(other.m_strides), m_finalizer(other.m_finalizer)
@@ -353,12 +353,12 @@ public:
     tensor(const tensor&& other) : tensor(static_cast<const tensor&>(other)) {}
 #else
     tensor(const tensor&) = default;
-    tensor(tensor&&) = default;
+    tensor(tensor&&)      = default;
     tensor(tensor& other) : tensor(const_cast<const tensor&>(other)) {}
     tensor(const tensor&& other) : tensor(static_cast<const tensor&>(other)) {}
 #endif
 
-#if defined(CMT_COMPILER_IS_MSVC) || true
+#if defined(KFR_COMPILER_IS_MSVC) || true
     tensor& operator=(const tensor& src) &
     {
         this->~tensor();
@@ -468,7 +468,7 @@ public:
                                       cvals_t<index_t, Num...> indices, const std::tuple<Index...>& idx) const
     {
         cforeach(indices,
-                 [&](auto i_) CMT_INLINE_LAMBDA
+                 [&](auto i_) KFR_INLINE_LAMBDA
                  {
                      constexpr index_t i  = val_of(decltype(i_)());
                      signed_index_t tsize = static_cast<signed_index_t>(m_shape[i]);
@@ -853,15 +853,15 @@ public:
             if (empty())
                 return {};
             else
-                return as_string(wrap_fmt(access(shape_type{}), cometa::ctype<Fmt>));
+                return as_string(wrap_fmt(access(shape_type{}), kfr::ctype<Fmt>));
         }
         else
         {
-            return cometa::array_to_string<Fmt>(
+            return kfr::array_to_string<Fmt>(
                 m_shape.template to_std_array<size_t>(),
-                [this](std::array<size_t, dims> index) CMT_INLINE_LAMBDA
-                { return access(shape_type::from_std_array(index)); },
-                max_columns, max_dimensions, std::move(separator), std::move(open), std::move(close));
+                [this](std::array<size_t, dims> index) KFR_INLINE_LAMBDA
+                { return access(shape_type::from_std_array(index)); }, max_columns, max_dimensions,
+                std::move(separator), std::move(open), std::move(close));
         }
     }
 
@@ -892,7 +892,7 @@ struct tensor<T, dynamic_shape>
 // private:
 // };
 
-template <typename Container, CMT_ENABLE_IF(kfr::has_data_size<Container>),
+template <typename Container, KFR_ENABLE_IF(kfr::has_data_size<Container>),
           typename T = typename Container::value_type>
 KFR_INTRINSIC tensor<T, 1> tensor_from_container(Container container)
 {
@@ -917,7 +917,7 @@ struct expression_traits<tensor<T, Dims>> : expression_traits_defaults
     KFR_MEM_INTRINSIC constexpr static shape<dims> get_shape() { return shape<dims>{ undefined_size }; }
 };
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <typename T, index_t NDims, index_t Axis, size_t N>
@@ -977,11 +977,11 @@ tensor<typename Traits::value_type, Traits::dims> trender(const E& expr, shape<T
     return result;
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 } // namespace kfr
 
-namespace cometa
+namespace kfr
 {
 template <typename T, kfr::index_t dims>
 struct representation<kfr::tensor<T, dims>>
@@ -1000,6 +1000,6 @@ struct representation<fmt_t<kfr::tensor<T, dims>, t, width, prec>>
     }
 };
 
-} // namespace cometa
+} // namespace kfr
 
-CMT_PRAGMA_MSVC(warning(pop))
+KFR_PRAGMA_MSVC(warning(pop))

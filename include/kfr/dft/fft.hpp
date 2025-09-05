@@ -35,16 +35,16 @@
 #include <bitset>
 #include <functional>
 
-CMT_PRAGMA_GNU(GCC diagnostic push)
-#if CMT_HAS_WARNING("-Wshadow")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+#if KFR_HAS_WARNING("-Wshadow")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
 #endif
-#if CMT_HAS_WARNING("-Wundefined-inline")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wundefined-inline")
+#if KFR_HAS_WARNING("-Wundefined-inline")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wundefined-inline")
 #endif
 
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 4100))
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 4100))
 
 namespace kfr
 {
@@ -625,7 +625,7 @@ struct dft_plan_md
             execute_dft(cfalse, out, in, temp);
     }
 
-    template <index_t UDims = Dims, CMT_ENABLE_IF(UDims != dynamic_shape)>
+    template <index_t UDims = Dims, KFR_ENABLE_IF(UDims != dynamic_shape)>
     void execute(const tensor<complex<T>, Dims>& out, const tensor<complex<T>, Dims>& in, u8* temp,
                  bool inverse = false) const
     {
@@ -788,7 +788,7 @@ struct dft_plan_md_real
         execute_dft(ctrue, out, in, temp);
     }
 
-    template <index_t UDims = Dims, CMT_ENABLE_IF(UDims != dynamic_shape)>
+    template <index_t UDims = Dims, KFR_ENABLE_IF(UDims != dynamic_shape)>
     void execute(const tensor<complex<T>, Dims>& out, const tensor<T, Dims>& in, u8* temp,
                  cdirect_t = {}) const
     {
@@ -798,7 +798,7 @@ struct dft_plan_md_real
                         "dft_plan_md_real: tensors must be contiguous");
         execute_dft(cfalse, out.data(), in.data(), temp);
     }
-    template <index_t UDims = Dims, CMT_ENABLE_IF(UDims != dynamic_shape)>
+    template <index_t UDims = Dims, KFR_ENABLE_IF(UDims != dynamic_shape)>
     void execute(const tensor<T, Dims>& out, const tensor<complex<T>, Dims>& in, u8* temp,
                  cinvert_t = {}) const
     {
@@ -1000,7 +1000,7 @@ struct dct_plan : dft_plan<T>
     }
 };
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <typename T, univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
@@ -1041,9 +1041,9 @@ void fft_multiply_accumulate(univector<complex<T>, Tag1>& dest, const univector<
     if (fmt == dft_pack_format::Perm)
         dest[0] = f0;
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr
 
-CMT_PRAGMA_GNU(GCC diagnostic pop)
+KFR_PRAGMA_GNU(GCC diagnostic pop)
 
-CMT_PRAGMA_MSVC(warning(pop))
+KFR_PRAGMA_MSVC(warning(pop))

@@ -29,7 +29,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 /// @brief Returns the hyperbolic sine of the x
@@ -75,5 +75,5 @@ KFR_FUNCTION flt_type<T1> coshsinh(const T1& x)
 {
     return intrinsics::coshsinh(x);
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

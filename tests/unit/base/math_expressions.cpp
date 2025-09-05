@@ -12,7 +12,7 @@
 
 using namespace kfr;
 
-namespace CMT_ARCH_NAME
+namespace KFR_ARCH_NAME
 {
 
 TEST(complex_basic_expressions)
@@ -57,4 +57,4 @@ TEST(complex_function_expressions)
     testo::assert_is_same<f32, expression_value_type<decltype(uv3)>>();
     testo::assert_is_same<f32, expression_value_type<decltype(real(uv2))>>();
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME

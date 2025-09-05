@@ -11,7 +11,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 TEST(resampler_test)
@@ -47,5 +47,5 @@ TEST(resampler_test_complex)
 
     CHECK(rms(cabs(slice(out - ref, static_cast<size_t>(ceil(delay * 2))))) < 0.005f);
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

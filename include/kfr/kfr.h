@@ -38,8 +38,8 @@
 #define KFR_VERSION_LABEL ""
 
 #define KFR_VERSION_STRING                                                                                   \
-    CMT_STRINGIFY(KFR_VERSION_MAJOR)                                                                         \
-    "." CMT_STRINGIFY(KFR_VERSION_MINOR) "." CMT_STRINGIFY(KFR_VERSION_PATCH) KFR_VERSION_LABEL
+    KFR_STRINGIFY(KFR_VERSION_MAJOR)                                                                         \
+    "." KFR_STRINGIFY(KFR_VERSION_MINOR) "." KFR_STRINGIFY(KFR_VERSION_PATCH) KFR_VERSION_LABEL
 #define KFR_VERSION (KFR_VERSION_MAJOR * 10000 + KFR_VERSION_MINOR * 100 + KFR_VERSION_PATCH)
 
 #if defined DEBUG || defined KFR_DEBUG
@@ -52,8 +52,8 @@
 
 #define KFR_NATIVE_INTRINSICS 1
 
-#if defined CMT_COMPILER_CLANG && !defined CMT_DISABLE_CLANG_EXT
-#define CMT_VEC_EXT
+#if defined KFR_COMPILER_CLANG && !defined KFR_DISABLE_CLANG_EXT
+#define KFR_VEC_EXT
 #endif
 
 #ifdef KFR_NATIVE_INTRINSICS
@@ -62,7 +62,7 @@
 #define KFR_BUILD_DETAILS_1 ""
 #endif
 
-#ifdef CMT_VEC_EXT
+#ifdef KFR_VEC_EXT
 #define KFR_BUILD_DETAILS_2 " +ve"
 #else
 #define KFR_BUILD_DETAILS_2 ""
@@ -76,8 +76,8 @@
 
 #define KFR_VERSION_FULL                                                                                     \
     "KFR " KFR_VERSION_STRING KFR_DEBUG_STR                                                                  \
-    " " CMT_STRINGIFY(CMT_ARCH_NAME) " " KFR_ENABLED_ARCHS_LIST CMT_ARCH_BITNESS_NAME                        \
-                                     " (" CMT_COMPILER_FULL_NAME "/" CMT_OS_NAME                             \
+    " " KFR_STRINGIFY(KFR_ARCH_NAME) " " KFR_ENABLED_ARCHS_LIST KFR_ARCH_BITNESS_NAME                        \
+                                     " (" KFR_COMPILER_FULL_NAME "/" KFR_OS_NAME                             \
                                      ")" KFR_BUILD_DETAILS_1 KFR_BUILD_DETAILS_2
 
 #ifdef __cplusplus
@@ -96,22 +96,17 @@ constexpr inline const char version_full[] = KFR_VERSION_FULL;
 } // namespace kfr
 #endif
 
-#define KFR_INTRINSIC CMT_INTRINSIC
-#define KFR_MEM_INTRINSIC CMT_MEM_INTRINSIC
 #ifdef KFR_FUNCTION_IS_INTRINSIC
-#define KFR_FUNCTION CMT_INTRINSIC
+#define KFR_FUNCTION KFR_INTRINSIC
 #else
 #define KFR_FUNCTION
 #endif
-#ifdef CMT_NATIVE_F64
-#define KFR_NATIVE_F64 CMT_NATIVE_F64
-#endif
 
-#if defined CMT_ARCH_ARM && !defined CMT_ARCH_NEON && !defined CMT_FORCE_GENERIC_CPU
+#if defined KFR_ARCH_ARM && !defined KFR_ARCH_NEON && !defined KFR_FORCE_GENERIC_CPU
 #error                                                                                                       \
-    "ARM builds require NEON support. Add -march=native for native build or skip the check with CMT_FORCE_GENERIC_CPU=1"
+    "ARM builds require NEON support. Add -march=native for native build or skip the check with KFR_FORCE_GENERIC_CPU=1"
 #endif
 
-#if defined CMT_ARCH_ARM && !defined CMT_COMPILER_CLANG && !defined CMT_FORCE_NON_CLANG
-#error "ARM builds require Clang compiler. Disable checking with CMT_FORCE_NON_CLANG"
+#if defined KFR_ARCH_ARM && !defined KFR_COMPILER_CLANG && !defined KFR_FORCE_NON_CLANG
+#error "ARM builds require Clang compiler. Disable checking with KFR_FORCE_NON_CLANG"
 #endif

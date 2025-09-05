@@ -8,7 +8,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 TEST(logical_all)
@@ -48,5 +48,5 @@ TEST(intrin_any_all)
                       CHECK(any(z) == true);
                   });
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

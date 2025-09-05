@@ -37,7 +37,7 @@
 namespace kfr
 {
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace internal
@@ -112,14 +112,14 @@ private:
 template <typename T, size_t VecWidth = internal::generator_width<T>(1)>
 struct generator_linear : public generator<T, VecWidth, generator_linear<T, VecWidth>>
 {
-    generator_linear(T start, T step) CMT_NOEXCEPT : vstep{ step * VecWidth } { sync(start); }
+    generator_linear(T start, T step) KFR_NOEXCEPT : vstep{ step * VecWidth } { sync(start); }
 
-    KFR_MEM_INTRINSIC void sync(T start) const CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC void sync(T start) const KFR_NOEXCEPT
     {
         this->value = start + enumerate(vec_shape<T, VecWidth>{}, vstep / VecWidth);
     }
 
-    KFR_MEM_INTRINSIC void next() const CMT_NOEXCEPT { this->value += vstep; }
+    KFR_MEM_INTRINSIC void next() const KFR_NOEXCEPT { this->value += vstep; }
 
     T vstep;
 };
@@ -127,18 +127,18 @@ struct generator_linear : public generator<T, VecWidth, generator_linear<T, VecW
 template <typename T, size_t VecWidth = internal::generator_width<T>(1)>
 struct generator_exp : public generator<T, VecWidth, generator_exp<T, VecWidth>>
 {
-    generator_exp(T start, T step) CMT_NOEXCEPT : step{ step },
+    generator_exp(T start, T step) KFR_NOEXCEPT : step{ step },
                                                   vstep{ exp(make_vector(step * VecWidth)).front() - 1 }
     {
         this->resync(start);
     }
 
-    KFR_MEM_INTRINSIC void sync(T start) const CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC void sync(T start) const KFR_NOEXCEPT
     {
         this->value = exp(start + enumerate<T, VecWidth>() * step);
     }
 
-    KFR_MEM_INTRINSIC void next() const CMT_NOEXCEPT { this->value += this->value * vstep; }
+    KFR_MEM_INTRINSIC void next() const KFR_NOEXCEPT { this->value += this->value * vstep; }
 
 protected:
     T step;
@@ -156,9 +156,9 @@ struct generator_expj : public generator<T, VecWidth, generator_expj<T, VecWidth
     {
         this->resync(T(start_));
     }
-    KFR_MEM_INTRINSIC void sync(T start) const CMT_NOEXCEPT { this->value = init_cossin(step, start.real()); }
+    KFR_MEM_INTRINSIC void sync(T start) const KFR_NOEXCEPT { this->value = init_cossin(step, start.real()); }
 
-    KFR_MEM_INTRINSIC void next() const CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC void next() const KFR_NOEXCEPT
     {
         this->value = ccomp(cdecom(this->value) -
                             subadd(alpha * cdecom(this->value), beta * swap<2>(cdecom(this->value))));
@@ -168,7 +168,7 @@ protected:
     ST step;
     ST alpha;
     ST beta;
-    CMT_NOINLINE static vec<T, VecWidth> init_cossin(ST w, ST phase)
+    KFR_NOINLINE static vec<T, VecWidth> init_cossin(ST w, ST phase)
     {
         return ccomp(cossin(dup(phase + enumerate<ST, VecWidth>() * w)));
     }
@@ -177,18 +177,18 @@ protected:
 template <typename T, size_t VecWidth = internal::generator_width<T>(1)>
 struct generator_exp2 : public generator<T, VecWidth, generator_exp2<T, VecWidth>>
 {
-    generator_exp2(T start, T step) CMT_NOEXCEPT : step{ step },
+    generator_exp2(T start, T step) KFR_NOEXCEPT : step{ step },
                                                    vstep{ exp2(make_vector(step * VecWidth))[0] - 1 }
     {
         this->resync(start);
     }
 
-    KFR_MEM_INTRINSIC void sync(T start) const CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC void sync(T start) const KFR_NOEXCEPT
     {
         this->value = exp2(start + enumerate(vec_shape<T, VecWidth>{}, step));
     }
 
-    KFR_MEM_INTRINSIC void next() const CMT_NOEXCEPT { this->value += this->value * vstep; }
+    KFR_MEM_INTRINSIC void next() const KFR_NOEXCEPT { this->value += this->value * vstep; }
 
 protected:
     T step;
@@ -204,9 +204,9 @@ struct generator_cossin : public generator<T, VecWidth, generator_cossin<T, VecW
     {
         this->resync(start);
     }
-    KFR_MEM_INTRINSIC void sync(T start) const CMT_NOEXCEPT { this->value = init_cossin(step, start); }
+    KFR_MEM_INTRINSIC void sync(T start) const KFR_NOEXCEPT { this->value = init_cossin(step, start); }
 
-    KFR_MEM_INTRINSIC void next() const CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC void next() const KFR_NOEXCEPT
     {
         this->value = this->value - subadd(alpha * this->value, beta * swap<2>(this->value));
     }
@@ -215,7 +215,7 @@ protected:
     T step;
     T alpha;
     T beta;
-    CMT_NOINLINE static vec<T, VecWidth> init_cossin(T w, T phase)
+    KFR_NOINLINE static vec<T, VecWidth> init_cossin(T w, T phase)
     {
         return cossin(dup(phase + enumerate(vec_shape<T, VecWidth / 2>{}, w)));
     }
@@ -229,13 +229,13 @@ struct generator_sin : public generator<T, VecWidth, generator_sin<T, VecWidth>,
     {
         this->resync(start);
     }
-    KFR_MEM_INTRINSIC void sync(T start) const CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC void sync(T start) const KFR_NOEXCEPT
     {
         const vec<T, 2 * VecWidth> cs = cossin(dup(start + enumerate(vec_shape<T, VecWidth>{}, step)));
         this->value                   = vec<vec<T, 2>, VecWidth>::from_flatten(cs);
     }
 
-    KFR_MEM_INTRINSIC void next() const CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC void next() const KFR_NOEXCEPT
     {
         vec<T, 2 * VecWidth> cs = flatten(this->value);
 
@@ -328,5 +328,5 @@ KFR_FUNCTION generator_sin<TF> gen_sin(T1 start, T2 step)
 {
     return generator_sin<TF>(start, step);
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

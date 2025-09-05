@@ -8,12 +8,12 @@
 
 #include <kfr/io.hpp>
 
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 4146))
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 4146))
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 TEST(min)
 {
@@ -40,7 +40,7 @@ struct IsNotMinInt
     template <typename T, size_t N>
     bool operator()(ctype_t<vec<T, N>>, identity<T> x, identity<T> y) const
     {
-        return operator()(cometa::ctype<T>, x, y);
+        return operator()(kfr::ctype<T>, x, y);
     }
 };
 
@@ -69,7 +69,7 @@ TEST(absmax)
         },
         IsNotMinInt{});
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr
 
-CMT_PRAGMA_MSVC(warning(pop))
+KFR_PRAGMA_MSVC(warning(pop))

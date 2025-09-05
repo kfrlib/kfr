@@ -32,7 +32,7 @@
 #include "expression.hpp"
 #include <functional>
 
-#ifdef CMT_ARCH_ARM
+#ifdef KFR_ARCH_ARM
 #define KFR_DISABLE_READCYCLECOUNTER
 #endif
 
@@ -59,7 +59,7 @@ struct random_state
 };
 
 #ifndef KFR_DISABLE_READCYCLECOUNTER
-#ifdef CMT_COMPILER_CLANG
+#ifdef KFR_COMPILER_CLANG
 #define KFR_builtin_readcyclecounter()                                                                       \
     static_cast<u64>(__builtin_readcyclecounter()) // Intel C++ requires cast here
 #else
@@ -69,7 +69,7 @@ struct random_state
 
 static_assert(sizeof(random_state) == 16, "sizeof(random_state) == 16");
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 /**
  * @brief Advances the internal state of the pseudo-random number generator.
@@ -192,5 +192,5 @@ KFR_INTRINSIC vec<u8, N> random_bits(random_state& state)
     const vec<u8, N - N2> bits2 = random_bits<N - N2>(state);
     return concat(bits1, bits2);
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

@@ -33,7 +33,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace internal
@@ -83,9 +83,9 @@ template <typename T, size_t N>
 void matrix_transpose_square_small(vec<T, N>* out, const vec<T, N>* in, size_t n)
 {
     cswitch(csizeseq<6, 1>, n, // 1, 2, 3, 4, 5 or 6
-            [&](auto n_) CMT_INLINE_LAMBDA
+            [&](auto n_) KFR_INLINE_LAMBDA
             {
-                constexpr size_t n = CMT_CVAL(n_);
+                constexpr size_t n = KFR_CVAL(n_);
                 write(ptr_cast<T>(out), transpose<n, N>(kfr::read<n * n * N>(ptr_cast<T>(in))));
             });
 }
@@ -100,7 +100,7 @@ void matrix_transpose_square(vec<T, N>* out, const vec<T, N>* in, size_t n, size
 
     size_t i        = 0;
     size_t istridei = 0;
-    CMT_LOOP_NOUNROLL
+    KFR_LOOP_NOUNROLL
     for (; i < nw; i += width)
     {
         matrix_transpose_block_one<T, width>(out, in, istridei, stride);
@@ -108,17 +108,17 @@ void matrix_transpose_square(vec<T, N>* out, const vec<T, N>* in, size_t n, size
         size_t j        = i + width;
         size_t istridej = istridei + width;
         size_t jstridei = istridei + wstride;
-        CMT_LOOP_NOUNROLL
+        KFR_LOOP_NOUNROLL
         for (; j < nw; j += width)
         {
             matrix_transpose_block_two<T, width>(out, in, istridej, jstridei, stride);
             istridej += width;
             jstridei += wstride;
         }
-        CMT_LOOP_NOUNROLL
+        KFR_LOOP_NOUNROLL
         for (; j < n; ++j)
         {
-            CMT_LOOP_NOUNROLL
+            KFR_LOOP_NOUNROLL
             for (size_t ii = i; ii < i + width; ++ii)
             {
                 matrix_transpose_block_two<T, 1>(out, in, istridej, jstridei, stride);
@@ -131,11 +131,11 @@ void matrix_transpose_square(vec<T, N>* out, const vec<T, N>* in, size_t n, size
         istridei += width * (stride + 1);
     }
 
-    CMT_LOOP_NOUNROLL
+    KFR_LOOP_NOUNROLL
     for (; i < n; ++i)
     {
         matrix_transpose_block_one<T, 1>(out, in, i * stride + i, stride);
-        CMT_LOOP_NOUNROLL
+        KFR_LOOP_NOUNROLL
         for (size_t j = i + 1; j < n; ++j)
         {
             matrix_transpose_block_two<T, 1>(out, in, i * stride + j, j * stride + i, stride);
@@ -146,21 +146,21 @@ void matrix_transpose_square(vec<T, N>* out, const vec<T, N>* in, size_t n, size
     const size_t nw        = align_down(n, width);
 
     size_t i = 0;
-    CMT_LOOP_NOUNROLL
+    KFR_LOOP_NOUNROLL
     for (; i < nw; i += width)
     {
         matrix_transpose_block_one<T, width>(out, in, i * stride + i, stride);
 
         size_t j = i + width;
-        CMT_LOOP_NOUNROLL
+        KFR_LOOP_NOUNROLL
         for (; j < nw; j += width)
         {
             matrix_transpose_block_two<T, width>(out, in, i * stride + j, j * stride + i, stride);
         }
-        CMT_LOOP_NOUNROLL
+        KFR_LOOP_NOUNROLL
         for (; j < n; ++j)
         {
-            CMT_LOOP_NOUNROLL
+            KFR_LOOP_NOUNROLL
             for (size_t ii = i; ii < i + width; ++ii)
             {
                 matrix_transpose_block_two<T, 1>(out, in, ii * stride + j, j * stride + ii, stride);
@@ -168,11 +168,11 @@ void matrix_transpose_square(vec<T, N>* out, const vec<T, N>* in, size_t n, size
         }
     }
 
-    CMT_LOOP_NOUNROLL
+    KFR_LOOP_NOUNROLL
     for (; i < n; ++i)
     {
         matrix_transpose_block_one<T, 1>(out, in, i * stride + i, stride);
-        CMT_LOOP_NOUNROLL
+        KFR_LOOP_NOUNROLL
         for (size_t j = i + 1; j < n; ++j)
         {
             matrix_transpose_block_two<T, 1>(out, in, i * stride + j, j * stride + i, stride);
@@ -182,7 +182,7 @@ void matrix_transpose_square(vec<T, N>* out, const vec<T, N>* in, size_t n, size
 }
 
 template <typename T, size_t N>
-CMT_INLINE void do_reverse(vec<T, N>* first, vec<T, N>* last)
+KFR_INLINE void do_reverse(vec<T, N>* first, vec<T, N>* last)
 {
     constexpr size_t width = vector_capacity<T> / 4 / N;
     for (; first + width - 1 < last - width; first += width, last -= width)
@@ -202,12 +202,12 @@ CMT_INLINE void do_reverse(vec<T, N>* first, vec<T, N>* last)
 }
 
 template <typename T, size_t N>
-CMT_INLINE void ranges_swap(vec<T, N>* x, vec<T, N>* y, size_t size)
+KFR_INLINE void ranges_swap(vec<T, N>* x, vec<T, N>* y, size_t size)
 {
     block_process(size, csizes<const_max(vector_capacity<T> / 4 / N, 2), 1>,
-                  [x, y](size_t index, auto w) CMT_INLINE_LAMBDA
+                  [x, y](size_t index, auto w) KFR_INLINE_LAMBDA
                   {
-                      constexpr size_t width = CMT_CVAL(w);
+                      constexpr size_t width = KFR_CVAL(w);
                       vec<T, N * width> xx   = read<N * width>(ptr_cast<T>(x + index));
                       vec<T, N * width> yy   = read<N * width>(ptr_cast<T>(y + index));
                       write(ptr_cast<T>(x + index), yy);
@@ -216,12 +216,12 @@ CMT_INLINE void ranges_swap(vec<T, N>* x, vec<T, N>* y, size_t size)
 }
 
 template <typename T>
-CMT_INLINE void do_swap(T* arr, size_t a, size_t b, size_t k)
+KFR_INLINE void do_swap(T* arr, size_t a, size_t b, size_t k)
 {
     ranges_swap(arr + a, arr + b, k);
 }
 template <typename T>
-CMT_INLINE void do_block_swap(T* arr, size_t k, size_t n)
+KFR_INLINE void do_block_swap(T* arr, size_t k, size_t n)
 {
     if (k == 0 || k == n)
         return;
@@ -250,7 +250,7 @@ CMT_INLINE void do_block_swap(T* arr, size_t k, size_t n)
 }
 
 template <typename T, size_t N>
-CMT_INLINE void range_rotate(vec<T, N>* first, vec<T, N>* middle, vec<T, N>* last)
+KFR_INLINE void range_rotate(vec<T, N>* first, vec<T, N>* middle, vec<T, N>* last)
 {
 #ifndef KFR_T_REV
     do_block_swap(first, middle - first, last - first);
@@ -316,7 +316,7 @@ public:
     matrix_cycles& operator=(const matrix_cycles&) = delete;
     matrix_cycles& operator=(matrix_cycles&&)      = delete;
 
-    CMT_INLINE_MEMBER explicit matrix_cycles(shape<2> size) : size(size), flat_size(size.product())
+    KFR_INLINE_MEMBER explicit matrix_cycles(shape<2> size) : size(size), flat_size(size.product())
     {
         size_t bits  = (flat_size + 1) / 2;
         size_t words = (bits + word_bits - 1) / word_bits;
@@ -399,20 +399,20 @@ private:
     shape<2> size;
     size_t flat_size;
     word_t* data;
-    CMT_PRAGMA_GNU(GCC diagnostic push)
-    CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wattributes")
+    KFR_PRAGMA_GNU(GCC diagnostic push)
+    KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wattributes")
     [[maybe_unused]] uint8_t cache_line__[64];
-    CMT_PRAGMA_GNU(GCC diagnostic pop)
+    KFR_PRAGMA_GNU(GCC diagnostic pop)
     alignas(16) word_t on_stack[1024];
 
-    CMT_INLINE_MEMBER void set(size_t index)
+    KFR_INLINE_MEMBER void set(size_t index)
     {
         word_t& word = data[index / word_bits];
         word_t mask  = 1u << (index % word_bits);
         word |= mask;
     }
 
-    CMT_INLINE_MEMBER bool test_and_set(size_t index)
+    KFR_INLINE_MEMBER bool test_and_set(size_t index)
     {
         word_t& word = data[index / word_bits];
         word_t mask  = 1u << (index % word_bits);
@@ -424,7 +424,7 @@ private:
 };
 
 template <typename T, size_t N, bool horizontal>
-CMT_INTRINSIC void matrix_merge_squares_fast(vec<T, N>* out, size_t side, size_t squares, matrix_size size,
+KFR_INTRINSIC void matrix_merge_squares_fast(vec<T, N>* out, size_t side, size_t squares, matrix_size size,
                                              size_t stride, cbool_t<horizontal>)
 {
     if constexpr (!horizontal)
@@ -442,7 +442,7 @@ CMT_INTRINSIC void matrix_merge_squares_fast(vec<T, N>* out, size_t side, size_t
     }
 }
 
-static CMT_INTRINSIC size_t matrix_offset(size_t flat_index, size_t side, size_t stride1, size_t stride2)
+static KFR_INTRINSIC size_t matrix_offset(size_t flat_index, size_t side, size_t stride1, size_t stride2)
 {
     size_t i = flat_index / side;
     size_t j = flat_index % side;
@@ -472,7 +472,7 @@ void matrix_merge_squares(vec<T, N>* out, size_t side, size_t squares, matrix_si
             side, csizes<const_max(2, vector_capacity<T> / 8 / N), 1>,
             [&](size_t offset, auto width_)
             {
-                constexpr size_t width = CMT_CVAL(width_);
+                constexpr size_t width = KFR_CVAL(width_);
 
                 vec<T, width * N> temp;
                 vec<T, width * N> temp_inv;
@@ -480,10 +480,10 @@ void matrix_merge_squares(vec<T, N>* out, size_t side, size_t squares, matrix_si
                 size_t previous_inv;
                 cycles.iterate(
                     origin,
-                    [&](size_t origin, size_t origin_inv, bool /* fixed */) CMT_INLINE_LAMBDA
+                    [&](size_t origin, size_t origin_inv, bool /* fixed */) KFR_INLINE_LAMBDA
                     {
-#ifdef CMT_COMPILER_IS_MSVC
-                        constexpr size_t width = CMT_CVAL(width_);
+#ifdef KFR_COMPILER_IS_MSVC
+                        constexpr size_t width = KFR_CVAL(width_);
 #endif
                         temp = read<width * N>(
                             ptr_cast<T>(out + matrix_offset(origin, flat_side, stride, side) + offset));
@@ -492,10 +492,10 @@ void matrix_merge_squares(vec<T, N>* out, size_t side, size_t squares, matrix_si
                         previous     = origin;
                         previous_inv = origin_inv;
                     },
-                    [&](size_t current, size_t current_inv) CMT_INLINE_LAMBDA
+                    [&](size_t current, size_t current_inv) KFR_INLINE_LAMBDA
                     {
-#ifdef CMT_COMPILER_IS_MSVC
-                        constexpr size_t width = CMT_CVAL(width_);
+#ifdef KFR_COMPILER_IS_MSVC
+                        constexpr size_t width = KFR_CVAL(width_);
 #endif
                         vec<T, (width * N)> val = read<width * N>(
                             ptr_cast<T>(out + matrix_offset(current, flat_side, stride, side) + offset));
@@ -509,7 +509,7 @@ void matrix_merge_squares(vec<T, N>* out, size_t side, size_t squares, matrix_si
                         previous     = current;
                         previous_inv = current_inv;
                     },
-                    [&](bool symmetric) CMT_INLINE_LAMBDA
+                    [&](bool symmetric) KFR_INLINE_LAMBDA
                     {
                         if (!symmetric)
                             std::swap(temp, temp_inv);
@@ -601,14 +601,14 @@ void matrix_transpose(vec<T, N>* out, const vec<T, N>* in, shape<Dims> tshape)
     {
         const index_t rows = tshape[0];
         const index_t cols = tshape[1];
-        if (CMT_UNLIKELY(cols == 1 || rows == 1))
+        if (KFR_UNLIKELY(cols == 1 || rows == 1))
         {
             return internal::matrix_transpose_noop(out, in, tshape.product());
         }
         // TODO: special cases for tall or wide matrices
-        if (CMT_LIKELY(cols == rows))
+        if (KFR_LIKELY(cols == rows))
         {
-            if (CMT_UNLIKELY(cols <= 6))
+            if (KFR_UNLIKELY(cols <= 6))
                 return internal::matrix_transpose_square_small(out, in, cols);
             return internal::matrix_transpose_square(out, in, cols, cols);
         }
@@ -651,6 +651,6 @@ void matrix_transpose(T* out, const T* in, shape<Dims> shape)
                                                       ptr_cast<vec<U, width>>(in), shape);
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 } // namespace kfr

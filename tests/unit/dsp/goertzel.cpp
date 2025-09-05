@@ -11,7 +11,7 @@
 
 using namespace kfr;
 
-namespace CMT_ARCH_NAME
+namespace KFR_ARCH_NAME
 {
 
 TEST(goertzel)
@@ -35,4 +35,4 @@ TEST(goertzel)
     CHECK(cabs(cs[2]) == 8.f);
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME

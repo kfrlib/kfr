@@ -29,7 +29,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace intrinsics
@@ -53,6 +53,6 @@ KFR_HANDLE_SCALAR(acos)
 } // namespace intrinsics
 KFR_I_FN(asin)
 KFR_I_FN(acos)
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 } // namespace kfr

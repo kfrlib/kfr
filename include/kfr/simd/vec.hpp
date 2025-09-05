@@ -25,7 +25,7 @@
  */
 #pragma once
 
-#include "../cometa/string.hpp"
+#include "../meta/string.hpp"
 #include "../version.hpp"
 #include "constants.hpp"
 #include "impl/backend.hpp"
@@ -39,7 +39,7 @@
     struct FN                                                                                                \
     {                                                                                                        \
         template <typename... Args>                                                                          \
-        CMT_INLINE_MEMBER decltype(::kfr::FN(std::declval<Args>()...)) operator()(Args&&... args) const      \
+        KFR_INLINE_MEMBER decltype(::kfr::FN(std::declval<Args>()...)) operator()(Args&&... args) const      \
         {                                                                                                    \
             return ::kfr::FN(std::forward<Args>(args)...);                                                   \
         }                                                                                                    \
@@ -55,7 +55,7 @@
     struct FN                                                                                                \
     {                                                                                                        \
         template <typename... Args>                                                                          \
-        CMT_INLINE_MEMBER decltype(::kfr::intrinsics::FN(std::declval<Args>()...)) operator()(               \
+        KFR_INLINE_MEMBER decltype(::kfr::intrinsics::FN(std::declval<Args>()...)) operator()(               \
             Args&&... args) const                                                                            \
         {                                                                                                    \
             return ::kfr::intrinsics::FN(std::forward<Args>(args)...);                                       \
@@ -69,23 +69,23 @@
     struct FN                                                                                                \
     {                                                                                                        \
         template <typename... Args>                                                                          \
-        CMT_INLINE_MEMBER decltype(FULLFN(std::declval<Args>()...)) operator()(Args&&... args) const         \
+        KFR_INLINE_MEMBER decltype(FULLFN(std::declval<Args>()...)) operator()(Args&&... args) const         \
         {                                                                                                    \
             return FULLFN(std::forward<Args>(args)...);                                                      \
         }                                                                                                    \
     };                                                                                                       \
     }
 
-CMT_PRAGMA_GNU(GCC diagnostic push)
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpragmas")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wfloat-equal")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wc++98-compat-local-type-template-args")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpacked")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wpragmas")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wfloat-equal")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wc++98-compat-local-type-template-args")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wpacked")
 
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 4814))
-CMT_PRAGMA_MSVC(warning(disable : 4244))
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 4814))
+KFR_PRAGMA_MSVC(warning(disable : 4244))
 
 namespace kfr
 {
@@ -108,7 +108,7 @@ namespace kfr
 template <typename T, size_t N>
 struct alignas(next_poweroftwo(sizeof(T)) * next_poweroftwo(N)) portable_vec
 {
-    static constexpr vec_shape<T, N> shape() CMT_NOEXCEPT { return {}; }
+    static constexpr vec_shape<T, N> shape() KFR_NOEXCEPT { return {}; }
 
     constexpr portable_vec() = default;
 
@@ -126,7 +126,7 @@ struct alignas(next_poweroftwo(sizeof(T)) * next_poweroftwo(N)) portable_vec
     // type and size
     using value_type = T;
 
-    constexpr static size_t size() CMT_NOEXCEPT { return N; }
+    constexpr static size_t size() KFR_NOEXCEPT { return N; }
 
     T elem[N];
 
@@ -144,7 +144,7 @@ private:
     }
 };
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <typename T, size_t N>
@@ -240,12 +240,12 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     static_assert(N_ > 0, "vec<T, N>: vector width cannot be zero");
 
     constexpr static inline size_t N = const_max(size_t(1), N_);
-    static constexpr vec_shape<T, N> shape() CMT_NOEXCEPT { return {}; }
+    static constexpr vec_shape<T, N> shape() KFR_NOEXCEPT { return {}; }
 
     // type and size
     using value_type = T;
 
-    constexpr static size_t size() CMT_NOEXCEPT { return N; }
+    constexpr static size_t size() KFR_NOEXCEPT { return N; }
 
     using ST          = typename compound_type_traits<T>::deep_subtype;
     using scalar_type = ST;
@@ -253,7 +253,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     constexpr static inline size_t SW = compound_type_traits<T>::deep_width;
     constexpr static inline size_t SN = N * SW;
 
-    constexpr static size_t scalar_size() CMT_NOEXCEPT { return SN; }
+    constexpr static size_t scalar_size() KFR_NOEXCEPT { return SN; }
 
     static_assert(is_simd_type<scalar_type>, "Invalid vector type");
 
@@ -273,43 +273,43 @@ struct alignas(internal::vec_alignment<T, N_>) vec
 
     // constructors and assignment
     // from SIMD
-    KFR_MEM_INTRINSIC vec(const simd_type& simd) CMT_NOEXCEPT : v(simd) {}
+    KFR_MEM_INTRINSIC vec(const simd_type& simd) KFR_NOEXCEPT : v(simd) {}
     // default
-    KFR_MEM_INTRINSIC constexpr vec() CMT_NOEXCEPT {}
+    KFR_MEM_INTRINSIC constexpr vec() KFR_NOEXCEPT {}
 
-#ifdef CMT_COMPILER_IS_MSVC
+#ifdef KFR_COMPILER_IS_MSVC
     // MSVC Internal Compiler Error workaround
     // copy
-    KFR_MEM_INTRINSIC constexpr vec(const vec& value) CMT_NOEXCEPT : v(value.v) {}
+    KFR_MEM_INTRINSIC constexpr vec(const vec& value) KFR_NOEXCEPT : v(value.v) {}
     // move
-    KFR_MEM_INTRINSIC constexpr vec(vec&& value) CMT_NOEXCEPT : v(value.v) {}
+    KFR_MEM_INTRINSIC constexpr vec(vec&& value) KFR_NOEXCEPT : v(value.v) {}
     // assignment
-    KFR_MEM_INTRINSIC constexpr vec& operator=(const vec& value) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr vec& operator=(const vec& value) KFR_NOEXCEPT
     {
         v = value.v;
         return *this;
     }
     // assignment
-    KFR_MEM_INTRINSIC constexpr vec& operator=(vec&& value) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr vec& operator=(vec&& value) KFR_NOEXCEPT
     {
         v = value.v;
         return *this;
     }
 #else
     // copy
-    KFR_MEM_INTRINSIC constexpr vec(const vec&) CMT_NOEXCEPT = default;
+    KFR_MEM_INTRINSIC constexpr vec(const vec&) KFR_NOEXCEPT = default;
     // move
-    KFR_MEM_INTRINSIC constexpr vec(vec&&) CMT_NOEXCEPT = default;
+    KFR_MEM_INTRINSIC constexpr vec(vec&&) KFR_NOEXCEPT = default;
     // assignment
-    KFR_MEM_INTRINSIC constexpr vec& operator=(const vec&) CMT_NOEXCEPT = default;
+    KFR_MEM_INTRINSIC constexpr vec& operator=(const vec&) KFR_NOEXCEPT = default;
     // assignment
-    KFR_MEM_INTRINSIC constexpr vec& operator=(vec&&) CMT_NOEXCEPT = default;
+    KFR_MEM_INTRINSIC constexpr vec& operator=(vec&&) KFR_NOEXCEPT = default;
 #endif
 
     // from scalar
     template <typename U,
               KFR_ENABLE_IF(std::is_convertible_v<U, value_type>&& compound_type_traits<T>::is_scalar)>
-    KFR_MEM_INTRINSIC vec(const U& s) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC vec(const U& s) KFR_NOEXCEPT
         : v(intrinsics::simd_broadcast(intrinsics::simd_t<unwrap_bit<ST>, SN>{},
                                        unwrap_bit_value(static_cast<ST>(s))))
     {
@@ -317,7 +317,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
 
     template <typename U,
               KFR_ENABLE_IF(std::is_convertible_v<U, value_type> && !compound_type_traits<T>::is_scalar)>
-    KFR_MEM_INTRINSIC vec(const U& s) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC vec(const U& s) KFR_NOEXCEPT
         : v(intrinsics::simd_shuffle(intrinsics::simd_t<unwrap_bit<ST>, SW>{},
                                      internal::compoundcast<T>::to_flat(static_cast<T>(s)).v,
                                      csizeseq<SN> % csize<SW>, overload_auto))
@@ -326,13 +326,13 @@ struct alignas(internal::vec_alignment<T, N_>) vec
 
     // from list
     template <typename... Us, KFR_ENABLE_IF(sizeof...(Us) <= 1022 && compound_type_traits<T>::is_scalar)>
-    KFR_MEM_INTRINSIC vec(const value_type& s0, const value_type& s1, const Us&... rest) CMT_NOEXCEPT
-        : v(intrinsics::simd_make(cometa::ctype<T>, s0, s1, static_cast<value_type>(rest)...))
+    KFR_MEM_INTRINSIC vec(const value_type& s0, const value_type& s1, const Us&... rest) KFR_NOEXCEPT
+        : v(intrinsics::simd_make(kfr::ctype<T>, s0, s1, static_cast<value_type>(rest)...))
     {
     }
 
     template <typename... Us, KFR_ENABLE_IF(sizeof...(Us) <= 1022 && !compound_type_traits<T>::is_scalar)>
-    KFR_MEM_INTRINSIC vec(const value_type& s0, const value_type& s1, const Us&... rest) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC vec(const value_type& s0, const value_type& s1, const Us&... rest) KFR_NOEXCEPT
         : v(intrinsics::simd_concat<ST, size_t(SW), size_t(SW), just_value<Us, size_t>(SW)...>(
               internal::compoundcast<T>::to_flat(s0).v, internal::compoundcast<T>::to_flat(s1).v,
               internal::compoundcast<T>::to_flat(static_cast<T>(rest)).v...))
@@ -342,7 +342,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     // from vector of another type
     template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, value_type> &&
                                         (compound_type_traits<T>::is_scalar && !is_bit<U>))>
-    KFR_MEM_INTRINSIC vec(const vec<U, N>& x) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC vec(const vec<U, N>& x) KFR_NOEXCEPT
         : v(intrinsics::simd_convert(
               intrinsics::simd_cvt_t<unwrap_bit<ST>, unwrap_bit<deep_subtype<U>>, SN>{}, x.v))
     {
@@ -351,19 +351,19 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     // from mask of the same type
     template <typename U = T, KFR_ENABLE_IF(!is_bit<U> && compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC explicit vec(
-        const vec<std::conditional_t<compound_type_traits<T>::is_scalar, bit<T>, T>, N>& x) CMT_NOEXCEPT
+        const vec<std::conditional_t<compound_type_traits<T>::is_scalar, bit<T>, T>, N>& x) KFR_NOEXCEPT
         : v(x.v)
     {
     }
     // from vec to mask of the same type
     template <typename U = T, KFR_ENABLE_IF(is_bit<U>&& compound_type_traits<T>::is_scalar)>
-    KFR_MEM_INTRINSIC explicit vec(const vec<unwrap_bit<T>, N>& x) CMT_NOEXCEPT : v(x.v)
+    KFR_MEM_INTRINSIC explicit vec(const vec<unwrap_bit<T>, N>& x) KFR_NOEXCEPT : v(x.v)
     {
     }
 
     // from lambda
     template <typename Fn, KFR_ENABLE_IF(std::is_invocable_r_v<T, Fn, size_t>)>
-    KFR_MEM_INTRINSIC vec(Fn&& fn) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC vec(Fn&& fn) KFR_NOEXCEPT
     {
         for (size_t i = 0; i < N; ++i)
         {
@@ -374,7 +374,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
 
     template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, value_type> &&
                                         !(compound_type_traits<T>::is_scalar && !is_bit<U>))>
-    KFR_MEM_INTRINSIC vec(const vec<U, N>& x) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC vec(const vec<U, N>& x) KFR_NOEXCEPT
         : v(internal::conversion<vec_rank<T> + 1, vec_rank<U> + 1, vec<T, N>, vec<U, N>,
                                  internal::conv_t::promote>::cast(x)
                 .v)
@@ -383,24 +383,24 @@ struct alignas(internal::vec_alignment<T, N_>) vec
 
     // from list of vectors
     template <size_t... Ns, typename = std::enable_if_t<csum<size_t, Ns...>() == N>>
-    KFR_MEM_INTRINSIC vec(const vec<T, Ns>&... vs) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC vec(const vec<T, Ns>&... vs) KFR_NOEXCEPT
         : v(intrinsics::simd_concat<ST, (SW * Ns)...>(vs.v...))
     {
     }
 
-    KFR_MEM_INTRINSIC vec(const portable_vec<T, N>& p) CMT_NOEXCEPT : vec(bitcast_anything<vec>(p)) {}
+    KFR_MEM_INTRINSIC vec(const portable_vec<T, N>& p) KFR_NOEXCEPT : vec(bitcast_anything<vec>(p)) {}
 
-    KFR_MEM_INTRINSIC operator portable_vec<T, N>() const CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC operator portable_vec<T, N>() const KFR_NOEXCEPT
     {
         return bitcast_anything<portable_vec<T, N>>(*this);
     }
 
-    KFR_MEM_INTRINSIC vec(czeros_t) CMT_NOEXCEPT : v(intrinsics::simd_zeros<ST, SN>()) {}
+    KFR_MEM_INTRINSIC vec(czeros_t) KFR_NOEXCEPT : v(intrinsics::simd_zeros<ST, SN>()) {}
 
-    KFR_MEM_INTRINSIC vec(cones_t) CMT_NOEXCEPT : v(intrinsics::simd_allones<ST, SN>()) {}
+    KFR_MEM_INTRINSIC vec(cones_t) KFR_NOEXCEPT : v(intrinsics::simd_allones<ST, SN>()) {}
 
     template <typename U, size_t M, KFR_ENABLE_IF(sizeof(U) * M == sizeof(T) * N)>
-    KFR_MEM_INTRINSIC static vec frombits(const vec<U, M>& v) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC static vec frombits(const vec<U, M>& v) KFR_NOEXCEPT
     {
         return intrinsics::simd_bitcast(
             intrinsics::simd_cvt_t<ST, typename vec<U, M>::scalar_type, vec<U, M>::scalar_size()>{}, v.v);
@@ -408,7 +408,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
 
     // shuffle
     template <size_t... indices>
-    KFR_MEM_INTRINSIC vec<value_type, sizeof...(indices)> shuffle(csizes_t<indices...> i) const CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC vec<value_type, sizeof...(indices)> shuffle(csizes_t<indices...> i) const KFR_NOEXCEPT
     {
         return vec<value_type, sizeof...(indices)>(intrinsics::simd_shuffle(
             intrinsics::simd_t<unwrap_bit<ST>, SN>{}, v, scale<SW>(i), overload_auto));
@@ -416,7 +416,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
 
     template <size_t... indices>
     KFR_MEM_INTRINSIC vec<value_type, sizeof...(indices)> shuffle(const vec& y,
-                                                                  csizes_t<indices...> i) const CMT_NOEXCEPT
+                                                                  csizes_t<indices...> i) const KFR_NOEXCEPT
     {
         return vec<value_type, sizeof...(indices)>(
             intrinsics::simd_shuffle(intrinsics::simd2_t<ST, SN, SN>{}, v, y.v, scale<SW>(i), overload_auto));
@@ -425,33 +425,33 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     // element access
     struct element;
 
-    KFR_MEM_INTRINSIC constexpr value_type operator[](size_t index) const& CMT_NOEXCEPT { return get(index); }
+    KFR_MEM_INTRINSIC constexpr value_type operator[](size_t index) const& KFR_NOEXCEPT { return get(index); }
 
-    KFR_MEM_INTRINSIC constexpr value_type operator[](size_t index) && CMT_NOEXCEPT { return get(index); }
+    KFR_MEM_INTRINSIC constexpr value_type operator[](size_t index) && KFR_NOEXCEPT { return get(index); }
 
-    KFR_MEM_INTRINSIC constexpr element operator[](size_t index) & CMT_NOEXCEPT { return { *this, index }; }
+    KFR_MEM_INTRINSIC constexpr element operator[](size_t index) & KFR_NOEXCEPT { return { *this, index }; }
 
-    KFR_MEM_INTRINSIC value_type front() const& CMT_NOEXCEPT { return get(csize<0>); }
+    KFR_MEM_INTRINSIC value_type front() const& KFR_NOEXCEPT { return get(csize<0>); }
 
-    KFR_MEM_INTRINSIC value_type back() const& CMT_NOEXCEPT { return get(csize<N - 1>); }
+    KFR_MEM_INTRINSIC value_type back() const& KFR_NOEXCEPT { return get(csize<N - 1>); }
 
-    KFR_MEM_INTRINSIC value_type front() && CMT_NOEXCEPT { return get(csize<0>); }
+    KFR_MEM_INTRINSIC value_type front() && KFR_NOEXCEPT { return get(csize<0>); }
 
-    KFR_MEM_INTRINSIC value_type back() && CMT_NOEXCEPT { return get(csize<N - 1>); }
+    KFR_MEM_INTRINSIC value_type back() && KFR_NOEXCEPT { return get(csize<N - 1>); }
 
-    KFR_MEM_INTRINSIC element front() & CMT_NOEXCEPT { return { *this, 0 }; }
+    KFR_MEM_INTRINSIC element front() & KFR_NOEXCEPT { return { *this, 0 }; }
 
-    KFR_MEM_INTRINSIC element back() & CMT_NOEXCEPT { return { *this, N - 1 }; }
+    KFR_MEM_INTRINSIC element back() & KFR_NOEXCEPT { return { *this, N - 1 }; }
 
     template <int dummy = 0, KFR_ENABLE_IF(dummy == 0 && compound_type_traits<T>::is_scalar)>
-    KFR_MEM_INTRINSIC constexpr value_type get(size_t index) const CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr value_type get(size_t index) const KFR_NOEXCEPT
     {
         return intrinsics::simd_get_element<T, N>(v, index);
     }
 
     template <int dummy = 0, typename = void,
               KFR_ENABLE_IF(dummy == 0 && !compound_type_traits<T>::is_scalar)>
-    KFR_MEM_INTRINSIC constexpr value_type get(size_t index) const CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr value_type get(size_t index) const KFR_NOEXCEPT
     {
         value_type result{};
         union
@@ -464,33 +464,33 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     }
 
     template <size_t index, KFR_ENABLE_IF(index < 1024 && compound_type_traits<T>::is_scalar)>
-    KFR_MEM_INTRINSIC constexpr value_type get(csize_t<index>) const CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr value_type get(csize_t<index>) const KFR_NOEXCEPT
     {
         return intrinsics::simd_get_element<T, N>(v, csize<index>);
     }
 
     template <size_t index, typename = void,
               KFR_ENABLE_IF(index < 1024 && !compound_type_traits<T>::is_scalar)>
-    KFR_MEM_INTRINSIC constexpr value_type get(csize_t<index>) const CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr value_type get(csize_t<index>) const KFR_NOEXCEPT
     {
         return internal::compoundcast<T>::from_flat(intrinsics::simd_shuffle(
             intrinsics::simd_t<unwrap_bit<ST>, SN>{}, v, csizeseq<SW, SW * index>, overload_auto));
     }
 
     template <size_t index>
-    KFR_MEM_INTRINSIC constexpr value_type get() const CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr value_type get() const KFR_NOEXCEPT
     {
         return this->get(csize_t<index>{});
     }
 
     template <int dummy = 0, KFR_ENABLE_IF(dummy == 0 && compound_type_traits<T>::is_scalar)>
-    KFR_MEM_INTRINSIC constexpr void set(size_t index, const value_type& s) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr void set(size_t index, const value_type& s) KFR_NOEXCEPT
     {
         v = intrinsics::simd_set_element<T, N>(v, index, s);
     }
 
     template <int dummy = 0, KFR_ENABLE_IF(dummy == 0 && !compound_type_traits<T>::is_scalar)>
-    KFR_MEM_INTRINSIC constexpr void set(size_t index, const value_type& s) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr void set(size_t index, const value_type& s) KFR_NOEXCEPT
     {
         union
         {
@@ -502,87 +502,87 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     }
 
     template <size_t index, KFR_ENABLE_IF(index < 1024 && compound_type_traits<T>::is_scalar)>
-    KFR_MEM_INTRINSIC constexpr void set(csize_t<index>, const value_type& s) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr void set(csize_t<index>, const value_type& s) KFR_NOEXCEPT
     {
         v = intrinsics::simd_set_element<T, N>(v, csize<index>, s);
     }
 
     template <size_t index, typename = void,
               KFR_ENABLE_IF(index < 1024 && !compound_type_traits<T>::is_scalar)>
-    KFR_MEM_INTRINSIC constexpr void set(csize_t<index>, const value_type& s) CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr void set(csize_t<index>, const value_type& s) KFR_NOEXCEPT
     {
         this->v[index] = s;
     }
 
     struct element
     {
-        constexpr operator value_type() const CMT_NOEXCEPT { return v.get(index); }
+        constexpr operator value_type() const KFR_NOEXCEPT { return v.get(index); }
 
-        template <typename U = T, CMT_ENABLE_IF(is_vec<U>)>
-        KFR_MEM_INTRINSIC typename U::value_type operator[](size_t index) CMT_NOEXCEPT
+        template <typename U = T, KFR_ENABLE_IF(is_vec<U>)>
+        KFR_MEM_INTRINSIC typename U::value_type operator[](size_t index) KFR_NOEXCEPT
         {
             return v.get(this->index)[index];
         }
-        KFR_MEM_INTRINSIC value_type operator+() CMT_NOEXCEPT { return v.get(index); }
-        KFR_MEM_INTRINSIC value_type operator-() CMT_NOEXCEPT { return -v.get(index); }
+        KFR_MEM_INTRINSIC value_type operator+() KFR_NOEXCEPT { return v.get(index); }
+        KFR_MEM_INTRINSIC value_type operator-() KFR_NOEXCEPT { return -v.get(index); }
 
-        KFR_MEM_INTRINSIC element& operator=(const value_type& s) CMT_NOEXCEPT
+        KFR_MEM_INTRINSIC element& operator=(const value_type& s) KFR_NOEXCEPT
         {
             v.set(index, s);
             return *this;
         }
 
-        KFR_MEM_INTRINSIC element& operator+=(const value_type& s) CMT_NOEXCEPT
+        KFR_MEM_INTRINSIC element& operator+=(const value_type& s) KFR_NOEXCEPT
         {
             v.set(index, v.get(index) + s);
             return *this;
         }
-        KFR_MEM_INTRINSIC element& operator-=(const value_type& s) CMT_NOEXCEPT
+        KFR_MEM_INTRINSIC element& operator-=(const value_type& s) KFR_NOEXCEPT
         {
             v.set(index, v.get(index) - s);
             return *this;
         }
-        KFR_MEM_INTRINSIC element& operator*=(const value_type& s) CMT_NOEXCEPT
+        KFR_MEM_INTRINSIC element& operator*=(const value_type& s) KFR_NOEXCEPT
         {
             v.set(index, v.get(index) * s);
             return *this;
         }
-        KFR_MEM_INTRINSIC element& operator/=(const value_type& s) CMT_NOEXCEPT
+        KFR_MEM_INTRINSIC element& operator/=(const value_type& s) KFR_NOEXCEPT
         {
             v.set(index, v.get(index) / s);
             return *this;
         }
-        KFR_MEM_INTRINSIC element& operator++() CMT_NOEXCEPT
+        KFR_MEM_INTRINSIC element& operator++() KFR_NOEXCEPT
         {
             v.set(index, v.get(index) + 1);
             return *this;
         }
-        KFR_MEM_INTRINSIC element& operator--() CMT_NOEXCEPT
+        KFR_MEM_INTRINSIC element& operator--() KFR_NOEXCEPT
         {
             v.set(index, v.get(index) - 1);
             return *this;
         }
-        KFR_MEM_INTRINSIC value_type operator++(int) CMT_NOEXCEPT
+        KFR_MEM_INTRINSIC value_type operator++(int) KFR_NOEXCEPT
         {
             value_type val = v.get(index) + 1;
             v.set(index, val);
             return val;
         }
-        KFR_MEM_INTRINSIC value_type operator--(int) CMT_NOEXCEPT
+        KFR_MEM_INTRINSIC value_type operator--(int) KFR_NOEXCEPT
         {
             value_type val = v.get(index) - 1;
             v.set(index, val);
             return val;
         }
 
-        KFR_MEM_INTRINSIC element& operator=(const element& s) CMT_NOEXCEPT
+        KFR_MEM_INTRINSIC element& operator=(const element& s) KFR_NOEXCEPT
         {
             v.set(index, static_cast<value_type>(s));
             return *this;
         }
 
         template <typename U, size_t M>
-        KFR_MEM_INTRINSIC element& operator=(const typename vec<U, M>::element& s) CMT_NOEXCEPT
+        KFR_MEM_INTRINSIC element& operator=(const typename vec<U, M>::element& s) KFR_NOEXCEPT
         {
             v.set(index, static_cast<value_type>(static_cast<U>(s)));
             return *this;
@@ -595,19 +595,19 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     // read/write
     template <bool aligned = false>
     KFR_MEM_INTRINSIC explicit constexpr vec(const value_type* src,
-                                             cbool_t<aligned> = cbool_t<aligned>()) CMT_NOEXCEPT;
+                                             cbool_t<aligned> = cbool_t<aligned>()) KFR_NOEXCEPT;
 
     template <bool aligned = false>
     KFR_MEM_INTRINSIC const vec& write(value_type* dest,
-                                       cbool_t<aligned> = cbool_t<aligned>()) const CMT_NOEXCEPT;
+                                       cbool_t<aligned> = cbool_t<aligned>()) const KFR_NOEXCEPT;
 
-    KFR_MEM_INTRINSIC vec<ST, SN> flatten() const CMT_NOEXCEPT { return v; }
+    KFR_MEM_INTRINSIC vec<ST, SN> flatten() const KFR_NOEXCEPT { return v; }
 
     KFR_MEM_INTRINSIC static vec from_flatten(const vec<ST, SN>& x) { return vec(x.v); }
 
-    KFR_MEM_INTRINSIC constexpr mask_t asmask() const CMT_NOEXCEPT { return mask_t(v); }
+    KFR_MEM_INTRINSIC constexpr mask_t asmask() const KFR_NOEXCEPT { return mask_t(v); }
 
-    KFR_MEM_INTRINSIC constexpr vec<unwrap_bit<T>, N> asvec() const CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr vec<unwrap_bit<T>, N> asvec() const KFR_NOEXCEPT
     {
         return vec<unwrap_bit<T>, N>(v);
     }
@@ -634,20 +634,20 @@ constexpr inline bool is_vec_element = is_simd_type<deep_subtype<std::remove_con
 
 template <typename T, size_t N, size_t... indices>
 KFR_INTRINSIC vec<T, sizeof...(indices)> shufflevector(const vec<T, N>& x,
-                                                       csizes_t<indices...> i) CMT_NOEXCEPT
+                                                       csizes_t<indices...> i) KFR_NOEXCEPT
 {
     return intrinsics::simd_shuffle(intrinsics::simd_t<unwrap_bit<T>, N>{}, x.v, i, overload_auto);
 }
 
 template <typename T, size_t N, size_t... indices>
 KFR_INTRINSIC vec<T, sizeof...(indices)> shufflevectors(const vec<T, N>& x, const vec<T, N>& y,
-                                                        csizes_t<indices...> i) CMT_NOEXCEPT
+                                                        csizes_t<indices...> i) KFR_NOEXCEPT
 {
     return intrinsics::simd_shuffle(intrinsics::simd2_t<T, N, N>{}, x.v, y.v, i, overload_auto);
 }
 
-CMT_PRAGMA_GNU(GCC diagnostic push)
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wold-style-cast")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wold-style-cast")
 
 template <size_t N, typename T>
 constexpr KFR_INTRINSIC vec<T, N> broadcast(T x)
@@ -655,14 +655,14 @@ constexpr KFR_INTRINSIC vec<T, N> broadcast(T x)
     return x;
 }
 
-CMT_PRAGMA_GNU(GCC diagnostic pop)
+KFR_PRAGMA_GNU(GCC diagnostic pop)
 
 namespace internal
 {
 
 template <typename To, typename From, size_t N, typename Tsub = deep_subtype<To>,
           size_t Nout = (N * compound_type_traits<To>::deep_width)>
-constexpr KFR_INTRINSIC vec<To, N> builtin_convertvector(const vec<From, N>& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC vec<To, N> builtin_convertvector(const vec<From, N>& value) KFR_NOEXCEPT
 {
     return vec<To, N>(value);
 }
@@ -689,45 +689,45 @@ struct conversion<1, 0, vec<To, N>, From, conv>
 } // namespace internal
 
 template <typename T>
-constexpr size_t size_of() CMT_NOEXCEPT
+constexpr size_t size_of() KFR_NOEXCEPT
 {
     return sizeof(deep_subtype<T>) * compound_type_traits<T>::deep_width;
 }
 
 template <typename From, size_t N, typename Tsub = deep_subtype<From>,
           size_t Nout = N * size_of<From>() / size_of<Tsub>()>
-constexpr KFR_INTRINSIC vec<Tsub, Nout> flatten(const vec<From, N>& x) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC vec<Tsub, Nout> flatten(const vec<From, N>& x) KFR_NOEXCEPT
 {
     return x.flatten();
 }
 
 template <typename To, typename From,
           typename Tout = typename compound_type_traits<From>::template deep_rebind<To>>
-constexpr KFR_INTRINSIC Tout cast(const From& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC Tout cast(const From& value) KFR_NOEXCEPT
 {
     return static_cast<Tout>(value);
 }
 
 template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(!std::is_same_v<Tin, Tout>)>
-constexpr KFR_INTRINSIC vec<Tout, N> cast(const vec<Tin, N>& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC vec<Tout, N> cast(const vec<Tin, N>& value) KFR_NOEXCEPT
 {
     return vec<Tout, N>(value);
 }
 
 template <typename Tout, typename Tin, size_t N1, size_t N2, KFR_ENABLE_IF(!std::is_same_v<Tin, Tout>)>
-constexpr KFR_INTRINSIC vec<vec<Tout, N1>, N2> cast(const vec<vec<Tin, N1>, N2>& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC vec<vec<Tout, N1>, N2> cast(const vec<vec<Tin, N1>, N2>& value) KFR_NOEXCEPT
 {
     return vec<vec<Tout, N1>, N2>(value);
 }
 
 template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(std::is_same_v<Tin, Tout>)>
-constexpr KFR_INTRINSIC const vec<Tin, N>& cast(const vec<Tin, N>& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC const vec<Tin, N>& cast(const vec<Tin, N>& value) KFR_NOEXCEPT
 {
     return value;
 }
 
 template <typename Tout, typename Tin, size_t N1, size_t N2, KFR_ENABLE_IF(std::is_same_v<Tin, Tout>)>
-constexpr KFR_INTRINSIC const vec<vec<Tin, N1>, N2>& cast(const vec<vec<Tin, N1>, N2>& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC const vec<vec<Tin, N1>, N2>& cast(const vec<vec<Tin, N1>, N2>& value) KFR_NOEXCEPT
 {
     return value;
 }
@@ -736,47 +736,47 @@ constexpr KFR_INTRINSIC const vec<vec<Tin, N1>, N2>& cast(const vec<vec<Tin, N1>
 
 template <typename To, typename From,
           typename Tout = typename compound_type_traits<From>::template deep_rebind<To>>
-constexpr KFR_INTRINSIC Tout broadcastto(const From& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC Tout broadcastto(const From& value) KFR_NOEXCEPT
 {
     return static_cast<Tout>(value);
 }
 
 template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(!std::is_same_v<Tin, Tout>)>
-constexpr KFR_INTRINSIC vec<Tout, N> broadcastto(const vec<Tin, N>& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC vec<Tout, N> broadcastto(const vec<Tin, N>& value) KFR_NOEXCEPT
 {
     return internal::conversion<vec_rank<Tout> + 1, 1, vec<Tout, N>, vec<Tin, N>,
                                 internal::conv_t::broadcast>::cast(value);
 }
 
 template <typename Tout, typename Tin, size_t N1, size_t N2, KFR_ENABLE_IF(!std::is_same_v<Tin, Tout>)>
-constexpr KFR_INTRINSIC vec<vec<Tout, N1>, N2> broadcastto(const vec<vec<Tin, N1>, N2>& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC vec<vec<Tout, N1>, N2> broadcastto(const vec<vec<Tin, N1>, N2>& value) KFR_NOEXCEPT
 {
     return internal::conversion<vec_rank<Tout> + 2, 2, vec<vec<Tout, N1>, N2>, vec<vec<Tin, N1>, N2>,
                                 internal::conv_t::broadcast>::cast(value);
 }
 
 template <typename Tout, typename Tin, size_t N, KFR_ENABLE_IF(std::is_same_v<Tin, Tout>)>
-constexpr KFR_INTRINSIC const vec<Tin, N>& broadcastto(const vec<Tin, N>& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC const vec<Tin, N>& broadcastto(const vec<Tin, N>& value) KFR_NOEXCEPT
 {
     return value;
 }
 
 template <typename Tout, typename Tin, size_t N1, size_t N2, KFR_ENABLE_IF(std::is_same_v<Tin, Tout>)>
 constexpr KFR_INTRINSIC const vec<vec<Tin, N1>, N2>& broadcastto(const vec<vec<Tin, N1>, N2>& value)
-    CMT_NOEXCEPT
+    KFR_NOEXCEPT
 {
     return value;
 }
 
 //
 template <typename Tout, typename Tin>
-constexpr KFR_INTRINSIC Tout promoteto(const Tin& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC Tout promoteto(const Tin& value) KFR_NOEXCEPT
 {
     return static_cast<Tout>(value);
 }
 
 template <typename Tout, typename Tin, size_t N>
-constexpr KFR_INTRINSIC vec<Tout, N> promoteto(const vec<Tin, N>& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC vec<Tout, N> promoteto(const vec<Tin, N>& value) KFR_NOEXCEPT
 {
     if constexpr (std::is_same_v<Tin, Tout>)
         return value;
@@ -786,7 +786,7 @@ constexpr KFR_INTRINSIC vec<Tout, N> promoteto(const vec<Tin, N>& value) CMT_NOE
 }
 
 template <typename Tout, typename Tin, size_t N1, size_t N2>
-constexpr KFR_INTRINSIC vec<Tout, N2> promoteto(const vec<vec<Tin, N1>, N2>& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC vec<Tout, N2> promoteto(const vec<vec<Tin, N1>, N2>& value) KFR_NOEXCEPT
 {
     if constexpr (std::is_same_v<Tin, Tout>)
         return value;
@@ -796,7 +796,7 @@ constexpr KFR_INTRINSIC vec<Tout, N2> promoteto(const vec<vec<Tin, N1>, N2>& val
 }
 
 template <typename To, typename From>
-CMT_GNU_CONSTEXPR KFR_INTRINSIC To bitcast(const From& value) CMT_NOEXCEPT
+KFR_GNU_CONSTEXPR KFR_INTRINSIC To bitcast(const From& value) KFR_NOEXCEPT
 {
     static_assert(sizeof(From) == sizeof(To), "bitcast: Incompatible types");
     union
@@ -808,59 +808,59 @@ CMT_GNU_CONSTEXPR KFR_INTRINSIC To bitcast(const From& value) CMT_NOEXCEPT
 }
 
 template <typename To, typename From, size_t N, size_t Nout = (N * size_of<From>() / size_of<To>())>
-CMT_GNU_CONSTEXPR KFR_INTRINSIC vec<To, Nout> bitcast(const vec<From, N>& value) CMT_NOEXCEPT
+KFR_GNU_CONSTEXPR KFR_INTRINSIC vec<To, Nout> bitcast(const vec<From, N>& value) KFR_NOEXCEPT
 {
     return vec<To, Nout>::frombits(value);
 }
 
 template <typename From, typename To = utype<From>, KFR_ENABLE_IF(!is_compound_type<From>)>
-constexpr KFR_INTRINSIC To ubitcast(const From& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC To ubitcast(const From& value) KFR_NOEXCEPT
 {
     return bitcast<To>(value);
 }
 
 template <typename From, typename To = itype<From>, KFR_ENABLE_IF(!is_compound_type<From>)>
-constexpr KFR_INTRINSIC To ibitcast(const From& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC To ibitcast(const From& value) KFR_NOEXCEPT
 {
     return bitcast<To>(value);
 }
 
 template <typename From, typename To = ftype<From>, KFR_ENABLE_IF(!is_compound_type<From>)>
-constexpr KFR_INTRINSIC To fbitcast(const From& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC To fbitcast(const From& value) KFR_NOEXCEPT
 {
     return bitcast<To>(value);
 }
 
 template <typename From, typename To = uitype<From>, KFR_ENABLE_IF(!is_compound_type<From>)>
-constexpr KFR_INTRINSIC To uibitcast(const From& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC To uibitcast(const From& value) KFR_NOEXCEPT
 {
     return bitcast<To>(value);
 }
 
 template <typename From, size_t N, typename To = utype<From>,
           size_t Nout = size_of<From>() * N / size_of<To>()>
-constexpr KFR_INTRINSIC vec<To, Nout> ubitcast(const vec<From, N>& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC vec<To, Nout> ubitcast(const vec<From, N>& value) KFR_NOEXCEPT
 {
     return vec<To, Nout>::frombits(value);
 }
 
 template <typename From, size_t N, typename To = itype<From>,
           size_t Nout = size_of<From>() * N / size_of<To>()>
-constexpr KFR_INTRINSIC vec<To, Nout> ibitcast(const vec<From, N>& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC vec<To, Nout> ibitcast(const vec<From, N>& value) KFR_NOEXCEPT
 {
     return vec<To, Nout>::frombits(value);
 }
 
 template <typename From, size_t N, typename To = ftype<From>,
           size_t Nout = size_of<From>() * N / size_of<To>()>
-constexpr KFR_INTRINSIC vec<To, Nout> fbitcast(const vec<From, N>& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC vec<To, Nout> fbitcast(const vec<From, N>& value) KFR_NOEXCEPT
 {
     return vec<To, Nout>::frombits(value);
 }
 
 template <typename From, size_t N, typename To = uitype<From>,
           size_t Nout = size_of<From>() * N / size_of<To>()>
-constexpr KFR_INTRINSIC vec<To, Nout> uibitcast(const vec<From, N>& value) CMT_NOEXCEPT
+constexpr KFR_INTRINSIC vec<To, Nout> uibitcast(const vec<From, N>& value) KFR_NOEXCEPT
 {
     return vec<To, Nout>::frombits(value);
 }
@@ -870,12 +870,12 @@ constexpr KFR_INTRINSIC size_t vector_alignment(size_t size) { return next_power
 template <typename T, size_t N>
 struct pkd_vec
 {
-    constexpr pkd_vec() CMT_NOEXCEPT {}
+    constexpr pkd_vec() KFR_NOEXCEPT {}
 
-    pkd_vec(const vec<T, N>& value) CMT_NOEXCEPT { value.write(v); }
+    pkd_vec(const vec<T, N>& value) KFR_NOEXCEPT { value.write(v); }
 
     template <typename... Ts>
-    constexpr pkd_vec(Ts... init) CMT_NOEXCEPT : v{ static_cast<T>(init)... }
+    constexpr pkd_vec(Ts... init) KFR_NOEXCEPT : v{ static_cast<T>(init)... }
     {
         static_assert(N <= sizeof...(Ts), "Too few initializers for pkd_vec");
     }
@@ -884,7 +884,7 @@ private:
     T v[N];
     friend struct vec<T, N>;
 }
-#ifdef CMT_GNU_ATTRIBUTES
+#ifdef KFR_GNU_ATTRIBUTES
 __attribute__((packed))
 #endif
 ;
@@ -905,7 +905,7 @@ constexpr KFR_INTRINSIC T make_vector_get_n(const T& arg, const Args&... args)
 }
 
 template <typename T, typename... Args, size_t... indices, size_t N = sizeof...(Args)>
-CMT_GNU_CONSTEXPR KFR_INTRINSIC vec<T, N> make_vector_impl(csizes_t<indices...>, const Args&... args)
+KFR_GNU_CONSTEXPR KFR_INTRINSIC vec<T, N> make_vector_impl(csizes_t<indices...>, const Args&... args)
 {
     static_assert(sizeof...(indices) == sizeof...(Args), "");
     const T list[] = { static_cast<T>(args)... };
@@ -1165,37 +1165,37 @@ constexpr KFR_INTRINSIC vec<T, N> apply(Fn&& fn)
 }
 
 template <typename T, size_t N>
-CMT_GNU_CONSTEXPR KFR_INTRINSIC vec<T, N> zerovector()
+KFR_GNU_CONSTEXPR KFR_INTRINSIC vec<T, N> zerovector()
 {
     return vec<T, N>(czeros);
 }
 
 template <typename T, size_t N>
-CMT_GNU_CONSTEXPR KFR_INTRINSIC vec<T, N> zerovector(vec_shape<T, N>)
+KFR_GNU_CONSTEXPR KFR_INTRINSIC vec<T, N> zerovector(vec_shape<T, N>)
 {
     return vec<T, N>(czeros);
 }
 
 template <typename T, size_t N>
-CMT_GNU_CONSTEXPR KFR_INTRINSIC vec<T, N> zerovector(vec<T, N>)
+KFR_GNU_CONSTEXPR KFR_INTRINSIC vec<T, N> zerovector(vec<T, N>)
 {
     return vec<T, N>(czeros);
 }
 
 template <typename T, size_t N>
-CMT_GNU_CONSTEXPR KFR_INTRINSIC vec<T, N> allonesvector()
+KFR_GNU_CONSTEXPR KFR_INTRINSIC vec<T, N> allonesvector()
 {
     return vec<T, N>(cones);
 }
 
 template <typename T, size_t N>
-CMT_GNU_CONSTEXPR KFR_INTRINSIC vec<T, N> allonesvector(vec_shape<T, N>)
+KFR_GNU_CONSTEXPR KFR_INTRINSIC vec<T, N> allonesvector(vec_shape<T, N>)
 {
     return vec<T, N>(cones);
 }
 
 template <typename T, size_t N>
-CMT_GNU_CONSTEXPR KFR_INTRINSIC vec<T, N> allonesvector(vec<T, N>)
+KFR_GNU_CONSTEXPR KFR_INTRINSIC vec<T, N> allonesvector(vec<T, N>)
 {
     return vec<T, N>(cones);
 }
@@ -1277,7 +1277,7 @@ void test_function1(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
                   [&](special_value value, auto type)
                   {
                       using T = typename decltype(type)::type;
-                      if (isapplicable(cometa::ctype<T>, value))
+                      if (isapplicable(kfr::ctype<T>, value))
                       {
                           const T x(value);
 #if !defined(_MSC_VER) || defined(__clang__)
@@ -1295,7 +1295,7 @@ void test_function1(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
                       }
                   });
 
-    testo::matrix(named("type") = test_catogories::types(cint<Cat & ~1>),
+    testo::matrix(named("type") = test_catogories::types(cint < Cat & ~1 >),
                   [&](auto type)
                   {
                       using T   = typename decltype(type)::type;
@@ -1316,11 +1316,11 @@ void test_function2(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
         [&](special_value value1, special_value value2, auto type)
         {
             using T = typename decltype(type)::type;
-            if constexpr (IsDefined{}(cometa::ctype<T>))
+            if constexpr (IsDefined{}(kfr::ctype<T>))
             {
                 const T x1(value1);
                 const T x2(value2);
-                if (isapplicable(cometa::ctype<T>, value1, value2))
+                if (isapplicable(kfr::ctype<T>, value1, value2))
                 {
                     CHECK(std::is_same_v<decltype(fn(x1, x2)),
                                          typename compound_type_traits<T>::template rebind<decltype(reffn(
@@ -1330,13 +1330,13 @@ void test_function2(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
             }
         });
 
-    testo::matrix(named("type") = test_catogories::types(cint<Cat & ~1>),
+    testo::matrix(named("type") = test_catogories::types(cint < Cat & ~1 >),
                   [&](auto type)
                   {
                       using T    = typename decltype(type)::type;
                       const T x1 = test_enumerate(T::shape(), csizeseq<T::size()>, 0, 1);
                       const T x2 = test_enumerate(T::shape(), csizeseq<T::size()>, 100, -1);
-                      if constexpr (IsDefined{}(cometa::ctype<T>))
+                      if constexpr (IsDefined{}(kfr::ctype<T>))
                       {
                           CHECK(fn(x1, x2) == apply(reffn, x1, x2));
                       }
@@ -1481,7 +1481,7 @@ KFR_INTRINSIC vec<T, N> to_vec(const portable_vec<T, N>& pv)
     return pv;
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 template <typename T1, typename T2, size_t N1, size_t N2, typename = void>
 struct common_type_helper
@@ -1548,7 +1548,7 @@ struct common_type<kfr::vec<kfr::vec<T1, N1>, N2>, kfr::vec<kfr::vec<T2, N1>, N2
 
 } // namespace std
 
-namespace cometa
+namespace kfr
 {
 
 template <typename T, size_t N>
@@ -1557,9 +1557,9 @@ struct compound_type_traits<kfr::vec_shape<T, N>>
     constexpr static size_t width      = N;
     constexpr static size_t deep_width = width * compound_type_traits<T>::width;
     using subtype                      = T;
-    using deep_subtype                 = cometa::deep_subtype<T>;
+    using deep_subtype                 = kfr::deep_subtype<T>;
     constexpr static bool is_scalar    = false;
-    constexpr static size_t depth      = cometa::compound_type_traits<T>::depth + 1;
+    constexpr static size_t depth      = kfr::compound_type_traits<T>::depth + 1;
 
     template <typename U>
     using rebind = kfr::vec_shape<U, N>;
@@ -1571,11 +1571,11 @@ template <typename T, size_t N>
 struct compound_type_traits<kfr::vec<T, N>>
 {
     using subtype                      = T;
-    using deep_subtype                 = cometa::deep_subtype<T>;
+    using deep_subtype                 = kfr::deep_subtype<T>;
     constexpr static size_t width      = N;
     constexpr static size_t deep_width = width * compound_type_traits<T>::width;
     constexpr static bool is_scalar    = false;
-    constexpr static size_t depth      = cometa::compound_type_traits<T>::depth + 1;
+    constexpr static size_t depth      = kfr::compound_type_traits<T>::depth + 1;
     template <typename U>
     using rebind = kfr::vec<U, N>;
     template <typename U>
@@ -1590,17 +1590,17 @@ struct compound_type_traits<kfr::vec<T, N>>
 namespace details
 {
 template <typename T, size_t N>
-struct flt_type_impl<kfr::CMT_ARCH_NAME::vec<T, N>>
+struct flt_type_impl<kfr::KFR_ARCH_NAME::vec<T, N>>
 {
-    using type = kfr::CMT_ARCH_NAME::vec<typename flt_type_impl<T>::type, N>;
+    using type = kfr::KFR_ARCH_NAME::vec<typename flt_type_impl<T>::type, N>;
 };
 } // namespace details
 
 template <typename T, size_t N>
-struct representation<kfr::CMT_ARCH_NAME::vec<T, N>>
+struct representation<kfr::KFR_ARCH_NAME::vec<T, N>>
 {
     using type = std::string;
-    static std::string get(const kfr::CMT_ARCH_NAME::vec<T, N>& value)
+    static std::string get(const kfr::KFR_ARCH_NAME::vec<T, N>& value)
     {
         kfr::portable_vec<T, N> p = value;
         return array_to_string(N, ptr_cast<T>(&p.front()));
@@ -1608,10 +1608,10 @@ struct representation<kfr::CMT_ARCH_NAME::vec<T, N>>
 };
 
 template <char t, int width, int prec, typename T, size_t N>
-struct representation<fmt_t<kfr::CMT_ARCH_NAME::vec<T, N>, t, width, prec>>
+struct representation<fmt_t<kfr::KFR_ARCH_NAME::vec<T, N>, t, width, prec>>
 {
     using type = std::string;
-    static std::string get(const fmt_t<kfr::CMT_ARCH_NAME::vec<T, N>, t, width, prec>& value)
+    static std::string get(const fmt_t<kfr::KFR_ARCH_NAME::vec<T, N>, t, width, prec>& value)
     {
         kfr::portable_vec<T, N> p = value.value;
         return array_to_string<fmt_t<T, t, width, prec>>(N, ptr_cast<T>(&p.front()));
@@ -1619,10 +1619,10 @@ struct representation<fmt_t<kfr::CMT_ARCH_NAME::vec<T, N>, t, width, prec>>
 };
 
 template <typename T, size_t N>
-struct representation<kfr::CMT_ARCH_NAME::mask<T, N>>
+struct representation<kfr::KFR_ARCH_NAME::mask<T, N>>
 {
     using type = std::string;
-    static std::string get(const kfr::CMT_ARCH_NAME::mask<T, N>& value)
+    static std::string get(const kfr::KFR_ARCH_NAME::mask<T, N>& value)
     {
         bool values[N];
         for (size_t i = 0; i < N; i++)
@@ -1631,10 +1631,10 @@ struct representation<kfr::CMT_ARCH_NAME::mask<T, N>>
     }
 };
 
-} // namespace cometa
+} // namespace kfr
 
-CMT_PRAGMA_GNU(GCC diagnostic pop)
-CMT_PRAGMA_MSVC(warning(pop))
+KFR_PRAGMA_GNU(GCC diagnostic pop)
+KFR_PRAGMA_MSVC(warning(pop))
 
 namespace std
 {

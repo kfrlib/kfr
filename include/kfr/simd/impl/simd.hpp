@@ -28,7 +28,7 @@
 namespace kfr
 {
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace intrinsics
@@ -90,18 +90,18 @@ struct simd_halves
     subtype low;
     subtype high;
 #if defined KFR_DEFINE_CTORS_FOR_HALVES && KFR_DEFINE_CTORS_FOR_HALVES
-    simd_halves() CMT_NOEXCEPT {}
-    simd_halves(const subtype& l, const subtype& h) CMT_NOEXCEPT : low(l), high(h) {}
-    simd_halves(const simd_halves& v) CMT_NOEXCEPT : low(v.low), high(v.high) {}
-    simd_halves(simd_halves&& v) CMT_NOEXCEPT : low(v.low), high(v.high) {}
+    simd_halves() KFR_NOEXCEPT {}
+    simd_halves(const subtype& l, const subtype& h) KFR_NOEXCEPT : low(l), high(h) {}
+    simd_halves(const simd_halves& v) KFR_NOEXCEPT : low(v.low), high(v.high) {}
+    simd_halves(simd_halves&& v) KFR_NOEXCEPT : low(v.low), high(v.high) {}
 
-    simd_halves& operator=(const simd_halves& v) CMT_NOEXCEPT
+    simd_halves& operator=(const simd_halves& v) KFR_NOEXCEPT
     {
         low  = v.low;
         high = v.high;
         return *this;
     }
-    simd_halves& operator=(simd_halves&& v) CMT_NOEXCEPT
+    simd_halves& operator=(simd_halves&& v) KFR_NOEXCEPT
     {
         low  = v.low;
         high = v.high;
@@ -111,7 +111,7 @@ struct simd_halves
 };
 
 } // namespace intrinsics
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 #define KFR_COMPONENTWISE_RET(code)                                                                          \
     vec<T, N> result;                                                                                        \

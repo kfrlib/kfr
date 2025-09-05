@@ -73,7 +73,7 @@ inline constexpr size_t audio_sample_bit_depth(audio_sample_type type)
     return audio_sample_sizeof(type) * 8;
 }
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 using audio_sample_type_clist =
@@ -202,7 +202,7 @@ void deinterleave(Tout* out[], const Tin* in, size_t channels, size_t size)
 template <typename Tout, univector_tag Tag1, univector_tag Tag2, typename Tin, univector_tag Tag3>
 void deinterleave(univector2d<Tout, Tag1, Tag2>& out, const univector<Tin, Tag3>& in)
 {
-    if (CMT_UNLIKELY(in.empty() || out.empty()))
+    if (KFR_UNLIKELY(in.empty() || out.empty()))
         return;
     std::vector<Tout*> ptrs(out.size());
     for (size_t i = 0; i < out.size(); ++i)
@@ -228,7 +228,7 @@ void interleave(Tout* out, const Tin* in[], size_t channels, size_t size)
 template <typename Tout, univector_tag Tag1, typename Tin, univector_tag Tag2, univector_tag Tag3>
 void interleave(univector<Tout, Tag1>& out, const univector2d<Tin, Tag2, Tag3>& in)
 {
-    if (CMT_UNLIKELY(in.empty() || out.empty()))
+    if (KFR_UNLIKELY(in.empty() || out.empty()))
         return;
     std::vector<const Tin*> ptrs(in.size());
     for (size_t i = 0; i < in.size(); ++i)
@@ -242,7 +242,7 @@ void interleave(univector<Tout, Tag1>& out, const univector2d<Tin, Tag2, Tag3>& 
 template <typename Tin, univector_tag Tag1, univector_tag Tag2>
 univector<Tin> interleave(const univector2d<Tin, Tag1, Tag2>& in)
 {
-    if (CMT_UNLIKELY(in.empty()))
+    if (KFR_UNLIKELY(in.empty()))
         return {};
     univector<Tin> result(in.size() * in[0].size());
     interleave(result, in);
@@ -283,5 +283,5 @@ void convert(void* out, audio_sample_type out_type, const Tin* in, size_t size)
                 convert(reinterpret_cast<type*>(out), in, size);
             });
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

@@ -26,22 +26,22 @@
 #pragma once
 
 #include "../base/univector.hpp"
-#include "../cometa/string.hpp"
+#include "../meta/string.hpp"
 #include "../simd/complex.hpp"
 #include "../simd/vec.hpp"
 #include <cmath>
 #include <vector>
 
-namespace cometa
+namespace kfr
 {
 
 template <>
-struct representation<cometa::special_value>
+struct representation<kfr::special_value>
 {
     using type = std::string;
-    static std::string get(const cometa::special_value& value)
+    static std::string get(const kfr::special_value& value)
     {
-        using cometa::special_constant;
+        using kfr::special_constant;
         switch (value.c)
         {
         case special_constant::default_constructed:
@@ -83,22 +83,22 @@ constexpr size_t number_columns         = 8;
 template <typename T>
 std::string fmtvalue(std::true_type, const T& x)
 {
-    std::string str = as_string(cometa::fmt<'g', number_width, number_precision>(x));
+    std::string str = as_string(kfr::fmt<'g', number_width, number_precision>(x));
     if (str.size() > number_width)
-        str = as_string(cometa::fmt<'g', number_width, number_precision_short>(x));
+        str = as_string(kfr::fmt<'g', number_width, number_precision_short>(x));
     return str;
 }
 
 template <typename T>
 std::string fmtvalue(std::true_type, const kfr::complex<T>& x)
 {
-    std::string restr = as_string(cometa::fmt<'g', number_width, number_precision>(x.real()));
+    std::string restr = as_string(kfr::fmt<'g', number_width, number_precision>(x.real()));
     if (restr.size() > number_width)
-        restr = as_string(cometa::fmt<'g', number_width, number_precision_short>(x.real()));
+        restr = as_string(kfr::fmt<'g', number_width, number_precision_short>(x.real()));
 
-    std::string imstr = as_string(cometa::fmt<'g', -1, number_precision>(std::abs(x.imag())));
+    std::string imstr = as_string(kfr::fmt<'g', -1, number_precision>(std::abs(x.imag())));
     if (imstr.size() > number_width)
-        imstr = as_string(cometa::fmt<'g', -1, number_precision_short>(std::abs(x.imag())));
+        imstr = as_string(kfr::fmt<'g', -1, number_precision_short>(std::abs(x.imag())));
 
     return restr + (x.imag() < T(0) ? "-" : "+") + padleft(number_width, imstr + "j");
 }
@@ -153,7 +153,7 @@ struct representation<kfr::cpu_t>
     static std::string get(kfr::cpu_t value) { return kfr::cpu_name(value); }
 };
 
-} // namespace cometa
+} // namespace kfr
 
 namespace kfr
 {

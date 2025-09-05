@@ -31,7 +31,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 /**
@@ -99,5 +99,5 @@ KFR_INTRINSIC vec<T, N> sortdesc(const vec<T, N>& x)
     }
     return interleavehalves(concat(e, o));
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

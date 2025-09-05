@@ -9,7 +9,7 @@
 #include <cstdint>
 #include <memory>
 
-namespace cometa
+namespace kfr
 {
 
 namespace details
@@ -38,12 +38,12 @@ struct mem_header
     unsigned int references_uint;
     size_t size;
 
-    CMT_MEM_INTRINSIC std::atomic_uint& references()
+    KFR_MEM_INTRINSIC std::atomic_uint& references()
     {
         return reinterpret_cast<std::atomic_uint&>(references_uint);
     }
 }
-#ifdef CMT_GNU_ATTRIBUTES
+#ifdef KFR_GNU_ATTRIBUTES
 __attribute__((__packed__))
 #endif
 ;
@@ -128,18 +128,18 @@ constexpr inline size_t default_memory_alignment = 64;
 
 /// @brief Allocates aligned memory
 template <typename T = void, size_t alignment = default_memory_alignment>
-CMT_INTRINSIC T* aligned_allocate(size_t size = 1)
+KFR_INTRINSIC T* aligned_allocate(size_t size = 1)
 {
-    T* ptr = static_cast<T*>(CMT_ASSUME_ALIGNED(
+    T* ptr = static_cast<T*>(KFR_ASSUME_ALIGNED(
         details::aligned_malloc(std::max(alignment, size * details::elementsize<T>()), alignment),
         alignment));
     return ptr;
 }
 /// @brief Allocates aligned memory
 template <typename T = void>
-CMT_INTRINSIC T* aligned_allocate(size_t size, size_t alignment)
+KFR_INTRINSIC T* aligned_allocate(size_t size, size_t alignment)
 {
-    T* ptr = static_cast<T*>(CMT_ASSUME_ALIGNED(
+    T* ptr = static_cast<T*>(KFR_ASSUME_ALIGNED(
         details::aligned_malloc(std::max(alignment, size * details::elementsize<T>()), alignment),
         alignment));
     return ptr;
@@ -147,7 +147,7 @@ CMT_INTRINSIC T* aligned_allocate(size_t size, size_t alignment)
 
 /// @brief Deallocates aligned memory
 template <typename T = void>
-CMT_INTRINSIC void aligned_deallocate(T* ptr)
+KFR_INTRINSIC void aligned_deallocate(T* ptr)
 {
     return details::aligned_free(ptr);
 }
@@ -157,7 +157,7 @@ namespace details
 template <typename T>
 struct aligned_deleter
 {
-    CMT_MEM_INTRINSIC void operator()(T* ptr) const { aligned_deallocate(ptr); }
+    KFR_MEM_INTRINSIC void operator()(T* ptr) const { aligned_deallocate(ptr); }
 };
 } // namespace details
 
@@ -166,32 +166,32 @@ template <typename T>
 struct autofree
 {
     /// @brief Default constructor.
-    CMT_MEM_INTRINSIC autofree() {}
+    KFR_MEM_INTRINSIC autofree() {}
 
     /// @brief Allocates aligned memory for given size.
-    explicit CMT_MEM_INTRINSIC autofree(size_t size) : ptr(aligned_allocate<T>(size)) {}
+    explicit KFR_MEM_INTRINSIC autofree(size_t size) : ptr(aligned_allocate<T>(size)) {}
 
     autofree(const autofree&)                    = delete;
     autofree& operator=(const autofree&)         = delete;
-    autofree(autofree&&) CMT_NOEXCEPT            = default;
-    autofree& operator=(autofree&&) CMT_NOEXCEPT = default;
+    autofree(autofree&&) KFR_NOEXCEPT            = default;
+    autofree& operator=(autofree&&) KFR_NOEXCEPT = default;
 
     /// @brief Access element at index.
-    CMT_MEM_INTRINSIC T& operator[](size_t index) CMT_NOEXCEPT { return ptr[index]; }
+    KFR_MEM_INTRINSIC T& operator[](size_t index) KFR_NOEXCEPT { return ptr[index]; }
 
     /// @brief Const access to element at index.
-    CMT_MEM_INTRINSIC const T& operator[](size_t index) const CMT_NOEXCEPT { return ptr[index]; }
+    KFR_MEM_INTRINSIC const T& operator[](size_t index) const KFR_NOEXCEPT { return ptr[index]; }
 
     /// @brief Returns pointer to underlying data.
     template <typename U = T>
-    CMT_MEM_INTRINSIC U* data() CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC U* data() KFR_NOEXCEPT
     {
         return ptr_cast<U>(ptr.get());
     }
 
     /// @brief Returns const pointer to underlying data.
     template <typename U = T>
-    CMT_MEM_INTRINSIC const U* data() const CMT_NOEXCEPT
+    KFR_MEM_INTRINSIC const U* data() const KFR_NOEXCEPT
     {
         return ptr_cast<U>(ptr.get());
     }
@@ -224,29 +224,29 @@ struct data_allocator
     {
         using other = data_allocator<U>;
     };
-    constexpr data_allocator() CMT_NOEXCEPT                      = default;
-    constexpr data_allocator(const data_allocator&) CMT_NOEXCEPT = default;
+    constexpr data_allocator() KFR_NOEXCEPT                      = default;
+    constexpr data_allocator(const data_allocator&) KFR_NOEXCEPT = default;
     template <typename U>
-    constexpr data_allocator(const data_allocator<U>&) CMT_NOEXCEPT
+    constexpr data_allocator(const data_allocator<U>&) KFR_NOEXCEPT
     {
     }
     pointer allocate(size_type n) const
     {
         pointer result = aligned_allocate<value_type>(n);
         if (!result)
-            CMT_THROW(std::bad_alloc());
+            KFR_THROW(std::bad_alloc());
         return result;
     }
     void deallocate(pointer p, size_type) { aligned_deallocate(p); }
 };
 
 template <typename T1, typename T2>
-constexpr inline bool operator==(const data_allocator<T1>&, const data_allocator<T2>&) CMT_NOEXCEPT
+constexpr inline bool operator==(const data_allocator<T1>&, const data_allocator<T2>&) KFR_NOEXCEPT
 {
     return true;
 }
 template <typename T1, typename T2>
-constexpr inline bool operator!=(const data_allocator<T1>&, const data_allocator<T2>&) CMT_NOEXCEPT
+constexpr inline bool operator!=(const data_allocator<T1>&, const data_allocator<T2>&) KFR_NOEXCEPT
 {
     return false;
 }
@@ -290,14 +290,14 @@ namespace details
 {
 
 template <typename T, typename Fn>
-CMT_INLINE static void call_with_temp_heap(size_t temp_size, Fn&& fn)
+KFR_INLINE static void call_with_temp_heap(size_t temp_size, Fn&& fn)
 {
     autofree<T> temp(temp_size);
     fn(temp.data());
 }
 
 template <size_t stack_size, typename T, typename Fn>
-CMT_NOINLINE static void call_with_temp_stack(size_t temp_size, Fn&& fn)
+KFR_NOINLINE static void call_with_temp_stack(size_t temp_size, Fn&& fn)
 {
     alignas(default_memory_alignment) T temp[stack_size];
     fn(&temp[0]);
@@ -315,10 +315,10 @@ CMT_NOINLINE static void call_with_temp_stack(size_t temp_size, Fn&& fn)
  * @param fn Function to call with a pointer to the buffer.
  */
 template <size_t stack_size = 4096, typename T = u8, typename Fn>
-CMT_INLINE static void call_with_temp(size_t temp_size, Fn&& fn)
+KFR_INLINE static void call_with_temp(size_t temp_size, Fn&& fn)
 {
     if (temp_size <= stack_size)
         return details::call_with_temp_stack<stack_size, T>(temp_size, std::forward<Fn>(fn));
     return details::call_with_temp_heap<T>(temp_size, std::forward<Fn>(fn));
 }
-} // namespace cometa
+} // namespace kfr

@@ -30,7 +30,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <size_t N, bool A = false, typename T>
@@ -302,7 +302,7 @@ KFR_INTRINSIC vec<T, N> partial_mask(size_t index, vec_shape<T, N>)
 // read/write
 template <typename T, size_t N>
 template <bool aligned>
-KFR_MEM_INTRINSIC constexpr vec<T, N>::vec(const value_type* src, cbool_t<aligned>) CMT_NOEXCEPT
+KFR_MEM_INTRINSIC constexpr vec<T, N>::vec(const value_type* src, cbool_t<aligned>) KFR_NOEXCEPT
     : vec(vec<T, N>::from_flatten(intrinsics::read(cbool<aligned>,
                                                    csize<N * compound_type_traits<T>::deep_width>,
                                                    ptr_cast<deep_subtype<T>>(src))))
@@ -311,11 +311,11 @@ KFR_MEM_INTRINSIC constexpr vec<T, N>::vec(const value_type* src, cbool_t<aligne
 
 template <typename T, size_t N>
 template <bool aligned>
-KFR_MEM_INTRINSIC const vec<T, N>& vec<T, N>::write(value_type* dest, cbool_t<aligned>) const CMT_NOEXCEPT
+KFR_MEM_INTRINSIC const vec<T, N>& vec<T, N>::write(value_type* dest, cbool_t<aligned>) const KFR_NOEXCEPT
 {
     intrinsics::write(cbool<aligned>, ptr_cast<deep_subtype<T>>(dest), flatten());
     return *this;
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

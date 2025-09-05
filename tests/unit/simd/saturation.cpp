@@ -8,13 +8,13 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <typename T>
 bool builtin_add_overflow(T x, T y, T* r)
 {
-#if CMT_HAS_BUILTIN(__builtin_add_overflow) || defined CMT_COMPILER_GCC
+#if KFR_HAS_BUILTIN(__builtin_add_overflow) || defined KFR_COMPILER_GCC
     return __builtin_add_overflow(x, y, r);
 #else
     *r = x + y;
@@ -24,7 +24,7 @@ bool builtin_add_overflow(T x, T y, T* r)
 template <>
 bool builtin_add_overflow<u64>(u64 x, u64 y, u64* r)
 {
-#if CMT_HAS_BUILTIN(__builtin_uaddll_overflow) || defined CMT_COMPILER_GCC
+#if KFR_HAS_BUILTIN(__builtin_uaddll_overflow) || defined KFR_COMPILER_GCC
     return __builtin_uaddll_overflow(x, y, reinterpret_cast<unsigned long long*>(r));
 #else
     *r = x + y;
@@ -34,7 +34,7 @@ bool builtin_add_overflow<u64>(u64 x, u64 y, u64* r)
 template <>
 bool builtin_add_overflow<i64>(i64 x, i64 y, i64* r)
 {
-#if CMT_HAS_BUILTIN(__builtin_saddll_overflow) || defined CMT_COMPILER_GCC
+#if KFR_HAS_BUILTIN(__builtin_saddll_overflow) || defined KFR_COMPILER_GCC
     return __builtin_saddll_overflow(x, y, reinterpret_cast<long long*>(r));
 #else
     *r = x + y;
@@ -44,7 +44,7 @@ bool builtin_add_overflow<i64>(i64 x, i64 y, i64* r)
 template <typename T>
 bool builtin_sub_overflow(T x, T y, T* r)
 {
-#if CMT_HAS_BUILTIN(__builtin_sub_overflow) || defined CMT_COMPILER_GCC
+#if KFR_HAS_BUILTIN(__builtin_sub_overflow) || defined KFR_COMPILER_GCC
     return __builtin_sub_overflow(x, y, r);
 #else
     *r = x - y;
@@ -54,7 +54,7 @@ bool builtin_sub_overflow(T x, T y, T* r)
 template <>
 bool builtin_sub_overflow<u64>(u64 x, u64 y, u64* r)
 {
-#if CMT_HAS_BUILTIN(__builtin_usubll_overflow) || defined CMT_COMPILER_GCC
+#if KFR_HAS_BUILTIN(__builtin_usubll_overflow) || defined KFR_COMPILER_GCC
     return __builtin_usubll_overflow(x, y, reinterpret_cast<unsigned long long*>(r));
 #else
     *r = x - y;
@@ -64,7 +64,7 @@ bool builtin_sub_overflow<u64>(u64 x, u64 y, u64* r)
 template <>
 bool builtin_sub_overflow<i64>(i64 x, i64 y, i64* r)
 {
-#if CMT_HAS_BUILTIN(__builtin_ssubll_overflow) || defined CMT_COMPILER_GCC
+#if KFR_HAS_BUILTIN(__builtin_ssubll_overflow) || defined KFR_COMPILER_GCC
     return __builtin_ssubll_overflow(x, y, reinterpret_cast<long long*>(r));
 #else
     *r = x - y;
@@ -93,7 +93,7 @@ inline T ref_satsub(T x, T y)
 
 TEST(intrin_satadd_satsub)
 {
-#if defined CMT_COMPILER_IS_MSVC && defined CMT_ARCH_X32
+#if defined KFR_COMPILER_IS_MSVC && defined KFR_ARCH_X32
     println("Skipping saturation tests on MSVC x86 due to compiler optimization error");
 #else
     testo::matrix(named("type") = cconcat(signed_vector_types<vec>, unsigned_vector_types<vec>),
@@ -123,5 +123,5 @@ TEST(intrin_satadd_satsub)
                   });
 #endif
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

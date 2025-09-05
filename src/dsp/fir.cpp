@@ -29,7 +29,7 @@
 namespace kfr
 {
 
-CMT_MULTI_PROTO(namespace impl {
+KFR_MULTI_PROTO(namespace impl {
     template <typename T, typename U>
     class fir_filter : public kfr::fir_filter<T, U>
     {
@@ -42,7 +42,7 @@ CMT_MULTI_PROTO(namespace impl {
 } // namespace impl
 )
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 namespace impl
 {
@@ -66,9 +66,9 @@ template class fir_filter<float, complex<float>>;
 template class fir_filter<double, complex<double>>;
 
 } // namespace impl
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
-#ifdef CMT_MULTI_NEEDS_GATE
+#ifdef KFR_MULTI_NEEDS_GATE
 
 template <typename T, typename U>
 void fir_filter<T, U>::process_buffer(U* dest, const U* src, size_t size)

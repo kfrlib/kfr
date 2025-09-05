@@ -22,7 +22,7 @@
  */
 #pragma once
 #include "cident.h"
-#include "cometa/string.hpp"
+#include "meta/string.hpp"
 #include <exception>
 
 namespace kfr
@@ -54,18 +54,18 @@ public:
 #define KFR_THROW_EXCEPTION(kind, ...)                                                                       \
     do                                                                                                       \
     {                                                                                                        \
-        throw ::kfr::CMT_CONCAT(kind, _error)(kfr::as_string(__VA_ARGS__));                                  \
+        throw ::kfr::KFR_CONCAT(kind, _error)(kfr::as_string(__VA_ARGS__));                                  \
     } while (0)
 #endif
 
 #define KFR_PRINT_AND_ABORT(kind, ...)                                                                       \
     do                                                                                                       \
     {                                                                                                        \
-        kfr::errorln("KFR " CMT_STRINGIFY(kind) " error: ", __VA_ARGS__);                                    \
+        kfr::errorln("KFR " KFR_STRINGIFY(kind) " error: ", __VA_ARGS__);                                    \
         std::abort();                                                                                        \
     } while (0)
 
-#if CMT_HAS_EXCEPTIONS
+#if KFR_HAS_EXCEPTIONS
 #define KFR_REPORT_ERROR KFR_THROW_EXCEPTION
 #else
 #define KFR_REPORT_ERROR KFR_PRINT_AND_ABORT
@@ -74,7 +74,7 @@ public:
 #define KFR_CHECK_IMPL(cond, kind, ...)                                                                      \
     do                                                                                                       \
     {                                                                                                        \
-        if (CMT_UNLIKELY(!(cond)))                                                                           \
+        if (KFR_UNLIKELY(!(cond)))                                                                           \
             KFR_REPORT_ERROR(kind, __VA_ARGS__);                                                             \
     } while (0)
 
@@ -89,8 +89,8 @@ public:
 #define KFR_LOGIC_CHECK(cond, ...) KFR_CHECK_IMPL(cond, logic, __VA_ARGS__)
 
 #else
-#define KFR_RUNTIME_CHECK(cond, ...) CMT_NOOP
-#define KFR_LOGIC_CHECK(cond, ...) CMT_NOOP
+#define KFR_RUNTIME_CHECK(cond, ...) KFR_NOOP
+#define KFR_LOGIC_CHECK(cond, ...) KFR_NOOP
 
 #endif
 

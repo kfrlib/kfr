@@ -23,7 +23,7 @@
 #pragma once
 
 #include "simd.hpp"
-#ifdef CMT_VEC_EXT
+#ifdef KFR_VEC_EXT
 #include "backend_vecext.hpp"
 #else
 #include "backend_generic.hpp"
@@ -31,7 +31,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 namespace intrinsics
@@ -73,7 +73,7 @@ template struct check_sizes<int64_t>;
 
 #endif
 } // namespace intrinsics
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
-using CMT_ARCH_NAME::intrinsics::simd;
+using KFR_ARCH_NAME::intrinsics::simd;
 } // namespace kfr

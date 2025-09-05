@@ -13,7 +13,7 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 TEST(sample_conversion)
@@ -70,5 +70,5 @@ TEST(sample_interleave_deinterleave)
     CHECK(absmaxof(in[1] - render(counter() * 3.f + 1.f, size)) == 0);
     CHECK(absmaxof(in[2] - render(counter() * 3.f + 2.f, size)) == 0);
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

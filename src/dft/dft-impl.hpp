@@ -29,24 +29,24 @@
 #include <kfr/base/simd_expressions.hpp>
 #include "dft-fft.hpp"
 
-CMT_PRAGMA_GNU(GCC diagnostic push)
-#if CMT_HAS_WARNING("-Wshadow")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+#if KFR_HAS_WARNING("-Wshadow")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
 #endif
-#if CMT_HAS_WARNING("-Wunused-lambda-capture")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wunused-lambda-capture")
+#if KFR_HAS_WARNING("-Wunused-lambda-capture")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wunused-lambda-capture")
 #endif
-#if CMT_HAS_WARNING("-Wpass-failed")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wpass-failed")
+#if KFR_HAS_WARNING("-Wpass-failed")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wpass-failed")
 #endif
 
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 4100))
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 4100))
 
 namespace kfr
 {
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 constexpr csizes_t<2, 3, 4, 5, 6, 7, 8, 9, 10> dft_radices{};
 
@@ -63,13 +63,13 @@ void dft_stage_fixed_initialize(dft_stage<T>* stage, size_t width)
 
     while (width > 0)
     {
-        CMT_LOOP_NOUNROLL
+        KFR_LOOP_NOUNROLL
         for (; i < Nord / width * width; i += width)
         {
-            CMT_LOOP_NOUNROLL
+            KFR_LOOP_NOUNROLL
             for (size_t j = 1; j < stage->radix; j++)
             {
-                CMT_LOOP_NOUNROLL
+                KFR_LOOP_NOUNROLL
                 for (size_t k = 0; k < width; k++)
                 {
                     cvec<T, 1> xx                    = calculate_twiddle<T>((i + k) * j, N);
@@ -112,7 +112,7 @@ struct dft_stage_fixed_impl : dft_stage<T>
         const complex<T>* twiddle = ptr_cast<complex<T>>(this->data);
 
         const size_t N = Nord * fixed_radix;
-        CMT_LOOP_NOUNROLL
+        KFR_LOOP_NOUNROLL
         for (size_t b = 0; b < this->blocks; b++)
         {
             butterflies(Nord, csize<width>, csize<fixed_radix>, cbool<inverse>, out, in, twiddle, Nord);
@@ -167,7 +167,7 @@ struct fft_inverse : expression_with_traits<E>
 {
     using value_type = typename expression_with_traits<E>::value_type;
 
-    KFR_MEM_INTRINSIC fft_inverse(E&& expr) CMT_NOEXCEPT : expression_with_traits<E>(std::forward<E>(expr)) {}
+    KFR_MEM_INTRINSIC fft_inverse(E&& expr) KFR_NOEXCEPT : expression_with_traits<E>(std::forward<E>(expr)) {}
 
     friend KFR_INTRINSIC vec<value_type, 1> get_elements(const fft_inverse& self, shape<1> index,
                                                          axis_params<0, 1>)
@@ -340,10 +340,10 @@ protected:
     virtual void do_initialize(size_t) override final
     {
         complex<T>* twiddle = ptr_cast<complex<T>>(this->data);
-        CMT_LOOP_NOUNROLL
+        KFR_LOOP_NOUNROLL
         for (size_t i = 0; i < this->radix / 2; i++)
         {
-            CMT_LOOP_NOUNROLL
+            KFR_LOOP_NOUNROLL
             for (size_t j = 0; j < this->radix / 2; j++)
             {
                 cwrite<1>(twiddle++, calculate_twiddle<T>((i + 1) * (j + 1), this->radix));
@@ -358,7 +358,7 @@ protected:
         const complex<T>* twiddle = ptr_cast<complex<T>>(this->data);
         const size_t bl           = this->blocks;
 
-        CMT_LOOP_NOUNROLL
+        KFR_LOOP_NOUNROLL
         for (size_t b = 0; b < bl; b++)
             generic_butterfly(this->radix, cbool<inverse>, out + b, in + b * this->radix,
                               ptr_cast<complex<T>>(temp), twiddle, bl);
@@ -368,18 +368,18 @@ protected:
 template <typename T, typename Tr2>
 inline void dft_permute(complex<T>* out, const complex<T>* in, size_t r0, size_t r1, Tr2 first_radix)
 {
-    CMT_ASSUME(r0 > 1);
-    CMT_ASSUME(r1 > 1);
+    KFR_ASSUME(r0 > 1);
+    KFR_ASSUME(r1 > 1);
 
-    CMT_LOOP_NOUNROLL
+    KFR_LOOP_NOUNROLL
     for (size_t p = 0; p < r0; p++)
     {
         const complex<T>* in1 = in;
-        CMT_LOOP_NOUNROLL
+        KFR_LOOP_NOUNROLL
         for (size_t i = 0; i < r1; i++)
         {
             const complex<T>* in2 = in1;
-            CMT_LOOP_UNROLL
+            KFR_LOOP_UNROLL
             for (size_t j = 0; j < first_radix; j++)
             {
                 *out++ = *in2;
@@ -399,11 +399,11 @@ inline void dft_permute_deep(complex<T>*& out, const complex<T>* in, const size_
     const size_t radix = radices[index];
     if (b)
     {
-        CMT_LOOP_NOUNROLL
+        KFR_LOOP_NOUNROLL
         for (size_t i = 0; i < radix; i++)
         {
             const complex<T>* in1 = in;
-            CMT_LOOP_UNROLL
+            KFR_LOOP_UNROLL
             for (size_t j = 0; j < first_radix; j++)
             {
                 *out++ = *in1;
@@ -416,7 +416,7 @@ inline void dft_permute_deep(complex<T>*& out, const complex<T>* in, const size_
     {
         const size_t steps        = radix;
         const size_t inscale_next = inscale * radix;
-        CMT_LOOP_NOUNROLL
+        KFR_LOOP_NOUNROLL
         for (size_t i = 0; i < steps; i++)
         {
             dft_permute_deep(out, in, radices, count, index - 1, inscale_next, inner_size, first_radix);
@@ -499,7 +499,7 @@ void prepare_dft_stage(dft_plan<T>* self, size_t radix, size_t iterations, size_
 {
     return cswitch(
         dft_radices, radix,
-        [self, iterations, blocks](auto radix) CMT_INLINE_LAMBDA
+        [self, iterations, blocks](auto radix) KFR_INLINE_LAMBDA
         {
             add_stage<std::conditional_t<is_final, intrinsics::dft_stage_fixed_final_impl<T, val_of(radix)>,
                                          intrinsics::dft_stage_fixed_impl<T, val_of(radix)>>>(
@@ -582,10 +582,10 @@ void init_dft(dft_plan<T>* self, size_t size, dft_order)
     }
 }
 
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 } // namespace kfr
 
-CMT_PRAGMA_GNU(GCC diagnostic pop)
+KFR_PRAGMA_GNU(GCC diagnostic pop)
 
-CMT_PRAGMA_MSVC(warning(pop))
+KFR_PRAGMA_MSVC(warning(pop))
