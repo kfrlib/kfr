@@ -52,7 +52,7 @@ inline namespace KFR_ARCH_NAME
 template <typename T, size_t N>
 using cvec = vec<T, N * 2>;
 
-namespace intrinsics
+namespace intr
 {
 
 template <typename T, size_t N, KFR_ENABLE_IF(N >= 2)>
@@ -77,7 +77,7 @@ KFR_INTRINSIC vec<T, N> cmul_impl(const vec<T, 2>& x, const vec<T, N>& y)
 template <typename T, size_t N1, size_t N2>
 KFR_INTRINSIC vec<T, const_max(N1, N2)> cmul(const vec<T, N1>& x, const vec<T, N2>& y)
 {
-    return intrinsics::cmul_impl(x, y);
+    return intr::cmul_impl(x, y);
 }
 
 template <typename T, size_t N, KFR_ENABLE_IF(N >= 2)>
@@ -1810,7 +1810,7 @@ KFR_NOINLINE cvec<T, 1> calculate_twiddle(size_t n, size_t size)
     return result;
 }
 
-} // namespace intrinsics
+} // namespace intr
 } // namespace KFR_ARCH_NAME
 } // namespace kfr
 

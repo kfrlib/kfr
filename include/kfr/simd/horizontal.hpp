@@ -33,7 +33,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 template <typename T, typename ReduceFn>
@@ -53,7 +53,7 @@ KFR_INTRINSIC T horizontal_impl(const vec<T, N>& value, ReduceFn&& reduce)
     const T initial = reduce(initialvalue<T>());
     return horizontal_impl(widen<next_poweroftwo(N)>(value, initial), std::forward<ReduceFn>(reduce));
 }
-} // namespace intrinsics
+} // namespace intr
 
 /**
  * @brief Applies a reduction function horizontally across all elements of the vector.
@@ -68,7 +68,7 @@ KFR_INTRINSIC T horizontal_impl(const vec<T, N>& value, ReduceFn&& reduce)
 template <typename T, size_t N, typename ReduceFn>
 KFR_INTRINSIC T horizontal(const vec<T, N>& value, ReduceFn&& reduce)
 {
-    return intrinsics::horizontal_impl(value, std::forward<ReduceFn>(reduce));
+    return intr::horizontal_impl(value, std::forward<ReduceFn>(reduce));
 }
 
 /**

@@ -34,7 +34,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 #ifdef KFR_AUTOTESTS
@@ -72,8 +72,8 @@ template struct check_sizes<int32_t>;
 template struct check_sizes<int64_t>;
 
 #endif
-} // namespace intrinsics
+} // namespace intr
 } // namespace KFR_ARCH_NAME
 
-using KFR_ARCH_NAME::intrinsics::simd;
+using KFR_ARCH_NAME::intr::simd;
 } // namespace kfr

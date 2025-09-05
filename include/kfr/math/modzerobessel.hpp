@@ -42,7 +42,7 @@ inline namespace KFR_ARCH_NAME
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION T1 modzerobessel(const T1& x)
 {
-    return intrinsics::modzerobessel(x);
+    return intr::modzerobessel(x);
 }
 } // namespace KFR_ARCH_NAME
 } // namespace kfr

@@ -34,7 +34,7 @@ namespace kfr
 {
 inline namespace KFR_ARCH_NAME
 {
-namespace intrinsics
+namespace intr
 {
 
 #ifndef KFR_VEC_EXT
@@ -396,7 +396,7 @@ KFR_INTRINSIC void write(caligned_t, T* __restrict ptr, const vec<T, N>& __restr
     *reinterpret_cast<typename vec<T, N>::simd_type*>(ptr) = x.v;
 }
 
-} // namespace intrinsics
+} // namespace intr
 
 } // namespace KFR_ARCH_NAME
 } // namespace kfr

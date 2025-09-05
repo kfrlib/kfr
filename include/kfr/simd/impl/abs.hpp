@@ -31,7 +31,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 #if defined KFR_ARCH_SSSE3 && defined KFR_NATIVE_INTRINSICS
@@ -131,7 +131,7 @@ KFR_INTRINSIC vec<T, N> abs(const vec<T, N>& x) KFR_NOEXCEPT
 }
 #endif
 KFR_HANDLE_SCALAR(abs)
-} // namespace intrinsics
+} // namespace intr
 
 KFR_I_FN(abs)
 } // namespace KFR_ARCH_NAME

@@ -79,7 +79,7 @@ KFR_PUBLIC_C KFR_DLL_EXPORT void not_optimized(const char* fn) KFR_NOEXCEPT;
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 template <typename T, size_t N>
@@ -1944,7 +1944,7 @@ KFR_INTRINSIC simd<T, Nout> universal_shuffle(simd_t<T, Nin>, const simd<T, Nin>
     }
 }
 
-} // namespace intrinsics
+} // namespace intr
 } // namespace KFR_ARCH_NAME
 } // namespace kfr
 

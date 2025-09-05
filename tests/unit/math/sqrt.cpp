@@ -16,7 +16,7 @@ namespace KFR_ARCH_NAME
 TEST(intrin_sqrt)
 {
     testo::assert_is_same<decltype(kfr::sqrt(9)), fbase>();
-    testo::assert_is_same<decltype(kfr::intrinsics::sqrt(9)), fbase>();
+    testo::assert_is_same<decltype(kfr::intr::sqrt(9)), fbase>();
     testo::assert_is_same<decltype(kfr::sqrt(make_vector(9))), vec<fbase, 1>>();
     testo::assert_is_same<decltype(kfr::sqrt(make_vector(9, 25))), vec<fbase, 2>>();
     CHECK(kfr::sqrt(9) == fbase(3.0));

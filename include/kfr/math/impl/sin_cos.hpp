@@ -40,7 +40,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 template <typename T, size_t N>
@@ -289,7 +289,7 @@ KFR_INTRINSIC Tout cossindeg(const T& x)
 {
     return cossin(x * constants<Tout>::degtorad);
 }
-} // namespace intrinsics
+} // namespace intr
 
 KFR_I_FN(sin)
 KFR_I_FN(cos)

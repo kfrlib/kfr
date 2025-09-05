@@ -31,7 +31,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 template <typename T, size_t N>
@@ -110,7 +110,7 @@ struct simd_halves
 #endif
 };
 
-} // namespace intrinsics
+} // namespace intr
 } // namespace KFR_ARCH_NAME
 
 #define KFR_COMPONENTWISE_RET(code)                                                                          \

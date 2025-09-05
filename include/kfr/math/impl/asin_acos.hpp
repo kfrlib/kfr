@@ -32,7 +32,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 template <typename T, size_t N, typename Tout = flt_type<T>>
@@ -50,7 +50,7 @@ KFR_INTRINSIC vec<Tout, N> acos(const vec<T, N>& x)
 }
 KFR_HANDLE_SCALAR(asin)
 KFR_HANDLE_SCALAR(acos)
-} // namespace intrinsics
+} // namespace intr
 KFR_I_FN(asin)
 KFR_I_FN(acos)
 } // namespace KFR_ARCH_NAME

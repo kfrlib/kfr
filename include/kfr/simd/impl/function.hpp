@@ -38,7 +38,7 @@ inline namespace KFR_ARCH_NAME
     template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>)>                                           \
     KFR_INTRINSIC vec<flt_type<T>, N> fn(const vec<T, N>& a) KFR_NOEXCEPT                                    \
     {                                                                                                        \
-        return intrinsics::fn(promoteto<flt_type<T>>(a));                                                    \
+        return intr::fn(promoteto<flt_type<T>>(a));                                                    \
     }
 
 #define KFR_HANDLE_SCALAR(fn)                                                                                \
@@ -47,7 +47,7 @@ inline namespace KFR_ARCH_NAME
     KFR_INTRINSIC Tout fn(const T1& a, const Args&... b) KFR_NOEXCEPT                                        \
     {                                                                                                        \
         using vecout = vec1<Tout>;                                                                           \
-        return to_scalar(::kfr::intrinsics::fn(vecout(a), vecout(b)...));                                    \
+        return to_scalar(::kfr::intr::fn(vecout(a), vecout(b)...));                                    \
     }
 
 #define KFR_HANDLE_SCALAR_1_T(fn, Tout)                                                                      \
@@ -56,7 +56,7 @@ inline namespace KFR_ARCH_NAME
     KFR_INTRINSIC Tout fn(const T1& a, const Args&... b) KFR_NOEXCEPT                                        \
     {                                                                                                        \
         using vecout = vec1<Tout>;                                                                           \
-        return to_scalar(::kfr::intrinsics::fn(vecout(a), vecout(b)...));                                    \
+        return to_scalar(::kfr::intr::fn(vecout(a), vecout(b)...));                                    \
     }
 
 #define KFR_HANDLE_ARGS_T(fn, Tout)                                                                          \
@@ -65,10 +65,10 @@ inline namespace KFR_ARCH_NAME
     KFR_INTRINSIC Tout fn(const T1& a, const Args&... b) KFR_NOEXCEPT                                        \
     {                                                                                                        \
         using vecout = vec1<Tout>;                                                                           \
-        return to_scalar(::kfr::intrinsics::fn(vecout(a), vecout(b)...));                                    \
+        return to_scalar(::kfr::intr::fn(vecout(a), vecout(b)...));                                    \
     }
 
-namespace intrinsics
+namespace intr
 {
 #ifdef KFR_ARCH_X86
 using f32sse = vec<f32, 4>;
@@ -257,15 +257,15 @@ KFR_INTRINSIC void intrin(vec<T, N>& result, const T& a, const vec<T, N>& b, Fn&
               KFR_ENABLE_IF(N < vector_width<T> && !is_simd_size<T>(N) && is_simd_type<T> && cond)>          \
     KFR_INTRINSIC vec<T, N> fn(const vec<T, N>& a) KFR_NOEXCEPT                                              \
     {                                                                                                        \
-        constexpr size_t Nout = intrinsics::next_simd_width<T>(N);                                           \
-        return intrinsics::fn(a.shuffle(csizeseq<Nout>)).shuffle(csizeseq<N>);                               \
+        constexpr size_t Nout = intr::next_simd_width<T>(N);                                           \
+        return intr::fn(a.shuffle(csizeseq<Nout>)).shuffle(csizeseq<N>);                               \
     }                                                                                                        \
     template <typename T, size_t N, KFR_ENABLE_IF(N > vector_width<T> && is_simd_type<T> && cond),           \
               typename = void>                                                                               \
     KFR_INTRINSIC vec<T, N> fn(const vec<T, N>& a) KFR_NOEXCEPT                                              \
     {                                                                                                        \
         vec<T, N> r;                                                                                         \
-        intrin(r, a, [](const auto& x) { return intrinsics::fn(x); });                                       \
+        intrin(r, a, [](const auto& x) { return intr::fn(x); });                                       \
         return r;                                                                                            \
     }
 
@@ -276,43 +276,43 @@ KFR_INTRINSIC void intrin(vec<T, N>& result, const T& a, const vec<T, N>& b, Fn&
               KFR_ENABLE_IF(N < vector_width<T> && !is_simd_size<T>(N) && is_simd_type<T>)>                  \
     KFR_INTRINSIC vec<T, N> fn(const vec<T, N>& a, const vec<T, N>& b) KFR_NOEXCEPT                          \
     {                                                                                                        \
-        constexpr size_t Nout = intrinsics::next_simd_width<T>(N);                                           \
-        return intrinsics::fn(a.shuffle(csizeseq_t<Nout>()), b.shuffle(csizeseq_t<Nout>()))                  \
+        constexpr size_t Nout = intr::next_simd_width<T>(N);                                           \
+        return intr::fn(a.shuffle(csizeseq_t<Nout>()), b.shuffle(csizeseq_t<Nout>()))                  \
             .shuffle(csizeseq<N>);                                                                           \
     }                                                                                                        \
     template <typename T, size_t N, KFR_ENABLE_IF(N > vector_width<T> && is_simd_type<T>), typename = void>  \
     KFR_INTRINSIC vec<T, N> fn(const vec<T, N>& a, const vec<T, N>& b) KFR_NOEXCEPT                          \
     {                                                                                                        \
         vec<T, N> r;                                                                                         \
-        intrin(r, a, b, [](const auto& aa, const auto& bb) { return intrinsics::fn(aa, bb); });              \
+        intrin(r, a, b, [](const auto& aa, const auto& bb) { return intr::fn(aa, bb); });              \
         return r;                                                                                            \
     }                                                                                                        \
     template <typename T, size_t N,                                                                          \
               KFR_ENABLE_IF(N < vector_width<T> && !is_simd_size<T>(N) && is_simd_type<T>)>                  \
     KFR_INTRINSIC vec<T, N> fn(const vec<T, N>& a, const T& b) KFR_NOEXCEPT                                  \
     {                                                                                                        \
-        constexpr size_t Nout = intrinsics::next_simd_width<T>(N);                                           \
-        return intrinsics::fn(a.shuffle(csizeseq_t<Nout>()), vec<T, Nout>(b)).shuffle(csizeseq<N>);          \
+        constexpr size_t Nout = intr::next_simd_width<T>(N);                                           \
+        return intr::fn(a.shuffle(csizeseq_t<Nout>()), vec<T, Nout>(b)).shuffle(csizeseq<N>);          \
     }                                                                                                        \
     template <typename T, size_t N, KFR_ENABLE_IF(N > vector_width<T> && is_simd_type<T>), typename = void>  \
     KFR_INTRINSIC vec<T, N> fn(const vec<T, N>& a, const T& b) KFR_NOEXCEPT                                  \
     {                                                                                                        \
         vec<T, N> r;                                                                                         \
-        intrin(r, a, b, [](const auto& aa, const auto& bb) { return intrinsics::fn(aa, bb); });              \
+        intrin(r, a, b, [](const auto& aa, const auto& bb) { return intr::fn(aa, bb); });              \
         return r;                                                                                            \
     }                                                                                                        \
     template <typename T, size_t N,                                                                          \
               KFR_ENABLE_IF(N < vector_width<T> && !is_simd_size<T>(N) && is_simd_type<T>)>                  \
     KFR_INTRINSIC vec<T, N> fn(const T& a, const vec<T, N>& b) KFR_NOEXCEPT                                  \
     {                                                                                                        \
-        constexpr size_t Nout = intrinsics::next_simd_width<T>(N);                                           \
-        return intrinsics::fn(vec<T, Nout>(a), b.shuffle(csizeseq_t<Nout>())).shuffle(csizeseq<N>);          \
+        constexpr size_t Nout = intr::next_simd_width<T>(N);                                           \
+        return intr::fn(vec<T, Nout>(a), b.shuffle(csizeseq_t<Nout>())).shuffle(csizeseq<N>);          \
     }                                                                                                        \
     template <typename T, size_t N, KFR_ENABLE_IF(N > vector_width<T> && is_simd_type<T>), typename = void>  \
     KFR_INTRINSIC vec<T, N> fn(const T& a, const vec<T, N>& b) KFR_NOEXCEPT                                  \
     {                                                                                                        \
         vec<T, N> r;                                                                                         \
-        intrin(r, a, b, [](const auto& aa, const auto& bb) { return intrinsics::fn(aa, bb); });              \
+        intrin(r, a, b, [](const auto& aa, const auto& bb) { return intr::fn(aa, bb); });              \
         return r;                                                                                            \
     }
 
@@ -329,7 +329,7 @@ inline T to_scalar(const vec<T, 1>& value) KFR_NOEXCEPT
 {
     return value[0];
 }
-} // namespace intrinsics
+} // namespace intr
 } // namespace KFR_ARCH_NAME
 } // namespace kfr
 KFR_PRAGMA_GNU(GCC diagnostic pop)

@@ -39,7 +39,7 @@ inline namespace KFR_ARCH_NAME
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_INTRINSIC T1 abs(const T1& x)
 {
-    return intrinsics::abs(x);
+    return intr::abs(x);
 }
 } // namespace KFR_ARCH_NAME
 

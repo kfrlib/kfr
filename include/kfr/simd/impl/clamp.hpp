@@ -29,7 +29,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 template <typename T>
@@ -49,7 +49,7 @@ KFR_INTRINSIC vec<T, N> clamp(const vec<T, N>& x, const vec<T, N>& hi)
 {
     return max(min(x, hi), zerovector<T, N>());
 }
-} // namespace intrinsics
+} // namespace intr
 KFR_I_FN(clamp)
 } // namespace KFR_ARCH_NAME
 } // namespace kfr

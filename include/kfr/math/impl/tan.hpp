@@ -34,7 +34,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 template <typename T, size_t N, typename IT = itype<T>>
@@ -142,7 +142,7 @@ KFR_INTRINSIC flt_type<T> tandeg(const T& x)
 {
     return tan(x * c_degtorad<flt_type<T>>);
 }
-} // namespace intrinsics
+} // namespace intr
 namespace fn
 {
 }

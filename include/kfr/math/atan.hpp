@@ -39,7 +39,7 @@ inline namespace KFR_ARCH_NAME
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> atan(const T1& x)
 {
-    return intrinsics::atan(x);
+    return intr::atan(x);
 }
 
 /**
@@ -49,7 +49,7 @@ KFR_FUNCTION flt_type<T1> atan(const T1& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> atandeg(const T1& x)
 {
-    return intrinsics::atandeg(x);
+    return intr::atandeg(x);
 }
 
 /**
@@ -58,7 +58,7 @@ KFR_FUNCTION flt_type<T1> atandeg(const T1& x)
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>)>
 KFR_FUNCTION std::common_type_t<T1, T2> atan2(const T1& x, const T2& y)
 {
-    return intrinsics::atan2(x, y);
+    return intr::atan2(x, y);
 }
 
 /**
@@ -68,7 +68,7 @@ KFR_FUNCTION std::common_type_t<T1, T2> atan2(const T1& x, const T2& y)
 template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>)>
 KFR_FUNCTION std::common_type_t<T1, T2> atan2deg(const T1& x, const T2& y)
 {
-    return intrinsics::atan2deg(x, y);
+    return intr::atan2deg(x, y);
 }
 } // namespace KFR_ARCH_NAME
 } // namespace kfr

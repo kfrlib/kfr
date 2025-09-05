@@ -39,7 +39,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 constexpr inline static bool fft_reorder_aligned = false;
@@ -490,6 +490,6 @@ KFR_INTRINSIC void fft_reorder(complex<T>* inout, size_t log2n, cfalse_t use_br2
         i += istep;
     }
 }
-} // namespace intrinsics
+} // namespace intr
 } // namespace KFR_ARCH_NAME
 } // namespace kfr

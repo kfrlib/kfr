@@ -29,7 +29,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 #if defined KFR_ARCH_SSE2 && defined KFR_NATIVE_INTRINSICS
@@ -66,7 +66,7 @@ KFR_INTRINSIC vec<T, N> sqrt(const vec<T, N>& x)
 KFR_HANDLE_SCALAR_1_T(sqrt, flt_type<T>)
 
 KFR_HANDLE_NOT_F_1(sqrt)
-} // namespace intrinsics
+} // namespace intr
 KFR_I_FN(sqrt)
 } // namespace KFR_ARCH_NAME
 } // namespace kfr

@@ -31,7 +31,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 #if defined KFR_ARCH_SSE2 && defined KFR_NATIVE_INTRINSICS
@@ -281,6 +281,6 @@ KFR_INTRINSIC bool bittestall(const mask<T, N>& x, const mask<T, N>& y)
     return !bittestany(~x & y);
 }
 #endif
-} // namespace intrinsics
+} // namespace intr
 } // namespace KFR_ARCH_NAME
 } // namespace kfr

@@ -37,7 +37,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 template <size_t N>
@@ -317,7 +317,7 @@ KFR_INTRINSIC flt_type<std::common_type_t<T1, T2, T3>> log_fmadd(const T1& x, co
 {
     return fmadd(log(x), m, a);
 }
-} // namespace intrinsics
+} // namespace intr
 KFR_I_FN(exp)
 KFR_I_FN(exp2)
 KFR_I_FN(exp10)

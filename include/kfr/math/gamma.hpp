@@ -36,14 +36,14 @@ inline namespace KFR_ARCH_NAME
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> gamma(const T1& x)
 {
-    return intrinsics::gamma(x);
+    return intr::gamma(x);
 }
 
 /// @brief Returns the approximate factorial of an argument
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> factorial_approx(const T1& x)
 {
-    return intrinsics::factorial_approx(x);
+    return intr::factorial_approx(x);
 }
 
 constexpr inline uint64_t factorial_table[21] = {

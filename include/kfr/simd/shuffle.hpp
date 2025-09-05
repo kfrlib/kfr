@@ -94,14 +94,14 @@ template <typename T, size_t... Ns>
 KFR_INTRINSIC vec<T, csum<size_t, Ns...>()> concat(const vec<T, Ns>&... vs) KFR_NOEXCEPT
 {
     return vec<T, csum<size_t, Ns...>()>(
-        intrinsics::simd_concat<typename vec<T, 1>::scalar_type, vec<T, Ns>::scalar_size()...>(vs.v...));
+        intr::simd_concat<typename vec<T, 1>::scalar_type, vec<T, Ns>::scalar_size()...>(vs.v...));
 }
 
 template <typename T, size_t N1, size_t N2>
 KFR_INTRINSIC vec<T, N1 + N2> concat2(const vec<T, N1>& x, const vec<T, N2>& y) KFR_NOEXCEPT
 {
     return vec<T, csum<size_t, N1, N2>()>(
-        intrinsics::simd_concat<typename vec<T, 1>::scalar_type, vec<T, N1>::scalar_size(),
+        intr::simd_concat<typename vec<T, 1>::scalar_type, vec<T, N1>::scalar_size(),
                                 vec<T, N2>::scalar_size()>(x.v, y.v));
 }
 
@@ -109,11 +109,11 @@ template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N * 4> concat4(const vec<T, N>& a, const vec<T, N>& b, const vec<T, N>& c,
                                     const vec<T, N>& d) KFR_NOEXCEPT
 {
-    return intrinsics::simd_concat<typename vec<T, 1>::scalar_type, vec<T, N * 2>::scalar_size(),
+    return intr::simd_concat<typename vec<T, 1>::scalar_type, vec<T, N * 2>::scalar_size(),
                                    vec<T, N * 2>::scalar_size()>(
-        intrinsics::simd_concat<typename vec<T, 1>::scalar_type, vec<T, N>::scalar_size(),
+        intr::simd_concat<typename vec<T, 1>::scalar_type, vec<T, N>::scalar_size(),
                                 vec<T, N>::scalar_size()>(a.v, b.v),
-        intrinsics::simd_concat<typename vec<T, 1>::scalar_type, vec<T, N>::scalar_size(),
+        intr::simd_concat<typename vec<T, 1>::scalar_type, vec<T, N>::scalar_size(),
                                 vec<T, N>::scalar_size()>(c.v, d.v));
 }
 
@@ -134,7 +134,7 @@ constexpr KFR_INTRINSIC const vec<T, Nout>& resize(const vec<T, N>& x)
     return x;
 }
 
-namespace intrinsics
+namespace intr
 {
 
 template <typename T, typename... Ts, size_t... indices, size_t Nin = sizeof...(Ts),
@@ -144,12 +144,12 @@ KFR_INTRINSIC vec<T, Nout> broadcast_helper(csizes_t<indices...>, const Ts&... v
     const std::tuple<Ts...> tup(values...);
     return vec<T, Nout>(std::get<indices % Nin>(tup)...);
 }
-} // namespace intrinsics
+} // namespace intr
 
 template <size_t Nout, typename... Ts, typename C = typename std::common_type<Ts...>::type>
 KFR_INTRINSIC vec<C, Nout> broadcast(const Ts&... values)
 {
-    return intrinsics::broadcast_helper<C>(csizeseq<Nout>, values...);
+    return intr::broadcast_helper<C>(csizeseq<Nout>, values...);
 }
 KFR_FN(broadcast)
 

@@ -32,7 +32,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 #ifdef __clang__
@@ -249,7 +249,7 @@ KFR_INTRINSIC simd<T, N> simd_set_element(simd<T, N> value, size_t index, T x)
     value[index] = unwrap_bit_value(x);
     return value;
 }
-} // namespace intrinsics
+} // namespace intr
 } // namespace KFR_ARCH_NAME
 
 } // namespace kfr

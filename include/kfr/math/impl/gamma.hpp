@@ -34,7 +34,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 template <typename T>
 constexpr T gamma_precalc[] = {
@@ -62,7 +62,7 @@ KFR_INTRINSIC vec<T, N> factorial_approx(const vec<T, N>& x)
 }
 KFR_HANDLE_SCALAR(gamma)
 KFR_HANDLE_SCALAR(factorial_approx)
-} // namespace intrinsics
+} // namespace intr
 KFR_I_FN(gamma)
 KFR_I_FN(factorial_approx)
 } // namespace KFR_ARCH_NAME

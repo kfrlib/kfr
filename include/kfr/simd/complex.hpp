@@ -73,7 +73,7 @@ using cbase = complex<fbase>;
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 template <typename T>
 constexpr inline complex<T> vcomplex(const vec<T, 2>& v)
@@ -88,15 +88,15 @@ constexpr inline vec<T, 2> vcomplex(const complex<T>& v)
 template <typename T>
 constexpr inline simd<T, 2> vvcomplex(const complex<T>& v)
 {
-    return intrinsics::simd_make(kfr::ctype<T>, v.real(), v.imag());
+    return intr::simd_make(kfr::ctype<T>, v.real(), v.imag());
 }
-} // namespace intrinsics
+} // namespace intr
 
 template <typename T, size_t N, size_t... indices>
 KFR_INTRINSIC vec<complex<T>, sizeof...(indices)> shufflevector(const vec<complex<T>, N>& x,
                                                                 csizes_t<indices...>) KFR_NOEXCEPT
 {
-    return intrinsics::simd_shuffle(intrinsics::simd_t<unwrap_bit<T>, N>{}, x.v, scale<2, indices...>(),
+    return intr::simd_shuffle(intr::simd_t<unwrap_bit<T>, N>{}, x.v, scale<2, indices...>(),
                                     overload_auto);
 }
 template <typename T, size_t N, size_t... indices>
@@ -104,7 +104,7 @@ KFR_INTRINSIC vec<complex<T>, sizeof...(indices)> shufflevectors(const vec<compl
                                                                  const vec<T, N>& y,
                                                                  csizes_t<indices...>) KFR_NOEXCEPT
 {
-    return intrinsics::simd_shuffle(intrinsics::simd2_t<unwrap_bit<T>, N, N>{}, x.v, y.v,
+    return intr::simd_shuffle(intr::simd2_t<unwrap_bit<T>, N, N>{}, x.v, y.v,
                                     scale<2, indices...>(), overload_auto);
 }
 namespace internal
@@ -285,7 +285,7 @@ constexpr KFR_INTRINSIC complex<T> make_complex(T1 real, T2 imag = T2(0))
 }
 KFR_FN(make_complex)
 
-namespace intrinsics
+namespace intr
 {
 template <typename T, size_t N>
 KFR_INTRINSIC vec<complex<T>, N> cconj(const vec<complex<T>, N>& x)
@@ -294,14 +294,14 @@ KFR_INTRINSIC vec<complex<T>, N> cconj(const vec<complex<T>, N>& x)
 }
 
 KFR_HANDLE_SCALAR(cconj)
-} // namespace intrinsics
+} // namespace intr
 KFR_I_FN(cconj)
 
 /// @brief Returns the complex conjugate of the complex number x
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_INTRINSIC T1 cconj(const T1& x)
 {
-    return intrinsics::cconj(x);
+    return intr::cconj(x);
 }
 
 template <size_t N>

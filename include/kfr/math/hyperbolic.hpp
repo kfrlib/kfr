@@ -36,28 +36,28 @@ inline namespace KFR_ARCH_NAME
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> sinh(const T1& x)
 {
-    return intrinsics::sinh(x);
+    return intr::sinh(x);
 }
 
 /// @brief Returns the hyperbolic cosine of the x
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> cosh(const T1& x)
 {
-    return intrinsics::cosh(x);
+    return intr::cosh(x);
 }
 
 /// @brief Returns the hyperbolic tangent of the x
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> tanh(const T1& x)
 {
-    return intrinsics::tanh(x);
+    return intr::tanh(x);
 }
 
 /// @brief Returns the hyperbolic cotangent of the x
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> coth(const T1& x)
 {
-    return intrinsics::coth(x);
+    return intr::coth(x);
 }
 
 /// @brief Returns the hyperbolic sine of the even elements of the x and the hyperbolic cosine of the odd
@@ -65,7 +65,7 @@ KFR_FUNCTION flt_type<T1> coth(const T1& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> sinhcosh(const T1& x)
 {
-    return intrinsics::sinhcosh(x);
+    return intr::sinhcosh(x);
 }
 
 /// @brief Returns the hyperbolic cosine of the even elements of the x and the hyperbolic sine of the odd
@@ -73,7 +73,7 @@ KFR_FUNCTION flt_type<T1> sinhcosh(const T1& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> coshsinh(const T1& x)
 {
-    return intrinsics::coshsinh(x);
+    return intr::coshsinh(x);
 }
 } // namespace KFR_ARCH_NAME
 } // namespace kfr

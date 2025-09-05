@@ -34,7 +34,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 template <typename T>
@@ -92,7 +92,7 @@ KFR_INTRINSIC T cweighting(T f)
 {
     return weight_c_unnorm(f) * weight_c_gain<subtype<T>>;
 }
-} // namespace intrinsics
+} // namespace intr
 KFR_I_FN(aweighting)
 KFR_I_FN(bweighting)
 KFR_I_FN(cweighting)
@@ -100,7 +100,7 @@ KFR_I_FN(cweighting)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_INTRINSIC T1 aweighting(const T1& x)
 {
-    return intrinsics::aweighting(x);
+    return intr::aweighting(x);
 }
 
 template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
@@ -112,7 +112,7 @@ KFR_INTRINSIC expression_function<fn::aweighting, E1> aweighting(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_INTRINSIC T1 bweighting(const T1& x)
 {
-    return intrinsics::bweighting(x);
+    return intr::bweighting(x);
 }
 
 template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
@@ -124,7 +124,7 @@ KFR_INTRINSIC expression_function<fn::bweighting, E1> bweighting(E1&& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_INTRINSIC T1 cweighting(const T1& x)
 {
-    return intrinsics::cweighting(x);
+    return intr::cweighting(x);
 }
 
 template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>

@@ -42,7 +42,7 @@ inline namespace KFR_ARCH_NAME
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> tan(const T1& x)
 {
-    return intrinsics::tan(x);
+    return intr::tan(x);
 }
 
 /**
@@ -55,7 +55,7 @@ KFR_FUNCTION flt_type<T1> tan(const T1& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> tandeg(const T1& x)
 {
-    return intrinsics::tandeg(x);
+    return intr::tandeg(x);
 }
 
 } // namespace KFR_ARCH_NAME

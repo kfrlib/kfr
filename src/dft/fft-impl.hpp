@@ -120,7 +120,7 @@ KFR_INTRINSIC vec<float, 64> ctranspose<4, float, 64>(const vec<float, 64>& v32)
     return concat(a0, a4, a1, a5, a2, a6, a3, a7);
 }
 
-namespace intrinsics
+namespace intr
 {
 
 template <size_t width, bool inverse, typename T>
@@ -1674,18 +1674,18 @@ void make_fft_stages(dft_plan<T>* self, cbool_t<autosort>, size_t stage_size, cb
     }
 }
 
-} // namespace intrinsics
+} // namespace intr
 
 template <bool is_even, typename T>
 void make_fft(dft_plan<T>* self, size_t stage_size, cbool_t<is_even>, bool autosort)
 {
     if (autosort)
     {
-        intrinsics::make_fft_stages(self, ctrue, stage_size, cbool<is_even>, ctrue);
+        intr::make_fft_stages(self, ctrue, stage_size, cbool<is_even>, ctrue);
     }
     else
     {
-        intrinsics::make_fft_stages(self, cfalse, stage_size, cbool<is_even>, ctrue);
+        intr::make_fft_stages(self, cfalse, stage_size, cbool<is_even>, ctrue);
     }
 }
 
@@ -1761,7 +1761,7 @@ KFR_INTRINSIC void init_fft(dft_plan<T>* self, size_t size, dft_order)
         {
             (void)log2n;
             constexpr size_t log2nv = val_of(decltype(log2n)());
-            add_stage<intrinsics::fft_specialization<T, log2nv>>(self, size);
+            add_stage<intr::fft_specialization<T, log2nv>>(self, size);
         },
         [&]()
         {
@@ -1773,7 +1773,7 @@ KFR_INTRINSIC void init_fft(dft_plan<T>* self, size_t size, dft_order)
 template <typename T>
 KFR_INTRINSIC void generate_real_twiddles(dft_plan_real<T>* self, size_t size)
 {
-    using namespace intrinsics;
+    using namespace intr;
     constexpr size_t width = vector_width<T> * 2;
     block_process(size / 4, csizes_t<width, 1>(),
                   [=](size_t i, auto w)
@@ -1799,7 +1799,7 @@ void
 to_fmt(size_t real_size, const complex<T>* rtwiddle, complex<T>* out, const complex<T>* in,
        dft_pack_format fmt)
 {
-    using namespace intrinsics;
+    using namespace intr;
     size_t csize = real_size / 2; // const size_t causes internal compiler error: in tsubst_copy in GCC 5.2
 
     constexpr size_t width = vector_width<T> * 2;
@@ -1852,7 +1852,7 @@ KFR_INTRINSIC
 void from_fmt(size_t real_size, complex<T>* rtwiddle, complex<T>* out, const complex<T>* in,
                             dft_pack_format fmt)
 {
-    using namespace intrinsics;
+    using namespace intr;
 
     const size_t csize = real_size / 2;
 
@@ -2063,7 +2063,7 @@ void dft_progressive_step(const dft_plan<T>& plan, typename dft_plan<T>::progres
 }
 } // namespace impl
 
-namespace intrinsics
+namespace intr
 {
 
 template <typename T>
@@ -2081,7 +2081,7 @@ public:
     }
     void do_initialize(size_t) final
     {
-        using namespace intrinsics;
+        using namespace intr;
         constexpr size_t width = vector_width<T> * 2;
         size_t real_size       = this->stage_size;
         complex<T>* rtwiddle   = ptr_cast<complex<T>>(this->data);
@@ -2112,7 +2112,7 @@ public:
         builtin_memcpy(out, in, sizeof(complex<T>) * (size + extra));
     }
 };
-} // namespace intrinsics
+} // namespace intr
 
 namespace impl
 {
@@ -2122,7 +2122,7 @@ void dft_real_initialize(dft_plan_real<T>& plan)
     if (plan.size == 0)
         return;
     initialize_stages(&plan);
-    add_stage<intrinsics::dft_stage_real_repack<T>, false>(&plan, plan.size, plan.fmt);
+    add_stage<intr::dft_stage_real_repack<T>, false>(&plan, plan.size, plan.fmt);
     plan.stages[0].push_back(plan.all_stages.back().get());
     plan.stages[1].insert(plan.stages[1].begin(), plan.all_stages.back().get());
     initialize_data(&plan);

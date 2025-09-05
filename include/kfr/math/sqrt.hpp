@@ -38,7 +38,7 @@ inline namespace KFR_ARCH_NAME
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_INTRINSIC flt_type<T1> sqrt(const T1& x)
 {
-    return intrinsics::sqrt(x);
+    return intr::sqrt(x);
 }
 } // namespace KFR_ARCH_NAME
 } // namespace kfr

@@ -32,7 +32,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>)>
@@ -179,6 +179,6 @@ KFR_INTRINSIC vec<T, N> gt(const vec<T, N>& x, const vec<T, N>& y)
     return (simd<T, N>)(x.v > y.v);
 }
 KFR_OP_SCALAR2(gt, >, (simd<T, N>), , )
-} // namespace intrinsics
+} // namespace intr
 } // namespace KFR_ARCH_NAME
 } // namespace kfr

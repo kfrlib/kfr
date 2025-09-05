@@ -49,7 +49,7 @@ template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>),
           typename Tout = std::common_type_t<T1, T2>>
 KFR_INTRINSIC Tout satadd(const T1& x, const T2& y)
 {
-    return intrinsics::satadd(x, y);
+    return intr::satadd(x, y);
 }
 
 /**
@@ -69,7 +69,7 @@ template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>),
           typename Tout = std::common_type_t<T1, T2>>
 KFR_INTRINSIC Tout satsub(const T1& x, const T2& y)
 {
-    return intrinsics::satsub(x, y);
+    return intr::satsub(x, y);
 }
 
 } // namespace KFR_ARCH_NAME

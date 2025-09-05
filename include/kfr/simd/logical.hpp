@@ -41,7 +41,7 @@ inline namespace KFR_ARCH_NAME
 template <typename T, size_t N>
 KFR_INTRINSIC bool all(const mask<T, N>& x)
 {
-    return intrinsics::bittestall(x);
+    return intr::bittestall(x);
 }
 
 /**
@@ -52,7 +52,7 @@ KFR_INTRINSIC bool all(const mask<T, N>& x)
 template <typename T, size_t N>
 KFR_INTRINSIC bool any(const mask<T, N>& x)
 {
-    return intrinsics::bittestany(x);
+    return intr::bittestany(x);
 }
 
 } // namespace KFR_ARCH_NAME

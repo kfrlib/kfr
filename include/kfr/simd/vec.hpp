@@ -55,10 +55,10 @@
     struct FN                                                                                                \
     {                                                                                                        \
         template <typename... Args>                                                                          \
-        KFR_INLINE_MEMBER decltype(::kfr::intrinsics::FN(std::declval<Args>()...)) operator()(               \
+        KFR_INLINE_MEMBER decltype(::kfr::intr::FN(std::declval<Args>()...)) operator()(               \
             Args&&... args) const                                                                            \
         {                                                                                                    \
-            return ::kfr::intrinsics::FN(std::forward<Args>(args)...);                                       \
+            return ::kfr::intr::FN(std::forward<Args>(args)...);                                       \
         }                                                                                                    \
     };                                                                                                       \
     }
@@ -214,7 +214,7 @@ struct compoundcast<vec<vec<T, N1>, N2>>
 
 template <typename T, size_t N_>
 inline constexpr size_t vec_alignment =
-    const_max(alignof(intrinsics::simd<typename compound_type_traits<T>::deep_subtype,
+    const_max(alignof(intr::simd<typename compound_type_traits<T>::deep_subtype,
                                        const_max(size_t(1), N_) * compound_type_traits<T>::deep_width>),
               const_min(size_t(platform<>::native_vector_alignment),
                         next_poweroftwo(sizeof(typename compound_type_traits<T>::deep_subtype) *
@@ -261,15 +261,15 @@ struct alignas(internal::vec_alignment<T, N_>) vec
 
     using mask_t = mask<T, N>;
 
-    using simd_type    = intrinsics::simd<ST, SN>;
+    using simd_type    = intr::simd<ST, SN>;
     using uvalue_type  = utype<T>;
     using iuvalue_type = std::conditional_t<is_i_class<T>, T, uvalue_type>;
 
     using uscalar_type  = utype<ST>;
     using iuscalar_type = std::conditional_t<is_i_class<ST>, ST, uscalar_type>;
 
-    using usimd_type  = intrinsics::simd<uscalar_type, SN>;
-    using iusimd_type = intrinsics::simd<iuscalar_type, SN>;
+    using usimd_type  = intr::simd<uscalar_type, SN>;
+    using iusimd_type = intr::simd<iuscalar_type, SN>;
 
     // constructors and assignment
     // from SIMD
@@ -310,7 +310,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     template <typename U,
               KFR_ENABLE_IF(std::is_convertible_v<U, value_type>&& compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC vec(const U& s) KFR_NOEXCEPT
-        : v(intrinsics::simd_broadcast(intrinsics::simd_t<unwrap_bit<ST>, SN>{},
+        : v(intr::simd_broadcast(intr::simd_t<unwrap_bit<ST>, SN>{},
                                        unwrap_bit_value(static_cast<ST>(s))))
     {
     }
@@ -318,7 +318,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     template <typename U,
               KFR_ENABLE_IF(std::is_convertible_v<U, value_type> && !compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC vec(const U& s) KFR_NOEXCEPT
-        : v(intrinsics::simd_shuffle(intrinsics::simd_t<unwrap_bit<ST>, SW>{},
+        : v(intr::simd_shuffle(intr::simd_t<unwrap_bit<ST>, SW>{},
                                      internal::compoundcast<T>::to_flat(static_cast<T>(s)).v,
                                      csizeseq<SN> % csize<SW>, overload_auto))
     {
@@ -327,13 +327,13 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     // from list
     template <typename... Us, KFR_ENABLE_IF(sizeof...(Us) <= 1022 && compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC vec(const value_type& s0, const value_type& s1, const Us&... rest) KFR_NOEXCEPT
-        : v(intrinsics::simd_make(kfr::ctype<T>, s0, s1, static_cast<value_type>(rest)...))
+        : v(intr::simd_make(kfr::ctype<T>, s0, s1, static_cast<value_type>(rest)...))
     {
     }
 
     template <typename... Us, KFR_ENABLE_IF(sizeof...(Us) <= 1022 && !compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC vec(const value_type& s0, const value_type& s1, const Us&... rest) KFR_NOEXCEPT
-        : v(intrinsics::simd_concat<ST, size_t(SW), size_t(SW), just_value<Us, size_t>(SW)...>(
+        : v(intr::simd_concat<ST, size_t(SW), size_t(SW), just_value<Us, size_t>(SW)...>(
               internal::compoundcast<T>::to_flat(s0).v, internal::compoundcast<T>::to_flat(s1).v,
               internal::compoundcast<T>::to_flat(static_cast<T>(rest)).v...))
     {
@@ -343,8 +343,8 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, value_type> &&
                                         (compound_type_traits<T>::is_scalar && !is_bit<U>))>
     KFR_MEM_INTRINSIC vec(const vec<U, N>& x) KFR_NOEXCEPT
-        : v(intrinsics::simd_convert(
-              intrinsics::simd_cvt_t<unwrap_bit<ST>, unwrap_bit<deep_subtype<U>>, SN>{}, x.v))
+        : v(intr::simd_convert(
+              intr::simd_cvt_t<unwrap_bit<ST>, unwrap_bit<deep_subtype<U>>, SN>{}, x.v))
     {
     }
 
@@ -384,7 +384,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     // from list of vectors
     template <size_t... Ns, typename = std::enable_if_t<csum<size_t, Ns...>() == N>>
     KFR_MEM_INTRINSIC vec(const vec<T, Ns>&... vs) KFR_NOEXCEPT
-        : v(intrinsics::simd_concat<ST, (SW * Ns)...>(vs.v...))
+        : v(intr::simd_concat<ST, (SW * Ns)...>(vs.v...))
     {
     }
 
@@ -395,23 +395,23 @@ struct alignas(internal::vec_alignment<T, N_>) vec
         return bitcast_anything<portable_vec<T, N>>(*this);
     }
 
-    KFR_MEM_INTRINSIC vec(czeros_t) KFR_NOEXCEPT : v(intrinsics::simd_zeros<ST, SN>()) {}
+    KFR_MEM_INTRINSIC vec(czeros_t) KFR_NOEXCEPT : v(intr::simd_zeros<ST, SN>()) {}
 
-    KFR_MEM_INTRINSIC vec(cones_t) KFR_NOEXCEPT : v(intrinsics::simd_allones<ST, SN>()) {}
+    KFR_MEM_INTRINSIC vec(cones_t) KFR_NOEXCEPT : v(intr::simd_allones<ST, SN>()) {}
 
     template <typename U, size_t M, KFR_ENABLE_IF(sizeof(U) * M == sizeof(T) * N)>
     KFR_MEM_INTRINSIC static vec frombits(const vec<U, M>& v) KFR_NOEXCEPT
     {
-        return intrinsics::simd_bitcast(
-            intrinsics::simd_cvt_t<ST, typename vec<U, M>::scalar_type, vec<U, M>::scalar_size()>{}, v.v);
+        return intr::simd_bitcast(
+            intr::simd_cvt_t<ST, typename vec<U, M>::scalar_type, vec<U, M>::scalar_size()>{}, v.v);
     }
 
     // shuffle
     template <size_t... indices>
     KFR_MEM_INTRINSIC vec<value_type, sizeof...(indices)> shuffle(csizes_t<indices...> i) const KFR_NOEXCEPT
     {
-        return vec<value_type, sizeof...(indices)>(intrinsics::simd_shuffle(
-            intrinsics::simd_t<unwrap_bit<ST>, SN>{}, v, scale<SW>(i), overload_auto));
+        return vec<value_type, sizeof...(indices)>(intr::simd_shuffle(
+            intr::simd_t<unwrap_bit<ST>, SN>{}, v, scale<SW>(i), overload_auto));
     }
 
     template <size_t... indices>
@@ -419,7 +419,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
                                                                   csizes_t<indices...> i) const KFR_NOEXCEPT
     {
         return vec<value_type, sizeof...(indices)>(
-            intrinsics::simd_shuffle(intrinsics::simd2_t<ST, SN, SN>{}, v, y.v, scale<SW>(i), overload_auto));
+            intr::simd_shuffle(intr::simd2_t<ST, SN, SN>{}, v, y.v, scale<SW>(i), overload_auto));
     }
 
     // element access
@@ -446,7 +446,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     template <int dummy = 0, KFR_ENABLE_IF(dummy == 0 && compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC constexpr value_type get(size_t index) const KFR_NOEXCEPT
     {
-        return intrinsics::simd_get_element<T, N>(v, index);
+        return intr::simd_get_element<T, N>(v, index);
     }
 
     template <int dummy = 0, typename = void,
@@ -466,15 +466,15 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     template <size_t index, KFR_ENABLE_IF(index < 1024 && compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC constexpr value_type get(csize_t<index>) const KFR_NOEXCEPT
     {
-        return intrinsics::simd_get_element<T, N>(v, csize<index>);
+        return intr::simd_get_element<T, N>(v, csize<index>);
     }
 
     template <size_t index, typename = void,
               KFR_ENABLE_IF(index < 1024 && !compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC constexpr value_type get(csize_t<index>) const KFR_NOEXCEPT
     {
-        return internal::compoundcast<T>::from_flat(intrinsics::simd_shuffle(
-            intrinsics::simd_t<unwrap_bit<ST>, SN>{}, v, csizeseq<SW, SW * index>, overload_auto));
+        return internal::compoundcast<T>::from_flat(intr::simd_shuffle(
+            intr::simd_t<unwrap_bit<ST>, SN>{}, v, csizeseq<SW, SW * index>, overload_auto));
     }
 
     template <size_t index>
@@ -486,7 +486,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     template <int dummy = 0, KFR_ENABLE_IF(dummy == 0 && compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC constexpr void set(size_t index, const value_type& s) KFR_NOEXCEPT
     {
-        v = intrinsics::simd_set_element<T, N>(v, index, s);
+        v = intr::simd_set_element<T, N>(v, index, s);
     }
 
     template <int dummy = 0, KFR_ENABLE_IF(dummy == 0 && !compound_type_traits<T>::is_scalar)>
@@ -504,7 +504,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     template <size_t index, KFR_ENABLE_IF(index < 1024 && compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC constexpr void set(csize_t<index>, const value_type& s) KFR_NOEXCEPT
     {
-        v = intrinsics::simd_set_element<T, N>(v, csize<index>, s);
+        v = intr::simd_set_element<T, N>(v, csize<index>, s);
     }
 
     template <size_t index, typename = void,
@@ -636,14 +636,14 @@ template <typename T, size_t N, size_t... indices>
 KFR_INTRINSIC vec<T, sizeof...(indices)> shufflevector(const vec<T, N>& x,
                                                        csizes_t<indices...> i) KFR_NOEXCEPT
 {
-    return intrinsics::simd_shuffle(intrinsics::simd_t<unwrap_bit<T>, N>{}, x.v, i, overload_auto);
+    return intr::simd_shuffle(intr::simd_t<unwrap_bit<T>, N>{}, x.v, i, overload_auto);
 }
 
 template <typename T, size_t N, size_t... indices>
 KFR_INTRINSIC vec<T, sizeof...(indices)> shufflevectors(const vec<T, N>& x, const vec<T, N>& y,
                                                         csizes_t<indices...> i) KFR_NOEXCEPT
 {
-    return intrinsics::simd_shuffle(intrinsics::simd2_t<T, N, N>{}, x.v, y.v, i, overload_auto);
+    return intr::simd_shuffle(intr::simd2_t<T, N, N>{}, x.v, y.v, i, overload_auto);
 }
 
 KFR_PRAGMA_GNU(GCC diagnostic push)

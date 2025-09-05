@@ -36,7 +36,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 #define KFR_DIV_MOD_FN(ty)                                                                                   \
@@ -1680,7 +1680,7 @@ KFR_INTRINSIC vec<bit<T>, N> bnot(const vec<bit<T>, N>& x)
     return bnot(vec<T, N>(x.v)).v;
 }
 
-} // namespace intrinsics
+} // namespace intr
 } // namespace KFR_ARCH_NAME
 } // namespace kfr
 

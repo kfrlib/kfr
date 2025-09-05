@@ -35,7 +35,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 template <typename T, size_t N>
@@ -96,7 +96,7 @@ KFR_INTRINSIC vec<T, N> modzerobessel(const vec<T, N>& x)
 }
 
 KFR_HANDLE_SCALAR(modzerobessel)
-} // namespace intrinsics
+} // namespace intr
 KFR_I_FN(modzerobessel)
 } // namespace KFR_ARCH_NAME
 } // namespace kfr

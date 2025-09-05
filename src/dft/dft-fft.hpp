@@ -38,12 +38,12 @@ namespace kfr
 
 inline namespace KFR_ARCH_NAME
 {
-namespace intrinsics
+namespace intr
 {
 struct name_test_impl
 {
 };
-} // namespace intrinsics
+} // namespace intr
 } // namespace KFR_ARCH_NAME
 
 template <typename T, cpu_t cpu>
@@ -54,7 +54,7 @@ struct dft_name_impl
 template <typename Class>
 inline const char* dft_name(Class*)
 {
-    constexpr static size_t prefix_len = ctype_name<intrinsics::name_test_impl>().length() - 14;
+    constexpr static size_t prefix_len = ctype_name<intr::name_test_impl>().length() - 14;
     static constexpr cstring full_name = ctype_name<std::decay_t<Class>>();
     static constexpr cstring name_arch =
         concat_cstring(full_name.slice(csize<prefix_len>), make_cstring("("),

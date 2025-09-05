@@ -39,7 +39,7 @@ namespace kfr
 {
 inline namespace KFR_ARCH_NAME
 {
-namespace intrinsics
+namespace intr
 {
 
 #define KFR_VECVEC_OP1(fn)                                                                                   \
@@ -92,6 +92,6 @@ KFR_VECVEC_OP2(band)
 KFR_VECVEC_OP2(bor)
 KFR_VECVEC_OP2(bxor)
 
-} // namespace intrinsics
+} // namespace intr
 } // namespace KFR_ARCH_NAME
 } // namespace kfr

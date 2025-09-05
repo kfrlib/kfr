@@ -50,7 +50,7 @@ inline namespace KFR_ARCH_NAME
 {
 constexpr csizes_t<2, 3, 4, 5, 6, 7, 8, 9, 10> dft_radices{};
 
-namespace intrinsics
+namespace intr
 {
 
 template <typename T>
@@ -492,7 +492,7 @@ protected:
             });
     }
 };
-} // namespace intrinsics
+} // namespace intr
 
 template <bool is_final, typename T>
 void prepare_dft_stage(dft_plan<T>* self, size_t radix, size_t iterations, size_t blocks, cbool_t<is_final>)
@@ -501,12 +501,12 @@ void prepare_dft_stage(dft_plan<T>* self, size_t radix, size_t iterations, size_
         dft_radices, radix,
         [self, iterations, blocks](auto radix) KFR_INLINE_LAMBDA
         {
-            add_stage<std::conditional_t<is_final, intrinsics::dft_stage_fixed_final_impl<T, val_of(radix)>,
-                                         intrinsics::dft_stage_fixed_impl<T, val_of(radix)>>>(
+            add_stage<std::conditional_t<is_final, intr::dft_stage_fixed_final_impl<T, val_of(radix)>,
+                                         intr::dft_stage_fixed_impl<T, val_of(radix)>>>(
                 self, radix, iterations, blocks);
         },
         [self, radix, iterations, blocks]()
-        { add_stage<intrinsics::dft_stage_generic_impl<T, is_final>>(self, radix, iterations, blocks); });
+        { add_stage<intr::dft_stage_generic_impl<T, is_final>>(self, radix, iterations, blocks); });
 }
 
 template <typename T>
@@ -514,11 +514,11 @@ void init_dft(dft_plan<T>* self, size_t size, dft_order)
 {
     if (size == 60)
     {
-        add_stage<intrinsics::dft_special_stage_impl<T, 6, 10>>(self);
+        add_stage<intr::dft_special_stage_impl<T, 6, 10>>(self);
     }
     else if (size == 48)
     {
-        add_stage<intrinsics::dft_special_stage_impl<T, 6, 8>>(self);
+        add_stage<intr::dft_special_stage_impl<T, 6, 8>>(self);
     }
     else
     {
@@ -541,7 +541,7 @@ void init_dft(dft_plan<T>* self, size_t size, dft_order)
         int num_stages = 0;
         if (cur_size >= 101)
         {
-            add_stage<intrinsics::dft_arblen_stage_impl<T>>(self, size);
+            add_stage<intr::dft_arblen_stage_impl<T>>(self, size);
             ++num_stages;
             self->arblen = true;
         }
@@ -577,7 +577,7 @@ void init_dft(dft_plan<T>* self, size_t size, dft_order)
             }
 
             if (num_stages > 2)
-                add_stage<intrinsics::dft_reorder_stage_impl<T>>(self, radices, radices_size);
+                add_stage<intr::dft_reorder_stage_impl<T>>(self, radices, radices_size);
         }
     }
 }

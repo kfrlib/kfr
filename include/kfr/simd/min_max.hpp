@@ -39,7 +39,7 @@ template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>),
           typename Tout = std::common_type_t<T1, T2>>
 KFR_INTRINSIC Tout min(const T1& x, const T2& y)
 {
-    return intrinsics::min(x, y);
+    return intr::min(x, y);
 }
 
 /**
@@ -49,7 +49,7 @@ template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>),
           typename Tout = std::common_type_t<T1, T2>>
 KFR_INTRINSIC Tout max(const T1& x, const T2& y)
 {
-    return intrinsics::max(x, y);
+    return intr::max(x, y);
 }
 
 /**
@@ -59,7 +59,7 @@ template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>),
           typename Tout = std::common_type_t<T1, T2>>
 KFR_INTRINSIC Tout absmin(const T1& x, const T2& y)
 {
-    return intrinsics::absmin(x, y);
+    return intr::absmin(x, y);
 }
 
 /**
@@ -69,7 +69,7 @@ template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>),
           typename Tout = std::common_type_t<T1, T2>>
 KFR_INTRINSIC Tout absmax(const T1& x, const T2& y)
 {
-    return intrinsics::absmax(x, y);
+    return intr::absmax(x, y);
 }
 } // namespace KFR_ARCH_NAME
 } // namespace kfr

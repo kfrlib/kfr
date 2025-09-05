@@ -274,7 +274,7 @@ TEST_ASM_F(acos, TEST_ASM_VTY1_F)
 #ifdef HAVE_DFT
 
 #define TEST_FFT_SPEC(ty, size)                                                                              \
-    static intrinsics::fft_specialization<ty, size> fft__##ty##__##size(static_cast<size_t>(1 << size));     \
+    static intr::fft_specialization<ty, size> fft__##ty##__##size(static_cast<size_t>(1 << size));     \
     KFR_PUBLIC void asm__test__fft__##ty##__##size(complex<ty>* out, const complex<ty>* in, u8* temp)        \
     {                                                                                                        \
         fft__##ty##__##size.do_execute<false>(out, in, temp);                                                \
@@ -284,7 +284,7 @@ TEST_ASM_F(acos, TEST_ASM_VTY1_F)
         fft__##ty##__##size.do_execute<true>(out, in, temp);                                                 \
     }
 #define TEST_FFT_GEN(ty)                                                                                     \
-    static intrinsics::fft_stage_impl<ty, true, true> fft__##ty##__##size(static_cast<size_t>(65526));       \
+    static intr::fft_stage_impl<ty, true, true> fft__##ty##__##size(static_cast<size_t>(65526));       \
     KFR_PUBLIC void asm__test__fft__##ty##__gen(complex<ty>* out, const complex<ty>* in, u8* temp)           \
     {                                                                                                        \
         fft__##ty##__##size.do_execute<false>(out, in, temp);                                                \

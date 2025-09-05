@@ -33,7 +33,7 @@ namespace kfr
 {
 inline namespace KFR_ARCH_NAME
 {
-namespace intrinsics
+namespace intr
 {
 
 template <typename T, size_t N>
@@ -107,7 +107,7 @@ KFR_COMPLEX_OP_CVT(band)
 KFR_COMPLEX_OP_CVT(bxor)
 KFR_COMPLEX_OP_CVT(bor)
 
-} // namespace intrinsics
+} // namespace intr
 } // namespace KFR_ARCH_NAME
 
 } // namespace kfr

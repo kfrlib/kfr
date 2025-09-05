@@ -40,7 +40,7 @@ template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T
           typename Tout = std::common_type_t<T1, T2, T3>>
 KFR_INTRINSIC Tout clamp(const T1& x, const T2& lo, const T3& hi)
 {
-    return intrinsics::clamp(static_cast<Tout>(x), static_cast<Tout>(lo), static_cast<Tout>(hi));
+    return intr::clamp(static_cast<Tout>(x), static_cast<Tout>(lo), static_cast<Tout>(hi));
 }
 
 /**
@@ -51,7 +51,7 @@ template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>),
           typename Tout = std::common_type_t<T1, T2>>
 KFR_INTRINSIC Tout clamp(const T1& x, const T2& hi)
 {
-    return intrinsics::clamp(static_cast<Tout>(x), static_cast<Tout>(hi));
+    return intr::clamp(static_cast<Tout>(x), static_cast<Tout>(hi));
 }
 } // namespace KFR_ARCH_NAME
 } // namespace kfr

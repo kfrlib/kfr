@@ -31,7 +31,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 #define KFR_mm_trunc_ps(V) _mm_round_ps((V), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC)
@@ -251,7 +251,7 @@ KFR_HANDLE_SCALAR(ifloor)
 KFR_HANDLE_SCALAR(iceil)
 KFR_HANDLE_SCALAR(iround)
 KFR_HANDLE_SCALAR(itrunc)
-} // namespace intrinsics
+} // namespace intr
 KFR_I_FN(floor)
 KFR_I_FN(ceil)
 KFR_I_FN(round)

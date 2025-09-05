@@ -38,7 +38,7 @@ inline namespace KFR_ARCH_NAME
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> sin(const T1& x)
 {
-    return intrinsics::sin(x);
+    return intr::sin(x);
 }
 
 /**
@@ -47,7 +47,7 @@ KFR_FUNCTION flt_type<T1> sin(const T1& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> cos(const T1& x)
 {
-    return intrinsics::cos(x);
+    return intr::cos(x);
 }
 
 /**
@@ -56,7 +56,7 @@ KFR_FUNCTION flt_type<T1> cos(const T1& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> fastsin(const T1& x)
 {
-    return intrinsics::fastsin(x);
+    return intr::fastsin(x);
 }
 
 /**
@@ -65,7 +65,7 @@ KFR_FUNCTION flt_type<T1> fastsin(const T1& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> fastcos(const T1& x)
 {
-    return intrinsics::fastcos(x);
+    return intr::fastcos(x);
 }
 
 /**
@@ -75,7 +75,7 @@ KFR_FUNCTION flt_type<T1> fastcos(const T1& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> sincos(const T1& x)
 {
-    return intrinsics::sincos(x);
+    return intr::sincos(x);
 }
 
 /**
@@ -85,7 +85,7 @@ KFR_FUNCTION flt_type<T1> sincos(const T1& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> cossin(const T1& x)
 {
-    return intrinsics::cossin(x);
+    return intr::cossin(x);
 }
 
 /**
@@ -94,7 +94,7 @@ KFR_FUNCTION flt_type<T1> cossin(const T1& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> sindeg(const T1& x)
 {
-    return intrinsics::sindeg(x);
+    return intr::sindeg(x);
 }
 
 /**
@@ -103,7 +103,7 @@ KFR_FUNCTION flt_type<T1> sindeg(const T1& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> cosdeg(const T1& x)
 {
-    return intrinsics::cosdeg(x);
+    return intr::cosdeg(x);
 }
 
 /**
@@ -112,7 +112,7 @@ KFR_FUNCTION flt_type<T1> cosdeg(const T1& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> fastsindeg(const T1& x)
 {
-    return intrinsics::fastsindeg(x);
+    return intr::fastsindeg(x);
 }
 
 /**
@@ -121,7 +121,7 @@ KFR_FUNCTION flt_type<T1> fastsindeg(const T1& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> fastcosdeg(const T1& x)
 {
-    return intrinsics::fastcosdeg(x);
+    return intr::fastcosdeg(x);
 }
 
 /**
@@ -131,7 +131,7 @@ KFR_FUNCTION flt_type<T1> fastcosdeg(const T1& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> sincosdeg(const T1& x)
 {
-    return intrinsics::sincosdeg(x);
+    return intr::sincosdeg(x);
 }
 
 /**
@@ -141,7 +141,7 @@ KFR_FUNCTION flt_type<T1> sincosdeg(const T1& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> cossindeg(const T1& x)
 {
-    return intrinsics::cossindeg(x);
+    return intr::cossindeg(x);
 }
 
 /**
@@ -153,7 +153,7 @@ KFR_FUNCTION flt_type<T1> cossindeg(const T1& x)
 template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
 KFR_FUNCTION flt_type<T1> sinc(const T1& x)
 {
-    return intrinsics::sinc(x);
+    return intr::sinc(x);
 }
 
 /**

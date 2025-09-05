@@ -36,14 +36,14 @@ inline namespace KFR_ARCH_NAME
 template <size_t N, bool A = false, typename T>
 KFR_INTRINSIC vec<T, N> read(const T* src)
 {
-    return vec<T, N>::from_flatten(intrinsics::read(cbool<A>, csize<N * compound_type_traits<T>::deep_width>,
+    return vec<T, N>::from_flatten(intr::read(cbool<A>, csize<N * compound_type_traits<T>::deep_width>,
                                                     ptr_cast<deep_subtype<T>>(src)));
 }
 
 template <bool A = false, size_t N, typename T>
 KFR_INTRINSIC void write(T* dest, const vec<T, N>& value)
 {
-    intrinsics::write(cbool<A>, ptr_cast<deep_subtype<T>>(dest), value.flatten());
+    intr::write(cbool<A>, ptr_cast<deep_subtype<T>>(dest), value.flatten());
 }
 
 namespace internal
@@ -51,7 +51,7 @@ namespace internal
 template <size_t group, size_t count, size_t N, bool A, typename T, size_t... indices>
 KFR_INTRINSIC vec<T, group * count * N> read_group_impl(const T* src, size_t stride, csizes_t<indices...>)
 {
-    return concat(intrinsics::read(cbool<A>, csize<N * group>, src + group * stride * indices)...);
+    return concat(intr::read(cbool<A>, csize<N * group>, src + group * stride * indices)...);
 }
 template <size_t group, size_t count, size_t N, bool A, typename T, size_t... indices>
 KFR_INTRINSIC void write_group_impl(T* dest, size_t stride, const vec<T, group * count * N>& value,
@@ -303,7 +303,7 @@ KFR_INTRINSIC vec<T, N> partial_mask(size_t index, vec_shape<T, N>)
 template <typename T, size_t N>
 template <bool aligned>
 KFR_MEM_INTRINSIC constexpr vec<T, N>::vec(const value_type* src, cbool_t<aligned>) KFR_NOEXCEPT
-    : vec(vec<T, N>::from_flatten(intrinsics::read(cbool<aligned>,
+    : vec(vec<T, N>::from_flatten(intr::read(cbool<aligned>,
                                                    csize<N * compound_type_traits<T>::deep_width>,
                                                    ptr_cast<deep_subtype<T>>(src))))
 {
@@ -313,7 +313,7 @@ template <typename T, size_t N>
 template <bool aligned>
 KFR_MEM_INTRINSIC const vec<T, N>& vec<T, N>::write(value_type* dest, cbool_t<aligned>) const KFR_NOEXCEPT
 {
-    intrinsics::write(cbool<aligned>, ptr_cast<deep_subtype<T>>(dest), flatten());
+    intr::write(cbool<aligned>, ptr_cast<deep_subtype<T>>(dest), flatten());
     return *this;
 }
 

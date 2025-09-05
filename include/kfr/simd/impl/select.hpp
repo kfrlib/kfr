@@ -30,7 +30,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 #if defined KFR_ARCH_SSE41 && defined KFR_NATIVE_INTRINSICS
@@ -325,7 +325,7 @@ KFR_INTRINSIC std::common_type_t<T1, T2> select(bool m, const T1& x, const T2& y
     return m ? x : y;
 }
 
-} // namespace intrinsics
+} // namespace intr
 KFR_I_FN(select)
 } // namespace KFR_ARCH_NAME
 } // namespace kfr

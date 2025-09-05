@@ -34,7 +34,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 template <size_t N>
 KFR_INTRINSIC vec<f32, N> atan2k(const vec<f32, N>& yy, const vec<f32, N>& xx)
@@ -218,7 +218,7 @@ KFR_HANDLE_SCALAR(atan)
 KFR_HANDLE_SCALAR(atan2)
 KFR_HANDLE_SCALAR(atandeg)
 KFR_HANDLE_SCALAR(atan2deg)
-} // namespace intrinsics
+} // namespace intr
 KFR_I_FN(atan)
 KFR_I_FN(atandeg)
 KFR_I_FN(atan2)

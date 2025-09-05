@@ -31,7 +31,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 // Generic functions
@@ -198,7 +198,7 @@ KFR_INTRINSIC vec<T, N> satsub(const vec<T, N>& a, const vec<T, N>& b)
 #endif
 KFR_HANDLE_SCALAR(satadd)
 KFR_HANDLE_SCALAR(satsub)
-} // namespace intrinsics
+} // namespace intr
 KFR_I_FN(satadd)
 KFR_I_FN(satsub)
 } // namespace KFR_ARCH_NAME

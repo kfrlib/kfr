@@ -32,7 +32,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 #if defined KFR_ARCH_SSE2 && defined KFR_NATIVE_INTRINSICS
@@ -227,7 +227,7 @@ KFR_HANDLE_SCALAR(min)
 KFR_HANDLE_SCALAR(max)
 KFR_HANDLE_SCALAR(absmin)
 KFR_HANDLE_SCALAR(absmax)
-} // namespace intrinsics
+} // namespace intr
 KFR_I_FN(min)
 KFR_I_FN(max)
 KFR_I_FN(absmin)
