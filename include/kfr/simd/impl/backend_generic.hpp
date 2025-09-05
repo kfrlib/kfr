@@ -189,6 +189,12 @@ constexpr inline bool is_simd_small_array = false;
 template <typename T, size_t N, typename U>
 constexpr inline bool is_simd_small_array<simd_small_array<T, N, U>> = true;
 
+template <typename T>
+constexpr inline bool is_halves = false;
+
+template <typename T, size_t N>
+constexpr inline bool is_halves<simd_halves<T, N>> = true;
+
 #define KFR_SIMD_TYPE(T, N, ...)                                                                             \
     template <>                                                                                              \
     struct simd_type<T, N>                                                                                   \
@@ -397,7 +403,8 @@ KFR_INTRINSIC simd<double, Nout> simd_shuffle(simd_t<double, N>, const simd<doub
     return universal_shuffle(simd_t<double, N>{}, x, ind);
 }
 
-template <size_t N, size_t... indices, size_t Nout = sizeof...(indices)>
+template <size_t N, size_t... indices, size_t Nout = sizeof...(indices),
+          KFR_ENABLE_IF(is_poweroftwo(N) && is_halves<simd<float, 2 * N>>)>
 KFR_INTRINSIC simd<float, Nout> simd_shuffle(simd2_t<float, N, N>, const simd<float, N>& x,
                                              const simd<float, N>& y, csizes_t<indices...> ind,
                                              overload_priority<2>) CMT_NOEXCEPT
@@ -405,7 +412,8 @@ KFR_INTRINSIC simd<float, Nout> simd_shuffle(simd2_t<float, N, N>, const simd<fl
     return universal_shuffle(simd_t<float, 2 * N>{}, simd_from_halves(simd_t<float, 2 * N>{}, x, y), ind);
 }
 
-template <size_t N, size_t... indices, size_t Nout = sizeof...(indices)>
+template <size_t N, size_t... indices, size_t Nout = sizeof...(indices),
+          KFR_ENABLE_IF(is_poweroftwo(N) && is_halves<simd<double, 2 * N>>)>
 KFR_INTRINSIC simd<double, Nout> simd_shuffle(simd2_t<double, N, N>, const simd<double, N>& x,
                                               const simd<double, N>& y, csizes_t<indices...> ind,
                                               overload_priority<2>) CMT_NOEXCEPT
@@ -1365,9 +1373,9 @@ KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd2_t<T, N1, N2>, const simd<T, N1>& 
     return from_simd_array<T, Nout>(simd_shuffle2_generic<T, Nout, N1, N2>(xx, yy, indices_array));
 #else
 
-    return from_simd_array<T, Nout>({ (indices > N1 + N2 ? T()
-                                       : indices >= N1   ? to_simd_array<T, N2>(y).val[indices - N1]
-                                                         : to_simd_array<T, N1>(x).val[indices])... });
+    return from_simd_array<T, Nout>({ (indices >= N1 + N2 ? T()
+                                       : indices >= N1    ? to_simd_array<T, N2>(y).val[indices - N1]
+                                                          : to_simd_array<T, N1>(x).val[indices])... });
 #endif
 }
 
@@ -1504,7 +1512,7 @@ KFR_INTRINSIC simd<T, N / 2> simd_get_high(simd_t<T, N>, const simd<T, N>& x)
 {
     return x.high;
 }
-template <typename T, size_t N>
+template <typename T, size_t N, KFR_ENABLE_IF(is_poweroftwo(N) && is_halves<simd<T, N>>)>
 KFR_INTRINSIC simd<T, N> simd_from_halves(simd_t<T, N>, const simd<T, N / 2>& x, const simd<T, N / 2>& y)
 {
     return { x, y };
@@ -1727,7 +1735,7 @@ KFR_INTRINSIC simd<float, 8> simd_vec_shuffle(simd_t<float, 8>, const simd<float
                                                       csizes<I0, I1, I2, I3>),
                                     universal_shuffle(simd_t<float, 4>{},
                                                       simd_get_high(simd_t<float, 8>{}, x),
-                                                      csizes<I4, I5, I6, I7>));
+                                                      csizes<I4 - 4, I5 - 4, I6 - 4, I7 - 4>));
         }
     }
     else

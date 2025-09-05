@@ -17,6 +17,31 @@ TEST(concat)
           == vec<f32, 7>{ 1, 2, 3, 4, 5, 6, 7 });
 }
 
+TEST(concat12)
+{
+    vec<float, 6> a0{ 1, 11, 2, 22, 3, 33 };
+    vec<float, 6> a1{ 4, 44, 5, 55, 6, 66 };
+    vec<float, 12> r = concat(a0, a1);
+    CHECK(r == pack<float>(1, 11, 2, 22, 3, 33, 4, 44, 5, 55, 6, 66));
+}
+
+TEST(concat18)
+{
+    vec<float, 6> a0{ 1, 11, 2, 22, 3, 33 };
+    vec<float, 6> a1{ 4, 44, 5, 55, 6, 66 };
+    vec<float, 6> a2{ 7, 77, 8, 88, 9, 99 };
+    vec<float, 18> r = concat(a0, a1, a2);
+    CHECK(r == pack<float>(1, 11, 2, 22, 3, 33, 4, 44, 5, 55, 6, 66, 7, 77, 8, 88, 9, 99));
+}
+
+TEST(split18)
+{
+    vec<float, 18> r{ 1, 11, 2, 22, 3, 33, 4, 44, 5, 55, 6, 66, 7, 77, 8, 88, 9, 99 };
+    CHECK(slice<0, 6>(r) == pack<float>(1, 11, 2, 22, 3, 33));
+    CHECK(slice<6, 6>(r) == pack<float>(4, 44, 5, 55, 6, 66));
+    CHECK(slice<12, 6>(r) == pack<float>(7, 77, 8, 88, 9, 99));
+}
+
 TEST(reverse)
 {
     CHECK(reverse(pack(0, 1, 2, 3, 4, 5, 6, 7)) == pack(7, 6, 5, 4, 3, 2, 1, 0));
@@ -186,7 +211,6 @@ TEST(enumerate)
     CHECK(enumerate(vec_shape<int, 8>{}, 3) == vec{ 0, 3, 6, 9, 12, 15, 18, 21 });
     CHECK(enumerate(vec_shape<int, 7>{}, 3) == vec{ 0, 3, 6, 9, 12, 15, 18 });
 }
-
 
 TEST(test_basic)
 {
