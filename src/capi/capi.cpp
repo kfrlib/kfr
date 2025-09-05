@@ -33,14 +33,14 @@
 
 namespace kfr
 {
-static thread_local std::array<char, 256> error;
+static thread_local std::array<char, 256> latest_error;
 
-void reset_error() { std::fill(error.begin(), error.end(), 0); }
+void reset_error() { std::fill(latest_error.begin(), latest_error.end(), 0); }
 void set_error(std::string_view s)
 {
-    size_t n = std::min(s.size(), error.size() - 1);
-    auto end = std::copy_n(s.begin(), n, error.begin());
-    std::fill(end, error.end(), 0);
+    size_t n = std::min(s.size(), latest_error.size() - 1);
+    auto end = std::copy_n(s.begin(), n, latest_error.begin());
+    std::fill(end, latest_error.end(), 0);
 }
 
 template <typename Fn, typename R = std::invoke_result_t<Fn>, typename T>
@@ -180,7 +180,7 @@ KFR_API_SPEC uint32_t kfr_version() { return KFR_VERSION; }
 KFR_API_SPEC const char* kfr_enabled_archs() { return KFR_ENABLED_ARCHS_LIST; }
 KFR_API_SPEC int kfr_current_arch() { return static_cast<int>(get_cpu()); }
 
-KFR_API_SPEC const char* kfr_last_error() { return error.data(); }
+KFR_API_SPEC const char* kfr_last_error() { return latest_error.data(); }
 
 KFR_API_SPEC void* kfr_allocate(size_t size) { return details::aligned_malloc(size, KFR_DEFAULT_ALIGNMENT); }
 KFR_API_SPEC void* kfr_allocate_aligned(size_t size, size_t alignment)
