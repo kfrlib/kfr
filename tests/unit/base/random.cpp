@@ -17,10 +17,10 @@ template <typename T, size_t N>
 static void test_random(random_state& state, const vec<T, N>& value)
 {
     const vec<T, N> r = kfr::random_uniform<T, N>(state);
-    CHECK(r == value);
+    CHECK_THAT((r), DeepMatcher(value));
 }
 
-TEST(random_bit_generator)
+TEST_CASE("random_bit_generator")
 {
     random_state gen = random_init(1, 2, 3, 4);
     test_random(gen, pack<u8>(21, 62, 88, 30, 46, 234, 205, 29, 41, 190, 212, 81, 217, 135, 218, 227));
@@ -64,7 +64,7 @@ TEST(random_bit_generator)
                           0.80028288039450723));
 }
 
-TEST(gen_random_range)
+TEST_CASE("gen_random_range")
 {
     random_state gen         = random_init(1, 2, 3, 4);
     univector<fbase, 1000> v = gen_random_range<fbase>(std::ref(gen), -1.0, 1.0);
@@ -73,7 +73,7 @@ TEST(gen_random_range)
     // println(mean(v));
 }
 
-TEST(random_normal)
+TEST_CASE("random_normal")
 {
     random_state gen = random_init(1, 2, 3, 4);
     vec<fbase, 12> r = random_normal<12, fbase>(gen, 0.0, 1.0);

@@ -31,7 +31,7 @@
 #include "../simd/operators.hpp"
 #include "../base/state_holder.hpp"
 #include "../simd/vec.hpp"
-#include "../testo/assert.hpp"
+#include "../test/assert.hpp"
 
 namespace kfr
 {

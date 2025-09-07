@@ -17,8 +17,6 @@ constexpr size_t points_2arg = 100;
 
 using namespace kfr;
 
-using testo::test_data_entry;
-
 template <typename T>
 struct range_sampler
 {

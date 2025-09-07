@@ -10,7 +10,7 @@ namespace kfr
 {
 inline namespace KFR_ARCH_NAME
 {
-TEST(select_true)
+TEST_CASE("select_true")
 {
     test_function2(
         test_catogories::vectors,
@@ -22,7 +22,7 @@ TEST(select_true)
         [](auto x, auto) { return x; });
 }
 
-TEST(select_false)
+TEST_CASE("select_false")
 {
     test_function2(
         test_catogories::vectors,

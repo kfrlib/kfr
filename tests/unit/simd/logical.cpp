@@ -11,14 +11,14 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-TEST(logical_all)
+TEST_CASE("logical_all")
 {
     CHECK(all(mask<f32, 4>{ true, true, true, true }) == true);
     CHECK(all(mask<f32, 4>{ true, false, true, false }) == false);
     CHECK(all(mask<f32, 4>{ false, true, false, true }) == false);
     CHECK(all(mask<f32, 4>{ false, false, false, false }) == false);
 }
-TEST(logical_any)
+TEST_CASE("logical_any")
 {
     CHECK(any(mask<f32, 4>{ true, true, true, true }) == true);
     CHECK(any(mask<f32, 4>{ true, false, true, false }) == true);
@@ -26,9 +26,9 @@ TEST(logical_any)
     CHECK(any(mask<f32, 4>{ false, false, false, false }) == false);
 }
 
-TEST(intrin_any_all)
+TEST_CASE("intrin_any_all")
 {
-    testo::matrix(named("type") = unsigned_vector_types<vec>,
+    test_matrix(named("type") = unsigned_vector_types<vec>,
                   [](auto type)
                   {
                       using T                = typename decltype(type)::type;

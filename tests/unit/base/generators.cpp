@@ -16,7 +16,7 @@ using namespace kfr;
 namespace KFR_ARCH_NAME
 {
 
-TEST(test_gen_expj)
+TEST_CASE("test_gen_expj")
 {
     univector<cbase> v = truncate(gen_expj(0.f, constants<float>::pi_s(2) * 0.1f), 1000);
     CHECK(rms(cabs(
@@ -30,7 +30,7 @@ TEST(test_gen_expj)
     // In most cases error is much lower (less than 0.00001)
 }
 
-TEST(gen_sin)
+TEST_CASE("gen_sin")
 {
     kfr::univector<kfr::fbase> x;
     constexpr size_t size = 132;

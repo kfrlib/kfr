@@ -91,36 +91,37 @@ inline T ref_satsub(T x, T y)
         return result;
 }
 
-TEST(intrin_satadd_satsub)
+TEST_CASE("intrin_satadd_satsub")
 {
 #if defined KFR_COMPILER_IS_MSVC && defined KFR_ARCH_X32
     println("Skipping saturation tests on MSVC x86 due to compiler optimization error");
 #else
-    testo::matrix(named("type") = cconcat(signed_vector_types<vec>, unsigned_vector_types<vec>),
-                  [](auto type)
-                  {
-                      using T     = typename decltype(type)::type;
-                      using Tsub  = subtype<T>;
-                      const T min = std::numeric_limits<Tsub>::min();
-                      const T max = std::numeric_limits<Tsub>::max();
-                      CHECK(kfr::satadd(min, min) ==
-                            apply([](auto x, auto y) -> decltype(x) { return ref_satadd(x, y); }, min, min));
-                      CHECK(kfr::satadd(max, max) ==
-                            apply([](auto x, auto y) -> decltype(x) { return ref_satadd(x, y); }, max, max));
-                      CHECK(kfr::satadd(min, max) ==
-                            apply([](auto x, auto y) -> decltype(x) { return ref_satadd(x, y); }, min, max));
-                      CHECK(kfr::satadd(max, min) ==
-                            apply([](auto x, auto y) -> decltype(x) { return ref_satadd(x, y); }, max, min));
+    test_matrix(
+        named("type") = cconcat(signed_vector_types<vec>, unsigned_vector_types<vec>),
+        [](auto type)
+        {
+            using T     = typename decltype(type)::type;
+            using Tsub  = subtype<T>;
+            const T min = std::numeric_limits<Tsub>::min();
+            const T max = std::numeric_limits<Tsub>::max();
+            CHECK_THAT(kfr::satadd(min, min), DeepMatcher(apply([](auto x, auto y) -> decltype(x)
+                                                                { return ref_satadd(x, y); }, min, min)));
+            CHECK_THAT(kfr::satadd(max, max), DeepMatcher(apply([](auto x, auto y) -> decltype(x)
+                                                                { return ref_satadd(x, y); }, max, max)));
+            CHECK_THAT(kfr::satadd(min, max), DeepMatcher(apply([](auto x, auto y) -> decltype(x)
+                                                                { return ref_satadd(x, y); }, min, max)));
+            CHECK_THAT(kfr::satadd(max, min), DeepMatcher(apply([](auto x, auto y) -> decltype(x)
+                                                                { return ref_satadd(x, y); }, max, min)));
 
-                      CHECK(kfr::satsub(min, min) ==
-                            apply([](auto x, auto y) -> decltype(x) { return ref_satsub(x, y); }, min, min));
-                      CHECK(kfr::satsub(max, max) ==
-                            apply([](auto x, auto y) -> decltype(x) { return ref_satsub(x, y); }, max, max));
-                      CHECK(kfr::satsub(min, max) ==
-                            apply([](auto x, auto y) -> decltype(x) { return ref_satsub(x, y); }, min, max));
-                      CHECK(kfr::satsub(max, min) ==
-                            apply([](auto x, auto y) -> decltype(x) { return ref_satsub(x, y); }, max, min));
-                  });
+            CHECK_THAT(kfr::satsub(min, min), DeepMatcher(apply([](auto x, auto y) -> decltype(x)
+                                                                { return ref_satsub(x, y); }, min, min)));
+            CHECK_THAT(kfr::satsub(max, max), DeepMatcher(apply([](auto x, auto y) -> decltype(x)
+                                                                { return ref_satsub(x, y); }, max, max)));
+            CHECK_THAT(kfr::satsub(min, max), DeepMatcher(apply([](auto x, auto y) -> decltype(x)
+                                                                { return ref_satsub(x, y); }, min, max)));
+            CHECK_THAT(kfr::satsub(max, min), DeepMatcher(apply([](auto x, auto y) -> decltype(x)
+                                                                { return ref_satsub(x, y); }, max, min)));
+        });
 #endif
 }
 } // namespace KFR_ARCH_NAME

@@ -58,7 +58,7 @@ static void test_npy_t(shape<Dims> size)
             {
                 std::string filepath =
                     KFR_SRC_DIR "/tests/npy/" + filename<T, Dims>(size, ver, order, endianness);
-                testo::scope s(filepath);
+                INFO(filepath);
                 std::shared_ptr<file_reader<void>> f = open_file_for_reading(filepath);
                 CHECK(f != nullptr);
                 if (!f)
@@ -115,7 +115,7 @@ static void test_npy(shape<Dims> size)
     // test_npy_t<bool>(size);
 }
 
-TEST(npy_all)
+TEST_CASE("npy_all")
 {
     test_npy(shape{ 110 });
     test_npy(shape{ 10, 11 });

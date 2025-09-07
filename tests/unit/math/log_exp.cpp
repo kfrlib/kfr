@@ -20,7 +20,7 @@ KFR_AUTO_TEST_1(log2, narrow, 2, 1)
 KFR_AUTO_TEST_1(log10, narrow, 3, 1)
 KFR_AUTO_TEST_1(cbrt, narrow, 5, 1)
 
-TEST(cbrt)
+TEST_CASE("cbrt")
 {
     CHECK(kfr::cbrt(27.f) == 3.f);
     CHECK(kfr::cbrt(-27.f) == -3.f);

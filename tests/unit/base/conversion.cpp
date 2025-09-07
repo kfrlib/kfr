@@ -16,7 +16,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-TEST(sample_conversion)
+TEST_CASE("sample_conversion")
 {
     CHECK(convert_sample<float>(static_cast<i8>(-127)) == -1.f);
     CHECK(convert_sample<float>(static_cast<i8>(0)) == 0.f);
@@ -51,7 +51,7 @@ TEST(sample_conversion)
     CHECK(convert_sample<i32>(1.f) == 2147483647);
 }
 
-TEST(sample_interleave_deinterleave)
+TEST_CASE("sample_interleave_deinterleave")
 {
     const size_t size = 50;
     univector2d<float> in;

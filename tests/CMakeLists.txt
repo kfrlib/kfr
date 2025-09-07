@@ -52,15 +52,29 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${PROJECT_BINARY_DIR}/bin)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/tests/cmake/")
 
+macro (add_test_executable NAME)
+    add_executable(
+        ${NAME}
+        ${ARGN}
+        "${CMAKE_SOURCE_DIR}/src/thirdparty/catch/catch_amalgamated.cpp")
+    target_include_directories(
+        ${NAME} PUBLIC ${CMAKE_SOURCE_DIR}/include
+                       ${CMAKE_SOURCE_DIR}/include/kfr/thirdparty/catch)
+    target_compile_definitions(${NAME} PRIVATE CATCH_AMALGAMATED_CUSTOM_MAIN)
+    if (CMAKE_SYSTEM_NAME STREQUAL "Android")
+        target_link_libraries(${NAME} log)
+    endif ()
+endmacro ()
+
 if (KFR_ENABLE_CAPI_BUILD)
-    add_executable(capi_test capi_test.cpp)
+    add_test_executable(capi_test capi_test.cpp)
     target_include_directories(capi_test
                                PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include)
     target_link_libraries(capi_test PRIVATE kfr_capi)
 endif ()
 
 if (KFR_ENABLE_ASMTEST)
-    add_executable(asm_test internal/asm_test.cpp)
+    add_test_executable(asm_test internal/asm_test.cpp)
     target_link_libraries(asm_test kfr)
     target_set_arch(asm_test PRIVATE avx2)
     target_compile_definitions(asm_test PRIVATE KFR_SHOW_NOT_OPTIMIZED)
@@ -84,7 +98,7 @@ set(ALL_TESTS_CPP ${KFR_UNITTEST_SRC})
 if (KFR_ENABLE_DFT)
     list(APPEND ALL_TESTS_CPP dft_test.cpp)
 
-    add_executable(dft_test dft_test.cpp)
+    add_test_executable(dft_test dft_test.cpp)
     target_link_libraries(dft_test kfr_dft use_arch)
 endif ()
 
@@ -93,7 +107,7 @@ if (KFR_REGENERATE_TESTS)
     find_package(GMP)
 
     if (MPFR_FOUND AND GMP_FOUND)
-        add_executable(generate_data internal/generate_data.cpp)
+        add_test_executable(generate_data internal/generate_data.cpp)
         target_link_libraries(generate_data kfr)
         target_include_directories(generate_data PRIVATE ${MPFR_INCLUDE_DIR}
                                                          ${GMP_INCLUDE_DIR})
@@ -109,7 +123,7 @@ if (KFR_REGENERATE_TESTS)
     endif ()
 endif ()
 
-add_executable(all_tests all_tests.cpp ${ALL_TESTS_CPP})
+add_test_executable(all_tests all_tests.cpp ${ALL_TESTS_CPP})
 target_compile_definitions(all_tests PRIVATE KFR_NO_MAIN)
 target_link_libraries(all_tests kfr use_arch kfr_dsp)
 if (KFR_ENABLE_DFT)
@@ -126,8 +140,8 @@ endif ()
 function (add_x86_test ARCH)
     set(NAME ${ARCH})
 
-    add_executable(all_tests_${NAME} all_tests.cpp ${ALL_TESTS_CPP}
-                                     ${KFR_IO_SRC} ${KFR_DSP_SRC})
+    add_test_executable(all_tests_${NAME} all_tests.cpp ${ALL_TESTS_CPP}
+                        ${KFR_IO_SRC} ${KFR_DSP_SRC})
     if (KFR_ENABLE_DFT)
         target_sources(all_tests_${NAME} PRIVATE ${KFR_DFT_SRC})
     endif ()

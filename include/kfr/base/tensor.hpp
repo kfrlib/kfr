@@ -239,7 +239,7 @@ public:
     /// @brief Initialize with braced list. Defined for 2D tensor only
     template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>&& dims == 2)>
     KFR_INTRINSIC tensor(const std::initializer_list<std::initializer_list<U>>& values)
-        : tensor(shape_type(values.size(), values.begin()->size()))
+        : tensor(shape_type(values.size(), values.begin() -> size()))
     {
         internal_generic::list_copy_recursively(values, contiguous_begin_unsafe());
     }
@@ -247,7 +247,7 @@ public:
     /// @brief Initialize with braced list. Defined for 3D tensor only
     template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>&& dims == 3)>
     KFR_INTRINSIC tensor(const std::initializer_list<std::initializer_list<std::initializer_list<U>>>& values)
-        : tensor(shape_type(values.size(), values.begin()->size(), values.begin()->begin()->size()))
+        : tensor(shape_type(values.size(), values.begin() -> size(), values.begin()->begin()->size()))
     {
         internal_generic::list_copy_recursively(values, contiguous_begin_unsafe());
     }
@@ -257,7 +257,7 @@ public:
     KFR_INTRINSIC tensor(
         const std::initializer_list<std::initializer_list<std::initializer_list<std::initializer_list<U>>>>&
             values)
-        : tensor(shape_type(values.size(), values.begin()->size(), values.begin()->begin()->size(),
+        : tensor(shape_type(values.size(), values.begin() -> size(), values.begin()->begin()->size(),
                             values.begin()->begin()->begin()->size()))
     {
         internal_generic::list_copy_recursively(values, contiguous_begin_unsafe());
@@ -831,11 +831,44 @@ public:
         return *this;
     }
 
-    bool operator==(const tensor& other) const
+    friend bool operator==(const tensor& lhs, const tensor& rhs)
     {
-        return shape() == other.shape() && std::equal(begin(), end(), other.begin());
+        return lhs.shape() == rhs.shape() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
     }
-    bool operator!=(const tensor& other) const { return !operator==(other); }
+    friend bool operator==(const tensor& lhs, tensor&& rhs)
+    {
+        return lhs.shape() == rhs.shape() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    }
+    friend bool operator==(const tensor& lhs, tensor& rhs)
+    {
+        return lhs.shape() == rhs.shape() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    }
+    
+    friend bool operator==(tensor&& lhs, const tensor& rhs)
+    {
+        return lhs.shape() == rhs.shape() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    }
+    friend bool operator==(tensor&& lhs, tensor&& rhs)
+    {
+        return lhs.shape() == rhs.shape() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    }
+    friend bool operator==(tensor&& lhs, tensor& rhs)
+    {
+        return lhs.shape() == rhs.shape() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    }
+    
+    friend bool operator==(tensor& lhs, const tensor& rhs)
+    {
+        return lhs.shape() == rhs.shape() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    }
+    friend bool operator==(tensor& lhs, tensor&& rhs)
+    {
+        return lhs.shape() == rhs.shape() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    }
+    friend bool operator==(tensor& lhs, tensor& rhs)
+    {
+        return lhs.shape() == rhs.shape() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    }
 
     KFR_MEM_INTRINSIC const shape_type& shape() const { return m_shape; }
     KFR_MEM_INTRINSIC const shape_type& strides() const { return m_strides; }

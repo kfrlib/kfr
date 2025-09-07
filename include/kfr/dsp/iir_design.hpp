@@ -34,7 +34,7 @@
 #include "../simd/impl/function.hpp"
 #include "../simd/operators.hpp"
 #include "../simd/vec.hpp"
-#include "../testo/assert.hpp"
+#include "../test/assert.hpp"
 #include "biquad_design.hpp"
 
 namespace kfr

@@ -467,8 +467,7 @@ struct expression_function : expression_with_arguments<Args...>, expression_trai
     constexpr static shape<dims> get_shape(const expression_function& self)
     {
         return self.fold(
-            [&](auto&&... args) KFR_INLINE_LAMBDA constexpr -> auto
-            {
+            [&](auto&&... args) KFR_INLINE_LAMBDA constexpr -> auto {
                 return internal_generic::common_shape<true>(
                     expression_traits<decltype(args)>::get_shape(args)...);
             });
@@ -512,8 +511,8 @@ struct expression_function : expression_with_arguments<Args...>, expression_trai
 };
 
 template <typename... Args, typename Fn>
-expression_function(const expression_with_arguments<Args...>& args, Fn&& fn)
-    -> expression_function<Fn, Args...>;
+expression_function(const expression_with_arguments<Args...>& args,
+                    Fn&& fn) -> expression_function<Fn, Args...>;
 template <typename... Args, typename Fn>
 expression_function(expression_with_arguments<Args...>&& args, Fn&& fn) -> expression_function<Fn, Args...>;
 template <typename... Args, typename Fn>
@@ -893,52 +892,42 @@ inline vec<T, N> get_fn_value(size_t index, Fn&& fn)
 }
 } // namespace internal
 
-template <typename E, typename Fn, KFR_ENABLE_IF(std::is_invocable_v<Fn, size_t>)>
-void test_expression(const E& expr, size_t size, Fn&& fn, const char* expression = nullptr,
-                     const char* file = nullptr, int line = 0)
-{
-    static_assert(expression_dims<E> == 1, "CHECK_EXPRESSION supports only 1-dim expressions");
-    using T                  = expression_value_type<E>;
-    size_t expr_size         = get_shape(expr).front();
-    ::testo::test_case* test = ::testo::active_test();
-    auto&& c                 = ::testo::make_comparison();
-    test->check(c <= expr_size == size, expression, file, line);
-    if (expr_size != size)
-        return;
-    size                     = min(shape<1>(size), shape<1>(200)).front();
-    constexpr size_t maxsize = 2 + ilog2(vector_width<T> * 2);
-    size_t g                 = 1;
-    for (size_t i = 0; i < size;)
-    {
-        const size_t next_size = std::min(prev_poweroftwo(size - i), g);
-        g *= 2;
-        if (g > (1 << (maxsize - 1)))
-            g = 1;
+#define CHECK_EXPRESSION(...)                                                                                \
+    []<typename E, typename Fn>(const E& expr, size_t size, Fn&& fn)                                         \
+    {                                                                                                        \
+        static_assert(expression_dims<E> == 1, "CHECK_EXPRESSION supports only 1-dim expressions");          \
+        using T          = expression_value_type<E>;                                                         \
+        size_t expr_size = get_shape(expr).front();                                                          \
+        CHECK(expr_size == size);                                                                            \
+        if (expr_size != size)                                                                               \
+            return;                                                                                          \
+        size                     = min(shape<1>(size), shape<1>(200)).front();                               \
+        constexpr size_t maxsize = 2 + ilog2(vector_width<T> * 2);                                           \
+        size_t g                 = 1;                                                                        \
+        for (size_t i = 0; i < size;)                                                                        \
+        {                                                                                                    \
+            const size_t next_size = std::min(prev_poweroftwo(size - i), g);                                 \
+            g *= 2;                                                                                          \
+            if (g > (1 << (maxsize - 1)))                                                                    \
+                g = 1;                                                                                       \
+                                                                                                             \
+            cswitch(csize<1> << csizeseq<maxsize>, next_size,                                                \
+                    [&](auto x)                                                                              \
+                    {                                                                                        \
+                        constexpr size_t nsize = val_of(decltype(x)());                                      \
+                        INFO(as_string("i = ", i, " width = ", nsize));                                      \
+                        CHECK_THAT(get_elements(expr, shape<1>(i), axis_params_v<0, nsize>),                 \
+                                   DeepMatcher(internal::get_fn_value<T, nsize>(i, fn)));                    \
+                    });                                                                                      \
+            i += next_size;                                                                                  \
+        }                                                                                                    \
+    }(__VA_ARGS__)
 
-        cswitch(csize<1> << csizeseq<maxsize>, next_size,
-                [&](auto x)
-                {
-                    constexpr size_t nsize = val_of(decltype(x)());
-                    ::testo::scope s(as_string("i = ", i, " width = ", nsize));
-                    test->check(c <= get_elements(expr, shape<1>(i), axis_params_v<0, nsize>) ==
-                                    internal::get_fn_value<T, nsize>(i, fn),
-                                expression, file, line);
-                });
-        i += next_size;
-    }
-}
+#define CHECK_EXPRESSION_LIST(...)                                                                           \
+    []<typename E_, typename T_ = expression_value_type<E_>>(const E_& expr,                                 \
+                                                             std::initializer_list<kfr::identity<T_>> list)  \
+    { CHECK_EXPRESSION(expr, list.size(), [&](size_t i) { return list.begin()[i]; }); }(__VA_ARGS__)
 
-template <typename E, typename T = expression_value_type<E>>
-void test_expression(const E& expr, std::initializer_list<kfr::identity<T>> list,
-                     const char* expression = nullptr, const char* file = nullptr, int line = 0)
-{
-    test_expression(expr, list.size(), [&](size_t i) { return list.begin()[i]; }, expression, file, line);
-}
-#define TESTO_CHECK_EXPRESSION(expr, ...) ::kfr::test_expression(expr, __VA_ARGS__, #expr, __FILE__, __LINE__)
-
-#ifndef TESTO_NO_SHORT_MACROS
-#define CHECK_EXPRESSION TESTO_CHECK_EXPRESSION
-#endif
 #endif
 
 } // namespace KFR_ARCH_NAME

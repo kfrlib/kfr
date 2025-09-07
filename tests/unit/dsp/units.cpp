@@ -11,54 +11,54 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-TEST(note_to_hertz)
+TEST_CASE("note_to_hertz")
 {
-    testo::epsilon_scope<void> eps(2000);
-    CHECK(kfr::note_to_hertz(60) == fbase(261.6255653005986346778499935233));
-    CHECK(kfr::note_to_hertz(pack(60)) == pack(fbase(261.6255653005986346778499935233)));
+    epsilon_scope<void> eps(2000);
+    CHECK_THAT((kfr::note_to_hertz(60) ), DeepMatcher( fbase(261.6255653005986346778499935233)));
+    CHECK_THAT((kfr::note_to_hertz(pack(60))), DeepMatcher(pack(fbase(261.6255653005986346778499935233))));
 
-    CHECK(kfr::note_to_hertz(69) == fbase(440.0));
-    CHECK(kfr::note_to_hertz(pack(69)) == pack(fbase(440)));
+    CHECK_THAT((kfr::note_to_hertz(69) ), DeepMatcher( fbase(440.0)));
+    CHECK_THAT((kfr::note_to_hertz(pack(69))), DeepMatcher(pack(fbase(440))));
 }
 
-TEST(hertz_to_note)
+TEST_CASE("hertz_to_note")
 {
-    testo::epsilon_scope<void> eps(1000);
-    CHECK(kfr::hertz_to_note(261.6255653005986346778499935233) == fbase(60));
-    CHECK(kfr::hertz_to_note(pack(261.6255653005986346778499935233)) == pack(fbase(60)));
+    epsilon_scope<void> eps(1000);
+    CHECK_THAT((kfr::hertz_to_note(261.6255653005986346778499935233) ), DeepMatcher( fbase(60)));
+    CHECK_THAT((kfr::hertz_to_note(pack(261.6255653005986346778499935233))), DeepMatcher(pack(fbase(60))));
 
-    CHECK(kfr::hertz_to_note(440) == fbase(69));
-    CHECK(kfr::hertz_to_note(pack(440)) == pack(fbase(69)));
+    CHECK_THAT((kfr::hertz_to_note(440) ), DeepMatcher( fbase(69)));
+    CHECK_THAT((kfr::hertz_to_note(pack(440))), DeepMatcher(pack(fbase(69))));
 }
 
-TEST(amp_to_dB)
+TEST_CASE("amp_to_dB")
 {
-    testo::epsilon_scope<void> eps(1000);
+    epsilon_scope<void> eps(1000);
 
-    CHECK(kfr::amp_to_dB(fbase(2.0)) == fbase(6.0205999132796239042747778944899));
-    CHECK(kfr::amp_to_dB(fbase(-2.0)) == fbase(6.0205999132796239042747778944899));
-    CHECK(kfr::amp_to_dB(fbase(1.0)) == fbase(0));
-    CHECK(kfr::amp_to_dB(fbase(-1.0)) == fbase(0));
-    CHECK(kfr::amp_to_dB(fbase(0.5)) == fbase(-6.0205999132796239042747778944899));
-    CHECK(kfr::amp_to_dB(fbase(-0.5)) == fbase(-6.0205999132796239042747778944899));
-    CHECK(kfr::amp_to_dB(fbase(0.0)) == fbase(-HUGE_VAL));
+    CHECK_THAT((kfr::amp_to_dB(fbase(2.0)) ), DeepMatcher( fbase(6.0205999132796239042747778944899)));
+    CHECK_THAT((kfr::amp_to_dB(fbase(-2.0)) ), DeepMatcher( fbase(6.0205999132796239042747778944899)));
+    CHECK_THAT((kfr::amp_to_dB(fbase(1.0)) ), DeepMatcher( fbase(0)));
+    CHECK_THAT((kfr::amp_to_dB(fbase(-1.0)) ), DeepMatcher( fbase(0)));
+    CHECK_THAT((kfr::amp_to_dB(fbase(0.5)) ), DeepMatcher( fbase(-6.0205999132796239042747778944899)));
+    CHECK_THAT((kfr::amp_to_dB(fbase(-0.5)) ), DeepMatcher( fbase(-6.0205999132796239042747778944899)));
+    CHECK_THAT((kfr::amp_to_dB(fbase(0.0)) ), DeepMatcher( fbase(-HUGE_VAL)));
 }
 
-TEST(dB_to_amp)
+TEST_CASE("dB_to_amp")
 {
 #if defined __clang__ && defined(KFR_ARCH_ARM) && __clang_major__ >= 13
     // Clang 13+ compiler bug on ARM
 #else
-    testo::epsilon_scope<void> eps(1000);
+    epsilon_scope<void> eps(1000);
 
-    CHECK(kfr::exp(fbase(-HUGE_VAL)) == fbase(0.0));
-    CHECK(kfr::exp2(fbase(-HUGE_VAL)) == fbase(0.0));
-    CHECK(kfr::exp10(fbase(-HUGE_VAL)) == fbase(0.0));
+    CHECK_THAT((kfr::exp(fbase(-HUGE_VAL)) ), DeepMatcher( fbase(0.0)));
+    CHECK_THAT((kfr::exp2(fbase(-HUGE_VAL)) ), DeepMatcher( fbase(0.0)));
+    CHECK_THAT((kfr::exp10(fbase(-HUGE_VAL)) ), DeepMatcher( fbase(0.0)));
 
-    CHECK(kfr::dB_to_amp(fbase(-HUGE_VAL)) == fbase(0.0));
-    CHECK(kfr::dB_to_amp(fbase(0.0)) == fbase(1.0));
-    CHECK(kfr::dB_to_amp(fbase(6.0205999132796239042747778944899)) == fbase(2.0));
-    CHECK(kfr::dB_to_amp(fbase(-6.0205999132796239042747778944899)) == fbase(0.5));
+    CHECK_THAT((kfr::dB_to_amp(fbase(-HUGE_VAL)) ), DeepMatcher( fbase(0.0)));
+    CHECK_THAT((kfr::dB_to_amp(fbase(0.0)) ), DeepMatcher( fbase(1.0)));
+    CHECK_THAT((kfr::dB_to_amp(fbase(6.0205999132796239042747778944899)) ), DeepMatcher( fbase(2.0)));
+    CHECK_THAT((kfr::dB_to_amp(fbase(-6.0205999132796239042747778944899)) ), DeepMatcher( fbase(0.5)));
 #endif
 }
 

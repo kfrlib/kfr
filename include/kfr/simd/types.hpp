@@ -42,7 +42,7 @@ KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wignored-qualifiers")
 
 #ifdef KFR_TESTING
 #include "../meta/function.hpp"
-#include "../testo/testo.hpp"
+#include "../test/test.hpp"
 #endif
 
 #include "../meta.hpp"

@@ -14,54 +14,54 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-TEST(reduce)
+TEST_CASE("reduce")
 {
-    testo::epsilon_scope<void> e(100);
+    epsilon_scope<void> e(100);
     {
         univector<float, 6> a({ 1, 2, 3, 4, 5, -9 });
-        CHECK(sum(a) == 6);
-        CHECK(mean(a) == 1);
-        CHECK(minof(a) == -9);
-        CHECK(maxof(a) == 5);
-        CHECK(absminof(a) == 1);
-        CHECK(absmaxof(a) == 9);
-        CHECK(sumsqr(a) == 136);
-        CHECK(rms(a) == 4.760952285695233f);
-        CHECK(product(a) == -1080);
+        CHECK_THAT((sum(a)), DeepMatcher(6));
+        CHECK_THAT((mean(a)), DeepMatcher(1));
+        CHECK_THAT((minof(a)), DeepMatcher(-9));
+        CHECK_THAT((maxof(a)), DeepMatcher(5));
+        CHECK_THAT((absminof(a)), DeepMatcher(1));
+        CHECK_THAT((absmaxof(a)), DeepMatcher(9));
+        CHECK_THAT((sumsqr(a)), DeepMatcher(136));
+        CHECK_THAT((rms(a)), DeepMatcher(4.760952285695233f));
+        CHECK_THAT((product(a)), DeepMatcher(-1080));
     }
     {
         univector<double, 6> a({ 1, 2, 3, 4, 5, -9 });
-        CHECK(sum(a) == 6);
-        CHECK(mean(a) == 1);
-        CHECK(minof(a) == -9);
-        CHECK(maxof(a) == 5);
-        CHECK(absminof(a) == 1);
-        CHECK(absmaxof(a) == 9);
-        CHECK(sumsqr(a) == 136);
-        CHECK(rms(a) == 4.760952285695233);
-        CHECK(product(a) == -1080);
+        CHECK_THAT((sum(a)), DeepMatcher(6));
+        CHECK_THAT((mean(a)), DeepMatcher(1));
+        CHECK_THAT((minof(a)), DeepMatcher(-9));
+        CHECK_THAT((maxof(a)), DeepMatcher(5));
+        CHECK_THAT((absminof(a)), DeepMatcher(1));
+        CHECK_THAT((absmaxof(a)), DeepMatcher(9));
+        CHECK_THAT((sumsqr(a)), DeepMatcher(136));
+        CHECK_THAT((rms(a)), DeepMatcher(4.760952285695233));
+        CHECK_THAT((product(a)), DeepMatcher(-1080));
     }
     {
         univector<int, 6> a({ 1, 2, 3, 4, 5, -9 });
-        CHECK(sum(a) == 6);
-        CHECK(mean(a) == 1);
-        CHECK(minof(a) == -9);
-        CHECK(maxof(a) == 5);
-        CHECK(absminof(a) == 1);
-        CHECK(absmaxof(a) == 9);
-        CHECK(sumsqr(a) == 136);
-        CHECK(product(a) == -1080);
+        CHECK_THAT((sum(a)), DeepMatcher(6));
+        CHECK_THAT((mean(a)), DeepMatcher(1));
+        CHECK_THAT((minof(a)), DeepMatcher(-9));
+        CHECK_THAT((maxof(a)), DeepMatcher(5));
+        CHECK_THAT((absminof(a)), DeepMatcher(1));
+        CHECK_THAT((absmaxof(a)), DeepMatcher(9));
+        CHECK_THAT((sumsqr(a)), DeepMatcher(136));
+        CHECK_THAT((product(a)), DeepMatcher(-1080));
     }
 }
 
-TEST(dotproduct)
+TEST_CASE("dotproduct")
 {
     univector<float, 177> v1 = counter();
     univector<float, 177> v2 = counter() * 2 + 10;
-    CHECK(dotproduct(v1, v2) == 3821312);
+    CHECK_THAT((dotproduct(v1, v2)), DeepMatcher(3821312));
 }
 
-TEST(histogram)
+TEST_CASE("histogram")
 {
     univector<int, 16> v{ 1, 9, 5, 2, 1, -3, 100, 19, -4, -3, 1, 5, 9, 8, 0, 1 };
     auto h = histogram<10>(v);
@@ -97,7 +97,7 @@ TEST(histogram)
     CHECK(h2[9] == 2);
 }
 
-TEST(reduce_multidim)
+TEST_CASE("reduce_multidim")
 {
     CHECK(sum(tensor<int, 2>(shape{ 3, 3 }, { 1, 2, 3, 4, 5, 6, 7, 8, 9 })) == 45); //
     CHECK(sum(tensor<int, 3>(shape{ 2, 2, 2 }, { 1, 2, 3, 4, 5, 6, 7, 8 })) == 36); //

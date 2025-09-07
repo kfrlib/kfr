@@ -4,7 +4,7 @@
  * See LICENSE.txt for details
  */
 
-#include <kfr/testo/testo.hpp>
+#include <kfr/test/test.hpp>
 
 #include <kfr/base.hpp>
 #include <kfr/dsp/oscillators.hpp>
@@ -14,14 +14,14 @@ using namespace kfr;
 namespace KFR_ARCH_NAME
 {
 
-TEST(sine_type)
+TEST_CASE("sine_type")
 {
     double ph = 0.0;
     using T   = decltype(sine(ph));
     static_assert(std::is_same_v<T, double>);
 }
 
-TEST(phasor)
+TEST_CASE("phasor")
 {
     constexpr fbase sr       = 44100.0;
     univector<fbase, 100> v1 = sinenorm(phasor(15000, sr));

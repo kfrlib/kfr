@@ -19,10 +19,8 @@ KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
 KFR_PRAGMA_MSVC(warning(push))
 KFR_PRAGMA_MSVC(warning(disable : 4018))
 
-namespace testo
+namespace kfr
 {
-
-using namespace kfr;
 
 template <typename Fn, typename L, typename R>
 struct comparison
@@ -243,7 +241,7 @@ struct make_comparison
         return half_comparison<L>(std::forward<L>(left));
     }
 };
-} // namespace testo
+} // namespace kfr
 
 KFR_PRAGMA_MSVC(warning(pop))
 KFR_PRAGMA_GNU(GCC diagnostic pop)

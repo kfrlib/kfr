@@ -71,7 +71,7 @@ static void test_transpose(size_t rows, size_t cols, size_t mark = 10000)
 
     matrix_transpose(d2.data(), d.data(), shape{ rows, cols });
 
-    testo::scope s(as_string("type=", type_name<T>(), " rows=", rows, " cols=", cols));
+    INFO(as_string("type=", type_name<T>(), " rows=", rows, " cols=", cols));
 
     auto erro = maxof(cabs(t2 - expression_test_matrix<T, true>(rows, cols, mark)));
     CHECK(erro == 0);
@@ -88,7 +88,7 @@ static void test_transpose(size_t rows, size_t cols, size_t mark = 10000)
     test_transpose<complex<double>>(rows, cols, mark);
 }
 
-TEST(matrix_transpose)
+TEST_CASE("matrix_transpose")
 {
     constexpr size_t limit = 100;
 

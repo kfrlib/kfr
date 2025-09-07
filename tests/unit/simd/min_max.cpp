@@ -15,14 +15,14 @@ namespace kfr
 {
 inline namespace KFR_ARCH_NAME
 {
-TEST(min)
+TEST_CASE("min")
 {
     test_function2(
         test_catogories::all, [](auto x, auto y) { return kfr::min(x, y); },
         [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)> { return x <= y ? x : y; });
 }
 
-TEST(max)
+TEST_CASE("max")
 {
     test_function2(
         test_catogories::all, [](auto x, auto y) { return kfr::max(x, y); },
@@ -44,7 +44,7 @@ struct IsNotMinInt
     }
 };
 
-TEST(absmin)
+TEST_CASE("absmin")
 {
     test_function2(
         test_catogories::all, [](auto x, auto y) { return kfr::absmin(x, y); },
@@ -57,7 +57,7 @@ TEST(absmin)
         IsNotMinInt{});
 }
 
-TEST(absmax)
+TEST_CASE("absmax")
 {
     test_function2(
         test_catogories::all, [](auto x, auto y) { return kfr::absmax(x, y); },

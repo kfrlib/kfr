@@ -55,10 +55,10 @@
     struct FN                                                                                                \
     {                                                                                                        \
         template <typename... Args>                                                                          \
-        KFR_INLINE_MEMBER decltype(::kfr::intr::FN(std::declval<Args>()...)) operator()(               \
+        KFR_INLINE_MEMBER decltype(::kfr::intr::FN(std::declval<Args>()...)) operator()(                     \
             Args&&... args) const                                                                            \
         {                                                                                                    \
-            return ::kfr::intr::FN(std::forward<Args>(args)...);                                       \
+            return ::kfr::intr::FN(std::forward<Args>(args)...);                                             \
         }                                                                                                    \
     };                                                                                                       \
     }
@@ -215,7 +215,7 @@ struct compoundcast<vec<vec<T, N1>, N2>>
 template <typename T, size_t N_>
 inline constexpr size_t vec_alignment =
     const_max(alignof(intr::simd<typename compound_type_traits<T>::deep_subtype,
-                                       const_max(size_t(1), N_) * compound_type_traits<T>::deep_width>),
+                                 const_max(size_t(1), N_) * compound_type_traits<T>::deep_width>),
               const_min(size_t(platform<>::native_vector_alignment),
                         next_poweroftwo(sizeof(typename compound_type_traits<T>::deep_subtype) *
                                         const_max(size_t(1), N_) * compound_type_traits<T>::deep_width)));
@@ -310,8 +310,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     template <typename U,
               KFR_ENABLE_IF(std::is_convertible_v<U, value_type>&& compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC vec(const U& s) KFR_NOEXCEPT
-        : v(intr::simd_broadcast(intr::simd_t<unwrap_bit<ST>, SN>{},
-                                       unwrap_bit_value(static_cast<ST>(s))))
+        : v(intr::simd_broadcast(intr::simd_t<unwrap_bit<ST>, SN>{}, unwrap_bit_value(static_cast<ST>(s))))
     {
     }
 
@@ -319,8 +318,8 @@ struct alignas(internal::vec_alignment<T, N_>) vec
               KFR_ENABLE_IF(std::is_convertible_v<U, value_type> && !compound_type_traits<T>::is_scalar)>
     KFR_MEM_INTRINSIC vec(const U& s) KFR_NOEXCEPT
         : v(intr::simd_shuffle(intr::simd_t<unwrap_bit<ST>, SW>{},
-                                     internal::compoundcast<T>::to_flat(static_cast<T>(s)).v,
-                                     csizeseq<SN> % csize<SW>, overload_auto))
+                               internal::compoundcast<T>::to_flat(static_cast<T>(s)).v,
+                               csizeseq<SN> % csize<SW>, overload_auto))
     {
     }
 
@@ -343,8 +342,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, value_type> &&
                                         (compound_type_traits<T>::is_scalar && !is_bit<U>))>
     KFR_MEM_INTRINSIC vec(const vec<U, N>& x) KFR_NOEXCEPT
-        : v(intr::simd_convert(
-              intr::simd_cvt_t<unwrap_bit<ST>, unwrap_bit<deep_subtype<U>>, SN>{}, x.v))
+        : v(intr::simd_convert(intr::simd_cvt_t<unwrap_bit<ST>, unwrap_bit<deep_subtype<U>>, SN>{}, x.v))
     {
     }
 
@@ -410,8 +408,8 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     template <size_t... indices>
     KFR_MEM_INTRINSIC vec<value_type, sizeof...(indices)> shuffle(csizes_t<indices...> i) const KFR_NOEXCEPT
     {
-        return vec<value_type, sizeof...(indices)>(intr::simd_shuffle(
-            intr::simd_t<unwrap_bit<ST>, SN>{}, v, scale<SW>(i), overload_auto));
+        return vec<value_type, sizeof...(indices)>(
+            intr::simd_shuffle(intr::simd_t<unwrap_bit<ST>, SN>{}, v, scale<SW>(i), overload_auto));
     }
 
     template <size_t... indices>
@@ -931,7 +929,7 @@ struct conditional_common<false, Tfallback, Args...>
 
 /// Create vector from scalar values
 /// @code
-/// CHECK( make_vector( 1, 2, 3, 4 ) == i32x4{1, 2, 3, 4} );
+/// CHECK_THAT(( make_vector( 1, 2, 3, 4 ) ), DeepMatcher( i32x4{1, 2, 3, 4} ));
 /// @endcode
 template <typename Type = void, typename Arg, typename... Args, size_t N = (sizeof...(Args) + 1),
           typename SubType =
@@ -1228,6 +1226,22 @@ struct vecvec_template
 
 #ifdef KFR_TESTING
 
+template <typename T1>
+struct DeepMatcher : Catch::Matchers::MatcherGenericBase
+{
+    DeepMatcher(const T1& value) : value{ value } {}
+
+    template <typename T2>
+    bool match(const T2& other) const
+    {
+        return deep_is_equal(value, other);
+    }
+
+    std::string describe() const override { return "Deeply equals: " + as_string(value); }
+
+    const T1& value;
+};
+
 inline const std::vector<special_value>& special_values()
 {
     static const std::vector<special_value> values{ special_constant::infinity,
@@ -1273,35 +1287,32 @@ vec<T, N> test_enumerate(vec_shape<T, N>, csizes_t<indices...>, double start = 0
 template <int Cat, typename Fn, typename RefFn, typename IsApplicable = fn_return_constant<bool, true>>
 void test_function1(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isapplicable = IsApplicable{})
 {
-    testo::matrix(named("value") = special_values(), named("type") = test_catogories::types(cat),
-                  [&](special_value value, auto type)
-                  {
-                      using T = typename decltype(type)::type;
-                      if (isapplicable(kfr::ctype<T>, value))
-                      {
-                          const T x(value);
+    test_matrix(named("value") = special_values(), named("type") = test_catogories::types(cat),
+                [&](special_value value, auto type)
+                {
+                    using T = typename decltype(type)::type;
+                    if (isapplicable(kfr::ctype<T>, value))
+                    {
+                        const T x(value);
 #if !defined(_MSC_VER) || defined(__clang__)
-                          // Supress ICE in MSVC
-                          using RefFnTy = decltype(std::declval<RefFn>()(std::declval<subtype<T>>()));
-                          CHECK(std::is_same_v<decltype(fn(x)),
-                                               typename compound_type_traits<T>::template rebind<RefFnTy>>);
+                        // Supress ICE in MSVC
+                        using RefFnTy = decltype(std::declval<RefFn>()(std::declval<subtype<T>>()));
+                        CHECK(std::is_same_v<decltype(fn(x)),
+                                             typename compound_type_traits<T>::template rebind<RefFnTy>>);
 #endif
-                          const auto fn_x  = fn(x);
-                          const auto ref_x = apply(reffn, x);
-                          ::testo::active_test()->check(testo::deep_is_equal(ref_x, fn_x),
-                                                        as_string(fn_x, " == ", ref_x),
-                                                        "fn(x) == apply(reffn, x)", __FILE__, __LINE__);
-                          //   CHECK(fn(x) == apply(reffn, x));
-                      }
-                  });
+                        const auto fn_x  = fn(x);
+                        const auto ref_x = apply(reffn, x);
+                        CHECK_THAT(fn_x, DeepMatcher(ref_x));
+                    }
+                });
 
-    testo::matrix(named("type") = test_catogories::types(cint < Cat & ~1 >),
-                  [&](auto type)
-                  {
-                      using T   = typename decltype(type)::type;
-                      const T x = test_enumerate(T::shape(), csizeseq<T::size()>, 0);
-                      CHECK(fn(x) == apply(reffn, x));
-                  });
+    test_matrix(named("type") = test_catogories::types(cint<Cat & ~1>),
+                [&](auto type)
+                {
+                    using T   = typename decltype(type)::type;
+                    const T x = test_enumerate(T::shape(), csizeseq<T::size()>, 0);
+                    CHECK_THAT(fn(x), DeepMatcher(apply(reffn, x)));
+                });
 }
 
 template <int Cat, typename Fn, typename RefFn, typename IsApplicable = fn_return_constant<bool, true>,
@@ -1310,7 +1321,7 @@ void test_function2(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
                     IsDefined&& = IsDefined{})
 {
 
-    testo::matrix(
+    test_matrix(
         named("value1") = special_values(), //
         named("value2") = special_values(), named("type") = test_catogories::types(cat),
         [&](special_value value1, special_value value2, auto type)
@@ -1325,22 +1336,22 @@ void test_function2(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
                     CHECK(std::is_same_v<decltype(fn(x1, x2)),
                                          typename compound_type_traits<T>::template rebind<decltype(reffn(
                                              std::declval<subtype<T>>(), std::declval<subtype<T>>()))>>);
-                    CHECK(fn(x1, x2) == apply(reffn, x1, x2));
+                    CHECK_THAT(fn(x1, x2), DeepMatcher(apply(reffn, x1, x2)));
                 }
             }
         });
 
-    testo::matrix(named("type") = test_catogories::types(cint < Cat & ~1 >),
-                  [&](auto type)
-                  {
-                      using T    = typename decltype(type)::type;
-                      const T x1 = test_enumerate(T::shape(), csizeseq<T::size()>, 0, 1);
-                      const T x2 = test_enumerate(T::shape(), csizeseq<T::size()>, 100, -1);
-                      if constexpr (IsDefined{}(kfr::ctype<T>))
-                      {
-                          CHECK(fn(x1, x2) == apply(reffn, x1, x2));
-                      }
-                  });
+    test_matrix(named("type") = test_catogories::types(cint<Cat & ~1>),
+                [&](auto type)
+                {
+                    using T    = typename decltype(type)::type;
+                    const T x1 = test_enumerate(T::shape(), csizeseq<T::size()>, 0, 1);
+                    const T x2 = test_enumerate(T::shape(), csizeseq<T::size()>, 100, -1);
+                    if constexpr (IsDefined{}(kfr::ctype<T>))
+                    {
+                        CHECK_THAT(fn(x1, x2), DeepMatcher(apply(reffn, x1, x2)));
+                    }
+                });
 }
 
 #endif
@@ -1630,8 +1641,23 @@ struct representation<kfr::KFR_ARCH_NAME::mask<T, N>>
         return array_to_string(N, values);
     }
 };
-
 } // namespace kfr
+
+#ifdef KFR_TESTING
+namespace Catch
+{
+template <typename T, size_t N>
+struct StringMaker<kfr::KFR_ARCH_NAME::vec<T, N>>
+{
+    static std::string convert(const kfr::KFR_ARCH_NAME::vec<T, N>& value) { return as_string(value); }
+};
+template <typename T, size_t N>
+struct StringMaker<kfr::KFR_ARCH_NAME::mask<T, N>>
+{
+    static std::string convert(const kfr::KFR_ARCH_NAME::mask<T, N>& value) { return as_string(value); }
+};
+} // namespace Catch
+#endif
 
 KFR_PRAGMA_GNU(GCC diagnostic pop)
 KFR_PRAGMA_MSVC(warning(pop))

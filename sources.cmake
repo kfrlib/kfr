@@ -145,11 +145,10 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/specialconstants.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/specializations.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/intrinsics.h
-    ${PROJECT_SOURCE_DIR}/include/kfr/testo/assert.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/testo/comparison.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/testo/console_colors.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/testo/double_double.hpp
-    ${PROJECT_SOURCE_DIR}/include/kfr/testo/testo.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/test/assert.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/test/comparison.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/test/double_double.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/test/tests.hpp
 )
 
     

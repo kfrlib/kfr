@@ -4,6 +4,8 @@
  * See LICENSE.txt for details
  */
 
+#define KFR_ENABLE_EXPR_CMP
+
 #include <kfr/base/basic_expressions.hpp>
 #include <kfr/base/simd_expressions.hpp>
 #include <kfr/base/univector.hpp>
@@ -14,14 +16,14 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-TEST(expression_mask)
+TEST_CASE("expression_mask")
 {
     univector<float> x(100);
     univector<float> y(100);
     x = select(x > y, 0.5f, 0.1f) * (y - x) + x;
 }
 
-TEST(mix)
+TEST_CASE("mix")
 {
     CHECK_EXPRESSION(mix(sequence(0, 0.5f, 1, 0.5f), counter(), counter() * 10), infinite_size, [](size_t i)
                      { return mix(std::array<float, 4>{ 0, 0.5f, 1, 0.5f }[i % 4], i, i * 10); });

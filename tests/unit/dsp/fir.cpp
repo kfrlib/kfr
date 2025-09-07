@@ -12,7 +12,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-TEST(fir_state)
+TEST_CASE("fir_state")
 {
     fir_state<float, float> state(univector<float>{ 1, 2, 3, 4, 5, 6 });
     {
@@ -33,10 +33,10 @@ TEST(fir_state)
     }
 }
 
-TEST(fir)
+TEST_CASE("fir")
 {
 #ifdef KFR_COMPILER_IS_MSVC
-    // testo::matrix causes error in MSVC
+    // test_matrix causes error in MSVC
     {
         using T = float;
 
@@ -86,7 +86,7 @@ TEST(fir)
                          });
     }
 #else
-    testo::matrix(named("type") = ctypes_t<float
+    test_matrix(named("type") = ctypes_t<float
 #ifdef KFR_NATIVE_F64
                                            ,
                                            double
@@ -175,7 +175,7 @@ TEST(fir)
 }
 
 #ifdef KFR_NATIVE_F64
-TEST(fir_different)
+TEST_CASE("fir_different")
 {
     const univector<float, 100> data = counter() + sequence(1, 2, -10, 100) + sequence(0, -7, 0.5f);
     //    const univector<double, 6> taps{ 1, 2, -2, 0.5, 0.0625, 4 };
@@ -201,7 +201,7 @@ TEST(fir_different)
 }
 #endif
 
-TEST(fir_complex)
+TEST_CASE("fir_complex")
 {
     const univector<complex<float>, 100> data =
         counter() * complex<float>{ 0.f, 1.f } + sequence(1, 2, -10, 100) + sequence(0, -7, 0.5f);

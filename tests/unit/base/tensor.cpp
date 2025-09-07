@@ -23,7 +23,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-TEST(tensor_base)
+TEST_CASE("tensor_base")
 {
     tensor<float, 2> t{ shape{ 20, 40 } };
     CHECK(t.shape() == shape{ 20, 40 });
@@ -55,7 +55,7 @@ TEST(tensor_base)
     CHECK(t3.finalizer() == t.finalizer());
 }
 
-TEST(tensor_memory)
+TEST_CASE("tensor_memory")
 {
     // reference
     std::vector<float> vector{ 1.23f };
@@ -94,7 +94,7 @@ TEST(tensor_memory)
     CHECK(refs == 0);
 }
 
-TEST(tensor_expression)
+TEST_CASE("tensor_expression")
 {
     tensor<float, 1> t1{ shape{ 32 }, 0.f };
     tensor<float, 1> t2{ shape{ 32 }, 100.f };
@@ -141,7 +141,7 @@ TEST(tensor_expression)
     CHECK(sum(t4) == 78);
 }
 
-TEST(tensor_broadcast)
+TEST_CASE("tensor_broadcast")
 {
     tensor<float, 2> t1{ shape{ 1, 5 }, { 1.f, 2.f, 3.f, 4.f, 5.f } };
     tensor<float, 2> t2{ shape{ 5, 1 }, { 10.f, 20.f, 30.f, 40.f, 50.f } };
@@ -232,7 +232,7 @@ KFR_INTRINSIC void set_elements(std::array<std::array<T, N1>, N2>& KFR_RESTRICT 
     }
 }
 
-TEST(tensor_slice)
+TEST_CASE("tensor_slice")
 {
     tensor<double, 3> t1{
         { { 0, 1, 2 }, { 3, 4, 5 }, { 6, 7, 8 } },
@@ -245,13 +245,13 @@ TEST(tensor_slice)
           trender(truncate(counter(13.0, 9, 3, 1), shape{ 2, 2, 2 })));
 }
 
-TEST(scalars)
+TEST_CASE("scalars")
 {
     CHECK(trender(scalar(3)) == tensor<int, 0>{});
     CHECK(trender(scalar(3)).to_string() == "3");
 }
 
-TEST(tensor_lambda)
+TEST_CASE("tensor_lambda")
 {
     CHECK(trender(lambda<float, 2>([](shape<2> idx) -> float { return 1 + idx[1] + 3 * idx[0]; }),
                   shape{ 3, 3 }) ==
@@ -270,17 +270,17 @@ TEST(tensor_lambda)
           });
 }
 
-TEST(tensor_expressions2)
+TEST_CASE("tensor_expressions2")
 {
     auto aa = std::array<std::array<double, 2>, 2>{ { { { 1, 2 } }, { { 3, 4 } } } };
     static_assert(expression_traits<decltype(aa)>::dims == 2);
     CHECK(expression_traits<decltype(aa)>::get_shape(aa) == shape{ 2, 2 });
-    CHECK(get_elements(aa, { 1, 1 }, axis_params<1, 1>{}) == vec{ 4. });
-    CHECK(get_elements(aa, { 1, 0 }, axis_params<1, 2>{}) == vec{ 3., 4. });
+    CHECK_THAT((get_elements(aa, { 1, 1 }, axis_params<1, 1>{})), DeepMatcher(vec{ 4. }));
+    CHECK_THAT((get_elements(aa, { 1, 0 }, axis_params<1, 2>{})), DeepMatcher(vec{ 3., 4. }));
 
     static_assert(expression_traits<decltype(1234.f)>::dims == 0);
     CHECK(expression_traits<decltype(1234.f)>::get_shape(1234.f) == shape{});
-    CHECK(get_elements(1234.f, {}, axis_params<0, 3>{}) == vec{ 1234.f, 1234.f, 1234.f });
+    CHECK_THAT((get_elements(1234.f, {}, axis_params<0, 3>{})), DeepMatcher(vec{ 1234.f, 1234.f, 1234.f }));
 
     process(aa, 123.45f);
 
@@ -291,10 +291,11 @@ TEST(tensor_expressions2)
 
     process(aa, a);
 
-    CHECK(aa == std::array<std::array<double, 2>, 2>{ { { { -5., +5. } }, { { -5., +5. } } } });
+    CHECK_THAT((aa),
+               DeepMatcher(std::array<std::array<double, 2>, 2>{ { { { -5., +5. } }, { { -5., +5. } } } }));
 }
 
-TEST(tensor_counter)
+TEST_CASE("tensor_counter")
 {
     std::array<double, 6> x;
 
@@ -314,7 +315,7 @@ TEST(tensor_counter)
 }
 namespace tests
 {
-TEST(tensor_dims)
+TEST_CASE("tensor_dims")
 {
     tensor<double, 6> t12{ shape{ 2, 3, 4, 5, 6, 7 } };
 
@@ -327,14 +328,15 @@ TEST(tensor_dims)
 }
 } // namespace tests
 
-TEST(vec_from_cvals)
+TEST_CASE("vec_from_cvals")
 {
-    CHECK(make_vector(csizes<1, 2, 3, 4>) == make_vector<size_t>(1, 2, 3, 4));
-    CHECK(make_vector(cconcat(cvalseq<index_t, 2, 0, 0>, cvalseq<index_t, 1, 1>,
-                              cvalseq<index_t, 2, 0, 0>)) == make_vector<size_t>(0, 0, 1, 0, 0));
+    CHECK_THAT((make_vector(csizes<1, 2, 3, 4>)), DeepMatcher(make_vector<size_t>(1, 2, 3, 4)));
+    CHECK_THAT(
+        (make_vector(cconcat(cvalseq<index_t, 2, 0, 0>, cvalseq<index_t, 1, 1>, cvalseq<index_t, 2, 0, 0>))),
+        DeepMatcher(make_vector<size_t>(0, 0, 1, 0, 0)));
 }
 
-TEST(xfunction_test)
+TEST_CASE("xfunction_test")
 {
     auto f = expression_function{ expression_with_arguments{ 3.f, 4.f }, std::plus<>{} };
     float v;
@@ -369,7 +371,7 @@ TEST(xfunction_test)
                                                        { { 501.f, 502.f, 503.f, 504.f, 505.f } } } });
 }
 
-TEST(xfunction_test2)
+TEST_CASE("xfunction_test2")
 {
     CHECK(trender(abs(tensor<float, 2>{ { 1, -2 }, { -1, 3 } })) == tensor<float, 2>{ { 1, 2 }, { 1, 3 } });
     CHECK(trender(min(tensor<float, 2>{ { 1, -2 }, { -1, 3 } }, tensor<float, 2>{ { 0, 3 }, { 2, 1 } })) ==
@@ -393,7 +395,7 @@ KFR_FUNCTION expression_counter<Type, Dims> debug_counter(uint64_t scale = 10)
 static std::string nl = R"(
 )";
 
-TEST(tensor_tostring)
+TEST_CASE("tensor_tostring")
 {
     CHECK(as_string(shape{}) == "shape{}");
     CHECK(as_string(shape{ 1, 2, 3 }) == "shape{1, 2, 3}");
@@ -481,8 +483,7 @@ static void test_reshape_body(const tensor<T, dims1>& t1, const tensor<T, dims2>
              [&](auto x)
              {
                  constexpr index_t axis = val_of(decltype(x)());
-                 ::testo::scope s(
-                     as_string("axis = ", axis, " shape = (", t1.shape(), ") -> (", t2.shape(), ")"));
+                 INFO(as_string("axis = ", axis, " shape = (", t1.shape(), ") -> (", t2.shape(), ")"));
                  CHECK(trender<1, axis>(reshape(t1, t2.shape())) == t2);
                  CHECK(trender<2, axis>(reshape(t1, t2.shape())) == t2);
                  CHECK(trender<4, axis>(reshape(t1, t2.shape())) == t2);
@@ -505,7 +506,7 @@ static void test_reshape(const tensor<T, dims1>& t1, const tensor<T, dims>&... t
     test_reshape(ts...);
 }
 
-TEST(expression_reshape)
+TEST_CASE("expression_reshape")
 {
     std::array<float, 12> x;
     process(reshape(x, shape{ 3, 4 }), expression_counter<float, 2>{ 0, { 10, 1 } });
@@ -707,7 +708,7 @@ val& lvint_func()
     static val v;
     return v;
 }
-TEST(expression_with_arguments)
+TEST_CASE("expression_with_arguments")
 {
     expression_function fn1 = expression_function{ expression_with_arguments{ rvint_func() }, fn::add{} };
     static_assert(std::is_same_v<decltype(fn1)::nth<0>, val>);
@@ -720,7 +721,7 @@ TEST(expression_with_arguments)
     static_assert(std::is_same_v<decltype(fn3)::nth<0>, const val&>);
 }
 
-TEST(slices)
+TEST_CASE("slices")
 {
     const auto _ = std::nullopt;
     tensor<float, 1> t1{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
@@ -757,7 +758,7 @@ TEST(slices)
     CHECK(t1(trange(3, 3 + 12, 0)) == tensor<float, 1>{ 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3 });
 }
 
-TEST(complex_tensors)
+TEST_CASE("complex_tensors")
 {
     tensor<complex<float>, 1> t1{
         complex<float>(0, -1),
@@ -772,7 +773,7 @@ TEST(complex_tensors)
           tensor<complex<float>, 1>{ complex<float>(0, 1) });
 }
 
-TEST(from_ilist)
+TEST_CASE("from_ilist")
 {
     tensor<float, 1> t1{ 10, 20, 30, 40 };
     CHECK(t1 == tensor<float, 1>(shape{ 4 }, { 10, 20, 30, 40 }));
@@ -787,7 +788,7 @@ TEST(from_ilist)
     CHECK(t4 == tensor<float, 3>(shape{ 2, 2, 2 }, { 10, 20, 30, 40, 50, 60, 70, 80 }));
 }
 
-TEST(sharing_data)
+TEST_CASE("sharing_data")
 {
     tensor<int, 2> t{ { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } };
     auto t2  = t; // share data
@@ -802,7 +803,7 @@ TEST(sharing_data)
     CHECK(t == tensor<int, 2>{ { 0, 0, 30 }, { 0, 0, 6 }, { 7, 8, 9 } });
 }
 
-TEST(tensor_from_container)
+TEST_CASE("tensor_from_container")
 {
     std::vector<int> a{ 1, 2, 3 };
     auto t = tensor_from_container(a);
@@ -836,7 +837,7 @@ vec<T, N> get_elements(const identity_matrix<T, Size>& self, const shape<2>& ind
 inline namespace KFR_ARCH_NAME
 {
 
-TEST(identity_matrix)
+TEST_CASE("identity_matrix")
 {
     CHECK(trender(identity_matrix<float, 3>{}) == tensor<float, 2>{ { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } });
 }

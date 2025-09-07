@@ -6,12 +6,12 @@
 
 #include <kfr/meta.hpp>
 #include <kfr/meta/ctti.hpp>
-#include <kfr/testo/testo.hpp>
+#include <kfr/test/test.hpp>
 
 namespace kfr
 {
 
-TEST(ctti)
+TEST_CASE("ctti")
 {
     CHECK(kfr::type_name<float>() == std::string("float"));
     CHECK(kfr::type_name<int>() == std::string("int"));

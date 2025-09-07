@@ -14,7 +14,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-TEST(resampler_test)
+TEST_CASE("resampler_test")
 {
     const int in_sr  = 44100;
     const int out_sr = 48000;
@@ -30,7 +30,7 @@ TEST(resampler_test)
 
     CHECK(rms(slice(out - ref, static_cast<size_t>(ceil(delay * 2)))) < 0.005f);
 }
-TEST(resampler_test_complex)
+TEST_CASE("resampler_test_complex")
 {
     using type       = complex<fbase>;
     const int in_sr  = 44100;

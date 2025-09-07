@@ -15,7 +15,6 @@
 #include <kfr/dft/impl/fft-impl.hpp>
 #endif
 #include <kfr/io.hpp>
-#include <kfr/testo/console_colors.hpp>
 
 using namespace kfr;
 

@@ -15,7 +15,7 @@ namespace kfr
 {
 inline namespace KFR_ARCH_NAME
 {
-TEST(abs)
+TEST_CASE("abs")
 {
     test_function1(
         test_catogories::all, [](auto x) { return kfr::abs(x); },

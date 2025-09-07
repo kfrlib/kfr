@@ -222,6 +222,8 @@ KFR_INTRINSIC expression_make_function<fn::make_complex, E1, E2> make_complex(E1
     return { fn::make_complex{}, std::forward<E1>(re), std::forward<E2>(im) };
 }
 
+#ifdef KFR_ENABLE_EXPR_CMP
+
 template <typename E1, typename E2, KFR_ACCEPT_EXPRESSIONS(E1, E2)>
 KFR_INTRINSIC expression_make_function<fn::equal, E1, E2> operator==(E1&& e1, E2&& e2)
 {
@@ -257,6 +259,8 @@ KFR_INTRINSIC expression_make_function<fn::greaterorequal, E1, E2> operator>=(E1
 {
     return { fn::greaterorequal(), std::forward<E1>(e1), std::forward<E2>(e2) };
 }
+
+#endif
 
 /// @brief Returns the real part of the complex value
 template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>

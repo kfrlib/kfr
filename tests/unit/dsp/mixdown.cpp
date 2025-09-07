@@ -14,13 +14,13 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-TEST(mixdown)
+TEST_CASE("mixdown")
 {
     CHECK_EXPRESSION(mixdown(counter(), counter() * 2 + 100), infinite_size,
                      [](size_t i) { return i + i * 2 + 100; });
 }
 
-TEST(mixdown_stereo)
+TEST_CASE("mixdown_stereo")
 {
     const univector<double, 21> left  = counter();
     const univector<double, 21> right = counter() * 2 + 100;

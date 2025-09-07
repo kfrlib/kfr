@@ -4,7 +4,7 @@
  * See LICENSE.txt for details
  */
 
-#include <kfr/testo/testo.hpp>
+#include <kfr/test/test.hpp>
 
 #include <kfr/base/simd_expressions.hpp>
 #include <kfr/base/math_expressions.hpp>
@@ -15,7 +15,7 @@ using namespace kfr;
 namespace KFR_ARCH_NAME
 {
 
-TEST(complex_basic_expressions)
+TEST_CASE("complex_basic_expressions")
 {
     const univector<c32, 15> uv1 = zeros();
     CHECK(uv1[0] == c32{ 0, 0 });
@@ -34,7 +34,7 @@ TEST(complex_basic_expressions)
     CHECK(uv3[14] == c32{ 14, 0 });
 }
 
-TEST(complex_function_expressions)
+TEST_CASE("complex_function_expressions")
 {
     const univector<c32, 4> uv1 = sqr(counter());
     CHECK(uv1[0] == c32{ 0, 0 });
@@ -53,8 +53,8 @@ TEST(complex_function_expressions)
     CHECK(uv3[1] == 2.f);
     CHECK(uv3[2] == 8.f);
     CHECK(uv3[3] == 18.f);
-    testo::assert_is_same<c32, expression_value_type<decltype(uv2)>>();
-    testo::assert_is_same<f32, expression_value_type<decltype(uv3)>>();
-    testo::assert_is_same<f32, expression_value_type<decltype(real(uv2))>>();
+    assert_is_same<c32, expression_value_type<decltype(uv2)>>();
+    assert_is_same<f32, expression_value_type<decltype(uv3)>>();
+    assert_is_same<f32, expression_value_type<decltype(real(uv2))>>();
 }
 } // namespace KFR_ARCH_NAME

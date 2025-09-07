@@ -31,9 +31,9 @@ inline const univector<T, Tag>& choose_array(const univector<T2, Tag>&, const un
     return choose_array<T>(arrays...);
 }
 
-TEST(biquad_lowpass1)
+TEST_CASE("biquad_lowpass1")
 {
-    testo::matrix(named("type") = ctypes_t<float, double>{},
+    test_matrix(named("type") = ctypes_t<float, double>{},
                   [](auto type)
                   {
                       using T = typename decltype(type)::type;
@@ -72,9 +72,9 @@ TEST(biquad_lowpass1)
                   });
 }
 
-TEST(biquad_lowpass2)
+TEST_CASE("biquad_lowpass2")
 {
-    testo::matrix(named("type") = ctypes_t<float, double>{},
+    test_matrix(named("type") = ctypes_t<float, double>{},
                   [](auto type)
                   {
                       using T = typename decltype(type)::type;
@@ -113,7 +113,7 @@ TEST(biquad_lowpass2)
                   });
 }
 
-TEST(iir_filter)
+TEST_CASE("iir_filter")
 {
     biquad_section<float> params[16];
     auto f = iir_filter<float>(iir_params{ params });

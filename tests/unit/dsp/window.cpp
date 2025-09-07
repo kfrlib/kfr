@@ -44,12 +44,12 @@ template <window_type type, typename T>
 void win(size_t len, T arg, window_symmetry sym, univector<T> ref)
 {
     univector<T> calc = render(window(len, cval_t<window_type, type>{}, arg, sym, kfr::ctype<T>));
-    testo::scope sc(as_string("win=", wins[static_cast<int>(type)], " len=", len, " sym=",
-                              sym == window_symmetry::symmetric, "\n    calc=", calc, "\n    ref =", ref));
+    INFO(as_string("win=", wins[static_cast<int>(type)], " len=", len,
+                   " sym=", sym == window_symmetry::symmetric, "\n    calc=", calc, "\n    ref =", ref));
     CHECK(rms(calc - ref) < 0.00001f);
 }
 
-TEST(window)
+TEST_CASE("window")
 {
     using w = window_type;
     using s = window_symmetry;

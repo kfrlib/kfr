@@ -12,7 +12,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-TEST(fraction)
+TEST_CASE("fraction")
 {
     fraction f = 1;
     f          = f / 3;

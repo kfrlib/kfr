@@ -14,20 +14,20 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-TEST(linspace)
+TEST_CASE("linspace")
 {
-    testo::epsilon_scope<> eps(10);
-    CHECK_EXPRESSION(linspace(0.0, 1.0, 5, true, ctrue), { 0.0, 0.25, 0.50, 0.75, 1.0 });
-    CHECK_EXPRESSION(linspace(0.0, 1.0, 4, false, ctrue), { 0.0, 0.25, 0.50, 0.75 });
+    epsilon_scope<> eps(10);
+    CHECK_EXPRESSION_LIST(linspace(0.0, 1.0, 5, true, ctrue), { 0.0, 0.25, 0.50, 0.75, 1.0 });
+    CHECK_EXPRESSION_LIST(linspace(0.0, 1.0, 4, false, ctrue), { 0.0, 0.25, 0.50, 0.75 });
     CHECK(get_shape(linspace(0.0, 1.0, 5, true, cfalse)) == shape{ infinite_size });
-    CHECK_EXPRESSION(linspace(0.0, 1.0, 4, false, ctrue), { 0.0, 0.25, 0.50, 0.75 });
-    CHECK_EXPRESSION(symmlinspace(3.0, 4, ctrue), { -3.0, -1.00, 1.00, 3.00 });
+    CHECK_EXPRESSION_LIST(linspace(0.0, 1.0, 4, false, ctrue), { 0.0, 0.25, 0.50, 0.75 });
+    CHECK_EXPRESSION_LIST(symmlinspace(3.0, 4, ctrue), { -3.0, -1.00, 1.00, 3.00 });
 
-    CHECK_EXPRESSION(linspace(1, 21, 4, false, ctrue), { 1, 6, 11, 16 });
-    CHECK_EXPRESSION(linspace(1, 21, 4, true, ctrue), { 1, 7.66666667f, 14.3333333f, 21 });
+    CHECK_EXPRESSION_LIST(linspace(1, 21, 4, false, ctrue), { 1, 6, 11, 16 });
+    CHECK_EXPRESSION_LIST(linspace(1, 21, 4, true, ctrue), { 1, 7.66666667f, 14.3333333f, 21 });
 }
 
-TEST(counter_shape)
+TEST_CASE("counter_shape")
 {
     CHECK(get_shape(1) == shape{});
     CHECK(get_shape(counter()) == shape{ infinite_size });
@@ -35,7 +35,7 @@ TEST(counter_shape)
     CHECK(get_shape(counter(0, 1, 1)) == shape{ infinite_size, infinite_size });
 }
 
-TEST(pack)
+TEST_CASE("pack")
 {
     static_assert(std::is_same_v<vec<f32x2, 1>, std::invoke_result_t<fn::reverse, vec<f32x2, 1>>>);
     const univector<float, 21> v1 = 1 + counter();
@@ -47,13 +47,13 @@ TEST(pack)
                      [](float i) { return f32x2{ (1 + i) * 11, 1 + i }; });
 }
 
-TEST(adjacent)
+TEST_CASE("adjacent")
 {
     CHECK_EXPRESSION(adjacent(fn::mul(), counter()), infinite_size,
                      [](size_t i) { return i > 0 ? i * (i - 1) : 0; });
 }
 
-TEST(dimensions)
+TEST_CASE("dimensions")
 {
     static_assert(expression_dims<decltype(scalar(0))> == 0);
     static_assert(expression_dims<decltype(dimensions<1>(scalar(0)))> == 1);
@@ -62,10 +62,10 @@ TEST(dimensions)
     static_assert(get_shape<decltype(dimensions<1>(scalar(0)))>() == shape{ infinite_size });
     static_assert(get_shape<decltype(dimensions<2>(dimensions<1>(scalar(0))))>() ==
                   shape{ infinite_size, infinite_size });
-    CHECK_EXPRESSION(truncate(dimensions<1>(scalar(1)), 10), { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
+    CHECK_EXPRESSION_LIST(truncate(dimensions<1>(scalar(1)), 10), { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
 }
 
-TEST(padded)
+TEST_CASE("padded")
 {
     static_assert(is_infinite<decltype(padded(counter()))>, "");
     static_assert(is_infinite<decltype(padded(truncate(counter(), 100)))>, "");
@@ -79,15 +79,15 @@ TEST(padded)
                      [](size_t i) { return i >= 501 ? -1 : i; });
 }
 
-TEST(concatenate)
+TEST_CASE("concatenate")
 {
-    CHECK_EXPRESSION(concatenate(truncate(counter(5, 0), 5), truncate(counter(10, 0), 5)),
-                     { 5, 5, 5, 5, 5, 10, 10, 10, 10, 10 });
+    CHECK_EXPRESSION_LIST(concatenate(truncate(counter(5, 0), 5), truncate(counter(10, 0), 5)),
+                          { 5, 5, 5, 5, 5, 10, 10, 10, 10, 10 });
 }
 
 #ifndef KFR_COMPILER_IS_MSVC
 // The following test causes ICE in recent MSVC
-TEST(rebind)
+TEST_CASE("rebind")
 {
     auto c_minus_two  = counter() - 2;
     auto four_minus_c = rebind(c_minus_two, 4, counter());
@@ -97,7 +97,7 @@ TEST(rebind)
 }
 #endif
 
-TEST(test_arg_access)
+TEST_CASE("test_arg_access")
 {
     univector<float> v1(10);
     v1                      = counter();
@@ -108,7 +108,7 @@ TEST(test_arg_access)
     CHECK_EXPRESSION(e1, 10, [](size_t i) { return (i == 0 ? 100 : i) + 1; });
 }
 
-TEST(size_calc)
+TEST_CASE("size_calc")
 {
     auto a = counter();
     CHECK(get_shape(a) == shape{ infinite_size });
@@ -120,37 +120,37 @@ TEST(size_calc)
     CHECK(get_shape(d) == shape{ 900 });
 }
 
-TEST(reverse_expression)
+TEST_CASE("reverse_expression")
 {
     CHECK_EXPRESSION(reverse(truncate(counter(), 21)), 21, [](size_t i) { return 20 - i; });
 }
 
-TEST(sequence)
+TEST_CASE("sequence")
 {
     CHECK_EXPRESSION(sequence(0, 0.5f, 1, 0.5f), infinite_size,
                      [](size_t i) { return std::array<float, 4>{ 0, 0.5f, 1, 0.5f }[i % 4]; });
 }
 
-TEST(assign_expression)
+TEST_CASE("assign_expression")
 {
     univector<float> f = truncate(counter(0, 1), 10);
     f *= 10;
-    CHECK_EXPRESSION(f, { 0, 10, 20, 30, 40, 50, 60, 70, 80, 90 });
+    CHECK_EXPRESSION_LIST(f, { 0, 10, 20, 30, 40, 50, 60, 70, 80, 90 });
 
     univector<float> a = truncate(counter(0, 1), 10);
     univector<float> b = truncate(counter(100, 1), 10);
     pack(a, b) *= broadcast<2>(10.f);
-    CHECK_EXPRESSION(a, { 0, 10, 20, 30, 40, 50, 60, 70, 80, 90 });
-    CHECK_EXPRESSION(b, { 1000, 1010, 1020, 1030, 1040, 1050, 1060, 1070, 1080, 1090 });
+    CHECK_EXPRESSION_LIST(a, { 0, 10, 20, 30, 40, 50, 60, 70, 80, 90 });
+    CHECK_EXPRESSION_LIST(b, { 1000, 1010, 1020, 1030, 1040, 1050, 1060, 1070, 1080, 1090 });
 
     static_assert(std::is_same_v<std::common_type_t<f32x2x2, f32x2x2>, f32x2x2>);
     static_assert(
         std::is_same_v<std::common_type_t<vec<vec<double, 2>, 1>, vec<double, 2>>, vec<vec<double, 2>, 1>>);
 }
 
-TEST(trace) { render(trace(counter()), 44); }
+TEST_CASE("trace") { render(trace(counter()), 44); }
 
-TEST(get_element) { CHECK(get_element(counter(0, 1, 10, 100), { 1, 2, 3 }) == 321); }
+TEST_CASE("get_element") { CHECK(get_element(counter(0, 1, 10, 100), { 1, 2, 3 }) == 321); }
 
 } // namespace KFR_ARCH_NAME
 } // namespace kfr

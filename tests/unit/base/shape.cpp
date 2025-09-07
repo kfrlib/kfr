@@ -11,7 +11,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-TEST(shape)
+TEST_CASE("shape")
 {
     using internal_generic::increment_indices_return;
     using internal_generic::null_index;
@@ -40,7 +40,7 @@ TEST(shape)
 
     CHECK(shape{ 3, 4, 5 }.transpose() == shape{ 5, 4, 3 });
 }
-TEST(shape_broadcast)
+TEST_CASE("shape_broadcast")
 {
     using internal_generic::can_assign_from;
     using internal_generic::common_shape;

@@ -61,22 +61,22 @@ static void ebu_test_stereo(int sample_rate, const std::initializer_list<TestFra
     loudness.get_values(M, S, I, RL, RH);
     if (!std::isnan(refM))
     {
-        testo::scope s(as_string("M = ", fmt<'f', -1, 2>(M)));
+        INFO(as_string("M = ", fmt<'f', -1, 2>(M)));
         CHECK(std::abs(M - refM) < 0.05f);
     }
     if (!std::isnan(refS))
     {
-        testo::scope s(as_string("S = ", fmt<'f', -1, 2>(S)));
+        INFO(as_string("S = ", fmt<'f', -1, 2>(S)));
         CHECK(std::abs(S - refS) < 0.05f);
     }
     if (!std::isnan(refI))
     {
-        testo::scope s(as_string("I = ", fmt<'f', -1, 2>(I)));
+        INFO(as_string("I = ", fmt<'f', -1, 2>(I)));
         CHECK(std::abs(I - refI) < 0.05f);
     }
     if (!std::isnan(refLRA))
     {
-        testo::scope s(as_string("LRA = ", fmt<'f', -1, 2>((RH - RL))));
+        INFO(as_string("LRA = ", fmt<'f', -1, 2>((RH - RL))));
         CHECK(std::abs((RH - RL) - refLRA) < 0.05f);
     }
 }
@@ -122,29 +122,29 @@ static void ebu_test_multichannel(int sample_rate,
     loudness.get_values(M, S, I, RL, RH);
     if (!std::isnan(refM))
     {
-        testo::scope s(as_string("M = ", fmt<'f', -1, 2>(M)));
+        INFO(as_string("M = ", fmt<'f', -1, 2>(M)));
         CHECK(std::abs(M - refM) < 0.1f);
     }
     if (!std::isnan(refS))
     {
-        testo::scope s(as_string("S = ", fmt<'f', -1, 2>(S)));
+        INFO(as_string("S = ", fmt<'f', -1, 2>(S)));
         CHECK(std::abs(S - refS) < 0.1f);
     }
     if (!std::isnan(refI))
     {
-        testo::scope s(as_string("I = ", fmt<'f', -1, 2>(I)));
+        INFO(as_string("I = ", fmt<'f', -1, 2>(I)));
         CHECK(std::abs(I - refI) < 0.1f);
     }
     if (!std::isnan(refLRA))
     {
-        testo::scope s(as_string("LRA = ", fmt<'f', -1, 2>((RH - RL))));
+        INFO(as_string("LRA = ", fmt<'f', -1, 2>((RH - RL))));
         CHECK(std::abs((RH - RL) - refLRA) < 0.1f);
     }
 }
 
-TEST(ebu_stereo_1_and_2)
+TEST_CASE("ebu_stereo_1_and_2")
 {
-    testo::matrix(named("type")        = ctypes_t<float, double>{},
+    test_matrix(named("type")        = ctypes_t<float, double>{},
                   named("sample_rate") = std::vector<int>{ 44100, 48000 },
                   [](auto type, int sample_rate)
                   {
@@ -155,9 +155,9 @@ TEST(ebu_stereo_1_and_2)
                   });
 }
 
-TEST(ebu_stereo_3_4_and_5)
+TEST_CASE("ebu_stereo_3_4_and_5")
 {
-    testo::matrix(
+    test_matrix(
         named("type") = ctypes_t<float, double>{}, named("sample_rate") = std::vector<int>{ 44100, 48000 },
         [](auto type, int sample_rate)
         {
@@ -176,9 +176,9 @@ TEST(ebu_stereo_3_4_and_5)
         });
 }
 
-TEST(ebu_multichannel_6)
+TEST_CASE("ebu_multichannel_6")
 {
-    testo::matrix(named("type")        = ctypes_t<float, double>{},
+    test_matrix(named("type")        = ctypes_t<float, double>{},
                   named("sample_rate") = std::vector<int>{ 44100, 48000 },
                   [](auto type, int sample_rate)
                   {
@@ -189,9 +189,9 @@ TEST(ebu_multichannel_6)
                   });
 }
 
-TEST(ebu_stereo_9)
+TEST_CASE("ebu_stereo_9")
 {
-    testo::matrix(named("type")        = ctypes_t<float, double>{},
+    test_matrix(named("type")        = ctypes_t<float, double>{},
                   named("sample_rate") = std::vector<int>{ 44100, 48000 },
                   [](auto type, int sample_rate)
                   {
@@ -212,9 +212,9 @@ TEST(ebu_stereo_9)
                   });
 }
 
-TEST(ebu_stereo_12)
+TEST_CASE("ebu_stereo_12")
 {
-    testo::matrix(
+    test_matrix(
         named("type") = ctypes_t<float, double>{}, named("sample_rate") = std::vector<int>{ 44100, 48000 },
         [](auto type, int sample_rate)
         {
@@ -242,9 +242,9 @@ TEST(ebu_stereo_12)
         });
 }
 
-TEST(ebu_lra_1_2_3_and_4)
+TEST_CASE("ebu_lra_1_2_3_and_4")
 {
-    testo::matrix(named("type")        = ctypes_t<float, double>{},
+    test_matrix(named("type")        = ctypes_t<float, double>{},
                   named("sample_rate") = std::vector<int>{ 44100, 48000 },
                   [](auto type, int sample_rate)
                   {

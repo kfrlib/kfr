@@ -14,7 +14,7 @@ namespace kfr
 {
 inline namespace KFR_ARCH_NAME
 {
-TEST(to_handle)
+TEST_CASE("to_handle")
 {
     auto e1 = to_handle(counter<float>());
 
@@ -25,7 +25,7 @@ TEST(to_handle)
     CHECK_EXPRESSION(e2, infinite_size, [](size_t i) { return static_cast<float>(i); });
 }
 
-TEST(test_arg_replace)
+TEST_CASE("test_arg_replace")
 {
     univector<float, 10> v1 = counter();
     univector<float, 10> v2 = -counter();
@@ -35,7 +35,7 @@ TEST(test_arg_replace)
     CHECK_EXPRESSION(e1, 10, [](size_t i) { return i * -10.0; });
 }
 
-TEST(placeholders)
+TEST_CASE("placeholders")
 {
     auto expr1 = placeholder<float>();
     CHECK_EXPRESSION(expr1, infinite_size, [](size_t) { return 0.f; });
@@ -45,7 +45,7 @@ TEST(placeholders)
     CHECK_EXPRESSION(expr2, infinite_size, [](size_t i) { return 100.f * i; });
 }
 
-TEST(placeholders_handle)
+TEST_CASE("placeholders_handle")
 {
     expression_handle<float> expr = to_handle(10 * placeholder<float>());
     CHECK_EXPRESSION(expr, infinite_size, [](size_t) { return 0.f; });

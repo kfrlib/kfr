@@ -16,7 +16,7 @@
 #endif
 #endif
 
-namespace testo
+namespace kfr
 {
 
 #ifdef TESTO_CUSTOM_ASSERTION_PRINT
@@ -60,8 +60,8 @@ bool check_assertion(const half_comparison<L>& comparison, const char* expr, con
 #define TESTO_ASSERT_ACTIVE(...)                                                                             \
     do                                                                                                       \
     {                                                                                                        \
-        if (!::testo::check_assertion(::testo::make_comparison() <= __VA_ARGS__, #__VA_ARGS__, __FILE__,     \
-                                      __LINE__))                                                             \
+        if (!::kfr::check_assertion(::kfr::make_comparison() <= __VA_ARGS__, #__VA_ARGS__, __FILE__,         \
+                                    __LINE__))                                                               \
             TESTO_BREAKPOINT;                                                                                \
     } while (0)
 
@@ -114,4 +114,4 @@ inline OutType safe_cast(const InType& val)
     return static_cast<OutType>(val);
 }
 
-} // namespace testo
+} // namespace kfr

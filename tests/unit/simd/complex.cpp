@@ -12,7 +12,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-TEST(complex_convertible)
+TEST_CASE("complex_convertible")
 {
     static_assert(std::is_convertible<float, complex<float>>::value, "");
     static_assert(std::is_convertible<float, complex<double>>::value, "");
@@ -28,17 +28,19 @@ TEST(complex_convertible)
     CHECK(static_cast<complex<double>>(10.f) == complex<double>{ 10., 0. });
     CHECK(static_cast<complex<double>>(static_cast<short>(10)) == complex<double>{ 10., 0. });
 
-    CHECK(static_cast<vec<complex<float>, 2>>(complex<float>{ 1.f, 2.f }) ==
-          vec<complex<float>, 2>{ c32{ 1.f, 2.f }, c32{ 1.f, 2.f } });
+    CHECK_THAT((static_cast<vec<complex<float>, 2>>(complex<float>{ 1.f, 2.f })),
+               DeepMatcher(vec<complex<float>, 2>{ c32{ 1.f, 2.f }, c32{ 1.f, 2.f } }));
 
-    CHECK(static_cast<vec<complex<float>, 4>>(complex<float>{ 1.f, 2.f }) ==
-          vec<complex<float>, 4>{ c32{ 1.f, 2.f }, c32{ 1.f, 2.f }, c32{ 1.f, 2.f }, c32{ 1.f, 2.f } });
+    CHECK_THAT((static_cast<vec<complex<float>, 4>>(complex<float>{ 1.f, 2.f })),
+               DeepMatcher(vec<complex<float>, 4>{ c32{ 1.f, 2.f }, c32{ 1.f, 2.f }, c32{ 1.f, 2.f },
+                                                   c32{ 1.f, 2.f } }));
 
-    CHECK(static_cast<vec<complex<double>, 2>>(vec<complex<float>, 2>{ c32{ 1.f, 2.f }, c32{ 1.f, 2.f } }) ==
-          vec<complex<double>, 2>{ c64{ 1., 2. }, c64{ 1., 2. } });
+    CHECK_THAT(
+        (static_cast<vec<complex<double>, 2>>(vec<complex<float>, 2>{ c32{ 1.f, 2.f }, c32{ 1.f, 2.f } })),
+        DeepMatcher(vec<complex<double>, 2>{ c64{ 1., 2. }, c64{ 1., 2. } }));
 }
 
-TEST(complex_static_tests)
+TEST_CASE("complex_static_tests")
 {
     static_assert(is_numeric<vec<complex<float>, 4>>, "");
     static_assert(is_numeric_args<vec<complex<float>, 4>>, "");
@@ -48,39 +50,40 @@ TEST(complex_static_tests)
     static_assert(vec<c32, 4>::size() == 4, "");
     static_assert(vec<f32, 4>::scalar_size() == 4, "");
     static_assert(vec<c32, 4>::scalar_size() == 8, "");
-    testo::assert_is_same<subtype<complex<i32>>, i32>();
-    testo::assert_is_same<vec<c32, 4>::value_type, c32>();
-    testo::assert_is_same<vec<c32, 4>::scalar_type, f32>();
-    testo::assert_is_same<vec<f32, 4>::value_type, f32>();
-    testo::assert_is_same<vec<f32, 4>::scalar_type, f32>();
-    testo::assert_is_same<vec<c32, 1>, decltype(make_vector(c32{ 0, 0 }))>();
-    testo::assert_is_same<vec<c32, 2>, decltype(make_vector(c32{ 0, 0 }, 4))>();
-    testo::assert_is_same<ftype<complex<i32>>, complex<f32>>();
-    testo::assert_is_same<ftype<complex<i64>>, complex<f64>>();
-    testo::assert_is_same<ftype<vec<complex<i32>, 4>>, vec<complex<f32>, 4>>();
-    testo::assert_is_same<ftype<vec<complex<i64>, 8>>, vec<complex<f64>, 8>>();
+    assert_is_same<subtype<complex<i32>>, i32>();
+    assert_is_same<vec<c32, 4>::value_type, c32>();
+    assert_is_same<vec<c32, 4>::scalar_type, f32>();
+    assert_is_same<vec<f32, 4>::value_type, f32>();
+    assert_is_same<vec<f32, 4>::scalar_type, f32>();
+    assert_is_same<vec<c32, 1>, decltype(make_vector(c32{ 0, 0 }))>();
+    assert_is_same<vec<c32, 2>, decltype(make_vector(c32{ 0, 0 }, 4))>();
+    assert_is_same<ftype<complex<i32>>, complex<f32>>();
+    assert_is_same<ftype<complex<i64>>, complex<f64>>();
+    assert_is_same<ftype<vec<complex<i32>, 4>>, vec<complex<f32>, 4>>();
+    assert_is_same<ftype<vec<complex<i64>, 8>>, vec<complex<f64>, 8>>();
 
-    testo::assert_is_same<std::common_type_t<complex<int>, double>, complex<double>>();
+    assert_is_same<std::common_type_t<complex<int>, double>, complex<double>>();
 }
 
-TEST(complex_shuffle)
+TEST_CASE("complex_shuffle")
 {
     const vec<c32, 2> a{ c32{ 0, 1 }, c32{ 2, 3 } };
-    CHECK(reverse(a) == make_vector(c32{ 2, 3 }, c32{ 0, 1 }));
+    CHECK_THAT(reverse(a), DeepMatcher(make_vector(c32{ 2, 3 }, c32{ 0, 1 })));
 }
 
-TEST(complex_read_write)
+TEST_CASE("complex_read_write")
 {
     c32 buffer[8] = { c32{ 1, 2 },  c32{ 3, 4 },   c32{ 5, 6 },   c32{ 7, 8 },
                       c32{ 9, 10 }, c32{ 11, 12 }, c32{ 13, 14 }, c32{ 15, 16 } };
 
-    CHECK(read<4>(buffer) == make_vector(c32{ 1, 2 }, c32{ 3, 4 }, c32{ 5, 6 }, c32{ 7, 8 }));
-    CHECK(read<3>(buffer + 1) == make_vector(c32{ 3, 4 }, c32{ 5, 6 }, c32{ 7, 8 }));
+    CHECK_THAT(read<4>(buffer), DeepMatcher(make_vector(c32{ 1, 2 }, c32{ 3, 4 }, c32{ 5, 6 }, c32{ 7, 8 })));
+    CHECK_THAT(read<3>(buffer + 1), DeepMatcher(make_vector(c32{ 3, 4 }, c32{ 5, 6 }, c32{ 7, 8 })));
     write(buffer + 2, make_vector(c32{ 10, 11 }, c32{ 12, 13 }));
-    CHECK(read<4>(buffer) == make_vector(c32{ 1, 2 }, c32{ 3, 4 }, c32{ 10, 11 }, c32{ 12, 13 }));
+    CHECK_THAT(read<4>(buffer),
+               DeepMatcher(make_vector(c32{ 1, 2 }, c32{ 3, 4 }, c32{ 10, 11 }, c32{ 12, 13 })));
 }
 
-TEST(complex_cast)
+TEST_CASE("complex_cast")
 {
     const vec<f32, 4> v1 = bitcast<f32>(make_vector(c32{ 0, 1 }, c32{ 2, 3 }));
     CHECK(v1.flatten()[0] == 0.f);
@@ -104,11 +107,13 @@ TEST(complex_cast)
     CHECK(v4.flatten()[2] == 2.f);
     CHECK(v4.flatten()[3] == 0.f);
 
-    CHECK(zerovector<c32, 4>() == make_vector(c32{ 0, 0 }, c32{ 0, 0 }, c32{ 0, 0 }, c32{ 0, 0 }));
-    CHECK(enumerate<c32, 4>() == make_vector(c32{ 0, 0 }, c32{ 1, 0 }, c32{ 2, 0 }, c32{ 3, 0 }));
+    CHECK_THAT((zerovector<c32, 4>()),
+               DeepMatcher(make_vector(c32{ 0, 0 }, c32{ 0, 0 }, c32{ 0, 0 }, c32{ 0, 0 })));
+    CHECK_THAT((enumerate<c32, 4>()),
+               DeepMatcher(make_vector(c32{ 0, 0 }, c32{ 1, 0 }, c32{ 2, 0 }, c32{ 3, 0 })));
 }
 
-TEST(complex_vector)
+TEST_CASE("complex_vector")
 {
     const vec<c32, 1> c32x1{ c32{ 0, 1 } };
     CHECK(c32x1.flatten()[0] == 0.0f);

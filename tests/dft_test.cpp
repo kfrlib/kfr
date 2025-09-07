@@ -4,7 +4,7 @@
  * See LICENSE.txt for details
  */
 
-#include <kfr/testo/testo.hpp>
+#include <kfr/test/test.hpp>
 
 #include <chrono>
 #include <kfr/base.hpp>
@@ -15,10 +15,7 @@
 
 using namespace kfr;
 
-namespace KFR_ARCH_NAME
-{
-
-TEST(print_vector_capacity)
+TEST_CASE("print_vector_capacity")
 {
     println("vector_capacity<float> = ", vector_capacity<float>);
     println("vector_capacity<double> = ", vector_capacity<double>);
@@ -87,7 +84,7 @@ static void perf_test(int size)
     perf_test_t<double>(size);
 }
 
-TEST(test_performance)
+TEST_CASE("test_performance")
 {
     for (int size = 16; size <= 65536; size <<= 1)
     {
@@ -105,7 +102,7 @@ TEST(test_performance)
 }
 #endif
 
-TEST(test_convolve)
+TEST_CASE("test_convolve")
 {
     univector<fbase, 5> a({ 1, 2, 3, 4, 5 });
     univector<fbase, 5> b({ 0.25, 0.5, 1.0, -2.0, 1.5 });
@@ -114,7 +111,7 @@ TEST(test_convolve)
     CHECK(rms(c - univector<fbase>({ 0.25, 1., 2.75, 2.5, 3.75, 3.5, 1.5, -4., 7.5 })) < 0.0001);
 }
 
-TEST(test_complex_convolve)
+TEST_CASE("test_complex_convolve")
 {
     univector<complex<fbase>, 5> a({ 1, 2, 3, 4, 5 });
     univector<complex<fbase>, 5> b({ 0.25, 0.5, 1.0, -2.0, 1.5 });
@@ -124,7 +121,7 @@ TEST(test_complex_convolve)
           0.0001);
 }
 
-TEST(test_convolve_filter)
+TEST_CASE("test_convolve_filter")
 {
     univector<fbase, 5> a({ 1, 2, 3, 4, 5 });
     univector<fbase, 5> b({ 0.25, 0.5, 1.0, -2.0, 1.5 });
@@ -134,7 +131,7 @@ TEST(test_convolve_filter)
     CHECK(rms(dest - univector<fbase>({ 0.25, 1., 2.75, 2.5, 3.75 })) < 0.0001);
 }
 
-TEST(test_complex_convolve_filter)
+TEST_CASE("test_complex_convolve_filter")
 {
     univector<complex<fbase>, 5> a({ 1, 2, 3, 4, 5 });
     univector<complex<fbase>, 5> b({ 0.25, 0.5, 1.0, -2.0, 1.5 });
@@ -149,7 +146,7 @@ TEST(test_complex_convolve_filter)
     CHECK(rms(cabs(dest - univector<complex<fbase>>({ 0.25, 1., 2.75, 2.5, 3.75 }))) < 0.0001);
 }
 
-TEST(test_correlate)
+TEST_CASE("test_correlate")
 {
     univector<fbase, 5> a({ 1, 2, 3, 4, 5 });
     univector<fbase, 5> b({ 0.25, 0.5, 1.0, -2.0, 1.5 });
@@ -158,7 +155,7 @@ TEST(test_correlate)
     CHECK(rms(c - univector<fbase>({ 1.5, 1., 1.5, 2.5, 3.75, -4., 7.75, 3.5, 1.25 })) < 0.0001);
 }
 
-TEST(test_complex_correlate)
+TEST_CASE("test_complex_correlate")
 {
     univector<complex<fbase>, 5> a({ 1, 2, 3, 4, 5 });
     univector<complex<fbase>, 5> b({ 0.25, 0.5, 1.0, -2.0, 1.5 });
@@ -202,7 +199,7 @@ static void reconstruction_test(size_t size)
     CHECK(reconstructed_maxabs < 0.00001);
 }
 
-TEST(fft_reconstruction)
+TEST_CASE("fft_reconstruction")
 {
     for (size_t size = 2; size <= 256; size++)
     {
@@ -221,11 +218,8 @@ TEST(fft_reconstruction)
     }
 }
 
-TEST(fft_accuracy)
+TEST_CASE("fft_accuracy")
 {
-#ifdef DEBUG_DFT_PROGRESS
-    testo::active_test()->show_progress = true;
-#endif
     random_state gen = random_init(2247448713, 915890490, 864203735, 2982561);
     std::set<size_t> size_set;
     univector<size_t> sizes = truncate(counter(), fft_stopsize);
@@ -243,7 +237,7 @@ TEST(fft_accuracy)
     println(sizes);
 #endif
 
-    testo::matrix( //
+    test_matrix( //
         named("type") = dft_float_types, //
         named("size") = sizes, //
         [&gen](auto type, size_t size)
@@ -255,9 +249,8 @@ TEST(fft_accuracy)
             {
                 for (bool progressive_optimized : { false, true })
                 {
-                    testo::scope s(inverse ? "complex-inverse" : "complex-direct");
-                    testo::scope s2(progressive_optimized ? "progressive-optimized"
-                                                          : "single-call-optimized");
+                    INFO((inverse ? "complex-inverse" : "complex-direct"));
+                    INFO((progressive_optimized ? "progressive-optimized" : "single-call-optimized"));
                     univector<complex<float_type>> in =
                         truncate(gen_random_range<float_type>(gen, -1.0, +1.0), size);
                     univector<complex<float_type>> out    = in;
@@ -318,7 +311,7 @@ TEST(fft_accuracy)
                 univector<u8> temp(dft.temp_size);
 
                 {
-                    testo::scope s("real-direct");
+                    INFO("real-direct");
                     reference_dft(refout.data(), in.data(), size);
                     dft.execute(out, in, temp);
                     const float_type rms_diff_outofplace = rms(cabs(refout - out));
@@ -355,7 +348,7 @@ TEST(fft_accuracy)
                 }
 
                 {
-                    testo::scope s("real-inverse");
+                    INFO("real-inverse");
                     univector<float_type> out2(size, 0.f);
                     dft.execute(out2, out, temp);
                     out2                                 = out2 / size;
@@ -398,7 +391,7 @@ TEST(fft_accuracy)
         });
 }
 
-TEST(dct)
+TEST_CASE("dct")
 {
     constexpr size_t size = 16;
     dct_plan<float> plan(size);
@@ -431,7 +424,7 @@ template <typename T, index_t Dims, typename dft_type, typename dft_real_type>
 static void test_dft_md_t(random_state& gen, shape<Dims> shape)
 {
     index_t size = shape.product();
-    testo::scope s(as_string("shape=", shape));
+    INFO(as_string("shape=", shape));
 
     const double min_prec = 0.000002 * std::log(size) * size;
 
@@ -443,7 +436,7 @@ static void test_dft_md_t(random_state& gen, shape<Dims> shape)
         univector<complex<T>> in = truncate(gen_random_range<T>(gen, -1.0, +1.0), size);
         for (bool inverse : { false, true })
         {
-            testo::scope s(inverse ? "complex-inverse" : "complex-direct");
+            INFO((inverse ? "complex-inverse" : "complex-direct"));
             univector<complex<T>> out    = in;
             univector<complex<T>> refout = out;
             univector<complex<T>> outo   = in;
@@ -474,7 +467,7 @@ static void test_dft_md_t(random_state& gen, shape<Dims> shape)
         univector<u8> temp(dft.temp_size);
 
         {
-            testo::scope s("real-direct");
+            INFO("real-direct");
             reference_dft_md(refout.data(), in.data(), shape);
             dft.execute(out.data(), in.data(), temp.data());
             T rms_diff_outofplace = rms(cabs(refout - out));
@@ -488,7 +481,7 @@ static void test_dft_md_t(random_state& gen, shape<Dims> shape)
         }
 
         {
-            testo::scope s("real-inverse");
+            INFO("real-inverse");
             univector<T> out2(dft.real_out_size(), 0.f);
             dft.execute(out2.data(), out.data(), temp.data());
             out2                  = out2 / size;
@@ -509,98 +502,96 @@ template <typename T, index_t Dims>
 static void test_dft_md(random_state& gen, shape<Dims> shape)
 {
     {
-        testo::scope s("compile-time dims");
+        INFO("compile-time dims");
         test_dft_md_t<T, Dims, dft_plan_md<T, Dims>, dft_plan_md_real<T, Dims>>(gen, shape);
     }
     {
-        testo::scope s("runtime dims");
+        INFO("runtime dims");
         test_dft_md_t<T, Dims, dft_plan_md<T, dynamic_shape>, dft_plan_md_real<T, dynamic_shape>>(gen, shape);
     }
 }
 
-TEST(dft_md)
+TEST_CASE("dft_md")
 {
     random_state gen = random_init(2247448713, 915890490, 864203735, 2982561);
 
-    testo::matrix(named("type") = dft_float_types, //
-                  [&gen](auto type)
-                  {
-                      using float_type = type_of<decltype(type)>;
-                      test_dft_md<float_type>(gen, shape{ 120 });
-                      test_dft_md<float_type>(gen, shape{ 2, 60 });
-                      test_dft_md<float_type>(gen, shape{ 3, 40 });
-                      test_dft_md<float_type>(gen, shape{ 4, 30 });
-                      test_dft_md<float_type>(gen, shape{ 5, 24 });
-                      test_dft_md<float_type>(gen, shape{ 6, 20 });
-                      test_dft_md<float_type>(gen, shape{ 8, 15 });
-                      test_dft_md<float_type>(gen, shape{ 10, 12 });
-                      test_dft_md<float_type>(gen, shape{ 12, 10 });
-                      test_dft_md<float_type>(gen, shape{ 15, 8 });
-                      test_dft_md<float_type>(gen, shape{ 20, 6 });
-                      test_dft_md<float_type>(gen, shape{ 24, 5 });
-                      test_dft_md<float_type>(gen, shape{ 30, 4 });
-                      test_dft_md<float_type>(gen, shape{ 40, 3 });
-                      test_dft_md<float_type>(gen, shape{ 60, 2 });
+    test_matrix(named("type") = dft_float_types, //
+                [&gen](auto type)
+                {
+                    using float_type = type_of<decltype(type)>;
+                    test_dft_md<float_type>(gen, shape{ 120 });
+                    test_dft_md<float_type>(gen, shape{ 2, 60 });
+                    test_dft_md<float_type>(gen, shape{ 3, 40 });
+                    test_dft_md<float_type>(gen, shape{ 4, 30 });
+                    test_dft_md<float_type>(gen, shape{ 5, 24 });
+                    test_dft_md<float_type>(gen, shape{ 6, 20 });
+                    test_dft_md<float_type>(gen, shape{ 8, 15 });
+                    test_dft_md<float_type>(gen, shape{ 10, 12 });
+                    test_dft_md<float_type>(gen, shape{ 12, 10 });
+                    test_dft_md<float_type>(gen, shape{ 15, 8 });
+                    test_dft_md<float_type>(gen, shape{ 20, 6 });
+                    test_dft_md<float_type>(gen, shape{ 24, 5 });
+                    test_dft_md<float_type>(gen, shape{ 30, 4 });
+                    test_dft_md<float_type>(gen, shape{ 40, 3 });
+                    test_dft_md<float_type>(gen, shape{ 60, 2 });
 
-                      test_dft_md<float_type>(gen, shape{ 2, 3, 24 });
-                      test_dft_md<float_type>(gen, shape{ 12, 5, 2 });
-                      test_dft_md<float_type>(gen, shape{ 5, 12, 2 });
+                    test_dft_md<float_type>(gen, shape{ 2, 3, 24 });
+                    test_dft_md<float_type>(gen, shape{ 12, 5, 2 });
+                    test_dft_md<float_type>(gen, shape{ 5, 12, 2 });
 
-                      test_dft_md<float_type>(gen, shape{ 2, 3, 2, 12 });
-                      test_dft_md<float_type>(gen, shape{ 3, 4, 5, 2 });
-                      test_dft_md<float_type>(gen, shape{ 5, 4, 3, 2 });
+                    test_dft_md<float_type>(gen, shape{ 2, 3, 2, 12 });
+                    test_dft_md<float_type>(gen, shape{ 3, 4, 5, 2 });
+                    test_dft_md<float_type>(gen, shape{ 5, 4, 3, 2 });
 
-                      test_dft_md<float_type>(gen, shape{ 5, 2, 2, 3, 2 });
-                      test_dft_md<float_type>(gen, shape{ 2, 5, 2, 2, 3 });
+                    test_dft_md<float_type>(gen, shape{ 5, 2, 2, 3, 2 });
+                    test_dft_md<float_type>(gen, shape{ 2, 5, 2, 2, 3 });
 
-                      test_dft_md<float_type>(gen, shape{ 1, 120 });
-                      test_dft_md<float_type>(gen, shape{ 120, 1 });
-                      test_dft_md<float_type>(gen, shape{ 2, 1, 1, 60 });
-                      test_dft_md<float_type>(gen, shape{ 1, 2, 10, 2, 1, 3 });
+                    test_dft_md<float_type>(gen, shape{ 1, 120 });
+                    test_dft_md<float_type>(gen, shape{ 120, 1 });
+                    test_dft_md<float_type>(gen, shape{ 2, 1, 1, 60 });
+                    test_dft_md<float_type>(gen, shape{ 1, 2, 10, 2, 1, 3 });
 
-                      test_dft_md<float_type>(gen, shape{ 4, 4 });
-                      test_dft_md<float_type>(gen, shape{ 4, 4, 4 });
-                      test_dft_md<float_type>(gen, shape{ 4, 4, 4, 4 });
-                      test_dft_md<float_type>(gen, shape{ 4, 4, 4, 4, 4 });
-                      test_dft_md<float_type>(gen, shape{ 4, 4, 4, 4, 4, 4 });
-                      test_dft_md<float_type>(gen, shape{ 4, 4, 4, 4, 4, 4, 4 });
-                      test_dft_md<float_type>(gen, shape{ 4, 4, 4, 4, 4, 4, 4, 4 });
-                      test_dft_md<float_type>(gen, shape{ 4, 4, 4, 4, 4, 4, 4, 4, 4 });
-                      test_dft_md<float_type>(gen, shape{ 4, 4, 4, 4, 4, 4, 4, 4, 4, 4 });
+                    test_dft_md<float_type>(gen, shape{ 4, 4 });
+                    test_dft_md<float_type>(gen, shape{ 4, 4, 4 });
+                    test_dft_md<float_type>(gen, shape{ 4, 4, 4, 4 });
+                    test_dft_md<float_type>(gen, shape{ 4, 4, 4, 4, 4 });
+                    test_dft_md<float_type>(gen, shape{ 4, 4, 4, 4, 4, 4 });
+                    test_dft_md<float_type>(gen, shape{ 4, 4, 4, 4, 4, 4, 4 });
+                    test_dft_md<float_type>(gen, shape{ 4, 4, 4, 4, 4, 4, 4, 4 });
+                    test_dft_md<float_type>(gen, shape{ 4, 4, 4, 4, 4, 4, 4, 4, 4 });
+                    test_dft_md<float_type>(gen, shape{ 4, 4, 4, 4, 4, 4, 4, 4, 4, 4 });
 #if defined NDEBUG
-                      test_dft_md<float_type>(gen, shape{ 512, 512 });
-                      test_dft_md<float_type>(gen, shape{ 32, 32, 32 });
-                      test_dft_md<float_type>(gen, shape{ 8, 8, 8, 8 });
-                      test_dft_md<float_type>(gen, shape{ 2, 2, 2, 2, 2, 2 });
+                    test_dft_md<float_type>(gen, shape{ 512, 512 });
+                    test_dft_md<float_type>(gen, shape{ 32, 32, 32 });
+                    test_dft_md<float_type>(gen, shape{ 8, 8, 8, 8 });
+                    test_dft_md<float_type>(gen, shape{ 2, 2, 2, 2, 2, 2 });
 
-                      test_dft_md<float_type>(gen, shape{ 1, 65536 });
-                      test_dft_md<float_type>(gen, shape{ 2, 65536 });
-                      test_dft_md<float_type>(gen, shape{ 3, 65536 });
-                      test_dft_md<float_type>(gen, shape{ 4, 65536 });
-                      test_dft_md<float_type>(gen, shape{ 65536, 1 });
-                      test_dft_md<float_type>(gen, shape{ 65536, 2 });
-                      test_dft_md<float_type>(gen, shape{ 65536, 3 });
-                      test_dft_md<float_type>(gen, shape{ 65536, 4 });
+                    test_dft_md<float_type>(gen, shape{ 1, 65536 });
+                    test_dft_md<float_type>(gen, shape{ 2, 65536 });
+                    test_dft_md<float_type>(gen, shape{ 3, 65536 });
+                    test_dft_md<float_type>(gen, shape{ 4, 65536 });
+                    test_dft_md<float_type>(gen, shape{ 65536, 1 });
+                    test_dft_md<float_type>(gen, shape{ 65536, 2 });
+                    test_dft_md<float_type>(gen, shape{ 65536, 3 });
+                    test_dft_md<float_type>(gen, shape{ 65536, 4 });
 
-                      test_dft_md<float_type>(gen, shape{ 1, 2 });
-                      test_dft_md<float_type>(gen, shape{ 1, 2, 3 });
-                      test_dft_md<float_type>(gen, shape{ 1, 2, 3, 4 });
-                      test_dft_md<float_type>(gen, shape{ 1, 2, 3, 4, 5 });
-                      test_dft_md<float_type>(gen, shape{ 1, 2, 3, 4, 5, 6 });
-                      test_dft_md<float_type>(gen, shape{ 1, 2, 3, 4, 5, 6, 7 });
-                      test_dft_md<float_type>(gen, shape{ 1, 2, 3, 4, 5, 6, 7, 8 });
-                      test_dft_md<float_type>(gen, shape{ 2, 1 });
-                      test_dft_md<float_type>(gen, shape{ 3, 2, 1 });
-                      test_dft_md<float_type>(gen, shape{ 4, 3, 2, 1 });
-                      test_dft_md<float_type>(gen, shape{ 5, 4, 3, 2, 1 });
-                      test_dft_md<float_type>(gen, shape{ 6, 5, 4, 3, 2, 1 });
-                      test_dft_md<float_type>(gen, shape{ 7, 6, 5, 4, 3, 2, 1 });
-                      test_dft_md<float_type>(gen, shape{ 8, 7, 6, 5, 4, 3, 2, 1 });
+                    test_dft_md<float_type>(gen, shape{ 1, 2 });
+                    test_dft_md<float_type>(gen, shape{ 1, 2, 3 });
+                    test_dft_md<float_type>(gen, shape{ 1, 2, 3, 4 });
+                    test_dft_md<float_type>(gen, shape{ 1, 2, 3, 4, 5 });
+                    test_dft_md<float_type>(gen, shape{ 1, 2, 3, 4, 5, 6 });
+                    test_dft_md<float_type>(gen, shape{ 1, 2, 3, 4, 5, 6, 7 });
+                    test_dft_md<float_type>(gen, shape{ 1, 2, 3, 4, 5, 6, 7, 8 });
+                    test_dft_md<float_type>(gen, shape{ 2, 1 });
+                    test_dft_md<float_type>(gen, shape{ 3, 2, 1 });
+                    test_dft_md<float_type>(gen, shape{ 4, 3, 2, 1 });
+                    test_dft_md<float_type>(gen, shape{ 5, 4, 3, 2, 1 });
+                    test_dft_md<float_type>(gen, shape{ 6, 5, 4, 3, 2, 1 });
+                    test_dft_md<float_type>(gen, shape{ 7, 6, 5, 4, 3, 2, 1 });
+                    test_dft_md<float_type>(gen, shape{ 8, 7, 6, 5, 4, 3, 2, 1 });
 #endif
-                  });
+                });
 }
-
-} // namespace KFR_ARCH_NAME
 
 namespace kfr
 {
@@ -613,6 +604,8 @@ int main(int argc, char* argv[])
     println(library_version(), " running on ", cpu_runtime());
     println("DFT: ", library_version_dft());
 
-    return testo::run_all(argc >= 2 ? argv[1] : "", false);
+    int result = Catch::Session().run(argc, argv);
+
+    return result;
 }
 #endif
