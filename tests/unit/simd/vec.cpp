@@ -187,7 +187,7 @@ TEST_CASE("unaligned_read")
 
                     constexpr static size_t N = T::size();
                     Tsub data[N * 2];
-                    for (size_t i = 0; i < arraysize(data); i++)
+                    for (size_t i = 0; i < std::size(data); i++)
                     {
                         data[i] = static_cast<Tsub>(i);
                     }

@@ -44,7 +44,7 @@ namespace intr
 
 constexpr inline static bool fft_reorder_aligned = false;
 
-constexpr inline static size_t bitrev_table_log2N = ilog2(arraysize(data::bitrev_table));
+constexpr inline static size_t bitrev_table_log2N = ilog2(std::size(data::bitrev_table));
 
 template <size_t Bits>
 KFR_GNU_CONSTEXPR inline u32 bitrev_using_table(u32 x)

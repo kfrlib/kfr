@@ -289,9 +289,9 @@ constexpr T partial_masks[] = { special_constants<T>::allones(),
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> partial_mask(size_t index)
 {
-    static_assert(N <= arraysize(partial_masks<T>) / 2,
+    static_assert(N <= std::size(partial_masks<T>) / 2,
                   "N must not be greater than half of partial_masks array");
-    return read<N>(&partial_masks<T>[0] + arraysize(partial_masks<T>) / 2 - index);
+    return read<N>(&partial_masks<T>[0] + std::size(partial_masks<T>) / 2 - index);
 }
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> partial_mask(size_t index, vec_shape<T, N>)

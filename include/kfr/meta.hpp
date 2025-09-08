@@ -32,18 +32,6 @@ namespace kfr
 using std::ptrdiff_t;
 using std::size_t;
 
-template <typename T, size_t N>
-constexpr KFR_INTRINSIC static size_t arraysize(const T (&)[N]) KFR_NOEXCEPT
-{
-    return N;
-}
-
-template <typename T, size_t N>
-constexpr KFR_INTRINSIC static std::integral_constant<size_t, N> carraysize(const T (&)[N]) KFR_NOEXCEPT
-{
-    return {};
-}
-
 using pvoid      = void*;
 using pconstvoid = const void*;
 

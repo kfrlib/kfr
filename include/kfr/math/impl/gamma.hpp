@@ -46,7 +46,7 @@ constexpr T gamma_precalc[] = {
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> gamma(const vec<T, N>& z)
 {
-    constexpr size_t Count = arraysize(gamma_precalc<T>);
+    constexpr size_t Count = std::size(gamma_precalc<T>);
     vec<T, N> accm         = gamma_precalc<T>[0];
     KFR_LOOP_UNROLL
     for (size_t k = 1; k < Count; k++)

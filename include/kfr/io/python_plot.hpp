@@ -50,7 +50,7 @@ void python(const std::string& name, const std::string& code)
     std::string filename;
     {
         char curdir[1024];
-        (void)cross_getcwd(curdir, (int)arraysize(curdir));
+        (void)cross_getcwd(curdir, (int)std::size(curdir));
         filename = curdir;
     }
 #ifdef KFR_OS_WIN
