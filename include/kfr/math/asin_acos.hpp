@@ -35,7 +35,7 @@ inline namespace KFR_ARCH_NAME
 /**
  * @brief Returns the arc sine of x. The returned angle is in the range \f$-\pi/2\f$ through \f$\pi/2\f$.
  */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_INTRINSIC flt_type<T1> asin(const T1& x)
 {
     return intr::asin(x);
@@ -43,7 +43,7 @@ KFR_INTRINSIC flt_type<T1> asin(const T1& x)
 /**
  * @brief Returns the arc cosine of x. The returned angle is in the range 0 through \f$\pi\f$.
  */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_INTRINSIC flt_type<T1> acos(const T1& x)
 {
     return intr::acos(x);

@@ -33,73 +33,73 @@ inline namespace KFR_ARCH_NAME
 {
 
 /// @brief Returns the largest integer value not greater than x
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_INTRINSIC T1 floor(const T1& x)
 {
     return intr::floor(x);
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_INTRINSIC T1 ceil(const T1& x)
 {
     return intr::ceil(x);
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_INTRINSIC T1 round(const T1& x)
 {
     return intr::round(x);
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_INTRINSIC T1 trunc(const T1& x)
 {
     return intr::trunc(x);
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_INTRINSIC T1 fract(const T1& x)
 {
     return intr::fract(x);
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_INTRINSIC itype<T1> ifloor(const T1& x)
 {
     return intr::ifloor(x);
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_INTRINSIC itype<T1> iceil(const T1& x)
 {
     return intr::iceil(x);
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_INTRINSIC itype<T1> iround(const T1& x)
 {
     return intr::iround(x);
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_INTRINSIC itype<T1> itrunc(const T1& x)
 {
     return intr::itrunc(x);
 }
 
-template <typename T, KFR_ENABLE_IF(is_f_class<T>)>
+template <f_class T>
 KFR_INTRINSIC T fmod(const T& x, const T& y)
 {
     return x - trunc(x / y) * y;
 }
 KFR_FN(fmod)
 
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>)>
+template <not_f_class T, size_t N>
 constexpr KFR_INTRINSIC vec<T, N> rem(const vec<T, N>& x, const vec<T, N>& y)
 {
     return x % y;
 }
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
+template <f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> rem(const vec<T, N>& x, const vec<T, N>& y)
 {
     return fmod(x, y);

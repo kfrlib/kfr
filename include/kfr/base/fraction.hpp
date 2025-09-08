@@ -41,7 +41,7 @@ struct fraction
             denominator = -denominator;
             numerator   = -numerator;
         }
-        const i64 z = gcd(std::abs(numerator), std::abs(denominator));
+        const i64 z = std::gcd(std::abs(numerator), std::abs(denominator));
         numerator /= z;
         denominator /= z;
     }
@@ -120,18 +120,6 @@ struct fraction
     }
 
 private:
-    static i64 gcd(i64 a, i64 b)
-    {
-        i64 r;
-        while (b > 0)
-        {
-            r = a % b;
-            a = b;
-            b = r;
-        }
-        return a;
-    }
-    static i64 lcm(i64 a, i64 b) { return std::abs(a * b) / gcd(a, b); }
 };
 } // namespace kfr
 

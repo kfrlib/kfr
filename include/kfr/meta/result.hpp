@@ -25,7 +25,8 @@ struct result
 
     constexpr result(ErrEnum error) noexcept : m_error(error) {}
 
-    template <typename ValueInit, KFR_ENABLE_IF(std::is_constructible_v<value_type, ValueInit>)>
+    template <typename ValueInit>
+        requires(std::is_constructible_v<value_type, ValueInit>)
     constexpr result(ValueInit&& value) noexcept : m_value(std::forward<ValueInit>(value)), m_error(OkValue)
     {
     }

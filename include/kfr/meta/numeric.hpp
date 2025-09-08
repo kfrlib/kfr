@@ -138,6 +138,24 @@ template <typename T>
 constexpr inline bool is_i_class = typeclass<T> == datatype::i;
 
 template <typename T>
+concept f_class = typeclass<T> == datatype::f;
+
+template <typename T>
+concept u_class = typeclass<T> == datatype::u;
+
+template <typename T>
+concept i_class = typeclass<T> == datatype::i;
+
+template <typename T>
+concept not_f_class = typeclass<T> != datatype::f;
+
+template <typename T>
+concept not_u_class = typeclass<T> != datatype::u;
+
+template <typename T>
+concept not_i_class = typeclass<T> != datatype::i;
+
+template <typename T>
 struct typebits
 {
     constexpr static size_t bits  = sizeof(typename compound_type_traits<T>::subtype) * 8;

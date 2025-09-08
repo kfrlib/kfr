@@ -131,73 +131,73 @@ KFR_I_FN(dB_to_amp)
 KFR_I_FN(power_to_dB)
 KFR_I_FN(dB_to_power)
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> note_to_hertz(const T1& x)
 {
     return intr::note_to_hertz(x);
 }
 
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::note_to_hertz, E1> note_to_hertz(E1&& x)
 {
     return { fn::note_to_hertz(), std::forward<E1>(x) };
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> hertz_to_note(const T1& x)
 {
     return intr::hertz_to_note(x);
 }
 
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::hertz_to_note, E1> hertz_to_note(E1&& x)
 {
     return { fn::hertz_to_note(), std::forward<E1>(x) };
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> amp_to_dB(const T1& x)
 {
     return intr::amp_to_dB(x);
 }
 
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::amp_to_dB, E1> amp_to_dB(E1&& x)
 {
     return { fn::amp_to_dB(), std::forward<E1>(x) };
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> dB_to_amp(const T1& x)
 {
     return intr::dB_to_amp(x);
 }
 
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::dB_to_amp, E1> dB_to_amp(E1&& x)
 {
     return { fn::dB_to_amp(), std::forward<E1>(x) };
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> power_to_dB(const T1& x)
 {
     return intr::power_to_dB(x);
 }
 
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::power_to_dB, E1> power_to_dB(E1&& x)
 {
     return { fn::power_to_dB(), std::forward<E1>(x) };
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> dB_to_power(const T1& x)
 {
     return intr::dB_to_power(x);
 }
 
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::dB_to_power, E1> dB_to_power(E1&& x)
 {
     return { fn::dB_to_power(), std::forward<E1>(x) };

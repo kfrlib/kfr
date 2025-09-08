@@ -625,9 +625,9 @@ struct dft_plan_md
             execute_dft(cfalse, out, in, temp);
     }
 
-    template <index_t UDims = Dims, KFR_ENABLE_IF(UDims != dynamic_shape)>
     void execute(const tensor<complex<T>, Dims>& out, const tensor<complex<T>, Dims>& in, u8* temp,
                  bool inverse = false) const
+        requires(Dims != dynamic_shape)
     {
         KFR_LOGIC_CHECK(in.shape() == this->size && out.shape() == this->size,
                         "dft_plan_md: incorrect tensor shapes");
@@ -787,10 +787,9 @@ struct dft_plan_md_real
     {
         execute_dft(ctrue, out, in, temp);
     }
-
-    template <index_t UDims = Dims, KFR_ENABLE_IF(UDims != dynamic_shape)>
     void execute(const tensor<complex<T>, Dims>& out, const tensor<T, Dims>& in, u8* temp,
                  cdirect_t = {}) const
+        requires(Dims != dynamic_shape)
     {
         KFR_LOGIC_CHECK(in.shape() == this->size && out.shape() == complex_size(),
                         "dft_plan_md_real: incorrect tensor shapes");
@@ -798,9 +797,9 @@ struct dft_plan_md_real
                         "dft_plan_md_real: tensors must be contiguous");
         execute_dft(cfalse, out.data(), in.data(), temp);
     }
-    template <index_t UDims = Dims, KFR_ENABLE_IF(UDims != dynamic_shape)>
     void execute(const tensor<T, Dims>& out, const tensor<complex<T>, Dims>& in, u8* temp,
                  cinvert_t = {}) const
+        requires(Dims != dynamic_shape)
     {
         KFR_LOGIC_CHECK(in.shape() == complex_size() && out.shape() == this->size,
                         "dft_plan_md_real: incorrect tensor shapes");

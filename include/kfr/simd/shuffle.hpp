@@ -123,12 +123,14 @@ KFR_INTRINSIC vec<T, Nout> repeat(const vec<T, N>& x)
     return x.shuffle(csizeseq<Nout> % csize<N>);
 }
 
-template <size_t Nout, typename T, size_t N, KFR_ENABLE_IF(Nout != N)>
+template <size_t Nout, typename T, size_t N>
+    requires(Nout != N)
 KFR_INTRINSIC vec<T, Nout> resize(const vec<T, N>& x)
 {
     return x.shuffle(csizeseq<Nout> % csize<N>);
 }
-template <size_t Nout, typename T, size_t N, KFR_ENABLE_IF(Nout == N)>
+template <size_t Nout, typename T, size_t N>
+    requires(Nout == N)
 constexpr KFR_INTRINSIC const vec<T, Nout>& resize(const vec<T, N>& x)
 {
     return x;
@@ -188,12 +190,14 @@ KFR_INTRINSIC vec<T, Nout> extend(const vec<T, 1>& x)
 {
     return vec<T, Nout>(x.front());
 }
-template <size_t Nout, typename T, size_t N, KFR_ENABLE_IF(N != Nout && N > 1)>
+template <size_t Nout, typename T, size_t N>
+    requires(N != Nout && N > 1)
 KFR_INTRINSIC vec<T, Nout> extend(const vec<T, N>& x)
 {
     return x.shuffle(csizeseq<Nout>);
 }
-template <size_t Nout, typename T, size_t N, KFR_ENABLE_IF(N == Nout && N > 1)>
+template <size_t Nout, typename T, size_t N>
+    requires(N == Nout && N > 1)
 constexpr KFR_INTRINSIC const vec<T, Nout>& extend(const vec<T, N>& x)
 {
     return x;
@@ -260,13 +264,15 @@ KFR_INTRINSIC vec<T, count> concat_and_slice(const vec<T, N>& x, const vec<T, N>
     return x.shuffle(y, csizeseq<count, start>);
 }
 
-template <size_t start, size_t count, typename T, size_t N1, size_t N2, KFR_ENABLE_IF(N1 > N2)>
+template <size_t start, size_t count, typename T, size_t N1, size_t N2>
+    requires(N1 > N2)
 KFR_INTRINSIC vec<T, count> concat_and_slice(const vec<T, N1>& x, const vec<T, N2>& y)
 {
     return x.shuffle(y.shuffle(csizeseq<N1>), csizeseq<N1 * 2>).shuffle(csizeseq<count, start>);
 }
 
-template <size_t start, size_t count, typename T, size_t N1, size_t N2, KFR_ENABLE_IF(N1 < N2)>
+template <size_t start, size_t count, typename T, size_t N1, size_t N2>
+    requires(N1 < N2)
 KFR_INTRINSIC vec<T, count> concat_and_slice(const vec<T, N1>& x, const vec<T, N2>& y)
 {
     return x.shuffle(csizeseq<N2, N1 - N2>)
@@ -276,7 +282,8 @@ KFR_INTRINSIC vec<T, count> concat_and_slice(const vec<T, N1>& x, const vec<T, N
 
 KFR_FN(concat_and_slice)
 
-template <size_t Nout, typename T, size_t N, KFR_ENABLE_IF(Nout > N)>
+template <size_t Nout, typename T, size_t N>
+    requires(Nout > N)
 KFR_INTRINSIC vec<T, Nout> widen(const vec<T, N>& x, std::type_identity_t<T> newvalue = T())
 {
     static_assert(Nout > N, "Nout > N");
@@ -297,14 +304,16 @@ KFR_INTRINSIC vec<T, Nout> narrow(const vec<T, N>& x)
 }
 KFR_FN(narrow)
 
-template <size_t group = 1, typename T, size_t N, size_t Nout = N / 2, KFR_ENABLE_IF(N >= 2 && (N & 1) == 0)>
+template <size_t group = 1, typename T, size_t N, size_t Nout = N / 2>
+    requires(N >= 2 && (N & 1) == 0)
 KFR_INTRINSIC vec<T, Nout> even(const vec<T, N>& x)
 {
     return x.shuffle(scale<group>(csizeseq<Nout / group, 0, 2>));
 }
 KFR_FN(even)
 
-template <size_t group = 1, typename T, size_t N, size_t Nout = N / 2, KFR_ENABLE_IF(N >= 2 && (N & 1) == 0)>
+template <size_t group = 1, typename T, size_t N, size_t Nout = N / 2>
+    requires(N >= 2 && (N & 1) == 0)
 KFR_INTRINSIC vec<T, Nout> odd(const vec<T, N>& x)
 {
     return x.shuffle(scale<group>(csizeseq<Nout / group, 1, 2>));
@@ -475,13 +484,15 @@ KFR_INTRINSIC vec<T, N> insertleft(T x, const vec<T, N>& y)
 KFR_FN(insertleft)
 
 template <size_t side1, size_t group = 1, typename T, size_t N, size_t size = N / group,
-          size_t side2 = size / side1, KFR_ENABLE_IF(size > 3)>
+          size_t side2 = size / side1>
+    requires(size > 3)
 KFR_INTRINSIC vec<T, N> transpose(const vec<T, N>& x)
 {
     return x.shuffle(scale<group>(csizeseq_t<size>() % csize_t<side2>() * csize_t<side1>() +
                                   csizeseq_t<size>() / csize_t<side2>()));
 }
-template <size_t side, size_t group = 1, typename T, size_t N, KFR_ENABLE_IF(N / group <= 3)>
+template <size_t side, size_t group = 1, typename T, size_t N>
+    requires(N / group <= 3)
 KFR_INTRINSIC vec<T, N> transpose(const vec<T, N>& x)
 {
     return x;
@@ -494,13 +505,15 @@ KFR_INTRINSIC vec<vec<T, N>, N> transpose(const vec<vec<T, N>, N>& x)
 KFR_FN(transpose)
 
 template <size_t side2, size_t group = 1, typename T, size_t N, size_t size = N / group,
-          size_t side1 = size / side2, KFR_ENABLE_IF(size > 3)>
+          size_t side1 = size / side2>
+    requires(size > 3)
 KFR_INTRINSIC vec<T, N> transposeinverse(const vec<T, N>& x)
 {
     return x.shuffle(scale<group>(csizeseq_t<size>() % csize_t<side2>() * csize_t<side1>() +
                                   csizeseq_t<size>() / csize_t<side2>()));
 }
-template <size_t side, size_t groupsize = 1, typename T, size_t N, KFR_ENABLE_IF(N / groupsize <= 3)>
+template <size_t side, size_t groupsize = 1, typename T, size_t N>
+    requires(N / groupsize <= 3)
 KFR_INTRINSIC vec<T, N> transposeinverse(const vec<T, N>& x)
 {
     return x;
@@ -565,7 +578,8 @@ KFR_INTRINSIC vec<T, N> splitpairs(const vec<T, N>& x)
 }
 KFR_FN(splitpairs)
 
-template <size_t group = 1, typename T, size_t N, KFR_ENABLE_IF(!is_vec<T>)>
+template <size_t group = 1, typename T, size_t N>
+    requires(!is_vec<T>)
 KFR_INTRINSIC vec<T, N> reverse(const vec<T, N>& x)
 {
     constexpr size_t size = N / group;

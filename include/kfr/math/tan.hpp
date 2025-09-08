@@ -39,7 +39,7 @@ inline namespace KFR_ARCH_NAME
  * @param x Input value in radians.
  * @return The tangent of the input.
  */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> tan(const T1& x)
 {
     return intr::tan(x);
@@ -52,7 +52,7 @@ KFR_FUNCTION flt_type<T1> tan(const T1& x)
  * @param x Input value in degrees.
  * @return The tangent of the input.
  */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> tandeg(const T1& x)
 {
     return intr::tandeg(x);

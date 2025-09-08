@@ -77,7 +77,7 @@ struct fir_params
         std::reverse(this->taps.begin(), this->taps.end());
     }
 
-    template <typename Cont, KFR_HAS_DATA_SIZE(Cont)>
+    template <has_data_size Cont>
     fir_params(Cont&& taps) : fir_params(std::data(taps), std::size(taps))
     {
     }
@@ -98,11 +98,11 @@ struct fir_state
         : params(std::move(params)), delayline(this->params.taps.size(), U(0)), delayline_cursor(0)
     {
     }
-    template <typename Cont, KFR_HAS_DATA_SIZE(Cont)>
+    template <has_data_size Cont>
     fir_state(Cont&& taps) : params(std::move(taps)), delayline(params.taps.size(), U(0)), delayline_cursor(0)
     {
     }
-    template <typename Cont, KFR_HAS_DATA_SIZE(Cont)>
+    template <has_data_size Cont>
     void push_delayline(Cont&& state)
     {
         delayline.ringbuf_write(delayline_cursor, std::data(state), std::size(state));

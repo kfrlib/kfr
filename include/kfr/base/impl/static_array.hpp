@@ -106,8 +106,9 @@ struct static_array_base<T, csizes_t<indices...>>
         return value;
     }
 
-    template <int dummy = 0, KFR_ENABLE_IF(dummy == 0 && static_size > 1)>
-    KFR_MEM_INTRINSIC constexpr explicit static_array_base(value_type value) noexcept
+    KFR_MEM_INTRINSIC
+    constexpr explicit static_array_base(value_type value) noexcept
+        requires(static_size > 1)
         : array{ just_value<indices>(value)... }
     {
     }

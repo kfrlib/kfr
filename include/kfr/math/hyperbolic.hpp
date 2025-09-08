@@ -33,28 +33,28 @@ inline namespace KFR_ARCH_NAME
 {
 
 /// @brief Returns the hyperbolic sine of the x
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> sinh(const T1& x)
 {
     return intr::sinh(x);
 }
 
 /// @brief Returns the hyperbolic cosine of the x
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> cosh(const T1& x)
 {
     return intr::cosh(x);
 }
 
 /// @brief Returns the hyperbolic tangent of the x
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> tanh(const T1& x)
 {
     return intr::tanh(x);
 }
 
 /// @brief Returns the hyperbolic cotangent of the x
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> coth(const T1& x)
 {
     return intr::coth(x);
@@ -62,7 +62,7 @@ KFR_FUNCTION flt_type<T1> coth(const T1& x)
 
 /// @brief Returns the hyperbolic sine of the even elements of the x and the hyperbolic cosine of the odd
 /// elements of the x
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> sinhcosh(const T1& x)
 {
     return intr::sinhcosh(x);
@@ -70,7 +70,7 @@ KFR_FUNCTION flt_type<T1> sinhcosh(const T1& x)
 
 /// @brief Returns the hyperbolic cosine of the even elements of the x and the hyperbolic sine of the odd
 /// elements of the x
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> coshsinh(const T1& x)
 {
     return intr::coshsinh(x);

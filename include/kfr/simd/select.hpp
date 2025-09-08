@@ -38,8 +38,7 @@ inline namespace KFR_ARCH_NAME
  * return m ? x : y
  * @endcode
  */
-template <typename T1, size_t N, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>),
-          typename Tout = subtype<std::common_type_t<T2, T3>>>
+template <numeric T1, size_t N, numeric T2, numeric T3, typename Tout = subtype<std::common_type_t<T2, T3>>>
 KFR_INTRINSIC vec<Tout, N> select(const mask<T1, N>& m, const T2& x, const T3& y)
 {
     return intr::select(bitcast<Tout>(cast<itype<Tout>>(bitcast<itype<T1>>(m.asvec()))).asmask(),

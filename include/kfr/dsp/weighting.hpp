@@ -97,37 +97,37 @@ KFR_I_FN(aweighting)
 KFR_I_FN(bweighting)
 KFR_I_FN(cweighting)
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_INTRINSIC T1 aweighting(const T1& x)
 {
     return intr::aweighting(x);
 }
 
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_INTRINSIC expression_function<fn::aweighting, E1> aweighting(E1&& x)
 {
     return { fn::aweighting(), std::forward<E1>(x) };
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_INTRINSIC T1 bweighting(const T1& x)
 {
     return intr::bweighting(x);
 }
 
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_INTRINSIC expression_function<fn::bweighting, E1> bweighting(E1&& x)
 {
     return { fn::bweighting(), std::forward<E1>(x) };
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_INTRINSIC T1 cweighting(const T1& x)
 {
     return intr::cweighting(x);
 }
 
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_INTRINSIC expression_function<fn::cweighting, E1> cweighting(E1&& x)
 {
     return { fn::cweighting(), std::forward<E1>(x) };

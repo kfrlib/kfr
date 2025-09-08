@@ -37,7 +37,7 @@ public:
     constexpr array_ref& operator=(const array_ref&) noexcept = default;
     constexpr array_ref& operator=(array_ref&&) noexcept      = default;
 
-    template <typename Container, KFR_HAS_DATA_SIZE(Container)>
+    template <has_data_size Container>
     array_ref(Container&& cont) : array_ref(std::data(cont), std::size(cont))
     {
     }
@@ -67,7 +67,7 @@ inline array_ref<T> make_array_ref(T* data, std::size_t size)
     return array_ref<T>(data, size);
 }
 
-template <typename Container, KFR_HAS_DATA_SIZE(Container), typename T = container_value_type<Container>>
+template <has_data_size Container, typename T = container_value_type<Container>>
 inline array_ref<T> make_array_ref(Container&& cont)
 {
     return array_ref<T>(std::data(cont), std::size(cont));

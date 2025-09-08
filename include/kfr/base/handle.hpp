@@ -109,9 +109,6 @@ struct expression_vtable
         {
             write(dest, get_elements(*static_cast<Expression*>(instance), index, axis_params_v<VecAxis, N>));
         }
-        else
-        {
-        }
     }
     template <typename Expression, size_t N, index_t VecAxis>
     static void static_set_elements(void* instance, shape<Dims> index, const T* src)
@@ -119,9 +116,6 @@ struct expression_vtable
         if constexpr (is_output_expression<Expression>)
         {
             set_elements(*static_cast<Expression*>(instance), index, axis_params_v<VecAxis, N>, read<N>(src));
-        }
-        else
-        {
         }
     }
     template <typename Expression>

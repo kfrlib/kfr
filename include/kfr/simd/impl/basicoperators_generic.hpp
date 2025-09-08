@@ -251,12 +251,14 @@ KFR_INTRINSIC i64sse shr(const i64sse& x, unsigned y)
     KFR_COMPONENTWISE_RET_I(u64sse, result[i] = x[i] >> y);
 }
 
-template <typename T, size_t N, typename = decltype(uibitcast(T())), KFR_ENABLE_IF(is_simd_size<T>(N))>
+template <typename T, size_t N>
+    requires(is_simd_size<T>(N))
 KFR_INTRINSIC vec<T, N> shl(const vec<T, N>& x, const vec<utype<T>, N>& y)
 {
     KFR_COMPONENTWISE_RET(result[i] = bitcast<T>(static_cast<uitype<T>>(uibitcast(x[i]) << y[i])));
 }
-template <typename T, size_t N, typename = decltype(uibitcast(T())), KFR_ENABLE_IF(is_simd_size<T>(N))>
+template <typename T, size_t N>
+    requires(is_simd_size<T>(N))
 KFR_INTRINSIC vec<T, N> shr(const vec<T, N>& x, const vec<utype<T>, N>& y)
 {
     KFR_COMPONENTWISE_RET(result[i] = bitcast<T>(static_cast<uitype<T>>(uibitcast(x[i]) >> y[i])));
@@ -1471,25 +1473,27 @@ KFR_INTRINSIC f64avx512 shr(const f64avx512& x, const u64avx512& y)
 #endif
 
 #define KFR_HANDLE_ALL_SIZES_SHIFT_2(fn)                                                                     \
-    template <typename T, size_t N,                                                                          \
-              KFR_ENABLE_IF(N < vector_width<T> && !is_simd_size<T>(N) && is_simd_type<T>)>                  \
+    template <simd_compat T, size_t N>                                                                       \
+        requires(N < vector_width<T> && !is_simd_size<T>(N))                                                 \
     KFR_INTRINSIC vec<T, N> fn(const vec<T, N>& a, const unsigned b)                                         \
     {                                                                                                        \
         return slice<0, N>(fn(expand_simd(a), b));                                                           \
     }                                                                                                        \
-    template <typename T, size_t N, KFR_ENABLE_IF(N > vector_width<T> && is_simd_type<T>), typename = void>  \
+    template <simd_compat T, size_t N>                                                                       \
+        requires(N > vector_width<T>)                                                                        \
     KFR_INTRINSIC vec<T, N> fn(const vec<T, N>& a, const unsigned b)                                         \
     {                                                                                                        \
         return concat(fn(low(a), b), fn(high(a), b));                                                        \
     }
 #define KFR_HANDLE_ALL_SIZES_SHIFT_VAR_2(fn)                                                                 \
-    template <typename T, size_t N,                                                                          \
-              KFR_ENABLE_IF(N < vector_width<T> && !is_simd_size<T>(N) && is_simd_type<T>)>                  \
+    template <simd_compat T, size_t N>                                                                       \
+        requires(N < vector_width<T> && !is_simd_size<T>(N))                                                 \
     KFR_INTRINSIC vec<T, N> fn(const vec<T, N>& a, const vec<utype<T>, N>& b)                                \
     {                                                                                                        \
         return slice<0, N>(fn(expand_simd(a), expand_simd(b)));                                              \
     }                                                                                                        \
-    template <typename T, size_t N, KFR_ENABLE_IF(N > vector_width<T> && is_simd_type<T>), typename = void>  \
+    template <simd_compat T, size_t N>                                                                       \
+        requires(N > vector_width<T>)                                                                        \
     KFR_INTRINSIC vec<T, N> fn(const vec<T, N>& a, const vec<utype<T>, N>& b)                                \
     {                                                                                                        \
         return concat(fn(low(a), low(b)), fn(high(a), high(b)));                                             \
@@ -1519,107 +1523,107 @@ KFR_HANDLE_ALL_SIZES_SHIFT_VAR_2(shr)
 
 #else
 
-template <typename T, size_t N, typename = decltype(uibitcast(T())), KFR_ENABLE_IF(is_simd_type<T>)>
+template <simd_compat T, size_t N>
 KFR_INTRINSIC vec<T, N> shl(const vec<T, N>& x, const vec<utype<T>, N>& y)
 {
     KFR_COMPONENTWISE_RET(result[i] = bitcast<T>(static_cast<uitype<T>>(uibitcast(x[i]) << y[i])));
 }
-template <typename T, size_t N, typename = decltype(uibitcast(T())), KFR_ENABLE_IF(is_simd_type<T>)>
+template <simd_compat T, size_t N>
 KFR_INTRINSIC vec<T, N> shl(const vec<T, N>& x, unsigned y)
 {
     KFR_COMPONENTWISE_RET(result[i] = bitcast<T>(static_cast<uitype<T>>(uibitcast(x[i]) << y)));
 }
-template <typename T, size_t N, typename = decltype(uibitcast(T())), KFR_ENABLE_IF(is_simd_type<T>)>
+template <simd_compat T, size_t N>
 KFR_INTRINSIC vec<T, N> shr(const vec<T, N>& x, const vec<utype<T>, N>& y)
 {
     KFR_COMPONENTWISE_RET(result[i] = bitcast<T>(static_cast<uitype<T>>(uibitcast(x[i]) >> y[i])));
 }
-template <typename T, size_t N, typename = decltype(uibitcast(T())), KFR_ENABLE_IF(is_simd_type<T>)>
+template <simd_compat T, size_t N>
 KFR_INTRINSIC vec<T, N> shr(const vec<T, N>& x, unsigned y)
 {
     KFR_COMPONENTWISE_RET(result[i] = bitcast<T>(static_cast<uitype<T>>(uibitcast(x[i]) >> y)));
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>)>
+template <simd_compat T, size_t N>
 KFR_INTRINSIC vec<T, N> eq(const vec<T, N>& x, const vec<T, N>& y)
 {
     KFR_COMPONENTWISE_RET(result[i] = maskbits<T>(x[i] == y[i]));
 }
-template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>)>
+template <simd_compat T, size_t N>
 KFR_INTRINSIC vec<T, N> ne(const vec<T, N>& x, const vec<T, N>& y)
 {
     KFR_COMPONENTWISE_RET(result[i] = maskbits<T>(x[i] != y[i]));
 }
-template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>)>
+template <simd_compat T, size_t N>
 KFR_INTRINSIC vec<T, N> ge(const vec<T, N>& x, const vec<T, N>& y)
 {
     KFR_COMPONENTWISE_RET(result[i] = maskbits<T>(x[i] >= y[i]));
 }
-template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>)>
+template <simd_compat T, size_t N>
 KFR_INTRINSIC vec<T, N> le(const vec<T, N>& x, const vec<T, N>& y)
 {
     KFR_COMPONENTWISE_RET(result[i] = maskbits<T>(x[i] <= y[i]));
 }
-template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>)>
+template <simd_compat T, size_t N>
 KFR_INTRINSIC vec<T, N> gt(const vec<T, N>& x, const vec<T, N>& y)
 {
     KFR_COMPONENTWISE_RET(result[i] = maskbits<T>(x[i] > y[i]));
 }
-template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>)>
+template <simd_compat T, size_t N>
 KFR_INTRINSIC vec<T, N> lt(const vec<T, N>& x, const vec<T, N>& y)
 {
     KFR_COMPONENTWISE_RET(result[i] = maskbits<T>(x[i] < y[i]));
 }
 
-template <typename T, size_t N, typename = decltype(ubitcast(T())), KFR_ENABLE_IF(is_simd_type<T>)>
+template <simd_compat T, size_t N>
 KFR_INTRINSIC vec<T, N> bor(const vec<T, N>& x, const vec<T, N>& y)
 {
     KFR_COMPONENTWISE_RET(result[i] = bitcast<T>(static_cast<utype<T>>((ubitcast(x[i]) | ubitcast(y[i])))));
 }
-template <typename T, size_t N, typename = decltype(ubitcast(T())), KFR_ENABLE_IF(is_simd_type<T>)>
+template <simd_compat T, size_t N>
 KFR_INTRINSIC vec<T, N> bxor(const vec<T, N>& x, const vec<T, N>& y)
 {
     KFR_COMPONENTWISE_RET(result[i] = bitcast<T>(static_cast<utype<T>>(ubitcast(x[i]) ^ ubitcast(y[i]))));
 }
-template <typename T, size_t N, typename = decltype(ubitcast(T())), KFR_ENABLE_IF(is_simd_type<T>)>
+template <simd_compat T, size_t N>
 KFR_INTRINSIC vec<T, N> band(const vec<T, N>& x, const vec<T, N>& y)
 {
     KFR_COMPONENTWISE_RET(result[i] = bitcast<T>(static_cast<utype<T>>(ubitcast(x[i]) & ubitcast(y[i]))));
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>)>
+template <simd_compat T, size_t N>
 KFR_INTRINSIC vec<T, N> add(const vec<T, N>& x, const vec<T, N>& y)
 {
     KFR_COMPONENTWISE_RET(result[i] = x[i] + y[i]);
 }
-template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>)>
+template <simd_compat T, size_t N>
 KFR_INTRINSIC vec<T, N> sub(const vec<T, N>& x, const vec<T, N>& y)
 {
     KFR_COMPONENTWISE_RET(result[i] = x[i] - y[i]);
 }
-template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>)>
+template <simd_compat T, size_t N>
 KFR_INTRINSIC vec<T, N> mul(const vec<T, N>& x, const vec<T, N>& y)
 {
     KFR_COMPONENTWISE_RET(result[i] = x[i] * y[i]);
 }
-template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>)>
+template <simd_compat T, size_t N>
 KFR_INTRINSIC vec<T, N> div(const vec<T, N>& x, const vec<T, N>& y)
 {
     KFR_COMPONENTWISE_RET(result[i] = x[i] / y[i]);
 }
-template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>)>
+template <simd_compat T, size_t N>
 KFR_INTRINSIC vec<T, N> mod(const vec<T, N>& x, const vec<T, N>& y)
 {
     KFR_COMPONENTWISE_RET(result[i] = x[i] % y[i]);
 }
 
 #define KFR_HANDLE_VEC_SCA(fn)                                                                               \
-    template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>)>                                          \
+    template <simd_compat T, size_t N>                                                                       \
     KFR_INTRINSIC vec<T, N> fn(const vec<T, N>& x, const T& y)                                               \
     {                                                                                                        \
         return fn(x, vec<T, N>(y));                                                                          \
     }                                                                                                        \
-    template <typename T, size_t N, KFR_ENABLE_IF(is_simd_type<T>)>                                          \
+    template <simd_compat T, size_t N>                                                                       \
     KFR_INTRINSIC vec<T, N> fn(const T& x, const vec<T, N>& y)                                               \
     {                                                                                                        \
         return fn(vec<T, N>(x), y);                                                                          \
@@ -1648,12 +1652,12 @@ KFR_INTRINSIC vec<T, N> bnot(const vec<T, N>& x)
     return bxor(special_constants<T>::allones(), x);
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>)>
+template <not_f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> neg(const vec<T, N>& x)
 {
     return sub(T(0), x);
 }
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
+template <f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> neg(const vec<T, N>& x)
 {
     return bxor(special_constants<T>::highbitmask(), x);

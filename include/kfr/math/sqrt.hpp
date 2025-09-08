@@ -35,7 +35,7 @@ inline namespace KFR_ARCH_NAME
 /**
  * @brief Returns the positive square root of the x. \f$\sqrt{x}\f$
  */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_INTRINSIC flt_type<T1> sqrt(const T1& x)
 {
     return intr::sqrt(x);

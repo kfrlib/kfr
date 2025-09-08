@@ -36,7 +36,7 @@ inline namespace KFR_ARCH_NAME
  * @brief Returns the arc tangent of x. The returned angle is in the range \f$-\pi/2\f$ through
  * \f$\pi/2\f$.
  */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> atan(const T1& x)
 {
     return intr::atan(x);
@@ -46,7 +46,7 @@ KFR_FUNCTION flt_type<T1> atan(const T1& x)
  * @brief Returns the arc tangent of the x, expressed in degrees. The returned angle is in the range -90
  * through 90.
  */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> atandeg(const T1& x)
 {
     return intr::atandeg(x);
@@ -55,7 +55,7 @@ KFR_FUNCTION flt_type<T1> atandeg(const T1& x)
 /**
  * @brief Returns the arc tangent of y/x using the signs of arguments to determine the correct quadrant.
  */
-template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>)>
+template <numeric T1, numeric T2>
 KFR_FUNCTION std::common_type_t<T1, T2> atan2(const T1& x, const T2& y)
 {
     return intr::atan2(x, y);
@@ -65,7 +65,7 @@ KFR_FUNCTION std::common_type_t<T1, T2> atan2(const T1& x, const T2& y)
  * @brief Returns the arc tangent of y/x (expressed in degrees) using the signs of arguments to determine the
  * correct quadrant.
  */
-template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>)>
+template <numeric T1, numeric T2>
 KFR_FUNCTION std::common_type_t<T1, T2> atan2deg(const T1& x, const T2& y)
 {
     return intr::atan2deg(x, y);

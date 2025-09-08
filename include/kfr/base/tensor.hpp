@@ -237,7 +237,8 @@ public:
     }
 
     /// @brief Initialize with braced list. Defined for 2D tensor only
-    template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>&& dims == 2)>
+    template <std::convertible_to<T> U>
+        requires(dims == 2)
     KFR_INTRINSIC tensor(const std::initializer_list<std::initializer_list<U>>& values)
         : tensor(shape_type(values.size(), values.begin()->size()))
     {
@@ -245,7 +246,8 @@ public:
     }
 
     /// @brief Initialize with braced list. Defined for 3D tensor only
-    template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>&& dims == 3)>
+    template <std::convertible_to<T> U>
+        requires(dims == 3)
     KFR_INTRINSIC tensor(const std::initializer_list<std::initializer_list<std::initializer_list<U>>>& values)
         : tensor(shape_type(values.size(), values.begin()->size(), values.begin()->begin()->size()))
     {
@@ -253,7 +255,8 @@ public:
     }
 
     /// @brief Initialize with braced list. Defined for 4D tensor only
-    template <typename U, KFR_ENABLE_IF(std::is_convertible_v<U, T>&& dims == 4)>
+    template <std::convertible_to<T> U>
+        requires(dims == 4)
     KFR_INTRINSIC tensor(
         const std::initializer_list<std::initializer_list<std::initializer_list<std::initializer_list<U>>>>&
             values)
@@ -271,7 +274,7 @@ public:
         std::copy(values.begin(), values.end(), begin());
     }
 
-    template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
+    template <expression_argument Input>
     KFR_MEM_INTRINSIC tensor(Input&& input) : tensor(get_shape(input))
     {
         static_assert(expression_traits<Input>::dims == dims);
@@ -812,19 +815,19 @@ public:
 
     KFR_MEM_INTRINSIC memory_finalizer finalizer() const { return m_finalizer; }
 
-    template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
+    template <expression_argument Input>
     KFR_MEM_INTRINSIC const tensor& operator=(Input&& input) const&
     {
         process(*this, input);
         return *this;
     }
-    template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
+    template <expression_argument Input>
     KFR_MEM_INTRINSIC tensor& operator=(Input&& input) &&
     {
         process(*this, input);
         return *this;
     }
-    template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
+    template <expression_argument Input>
     KFR_MEM_INTRINSIC tensor& operator=(Input&& input) &
     {
         process(*this, input);
@@ -925,8 +928,7 @@ struct tensor<T, dynamic_shape>
 // private:
 // };
 
-template <typename Container, KFR_ENABLE_IF(kfr::has_data_size<Container>),
-          typename T = typename Container::value_type>
+template <has_data_size Container, typename T = typename Container::value_type>
 KFR_INTRINSIC tensor<T, 1> tensor_from_container(Container container)
 {
     using container_finalizer = internal_generic::memory_finalizer_data<Container>;

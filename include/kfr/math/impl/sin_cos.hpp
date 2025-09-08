@@ -133,7 +133,8 @@ KFR_INTRINSIC vec<f64, N> trig_sincos(const vec<f64, N>& folded, const mask<f64,
     return formula;
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(N > 1)>
+template <typename T, size_t N>
+    requires(N > 1)
 KFR_INTRINSIC vec<T, N> sincos_mask(const vec<T, N>& x_full, const mask<T, N>& cosmask)
 {
     vec<itype<T>, N> quadrant;
@@ -155,7 +156,7 @@ KFR_INTRINSIC vec<T, N> sincos_mask(const vec<T, N>& x_full, const mask<T, N>& c
     return formula;
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
+template <f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> sin(const vec<T, N>& x)
 {
     vec<itype<T>, N> quadrant;
@@ -171,7 +172,7 @@ KFR_INTRINSIC vec<T, N> sin(const vec<T, N>& x)
     return formula;
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
+template <f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> cos(const vec<T, N>& x)
 {
     vec<itype<T>, N> quadrant;
@@ -187,7 +188,7 @@ KFR_INTRINSIC vec<T, N> cos(const vec<T, N>& x)
     return formula;
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
+template <f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> fastsin(const vec<T, N>& x)
 {
     const vec<T, N> msk = broadcast<N>(special_constants<T>::highbitmask());
@@ -212,7 +213,7 @@ KFR_INTRINSIC vec<T, N> fastsin(const vec<T, N>& x)
     return formula;
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
+template <f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> fastcos(const vec<T, N>& x)
 {
     x += c_pi<T, 1, 2>;
@@ -220,19 +221,21 @@ KFR_INTRINSIC vec<T, N> fastcos(const vec<T, N>& x)
     return fastsin(x);
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(N > 1 && is_f_class<T>)>
+template <f_class T, size_t N>
+    requires(N > 1)
 KFR_INTRINSIC vec<T, N> sincos(const vec<T, N>& x)
 {
     return sincos_mask(x, internal::oddmask<T, N>());
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(N > 1 && is_f_class<T>)>
+template <f_class T, size_t N>
+    requires(N > 1)
 KFR_INTRINSIC vec<T, N> cossin(const vec<T, N>& x)
 {
     return sincos_mask(x, internal::evenmask<T, N>());
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
+template <f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> sinc(const vec<T, N>& x)
 {
     return select(abs(x) <= constants<T>::epsilon, T(1), sin(x) / x);

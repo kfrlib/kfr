@@ -259,7 +259,7 @@ KFR_INTRINSIC vec<T, N> cbrt(const vec<T, N>& x)
     return root<T, N>(x, T(3));
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>), typename Tout = flt_type<T>>
+template <not_f_class T, size_t N, typename Tout = flt_type<T>>
 KFR_INTRINSIC vec<Tout, N> cbrt(const vec<T, N>& x)
 {
     return cbrt(broadcastto<Tout>(x));

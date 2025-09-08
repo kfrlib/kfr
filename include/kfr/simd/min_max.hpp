@@ -35,8 +35,7 @@ inline namespace KFR_ARCH_NAME
 /**
  * @brief Returns the smaller of two values.
  */
-template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>),
-          typename Tout = std::common_type_t<T1, T2>>
+template <numeric T1, numeric T2, typename Tout = std::common_type_t<T1, T2>>
 KFR_INTRINSIC Tout min(const T1& x, const T2& y)
 {
     return intr::min(x, y);
@@ -45,8 +44,7 @@ KFR_INTRINSIC Tout min(const T1& x, const T2& y)
 /**
  * @brief Returns the greater of two values.
  */
-template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>),
-          typename Tout = std::common_type_t<T1, T2>>
+template <numeric T1, numeric T2, typename Tout = std::common_type_t<T1, T2>>
 KFR_INTRINSIC Tout max(const T1& x, const T2& y)
 {
     return intr::max(x, y);
@@ -55,8 +53,7 @@ KFR_INTRINSIC Tout max(const T1& x, const T2& y)
 /**
  * @brief Returns the smaller in magnitude of two values.
  */
-template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>),
-          typename Tout = std::common_type_t<T1, T2>>
+template <numeric T1, numeric T2, typename Tout = std::common_type_t<T1, T2>>
 KFR_INTRINSIC Tout absmin(const T1& x, const T2& y)
 {
     return intr::absmin(x, y);
@@ -65,8 +62,7 @@ KFR_INTRINSIC Tout absmin(const T1& x, const T2& y)
 /**
  * @brief Returns the greater in magnitude of two values.
  */
-template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>),
-          typename Tout = std::common_type_t<T1, T2>>
+template <numeric T1, numeric T2, typename Tout = std::common_type_t<T1, T2>>
 KFR_INTRINSIC Tout absmax(const T1& x, const T2& y)
 {
     return intr::absmax(x, y);

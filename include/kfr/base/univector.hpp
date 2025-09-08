@@ -94,7 +94,7 @@ struct univector_base;
 template <typename T, typename Class>
 struct univector_base<T, Class, true>
 {
-    template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
+    template <expression_argument Input>
     KFR_MEM_INTRINSIC Class& operator=(Input&& input)
     {
         constexpr index_t dims = expression_dims<Input>;
@@ -280,7 +280,7 @@ struct univector_base<T, Class, false>
         return array_ref<const T>(data, size);
     }
 
-    template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
+    template <expression_argument Input>
     KFR_MEM_INTRINSIC Class& operator=(Input&& input)
     {
         static_assert(sizeof(Input) == 0, "Can't assign expression to non-expression");
@@ -307,7 +307,7 @@ struct alignas(platform<>::maximum_vector_alignment) univector
 #endif
     univector(const univector& v)   = default;
     univector(univector&&) noexcept = default;
-    template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
+    template <expression_argument Input>
     univector(Input&& input)
     {
         this->assign_expr(std::forward<Input>(input));
@@ -360,18 +360,18 @@ struct univector<T, tag_array_ref> : array_ref<T>,
     constexpr univector(univector<T, Tag>& other) : array_ref<T>(other.data(), other.size())
     {
     }
-    template <typename U, univector_tag Tag,
-              KFR_ENABLE_IF(std::is_same_v<std::remove_const_t<T>, U>&& std::is_const_v<T>)>
+    template <typename U, univector_tag Tag>
+        requires(std::is_same_v<std::remove_const_t<T>, U> && std::is_const_v<T>)
     constexpr univector(const univector<U, Tag>& other) : array_ref<T>(other.data(), other.size())
     {
     }
-    template <typename U, univector_tag Tag,
-              KFR_ENABLE_IF(std::is_same_v<std::remove_const_t<T>, U>&& std::is_const_v<T>)>
+    template <typename U, univector_tag Tag>
+        requires(std::is_same_v<std::remove_const_t<T>, U> && std::is_const_v<T>)
     constexpr univector(univector<U, Tag>& other) : array_ref<T>(other.data(), other.size())
     {
     }
-    template <typename U, univector_tag Tag,
-              KFR_ENABLE_IF(std::is_same_v<std::remove_const_t<T>, U>&& std::is_const_v<T>)>
+    template <typename U, univector_tag Tag>
+        requires(std::is_same_v<std::remove_const_t<T>, U> && std::is_const_v<T>)
     constexpr univector(univector<U, Tag>&& other) : array_ref<T>(other.data(), other.size())
     {
     }
@@ -407,7 +407,7 @@ struct univector<T, tag_dynamic_vector>
 #endif
     univector(const univector& v)   = default;
     univector(univector&&) noexcept = default;
-    template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
+    template <expression_argument Input>
     univector(Input&& input)
     {
         static_assert(!is_infinite<Input>, "Dynamically sized vector requires finite input expression");
@@ -470,7 +470,7 @@ struct univector<T, tag_dynamic_vector>
     univector& operator=(univector&&)      = default;
 #endif
     KFR_MEM_INTRINSIC univector& operator=(univector& other) { return operator=(std::as_const(other)); }
-    template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
+    template <expression_argument Input>
     KFR_MEM_INTRINSIC univector& operator=(Input&& input)
     {
         constexpr index_t dims = expression_dims<Input>;
@@ -541,16 +541,14 @@ KFR_INTRINSIC univector_ref<const T> make_univector(const T* data, size_t size)
 }
 
 /// @brief Creates univector from a container (must have data() and size() methods)
-template <typename Container, KFR_ENABLE_IF(kfr::has_data_size<Container>),
-          typename T = value_type_of<Container>>
+template <has_data_size Container, typename T = value_type_of<Container>>
 KFR_INTRINSIC univector_ref<const T> make_univector(const Container& container)
 {
     return univector_ref<const T>(container.data(), container.size());
 }
 
 /// @brief Creates univector from a container (must have data() and size() methods)
-template <typename Container, KFR_ENABLE_IF(kfr::has_data_size<Container>),
-          typename T = value_type_of<Container>>
+template <has_data_size Container, typename T = value_type_of<Container>>
 KFR_INTRINSIC univector_ref<T> make_univector(Container& container)
 {
     return univector_ref<T>(container.data(), container.size());
@@ -645,7 +643,8 @@ KFR_INTRINSIC vec<std::remove_const_t<T>, N> get_elements(const univector<T, Tag
     return read<N>(ptr_cast<T>(data) + index.front());
 }
 
-template <typename T, univector_tag Tag, size_t N, KFR_ENABLE_IF(!std::is_const_v<T>)>
+template <typename T, univector_tag Tag, size_t N>
+    requires(!std::is_const_v<T>)
 KFR_INTRINSIC void set_elements(univector<T, Tag>& self, const shape<1>& index, const axis_params<0, N>&,
                                 const std::type_identity_t<vec<T, N>>& value)
 {

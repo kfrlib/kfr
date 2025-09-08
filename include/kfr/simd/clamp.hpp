@@ -36,8 +36,7 @@ inline namespace KFR_ARCH_NAME
  * @brief Returns the first argument clamped to a range [lo, hi]
  * @remarks Supports integer and floating-point numbers, scalars, and vec<>.
  */
-template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>),
-          typename Tout = std::common_type_t<T1, T2, T3>>
+template <numeric T1, numeric T2, numeric T3, typename Tout = std::common_type_t<T1, T2, T3>>
 KFR_INTRINSIC Tout clamp(const T1& x, const T2& lo, const T3& hi)
 {
     return intr::clamp(static_cast<Tout>(x), static_cast<Tout>(lo), static_cast<Tout>(hi));
@@ -47,8 +46,7 @@ KFR_INTRINSIC Tout clamp(const T1& x, const T2& lo, const T3& hi)
  * @brief Returns the first argument clamped to a range [0, hi]
  * @remarks Supports integer and floating-point numbers, scalars, and vec<>.
  */
-template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>),
-          typename Tout = std::common_type_t<T1, T2>>
+template <numeric T1, numeric T2, typename Tout = std::common_type_t<T1, T2>>
 KFR_INTRINSIC Tout clamp(const T1& x, const T2& hi)
 {
     return intr::clamp(static_cast<Tout>(x), static_cast<Tout>(hi));

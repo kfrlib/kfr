@@ -56,7 +56,7 @@ void samplerate_converter<T>::init(sample_rate_conversion_quality quality, itype
     this->input_position  = 0;
     this->output_position = 0;
 
-    const i64 gcf = gcd(interpolation_factor, decimation_factor);
+    const i64 gcf = std::gcd(interpolation_factor, decimation_factor);
     interpolation_factor /= gcf;
     decimation_factor /= gcf;
 

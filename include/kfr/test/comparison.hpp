@@ -46,7 +46,7 @@ struct static_assert_eq
     static_assert(left == right, "left == right");
 };
 
-template <typename L, typename R, typename = void>
+template <typename L, typename R>
 struct equality_comparer
 {
     bool operator()(const L& l, const R& r) const { return l == r; }
@@ -84,9 +84,9 @@ struct epsilon_scope<void>
 
 KFR_PRAGMA_GNU(GCC diagnostic pop)
 
-template <typename T1, typename T2,
-          KFR_ENABLE_IF(compound_type_traits<T1>::is_scalar&& compound_type_traits<T2>::is_scalar &&
-                        (std::is_floating_point<T1>::value || std::is_floating_point<T2>::value))>
+template <typename T1, typename T2>
+    requires(compound_type_traits<T1>::is_scalar && compound_type_traits<T2>::is_scalar &&
+             (std::is_floating_point<T1>::value || std::is_floating_point<T2>::value))
 constexpr bool deep_is_equal(const T1& x, const T2& y)
 {
     using C    = std::common_type_t<T1, T2>;
@@ -100,16 +100,16 @@ constexpr bool deep_is_equal(const T1& x, const T2& y)
     return !(std::abs(xx - yy) > current_epsilon<C>());
 }
 
-template <typename T1, typename T2,
-          KFR_ENABLE_IF(compound_type_traits<T1>::is_scalar&& compound_type_traits<T2>::is_scalar &&
-                        !std::is_floating_point<T1>::value && !std::is_floating_point<T2>::value)>
+template <typename T1, typename T2>
+    requires(compound_type_traits<T1>::is_scalar && compound_type_traits<T2>::is_scalar &&
+             !std::is_floating_point<T1>::value && !std::is_floating_point<T2>::value)
 constexpr bool deep_is_equal(const T1& x, const T2& y)
 {
     return x == y;
 }
 
-template <typename T1, typename T2,
-          KFR_ENABLE_IF(!compound_type_traits<T1>::is_scalar || !compound_type_traits<T2>::is_scalar)>
+template <typename T1, typename T2>
+    requires(!compound_type_traits<T1>::is_scalar || !compound_type_traits<T2>::is_scalar)
 constexpr bool deep_is_equal(const T1& x, const T2& y)
 {
     static_assert(compound_type_traits<T1>::width == compound_type_traits<T2>::width ||

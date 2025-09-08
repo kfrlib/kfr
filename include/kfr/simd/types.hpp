@@ -54,12 +54,13 @@ namespace kfr
 template <typename... T>
 using decay_common = std::decay_t<std::common_type_t<T...>>;
 
-template <typename CT, template <typename T> typename Tpl, typename = void>
+template <typename CT, template <typename T> typename Tpl>
 struct construct_common_type
 {
 };
 template <typename CT, template <typename T> typename Tpl>
-struct construct_common_type<CT, Tpl, std::void_t<typename CT::type>>
+    requires requires { typename CT::type; }
+struct construct_common_type<CT, Tpl>
 {
     using type = Tpl<typename CT::type>;
 };
@@ -240,12 +241,12 @@ struct special_scalar_constants<bit<T>>
 namespace internal_generic
 {
 template <typename T>
-struct unwrap_bit
+struct unwrap_bit_impl
 {
     using type = T;
 };
 template <typename T>
-struct unwrap_bit<bit<T>>
+struct unwrap_bit_impl<bit<T>>
 {
     using type = T;
 };
@@ -253,7 +254,7 @@ struct unwrap_bit<bit<T>>
 } // namespace internal_generic
 
 template <typename T>
-using unwrap_bit = typename internal_generic::unwrap_bit<T>::type;
+using unwrap_bit = typename internal_generic::unwrap_bit_impl<T>::type;
 
 template <typename T>
 constexpr inline bool is_bit = false;
@@ -271,7 +272,8 @@ KFR_INTRINSIC T unwrap_bit_value(const bit<T>& value)
     return value.value;
 }
 
-template <typename T, KFR_ENABLE_IF(is_bit<T>)>
+template <typename T>
+    requires(is_bit<T>)
 KFR_INTRINSIC T wrap_bit_value(const unwrap_bit<T>& value)
 {
     T result;
@@ -279,7 +281,8 @@ KFR_INTRINSIC T wrap_bit_value(const unwrap_bit<T>& value)
     return result;
 }
 
-template <typename T, KFR_ENABLE_IF(!is_bit<T>)>
+template <typename T>
+    requires(!is_bit<T>)
 KFR_INTRINSIC T wrap_bit_value(const T& value)
 {
     return value;
@@ -370,6 +373,9 @@ template <typename T>
 constexpr inline bool is_simd_float_type<bit<T>> = is_simd_float_type<T>;
 template <typename T>
 constexpr inline bool is_simd_int_type<bit<T>> = is_simd_int_type<T>;
+
+template <typename T>
+concept simd_compat = is_simd_type<T>;
 
 template <typename T, size_t N>
 struct vec_shape

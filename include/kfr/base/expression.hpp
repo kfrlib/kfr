@@ -47,11 +47,17 @@ template <typename T>
 using complex = std::complex<T>;
 #endif
 
-template <typename T, typename V = void>
+template <typename T>
 struct expression_traits;
 
 template <typename T>
 using expression_value_type = typename expression_traits<T>::value_type;
+
+template <typename T>
+concept has_expression_traits = requires {
+    typename expression_traits<T>::value_type;
+    { expression_traits<T>::dims } -> std::convertible_to<size_t>;
+};
 
 template <typename T>
 constexpr inline size_t expression_dims = expression_traits<T>::dims;
@@ -67,31 +73,34 @@ constexpr inline shape<expression_dims<T>> get_shape()
     return expression_traits<T>::get_shape();
 }
 
-template <typename T>
-struct expression_traits<const T, std::void_t<expression_value_type<T>>> : expression_traits<T>
+template <has_expression_traits T>
+struct expression_traits<const T> : expression_traits<T>
 {
 };
-template <typename T>
-struct expression_traits<T&, std::void_t<expression_value_type<T>>> : expression_traits<T>
+template <has_expression_traits T>
+struct expression_traits<T&> : expression_traits<T>
 {
 };
-template <typename T>
-struct expression_traits<T&&, std::void_t<expression_value_type<T>>> : expression_traits<T>
+template <has_expression_traits T>
+struct expression_traits<T&&> : expression_traits<T>
 {
 };
-template <typename T>
-struct expression_traits<const T&, std::void_t<expression_value_type<T>>> : expression_traits<T>
+template <has_expression_traits T>
+struct expression_traits<const T&> : expression_traits<T>
 {
 };
-template <typename T>
-struct expression_traits<const T&&, std::void_t<typename expression_traits<T>::value_type>>
-    : expression_traits<T>
+template <has_expression_traits T>
+struct expression_traits<const T&&> : expression_traits<T>
 {
 };
 
 // This allows old style expressions+traits
 template <typename T>
-struct expression_traits<T, std::void_t<decltype(T::random_access), decltype(T::get_shape())>>
+    requires requires {
+        T::random_access;
+        T::get_shape();
+    }
+struct expression_traits<T>
 {
     using value_type             = typename T::value_type;
     constexpr static size_t dims = T::dims;
@@ -113,12 +122,6 @@ struct expression_traits_defaults
     constexpr static inline bool random_access    = true;
 };
 
-template <typename T, typename = void>
-constexpr inline bool has_expression_traits = false;
-
-template <typename T>
-constexpr inline bool has_expression_traits<T, std::void_t<typename expression_traits<T>::value_type>> = true;
-
 namespace internal_generic
 {
 template <typename... Xs>
@@ -127,63 +130,48 @@ template <typename... Xs>
 using expressions_check = std::enable_if_t<(expression_traits<Xs>::explicit_operand || ...)>;
 } // namespace internal_generic
 
+// Input expression concept
 template <typename T>
-using enable_if_input_expression =
-    std::void_t<expression_traits<T>,
-                decltype(get_elements(std::declval<T>(), shape<expression_traits<T>::dims>(),
-                                      axis_params<0, 1>{}))>;
+concept input_expression = has_expression_traits<T> && requires(T expr) {
+    get_elements(expr, shape<expression_traits<T>::dims>(), axis_params<0, 1>{});
+};
 
+// Output expression concept
 template <typename T>
-using enable_if_output_expression =
-    std::void_t<expression_traits<T>,
-                decltype(set_elements(std::declval<T&>(), shape<expression_traits<T>::dims>(),
-                                      axis_params<0, 1>{},
-                                      vec<typename expression_traits<T>::value_type, 1>{}))>;
-
-template <typename T>
-using enable_if_input_output_expression =
-    std::void_t<enable_if_input_expression<T>, enable_if_output_expression<T>>;
-
-template <typename... T>
-using enable_if_input_expressions = std::void_t<enable_if_input_expression<T>...>;
-
-template <typename... T>
-using enable_if_output_expressions = std::void_t<enable_if_output_expression<T>...>;
-
-template <typename... T>
-using enable_if_input_output_expressions = std::void_t<enable_if_input_output_expression<T>...>;
-
-template <typename E, typename = void>
-constexpr inline bool is_input_expression = false;
+concept output_expression = has_expression_traits<T> && requires(T expr) {
+    set_elements(expr, shape<expression_traits<T>::dims>(), axis_params<0, 1>{},
+                 vec<typename expression_traits<T>::value_type, 1>{});
+};
 
 template <typename E>
-constexpr inline bool is_input_expression<E, enable_if_input_expression<E>> = true;
+concept expression_argument = input_expression<E> && expression_traits<E>::explicit_operand;
 
-template <typename E, typename = void>
-constexpr inline bool is_output_expression = false;
+template <typename... E>
+concept expression_arguments = ((input_expression<E> && expression_traits<E>::explicit_operand) || ...);
 
-template <typename E>
-constexpr inline bool is_output_expression<E, enable_if_output_expression<E>> = true;
-
-template <typename E, typename = void>
-constexpr inline bool is_input_output_expression = false;
+template <typename T>
+concept input_output_expression = input_expression<T> && output_expression<T>;
 
 template <typename E>
-constexpr inline bool is_input_output_expression<E, enable_if_input_output_expression<E>> = true;
+constexpr inline bool is_input_expression = input_expression<E>;
 
-#define KFR_ACCEPT_EXPRESSIONS(...) internal_generic::expressions_check<__VA_ARGS__>* = nullptr
+template <typename E>
+constexpr inline bool is_output_expression = output_expression<E>;
 
-#define KFR_ACCEPT_ASGN_EXPRESSIONS(E1, E2)                                                                  \
-    KFR_ENABLE_IF(is_input_output_expression<E1>&& is_input_expression<E2>)
+template <typename E>
+constexpr inline bool is_input_output_expression = input_output_expression<E>;
 
 template <typename T>
 constexpr inline bool is_expr_element = std::is_same_v<std::remove_cv_t<T>, T> && is_vec_element<T>;
 
+template <typename T>
+concept expr_element = is_expr_element<T>;
+
 template <typename E>
 constexpr inline bool is_infinite = expression_traits<E>::get_shape().has_infinity();
 
-template <typename T>
-struct expression_traits<T, std::enable_if_t<is_expr_element<T>>> : expression_traits_defaults
+template <expr_element T>
+struct expression_traits<T> : expression_traits_defaults
 {
     using value_type                              = T;
     constexpr static size_t dims                  = 0;
@@ -193,7 +181,7 @@ struct expression_traits<T, std::enable_if_t<is_expr_element<T>>> : expression_t
     KFR_MEM_INTRINSIC constexpr static shape<0> get_shape() { return {}; }
 };
 
-template <typename E, enable_if_input_expression<E>* = nullptr, index_t Dims = expression_dims<E>>
+template <input_expression E, index_t Dims = expression_dims<E>>
 inline expression_value_type<E> get_element(E&& expr, shape<Dims> index)
 {
     return get_elements(expr, index, axis_params_v<0, 1>).front();
@@ -255,13 +243,15 @@ KFR_INTRINSIC void end_pass(const internal_generic::anything&, shape<Dims> start
 {
 }
 
-template <typename T, index_t Axis, size_t N, KFR_ENABLE_IF(is_expr_element<std::decay_t<T>>)>
+template <typename T, index_t Axis, size_t N>
+    requires(is_expr_element<std::decay_t<T>>)
 KFR_INTRINSIC vec<std::decay_t<T>, N> get_elements(T&& self, const shape<0>& index,
                                                    const axis_params<Axis, N>&)
 {
     return self;
 }
-template <typename T, index_t Axis, size_t N, KFR_ENABLE_IF(is_expr_element<std::decay_t<T>>)>
+template <typename T, index_t Axis, size_t N>
+    requires(is_expr_element<std::decay_t<T>>)
 KFR_INTRINSIC void set_elements(T& self, const shape<0>& index, const axis_params<Axis, N>&,
                                 const std::type_identity_t<vec<T, N>>& val)
 {
@@ -502,7 +492,7 @@ struct expression_function : expression_with_arguments<Args...>, expression_trai
     {
     }
 
-    template <typename In, enable_if_input_expression<In>* = nullptr>
+    template <input_expression In>
     expression_function& operator=(In&& in)
     {
         static_assert(is_output_expression<expression_function>);
@@ -658,8 +648,8 @@ KFR_INTRINSIC static void tprocess_body(Out&& out, In&& in, size_t start, size_t
     }
 }
 
-template <size_t width = 0, index_t Axis = 0, typename Out, typename In, size_t gw = 1,
-          KFR_ENABLE_IF(expression_traits<Out>::dims == 0)>
+template <size_t width = 0, index_t Axis = 0, typename Out, typename In, size_t gw = 1>
+    requires(expression_traits<Out>::dims == 0)
 static auto process(Out&& out, In&& in, shape<0> = {}, shape<0> = {}, csize_t<gw> = {}) -> shape<0>
 {
     static_assert(is_input_expression<In>, "In must be an input expression");
@@ -717,7 +707,8 @@ KFR_INTRINSIC index_t axis_stop(const shape<outdims>& sh)
 } // namespace internal
 
 template <size_t width = 0, index_t Axis = infinite_size, typename Out, typename In, size_t gw = 1,
-          index_t outdims = expression_dims<Out>, KFR_ENABLE_IF(expression_dims<Out> > 0)>
+          index_t outdims = expression_dims<Out>>
+    requires(expression_dims<Out> > 0)
 static auto process(Out&& out, In&& in, shape<outdims> start = shape<outdims>(0),
                     shape<outdims> size = shape<outdims>(infinite_size), csize_t<gw> = {}) -> shape<outdims>
 {
@@ -844,7 +835,8 @@ struct expression_discard : public expression_traits_defaults
 
     template <size_t N, index_t VecAxis>
     friend KFR_INTRINSIC void set_elements(const expression_discard& self, shape<Dims>,
-                                           axis_params<VecAxis, N>, const std::type_identity_t<vec<Tin, N>>& x)
+                                           axis_params<VecAxis, N>,
+                                           const std::type_identity_t<vec<Tin, N>>& x)
     {
     }
 };
@@ -926,7 +918,7 @@ inline vec<T, N> get_fn_value(size_t index, Fn&& fn)
 
 #define CHECK_EXPRESSION_LIST(...)                                                                           \
     []<typename E_, typename T_ = expression_value_type<E_>>(                                                \
-        const E_& expr, std::initializer_list<std::type_identity_t<T_>> list)                             \
+        const E_& expr, std::initializer_list<std::type_identity_t<T_>> list)                                \
     { CHECK_EXPRESSION(expr, list.size(), [&](size_t i) { return list.begin()[i]; }); }(__VA_ARGS__)
 
 #endif

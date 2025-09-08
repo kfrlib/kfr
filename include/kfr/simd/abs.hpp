@@ -36,7 +36,7 @@ inline namespace KFR_ARCH_NAME
  * @brief Returns the absolute value of x.
  * @remarks Supports integer and floating-point numbers, scalars, and vec<>.
  */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_INTRINSIC T1 abs(const T1& x)
 {
     return intr::abs(x);

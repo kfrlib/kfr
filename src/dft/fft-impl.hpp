@@ -938,7 +938,8 @@ struct fft_final_stage_impl : dft_stage<T>
         final_stage<inverse>(csize<size>, 1, cbool<splitin>, out, in, twiddle);
     }
 
-    template <bool inverse, bool pass_splitin, typename U = T, KFR_ENABLE_IF(vector_capacity<U> >= 128)>
+    template <bool inverse, bool pass_splitin, typename U = T>
+        requires(vector_capacity<U> >= 128)
     KFR_MEM_INTRINSIC void final_stage(csize_t<16>, size_t invN, cbool_t<pass_splitin>, complex<T>* out,
                                        const complex<T>*, const complex<T>*& twiddle)
     {

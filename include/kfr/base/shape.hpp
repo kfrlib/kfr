@@ -111,7 +111,8 @@ struct shape : static_array_base<index_t, csizeseq_t<Dims>>
 
     static constexpr size_t dims() { return base::static_size; }
 
-    template <int dummy = 0, KFR_ENABLE_IF(dummy == 0 && Dims == 1)>
+    template <int dummy = 0>
+        requires(Dims == 1)
     operator index_t() const
     {
         return this->front();
@@ -448,7 +449,8 @@ struct shape<dynamic_shape> : protected std::vector<index_t>
     using std::vector<index_t>::back;
     using std::vector<index_t>::operator[];
 
-    template <index_t Dims, KFR_ENABLE_IF(Dims != dynamic_shape)>
+    template <index_t Dims>
+        requires(Dims != dynamic_shape)
     shape(shape<Dims> sh) : shape(sh.begin(), sh.end())
     {
     }

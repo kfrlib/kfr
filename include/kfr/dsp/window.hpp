@@ -614,9 +614,10 @@ KFR_FUNCTION expression_tukey<T> window_tukey(size_t size, std::type_identity_t<
 
 template <typename T           = fbase, window_type type,
           typename window_expr = typename window_by_type<type>::template type<T>>
-KFR_NOINLINE window_expr window(size_t size, cval_t<window_type, type>, std::type_identity_t<T> win_param = T(),
-                                window_symmetry symmetry = window_symmetry::symmetric,
-                                ctype_t<T>               = ctype_t<T>())
+KFR_NOINLINE window_expr window(size_t size, cval_t<window_type, type>,
+                                std::type_identity_t<T> win_param = T(),
+                                window_symmetry symmetry          = window_symmetry::symmetric,
+                                ctype_t<T>                        = ctype_t<T>())
 {
     return window_expr(size, win_param, symmetry);
 }

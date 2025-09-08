@@ -195,27 +195,27 @@ KFR_INTRINSIC vec<f64, N> fract(const vec<f64, N>& x)
 }
 #endif
 
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>)>
+template <not_f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> floor(const vec<T, N>& value)
 {
     return value;
 }
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>)>
+template <not_f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> ceil(const vec<T, N>& value)
 {
     return value;
 }
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>)>
+template <not_f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> trunc(const vec<T, N>& value)
 {
     return value;
 }
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>)>
+template <not_f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> round(const vec<T, N>& value)
 {
     return value;
 }
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>)>
+template <not_f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> fract(const vec<T, N>&)
 {
     return T(0);

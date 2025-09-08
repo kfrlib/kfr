@@ -312,7 +312,8 @@ KFR_INTRINSIC void write(cunaligned_t, i64* ptr, const i64avx512& x) { _mm512_st
 
 // fallback
 
-template <size_t N, typename T, KFR_ENABLE_IF(N == 1 || is_simd_size<T>(N))>
+template <size_t N, typename T>
+    requires(N == 1 || is_simd_size<T>(N))
 KFR_INTRINSIC vec<T, N> read(cunaligned_t, csize_t<N>, const T* ptr) noexcept
 {
     vec<T, N> result{};
@@ -321,7 +322,8 @@ KFR_INTRINSIC vec<T, N> read(cunaligned_t, csize_t<N>, const T* ptr) noexcept
     return result;
 }
 
-template <size_t N, typename T, KFR_ENABLE_IF(N == 1 || is_simd_size<T>(N))>
+template <size_t N, typename T>
+    requires(N == 1 || is_simd_size<T>(N))
 KFR_INTRINSIC void write(cunaligned_t, T* ptr, const vec<T, N>& x) noexcept
 {
     for (size_t i = 0; i < N; i++)
@@ -330,15 +332,15 @@ KFR_INTRINSIC void write(cunaligned_t, T* ptr, const vec<T, N>& x) noexcept
 
 #endif
 
-template <size_t N, typename T, KFR_ENABLE_IF(N != 1 && !is_simd_size<T>(N)),
-          size_t Nlow = prev_poweroftwo(N - 1)>
+template <size_t N, typename T, size_t Nlow = prev_poweroftwo(N - 1)>
+    requires(N != 1 && !is_simd_size<T>(N))
 KFR_INTRINSIC vec<T, N> read(cunaligned_t, csize_t<N>, const T* ptr) noexcept
 {
     return concat(read(cunaligned, csize<Nlow>, ptr), read(cunaligned, csize<N - Nlow>, ptr + Nlow));
 }
 
-template <size_t N, typename T, KFR_ENABLE_IF(N != 1 && !is_simd_size<T>(N)),
-          size_t Nlow = prev_poweroftwo(N - 1)>
+template <size_t N, typename T, size_t Nlow = prev_poweroftwo(N - 1)>
+    requires(N != 1 && !is_simd_size<T>(N))
 KFR_INTRINSIC void write(cunaligned_t, T* ptr, const vec<T, N>& x) noexcept
 {
     write(cunaligned, ptr, x.shuffle(csizeseq<Nlow>));
@@ -353,7 +355,8 @@ KFR_INTRINSIC simd<T, N> simd_read(const T* src) noexcept
     return reinterpret_cast<typename simd_storage<T, N, false>::const_pointer>(src)->value;
 }
 
-template <size_t N, bool A = false, typename T, KFR_ENABLE_IF(is_poweroftwo(N))>
+template <size_t N, bool A = false, typename T>
+    requires(is_poweroftwo(N))
 KFR_INTRINSIC vec<T, N> read(cunaligned_t, csize_t<N>, const T* src) noexcept
 {
     // Clang requires a separate function returning vector (simd).
@@ -361,21 +364,23 @@ KFR_INTRINSIC vec<T, N> read(cunaligned_t, csize_t<N>, const T* src) noexcept
     return simd_read<N>(src);
 }
 
-template <size_t N, bool A = false, typename T, KFR_ENABLE_IF(!is_poweroftwo(N)), typename = void>
+template <size_t N, bool A = false, typename T>
+    requires(!is_poweroftwo(N))
 KFR_INTRINSIC vec<T, N> read(cunaligned_t, csize_t<N>, const T* src) noexcept
 {
     constexpr size_t first = prev_poweroftwo(N);
     return concat(read(cunaligned, csize<first>, src), read(cunaligned, csize<N - first>, src + first));
 }
 
-template <bool A = false, size_t N, typename T, KFR_ENABLE_IF(is_poweroftwo(N))>
+template <bool A = false, size_t N, typename T>
+    requires(is_poweroftwo(N))
 KFR_INTRINSIC void write(cunaligned_t, T* dest, const vec<T, N>& x) noexcept
 {
     reinterpret_cast<typename simd_storage<T, N, A>::pointer>(dest)->value = x.v;
 }
 
-template <bool A      = false, size_t N, typename T, KFR_ENABLE_IF(!is_poweroftwo(N)),
-          size_t Nlow = prev_poweroftwo(N - 1)>
+template <bool A = false, size_t N, typename T, size_t Nlow = prev_poweroftwo(N - 1)>
+    requires(!is_poweroftwo(N))
 KFR_INTRINSIC void write(cunaligned_t, T* dest, const vec<T, N>& x) noexcept
 {
     write(cunaligned, dest, x.shuffle(csizeseq<Nlow>));

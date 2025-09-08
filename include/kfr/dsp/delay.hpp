@@ -39,13 +39,15 @@ inline namespace KFR_ARCH_NAME
 template <typename T, size_t samples, univector_tag Tag = samples>
 struct delay_state
 {
-    template <size_t S2 = samples, KFR_ENABLE_IF(S2 == Tag)>
-    delay_state() : data({ 0 }), cursor(0)
+    delay_state()
+        requires(samples == Tag)
+        : data({ 0 }), cursor(0)
     {
     }
 
-    template <size_t S2 = samples, KFR_ENABLE_IF(S2 != Tag)>
-    delay_state() : data(samples), cursor(0)
+    delay_state()
+        requires(samples != Tag)
+        : data(samples), cursor(0)
     {
     }
 
@@ -81,7 +83,8 @@ struct expression_delay : expression_with_arguments<E>, public expression_traits
     {
     }
 
-    template <size_t N, KFR_ENABLE_IF(N <= delay)>
+    template <size_t N>
+        requires(N <= delay)
     friend KFR_INTRINSIC vec<T, N> get_elements(const expression_delay& self, shape<1> index,
                                                 axis_params<0, N> sh)
     {
@@ -101,7 +104,8 @@ struct expression_delay : expression_with_arguments<E>, public expression_traits
         self.state->data.ringbuf_write(self.state->cursor, in);
         return out;
     }
-    template <size_t N, KFR_ENABLE_IF(N > delay)>
+    template <size_t N>
+        requires(N > delay)
     friend vec<T, N> get_elements(const expression_delay& self, shape<1> index, axis_params<0, N> sh)
     {
         vec<T, delay> out;

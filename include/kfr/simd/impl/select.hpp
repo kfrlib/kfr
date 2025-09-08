@@ -165,52 +165,60 @@ KFR_INTRINSIC i64avx512 select(const mi64avx512& m, const i64avx512& x, const i6
 }
 #endif
 
-template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T> && !is_simd_size<T>(N))>
+template <typename T, size_t N>
+    requires(N < vector_width<T> && !is_simd_size<T>(N))
 KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& a, const vec<T, N>& b, const vec<T, N>& c)
 {
     constexpr size_t Nout = next_simd_width<T>(N);
     return select(a.shuffle(csizeseq<Nout>), b.shuffle(csizeseq<Nout>), c.shuffle(csizeseq<Nout>))
         .shuffle(csizeseq<N>);
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N > vector_width<T>), typename = void>
+template <typename T, size_t N>
+    requires(N > vector_width<T>)
 KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& a, const vec<T, N>& b, const vec<T, N>& c)
 {
     return concat(select(low(a), low(b), low(c)), select(high(a), high(b), high(c)));
     //    return concat2(select(a.h.low, b.h.low, c.h.low), select(a.h.high, b.h.high, c.h.high));
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T> && !is_simd_size<T>(N))>
+template <typename T, size_t N>
+    requires(N < vector_width<T> && !is_simd_size<T>(N))
 KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& a, const T& b, const T& c)
 {
     constexpr size_t Nout = next_simd_width<T>(N);
     return select(a.shuffle(csizeseq<Nout>), vec<T, Nout>(b), vec<T, Nout>(c)).shuffle(csizeseq<N>);
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N > vector_width<T>), typename = void>
+template <typename T, size_t N>
+    requires(N > vector_width<T>)
 KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& a, const T& b, const T& c)
 {
     return concat2(select(a.h.low, b, c), select(a.h.high, b, c));
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T> && !is_simd_size<T>(N))>
+template <typename T, size_t N>
+    requires(N < vector_width<T> && !is_simd_size<T>(N))
 KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& a, const vec<T, N>& b, const T& c)
 {
     constexpr size_t Nout = next_simd_width<T>(N);
     return select(a.shuffle(csizeseq<Nout>), b.shuffle(csizeseq<Nout>), vec<T, Nout>(c)).shuffle(csizeseq<N>);
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N > vector_width<T>), typename = void>
+template <typename T, size_t N>
+    requires(N > vector_width<T>)
 KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& a, const vec<T, N>& b, const T& c)
 {
     return concat2(select(a.h.low, b.h.low, c), select(a.h.high, b.h.high, c));
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T> && !is_simd_size<T>(N))>
+template <typename T, size_t N>
+    requires(N < vector_width<T> && !is_simd_size<T>(N))
 KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& a, const T& b, const vec<T, N>& c)
 {
     constexpr size_t Nout = next_simd_width<T>(N);
     return select(shufflevector(a, csizeseq<Nout>), vec<T, Nout>(b), c.shuffle(csizeseq<Nout>))
         .shuffle(csizeseq<N>);
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N > vector_width<T>), typename = void>
+template <typename T, size_t N>
+    requires(N > vector_width<T>)
 KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& a, const T& b, const vec<T, N>& c)
 {
     return concat2(select(a.h.low, b, c.h.low), select(a.h.high, b, c.h.high));
@@ -267,14 +275,16 @@ KFR_INTRINSIC f64neon select(const mf64neon& m, const f64neon& x, const f64neon&
 }
 #endif
 
-template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T> && !is_simd_size<T>(N))>
+template <typename T, size_t N>
+    requires(N < vector_width<T> && !is_simd_size<T>(N))
 KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& a, const vec<T, N>& b, const vec<T, N>& c)
 {
     constexpr size_t Nout = next_simd_width<T>(N);
     return select(a.shuffle(csizeseq<Nout>), b.shuffle(csizeseq<Nout>), c.shuffle(csizeseq<Nout>))
         .shuffle(csizeseq<N>);
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N > vector_width<T>), typename = void>
+template <typename T, size_t N>
+    requires(N > vector_width<T>)
 KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& a, const vec<T, N>& b, const vec<T, N>& c)
 {
     return concat2(select(a.h.low, b.h.low, c.h.low), select(a.h.high, b.h.high, c.h.high));

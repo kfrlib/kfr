@@ -37,7 +37,7 @@ namespace intr
 #if defined KFR_ARCH_SSSE3 && defined KFR_NATIVE_INTRINSICS
 
 // floating point
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
+template <f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> abs(const vec<T, N>& x) noexcept
 {
     return x & special_constants<T>::invhighbitmask();
@@ -114,14 +114,14 @@ KFR_HANDLE_ALL_SIZES_1(abs)
 #else
 
 // floating point
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
+template <f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> abs(const vec<T, N>& x) noexcept
 {
     return x & special_constants<T>::invhighbitmask();
 }
 
 // fallback
-template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>)>
+template <not_f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> abs(const vec<T, N>& x) noexcept
 {
     return select(x >= T(0), x, -x);

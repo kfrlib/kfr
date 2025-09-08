@@ -14,7 +14,7 @@ Cpp11BracedListStyle: false
 AllowShortIfStatementsOnASingleLine: false
 AllowShortFunctionsOnASingleLine : true
 AlignOperands: true
-Standard: c++17
+Standard: c++20
 AlignTrailingComments : false
 ConstructorInitializerAllOnOneLineOrOnePerLine : false
 ColumnLimit: 110

@@ -39,39 +39,41 @@ inline namespace KFR_ARCH_NAME
 {
 
 #define KFR_VEC_OPERATOR1(op, fn)                                                                            \
-    template <typename T, size_t N /* , KFR_ENABLE_IF(!is_vec<T>) */>                                        \
+    template <typename T, size_t N>                                                                          \
     constexpr KFR_INTRINSIC vec<T, N> operator op(const vec<T, N>& x)                                        \
     {                                                                                                        \
         return intr::fn(x);                                                                                  \
     }
 
 #define KFR_VEC_OPERATOR2(op, asgnop, fn)                                                                    \
-    template <typename T1, typename T2, size_t N, KFR_ENABLE_IF(vec_rank<T1> == vec_rank<T2>)>               \
+    template <typename T1, typename T2, size_t N>                                                            \
+        requires(vec_rank<T1> == vec_rank<T2>)                                                               \
     constexpr KFR_INTRINSIC vec<T1, N>& operator asgnop(vec<T1, N>& x, const vec<T2, N>& y)                  \
     {                                                                                                        \
         x = intr::fn(x, promoteto<T1>(y));                                                                   \
         return x;                                                                                            \
     }                                                                                                        \
-    template <typename T1, typename T2, size_t N, KFR_ENABLE_IF(1 + vec_rank<T1> > vec_rank<T2>)>            \
+    template <typename T1, typename T2, size_t N>                                                            \
+        requires(1 + vec_rank<T1> > vec_rank<T2>)                                                            \
     constexpr KFR_INTRINSIC vec<T1, N>& operator asgnop(vec<T1, N>& x, const T2 & y)                         \
     {                                                                                                        \
         x = intr::fn(x, T1(y));                                                                              \
         return x;                                                                                            \
     }                                                                                                        \
-    template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,                   \
-              KFR_ENABLE_IF(1 + vec_rank<T1> > vec_rank<T2>)>                                                \
+    template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>>                   \
+        requires(1 + vec_rank<T1> > vec_rank<T2>)                                                            \
     constexpr KFR_INTRINSIC vec<C, N> operator op(const vec<T1, N>& x, const T2 & y)                         \
     {                                                                                                        \
         return intr::fn(promoteto<C>(x), C(y));                                                              \
     }                                                                                                        \
-    template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,                   \
-              KFR_ENABLE_IF(vec_rank<T1> < 1 + vec_rank<T2>)>                                                \
+    template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>>                   \
+        requires(vec_rank<T1> < 1 + vec_rank<T2>)                                                            \
     constexpr KFR_INTRINSIC vec<C, N> operator op(const T1 & x, const vec<T2, N>& y)                         \
     {                                                                                                        \
         return intr::fn(C(x), promoteto<C>(y));                                                              \
     }                                                                                                        \
-    template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,                   \
-              KFR_ENABLE_IF(vec_rank<T1> == vec_rank<T2>)>                                                   \
+    template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>>                   \
+        requires(vec_rank<T1> == vec_rank<T2>)                                                               \
     constexpr KFR_INTRINSIC vec<C, N> operator op(const vec<T1, N>& x, const vec<T2, N>& y)                  \
     {                                                                                                        \
         return intr::fn(promoteto<C>(x), promoteto<C>(y));                                                   \
@@ -84,7 +86,8 @@ inline namespace KFR_ARCH_NAME
         x = intr::fn(x, y);                                                                                  \
         return x;                                                                                            \
     }                                                                                                        \
-    template <typename T1, typename T2, size_t N, KFR_ENABLE_IF(vec_rank<T1> == vec_rank<T2>)>               \
+    template <typename T1, typename T2, size_t N>                                                            \
+        requires(vec_rank<T1> == vec_rank<T2>)                                                               \
     constexpr KFR_INTRINSIC vec<T1, N>& operator asgnop(vec<T1, N>& x, const vec<T2, N>& y)                  \
     {                                                                                                        \
         x = intr::fn(x, promoteto<utype<T1>>(y));                                                            \
@@ -95,34 +98,34 @@ inline namespace KFR_ARCH_NAME
     {                                                                                                        \
         return intr::fn(x, y);                                                                               \
     }                                                                                                        \
-    template <typename T1, typename T2, size_t N,                                                            \
-              KFR_ENABLE_IF(is_simd_type<T1>&& vec_rank<T1> < 1 + vec_rank<T2>)>                             \
+    template <simd_compat T1, typename T2, size_t N>                                                         \
+        requires(vec_rank<T1> < 1 + vec_rank<T2>)                                                            \
     constexpr KFR_INTRINSIC vec<T1, N> operator op(const T1 & x, const vec<T2, N>& y)                        \
     {                                                                                                        \
         return intr::fn(broadcastto<T1>(x), promoteto<utype<T1>>(y));                                        \
     }                                                                                                        \
-    template <typename T1, typename T2, size_t N,                                                            \
-              KFR_ENABLE_IF(is_simd_type<T1>&& vec_rank<T1> == vec_rank<T2>)>                                \
+    template <simd_compat T1, typename T2, size_t N>                                                         \
+        requires(vec_rank<T1> == vec_rank<T2>)                                                               \
     constexpr KFR_INTRINSIC vec<T1, N> operator op(const vec<T1, N>& x, const vec<T2, N>& y)                 \
     {                                                                                                        \
         return intr::fn(x, promoteto<utype<T1>>(y));                                                         \
     }
 
 #define KFR_VEC_CMP_OPERATOR(op, fn)                                                                         \
-    template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,                   \
-              KFR_ENABLE_IF(1 + vec_rank<T1> > vec_rank<T2>)>                                                \
+    template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>>                   \
+        requires(1 + vec_rank<T1> > vec_rank<T2>)                                                            \
     constexpr KFR_INTRINSIC mask<C, N> operator op(const vec<T1, N>& x, const T2 & y)                        \
     {                                                                                                        \
         return intr::fn(promoteto<C>(x), vec<C, N>(y)).asmask();                                             \
     }                                                                                                        \
-    template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,                   \
-              KFR_ENABLE_IF(vec_rank<T1> < 1 + vec_rank<T2>)>                                                \
+    template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>>                   \
+        requires(vec_rank<T1> < 1 + vec_rank<T2>)                                                            \
     constexpr KFR_INTRINSIC mask<C, N> operator op(const T1 & x, const vec<T2, N>& y)                        \
     {                                                                                                        \
         return intr::fn(vec<C, N>(x), promoteto<C>(y)).asmask();                                             \
     }                                                                                                        \
-    template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,                   \
-              KFR_ENABLE_IF(vec_rank<T1> == vec_rank<T2>)>                                                   \
+    template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>>                   \
+        requires(vec_rank<T1> == vec_rank<T2>)                                                               \
     constexpr KFR_INTRINSIC mask<C, N> operator op(const vec<T1, N>& x, const vec<T2, N>& y)                 \
     {                                                                                                        \
         return intr::fn(promoteto<C>(x), promoteto<C>(y)).asmask();                                          \
@@ -150,32 +153,32 @@ KFR_VEC_CMP_OPERATOR(<=, le)
 KFR_VEC_CMP_OPERATOR(>, gt)
 KFR_VEC_CMP_OPERATOR(<, lt)
 
-template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,
-          KFR_ENABLE_IF(sizeof(T1) == sizeof(T2))>
+template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>>
+    requires(sizeof(T1) == sizeof(T2))
 KFR_INTRINSIC mask<C, N> operator&(const mask<T1, N>& x, const mask<T2, N>& y) noexcept
 {
     return mask<C, N>((bitcast<C>(vec<T1, N>(x.v)) & bitcast<C>(vec<T2, N>(y.v))).v);
 }
-template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,
-          KFR_ENABLE_IF(sizeof(T1) == sizeof(T2))>
+template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>>
+    requires(sizeof(T1) == sizeof(T2))
 KFR_INTRINSIC mask<C, N> operator|(const mask<T1, N>& x, const mask<T2, N>& y) noexcept
 {
     return mask<C, N>((bitcast<C>(vec<T1, N>(x.v)) | bitcast<C>(vec<T2, N>(y.v))).v);
 }
-template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,
-          KFR_ENABLE_IF(sizeof(T1) == sizeof(T2))>
+template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>>
+    requires(sizeof(T1) == sizeof(T2))
 KFR_INTRINSIC mask<C, N> operator&&(const mask<T1, N>& x, const mask<T2, N>& y) noexcept
 {
     return mask<C, N>((bitcast<C>(vec<T1, N>(x.v)) & bitcast<C>(vec<T2, N>(y.v))).v);
 }
-template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,
-          KFR_ENABLE_IF(sizeof(T1) == sizeof(T2))>
+template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>>
+    requires(sizeof(T1) == sizeof(T2))
 KFR_INTRINSIC mask<C, N> operator||(const mask<T1, N>& x, const mask<T2, N>& y) noexcept
 {
     return mask<C, N>((bitcast<C>(vec<T1, N>(x.v)) | bitcast<C>(vec<T2, N>(y.v))).v);
 }
-template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>,
-          KFR_ENABLE_IF(sizeof(T1) == sizeof(T2))>
+template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>>
+    requires(sizeof(T1) == sizeof(T2))
 KFR_INTRINSIC mask<C, N> operator^(const mask<T1, N>& x, const mask<T2, N>& y) noexcept
 {
     return mask<C, N>((bitcast<C>(vec<T1, N>(x.v)) ^ bitcast<C>(vec<T2, N>(y.v))).v);
@@ -304,7 +307,7 @@ constexpr KFR_INTRINSIC T add(const T& x)
 /**
  * @brief Returns sum of all the arguments passed to a function.
  */
-template <typename T1, typename T2, typename... Ts, KFR_ENABLE_IF(is_numeric_args<T1, T2, Ts...>)>
+template <numeric T1, numeric T2, numeric... Ts>
 constexpr KFR_INTRINSIC std::common_type_t<T1, T2, Ts...> add(const T1& x, const T2& y, const Ts&... rest)
 {
     return x + add(y, rest...);
@@ -353,7 +356,7 @@ KFR_FN(mul)
 /**
  * @brief Returns square of x.
  */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 constexpr inline T1 sqr(const T1& x)
 {
     return x * x;
@@ -363,32 +366,32 @@ KFR_FN(sqr)
 /**
  * @brief Returns cube of x.
  */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 constexpr inline T1 cub(const T1& x)
 {
     return sqr(x) * x;
 }
 KFR_FN(cub)
 
-template <typename T, KFR_ENABLE_IF(is_numeric_args<T>)>
+template <numeric T>
 constexpr KFR_INTRINSIC T pow2(const T& x)
 {
     return sqr(x);
 }
 
-template <typename T, KFR_ENABLE_IF(is_numeric_args<T>)>
+template <numeric T>
 constexpr KFR_INTRINSIC T pow3(const T& x)
 {
     return cub(x);
 }
 
-template <typename T, KFR_ENABLE_IF(is_numeric_args<T>)>
+template <numeric T>
 constexpr KFR_INTRINSIC T pow4(const T& x)
 {
     return sqr(sqr(x));
 }
 
-template <typename T, KFR_ENABLE_IF(is_numeric_args<T>)>
+template <numeric T>
 constexpr KFR_INTRINSIC T pow5(const T& x)
 {
     return pow4(x) * x;
@@ -485,14 +488,14 @@ KFR_FN(fmsub)
 
 /// @brief Linear blend of `x` and `y` (`c` must be in the range 0...+1)
 /// Returns `x + ( y - x ) * c`
-template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>)>
+template <numeric T1, numeric T2, numeric T3>
 KFR_INTRINSIC constexpr std::common_type_t<T1, T2, T3> mix(const T1& c, const T2& x, const T3& y)
 {
     return fmadd(c, y - x, x);
 }
 
 /// @brief Linear blend of `x` and `y` (`c` must be in the range -1...+1)
-template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>)>
+template <numeric T1, numeric T2, numeric T3>
 KFR_INTRINSIC constexpr std::common_type_t<T1, T2, T3> mixs(const T1& c, const T2& x, const T3& y)
 {
     return mix(fmadd(c, 0.5, 0.5), x, y);
@@ -548,7 +551,7 @@ constexpr KFR_INTRINSIC std::common_type_t<T1, T2, T3, Ts...> horner_odd(const T
 /// @brief Calculate polynomial using Horner's method
 ///
 /// ``horner(x, 1, 2, 3)`` is equivalent to \(3x^2 + 2x + 1\)
-template <typename T1, typename... Ts, KFR_ENABLE_IF(is_numeric_args<T1, Ts...>)>
+template <numeric T1, numeric... Ts>
 constexpr KFR_INTRINSIC std::common_type_t<T1, Ts...> horner(const T1& x, const Ts&... c)
 {
     return intr::horner(x, c...);
@@ -558,7 +561,7 @@ KFR_FN(horner)
 /// @brief Calculate polynomial using Horner's method (even powers)
 ///
 /// ``horner_even(x, 1, 2, 3)`` is equivalent to \(3x^4 + 2x^2 + 1\)
-template <typename T1, typename... Ts, KFR_ENABLE_IF(is_numeric_args<T1, Ts...>)>
+template <numeric T1, numeric... Ts>
 constexpr KFR_INTRINSIC std::common_type_t<T1, Ts...> horner_even(const T1& x, const Ts&... c)
 {
     return intr::horner_even(x, c...);
@@ -568,7 +571,7 @@ KFR_FN(horner_even)
 /// @brief Calculate polynomial using Horner's method (odd powers)
 ///
 /// ``horner_odd(x, 1, 2, 3)`` is equivalent to \(3x^5 + 2x^3 + 1x\)
-template <typename T1, typename... Ts, KFR_ENABLE_IF(is_numeric_args<T1, Ts...>)>
+template <numeric T1, numeric... Ts>
 constexpr KFR_INTRINSIC std::common_type_t<T1, Ts...> horner_odd(const T1& x, const Ts&... c)
 {
     return intr::horner_odd(x, c...);
@@ -606,12 +609,14 @@ KFR_INTRINSIC T swapbyteorder(const T& x)
 }
 KFR_FN(swapbyteorder)
 
-template <typename T, size_t N, KFR_ENABLE_IF(N >= 2)>
+template <typename T, size_t N>
+    requires(N >= 2)
 KFR_INTRINSIC vec<T, N> subadd(const vec<T, N>& a, const vec<T, N>& b)
 {
     return blend<1, 0>(a + b, a - b);
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N >= 2)>
+template <typename T, size_t N>
+    requires(N >= 2)
 KFR_INTRINSIC vec<T, N> addsub(const vec<T, N>& a, const vec<T, N>& b)
 {
     return blend<0, 1>(a + b, a - b);

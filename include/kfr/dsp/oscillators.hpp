@@ -140,142 +140,142 @@ KFR_I_FN(sawtoothnorm)
 KFR_I_FN(isawtooth)
 KFR_I_FN(isawtoothnorm)
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION T1 rawsine(const T1& x)
 {
     return intr::rawsine(x);
 }
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::rawsine, E1> rawsine(E1&& x)
 {
     return { std::forward<E1>(x) };
 }
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION T1 sine(const T1& x)
 {
     return intr::sine(x);
 }
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::sine, E1> sine(E1&& x)
 {
     return { std::forward<E1>(x) };
 }
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION T1 sinenorm(const T1& x)
 {
     return intr::sinenorm(x);
 }
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::sinenorm, E1> sinenorm(E1&& x)
 {
     return { fn::sinenorm(), std::forward<E1>(x) };
 }
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION T1 rawsquare(const T1& x)
 {
     return intr::rawsquare(x);
 }
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::rawsquare, E1> rawsquare(E1&& x)
 {
     return { fn::rawsquare(), std::forward<E1>(x) };
 }
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION T1 square(const T1& x)
 {
     return intr::square(x);
 }
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::square, E1> square(E1&& x)
 {
     return { fn::square(), std::forward<E1>(x) };
 }
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION T1 squarenorm(const T1& x)
 {
     return intr::squarenorm(x);
 }
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::squarenorm, E1> squarenorm(E1&& x)
 {
     return { fn::squarenorm(), std::forward<E1>(x) };
 }
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION T1 rawtriangle(const T1& x)
 {
     return intr::rawtriangle(x);
 }
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::rawtriangle, E1> rawtriangle(E1&& x)
 {
     return { fn::rawtriangle(), std::forward<E1>(x) };
 }
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION T1 triangle(const T1& x)
 {
     return intr::triangle(x);
 }
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::triangle, E1> triangle(E1&& x)
 {
     return { fn::triangle(), std::forward<E1>(x) };
 }
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION T1 trianglenorm(const T1& x)
 {
     return intr::trianglenorm(x);
 }
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::trianglenorm, E1> trianglenorm(E1&& x)
 {
     return { fn::trianglenorm(), std::forward<E1>(x) };
 }
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION T1 rawsawtooth(const T1& x)
 {
     return intr::rawsawtooth(x);
 }
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::rawsawtooth, E1> rawsawtooth(E1&& x)
 {
     return { fn::rawsawtooth(), std::forward<E1>(x) };
 }
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION T1 sawtooth(const T1& x)
 {
     return intr::sawtooth(x);
 }
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::sawtooth, E1> sawtooth(E1&& x)
 {
     return { fn::sawtooth(), std::forward<E1>(x) };
 }
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION T1 sawtoothnorm(const T1& x)
 {
     return intr::sawtoothnorm(x);
 }
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::sawtoothnorm, E1> sawtoothnorm(E1&& x)
 {
     return { fn::sawtoothnorm(), std::forward<E1>(x) };
 }
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION T1 isawtooth(const T1& x)
 {
     return intr::isawtooth(x);
 }
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::isawtooth, E1> isawtooth(E1&& x)
 {
     return { fn::isawtooth(), std::forward<E1>(x) };
 }
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION T1 isawtoothnorm(const T1& x)
 {
     return intr::isawtoothnorm(x);
 }
-template <typename E1, KFR_ACCEPT_EXPRESSIONS(E1)>
+template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::isawtoothnorm, E1> isawtoothnorm(E1&& x)
 {
     return { fn::isawtoothnorm(), std::forward<E1>(x) };

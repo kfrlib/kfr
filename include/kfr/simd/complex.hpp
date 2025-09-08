@@ -225,7 +225,7 @@ struct conversion<1, 1, vec<complex<To>, N>, vec<From, N>, conv>
 } // namespace internal
 
 /// @brief Returns the real part of the complex value
-template <typename T, KFR_ENABLE_IF(is_numeric<T>)>
+template <numeric T>
 constexpr KFR_INTRINSIC T real(const T& value)
 {
     return value;
@@ -276,8 +276,7 @@ constexpr KFR_INTRINSIC vec<complex<T>, N> make_complex(const vec<T1, N>& real,
 }
 
 /// @brief Constructs complex value from real and imaginary parts
-template <typename T1, typename T2 = T1, typename T = std::common_type_t<T1, T2>,
-          KFR_ENABLE_IF(is_numeric_args<T1, T2>)>
+template <numeric T1, numeric T2 = T1, typename T = std::common_type_t<T1, T2>>
 constexpr KFR_INTRINSIC complex<T> make_complex(T1 real, T2 imag = T2(0))
 {
     return complex<T>(promoteto<T>(real), promoteto<T>(imag));
@@ -297,7 +296,7 @@ KFR_HANDLE_SCALAR(cconj)
 KFR_I_FN(cconj)
 
 /// @brief Returns the complex conjugate of the complex number x
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_INTRINSIC T1 cconj(const T1& x)
 {
     return intr::cconj(x);

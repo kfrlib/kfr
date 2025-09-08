@@ -55,18 +55,21 @@ using cvec = vec<T, N * 2>;
 namespace intr
 {
 
-template <typename T, size_t N, KFR_ENABLE_IF(N >= 2)>
+template <typename T, size_t N>
+    requires(N >= 2)
 KFR_INTRINSIC vec<T, N> cmul_impl(const vec<T, N>& x, const vec<T, N>& y)
 {
     return subadd(x * dupeven(y), swap<2>(x) * dupodd(y));
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N > 2)>
+template <typename T, size_t N>
+    requires(N > 2)
 KFR_INTRINSIC vec<T, N> cmul_impl(const vec<T, N>& x, const vec<T, 2>& y)
 {
     vec<T, N> yy = resize<N>(y);
     return cmul_impl(x, yy);
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N > 2)>
+template <typename T, size_t N>
+    requires(N > 2)
 KFR_INTRINSIC vec<T, N> cmul_impl(const vec<T, 2>& x, const vec<T, N>& y)
 {
     vec<T, N> xx = resize<N>(x);
@@ -80,17 +83,20 @@ KFR_INTRINSIC vec<T, std::max(N1, N2)> cmul(const vec<T, N1>& x, const vec<T, N2
     return intr::cmul_impl(x, y);
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(N >= 2)>
+template <typename T, size_t N>
+    requires(N >= 2)
 KFR_INTRINSIC vec<T, N> cmul_conj(const vec<T, N>& x, const vec<T, N>& y)
 {
     return swap<2>(subadd(swap<2>(x) * dupeven(y), x * dupodd(y)));
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N >= 2)>
+template <typename T, size_t N>
+    requires(N >= 2)
 KFR_INTRINSIC vec<T, N> cmul_2conj(const vec<T, N>& in0, const vec<T, N>& in1, const vec<T, N>& tw)
 {
     return (in0 + in1) * dupeven(tw) + swap<2>(cnegimag(in0 - in1)) * dupodd(tw);
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N >= 2)>
+template <typename T, size_t N>
+    requires(N >= 2)
 KFR_INTRINSIC void cmul_2conj(vec<T, N>& out0, vec<T, N>& out1, const vec<T, 2>& in0, const vec<T, 2>& in1,
                               const vec<T, N>& tw)
 {
@@ -103,13 +109,15 @@ KFR_INTRINSIC void cmul_2conj(vec<T, N>& out0, vec<T, N>& out1, const vec<T, 2>&
     out0 += sumtw + diftw;
     out1 += sumtw - diftw;
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N > 2)>
+template <typename T, size_t N>
+    requires(N > 2)
 KFR_INTRINSIC vec<T, N> cmul_conj(const vec<T, N>& x, const vec<T, 2>& y)
 {
     vec<T, N> yy = resize<N>(y);
     return cmul_conj(x, yy);
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N > 2)>
+template <typename T, size_t N>
+    requires(N > 2)
 KFR_INTRINSIC vec<T, N> cmul_conj(const vec<T, 2>& x, const vec<T, N>& y)
 {
     vec<T, N> xx = resize<N>(x);
@@ -741,7 +749,8 @@ KFR_INTRINSIC void apply_twiddles4(cvec<T, N>& __restrict a1, cvec<T, N>& __rest
     apply_twiddles4<N, inverse>(a1, a2, a3, tw1, tw2, tw3, a1, a2, a3);
 }
 
-template <size_t N, bool inverse = false, typename T, typename = u8[N - 1]>
+template <size_t N, bool inverse = false, typename T>
+    requires(N > 1)
 KFR_INTRINSIC void apply_twiddles4(cvec<T, N>& __restrict a1, cvec<T, N>& __restrict a2,
                                    cvec<T, N>& __restrict a3, const cvec<T, 1>& tw1, const cvec<T, 1>& tw2,
                                    const cvec<T, 1>& tw3)
@@ -749,7 +758,8 @@ KFR_INTRINSIC void apply_twiddles4(cvec<T, N>& __restrict a1, cvec<T, N>& __rest
     apply_twiddles4<N, inverse>(a1, a2, a3, resize<N * 2>(tw1), resize<N * 2>(tw2), resize<N * 2>(tw3));
 }
 
-template <size_t N, bool inverse = false, typename T, typename = u8[N - 2]>
+template <size_t N, bool inverse = false, typename T>
+    requires(N > 2)
 KFR_INTRINSIC void apply_twiddles4(cvec<T, N>& __restrict a1, cvec<T, N>& __restrict a2,
                                    cvec<T, N>& __restrict a3, cvec<T, N / 2> tw1, cvec<T, N / 2> tw2,
                                    cvec<T, N / 2> tw3)
@@ -1521,16 +1531,15 @@ KFR_INTRINSIC void butterfly_helper(csizes_t<I...>, size_t i, csize_t<width>, cs
                                     cbool_t<inverse>, complex<T>* out, const complex<T>* in,
                                     const complex<T>* tw, size_t stride)
 {
-    carray<cvec<T, width>, radix> inout;
+    std::array<cvec<T, width>, radix> inout;
 
-    swallow{ (inout.get(csize_t<I>()) = cread<width>(in + i + stride * I))... };
+    swallow{ (inout[I] = cread<width>(in + i + stride * I))... };
 
-    butterfly(cbool_t<inverse>(), inout.template get<I>()..., inout.template get<I>()...);
+    butterfly(cbool_t<inverse>(), inout[I]..., inout[I]...);
 
-    swallow{ (
-        cwrite<width>(out + i + stride * I,
-                      mul_tw<I, radix>(cbool_t<inverse>(), inout.template get<I>(), tw + i * (radix - 1))),
-        0)... };
+    swallow{ (cwrite<width>(out + i + stride * I,
+                            mul_tw<I, radix>(cbool_t<inverse>(), inout[I], tw + i * (radix - 1))),
+              0)... };
 }
 
 // Final
@@ -1538,14 +1547,14 @@ template <typename T, size_t width, size_t radix, bool inverse, size_t... I>
 KFR_INTRINSIC void butterfly_helper(csizes_t<I...>, size_t i, csize_t<width>, csize_t<radix>,
                                     cbool_t<inverse>, complex<T>* out, const complex<T>* in, size_t stride)
 {
-    carray<cvec<T, width>, radix> inout;
+    std::array<cvec<T, width>, radix> inout;
 
-    //        swallow{ ( inout.get( csize<I> ) = infn( i, I, cvec<T, width>( ) ) )... };
-    cread_transposed(ctrue, in + i * radix, inout.template get<I>()...);
+    //        swallow{ ( inout[I] = infn( i, I, cvec<T, width>( ) ) )... };
+    cread_transposed(ctrue, in + i * radix, inout[I]...);
 
-    butterfly(cbool_t<inverse>(), inout.template get<I>()..., inout.template get<I>()...);
+    butterfly(cbool_t<inverse>(), inout[I]..., inout[I]...);
 
-    swallow{ (cwrite<width>(out + i + stride * I, inout.get(csize_t<I>())), 0)... };
+    swallow{ (cwrite<width>(out + i + stride * I, inout[I]), 0)... };
 }
 
 template <size_t width, size_t radix, typename... Args>
@@ -1629,7 +1638,8 @@ KFR_INTRINSIC vec<T, 2> hcadd(vec<T, 2> value)
 {
     return value;
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N >= 4)>
+template <typename T, size_t N>
+    requires(N >= 4)
 KFR_INTRINSIC vec<T, 2> hcadd(vec<T, N> value)
 {
     return hcadd(low(value) + high(value));

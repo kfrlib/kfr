@@ -35,15 +35,15 @@ inline namespace KFR_ARCH_NAME
 {
 
 #define KFR_HANDLE_NOT_F_1(fn)                                                                               \
-    template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>)>                                           \
+    template <not_f_class T, size_t N>                                                                       \
     KFR_INTRINSIC vec<flt_type<T>, N> fn(const vec<T, N>& a) noexcept                                        \
     {                                                                                                        \
         return intr::fn(promoteto<flt_type<T>>(a));                                                          \
     }
 
 #define KFR_HANDLE_SCALAR(fn)                                                                                \
-    template <typename T1, typename... Args, typename Tout = std::common_type_t<T1, Args...>,                \
-              KFR_ENABLE_IF(!(is_vec<T1> || (is_vec<Args> || ...)))>                                         \
+    template <typename T1, typename... Args, typename Tout = std::common_type_t<T1, Args...>>                \
+        requires(!(is_vec<T1> || (is_vec<Args> || ...)))                                                     \
     KFR_INTRINSIC Tout fn(const T1& a, const Args&... b) noexcept                                            \
     {                                                                                                        \
         using vecout = vec1<Tout>;                                                                           \
@@ -51,8 +51,8 @@ inline namespace KFR_ARCH_NAME
     }
 
 #define KFR_HANDLE_SCALAR_1_T(fn, Tout)                                                                      \
-    template <typename T1, typename... Args, typename T = std::common_type_t<T1, Args...>,                   \
-              KFR_ENABLE_IF(!(is_vec<T1> || (is_vec<Args> || ...)))>                                         \
+    template <typename T1, typename... Args, typename T = std::common_type_t<T1, Args...>>                   \
+        requires(!(is_vec<T1> || (is_vec<Args> || ...)))                                                     \
     KFR_INTRINSIC Tout fn(const T1& a, const Args&... b) noexcept                                            \
     {                                                                                                        \
         using vecout = vec1<Tout>;                                                                           \
@@ -60,8 +60,8 @@ inline namespace KFR_ARCH_NAME
     }
 
 #define KFR_HANDLE_ARGS_T(fn, Tout)                                                                          \
-    template <typename T1, typename... Args, typename T = std::common_type_t<T1, Args...>,                   \
-              KFR_ENABLE_IF((is_vec<T1> || (is_vec<Args> || ...)))>                                          \
+    template <typename T1, typename... Args, typename T = std::common_type_t<T1, Args...>>                   \
+        requires((is_vec<T1> || (is_vec<Args> || ...)))                                                      \
     KFR_INTRINSIC Tout fn(const T1& a, const Args&... b) noexcept                                            \
     {                                                                                                        \
         using vecout = vec1<Tout>;                                                                           \
@@ -185,14 +185,16 @@ KFR_INTRINSIC vec<T, Nout> expand_simd(const vec<T, N>& x, std::type_identity_t<
     return widen<Nout>(x, value);
 }
 
-template <typename T, size_t N, size_t Nvec = vector_width<T>, typename Fn, KFR_ENABLE_IF(N <= Nvec)>
+template <typename T, size_t N, size_t Nvec = vector_width<T>, typename Fn>
+    requires(N <= Nvec)
 KFR_INTRINSIC void intrin(vec<T, N>& result, const vec<T, N>& a, const vec<T, N>& b, const vec<T, N>& c,
                           Fn&& fn)
 {
     result = fn(a, b, c);
 }
 
-template <typename T, size_t N, size_t Nvec = vector_width<T>, typename Fn, KFR_ENABLE_IF(N > Nvec)>
+template <typename T, size_t N, size_t Nvec = vector_width<T>, typename Fn>
+    requires(N > Nvec)
 KFR_INTRINSIC void intrin(vec<T, N>& result, const vec<T, N>& a, const vec<T, N>& b, const vec<T, N>& c,
                           Fn&& fn)
 {
@@ -200,52 +202,60 @@ KFR_INTRINSIC void intrin(vec<T, N>& result, const vec<T, N>& a, const vec<T, N>
     intrin(result.h.high, a.h.high, b.h.high, c.h.high, fn);
 }
 
-template <typename T, size_t N, size_t Nvec = vector_width<T>, typename Fn, KFR_ENABLE_IF(N <= Nvec)>
+template <typename T, size_t N, size_t Nvec = vector_width<T>, typename Fn>
+    requires(N <= Nvec)
 KFR_INTRINSIC void intrin(vec<T, N>& result, const vec<T, N>& a, Fn&& fn)
 {
     result = fn(a);
 }
 
-template <typename T, size_t Nvec = vector_width<T>, size_t N, typename Fn, KFR_ENABLE_IF(N > Nvec)>
+template <typename T, size_t Nvec = vector_width<T>, size_t N, typename Fn>
+    requires(N > Nvec)
 KFR_INTRINSIC void intrin(vec<T, N>& result, const vec<T, N>& a, Fn&& fn)
 {
     intrin(result.h.low, a.h.low, fn);
     intrin(result.h.high, a.h.high, fn);
 }
 
-template <typename T, size_t N, size_t Nvec = vector_width<T>, typename Fn, KFR_ENABLE_IF(N <= Nvec)>
+template <typename T, size_t N, size_t Nvec = vector_width<T>, typename Fn>
+    requires(N <= Nvec)
 KFR_INTRINSIC void intrin(vec<T, N>& result, const vec<T, N>& a, const vec<T, N>& b, Fn&& fn)
 {
     result = fn(a, b);
 }
 
-template <typename T, size_t N, size_t Nvec = vector_width<T>, typename Fn, KFR_ENABLE_IF(N > Nvec)>
+template <typename T, size_t N, size_t Nvec = vector_width<T>, typename Fn>
+    requires(N > Nvec)
 KFR_INTRINSIC void intrin(vec<T, N>& result, const vec<T, N>& a, const vec<T, N>& b, Fn&& fn)
 {
     intrin(result.h.low, a.h.low, b.h.low, fn);
     intrin(result.h.high, a.h.high, b.h.high, fn);
 }
 
-template <typename T, size_t N, size_t Nvec = vector_width<T>, typename Fn, KFR_ENABLE_IF(N <= Nvec)>
+template <typename T, size_t N, size_t Nvec = vector_width<T>, typename Fn>
+    requires(N <= Nvec)
 KFR_INTRINSIC void intrin(vec<T, N>& result, const vec<T, N>& a, const T& b, Fn&& fn)
 {
     result = fn(a, b);
 }
 
-template <typename T, size_t N, size_t Nvec = vector_width<T>, typename Fn, KFR_ENABLE_IF(N > Nvec)>
+template <typename T, size_t N, size_t Nvec = vector_width<T>, typename Fn>
+    requires(N > Nvec)
 KFR_INTRINSIC void intrin(vec<T, N>& result, const vec<T, N>& a, const T& b, Fn&& fn)
 {
     intrin(result.h.low, a.h.low, b, fn);
     intrin(result.h.high, a.h.high, b, fn);
 }
 
-template <typename T, size_t N, size_t Nvec = vector_width<T>, typename Fn, KFR_ENABLE_IF(N <= Nvec)>
+template <typename T, size_t N, size_t Nvec = vector_width<T>, typename Fn>
+    requires(N <= Nvec)
 KFR_INTRINSIC void intrin(vec<T, N>& result, const T& a, const vec<T, N>& b, Fn&& fn)
 {
     result = fn(a, b);
 }
 
-template <typename T, size_t N, size_t Nvec = vector_width<T>, typename Fn, KFR_ENABLE_IF(N > Nvec)>
+template <typename T, size_t N, size_t Nvec = vector_width<T>, typename Fn>
+    requires(N > Nvec)
 KFR_INTRINSIC void intrin(vec<T, N>& result, const T& a, const vec<T, N>& b, Fn&& fn)
 {
     intrin(result.h.low, a, b.h.low, fn);
@@ -253,15 +263,15 @@ KFR_INTRINSIC void intrin(vec<T, N>& result, const T& a, const vec<T, N>& b, Fn&
 }
 
 #define KFR_HANDLE_ALL_SIZES_1_IF(fn, cond)                                                                  \
-    template <typename T, size_t N,                                                                          \
-              KFR_ENABLE_IF(N < vector_width<T> && !is_simd_size<T>(N) && is_simd_type<T> && cond)>          \
+    template <simd_compat T, size_t N>                                                                       \
+        requires(N < vector_width<T> && !is_simd_size<T>(N) && cond)                                         \
     KFR_INTRINSIC vec<T, N> fn(const vec<T, N>& a) noexcept                                                  \
     {                                                                                                        \
         constexpr size_t Nout = intr::next_simd_width<T>(N);                                                 \
         return intr::fn(a.shuffle(csizeseq<Nout>)).shuffle(csizeseq<N>);                                     \
     }                                                                                                        \
-    template <typename T, size_t N, KFR_ENABLE_IF(N > vector_width<T> && is_simd_type<T> && cond),           \
-              typename = void>                                                                               \
+    template <simd_compat T, size_t N>                                                                       \
+        requires(N > vector_width<T> && cond)                                                                \
     KFR_INTRINSIC vec<T, N> fn(const vec<T, N>& a) noexcept                                                  \
     {                                                                                                        \
         vec<T, N> r;                                                                                         \
@@ -272,42 +282,45 @@ KFR_INTRINSIC void intrin(vec<T, N>& result, const T& a, const vec<T, N>& b, Fn&
 #define KFR_HANDLE_ALL_SIZES_1(fn) KFR_HANDLE_ALL_SIZES_1_IF(fn, true)
 
 #define KFR_HANDLE_ALL_SIZES_2(fn)                                                                           \
-    template <typename T, size_t N,                                                                          \
-              KFR_ENABLE_IF(N < vector_width<T> && !is_simd_size<T>(N) && is_simd_type<T>)>                  \
+    template <simd_compat T, size_t N>                                                                       \
+        requires(N < vector_width<T> && !is_simd_size<T>(N))                                                 \
     KFR_INTRINSIC vec<T, N> fn(const vec<T, N>& a, const vec<T, N>& b) noexcept                              \
     {                                                                                                        \
         constexpr size_t Nout = intr::next_simd_width<T>(N);                                                 \
         return intr::fn(a.shuffle(csizeseq_t<Nout>()), b.shuffle(csizeseq_t<Nout>())).shuffle(csizeseq<N>);  \
     }                                                                                                        \
-    template <typename T, size_t N, KFR_ENABLE_IF(N > vector_width<T> && is_simd_type<T>), typename = void>  \
+    template <simd_compat T, size_t N>                                                                       \
+        requires(N > vector_width<T>)                                                                        \
     KFR_INTRINSIC vec<T, N> fn(const vec<T, N>& a, const vec<T, N>& b) noexcept                              \
     {                                                                                                        \
         vec<T, N> r;                                                                                         \
         intrin(r, a, b, [](const auto& aa, const auto& bb) { return intr::fn(aa, bb); });                    \
         return r;                                                                                            \
     }                                                                                                        \
-    template <typename T, size_t N,                                                                          \
-              KFR_ENABLE_IF(N < vector_width<T> && !is_simd_size<T>(N) && is_simd_type<T>)>                  \
+    template <simd_compat T, size_t N>                                                                       \
+        requires(N < vector_width<T> && !is_simd_size<T>(N))                                                 \
     KFR_INTRINSIC vec<T, N> fn(const vec<T, N>& a, const T& b) noexcept                                      \
     {                                                                                                        \
         constexpr size_t Nout = intr::next_simd_width<T>(N);                                                 \
         return intr::fn(a.shuffle(csizeseq_t<Nout>()), vec<T, Nout>(b)).shuffle(csizeseq<N>);                \
     }                                                                                                        \
-    template <typename T, size_t N, KFR_ENABLE_IF(N > vector_width<T> && is_simd_type<T>), typename = void>  \
+    template <simd_compat T, size_t N>                                                                       \
+        requires(N > vector_width<T>)                                                                        \
     KFR_INTRINSIC vec<T, N> fn(const vec<T, N>& a, const T& b) noexcept                                      \
     {                                                                                                        \
         vec<T, N> r;                                                                                         \
         intrin(r, a, b, [](const auto& aa, const auto& bb) { return intr::fn(aa, bb); });                    \
         return r;                                                                                            \
     }                                                                                                        \
-    template <typename T, size_t N,                                                                          \
-              KFR_ENABLE_IF(N < vector_width<T> && !is_simd_size<T>(N) && is_simd_type<T>)>                  \
+    template <simd_compat T, size_t N>                                                                       \
+        requires(N < vector_width<T> && !is_simd_size<T>(N))                                                 \
     KFR_INTRINSIC vec<T, N> fn(const T& a, const vec<T, N>& b) noexcept                                      \
     {                                                                                                        \
         constexpr size_t Nout = intr::next_simd_width<T>(N);                                                 \
         return intr::fn(vec<T, Nout>(a), b.shuffle(csizeseq_t<Nout>())).shuffle(csizeseq<N>);                \
     }                                                                                                        \
-    template <typename T, size_t N, KFR_ENABLE_IF(N > vector_width<T> && is_simd_type<T>), typename = void>  \
+    template <simd_compat T, size_t N>                                                                       \
+        requires(N > vector_width<T>)                                                                        \
     KFR_INTRINSIC vec<T, N> fn(const T& a, const vec<T, N>& b) noexcept                                      \
     {                                                                                                        \
         vec<T, N> r;                                                                                         \

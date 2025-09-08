@@ -180,7 +180,8 @@ KFR_FUNCTION biquad_section<T> biquad_peak(std::type_identity_t<T> frequency, st
  * @return Biquad filter coefficients
  */
 template <typename T = fbase>
-KFR_FUNCTION biquad_section<T> biquad_lowshelf(std::type_identity_t<T> frequency, std::type_identity_t<T> gain)
+KFR_FUNCTION biquad_section<T> biquad_lowshelf(std::type_identity_t<T> frequency,
+                                               std::type_identity_t<T> gain)
 {
     biquad_section<T> result;
     const T K  = std::tan(c_pi<T, 1> * frequency);
@@ -217,7 +218,8 @@ KFR_FUNCTION biquad_section<T> biquad_lowshelf(std::type_identity_t<T> frequency
  * @return Biquad filter coefficients
  */
 template <typename T = fbase>
-KFR_FUNCTION biquad_section<T> biquad_highshelf(std::type_identity_t<T> frequency, std::type_identity_t<T> gain)
+KFR_FUNCTION biquad_section<T> biquad_highshelf(std::type_identity_t<T> frequency,
+                                                std::type_identity_t<T> gain)
 {
     biquad_section<T> result;
     const T K  = std::tan(c_pi<T, 1> * frequency);

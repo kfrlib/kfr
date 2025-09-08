@@ -168,7 +168,7 @@ struct expression_traits<expression_slice<Arg>> : expression_traits_defaults
     KFR_MEM_INTRINSIC constexpr static shape<dims> get_shape() { return shape<dims>(undefined_size); }
 };
 
-template <typename Arg, KFR_ACCEPT_EXPRESSIONS(Arg), index_t Dims = expression_dims<Arg>>
+template <expression_argument Arg, index_t Dims = expression_dims<Arg>>
 KFR_INTRINSIC expression_slice<Arg> slice(Arg&& arg, std::type_identity_t<shape<Dims>> start,
                                           std::type_identity_t<shape<Dims>> size = shape<Dims>(infinite_size))
 {
@@ -176,7 +176,7 @@ KFR_INTRINSIC expression_slice<Arg> slice(Arg&& arg, std::type_identity_t<shape<
     return { std::forward<Arg>(arg), start, size };
 }
 
-template <typename Arg, KFR_ACCEPT_EXPRESSIONS(Arg), index_t Dims = expression_dims<Arg>>
+template <expression_argument Arg, index_t Dims = expression_dims<Arg>>
 KFR_INTRINSIC expression_slice<Arg> truncate(Arg&& arg, std::type_identity_t<shape<Dims>> size)
 {
     static_assert(Dims > 0);
@@ -194,7 +194,7 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_slice<Arg>& self, const sh
     return static_cast<vec<T, N>>(get_elements(self.first(), index.add(self.start), sh));
 }
 
-template <typename Arg, index_t NDims, index_t Axis, size_t N, enable_if_output_expression<Arg>* = nullptr,
+template <output_expression Arg, index_t NDims, index_t Axis, size_t N,
           typename T = typename expression_traits<expression_slice<Arg>>::value_type>
 KFR_INTRINSIC void set_elements(const expression_slice<Arg>& self, const shape<NDims>& index,
                                 const axis_params<Axis, N>& sh, const std::type_identity_t<vec<T, N>>& value)
@@ -227,13 +227,13 @@ struct expression_traits<expression_cast<T, Arg>> : expression_traits_defaults
     KFR_MEM_INTRINSIC constexpr static shape<dims> get_shape() { return ArgTraits::get_shape(); }
 };
 
-template <typename T, typename Arg, KFR_ACCEPT_EXPRESSIONS(Arg)>
+template <typename T, expression_argument Arg>
 KFR_INTRINSIC expression_cast<T, Arg> cast(Arg&& arg)
 {
     return { std::forward<Arg>(arg) };
 }
 
-template <typename T, typename Arg, KFR_ACCEPT_EXPRESSIONS(Arg)>
+template <typename T, expression_argument Arg>
 KFR_INTRINSIC expression_cast<T, Arg> cast(Arg&& arg, ctype_t<T>)
 {
     return { std::forward<Arg>(arg) };
@@ -350,7 +350,7 @@ struct expression_padded : public expression_with_arguments<Arg>
     }
 };
 
-template <typename Arg, KFR_ACCEPT_EXPRESSIONS(Arg), typename T = expression_value_type<Arg>>
+template <expression_argument Arg, typename T = expression_value_type<Arg>>
 KFR_INTRINSIC expression_padded<Arg> padded(Arg&& arg, T fill_value = T{})
 {
     static_assert(expression_dims<Arg> >= 1);
@@ -419,7 +419,7 @@ struct expression_reverse : public expression_with_arguments<Arg>
     }
 };
 
-template <typename Arg, KFR_ACCEPT_EXPRESSIONS(Arg)>
+template <expression_argument Arg>
 KFR_INTRINSIC expression_reverse<Arg> reverse(Arg&& arg)
 {
     static_assert(expression_dims<Arg> >= 1);
@@ -478,7 +478,7 @@ struct expression_fixshape : public expression_with_arguments<Arg>
     }
 };
 
-template <typename Arg, index_t... ShapeValues, KFR_ACCEPT_EXPRESSIONS(Arg)>
+template <expression_argument Arg, index_t... ShapeValues>
 KFR_INTRINSIC expression_fixshape<Arg, fixed_shape_t<ShapeValues...>> fixshape(
     Arg&& arg, const fixed_shape_t<ShapeValues...>&)
 {
@@ -552,7 +552,7 @@ struct expression_reshape : public expression_with_arguments<Arg>
     }
 };
 
-template <typename Arg, index_t OutDims, KFR_ACCEPT_EXPRESSIONS(Arg)>
+template <expression_argument Arg, index_t OutDims>
 KFR_INTRINSIC expression_reshape<Arg, OutDims> reshape(Arg&& arg, const shape<OutDims>& out_shape)
 {
     return { std::forward<Arg>(arg), out_shape };
@@ -815,14 +815,15 @@ struct expression_traits<expression_concatenate<Arg1, Arg2, ConcatAxis>> : expre
     }
 };
 
-template <index_t ConcatAxis = 0, typename Arg1, typename Arg2, KFR_ACCEPT_EXPRESSIONS(Arg1, Arg2)>
+template <index_t ConcatAxis = 0, input_expression Arg1, input_expression Arg2>
+    requires expression_arguments<Arg1, Arg2>
 KFR_INTRINSIC expression_concatenate<Arg1, Arg2, ConcatAxis> concatenate(Arg1&& arg1, Arg2&& arg2)
 {
     return { std::forward<Arg1>(arg1), std::forward<Arg2>(arg2) };
 }
 
-template <index_t ConcatAxis = 0, typename Arg1, typename Arg2, typename Arg3,
-          KFR_ACCEPT_EXPRESSIONS(Arg1, Arg2, Arg3)>
+template <index_t ConcatAxis = 0, input_expression Arg1, input_expression Arg2, input_expression Arg3>
+    requires expression_arguments<Arg1, Arg2, Arg3>
 KFR_INTRINSIC expression_concatenate<Arg1, expression_concatenate<Arg2, Arg3, ConcatAxis>, ConcatAxis>
 concatenate(Arg1&& arg1, Arg2&& arg2, Arg3&& arg3)
 {
@@ -874,7 +875,8 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_concatenate<Arg1, Arg2, Co
 template <typename... Args>
 using expression_pack = expression_make_function<fn::packtranspose, Args...>;
 
-template <typename... Args, KFR_ACCEPT_EXPRESSIONS(Args...)>
+template <typename... Args>
+    requires expression_arguments<Args...>
 KFR_INTRINSIC expression_pack<Args...> pack(Args&&... args)
 {
     return { std::forward<Args>(args)... };
@@ -937,7 +939,7 @@ struct expression_unpack : expression_with_arguments<E...>, expression_traits_de
         self.output(index, sh, x, csizeseq<count>);
     }
 
-    template <typename Input, KFR_ACCEPT_EXPRESSIONS(Input)>
+    template <expression_argument Input>
     KFR_MEM_INTRINSIC expression_unpack& operator=(Input&& input)
     {
         process(*this, std::forward<Input>(input));
@@ -957,7 +959,7 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template <typename... E, enable_if_output_expressions<E...>* = nullptr>
+template <output_expression... E>
 KFR_FUNCTION expression_unpack<E...> unpack(E&&... e)
 {
     return { std::forward<E>(e)... };

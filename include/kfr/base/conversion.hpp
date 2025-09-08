@@ -172,14 +172,16 @@ struct audio_sample_traits<f64>
 };
 
 template <typename Tout, typename Tin, typename Tout_traits = audio_sample_traits<Tout>,
-          typename Tin_traits = audio_sample_traits<Tin>, KFR_ENABLE_IF(std::is_same_v<Tin, Tout>)>
+          typename Tin_traits = audio_sample_traits<Tin>>
+    requires(std::is_same_v<Tin, Tout>)
 inline Tout convert_sample(const Tin& in)
 {
     return in;
 }
 
 template <typename Tout, typename Tin, typename Tout_traits = audio_sample_traits<Tout>,
-          typename Tin_traits = audio_sample_traits<Tin>, KFR_ENABLE_IF(!std::is_same_v<Tin, Tout>)>
+          typename Tin_traits = audio_sample_traits<Tin>>
+    requires(!std::is_same_v<Tin, Tout>)
 inline Tout convert_sample(const Tin& in)
 {
     constexpr auto scale = Tout_traits::scale / Tin_traits::scale;

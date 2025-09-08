@@ -94,8 +94,8 @@ struct function<R(Args...)>
 
     function(std::nullptr_t) noexcept {}
 
-    template <typename Fn, typename = std::enable_if_t<std::is_invocable_r_v<R, Fn, Args...> &&
-                                                       !std::is_same_v<std::decay_t<Fn>, function>>>
+    template <typename Fn>
+        requires(std::is_invocable_r_v<R, Fn, Args...> && !std::is_same_v<std::decay_t<Fn>, function>)
     function(Fn fn) : impl(new details::function_impl<std::decay_t<Fn>, R, Args...>(std::move(fn)))
     {
     }
@@ -133,7 +133,8 @@ struct function<R(Args...)>
 };
 
 template <typename Ret, typename... Args, typename T, typename Fn, typename DefFn = fn_noop>
-KFR_INLINE function<Ret(Args...)> cdispatch(cvals_t<T>, std::type_identity_t<T>, Fn&&, DefFn&& deffn = DefFn())
+KFR_INLINE function<Ret(Args...)> cdispatch(cvals_t<T>, std::type_identity_t<T>, Fn&&,
+                                            DefFn&& deffn = DefFn())
 {
     return [=](Args... args) KFR_INLINE_LAMBDA -> Ret { return deffn(std::forward<Args>(args)...); };
 }

@@ -67,7 +67,8 @@ KFR_INTRINSIC simd<Tout, 1> simd_make(ctype_t<Tout>, const Arg& arg)
     return (simd<Tout, 1>){ unwrap_bit_value(arg) };
 }
 
-template <typename Tout, typename... Args, size_t N = sizeof...(Args), KFR_ENABLE_IF(N > 1)>
+template <typename Tout, typename... Args, size_t N = sizeof...(Args)>
+    requires(N > 1)
 KFR_INTRINSIC simd<Tout, N> simd_make(ctype_t<Tout>, const Args&... args)
 {
     return (simd<Tout, N>){ unwrap_bit_value(args)... };
@@ -191,8 +192,8 @@ KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd2_t<T, N, N>, const simd<T, N>& x, 
 #endif
 }
 
-template <typename T, size_t N1, size_t N2, size_t... indices, KFR_ENABLE_IF(N1 != N2),
-          size_t Nout = sizeof...(indices)>
+template <typename T, size_t N1, size_t N2, size_t... indices, size_t Nout = sizeof...(indices)>
+    requires(N1 != N2)
 KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd2_t<T, N1, N2>, const simd<T, N1>& x, const simd<T, N2>& y,
                                          csizes_t<indices...>, overload_generic)
 {

@@ -13,6 +13,8 @@
 #include <random>
 #include <type_traits>
 #include <tuple>
+#include <bit>
+#include <concepts>
 #include <utility>
 
 KFR_PRAGMA_GNU(GCC diagnostic push)
@@ -599,38 +601,6 @@ constexpr KFR_INTRINSIC auto scale() noexcept
 namespace details
 {
 
-template <typename Ret, typename T, typename enable = std::void_t<>>
-struct is_returning_type_impl : std::false_type
-{
-};
-
-template <typename Ret, typename Fn, typename... Args>
-struct is_returning_type_impl<Ret, Fn(Args...), std::void_t<std::invoke_result_t<Fn, Args...>>>
-    : std::is_same<Ret, std::invoke_result_t<Fn, Args...>>
-{
-};
-
-template <typename Fn, typename Args, typename enable = std::void_t<>>
-struct is_callable_impl : std::false_type
-{
-};
-
-template <typename Fn, typename... Args>
-struct is_callable_impl<Fn, ctypes_t<Args...>, std::void_t<std::invoke_result_t<Fn, Args...>>>
-    : std::true_type
-{
-};
-
-template <typename T, typename enable = std::void_t<>>
-struct is_enabled_impl : std::true_type
-{
-};
-
-template <typename Fn>
-struct is_enabled_impl<Fn, std::void_t<decltype(Fn::disabled)>> : std::integral_constant<bool, !Fn::disabled>
-{
-};
-
 template <int N>
 struct unique_enum_impl
 {
@@ -655,21 +625,15 @@ struct unique_enum_impl
 #define KFR_ENABLE_IF(...) KFR_ENABLE_IF_IMPL(__LINE__, __VA_ARGS__)
 } // namespace details
 
-template <typename T>
-constexpr inline bool is_enabled = details::is_enabled_impl<T>::value;
-
 namespace details
 {
-template <typename Fn, KFR_ENABLE_IF(std::is_invocable_v<Fn>)>
+template <typename Fn>
 KFR_INTRINSIC auto call_if_callable(Fn&& fn) noexcept
 {
-    return fn();
-}
-
-template <typename Fn, KFR_ENABLE_IF(!std::is_invocable_v<Fn>)>
-KFR_INTRINSIC auto call_if_callable(Fn&& fn) noexcept
-{
-    return std::forward<Fn>(fn);
+    if constexpr (std::is_invocable_v<Fn>)
+        return fn();
+    else
+        return std::forward<Fn>(fn);
 }
 } // namespace details
 
@@ -694,7 +658,7 @@ constexpr KFR_INTRINSIC bool is_odd(T x) noexcept
 template <typename T>
 constexpr KFR_INTRINSIC bool is_poweroftwo(T x) noexcept
 {
-    return ((x != 0) && !(x & (x - 1)));
+    return std::has_single_bit(x);
 }
 
 template <typename T>
@@ -721,48 +685,6 @@ template <typename T>
 constexpr KFR_INTRINSIC bool is_divisible(T x, T divisor) noexcept
 {
     return x % divisor == 0;
-}
-
-/// @brief Greatest common divisor
-template <typename T>
-constexpr KFR_INTRINSIC T gcd(T a) noexcept
-{
-    return a;
-}
-
-/// @brief Greatest common divisor
-template <typename T>
-constexpr inline T gcd(T a, T b) noexcept
-{
-    return a < b ? gcd(b, a) : ((a % b == 0) ? b : gcd(b, a % b));
-}
-
-/// @brief Greatest common divisor
-template <typename T, typename... Ts>
-constexpr KFR_INTRINSIC T gcd(T a, T b, T c, Ts... rest) noexcept
-{
-    return gcd(a, gcd(b, c, rest...));
-}
-
-/// @brief Least common multiple
-template <typename T>
-constexpr KFR_INTRINSIC T lcm(T a) noexcept
-{
-    return a;
-}
-
-/// @brief Least common multiple
-template <typename T>
-constexpr KFR_INTRINSIC T lcm(T a, T b) noexcept
-{
-    return a * b / gcd(a, b);
-}
-
-/// @brief Least common multiple
-template <typename T, typename... Ts>
-constexpr KFR_INTRINSIC T lcm(T a, T b, T c, Ts... rest) noexcept
-{
-    return lcm(a, lcm(b, c, rest...));
 }
 
 KFR_INTRINSIC std::lldiv_t floor_div(long long a, long long b) noexcept
@@ -903,14 +825,11 @@ constexpr inline bool is_numeric_args = (is_numeric<Ts> && ...);
 template <typename T>
 constexpr inline bool is_numeric_or_bool = is_number_or_bool<deep_subtype<T>>;
 
+template <typename T>
+concept numeric = is_numeric<T>;
+
 namespace details
 {
-template <typename T>
-struct identity_impl
-{
-    using type = T;
-};
-
 template <typename T>
 constexpr size_t elementsize() noexcept
 {
@@ -931,119 +850,6 @@ struct swallow
     KFR_MEM_INTRINSIC constexpr swallow(T&&...) noexcept
     {
     }
-};
-
-template <typename T, size_t N>
-struct carray;
-
-template <typename T>
-struct carray<T, 1>
-{
-    KFR_MEM_INTRINSIC constexpr carray() noexcept = default;
-    KFR_MEM_INTRINSIC constexpr carray(T val) noexcept : val(val) {}
-
-    template <typename Fn, size_t index = 0, KFR_ENABLE_IF(std::is_invocable_v<Fn, csize_t<index>>)>
-    KFR_MEM_INTRINSIC constexpr carray(Fn&& fn, csize_t<index> = csize_t<index>{}) noexcept
-        : val(static_cast<T>(fn(csize_t<index>())))
-    {
-    }
-
-    KFR_MEM_INTRINSIC constexpr carray(const carray&) noexcept = default;
-    KFR_MEM_INTRINSIC constexpr carray(carray&&) noexcept      = default;
-    KFR_MEM_INTRINSIC static constexpr size_t size() noexcept { return 1; }
-
-    template <size_t index>
-    KFR_MEM_INTRINSIC constexpr T& get(csize_t<index>) noexcept
-    {
-        static_assert(index == 0, "carray: Array index is out of range");
-        return val;
-    }
-    template <size_t index>
-    KFR_MEM_INTRINSIC constexpr const T& get(csize_t<index>) const noexcept
-    {
-        static_assert(index == 0, "carray: Array index is out of range");
-        return val;
-    }
-    template <size_t index>
-    KFR_MEM_INTRINSIC constexpr T& get() noexcept
-    {
-        return get(csize_t<index>());
-    }
-    template <size_t index>
-    KFR_MEM_INTRINSIC constexpr const T& get() const noexcept
-    {
-        return get(csize_t<index>());
-    }
-    KFR_MEM_INTRINSIC constexpr const T* front() const noexcept { return val; }
-    KFR_MEM_INTRINSIC constexpr T* front() noexcept { return val; }
-    KFR_MEM_INTRINSIC constexpr const T* back() const noexcept { return val; }
-    KFR_MEM_INTRINSIC constexpr T* back() noexcept { return val; }
-    KFR_MEM_INTRINSIC constexpr const T* begin() const noexcept { return &val; }
-    KFR_MEM_INTRINSIC constexpr const T* end() const noexcept { return &val + 1; }
-    KFR_MEM_INTRINSIC constexpr T* begin() noexcept { return &val; }
-    KFR_MEM_INTRINSIC constexpr T* end() noexcept { return &val + 1; }
-    KFR_MEM_INTRINSIC constexpr const T* data() const noexcept { return begin(); }
-    KFR_MEM_INTRINSIC constexpr T* data() noexcept { return begin(); }
-    KFR_MEM_INTRINSIC constexpr bool empty() const noexcept { return false; }
-    T val;
-};
-
-template <typename T, size_t N>
-struct carray : carray<T, N - 1>
-{
-    template <typename... Ts>
-    KFR_MEM_INTRINSIC constexpr carray(T first, Ts... list) noexcept : carray<T, N - 1>(list...), val(first)
-    {
-        static_assert(sizeof...(list) + 1 == N, "carray: Argument count is invalid");
-    }
-
-    template <typename Fn, size_t index = N - 1>
-    KFR_MEM_INTRINSIC constexpr carray(Fn&& fn, csize_t<index> = csize_t<index>{}) noexcept
-        : carray<T, N - 1>(std::forward<Fn>(fn), csize_t<index - 1>()),
-          val(static_cast<T>(fn(csize_t<index>())))
-    {
-    }
-
-    KFR_MEM_INTRINSIC constexpr carray() noexcept              = default;
-    KFR_MEM_INTRINSIC constexpr carray(const carray&) noexcept = default;
-    KFR_MEM_INTRINSIC constexpr carray(carray&&) noexcept      = default;
-    KFR_MEM_INTRINSIC static constexpr size_t size() noexcept { return N; }
-    KFR_MEM_INTRINSIC constexpr T& get(csize_t<N - 1>) noexcept { return val; }
-    template <size_t index>
-    KFR_MEM_INTRINSIC constexpr T& get(csize_t<index>) noexcept
-    {
-        return carray<T, N - 1>::get(csize_t<index>());
-    }
-    KFR_MEM_INTRINSIC constexpr const T& get(csize_t<N - 1>) const noexcept { return val; }
-    template <size_t index>
-    KFR_MEM_INTRINSIC constexpr const T& get(csize_t<index>) const noexcept
-    {
-        return carray<T, N - 1>::get(csize_t<index>());
-    }
-    template <size_t index>
-    KFR_MEM_INTRINSIC constexpr T& get() noexcept
-    {
-        return get(csize_t<index>());
-    }
-    template <size_t index>
-    KFR_MEM_INTRINSIC constexpr const T& get() const noexcept
-    {
-        return get(csize_t<index>());
-    }
-    KFR_MEM_INTRINSIC constexpr const T* front() const noexcept { return carray<T, N - 1>::front(); }
-    KFR_MEM_INTRINSIC constexpr T* front() noexcept { return carray<T, N - 1>::front(); }
-    KFR_MEM_INTRINSIC constexpr const T* back() const noexcept { return val; }
-    KFR_MEM_INTRINSIC constexpr T* back() noexcept { return val; }
-    KFR_MEM_INTRINSIC constexpr const T* begin() const noexcept { return carray<T, N - 1>::begin(); }
-    KFR_MEM_INTRINSIC constexpr const T* end() const noexcept { return &val + 1; }
-    KFR_MEM_INTRINSIC constexpr T* begin() noexcept { return carray<T, N - 1>::begin(); }
-    KFR_MEM_INTRINSIC constexpr T* end() noexcept { return &val + 1; }
-    KFR_MEM_INTRINSIC constexpr const T* data() const noexcept { return begin(); }
-    KFR_MEM_INTRINSIC constexpr T* data() noexcept { return begin(); }
-    KFR_MEM_INTRINSIC constexpr bool empty() const noexcept { return false; }
-
-private:
-    T val;
 };
 
 #define KFR_META_FN(fn)                                                                                      \
@@ -1168,7 +974,7 @@ KFR_INTRINSIC constexpr bool is_greaterorequal(const T1& x, const T2& y) noexcep
 template <typename T>
 KFR_INTRINSIC constexpr bool is_between(T value, std::type_identity_t<T> min,
                                         std::type_identity_t<T> max) noexcept(noexcept(value >= min &&
-                                                                                     value <= max))
+                                                                                       value <= max))
 {
     return value >= min && value <= max;
 }
@@ -1180,75 +986,17 @@ KFR_META_FN(is_lessorequal)
 KFR_META_FN(is_greaterorequal)
 KFR_META_FN(is_between)
 
-namespace details
-{
-template <typename, typename = void>
-struct has_begin_end_impl : std::false_type
-{
+template <typename T>
+concept has_begin_end = requires(T t) {
+    std::begin(t);
+    std::end(t);
 };
 
 template <typename T>
-struct has_begin_end_impl<T,
-                          std::void_t<decltype(std::declval<T>().begin()), decltype(std::declval<T>().end())>>
-    : std::true_type
-{
+concept has_data_size = requires(T t) {
+    std::data(t);
+    std::size(t);
 };
-
-template <typename, typename = void>
-struct has_value_type_impl : std::false_type
-{
-};
-
-template <typename T>
-struct has_value_type_impl<T, std::void_t<typename T::value_type>> : std::true_type
-{
-};
-
-template <typename, typename = void>
-struct has_data_size_impl : std::false_type
-{
-};
-
-template <typename T>
-struct has_data_size_impl<T,
-                          std::void_t<decltype(std::declval<T>().size()), decltype(std::declval<T>().data())>>
-    : std::true_type
-{
-};
-
-template <typename, typename = void>
-struct has_data_size_free_impl : std::false_type
-{
-};
-
-template <typename T>
-struct has_data_size_free_impl<
-    T, std::void_t<decltype(std::size(std::declval<T>())), decltype(std::data(std::declval<T>()))>>
-    : std::true_type
-{
-};
-
-template <typename, typename Fallback, typename = void>
-struct value_type_impl
-{
-    using type = Fallback;
-};
-
-template <typename T, typename Fallback>
-struct value_type_impl<T, Fallback, std::void_t<typename T::value_type>>
-{
-    using type = typename T::value_type;
-};
-} // namespace details
-
-template <typename T>
-constexpr inline bool has_begin_end = details::has_begin_end_impl<std::decay_t<T>>::value;
-
-template <typename T>
-constexpr inline bool has_data_size = details::has_data_size_impl<std::decay_t<T>>::value;
-
-#define KFR_HAS_DATA_SIZE(CONTAINER)                                                                         \
-    std::enable_if_t<details::has_data_size_free_impl<CONTAINER>::value>* = nullptr
 
 template <typename T>
 using value_type_of = typename std::decay_t<T>::value_type;
@@ -1274,21 +1022,12 @@ KFR_INTRINSIC void cforeach(cvals_t<T, values...>, Fn&& fn)
 #endif
 }
 
-template <typename T, typename Fn, KFR_ENABLE_IF(has_begin_end<T>)>
+template <has_begin_end T, typename Fn>
 KFR_INTRINSIC void cforeach(T&& list, Fn&& fn)
 {
     for (const auto& v : list)
     {
         fn(v);
-    }
-}
-
-template <typename T, size_t N, typename Fn>
-KFR_INTRINSIC void cforeach(const T (&array)[N], Fn&& fn)
-{
-    for (size_t i = 0; i < N; i++)
-    {
-        fn(array[i]);
     }
 }
 
@@ -1491,12 +1230,6 @@ KFR_INTRINSIC NonMemFn make_nonmember(const Fn&)
     return [](Fn* fn, Args... args) -> Ret { return fn->operator()(std::forward<Args>(args)...); };
 }
 
-template <typename T>
-constexpr KFR_INTRINSIC T choose_const() noexcept
-{
-    static_assert(sizeof(T) != 0, "T not found in the list of template arguments");
-    return T();
-}
 template <typename T, typename C1>
 constexpr KFR_INTRINSIC T choose_const_fallback(C1 c1) noexcept
 {
@@ -1510,13 +1243,21 @@ constexpr KFR_INTRINSIC T choose_const_fallback(C1 c1) noexcept
  * CHECK( choose_const<f64>( 32.0f, 64.0 ) == 64.0 );
  * @endcode
  */
-template <typename T, typename C1, typename... Cs, KFR_ENABLE_IF(std::is_same_v<T, C1>)>
+template <typename T>
+constexpr KFR_INTRINSIC T choose_const() noexcept
+{
+    static_assert(sizeof(T) != 0, "T not found in the list of template arguments");
+    return T();
+}
+template <typename T, typename C1, typename... Cs>
 constexpr KFR_INTRINSIC T choose_const(C1 c1, Cs...) noexcept
+    requires std::is_same_v<T, C1>
 {
     return static_cast<T>(c1);
 }
-template <typename T, typename C1, typename... Cs, KFR_ENABLE_IF(!std::is_same_v<T, C1>)>
+template <typename T, typename C1, typename... Cs>
 constexpr KFR_INTRINSIC T choose_const(C1, Cs... constants) noexcept
+    requires(!std::is_same_v<T, C1>)
 {
     return choose_const<T>(constants...);
 }
@@ -1545,23 +1286,6 @@ KFR_INTRINSIC constexpr autocast_impl<Tfrom> autocast(const Tfrom& value) noexce
 }
 
 inline void stop_constexpr() {}
-
-namespace details
-{
-template <typename T, typename = void>
-struct signed_type_impl
-{
-    using type = T;
-};
-template <typename T>
-struct signed_type_impl<T, std::void_t<std::enable_if_t<std::is_unsigned_v<T>>>>
-{
-    using type = findinttype<std::numeric_limits<T>::min(), std::numeric_limits<T>::max()>;
-};
-} // namespace details
-
-template <typename T>
-using signed_type = typename details::signed_type_impl<T>::type;
 
 template <typename T>
 constexpr KFR_INTRINSIC T align_down(T x, std::type_identity_t<T> alignment) noexcept

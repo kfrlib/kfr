@@ -162,7 +162,8 @@ KFR_INTRINSIC random_state random_init(u64 x0, u64 x1)
  * generates **at least 128 bits** of random data. To maintain deterministic
  * behavior across runs, always request the same size `N` in each usage scenario.
  */
-template <size_t N, KFR_ENABLE_IF(N <= sizeof(random_state))>
+template <size_t N>
+    requires(N <= sizeof(random_state))
 KFR_INTRINSIC vec<u8, N> random_bits(random_state& state)
 {
     random_next(state);
@@ -184,7 +185,8 @@ KFR_INTRINSIC vec<u8, N> random_bits(random_state& state)
  * generates **at least 128 bits** of random data. To maintain deterministic
  * behavior across runs, always request the same size `N` in each usage scenario.
  */
-template <size_t N, KFR_ENABLE_IF(N > sizeof(random_state))>
+template <size_t N>
+    requires(N > sizeof(random_state))
 KFR_INTRINSIC vec<u8, N> random_bits(random_state& state)
 {
     constexpr size_t N2         = prev_poweroftwo(N - 1);

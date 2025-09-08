@@ -42,12 +42,14 @@ KFR_INTRINSIC T horizontal_impl(const vec<T, 1>& value, ReduceFn&&)
     return T(value.front());
 }
 
-template <typename T, size_t N, typename ReduceFn, KFR_ENABLE_IF(N > 1 && is_poweroftwo(N))>
+template <typename T, size_t N, typename ReduceFn>
+    requires(N > 1 && is_poweroftwo(N))
 KFR_INTRINSIC T horizontal_impl(const vec<T, N>& value, ReduceFn&& reduce)
 {
     return horizontal_impl(reduce(low(value), high(value)), std::forward<ReduceFn>(reduce));
 }
-template <typename T, size_t N, typename ReduceFn, KFR_ENABLE_IF(N > 1 && !is_poweroftwo(N))>
+template <typename T, size_t N, typename ReduceFn>
+    requires(N > 1 && !is_poweroftwo(N))
 KFR_INTRINSIC T horizontal_impl(const vec<T, N>& value, ReduceFn&& reduce)
 {
     const T initial = reduce(initialvalue<T>());

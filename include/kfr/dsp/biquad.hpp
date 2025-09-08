@@ -134,7 +134,7 @@ struct iir_params
 
     iir_params(const biquad_section<T>& one) noexcept : iir_params(&one, 1) {}
 
-    template <typename Container, KFR_HAS_DATA_SIZE(Container)>
+    template <has_data_size Container>
     constexpr iir_params(Container&& cont) noexcept : iir_params(std::data(cont), std::size(cont))
     {
     }
@@ -157,7 +157,7 @@ struct iir_params<T, tag_dynamic_vector> : public std::vector<biquad_section<T>>
 
     iir_params(std::vector<biquad_section<T>>&& sections) noexcept : base(std::move(sections)) {}
 
-    template <typename Container, KFR_HAS_DATA_SIZE(Container)>
+    template <has_data_size Container>
     constexpr iir_params(Container&& cont) noexcept : iir_params(std::data(cont), std::size(cont))
     {
     }

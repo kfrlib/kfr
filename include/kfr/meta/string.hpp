@@ -45,38 +45,45 @@ struct fmt_t
 namespace details
 {
 
-template <int number, KFR_ENABLE_IF(number >= 0 && number < 10)>
+template <int number>
+    requires(number >= 0 && number < 10)
 constexpr cstring<2> itoa()
 {
     return cstring<2>{ { static_cast<char>(number + '0'), 0 } };
 }
-template <int number, KFR_ENABLE_IF(number >= 10)>
+template <int number>
+    requires(number >= 10)
 constexpr auto itoa()
 {
     return concat_cstring(itoa<number / 10>(), itoa<number % 10>());
 }
-template <int number, KFR_ENABLE_IF(number < 0)>
+template <int number>
+    requires(number < 0)
 constexpr auto itoa()
 {
     return concat_cstring(make_cstring("-"), itoa<-number>());
 }
 
-template <typename T, char t, int width, int prec, KFR_ENABLE_IF(width < 0 && prec >= 0)>
+template <typename T, char t, int width, int prec>
+    requires(width < 0 && prec >= 0)
 KFR_INLINE constexpr auto value_fmt_arg(ctype_t<fmt_t<T, t, width, prec>>)
 {
     return concat_cstring(make_cstring("."), itoa<prec>());
 }
-template <typename T, char t, int width, int prec, KFR_ENABLE_IF(width >= 0 && prec < 0)>
+template <typename T, char t, int width, int prec>
+    requires(width >= 0 && prec < 0)
 KFR_INLINE constexpr auto value_fmt_arg(ctype_t<fmt_t<T, t, width, prec>>)
 {
     return itoa<width>();
 }
-template <typename T, char t, int width, int prec, KFR_ENABLE_IF(width < 0 && prec < 0)>
+template <typename T, char t, int width, int prec>
+    requires(width < 0 && prec < 0)
 KFR_INLINE constexpr auto value_fmt_arg(ctype_t<fmt_t<T, t, width, prec>>)
 {
     return make_cstring("");
 }
-template <typename T, char t, int width, int prec, KFR_ENABLE_IF(width >= 0 && prec >= 0)>
+template <typename T, char t, int width, int prec>
+    requires(width >= 0 && prec >= 0)
 KFR_INLINE constexpr auto value_fmt_arg(ctype_t<fmt_t<T, t, width, prec>>)
 {
     return concat_cstring(itoa<width>(), make_cstring("."), itoa<prec>());

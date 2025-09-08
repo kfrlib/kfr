@@ -37,19 +37,19 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-template <typename T, size_t N, KFR_ENABLE_IF(std::is_integral_v<T>)>
+template <std::integral T, size_t N>
 KFR_INTRINSIC vec<T, N> random_uniform(random_state& state)
 {
     return bitcast<T>(random_bits<N * sizeof(T)>(state));
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(std::is_same_v<T, f32>)>
+template <std::same_as<f32> T, size_t N>
 KFR_INTRINSIC vec<f32, N> randommantissa(random_state& state)
 {
     return bitcast<f32>((random_uniform<u32, N>(state) & u32(0x7FFFFFu)) | u32(0x3f800000u)) + 0.0f;
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(std::is_same_v<T, f64>)>
+template <std::same_as<f64> T, size_t N>
 KFR_INTRINSIC vec<f64, N> randommantissa(random_state& state)
 {
     return bitcast<f64>((random_uniform<u64, N>(state) & u64(0x000FFFFFFFFFFFFFull)) |
@@ -67,7 +67,7 @@ KFR_INTRINSIC vec<f64, N> randommantissa(random_state& state)
  * @param state Reference to the random number generator state.
  * @return Vector of N floats in the range [0.0, 1.0).
  */
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
+template <f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> random_uniform(random_state& state)
 {
     return randommantissa<T, N>(state) - 1.f;
@@ -83,7 +83,7 @@ KFR_INTRINSIC vec<T, N> random_uniform(random_state& state)
  * @param max Upper bound of range.
  * @return Vector of N values in the range [min, max).
  */
-template <size_t N, typename T, KFR_ENABLE_IF(is_f_class<T>)>
+template <size_t N, f_class T>
 KFR_INTRINSIC vec<T, N> random_range(random_state& state, T min, T max)
 {
     return mix(random_uniform<T, N>(state), min, max);
@@ -101,7 +101,7 @@ KFR_INTRINSIC vec<T, N> random_range(random_state& state, T min, T max)
  * @param max Upper bound of range.
  * @return Vector of N values in the range [min, max).
  */
-template <size_t N, typename T, KFR_ENABLE_IF(!is_f_class<T>)>
+template <size_t N, not_f_class T>
 KFR_INTRINSIC vec<T, N> random_range(random_state& state, T min, T max)
 {
     using big_type = findinttype<sqr(std::numeric_limits<T>::min()), sqr(std::numeric_limits<T>::max())>;

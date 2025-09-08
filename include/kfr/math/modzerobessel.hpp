@@ -39,7 +39,7 @@ inline namespace KFR_ARCH_NAME
  * @param x The input value for which to compute the modified Bessel function
  * @return The computed value of I₀(x)
  */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION T1 modzerobessel(const T1& x)
 {
     return intr::modzerobessel(x);

@@ -88,14 +88,14 @@ public:
         process_expression(dest, src, size_min(size, src.size()));
     }
 
-    template <univector_tag Tag, typename Expr, KFR_ENABLE_IF(is_input_expression<Expr>)>
+    template <univector_tag Tag, input_expression Expr>
     void apply(univector<T, Tag>& dest, const Expr& src)
     {
         static_assert(expression_dims<Expr> == 1);
         process_expression(dest.data(), to_handle(src), size_min(dest.size(), get_shape(src).front()));
     }
 
-    template <typename Expr, KFR_ENABLE_IF(is_input_expression<Expr>)>
+    template <input_expression Expr>
     void apply(T* dest, const Expr& src, size_t size)
     {
         process_expression(dest, to_handle(src), size_min(size, src.size()));

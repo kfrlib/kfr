@@ -169,23 +169,27 @@ KFR_INTRINSIC bool bittestall(const mi32sse& x) { return !_mm_movemask_epi8((~x)
 KFR_INTRINSIC bool bittestall(const mi64sse& x) { return !_mm_movemask_epi8((~x).v); }
 #endif
 
-template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T>)>
+template <typename T, size_t N>
+    requires(N < vector_width<T>)
 KFR_INTRINSIC bool bittestall(const mask<T, N>& a)
 {
     return bittestall(expand_simd(a, bit<T>(true)));
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N >= vector_width<T>), typename = void>
+template <typename T, size_t N>
+    requires(N >= vector_width<T>)
 KFR_INTRINSIC bool bittestall(const mask<T, N>& a)
 {
     return bittestall(low(a)) && bittestall(high(a));
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T>)>
+template <typename T, size_t N>
+    requires(N < vector_width<T>)
 KFR_INTRINSIC bool bittestany(const mask<T, N>& a)
 {
     return bittestany(expand_simd(a, bit<T>(false)));
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N >= vector_width<T>), typename = void>
+template <typename T, size_t N>
+    requires(N >= vector_width<T>)
 KFR_INTRINSIC bool bittestany(const mask<T, N>& a)
 {
     return bittestany(low(a)) || bittestany(high(a));
@@ -224,23 +228,27 @@ KFR_INTRINSIC bool bittestall(const mi64neon& a) { return bittestall(bitcast<bit
 KFR_INTRINSIC bool bittestall(const mf32neon& a) { return bittestall(bitcast<bit<u32>>(a)); }
 KFR_INTRINSIC bool bittestall(const mf64neon& a) { return bittestall(bitcast<bit<u32>>(a)); }
 
-template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T>)>
+template <typename T, size_t N>
+    requires(N < vector_width<T>)
 KFR_INTRINSIC bool bittestall(const mask<T, N>& a)
 {
     return bittestall(expand_simd(a, bit<T>(true)));
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N >= vector_width<T>), typename = void>
+template <typename T, size_t N>
+    requires(N >= vector_width<T>)
 KFR_INTRINSIC bool bittestall(const mask<T, N>& a)
 {
     return bittestall(low(a)) && bittestall(high(a));
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(N < vector_width<T>)>
+template <typename T, size_t N>
+    requires(N < vector_width<T>)
 KFR_INTRINSIC bool bittestany(const mask<T, N>& a)
 {
     return bittestany(expand_simd(a, bit<T>(false)));
 }
-template <typename T, size_t N, KFR_ENABLE_IF(N >= vector_width<T>), typename = void>
+template <typename T, size_t N>
+    requires(N >= vector_width<T>)
 KFR_INTRINSIC bool bittestany(const mask<T, N>& a)
 {
     return bittestany(low(a)) || bittestany(high(a));

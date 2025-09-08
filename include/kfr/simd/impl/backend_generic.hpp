@@ -400,8 +400,8 @@ KFR_INTRINSIC simd<double, Nout> simd_shuffle(simd_t<double, N>, const simd<doub
     return universal_shuffle(simd_t<double, N>{}, x, ind);
 }
 
-template <size_t N, size_t... indices, size_t Nout = sizeof...(indices),
-          KFR_ENABLE_IF(is_poweroftwo(N) && is_halves<simd<float, 2 * N>>)>
+template <size_t N, size_t... indices, size_t Nout = sizeof...(indices)>
+    requires(is_poweroftwo(N) && is_halves<simd<float, 2 * N>>)
 KFR_INTRINSIC simd<float, Nout> simd_shuffle(simd2_t<float, N, N>, const simd<float, N>& x,
                                              const simd<float, N>& y, csizes_t<indices...> ind,
                                              overload_priority<2>) noexcept
@@ -409,8 +409,8 @@ KFR_INTRINSIC simd<float, Nout> simd_shuffle(simd2_t<float, N, N>, const simd<fl
     return universal_shuffle(simd_t<float, 2 * N>{}, simd_from_halves(simd_t<float, 2 * N>{}, x, y), ind);
 }
 
-template <size_t N, size_t... indices, size_t Nout = sizeof...(indices),
-          KFR_ENABLE_IF(is_poweroftwo(N) && is_halves<simd<double, 2 * N>>)>
+template <size_t N, size_t... indices, size_t Nout = sizeof...(indices)>
+    requires(is_poweroftwo(N) && is_halves<simd<double, 2 * N>>)
 KFR_INTRINSIC simd<double, Nout> simd_shuffle(simd2_t<double, N, N>, const simd<double, N>& x,
                                               const simd<double, N>& y, csizes_t<indices...> ind,
                                               overload_priority<2>) noexcept
@@ -1091,7 +1091,8 @@ KFR_INTRINSIC simd_array<T, N> to_simd_array(const simd<T, N>& x) noexcept
 
 #if defined KFR_COMPILER_IS_MSVC
 
-template <typename T, size_t N, KFR_ENABLE_IF(!is_simd_small_array<simd<T, N>>)>
+template <typename T, size_t N>
+    requires(!is_simd_small_array<simd<T, N>>)
 KFR_INTRINSIC simd<T, N> from_simd_array(const simd_array<T, N>& x) noexcept
 {
     return bitcast_anything<simd<T, N>>(x);
@@ -1103,7 +1104,8 @@ KFR_INTRINSIC simd<T, N> from_simd_array_impl(const simd_array<T, N>& x, csizes_
     return { unwrap_bit_value(x.val[indices])... };
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_simd_small_array<simd<T, N>>)>
+template <typename T, size_t N>
+    requires(is_simd_small_array<simd<T, N>>)
 KFR_INTRINSIC simd<T, N> from_simd_array(const simd_array<T, N>& x) noexcept
 {
     return from_simd_array_impl(x, csizeseq<N>);
@@ -1129,7 +1131,8 @@ KFR_INTRINSIC simd<Tout, 1> simd_make(ctype_t<Tout>, const Arg& arg) noexcept
 template <typename T, size_t... indices, typename... Args, size_t N = sizeof...(indices)>
 KFR_INTRINSIC simd<T, N> simd_make_helper(csizes_t<indices...>, const Args&... args) noexcept;
 
-template <typename Tout, typename... Args, size_t N = sizeof...(Args), KFR_ENABLE_IF(N > 1)>
+template <typename Tout, typename... Args, size_t N = sizeof...(Args)>
+    requires(N > 1)
 KFR_INTRINSIC simd<Tout, N> simd_make(ctype_t<Tout>, const Args&... args) noexcept
 {
     constexpr size_t Nlow = prev_poweroftwo(N - 1);
@@ -1172,15 +1175,12 @@ KFR_INTRINSIC simd<Tout, N> simd_allones() noexcept
 }
 
 /// @brief Converts input vector to vector with subtype Tout
-template <typename Tout, typename Tin, size_t N, size_t Nout = (sizeof(Tin) * N / sizeof(Tout))
+template <typename Tout, typename Tin, size_t N, size_t Nout = (sizeof(Tin) * N / sizeof(Tout))>
 #ifdef KFR_COMPILER_IS_MSVC
-                                                     ,
-          KFR_ENABLE_IF((Nout == 1 || N == 1) && !std::is_same_v<Tout, Tin>)
+    requires((Nout == 1 || N == 1) && !std::is_same_v<Tout, Tin>)
 #else
-                                                     ,
-          KFR_ENABLE_IF(Nout == 1 || N == 1)
+    requires(Nout == 1 || N == 1)
 #endif
-          >
 KFR_INTRINSIC simd<Tout, Nout> simd_bitcast(simd_cvt_t<Tout, Tin, N>, const simd<Tin, N>& x) noexcept
 {
     not_optimized(KFR_FUNC_SIGNATURE);
@@ -1188,15 +1188,12 @@ KFR_INTRINSIC simd<Tout, Nout> simd_bitcast(simd_cvt_t<Tout, Tin, N>, const simd
 }
 
 /// @brief Converts input vector to vector with subtype Tout
-template <typename Tout, typename Tin, size_t N, size_t Nout = (sizeof(Tin) * N / sizeof(Tout))
+template <typename Tout, typename Tin, size_t N, size_t Nout = (sizeof(Tin) * N / sizeof(Tout))>
 #ifdef KFR_COMPILER_IS_MSVC
-                                                     ,
-          KFR_ENABLE_IF(Nout > 1 && N > 1 && !std::is_same_v<Tout, Tin>)
+    requires(Nout > 1 && N > 1 && !std::is_same_v<Tout, Tin>)
 #else
-                                                     ,
-          KFR_ENABLE_IF(Nout > 1 && N > 1)
+    requires(Nout > 1 && N > 1)
 #endif
-          >
 KFR_INTRINSIC simd<Tout, Nout> simd_bitcast(simd_cvt_t<Tout, Tin, N>, const simd<Tin, N>& x) noexcept
 {
     constexpr size_t Nlow = prev_poweroftwo(N - 1);
@@ -1251,9 +1248,8 @@ KFR_INTRINSIC const simd<T, N2>& simd_shuffle(simd2_t<T, N1, N2>, const simd<T, 
 }
 
 // concat()
-template <typename T, size_t N,
-          KFR_ENABLE_IF(is_poweroftwo(N) &&
-                        std::is_same_v<simd<T, N + N>, simd_halves<unwrap_bit<T>, N + N>>)>
+template <typename T, size_t N>
+    requires(is_poweroftwo(N) && std::is_same_v<simd<T, N + N>, simd_halves<unwrap_bit<T>, N + N>>)
 KFR_INTRINSIC simd<T, N + N> simd_shuffle(simd2_t<T, N, N>, const simd<T, N>& x, const simd<T, N>& y,
                                           csizeseq_t<N + N>, overload_priority<8>) noexcept
 {
@@ -1266,23 +1262,24 @@ KFR_INTRINSIC simd<T, 1> simd_broadcast(simd_t<T, 1>, std::type_identity_t<T> va
     return { unwrap_bit_value(value) };
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(N >= 2), size_t Nlow = prev_poweroftwo(N - 1)>
+template <typename T, size_t N, size_t Nlow = prev_poweroftwo(N - 1)>
+    requires(N >= 2)
 KFR_INTRINSIC simd<T, N> simd_broadcast(simd_t<T, N>, std::type_identity_t<T> value) noexcept
 {
     return simd_concat<T, Nlow, N - Nlow>(simd_broadcast(simd_t<T, Nlow>{}, value),
                                           simd_broadcast(simd_t<T, N - Nlow>{}, value));
 }
 
-template <typename T, size_t N,
-          KFR_ENABLE_IF(is_poweroftwo(N) && std::is_same_v<simd<T, N>, simd_halves<unwrap_bit<T>, N>>)>
+template <typename T, size_t N>
+    requires(is_poweroftwo(N) && std::is_same_v<simd<T, N>, simd_halves<unwrap_bit<T>, N>>)
 KFR_INTRINSIC simd<T, N / 2> simd_shuffle(simd_t<T, N>, const simd<T, N>& x, csizeseq_t<N / 2>,
                                           overload_priority<7>) noexcept
 {
     return x.low;
 }
 
-template <typename T, size_t N,
-          KFR_ENABLE_IF(is_poweroftwo(N) && std::is_same_v<simd<T, N>, simd_halves<unwrap_bit<T>, N>>)>
+template <typename T, size_t N>
+    requires(is_poweroftwo(N) && std::is_same_v<simd<T, N>, simd_halves<unwrap_bit<T>, N>>)
 KFR_INTRINSIC simd<T, N / 2> simd_shuffle(simd_t<T, N>, const simd<T, N>& x, csizeseq_t<N / 2, N / 2>,
                                           overload_priority<7>) noexcept
 {
@@ -1355,8 +1352,8 @@ KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd2_t<T, N, N>, const simd<T, N>& x, 
 #endif
 }
 
-template <typename T, size_t N1, size_t N2, size_t... indices, KFR_ENABLE_IF(N1 != N2),
-          size_t Nout = sizeof...(indices)>
+template <typename T, size_t N1, size_t N2, size_t... indices, size_t Nout = sizeof...(indices)>
+    requires(N1 != N2)
 KFR_INTRINSIC simd<T, Nout> simd_shuffle(simd2_t<T, N1, N2>, const simd<T, N1>& x, const simd<T, N2>& y,
                                          csizes_t<indices...>, overload_generic) noexcept
 {
@@ -1414,7 +1411,8 @@ KFR_INTRINSIC simd<Tout, N> simd_convert__(const simd<Tin, N>& x, csizes_t<indic
 }
 
 /// @brief Converts input vector to vector with subtype Tout
-template <typename Tout, typename Tin, KFR_ENABLE_IF(!std::is_same<Tout, Tin>::value)>
+template <typename Tout, typename Tin>
+    requires(!std::is_same<Tout, Tin>::value)
 KFR_INTRINSIC simd<Tout, 1> simd_convert(simd_cvt_t<Tout, Tin, 1>, const simd<Tin, 1>& x) noexcept
 {
     return simd_make(kfr::ctype<Tout>, static_cast<Tout>(x));
@@ -1508,7 +1506,8 @@ KFR_INTRINSIC simd<T, N / 2> simd_get_high(simd_t<T, N>, const simd<T, N>& x)
 {
     return x.high;
 }
-template <typename T, size_t N, KFR_ENABLE_IF(is_poweroftwo(N) && is_halves<simd<T, N>>)>
+template <typename T, size_t N>
+    requires(is_poweroftwo(N) && is_halves<simd<T, N>>)
 KFR_INTRINSIC simd<T, N> simd_from_halves(simd_t<T, N>, const simd<T, N / 2>& x, const simd<T, N / 2>& y)
 {
     return { x, y };

@@ -102,7 +102,8 @@ private:
 
     KFR_MEM_INTRINSIC vec<T, width> call_get_value() const { return ptr_cast<Class>(this)->get_value(); }
 
-    template <typename U = T, KFR_ENABLE_IF(std::is_same_v<U, Twork>)>
+    template <typename U = T>
+        requires(std::is_same_v<U, Twork>)
     KFR_MEM_INTRINSIC vec<T, width> get_value() const
     {
         return value;

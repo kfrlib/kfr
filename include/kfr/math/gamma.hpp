@@ -33,14 +33,14 @@ inline namespace KFR_ARCH_NAME
 {
 
 /// @brief Returns the approximate gamma function of an argument
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> gamma(const T1& x)
 {
     return intr::gamma(x);
 }
 
 /// @brief Returns the approximate factorial of an argument
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> factorial_approx(const T1& x)
 {
     return intr::factorial_approx(x);
