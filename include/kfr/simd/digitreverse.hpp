@@ -77,7 +77,7 @@ KFR_PRAGMA_GNU(GCC diagnostic pop)
 template <size_t radix, size_t bits>
 struct shuffle_index_digitreverse
 {
-    constexpr KFR_INTRINSIC size_t operator()(size_t index) const KFR_NOEXCEPT
+    constexpr KFR_INTRINSIC size_t operator()(size_t index) const noexcept
     {
         return digitreverse_impl<bits>(static_cast<u32>(index), csize_t<radix>());
     }

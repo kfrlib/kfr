@@ -32,13 +32,13 @@ TEST_CASE("max")
 struct IsNotMinInt
 {
     template <typename T>
-    bool operator()(ctype_t<T>, identity<T> x, identity<T> y) const
+    bool operator()(ctype_t<T>, std::type_identity_t<T> x, std::type_identity_t<T> y) const
     {
         return std::is_floating_point_v<T> || std::is_unsigned_v<T> ||
                (x != std::numeric_limits<T>::min() && y != std::numeric_limits<T>::min());
     }
     template <typename T, size_t N>
-    bool operator()(ctype_t<vec<T, N>>, identity<T> x, identity<T> y) const
+    bool operator()(ctype_t<vec<T, N>>, std::type_identity_t<T> x, std::type_identity_t<T> y) const
     {
         return operator()(kfr::ctype<T>, x, y);
     }

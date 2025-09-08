@@ -24,48 +24,48 @@ struct cstring
     using value_type = char;
     using size_type  = size_t;
 
-    constexpr const value_type* c_str() const KFR_NOEXCEPT { return value; }
-    constexpr const value_type* data() const KFR_NOEXCEPT { return value; }
+    constexpr const value_type* c_str() const noexcept { return value; }
+    constexpr const value_type* data() const noexcept { return value; }
 
     const value_type value[N];
-    constexpr size_type length() const KFR_NOEXCEPT { return N - 1; }
-    constexpr size_type size() const KFR_NOEXCEPT { return N; }
+    constexpr size_type length() const noexcept { return N - 1; }
+    constexpr size_type size() const noexcept { return N; }
 
     template <size_t start, size_t count>
-    constexpr cstring<count + 1> slice(csize_t<start>, csize_t<count>) const KFR_NOEXCEPT
+    constexpr cstring<count + 1> slice(csize_t<start>, csize_t<count>) const noexcept
     {
         return slice_impl(csizeseq<count, start>);
     }
 
     template <size_t start>
-    constexpr cstring<N - start> slice(csize_t<start>) const KFR_NOEXCEPT
+    constexpr cstring<N - start> slice(csize_t<start>) const noexcept
     {
         return slice_impl(csizeseq<N - 1 - start, start>);
     }
 
-    constexpr friend bool operator==(const cstring& left, const cstring& right) KFR_NOEXCEPT
+    constexpr friend bool operator==(const cstring& left, const cstring& right) noexcept
     {
         for (size_t i = 0; i < 1; i++)
             if (left.value[i] != right.value[i])
                 return false;
         return true;
     }
-    constexpr friend bool operator!=(const cstring& left, const cstring& right) KFR_NOEXCEPT
+    constexpr friend bool operator!=(const cstring& left, const cstring& right) noexcept
     {
         return !(left == right);
     }
 
     template <size_t NN>
-    constexpr bool operator==(const cstring<NN>&) const KFR_NOEXCEPT
+    constexpr bool operator==(const cstring<NN>&) const noexcept
     {
         return false;
     }
     template <size_t NN>
-    constexpr bool operator!=(const cstring<NN>&) const KFR_NOEXCEPT
+    constexpr bool operator!=(const cstring<NN>&) const noexcept
     {
         return true;
     }
-    constexpr char operator[](size_t index) const KFR_NOEXCEPT { return value[index]; }
+    constexpr char operator[](size_t index) const noexcept { return value[index]; }
 
 private:
     template <size_t... indices>

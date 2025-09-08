@@ -313,7 +313,7 @@ KFR_INTRINSIC void write(cunaligned_t, i64* ptr, const i64avx512& x) { _mm512_st
 // fallback
 
 template <size_t N, typename T, KFR_ENABLE_IF(N == 1 || is_simd_size<T>(N))>
-KFR_INTRINSIC vec<T, N> read(cunaligned_t, csize_t<N>, const T* ptr) KFR_NOEXCEPT
+KFR_INTRINSIC vec<T, N> read(cunaligned_t, csize_t<N>, const T* ptr) noexcept
 {
     vec<T, N> result{};
     for (size_t i = 0; i < N; i++)
@@ -322,7 +322,7 @@ KFR_INTRINSIC vec<T, N> read(cunaligned_t, csize_t<N>, const T* ptr) KFR_NOEXCEP
 }
 
 template <size_t N, typename T, KFR_ENABLE_IF(N == 1 || is_simd_size<T>(N))>
-KFR_INTRINSIC void write(cunaligned_t, T* ptr, const vec<T, N>& x) KFR_NOEXCEPT
+KFR_INTRINSIC void write(cunaligned_t, T* ptr, const vec<T, N>& x) noexcept
 {
     for (size_t i = 0; i < N; i++)
         ptr[i] = x[i];
@@ -332,14 +332,14 @@ KFR_INTRINSIC void write(cunaligned_t, T* ptr, const vec<T, N>& x) KFR_NOEXCEPT
 
 template <size_t N, typename T, KFR_ENABLE_IF(N != 1 && !is_simd_size<T>(N)),
           size_t Nlow = prev_poweroftwo(N - 1)>
-KFR_INTRINSIC vec<T, N> read(cunaligned_t, csize_t<N>, const T* ptr) KFR_NOEXCEPT
+KFR_INTRINSIC vec<T, N> read(cunaligned_t, csize_t<N>, const T* ptr) noexcept
 {
     return concat(read(cunaligned, csize<Nlow>, ptr), read(cunaligned, csize<N - Nlow>, ptr + Nlow));
 }
 
 template <size_t N, typename T, KFR_ENABLE_IF(N != 1 && !is_simd_size<T>(N)),
           size_t Nlow = prev_poweroftwo(N - 1)>
-KFR_INTRINSIC void write(cunaligned_t, T* ptr, const vec<T, N>& x) KFR_NOEXCEPT
+KFR_INTRINSIC void write(cunaligned_t, T* ptr, const vec<T, N>& x) noexcept
 {
     write(cunaligned, ptr, x.shuffle(csizeseq<Nlow>));
     write(cunaligned, ptr + Nlow, x.shuffle(csizeseq<N - Nlow, Nlow>));
@@ -348,13 +348,13 @@ KFR_INTRINSIC void write(cunaligned_t, T* ptr, const vec<T, N>& x) KFR_NOEXCEPT
 #else
 
 template <size_t N, typename T>
-KFR_INTRINSIC simd<T, N> simd_read(const T* src) KFR_NOEXCEPT
+KFR_INTRINSIC simd<T, N> simd_read(const T* src) noexcept
 {
     return reinterpret_cast<typename simd_storage<T, N, false>::const_pointer>(src)->value;
 }
 
 template <size_t N, bool A = false, typename T, KFR_ENABLE_IF(is_poweroftwo(N))>
-KFR_INTRINSIC vec<T, N> read(cunaligned_t, csize_t<N>, const T* src) KFR_NOEXCEPT
+KFR_INTRINSIC vec<T, N> read(cunaligned_t, csize_t<N>, const T* src) noexcept
 {
     // Clang requires a separate function returning vector (simd).
     // Direct returning vec causes aligned read instruction
@@ -362,21 +362,21 @@ KFR_INTRINSIC vec<T, N> read(cunaligned_t, csize_t<N>, const T* src) KFR_NOEXCEP
 }
 
 template <size_t N, bool A = false, typename T, KFR_ENABLE_IF(!is_poweroftwo(N)), typename = void>
-KFR_INTRINSIC vec<T, N> read(cunaligned_t, csize_t<N>, const T* src) KFR_NOEXCEPT
+KFR_INTRINSIC vec<T, N> read(cunaligned_t, csize_t<N>, const T* src) noexcept
 {
     constexpr size_t first = prev_poweroftwo(N);
     return concat(read(cunaligned, csize<first>, src), read(cunaligned, csize<N - first>, src + first));
 }
 
 template <bool A = false, size_t N, typename T, KFR_ENABLE_IF(is_poweroftwo(N))>
-KFR_INTRINSIC void write(cunaligned_t, T* dest, const vec<T, N>& x) KFR_NOEXCEPT
+KFR_INTRINSIC void write(cunaligned_t, T* dest, const vec<T, N>& x) noexcept
 {
     reinterpret_cast<typename simd_storage<T, N, A>::pointer>(dest)->value = x.v;
 }
 
 template <bool A      = false, size_t N, typename T, KFR_ENABLE_IF(!is_poweroftwo(N)),
           size_t Nlow = prev_poweroftwo(N - 1)>
-KFR_INTRINSIC void write(cunaligned_t, T* dest, const vec<T, N>& x) KFR_NOEXCEPT
+KFR_INTRINSIC void write(cunaligned_t, T* dest, const vec<T, N>& x) noexcept
 {
     write(cunaligned, dest, x.shuffle(csizeseq<Nlow>));
     write(cunaligned, dest + Nlow, x.shuffle(csizeseq<N - Nlow, Nlow>));
@@ -385,13 +385,13 @@ KFR_INTRINSIC void write(cunaligned_t, T* dest, const vec<T, N>& x) KFR_NOEXCEPT
 #endif
 
 template <size_t N, typename T>
-KFR_INTRINSIC vec<T, N> read(caligned_t, csize_t<N>, const T* __restrict ptr) KFR_NOEXCEPT
+KFR_INTRINSIC vec<T, N> read(caligned_t, csize_t<N>, const T* __restrict ptr) noexcept
 {
     return *reinterpret_cast<const typename vec<T, N>::simd_type*>(ptr);
 }
 
 template <size_t N, typename T>
-KFR_INTRINSIC void write(caligned_t, T* __restrict ptr, const vec<T, N>& __restrict x) KFR_NOEXCEPT
+KFR_INTRINSIC void write(caligned_t, T* __restrict ptr, const vec<T, N>& __restrict x) noexcept
 {
     *reinterpret_cast<typename vec<T, N>::simd_type*>(ptr) = x.v;
 }

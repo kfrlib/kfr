@@ -247,7 +247,7 @@ template <typename T>
 struct representation
 {
     using type = T;
-    static constexpr auto get(const T& value) KFR_NOEXCEPT { return details::pack_value(value); }
+    static constexpr auto get(const T& value) noexcept { return details::pack_value(value); }
 };
 
 template <char t, int width = -1, int prec = -1, typename T>

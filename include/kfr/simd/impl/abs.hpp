@@ -38,78 +38,75 @@ namespace intr
 
 // floating point
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
-KFR_INTRINSIC vec<T, N> abs(const vec<T, N>& x) KFR_NOEXCEPT
+KFR_INTRINSIC vec<T, N> abs(const vec<T, N>& x) noexcept
 {
     return x & special_constants<T>::invhighbitmask();
 }
 
-KFR_INTRINSIC i64sse abs(const i64sse& x) KFR_NOEXCEPT
+KFR_INTRINSIC i64sse abs(const i64sse& x) noexcept
 {
     const __m128i sh  = _mm_srai_epi32(x.v, 31);
     const __m128i msk = _mm_shuffle_epi32(sh, _MM_SHUFFLE(3, 3, 1, 1));
     return _mm_sub_epi64(_mm_xor_si128(x.v, msk), msk);
 }
-KFR_INTRINSIC i32sse abs(const i32sse& x) KFR_NOEXCEPT { return _mm_abs_epi32(x.v); }
-KFR_INTRINSIC i16sse abs(const i16sse& x) KFR_NOEXCEPT { return _mm_abs_epi16(x.v); }
-KFR_INTRINSIC i8sse abs(const i8sse& x) KFR_NOEXCEPT { return _mm_abs_epi8(x.v); }
-KFR_INTRINSIC u64sse abs(const u64sse& x) KFR_NOEXCEPT { return x; }
-KFR_INTRINSIC u32sse abs(const u32sse& x) KFR_NOEXCEPT { return x; }
-KFR_INTRINSIC u16sse abs(const u16sse& x) KFR_NOEXCEPT { return x; }
-KFR_INTRINSIC u8sse abs(const u8sse& x) KFR_NOEXCEPT { return x; }
+KFR_INTRINSIC i32sse abs(const i32sse& x) noexcept { return _mm_abs_epi32(x.v); }
+KFR_INTRINSIC i16sse abs(const i16sse& x) noexcept { return _mm_abs_epi16(x.v); }
+KFR_INTRINSIC i8sse abs(const i8sse& x) noexcept { return _mm_abs_epi8(x.v); }
+KFR_INTRINSIC u64sse abs(const u64sse& x) noexcept { return x; }
+KFR_INTRINSIC u32sse abs(const u32sse& x) noexcept { return x; }
+KFR_INTRINSIC u16sse abs(const u16sse& x) noexcept { return x; }
+KFR_INTRINSIC u8sse abs(const u8sse& x) noexcept { return x; }
 
 #if defined KFR_ARCH_AVX2
-KFR_INTRINSIC i64avx abs(const i64avx& x) KFR_NOEXCEPT
+KFR_INTRINSIC i64avx abs(const i64avx& x) noexcept
 {
     const __m256i sh  = _mm256_srai_epi32(x.v, 31);
     const __m256i msk = _mm256_shuffle_epi32(sh, _MM_SHUFFLE(3, 3, 1, 1));
     return _mm256_sub_epi64(_mm256_xor_si256(x.v, msk), msk);
 }
-KFR_INTRINSIC i32avx abs(const i32avx& x) KFR_NOEXCEPT { return _mm256_abs_epi32(x.v); }
-KFR_INTRINSIC i16avx abs(const i16avx& x) KFR_NOEXCEPT { return _mm256_abs_epi16(x.v); }
-KFR_INTRINSIC i8avx abs(const i8avx& x) KFR_NOEXCEPT { return _mm256_abs_epi8(x.v); }
-KFR_INTRINSIC u64avx abs(const u64avx& x) KFR_NOEXCEPT { return x; }
-KFR_INTRINSIC u32avx abs(const u32avx& x) KFR_NOEXCEPT { return x; }
-KFR_INTRINSIC u16avx abs(const u16avx& x) KFR_NOEXCEPT { return x; }
-KFR_INTRINSIC u8avx abs(const u8avx& x) KFR_NOEXCEPT { return x; }
+KFR_INTRINSIC i32avx abs(const i32avx& x) noexcept { return _mm256_abs_epi32(x.v); }
+KFR_INTRINSIC i16avx abs(const i16avx& x) noexcept { return _mm256_abs_epi16(x.v); }
+KFR_INTRINSIC i8avx abs(const i8avx& x) noexcept { return _mm256_abs_epi8(x.v); }
+KFR_INTRINSIC u64avx abs(const u64avx& x) noexcept { return x; }
+KFR_INTRINSIC u32avx abs(const u32avx& x) noexcept { return x; }
+KFR_INTRINSIC u16avx abs(const u16avx& x) noexcept { return x; }
+KFR_INTRINSIC u8avx abs(const u8avx& x) noexcept { return x; }
 #endif
 
 #if defined KFR_ARCH_AVX512
-KFR_INTRINSIC i64avx512 abs(const i64avx512& x) KFR_NOEXCEPT { return _mm512_abs_epi64(x.v); }
-KFR_INTRINSIC i32avx512 abs(const i32avx512& x) KFR_NOEXCEPT { return _mm512_abs_epi32(x.v); }
-KFR_INTRINSIC i16avx512 abs(const i16avx512& x) KFR_NOEXCEPT { return _mm512_abs_epi16(x.v); }
-KFR_INTRINSIC i8avx512 abs(const i8avx512& x) KFR_NOEXCEPT { return _mm512_abs_epi8(x.v); }
-KFR_INTRINSIC u64avx512 abs(const u64avx512& x) KFR_NOEXCEPT { return x; }
-KFR_INTRINSIC u32avx512 abs(const u32avx512& x) KFR_NOEXCEPT { return x; }
-KFR_INTRINSIC u16avx512 abs(const u16avx512& x) KFR_NOEXCEPT { return x; }
-KFR_INTRINSIC u8avx512 abs(const u8avx512& x) KFR_NOEXCEPT { return x; }
+KFR_INTRINSIC i64avx512 abs(const i64avx512& x) noexcept { return _mm512_abs_epi64(x.v); }
+KFR_INTRINSIC i32avx512 abs(const i32avx512& x) noexcept { return _mm512_abs_epi32(x.v); }
+KFR_INTRINSIC i16avx512 abs(const i16avx512& x) noexcept { return _mm512_abs_epi16(x.v); }
+KFR_INTRINSIC i8avx512 abs(const i8avx512& x) noexcept { return _mm512_abs_epi8(x.v); }
+KFR_INTRINSIC u64avx512 abs(const u64avx512& x) noexcept { return x; }
+KFR_INTRINSIC u32avx512 abs(const u32avx512& x) noexcept { return x; }
+KFR_INTRINSIC u16avx512 abs(const u16avx512& x) noexcept { return x; }
+KFR_INTRINSIC u8avx512 abs(const u8avx512& x) noexcept { return x; }
 #endif
 
 KFR_HANDLE_ALL_SIZES_1_IF(abs, !is_f_class<T>)
 
 #elif defined KFR_ARCH_NEON && defined KFR_NATIVE_INTRINSICS
 
-KFR_INTRINSIC i8neon abs(const i8neon& x) KFR_NOEXCEPT { return vabsq_s8(x.v); }
-KFR_INTRINSIC i16neon abs(const i16neon& x) KFR_NOEXCEPT { return vabsq_s16(x.v); }
-KFR_INTRINSIC i32neon abs(const i32neon& x) KFR_NOEXCEPT { return vabsq_s32(x.v); }
+KFR_INTRINSIC i8neon abs(const i8neon& x) noexcept { return vabsq_s8(x.v); }
+KFR_INTRINSIC i16neon abs(const i16neon& x) noexcept { return vabsq_s16(x.v); }
+KFR_INTRINSIC i32neon abs(const i32neon& x) noexcept { return vabsq_s32(x.v); }
 #if defined KFR_ARCH_NEON64
-KFR_INTRINSIC i64neon abs(const i64neon& x) KFR_NOEXCEPT { return vabsq_s64(x.v); }
+KFR_INTRINSIC i64neon abs(const i64neon& x) noexcept { return vabsq_s64(x.v); }
 #else
-KFR_INTRINSIC i64neon abs(const i64neon& x) KFR_NOEXCEPT { return select(x >= 0, x, -x); }
+KFR_INTRINSIC i64neon abs(const i64neon& x) noexcept { return select(x >= 0, x, -x); }
 #endif
 
-KFR_INTRINSIC u8neon abs(const u8neon& x) KFR_NOEXCEPT { return x; }
-KFR_INTRINSIC u16neon abs(const u16neon& x) KFR_NOEXCEPT { return x; }
-KFR_INTRINSIC u32neon abs(const u32neon& x) KFR_NOEXCEPT { return x; }
-KFR_INTRINSIC u64neon abs(const u64neon& x) KFR_NOEXCEPT { return x; }
+KFR_INTRINSIC u8neon abs(const u8neon& x) noexcept { return x; }
+KFR_INTRINSIC u16neon abs(const u16neon& x) noexcept { return x; }
+KFR_INTRINSIC u32neon abs(const u32neon& x) noexcept { return x; }
+KFR_INTRINSIC u64neon abs(const u64neon& x) noexcept { return x; }
 
-KFR_INTRINSIC f32neon abs(const f32neon& x) KFR_NOEXCEPT { return vabsq_f32(x.v); }
+KFR_INTRINSIC f32neon abs(const f32neon& x) noexcept { return vabsq_f32(x.v); }
 #if defined KFR_ARCH_NEON64
-KFR_INTRINSIC f64neon abs(const f64neon& x) KFR_NOEXCEPT { return vabsq_f64(x.v); }
+KFR_INTRINSIC f64neon abs(const f64neon& x) noexcept { return vabsq_f64(x.v); }
 #else
-KFR_INTRINSIC f64neon abs(const f64neon& x) KFR_NOEXCEPT
-{
-    return x & special_constants<f64>::invhighbitmask();
-}
+KFR_INTRINSIC f64neon abs(const f64neon& x) noexcept { return x & special_constants<f64>::invhighbitmask(); }
 #endif
 
 KFR_HANDLE_ALL_SIZES_1(abs)
@@ -118,14 +115,14 @@ KFR_HANDLE_ALL_SIZES_1(abs)
 
 // floating point
 template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
-KFR_INTRINSIC vec<T, N> abs(const vec<T, N>& x) KFR_NOEXCEPT
+KFR_INTRINSIC vec<T, N> abs(const vec<T, N>& x) noexcept
 {
     return x & special_constants<T>::invhighbitmask();
 }
 
 // fallback
 template <typename T, size_t N, KFR_ENABLE_IF(!is_f_class<T>)>
-KFR_INTRINSIC vec<T, N> abs(const vec<T, N>& x) KFR_NOEXCEPT
+KFR_INTRINSIC vec<T, N> abs(const vec<T, N>& x) noexcept
 {
     return select(x >= T(0), x, -x);
 }

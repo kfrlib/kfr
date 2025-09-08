@@ -130,7 +130,7 @@ KFR_INTRINSIC simd<T, N> simd_set_element(simd<T, N> value, csize_t<index>, T x)
 }
 
 template <typename T, size_t N>
-KFR_INTRINSIC simd<T, N> simd_broadcast(simd_t<T, N>, identity<T> value)
+KFR_INTRINSIC simd<T, N> simd_broadcast(simd_t<T, N>, std::type_identity_t<T> value)
 {
 #ifdef __clang__
     return unwrap_bit_value(value);

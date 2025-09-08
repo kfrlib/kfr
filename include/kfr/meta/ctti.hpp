@@ -12,7 +12,7 @@ using pconstvoid = const void*;
 
 struct type_id_t
 {
-    constexpr type_id_t(const void* id) KFR_NOEXCEPT : id(id) {}
+    constexpr type_id_t(const void* id) noexcept : id(id) {}
     constexpr bool operator==(type_id_t other) const { return id == other.id; }
     constexpr bool operator!=(type_id_t other) const { return !(id == other.id); }
     const void* const id;
@@ -22,7 +22,7 @@ namespace details
 {
 
 template <typename T>
-constexpr inline type_id_t typeident_impl() KFR_NOEXCEPT
+constexpr inline type_id_t typeident_impl() noexcept
 {
     return type_id_t(pconstvoid(&typeident_impl<T>));
 }
@@ -42,12 +42,12 @@ constexpr size_t typename_postfix = sizeof("]") - 1;
 #endif
 
 template <size_t... indices, size_t Nout = 1 + sizeof...(indices)>
-constexpr cstring<Nout> gettypename_impl(const char* str, csizes_t<indices...>) KFR_NOEXCEPT
+constexpr cstring<Nout> gettypename_impl(const char* str, csizes_t<indices...>) noexcept
 {
     return cstring<Nout>{ { (str[indices])..., 0 } };
 }
 template <size_t... indices>
-constexpr cstring<1> gettypename_impl(const char*, csizes_t<>) KFR_NOEXCEPT
+constexpr cstring<1> gettypename_impl(const char*, csizes_t<>) noexcept
 {
     return cstring<1>{ { 0 } };
 }
@@ -78,7 +78,7 @@ constexpr auto KFR_CALL_CONV_SPEC ctype_name() noexcept
  * @return      name of the type
  */
 template <typename T>
-inline const char* type_name() KFR_NOEXCEPT
+inline const char* type_name() noexcept
 {
     static const auto name = ctype_name<T>();
     return name.c_str();
@@ -91,7 +91,7 @@ inline const char* type_name() KFR_NOEXCEPT
  * @return      name of the type
  */
 template <typename T>
-inline const char* type_name(T x) KFR_NOEXCEPT
+inline const char* type_name(T x) noexcept
 {
     (void)x;
     return type_name<T>();

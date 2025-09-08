@@ -3,10 +3,6 @@
  */
 #pragma once
 
-#ifdef LIBC_WORKAROUND_GETS
-extern char* gets(char* __s);
-#endif
-
 #if defined(_M_IX86) || defined(__i386__) || defined(_M_X64) || defined(__x86_64__) || defined(__wasm)
 #define KFR_ARCH_X86 1
 #elif defined(__arm__) || defined(__arm64__) || defined(_M_ARM) || defined(__aarch64__)
@@ -436,13 +432,9 @@ extern char* gets(char* __s);
 #define KFR_EMPTY_BASES
 #endif
 
-#define KFR_INLINE_STATIC KFR_INLINE static
-
 #define KFR_EXTERN_C extern "C"
 
 #define KFR_PUBLIC_C KFR_EXTERN_C KFR_NOINLINE
-
-#define KFR_ALWAYS_INLINE_STATIC KFR_ALWAYS_INLINE static
 
 #ifdef KFR_ARCH_x86
 #ifdef KFR_OS_WIN
@@ -478,13 +470,13 @@ extern char* gets(char* __s);
     {                                                                                                        \
     } while (0)
 
-#if KFR_HAS_BUILTIN(KFR_ASSUME)
+#if KFR_HAS_BUILTIN(__builtin_assume)
 #define KFR_ASSUME(x) __builtin_assume(x)
 #else
 #define KFR_ASSUME(x) KFR_NOOP
 #endif
 
-#if KFR_HAS_BUILTIN(KFR_ASSUME)
+#if KFR_HAS_BUILTIN(__builtin_assume_aligned)
 #define KFR_ASSUME_ALIGNED(x, a) __builtin_assume_aligned(x, a)
 #else
 #define KFR_ASSUME_ALIGNED(x, a) x
@@ -514,40 +506,10 @@ extern char* gets(char* __s);
 #define KFR_HAS_WARNING(warning) 0
 #endif
 
-#define KFR_HAS_VARIADIC_TEMPLATES                                                                           \
-    (KFR_HAS_FEATURE(cxx_variadic_templates) || (KFR_GCC_VERSION >= 404 && KFR_HAS_GXX_CXX11) ||             \
-     KFR_MSC_VER >= 1800)
-
 #ifdef KFR_BUILDING_DLL
 #define KFR_C_API KFR_DLL_EXPORT
 #else
 #define KFR_C_API KFR_DLL_IMPORT
-#endif
-
-#if __cplusplus >= 201103L || KFR_MSC_VER >= 1900 || KFR_HAS_FEATURE(cxx_constexpr)
-#define KFR_HAS_CONSTEXPR 1
-#endif
-
-#if __cpp_constexpr >= 201304 || KFR_HAS_FEATURE(cxx_constexpr)
-#define KFR_HAS_FULL_CONSTEXPR 1
-#endif
-
-#if KFR_HAS_CONSTEXPR
-#define KFR_CONSTEXPR constexpr
-#else
-#define KFR_CONSTEXPR
-#endif
-
-#if KFR_HAS_FEATURE(cxx_noexcept) || (KFR_GCC_VERSION >= 408 && KFR_HAS_GXX_CXX11) || KFR_MSC_VER >= 1900
-#define KFR_HAS_NOEXCEPT 1
-#endif
-
-#if KFR_HAS_NOEXCEPT
-#define KFR_NOEXCEPT noexcept
-#define KFR_NOEXCEPT_SPEC(...) noexcept(__VA_ARGS__)
-#else
-#define KFR_NOEXCEPT
-#define KFR_NOEXCEPT_SPEC(...)
 #endif
 
 #if KFR_COMPILER_GNU && !defined(__EXCEPTIONS)
@@ -606,8 +568,6 @@ extern char* gets(char* __s);
 #if defined(KFR_GNU_ATTRIBUTES)
 #define KFR_FAST_CC __attribute__((fastcall))
 #define KFR_UNUSED __attribute__((unused))
-#define KFR_GNU_CONSTEXPR constexpr
-#define KFR_GNU_NOEXCEPT noexcept
 #define KFR_GNU_PACKED __attribute__((packed))
 #define KFR_PRAGMA_PACK_PUSH_1
 #define KFR_PRAGMA_PACK_POP
@@ -627,8 +587,6 @@ extern char* gets(char* __s);
 #else
 #define KFR_FAST_CC __fastcall
 #define KFR_UNUSED
-#define KFR_GNU_CONSTEXPR
-#define KFR_GNU_NOEXCEPT
 #define KFR_GNU_PACKED
 #define KFR_PRAGMA_PACK_PUSH_1 __pragma(pack(push, 1))
 #define KFR_PRAGMA_PACK_POP __pragma(pack(pop))

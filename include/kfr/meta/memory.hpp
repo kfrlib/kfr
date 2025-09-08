@@ -139,9 +139,8 @@ KFR_INTRINSIC T* aligned_allocate(size_t size = 1)
 template <typename T = void>
 KFR_INTRINSIC T* aligned_allocate(size_t size, size_t alignment)
 {
-    T* ptr = static_cast<T*>(KFR_ASSUME_ALIGNED(
-        details::aligned_malloc(std::max(alignment, size * details::elementsize<T>()), alignment),
-        alignment));
+    T* ptr = static_cast<T*>(
+        details::aligned_malloc(std::max(alignment, size * details::elementsize<T>()), alignment));
     return ptr;
 }
 
@@ -171,27 +170,27 @@ struct autofree
     /// @brief Allocates aligned memory for given size.
     explicit KFR_MEM_INTRINSIC autofree(size_t size) : ptr(aligned_allocate<T>(size)) {}
 
-    autofree(const autofree&)                    = delete;
-    autofree& operator=(const autofree&)         = delete;
-    autofree(autofree&&) KFR_NOEXCEPT            = default;
-    autofree& operator=(autofree&&) KFR_NOEXCEPT = default;
+    autofree(const autofree&)                = delete;
+    autofree& operator=(const autofree&)     = delete;
+    autofree(autofree&&) noexcept            = default;
+    autofree& operator=(autofree&&) noexcept = default;
 
     /// @brief Access element at index.
-    KFR_MEM_INTRINSIC T& operator[](size_t index) KFR_NOEXCEPT { return ptr[index]; }
+    KFR_MEM_INTRINSIC T& operator[](size_t index) noexcept { return ptr[index]; }
 
     /// @brief Const access to element at index.
-    KFR_MEM_INTRINSIC const T& operator[](size_t index) const KFR_NOEXCEPT { return ptr[index]; }
+    KFR_MEM_INTRINSIC const T& operator[](size_t index) const noexcept { return ptr[index]; }
 
     /// @brief Returns pointer to underlying data.
     template <typename U = T>
-    KFR_MEM_INTRINSIC U* data() KFR_NOEXCEPT
+    KFR_MEM_INTRINSIC U* data() noexcept
     {
         return ptr_cast<U>(ptr.get());
     }
 
     /// @brief Returns const pointer to underlying data.
     template <typename U = T>
-    KFR_MEM_INTRINSIC const U* data() const KFR_NOEXCEPT
+    KFR_MEM_INTRINSIC const U* data() const noexcept
     {
         return ptr_cast<U>(ptr.get());
     }
@@ -224,10 +223,10 @@ struct data_allocator
     {
         using other = data_allocator<U>;
     };
-    constexpr data_allocator() KFR_NOEXCEPT                      = default;
-    constexpr data_allocator(const data_allocator&) KFR_NOEXCEPT = default;
+    constexpr data_allocator() noexcept                      = default;
+    constexpr data_allocator(const data_allocator&) noexcept = default;
     template <typename U>
-    constexpr data_allocator(const data_allocator<U>&) KFR_NOEXCEPT
+    constexpr data_allocator(const data_allocator<U>&) noexcept
     {
     }
     pointer allocate(size_type n) const
@@ -241,12 +240,12 @@ struct data_allocator
 };
 
 template <typename T1, typename T2>
-constexpr inline bool operator==(const data_allocator<T1>&, const data_allocator<T2>&) KFR_NOEXCEPT
+constexpr inline bool operator==(const data_allocator<T1>&, const data_allocator<T2>&) noexcept
 {
     return true;
 }
 template <typename T1, typename T2>
-constexpr inline bool operator!=(const data_allocator<T1>&, const data_allocator<T2>&) KFR_NOEXCEPT
+constexpr inline bool operator!=(const data_allocator<T1>&, const data_allocator<T2>&) noexcept
 {
     return false;
 }

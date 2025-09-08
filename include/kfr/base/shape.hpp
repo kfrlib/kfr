@@ -77,10 +77,10 @@ KFR_INTRINSIC constexpr size_t size_sub(size_t x, size_t y)
     return (x == infinite_size || y == infinite_size) ? infinite_size : (x > y ? x - y : 0);
 }
 
-KFR_INTRINSIC constexpr size_t size_min(size_t x) KFR_NOEXCEPT { return x; }
+KFR_INTRINSIC constexpr size_t size_min(size_t x) noexcept { return x; }
 
 template <typename... Ts>
-KFR_INTRINSIC constexpr size_t size_min(size_t x, size_t y, Ts... rest) KFR_NOEXCEPT
+KFR_INTRINSIC constexpr size_t size_min(size_t x, size_t y, Ts... rest) noexcept
 {
     return size_min(x < y ? x : y, rest...);
 }
@@ -607,7 +607,7 @@ constexpr KFR_INTRINSIC shape<outdims> compact_shape(const shape<dims>& in)
     return result;
 }
 
-template <index_t dims1, index_t dims2, index_t outdims = const_max(dims1, dims2)>
+template <index_t dims1, index_t dims2, index_t outdims = std::max(dims1, dims2)>
 constexpr bool can_assign_from(const shape<dims1>& dst_shape, const shape<dims2>& src_shape)
 {
     if constexpr (dims2 == 0)
@@ -639,7 +639,7 @@ constexpr shape<dims> common_shape(const shape<dims>& shape)
     return shape;
 }
 
-template <bool checked = false, index_t dims1, index_t dims2, index_t outdims = const_max(dims1, dims2)>
+template <bool checked = false, index_t dims1, index_t dims2, index_t outdims = std::max(dims1, dims2)>
 KFR_MEM_INTRINSIC constexpr shape<outdims> common_shape(const shape<dims1>& shape1,
                                                         const shape<dims2>& shape2)
 {
@@ -703,7 +703,7 @@ KFR_MEM_INTRINSIC constexpr shape<0> common_shape(const shape<0>& shape1, const 
 }
 
 template <bool checked    = false, index_t dims1, index_t dims2, index_t... dims,
-          index_t outdims = const_max(dims1, dims2, dims...)>
+          index_t outdims = std::max({ dims1, dims2, dims... })>
 KFR_MEM_INTRINSIC constexpr shape<outdims> common_shape(const shape<dims1>& shape1,
                                                         const shape<dims2>& shape2,
                                                         const shape<dims>&... shapes)

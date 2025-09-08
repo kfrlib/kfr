@@ -25,7 +25,7 @@ struct state_holder<T, false>
     constexpr state_holder()                    = delete;
     constexpr state_holder(const state_holder&) = default;
     constexpr state_holder(state_holder&&)      = default;
-    constexpr state_holder(T state) KFR_NOEXCEPT : s(std::move(state)) {}
+    constexpr state_holder(T state) noexcept : s(std::move(state)) {}
     constexpr state_holder(std::reference_wrapper<T> state)       = delete;
     constexpr state_holder(std::reference_wrapper<const T> state) = delete;
     constexpr state_holder(state_holder<T, true> stateless) : s(*stateless) {}
@@ -42,14 +42,14 @@ struct state_holder<T, true>
 {
     static_assert(!std::is_const_v<T>, "state_holder: T must not be const");
 
-    constexpr state_holder()                            = delete;
-    constexpr state_holder(const state_holder&)         = default;
-    constexpr state_holder(state_holder&&)              = default;
-    constexpr state_holder(T state) KFR_NOEXCEPT        = delete;
-    constexpr state_holder(const T& state) KFR_NOEXCEPT = delete;
-    constexpr state_holder(T& state) KFR_NOEXCEPT       = delete;
-    constexpr state_holder(T&& state) KFR_NOEXCEPT      = delete;
-    constexpr state_holder(std::reference_wrapper<T> state) KFR_NOEXCEPT : s(&state.get()) {}
+    constexpr state_holder()                        = delete;
+    constexpr state_holder(const state_holder&)     = default;
+    constexpr state_holder(state_holder&&)          = default;
+    constexpr state_holder(T state) noexcept        = delete;
+    constexpr state_holder(const T& state) noexcept = delete;
+    constexpr state_holder(T& state) noexcept       = delete;
+    constexpr state_holder(T&& state) noexcept      = delete;
+    constexpr state_holder(std::reference_wrapper<T> state) noexcept : s(&state.get()) {}
     T* s;
 
     const T* operator->() const { return s; }

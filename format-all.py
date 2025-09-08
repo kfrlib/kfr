@@ -10,13 +10,13 @@ import glob
 path = os.path.dirname(os.path.realpath(__file__))
 
 masks = ['*.hpp', '*.h', '*.cpp', '*.c', '*.cxx']
-ignore = ['build/*', 'build-*', 'cmake-*', '.*', 'src/io/dr']
+ignore = ['build', 'build-*', 'cmake-*', '.*', 'src/io/dr', 'src/thirdparty', 'include/kfr/thirdparty']
 
 filenames = []
 for root, dirnames, files in os.walk(path, path):
     ignore_dir = False
     for mask in ignore:
-        if fnmatch.fnmatch(os.path.relpath(root, path), mask):
+        if fnmatch.fnmatch(os.path.relpath(root, path), mask) or fnmatch.fnmatch(os.path.relpath(root, path), mask + '/*'):
             ignore_dir = True
             break
 

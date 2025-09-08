@@ -157,20 +157,20 @@ struct i24
 {
     u8 raw[3];
 
-    constexpr i24(i32 x) KFR_NOEXCEPT : raw{}
+    constexpr i24(i32 x) noexcept : raw{}
     {
         raw[0] = x & 0xFF;
         raw[1] = (x >> 8) & 0xFF;
         raw[2] = (x >> 16) & 0xFF;
     }
 
-    constexpr i32 as_int() const KFR_NOEXCEPT
+    constexpr i32 as_int() const noexcept
     {
         return static_cast<i32>(raw[0]) | static_cast<i32>(raw[1] << 8) |
                (static_cast<i32>(raw[2] << 24) >> 8);
     }
 
-    operator int() const KFR_NOEXCEPT { return as_int(); }
+    operator int() const noexcept { return as_int(); }
 };
 
 struct f16
@@ -205,27 +205,27 @@ template <typename T>
 struct bit
 {
     T value;
-    bit() KFR_NOEXCEPT = default;
+    bit() noexcept = default;
 
-    constexpr bit(bool value) KFR_NOEXCEPT : value(maskbits<T>(value)) {}
+    constexpr bit(bool value) noexcept : value(maskbits<T>(value)) {}
 
     template <typename U>
-    constexpr bit(const bit<U>& value) KFR_NOEXCEPT : value(value.operator bool())
+    constexpr bit(const bit<U>& value) noexcept : value(value.operator bool())
     {
     }
 
-    constexpr operator bool() const KFR_NOEXCEPT { return bitcast_anything<itype<T>>(value) < 0; }
+    constexpr operator bool() const noexcept { return bitcast_anything<itype<T>>(value) < 0; }
 
-    constexpr bit(T value) KFR_NOEXCEPT       = delete;
-    constexpr operator T() const KFR_NOEXCEPT = delete;
+    constexpr bit(T value) noexcept       = delete;
+    constexpr operator T() const noexcept = delete;
 
-    constexpr bool operator==(const bit& other) const KFR_NOEXCEPT
+    constexpr bool operator==(const bit& other) const noexcept
     {
         return operator bool() == other.operator bool();
     }
-    constexpr bool operator!=(const bit& other) const KFR_NOEXCEPT { return !operator==(other); }
-    constexpr bool operator==(bool other) const KFR_NOEXCEPT { return operator bool() == other; }
-    constexpr bool operator!=(bool other) const KFR_NOEXCEPT { return !operator==(other); }
+    constexpr bool operator!=(const bit& other) const noexcept { return !operator==(other); }
+    constexpr bool operator==(bool other) const noexcept { return operator bool() == other; }
+    constexpr bool operator!=(bool other) const noexcept { return !operator==(other); }
 };
 
 template <typename T>
@@ -375,11 +375,11 @@ template <typename T, size_t N>
 struct vec_shape
 {
     using value_type = T;
-    constexpr static size_t size() KFR_NOEXCEPT { return N; }
-    constexpr vec_shape() KFR_NOEXCEPT = default;
+    constexpr static size_t size() noexcept { return N; }
+    constexpr vec_shape() noexcept = default;
 
     using scalar_type = subtype<T>;
-    constexpr static size_t scalar_size() KFR_NOEXCEPT { return N * compound_type_traits<T>::width; }
+    constexpr static size_t scalar_size() noexcept { return N * compound_type_traits<T>::width; }
 };
 
 constexpr size_t index_undefined = static_cast<size_t>(-1);
@@ -398,12 +398,6 @@ using cunaligned_t = cbool_t<false>;
 
 constexpr caligned_t caligned{};
 constexpr cunaligned_t cunaligned{};
-
-#ifdef KFR_INTRINSICS_IS_CONSTEXPR
-#define KFR_I_CE constexpr
-#else
-#define KFR_I_CE
-#endif
 
 } // namespace kfr
 

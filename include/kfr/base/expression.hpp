@@ -263,7 +263,7 @@ KFR_INTRINSIC vec<std::decay_t<T>, N> get_elements(T&& self, const shape<0>& ind
 }
 template <typename T, index_t Axis, size_t N, KFR_ENABLE_IF(is_expr_element<std::decay_t<T>>)>
 KFR_INTRINSIC void set_elements(T& self, const shape<0>& index, const axis_params<Axis, N>&,
-                                const identity<vec<T, N>>& val)
+                                const std::type_identity_t<vec<T, N>>& val)
 {
     static_assert(N == 1);
     static_assert(!std::is_const_v<T>);
@@ -437,7 +437,7 @@ struct expression_function : expression_with_arguments<Args...>, expression_trai
     using value_type =
         typename std::invoke_result_t<Fn,
                                       vec<typename expression_traits<Args>::value_type, 1>...>::value_type;
-    constexpr static size_t dims = const_max(expression_traits<Args>::dims...);
+    constexpr static size_t dims = std::max({ expression_traits<Args>::dims... });
 
 #if defined KFR_COMPILER_IS_MSVC || defined KFR_COMPILER_GCC
     struct lambda_get_shape
@@ -467,7 +467,8 @@ struct expression_function : expression_with_arguments<Args...>, expression_trai
     constexpr static shape<dims> get_shape(const expression_function& self)
     {
         return self.fold(
-            [&](auto&&... args) KFR_INLINE_LAMBDA constexpr -> auto {
+            [&](auto&&... args) KFR_INLINE_LAMBDA constexpr -> auto
+            {
                 return internal_generic::common_shape<true>(
                     expression_traits<decltype(args)>::get_shape(args)...);
             });
@@ -511,8 +512,8 @@ struct expression_function : expression_with_arguments<Args...>, expression_trai
 };
 
 template <typename... Args, typename Fn>
-expression_function(const expression_with_arguments<Args...>& args,
-                    Fn&& fn) -> expression_function<Fn, Args...>;
+expression_function(const expression_with_arguments<Args...>& args, Fn&& fn)
+    -> expression_function<Fn, Args...>;
 template <typename... Args, typename Fn>
 expression_function(expression_with_arguments<Args...>&& args, Fn&& fn) -> expression_function<Fn, Args...>;
 template <typename... Args, typename Fn>
@@ -843,7 +844,7 @@ struct expression_discard : public expression_traits_defaults
 
     template <size_t N, index_t VecAxis>
     friend KFR_INTRINSIC void set_elements(const expression_discard& self, shape<Dims>,
-                                           axis_params<VecAxis, N>, const identity<vec<Tin, N>>& x)
+                                           axis_params<VecAxis, N>, const std::type_identity_t<vec<Tin, N>>& x)
     {
     }
 };
@@ -924,8 +925,8 @@ inline vec<T, N> get_fn_value(size_t index, Fn&& fn)
     }(__VA_ARGS__)
 
 #define CHECK_EXPRESSION_LIST(...)                                                                           \
-    []<typename E_, typename T_ = expression_value_type<E_>>(const E_& expr,                                 \
-                                                             std::initializer_list<kfr::identity<T_>> list)  \
+    []<typename E_, typename T_ = expression_value_type<E_>>(                                                \
+        const E_& expr, std::initializer_list<std::type_identity_t<T_>> list)                             \
     { CHECK_EXPRESSION(expr, list.size(), [&](size_t i) { return list.begin()[i]; }); }(__VA_ARGS__)
 
 #endif

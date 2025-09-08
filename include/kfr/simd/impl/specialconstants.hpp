@@ -22,6 +22,7 @@
  */
 #pragma once
 
+#include <bit>
 #include "../../meta/numeric.hpp"
 #include "intrinsics.h"
 
@@ -30,32 +31,20 @@ namespace kfr
 using namespace kfr;
 
 #if defined KFR_COMPILER_GNU
-constexpr f32 allones_f32() KFR_NOEXCEPT { return -__builtin_nanf("0xFFFFFFFF"); }
-constexpr f64 allones_f64() KFR_NOEXCEPT { return -__builtin_nan("0xFFFFFFFFFFFFFFFF"); }
-constexpr f32 invhighbit_f32() KFR_NOEXCEPT { return __builtin_nanf("0x7FFFFFFF"); }
-constexpr f64 invhighbit_f64() KFR_NOEXCEPT { return __builtin_nan("0x7FFFFFFFFFFFFFFF"); }
+constexpr f32 allones_f32() noexcept { return -__builtin_nanf("0xFFFFFFFF"); }
+constexpr f64 allones_f64() noexcept { return -__builtin_nan("0xFFFFFFFFFFFFFFFF"); }
+constexpr f32 invhighbit_f32() noexcept { return __builtin_nanf("0x7FFFFFFF"); }
+constexpr f64 invhighbit_f64() noexcept { return __builtin_nan("0x7FFFFFFFFFFFFFFF"); }
 #elif defined KFR_COMPILER_MSVC
-constexpr f32 allones_f32() KFR_NOEXCEPT { return -__builtin_nanf("-1"); }
-constexpr f64 allones_f64() KFR_NOEXCEPT { return -__builtin_nan("-1"); }
-constexpr f32 invhighbit_f32() KFR_NOEXCEPT { return __builtin_nanf("-1"); }
-constexpr f64 invhighbit_f64() KFR_NOEXCEPT { return __builtin_nan("-1"); }
+constexpr f32 allones_f32() noexcept { return -__builtin_nanf("-1"); }
+constexpr f64 allones_f64() noexcept { return -__builtin_nan("-1"); }
+constexpr f32 invhighbit_f32() noexcept { return __builtin_nanf("-1"); }
+constexpr f64 invhighbit_f64() noexcept { return __builtin_nan("-1"); }
 #else
-inline f32 allones_f32() KFR_NOEXCEPT
-{
-    return _mm_cvtss_f32(_mm_castsi128_ps(_mm_cvtsi32_si128(0xFFFFFFFFu)));
-}
-inline f64 allones_f64() KFR_NOEXCEPT
-{
-    return _mm_cvtsd_f64(_mm_castsi128_pd(_mm_cvtsi64x_si128(0xFFFFFFFFFFFFFFFFull)));
-}
-inline f32 invhighbit_f32() KFR_NOEXCEPT
-{
-    return _mm_cvtss_f32(_mm_castsi128_ps(_mm_cvtsi32_si128(0x7FFFFFFFu)));
-}
-inline f64 invhighbit_f64() KFR_NOEXCEPT
-{
-    return _mm_cvtsd_f64(_mm_castsi128_pd(_mm_cvtsi64x_si128(0x7FFFFFFFFFFFFFFFull)));
-}
+constexpr f32 allones_f32() noexcept { return std::bit_cast<f32>(0xffffffffu); }
+constexpr f64 allones_f64() noexcept { return std::bit_cast<f64>(0xffffffffffffffffull); }
+constexpr f32 invhighbit_f32() noexcept { return std::bit_cast<f32>(0x7fffffffu); }
+constexpr f64 invhighbit_f64() noexcept { return std::bit_cast<f64>(0x7fffffffffffffffull); }
 #endif
 
 template <typename T>
@@ -67,28 +56,22 @@ struct special_scalar_constants
     constexpr static T invhighbitmask() { return static_cast<T>((1ull << (sizeof(T) * 8 - 1)) - 1); }
 };
 
-#ifndef KFR_COMPILER_INTEL
-#define KFR_CONSTEXPR_NON_INTEL constexpr
-#else
-#define KFR_CONSTEXPR_NON_INTEL
-#endif
-
 template <>
 struct special_scalar_constants<float>
 {
     constexpr static float highbitmask() { return -0.f; }
-    KFR_CONSTEXPR_NON_INTEL static float allones() noexcept { return allones_f32(); }
+    constexpr static float allones() noexcept { return allones_f32(); }
     constexpr static float allzeros() { return 0.f; }
-    KFR_CONSTEXPR_NON_INTEL static float invhighbitmask() { return invhighbit_f32(); }
+    constexpr static float invhighbitmask() { return invhighbit_f32(); }
 };
 
 template <>
 struct special_scalar_constants<double>
 {
     constexpr static double highbitmask() { return -0.; }
-    KFR_CONSTEXPR_NON_INTEL static double allones() noexcept { return allones_f64(); }
+    constexpr static double allones() noexcept { return allones_f64(); }
     constexpr static double allzeros() { return 0.; }
-    KFR_CONSTEXPR_NON_INTEL static double invhighbitmask() { return invhighbit_f64(); }
+    constexpr static double invhighbitmask() { return invhighbit_f64(); }
 };
 
 template <typename T>

@@ -35,11 +35,11 @@ template <typename T, std::size_t Capacity = 16>
 struct small_buffer
 {
 public:
-    small_buffer() KFR_NOEXCEPT : m_size(0), m_data(m_preallocated) {}
+    small_buffer() noexcept : m_size(0), m_data(m_preallocated) {}
 
     small_buffer(std::size_t size) : small_buffer() { resize(size); }
 
-    friend void swap(small_buffer<T, Capacity>& first, small_buffer<T, Capacity>& second) KFR_NOEXCEPT
+    friend void swap(small_buffer<T, Capacity>& first, small_buffer<T, Capacity>& second) noexcept
     {
         using std::swap;
 

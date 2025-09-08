@@ -64,7 +64,7 @@ struct simd_cvt_t
 template <typename T, size_t N>
 constexpr size_t alignment()
 {
-    return const_min(size_t(platform<>::native_vector_alignment), next_poweroftwo(sizeof(T) * N));
+    return std::min(size_t(platform<>::native_vector_alignment), next_poweroftwo(sizeof(T) * N));
 }
 
 template <typename T, size_t N>
@@ -90,18 +90,18 @@ struct simd_halves
     subtype low;
     subtype high;
 #if defined KFR_DEFINE_CTORS_FOR_HALVES && KFR_DEFINE_CTORS_FOR_HALVES
-    simd_halves() KFR_NOEXCEPT {}
-    simd_halves(const subtype& l, const subtype& h) KFR_NOEXCEPT : low(l), high(h) {}
-    simd_halves(const simd_halves& v) KFR_NOEXCEPT : low(v.low), high(v.high) {}
-    simd_halves(simd_halves&& v) KFR_NOEXCEPT : low(v.low), high(v.high) {}
+    simd_halves() noexcept {}
+    simd_halves(const subtype& l, const subtype& h) noexcept : low(l), high(h) {}
+    simd_halves(const simd_halves& v) noexcept : low(v.low), high(v.high) {}
+    simd_halves(simd_halves&& v) noexcept : low(v.low), high(v.high) {}
 
-    simd_halves& operator=(const simd_halves& v) KFR_NOEXCEPT
+    simd_halves& operator=(const simd_halves& v) noexcept
     {
         low  = v.low;
         high = v.high;
         return *this;
     }
-    simd_halves& operator=(simd_halves&& v) KFR_NOEXCEPT
+    simd_halves& operator=(simd_halves&& v) noexcept
     {
         low  = v.low;
         high = v.high;

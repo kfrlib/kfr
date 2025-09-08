@@ -169,15 +169,15 @@ struct expression_traits<expression_slice<Arg>> : expression_traits_defaults
 };
 
 template <typename Arg, KFR_ACCEPT_EXPRESSIONS(Arg), index_t Dims = expression_dims<Arg>>
-KFR_INTRINSIC expression_slice<Arg> slice(Arg&& arg, identity<shape<Dims>> start,
-                                          identity<shape<Dims>> size = shape<Dims>(infinite_size))
+KFR_INTRINSIC expression_slice<Arg> slice(Arg&& arg, std::type_identity_t<shape<Dims>> start,
+                                          std::type_identity_t<shape<Dims>> size = shape<Dims>(infinite_size))
 {
     static_assert(Dims > 0);
     return { std::forward<Arg>(arg), start, size };
 }
 
 template <typename Arg, KFR_ACCEPT_EXPRESSIONS(Arg), index_t Dims = expression_dims<Arg>>
-KFR_INTRINSIC expression_slice<Arg> truncate(Arg&& arg, identity<shape<Dims>> size)
+KFR_INTRINSIC expression_slice<Arg> truncate(Arg&& arg, std::type_identity_t<shape<Dims>> size)
 {
     static_assert(Dims > 0);
     return { std::forward<Arg>(arg), shape<Dims>{ 0 }, size };
@@ -197,7 +197,7 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_slice<Arg>& self, const sh
 template <typename Arg, index_t NDims, index_t Axis, size_t N, enable_if_output_expression<Arg>* = nullptr,
           typename T = typename expression_traits<expression_slice<Arg>>::value_type>
 KFR_INTRINSIC void set_elements(const expression_slice<Arg>& self, const shape<NDims>& index,
-                                const axis_params<Axis, N>& sh, const identity<vec<T, N>>& value)
+                                const axis_params<Axis, N>& sh, const std::type_identity_t<vec<T, N>>& value)
 {
     set_elements(self.first(), index.add(self.start), sh, value);
 }
@@ -251,7 +251,7 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_cast<T, Arg>& self, const 
 
 template <typename T, typename Arg, index_t NDims, index_t Axis, size_t N>
 KFR_INTRINSIC void set_elements(const expression_cast<T, Arg>& self, const shape<NDims>& index,
-                                const axis_params<Axis, N>& sh, const identity<vec<T, N>>& value)
+                                const axis_params<Axis, N>& sh, const std::type_identity_t<vec<T, N>>& value)
 {
     set_elements(self.first(), index, sh, value);
 }
@@ -522,7 +522,7 @@ template <typename Arg, typename Shape, index_t Axis, size_t N,
           typename Traits = expression_traits<expression_fixshape<Arg, Shape>>,
           typename T      = typename Traits::value_type>
 KFR_INTRINSIC void set_elements(expression_fixshape<Arg, Shape>& self, const shape<Traits::dims>& index,
-                                const axis_params<Axis, N>& sh, const identity<vec<T, N>>& value)
+                                const axis_params<Axis, N>& sh, const std::type_identity_t<vec<T, N>>& value)
 {
     using ArgTraits = expression_traits<Arg>;
     if constexpr (is_output_expression<Arg>)
@@ -636,7 +636,7 @@ template <typename Arg, index_t outdims, index_t Axis, size_t N,
           typename Traits = expression_traits<expression_reshape<Arg, outdims>>,
           typename T      = typename Traits::value_type>
 KFR_INTRINSIC void set_elements(expression_reshape<Arg, outdims>& self, const shape<Traits::dims>& index,
-                                const axis_params<Axis, N>& sh, const identity<vec<T, N>>& value)
+                                const axis_params<Axis, N>& sh, const std::type_identity_t<vec<T, N>>& value)
 {
     using ArgTraits          = typename Traits::ArgTraits;
     constexpr index_t indims = ArgTraits::dims;
@@ -898,7 +898,8 @@ KFR_INTRINSIC void set_elements_packed(expression_function<fn::packtranspose, Ar
 template <typename... Args, index_t Axis, size_t N,
           typename Tr = expression_traits<expression_function<fn::packtranspose, Args...>>>
 KFR_INTRINSIC void set_elements(expression_function<fn::packtranspose, Args...>& self, shape<Tr::dims> index,
-                                axis_params<Axis, N> sh, const identity<vec<typename Tr::value_type, N>>& x)
+                                axis_params<Axis, N> sh,
+                                const std::type_identity_t<vec<typename Tr::value_type, N>>& x)
 {
     internal::set_elements_packed(self, index, sh, x, csizeseq<sizeof...(Args)>);
 }
@@ -930,7 +931,8 @@ struct expression_unpack : expression_with_arguments<E...>, expression_traits_de
 
     template <index_t Axis, size_t N>
     KFR_INTRINSIC friend void set_elements(expression_unpack& self, shape<dims> index,
-                                           axis_params<Axis, N> sh, const identity<vec<value_type, N>>& x)
+                                           axis_params<Axis, N> sh,
+                                           const std::type_identity_t<vec<value_type, N>>& x)
     {
         self.output(index, sh, x, csizeseq<count>);
     }

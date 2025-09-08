@@ -155,7 +155,7 @@ struct expression_resource
 template <typename E>
 struct expression_resource_impl : expression_resource
 {
-    expression_resource_impl(E&& e) KFR_NOEXCEPT : e(std::move(e)) {}
+    expression_resource_impl(E&& e) noexcept : e(std::move(e)) {}
     virtual ~expression_resource_impl() {}
     KFR_INTRINSIC virtual void* instance() override final { return &e; }
 
@@ -183,7 +183,7 @@ struct expression_handle
     const expression_vtable<T, Dims>* vtable;
     std::shared_ptr<expression_resource> resource;
 
-    expression_handle() KFR_NOEXCEPT : instance(nullptr), vtable(nullptr) {}
+    expression_handle() noexcept : instance(nullptr), vtable(nullptr) {}
     expression_handle(const void* instance, const expression_vtable<T, Dims>* vtable,
                       std::shared_ptr<expression_resource> resource = nullptr)
         : instance(const_cast<void*>(instance)), vtable(vtable), resource(std::move(resource))
@@ -251,7 +251,7 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_handle<T, NDims>& self, co
 
 template <typename T, index_t NDims, index_t Axis, size_t N>
 KFR_INTRINSIC void set_elements(const expression_handle<T, NDims>& self, const shape<NDims>& index,
-                                const axis_params<Axis, N>& sh, const identity<vec<T, N>>& value)
+                                const axis_params<Axis, N>& sh, const std::type_identity_t<vec<T, N>>& value)
 {
     static_assert(is_poweroftwo(N) && N >= 1);
     constexpr size_t Nsize = ilog2(N);
@@ -312,8 +312,8 @@ template <typename T, index_t Dims = 1, size_t Key = 0>
 struct expression_placeholder
 {
 public:
-    using value_type                      = T;
-    expression_placeholder() KFR_NOEXCEPT = default;
+    using value_type                  = T;
+    expression_placeholder() noexcept = default;
     expression_handle<T, Dims> handle;
 };
 

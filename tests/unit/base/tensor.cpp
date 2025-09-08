@@ -196,7 +196,7 @@ KFR_INTRINSIC vec<T, N> get_elements(const std::array<T, N1>& KFR_RESTRICT self,
 
 template <typename T, size_t N1, index_t Axis, size_t N>
 KFR_INTRINSIC void set_elements(std::array<T, N1>& KFR_RESTRICT self, const shape<1>& index,
-                                const axis_params<Axis, N>&, const identity<vec<T, N>>& val)
+                                const axis_params<Axis, N>&, const std::type_identity_t<vec<T, N>>& val)
 {
     T* KFR_RESTRICT const data = self.data();
     write(data + index[0], val);
@@ -219,7 +219,7 @@ KFR_INTRINSIC vec<T, N> get_elements(const std::array<std::array<T, N1>, N2>& KF
 
 template <typename T, size_t N1, size_t N2, index_t Axis, size_t N>
 KFR_INTRINSIC void set_elements(std::array<std::array<T, N1>, N2>& KFR_RESTRICT self, const shape<2>& index,
-                                const axis_params<Axis, N>&, const identity<vec<T, N>>& val)
+                                const axis_params<Axis, N>&, const std::type_identity_t<vec<T, N>>& val)
 {
     T* KFR_RESTRICT data = self.front().data() + index.front() * N1 + index.back();
     if constexpr (Axis == 1)

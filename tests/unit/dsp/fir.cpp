@@ -88,89 +88,89 @@ TEST_CASE("fir")
 #else
     test_matrix(named("type") = ctypes_t<float
 #ifdef KFR_NATIVE_F64
-                                           ,
-                                           double
+                                         ,
+                                         double
 #endif
-                                           >{},
-                  [](auto type)
-                  {
-                      using T = typename decltype(type)::type;
+                                         >{},
+                [](auto type)
+                {
+                    using T = typename decltype(type)::type;
 
-                      const univector<T, 100> data =
-                          counter() + sequence(1, 2, -10, 100) + sequence(0, -7, 0.5);
-                      const univector<T, 6> taps{ 1, 2, -2, 0.5, 0.0625, 4 };
+                    const univector<T, 100> data =
+                        counter() + sequence(1, 2, -10, 100) + sequence(0, -7, 0.5);
+                    const univector<T, 6> taps{ 1, 2, -2, 0.5, 0.0625, 4 };
 
-                      CHECK_EXPRESSION(fir(data, fir_params{ taps }), 100,
-                                       [&](size_t index) -> T
-                                       {
-                                           T result = 0;
-                                           for (size_t i = 0; i < taps.size(); i++)
-                                               result += data.get(index - i, 0) * taps[i];
-                                           return result;
-                                       });
+                    CHECK_EXPRESSION(fir(data, fir_params{ taps }), 100,
+                                     [&](size_t index) -> T
+                                     {
+                                         T result = 0;
+                                         for (size_t i = 0; i < taps.size(); i++)
+                                             result += data.get(index - i, 0) * taps[i];
+                                         return result;
+                                     });
 
-                      fir_state<T> state(taps.ref());
+                    fir_state<T> state(taps.ref());
 
-                      CHECK_EXPRESSION(fir(data, std::ref(state)), 100,
-                                       [&](size_t index) -> T
-                                       {
-                                           T result = 0;
-                                           for (size_t i = 0; i < taps.size(); i++)
-                                               result += data.get(index - i, 0) * taps[i];
-                                           return result;
-                                       });
+                    CHECK_EXPRESSION(fir(data, std::ref(state)), 100,
+                                     [&](size_t index) -> T
+                                     {
+                                         T result = 0;
+                                         for (size_t i = 0; i < taps.size(); i++)
+                                             result += data.get(index - i, 0) * taps[i];
+                                         return result;
+                                     });
 
-                      CHECK_EXPRESSION(short_fir(data, taps), 100,
-                                       [&](size_t index) -> T
-                                       {
-                                           T result = 0;
-                                           for (size_t i = 0; i < taps.size(); i++)
-                                               result += data.get(index - i, 0) * taps[i];
-                                           return result;
-                                       });
+                    CHECK_EXPRESSION(short_fir(data, taps), 100,
+                                     [&](size_t index) -> T
+                                     {
+                                         T result = 0;
+                                         for (size_t i = 0; i < taps.size(); i++)
+                                             result += data.get(index - i, 0) * taps[i];
+                                         return result;
+                                     });
 
-                      short_fir_state<9, T> state2(taps);
+                    short_fir_state<9, T> state2(taps);
 
-                      CHECK_EXPRESSION(short_fir(data, std::ref(state2)), 100,
-                                       [&](size_t index) -> T
-                                       {
-                                           T result = 0;
-                                           for (size_t i = 0; i < taps.size(); i++)
-                                               result += data.get(index - i, 0) * taps[i];
-                                           return result;
-                                       });
+                    CHECK_EXPRESSION(short_fir(data, std::ref(state2)), 100,
+                                     [&](size_t index) -> T
+                                     {
+                                         T result = 0;
+                                         for (size_t i = 0; i < taps.size(); i++)
+                                             result += data.get(index - i, 0) * taps[i];
+                                         return result;
+                                     });
 
-                      CHECK_EXPRESSION(moving_sum(data, taps.size()), 100,
-                                       [&](size_t index) -> T
-                                       {
-                                           T result = 0;
-                                           for (size_t i = 0; i < taps.size(); i++)
-                                               result += data.get(index - i, 0);
-                                           return result;
-                                       });
+                    CHECK_EXPRESSION(moving_sum(data, taps.size()), 100,
+                                     [&](size_t index) -> T
+                                     {
+                                         T result = 0;
+                                         for (size_t i = 0; i < taps.size(); i++)
+                                             result += data.get(index - i, 0);
+                                         return result;
+                                     });
 
-                      moving_sum_state<T, 131> msstate1;
+                    moving_sum_state<T, 131> msstate1;
 
-                      CHECK_EXPRESSION(moving_sum(data, std::ref(msstate1)), 100,
-                                       [&](size_t index) -> T
-                                       {
-                                           T result = 0;
-                                           for (size_t i = 0; i < msstate1.delayline.size(); i++)
-                                               result += data.get(index - i, 0);
-                                           return result;
-                                       });
+                    CHECK_EXPRESSION(moving_sum(data, std::ref(msstate1)), 100,
+                                     [&](size_t index) -> T
+                                     {
+                                         T result = 0;
+                                         for (size_t i = 0; i < msstate1.delayline.size(); i++)
+                                             result += data.get(index - i, 0);
+                                         return result;
+                                     });
 
-                      moving_sum_state<T> msstate2(133);
+                    moving_sum_state<T> msstate2(133);
 
-                      CHECK_EXPRESSION(moving_sum(data, std::ref(msstate2)), 100,
-                                       [&](size_t index) -> T
-                                       {
-                                           T result = 0;
-                                           for (size_t i = 0; i < msstate2.delayline.size(); i++)
-                                               result += data.get(index - i, 0);
-                                           return result;
-                                       });
-                  });
+                    CHECK_EXPRESSION(moving_sum(data, std::ref(msstate2)), 100,
+                                     [&](size_t index) -> T
+                                     {
+                                         T result = 0;
+                                         for (size_t i = 0; i < msstate2.delayline.size(); i++)
+                                             result += data.get(index - i, 0);
+                                         return result;
+                                     });
+                });
 #endif
 }
 

@@ -20,19 +20,18 @@ struct result
 
     constexpr static error_type ok_value = OkValue;
 
-    constexpr result(const result&)         = default;
-    constexpr result(result&&) KFR_NOEXCEPT = default;
+    constexpr result(const result&)     = default;
+    constexpr result(result&&) noexcept = default;
 
-    constexpr result(ErrEnum error) KFR_NOEXCEPT : m_error(error) {}
+    constexpr result(ErrEnum error) noexcept : m_error(error) {}
 
     template <typename ValueInit, KFR_ENABLE_IF(std::is_constructible_v<value_type, ValueInit>)>
-    constexpr result(ValueInit&& value) KFR_NOEXCEPT : m_value(std::forward<ValueInit>(value)),
-                                                       m_error(OkValue)
+    constexpr result(ValueInit&& value) noexcept : m_value(std::forward<ValueInit>(value)), m_error(OkValue)
     {
     }
 
-    constexpr result(const Type& value) KFR_NOEXCEPT : m_value(value), m_error(OkValue) {}
-    constexpr result(Type&& value) KFR_NOEXCEPT : m_value(std::move(value)), m_error(OkValue) {}
+    constexpr result(const Type& value) noexcept : m_value(value), m_error(OkValue) {}
+    constexpr result(Type&& value) noexcept : m_value(std::move(value)), m_error(OkValue) {}
 
     constexpr explicit operator bool() const { return m_error == OkValue; }
     constexpr const_reference operator*() const { return m_value; }

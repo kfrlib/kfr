@@ -840,7 +840,7 @@ struct fft_config
     constexpr static inline const bool prefetch = true;
 #endif
     constexpr static inline const size_t process_width =
-        const_max(static_cast<size_t>(1), vector_capacity<T> / 16);
+        std::max(static_cast<size_t>(1), vector_capacity<T> / 16);
 };
 
 template <typename T, bool splitin, bool is_even>
@@ -919,7 +919,7 @@ struct fft_final_stage_impl : dft_stage<T>
                                          complex<T>*& twiddle)
     {
         constexpr bool pass_splitout = get_pass_splitout(N);
-        constexpr size_t pass_width  = const_min(width, N / 4);
+        constexpr size_t pass_width  = std::min(width, N / 4);
         initialize_twiddles<T, pass_width>(twiddle, N, total_size, pass_splitout || pass_splitin);
         init_twiddles(csize<N / 4>, total_size, cbool<pass_splitout>, twiddle);
     }
@@ -968,7 +968,7 @@ struct fft_final_stage_impl : dft_stage<T>
     {
         static_assert(N > 8, "");
         constexpr bool pass_splitout = get_pass_splitout(N);
-        constexpr size_t pass_width  = const_min(width, N / 4);
+        constexpr size_t pass_width  = std::min(width, N / 4);
         static_assert(pass_width == width || !pass_splitin, "");
         static_assert(pass_width <= N / 4, "");
         radix4_pass(N, invN, csize_t<pass_width>(), cbool<pass_splitout>, cbool_t<pass_splitin>(),
@@ -1022,7 +1022,7 @@ struct fft_autosort_stage_impl : dft_stage<T>
     constexpr static bool prefetch = fft_config<T>::prefetch;
     constexpr static bool aligned  = false;
 
-    constexpr static size_t width = const_min(16, const_max(4, fft_config<T>::process_width));
+    constexpr static size_t width = std::min(size_t(16), std::max(size_t(4), fft_config<T>::process_width));
 
     void do_initialize(size_t total_size) final
     {
@@ -1205,7 +1205,7 @@ struct fft_specialization<T, 6> : dft_stage<T>
         this->data_size  = 64 * sizeof(complex<T>);
     }
 
-    constexpr static size_t width = const_min(16, const_max(4, fft_config<T>::process_width));
+    constexpr static size_t width = std::min(size_t(16), std::max(size_t(4), fft_config<T>::process_width));
 
     void do_initialize(size_t) final
     {
@@ -1259,7 +1259,7 @@ struct fft_specialization<double, 7> : dft_stage<double>
         this->data_size  = 128 * sizeof(complex<T>);
     }
 
-    constexpr static size_t width = const_min(16, const_max(4, fft_config<T>::process_width));
+    constexpr static size_t width = std::min(size_t(16), std::max(size_t(4), fft_config<T>::process_width));
 
     void do_initialize(size_t) final
     {
@@ -1294,7 +1294,7 @@ struct fft_specialization<double, 7> : dft_stage<double>
     }
 
     constexpr static bool aligned        = false;
-    constexpr static size_t width        = const_min(fft_config<T>::process_width, size_t(8));
+    constexpr static size_t width        = std::min(fft_config<T>::process_width, size_t(8));
     constexpr static bool use_br2        = true;
     constexpr static bool prefetch       = false;
     constexpr static size_t split_format = true;
@@ -1337,7 +1337,7 @@ struct fft_specialization<float, 7> : dft_stage<float>
 
     constexpr static bool aligned        = false;
     constexpr static size_t width1       = fft_config<T>::process_width;
-    constexpr static size_t width2       = const_min(width1, size_t(8));
+    constexpr static size_t width2       = std::min(width1, size_t(8));
     constexpr static bool use_br2        = true;
     constexpr static bool prefetch       = false;
     constexpr static size_t final_size   = 32;
@@ -1423,7 +1423,7 @@ struct fft_specialization<double, 8> : dft_stage<double>
         this->data_size  = 256 * sizeof(complex<T>);
     }
 
-    constexpr static size_t width = const_min(16, const_max(4, fft_config<T>::process_width));
+    constexpr static size_t width = std::min(size_t(16), std::max(size_t(4), fft_config<T>::process_width));
 
     void do_initialize(size_t) final
     {
@@ -1491,7 +1491,7 @@ struct fft_specialization<T, 9> : dft_stage<T>
         this->data_size  = 512 * sizeof(complex<T>);
     }
 
-    constexpr static size_t width = const_min(16, const_max(4, fft_config<T>::process_width));
+    constexpr static size_t width = std::min(size_t(16), std::max(size_t(4), fft_config<T>::process_width));
 
     void do_initialize(size_t) final
     {
@@ -1548,7 +1548,7 @@ struct fft_specialization<T, 10> : dft_stage<T>
         this->data_size  = 1024 * sizeof(complex<T>);
     }
 
-    constexpr static size_t width = const_min(16, const_max(4, fft_config<T>::process_width));
+    constexpr static size_t width = std::min(size_t(16), std::max(size_t(4), fft_config<T>::process_width));
 
     void do_initialize(size_t) final
     {
@@ -1606,7 +1606,7 @@ struct fft_specialization<T, 11> : dft_stage<T>
         this->data_size  = 2048 * sizeof(complex<T>);
     }
 
-    constexpr static size_t width = const_min(16, const_max(4, fft_config<T>::process_width));
+    constexpr static size_t width = std::min(size_t(16), std::max(size_t(4), fft_config<T>::process_width));
 
     void do_initialize(size_t) final
     {

@@ -513,7 +513,7 @@ KFR_FUNCTION expression_bartlett_hann<T> window_bartlett_hann(size_t size, ctype
  * alpha
  */
 template <typename T = fbase>
-KFR_FUNCTION expression_hamming<T> window_hamming(size_t size, identity<T> alpha = 0.54,
+KFR_FUNCTION expression_hamming<T> window_hamming(size_t size, std::type_identity_t<T> alpha = 0.54,
                                                   ctype_t<T> = ctype_t<T>())
 {
     return expression_hamming<T>(size, alpha);
@@ -533,7 +533,7 @@ KFR_FUNCTION expression_bohman<T> window_bohman(size_t size, ctype_t<T> = ctype_
  * alpha
  */
 template <typename T = fbase>
-KFR_FUNCTION expression_blackman<T> window_blackman(size_t size, identity<T> alpha = 0.16,
+KFR_FUNCTION expression_blackman<T> window_blackman(size_t size, std::type_identity_t<T> alpha = 0.16,
                                                     window_symmetry symmetry = window_symmetry::symmetric,
                                                     ctype_t<T>               = ctype_t<T>())
 {
@@ -555,7 +555,7 @@ KFR_FUNCTION expression_blackman_harris<T> window_blackman_harris(
  * beta
  */
 template <typename T = fbase>
-KFR_FUNCTION expression_kaiser<T> window_kaiser(size_t size, identity<T> beta = T(0.5),
+KFR_FUNCTION expression_kaiser<T> window_kaiser(size_t size, std::type_identity_t<T> beta = T(0.5),
                                                 ctype_t<T> = ctype_t<T>())
 {
     return expression_kaiser<T>(size, beta);
@@ -575,7 +575,7 @@ KFR_FUNCTION expression_flattop<T> window_flattop(size_t size, ctype_t<T> = ctyp
  * alpha
  */
 template <typename T = fbase>
-KFR_FUNCTION expression_gaussian<T> window_gaussian(size_t size, identity<T> alpha = 2.5,
+KFR_FUNCTION expression_gaussian<T> window_gaussian(size_t size, std::type_identity_t<T> alpha = 2.5,
                                                     ctype_t<T> = ctype_t<T>())
 {
     return expression_gaussian<T>(size, alpha);
@@ -595,7 +595,7 @@ KFR_FUNCTION expression_lanczos<T> window_lanczos(size_t size, ctype_t<T> = ctyp
  */
 template <typename T = fbase>
 KFR_FUNCTION expression_planck_taper<T> window_planck_taper(
-    size_t size, identity<T> epsilon, window_symmetry symmetry = window_symmetry::symmetric,
+    size_t size, std::type_identity_t<T> epsilon, window_symmetry symmetry = window_symmetry::symmetric,
     ctype_t<T> = ctype_t<T>())
 {
     return expression_planck_taper<T>(size, epsilon, symmetry);
@@ -605,7 +605,7 @@ KFR_FUNCTION expression_planck_taper<T> window_planck_taper(
  * @brief Returns template expression that generates Tukey window of length @c size (numpy compatible)
  */
 template <typename T = fbase>
-KFR_FUNCTION expression_tukey<T> window_tukey(size_t size, identity<T> alpha,
+KFR_FUNCTION expression_tukey<T> window_tukey(size_t size, std::type_identity_t<T> alpha,
                                               window_symmetry symmetry = window_symmetry::symmetric,
                                               ctype_t<T>               = ctype_t<T>())
 {
@@ -614,7 +614,7 @@ KFR_FUNCTION expression_tukey<T> window_tukey(size_t size, identity<T> alpha,
 
 template <typename T           = fbase, window_type type,
           typename window_expr = typename window_by_type<type>::template type<T>>
-KFR_NOINLINE window_expr window(size_t size, cval_t<window_type, type>, identity<T> win_param = T(),
+KFR_NOINLINE window_expr window(size_t size, cval_t<window_type, type>, std::type_identity_t<T> win_param = T(),
                                 window_symmetry symmetry = window_symmetry::symmetric,
                                 ctype_t<T>               = ctype_t<T>())
 {
@@ -622,7 +622,7 @@ KFR_NOINLINE window_expr window(size_t size, cval_t<window_type, type>, identity
 }
 
 template <typename T = fbase>
-KFR_NOINLINE expression_handle<T> window(size_t size, window_type type, identity<T> win_param,
+KFR_NOINLINE expression_handle<T> window(size_t size, window_type type, std::type_identity_t<T> win_param,
                                          window_symmetry symmetry = window_symmetry::symmetric,
                                          ctype_t<T>               = ctype_t<T>())
 {

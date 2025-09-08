@@ -84,7 +84,7 @@ struct expression_reduce : public expression_traits_defaults
 
     template <size_t N, index_t VecAxis>
     friend KFR_INTRINSIC void set_elements(expression_reduce& self, shape<Dims>, axis_params<VecAxis, N>,
-                                           const identity<vec<Tin, N>>& x)
+                                           const std::type_identity_t<vec<Tin, N>>& x)
     {
         self.counter += N;
         self.process(x);

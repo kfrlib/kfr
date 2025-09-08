@@ -12,6 +12,7 @@
 #include <limits>
 #include <random>
 #include <type_traits>
+#include <tuple>
 #include <utility>
 
 KFR_PRAGMA_GNU(GCC diagnostic push)
@@ -35,51 +36,13 @@ using std::size_t;
 using pvoid      = void*;
 using pconstvoid = const void*;
 
-namespace details
-{
-constexpr KFR_INTRINSIC bool args_or() { return false; }
-template <typename... Ts>
-constexpr KFR_INTRINSIC bool args_or(bool x, Ts... rest)
-{
-    return x || args_or(rest...);
-}
-
-constexpr KFR_INTRINSIC bool args_and() { return true; }
-template <typename... Ts>
-constexpr KFR_INTRINSIC bool args_and(bool x, Ts... rest)
-{
-    return x && args_and(rest...);
-}
-
-template <typename... Ts>
-struct or_t_impl : std::false_type
-{
-};
-
-template <typename T, typename... Ts>
-struct or_t_impl<T, Ts...> : std::integral_constant<bool, T::value || or_t_impl<Ts...>::value>
-{
-};
-
-template <typename... Ts>
-struct and_t_impl : std::true_type
-{
-};
-
-template <typename T, typename... Ts>
-struct and_t_impl<T, Ts...> : std::integral_constant<bool, T::value && and_t_impl<Ts...>::value>
-{
-};
-
-} // namespace details
-
 constexpr size_t max_size_t = size_t(-1);
 
 template <typename T1, typename T2>
 using or_type = std::conditional_t<std::is_same_v<T1, void>, T2, T1>;
 
 template <typename T1, typename T2 = void, typename... Ts>
-constexpr size_t typeindex()
+constexpr size_t typeindex() noexcept
 {
     return std::is_same_v<T1, T2>() ? 0 : 1 + typeindex<T1, Ts...>();
 }
@@ -99,16 +62,19 @@ struct compound_type_traits
     template <typename U>
     using deep_rebind = U;
 
-    KFR_MEM_INTRINSIC static constexpr const subtype& at(const T& value, size_t /*index*/) { return value; }
+    KFR_MEM_INTRINSIC static constexpr const subtype& at(const T& value, size_t /*index*/) noexcept
+    {
+        return value;
+    }
 };
 
 template <typename T>
-constexpr size_t widthof(T)
+constexpr size_t widthof(T) noexcept
 {
     return compound_type_traits<T>::width;
 }
 template <typename T>
-constexpr size_t widthof()
+constexpr size_t widthof() noexcept
 {
     return compound_type_traits<std::decay_t<T>>::width;
 }
@@ -139,7 +105,7 @@ struct compound_type_traits<std::pair<T, T>>
                                   typename compound_type_traits<subtype>::template deep_rebind<U>>;
 
     KFR_MEM_INTRINSIC static constexpr const subtype& at(const std::pair<subtype, subtype>& value,
-                                                         size_t index)
+                                                         size_t index) noexcept
     {
         return index == 0 ? value.first : value.second;
     }
@@ -149,23 +115,23 @@ template <typename T, T val>
 struct cval_t
 {
     constexpr static T value = val;
-    constexpr KFR_MEM_INTRINSIC cval_t() KFR_NOEXCEPT {}
-    constexpr KFR_MEM_INTRINSIC cval_t(const cval_t&) KFR_NOEXCEPT = default;
-    constexpr KFR_MEM_INTRINSIC cval_t(cval_t&&) KFR_NOEXCEPT      = default;
-    typedef T value_type;
-    typedef cval_t type;
-    constexpr KFR_MEM_INTRINSIC operator value_type() const { return value; }
-    constexpr KFR_MEM_INTRINSIC value_type operator()() const { return value; }
+    constexpr KFR_MEM_INTRINSIC cval_t() noexcept {}
+    constexpr KFR_MEM_INTRINSIC cval_t(const cval_t&) noexcept = default;
+    constexpr KFR_MEM_INTRINSIC cval_t(cval_t&&) noexcept      = default;
+    using value_type                                           = T;
+    using type                                                 = cval_t;
+    constexpr KFR_MEM_INTRINSIC operator value_type() const noexcept { return value; }
+    constexpr KFR_MEM_INTRINSIC value_type operator()() const noexcept { return value; }
 };
 
 template <typename T, T value>
-constexpr KFR_INTRINSIC T val_of(cval_t<T, value>)
+constexpr KFR_INTRINSIC T val_of(cval_t<T, value>) noexcept
 {
     return value;
 }
 
 template <typename T>
-constexpr KFR_INTRINSIC T val_of(T value)
+constexpr KFR_INTRINSIC T val_of(T value) noexcept
 {
     return value;
 }
@@ -173,34 +139,19 @@ constexpr KFR_INTRINSIC T val_of(T value)
 #define KFR_CVAL(...) (decltype(__VA_ARGS__)::value)
 
 template <typename T>
-constexpr KFR_INTRINSIC bool is_constant_val(T)
+constexpr KFR_INTRINSIC bool is_constant_val(T) noexcept
 {
     return false;
 }
 
 template <typename T, T value>
-constexpr KFR_INTRINSIC bool is_constant_val(cval_t<T, value>)
+constexpr KFR_INTRINSIC bool is_constant_val(cval_t<T, value>) noexcept
 {
     return true;
 }
 
 namespace details
 {
-
-template <typename T>
-struct inherit : T
-{
-};
-
-template <typename T, typename Enable = void>
-struct is_inheritable_impl : std::false_type
-{
-};
-
-template <typename T>
-struct is_inheritable_impl<T, std::void_t<inherit<T>>> : std::true_type
-{
-};
 
 template <typename T>
 struct is_val_impl : std::false_type
@@ -212,9 +163,6 @@ struct is_val_impl<cval_t<T, val>> : std::true_type
 {
 };
 } // namespace details
-
-template <typename T>
-using is_inheritable = typename details::is_inheritable_impl<T>::type;
 
 template <typename T>
 using is_val_t = typename details::is_val_impl<T>::type;
@@ -234,8 +182,8 @@ using csize_t = cval_t<size_t, val>;
 using cfalse_t = cbool_t<false>;
 using ctrue_t  = cbool_t<true>;
 
-constexpr ctrue_t ctrue{};
-constexpr cfalse_t cfalse{};
+constexpr inline ctrue_t ctrue{};
+constexpr inline cfalse_t cfalse{};
 
 namespace details
 {
@@ -254,64 +202,57 @@ template <size_t index, typename T>
 struct get_nth_e;
 
 template <size_t index, typename... Types>
-struct get_nth_type;
-
-template <size_t index, typename first, typename... rest>
-struct get_nth_type<index, first, rest...> : get_nth_type<index - 1, rest...>
+struct get_nth_type
 {
+#if defined(__clang__) && __has_builtin(__type_pack_element)
+    using type = __type_pack_element<index, Types...>;
+#elif defined(__GNUC__) && __has_builtin(__builtin_type_pack_element)
+    using type = __builtin_type_pack_element(index, Types...);
+#else
+    using type = std::tuple_element_t<index, std::tuple<Types...>>;
+#endif
 };
 
-template <typename first, typename... rest>
-struct get_nth_type<0, first, rest...>
-{
-    using type = first;
-};
-
-template <size_t index>
-struct get_nth_type<index>
-{
-};
 } // namespace details
 
 template <typename T, T... values>
 struct cvals_t
 {
-    constexpr KFR_MEM_INTRINSIC cvals_t() KFR_NOEXCEPT = default;
+    constexpr KFR_MEM_INTRINSIC cvals_t() noexcept = default;
 
     using type = cvals_t<T, values...>;
-    constexpr KFR_MEM_INTRINSIC static size_t size() { return sizeof...(values); }
+    constexpr KFR_MEM_INTRINSIC static size_t size() noexcept { return sizeof...(values); }
     template <size_t index>
-    constexpr KFR_MEM_INTRINSIC T operator[](csize_t<index>) const
+    constexpr KFR_MEM_INTRINSIC T operator[](csize_t<index>) const noexcept
     {
         return get(csize_t<index>());
     }
     template <size_t index>
-    constexpr KFR_MEM_INTRINSIC static T get(csize_t<index> = csize_t<index>())
+    constexpr KFR_MEM_INTRINSIC static T get(csize_t<index> = csize_t<index>()) noexcept
     {
         return details::get_nth<index, T, values...>::value;
     }
-    constexpr KFR_MEM_INTRINSIC static T front() { return get(csize_t<0>()); }
-    constexpr KFR_MEM_INTRINSIC static T back() { return get(csize_t<size() - 1>()); }
+    constexpr KFR_MEM_INTRINSIC static T front() noexcept { return get(csize_t<0>()); }
+    constexpr KFR_MEM_INTRINSIC static T back() noexcept { return get(csize_t<size() - 1>()); }
 
-    static KFR_MEM_INTRINSIC const T* begin() { return array(); }
-    static KFR_MEM_INTRINSIC const T* end() { return array() + size(); }
+    static KFR_MEM_INTRINSIC const T* begin() noexcept { return array(); }
+    static KFR_MEM_INTRINSIC const T* end() noexcept { return array() + size(); }
 
-    static KFR_MEM_INTRINSIC const T* array()
+    static KFR_MEM_INTRINSIC const T* array() noexcept
     {
         static const T arr[] = { values... };
         return &arr[0];
     }
     template <size_t... indices>
     constexpr KFR_MEM_INTRINSIC cvals_t<T, details::get_nth_e<indices, type>::value...> operator[](
-        cvals_t<size_t, indices...>) const
+        cvals_t<size_t, indices...>) const noexcept
     {
-        //        static_assert(sizeof(T)==0, "+++++++++++++++++++++++++++++");
         return {};
     }
 
     // MSVC requires static_cast<T> here:
     template <typename Fn>
-    constexpr KFR_MEM_INTRINSIC auto map(Fn&&) const -> cvals_t<T, static_cast<T>(Fn()(values))...>
+    constexpr KFR_MEM_INTRINSIC auto map(Fn&&) const noexcept -> cvals_t<T, static_cast<T>(Fn()(values))...>
     {
         return {};
     }
@@ -334,14 +275,14 @@ template <typename T>
 struct cvals_t<T>
 {
     using type = cvals_t<T>;
-    constexpr KFR_MEM_INTRINSIC static size_t size() { return 0; }
+    constexpr KFR_MEM_INTRINSIC static size_t size() noexcept { return 0; }
 
-    static KFR_MEM_INTRINSIC const T* array() { return nullptr; }
+    static KFR_MEM_INTRINSIC const T* array() noexcept { return nullptr; }
 };
 
 template <typename T, bool... flags, T... values1, T... values2>
 constexpr cvals_t<T, (flags ? values1 : values2)...> select(cvals_t<bool, flags...>, cvals_t<T, values1...>,
-                                                            cvals_t<T, values2...>)
+                                                            cvals_t<T, values2...>) noexcept
 {
     return {};
 }
@@ -358,7 +299,7 @@ struct get_nth_e<index, cvals_t<T, vals...>>
 template <bool... values>
 using cbools_t = cvals_t<bool, values...>;
 
-constexpr cbools_t<false, true> cfalse_true{};
+constexpr inline cbools_t<false, true> cfalse_true{};
 
 template <int... values>
 using cints_t = cvals_t<int, values...>;
@@ -376,25 +317,25 @@ template <size_t... values>
 using elements_t = cvals_t<size_t, values...>;
 
 template <typename T>
-constexpr KFR_INTRINSIC T csum(cvals_t<T> = cvals_t<T>())
+constexpr KFR_INTRINSIC T csum(cvals_t<T> = cvals_t<T>()) noexcept
 {
     return 0;
 }
 
 template <typename T, T first, T... rest>
-constexpr KFR_INTRINSIC T csum(cvals_t<T, first, rest...> = cvals_t<T, first, rest...>())
+constexpr KFR_INTRINSIC T csum(cvals_t<T, first, rest...> = cvals_t<T, first, rest...>()) noexcept
 {
     return first + csum(cvals_t<T, rest...>());
 }
 
 template <typename T>
-constexpr KFR_INTRINSIC T cprod(cvals_t<T>)
+constexpr KFR_INTRINSIC T cprod(cvals_t<T>) noexcept
 {
     return 1;
 }
 
 template <typename T, T first, T... rest>
-constexpr KFR_INTRINSIC T cprod(cvals_t<T, first, rest...>)
+constexpr KFR_INTRINSIC T cprod(cvals_t<T, first, rest...>) noexcept
 {
     return first * cprod(cvals_t<T, rest...>());
 }
@@ -403,8 +344,8 @@ template <typename T>
 struct ctype_t
 {
 #ifdef KFR_COMPILER_INTEL
-    constexpr ctype_t() KFR_NOEXCEPT               = default;
-    constexpr ctype_t(const ctype_t&) KFR_NOEXCEPT = default;
+    constexpr ctype_t() noexcept               = default;
+    constexpr ctype_t(const ctype_t&) noexcept = default;
 #endif
     using type = T;
 };
@@ -415,13 +356,13 @@ using type_of = typename T::type;
 template <typename... Types>
 struct ctypes_t
 {
-    constexpr static size_t size() { return sizeof...(Types); }
+    constexpr static size_t size() noexcept { return sizeof...(Types); }
 
     template <size_t index>
     using nth = typename details::get_nth_type<index, Types...>::type;
 
     template <size_t index>
-    constexpr static auto get(csize_t<index>) -> ctype_t<nth<index>>
+    constexpr static auto get(csize_t<index>) noexcept -> ctype_t<nth<index>>
     {
         return {};
     }
@@ -460,7 +401,7 @@ template <typename T1, typename... Ts>
 using concat_lists = typename details::concat_impl<std::decay_t<T1>, std::decay_t<Ts>...>::type;
 
 template <typename T1, typename... Ts>
-constexpr KFR_INTRINSIC concat_lists<T1, Ts...> cconcat(T1, Ts...)
+constexpr KFR_INTRINSIC concat_lists<T1, Ts...> cconcat(T1, Ts...) noexcept
 {
     return {};
 }
@@ -520,7 +461,7 @@ using cfilter_t = typename details::filter_impl<std::decay_t<T1>, std::decay_t<T
 
 template <typename T, T... vals, bool... flags,
           typename Ret = cfilter_t<cvals_t<T, vals...>, cvals_t<bool, flags...>>>
-constexpr KFR_INTRINSIC Ret cfilter(cvals_t<T, vals...>, cvals_t<bool, flags...>)
+constexpr KFR_INTRINSIC Ret cfilter(cvals_t<T, vals...>, cvals_t<bool, flags...>) noexcept
 {
     return Ret{};
 }
@@ -528,12 +469,12 @@ constexpr KFR_INTRINSIC Ret cfilter(cvals_t<T, vals...>, cvals_t<bool, flags...>
 #define KFR_UN_OP(op)                                                                                        \
     template <typename T1, T1... vals1,                                                                      \
               typename Ret = cvals_t<decltype(op std::declval<T1>()), (op vals1)...>>                        \
-    constexpr KFR_INTRINSIC Ret operator op(cvals_t<T1, vals1...>)                                           \
+    constexpr KFR_INTRINSIC Ret operator op(cvals_t<T1, vals1...>) noexcept                                  \
     {                                                                                                        \
         return Ret{};                                                                                        \
     }                                                                                                        \
     template <typename T1, T1 val1, typename Ret = cval_t<decltype(op std::declval<T1>()), (op val1)>>       \
-    constexpr KFR_INTRINSIC Ret operator op(cval_t<T1, val1>)                                                \
+    constexpr KFR_INTRINSIC Ret operator op(cval_t<T1, val1>) noexcept                                       \
     {                                                                                                        \
         return Ret{};                                                                                        \
     }
@@ -542,21 +483,21 @@ constexpr KFR_INTRINSIC Ret cfilter(cvals_t<T, vals...>, cvals_t<bool, flags...>
     template <typename T1, T1... vals1, typename T2, T2... vals2,                                            \
               typename Ret =                                                                                 \
                   cvals_t<decltype(std::declval<T1>() op std::declval<T2>()), (vals1 op vals2)...>>          \
-    constexpr KFR_INTRINSIC Ret operator op(cvals_t<T1, vals1...>, cvals_t<T2, vals2...>)                    \
+    constexpr KFR_INTRINSIC Ret operator op(cvals_t<T1, vals1...>, cvals_t<T2, vals2...>) noexcept           \
     {                                                                                                        \
         return Ret{};                                                                                        \
     }                                                                                                        \
     template <typename T1, T1... vals1, typename T2, T2 val2,                                                \
               typename Ret =                                                                                 \
                   cvals_t<decltype(std::declval<T1>() op std::declval<T2>()), (vals1 op val2)...>>           \
-    constexpr KFR_INTRINSIC Ret operator op(cvals_t<T1, vals1...>, cval_t<T2, val2>)                         \
+    constexpr KFR_INTRINSIC Ret operator op(cvals_t<T1, vals1...>, cval_t<T2, val2>) noexcept                \
     {                                                                                                        \
         return Ret{};                                                                                        \
     }                                                                                                        \
     template <typename T1, T1 val1, typename T2, T2... vals2,                                                \
               typename Ret =                                                                                 \
                   cvals_t<decltype(std::declval<T1>() op std::declval<T2>()), (val1 op vals2)...>>           \
-    constexpr KFR_INTRINSIC Ret operator op(cval_t<T1, val1>, cvals_t<T2, vals2...>)                         \
+    constexpr KFR_INTRINSIC Ret operator op(cval_t<T1, val1>, cvals_t<T2, vals2...>) noexcept                \
     {                                                                                                        \
         return Ret{};                                                                                        \
     }
@@ -642,14 +583,14 @@ template <typename... List>
 using indicesfor_t = cvalseq_t<size_t, sizeof...(List), 0>;
 
 template <size_t group, size_t... indices, size_t N = group * sizeof...(indices)>
-constexpr KFR_INTRINSIC auto scale(csizes_t<indices...>) KFR_NOEXCEPT
+constexpr KFR_INTRINSIC auto scale(csizes_t<indices...>) noexcept
 {
     using Tlist = typename details::concat_impl<csizeseq_t<group, group * indices>...>::type;
     return Tlist{};
 }
 
 template <size_t group, size_t... indices, size_t N = group * sizeof...(indices)>
-constexpr KFR_INTRINSIC auto scale() KFR_NOEXCEPT
+constexpr KFR_INTRINSIC auto scale() noexcept
 {
     using Tlist = typename details::concat_impl<csizeseq_t<group, group * indices>...>::type;
     return Tlist{};
@@ -720,111 +661,111 @@ constexpr inline bool is_enabled = details::is_enabled_impl<T>::value;
 namespace details
 {
 template <typename Fn, KFR_ENABLE_IF(std::is_invocable_v<Fn>)>
-KFR_INTRINSIC auto call_if_callable(Fn&& fn)
+KFR_INTRINSIC auto call_if_callable(Fn&& fn) noexcept
 {
     return fn();
 }
 
 template <typename Fn, KFR_ENABLE_IF(!std::is_invocable_v<Fn>)>
-KFR_INTRINSIC auto call_if_callable(Fn&& fn)
+KFR_INTRINSIC auto call_if_callable(Fn&& fn) noexcept
 {
     return std::forward<Fn>(fn);
 }
 } // namespace details
 
 template <typename Fn, typename... Args>
-KFR_INTRINSIC auto bind_func(Fn&& fn, Args&&... args)
+KFR_INTRINSIC auto bind_func(Fn&& fn, Args&&... args) noexcept
 {
     return [=]() KFR_INLINE_LAMBDA { return fn(details::call_if_callable(std::forward<Args>(args))...); };
 }
 
 template <typename T>
-constexpr KFR_INTRINSIC bool is_even(T x)
+constexpr KFR_INTRINSIC bool is_even(T x) noexcept
 {
     return (x % 2) == 0;
 }
 
 template <typename T>
-constexpr KFR_INTRINSIC bool is_odd(T x)
+constexpr KFR_INTRINSIC bool is_odd(T x) noexcept
 {
     return !is_even(x);
 }
 
 template <typename T>
-constexpr KFR_INTRINSIC bool is_poweroftwo(T x)
+constexpr KFR_INTRINSIC bool is_poweroftwo(T x) noexcept
 {
     return ((x != 0) && !(x & (x - 1)));
 }
 
 template <typename T>
-constexpr KFR_INTRINSIC unsigned ilog2(T n, unsigned p = 0)
+constexpr KFR_INTRINSIC unsigned ilog2(T n, unsigned p = 0) noexcept
 {
     return (n <= 1) ? p : ilog2(n / 2, p + 1);
 }
 
 /// @brief Returns a nearest power of two that is greater or equal than n
 template <typename T>
-constexpr KFR_INTRINSIC T next_poweroftwo(T n)
+constexpr KFR_INTRINSIC T next_poweroftwo(T n) noexcept
 {
     return n > 2 ? T(1) << (ilog2(n - 1) + 1) : n;
 }
 
 /// @brief Returns a nearest power of two that is less or equal than n
 template <typename T>
-constexpr KFR_INTRINSIC T prev_poweroftwo(T n)
+constexpr KFR_INTRINSIC T prev_poweroftwo(T n) noexcept
 {
     return n > 2 ? T(1) << (ilog2(n)) : n;
 }
 
 template <typename T>
-constexpr KFR_INTRINSIC bool is_divisible(T x, T divisor)
+constexpr KFR_INTRINSIC bool is_divisible(T x, T divisor) noexcept
 {
     return x % divisor == 0;
 }
 
 /// @brief Greatest common divisor
 template <typename T>
-constexpr KFR_INTRINSIC T gcd(T a)
+constexpr KFR_INTRINSIC T gcd(T a) noexcept
 {
     return a;
 }
 
 /// @brief Greatest common divisor
 template <typename T>
-constexpr inline T gcd(T a, T b)
+constexpr inline T gcd(T a, T b) noexcept
 {
     return a < b ? gcd(b, a) : ((a % b == 0) ? b : gcd(b, a % b));
 }
 
 /// @brief Greatest common divisor
 template <typename T, typename... Ts>
-constexpr KFR_INTRINSIC T gcd(T a, T b, T c, Ts... rest)
+constexpr KFR_INTRINSIC T gcd(T a, T b, T c, Ts... rest) noexcept
 {
     return gcd(a, gcd(b, c, rest...));
 }
 
 /// @brief Least common multiple
 template <typename T>
-constexpr KFR_INTRINSIC T lcm(T a)
+constexpr KFR_INTRINSIC T lcm(T a) noexcept
 {
     return a;
 }
 
 /// @brief Least common multiple
 template <typename T>
-constexpr KFR_INTRINSIC T lcm(T a, T b)
+constexpr KFR_INTRINSIC T lcm(T a, T b) noexcept
 {
     return a * b / gcd(a, b);
 }
 
 /// @brief Least common multiple
 template <typename T, typename... Ts>
-constexpr KFR_INTRINSIC T lcm(T a, T b, T c, Ts... rest)
+constexpr KFR_INTRINSIC T lcm(T a, T b, T c, Ts... rest) noexcept
 {
     return lcm(a, lcm(b, c, rest...));
 }
 
-KFR_INTRINSIC std::lldiv_t floor_div(long long a, long long b)
+KFR_INTRINSIC std::lldiv_t floor_div(long long a, long long b) noexcept
 {
     std::lldiv_t d = std::lldiv(a, b);
     if (d.rem < 0)
@@ -971,27 +912,23 @@ struct identity_impl
 };
 
 template <typename T>
-constexpr size_t elementsize()
+constexpr size_t elementsize() noexcept
 {
     return sizeof(T);
 }
 
 template <>
-constexpr size_t elementsize<void>()
+constexpr size_t elementsize<void>() noexcept
 {
     return 1;
 }
 } // namespace details
 
-/// @brief Utility typedef used to disable type deduction
-template <typename T>
-using identity = typename details::identity_impl<T>::type;
-
 /// @brief Utility class to use in list-initialization context
 struct swallow
 {
     template <typename... T>
-    KFR_MEM_INTRINSIC constexpr swallow(T&&...) KFR_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr swallow(T&&...) noexcept
     {
     }
 };
@@ -1002,52 +939,52 @@ struct carray;
 template <typename T>
 struct carray<T, 1>
 {
-    KFR_MEM_INTRINSIC constexpr carray() KFR_NOEXCEPT = default;
-    KFR_MEM_INTRINSIC constexpr carray(T val) KFR_NOEXCEPT : val(val) {}
+    KFR_MEM_INTRINSIC constexpr carray() noexcept = default;
+    KFR_MEM_INTRINSIC constexpr carray(T val) noexcept : val(val) {}
 
     template <typename Fn, size_t index = 0, KFR_ENABLE_IF(std::is_invocable_v<Fn, csize_t<index>>)>
-    KFR_MEM_INTRINSIC constexpr carray(Fn&& fn, csize_t<index> = csize_t<index>{}) KFR_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr carray(Fn&& fn, csize_t<index> = csize_t<index>{}) noexcept
         : val(static_cast<T>(fn(csize_t<index>())))
     {
     }
 
-    KFR_MEM_INTRINSIC constexpr carray(const carray&) KFR_NOEXCEPT = default;
-    KFR_MEM_INTRINSIC constexpr carray(carray&&) KFR_NOEXCEPT      = default;
-    KFR_MEM_INTRINSIC static constexpr size_t size() KFR_NOEXCEPT { return 1; }
+    KFR_MEM_INTRINSIC constexpr carray(const carray&) noexcept = default;
+    KFR_MEM_INTRINSIC constexpr carray(carray&&) noexcept      = default;
+    KFR_MEM_INTRINSIC static constexpr size_t size() noexcept { return 1; }
 
     template <size_t index>
-    KFR_MEM_INTRINSIC constexpr T& get(csize_t<index>) KFR_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr T& get(csize_t<index>) noexcept
     {
         static_assert(index == 0, "carray: Array index is out of range");
         return val;
     }
     template <size_t index>
-    KFR_MEM_INTRINSIC constexpr const T& get(csize_t<index>) const KFR_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr const T& get(csize_t<index>) const noexcept
     {
         static_assert(index == 0, "carray: Array index is out of range");
         return val;
     }
     template <size_t index>
-    KFR_MEM_INTRINSIC constexpr T& get() KFR_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr T& get() noexcept
     {
         return get(csize_t<index>());
     }
     template <size_t index>
-    KFR_MEM_INTRINSIC constexpr const T& get() const KFR_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr const T& get() const noexcept
     {
         return get(csize_t<index>());
     }
-    KFR_MEM_INTRINSIC constexpr const T* front() const KFR_NOEXCEPT { return val; }
-    KFR_MEM_INTRINSIC constexpr T* front() KFR_NOEXCEPT { return val; }
-    KFR_MEM_INTRINSIC constexpr const T* back() const KFR_NOEXCEPT { return val; }
-    KFR_MEM_INTRINSIC constexpr T* back() KFR_NOEXCEPT { return val; }
-    KFR_MEM_INTRINSIC constexpr const T* begin() const KFR_NOEXCEPT { return &val; }
-    KFR_MEM_INTRINSIC constexpr const T* end() const KFR_NOEXCEPT { return &val + 1; }
-    KFR_MEM_INTRINSIC constexpr T* begin() KFR_NOEXCEPT { return &val; }
-    KFR_MEM_INTRINSIC constexpr T* end() KFR_NOEXCEPT { return &val + 1; }
-    KFR_MEM_INTRINSIC constexpr const T* data() const KFR_NOEXCEPT { return begin(); }
-    KFR_MEM_INTRINSIC constexpr T* data() KFR_NOEXCEPT { return begin(); }
-    KFR_MEM_INTRINSIC constexpr bool empty() const KFR_NOEXCEPT { return false; }
+    KFR_MEM_INTRINSIC constexpr const T* front() const noexcept { return val; }
+    KFR_MEM_INTRINSIC constexpr T* front() noexcept { return val; }
+    KFR_MEM_INTRINSIC constexpr const T* back() const noexcept { return val; }
+    KFR_MEM_INTRINSIC constexpr T* back() noexcept { return val; }
+    KFR_MEM_INTRINSIC constexpr const T* begin() const noexcept { return &val; }
+    KFR_MEM_INTRINSIC constexpr const T* end() const noexcept { return &val + 1; }
+    KFR_MEM_INTRINSIC constexpr T* begin() noexcept { return &val; }
+    KFR_MEM_INTRINSIC constexpr T* end() noexcept { return &val + 1; }
+    KFR_MEM_INTRINSIC constexpr const T* data() const noexcept { return begin(); }
+    KFR_MEM_INTRINSIC constexpr T* data() noexcept { return begin(); }
+    KFR_MEM_INTRINSIC constexpr bool empty() const noexcept { return false; }
     T val;
 };
 
@@ -1055,56 +992,55 @@ template <typename T, size_t N>
 struct carray : carray<T, N - 1>
 {
     template <typename... Ts>
-    KFR_MEM_INTRINSIC constexpr carray(T first, Ts... list) KFR_NOEXCEPT : carray<T, N - 1>(list...),
-                                                                           val(first)
+    KFR_MEM_INTRINSIC constexpr carray(T first, Ts... list) noexcept : carray<T, N - 1>(list...), val(first)
     {
         static_assert(sizeof...(list) + 1 == N, "carray: Argument count is invalid");
     }
 
     template <typename Fn, size_t index = N - 1>
-    KFR_MEM_INTRINSIC constexpr carray(Fn&& fn, csize_t<index> = csize_t<index>{}) KFR_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr carray(Fn&& fn, csize_t<index> = csize_t<index>{}) noexcept
         : carray<T, N - 1>(std::forward<Fn>(fn), csize_t<index - 1>()),
           val(static_cast<T>(fn(csize_t<index>())))
     {
     }
 
-    KFR_MEM_INTRINSIC constexpr carray() KFR_NOEXCEPT              = default;
-    KFR_MEM_INTRINSIC constexpr carray(const carray&) KFR_NOEXCEPT = default;
-    KFR_MEM_INTRINSIC constexpr carray(carray&&) KFR_NOEXCEPT      = default;
-    KFR_MEM_INTRINSIC static constexpr size_t size() KFR_NOEXCEPT { return N; }
-    KFR_MEM_INTRINSIC constexpr T& get(csize_t<N - 1>) KFR_NOEXCEPT { return val; }
+    KFR_MEM_INTRINSIC constexpr carray() noexcept              = default;
+    KFR_MEM_INTRINSIC constexpr carray(const carray&) noexcept = default;
+    KFR_MEM_INTRINSIC constexpr carray(carray&&) noexcept      = default;
+    KFR_MEM_INTRINSIC static constexpr size_t size() noexcept { return N; }
+    KFR_MEM_INTRINSIC constexpr T& get(csize_t<N - 1>) noexcept { return val; }
     template <size_t index>
-    KFR_MEM_INTRINSIC constexpr T& get(csize_t<index>) KFR_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr T& get(csize_t<index>) noexcept
     {
         return carray<T, N - 1>::get(csize_t<index>());
     }
-    KFR_MEM_INTRINSIC constexpr const T& get(csize_t<N - 1>) const KFR_NOEXCEPT { return val; }
+    KFR_MEM_INTRINSIC constexpr const T& get(csize_t<N - 1>) const noexcept { return val; }
     template <size_t index>
-    KFR_MEM_INTRINSIC constexpr const T& get(csize_t<index>) const KFR_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr const T& get(csize_t<index>) const noexcept
     {
         return carray<T, N - 1>::get(csize_t<index>());
     }
     template <size_t index>
-    KFR_MEM_INTRINSIC constexpr T& get() KFR_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr T& get() noexcept
     {
         return get(csize_t<index>());
     }
     template <size_t index>
-    KFR_MEM_INTRINSIC constexpr const T& get() const KFR_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr const T& get() const noexcept
     {
         return get(csize_t<index>());
     }
-    KFR_MEM_INTRINSIC constexpr const T* front() const KFR_NOEXCEPT { return carray<T, N - 1>::front(); }
-    KFR_MEM_INTRINSIC constexpr T* front() KFR_NOEXCEPT { return carray<T, N - 1>::front(); }
-    KFR_MEM_INTRINSIC constexpr const T* back() const KFR_NOEXCEPT { return val; }
-    KFR_MEM_INTRINSIC constexpr T* back() KFR_NOEXCEPT { return val; }
-    KFR_MEM_INTRINSIC constexpr const T* begin() const KFR_NOEXCEPT { return carray<T, N - 1>::begin(); }
-    KFR_MEM_INTRINSIC constexpr const T* end() const KFR_NOEXCEPT { return &val + 1; }
-    KFR_MEM_INTRINSIC constexpr T* begin() KFR_NOEXCEPT { return carray<T, N - 1>::begin(); }
-    KFR_MEM_INTRINSIC constexpr T* end() KFR_NOEXCEPT { return &val + 1; }
-    KFR_MEM_INTRINSIC constexpr const T* data() const KFR_NOEXCEPT { return begin(); }
-    KFR_MEM_INTRINSIC constexpr T* data() KFR_NOEXCEPT { return begin(); }
-    KFR_MEM_INTRINSIC constexpr bool empty() const KFR_NOEXCEPT { return false; }
+    KFR_MEM_INTRINSIC constexpr const T* front() const noexcept { return carray<T, N - 1>::front(); }
+    KFR_MEM_INTRINSIC constexpr T* front() noexcept { return carray<T, N - 1>::front(); }
+    KFR_MEM_INTRINSIC constexpr const T* back() const noexcept { return val; }
+    KFR_MEM_INTRINSIC constexpr T* back() noexcept { return val; }
+    KFR_MEM_INTRINSIC constexpr const T* begin() const noexcept { return carray<T, N - 1>::begin(); }
+    KFR_MEM_INTRINSIC constexpr const T* end() const noexcept { return &val + 1; }
+    KFR_MEM_INTRINSIC constexpr T* begin() noexcept { return carray<T, N - 1>::begin(); }
+    KFR_MEM_INTRINSIC constexpr T* end() noexcept { return &val + 1; }
+    KFR_MEM_INTRINSIC constexpr const T* data() const noexcept { return begin(); }
+    KFR_MEM_INTRINSIC constexpr T* data() noexcept { return begin(); }
+    KFR_MEM_INTRINSIC constexpr bool empty() const noexcept { return false; }
 
 private:
     T val;
@@ -1114,7 +1050,7 @@ private:
     struct fn_##fn                                                                                           \
     {                                                                                                        \
         template <typename... Args>                                                                          \
-        KFR_INLINE_MEMBER decltype(fn(std::declval<Args>()...)) operator()(Args&&... args) const             \
+        KFR_INLINE_MEMBER decltype(fn(std::declval<Args>()...)) operator()(Args&&... args) const noexcept    \
         {                                                                                                    \
             return fn(std::forward<Args>(args)...);                                                          \
         }                                                                                                    \
@@ -1128,7 +1064,7 @@ private:
     {                                                                                                        \
         template <typename... Args>                                                                          \
         KFR_INLINE_MEMBER decltype(fn<KFR_ESC tpl_args>(std::declval<Args>()...)) operator()(                \
-            Args&&... args) const                                                                            \
+            Args&&... args) const noexcept                                                                   \
         {                                                                                                    \
             return fn<KFR_ESC tpl_args>(std::forward<Args>(args)...);                                        \
         }                                                                                                    \
@@ -1136,48 +1072,48 @@ private:
 
 /// @brief Function that returns its first argument
 template <typename T>
-KFR_INTRINSIC constexpr T&& pass_through(T&& x) KFR_NOEXCEPT
+KFR_INTRINSIC constexpr T&& pass_through(T&& x) noexcept
 {
     return std::forward<T>(x);
 }
 
 /// @brief Function that returns void and ignores all its arguments
 template <typename... Ts>
-KFR_INTRINSIC constexpr void noop(Ts&&...) KFR_NOEXCEPT
+KFR_INTRINSIC constexpr void noop(Ts&&...) noexcept
 {
 }
 
 /// @brief Function that returns its first argument and ignores all other arguments
 template <typename T1, typename... Ts>
-KFR_INTRINSIC constexpr T1&& get_first(T1&& x, Ts&&...) KFR_NOEXCEPT
+KFR_INTRINSIC constexpr T1&& get_first(T1&& x, Ts&&...) noexcept
 {
     return std::forward<T1>(x);
 }
 
 /// @brief Function that returns its second argument and ignores all other arguments
 template <typename T1, typename T2, typename... Ts>
-KFR_INTRINSIC constexpr T2&& get_second(T1, T2&& x, Ts&&...) KFR_NOEXCEPT
+KFR_INTRINSIC constexpr T2&& get_second(T1, T2&& x, Ts&&...) noexcept
 {
     return std::forward<T2>(x);
 }
 
 /// @brief Function that returns its third argument and ignores all other arguments
 template <typename T1, typename T2, typename T3, typename... Ts>
-KFR_INTRINSIC constexpr T3&& get_third(T1&&, T2&&, T3&& x, Ts&&...) KFR_NOEXCEPT
+KFR_INTRINSIC constexpr T3&& get_third(T1&&, T2&&, T3&& x, Ts&&...) noexcept
 {
     return std::forward<T3>(x);
 }
 
 /// @brief Function that returns value-initialization of type T and ignores all its arguments
 template <typename T, typename... Ts>
-KFR_INTRINSIC constexpr T returns(Ts&&...)
+KFR_INTRINSIC constexpr T returns(Ts&&...) noexcept
 {
     return T();
 }
 
 /// @brief Function that returns constant of type T and ignores all its arguments
 template <typename T, T value, typename... Args>
-KFR_INTRINSIC constexpr T return_constant(Args&&...)
+KFR_INTRINSIC constexpr T return_constant(Args&&...) noexcept
 {
     return value;
 }
@@ -1200,37 +1136,39 @@ struct fn_return_constant
 };
 
 template <typename T1, typename T2>
-KFR_INTRINSIC constexpr bool is_equal(const T1& x, const T2& y)
+KFR_INTRINSIC constexpr bool is_equal(const T1& x, const T2& y) noexcept(noexcept(x == y))
 {
     return x == y;
 }
 template <typename T1, typename T2>
-KFR_INTRINSIC constexpr bool is_notequal(const T1& x, const T2& y)
+KFR_INTRINSIC constexpr bool is_notequal(const T1& x, const T2& y) noexcept(noexcept(x != y))
 {
     return x != y;
 }
 template <typename T1, typename T2>
-KFR_INTRINSIC constexpr bool is_less(const T1& x, const T2& y)
+KFR_INTRINSIC constexpr bool is_less(const T1& x, const T2& y) noexcept(noexcept(x < y))
 {
     return x < y;
 }
 template <typename T1, typename T2>
-KFR_INTRINSIC constexpr bool is_greater(const T1& x, const T2& y)
+KFR_INTRINSIC constexpr bool is_greater(const T1& x, const T2& y) noexcept(noexcept(x > y))
 {
     return x > y;
 }
 template <typename T1, typename T2>
-KFR_INTRINSIC constexpr bool is_lessorequal(const T1& x, const T2& y)
+KFR_INTRINSIC constexpr bool is_lessorequal(const T1& x, const T2& y) noexcept(noexcept(x <= y))
 {
     return x <= y;
 }
 template <typename T1, typename T2>
-KFR_INTRINSIC constexpr bool is_greaterorequal(const T1& x, const T2& y)
+KFR_INTRINSIC constexpr bool is_greaterorequal(const T1& x, const T2& y) noexcept(noexcept(x >= y))
 {
     return x >= y;
 }
 template <typename T>
-KFR_INTRINSIC constexpr bool is_between(T value, identity<T> min, identity<T> max)
+KFR_INTRINSIC constexpr bool is_between(T value, std::type_identity_t<T> min,
+                                        std::type_identity_t<T> max) noexcept(noexcept(value >= min &&
+                                                                                     value <= max))
 {
     return value >= min && value <= max;
 }
@@ -1358,7 +1296,7 @@ namespace details
 {
 
 template <size_t index, typename... types>
-KFR_INTRINSIC auto get_type_arg(ctypes_t<types...>)
+KFR_INTRINSIC auto get_type_arg(ctypes_t<types...>) noexcept
 {
     return ctype_t<typename details::get_nth_type<index, types...>::type>();
 }
@@ -1455,14 +1393,14 @@ KFR_INTRINSIC void cswitch(cvals_t<T, vs...>, const U& value, Function&& functio
 }
 
 template <typename T, typename Fn, typename DefFn = fn_noop, typename CmpFn = fn_is_equal>
-KFR_INTRINSIC decltype(auto) cswitch(cvals_t<T>, identity<T>, Fn&&, DefFn&& deffn = DefFn(),
+KFR_INTRINSIC decltype(auto) cswitch(cvals_t<T>, std::type_identity_t<T>, Fn&&, DefFn&& deffn = DefFn(),
                                      CmpFn&& = CmpFn())
 {
     return deffn();
 }
 
 template <typename T, T v0, T... values, typename Fn, typename DefFn = fn_noop, typename CmpFn = fn_is_equal>
-KFR_INTRINSIC decltype(auto) cswitch(cvals_t<T, v0, values...>, identity<T> value, Fn&& fn,
+KFR_INTRINSIC decltype(auto) cswitch(cvals_t<T, v0, values...>, std::type_identity_t<T> value, Fn&& fn,
                                      DefFn&& deffn = DefFn(), CmpFn&& cmpfn = CmpFn())
 {
     if (cmpfn(value, v0))
@@ -1518,7 +1456,7 @@ KFR_INTRINSIC decltype(auto) cmatch(T&& value, Fn&& fn, Args... args)
 }
 
 template <typename T, T... values>
-KFR_INTRINSIC size_t cfind(cvals_t<T, values...>, identity<T> value)
+KFR_INTRINSIC size_t cfind(cvals_t<T, values...>, std::type_identity_t<T> value)
 {
     static constexpr T temp[]    = { values... };
     static constexpr size_t size = sizeof...(values);
@@ -1554,13 +1492,13 @@ KFR_INTRINSIC NonMemFn make_nonmember(const Fn&)
 }
 
 template <typename T>
-constexpr KFR_INTRINSIC T choose_const()
+constexpr KFR_INTRINSIC T choose_const() noexcept
 {
     static_assert(sizeof(T) != 0, "T not found in the list of template arguments");
     return T();
 }
 template <typename T, typename C1>
-constexpr KFR_INTRINSIC T choose_const_fallback(C1 c1)
+constexpr KFR_INTRINSIC T choose_const_fallback(C1 c1) noexcept
 {
     return static_cast<T>(c1);
 }
@@ -1573,18 +1511,18 @@ constexpr KFR_INTRINSIC T choose_const_fallback(C1 c1)
  * @endcode
  */
 template <typename T, typename C1, typename... Cs, KFR_ENABLE_IF(std::is_same_v<T, C1>)>
-constexpr KFR_INTRINSIC T choose_const(C1 c1, Cs...)
+constexpr KFR_INTRINSIC T choose_const(C1 c1, Cs...) noexcept
 {
     return static_cast<T>(c1);
 }
 template <typename T, typename C1, typename... Cs, KFR_ENABLE_IF(!std::is_same_v<T, C1>)>
-constexpr KFR_INTRINSIC T choose_const(C1, Cs... constants)
+constexpr KFR_INTRINSIC T choose_const(C1, Cs... constants) noexcept
 {
     return choose_const<T>(constants...);
 }
 
 template <typename T, typename C1, typename... Cs>
-constexpr KFR_INTRINSIC T choose_const_fallback(C1 c1, Cs... constants)
+constexpr KFR_INTRINSIC T choose_const_fallback(C1 c1, Cs... constants) noexcept
 {
     return std::is_same_v<T, C1> ? static_cast<T>(c1) : choose_const_fallback<T>(constants...);
 }
@@ -1594,14 +1532,14 @@ struct autocast_impl
 {
     const Tfrom value;
     template <typename T>
-    KFR_MEM_INTRINSIC constexpr operator T() const KFR_NOEXCEPT
+    KFR_MEM_INTRINSIC constexpr operator T() const noexcept
     {
         return static_cast<T>(value);
     }
 };
 
 template <typename Tfrom>
-KFR_INTRINSIC constexpr autocast_impl<Tfrom> autocast(const Tfrom& value) KFR_NOEXCEPT
+KFR_INTRINSIC constexpr autocast_impl<Tfrom> autocast(const Tfrom& value) noexcept
 {
     return { value };
 }
@@ -1626,38 +1564,38 @@ template <typename T>
 using signed_type = typename details::signed_type_impl<T>::type;
 
 template <typename T>
-constexpr KFR_INTRINSIC T align_down(T x, identity<T> alignment)
+constexpr KFR_INTRINSIC T align_down(T x, std::type_identity_t<T> alignment) noexcept
 {
     return (x) & ~(alignment - 1);
 }
 template <typename T>
-constexpr KFR_INTRINSIC T* align_down(T* x, size_t alignment)
+constexpr KFR_INTRINSIC T* align_down(T* x, size_t alignment) noexcept
 {
     return reinterpret_cast<T*>(align_down(reinterpret_cast<size_t>(x), alignment));
 }
 
 template <typename T>
-constexpr KFR_INTRINSIC T align_up(T x, identity<T> alignment)
+constexpr KFR_INTRINSIC T align_up(T x, std::type_identity_t<T> alignment) noexcept
 {
     return (x + alignment - 1) & ~(alignment - 1);
 }
 template <typename T>
-constexpr KFR_INTRINSIC T* align_up(T* x, size_t alignment)
+constexpr KFR_INTRINSIC T* align_up(T* x, size_t alignment) noexcept
 {
     return reinterpret_cast<T*>(align_up(reinterpret_cast<size_t>(x), alignment));
 }
 
 template <typename T>
-constexpr KFR_INTRINSIC T* advance(T* x, ptrdiff_t offset)
+constexpr KFR_INTRINSIC T* advance(T* x, ptrdiff_t offset) noexcept
 {
     return x + offset;
 }
-constexpr KFR_INTRINSIC void* advance(void* x, ptrdiff_t offset)
+constexpr KFR_INTRINSIC void* advance(void* x, ptrdiff_t offset) noexcept
 {
     return advance(static_cast<unsigned char*>(x), offset);
 }
 
-constexpr KFR_INTRINSIC ptrdiff_t distance(const void* x, const void* y)
+constexpr KFR_INTRINSIC ptrdiff_t distance(const void* x, const void* y) noexcept
 {
     return static_cast<const unsigned char*>(x) - static_cast<const unsigned char*>(y);
 }
@@ -1668,49 +1606,49 @@ KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wundefined-reinterpret-cast")
 #endif
 
 template <typename T, typename U>
-KFR_INTRINSIC constexpr static T& ref_cast(U& ptr)
+KFR_INTRINSIC constexpr static T& ref_cast(U& ptr) noexcept
 {
     return reinterpret_cast<T&>(ptr);
 }
 
 template <typename T, typename U>
-KFR_INTRINSIC constexpr static const T& ref_cast(const U& ptr)
+KFR_INTRINSIC constexpr static const T& ref_cast(const U& ptr) noexcept
 {
     return reinterpret_cast<const T&>(ptr);
 }
 
 template <typename T, typename U>
-KFR_INTRINSIC constexpr static T* ptr_cast(U* ptr)
+KFR_INTRINSIC constexpr static T* ptr_cast(U* ptr) noexcept
 {
     return reinterpret_cast<T*>(ptr);
 }
 
 template <typename T, typename U>
-KFR_INTRINSIC constexpr static const T* ptr_cast(const U* ptr)
+KFR_INTRINSIC constexpr static const T* ptr_cast(const U* ptr) noexcept
 {
     return reinterpret_cast<const T*>(ptr);
 }
 
 template <typename T, typename U>
-KFR_INTRINSIC constexpr static T* ptr_cast(U* ptr, ptrdiff_t offset)
+KFR_INTRINSIC constexpr static T* ptr_cast(U* ptr, ptrdiff_t offset) noexcept
 {
     return ptr_cast<T>(ptr_cast<unsigned char>(ptr) + offset);
 }
 
 template <typename T, typename U>
-KFR_INTRINSIC constexpr static T* derived_cast(U* ptr)
+KFR_INTRINSIC constexpr static T* derived_cast(U* ptr) noexcept
 {
     return static_cast<T*>(ptr);
 }
 
 template <typename T, typename U>
-KFR_INTRINSIC constexpr static const T* derived_cast(const U* ptr)
+KFR_INTRINSIC constexpr static const T* derived_cast(const U* ptr) noexcept
 {
     return static_cast<const T*>(ptr);
 }
 
 template <typename T, typename U>
-KFR_INTRINSIC constexpr static T implicit_cast(U&& value)
+KFR_INTRINSIC constexpr static T implicit_cast(U&& value) noexcept
 {
     return std::forward<T>(value);
 }
@@ -1718,115 +1656,91 @@ KFR_INTRINSIC constexpr static T implicit_cast(U&& value)
 namespace details
 {
 template <size_t start, size_t count>
-constexpr KFR_INTRINSIC std::true_type test_sequence(csizeseq_t<count, start>)
+constexpr KFR_INTRINSIC std::true_type test_sequence(csizeseq_t<count, start>) noexcept
 {
     return {};
 }
 
 template <size_t, size_t>
-constexpr KFR_INTRINSIC std::false_type test_sequence(...)
+constexpr KFR_INTRINSIC std::false_type test_sequence(...) noexcept
 {
     return {};
 }
 } // namespace details
 
 template <size_t number, size_t... numbers>
-constexpr KFR_INTRINSIC bool is_sequence(csizes_t<number, numbers...>)
+constexpr KFR_INTRINSIC bool is_sequence(csizes_t<number, numbers...>) noexcept
 {
     return details::test_sequence<number, 1 + sizeof...(numbers)>(csizes_t<number, numbers...>()).value;
 }
 
 template <typename T, T val>
-constexpr cval_t<T, val> cval{};
+constexpr inline cval_t<T, val> cval{};
 
 template <bool val>
-constexpr cbool_t<val> cbool{};
+constexpr inline cbool_t<val> cbool{};
 
 template <int val>
-constexpr cint_t<val> cint{};
+constexpr inline cint_t<val> cint{};
 
 template <unsigned val>
-constexpr cuint_t<val> cuint{};
+constexpr inline cuint_t<val> cuint{};
 
 template <size_t val>
-constexpr csize_t<val> csize{};
+constexpr inline csize_t<val> csize{};
 
 template <typename T, T... values>
-constexpr cvals_t<T, values...> cvals{};
+constexpr inline cvals_t<T, values...> cvals{};
 
 template <bool... vals>
-constexpr cbools_t<vals...> cbools{};
+constexpr inline cbools_t<vals...> cbools{};
 
 template <int... vals>
-constexpr cints_t<vals...> cints{};
+constexpr inline cints_t<vals...> cints{};
 
 template <char... vals>
-constexpr cchars_t<vals...> cchars{};
+constexpr inline cchars_t<vals...> cchars{};
 
 template <unsigned... vals>
-constexpr cuints_t<vals...> cuints{};
+constexpr inline cuints_t<vals...> cuints{};
 
 template <size_t... vals>
-constexpr csizes_t<vals...> csizes{};
+constexpr inline csizes_t<vals...> csizes{};
 
 template <size_t... vals>
-constexpr elements_t<vals...> elements{};
+constexpr inline elements_t<vals...> elements{};
 
 template <typename T>
-constexpr ctype_t<T> ctype{};
+constexpr inline ctype_t<T> ctype{};
 
 template <typename... Ts>
-constexpr ctypes_t<Ts...> ctypes{};
+constexpr inline ctypes_t<Ts...> ctypes{};
 
 template <typename T, T begin, T end>
-constexpr cvalseq_t<T, end - begin, begin> cvalrange{};
+constexpr inline cvalseq_t<T, end - begin, begin> cvalrange{};
 
 template <size_t begin, size_t end>
-constexpr cvalseq_t<size_t, end - begin, begin> csizerange{};
+constexpr inline cvalseq_t<size_t, end - begin, begin> csizerange{};
 
 template <int begin, int end>
-constexpr cvalseq_t<int, end - begin, begin> cintrange{};
+constexpr inline cvalseq_t<int, end - begin, begin> cintrange{};
 
 template <unsigned begin, unsigned end>
-constexpr cvalseq_t<unsigned, end - begin, begin> cuintrange{};
+constexpr inline cvalseq_t<unsigned, end - begin, begin> cuintrange{};
 
 template <typename T, size_t size, T start = T(), ptrdiff_t step = 1>
-constexpr cvalseq_t<T, size, start, step> cvalseq{};
+constexpr inline cvalseq_t<T, size, start, step> cvalseq{};
 
 template <size_t size, size_t start = 0, ptrdiff_t step = 1>
-constexpr cvalseq_t<size_t, size, start, step> csizeseq{};
+constexpr inline cvalseq_t<size_t, size, start, step> csizeseq{};
 
 template <size_t size, int start = 0, ptrdiff_t step = 1>
-constexpr cvalseq_t<int, size, start, step> cintseq{};
+constexpr inline cvalseq_t<int, size, start, step> cintseq{};
 
 template <size_t size, unsigned start = 0, ptrdiff_t step = 1>
-constexpr cvalseq_t<unsigned, size, start, step> cuintseq{};
+constexpr inline cvalseq_t<unsigned, size, start, step> cuintseq{};
 template <typename... List>
-constexpr indicesfor_t<List...> indicesfor{};
-
-template <typename T>
-constexpr KFR_INTRINSIC T const_max(T x)
-{
-    return x;
-}
-template <typename T1, typename T2, typename... Ts>
-constexpr KFR_INTRINSIC std::common_type_t<T1, T2, Ts...> const_max(T1 x, T2 y, Ts... z)
-{
-    auto yz = const_max(y, z...);
-    return x > yz ? x : yz;
-}
-
-template <typename T>
-constexpr KFR_INTRINSIC T const_min(T x)
-{
-    return x;
-}
-template <typename T1, typename T2, typename... Ts>
-constexpr KFR_INTRINSIC std::common_type_t<T1, T2, Ts...> const_min(T1 x, T2 y, Ts... z)
-{
-    auto yz = const_min(y, z...);
-    return x < yz ? x : yz;
-}
+constexpr inline indicesfor_t<List...> indicesfor{};
 
 template <typename T>
 constexpr KFR_INTRINSIC T cminof(cvals_t<T>)
@@ -1861,7 +1775,7 @@ struct overload_priority<0>
 {
 };
 
-constexpr overload_priority<> overload_auto{};
+constexpr inline overload_priority<> overload_auto{};
 
 using overload_generic = overload_priority<0>;
 
@@ -2020,7 +1934,7 @@ struct special_value
     constexpr special_value(int i) : c(special_constant::integer), ll(i), d(0) {}
 
     template <typename T>
-    constexpr T get() const KFR_NOEXCEPT
+    constexpr T get() const noexcept
     {
         switch (c)
         {
@@ -2056,7 +1970,7 @@ struct special_value
     }
 
     template <typename T>
-    constexpr operator T() const KFR_NOEXCEPT
+    constexpr operator T() const noexcept
     {
         return get<T>();
     }

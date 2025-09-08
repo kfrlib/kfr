@@ -75,7 +75,7 @@ KFR_INTRINSIC vec<T, N> cmul_impl(const vec<T, 2>& x, const vec<T, N>& y)
 
 /// Complex Multiplication
 template <typename T, size_t N1, size_t N2>
-KFR_INTRINSIC vec<T, const_max(N1, N2)> cmul(const vec<T, N1>& x, const vec<T, N2>& y)
+KFR_INTRINSIC vec<T, std::max(N1, N2)> cmul(const vec<T, N1>& x, const vec<T, N2>& y)
 {
     return intr::cmul_impl(x, y);
 }

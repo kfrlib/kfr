@@ -47,7 +47,7 @@ constexpr inline static bool fft_reorder_aligned = false;
 constexpr inline static size_t bitrev_table_log2N = ilog2(std::size(data::bitrev_table));
 
 template <size_t Bits>
-KFR_GNU_CONSTEXPR inline u32 bitrev_using_table(u32 x)
+inline u32 bitrev_using_table(u32 x)
 {
 #ifdef KFR_ARCH_NEON
     return __builtin_bitreverse32(x) >> (32 - Bits);
@@ -60,7 +60,7 @@ KFR_GNU_CONSTEXPR inline u32 bitrev_using_table(u32 x)
 }
 
 template <bool use_table>
-KFR_GNU_CONSTEXPR inline u32 bitrev_using_table(u32 x, size_t bits, cbool_t<use_table>)
+inline u32 bitrev_using_table(u32 x, size_t bits, cbool_t<use_table>)
 {
 #ifdef KFR_ARCH_NEON
     return __builtin_bitreverse32(x) >> (32 - bits);
@@ -76,7 +76,7 @@ KFR_GNU_CONSTEXPR inline u32 bitrev_using_table(u32 x, size_t bits, cbool_t<use_
 #endif
 }
 
-KFR_GNU_CONSTEXPR inline u32 dig4rev_using_table(u32 x, size_t bits)
+inline u32 dig4rev_using_table(u32 x, size_t bits)
 {
 #ifdef KFR_ARCH_NEON
     x = __builtin_bitreverse32(x);

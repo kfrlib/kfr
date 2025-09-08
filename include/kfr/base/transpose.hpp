@@ -204,7 +204,7 @@ KFR_INLINE void do_reverse(vec<T, N>* first, vec<T, N>* last)
 template <typename T, size_t N>
 KFR_INLINE void ranges_swap(vec<T, N>* x, vec<T, N>* y, size_t size)
 {
-    block_process(size, csizes<const_max(vector_capacity<T> / 4 / N, 2), 1>,
+    block_process(size, csizes<std::max(vector_capacity<T> / 4 / N, size_t(2)), 1>,
                   [x, y](size_t index, auto w) KFR_INLINE_LAMBDA
                   {
                       constexpr size_t width = KFR_CVAL(w);
@@ -469,7 +469,7 @@ void matrix_merge_squares(vec<T, N>* out, size_t side, size_t squares, matrix_si
     do
     {
         block_process(
-            side, csizes<const_max(2, vector_capacity<T> / 8 / N), 1>,
+            side, csizes<std::max(size_t(2), vector_capacity<T> / 8 / N), 1>,
             [&](size_t offset, auto width_)
             {
                 constexpr size_t width = KFR_CVAL(width_);

@@ -256,29 +256,29 @@ inline namespace KFR_ARCH_NAME
 /// @brief SIMD vector width for the given cpu instruction set
 template <typename T>
 constexpr static size_t vector_width =
-    (const_max(size_t(1), typeclass<T> == datatype::f ? platform<>::native_float_vector_size / sizeof(T)
-                                                      : platform<>::native_int_vector_size / sizeof(T)));
+    (std::max(size_t(1), typeclass<T> == datatype::f ? platform<>::native_float_vector_size / sizeof(T)
+                                                     : platform<>::native_int_vector_size / sizeof(T)));
 
 template <typename T, cpu_t cpu>
 constexpr static size_t vector_width_for =
-    (const_max(size_t(1), typeclass<T> == datatype::f ? platform<cpu>::native_float_vector_size / sizeof(T)
-                                                      : platform<cpu>::native_int_vector_size / sizeof(T)));
+    (std::max(size_t(1), typeclass<T> == datatype::f ? platform<cpu>::native_float_vector_size / sizeof(T)
+                                                     : platform<cpu>::native_int_vector_size / sizeof(T)));
 
 template <typename T>
 constexpr static size_t minimum_vector_width =
-    (const_max(size_t(1), typeclass<T> == datatype::f ? platform<>::minimum_float_vector_size / sizeof(T)
-                                                      : platform<>::minimum_int_vector_size / sizeof(T)));
+    (std::max(size_t(1), typeclass<T> == datatype::f ? platform<>::minimum_float_vector_size / sizeof(T)
+                                                     : platform<>::minimum_int_vector_size / sizeof(T)));
 
 template <typename T>
 constexpr static size_t vector_capacity = platform<>::simd_register_count * vector_width<T>;
 
 #ifdef KFR_COMPILER_IS_MSVC
 template <typename T>
-constexpr static size_t maximum_vector_size = const_min(static_cast<size_t>(32), vector_width<T> * 2);
+constexpr static size_t maximum_vector_size = std::min(static_cast<size_t>(32), vector_width<T> * 2);
 #else
 template <typename T>
-constexpr static size_t maximum_vector_size = const_min(
-    static_cast<size_t>(32), const_max(size_t(1), platform<>::simd_register_count / 4) * vector_width<T>);
+constexpr static size_t maximum_vector_size = std::min(
+    static_cast<size_t>(32), std::max(size_t(1), platform<>::simd_register_count / 4) * vector_width<T>);
 #endif
 
 template <typename T>

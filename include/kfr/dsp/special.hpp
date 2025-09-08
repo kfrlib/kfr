@@ -62,7 +62,7 @@ auto jaehne_arg(size_t size)
  * Generates the sine with linearly increasing frequency from 0hz to nyquist frequency.
  */
 template <typename T = fbase>
-auto jaehne(identity<T> magn, size_t size)
+auto jaehne(std::type_identity_t<T> magn, size_t size)
 {
     return magn * sin(jaehne_arg<T>(size));
 }
@@ -80,7 +80,7 @@ auto swept_arg(size_t size)
  * Generates the sine with logarithmically increasing frequency from 0hz to nyquist frequency.
  */
 template <typename T = fbase>
-auto swept(identity<T> magn, size_t size)
+auto swept(std::type_identity_t<T> magn, size_t size)
 {
     return magn * sin(swept_arg<T>(size));
 }

@@ -91,30 +91,30 @@ KFR_INTRINSIC vec_shape<T, Nout> highhalf(vec_shape<T, N>)
 }
 
 template <typename T, size_t... Ns>
-KFR_INTRINSIC vec<T, csum<size_t, Ns...>()> concat(const vec<T, Ns>&... vs) KFR_NOEXCEPT
+KFR_INTRINSIC vec<T, csum<size_t, Ns...>()> concat(const vec<T, Ns>&... vs) noexcept
 {
     return vec<T, csum<size_t, Ns...>()>(
         intr::simd_concat<typename vec<T, 1>::scalar_type, vec<T, Ns>::scalar_size()...>(vs.v...));
 }
 
 template <typename T, size_t N1, size_t N2>
-KFR_INTRINSIC vec<T, N1 + N2> concat2(const vec<T, N1>& x, const vec<T, N2>& y) KFR_NOEXCEPT
+KFR_INTRINSIC vec<T, N1 + N2> concat2(const vec<T, N1>& x, const vec<T, N2>& y) noexcept
 {
     return vec<T, csum<size_t, N1, N2>()>(
         intr::simd_concat<typename vec<T, 1>::scalar_type, vec<T, N1>::scalar_size(),
-                                vec<T, N2>::scalar_size()>(x.v, y.v));
+                          vec<T, N2>::scalar_size()>(x.v, y.v));
 }
 
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N * 4> concat4(const vec<T, N>& a, const vec<T, N>& b, const vec<T, N>& c,
-                                    const vec<T, N>& d) KFR_NOEXCEPT
+                                    const vec<T, N>& d) noexcept
 {
     return intr::simd_concat<typename vec<T, 1>::scalar_type, vec<T, N * 2>::scalar_size(),
-                                   vec<T, N * 2>::scalar_size()>(
+                             vec<T, N * 2>::scalar_size()>(
         intr::simd_concat<typename vec<T, 1>::scalar_type, vec<T, N>::scalar_size(),
-                                vec<T, N>::scalar_size()>(a.v, b.v),
+                          vec<T, N>::scalar_size()>(a.v, b.v),
         intr::simd_concat<typename vec<T, 1>::scalar_type, vec<T, N>::scalar_size(),
-                                vec<T, N>::scalar_size()>(c.v, d.v));
+                          vec<T, N>::scalar_size()>(c.v, d.v));
 }
 
 template <size_t count, typename T, size_t N, size_t Nout = N * count>
@@ -159,7 +159,7 @@ KFR_INTRINSIC vec<T, N + Ncount> padhigh(const vec<T, N>& x)
     return x.shuffle(csizeseq<N + Ncount>);
 }
 template <size_t Ncount, typename T, size_t N>
-KFR_INTRINSIC vec<T, N + Ncount> padhigh(const vec<T, N>& x, identity<T> newvalue)
+KFR_INTRINSIC vec<T, N + Ncount> padhigh(const vec<T, N>& x, std::type_identity_t<T> newvalue)
 {
     if constexpr (Ncount == 0)
         return x;
@@ -174,7 +174,7 @@ KFR_INTRINSIC vec<T, N + Ncount> padlow(const vec<T, N>& x)
     return x.shuffle(csizeseq<N + Ncount, 0 - Ncount>);
 }
 template <size_t Ncount, typename T, size_t N>
-KFR_INTRINSIC vec<T, N + Ncount> padlow(const vec<T, N>& x, identity<T> newvalue)
+KFR_INTRINSIC vec<T, N + Ncount> padlow(const vec<T, N>& x, std::type_identity_t<T> newvalue)
 {
     if constexpr (Ncount == 0)
         return x;
@@ -277,7 +277,7 @@ KFR_INTRINSIC vec<T, count> concat_and_slice(const vec<T, N1>& x, const vec<T, N
 KFR_FN(concat_and_slice)
 
 template <size_t Nout, typename T, size_t N, KFR_ENABLE_IF(Nout > N)>
-KFR_INTRINSIC vec<T, Nout> widen(const vec<T, N>& x, identity<T> newvalue = T())
+KFR_INTRINSIC vec<T, Nout> widen(const vec<T, N>& x, std::type_identity_t<T> newvalue = T())
 {
     static_assert(Nout > N, "Nout > N");
     return concat(x, broadcast<Nout - N>(newvalue));
@@ -614,7 +614,7 @@ constexpr KFR_INTRINSIC vec<T, N> enumerate(vec_shape<T, N>)
     return generate_vector<T, N, internal::generate_index<start, stride>>();
 }
 template <typename T, size_t N>
-KFR_INTRINSIC vec<T, N> enumerate(vec_shape<T, N> sh, identity<T> step)
+KFR_INTRINSIC vec<T, N> enumerate(vec_shape<T, N> sh, std::type_identity_t<T> step)
 {
     if constexpr (N == 1)
     {

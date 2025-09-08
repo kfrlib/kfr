@@ -131,14 +131,16 @@ TEST_CASE("shl")
                 const T x(value);
                 CHECK(std::is_same<decltype(x << shift), T>::value);
                 CHECK_THAT((x << shift), DeepMatcher(apply(
-                                             [=](auto x) -> decltype(x) {
+                                             [=](auto x) -> decltype(x)
+                                             {
                                                  return bitcast<decltype(x)>(
                                                      static_cast<uitype<decltype(x)>>(uibitcast(x) << shift));
                                              },
                                              x)));
                 CHECK_THAT((x << broadcast<T::scalar_size()>(utype<subtype<T>>(shift))),
                            DeepMatcher(apply(
-                               [=](auto x) -> decltype(x) {
+                               [=](auto x) -> decltype(x)
+                               {
                                    return bitcast<decltype(x)>(
                                        static_cast<uitype<decltype(x)>>(uibitcast(x) << shift));
                                },
@@ -160,14 +162,16 @@ TEST_CASE("shr")
                 const T x(value);
                 CHECK(std::is_same<decltype(x >> shift), T>::value);
                 CHECK_THAT((x >> shift), DeepMatcher(apply(
-                                             [=](auto x) -> decltype(x) {
+                                             [=](auto x) -> decltype(x)
+                                             {
                                                  return bitcast<decltype(x)>(
                                                      static_cast<uitype<decltype(x)>>(uibitcast(x) >> shift));
                                              },
                                              x)));
                 CHECK_THAT((x >> broadcast<T::scalar_size()>(utype<subtype<T>>(shift))),
                            DeepMatcher(apply(
-                               [=](auto x) -> decltype(x) {
+                               [=](auto x) -> decltype(x)
+                               {
                                    return bitcast<decltype(x)>(
                                        static_cast<uitype<decltype(x)>>(uibitcast(x) >> shift));
                                },

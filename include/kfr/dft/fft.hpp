@@ -934,7 +934,7 @@ private:
         contract(out_real, ptr_cast<T>(out), size.remove_back().product(), size.back());
     }
     using dft_list = std::conditional_t<Dims == dynamic_shape, std::vector<dft_plan<T>>,
-                                        std::array<dft_plan<T>, const_max(Dims, 1) - 1>>;
+                                        std::array<dft_plan<T>, std::max(Dims, index_t(1)) - 1>>;
     dft_list dfts;
     dft_plan_real<T> dft_real;
     internal_generic::fn_transpose<T> transpose;

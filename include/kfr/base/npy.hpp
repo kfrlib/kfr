@@ -103,7 +103,7 @@ struct npy_writer
     void operator()(std::initializer_list<uint8_t> b) { operator()(&*b.begin(), b.size()); }
 
     template <typename Num>
-    void operator()(kfr::ctype_t<Num>, kfr::identity<Num> n)
+    void operator()(kfr::ctype_t<Num>, std::type_identity_t<Num> n)
     {
         operator()(&n, sizeof(Num));
     }

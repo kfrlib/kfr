@@ -57,7 +57,7 @@ struct expression_goertzel : expression_traits_defaults
 
     template <size_t N, index_t VecAxis>
     friend KFR_INTRINSIC void set_elements(expression_goertzel& self, shape<1>, axis_params<VecAxis, N>,
-                                           const identity<vec<T, N>>& x)
+                                           const std::type_identity_t<vec<T, N>>& x)
     {
         vec<T, N> in = x;
         KFR_LOOP_UNROLL
@@ -105,7 +105,7 @@ struct expression_parallel_goertzel : expression_traits_defaults
     }
     template <size_t N, index_t VecAxis>
     friend KFR_INTRINSIC void set_elements(expression_parallel_goertzel& self, shape<1>,
-                                           axis_params<VecAxis, N>, const identity<vec<T, N>>& x)
+                                           axis_params<VecAxis, N>, const std::type_identity_t<vec<T, N>>& x)
     {
         const vec<T, N> in = x;
         KFR_LOOP_UNROLL
@@ -125,7 +125,7 @@ struct expression_parallel_goertzel : expression_traits_defaults
 };
 
 template <typename T>
-KFR_INTRINSIC expression_goertzel<T> goertzel(complex<T>& result, identity<T> omega)
+KFR_INTRINSIC expression_goertzel<T> goertzel(complex<T>& result, std::type_identity_t<T> omega)
 {
     return expression_goertzel<T>(result, omega);
 }

@@ -36,13 +36,14 @@ inline namespace KFR_ARCH_NAME
 {
 
 template <typename T = fbase>
-KFR_FUNCTION static auto phasor(identity<T> frequency, identity<T> sample_rate, identity<T> phase = 0)
+KFR_FUNCTION static auto phasor(std::type_identity_t<T> frequency, std::type_identity_t<T> sample_rate,
+                                std::type_identity_t<T> phase = 0)
 {
     return fract(counter(phase, frequency / sample_rate));
 }
 
 template <typename T = fbase>
-KFR_FUNCTION static auto phasor(identity<T> frequency)
+KFR_FUNCTION static auto phasor(std::type_identity_t<T> frequency)
 {
     return phasor(frequency, 1, 0);
 }

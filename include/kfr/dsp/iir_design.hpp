@@ -52,7 +52,7 @@ inline namespace KFR_ARCH_NAME
 {
 
 template <typename T>
-KFR_FUNCTION zpk<T> chebyshev1(int N, identity<T> rp)
+KFR_FUNCTION zpk<T> chebyshev1(int N, std::type_identity_t<T> rp)
 {
     if (N <= 0)
     {
@@ -73,7 +73,7 @@ KFR_FUNCTION zpk<T> chebyshev1(int N, identity<T> rp)
 }
 
 template <typename T>
-KFR_FUNCTION zpk<T> chebyshev2(int N, identity<T> rs)
+KFR_FUNCTION zpk<T> chebyshev2(int N, std::type_identity_t<T> rs)
 {
     if (N <= 0)
     {
@@ -864,7 +864,7 @@ namespace internal
 {
 
 template <typename T>
-KFR_FUNCTION zpk<T> bilinear(const zpk<T>& filter, identity<T> fs)
+KFR_FUNCTION zpk<T> bilinear(const zpk<T>& filter, std::type_identity_t<T> fs)
 {
     const T fs2 = T(2.0) * fs;
     zpk<T> result;
@@ -888,7 +888,7 @@ KFR_FUNCTION vec<T, 3> zpk2tf_poly(const complex<T>& x, const complex<T>& y)
 }
 
 template <typename T>
-KFR_FUNCTION biquad_section<T> zpk2tf(const zero_pole_pairs<T>& pairs, identity<T> k)
+KFR_FUNCTION biquad_section<T> zpk2tf(const zero_pole_pairs<T>& pairs, std::type_identity_t<T> k)
 {
     vec<T, 3> zz = k * zpk2tf_poly(pairs.z1, pairs.z2);
     vec<T, 3> pp = zpk2tf_poly(pairs.p1, pairs.p2);
@@ -962,7 +962,7 @@ KFR_FUNCTION int countreal(const univector<complex<T>>& list)
 }
 
 template <typename T>
-KFR_FUNCTION zpk<T> lp2lp_zpk(const zpk<T>& filter, identity<T> wo)
+KFR_FUNCTION zpk<T> lp2lp_zpk(const zpk<T>& filter, std::type_identity_t<T> wo)
 {
     zpk<T> result;
     result.z = wo * filter.z;
@@ -972,7 +972,7 @@ KFR_FUNCTION zpk<T> lp2lp_zpk(const zpk<T>& filter, identity<T> wo)
 }
 
 template <typename T>
-KFR_FUNCTION zpk<T> lp2hp_zpk(const zpk<T>& filter, identity<T> wo)
+KFR_FUNCTION zpk<T> lp2hp_zpk(const zpk<T>& filter, std::type_identity_t<T> wo)
 {
     zpk<T> result;
     result.z = wo / filter.z;
@@ -983,7 +983,7 @@ KFR_FUNCTION zpk<T> lp2hp_zpk(const zpk<T>& filter, identity<T> wo)
 }
 
 template <typename T>
-KFR_FUNCTION zpk<T> lp2bp_zpk(const zpk<T>& filter, identity<T> wo, identity<T> bw)
+KFR_FUNCTION zpk<T> lp2bp_zpk(const zpk<T>& filter, std::type_identity_t<T> wo, std::type_identity_t<T> bw)
 {
     zpk<T> lowpass;
     lowpass.z = bw * T(0.5) * filter.z;
@@ -1002,7 +1002,7 @@ KFR_FUNCTION zpk<T> lp2bp_zpk(const zpk<T>& filter, identity<T> wo, identity<T> 
 }
 
 template <typename T>
-KFR_FUNCTION zpk<T> lp2bs_zpk(const zpk<T>& filter, identity<T> wo, identity<T> bw)
+KFR_FUNCTION zpk<T> lp2bs_zpk(const zpk<T>& filter, std::type_identity_t<T> wo, std::type_identity_t<T> bw)
 {
     zpk<T> highpass;
     highpass.z = (bw * T(0.5)) / filter.z;
@@ -1040,7 +1040,8 @@ KFR_FUNCTION T warp_freq(T frequency, T fs)
  * @return The resulting zpk filter
  */
 template <typename T>
-KFR_FUNCTION zpk<T> iir_lowpass(const zpk<T>& filter, identity<T> frequency, identity<T> fs = T(2.0))
+KFR_FUNCTION zpk<T> iir_lowpass(const zpk<T>& filter, std::type_identity_t<T> frequency,
+                                std::type_identity_t<T> fs = T(2.0))
 {
     T warped = internal::warp_freq(frequency, fs);
 
@@ -1058,7 +1059,8 @@ KFR_FUNCTION zpk<T> iir_lowpass(const zpk<T>& filter, identity<T> frequency, ide
  * @return The resulting zpk filter
  */
 template <typename T>
-KFR_FUNCTION zpk<T> iir_highpass(const zpk<T>& filter, identity<T> frequency, identity<T> fs = T(2.0))
+KFR_FUNCTION zpk<T> iir_highpass(const zpk<T>& filter, std::type_identity_t<T> frequency,
+                                 std::type_identity_t<T> fs = T(2.0))
 {
     T warped = internal::warp_freq(frequency, fs);
 
@@ -1077,8 +1079,8 @@ KFR_FUNCTION zpk<T> iir_highpass(const zpk<T>& filter, identity<T> frequency, id
  * @return The resulting zpk filter
  */
 template <typename T>
-KFR_FUNCTION zpk<T> iir_bandpass(const zpk<T>& filter, identity<T> lowfreq, identity<T> highfreq,
-                                 identity<T> fs = T(2.0))
+KFR_FUNCTION zpk<T> iir_bandpass(const zpk<T>& filter, std::type_identity_t<T> lowfreq,
+                                 std::type_identity_t<T> highfreq, std::type_identity_t<T> fs = T(2.0))
 {
     T warpedlow  = internal::warp_freq(lowfreq, fs);
     T warpedhigh = internal::warp_freq(highfreq, fs);
@@ -1098,8 +1100,8 @@ KFR_FUNCTION zpk<T> iir_bandpass(const zpk<T>& filter, identity<T> lowfreq, iden
  * @return The resulting zpk filter
  */
 template <typename T>
-KFR_FUNCTION zpk<T> iir_bandstop(const zpk<T>& filter, identity<T> lowfreq, identity<T> highfreq,
-                                 identity<T> fs = T(2.0))
+KFR_FUNCTION zpk<T> iir_bandstop(const zpk<T>& filter, std::type_identity_t<T> lowfreq,
+                                 std::type_identity_t<T> highfreq, std::type_identity_t<T> fs = T(2.0))
 {
     T warpedlow  = internal::warp_freq(lowfreq, fs);
     T warpedhigh = internal::warp_freq(highfreq, fs);

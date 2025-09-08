@@ -167,7 +167,7 @@ struct fft_inverse : expression_with_traits<E>
 {
     using value_type = typename expression_with_traits<E>::value_type;
 
-    KFR_MEM_INTRINSIC fft_inverse(E&& expr) KFR_NOEXCEPT : expression_with_traits<E>(std::forward<E>(expr)) {}
+    KFR_MEM_INTRINSIC fft_inverse(E&& expr) noexcept : expression_with_traits<E>(std::forward<E>(expr)) {}
 
     friend KFR_INTRINSIC vec<value_type, 1> get_elements(const fft_inverse& self, shape<1> index,
                                                          axis_params<0, 1>)
@@ -502,8 +502,8 @@ void prepare_dft_stage(dft_plan<T>* self, size_t radix, size_t iterations, size_
         [self, iterations, blocks](auto radix) KFR_INLINE_LAMBDA
         {
             add_stage<std::conditional_t<is_final, intr::dft_stage_fixed_final_impl<T, val_of(radix)>,
-                                         intr::dft_stage_fixed_impl<T, val_of(radix)>>>(
-                self, radix, iterations, blocks);
+                                         intr::dft_stage_fixed_impl<T, val_of(radix)>>>(self, radix,
+                                                                                        iterations, blocks);
         },
         [self, radix, iterations, blocks]()
         { add_stage<intr::dft_stage_generic_impl<T, is_final>>(self, radix, iterations, blocks); });

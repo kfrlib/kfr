@@ -313,12 +313,12 @@ struct alignas(platform<>::maximum_vector_alignment) univector
         this->assign_expr(std::forward<Input>(input));
     }
     template <typename... Args>
-    constexpr univector(const T& x, const Args&... args) KFR_NOEXCEPT
+    constexpr univector(const T& x, const Args&... args) noexcept
         : std::array<T, Size>{ { x, static_cast<T>(args)... } }
     {
     }
 
-    constexpr univector() KFR_NOEXCEPT_SPEC(noexcept(std::array<T, Size>())) = default;
+    constexpr univector() noexcept(noexcept(std::array<T, Size>())) = default;
     constexpr univector(size_t, const T& value) { std::fill(this->begin(), this->end(), value); }
     constexpr static bool size_known    = true;
     constexpr static size_t static_size = Size;
@@ -328,13 +328,13 @@ struct alignas(platform<>::maximum_vector_alignment) univector
     constexpr static bool is_aligned    = true;
     using value_type                    = T;
 
-    value_type get(size_t index, value_type fallback_value) const KFR_NOEXCEPT
+    value_type get(size_t index, value_type fallback_value) const noexcept
     {
         return index < this->size() ? this->operator[](index) : fallback_value;
     }
     using univector_base<T, univector, is_vec_element<T>>::operator=;
 
-    void resize(size_t) KFR_NOEXCEPT {}
+    void resize(size_t) noexcept {}
 };
 
 template <typename T>
@@ -375,7 +375,7 @@ struct univector<T, tag_array_ref> : array_ref<T>,
     constexpr univector(univector<U, Tag>&& other) : array_ref<T>(other.data(), other.size())
     {
     }
-    void resize(size_t) KFR_NOEXCEPT {}
+    void resize(size_t) noexcept {}
     constexpr static bool size_known   = false;
     constexpr static bool is_array     = false;
     constexpr static bool is_array_ref = true;
@@ -383,7 +383,7 @@ struct univector<T, tag_array_ref> : array_ref<T>,
     constexpr static bool is_aligned   = false;
     using value_type                   = std::remove_const_t<T>;
 
-    value_type get(size_t index, value_type fallback_value) const KFR_NOEXCEPT
+    value_type get(size_t index, value_type fallback_value) const noexcept
     {
         return index < this->size() ? this->operator[](index) : fallback_value;
     }
@@ -419,7 +419,7 @@ struct univector<T, tag_dynamic_vector>
         }
         this->assign_expr(std::forward<Input>(input));
     }
-    constexpr univector() KFR_NOEXCEPT_SPEC(noexcept(std::vector<T, data_allocator<T>>())) = default;
+    constexpr univector() noexcept(noexcept(std::vector<T, data_allocator<T>>())) = default;
     constexpr univector(const std::vector<T, data_allocator<T>>& other)
         : std::vector<T, data_allocator<T>>(other)
     {
@@ -447,7 +447,7 @@ struct univector<T, tag_dynamic_vector>
     constexpr static bool is_aligned                 = true;
     using value_type                                 = T;
 
-    value_type get(size_t index, value_type fallback_value) const KFR_NOEXCEPT
+    value_type get(size_t index, value_type fallback_value) const noexcept
     {
         return index < this->size() ? this->operator[](index) : fallback_value;
     }
@@ -647,7 +647,7 @@ KFR_INTRINSIC vec<std::remove_const_t<T>, N> get_elements(const univector<T, Tag
 
 template <typename T, univector_tag Tag, size_t N, KFR_ENABLE_IF(!std::is_const_v<T>)>
 KFR_INTRINSIC void set_elements(univector<T, Tag>& self, const shape<1>& index, const axis_params<0, N>&,
-                                const identity<vec<T, N>>& value)
+                                const std::type_identity_t<vec<T, N>>& value)
 {
     T* data = self.data();
     write(ptr_cast<T>(data) + index.front(), value);

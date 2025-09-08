@@ -63,23 +63,16 @@ template <typename T>
 struct biquad_section
 {
     template <typename U>
-    constexpr biquad_section(const biquad_section<U>& bq) KFR_NOEXCEPT : a0(static_cast<T>(bq.a0)),
-                                                                         a1(static_cast<T>(bq.a1)),
-                                                                         a2(static_cast<T>(bq.a2)),
-                                                                         b0(static_cast<T>(bq.b0)),
-                                                                         b1(static_cast<T>(bq.b1)),
-                                                                         b2(static_cast<T>(bq.b2))
+    constexpr biquad_section(const biquad_section<U>& bq) noexcept
+        : a0(static_cast<T>(bq.a0)), a1(static_cast<T>(bq.a1)), a2(static_cast<T>(bq.a2)),
+          b0(static_cast<T>(bq.b0)), b1(static_cast<T>(bq.b1)), b2(static_cast<T>(bq.b2))
     {
     }
 
     static_assert(std::is_floating_point_v<T>, "T must be a floating point type");
-    constexpr biquad_section() KFR_NOEXCEPT : a0(1), a1(0), a2(0), b0(1), b1(0), b2(0) {}
-    constexpr biquad_section(T a0, T a1, T a2, T b0, T b1, T b2) KFR_NOEXCEPT : a0(a0),
-                                                                                a1(a1),
-                                                                                a2(a2),
-                                                                                b0(b0),
-                                                                                b1(b1),
-                                                                                b2(b2)
+    constexpr biquad_section() noexcept : a0(1), a1(0), a2(0), b0(1), b1(0), b2(0) {}
+    constexpr biquad_section(T a0, T a1, T a2, T b0, T b1, T b2) noexcept
+        : a0(a0), a1(a1), a2(a2), b0(b0), b1(b1), b2(b2)
     {
     }
     T a0;
@@ -104,7 +97,7 @@ struct biquad_state
     vec<T, filters> s1;
     vec<T, filters> s2;
     vec<T, filters> out;
-    constexpr biquad_state() KFR_NOEXCEPT : s1(0), s2(0), out(0) {}
+    constexpr biquad_state() noexcept : s1(0), s2(0), out(0) {}
 };
 
 template <typename T, size_t filters = tag_dynamic_vector>
@@ -116,11 +109,11 @@ struct iir_params
     vec<T, filters> b1;
     vec<T, filters> b2;
 
-    constexpr iir_params() KFR_NOEXCEPT : a1(0), a2(0), b0(1), b1(0), b2(0) {}
-    KFR_GNU_CONSTEXPR iir_params(const biquad_section<T>* bq, size_t count)
+    constexpr iir_params() noexcept : a1(0), a2(0), b0(1), b1(0), b2(0) {}
+    iir_params(const biquad_section<T>* bq, size_t count)
     {
         KFR_LOGIC_CHECK(count <= filters, "iir_params: too many biquad sections");
-        count = const_min(filters, count);
+        count = std::min(filters, count);
         for (size_t i = 0; i < count; i++)
         {
             a1[i] = bq[i].a1;
@@ -139,10 +132,10 @@ struct iir_params
         }
     }
 
-    KFR_GNU_CONSTEXPR iir_params(const biquad_section<T>& one) KFR_NOEXCEPT : iir_params(&one, 1) {}
+    iir_params(const biquad_section<T>& one) noexcept : iir_params(&one, 1) {}
 
     template <typename Container, KFR_HAS_DATA_SIZE(Container)>
-    constexpr iir_params(Container&& cont) KFR_NOEXCEPT : iir_params(std::data(cont), std::size(cont))
+    constexpr iir_params(Container&& cont) noexcept : iir_params(std::data(cont), std::size(cont))
     {
     }
 };
@@ -158,14 +151,14 @@ struct iir_params<T, tag_dynamic_vector> : public std::vector<biquad_section<T>>
 
     iir_params(size_t count) : base(count) {}
 
-    iir_params(const biquad_section<T>* bq, size_t count) KFR_NOEXCEPT : base(bq, bq + count) {}
+    iir_params(const biquad_section<T>* bq, size_t count) noexcept : base(bq, bq + count) {}
 
-    iir_params(const biquad_section<T>& one) KFR_NOEXCEPT : iir_params(&one, 1) {}
+    iir_params(const biquad_section<T>& one) noexcept : iir_params(&one, 1) {}
 
-    iir_params(std::vector<biquad_section<T>>&& sections) KFR_NOEXCEPT : base(std::move(sections)) {}
+    iir_params(std::vector<biquad_section<T>>&& sections) noexcept : base(std::move(sections)) {}
 
     template <typename Container, KFR_HAS_DATA_SIZE(Container)>
-    constexpr iir_params(Container&& cont) KFR_NOEXCEPT : iir_params(std::data(cont), std::size(cont))
+    constexpr iir_params(Container&& cont) noexcept : iir_params(std::data(cont), std::size(cont))
     {
     }
 
@@ -254,7 +247,7 @@ namespace internal
 
 template <size_t filters, typename T>
 KFR_INTRINSIC T biquad_process(vec<T, filters>& out, const iir_params<T, filters>& bq,
-                               biquad_state<T, filters>& state, identity<T> in0,
+                               biquad_state<T, filters>& state, std::type_identity_t<T> in0,
                                const vec<T, filters>& delayline)
 {
     vec<T, filters> in = insertleft(in0, delayline);

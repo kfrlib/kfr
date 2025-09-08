@@ -57,12 +57,12 @@ struct stereo_matrix
 };
 
 template <int = 0>
-KFR_GNU_CONSTEXPR f64x2x2 matrix_sum_diff()
+f64x2x2 matrix_sum_diff()
 {
     return { f64x2{ 1, 1 }, f64x2{ 1, -1 } };
 }
 template <int = 0>
-KFR_GNU_CONSTEXPR f64x2x2 matrix_halfsum_halfdiff()
+f64x2x2 matrix_halfsum_halfdiff()
 {
     return { f64x2{ 0.5, 0.5 }, f64x2{ 0.5, -0.5 } };
 }

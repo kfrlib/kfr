@@ -31,13 +31,13 @@ struct func_filter<Result(Args...)>
 };
 
 template <typename T>
-constexpr KFR_INTRINSIC T return_val() KFR_NOEXCEPT
+constexpr KFR_INTRINSIC T return_val() noexcept
 {
     return {};
 }
 
 template <>
-constexpr KFR_INTRINSIC void return_val<void>() KFR_NOEXCEPT
+constexpr KFR_INTRINSIC void return_val<void>() noexcept
 {
 }
 } // namespace details
@@ -133,14 +133,14 @@ struct function<R(Args...)>
 };
 
 template <typename Ret, typename... Args, typename T, typename Fn, typename DefFn = fn_noop>
-KFR_INLINE function<Ret(Args...)> cdispatch(cvals_t<T>, identity<T>, Fn&&, DefFn&& deffn = DefFn())
+KFR_INLINE function<Ret(Args...)> cdispatch(cvals_t<T>, std::type_identity_t<T>, Fn&&, DefFn&& deffn = DefFn())
 {
     return [=](Args... args) KFR_INLINE_LAMBDA -> Ret { return deffn(std::forward<Args>(args)...); };
 }
 
 template <typename Ret, typename... Args, typename T, T v0, T... values, typename Fn,
           typename DefFn = fn_noop>
-inline function<Ret(Args...)> cdispatch(cvals_t<T, v0, values...>, identity<T> value, Fn&& fn,
+inline function<Ret(Args...)> cdispatch(cvals_t<T, v0, values...>, std::type_identity_t<T> value, Fn&& fn,
                                         DefFn&& deffn = DefFn())
 {
     if (value == v0)

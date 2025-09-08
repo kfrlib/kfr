@@ -19,7 +19,7 @@ struct named_arg
 
 struct named
 {
-    constexpr named(const char* name) KFR_NOEXCEPT : name(name) {}
+    constexpr named(const char* name) noexcept : name(name) {}
 
     template <typename T>
     KFR_MEM_INTRINSIC constexpr named_arg<T> operator=(T&& value)

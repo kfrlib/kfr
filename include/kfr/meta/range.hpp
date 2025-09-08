@@ -19,9 +19,8 @@ struct range
     using const_pointer   = const T*;
     using diff_type       = decltype(std::declval<T>() - std::declval<T>());
 
-    constexpr range(value_type begin, value_type end, diff_type step) KFR_NOEXCEPT : min(begin),
-                                                                                     max(end),
-                                                                                     step(step)
+    constexpr range(value_type begin, value_type end, diff_type step) noexcept
+        : min(begin), max(end), step(step)
     {
     }
 

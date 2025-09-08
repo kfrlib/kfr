@@ -145,14 +145,14 @@ static void ebu_test_multichannel(int sample_rate,
 TEST_CASE("ebu_stereo_1_and_2")
 {
     test_matrix(named("type")        = ctypes_t<float, double>{},
-                  named("sample_rate") = std::vector<int>{ 44100, 48000 },
-                  [](auto type, int sample_rate)
-                  {
-                      using T = typename decltype(type)::type;
+                named("sample_rate") = std::vector<int>{ 44100, 48000 },
+                [](auto type, int sample_rate)
+                {
+                    using T = typename decltype(type)::type;
 
-                      ebu_test_stereo<T>(sample_rate, { { -23.f, 20.f, 1000.f } }, -23.f, -23.f, -23.f, NAN);
-                      ebu_test_stereo<T>(sample_rate, { { -33.f, 20.f, 1000.f } }, -33.f, -33.f, -33.f, NAN);
-                  });
+                    ebu_test_stereo<T>(sample_rate, { { -23.f, 20.f, 1000.f } }, -23.f, -23.f, -23.f, NAN);
+                    ebu_test_stereo<T>(sample_rate, { { -33.f, 20.f, 1000.f } }, -33.f, -33.f, -33.f, NAN);
+                });
 }
 
 TEST_CASE("ebu_stereo_3_4_and_5")
@@ -179,37 +179,37 @@ TEST_CASE("ebu_stereo_3_4_and_5")
 TEST_CASE("ebu_multichannel_6")
 {
     test_matrix(named("type")        = ctypes_t<float, double>{},
-                  named("sample_rate") = std::vector<int>{ 44100, 48000 },
-                  [](auto type, int sample_rate)
-                  {
-                      using T = typename decltype(type)::type;
+                named("sample_rate") = std::vector<int>{ 44100, 48000 },
+                [](auto type, int sample_rate)
+                {
+                    using T = typename decltype(type)::type;
 
-                      ebu_test_multichannel<T>(sample_rate, { { -28.f, -24.f, -30.f, 20.f, 1000.f } }, NAN,
-                                               NAN, -23.f, NAN);
-                  });
+                    ebu_test_multichannel<T>(sample_rate, { { -28.f, -24.f, -30.f, 20.f, 1000.f } }, NAN, NAN,
+                                             -23.f, NAN);
+                });
 }
 
 TEST_CASE("ebu_stereo_9")
 {
     test_matrix(named("type")        = ctypes_t<float, double>{},
-                  named("sample_rate") = std::vector<int>{ 44100, 48000 },
-                  [](auto type, int sample_rate)
-                  {
-                      using T = typename decltype(type)::type;
+                named("sample_rate") = std::vector<int>{ 44100, 48000 },
+                [](auto type, int sample_rate)
+                {
+                    using T = typename decltype(type)::type;
 
-                      ebu_test_stereo<T>(sample_rate,
-                                         { { -20.f, 1.34f, 1000.f },
-                                           { -30.f, 1.66f, 1000.f },
-                                           { -20.f, 1.34f, 1000.f },
-                                           { -30.f, 1.66f, 1000.f },
-                                           { -20.f, 1.34f, 1000.f },
-                                           { -30.f, 1.66f, 1000.f },
-                                           { -20.f, 1.34f, 1000.f },
-                                           { -30.f, 1.66f, 1000.f },
-                                           { -20.f, 1.34f, 1000.f },
-                                           { -30.f, 1.66f, 1000.f } },
-                                         NAN, -23.f, NAN, NAN);
-                  });
+                    ebu_test_stereo<T>(sample_rate,
+                                       { { -20.f, 1.34f, 1000.f },
+                                         { -30.f, 1.66f, 1000.f },
+                                         { -20.f, 1.34f, 1000.f },
+                                         { -30.f, 1.66f, 1000.f },
+                                         { -20.f, 1.34f, 1000.f },
+                                         { -30.f, 1.66f, 1000.f },
+                                         { -20.f, 1.34f, 1000.f },
+                                         { -30.f, 1.66f, 1000.f },
+                                         { -20.f, 1.34f, 1000.f },
+                                         { -30.f, 1.66f, 1000.f } },
+                                       NAN, -23.f, NAN, NAN);
+                });
 }
 
 TEST_CASE("ebu_stereo_12")
@@ -245,28 +245,28 @@ TEST_CASE("ebu_stereo_12")
 TEST_CASE("ebu_lra_1_2_3_and_4")
 {
     test_matrix(named("type")        = ctypes_t<float, double>{},
-                  named("sample_rate") = std::vector<int>{ 44100, 48000 },
-                  [](auto type, int sample_rate)
-                  {
-                      using T = typename decltype(type)::type;
+                named("sample_rate") = std::vector<int>{ 44100, 48000 },
+                [](auto type, int sample_rate)
+                {
+                    using T = typename decltype(type)::type;
 
-                      ebu_test_stereo<T>(sample_rate, { { -20.f, 20.f, 1000.f }, { -30.f, 20.f, 1000.f } },
-                                         NAN, NAN, NAN, 10.f);
+                    ebu_test_stereo<T>(sample_rate, { { -20.f, 20.f, 1000.f }, { -30.f, 20.f, 1000.f } }, NAN,
+                                       NAN, NAN, 10.f);
 
-                      ebu_test_stereo<T>(sample_rate, { { -20.f, 20.f, 1000.f }, { -15.f, 20.f, 1000.f } },
-                                         NAN, NAN, NAN, 5.f);
+                    ebu_test_stereo<T>(sample_rate, { { -20.f, 20.f, 1000.f }, { -15.f, 20.f, 1000.f } }, NAN,
+                                       NAN, NAN, 5.f);
 
-                      ebu_test_stereo<T>(sample_rate, { { -40.f, 20.f, 1000.f }, { -20.f, 20.f, 1000.f } },
-                                         NAN, NAN, NAN, 20.f);
+                    ebu_test_stereo<T>(sample_rate, { { -40.f, 20.f, 1000.f }, { -20.f, 20.f, 1000.f } }, NAN,
+                                       NAN, NAN, 20.f);
 
-                      ebu_test_stereo<T>(sample_rate,
-                                         { { -50.f, 20.f, 1000.f },
-                                           { -35.f, 20.f, 1000.f },
-                                           { -20.f, 20.f, 1000.f },
-                                           { -35.f, 20.f, 1000.f },
-                                           { -50.f, 20.f, 1000.f } },
-                                         NAN, NAN, NAN, 15.f);
-                  });
+                    ebu_test_stereo<T>(sample_rate,
+                                       { { -50.f, 20.f, 1000.f },
+                                         { -35.f, 20.f, 1000.f },
+                                         { -20.f, 20.f, 1000.f },
+                                         { -35.f, 20.f, 1000.f },
+                                         { -50.f, 20.f, 1000.f } },
+                                       NAN, NAN, NAN, 15.f);
+                });
 }
 } // namespace KFR_ARCH_NAME
 
