@@ -655,30 +655,30 @@ constexpr KFR_INTRINSIC bool is_odd(T x) noexcept
     return !is_even(x);
 }
 
-template <typename T>
+template <std::unsigned_integral T>
 constexpr KFR_INTRINSIC bool is_poweroftwo(T x) noexcept
 {
     return std::has_single_bit(x);
 }
 
-template <typename T>
-constexpr KFR_INTRINSIC unsigned ilog2(T n, unsigned p = 0) noexcept
+template <std::unsigned_integral T>
+constexpr KFR_INTRINSIC unsigned ilog2(T n) noexcept
 {
-    return (n <= 1) ? p : ilog2(n / 2, p + 1);
+    return (n <= 1) ? 0 : std::bit_width(n) - 1;
 }
 
 /// @brief Returns a nearest power of two that is greater or equal than n
-template <typename T>
+template <std::unsigned_integral T>
 constexpr KFR_INTRINSIC T next_poweroftwo(T n) noexcept
 {
-    return n > 2 ? T(1) << (ilog2(n - 1) + 1) : n;
+    return std::bit_ceil(n);
 }
 
 /// @brief Returns a nearest power of two that is less or equal than n
-template <typename T>
+template <std::unsigned_integral T>
 constexpr KFR_INTRINSIC T prev_poweroftwo(T n) noexcept
 {
-    return n > 2 ? T(1) << (ilog2(n)) : n;
+    return std::bit_floor(n);
 }
 
 template <typename T>
