@@ -28,64 +28,88 @@ int main(int argc, char** argv)
 
     // Initialize WAV reader and get file sample rate
     audio_reader_wav<double> reader(open_file_for_reading(argv[1]));
+    const size_t channels = reader.format().channels;
     const size_t input_sr = static_cast<size_t>(reader.format().samplerate);
 
-    // Read channels of audio
-    univector2d<double> input_channels = reader.read_channels(reader.format().length);
-
-    // Prepare conversion
-    univector2d<double> output_channels;
-    println("Input channels: ", reader.format().channels);
+    println("Input channels: ", channels);
     println("Input sample rate: ", reader.format().samplerate);
     println("Input bit depth: ", audio_sample_bit_depth(reader.format().type));
 
-    for (size_t ch = 0; ch < input_channels.size(); ++ch)
+    // Initialize WAV writer
+    audio_writer_wav<double> writer(open_file_for_writing(argv[2]),
+                                    audio_format{ channels, reader.format().type, kfr::fmax(output_sr) });
+
+    std::vector<samplerate_converter<double>> resamplers(channels);
+    for (size_t ch = 0; ch < channels; ++ch)
     {
-        println("Processing ", ch, " of ", reader.format().channels);
-        const univector<double>& input = input_channels[ch];
+        resamplers[ch] = resampler<double>(resample_quality::high, output_sr, input_sr);
+    }
+    auto& resampler0 = resamplers.front();
 
-        // Initialize resampler
-        auto r = resampler<double>(resample_quality::high, output_sr, input_sr);
+    constexpr size_t output_chunk_size = 16384;
+    univector2d<double> output_chunk(channels, univector<double>(output_chunk_size));
+    univector<double> output_chunk_interleaved(output_chunk_size * channels);
 
-        // Calculate output size and initialize output buffer
-        const size_t output_size = input.size() * output_sr / input_sr;
-        univector<double> output(output_size);
+    const size_t input_delay_compensation = resampler0.input_size_for_output(resampler0.get_delay());
+    const size_t input_chunk_size = output_chunk_size * input_sr / output_sr + 1 + input_delay_compensation;
+    univector<double> input_chunk_interleaved(input_chunk_size * channels);
+    univector2d<double> input_chunk(channels, univector<double>(input_chunk_size));
 
-        // Skip the first r.get_delay() samples (FIR filter delay). Returns new input pos
-        size_t input_pos = r.skip(r.get_delay(), input.slice());
+    bool first_chunk = true;
+    bool last_chunk  = false;
+    std::chrono::high_resolution_clock::duration resampling_time{};
+    // Process audio in chunks
+    println("Resampling...");
+    fflush(stdout);
+    for (;;)
+    {
+        const size_t frames_to_read =
+            resampler0.input_size_for_output(output_chunk_size + (first_chunk ? resampler0.get_delay() : 0));
 
-        std::chrono::high_resolution_clock::time_point start_time = std::chrono::high_resolution_clock::now();
-        size_t output_pos                                         = 0;
-        for (;;)
+        // Read channels of audio
+        const size_t samples_read = reader.read(input_chunk_interleaved.truncate(frames_to_read * channels));
+        const size_t frames_read  = samples_read / channels;
+        deinterleave(input_chunk, input_chunk_interleaved.truncate(samples_read));
+
+        size_t frames_to_write = output_chunk_size;
+        if (frames_read < frames_to_read)
         {
-            const size_t block_size = std::min(size_t(16384), output.size() - output_pos);
-            if (block_size == 0)
-                break;
-
-            // Process new block of audio
-            input_pos += r.process(output.slice(output_pos, block_size).ref(), input.slice(input_pos));
-            output_pos += block_size;
+            last_chunk      = true;
+            frames_to_write = resampler0.output_size_for_input(frames_read) + resampler0.get_delay();
+        }
+        if (frames_to_write <= resampler0.get_delay())
+        {
+            println("Error: input file is too short for resampling");
+            return 2;
         }
 
-        std::chrono::high_resolution_clock::duration time =
-            std::chrono::high_resolution_clock::now() - start_time;
-        const double duration = static_cast<double>(output.size()) / output_sr;
-        println("time: ",
-                fmt<'f', 6, 2>(std::chrono::duration_cast<std::chrono::microseconds>(time).count() /
-                               duration * 0.001),
-                "ms per 1 second of audio");
+        const std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+        for (size_t ch = 0; ch < channels; ++ch)
+        {
+            auto& r       = resamplers[ch];
+            auto&& output = output_chunk[ch].truncate(frames_to_write).ref();
+            auto&& input  = input_chunk[ch].truncate(frames_read);
+            if (first_chunk)
+            {
+                // Skip the first r.get_delay() samples (FIR filter delay).
+                r.skip(r.get_delay(), input);
+            }
 
-        // Place buffer to the list of output channels
-        output_channels.push_back(std::move(output));
+            // Process new block of audio
+            r.process(output, input);
+        }
+        resampling_time += std::chrono::high_resolution_clock::now() - t1;
+        interleave(output_chunk_interleaved.truncate(frames_to_write * channels).ref(), output_chunk);
+
+        // Write audio
+        writer.write(output_chunk_interleaved.truncate(frames_to_write * channels));
+        first_chunk = false;
+        if (last_chunk)
+            break;
     }
-
-    // Initialize WAV writer
-    audio_writer_wav<double> writer(
-        open_file_for_writing(argv[2]),
-        audio_format{ reader.format().channels, reader.format().type, kfr::fmax(output_sr) });
-
-    // Write audio
-    writer.write_channels(output_channels);
+    double duration = std::chrono::duration_cast<std::chrono::nanoseconds>(resampling_time).count() / 1e9;
+    double length   = reader.format().length / reader.format().samplerate;
+    println("done in ", duration, " seconds", " (", fmt<'f', 4, 1>(length / duration), "x real-time)");
 
     return 0;
 }
