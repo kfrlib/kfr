@@ -152,6 +152,10 @@ public:
     samplerate_converter(sample_rate_conversion_quality quality, itype interpolation_factor,
                          itype decimation_factor, ftype scale = ftype(1), ftype cutoff = 0.5f);
 
+    samplerate_converter()                                           = default;
+    samplerate_converter(samplerate_converter&&) noexcept            = default;
+    samplerate_converter& operator=(samplerate_converter&&) noexcept = default;
+
     /**
      * @brief Converts an input position to an intermediate position.
      * @param in_pos Input position.
