@@ -7,19 +7,19 @@
 
 #if defined(KFR_COMPILER_MSVC)
 #include <intrin.h>
-#define TESTO_BREAKPOINT __debugbreak()
+#define KFR_BREAKPOINT __debugbreak()
 #else
 #if defined(__i386__) || defined(__x86_64__)
-#define TESTO_BREAKPOINT __asm__ __volatile__("int $0x03")
+#define KFR_BREAKPOINT __asm__ __volatile__("int $0x03")
 #else
-#define TESTO_BREAKPOINT __builtin_trap()
+#define KFR_BREAKPOINT __builtin_trap()
 #endif
 #endif
 
 namespace kfr
 {
 
-#ifdef TESTO_CUSTOM_ASSERTION_PRINT
+#ifdef KFR_CUSTOM_ASSERTION_PRINT
 void assertion_failed(const std::string& string, const char* file, int line);
 #else
 inline void assertion_failed(const std::string& string, const char* file, int line)
@@ -57,31 +57,31 @@ bool check_assertion(const half_comparison<L>& comparison, const char* expr, con
     return result;
 }
 
-#define TESTO_ASSERT_ACTIVE(...)                                                                             \
+#define KFR_ASSERT_ACTIVE(...)                                                                             \
     do                                                                                                       \
     {                                                                                                        \
         if (!::kfr::check_assertion(::kfr::make_comparison() <= __VA_ARGS__, #__VA_ARGS__, __FILE__,         \
                                     __LINE__))                                                               \
-            TESTO_BREAKPOINT;                                                                                \
+            KFR_BREAKPOINT;                                                                                \
     } while (0)
 
-#define TESTO_ASSERT_INACTIVE(...)                                                                           \
+#define KFR_ASSERT_INACTIVE(...)                                                                           \
     do                                                                                                       \
     {                                                                                                        \
     } while (false && (__VA_ARGS__))
 
-#if defined(TESTO_ASSERTION_ON) || !(defined(NDEBUG) || defined(TESTO_ASSERTION_OFF))
+#if defined(KFR_ASSERTION_ON) || !(defined(NDEBUG) || defined(KFR_ASSERTION_OFF))
 
-#define TESTO_ASSERT TESTO_ASSERT_ACTIVE
+#define KFR_ASSERT KFR_ASSERT_ACTIVE
 
 #else
 
-#define TESTO_ASSERT TESTO_ASSERT_INACTIVE
+#define KFR_ASSERT KFR_ASSERT_INACTIVE
 
 #endif
 
-#ifndef TESTO_NO_SHORT_MACROS
-#define ASSERT TESTO_ASSERT
+#ifndef KFR_NO_SHORT_MACROS
+#define ASSERT KFR_ASSERT
 #endif
 
 template <typename OutType, typename InType>

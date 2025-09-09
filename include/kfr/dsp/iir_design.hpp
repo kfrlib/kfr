@@ -931,7 +931,7 @@ KFR_FUNCTION size_t nearest_real_or_complex(const univector<complex<T>>& list, c
             filtered.push_back(v);
         }
     }
-    TESTO_ASSERT(!filtered.empty());
+    KFR_ASSERT(!filtered.empty());
     if (filtered.empty())
         return std::numeric_limits<size_t>::max();
 
@@ -1194,7 +1194,7 @@ KFR_FUNCTION iir_params<T> to_sos(const zpk<T>& filter)
                     p2            = cconj(p1);
                     size_t z2_idx = internal::nearest_real_or_complex(filt.z, p1, true);
                     z2            = filt.z[z2_idx];
-                    TESTO_ASSERT(isreal(z2));
+                    KFR_ASSERT(isreal(z2));
                     filt.z.erase(filt.z.begin() + z2_idx);
                 }
             }
@@ -1207,7 +1207,7 @@ KFR_FUNCTION iir_params<T> to_sos(const zpk<T>& filter)
                     z2     = cconj(z1);
                     p2_idx = internal::nearest_real_or_complex(filt.z, p1, true);
                     p2     = filt.p[p2_idx];
-                    TESTO_ASSERT(isreal(p2));
+                    KFR_ASSERT(isreal(p2));
                 }
                 else
                 {
@@ -1225,10 +1225,10 @@ KFR_FUNCTION iir_params<T> to_sos(const zpk<T>& filter)
                     p2_idx = worstidx;
                     p2     = filt.p[p2_idx];
 
-                    TESTO_ASSERT(isreal(p2));
+                    KFR_ASSERT(isreal(p2));
                     z2_idx = internal::nearest_real_or_complex(filt.z, p2, true);
                     z2     = filt.z[z2_idx];
-                    TESTO_ASSERT(isreal(z2));
+                    KFR_ASSERT(isreal(z2));
                     filt.z.erase(filt.z.begin() + z2_idx);
                 }
                 filt.p.erase(filt.p.begin() + p2_idx);

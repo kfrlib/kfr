@@ -84,7 +84,7 @@ inline const char* dft_name(Class*)
 inline namespace KFR_ARCH_NAME
 {
 
-#define DFT_ASSERT TESTO_ASSERT_INACTIVE
+#define DFT_ASSERT KFR_ASSERT_INACTIVE
 
 template <typename T>
 constexpr size_t fft_vector_width = vector_width<T>;

@@ -315,7 +315,7 @@ public:
         T shortterm = 0;
         for (size_t ch = 0; ch < m_channels.size(); ch++)
         {
-            TESTO_ASSERT(source[ch].size() == m_packet_size);
+            KFR_ASSERT(source[ch].size() == m_packet_size);
             ebu_channel<T>& chan = m_channels[ch];
             chan.process_packet(source[ch].data());
             if (m_running)
