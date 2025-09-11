@@ -26,3 +26,5 @@ PenaltyReturnTypeOnItsOwnLine: 50000
 CommentPragmas: '^ >'
 IndentExternBlock: NoIndent
 SortIncludes: false
+Macros:
+- KFR_RESTRICT=__restrict__
