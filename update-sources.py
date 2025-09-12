@@ -36,10 +36,12 @@ list_sources("KFR_MATH_HDR", "include/kfr/math", ['*.hpp', '*.h'])
 list_sources("KFR_BASE_HDR", "include/kfr/base", ['*.hpp', '*.h'])
 list_sources("KFR_DSP_HDR", "include/kfr/dsp", ['*.hpp', '*.h'])
 list_sources("KFR_IO_HDR", "include/kfr/io", ['*.hpp', '*.h'])
+list_sources("KFR_AUDIO_HDR", "include/kfr/audio", ['*.hpp', '*.h'])
 list_sources("KFR_RUNTIME_HDR", "include/kfr/runtime", ['*.hpp', '*.h'])
 list_sources("KFR_DFT_SRC", "src/dft", ['*.cpp'])
 list_sources("KFR_DSP_SRC", "src/dsp", ['*.cpp'])
 list_sources("KFR_IO_SRC", "src/io", ['*.cpp'])
+list_sources("KFR_AUDIO_SRC", "src/audio", ['*.cpp'])
 list_sources("KFR_UNITTEST_SRC", "tests/unit", ['*.cpp'])
 
 with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'sources.cmake'), "w") as f:

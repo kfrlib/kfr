@@ -57,15 +57,15 @@ bool check_assertion(const half_comparison<L>& comparison, const char* expr, con
     return result;
 }
 
-#define KFR_ASSERT_ACTIVE(...)                                                                             \
+#define KFR_ASSERT_ACTIVE(...)                                                                               \
     do                                                                                                       \
     {                                                                                                        \
         if (!::kfr::check_assertion(::kfr::make_comparison() <= __VA_ARGS__, #__VA_ARGS__, __FILE__,         \
                                     __LINE__))                                                               \
-            KFR_BREAKPOINT;                                                                                \
+            KFR_BREAKPOINT;                                                                                  \
     } while (0)
 
-#define KFR_ASSERT_INACTIVE(...)                                                                           \
+#define KFR_ASSERT_INACTIVE(...)                                                                             \
     do                                                                                                       \
     {                                                                                                        \
     } while (false && (__VA_ARGS__))

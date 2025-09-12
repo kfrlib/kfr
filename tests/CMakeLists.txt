@@ -102,6 +102,10 @@ if (KFR_ENABLE_DFT)
     target_link_libraries(dft_test kfr_dft use_arch)
 endif ()
 
+
+add_test_executable(audio_test audio_test.cpp)
+target_link_libraries(audio_test kfr_audio use_arch)
+
 if (KFR_REGENERATE_TESTS)
     find_package(MPFR)
     find_package(GMP)

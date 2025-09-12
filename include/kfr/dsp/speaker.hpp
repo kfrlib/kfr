@@ -28,6 +28,8 @@
 namespace kfr
 {
 
+/// @brief Speaker positions
+/// Matches VST3 definitions
 enum class Speaker : int
 {
     None          = -1,
@@ -60,6 +62,8 @@ enum class Speaker : int
     Lfe2          = 19
 };
 
+/// @brief Predefined speaker arrangements
+/// Matches VST3 definitions
 enum class SpeakerArrangement : int
 {
     None           = -1,
@@ -93,5 +97,36 @@ enum class SpeakerArrangement : int
     Music81        = 27,
     Arr102         = 28
 };
+
+/// @brief Returns a predefined speaker arrangement for a given number of channels
+/// If no predefined arrangement exists, returns SpeakerArrangement::None
+inline SpeakerArrangement arrangement_for_channels(size_t count)
+{
+    switch (count)
+    {
+    case 1:
+        return SpeakerArrangement::Mono;
+    case 2:
+        return SpeakerArrangement::Stereo;
+    case 3:
+        return SpeakerArrangement::Music30;
+    case 4:
+        return SpeakerArrangement::Music40;
+    case 5:
+        return SpeakerArrangement::Arr50;
+    case 6:
+        return SpeakerArrangement::Arr51;
+    case 7:
+        return SpeakerArrangement::Music61;
+    case 8:
+        return SpeakerArrangement::Music71;
+    case 9:
+        return SpeakerArrangement::Music81;
+    case 12:
+        return SpeakerArrangement::Arr102;
+    default:
+        return SpeakerArrangement::None;
+    }
+}
 
 } // namespace kfr
