@@ -53,7 +53,7 @@ struct audio_format_and_length : audio_format
 };
 
 template <typename T>
-struct audio_reader : public abstract_reader<T>
+struct [[deprecated("Use audio_decoder instead")]] audio_reader : public abstract_reader<T>
 {
     /// @brief Reads interleaved audio
     using abstract_reader<T>::read;
@@ -74,7 +74,7 @@ struct audio_reader : public abstract_reader<T>
 };
 
 template <typename T>
-struct audio_writer : public abstract_writer<T>
+struct [[deprecated("Use audio_encoder instead")]] audio_writer : public abstract_writer<T>
 {
     /// @brief Writes interleaved audio
     using abstract_writer<T>::write;
@@ -106,7 +106,7 @@ struct wav_file_deleter
 
 /// @brief WAV format writer
 template <typename T>
-struct audio_writer_wav : audio_writer<T>
+struct [[deprecated("Use audio_encoder instead")]] audio_writer_wav : audio_writer<T>
 {
     /// @brief Constructs WAV writer using target writer and format
     audio_writer_wav(std::shared_ptr<abstract_writer<>>&& writer, const audio_format& fmt);
@@ -141,7 +141,7 @@ extern template struct audio_writer_wav<f64>;
 
 /// @brief WAV format reader
 template <typename T>
-struct audio_reader_wav : audio_reader<T>
+struct [[deprecated("Use audio_decoder instead")]] audio_reader_wav : audio_reader<T>
 {
     using audio_reader<T>::read;
 
@@ -188,7 +188,7 @@ struct flac_file_deleter
 
 /// @brief FLAC format reader
 template <typename T>
-struct audio_reader_flac : audio_reader<T>
+struct [[deprecated("Use audio_decoder instead")]] audio_reader_flac : audio_reader<T>
 {
     /// @brief Constructs FLAC reader
     audio_reader_flac(std::shared_ptr<abstract_reader<>>&& reader);
@@ -239,7 +239,7 @@ struct mp3_file_deleter
 
 /// @brief MP3 format reader
 template <typename T>
-struct audio_reader_mp3 : audio_reader<T>
+struct [[deprecated("Use audio_decoder instead")]] audio_reader_mp3 : audio_reader<T>
 {
     /// @brief Constructs MP3 reader
     audio_reader_mp3(std::shared_ptr<abstract_reader<>>&& reader);
