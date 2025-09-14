@@ -25,5 +25,6 @@
 #include "dsp.hpp"
 
 #include "audio/data.hpp"
+#include "audio/io.hpp"
 #include "audio/decoder.hpp"
 #include "audio/encoder.hpp"

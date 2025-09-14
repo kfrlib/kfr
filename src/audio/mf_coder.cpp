@@ -53,6 +53,7 @@ public:
     [[nodiscard]] expected<audio_data, audiofile_error> read() override;
     [[nodiscard]] expected<void, audiofile_error> seek(uint64_t position) override;
     void close() override;
+    [[nodiscard]] bool seek_is_precise() const override { return false; }
 
 protected:
     ComPtr<IMFSourceReader> pReader;

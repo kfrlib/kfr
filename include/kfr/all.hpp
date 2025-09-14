@@ -25,6 +25,7 @@
 #include "dft.hpp"
 #include "dsp.hpp"
 #include "io.hpp"
+#include "audio.hpp"
 
 /** @defgroup meta Metaprogramming
  * @brief Metaprogramming

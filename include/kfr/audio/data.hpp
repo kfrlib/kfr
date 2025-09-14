@@ -28,6 +28,7 @@
 #include <array>
 #include <memory>
 #include <map>
+#include <span>
 #include <string>
 #include <kfr/test/assert.hpp>
 #include <kfr/base.hpp>
@@ -147,6 +148,114 @@ struct audio_stat
     fbase rms;
 };
 
+namespace details
+{
+struct aligned_deallocator
+{
+    fbase* ptr;
+    ~aligned_deallocator() { kfr::aligned_deallocate(ptr); }
+};
+template <typename Fn>
+struct lambda_deallocator
+{
+    Fn fn;
+    ~lambda_deallocator() { fn(); }
+};
+} // namespace details
+
+template <typename Tout>
+void interleave_samples(Tout* out, const fbase* const in[], size_t channels, size_t size);
+template <typename Tin>
+void deinterleave_samples(fbase* const out[], const Tin* in, size_t channels, size_t size);
+
+struct audio_data;
+
+struct audio_interleaved_data
+{
+    const audio_metadata* metadata; /**< Metadata associated with the audio data. */
+    fbase* data = nullptr;
+    size_t size; /**< Number of samples per channel. */
+    size_t capacity; /**< Allocated capacity per channel. */
+    int64_t position = 0; /**< Position of the first sample in the audio data. */
+    std::shared_ptr<void> deallocator; /**< Deallocator for the data. */
+
+    template <std::derived_from<audio_metadata> T>
+    [[nodiscard]] const T* typed_metadata() const noexcept
+    {
+        if (metadata->type == T::metadata_type)
+            return static_cast<const T*>(metadata);
+        return nullptr;
+    }
+
+    [[nodiscard]] constexpr audio_interleaved_data() noexcept : metadata(nullptr), size(0), capacity(0) {}
+
+    [[nodiscard]] audio_interleaved_data(const audio_data& deinterleaved);
+
+    audio_interleaved_data(const audio_interleaved_data&) noexcept            = default;
+    audio_interleaved_data(audio_interleaved_data&&) noexcept                 = default;
+    audio_interleaved_data& operator=(const audio_interleaved_data&) noexcept = default;
+    audio_interleaved_data& operator=(audio_interleaved_data&&) noexcept      = default;
+
+    template <std::invocable Fn>
+    [[nodiscard]] audio_interleaved_data(const audio_metadata* metadata, fbase* data, size_t size,
+                                         Fn&& deallocator)
+        : metadata(metadata), data(data), size(size), capacity(size),
+          deallocator(new details::lambda_deallocator<Fn>{ std::forward<Fn>(deallocator) })
+    {
+        KFR_ASSERT(metadata);
+    }
+    [[nodiscard]] audio_interleaved_data(const audio_metadata* metadata, fbase* data, size_t size)
+        : metadata(metadata), data(data), size(size), capacity(size)
+    {
+        KFR_ASSERT(metadata);
+    }
+    [[nodiscard]] audio_interleaved_data(const audio_metadata* metadata, size_t size = 0);
+    [[nodiscard]] audio_interleaved_data(const audio_metadata* metadata, size_t size, fbase value);
+
+    void reset();
+
+    void fill(fbase value);
+
+    void multiply(fbase value);
+
+    void resize(size_t new_size);
+
+    void clear();
+
+    void resize(size_t new_size, fbase value);
+
+    void reserve(size_t new_capacity);
+
+    void append(const audio_interleaved_data& other);
+
+    void prepend(const audio_interleaved_data& other);
+
+    friend void swap(audio_interleaved_data& a, audio_interleaved_data& b) noexcept { a.swap(b); }
+
+    void swap(audio_interleaved_data& other) noexcept;
+
+    [[nodiscard]] bool empty() const noexcept { return !metadata || size == 0; }
+
+    std::span<fbase> as_span() const noexcept { return std::span(data, size * metadata->channels); }
+
+    univector_ref<fbase> interlaved() const noexcept
+    {
+        return make_univector(data, size * metadata->channels);
+    }
+
+    [[nodiscard]] size_t channel_count() const noexcept
+    {
+        KFR_ASSERT(metadata);
+        return metadata->channels;
+    }
+
+    [[nodiscard]] audio_interleaved_data truncate(size_t length) const { return slice(0, length); }
+
+    [[nodiscard]] audio_interleaved_data slice(size_t start, size_t length = SIZE_MAX) const;
+
+    [[nodiscard]] audio_stat stat() const noexcept;
+};
+
 struct audio_data
 {
     const audio_metadata* metadata; /**< Metadata associated with the audio data. */
@@ -166,6 +275,8 @@ struct audio_data
 
     [[nodiscard]] constexpr audio_data() noexcept : metadata(nullptr), size(0), capacity(0) {}
 
+    [[nodiscard]] audio_data(const audio_interleaved_data& interleaved);
+
     audio_data(const audio_data&) noexcept            = default;
     audio_data(audio_data&&) noexcept                 = default;
     audio_data& operator=(const audio_data&) noexcept = default;
@@ -174,7 +285,7 @@ struct audio_data
     template <std::invocable Fn>
     [[nodiscard]] audio_data(const audio_metadata* metadata, chan<fbase*> data, size_t size, Fn&& deallocator)
         : metadata(metadata), data(data), size(size), capacity(size),
-          deallocator(new lambda_deallocator<Fn>{ std::forward<Fn>(deallocator) })
+          deallocator(new details::lambda_deallocator<Fn>{ std::forward<Fn>(deallocator) })
     {
         KFR_ASSERT(metadata);
     }
@@ -219,18 +330,6 @@ struct audio_data
     friend void swap(audio_data& a, audio_data& b) noexcept { a.swap(b); }
 
     void swap(audio_data& other) noexcept;
-
-    struct flat_deallocator
-    {
-        fbase* ptr;
-        ~flat_deallocator() { kfr::aligned_deallocate(ptr); }
-    };
-    template <typename Fn>
-    struct lambda_deallocator
-    {
-        Fn fn;
-        ~lambda_deallocator() { fn(); }
-    };
 
     [[nodiscard]] bool empty() const noexcept { return !metadata || size == 0; }
 
@@ -338,6 +437,15 @@ void interleave_samples(Tout* out, const fbase* const in[], size_t channels, siz
     {
         for (size_t ch = 0; ch < channels; ++ch)
             details::cvt_sample(out[i * channels + ch], in[ch][i], quantinization);
+    }
+}
+template <typename Tout>
+void interleave_samples(Tout* out, const fbase* const in[], size_t channels, size_t size)
+{
+    for (size_t i = 0; i < size; ++i)
+    {
+        for (size_t ch = 0; ch < channels; ++ch)
+            details::cvt_sample(out[i * channels + ch], in[ch][i]);
     }
 }
 

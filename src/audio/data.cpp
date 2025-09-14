@@ -28,14 +28,152 @@
 namespace kfr
 {
 
+static size_t round_capacity(size_t size) { return std::bit_ceil(size); }
+
+audio_interleaved_data::audio_interleaved_data(const audio_metadata* metadata, size_t size)
+    : metadata(metadata), size(size), capacity(size)
+{
+    KFR_ASSERT(metadata);
+    if (!empty())
+    {
+        std::shared_ptr<details::aligned_deallocator> dealloc(
+            new details::aligned_deallocator{ kfr::aligned_allocate<fbase>(metadata->channels * capacity) });
+        data        = dealloc->ptr;
+        deallocator = std::move(dealloc);
+    }
+}
+audio_interleaved_data::audio_interleaved_data(const audio_metadata* metadata, size_t size, fbase value)
+    : audio_interleaved_data(metadata, size)
+{
+    fill(value);
+}
+
+void audio_interleaved_data::reset() { *this = {}; }
+
+void audio_interleaved_data::fill(fbase value) { interlaved() = scalar(value); }
+
+void audio_interleaved_data::multiply(fbase value)
+{
+    if (value == fbase(1))
+        return;
+    if (value == fbase(0))
+    {
+        fill(fbase(0));
+        return;
+    }
+    interlaved() *= scalar(value);
+}
+
+void audio_interleaved_data::resize(size_t new_size) {}
+
+void audio_interleaved_data::clear()
+{
+    size     = 0;
+    position = 0;
+}
+
+void audio_interleaved_data::resize(size_t new_size, fbase value)
+{
+    KFR_ASSERT(metadata);
+    if (new_size <= capacity)
+    {
+        size = new_size;
+        return;
+    }
+    reserve(round_capacity(new_size));
+    size = new_size;
+}
+
+void audio_interleaved_data::reserve(size_t new_capacity)
+{
+    KFR_ASSERT(metadata);
+    if (new_capacity <= capacity)
+    {
+        capacity = new_capacity;
+        return;
+    }
+
+    audio_interleaved_data result(metadata, new_capacity);
+    result.size     = size;
+    result.position = position;
+    if (size > 0)
+    {
+        if (result.data)
+            std::memcpy(result.data, data, size * channel_count() * sizeof(fbase));
+    }
+    swap(result);
+}
+
+void audio_interleaved_data::append(const audio_interleaved_data& other)
+{
+    if (!metadata)
+    {
+        *this = other;
+        return;
+    }
+    KFR_ASSERT(metadata == other.metadata);
+    const size_t old_size = size;
+    resize(size + other.size);
+    std::memcpy(data + old_size * channel_count(), other.data, other.size * channel_count() * sizeof(fbase));
+}
+
+void audio_interleaved_data::prepend(const audio_interleaved_data& other)
+{
+    if (!metadata)
+    {
+        *this = other;
+        return;
+    }
+    KFR_ASSERT(metadata == other.metadata);
+    const size_t old_size = size;
+    resize(size + other.size);
+    std::memmove(data + other.size * channel_count(), data, old_size * channel_count() * sizeof(fbase));
+    std::memcpy(data, other.data, other.size * channel_count() * sizeof(fbase));
+    position -= other.size;
+}
+
+void audio_interleaved_data::swap(audio_interleaved_data& other) noexcept
+{
+    std::swap(metadata, other.metadata);
+    std::swap(data, other.data);
+    std::swap(size, other.size);
+    std::swap(capacity, other.capacity);
+    std::swap(position, other.position);
+    std::swap(deallocator, other.deallocator);
+}
+
+audio_interleaved_data audio_interleaved_data::slice(size_t start, size_t length) const
+{
+    KFR_ASSERT(metadata);
+    KFR_LOGIC_CHECK(start <= size, "Slice out of range");
+    audio_interleaved_data result = *this;
+    result.size                   = std::min(length, size - start);
+    result.data += start * channel_count();
+    result.position += start;
+    return result;
+}
+
+audio_stat audio_interleaved_data::stat() const noexcept
+{
+    KFR_ASSERT(metadata);
+    audio_stat result{ 0, 0 };
+    if (empty())
+    {
+        return result;
+    }
+    result.peak = std::max(result.peak, absmaxof(interlaved()));
+    result.rms  = rms(interlaved());
+    return result;
+}
+
 audio_data::audio_data(const audio_metadata* metadata, size_t size)
     : metadata(metadata), size(size), capacity(size)
 {
     KFR_ASSERT(metadata);
     if (!empty())
     {
-        std::shared_ptr<flat_deallocator> dealloc(
-            new flat_deallocator{ kfr::aligned_allocate<fbase>(metadata->channels * capacity) });
+        std::shared_ptr<details::aligned_deallocator> dealloc(
+            new details::aligned_deallocator{ kfr::aligned_allocate<fbase>(metadata->channels * capacity) });
         for (uint32_t i = 0; i < metadata->channels; ++i)
         {
             data[i] = dealloc->ptr + i * capacity;
@@ -77,7 +215,6 @@ void audio_data::multiply(fbase value)
         make_univector(data[ch], size) *= scalar(value);
     }
 }
-static size_t round_capacity(size_t size) { return std::bit_ceil(size); }
 
 void audio_data::resize(size_t new_size)
 {
@@ -205,4 +342,24 @@ audio_stat audio_data::stat() const noexcept
 }
 
 void audio_data::reset() { *this = {}; }
+
+audio_interleaved_data::audio_interleaved_data(const audio_data& deinterleaved)
+    : audio_interleaved_data(deinterleaved.metadata, deinterleaved.size)
+{
+    KFR_ASSERT(metadata);
+    if (!deinterleaved.empty())
+    {
+        interleave_samples(data, deinterleaved.pointers(), deinterleaved.channel_count(), deinterleaved.size);
+    }
+}
+
+audio_data::audio_data(const audio_interleaved_data& interleaved)
+    : audio_data(interleaved.metadata, interleaved.size)
+{
+    KFR_ASSERT(metadata);
+    if (!interleaved.empty())
+    {
+        deinterleave_samples(pointers(), interleaved.data, interleaved.channel_count(), interleaved.size);
+    }
+}
 } // namespace kfr
