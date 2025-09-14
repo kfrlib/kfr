@@ -65,6 +65,11 @@ const audiofile_metadata& audio_decoder::metadata() const
     return *m_metadata;
 }
 
+expected<std::vector<uint8_t>, audiofile_error> audio_decoder::read_chunk(std::span<const std::byte> chunk_id)
+{
+    return unexpected(audiofile_error::not_implemented);
+}
+
 std::unique_ptr<audio_decoder> create_decoder_for_container(audiofile_container container,
                                                             const audio_decoding_options& options)
 {

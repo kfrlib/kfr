@@ -47,6 +47,7 @@ enum class audiofile_error : uint32_t
     too_large_error = 4, // data chunk too large for standard WAV
     end_of_file     = 5,
     abort           = 6,
+    not_implemented = 7,
 };
 
 inline std::string to_string(audiofile_error err)
@@ -72,7 +73,7 @@ inline std::string to_string(audiofile_error err)
     }
 }
 
-constexpr inline size_t default_audio_frames_to_read = 65536;
+constexpr inline size_t default_audio_frames_to_read = 16384;
 
 enum class open_file_mode
 {

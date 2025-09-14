@@ -28,6 +28,7 @@
 #include <cstdint>
 #include <optional>
 #include <string_view>
+#include <span>
 
 #include <kfr/audio/io.hpp>
 
@@ -68,6 +69,10 @@ public:
 
     /// @brief get audio metadata
     [[nodiscard]] const audiofile_metadata& metadata() const;
+
+    /// @brief read chunk of data by its ID
+    [[nodiscard]] virtual expected<std::vector<uint8_t>, audiofile_error> read_chunk(
+        std::span<const std::byte> chunk_id);
 
     /// @brief close underlying file
     virtual void close() = 0;

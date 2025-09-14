@@ -800,6 +800,15 @@ struct RIFFDecoder : public audio_decoder
         return container.readAudio(&*m_metadata);
     }
 
+    expected<std::vector<uint8_t>, audiofile_error> read_chunk(std::span<const std::byte> chunk_id) override
+    {
+        typename ContainerType::IDType chunkId;
+        if (chunk_id.size() != sizeof(chunkId))
+            return unexpected(audiofile_error::not_implemented);
+        std::memcpy(&chunkId, chunk_id.data(), sizeof(chunkId));
+        return container.readChunkBytes(chunkId);
+    }
+
     [[nodiscard]] expected<void, audiofile_error> seek(uint64_t position) override
     {
         if (!m_metadata)
