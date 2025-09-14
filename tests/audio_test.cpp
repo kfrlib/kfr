@@ -235,11 +235,11 @@ static void testFormat(const std::filesystem::path& dir, bool expectedToFail, bo
             continue;
         }
 
-        audiofile_metadata rawOpenInfo        = *info;
-        rawOpenInfo.bit_depth                 = 16;
-        rawOpenInfo.codec                     = audiofile_codec::lpcm;
-        rawOpenInfo.endianness                = audiofile_endianness::little;
-        std::unique_ptr<audio_decoder> rawDec = create_raw_decoder(rawOpenInfo);
+        raw_decoding_options rawOptions;
+        rawOptions.raw.bit_depth              = 16;
+        rawOptions.raw.codec                  = audiofile_codec::lpcm;
+        rawOptions.raw.endianness             = audiofile_endianness::little;
+        std::unique_ptr<audio_decoder> rawDec = create_raw_decoder(rawOptions);
         auto rawInfo                          = rawDec->open(f.path().string() + ".raw");
         if (!rawInfo)
         {
@@ -375,6 +375,11 @@ TEST_CASE("audio_format_os_unsupported")
 
 #endif
 
+static auto data_generator(size_t size, uint32_t ch, double scale)
+{
+    return scale * truncate(sinenorm(counter() * ((ch + 4) / 300.f)), size);
+}
+
 static void test_audiodata(audio_decoder& decoder, bool allowLengthMismatch = false,
                            double threshold = 0.0001, double scale = dB_to_amp(-3))
 {
@@ -392,8 +397,7 @@ static void test_audiodata(audio_decoder& decoder, bool allowLengthMismatch = fa
 
     for (size_t ch = 0; ch < r.channels; ++ch)
     {
-        double err = absmaxof(data->channel(ch) -
-                              scale * truncate(sinenorm(counter() * ((ch + 4) / 300.f)), data->size));
+        double err = absmaxof(data->channel(ch) - data_generator(44100, ch, scale));
         CHECK(err < threshold);
     }
 }
@@ -431,13 +435,12 @@ TEST_CASE("aiff_decoder")
 
 TEST_CASE("raw_decoder: le")
 {
-    audiofile_metadata info{};
-    info.type        = audio_metadata_type::audio_file;
-    info.codec       = audiofile_codec::ieee_float;
-    info.endianness  = audiofile_endianness::little;
-    info.bit_depth   = 32;
-    info.channels    = 2;
-    info.sample_rate = 44100;
+    raw_decoding_options info{};
+    info.raw.codec       = audiofile_codec::ieee_float;
+    info.raw.endianness  = audiofile_endianness::little;
+    info.raw.bit_depth   = 32;
+    info.raw.channels    = 2;
+    info.raw.sample_rate = 44100;
 
     auto decoder = create_raw_decoder(info);
     REQUIRE(decoder != nullptr);
@@ -453,13 +456,12 @@ TEST_CASE("raw_decoder: le")
 
 TEST_CASE("raw_decoder: be24")
 {
-    audiofile_metadata info{};
-    info.type        = audio_metadata_type::audio_file;
-    info.codec       = audiofile_codec::lpcm;
-    info.endianness  = audiofile_endianness::big;
-    info.bit_depth   = 24;
-    info.channels    = 2;
-    info.sample_rate = 44100;
+    raw_decoding_options info{};
+    info.raw.codec       = audiofile_codec::lpcm;
+    info.raw.endianness  = audiofile_endianness::big;
+    info.raw.bit_depth   = 24;
+    info.raw.channels    = 2;
+    info.raw.sample_rate = 44100;
 
     auto decoder = create_raw_decoder(info);
     REQUIRE(decoder != nullptr);
@@ -469,6 +471,50 @@ TEST_CASE("raw_decoder: be24")
     CHECK(r->codec == audiofile_codec::lpcm);
     CHECK(r->endianness == audiofile_endianness::big);
     CHECK(r->bit_depth == 24);
+
+    test_audiodata(*decoder);
+}
+
+TEST_CASE("raw_encoder: s32")
+{
+    std::string name = "temp" + std::to_string(std::random_device{}()) + ".raw";
+
+    raw_encoding_options info{};
+    info.raw.codec       = audiofile_codec::lpcm;
+    info.raw.endianness  = audiofile_endianness::little;
+    info.raw.bit_depth   = 32;
+    info.raw.channels    = 2;
+    info.raw.sample_rate = 44100;
+
+    auto encoder = create_raw_encoder(info);
+    REQUIRE(encoder != nullptr);
+    auto r = encoder->open(name);
+    REQUIRE(r);
+    // No need to call prepare for raw files
+
+    audiofile_metadata info2 = info.raw.to_metadata();
+    audio_data data(&info2);
+    data.resize(44100);
+    data.channel(0) = data_generator(data.size, 0, dB_to_amp(-3));
+    data.channel(1) = data_generator(data.size, 1, dB_to_amp(-3));
+
+    auto e = encoder->write(data);
+    REQUIRE(e);
+    e = encoder->close();
+    REQUIRE(e);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100)); // wait for file to be written
+
+    raw_decoding_options info3{};
+    info3.raw    = info.raw;
+    auto decoder = create_raw_decoder(info3);
+    REQUIRE(decoder != nullptr);
+    auto r2 = decoder->open(name);
+    REQUIRE(r2);
+    CHECK(r2->container == audiofile_container::unknown);
+    CHECK(r2->codec == audiofile_codec::lpcm);
+    CHECK(r2->endianness == audiofile_endianness::little);
+    CHECK(r2->bit_depth == 32);
 
     test_audiodata(*decoder);
 }
@@ -703,7 +749,7 @@ TEST_CASE("wave encoder")
 {
     std::string name = "temp" + std::to_string(std::random_device{}()) + ".wav";
 
-    auto enc = create_wave_encoder({ {}, /* .switch_to_rf64_if_needed = */ false });
+    auto enc = create_wave_encoder({ {}, /* .switch_to_rf64_if_over_4gb = */ false });
     REQUIRE(enc != nullptr);
     audiofile_metadata info{};
     info.container    = audiofile_container::wave;
@@ -720,7 +766,7 @@ TEST_CASE("wave encoder")
     audio_data data(&info);
     data.resize(44100);
     for (size_t ch = 0; ch < info.channels; ++ch)
-        data.channel(ch) = truncate(dB_to_amp(-3) * sinenorm(counter() * ((ch + 4) / 300.f)), data.size);
+        data.channel(ch) = data_generator(data.size, ch, dB_to_amp(-3));
     e = enc->write(data);
     REQUIRE(e);
     e = enc->close();

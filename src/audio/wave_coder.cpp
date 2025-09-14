@@ -249,7 +249,7 @@ expected<void, audiofile_error> WAVEContainer::writeFormat(const audiofile_metad
     if (container == audiofile_container::unknown)
         container = audiofile_container::wave;
 
-    if (container != audiofile_container::wave || encodingOptions.switch_to_rf64_if_needed)
+    if (container != audiofile_container::wave || encodingOptions.switch_to_rf64_if_over_4gb)
     {
         WAVEDS64 ds64{};
         if (auto e = writeChunkFrom("JUNK", ds64); !e)
@@ -280,7 +280,7 @@ expected<void, audiofile_error> WAVEContainer::finalize()
     if (m_fileSize >= 0x1'00000000ull || container != audiofile_container::wave)
     {
         // >= 4GB
-        if (container == audiofile_container::wave && !encodingOptions.switch_to_rf64_if_needed)
+        if (container == audiofile_container::wave && !encodingOptions.switch_to_rf64_if_over_4gb)
             return unexpected(audiofile_error::too_large_error);
 
         auto data_idx = findChunk("data");
@@ -297,7 +297,7 @@ expected<void, audiofile_error> WAVEContainer::finalize()
             return unexpected(e.error());
 
         // rewrite header
-        if ((container == audiofile_container::wave && encodingOptions.switch_to_rf64_if_needed) ||
+        if ((container == audiofile_container::wave && encodingOptions.switch_to_rf64_if_over_4gb) ||
             container == audiofile_container::rf64)
             m_header.riff = "RF64";
         else if (container == audiofile_container::bw64)

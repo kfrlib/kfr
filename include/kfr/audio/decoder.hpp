@@ -110,27 +110,38 @@ struct audio_decoding_options
 [[nodiscard]] std::unique_ptr<audio_decoder> create_decoder_from_header(
     const audiofile_header& header, const audio_decoding_options& options = {});
 
+struct raw_decoding_options : public audio_decoding_options
+{
+    raw_stream_options raw;
+};
+
+[[nodiscard]] std::unique_ptr<audio_decoder> create_raw_decoder(const raw_decoding_options& options = {});
+
 struct wave_decoding_options : public audio_decoding_options
 {
 };
+
+[[nodiscard]] std::unique_ptr<audio_decoder> create_wave_decoder(const wave_decoding_options& options = {});
+
 struct aiff_decoding_options : public audio_decoding_options
 {
 };
+
+[[nodiscard]] std::unique_ptr<audio_decoder> create_aiff_decoder(const aiff_decoding_options& options = {});
+
 struct caff_decoding_options : public audio_decoding_options
 {
 };
 
-[[nodiscard]] std::unique_ptr<audio_decoder> create_raw_decoder(const audiofile_metadata& info);
-
-[[nodiscard]] std::unique_ptr<audio_decoder> create_wave_decoder(const wave_decoding_options& options = {});
-[[nodiscard]] std::unique_ptr<audio_decoder> create_aiff_decoder(const aiff_decoding_options& options = {});
 [[nodiscard]] std::unique_ptr<audio_decoder> create_caff_decoder(const caff_decoding_options& options = {});
+
 #ifdef KFR_AUDIO_FLAC
 struct flac_decoding_options : public audio_decoding_options
 {
 };
 [[nodiscard]] std::unique_ptr<audio_decoder> create_flac_decoder(const flac_decoding_options& options = {});
 #endif
+
 #ifdef KFR_AUDIO_MP3
 struct mp3_decoding_options : public audio_decoding_options
 {
@@ -138,11 +149,11 @@ struct mp3_decoding_options : public audio_decoding_options
 [[nodiscard]] std::unique_ptr<audio_decoder> create_mp3_decoder(const mp3_decoding_options& options = {});
 #endif
 
+#ifdef KFR_OS_WIN
 struct mediafoundation_decoding_options : public audio_decoding_options
 {
 };
 
-#ifdef KFR_OS_WIN
 [[nodiscard]] std::unique_ptr<audio_decoder> create_mediafoundation_decoder(
     const mediafoundation_decoding_options& options = {});
 #endif

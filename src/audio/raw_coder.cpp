@@ -25,6 +25,7 @@
  */
 
 #include <kfr/audio/decoder.hpp>
+#include <kfr/audio/encoder.hpp>
 #include "riff.hpp"
 
 namespace kfr
@@ -33,21 +34,49 @@ namespace kfr
 struct RawDecoder : public audio_decoder
 {
 public:
-    RawDecoder(audiofile_metadata info) { m_metadata = std::move(info); }
+    RawDecoder(raw_decoding_options options)
+    {
+        this->options = std::move(options);
+        m_metadata    = this->options.raw.to_metadata();
+    }
     [[nodiscard]] expected<audiofile_metadata, audiofile_error> open(const file_path& path) override;
     [[nodiscard]] expected<audio_data, audiofile_error> read() override;
     [[nodiscard]] expected<void, audiofile_error> seek(uint64_t position) override;
     void close() override;
 
 protected:
+    raw_decoding_options options;
     std::unique_ptr<std::FILE, details::stdFILE_deleter> file;
 };
 
-std::unique_ptr<audio_decoder> create_raw_decoder(const audiofile_metadata& info)
+struct RawEncoder : public audio_encoder
 {
-    if (!info.valid())
-        return nullptr;
-    return std::unique_ptr<audio_decoder>(new RawDecoder(info));
+public:
+    RawEncoder(raw_encoding_options options)
+    {
+        this->options = std::move(options);
+        m_metadata    = this->options.raw.to_metadata();
+    }
+    [[nodiscard]] expected<void, audiofile_error> open(const file_path& path,
+                                                       audio_decoder* copyMetadataFrom) override;
+    [[nodiscard]] expected<void, audiofile_error> prepare(const audiofile_metadata& info) override;
+    [[nodiscard]] expected<void, audiofile_error> write(const audio_data& data) override;
+    expected<void, audiofile_error> close() override;
+
+protected:
+    raw_encoding_options options;
+    audiofile_metadata m_metadata;
+    std::unique_ptr<std::FILE, details::stdFILE_deleter> file;
+};
+
+std::unique_ptr<audio_decoder> create_raw_decoder(const raw_decoding_options& options)
+{
+    return std::unique_ptr<audio_decoder>(new RawDecoder(options));
+}
+
+std::unique_ptr<audio_encoder> create_raw_encoder(const raw_encoding_options& options)
+{
+    return std::unique_ptr<audio_encoder>(new RawEncoder(options));
 }
 
 expected<audiofile_metadata, audiofile_error> RawDecoder::open(const file_path& path)
@@ -109,10 +138,58 @@ expected<void, audiofile_error> RawDecoder::seek(uint64_t position)
         return unexpected(audiofile_error::io_error);
     return {};
 }
-void RawDecoder::close()
+void RawDecoder::close() { file.reset(); }
+
+expected<void, audiofile_error> RawEncoder::open(const file_path& path, audio_decoder* copyMetadataFrom)
+{
+    auto f = fopen_path(path, open_file_mode::write_new);
+    if (f)
+        file.reset(*f);
+    else
+        return unexpected(audiofile_error::io_error);
+    return {};
+}
+
+expected<void, audiofile_error> RawEncoder::prepare(const audiofile_metadata& info)
+{
+    if (!m_metadata.compatible(info))
+        return unexpected(audiofile_error::format_error);
+    return {};
+}
+
+expected<void, audiofile_error> RawEncoder::write(const audio_data& audio)
+{
+    // borrowed from RIFF::writePCMAudio
+
+    const audiofile_metadata* meta = &m_metadata;
+    size_t framesToWrite           = audio.size;
+    univector<uint8_t> interleaved(framesToWrite * meta->bytes_per_pcm_frame());
+    audio_quantinization quant(meta->bit_depth, options.dithering);
+    if (!forPCMCodec(
+            [&]<typename T>(ctype_t<T>)
+            {
+                T* interleavedAudio = reinterpret_cast<T*>(interleaved.data());
+                interleave_samples(interleavedAudio, audio.pointers(), audio.channel_count(), framesToWrite,
+                                   quant);
+
+                if (meta->endianness != audiofile_endianness::little)
+                {
+                    for (size_t i = 0; i < framesToWrite * meta->channels; i++)
+                        convertEndianess(interleavedAudio[i]);
+                }
+            },
+            meta->codec, meta->bit_depth))
+        return unexpected(audiofile_error::format_error);
+    size_t wr = fwrite(interleaved.data(), 1, interleaved.size(), file.get());
+    if (wr != interleaved.size())
+        return unexpected(audiofile_error::io_error);
+    return {};
+}
+
+expected<void, audiofile_error> RawEncoder::close()
 {
     file.reset();
-    m_metadata.reset();
+    return {};
 }
 
 } // namespace kfr

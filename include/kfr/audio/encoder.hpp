@@ -68,23 +68,36 @@ public:
 /// Software string to write into metadata, if supported by format
 extern std::string audio_writing_software;
 
+struct raw_encoding_options : public audio_encoding_options
+{
+    raw_stream_options raw;
+};
+
+std::unique_ptr<audio_encoder> create_raw_encoder(const raw_encoding_options& options = {});
+
 struct wave_encoding_options : public audio_encoding_options
 {
-    bool switch_to_rf64_if_needed = true; // default true
+    bool switch_to_rf64_if_over_4gb = true; // default true
 };
+
+std::unique_ptr<audio_encoder> create_wave_encoder(const wave_encoding_options& options = {});
+
 struct aiff_encoding_options : public audio_encoding_options
 {
 };
+
+std::unique_ptr<audio_encoder> create_aiff_encoder(const aiff_encoding_options& options = {});
+
 struct flac_encoding_options : public audio_encoding_options
 {
 };
+
+std::unique_ptr<audio_encoder> create_flac_encoder(const flac_encoding_options& options = {});
+
 struct caff_encoding_options : public audio_encoding_options
 {
 };
 
-std::unique_ptr<audio_encoder> create_wave_encoder(const wave_encoding_options& options = {});
-std::unique_ptr<audio_encoder> create_aiff_encoder(const aiff_encoding_options& options = {});
-std::unique_ptr<audio_encoder> create_flac_encoder(const flac_encoding_options& options = {});
 std::unique_ptr<audio_encoder> create_caff_encoder(const caff_encoding_options& options = {});
 
 } // namespace kfr

@@ -102,4 +102,24 @@ using file_path = std::string;
 [[nodiscard]] expected<FILE*, std::error_code> fopen_path(const file_path& path,
                                                           open_file_mode mode) noexcept;
 
+struct raw_stream_options
+{
+    uint32_t channels               = 2;
+    uint32_t sample_rate            = 44100;
+    audiofile_codec codec           = audiofile_codec::lpcm; // only lpcm and ieee_float supported
+    audiofile_endianness endianness = audiofile_endianness::little;
+    int8_t bit_depth                = 16;
+
+    audiofile_metadata to_metadata() const noexcept
+    {
+        audiofile_metadata info{};
+        info.channels    = channels;
+        info.sample_rate = sample_rate;
+        info.codec       = codec;
+        info.endianness  = endianness;
+        info.bit_depth   = bit_depth;
+        return info;
+    }
+};
+
 } // namespace kfr
