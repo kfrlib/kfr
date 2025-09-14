@@ -46,12 +46,15 @@ void set_error(std::string_view s)
 template <typename Fn, typename R = std::invoke_result_t<Fn>, typename T>
 static R try_fn(Fn&& fn, T fallback)
 {
+#if KFR_HAS_EXCEPTIONS
     try
+#endif
     {
         auto result = fn();
         reset_error();
         return result;
     }
+#if KFR_HAS_EXCEPTIONS
     catch (std::exception& e)
     {
         set_error(e.what());
@@ -62,16 +65,20 @@ static R try_fn(Fn&& fn, T fallback)
         set_error("(unknown exception)");
         return fallback;
     }
+#endif
 }
 
 template <typename Fn>
 static void try_fn(Fn&& fn)
 {
+#if KFR_HAS_EXCEPTIONS
     try
+#endif
     {
         fn();
         reset_error();
     }
+#if KFR_HAS_EXCEPTIONS
     catch (std::exception& e)
     {
         set_error(e.what());
@@ -80,6 +87,7 @@ static void try_fn(Fn&& fn)
     {
         set_error("(unknown exception)");
     }
+#endif
 }
 
 template <typename T>
@@ -216,8 +224,7 @@ KFR_API_SPEC KFR_DFT_PLAN_F32* kfr_dft_create_plan_f32(size_t size)
 KFR_API_SPEC KFR_DFT_PLAN_F32* kfr_dft_create_2d_plan_f32(size_t size1, size_t size2)
 {
     return try_fn(
-        [&]()
-        {
+        [&]() {
             return reinterpret_cast<KFR_DFT_PLAN_F32*>(
                 new var_dft_plan_impl<float, 2>(shape{ size1, size2 }));
         },
@@ -252,8 +259,7 @@ KFR_API_SPEC KFR_DFT_PLAN_F64* kfr_dft_create_plan_f64(size_t size)
 KFR_API_SPEC KFR_DFT_PLAN_F64* kfr_dft_create_2d_plan_f64(size_t size1, size_t size2)
 {
     return try_fn(
-        [&]()
-        {
+        [&]() {
             return reinterpret_cast<KFR_DFT_PLAN_F64*>(
                 new var_dft_plan_impl<double, 2>(shape{ size1, size2 }));
         },
@@ -451,8 +457,7 @@ KFR_API_SPEC void kfr_dft_real_execute_f64(KFR_DFT_REAL_PLAN_F64* plan, kfr_c64*
                                            uint8_t* temp)
 {
     try_fn(
-        [&]()
-        {
+        [&]() {
             reinterpret_cast<var_dft_plan<double>*>(plan)->execute(reinterpret_cast<double*>(out), in, temp);
         });
 }
