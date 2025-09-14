@@ -77,7 +77,10 @@ std::unique_ptr<audio_decoder> create_decoder_for_container(audiofile_container 
     {
     case audiofile_container::wave:
     case audiofile_container::rf64:
+    case audiofile_container::bw64:
         return create_wave_decoder({ options });
+    case audiofile_container::w64:
+        return create_w64_decoder({ options });
     case audiofile_container::aiff:
         return create_aiff_decoder({ options });
     case audiofile_container::caf:
@@ -116,6 +119,8 @@ std::unique_ptr<audio_decoder> create_decoder_from_header(const audiofile_header
     if (header_is(header, "RIFF....WAVE....") || header_is(header, "RF64....WAVE....") ||
         header_is(header, "BW64....WAVE...."))
         return create_wave_decoder({ options });
+    if (header_is(header, "riff\x2E\x91\xCF\x11\xA5\xD6\x28\xDB\x04\xC1\x00\x00"))
+        return create_w64_decoder({ options });
     if (header_is(header, "FORM....AIFF....") || header_is(header, "FORM....AIFC...."))
         return create_aiff_decoder({ options });
     if (header_is(header, "caff............"))
@@ -186,6 +191,8 @@ audiofile_container audiofile_container_from_extension(std::string_view extensio
         return audiofile_container::mp3;
     if (match_nocase(extension, ".wav") || match_nocase(extension, ".wave"))
         return audiofile_container::wave;
+    if (match_nocase(extension, ".w64"))
+        return audiofile_container::w64;
     if (match_nocase(extension, ".rf64"))
         return audiofile_container::rf64;
     if (match_nocase(extension, ".bw64"))
