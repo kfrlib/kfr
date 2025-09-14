@@ -82,6 +82,12 @@ struct wave_encoding_options : public audio_encoding_options
 
 std::unique_ptr<audio_encoder> create_wave_encoder(const wave_encoding_options& options = {});
 
+struct w64_encoding_options : public audio_encoding_options
+{
+};
+
+std::unique_ptr<audio_encoder> create_w64_encoder(const w64_encoding_options& options = {});
+
 struct aiff_encoding_options : public audio_encoding_options
 {
 };

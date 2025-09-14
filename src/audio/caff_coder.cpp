@@ -24,8 +24,6 @@
   See https://www.kfrlib.com for details.
  */
 
-#include <kfr/audio/decoder.hpp>
-#include <kfr/audio/encoder.hpp>
 #include "riff.hpp"
 
 #ifdef KFR_AUDIO_ALAC

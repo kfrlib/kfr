@@ -23,7 +23,6 @@
   disclosing the source code of your own applications.
   See https://www.kfrlib.com for details.
  */
-#include <kfr/audio/decoder.hpp>
 #include "riff.hpp"
 #include "ieee.hpp"
 

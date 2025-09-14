@@ -419,6 +419,20 @@ TEST_CASE("wave_decoder")
     CHECK(r->metadata.at("ISFT") == "KFR 7.0.0 debug avx2 64-bit (clang-msvc-20.1.3/windows) +in +ve");
 }
 
+TEST_CASE("w64_decoder")
+{
+    auto decoder = create_w64_decoder({ { .read_metadata = true } });
+    REQUIRE(decoder != nullptr);
+    auto r = decoder->open(KFR_SRC_DIR "/tests/test-audio/testdata_2c_s16.w64");
+    REQUIRE(r);
+    CHECK(r->container == audiofile_container::w64);
+    CHECK(r->codec == audiofile_codec::lpcm);
+    CHECK(r->endianness == audiofile_endianness::little);
+    CHECK(r->bit_depth == 16);
+
+    test_audiodata(*decoder);
+}
+
 TEST_CASE("aiff_decoder")
 {
     auto decoder = create_aiff_decoder({ { .read_metadata = true } });

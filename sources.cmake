@@ -348,6 +348,7 @@ set(
     ${PROJECT_SOURCE_DIR}/src/audio/mf_coder.cpp
     ${PROJECT_SOURCE_DIR}/src/audio/mp3_coder.cpp
     ${PROJECT_SOURCE_DIR}/src/audio/raw_coder.cpp
+    ${PROJECT_SOURCE_DIR}/src/audio/w64_coder.cpp
     ${PROJECT_SOURCE_DIR}/src/audio/wave_coder.cpp
 )
 

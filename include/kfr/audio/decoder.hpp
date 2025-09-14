@@ -123,6 +123,12 @@ struct wave_decoding_options : public audio_decoding_options
 
 [[nodiscard]] std::unique_ptr<audio_decoder> create_wave_decoder(const wave_decoding_options& options = {});
 
+struct w64_decoding_options : public audio_decoding_options
+{
+};
+
+[[nodiscard]] std::unique_ptr<audio_decoder> create_w64_decoder(const w64_decoding_options& options = {});
+
 struct aiff_decoding_options : public audio_decoding_options
 {
 };

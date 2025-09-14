@@ -66,6 +66,7 @@ enum class audiofile_container : uint8_t
 {
     unknown = 0,
     wave, ///< RIFF WAVE
+    w64, ///< Sony WAVE64
     rf64, ///< RF64 by EBU
     bw64, ///< BW64 as per EBU Tech 3285 v2 (no metadata support yet)
     flac, ///< FLAC
