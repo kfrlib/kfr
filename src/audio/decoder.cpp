@@ -35,7 +35,6 @@ expected<audio_data_interleaved, audiofile_error> audio_decoder::read_all()
         return unexpected(audiofile_error::closed);
     audio_data_interleaved result(m_format->channels);
 
-    size_t start = 0;
     for (;;)
     {
         auto read = read_to(result.slice_past_end(default_audio_frames_to_read));
@@ -62,7 +61,6 @@ expected<audio_data_planar, audiofile_error> audio_decoder::read_all_planar()
 
     audio_data_interleaved buffer(m_format->channels, default_audio_frames_to_read);
 
-    size_t start = 0;
     for (;;)
     {
         auto read = read_to(buffer);
@@ -340,4 +338,12 @@ expected<audio_data_interleaved, audiofile_error> decode_audio_file(const file_p
 
     return decoder->read_all();
 }
+#if defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM
+expected<audio_data_interleaved, audiofile_error> decode_audio_file(const std::string& path,
+                                                                    audiofile_format* out_format,
+                                                                    const audio_decoding_options& options)
+{
+    return decode_audio_file(details::utf8_to_wstring(path), out_format, options);
+}
+#endif
 } // namespace kfr

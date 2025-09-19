@@ -54,7 +54,7 @@ public:
                                                        const audiofile_format& format,
                                                        audio_decoder* copyMetadataFrom = nullptr)
     {
-        return open(details::utf8_to_wstring(path), copyMetadataFrom);
+        return open(details::utf8_to_wstring(path), format, copyMetadataFrom);
     }
 #endif
 
@@ -101,7 +101,6 @@ struct aiff_encoding_options : public audio_encoding_options
 
 std::unique_ptr<audio_encoder> create_aiff_encoder(const aiff_encoding_options& options = {});
 
-
 #ifdef KFR_AUDIO_FLAC
 struct flac_encoding_options : public audio_encoding_options
 {
@@ -139,6 +138,14 @@ std::unique_ptr<audio_encoder> create_caff_encoder(const caff_encoding_options& 
                                                                 audio_decoder* copyMetadataFrom = nullptr,
                                                                 const audio_encoding_options& options = {});
 
+#if defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM
+[[nodiscard]] expected<void, audiofile_error> encode_audio_file(const std::string& path,
+                                                                const audio_data_interleaved& data,
+                                                                const audiofile_format& format,
+                                                                audio_decoder* copyMetadataFrom = nullptr,
+                                                                const audio_encoding_options& options = {});
+#endif
+
 /**
  * @brief Encodes and writes audio data to a file.
  *
@@ -161,5 +168,12 @@ std::unique_ptr<audio_encoder> create_caff_encoder(const caff_encoding_options& 
                                                                 const audiofile_format& format,
                                                                 audio_decoder* copyMetadataFrom = nullptr,
                                                                 const audio_encoding_options& options = {});
+#if defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM
+[[nodiscard]] expected<void, audiofile_error> encode_audio_file(const std::string& path,
+                                                                const audio_data_planar& data,
+                                                                const audiofile_format& format,
+                                                                audio_decoder* copyMetadataFrom = nullptr,
+                                                                const audio_encoding_options& options = {});
+#endif
 
 } // namespace kfr

@@ -130,4 +130,20 @@ expected<void, audiofile_error> encode_audio_file(const file_path& path, const a
 
     return {};
 }
+#if defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM
+expected<void, audiofile_error> encode_audio_file(const std::string& path, const audio_data_interleaved& data,
+                                                  const audiofile_format& format,
+                                                  audio_decoder* copyMetadataFrom,
+                                                  const audio_encoding_options& options)
+{
+    return encode_audio_file(details::utf8_to_wstring(path), data, format, copyMetadataFrom, options);
+}
+expected<void, audiofile_error> encode_audio_file(const std::string& path, const audio_data_planar& data,
+                                                  const audiofile_format& format,
+                                                  audio_decoder* copyMetadataFrom,
+                                                  const audio_encoding_options& options)
+{
+    return encode_audio_file(details::utf8_to_wstring(path), data, format, copyMetadataFrom, options);
+}
+#endif
 } // namespace kfr

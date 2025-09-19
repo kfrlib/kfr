@@ -10,6 +10,14 @@
 #include <kfr/test/test.hpp>
 #include <kfr/base.hpp>
 
+#ifdef KFR_COMPILER_IS_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 namespace kfr
 {
 
@@ -75,3 +83,9 @@ TEST_CASE("read_mp3_file")
 }
 #endif
 } // namespace kfr
+
+#ifdef KFR_COMPILER_IS_MSVC
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif

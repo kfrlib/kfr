@@ -376,6 +376,12 @@ struct mediafoundation_decoding_options : public audio_decoding_options
     const file_path& path, audiofile_format* out_format = nullptr,
     const audio_decoding_options& options = {});
 
+#if defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM
+[[nodiscard]] expected<audio_data_interleaved, audiofile_error> decode_audio_file(
+    const std::string& path, audiofile_format* out_format = nullptr,
+    const audio_decoding_options& options = {});
+#endif
+
 namespace details
 {
 /**

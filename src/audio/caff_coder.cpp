@@ -64,6 +64,9 @@ struct CAFFTraits
     using EncodingOptions                                = caff_encoding_options;
     using DecodingOptions                                = caff_decoding_options;
 
+    constexpr static std::array<IDType, 0> initialChunksToCopy{};
+    constexpr static std::array<IDType, 0> finalChunksToCopy{};
+
 #pragma pack(push, 1)
     struct ChunkType
     {

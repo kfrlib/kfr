@@ -114,8 +114,8 @@ struct W64Traits
     using EncodingOptions                                = w64_encoding_options;
     using DecodingOptions                                = w64_decoding_options;
 
-    constexpr static std::array initialChunksToCopy = { guidBEXT };
-    constexpr static std::array<IDType, 0> finalChunksToCopy;
+    constexpr static std::array<IDType, 1> initialChunksToCopy{ guidBEXT };
+    constexpr static std::array<IDType, 0> finalChunksToCopy{};
 
 #pragma pack(push, 1)
     struct ChunkType

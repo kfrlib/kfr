@@ -820,7 +820,7 @@ public:
 
         if (this->copyMetadataFrom)
         {
-            for (IDType id : Traits::finalChunksToCopy)
+            for (IDType id : Traits::initialChunksToCopy)
             {
                 if (auto e = copyChunk(id); !e)
                     return unexpected(e.error());
@@ -867,7 +867,7 @@ public:
         std::optional<audiofile_error> err;
         auto e = this->copyMetadataFrom->read_chunk(
             std::span(reinterpret_cast<const std::byte*>(&id), sizeof(id)),
-            [this, id, &err](std::span<const std::byte> data)
+            [this, &err](std::span<const std::byte> data)
             {
                 if (auto e = writeChunkContinue(data.data(), data.size_bytes()); !e)
                 {

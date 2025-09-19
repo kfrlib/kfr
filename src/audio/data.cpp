@@ -215,7 +215,7 @@ void audio_data<Interleaved>::prepend(const audio_data& other)
     position -= other.size;
 }
 
-static chan<fbase*, false> operator+(const chan<fbase*, false>& arr, size_t offset)
+[[maybe_unused]] static chan<fbase*, false> operator+(const chan<fbase*, false>& arr, size_t offset)
 {
     chan<fbase*, false> result = arr;
     for (size_t i = 0; i < result.size(); ++i)
@@ -428,10 +428,10 @@ inline void cvt_sample(kfr::i24& sample, fbase value) noexcept
 {
     sample = std::llround(std::clamp(value, fbase(-1.0), fbase(+1.0)) * fbase(8388607.0));
 }
-inline void cvt_sample(float& sample, double value) noexcept { sample = value; }
-inline void cvt_sample(double& sample, double value) noexcept { sample = value; }
-inline void cvt_sample(float& value, float sample) noexcept { value = sample; }
-inline void cvt_sample(double& value, float sample) noexcept { value = sample; }
+[[maybe_unused]] inline void cvt_sample(float& sample, double value) noexcept { sample = value; }
+[[maybe_unused]] inline void cvt_sample(double& sample, double value) noexcept { sample = value; }
+[[maybe_unused]] inline void cvt_sample(float& value, float sample) noexcept { value = sample; }
+[[maybe_unused]] inline void cvt_sample(double& value, float sample) noexcept { value = sample; }
 
 inline void cvt_sample(fbase& value, int16_t sample) noexcept { value = sample / fbase(32767.0); }
 inline void cvt_sample(fbase& value, kfr::i24 sample) noexcept { value = sample / fbase(8388607.0); }

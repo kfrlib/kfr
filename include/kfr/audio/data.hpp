@@ -459,7 +459,7 @@ struct audio_data
         requires(Interleaved)
     {
         KFR_ASSERT(index < channels);
-        return strided_channel<fbase>(data + index, size, channels);
+        return strided_channel<fbase>{ data + index, size, channels };
     }
 
     /**

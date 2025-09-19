@@ -75,7 +75,6 @@ int main(int argc, char** argv)
     audio_data input_chunk(channels, input_chunk_size);
 
     bool first_chunk = true;
-    bool last_chunk  = false;
     std::chrono::high_resolution_clock::duration resampling_time{};
     // Process audio in chunks
     println("Resampling...");

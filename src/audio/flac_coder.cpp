@@ -398,10 +398,9 @@ expected<void, audiofile_error> FLACEncoder::write(const audio_data_interleaved&
 }
 expected<uint64_t, audiofile_error> FLACEncoder::close()
 {
-    bool ok = true;
     if (encoder)
     {
-        ok = FLAC__stream_encoder_finish(encoder.get());
+        FLAC__stream_encoder_finish(encoder.get());
         encoder.reset();
     }
     file.reset();

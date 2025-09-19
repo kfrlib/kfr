@@ -98,8 +98,8 @@ struct AIFFTraits
     using EncodingOptions                                = aiff_encoding_options;
     using DecodingOptions                                = aiff_decoding_options;
 
-    constexpr static IDType initialChunksToCopy[] = {};
-    constexpr static IDType finalChunksToCopy[]   = { "NAME", "AUTH", "(c) ", "ANNO", "COMT" };
+    constexpr static std::array<IDType, 0> initialChunksToCopy{};
+    constexpr static std::array<IDType, 5> finalChunksToCopy{ "NAME", "AUTH", "(c) ", "ANNO", "COMT" };
 
 #pragma pack(push, 1)
     struct ChunkType

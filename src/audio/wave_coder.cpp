@@ -81,8 +81,8 @@ struct WAVETraits
     using EncodingOptions                                = wave_encoding_options;
     using DecodingOptions                                = wave_decoding_options;
 
-    constexpr static std::array initialChunksToCopy = { "chna", "axml", "bext" };
-    constexpr static std::array<IDType, 0> finalChunksToCopy;
+    constexpr static std::array<IDType, 3> initialChunksToCopy{ "chna", "axml", "bext" };
+    constexpr static std::array<IDType, 0> finalChunksToCopy{};
 
 #pragma pack(push, 1)
     struct ChunkType
