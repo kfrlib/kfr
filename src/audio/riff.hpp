@@ -529,7 +529,7 @@ public:
         if (!chunkSize)
             return unexpected(chunkSize.error());
 
-        size_t sizeToRead = std::min(buffer_size, *chunkSize);
+        size_t sizeToRead = std::min(buffer_size, size_t(*chunkSize));
         std::unique_ptr<std::byte[]> buffer(new std::byte[sizeToRead]);
 
         for (;;)
