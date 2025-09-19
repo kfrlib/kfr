@@ -131,7 +131,14 @@ expected<size_t, audiofile_error> MP3Decoder::read_to(const audio_data_interleav
     {
         return unexpected(audiofile_error::invalid_argument);
     }
+#ifdef KFR_BASETYPE_F32
     size_t framesRead = mp3dec_ex_read(&*decex, output.data, output.total_samples()) / m_format->channels;
+#else
+    std::vector<float> temp(output.total_samples());
+    size_t framesRead = mp3dec_ex_read(&*decex, temp.data(), output.total_samples()) / m_format->channels;
+    samples_load(output.data, temp.data(), output.channels * framesRead);
+    temp = {};
+#endif
     if (framesRead == 0) /* normal eof or error condition */
     {
         if (decex->last_error)

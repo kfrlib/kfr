@@ -7,6 +7,7 @@
 #include <kfr/base.hpp>
 #include <kfr/dsp.hpp>
 #include <kfr/io.hpp>
+#include <kfr/audio.hpp>
 
 using namespace kfr;
 
@@ -36,11 +37,16 @@ int main()
         // Perform the resampling process
         r.process(resampled, swept_sine);
 
-        // Write the resampled signal to a WAV file
-        audio_writer_wav<fbase> writer(open_file_for_writing(KFR_FILEPATH("audio_high_quality.wav")),
-                                       audio_format{ 1, audio_sample_type::i32, output_sr });
-        writer.write(resampled.data(), resampled.size());
-        writer.close();
+        auto written = encode_audio_file(
+            "audio_high_quality.wav",
+            audio_data_planar{ std::initializer_list<fbase*>{ resampled.data() }, resampled.size() },
+            audiofile_format{ .container   = audiofile_container::wave,
+                              .codec       = audiofile_codec::lpcm,
+                              .bit_depth   = 32,
+                              .channels    = 1,
+                              .sample_rate = output_sr });
+        if (!written)
+            return -1;
 
         // Save a plot of the high-quality resampled audio
         plot_save("audio_high_quality", "audio_high_quality.wav", "");
@@ -60,10 +66,16 @@ int main()
         r.process(resampled, swept_sine);
 
         // Write the resampled signal to a WAV file
-        audio_writer_wav<fbase> writer(open_file_for_writing(KFR_FILEPATH("audio_normal_quality.wav")),
-                                       audio_format{ 1, audio_sample_type::i32, output_sr });
-        writer.write(resampled.data(), resampled.size());
-        writer.close();
+        auto written = encode_audio_file(
+            "audio_normal_quality.wav",
+            audio_data_planar{ std::initializer_list<fbase*>{ resampled.data() }, resampled.size() },
+            audiofile_format{ .container   = audiofile_container::wave,
+                              .codec       = audiofile_codec::lpcm,
+                              .bit_depth   = 32,
+                              .channels    = 1,
+                              .sample_rate = output_sr });
+        if (!written)
+            return -1;
 
         // Save a plot of the normal-quality resampled audio
         plot_save("audio_normal_quality", "audio_normal_quality.wav", "");
@@ -83,10 +95,16 @@ int main()
         r.process(resampled, swept_sine);
 
         // Write the resampled signal to a WAV file
-        audio_writer_wav<fbase> writer(open_file_for_writing(KFR_FILEPATH("audio_low_quality.wav")),
-                                       audio_format{ 1, audio_sample_type::i32, output_sr });
-        writer.write(resampled.data(), resampled.size());
-        writer.close();
+        auto written = encode_audio_file(
+            "audio_low_quality.wav",
+            audio_data_planar{ std::initializer_list<fbase*>{ resampled.data() }, resampled.size() },
+            audiofile_format{ .container   = audiofile_container::wave,
+                              .codec       = audiofile_codec::lpcm,
+                              .bit_depth   = 32,
+                              .channels    = 1,
+                              .sample_rate = output_sr });
+        if (!written)
+            return -1;
 
         // Save a plot of the low-quality resampled audio
         plot_save("audio_low_quality", "audio_low_quality.wav", "");
@@ -106,10 +124,16 @@ int main()
         r.process(resampled, swept_sine);
 
         // Write the resampled signal to a WAV file
-        audio_writer_wav<fbase> writer(open_file_for_writing(KFR_FILEPATH("audio_draft_quality.wav")),
-                                       audio_format{ 1, audio_sample_type::i32, output_sr });
-        writer.write(resampled.data(), resampled.size());
-        writer.close();
+        auto written = encode_audio_file(
+            "audio_draft_quality.wav",
+            audio_data_planar{ std::initializer_list<fbase*>{ resampled.data() }, resampled.size() },
+            audiofile_format{ .container   = audiofile_container::wave,
+                              .codec       = audiofile_codec::lpcm,
+                              .bit_depth   = 32,
+                              .channels    = 1,
+                              .sample_rate = output_sr });
+        if (!written)
+            return -1;
 
         // Save a plot of the draft-quality resampled audio
         plot_save("audio_draft_quality", "audio_draft_quality.wav", "");

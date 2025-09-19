@@ -43,8 +43,10 @@ std::unique_ptr<audio_encoder> create_encoder_for_container(audiofile_container 
         return create_w64_encoder(w64_encoding_options{ options });
     case audiofile_container::aiff:
         return create_aiff_encoder(aiff_encoding_options{ options });
+#ifdef KFR_AUDIO_FLAC
     case audiofile_container::flac:
         return create_flac_encoder(flac_encoding_options{ options });
+#endif
     case audiofile_container::caf:
         return create_caff_encoder(caff_encoding_options{ options });
     case audiofile_container::unknown:

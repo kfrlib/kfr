@@ -101,11 +101,14 @@ struct aiff_encoding_options : public audio_encoding_options
 
 std::unique_ptr<audio_encoder> create_aiff_encoder(const aiff_encoding_options& options = {});
 
+
+#ifdef KFR_AUDIO_FLAC
 struct flac_encoding_options : public audio_encoding_options
 {
 };
 
 std::unique_ptr<audio_encoder> create_flac_encoder(const flac_encoding_options& options = {});
+#endif
 
 struct caff_encoding_options : public audio_encoding_options
 {
@@ -133,8 +136,8 @@ std::unique_ptr<audio_encoder> create_caff_encoder(const caff_encoding_options& 
 [[nodiscard]] expected<void, audiofile_error> encode_audio_file(const file_path& path,
                                                                 const audio_data_interleaved& data,
                                                                 const audiofile_format& format,
-                                                                audio_decoder* copyMetadataFrom,
-                                                                const audio_encoding_options& options);
+                                                                audio_decoder* copyMetadataFrom = nullptr,
+                                                                const audio_encoding_options& options = {});
 
 /**
  * @brief Encodes and writes audio data to a file.
@@ -156,7 +159,7 @@ std::unique_ptr<audio_encoder> create_caff_encoder(const caff_encoding_options& 
 [[nodiscard]] expected<void, audiofile_error> encode_audio_file(const file_path& path,
                                                                 const audio_data_planar& data,
                                                                 const audiofile_format& format,
-                                                                audio_decoder* copyMetadataFrom,
-                                                                const audio_encoding_options& options);
+                                                                audio_decoder* copyMetadataFrom = nullptr,
+                                                                const audio_encoding_options& options = {});
 
 } // namespace kfr
