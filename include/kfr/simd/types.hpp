@@ -158,14 +158,16 @@ struct i24
 {
     u8 raw[3];
 
-    constexpr i24(i32 x) noexcept : raw{}
+    i24() noexcept {}
+
+    i24(i32 x) noexcept
     {
         raw[0] = x & 0xFF;
         raw[1] = (x >> 8) & 0xFF;
         raw[2] = (x >> 16) & 0xFF;
     }
 
-    constexpr i32 as_int() const noexcept
+    i32 as_int() const noexcept
     {
         return static_cast<i32>(raw[0]) | static_cast<i32>(raw[1] << 8) |
                (static_cast<i32>(raw[2] << 24) >> 8);

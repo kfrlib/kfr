@@ -92,4 +92,5 @@ std::wstring utf8_to_wstring(std::string_view str)
 }
 } // namespace details
 #endif
+
 } // namespace kfr

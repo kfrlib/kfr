@@ -474,7 +474,7 @@ npy_decode_result load_from_npy(tensor<T, Dims>& result, Fn&& read_callback)
     rd(ctype<T>, buffer.data(), buffer.size());
     if (convert_endianness)
     {
-        convert_endianess(buffer.data(), buffer.size());
+        kfr::convert_endianness(buffer.data(), buffer.size());
     }
     if (hdr.fortran_order)
     {

@@ -46,24 +46,31 @@ public:
 
     /// @brief open file for writing
     [[nodiscard]] virtual expected<void, audiofile_error> open(const file_path& path,
+                                                               const audiofile_format& format,
                                                                audio_decoder* copyMetadataFrom = nullptr) = 0;
 
 #if defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM
     [[nodiscard]] expected<void, audiofile_error> open(const std::string& path,
+                                                       const audiofile_format& format,
                                                        audio_decoder* copyMetadataFrom = nullptr)
     {
         return open(details::utf8_to_wstring(path), copyMetadataFrom);
     }
 #endif
 
-    /// @brief prepare encoding, write format
-    [[nodiscard]] virtual expected<void, audiofile_error> prepare(const audiofile_metadata& info) = 0;
-
     /// @brief write chunk of data
-    [[nodiscard]] virtual expected<void, audiofile_error> write(const audio_data& data) = 0;
+    [[nodiscard]] virtual expected<void, audiofile_error> write(const audio_data_interleaved& data) = 0;
 
-    [[nodiscard]] virtual expected<void, audiofile_error> close() = 0;
+    [[nodiscard]] virtual expected<uint64_t, audiofile_error> close() = 0;
+
+    [[]] const std::optional<audiofile_format>& format() const noexcept { return m_format; }
+
+protected:
+    std::optional<audiofile_format> m_format;
 };
+
+[[nodiscard]] std::unique_ptr<audio_encoder> create_encoder_for_container(
+    audiofile_container container, const audio_encoding_options& options = {});
 
 /// Software string to write into metadata, if supported by format
 extern std::string audio_writing_software;
@@ -105,5 +112,51 @@ struct caff_encoding_options : public audio_encoding_options
 };
 
 std::unique_ptr<audio_encoder> create_caff_encoder(const caff_encoding_options& options = {});
+
+/**
+ * @brief Encodes and writes audio data to a file.
+ *
+ * This function encodes the provided interleaved audio data into the specified format
+ * and writes it to the given file path. Optionally, metadata can be copied from an
+ * existing audio decoder.
+ *
+ * @param path The file path where the encoded audio file will be written.
+ * @param data The interleaved audio data to be encoded.
+ * @param format The desired audio file format for encoding.
+ * @param copyMetadataFrom Optional pointer to an audio decoder from which metadata
+ *                         will be copied. Pass nullptr if no metadata copying is needed.
+ * @param options Encoding options to customize the encoding process.
+ *
+ * @return An `expected<void, audiofile_error>` object. If the operation succeeds,
+ *         it contains no value. If an error occurs, it contains an `audiofile_error`.
+ */
+[[nodiscard]] expected<void, audiofile_error> encode_audio_file(const file_path& path,
+                                                                const audio_data_interleaved& data,
+                                                                const audiofile_format& format,
+                                                                audio_decoder* copyMetadataFrom,
+                                                                const audio_encoding_options& options);
+
+/**
+ * @brief Encodes and writes audio data to a file.
+ *
+ * This function encodes the provided planar audio data into the specified format
+ * and writes it to the given file path. Optionally, metadata can be copied from an
+ * existing audio decoder.
+ *
+ * @param path The file path where the encoded audio file will be written.
+ * @param data The planar audio data to be encoded.
+ * @param format The desired audio file format for encoding.
+ * @param copyMetadataFrom Optional pointer to an audio decoder from which metadata
+ *                         will be copied. Pass nullptr if no metadata copying is needed.
+ * @param options Encoding options to customize the encoding process.
+ *
+ * @return An `expected<void, audiofile_error>` object. If the operation succeeds,
+ *         it contains no value. If an error occurs, it contains an `audiofile_error`.
+ */
+[[nodiscard]] expected<void, audiofile_error> encode_audio_file(const file_path& path,
+                                                                const audio_data_planar& data,
+                                                                const audiofile_format& format,
+                                                                audio_decoder* copyMetadataFrom,
+                                                                const audio_encoding_options& options);
 
 } // namespace kfr

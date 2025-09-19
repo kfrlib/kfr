@@ -40,14 +40,16 @@ using tl::unexpected;
 
 enum class audiofile_error : uint32_t
 {
-    unknown         = 0,
-    io_error        = 1,
-    format_error    = 2,
-    internal_error  = 3,
-    too_large_error = 4, // data chunk too large for standard WAV
-    end_of_file     = 5,
-    abort           = 6,
-    not_implemented = 7,
+    unknown          = 0,
+    io_error         = 1,
+    format_error     = 2,
+    internal_error   = 3,
+    too_large_error  = 4, // data chunk too large for standard WAV
+    end_of_file      = 5,
+    abort            = 6,
+    not_implemented  = 7,
+    invalid_argument = 8,
+    closed           = 9,
 };
 
 inline std::string to_string(audiofile_error err)
@@ -111,16 +113,27 @@ struct raw_stream_options
     audiofile_endianness endianness = audiofile_endianness::little;
     int8_t bit_depth                = 16;
 
-    audiofile_metadata to_metadata() const noexcept
+    audiofile_format to_format() const noexcept
     {
-        audiofile_metadata info{};
-        info.channels    = channels;
-        info.sample_rate = sample_rate;
-        info.codec       = codec;
-        info.endianness  = endianness;
-        info.bit_depth   = bit_depth;
-        return info;
+        audiofile_format result{};
+        result.channels    = channels;
+        result.sample_rate = sample_rate;
+        result.codec       = codec;
+        result.endianness  = endianness;
+        result.bit_depth   = bit_depth;
+        return result;
     }
 };
+
+#if defined _MSC_VER // MSVC
+#define KFR_IO_SEEK_64 _fseeki64
+#define KFR_IO_TELL_64 _ftelli64
+#elif defined _WIN32 // MinGW
+#define KFR_IO_SEEK_64 fseeko64
+#define KFR_IO_TELL_64 ftello64
+#else // macOS, Linux
+#define KFR_IO_SEEK_64 fseeko
+#define KFR_IO_TELL_64 ftello
+#endif
 
 } // namespace kfr

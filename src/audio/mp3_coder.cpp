@@ -25,7 +25,6 @@
  */
 
 #include <kfr/audio/decoder.hpp>
-#include "riff.hpp"
 
 #ifdef KFR_AUDIO_MP3
 
@@ -40,8 +39,8 @@ namespace kfr
 struct MP3Decoder : public audio_decoder
 {
 public:
-    [[nodiscard]] expected<audiofile_metadata, audiofile_error> open(const file_path& path) override;
-    [[nodiscard]] expected<audio_data, audiofile_error> read() override;
+    [[nodiscard]] expected<audiofile_format, audiofile_error> open(const file_path& path) override;
+    [[nodiscard]] expected<size_t, audiofile_error> read_to(const audio_data_interleaved& output) override;
     [[nodiscard]] expected<void, audiofile_error> seek(uint64_t position) override;
     void close() override;
 
@@ -53,7 +52,7 @@ protected:
     mp3dec_io_t io;
     std::unique_ptr<std::FILE, details::stdFILE_deleter> file;
     std::optional<mp3dec_ex_t> decex;
-    audio_data audio;
+    audio_data_interleaved audio;
 
     static size_t mp3d_read_cb(void* buf, size_t size, void* user_data);
     static int mp3d_seek_cb(uint64_t position, void* user_data);
@@ -78,7 +77,7 @@ void MP3Decoder::close()
         decex.reset();
     }
     file.reset();
-    m_metadata.reset();
+    m_format.reset();
 }
 
 size_t MP3Decoder::mp3d_read_cb(void* buf, size_t size, void* user_data)
@@ -92,7 +91,7 @@ int MP3Decoder::mp3d_seek_cb(uint64_t position, void* user_data)
     return KFR_IO_SEEK_64(file, position, SEEK_SET);
 }
 
-expected<audiofile_metadata, audiofile_error> MP3Decoder::open(const file_path& path)
+expected<audiofile_format, audiofile_error> MP3Decoder::open(const file_path& path)
 {
     auto f = fopen_path(path, open_file_mode::read_existing);
     if (f)
@@ -113,24 +112,27 @@ expected<audiofile_metadata, audiofile_error> MP3Decoder::open(const file_path& 
             return unexpected(audiofile_error::internal_error);
         }
     }
-    audiofile_metadata info;
+    audiofile_format info;
     info.container    = audiofile_container::mp3;
     info.channels     = decex->info.channels;
     info.sample_rate  = decex->info.hz;
     info.total_frames = decex->samples / decex->info.channels;
-    info.bit_depth    = 16; // Nominal
+    info.bit_depth    = 0;
     info.codec        = audiofile_codec::mp3;
-    m_metadata        = std::move(info);
-    return *m_metadata;
+    m_format          = std::move(info);
+    return *m_format;
 }
-expected<audio_data, audiofile_error> MP3Decoder::read()
+
+static_assert(std::is_same_v<mp3d_sample_t, float>);
+
+expected<size_t, audiofile_error> MP3Decoder::read_to(const audio_data_interleaved& output)
 {
-    size_t framesToRead = default_audio_frames_to_read;
-    static_assert(std::is_same_v<mp3d_sample_t, float>);
-    std::vector<float> buffer(framesToRead * m_metadata->channels);
-    size_t readed =
-        mp3dec_ex_read(&*decex, buffer.data(), framesToRead * m_metadata->channels) / m_metadata->channels;
-    if (readed == 0) /* normal eof or error condition */
+    if (output.channels != m_format->channels || output.size == 0)
+    {
+        return unexpected(audiofile_error::invalid_argument);
+    }
+    size_t framesRead = mp3dec_ex_read(&*decex, output.data, output.total_samples()) / m_format->channels;
+    if (framesRead == 0) /* normal eof or error condition */
     {
         if (decex->last_error)
         {
@@ -141,17 +143,12 @@ expected<audio_data, audiofile_error> MP3Decoder::read()
             return unexpected(audiofile_error::end_of_file);
         }
     }
-    audio_data data;
-    data.metadata = &*m_metadata;
-    data.resize(readed);
-
-    deinterleave_samples(data.pointers(), buffer.data(), m_metadata->channels, readed);
-    return data;
+    return framesRead;
 }
 
 expected<void, audiofile_error> MP3Decoder::seek(uint64_t position)
 {
-    if (mp3dec_ex_seek(&*decex, position * m_metadata->channels))
+    if (mp3dec_ex_seek(&*decex, position * m_format->channels))
     {
         return unexpected(audiofile_error::format_error);
     }

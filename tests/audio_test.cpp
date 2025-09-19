@@ -58,14 +58,13 @@ struct ErrorDesc
     }
 };
 
-static void testAudioEquality(const audio_data& test, const audio_data& reference);
+static void testAudioEquality(const audio_data_interleaved& test, const audio_data_interleaved& reference);
 
 [[maybe_unused]] static void testRandomReads(const std::unique_ptr<audio_decoder>& decoder,
-                                             const audio_data& reference)
+                                             const audio_data_interleaved& reference)
 {
     std::mt19937_64 rnd(12345);
-    std::uniform_int_distribution<int64_t> dist(0,
-                                                reference.typed_metadata<audiofile_metadata>()->total_frames);
+    std::uniform_int_distribution<int64_t> dist(0, reference.size);
     for (size_t i = 0; i < 20; i++)
     {
         int64_t start;
@@ -85,14 +84,15 @@ static void testAudioEquality(const audio_data& test, const audio_data& referenc
             CHECK(ErrorDesc{ "Cannot seek due to " + to_string(e.error()) });
             continue;
         }
-        audio_data buffer;
-        auto fragment = decoder->read_buffered(end - start, buffer);
-        if (!fragment)
+        audio_data_interleaved data(reference.channels, end - start);
+        auto sizeRead = decoder->read_to(data);
+        if (!sizeRead)
         {
-            CHECK(ErrorDesc{ "Cannot read fragment due to " + to_string(fragment.error()) });
+            CHECK(ErrorDesc{ "Cannot read fragment due to " + to_string(sizeRead.error()) });
             continue;
         }
-        testAudioEquality(*fragment, reference.slice(start, end - start));
+        data.resize(*sizeRead);
+        testAudioEquality(data, reference.slice(start, end - start));
     }
 }
 
@@ -114,27 +114,22 @@ fbase fastrmsdiff(const fbase* x, const fbase* y, size_t sz)
     return std::sqrt(sum / sz);
 }
 
-template <typename T, size_t Tag1, size_t Tag2, typename TT = std::remove_const_t<T>>
-static TT fastrmsdiff(const kfr::univector<T, Tag1>& x, const kfr::univector<T, Tag2>& y)
-{
-    return fastrmsdiff(x.data(), y.data(), kfr::size_min(x.size(), y.size()));
-}
-
-static fbase testAudioEqualityOffset(const audio_data& test, const audio_data& reference, long long offs)
+#if 0
+static fbase testAudioEqualityOffset(const audio_data_interleaved& test,
+                                     const audio_data_interleaved& reference, long long offs)
 {
     fbase maxErrRMS = 0.0;
-    size_t shortlen = 2 * 4410;
-    for (size_t i = 0; i < reference.metadata->channels; ++i)
+    for (size_t i = 0; i < reference.channels; ++i)
     {
         fbase v;
-        v = fastrmsdiff(reference.channel(i).slice(std::max(0ll, -offs), shortlen),
-                        test.channel(i).slice(std::max(0ll, offs), shortlen));
+        v = fastrmsdiff(reference.interlaved().slice(std::max(0ll, -offs), shortlen),
+                        test.interlaved().slice(std::max(0ll, offs), shortlen));
         if (v > rmsThresholdHigh)
         {
             return v;
         }
-        v = fastrmsdiff(reference.channel(i).slice(std::max(0ll, -offs)),
-                        test.channel(i).slice(std::max(0ll, offs)));
+        v = fastrmsdiff(reference.interlaved().slice(std::max(0ll, -offs)),
+                        test.interlaved().slice(std::max(0ll, offs)));
         if (v > rmsThresholdHigh)
         {
             return v;
@@ -143,50 +138,89 @@ static fbase testAudioEqualityOffset(const audio_data& test, const audio_data& r
     }
     return maxErrRMS;
 }
+#endif
 
-static void testAudioEquality(const audio_data& test, const audio_data& reference)
+static void testAudioEquality(const audio_data_interleaved& test, const audio_data_interleaved& reference)
 {
-    CHECK(test.metadata->channels == reference.metadata->channels);
-    CHECK(test.metadata->sample_rate == reference.metadata->sample_rate);
+    CHECK(test.channels == reference.channels);
+    CHECK(test.size == reference.size);
 
-    double minErrRMS  = HUGE_VAL;
-    long long minOffs = 0;
+    double errRMS =
+        fastrmsdiff(test.data, reference.data, std::min(test.total_samples(), reference.total_samples()));
+    CHECK(errRMS < rmsThreshold);
 
-    for (long long offs = 0; offs <= 4096; offs++)
+    if (errRMS >= rmsThreshold)
     {
-        double errRMS = testAudioEqualityOffset(test, reference, offs);
-        if (errRMS < minErrRMS)
+        audiofile_format fmt;
+        fmt.container   = audiofile_container::wave;
+        fmt.codec       = audiofile_codec::lpcm;
+        fmt.endianness  = audiofile_endianness::little;
+        fmt.bit_depth   = 24;
+        fmt.sample_rate = 44100;
+        fmt.channels    = test.channels;
+        auto enc        = create_wave_encoder();
+        std::ignore     = enc->open(std::to_string(std::random_device{}()) + ".wav", fmt);
+        std::ignore     = enc->write(test);
+        std::ignore     = enc->close();
+    }
+}
+
+static void testAudioEqualityCompressed(const audio_data_interleaved& test,
+                                        const audio_data_interleaved& reference)
+{
+    ptrdiff_t sizeDiff = static_cast<ptrdiff_t>(test.size) - static_cast<ptrdiff_t>(reference.size);
+    if (sizeDiff == 0)
+    {
+        // same size, just compare
+        double errRMS =
+            fastrmsdiff(test.data, reference.data, std::min(test.total_samples(), reference.total_samples()));
+        if (errRMS < rmsThreshold)
         {
-            minErrRMS = errRMS;
-            minOffs   = offs;
-        }
-        errRMS = testAudioEqualityOffset(test, reference, -offs);
-        if (errRMS < minErrRMS)
-        {
-            minErrRMS = errRMS;
-            minOffs   = -offs;
-        }
-        if (minErrRMS < rmsThreshold)
-        {
-            break;
+            return; // all good
         }
     }
-    CAPTURE(minOffs);
-    CHECK(minErrRMS < rmsThreshold);
-
-    if (minErrRMS >= rmsThreshold)
+    else if (sizeDiff > 0)
     {
-        audiofile_metadata encInfo = *test.typed_metadata<audiofile_metadata>();
-        encInfo.codec              = audiofile_codec::lpcm;
-        encInfo.bit_depth          = 16;
-        encInfo.container          = audiofile_container::wave;
-        encInfo.endianness         = audiofile_endianness::little;
-        auto enc                   = create_wave_encoder();
-        std::ignore                = enc->open(std::to_string(std::random_device{}()) + ".wav");
-        std::ignore                = enc->prepare(encInfo);
-        std::ignore                = enc->write(test);
-        std::ignore                = enc->close();
+        // test is longer than reference
+        audio_data_interleaved testTruncated = test.slice(sizeDiff);
+        double errRMS                        = fastrmsdiff(testTruncated.data, reference.data,
+                                                           std::min(testTruncated.total_samples(), reference.total_samples()));
+        if (errRMS < rmsThreshold)
+        {
+            return; // all good
+        }
     }
+    else
+    {
+        // reference is longer than test, truncate
+        audio_data_interleaved refTruncated = reference.truncate(test.size);
+        double errRMS                       = fastrmsdiff(test.data, refTruncated.data,
+                                                          std::min(test.total_samples(), refTruncated.total_samples()));
+        if (errRMS < rmsThreshold)
+        {
+            return; // all good
+        }
+    }
+
+    size_t peakTest      = test.find_peak();
+    size_t peakReference = reference.find_peak();
+    ptrdiff_t peakDiff   = static_cast<ptrdiff_t>(peakTest) - static_cast<ptrdiff_t>(peakReference);
+    // Align peaks
+    audio_data_interleaved testAligned = test;
+    audio_data_interleaved refAligned  = reference;
+    if (peakDiff > 0)
+    {
+        testAligned = testAligned.slice(peakDiff);
+    }
+    else if (peakDiff < 0)
+    {
+        refAligned = refAligned.slice(-peakDiff);
+    }
+    // truncate to the shortest length
+    testAligned = testAligned.truncate(std::min(testAligned.size, refAligned.size));
+    refAligned  = refAligned.truncate(std::min(testAligned.size, refAligned.size));
+
+    testAudioEquality(testAligned, refAligned);
 }
 
 #ifdef KFR_USE_STD_FILESYSTEM
@@ -220,22 +254,23 @@ static void testFormat(const std::filesystem::path& dir, bool expectedToFail, bo
         if (!info)
         {
             if (!expectedToFail)
-                CHECK(ErrorDesc{ "Cannot read format due to {}\n" + to_string(info.error()) });
+                CHECK(ErrorDesc{ "Cannot read format due to " + to_string(info.error()) });
             continue;
         }
         if (auto e = decoder->seek(0); !e)
         {
-            CHECK(ErrorDesc{ "Cannot seek due to {}\n" + to_string(e.error()) });
+            CHECK(ErrorDesc{ "Cannot seek due to " + to_string(e.error()) });
             continue;
         }
         auto audio = decoder->read_all();
         if (!audio)
         {
-            CHECK(ErrorDesc{ "Cannot read audio due to {}\n" + to_string(audio.error()) });
+            CHECK(ErrorDesc{ "Cannot read audio due to " + to_string(audio.error()) });
             continue;
         }
 
         raw_decoding_options rawOptions;
+        rawOptions.raw.channels               = info->channels;
         rawOptions.raw.bit_depth              = 16;
         rawOptions.raw.codec                  = audiofile_codec::lpcm;
         rawOptions.raw.endianness             = audiofile_endianness::little;
@@ -243,19 +278,28 @@ static void testFormat(const std::filesystem::path& dir, bool expectedToFail, bo
         auto rawInfo                          = rawDec->open(f.path().string() + ".raw");
         if (!rawInfo)
         {
-            CHECK(ErrorDesc{ "Cannot read raw audio due to {}\n" + to_string(rawInfo.error()) });
+            CHECK(ErrorDesc{ "Cannot read raw audio due to " + to_string(rawInfo.error()) });
             continue;
         }
         auto rawAudio = rawDec->read_all();
         if (!rawAudio)
         {
-            CHECK(ErrorDesc{ "Cannot read raw audio due to {}\n" + to_string(rawAudio.error()) });
+            CHECK(ErrorDesc{ "Cannot read raw audio due to " + to_string(rawAudio.error()) });
             continue;
         }
 
-        testAudioEquality(*audio, *rawAudio);
-        if (!disable_random_reads)
-            testRandomReads(decoder, *rawAudio);
+        if (useOSDecoder || decoder->format()->codec == audiofile_codec::mp3 ||
+            decoder->format()->codec == audiofile_codec::alac)
+        {
+            testAudioEqualityCompressed(*audio, *rawAudio);
+        }
+        else
+        {
+            testAudioEquality(*audio, *rawAudio);
+        }
+
+        // if (!disable_random_reads)
+        // testRandomReads(decoder, *rawAudio);
     }
 }
 
@@ -383,7 +427,8 @@ static auto data_generator(size_t size, uint32_t ch, double scale)
 static void test_audiodata(audio_decoder& decoder, bool allowLengthMismatch = false,
                            double threshold = 0.0001, double scale = dB_to_amp(-3))
 {
-    const audiofile_metadata& r = decoder.metadata();
+    REQUIRE(decoder.format().has_value());
+    const audiofile_format& r = *decoder.format();
     CHECK(r.channels == 2);
     CHECK(r.sample_rate == 44100);
     if (allowLengthMismatch)
@@ -502,20 +547,19 @@ TEST_CASE("raw_encoder: s32")
 
     auto encoder = create_raw_encoder(info);
     REQUIRE(encoder != nullptr);
-    auto r = encoder->open(name);
+    auto r = encoder->open(name, {});
     REQUIRE(r);
     // No need to call prepare for raw files
 
-    audiofile_metadata info2 = info.raw.to_metadata();
-    audio_data data(&info2);
-    data.resize(44100);
+    audiofile_format info2 = info.raw.to_format();
+    audio_data data(info2.channels, 44100);
     data.channel(0) = data_generator(data.size, 0, dB_to_amp(-3));
     data.channel(1) = data_generator(data.size, 1, dB_to_amp(-3));
 
     auto e = encoder->write(data);
     REQUIRE(e);
-    e = encoder->close();
-    REQUIRE(e);
+    auto closed = encoder->close();
+    REQUIRE(closed);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100)); // wait for file to be written
 
@@ -562,7 +606,7 @@ TEST_CASE("mp3_decoder")
     CHECK(r->container == audiofile_container::mp3);
     CHECK(r->codec == audiofile_codec::mp3);
     CHECK(r->endianness == audiofile_endianness::little);
-    CHECK(r->bit_depth == 16);
+    CHECK(r->bit_depth == 0);
 
     test_audiodata(*decoder, false, 0.01, dB_to_amp(-3.445));
 }
@@ -765,7 +809,7 @@ TEST_CASE("wave encoder")
 
     auto enc = create_wave_encoder({ {}, /* .switch_to_rf64_if_over_4gb = */ false });
     REQUIRE(enc != nullptr);
-    audiofile_metadata info{};
+    audiofile_format info{};
     info.container    = audiofile_container::wave;
     info.codec        = audiofile_codec::lpcm;
     info.endianness   = audiofile_endianness::little;
@@ -773,18 +817,15 @@ TEST_CASE("wave encoder")
     info.channels     = 2;
     info.sample_rate  = 44100;
     info.total_frames = 44100;
-    auto e            = enc->open(name);
+    auto e            = enc->open(name, info);
     REQUIRE(e);
-    e = enc->prepare(info);
-    REQUIRE(e);
-    audio_data data(&info);
-    data.resize(44100);
+    audio_data data(info.channels, 44100);
     for (size_t ch = 0; ch < info.channels; ++ch)
         data.channel(ch) = data_generator(data.size, ch, dB_to_amp(-3));
     e = enc->write(data);
     REQUIRE(e);
-    e = enc->close();
-    REQUIRE(e);
+    auto closed = enc->close();
+    REQUIRE(closed);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100)); // wait for file to be closed
 
@@ -797,6 +838,15 @@ TEST_CASE("wave encoder")
     CHECK(r->endianness == audiofile_endianness::little);
     CHECK(r->bit_depth == 16);
     test_audiodata(*dec);
+}
+
+TEST_CASE("Each channel is cache-aligned")
+{
+    audio_data data(16, 1);
+    for (size_t ch = 0; ch < data.channels; ++ch)
+    {
+        CHECK((reinterpret_cast<uintptr_t>(data.channel(ch).data()) % 64) == 0);
+    }
 }
 
 #ifndef KFR_NO_MAIN

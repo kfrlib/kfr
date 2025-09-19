@@ -24,48 +24,68 @@
   See https://www.kfrlib.com for details.
  */
 #include <kfr/audio/decoder.hpp>
-#include "riff.hpp"
 
 namespace kfr
 {
 bool audio_decoder::seek_is_precise() const { return true; }
 
-expected<audio_data, audiofile_error> audio_decoder::read_buffered(size_t size, audio_data& buffer)
+expected<audio_data_interleaved, audiofile_error> audio_decoder::read_all()
 {
-    while (buffer.size < size)
+    if (!m_format.has_value())
+        return unexpected(audiofile_error::closed);
+    audio_data_interleaved result(m_format->channels);
+
+    size_t start = 0;
+    for (;;)
     {
-        expected<audio_data, audiofile_error> data = read();
-        if (!data)
-            return data;
-        buffer.append(*data);
+        auto read = read_to(result.slice_past_end(default_audio_frames_to_read));
+        if (!read)
+        {
+            if (read.error() == audiofile_error::end_of_file)
+            {
+                return result;
+            }
+            else
+            {
+                return unexpected(read.error());
+            }
+        }
+        result.resize(result.size + *read);
     }
-    audio_data result = buffer.truncate(size);
-    buffer            = buffer.slice(size);
-    return result;
-}
-expected<audio_data, audiofile_error> audio_decoder::read_all()
-{
-    audio_data result;
-    KFR_ASSERT(m_metadata.has_value());
-    result.metadata = &*m_metadata;
-    auto e          = read();
-    while (e)
-    {
-        result.append(*e);
-        e = read();
-    }
-    if (e.error() == audiofile_error::end_of_file)
-        return result;
-    else
-        return unexpected(e.error());
-}
-const audiofile_metadata& audio_decoder::metadata() const
-{
-    KFR_ASSERT(m_metadata.has_value());
-    return *m_metadata;
 }
 
-expected<std::vector<uint8_t>, audiofile_error> audio_decoder::read_chunk(std::span<const std::byte> chunk_id)
+expected<audio_data_planar, audiofile_error> audio_decoder::read_all_planar()
+{
+    if (!m_format.has_value())
+        return unexpected(audiofile_error::closed);
+    audio_data_planar result(m_format->channels);
+
+    audio_data_interleaved buffer(m_format->channels, default_audio_frames_to_read);
+
+    size_t start = 0;
+    for (;;)
+    {
+        auto read = read_to(buffer);
+        if (!read)
+        {
+            if (read.error() == audiofile_error::end_of_file)
+            {
+                return result;
+            }
+            else
+            {
+                return unexpected(read.error());
+            }
+        }
+        result.append(buffer.truncate(*read));
+    }
+}
+
+const std::optional<audiofile_format>& audio_decoder::format() const { return m_format; }
+
+expected<void, audiofile_error> audio_decoder::read_chunk(
+    std::span<const std::byte> chunk_id, const std::function<bool(std::span<const std::byte>)>& handler,
+    size_t buffer_size)
 {
     return unexpected(audiofile_error::not_implemented);
 }
@@ -222,5 +242,102 @@ expected<audiofile_header, std::error_code> read_audiofile_header(const file_pat
         return header;
     }
     return unexpected(f.error());
+}
+expected<audio_data_interleaved, audiofile_error> audio_decoder::read(size_t maximum_frames)
+{
+    if (!m_format.has_value())
+        return unexpected(audiofile_error::closed);
+    audio_data_interleaved result(m_format->channels, maximum_frames);
+    auto rd = read_to(result);
+    if (!rd)
+        return unexpected(rd.error());
+    result.resize(*rd);
+    return result;
+}
+
+expected<size_t, audiofile_error> audio_decoder::read_buffered(
+    const audio_data_interleaved& output,
+    const std::function<expected<audio_data_interleaved, audiofile_error>()>& read_packet,
+    audio_data_interleaved& buffer)
+{
+    if (!m_format.has_value())
+        return unexpected(audiofile_error::closed);
+
+    if (output.size == 0 || output.channels != m_format->channels)
+        return unexpected(audiofile_error::invalid_argument);
+    size_t total_read = 0;
+    while (total_read < output.size)
+    {
+        if (!buffer.empty())
+        {
+            size_t to_copy = std::min(output.size - total_read, buffer.size);
+            std::memcpy(output.data + total_read * output.channels, buffer.data,
+                        to_copy * output.channels * sizeof(fbase));
+            total_read += to_copy;
+            if (to_copy < buffer.size)
+            {
+                buffer = buffer.slice(to_copy);
+            }
+            else
+            {
+                buffer = audio_data_interleaved();
+            }
+        }
+        else
+        {
+            auto packet = read_packet();
+            if (!packet)
+            {
+                if (packet.error() == audiofile_error::end_of_file && total_read > 0)
+                {
+                    return total_read;
+                }
+                return unexpected(packet.error());
+            }
+            if (packet->empty())
+            {
+                return unexpected(audiofile_error::end_of_file);
+            }
+            buffer.swap(*packet);
+        }
+    }
+    return total_read;
+}
+std::optional<uint64_t> audio_decoder::has_chunk(std::span<const std::byte> chunk_id) const
+{
+    return std::nullopt;
+}
+expected<std::vector<uint8_t>, audiofile_error> audio_decoder::read_chunk_bytes(
+    std::span<const std::byte> chunk_id)
+{
+    std::vector<uint8_t> result;
+    if (auto e = read_chunk(chunk_id,
+                            [&result](std::span<const std::byte> data)
+                            {
+                                size_t oldSize = result.size();
+                                result.resize(oldSize + data.size());
+                                std::memcpy(result.data() + oldSize, data.data(), data.size());
+                                return true;
+                            });
+        !e)
+        return unexpected(e.error());
+    return result;
+}
+expected<audio_data_interleaved, audiofile_error> decode_audio_file(const file_path& path,
+                                                                    audiofile_format* out_format,
+                                                                    const audio_decoding_options& options)
+{
+    auto decoder = create_decoder_for_file(path, options);
+    if (!decoder)
+        return unexpected(audiofile_error::format_error);
+
+    auto format_result = decoder->open(path);
+    if (!format_result)
+        return unexpected(format_result.error());
+
+    if (out_format)
+        *out_format = *format_result;
+
+    return decoder->read_all();
 }
 } // namespace kfr

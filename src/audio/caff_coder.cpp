@@ -25,6 +25,7 @@
  */
 
 #include "riff.hpp"
+#include <kfr/base/endianness.hpp>
 
 #ifdef KFR_AUDIO_ALAC
 
@@ -70,27 +71,9 @@ struct CAFFTraits
         SizeType size;
     };
 #pragma pack(pop)
-
-    [[nodiscard]] static expected<uint64_t, audiofile_error> chunkGetSize(const ChunkType& chunk,
-                                                                          uint64_t position,
-                                                                          RIFFContainer<CAFFTraits>* self)
-    {
-        if (chunk.size == uint64_t(-1))
-        {
-            return self->fileSize() - position - sizeof(ChunkType);
-        }
-        return chunk.size;
-    }
-    [[nodiscard]] static expected<void, audiofile_error> chunkSetSize(ChunkType& chunk, uint64_t position,
-                                                                      uint64_t byteSize,
-                                                                      RIFFContainer<CAFFTraits>*)
-    {
-        chunk.size = byteSize;
-        return {};
-    }
 };
 
-inline void fixByteOrder(CAFFTraits::ChunkType& val) { convertEndianess(val.size); }
+inline void fixByteOrder(CAFFTraits::ChunkType& val) { details::convert_endianness(val.size); }
 
 enum
 {
@@ -100,8 +83,8 @@ enum
 
 inline void fixByteOrder(CAFFHeader& val)
 {
-    convertEndianess(val.caffVersion);
-    convertEndianess(val.fileVersion);
+    details::convert_endianness(val.caffVersion);
+    details::convert_endianness(val.fileVersion);
 }
 
 #pragma pack(push, 1)
@@ -121,114 +104,12 @@ struct CAFFDesc
 
 inline void fixByteOrder(CAFFDesc& val)
 {
-    convertEndianess(val.mSampleRate);
-    convertEndianess(val.mFormatFlags);
-    convertEndianess(val.mBytesPerPacket);
-    convertEndianess(val.mFramesPerPacket);
-    convertEndianess(val.mChannelsPerFrame);
-    convertEndianess(val.mBitsPerChannel);
-}
-
-#ifdef KFR_AUDIO_ALAC
-using CAFFChan = ALACAudioChannelLayout;
-
-inline void fixByteOrder(CAFFChan& val)
-{
-    convertEndianess(val.mChannelLayoutTag);
-    convertEndianess(val.mChannelBitmap);
-    convertEndianess(val.mNumberChannelDescriptions);
-}
-
-#pragma pack(push, 1)
-struct CAFFPakt
-{
-    int64_t mNumberPackets;
-    int64_t mNumberValidFrames;
-    int32_t mPrimingFrames;
-    int32_t mRemainderFrames;
-};
-#pragma pack(pop)
-
-inline void fixByteOrder(CAFFPakt& val)
-{
-    convertEndianess(val.mNumberPackets);
-    convertEndianess(val.mNumberValidFrames);
-    convertEndianess(val.mPrimingFrames);
-    convertEndianess(val.mRemainderFrames);
-}
-#endif
-
-#pragma pack(push, 1)
-struct CAFFDataPrefix
-{
-    uint32_t editCount;
-};
-#pragma pack(pop)
-
-class CAFFContainer : public RIFFContainer<CAFFTraits>
-{
-public:
-    using Super = RIFFContainer<CAFFTraits>;
-
-    [[nodiscard]] expected<audiofile_metadata, audiofile_error> readFormat();
-
-    [[nodiscard]] expected<audio_data, audiofile_error> readAudio(const audiofile_metadata* audioInfo);
-
-    [[nodiscard]] expected<void, audiofile_error> seek(const audiofile_metadata* audioInfo,
-                                                       uint64_t position);
-
-    [[nodiscard]] expected<void, audiofile_error> writeFormat(const audiofile_metadata* info);
-
-    [[nodiscard]] expected<void, audiofile_error> writeAudio(const audio_data& data,
-                                                             const audio_quantinization& quantinization);
-
-#ifdef KFR_AUDIO_ALAC
-    [[nodiscard]] expected<void, audiofile_error> writeBuffered();
-    void writePacketSize(int32_t pktSize);
-    [[nodiscard]] expected<void, audiofile_error> writeAudioPacket(size_t packetFrames);
-#endif
-    [[nodiscard]] expected<void, audiofile_error> finalize();
-
-    ~CAFFContainer() {}
-
-#ifdef KFR_AUDIO_ALAC
-    std::unique_ptr<ALACDecoder> theDecoder;
-    std::vector<uint8_t> theReadBuffer;
-    std::vector<uint8_t> theWriteBuffer;
-    BitBuffer theInputBuffer;
-    std::vector<uint64_t> packetOffsets; // offset of past-the-end byte for each packet
-    size_t packetIndex              = 0;
-    size_t framesToSkipInNextPacket = 0; // used for seek
-#endif
-    CAFFDesc desc;
-#ifdef KFR_AUDIO_ALAC
-    AudioFormatDescription afdesc, inafdesc;
-    std::unique_ptr<ALACEncoder> theEncoder;
-#endif
-    bool finalized = false;
-    std::vector<uint8_t> buffered;
-    uint64_t framesWritten  = 0;
-    uint64_t packetsWritten = 0;
-};
-
-struct CAFFDecoder : public RIFFDecoder<CAFFContainer>
-{
-public:
-    using RIFFDecoder<CAFFContainer>::RIFFDecoder;
-};
-
-struct CAFFEncoder : public RIFFEncoder<CAFFContainer>
-{
-    using RIFFEncoder<CAFFContainer>::RIFFEncoder;
-};
-
-std::unique_ptr<audio_decoder> create_caff_decoder(const caff_decoding_options& options)
-{
-    return std::unique_ptr<audio_decoder>(new CAFFDecoder(options));
-}
-std::unique_ptr<audio_encoder> create_caff_encoder(const caff_encoding_options& options)
-{
-    return std::unique_ptr<audio_encoder>(new CAFFEncoder(options));
+    details::convert_endianness(val.mSampleRate);
+    details::convert_endianness(val.mFormatFlags);
+    details::convert_endianness(val.mBytesPerPacket);
+    details::convert_endianness(val.mFramesPerPacket);
+    details::convert_endianness(val.mChannelsPerFrame);
+    details::convert_endianness(val.mBitsPerChannel);
 }
 
 #ifdef KFR_AUDIO_ALAC
@@ -303,153 +184,294 @@ static void GetBERInteger(int32_t theOriginalValue, uint8_t* theBuffer, int32_t*
 }
 #endif
 
-expected<audiofile_metadata, audiofile_error> CAFFContainer::readFormat()
-{
-    if (!this->findChunk("data"))
-        return unexpected(audiofile_error::format_error);
-
-    if (auto e = this->readChunkTo("desc", desc); !e)
-        return unexpected(e.error());
-
-    audiofile_metadata audioInfo;
-    audioInfo.channels    = desc.mChannelsPerFrame;
-    audioInfo.bit_depth   = desc.mBitsPerChannel;
-    audioInfo.container   = audiofile_container::caf;
-    audioInfo.sample_rate = desc.mSampleRate;
-
-    if (desc.mFormatID == "lpcm")
-    {
-        audioInfo.endianness = (desc.mFormatFlags & kCAFLinearPCMFormatFlagIsLittleEndian)
-                                   ? audiofile_endianness::little
-                                   : audiofile_endianness::big;
-        audioInfo.codec = (desc.mFormatFlags & kCAFLinearPCMFormatFlagIsFloat) ? audiofile_codec::ieee_float
-                                                                               : audiofile_codec::lpcm;
-        audioInfo.total_frames = (m_chunks[*findChunk("data")].byteSize - sizeof(CAFFDataPrefix)) /
-                                 audioInfo.bytes_per_pcm_frame();
-    }
 #ifdef KFR_AUDIO_ALAC
-    else if (desc.mFormatID == "alac")
+using CAFFChan = ALACAudioChannelLayout;
+
+inline void fixByteOrder(CAFFChan& val)
+{
+    details::convert_endianness(val.mChannelLayoutTag);
+    details::convert_endianness(val.mChannelBitmap);
+    details::convert_endianness(val.mNumberChannelDescriptions);
+}
+
+#pragma pack(push, 1)
+struct CAFFPakt
+{
+    int64_t mNumberPackets;
+    int64_t mNumberValidFrames;
+    int32_t mPrimingFrames;
+    int32_t mRemainderFrames;
+};
+#pragma pack(pop)
+
+inline void fixByteOrder(CAFFPakt& val)
+{
+    details::convert_endianness(val.mNumberPackets);
+    details::convert_endianness(val.mNumberValidFrames);
+    details::convert_endianness(val.mPrimingFrames);
+    details::convert_endianness(val.mRemainderFrames);
+}
+#endif
+
+#pragma pack(push, 1)
+struct CAFFDataPrefix
+{
+    uint32_t editCount;
+};
+#pragma pack(pop)
+
+#if 0
+
+class CAFFContainer : public RIFFContainer<CAFFTraits>
+{
+public:
+    using Super = RIFFContainer<CAFFTraits>;
+
+    [[nodiscard]] expected<audiofile_metadata, audiofile_error> readFormat();
+
+    [[nodiscard]] expected<audio_data_interleaved, audiofile_error> readAudio(
+        const audiofile_metadata* audioInfo);
+
+    [[nodiscard]] expected<void, audiofile_error> seek(const audiofile_metadata* audioInfo,
+                                                       uint64_t position);
+
+    [[nodiscard]] expected<void, audiofile_error> writeFormat(const audiofile_metadata* info);
+
+    [[nodiscard]] expected<void, audiofile_error> writeAudio(const audio_data_interleaved& data,
+                                                             const audio_quantization& quantization);
+
+#ifdef KFR_AUDIO_ALAC
+    [[nodiscard]] expected<void, audiofile_error> writeBuffered();
+    void writePacketSize(int32_t pktSize);
+    [[nodiscard]] expected<void, audiofile_error> writeAudioPacket(size_t packetFrames);
+#endif
+    [[nodiscard]] expected<void, audiofile_error> finalize();
+
+    ~CAFFContainer() {}
+
+#ifdef KFR_AUDIO_ALAC
+    size_t packetIndex              = 0;
+    size_t framesToSkipInNextPacket = 0; // used for seek
+#endif
+#ifdef KFR_AUDIO_ALAC
+    AudioFormatDescription afdesc, inafdesc;
+    std::unique_ptr<ALACEncoder> theEncoder;
+#endif
+    bool finalized = false;
+    std::vector<uint8_t> buffered;
+    uint64_t packetsWritten = 0;
+};
+#endif
+
+struct CAFFDecoder : public RIFFDecoder<CAFFDecoder, CAFFTraits>
+{
+public:
+    using RIFFDecoder<CAFFDecoder, CAFFTraits>::RIFFDecoder;
+
+    [[nodiscard]] expected<uint64_t, audiofile_error> chunkGetSize(const ChunkType& chunk, uint64_t position)
     {
-        audioInfo.codec = audiofile_codec::alac;
-        auto kuki       = readChunkBytes("kuki");
-        if (!kuki)
-            return unexpected(kuki.error());
-        theDecoder.reset(new ALACDecoder());
-        if (theDecoder->Init(kuki->data(), kuki->size()) != ALAC_noErr)
+        if (chunk.size == uint64_t(-1))
+        {
+            return this->m_fileSize - position - sizeof(ChunkType);
+        }
+        return chunk.size;
+    }
+
+    [[nodiscard]] expected<void, audiofile_error> seekTo(uint64_t position)
+    {
+        if (!m_currentChunkToRead)
+            if (auto e = readChunkStart("data", sizeof(CAFFDataPrefix)); !e)
+                return unexpected(e.error());
+        if (m_format->codec == audiofile_codec::ieee_float || m_format->codec == audiofile_codec::lpcm)
+            return this->readChunkSeek(sizeof(CAFFDataPrefix) + position * m_format->bytes_per_pcm_frame());
+
+#ifdef KFR_AUDIO_ALAC
+        buffer.reset();
+        packetIndex                  = position / desc.mFramesPerPacket;
+        framesToSkipInNextPacket     = position % desc.mFramesPerPacket;
+        uint64_t packetOffsetInBytes = packetIndex == 0 ? 0 : packetOffsets[packetIndex - 1];
+        return readChunkSeek(sizeof(CAFFDataPrefix) + packetOffsetInBytes);
+#else
+        return unexpected(audiofile_error::format_error);
+#endif
+    }
+
+    expected<audiofile_format, audiofile_error> readFormat()
+    {
+        if (!this->findChunk("data"))
             return unexpected(audiofile_error::format_error);
 
-        theReadBuffer.resize(desc.mChannelsPerFrame * sizeof(int32_t) * desc.mFramesPerPacket +
-                             kALACMaxEscapeHeaderBytes);
-        theWriteBuffer.resize(theReadBuffer.size() - kALACMaxEscapeHeaderBytes);
-        BitBufferInit(&theInputBuffer, theReadBuffer.data(), theReadBuffer.size());
-
-        CAFFPakt pakt;
-        if (auto e = readChunkTo("pakt", pakt); !e)
+        if (auto e = this->readChunkTo("desc", desc); !e)
             return unexpected(e.error());
 
-        std::vector<uint8_t> packetTable = *readChunkBytes("pakt");
-        packetTable.erase(packetTable.begin(), packetTable.begin() + sizeof(CAFFPakt));
+        audiofile_format audioInfo;
+        audioInfo.channels    = desc.mChannelsPerFrame;
+        audioInfo.bit_depth   = desc.mBitsPerChannel;
+        audioInfo.container   = audiofile_container::caf;
+        audioInfo.sample_rate = desc.mSampleRate;
 
-        // uncompress packet table:
-        size_t byteOffset     = 0;
-        uint64_t packetOffset = 0;
-        for (;;)
+        if (desc.mFormatID == "lpcm")
         {
-            int32_t numBytes            = kMaxBERSize;
-            int32_t theInputPacketBytes = ReadBERInteger(packetTable.data() + byteOffset, &numBytes);
-            if (theInputPacketBytes == 0)
-                break;
-            packetOffset += theInputPacketBytes;
-            byteOffset += numBytes;
-            packetOffsets.push_back(packetOffset);
+            audioInfo.endianness   = (desc.mFormatFlags & kCAFLinearPCMFormatFlagIsLittleEndian)
+                                         ? audiofile_endianness::little
+                                         : audiofile_endianness::big;
+            audioInfo.codec        = (desc.mFormatFlags & kCAFLinearPCMFormatFlagIsFloat)
+                                         ? audiofile_codec::ieee_float
+                                         : audiofile_codec::lpcm;
+            audioInfo.total_frames = (m_chunks[*findChunk("data")].byteSize - sizeof(CAFFDataPrefix)) /
+                                     audioInfo.bytes_per_pcm_frame();
+        }
+#ifdef KFR_AUDIO_ALAC
+        else if (desc.mFormatID == "alac")
+        {
+            audioInfo.codec = audiofile_codec::alac;
+            auto kuki       = readChunkBytes("kuki");
+            if (!kuki)
+                return unexpected(kuki.error());
+            theDecoder.reset(new ALACDecoder());
+            if (theDecoder->Init(kuki->data(), kuki->size()) != ALAC_noErr)
+                return unexpected(audiofile_error::format_error);
+
+            theWriteBuffer.resize(desc.mChannelsPerFrame * sizeof(int32_t) * desc.mFramesPerPacket);
+            theReadBuffer.resize(theWriteBuffer.size() + kALACMaxEscapeHeaderBytes);
+            BitBufferInit(&theInputBuffer, theReadBuffer.data(), theReadBuffer.size());
+
+            CAFFPakt pakt;
+            if (auto e = readChunkTo("pakt", pakt); !e)
+                return unexpected(e.error());
+
+            std::vector<uint8_t> packetTable = *readChunkBytes("pakt");
+            packetTable.erase(packetTable.begin(), packetTable.begin() + sizeof(CAFFPakt));
+
+            // uncompress packet table:
+            size_t byteOffset     = 0;
+            uint64_t packetOffset = 0;
+            for (;;)
+            {
+                int32_t numBytes            = kMaxBERSize;
+                int32_t theInputPacketBytes = ReadBERInteger(packetTable.data() + byteOffset, &numBytes);
+                if (theInputPacketBytes == 0)
+                    break;
+                packetOffset += theInputPacketBytes;
+                byteOffset += numBytes;
+                packetOffsets.push_back(packetOffset);
+            }
+
+            audioInfo.total_frames = pakt.mNumberValidFrames;
+            audioInfo.bit_depth    = theDecoder->mConfig.bitDepth;
+        }
+#endif
+        else
+        {
+            return unexpected(audiofile_error::format_error);
         }
 
-        audioInfo.total_frames = pakt.mNumberValidFrames;
-        // fmt::print(stderr, fg(fmt::color::light_pink), "totalSamples = {}\n", audioInfo.totalSamples);
-        audioInfo.bit_depth = theDecoder->mConfig.bitDepth;
+        return audioInfo;
     }
-#endif
-    else
-    {
-        return unexpected(audiofile_error::format_error);
-    }
-
-    return audioInfo;
-}
-
-expected<audio_data, audiofile_error> CAFFContainer::readAudio(const audiofile_metadata* metadata)
-{
-    if (!m_currentChunkToRead)
-        if (auto e = readChunkStart("data", sizeof(CAFFDataPrefix)); !e)
-            return unexpected(e.error());
-    if (metadata->codec == audiofile_codec::ieee_float || metadata->codec == audiofile_codec::lpcm)
-        return Super::readPCMAudio(default_audio_frames_to_read, metadata);
 
 #ifdef KFR_AUDIO_ALAC
-    BitBufferReset(&theInputBuffer);
-
-    if (packetIndex >= packetOffsets.size())
-        return unexpected(audiofile_error::end_of_file);
-
-    int32_t theInputPacketBytes =
-        packetIndex == 0 ? packetOffsets[0] : packetOffsets[packetIndex] - packetOffsets[packetIndex - 1];
-    ++packetIndex;
-
-    if (auto e = readChunkContinue(theInputPacketBytes, theReadBuffer.data()); !e)
-        return unexpected(e.error());
-    else if (*e != theInputPacketBytes)
-        return unexpected(audiofile_error::io_error);
-    uint32_t framesToRead = 0;
-
-    if (theDecoder->Decode(&theInputBuffer, theWriteBuffer.data(), desc.mFramesPerPacket,
-                           desc.mChannelsPerFrame, &framesToRead) != ALAC_noErr)
+    expected<audio_data_interleaved, audiofile_error> readPacket()
     {
-        return unexpected(audiofile_error::format_error);
-    }
+        BitBufferReset(&theInputBuffer);
 
-    audio_data result;
-    result.metadata = metadata;
+        if (packetIndex >= packetOffsets.size())
+            return unexpected(audiofile_error::end_of_file);
 
-    result.resize(framesToRead);
-    if (!forPCMCodec(
-            [&]<typename T>(ctype_t<T>)
-            {
-                T* audio = reinterpret_cast<T*>(theWriteBuffer.data());
-                deinterleave_samples(result.pointers(), audio, metadata->channels, framesToRead);
-            },
-            audiofile_codec::lpcm, metadata->bit_depth))
-        return unexpected(audiofile_error::format_error);
+        int32_t theInputPacketBytes =
+            packetIndex == 0 ? packetOffsets[0] : packetOffsets[packetIndex] - packetOffsets[packetIndex - 1];
+        ++packetIndex;
 
-    if (framesToSkipInNextPacket > 0)
-    {
-        result                   = result.slice(framesToSkipInNextPacket);
+        if (auto e = readChunkContinue(theInputPacketBytes, theReadBuffer.data()); !e)
+            return unexpected(e.error());
+        else if (*e != theInputPacketBytes)
+            return unexpected(audiofile_error::io_error);
+        uint32_t framesRead = 0;
+
+        if (theDecoder->Decode(&theInputBuffer, theWriteBuffer.data(), desc.mFramesPerPacket,
+                               desc.mChannelsPerFrame, &framesRead) != ALAC_noErr)
+        {
+            return unexpected(audiofile_error::format_error);
+        }
+
+        if (framesToSkipInNextPacket >= framesRead)
+        {
+            framesToSkipInNextPacket -= framesRead;
+            return unexpected(audiofile_error::end_of_file); // should never happen
+        }
+
+        audio_data_interleaved data(m_format->channels, framesRead - framesToSkipInNextPacket);
+
+        sample_t typ = m_format->sample_type_lpcm();
+        if (typ == sample_t::unknown)
+            return unexpected(audiofile_error::format_error);
+        samples_load(typ, data.data,
+                     (const std::byte*)theWriteBuffer.data() +
+                         m_format->bytes_per_pcm_frame() * framesToSkipInNextPacket,
+                     desc.mChannelsPerFrame * (framesRead - framesToSkipInNextPacket));
+
         framesToSkipInNextPacket = 0;
+        return data;
     }
-    return result;
-#else
-    return unexpected(audiofile_error::format_error);
 #endif
-}
 
-[[nodiscard]] expected<void, audiofile_error> CAFFContainer::seek(const audiofile_metadata* audioInfo,
-                                                                  uint64_t position)
-{
-    if (!m_currentChunkToRead)
-        if (auto e = readChunkStart("data", sizeof(CAFFDataPrefix)); !e)
-            return unexpected(e.error());
-    if (audioInfo->codec == audiofile_codec::ieee_float || audioInfo->codec == audiofile_codec::lpcm)
-        return Super::readChunkSeek(sizeof(CAFFDataPrefix) + position * audioInfo->bytes_per_pcm_frame());
+    expected<size_t, audiofile_error> readTo(const audio_data_interleaved& data)
+    {
+        if (!m_currentChunkToRead)
+            if (auto e = readChunkStart("data", sizeof(CAFFDataPrefix)); !e)
+                return unexpected(e.error());
+        if (m_format->codec == audiofile_codec::ieee_float || m_format->codec == audiofile_codec::lpcm)
+            return this->readPCMAudio(data);
 
 #ifdef KFR_AUDIO_ALAC
-    packetIndex                  = position / desc.mFramesPerPacket;
-    framesToSkipInNextPacket     = position % desc.mFramesPerPacket;
-    uint64_t packetOffsetInBytes = packetIndex == 0 ? 0 : packetOffsets[packetIndex - 1];
-    return readChunkSeek(sizeof(CAFFDataPrefix) + packetOffsetInBytes);
+        return read_buffered(data, [this]() { return readPacket(); }, buffer);
 #else
-    return unexpected(audiofile_error::format_error);
+        return unexpected(audiofile_error::format_error);
 #endif
+    }
+
+protected:
+    CAFFDesc desc;
+    audio_data_interleaved buffer;
+#ifdef KFR_AUDIO_ALAC
+    std::vector<uint64_t> packetOffsets; // offset of past-the-end byte for each packet
+    BitBuffer theInputBuffer;
+    std::unique_ptr<ALACDecoder> theDecoder;
+    std::vector<uint8_t> theReadBuffer;
+    std::vector<uint8_t> theWriteBuffer;
+    size_t packetIndex              = 0;
+    size_t framesToSkipInNextPacket = 0; // used for seek
+#endif
+};
+
+#if 0
+struct CAFFEncoder : public RIFFEncoder<CAFFEncoder, CAFFTraits>
+{
+    using RIFFEncoder<CAFFEncoder, CAFFTraits>::RIFFEncoder;
+
+    expected<void, audiofile_error> chunkSetSize(ChunkType& chunk, uint64_t position, uint64_t byteSize)
+    {
+        chunk.size = byteSize;
+        return {};
+    }
+
+protected:
+#ifdef KFR_AUDIO_ALAC
+    std::vector<uint8_t> theWriteBuffer;
+
+#endif
+};
+#endif
+
+std::unique_ptr<audio_decoder> create_caff_decoder(const caff_decoding_options& options)
+{
+    return std::unique_ptr<audio_decoder>(new CAFFDecoder(options));
+}
+std::unique_ptr<audio_encoder> create_caff_encoder(const caff_encoding_options& options)
+{
+    return nullptr; // std::unique_ptr<audio_encoder>(new CAFFEncoder(options));
 }
 
+#if 0
 expected<void, audiofile_error> CAFFContainer::writeFormat(const audiofile_metadata* info)
 {
     if (info->codec == audiofile_codec::lpcm)
@@ -586,8 +608,8 @@ expected<void, audiofile_error> CAFFContainer::writeAudioPacket(size_t packetFra
 }
 #endif
 
-expected<void, audiofile_error> CAFFContainer::writeAudio(const audio_data& audio,
-                                                          const audio_quantinization& quantinization)
+expected<void, audiofile_error> CAFFContainer::writeAudio(const audio_data_interleaved& audio,
+                                                          const audio_quantization& quantization)
 {
     const audiofile_metadata* metadata = audio.typed_metadata<audiofile_metadata>();
     if (!m_currentChunkToWrite)
@@ -598,9 +620,10 @@ expected<void, audiofile_error> CAFFContainer::writeAudio(const audio_data& audi
         if (auto e = writeChunkContinue(&prefix, sizeof(prefix)); !e)
             return e;
     }
-    framesWritten += audio.size;
     if (metadata->codec == audiofile_codec::lpcm || metadata->codec == audiofile_codec::ieee_float)
-        return Super::writePCMAudio(audio, quantinization);
+        return Super::writePCMAudio(audio, quantization);
+
+    m_framesWritten += audio.size;
 
 #ifdef KFR_AUDIO_ALAC
     size_t framesToWrite = audio.size;
@@ -609,7 +632,7 @@ expected<void, audiofile_error> CAFFContainer::writeAudio(const audio_data& audi
             [&]<typename T>(ctype_t<T>)
             {
                 interleave_samples(reinterpret_cast<T*>(interleaved.data()), audio.pointers(),
-                                   audio.metadata->channels, framesToWrite, quantinization);
+                                   audio.metadata->channels, framesToWrite, quantization);
             },
             audiofile_codec::lpcm, metadata->bit_depth))
         return unexpected(audiofile_error::format_error);
@@ -654,7 +677,7 @@ expected<void, audiofile_error> CAFFContainer::finalize()
         if (!packetOffsets.empty())
         {
             CAFFPakt pakt;
-            pakt.mNumberValidFrames = framesWritten;
+            pakt.mNumberValidFrames = m_framesWritten;
             pakt.mNumberPackets     = packetsWritten;
             pakt.mPrimingFrames     = 0;
             pakt.mRemainderFrames   = afdesc.mFramesPerPacket - lastPacketFrames;
@@ -681,4 +704,6 @@ expected<void, audiofile_error> CAFFContainer::finalize()
     finalized = true;
     return {};
 }
+
+#endif
 } // namespace kfr

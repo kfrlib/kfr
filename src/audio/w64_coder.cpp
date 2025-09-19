@@ -23,6 +23,7 @@
   disclosing the source code of your own applications.
   See https://www.kfrlib.com for details.
  */
+#include <span>
 #include "riff.hpp"
 
 namespace kfr
@@ -37,7 +38,12 @@ struct W64GUID
     uint16_t Data3;
     uint8_t Data4[8];
 
-    bool operator==(const W64GUID& other) const = default;
+    bool operator==(const W64GUID& other) const noexcept = default;
+
+    operator std::span<const std::byte>() const noexcept
+    {
+        return std::span<const std::byte>(reinterpret_cast<const std::byte*>(this), 16);
+    }
 };
 
 // 66666972-912E-11CF-A5D6-28DB04C10000
@@ -108,6 +114,9 @@ struct W64Traits
     using EncodingOptions                                = w64_encoding_options;
     using DecodingOptions                                = w64_decoding_options;
 
+    constexpr static std::array initialChunksToCopy = { guidBEXT };
+    constexpr static std::array<IDType, 0> finalChunksToCopy;
+
 #pragma pack(push, 1)
     struct ChunkType
     {
@@ -115,174 +124,138 @@ struct W64Traits
         SizeType size;
     };
 #pragma pack(pop)
+};
 
-    [[nodiscard]] static expected<uint64_t, audiofile_error> chunkGetSize(const ChunkType& chunk,
-                                                                          uint64_t position,
-                                                                          RIFFContainer<W64Traits>*)
+enum : uint16_t
+{
+    WAVE_FORMAT_PCM        = 0x1,
+    WAVE_FORMAT_IEEE_FLOAT = 0x3,
+    WAVE_FORMAT_EXTENSIBLE = 0xFFFE,
+};
+
+struct W64Decoder : public RIFFDecoder<W64Decoder, W64Traits>
+{
+    using RIFFDecoder<W64Decoder, W64Traits>::RIFFDecoder;
+
+    expected<uint64_t, audiofile_error> chunkGetSize(const ChunkType& chunk, uint64_t position)
     {
         return chunk.size - sizeof(ChunkType);
     }
-    [[nodiscard]] static expected<void, audiofile_error> chunkSetSize(ChunkType& chunk, uint64_t position,
-                                                                      uint64_t byteSize,
-                                                                      RIFFContainer<W64Traits>*)
+
+    expected<audiofile_format, audiofile_error> readFormat()
+    {
+        audiofile_format format;
+        if (m_header.riff == guidRIFF && m_header.wave == guidWAVE)
+        {
+            format.container = audiofile_container::w64;
+        }
+        else
+        {
+            return unexpected(audiofile_error::format_error);
+        }
+
+        WaveFmtEx fmt;
+        fmt.extendedSize = 0;
+        if (!this->findChunk(guidDATA))
+            return unexpected(audiofile_error::format_error);
+        if (!this->readChunkTo(guidFMT, fmt) && !this->readChunkTo(guidFMT, fmt.fmt))
+            return unexpected(audiofile_error::format_error);
+
+        if (fmt.extendedSize == 0 && fmt.fmt.formatTag == WAVE_FORMAT_EXTENSIBLE)
+            return unexpected(audiofile_error::format_error);
+        uint16_t formatTag =
+            fmt.fmt.formatTag == WAVE_FORMAT_EXTENSIBLE ? fmt.formatTagEx : fmt.fmt.formatTag;
+
+        format.channels = fmt.fmt.channels;
+        format.codec    = formatTag == WAVE_FORMAT_PCM          ? audiofile_codec::lpcm
+                          : formatTag == WAVE_FORMAT_IEEE_FLOAT ? audiofile_codec::ieee_float
+                                                                : audiofile_codec::unknown;
+        if (format.codec == audiofile_codec::unknown)
+        {
+            return unexpected(audiofile_error::format_error);
+        }
+        format.sample_rate = fmt.fmt.sample_rate;
+        format.bit_depth   = fmt.fmt.bitsPerSample;
+        if (format.bit_depth == 0)
+        {
+            return unexpected(audiofile_error::format_error);
+        }
+        format.total_frames = m_chunks[*this->findChunk(guidDATA)].byteSize / format.bytes_per_pcm_frame();
+        if (!format.valid())
+        {
+            return unexpected(audiofile_error::format_error);
+        }
+
+        return format;
+    }
+    expected<size_t, audiofile_error> readTo(const audio_data_interleaved& data)
+    {
+        if (!m_currentChunkToRead)
+            if (auto e = readChunkStart(guidDATA); !e)
+                return unexpected(e.error());
+        return this->readPCMAudio(data);
+    }
+    expected<void, audiofile_error> seekTo(uint64_t position)
+    {
+        if (!m_currentChunkToRead)
+            if (auto e = readChunkStart(guidDATA); !e)
+                return unexpected(e.error());
+        return readChunkSeek(position * m_format->bytes_per_pcm_frame());
+    }
+};
+
+struct W64Encoder : public RIFFEncoder<W64Encoder, W64Traits>
+{
+public:
+    using RIFFEncoder<W64Encoder, W64Traits>::RIFFEncoder;
+
+    expected<void, audiofile_error> finalize()
+    {
+        if (m_currentChunkToWrite)
+            if (auto e = writeChunkFinish(); !e)
+                return e;
+
+        m_header.riff     = guidRIFF;
+        m_header.riffSize = m_fileSize;
+        m_header.wave     = guidWAVE;
+        return writeHeader();
+    }
+
+    expected<void, audiofile_error> writeAudio(const audio_data_interleaved& data,
+                                               const audio_quantization& quantization)
+    {
+        if (!m_currentChunkToWrite)
+            if (auto e = writeChunkStart(guidDATA); !e)
+                return unexpected(e.error());
+        return this->writePCMAudio(data, quantization);
+    }
+
+    expected<void, audiofile_error> writeFormat()
+    {
+        KFR_ASSERT(m_format.has_value());
+        WaveFmt fmt;
+        fmt.bitsPerSample  = m_format->bit_depth;
+        fmt.sample_rate    = m_format->sample_rate;
+        fmt.channels       = m_format->channels;
+        fmt.formatTag      = m_format->codec == audiofile_codec::lpcm         ? WAVE_FORMAT_PCM
+                             : m_format->codec == audiofile_codec::ieee_float ? WAVE_FORMAT_IEEE_FLOAT
+                                                                              : 0;
+        fmt.blockAlign     = m_format->bytes_per_pcm_frame();
+        fmt.avgBytesPerSec = fmt.sample_rate * fmt.blockAlign;
+
+        if (auto e = writeChunkFrom(guidFMT, fmt); !e)
+            return unexpected(e.error());
+
+        flush();
+        return {};
+    }
+
+    static expected<void, audiofile_error> chunkSetSize(ChunkType& chunk, uint64_t position,
+                                                        uint64_t byteSize)
     {
         chunk.size = byteSize + sizeof(ChunkType);
         return {};
     }
-};
-
-class W64Container : public RIFFContainer<W64Traits>
-{
-public:
-    using Super = RIFFContainer<W64Traits>;
-
-    enum : uint16_t
-    {
-        WAVE_FORMAT_PCM        = 0x1,
-        WAVE_FORMAT_IEEE_FLOAT = 0x3,
-        WAVE_FORMAT_EXTENSIBLE = 0xFFFE,
-    };
-
-    [[nodiscard]] expected<audiofile_metadata, audiofile_error> readFormat();
-
-    [[nodiscard]] expected<audio_data, audiofile_error> readAudio(const audiofile_metadata* meta);
-
-    [[nodiscard]] expected<void, audiofile_error> seek(const audiofile_metadata* meta, uint64_t position);
-
-    [[nodiscard]] expected<void, audiofile_error> writeFormat(const audiofile_metadata* meta);
-    [[nodiscard]] expected<void, audiofile_error> writeAudio(const audio_data& data,
-                                                             const audio_quantinization& quantinization);
-
-    [[nodiscard]] expected<void, audiofile_error> finalize();
-
-    [[nodiscard]] expected<void, audiofile_error> copyInitialChunksFrom(RIFFContainer* sourceContainer);
-
-    ~W64Container() {}
-    bool finalized                = false;
-    audiofile_container container = audiofile_container::unknown;
-};
-
-struct W64Decoder : public RIFFDecoder<W64Container>
-{
-    using RIFFDecoder<W64Container>::RIFFDecoder;
-};
-
-expected<audiofile_metadata, audiofile_error> W64Container::readFormat()
-{
-    audiofile_metadata meta;
-    if (m_header.riff == guidRIFF && m_header.wave == guidWAVE)
-    {
-        meta.container = audiofile_container::w64;
-    }
-    else
-    {
-        return unexpected(audiofile_error::format_error);
-    }
-
-    WaveFmtEx fmt;
-    fmt.extendedSize = 0;
-    if (!this->findChunk(guidDATA))
-        return unexpected(audiofile_error::format_error);
-    if (!this->readChunkTo(guidFMT, fmt) && !this->readChunkTo(guidFMT, fmt.fmt))
-        return unexpected(audiofile_error::format_error);
-
-    if (fmt.extendedSize == 0 && fmt.fmt.formatTag == WAVE_FORMAT_EXTENSIBLE)
-        return unexpected(audiofile_error::format_error);
-    uint16_t formatTag = fmt.fmt.formatTag == WAVE_FORMAT_EXTENSIBLE ? fmt.formatTagEx : fmt.fmt.formatTag;
-
-    meta.channels = fmt.fmt.channels;
-    meta.codec    = formatTag == WAVE_FORMAT_PCM          ? audiofile_codec::lpcm
-                    : formatTag == WAVE_FORMAT_IEEE_FLOAT ? audiofile_codec::ieee_float
-                                                          : audiofile_codec::unknown;
-    if (meta.codec == audiofile_codec::unknown)
-    {
-        return unexpected(audiofile_error::format_error);
-    }
-    meta.sample_rate = fmt.fmt.sample_rate;
-    meta.bit_depth   = fmt.fmt.bitsPerSample;
-    if (meta.bit_depth == 0)
-    {
-        return unexpected(audiofile_error::format_error);
-    }
-    meta.total_frames = m_chunks[*this->findChunk(guidDATA)].byteSize / meta.bytes_per_pcm_frame();
-    if (!meta.valid())
-    {
-        return unexpected(audiofile_error::format_error);
-    }
-
-    return meta;
-}
-
-expected<audio_data, audiofile_error> W64Container::readAudio(const audiofile_metadata* meta)
-{
-    if (!m_currentChunkToRead)
-        if (auto e = readChunkStart(guidDATA); !e)
-            return unexpected(e.error());
-    return Super::readPCMAudio(default_audio_frames_to_read, meta);
-}
-
-[[nodiscard]] expected<void, audiofile_error> W64Container::seek(const audiofile_metadata* meta,
-                                                                 uint64_t position)
-{
-    if (!m_currentChunkToRead)
-        if (auto e = readChunkStart(guidDATA); !e)
-            return unexpected(e.error());
-    return readChunkSeek(position * meta->bytes_per_pcm_frame());
-}
-
-expected<void, audiofile_error> W64Container::copyInitialChunksFrom(RIFFContainer* sourceContainer)
-{
-    if (auto e = copyChunkFrom(sourceContainer, guidBEXT); !e)
-        return unexpected(e.error());
-    return {};
-}
-
-expected<void, audiofile_error> W64Container::writeFormat(const audiofile_metadata* meta)
-{
-    WaveFmt fmt;
-    fmt.bitsPerSample  = meta->bit_depth;
-    fmt.sample_rate    = meta->sample_rate;
-    fmt.channels       = meta->channels;
-    fmt.formatTag      = meta->codec == audiofile_codec::lpcm         ? WAVE_FORMAT_PCM
-                         : meta->codec == audiofile_codec::ieee_float ? WAVE_FORMAT_IEEE_FLOAT
-                                                                      : 0;
-    fmt.blockAlign     = meta->bytes_per_pcm_frame();
-    fmt.avgBytesPerSec = fmt.sample_rate * fmt.blockAlign;
-    container          = meta->container;
-    if (container == audiofile_container::unknown)
-        container = audiofile_container::w64;
-
-    if (auto e = writeChunkFrom(guidFMT, fmt); !e)
-        return unexpected(e.error());
-
-    flush();
-    return {};
-}
-expected<void, audiofile_error> W64Container::writeAudio(const audio_data& data,
-                                                         const audio_quantinization& quantinization)
-{
-    if (!m_currentChunkToWrite)
-        if (auto e = writeChunkStart(guidDATA); !e)
-            return unexpected(e.error());
-    return Super::writePCMAudio(data, quantinization);
-}
-
-expected<void, audiofile_error> W64Container::finalize()
-{
-    if (m_currentChunkToWrite)
-        if (auto e = writeChunkFinish(); !e)
-            return e;
-
-    m_header.riff     = guidRIFF;
-    m_header.riffSize = m_fileSize;
-    m_header.wave     = guidWAVE;
-    finalized         = true;
-    return writeHeader();
-}
-
-struct W64Encoder : public RIFFEncoder<W64Container>
-{
-    using RIFFEncoder<W64Container>::RIFFEncoder;
 };
 
 std::unique_ptr<audio_decoder> create_w64_decoder(const w64_decoding_options& options)

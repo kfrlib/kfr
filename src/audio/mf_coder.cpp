@@ -49,16 +49,18 @@ struct MFDecoder : public audio_decoder
 {
 public:
     MFDecoder(mediafoundation_decoding_options options) : options(std::move(options)) {}
-    [[nodiscard]] expected<audiofile_metadata, audiofile_error> open(const file_path& path) override;
-    [[nodiscard]] expected<audio_data, audiofile_error> read() override;
+    [[nodiscard]] expected<audiofile_format, audiofile_error> open(const file_path& path) override;
     [[nodiscard]] expected<void, audiofile_error> seek(uint64_t position) override;
+    expected<size_t, audiofile_error> read_to(const audio_data_interleaved& output) override;
     void close() override;
     [[nodiscard]] bool seek_is_precise() const override { return false; }
 
 protected:
+    expected<audio_data_interleaved, audiofile_error> read_packet();
     ComPtr<IMFSourceReader> pReader;
     ComPtr<IMFMediaType> ppPCMAudio;
     mediafoundation_decoding_options options;
+    audio_data_interleaved buffer;
 };
 
 std::unique_ptr<audio_decoder> create_mediafoundation_decoder(const mediafoundation_decoding_options& options)
@@ -215,7 +217,7 @@ static std::map<std::string, std::string> readMeta(ComPtr<IMFSourceReader> pRead
     return metadata;
 }
 
-expected<audiofile_metadata, audiofile_error> MFDecoder::open(const file_path& path)
+expected<audiofile_format, audiofile_error> MFDecoder::open(const file_path& path)
 {
     ComPtr<IMFMediaType> pSourceAudioType;
     ComPtr<IMFMediaType> pUncompressedAudioType;
@@ -234,14 +236,14 @@ expected<audiofile_metadata, audiofile_error> MFDecoder::open(const file_path& p
     HANDLE_ERROR(pReader->GetCurrentMediaType((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM,
                                               pSourceAudioType.ReleaseAndGetAddressOf()));
 
-    audiofile_metadata info;
+    audiofile_format info;
     info.container   = audiofile_container::unknown;
     info.codec       = audiofile_codec::unknown;
     info.endianness  = audiofile_endianness::little;
     info.bit_depth   = MFGetAttributeUINT32(pSourceAudioType.Get(), MF_MT_AUDIO_BITS_PER_SAMPLE, 0);
     info.channels    = MFGetAttributeUINT32(pSourceAudioType.Get(), MF_MT_AUDIO_NUM_CHANNELS, 0);
     info.sample_rate = MFGetAttributeUINT32(pSourceAudioType.Get(), MF_MT_AUDIO_SAMPLES_PER_SECOND, 0);
-    if (info.channels == 0 || info.sample_rate == 0)
+    if (!info.valid())
         return unexpected(audiofile_error::format_error);
 
     PROPVARIANT var;
@@ -273,16 +275,22 @@ expected<audiofile_metadata, audiofile_error> MFDecoder::open(const file_path& p
 
     ppPCMAudio = pUncompressedAudioType;
 
-    m_metadata = info;
+    m_format = info;
 
     if (options.read_metadata)
     {
         // Read media metadata (author, title, album, etc) using MF
-        m_metadata->metadata = readMeta(pReader);
+        m_format->metadata = readMeta(pReader);
     }
     return info;
 }
-expected<audio_data, audiofile_error> MFDecoder::read()
+
+expected<size_t, audiofile_error> MFDecoder::read_to(const audio_data_interleaved& output)
+{
+    return read_buffered(output, [this]() { return read_packet(); }, buffer);
+}
+
+expected<audio_data_interleaved, audiofile_error> MFDecoder::read_packet()
 {
     ComPtr<IMFSample> pSample;
     ComPtr<IMFMediaBuffer> pBuffer;
@@ -290,9 +298,10 @@ expected<audio_data, audiofile_error> MFDecoder::read()
     BYTE* pAudioData = NULL;
     DWORD cbBuffer   = 0;
 
-    KFR_ASSERT(m_metadata.has_value());
+    if (!m_format.has_value())
+        return unexpected(audiofile_error::closed);
 
-    audio_data data{ &*m_metadata };
+    audio_data_interleaved data(m_format->channels);
 
     for (;;)
     {
@@ -307,12 +316,15 @@ expected<audio_data, audiofile_error> MFDecoder::read()
 
         HANDLE_ERROR(pSample->ConvertToContiguousBuffer(pBuffer.ReleaseAndGetAddressOf()));
         HANDLE_ERROR(pBuffer->Lock(&pAudioData, NULL, &cbBuffer));
-        size_t numSamples = cbBuffer / sizeof(MFSample) / m_metadata->channels;
+        size_t numSamples = cbBuffer / sizeof(MFSample) / m_format->channels;
         if (numSamples == 0)
             continue;
         data.resize(numSamples);
-        deinterleave_samples(data.pointers(), reinterpret_cast<const MFSample*>(pAudioData),
-                             m_metadata->channels, numSamples);
+        samples_load(data.data, reinterpret_cast<const MFSample*>(pAudioData),
+                     numSamples * m_format->channels, false);
+
+        // auto stat = data.stat();
+        // fprintf(stderr, "Read %zu frames (rms = %.2f)\n", data.size, stat.rms);
 
         HANDLE_ERROR(pBuffer->Unlock());
         pAudioData = nullptr;
@@ -326,13 +338,14 @@ expected<audio_data, audiofile_error> MFDecoder::read()
 }
 expected<void, audiofile_error> MFDecoder::seek(uint64_t position)
 {
-    uint64_t hnsPosition = position * 10'000'000.0 / m_metadata->sample_rate;
+    uint64_t hnsPosition = std::floor(position * 10'000'000.0 / m_format->sample_rate);
 
     PROPVARIANT var;
     HANDLE_ERROR(InitPropVariantFromInt64(hnsPosition, &var));
     HANDLE_ERROR(pReader->SetCurrentPosition(GUID_NULL, var));
     PropVariantClear(&var);
 
+    buffer.reset();
     return {};
 }
 
@@ -340,7 +353,7 @@ void MFDecoder::close()
 {
     ppPCMAudio.Reset();
     pReader.Reset();
-    m_metadata.reset();
+    m_format.reset();
 }
 } // namespace kfr
 

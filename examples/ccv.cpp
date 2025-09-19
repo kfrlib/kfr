@@ -6,7 +6,9 @@
 
 // Complex convolution filter examples
 
+#ifndef KFR_BASETYPE_F32
 #define KFR_BASETYPE_F32
+#endif
 
 #include <chrono>
 #include <kfr/base.hpp>

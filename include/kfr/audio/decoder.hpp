@@ -41,22 +41,18 @@ public:
     virtual ~audio_decoder();
 
     /// @brief open audio file for reading and read info
-    [[nodiscard]] virtual expected<audiofile_metadata, audiofile_error> open(const file_path& path) = 0;
+    [[nodiscard]] virtual expected<audiofile_format, audiofile_error> open(const file_path& path) = 0;
 
 #if defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM
-    [[nodiscard]] expected<audiofile_metadata, audiofile_error> open(const std::string& path)
+    [[nodiscard]] expected<audiofile_format, audiofile_error> open(const std::string& path)
     {
         return open(details::utf8_to_wstring(path));
     }
 #endif
 
-    /// @brief read chunk of audio data
-    /// @returns audiofile_error::end_of_file if total_samples have been read
-    /// @returns audiofile_error::io_error if an I/O error occurred
-    [[nodiscard]] virtual expected<audio_data, audiofile_error> read() = 0;
+    [[nodiscard]] virtual expected<size_t, audiofile_error> read_to(const audio_data_interleaved& output) = 0;
 
-    [[nodiscard]] virtual expected<audio_data, audiofile_error> read_buffered(size_t size,
-                                                                              audio_data& buffer);
+    [[nodiscard]] expected<audio_data_interleaved, audiofile_error> read(size_t maximum_frames);
 
     [[nodiscard]] virtual bool seek_is_precise() const;
 
@@ -65,21 +61,34 @@ public:
     [[nodiscard]] virtual expected<void, audiofile_error> seek(uint64_t position) = 0;
 
     /// @brief read entire audio
-    [[nodiscard]] expected<audio_data, audiofile_error> read_all();
+    [[nodiscard]] expected<audio_data_interleaved, audiofile_error> read_all();
 
-    /// @brief get audio metadata
-    [[nodiscard]] const audiofile_metadata& metadata() const;
+    /// @brief read entire audio
+    [[nodiscard]] expected<audio_data_planar, audiofile_error> read_all_planar();
+
+    /// @brief get audio format
+    [[nodiscard]] const std::optional<audiofile_format>& format() const;
+
+    virtual std::optional<uint64_t> has_chunk(std::span<const std::byte> chunk_id) const;
 
     /// @brief read chunk of data by its ID
-    [[nodiscard]] virtual expected<std::vector<uint8_t>, audiofile_error> read_chunk(
-        std::span<const std::byte> chunk_id);
+    [[nodiscard]] virtual expected<void, audiofile_error> read_chunk(
+        std::span<const std::byte> chunk_id, const std::function<bool(std::span<const std::byte>)>& handler,
+        size_t buffer_size = 65536);
+
+    expected<std::vector<uint8_t>, audiofile_error> read_chunk_bytes(std::span<const std::byte> chunk_id);
 
     /// @brief close underlying file
     virtual void close() = 0;
 
 protected:
+    expected<size_t, audiofile_error> read_buffered(
+        const audio_data_interleaved& output,
+        const std::function<expected<audio_data_interleaved, audiofile_error>()>& read_packet,
+        audio_data_interleaved& buffer);
+
     audio_decoder() = default;
-    std::optional<audiofile_metadata> m_metadata;
+    std::optional<audiofile_format> m_format;
 };
 
 using audiofile_header = std::array<std::byte, 16>;
@@ -157,6 +166,17 @@ struct flac_decoding_options : public audio_decoding_options
 struct mp3_decoding_options : public audio_decoding_options
 {
 };
+
+/**
+ * @brief Creates an MP3 audio decoder with the specified decoding options.
+ *
+ * This function initializes and returns a unique pointer to an MP3 audio decoder
+ * configured with the provided decoding options. If no options are specified,
+ * default options will be used.
+ *
+ * @param options The MP3 decoding options to configure the decoder. Defaults to an empty set of options.
+ * @return A unique pointer to the created MP3 audio decoder.
+ */
 [[nodiscard]] std::unique_ptr<audio_decoder> create_mp3_decoder(const mp3_decoding_options& options = {});
 #endif
 
@@ -165,9 +185,37 @@ struct mediafoundation_decoding_options : public audio_decoding_options
 {
 };
 
+/**
+ * @brief Creates a Media Foundation-based audio decoder.
+ *
+ * This function initializes and returns a unique pointer to an audio decoder
+ * that utilizes the Media Foundation framework for decoding audio streams.
+ *
+ * @param options Optional parameter specifying the decoding options to configure
+ *                the Media Foundation decoder. If not provided, default options
+ *                will be used.
+ *
+ * @return A `std::unique_ptr<audio_decoder>` that manages the lifetime of the
+ *         created audio decoder instance.
+ */
 [[nodiscard]] std::unique_ptr<audio_decoder> create_mediafoundation_decoder(
     const mediafoundation_decoding_options& options = {});
 #endif
+
+/**
+ * @brief Decodes an audio file and returns the audio data in an interleaved format.
+ *
+ * @param path The file path to the audio file to be decoded.
+ * @param out_format Optional pointer to an audiofile_format object where the format of the decoded audio file
+ * will be stored. May be nullptr if the format is not needed.
+ * @param options Optional audio decoding options to customize the decoding process.
+ *
+ * @return An expected object containing the decoded audio data in interleaved format on success,
+ *         or an audiofile_error on failure.
+ */
+[[nodiscard]] expected<audio_data_interleaved, audiofile_error> decode_audio_file(
+    const file_path& path, audiofile_format* out_format = nullptr,
+    const audio_decoding_options& options = {});
 
 namespace details
 {
