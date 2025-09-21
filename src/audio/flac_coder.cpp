@@ -40,55 +40,6 @@ struct libflac_deleter
     void operator()(FLAC__StreamEncoder* f) { FLAC__stream_encoder_delete(f); }
 };
 
-struct FLACDecoder : public audio_decoder
-{
-public:
-    FLACDecoder(flac_decoding_options options) : options(std::move(options)) {}
-    ~FLACDecoder() { close(); }
-    [[nodiscard]] expected<audiofile_format, audiofile_error> open(const file_path& path) override;
-    [[nodiscard]] expected<void, audiofile_error> seek(uint64_t position) override;
-    void close() override;
-
-protected:
-    std::unique_ptr<FLAC__StreamDecoder, libflac_deleter> decoder;
-    audio_data_interleaved packet;
-    audio_data_interleaved buffer;
-    bool flacError          = false;
-    FLAC__uint64 dataOffset = 0;
-    flac_decoding_options options;
-    expected<audio_data_interleaved, audiofile_error> read_packet();
-    [[nodiscard]] expected<size_t, audiofile_error> read_to(const audio_data_interleaved& output) override
-    {
-        return read_buffered(output, [this]() { return read_packet(); }, buffer);
-    }
-
-    friend FLAC__StreamDecoderWriteStatus libflac_write_callback(const FLAC__StreamDecoder* decoder,
-                                                                 const FLAC__Frame* frame,
-                                                                 const FLAC__int32* const buffer[],
-                                                                 void* client_data);
-    friend void libflac_metadata_callback(const FLAC__StreamDecoder* decoder,
-                                          const FLAC__StreamMetadata* metadata, void* client_data);
-    friend void libflac_error_callback(const FLAC__StreamDecoder* decoder,
-                                       FLAC__StreamDecoderErrorStatus status, void* client_data);
-};
-
-struct FLACEncoder : public audio_encoder
-{
-public:
-    FLACEncoder(flac_encoding_options options) : options(std::move(options)) {}
-    [[nodiscard]] expected<void, audiofile_error> open(const file_path& path, const audiofile_format& format,
-                                                       audio_decoder* copyMetadataFrom = nullptr) override;
-    [[nodiscard]] expected<void, audiofile_error> write(const audio_data_interleaved& data) override;
-    ~FLACEncoder();
-
-    [[nodiscard]] expected<uint64_t, audiofile_error> close() override;
-
-protected:
-    std::unique_ptr<FLAC__StreamEncoder, libflac_deleter> encoder;
-    bool flacError = false;
-    flac_encoding_options options;
-};
-
 namespace details
 {
 // sample ranges for bit depths 1..32
@@ -158,82 +109,210 @@ inline void samples_load_flac(fbase* out, const FLAC__int32* const in[], size_t 
     }
 }
 
-// inline bool supportsOggFlac = FLAC_API_SUPPORTS_OGG_FLAC;
-
-FLAC__StreamDecoderWriteStatus libflac_write_callback(const FLAC__StreamDecoder* decoder,
-                                                      const FLAC__Frame* frame,
-                                                      const FLAC__int32* const buffer[], void* client_data)
+struct FLACDecoder : public audio_decoder
 {
-    FLACDecoder* instance = reinterpret_cast<FLACDecoder*>(client_data);
-    if (!instance->m_format)
-        return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
-    if (frame->header.channels != instance->m_format->channels)
-        return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
-    if (frame->header.sample_rate != instance->m_format->sample_rate)
-        return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
-    if (frame->header.bits_per_sample <= 0 || frame->header.bits_per_sample > 32)
-        return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+public:
+    FLACDecoder(flac_decoding_options options) : options(std::move(options)) {}
+    ~FLACDecoder() { close(); }
+    [[nodiscard]] expected<audiofile_format, audiofile_error> open(
+        std::shared_ptr<binary_reader> reader) override;
+    [[nodiscard]] expected<void, audiofile_error> seek(uint64_t position) override;
+    void close() override;
 
-    const size_t chanNum      = frame->header.channels;
-    const size_t sampleNum    = frame->header.blocksize;
-    const size_t writePos     = instance->packet.size;
-    const int bits_per_sample = frame->header.bits_per_sample;
-
-    if (instance->packet.empty())
+protected:
+    std::unique_ptr<FLAC__StreamDecoder, libflac_deleter> decoder;
+    audio_data_interleaved packet;
+    audio_data_interleaved buffer;
+    std::shared_ptr<binary_reader> reader;
+    bool flacError          = false;
+    FLAC__uint64 dataOffset = 0;
+    flac_decoding_options options;
+    expected<audio_data_interleaved, audiofile_error> read_packet();
+    [[nodiscard]] expected<size_t, audiofile_error> read_to(const audio_data_interleaved& output) override
     {
-        instance->packet = audio_data_interleaved(chanNum);
+        return read_buffered(output, [this]() { return read_packet(); }, buffer);
     }
 
-    // allocate audio data
-    instance->packet.resize(writePos + sampleNum);
-
-    samples_load_flac(instance->packet.data + writePos * chanNum, buffer, chanNum, sampleNum,
-                      bits_per_sample);
-
-    return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
-}
-
-void libflac_metadata_callback(const FLAC__StreamDecoder* decoder, const FLAC__StreamMetadata* metadata,
-                               void* client_data)
-{
-    FLACDecoder* instance = reinterpret_cast<FLACDecoder*>(client_data);
-    if (metadata->type == FLAC__METADATA_TYPE_STREAMINFO)
+    static FLAC__StreamDecoderWriteStatus libflac_write_callback(const FLAC__StreamDecoder* decoder,
+                                                                 const FLAC__Frame* frame,
+                                                                 const FLAC__int32* const buffer[],
+                                                                 void* client_data)
     {
-        audiofile_format info;
-        info.container     = audiofile_container::flac;
-        info.channels      = metadata->data.stream_info.channels;
-        info.sample_rate   = metadata->data.stream_info.sample_rate;
-        info.total_frames  = metadata->data.stream_info.total_samples;
-        info.bit_depth     = metadata->data.stream_info.bits_per_sample;
-        info.codec         = audiofile_codec::flac;
-        instance->m_format = info;
-    }
-    if (metadata->type == FLAC__METADATA_TYPE_VORBIS_COMMENT)
-    {
-        KFR_ASSERT(instance->m_format);
-        for (uint32_t i = 0; i < metadata->data.vorbis_comment.num_comments; i++)
+        FLACDecoder* instance = reinterpret_cast<FLACDecoder*>(client_data);
+        if (!instance->m_format)
+            return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+        if (frame->header.channels != instance->m_format->channels)
+            return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+        if (frame->header.sample_rate != instance->m_format->sample_rate)
+            return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+        if (frame->header.bits_per_sample <= 0 || frame->header.bits_per_sample > 32)
+            return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+
+        const size_t chanNum      = frame->header.channels;
+        const size_t sampleNum    = frame->header.blocksize;
+        const size_t writePos     = instance->packet.size;
+        const int bits_per_sample = frame->header.bits_per_sample;
+
+        if (instance->packet.empty())
         {
-            const FLAC__StreamMetadata_VorbisComment_Entry& entry = metadata->data.vorbis_comment.comments[i];
-            std::string_view comment{ reinterpret_cast<const char*>(entry.entry), entry.length };
-            size_t eq = comment.find('=');
-            if (eq != std::string_view::npos)
+            instance->packet = audio_data_interleaved(chanNum);
+        }
+
+        // allocate audio data
+        instance->packet.resize(writePos + sampleNum);
+
+        samples_load_flac(instance->packet.data + writePos * chanNum, buffer, chanNum, sampleNum,
+                          bits_per_sample);
+
+        return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
+    }
+
+    static void libflac_metadata_callback(const FLAC__StreamDecoder* decoder,
+                                          const FLAC__StreamMetadata* metadata, void* client_data)
+    {
+        FLACDecoder* instance = reinterpret_cast<FLACDecoder*>(client_data);
+        if (metadata->type == FLAC__METADATA_TYPE_STREAMINFO)
+        {
+            audiofile_format info;
+            info.container     = audiofile_container::flac;
+            info.channels      = metadata->data.stream_info.channels;
+            info.sample_rate   = metadata->data.stream_info.sample_rate;
+            info.total_frames  = metadata->data.stream_info.total_samples;
+            info.bit_depth     = metadata->data.stream_info.bits_per_sample;
+            info.codec         = audiofile_codec::flac;
+            instance->m_format = info;
+        }
+        if (metadata->type == FLAC__METADATA_TYPE_VORBIS_COMMENT)
+        {
+            KFR_ASSERT(instance->m_format);
+            for (uint32_t i = 0; i < metadata->data.vorbis_comment.num_comments; i++)
             {
-                std::string key{ comment.substr(0, eq) };
-                std::string value{ comment.substr(eq + 1) };
-                instance->m_format->metadata.emplace(std::move(key), std::move(value));
+                const FLAC__StreamMetadata_VorbisComment_Entry& entry =
+                    metadata->data.vorbis_comment.comments[i];
+                std::string_view comment{ reinterpret_cast<const char*>(entry.entry), entry.length };
+                size_t eq = comment.find('=');
+                if (eq != std::string_view::npos)
+                {
+                    std::string key{ comment.substr(0, eq) };
+                    std::string value{ comment.substr(eq + 1) };
+                    instance->m_format->metadata.emplace(std::move(key), std::move(value));
+                }
             }
         }
     }
-}
-void libflac_error_callback(const FLAC__StreamDecoder* decoder, FLAC__StreamDecoderErrorStatus status,
-                            void* client_data)
-{
-    FLACDecoder* instance = reinterpret_cast<FLACDecoder*>(client_data);
-    instance->flacError   = true;
-}
+    static void libflac_error_callback(const FLAC__StreamDecoder* decoder,
+                                       FLAC__StreamDecoderErrorStatus status, void* client_data)
+    {
+        FLACDecoder* instance = reinterpret_cast<FLACDecoder*>(client_data);
+        instance->flacError   = true;
+    }
 
-expected<audiofile_format, audiofile_error> FLACDecoder::open(const file_path& path)
+    static FLAC__StreamDecoderReadStatus libflac_read_callback(const FLAC__StreamDecoder* decoder,
+                                                               FLAC__byte buffer[], size_t* bytes,
+                                                               void* client_data)
+    {
+        FLACDecoder* instance = reinterpret_cast<FLACDecoder*>(client_data);
+        size_t read_bytes     = instance->reader->read(buffer, *bytes);
+        if (read_bytes == 0)
+            return FLAC__STREAM_DECODER_READ_STATUS_END_OF_STREAM;
+        *bytes = read_bytes;
+        return FLAC__STREAM_DECODER_READ_STATUS_CONTINUE;
+    }
+    static FLAC__StreamDecoderSeekStatus libflac_seek_callback(const FLAC__StreamDecoder* decoder,
+                                                               FLAC__uint64 absolute_byte_offset,
+                                                               void* client_data)
+    {
+        FLACDecoder* instance = reinterpret_cast<FLACDecoder*>(client_data);
+        return instance->reader->seek(absolute_byte_offset, seek_origin::begin)
+                   ? FLAC__STREAM_DECODER_SEEK_STATUS_OK
+                   : FLAC__STREAM_DECODER_SEEK_STATUS_ERROR;
+    }
+    static FLAC__StreamDecoderTellStatus libflac_tell_callback(const FLAC__StreamDecoder* decoder,
+                                                               FLAC__uint64* absolute_byte_offset,
+                                                               void* client_data)
+    {
+        FLACDecoder* instance = reinterpret_cast<FLACDecoder*>(client_data);
+        *absolute_byte_offset = instance->reader->tell();
+        return FLAC__STREAM_DECODER_TELL_STATUS_OK;
+    }
+
+    static FLAC__StreamDecoderLengthStatus libflac_length_callback(const FLAC__StreamDecoder* decoder,
+                                                                   FLAC__uint64* stream_length,
+                                                                   void* client_data)
+    {
+        FLACDecoder* instance = reinterpret_cast<FLACDecoder*>(client_data);
+        auto size             = instance->reader->size();
+        if (size)
+        {
+            *stream_length = *size;
+            return FLAC__STREAM_DECODER_LENGTH_STATUS_OK;
+        }
+        else
+        {
+            return FLAC__STREAM_DECODER_LENGTH_STATUS_UNSUPPORTED;
+        }
+    }
+
+    static FLAC__bool libflac_eof_callback(const FLAC__StreamDecoder* decoder, void* client_data)
+    {
+        FLACDecoder* instance = reinterpret_cast<FLACDecoder*>(client_data);
+        return instance->reader->tell() >= instance->reader->size().value_or(0);
+    }
+};
+
+struct FLACEncoder : public audio_encoder
 {
+public:
+    FLACEncoder(flac_encoding_options options) : options(std::move(options)) {}
+    [[nodiscard]] expected<void, audiofile_error> open(std::shared_ptr<binary_writer> writer,
+                                                       const audiofile_format& format,
+                                                       audio_decoder* copyMetadataFrom = nullptr) override;
+    [[nodiscard]] expected<void, audiofile_error> write(const audio_data_interleaved& data) override;
+    ~FLACEncoder();
+
+    [[nodiscard]] expected<uint64_t, audiofile_error> close() override;
+
+protected:
+    std::unique_ptr<FLAC__StreamEncoder, libflac_deleter> encoder;
+    bool flacError = false;
+    flac_encoding_options options;
+
+    static FLAC__StreamEncoderWriteStatus libflac_write_callback(const FLAC__StreamEncoder* encoder,
+                                                                 const FLAC__byte buffer[], size_t bytes,
+                                                                 uint32_t samples, uint32_t current_frame,
+                                                                 void* client_data)
+    {
+        FLACEncoder* instance = reinterpret_cast<FLACEncoder*>(client_data);
+        size_t written        = instance->m_writer->write(buffer, bytes);
+        return written == bytes ? FLAC__STREAM_ENCODER_WRITE_STATUS_OK
+                                : FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
+    }
+    static FLAC__StreamEncoderSeekStatus libflac_seek_callback(const FLAC__StreamEncoder* encoder,
+                                                               FLAC__uint64 absolute_byte_offset,
+                                                               void* client_data)
+    {
+        FLACEncoder* instance = reinterpret_cast<FLACEncoder*>(client_data);
+        return instance->m_writer->seek(absolute_byte_offset, seek_origin::begin)
+                   ? FLAC__STREAM_ENCODER_SEEK_STATUS_OK
+                   : FLAC__STREAM_ENCODER_SEEK_STATUS_ERROR;
+    }
+    static FLAC__StreamEncoderTellStatus libflac_tell_callback(const FLAC__StreamEncoder* encoder,
+                                                               FLAC__uint64* absolute_byte_offset,
+                                                               void* client_data)
+    {
+        FLACEncoder* instance = reinterpret_cast<FLACEncoder*>(client_data);
+        *absolute_byte_offset = instance->m_writer->tell();
+        return FLAC__STREAM_ENCODER_TELL_STATUS_OK;
+    }
+};
+
+// inline bool supportsOggFlac = FLAC_API_SUPPORTS_OGG_FLAC;
+
+expected<audiofile_format, audiofile_error> FLACDecoder::open(std::shared_ptr<binary_reader> reader_)
+{
+    if (!reader_)
+        return unexpected(audiofile_error::invalid_argument);
+    reader = std::move(reader_);
     decoder.reset(FLAC__stream_decoder_new());
     if (!decoder)
         return unexpected(audiofile_error::internal_error);
@@ -243,13 +322,18 @@ expected<audiofile_format, audiofile_error> FLACDecoder::open(const file_path& p
         FLAC__stream_decoder_set_metadata_respond(decoder.get(), FLAC__METADATA_TYPE_VORBIS_COMMENT);
     }
 
-    auto f = fopen_path(path, open_file_mode::read_existing);
-    if (!f)
-        return unexpected(audiofile_error::io_error);
-
     FLAC__StreamDecoderInitStatus init_status =
-        FLAC__stream_decoder_init_FILE(decoder.get(), *f, &libflac_write_callback, &libflac_metadata_callback,
-                                       &libflac_error_callback, this);
+        FLAC__stream_decoder_init_stream(decoder.get(), //
+                                         &FLACDecoder::libflac_read_callback, //
+                                         &FLACDecoder::libflac_seek_callback, //
+                                         &FLACDecoder::libflac_tell_callback, //
+                                         &FLACDecoder::libflac_length_callback, //
+                                         &FLACDecoder::libflac_eof_callback, //
+                                         &FLACDecoder::libflac_write_callback, //
+                                         &FLACDecoder::libflac_metadata_callback, //
+                                         &FLACDecoder::libflac_error_callback, //
+                                         this);
+
     if (init_status == FLAC__STREAM_DECODER_INIT_STATUS_UNSUPPORTED_CONTAINER)
         return unexpected(audiofile_error::format_error);
     else if (init_status != FLAC__STREAM_DECODER_INIT_STATUS_OK)
@@ -320,17 +404,19 @@ void FLACDecoder::close()
 {
     packet.reset();
     decoder.reset();
+    m_reader.reset();
     flacError  = false;
     dataOffset = 0;
     m_format.reset();
 }
 
-expected<void, audiofile_error> FLACEncoder::open(const file_path& path, const audiofile_format& format,
+expected<void, audiofile_error> FLACEncoder::open(std::shared_ptr<binary_writer> writer,
+                                                  const audiofile_format& format,
                                                   audio_decoder* copyMetadataFrom)
 {
-    auto f = fopen_path(path, open_file_mode::write_new);
-    if (!f)
-        return unexpected(audiofile_error::io_error);
+    if (!writer)
+        return unexpected(audiofile_error::invalid_argument);
+    m_writer = std::move(writer);
 
     encoder.reset(FLAC__stream_encoder_new());
     if (!encoder)
@@ -357,7 +443,12 @@ expected<void, audiofile_error> FLACEncoder::open(const file_path& path, const a
     }
 
     FLAC__StreamEncoderInitStatus init_status =
-        FLAC__stream_encoder_init_FILE(encoder.get(), *f, nullptr, this);
+        FLAC__stream_encoder_init_stream(encoder.get(), //
+                                         &FLACEncoder::libflac_write_callback, //
+                                         &FLACEncoder::libflac_seek_callback, //
+                                         &FLACEncoder::libflac_tell_callback, //
+                                         nullptr, //
+                                         this);
     if (init_status != FLAC__STREAM_ENCODER_INIT_STATUS_OK)
         return unexpected(audiofile_error::internal_error);
 
@@ -399,6 +490,7 @@ expected<uint64_t, audiofile_error> FLACEncoder::close()
     flacError             = false;
     uint64_t totalWritten = m_format ? m_format->total_frames : 0;
     m_format.reset();
+    m_writer.reset();
     if (totalWritten == 0)
         return unexpected(audiofile_error::empty_file);
     return totalWritten;

@@ -112,14 +112,14 @@ template <typename T = void>
 struct abstract_stream
 {
     virtual ~abstract_stream() {}
-    [[nodiscard]] virtual uint64_t tell() const                         = 0;
-    [[nodiscard]] virtual bool seek(int64_t offset, seek_origin origin) = 0;
+    [[nodiscard]] virtual uint64_t tell() const                                              = 0;
+    [[nodiscard]] virtual bool seek(int64_t offset, seek_origin origin = seek_origin::begin) = 0;
     [[nodiscard]] bool seek(int64_t offset, int origin)
     {
         return seek(offset, static_cast<seek_origin>(origin));
     }
 
-    [[nodiscard]] std::optional<uint64_t> size()
+    [[nodiscard]] virtual std::optional<uint64_t> size()
     {
         uint64_t pos = tell();
         if (!seek(0, seek_origin::end))
@@ -179,6 +179,104 @@ struct abstract_writer : abstract_stream<T>
     }
 };
 
+template <typename T>
+class memory_reader : public abstract_reader<T>
+{
+public:
+    memory_reader(std::span<const T> buffer) : m_buffer(buffer), m_pos(0) {}
+
+    uint64_t tell() const override { return m_pos; }
+
+    std::optional<uint64_t> size() override { return static_cast<uint64_t>(m_buffer.size()); }
+
+    bool seek(int64_t offset, seek_origin origin) override
+    {
+        int64_t new_pos;
+        switch (origin)
+        {
+        case seek_origin::begin:
+            new_pos = offset;
+            break;
+        case seek_origin::current:
+            new_pos = static_cast<int64_t>(m_pos) + offset;
+            break;
+        case seek_origin::end:
+            new_pos = static_cast<int64_t>(m_buffer.size()) + offset;
+            break;
+        default:
+            return false;
+        }
+        if (new_pos < 0 || new_pos > static_cast<int64_t>(m_buffer.size()))
+            return false;
+        m_pos = static_cast<size_t>(new_pos);
+        return true;
+    }
+
+    size_t read(T* data, size_t size) override
+    {
+        size_t available = m_buffer.size() - m_pos;
+        size_t to_read   = std::min(size, available);
+        if (to_read == 0)
+            return 0;
+        std::copy_n(m_buffer.data() + m_pos, to_read, data);
+        m_pos += to_read;
+        return to_read;
+    }
+
+private:
+    std::span<const T> m_buffer;
+    size_t m_pos;
+};
+
+template <typename T>
+class memory_writer : public abstract_writer<T>
+{
+public:
+    memory_writer(std::span<T> buffer) : m_buffer(buffer), m_pos(0) {}
+
+    uint64_t tell() const override { return m_pos; }
+
+    std::optional<uint64_t> size() override { return static_cast<uint64_t>(m_buffer.size()); }
+
+    bool seek(int64_t offset, seek_origin origin) override
+    {
+        int64_t new_pos;
+        switch (origin)
+        {
+        case seek_origin::begin:
+            new_pos = offset;
+            break;
+        case seek_origin::current:
+            new_pos = static_cast<int64_t>(m_pos) + offset;
+            break;
+        case seek_origin::end:
+            new_pos = static_cast<int64_t>(m_buffer.size()) + offset;
+            break;
+        default:
+            return false;
+        }
+        if (new_pos < 0 || new_pos > static_cast<int64_t>(m_buffer.size()))
+            return false;
+        m_pos = static_cast<size_t>(new_pos);
+        return true;
+    }
+
+    size_t write(const T* data, size_t size) override
+    {
+        size_t available = m_buffer.size() - m_pos;
+        size_t to_write  = std::min(size, available);
+        if (to_write == 0)
+            return 0;
+        std::copy_n(data, to_write, m_buffer.data() + m_pos);
+        m_pos += to_write;
+        return to_write;
+    }
+
+private:
+    std::span<T> m_buffer;
+    size_t m_pos;
+};
+
 template <typename From, typename To>
 struct reader_adapter : abstract_reader<To>
 {
@@ -187,6 +285,14 @@ struct reader_adapter : abstract_reader<To>
     constexpr static uint64_t scale = element_size<To>() / element_size<To>();
 
     reader_adapter(std::shared_ptr<abstract_reader<From>> reader) : reader(std::move(reader)) {}
+
+    std::optional<uint64_t> size() override
+    {
+        if (auto reader_size = reader->size())
+            return *reader_size / scale;
+        else
+            return std::nullopt;
+    }
 
     [[nodiscard]] size_t read(To* data, size_t size) final
     {
@@ -211,6 +317,14 @@ struct writer_adapter : abstract_writer<To>
     constexpr static uint64_t scale = element_size<To>() / element_size<To>();
 
     writer_adapter(std::shared_ptr<abstract_writer<From>> writer) : writer(std::move(writer)) {}
+
+    std::optional<uint64_t> size() override
+    {
+        if (auto writer_size = writer->size())
+            return *writer_size / scale;
+        else
+            return std::nullopt;
+    }
 
     [[nodiscard]] size_t write(const To* data, size_t size) final
     {

@@ -39,7 +39,8 @@ namespace kfr
 struct MP3Decoder : public audio_decoder
 {
 public:
-    [[nodiscard]] expected<audiofile_format, audiofile_error> open(const file_path& path) override;
+    [[nodiscard]] expected<audiofile_format, audiofile_error> open(
+        std::shared_ptr<binary_reader> reader) override;
     [[nodiscard]] expected<size_t, audiofile_error> read_to(const audio_data_interleaved& output) override;
     [[nodiscard]] expected<void, audiofile_error> seek(uint64_t position) override;
     void close() override;
@@ -50,7 +51,6 @@ public:
 protected:
     mp3_decoding_options options;
     mp3dec_io_t io;
-    std::unique_ptr<std::FILE, details::stdFILE_deleter> file;
     std::optional<mp3dec_ex_t> decex;
     audio_data_interleaved audio;
 
@@ -76,29 +76,24 @@ void MP3Decoder::close()
         mp3dec_ex_close(&*decex);
         decex.reset();
     }
-    file.reset();
+    m_reader.reset();
     m_format.reset();
 }
 
 size_t MP3Decoder::mp3d_read_cb(void* buf, size_t size, void* user_data)
 {
-    std::FILE* file = reinterpret_cast<MP3Decoder*>(user_data)->file.get();
-    return fread(buf, 1, size, file);
+    return reinterpret_cast<MP3Decoder*>(user_data)->m_reader->read(buf, size);
 }
 int MP3Decoder::mp3d_seek_cb(uint64_t position, void* user_data)
 {
-    std::FILE* file = reinterpret_cast<MP3Decoder*>(user_data)->file.get();
-    return KFR_IO_SEEK_64(file, position, SEEK_SET);
+    return reinterpret_cast<MP3Decoder*>(user_data)->m_reader->seek(position, seek_origin::begin) ? 0 : -1;
 }
 
-expected<audiofile_format, audiofile_error> MP3Decoder::open(const file_path& path)
+expected<audiofile_format, audiofile_error> MP3Decoder::open(std::shared_ptr<binary_reader> reader)
 {
-    auto f = fopen_path(path, open_file_mode::read_existing);
-    if (f)
-        file.reset(*f);
-    else
-        return unexpected(audiofile_error::io_error);
-
+    if (!reader)
+        return unexpected(audiofile_error::invalid_argument);
+    m_reader = std::move(reader);
     decex.emplace();
     if (int e = mp3dec_ex_open_cb(&*decex, &io, MP3D_SEEK_TO_SAMPLE); e != 0)
     {

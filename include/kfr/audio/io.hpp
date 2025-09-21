@@ -45,7 +45,11 @@ enum class audiofile_error : uint32_t
     invalid_argument = 8,
     closed           = 9,
     empty_file       = 10, // file is empty or does not contain any audio data
+    not_found        = 11,
+    access_denied    = 12,
 };
+
+audiofile_error from_error_code(std::error_code ec);
 
 std::string to_string(audiofile_error err);
 

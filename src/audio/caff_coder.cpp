@@ -526,7 +526,6 @@ struct CAFFEncoder : public RIFFEncoder<CAFFEncoder, CAFFTraits>
         if (auto e = writeChunkFrom("chan", chan); !e)
             return unexpected(e.error());
 #endif
-        flush();
         return {};
     }
 
@@ -605,7 +604,6 @@ struct CAFFEncoder : public RIFFEncoder<CAFFEncoder, CAFFTraits>
 #ifdef KFR_AUDIO_ALAC
         if (m_currentChunkToWrite)
         {
-            flush();
             if (m_format->codec == audiofile_codec::alac)
             {
                 // write last (partial) packet

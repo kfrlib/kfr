@@ -39,28 +39,28 @@ public:
         this->options = std::move(options);
         m_format      = this->options.raw.to_format();
     }
-    [[nodiscard]] expected<audiofile_format, audiofile_error> open(const file_path& path) override;
+    [[nodiscard]] expected<audiofile_format, audiofile_error> open(
+        std::shared_ptr<binary_reader> reader) override;
     [[nodiscard]] expected<size_t, audiofile_error> read_to(const audio_data_interleaved& data) override;
     [[nodiscard]] expected<void, audiofile_error> seek(uint64_t position) override;
     void close() override;
 
 protected:
     raw_decoding_options options;
-    std::unique_ptr<std::FILE, details::stdFILE_deleter> file;
 };
 
 struct RawEncoder : public audio_encoder
 {
 public:
     RawEncoder(raw_encoding_options options) { this->options = std::move(options); }
-    [[nodiscard]] expected<void, audiofile_error> open(const file_path& path, const audiofile_format& format,
+    [[nodiscard]] expected<void, audiofile_error> open(std::shared_ptr<binary_writer> writer,
+                                                       const audiofile_format& format,
                                                        audio_decoder* copyMetadataFrom) override;
     [[nodiscard]] expected<void, audiofile_error> write(const audio_data_interleaved& data) override;
     expected<uint64_t, audiofile_error> close() override;
 
 protected:
     raw_encoding_options options;
-    std::unique_ptr<std::FILE, details::stdFILE_deleter> file;
 };
 
 std::unique_ptr<audio_decoder> create_raw_decoder(const raw_decoding_options& options)
@@ -73,24 +73,26 @@ std::unique_ptr<audio_encoder> create_raw_encoder(const raw_encoding_options& op
     return std::unique_ptr<audio_encoder>(new RawEncoder(options));
 }
 
-expected<audiofile_format, audiofile_error> RawDecoder::open(const file_path& path)
+expected<audiofile_format, audiofile_error> RawDecoder::open(std::shared_ptr<binary_reader> reader)
 {
-    auto f = fopen_path(path, open_file_mode::read_existing);
-    if (f)
-        file.reset(*f);
-    else
-        return unexpected(audiofile_error::io_error);
+    if (!reader)
+        return unexpected(audiofile_error::invalid_argument);
+    m_reader = std::move(reader);
 
     m_format = this->options.raw.to_format();
 
-    if (KFR_IO_SEEK_64(file.get(), 0, SEEK_END))
+    if (auto size = m_reader->size())
+    {
+        m_format->total_frames = *size / m_format->bytes_per_pcm_frame();
+        if (m_format->total_frames == 0)
+        {
+            return unexpected(audiofile_error::empty_file);
+        }
+    }
+    else
+    {
         return unexpected(audiofile_error::io_error);
-    int64_t size = KFR_IO_TELL_64(file.get());
-    if (size < m_format->bytes_per_pcm_frame())
-        return unexpected(audiofile_error::format_error);
-    if (KFR_IO_SEEK_64(file.get(), 0, SEEK_SET))
-        return unexpected(audiofile_error::io_error);
-    m_format->total_frames = size / m_format->bytes_per_pcm_frame();
+    }
 
     return *m_format;
 }
@@ -101,7 +103,7 @@ expected<size_t, audiofile_error> RawDecoder::read_to(const audio_data_interleav
     size_t framesToRead = default_audio_frames_to_read;
 
     kfr::univector<std::byte> interleaved(framesToRead * m_format->bytes_per_pcm_frame());
-    size_t sz         = fread(interleaved.data(), 1, interleaved.size(), file.get());
+    size_t sz         = m_reader->read(interleaved.data(), interleaved.size());
     size_t framesRead = sz / m_format->bytes_per_pcm_frame();
     if (framesRead == 0)
         return unexpected(audiofile_error::end_of_file);
@@ -120,26 +122,24 @@ expected<void, audiofile_error> RawDecoder::seek(uint64_t position)
 {
     if (position > m_format->total_frames)
         return unexpected(audiofile_error::end_of_file);
-    if (KFR_IO_SEEK_64(file.get(), position * m_format->bytes_per_pcm_frame(), SEEK_SET))
+    if (!m_reader->seek(position * m_format->bytes_per_pcm_frame(), seek_origin::begin))
         return unexpected(audiofile_error::io_error);
     return {};
 }
 void RawDecoder::close()
 {
-    file.reset();
+    m_reader.reset();
     m_format.reset();
 }
 
-expected<void, audiofile_error> RawEncoder::open(const file_path& path, const audiofile_format& format,
+expected<void, audiofile_error> RawEncoder::open(std::shared_ptr<binary_writer> writer,
+                                                 const audiofile_format& format,
                                                  audio_decoder* copyMetadataFrom)
 {
+    if (!writer)
+        return unexpected(audiofile_error::invalid_argument);
+    m_writer = std::move(writer);
     m_format = options.raw.to_format();
-
-    auto f = fopen_path(path, open_file_mode::write_new);
-    if (f)
-        file.reset(*f);
-    else
-        return unexpected(audiofile_error::io_error);
     return {};
 }
 
@@ -160,7 +160,7 @@ expected<void, audiofile_error> RawEncoder::write(const audio_data_interleaved& 
     samples_store(typ, interleaved.data(), audio.data, audio.total_samples(), quant,
                   m_format->endianness != audiofile_endianness::little);
     m_format->total_frames += framesToWrite;
-    size_t wr = fwrite(interleaved.data(), 1, interleaved.size(), file.get());
+    size_t wr = m_writer->write(interleaved.data(), interleaved.size());
     if (wr != interleaved.size())
         return unexpected(audiofile_error::io_error);
     return {};
@@ -168,7 +168,7 @@ expected<void, audiofile_error> RawEncoder::write(const audio_data_interleaved& 
 
 expected<uint64_t, audiofile_error> RawEncoder::close()
 {
-    file.reset();
+    m_writer.reset();
     uint64_t total_frames = m_format->total_frames;
     m_format.reset();
     if (total_frames == 0)

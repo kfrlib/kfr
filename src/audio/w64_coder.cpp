@@ -246,7 +246,6 @@ public:
         if (auto e = writeChunkFrom(guidFMT, fmt); !e)
             return unexpected(e.error());
 
-        flush();
         return {};
     }
 

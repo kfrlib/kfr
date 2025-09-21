@@ -44,18 +44,18 @@ public:
     /// @brief close and finish file encoding
     virtual ~audio_encoder();
 
-    /// @brief open file for writing
-    [[nodiscard]] virtual expected<void, audiofile_error> open(const file_path& path,
+    [[nodiscard]] virtual expected<void, audiofile_error> open(std::shared_ptr<binary_writer> writer,
                                                                const audiofile_format& format,
                                                                audio_decoder* copyMetadataFrom = nullptr) = 0;
+
+    /// @brief open file for writing
+    [[nodiscard]] expected<void, audiofile_error> open(const file_path& path, const audiofile_format& format,
+                                                       audio_decoder* copyMetadataFrom = nullptr);
 
 #if defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM
     [[nodiscard]] expected<void, audiofile_error> open(const std::string& path,
                                                        const audiofile_format& format,
-                                                       audio_decoder* copyMetadataFrom = nullptr)
-    {
-        return open(details::utf8_to_wstring(path), format, copyMetadataFrom);
-    }
+                                                       audio_decoder* copyMetadataFrom = nullptr);
 #endif
 
     /// @brief write chunk of data
@@ -63,10 +63,13 @@ public:
 
     [[nodiscard]] virtual expected<uint64_t, audiofile_error> close() = 0;
 
-    [[]] const std::optional<audiofile_format>& format() const noexcept { return m_format; }
+    [[nodiscard]] const std::optional<audiofile_format>& format() const noexcept { return m_format; }
+
+    std::shared_ptr<binary_writer> writer() const noexcept { return m_writer; }
 
 protected:
     std::optional<audiofile_format> m_format;
+    std::shared_ptr<binary_writer> m_writer;
 };
 
 [[nodiscard]] std::unique_ptr<audio_encoder> create_encoder_for_container(

@@ -211,7 +211,6 @@ protected:
     using MetadataParser                                 = typename Traits::MetadataParser;
 
     DecodingOptions m_options;
-    std::unique_ptr<std::FILE, details::stdFILE_deleter> m_file;
     uint64_t m_fileSize = 0;
     MainHeader m_header{};
 
@@ -271,11 +270,10 @@ public:
         if (m_offsetInChunk + sizeToRead > m_chunks[*m_currentChunkToRead].byteSize)
             sizeToRead = m_chunks[*m_currentChunkToRead].byteSize - m_offsetInChunk;
 
-        if (KFR_IO_SEEK_64(m_file.get(), m_chunks[*m_currentChunkToRead].fileOffset + m_offsetInChunk,
-                           SEEK_SET) != 0)
+        if (!m_reader->seek(m_chunks[*m_currentChunkToRead].fileOffset + m_offsetInChunk, seek_origin::begin))
             return unexpected(audiofile_error::io_error);
 
-        size_t rd = fread(buffer, 1, sizeToRead, m_file.get());
+        size_t rd = m_reader->read(buffer, sizeToRead);
         if (rd == 0)
             return unexpected(audiofile_error::io_error);
         m_offsetInChunk += rd;
@@ -344,17 +342,18 @@ public:
     /// @brief Returns full size of the file in bytes
     [[nodiscard]] expected<uint64_t, audiofile_error> readHeader() // Decoder
     {
-        if (KFR_IO_SEEK_64(m_file.get(), 0, SEEK_SET) != 0)
+        if (auto size = m_reader->size())
+            m_fileSize = *size;
+        else
             return unexpected(audiofile_error::io_error);
 
-        if (fread(&m_header, 1, sizeof(MainHeader), m_file.get()) != sizeof(MainHeader))
+        if (!m_reader->seek(0))
+            return unexpected(audiofile_error::io_error);
+
+        if (m_reader->read(&m_header, sizeof(MainHeader)) != sizeof(MainHeader))
             return unexpected(audiofile_error::io_error);
         fixByteOrder(m_header);
 
-        if (KFR_IO_SEEK_64(m_file.get(), 0, SEEK_END) != 0)
-            return unexpected(audiofile_error::io_error);
-
-        m_fileSize = KFR_IO_TELL_64(m_file.get());
         return m_fileSize;
     }
 
@@ -364,10 +363,10 @@ public:
         uint64_t position = sizeof(MainHeader);
         for (;;)
         {
-            if (KFR_IO_SEEK_64(m_file.get(), position, SEEK_SET) != 0)
+            if (!m_reader->seek(position))
                 return unexpected(audiofile_error::io_error);
             ChunkType chunk;
-            if (fread(&chunk, 1, sizeof(ChunkType), m_file.get()) != sizeof(ChunkType))
+            if (m_reader->read(&chunk, sizeof(ChunkType)) != sizeof(ChunkType))
                 return unexpected(audiofile_error::io_error);
             fixByteOrder(chunk);
             expected<uint64_t, audiofile_error> chunkRealSize =
@@ -386,13 +385,12 @@ public:
         }
     }
 
-    [[nodiscard]] expected<audiofile_format, audiofile_error> open(const file_path& path) override
+    [[nodiscard]] expected<audiofile_format, audiofile_error> open(
+        std::shared_ptr<binary_reader> reader) override
     {
-        auto f = fopen_path(path, open_file_mode::read_existing);
-        if (f)
-            m_file.reset(*f);
-        else
-            return unexpected(audiofile_error::io_error);
+        if (!reader)
+            return unexpected(audiofile_error::invalid_argument);
+        m_reader = std::move(reader);
 
         if (auto e = this->readHeader(); !e)
             return unexpected(e.error());
@@ -492,7 +490,7 @@ public:
 
     void close() override
     {
-        m_file.reset();
+        m_reader.reset();
         m_format.reset();
     }
 
@@ -514,7 +512,6 @@ protected:
     using MetadataParser                                 = typename Traits::MetadataParser;
 
     EncodingOptions m_options;
-    std::unique_ptr<std::FILE, details::stdFILE_deleter> m_file;
     uint64_t m_fileSize = 0;
     MainHeader m_header{};
 
@@ -543,13 +540,13 @@ public:
 
     [[nodiscard]] expected<void, audiofile_error> writeHeader()
     {
-        if (KFR_IO_SEEK_64(m_file.get(), 0, SEEK_SET) != 0)
+        if (!m_writer->seek(0))
             return unexpected(audiofile_error::io_error);
 
         MainHeader hdrFixed = m_header;
         fixByteOrder(hdrFixed);
 
-        if (fwrite(&hdrFixed, 1, sizeof(MainHeader), m_file.get()) != sizeof(MainHeader))
+        if (m_writer->write(&hdrFixed, sizeof(MainHeader)) != sizeof(MainHeader))
             return unexpected(audiofile_error::io_error);
 
         return {};
@@ -595,12 +592,12 @@ public:
             m_chunks[*chIndex].chunk      = chunk;
             m_chunks[*chIndex].fileOffset = fileOffset;
             m_chunks[*chIndex].byteSize   = dataSize;
-            if (KFR_IO_SEEK_64(m_file.get(), fileOffset, SEEK_SET) != 0)
+            if (!m_writer->seek(fileOffset))
                 return unexpected(audiofile_error::io_error);
         }
         else
         {
-            uint64_t fileOffset = KFR_IO_TELL_64(m_file.get()) + sizeof(ChunkType);
+            uint64_t fileOffset = m_writer->tell() + sizeof(ChunkType);
             chunk.id            = id;
             if (auto e = static_cast<Encoder*>(this)->chunkSetSize(chunk, fileOffset - sizeof(ChunkType),
                                                                    dataSize);
@@ -612,7 +609,7 @@ public:
         if (chunkSizeIsAligned)
             chunk.size = align_up(chunk.size, chunkAlignment);
         fixByteOrder(chunk);
-        size_t wr = fwrite(&chunk, 1, sizeof(ChunkType), m_file.get());
+        size_t wr = m_writer->write(&chunk, sizeof(ChunkType));
         if (wr != sizeof(ChunkType))
             return unexpected(audiofile_error::io_error);
         return {};
@@ -622,7 +619,7 @@ public:
     [[nodiscard]] expected<void, audiofile_error> writeChunkContinue(const void* data, size_t size)
     {
         ASSERT(m_currentChunkToWrite);
-        size_t wr = fwrite(data, 1, size, m_file.get());
+        size_t wr = m_writer->write(data, size);
         if (wr != size)
             return unexpected(audiofile_error::io_error);
         return {};
@@ -636,7 +633,7 @@ public:
     /// @brief Finishes chunk writing, fixes chunk header if needed
     [[nodiscard]] expected<void, audiofile_error> writeChunkFinish()
     {
-        uint64_t fileOffset   = KFR_IO_TELL_64(m_file.get());
+        uint64_t fileOffset   = m_writer->tell();
         m_fileSize            = fileOffset;
         ChunkInfo& lastChunk  = m_chunks.back();
         uint64_t bytesWritten = fileOffset - lastChunk.fileOffset;
@@ -644,7 +641,7 @@ public:
         if (fileOffset - lastChunk.fileOffset != lastChunk.byteSize)
         {
             lastChunk.byteSize = bytesWritten;
-            if (KFR_IO_SEEK_64(m_file.get(), lastChunk.fileOffset - sizeof(ChunkType), SEEK_SET) != 0)
+            if (!m_writer->seek(lastChunk.fileOffset - sizeof(ChunkType)))
                 return unexpected(audiofile_error::io_error);
             if (auto e = static_cast<Encoder*>(this)->chunkSetSize(
                     lastChunk.chunk, fileOffset - sizeof(ChunkType), bytesWritten);
@@ -654,10 +651,10 @@ public:
             if (chunkSizeIsAligned)
                 chunk.size = align_up(chunk.size, chunkAlignment);
             fixByteOrder(chunk);
-            size_t wr = fwrite(&chunk, 1, sizeof(ChunkType), m_file.get());
+            size_t wr = m_writer->write(&chunk, sizeof(ChunkType));
             if (wr != sizeof(ChunkType))
                 return unexpected(audiofile_error::io_error);
-            if (KFR_IO_SEEK_64(m_file.get(), fileOffset, SEEK_SET) != 0)
+            if (!m_writer->seek(fileOffset))
                 return unexpected(audiofile_error::io_error);
         }
         if (chunkAlignment > 1)
@@ -671,7 +668,7 @@ public:
         static const std::array<uint8_t, 16> padding = {
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         };
-        size_t wr = fwrite(&padding, 1, bytes, m_file.get());
+        size_t wr = m_writer->write(&padding, bytes);
         if (wr != bytes)
             return unexpected(audiofile_error::io_error);
         return {};
@@ -705,17 +702,14 @@ public:
         return {};
     }
 
-    void flush() { fflush(m_file.get()); }
-
-    [[nodiscard]] expected<void, audiofile_error> open(const file_path& path, const audiofile_format& format,
+    [[nodiscard]] expected<void, audiofile_error> open(std::shared_ptr<binary_writer> writer,
+                                                       const audiofile_format& format,
                                                        audio_decoder* copyMetadataFrom = nullptr) override
     {
+        if (!writer)
+            return unexpected(audiofile_error::invalid_argument);
         this->copyMetadataFrom = copyMetadataFrom;
-        auto f                 = fopen_path(path, open_file_mode::write_new);
-        if (f)
-            m_file.reset(*f);
-        else
-            return unexpected(audiofile_error::io_error);
+        m_writer               = std::move(writer);
 
         if (auto e = writeHeader(); !e)
             return unexpected(e.error());
@@ -827,7 +821,7 @@ public:
         m_fileSize = 0;
         m_header   = {};
 
-        m_file.reset();
+        m_writer.reset();
         if (!result)
             return unexpected(result.error());
         uint64_t totalLength = m_format->total_frames;

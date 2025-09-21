@@ -290,7 +290,6 @@ struct AIFFEncoder : public RIFFEncoder<AIFFEncoder, AIFFTraits>
             if (auto e = writeChunkFrom("COMM", static_cast<AIFFCOMM&>(comm)); !e)
                 return unexpected(e.error());
         }
-        flush();
         return {};
     }
 

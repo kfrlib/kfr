@@ -52,8 +52,45 @@ std::string to_string(audiofile_error err)
         return "invalid_argument";
     case audiofile_error::closed:
         return "closed";
+    case audiofile_error::empty_file:
+        return "empty_file";
+    case audiofile_error::not_found:
+        return "not_found";
+    case audiofile_error::access_denied:
+        return "access_denied";
     default:
         return "(invalid audiofile_error: " + std::to_string(uint32_t(err)) + ")";
+    }
+}
+audiofile_error from_error_code(std::error_code ec)
+{
+    switch (ec.value())
+    {
+        /* File not found */
+#ifdef ENOENT
+    case ENOENT: // POSIX, MSVCRT
+        return audiofile_error::not_found;
+#endif
+
+        /* Permission denied */
+#ifdef EACCES
+    case EACCES: // POSIX, MSVCRT
+        return audiofile_error::access_denied;
+#endif
+#ifdef EPERM
+    case EPERM: // POSIX
+        return audiofile_error::access_denied;
+#endif
+
+        /* Invalid argument */
+#ifdef EINVAL
+    case EINVAL: // POSIX, MSVCRT
+        return audiofile_error::invalid_argument;
+#endif
+
+    /* Anything else: generic I/O error */
+    default:
+        return audiofile_error::io_error;
     }
 }
 } // namespace kfr

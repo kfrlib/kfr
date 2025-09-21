@@ -227,7 +227,6 @@ struct WaveEncoder : public RIFFEncoder<WaveEncoder, WAVETraits>
         if (auto e = writeChunkFrom("fmt ", fmt); !e)
             return unexpected(e.error());
 
-        flush();
         return {};
     }
 

@@ -345,5 +345,18 @@ expected<audio_data_interleaved, audiofile_error> decode_audio_file(const std::s
 {
     return decode_audio_file(details::utf8_to_wstring(path), out_format, options);
 }
+expected<audiofile_format, audiofile_error> audio_decoder::open(const std::string& path)
+{
+    return open(details::utf8_to_wstring(path));
+}
 #endif
+expected<audiofile_format, audiofile_error> audio_decoder::open(const file_path& path)
+{
+    auto file = fopen_path(path, open_file_mode::read_existing);
+    if (!file)
+    {
+        return unexpected(from_error_code(file.error()));
+    }
+    return open(std::make_shared<file_reader<>>(*file));
+}
 } // namespace kfr

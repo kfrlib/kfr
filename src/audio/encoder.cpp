@@ -145,5 +145,18 @@ expected<void, audiofile_error> encode_audio_file(const std::string& path, const
 {
     return encode_audio_file(details::utf8_to_wstring(path), data, format, copyMetadataFrom, options);
 }
+expected<void, audiofile_error> audio_encoder::open(const std::string& path, const audiofile_format& format,
+                                                    audio_decoder* copyMetadataFrom)
+{
+    return open(details::utf8_to_wstring(path), format, copyMetadataFrom);
+}
 #endif
+expected<void, audiofile_error> audio_encoder::open(const file_path& path, const audiofile_format& format,
+                                                    audio_decoder* copyMetadataFrom)
+{
+    auto file = fopen_path(path, open_file_mode::write_new);
+    if (!file)
+        return unexpected(from_error_code(file.error()));
+    return open(std::make_shared<file_writer<>>(*file), format, copyMetadataFrom);
+}
 } // namespace kfr

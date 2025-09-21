@@ -46,13 +46,16 @@ struct audio_decoder
 public:
     virtual ~audio_decoder();
 
+    [[nodiscard]] virtual expected<audiofile_format, audiofile_error> open(
+        std::shared_ptr<binary_reader> reader) = 0;
+
     /**
      * @brief Open an audio file for reading and retrieve its format information.
      *
      * @param path The path to the audio file.
      * @return The audio format on success, or an error code on failure.
      */
-    [[nodiscard]] virtual expected<audiofile_format, audiofile_error> open(const file_path& path) = 0;
+    [[nodiscard]] expected<audiofile_format, audiofile_error> open(const file_path& path);
 
 #if defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM
     /**
@@ -61,10 +64,7 @@ public:
      * @param path The UTF-8 encoded file path.
      * @return The audio format on success, or an error code on failure.
      */
-    [[nodiscard]] expected<audiofile_format, audiofile_error> open(const std::string& path)
-    {
-        return open(details::utf8_to_wstring(path));
-    }
+    [[nodiscard]] expected<audiofile_format, audiofile_error> open(const std::string& path);
 #endif
 
     /**
@@ -152,6 +152,8 @@ public:
      */
     virtual void close() = 0;
 
+    std::shared_ptr<binary_reader> reader() const noexcept { return m_reader; }
+
 protected:
     expected<size_t, audiofile_error> read_buffered(
         const audio_data_interleaved& output,
@@ -160,6 +162,7 @@ protected:
 
     audio_decoder() = default;
     std::optional<audiofile_format> m_format;
+    std::shared_ptr<binary_reader> m_reader;
 };
 
 /**

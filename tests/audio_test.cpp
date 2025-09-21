@@ -712,7 +712,7 @@ TEST_CASE("os_decoder_no_file")
     REQUIRE(decoder != nullptr);
     auto r = decoder->open("this_file_does_not_exist.wav");
     REQUIRE(!r.has_value());
-    CHECK(r.error() == audiofile_error::io_error);
+    CHECK(r.error() == audiofile_error::not_found);
 }
 
 TEST_CASE("os_decoder_unsupported")
@@ -820,7 +820,7 @@ TEST_CASE("every decoder must report io_error for non-existing file")
         REQUIRE(decoder != nullptr);
         auto r = decoder->open("this_file_does_not_exist.wav");
         REQUIRE(!r.has_value());
-        CHECK(r.error() == audiofile_error::io_error);
+        CHECK(r.error() == audiofile_error::not_found);
     }
 }
 

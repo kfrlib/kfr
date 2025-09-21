@@ -33,9 +33,11 @@
 #include <mfapi.h>
 #include <mfidl.h>
 #include <mfreadwrite.h>
+#include <mfobjects.h>
 #include <stdio.h>
 #include <mferror.h>
 #include <Windows.Foundation.h>
+#include <wrl.h>
 #include <wrl/wrappers/corewrappers.h>
 #include <wrl/client.h>
 #include <propvarutil.h>
@@ -45,11 +47,133 @@ namespace kfr
 
 using Microsoft::WRL::ComPtr;
 
+using Microsoft::WRL::RuntimeClass;
+using Microsoft::WRL::RuntimeClassFlags;
+
+class binary_reader_adapter final : public IStream
+{
+protected:
+    std::shared_ptr<binary_reader> m_reader; // raw pointer (not owning)
+    std::atomic_uint m_refcount;
+
+public:
+    explicit binary_reader_adapter(std::shared_ptr<binary_reader> reader)
+        : m_reader(std::move(reader)), m_refcount(1)
+    {
+    }
+
+    binary_reader_adapter(const binary_reader_adapter&)            = delete;
+    binary_reader_adapter& operator=(const binary_reader_adapter&) = delete;
+
+    STDMETHOD(QueryInterface)(const IID& iid, void** ppv) override
+    {
+        if (!ppv)
+            return E_INVALIDARG;
+
+        if (iid == __uuidof(IStream) || iid == __uuidof(ISequentialStream) || iid == __uuidof(IUnknown))
+        {
+            *ppv = static_cast<IStream*>(this);
+            AddRef();
+            return S_OK;
+        }
+
+        return E_NOINTERFACE;
+    }
+
+    IFACEMETHOD_(ULONG, AddRef)() override { return ++m_refcount; }
+
+    IFACEMETHOD_(ULONG, Release)() override
+    {
+        if (--m_refcount == 0)
+        {
+            delete this;
+            return 0;
+        }
+        return m_refcount;
+    }
+
+    STDMETHOD(Read)(void* pv, ULONG cb, ULONG* pcbRead) override
+    {
+        if (!pv || !pcbRead)
+            return STG_E_INVALIDPOINTER;
+
+        if (!m_reader)
+            return STG_E_ACCESSDENIED;
+
+        size_t n = m_reader->read(pv, cb);
+        *pcbRead = static_cast<ULONG>(n);
+
+        return (n < cb) ? S_FALSE : S_OK;
+    }
+
+    STDMETHOD(Write)(const void*, ULONG, ULONG*) override { return STG_E_ACCESSDENIED; }
+
+    STDMETHOD(Seek)(LARGE_INTEGER dlibMove, DWORD dwOrigin, ULARGE_INTEGER* plibNewPosition) override
+    {
+        seek_origin origin;
+
+        switch (dwOrigin)
+        {
+        case STREAM_SEEK_SET:
+            origin = seek_origin::begin;
+            break;
+        case STREAM_SEEK_CUR:
+            origin = seek_origin::current;
+            break;
+        case STREAM_SEEK_END:
+            origin = seek_origin::end;
+            break;
+        default:
+            return STG_E_INVALIDFUNCTION;
+        }
+
+        if (!m_reader->seek(dlibMove.QuadPart, origin))
+            return STG_E_INVALIDFUNCTION;
+
+        if (plibNewPosition)
+            plibNewPosition->QuadPart = m_reader->tell();
+
+        return S_OK;
+    }
+
+    STDMETHOD(SetSize)(ULARGE_INTEGER) override { return E_NOTIMPL; }
+
+    STDMETHOD(CopyTo)
+    (IStream*, ULARGE_INTEGER, ULARGE_INTEGER*, ULARGE_INTEGER*) override { return E_NOTIMPL; }
+
+    STDMETHOD(Commit)(DWORD) override { return E_NOTIMPL; }
+
+    STDMETHOD(Revert)() override { return E_NOTIMPL; }
+
+    STDMETHOD(LockRegion)(ULARGE_INTEGER, ULARGE_INTEGER, DWORD) override { return E_NOTIMPL; }
+
+    STDMETHOD(UnlockRegion)(ULARGE_INTEGER, ULARGE_INTEGER, DWORD) override { return E_NOTIMPL; }
+
+    STDMETHOD(Stat)(STATSTG* pstatstg, DWORD) override
+    {
+        if (!pstatstg)
+            return STG_E_INVALIDPOINTER;
+
+        std::memset(pstatstg, 0, sizeof(*pstatstg));
+
+        auto s = m_reader->size();
+        if (s)
+            pstatstg->cbSize.QuadPart = *s;
+        else
+            pstatstg->cbSize.QuadPart = 0;
+
+        return S_OK;
+    }
+
+    STDMETHOD(Clone)(IStream**) override { return E_NOTIMPL; }
+};
+
 struct MFDecoder : public audio_decoder
 {
 public:
     MFDecoder(mediafoundation_decoding_options options) : options(std::move(options)) {}
-    [[nodiscard]] expected<audiofile_format, audiofile_error> open(const file_path& path) override;
+    [[nodiscard]] expected<audiofile_format, audiofile_error> open(
+        std::shared_ptr<binary_reader> reader) override;
     [[nodiscard]] expected<void, audiofile_error> seek(uint64_t position) override;
     expected<size_t, audiofile_error> read_to(const audio_data_interleaved& output) override;
     void close() override;
@@ -57,6 +181,7 @@ public:
 
 protected:
     expected<audio_data_interleaved, audiofile_error> read_packet();
+    ComPtr<IMFByteStream> byteStream;
     ComPtr<IMFSourceReader> pReader;
     ComPtr<IMFMediaType> ppPCMAudio;
     mediafoundation_decoding_options options;
@@ -217,8 +342,12 @@ static std::map<std::string, std::string> readMeta(ComPtr<IMFSourceReader> pRead
     return metadata;
 }
 
-expected<audiofile_format, audiofile_error> MFDecoder::open(const file_path& path)
+expected<audiofile_format, audiofile_error> MFDecoder::open(std::shared_ptr<binary_reader> reader)
 {
+    if (!reader)
+        return unexpected(audiofile_error::invalid_argument);
+    m_reader = std::move(reader);
+
     ComPtr<IMFMediaType> pSourceAudioType;
     ComPtr<IMFMediaType> pUncompressedAudioType;
     ComPtr<IMFMediaType> pPartialType;
@@ -229,7 +358,12 @@ expected<audiofile_format, audiofile_error> MFDecoder::open(const file_path& pat
     std::call_once(flag, [&]() { startup_hr = MFStartup(MF_VERSION); });
     HANDLE_ERROR(startup_hr);
 
-    HANDLE_ERROR(MFCreateSourceReaderFromURL(path.c_str(), NULL, pReader.ReleaseAndGetAddressOf()));
+    ComPtr<IStream> strm;
+    strm.Attach(new binary_reader_adapter(m_reader));
+
+    HANDLE_ERROR(MFCreateMFByteStreamOnStream(strm.Get(), byteStream.ReleaseAndGetAddressOf()));
+    HANDLE_ERROR(
+        MFCreateSourceReaderFromByteStream(byteStream.Get(), NULL, pReader.ReleaseAndGetAddressOf()));
     HANDLE_ERROR(pReader->SetStreamSelection((DWORD)MF_SOURCE_READER_ALL_STREAMS, FALSE));
     HANDLE_ERROR(pReader->SetStreamSelection((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, TRUE));
 
@@ -353,6 +487,8 @@ void MFDecoder::close()
 {
     ppPCMAudio.Reset();
     pReader.Reset();
+    byteStream.Reset();
+    m_reader.reset();
     m_format.reset();
 }
 } // namespace kfr
