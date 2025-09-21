@@ -70,7 +70,7 @@ jobs:
     - name: Tests
       run: |
         sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build clang-19
-        vcpkg install libflac minimp3 alac
+        vcpkg install libflac minimp3
         ci/run.sh build-release -DCMAKE_PREFIX_PATH=/usr/local/share/vcpkg/installed/arm64-linux -DKFR_ARCH=target -DENABLE_EXAMPLES=OFF -DCMAKE_CXX_COMPILER=clang++-19 -DCMAKE_BUILD_TYPE=Release
 
   windows2022-clang21-x86:
@@ -198,7 +198,8 @@ jobs:
       run: |
         set -e
         brew install ninja
-        ci/run.sh build-release -DCMAKE_OSX_ARCHITECTURES=x86_64 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse42,avx -DKFR_ARCH=target -DCMAKE_BUILD_TYPE=Release      
+        vcpkg install libflac minimp3 alac
+        ci/run.sh build-release -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-osx -DCMAKE_OSX_ARCHITECTURES=x86_64 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse42,avx -DKFR_ARCH=target -DCMAKE_BUILD_TYPE=Release      
 
   macos15-xcode16-arm64:
     runs-on: macos-15
@@ -209,7 +210,7 @@ jobs:
       run: |
         set -e
         brew install ninja
-        vcpkg install libflac minimp3 alac
+        vcpkg install libflac minimp3
         ci/run.sh build-release -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/arm64-osx -DCMAKE_OSX_ARCHITECTURES=arm64 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_BUILD_TYPE=Release
 
   macos13-xcode14-ios-arm64:

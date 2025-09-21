@@ -28,20 +28,25 @@ else ()
     )
 endif ()
 
-find_path(ALAC_INCLUDE_DIRS "alac/ALACDecoder.h")
-find_library(ALAC_LIBRARIES NAMES libalac alac)
-if (ALAC_INCLUDE_DIRS AND ALAC_LIBRARIES)
-    message(STATUS "ALAC found, enabling ALAC support in kfr_audio")
-    target_include_directories(kfr_audio PRIVATE ${ALAC_INCLUDE_DIRS})
-    target_link_libraries(kfr_audio PRIVATE ${ALAC_LIBRARIES})
-    target_compile_definitions(kfr_audio PUBLIC KFR_AUDIO_ALAC=1)
-else ()
-    message(WARNING "ALAC not found, ALAC support in kfr_audio disabled")
-    message(
-        STATUS
-            "To enable ALAC support, install ALAC using vcpkg, set CMAKE_PREFIX_PATH and re-run CMake"
-    )
-endif ()
+# Enable only on x86 because alac is broken on ARM
+# https://github.com/macosforge/alac/issues/24
+
+if (X86)
+    find_path(ALAC_INCLUDE_DIRS "alac/ALACDecoder.h")
+    find_library(ALAC_LIBRARIES NAMES libalac alac)
+    if (ALAC_INCLUDE_DIRS AND ALAC_LIBRARIES)
+        message(STATUS "ALAC found, enabling ALAC support in kfr_audio")
+        target_include_directories(kfr_audio PRIVATE ${ALAC_INCLUDE_DIRS})
+        target_link_libraries(kfr_audio PRIVATE ${ALAC_LIBRARIES})
+        target_compile_definitions(kfr_audio PUBLIC KFR_AUDIO_ALAC=1)
+    else ()
+        message(WARNING "ALAC not found, ALAC support in kfr_audio disabled")
+        message(
+            STATUS
+                "To enable ALAC support, install ALAC using vcpkg, set CMAKE_PREFIX_PATH and re-run CMake"
+        )
+    endif ()
+endif()
 
 if (WIN32)
     target_link_libraries(kfr_audio PUBLIC mf mfplat mfreadwrite mfuuid propsys)
