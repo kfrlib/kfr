@@ -882,9 +882,9 @@ TEST_CASE("encoders")
 }
 
 static void test_encode_and_decode(const audio_data_interleaved& audio, const audiofile_format& fmt,
-                                   audio_encoder& encoder, audio_decoder& decoder)
+                                   audio_encoder& encoder, audio_decoder& decoder, const std::string& ext)
 {
-    std::string name = "temp" + std::to_string(std::random_device{}()) + ".tmp";
+    std::string name = "temp" + std::to_string(std::random_device{}()) + ext;
 
     auto e = encoder.open(name, fmt);
     CHECK(e);
@@ -945,7 +945,7 @@ TEST_CASE("encode and decode raw")
                 CAPTURE(endianness);
                 rawOptions.endianness = endianness;
                 test_encode_and_decode(audio, rawOptions.to_format(), *create_raw_encoder({ {}, rawOptions }),
-                                       *create_raw_decoder({ {}, rawOptions }));
+                                       *create_raw_decoder({ {}, rawOptions }), ".raw");
             }
         }
     }
@@ -977,11 +977,11 @@ TEST_CASE("encode and decode")
 
             {
                 INFO("wave");
-                test_encode_and_decode(audio, format, *create_wave_encoder(), *create_wave_decoder());
+                test_encode_and_decode(audio, format, *create_wave_encoder(), *create_wave_decoder(), ".wav");
             }
             {
                 INFO("w64");
-                test_encode_and_decode(audio, format, *create_w64_encoder(), *create_w64_decoder());
+                test_encode_and_decode(audio, format, *create_w64_encoder(), *create_w64_decoder(), ".w64");
             }
 
             if (format.codec == audiofile_codec::lpcm)
@@ -992,7 +992,8 @@ TEST_CASE("encode and decode")
                     INFO("alac");
                     audiofile_format formatAlac = format;
                     formatAlac.codec            = audiofile_codec::alac;
-                    test_encode_and_decode(audio, formatAlac, *create_caff_encoder(), *create_caff_decoder());
+                    test_encode_and_decode(audio, formatAlac, *create_caff_encoder(), *create_caff_decoder(),
+                                           ".alac.caf");
                 }
 #endif
 #ifdef KFR_AUDIO_FLAC
@@ -1001,7 +1002,8 @@ TEST_CASE("encode and decode")
                     INFO("flac");
                     audiofile_format formatFlac = format;
                     formatFlac.codec            = audiofile_codec::flac;
-                    test_encode_and_decode(audio, formatFlac, *create_flac_encoder(), *create_flac_decoder());
+                    test_encode_and_decode(audio, formatFlac, *create_flac_encoder(), *create_flac_decoder(),
+                                           ".flac");
                 }
 #endif
             }
@@ -1012,12 +1014,14 @@ TEST_CASE("encode and decode")
                 format.endianness = endianness;
                 {
                     INFO("caff");
-                    test_encode_and_decode(audio, format, *create_caff_encoder(), *create_caff_decoder());
+                    test_encode_and_decode(audio, format, *create_caff_encoder(), *create_caff_decoder(),
+                                           ".caf");
                 }
                 if (format.codec == audiofile_codec::lpcm || format.endianness == audiofile_endianness::big)
                 {
                     INFO("aiff");
-                    test_encode_and_decode(audio, format, *create_aiff_encoder(), *create_aiff_decoder());
+                    test_encode_and_decode(audio, format, *create_aiff_encoder(), *create_aiff_decoder(),
+                                           ".aiff");
                 }
             }
         }
