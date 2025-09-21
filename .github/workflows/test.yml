@@ -12,7 +12,22 @@ jobs:
         sudo apt-get update && sudo apt-get install -y ninja-build
         wget -O - https://apt.llvm.org/llvm.sh | sudo bash -s - 20
         vcpkg install libflac minimp3 alac
-        ci/run.sh build-release -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER=clang++-20 -DCMAKE_BUILD_TYPE=Release
+        ci/run.sh build-release -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-linux -DKFR_ENABLE_MULTIARCH=OFF -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER=clang++-20 -DCMAKE_BUILD_TYPE=Release
+
+  ubuntu24-clang19-arm-qemu:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Tests
+      env:
+        VCPKG_DEFAULT_TRIPLET: arm64-linux
+        VCPKG_HOST_TRIPLET: x64-linux
+      run: |
+        set -e
+        sudo apt-get update && sudo apt-get install -y ninja-build g++-aarch64-linux-gnu qemu qemu-system-arm qemu-user clang-19
+        vcpkg install libflac minimp3 alac
+        ci/run.sh build-release -DCMAKE_PREFIX_PATH=/usr/local/share/vcpkg/installed/arm64-linux -DENABLE_EXAMPLES=OFF -DCLANG_SUFFIX=-19 -DCMAKE_BUILD_TYPE=Release -DGCC_VER=13 -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
 
   ubuntu24-clang19-arm:
     runs-on: ubuntu-24.04-arm
@@ -24,15 +39,3 @@ jobs:
         sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build clang-19
         vcpkg install libflac minimp3 alac
         ci/run.sh build-release -DCMAKE_PREFIX_PATH=/usr/local/share/vcpkg/installed/arm64-linux -DKFR_ARCH=target -DENABLE_EXAMPLES=OFF -DCMAKE_CXX_COMPILER=clang++-19 -DCMAKE_BUILD_TYPE=Release
-
-  ubuntu24-clang20-arm:
-    runs-on: ubuntu-24.04-arm
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Tests
-      run: |
-        sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build
-        wget -O - https://apt.llvm.org/llvm.sh | sudo bash -s - 20
-        vcpkg install libflac minimp3 alac
-        ci/run.sh build-release -DCMAKE_PREFIX_PATH=/usr/local/share/vcpkg/installed/arm64-linux -DKFR_ARCH=target -DENABLE_EXAMPLES=OFF -DCMAKE_CXX_COMPILER=clang++-20 -DCMAKE_BUILD_TYPE=Release
