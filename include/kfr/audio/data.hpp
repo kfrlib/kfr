@@ -94,24 +94,7 @@ constexpr bool is_single_codec(audiofile_container container)
 
 using metadata_map = std::map<std::string, std::string>;
 
-enum class sample_t : int8_t
-{
-    f32     = -32,
-    f64     = -64,
-    unknown = 0,
-    i16     = 16,
-    i24     = 24,
-    i32     = 32,
-};
-
 struct audio_quantization;
-
-inline size_t sample_bits(sample_t t) noexcept { return std::abs(static_cast<int8_t>(t)); }
-inline bool sample_is_float(sample_t t) noexcept { return static_cast<int8_t>(t) < 0; }
-
-template <typename T>
-concept sample = std::floating_point<f32> || std::floating_point<f64> || std::same_as<T, int16_t> ||
-                 std::same_as<T, kfr::i24> || std::same_as<T, int32_t>;
 
 template <typename Tin>
 void samples_load(fbase* out, const Tin* in, size_t size, bool swap_bytes = false) noexcept;
@@ -129,48 +112,48 @@ template <typename Tout>
 void samples_store(Tout* out, const fbase* const in[], size_t channels, size_t size,
                    bool swap_bytes = false) noexcept;
 
-KFR_INTRINSIC void samples_load(sample_t type, fbase* out, const std::byte* in, size_t size,
+KFR_INTRINSIC void samples_load(audio_sample_type type, fbase* out, const std::byte* in, size_t size,
                                 bool swap_bytes = false) noexcept
 {
     switch (type)
     {
-    case sample_t::i16:
+    case audio_sample_type::i16:
         samples_load(out, reinterpret_cast<const i16*>(in), size, swap_bytes);
         break;
-    case sample_t::i24:
+    case audio_sample_type::i24:
         samples_load(out, reinterpret_cast<const i24*>(in), size, swap_bytes);
         break;
-    case sample_t::i32:
+    case audio_sample_type::i32:
         samples_load(out, reinterpret_cast<const i32*>(in), size, swap_bytes);
         break;
-    case sample_t::f32:
+    case audio_sample_type::f32:
         samples_load(out, reinterpret_cast<const f32*>(in), size, swap_bytes);
         break;
-    case sample_t::f64:
+    case audio_sample_type::f64:
         samples_load(out, reinterpret_cast<const f64*>(in), size, swap_bytes);
         break;
     default:
         KFR_UNREACHABLE;
     }
 }
-KFR_INTRINSIC void samples_load(sample_t type, fbase* const out[], const std::byte* in, size_t channels,
-                                size_t size, bool swap_bytes = false) noexcept
+KFR_INTRINSIC void samples_load(audio_sample_type type, fbase* const out[], const std::byte* in,
+                                size_t channels, size_t size, bool swap_bytes = false) noexcept
 {
     switch (type)
     {
-    case sample_t::i16:
+    case audio_sample_type::i16:
         samples_load(out, reinterpret_cast<const i16*>(in), channels, size, swap_bytes);
         break;
-    case sample_t::i24:
+    case audio_sample_type::i24:
         samples_load(out, reinterpret_cast<const i24*>(in), channels, size, swap_bytes);
         break;
-    case sample_t::i32:
+    case audio_sample_type::i32:
         samples_load(out, reinterpret_cast<const i32*>(in), channels, size, swap_bytes);
         break;
-    case sample_t::f32:
+    case audio_sample_type::f32:
         samples_load(out, reinterpret_cast<const f32*>(in), channels, size, swap_bytes);
         break;
-    case sample_t::f64:
+    case audio_sample_type::f64:
         samples_load(out, reinterpret_cast<const f64*>(in), channels, size, swap_bytes);
         break;
     default:
@@ -178,73 +161,73 @@ KFR_INTRINSIC void samples_load(sample_t type, fbase* const out[], const std::by
     }
 }
 
-KFR_INTRINSIC void samples_store(sample_t type, std::byte* out, const fbase* in, size_t size,
+KFR_INTRINSIC void samples_store(audio_sample_type type, std::byte* out, const fbase* in, size_t size,
                                  const audio_quantization& quantization, bool swap_bytes = false) noexcept
 {
     switch (type)
     {
-    case sample_t::i16:
+    case audio_sample_type::i16:
         samples_store(reinterpret_cast<i16*>(out), in, size, quantization, swap_bytes);
         break;
-    case sample_t::i24:
+    case audio_sample_type::i24:
         samples_store(reinterpret_cast<i24*>(out), in, size, quantization, swap_bytes);
         break;
-    case sample_t::i32:
+    case audio_sample_type::i32:
         samples_store(reinterpret_cast<i32*>(out), in, size, quantization, swap_bytes);
         break;
-    case sample_t::f32:
+    case audio_sample_type::f32:
         samples_store(reinterpret_cast<f32*>(out), in, size, quantization, swap_bytes);
         break;
-    case sample_t::f64:
+    case audio_sample_type::f64:
         samples_store(reinterpret_cast<f64*>(out), in, size, quantization, swap_bytes);
         break;
     default:
         KFR_UNREACHABLE;
     }
 }
-KFR_INTRINSIC void samples_store(sample_t type, std::byte* out, const fbase* const in[], size_t channels,
-                                 size_t size, const audio_quantization& quantization,
+KFR_INTRINSIC void samples_store(audio_sample_type type, std::byte* out, const fbase* const in[],
+                                 size_t channels, size_t size, const audio_quantization& quantization,
                                  bool swap_bytes = false) noexcept
 {
     switch (type)
     {
-    case sample_t::i16:
+    case audio_sample_type::i16:
         samples_store(reinterpret_cast<i16*>(out), in, channels, size, quantization, swap_bytes);
         break;
-    case sample_t::i24:
+    case audio_sample_type::i24:
         samples_store(reinterpret_cast<i24*>(out), in, channels, size, quantization, swap_bytes);
         break;
-    case sample_t::i32:
+    case audio_sample_type::i32:
         samples_store(reinterpret_cast<i32*>(out), in, channels, size, quantization, swap_bytes);
         break;
-    case sample_t::f32:
+    case audio_sample_type::f32:
         samples_store(reinterpret_cast<f32*>(out), in, channels, size, quantization, swap_bytes);
         break;
-    case sample_t::f64:
+    case audio_sample_type::f64:
         samples_store(reinterpret_cast<f64*>(out), in, channels, size, quantization, swap_bytes);
         break;
     default:
         KFR_UNREACHABLE;
     }
 }
-KFR_INTRINSIC void samples_store(sample_t type, std::byte* out, const fbase* const in[], size_t channels,
-                                 size_t size, bool swap_bytes = false) noexcept
+KFR_INTRINSIC void samples_store(audio_sample_type type, std::byte* out, const fbase* const in[],
+                                 size_t channels, size_t size, bool swap_bytes = false) noexcept
 {
     switch (type)
     {
-    case sample_t::i16:
+    case audio_sample_type::i16:
         samples_store(reinterpret_cast<i16*>(out), in, channels, size, swap_bytes);
         break;
-    case sample_t::i24:
+    case audio_sample_type::i24:
         samples_store(reinterpret_cast<i24*>(out), in, channels, size, swap_bytes);
         break;
-    case sample_t::i32:
+    case audio_sample_type::i32:
         samples_store(reinterpret_cast<i32*>(out), in, channels, size, swap_bytes);
         break;
-    case sample_t::f32:
+    case audio_sample_type::f32:
         samples_store(reinterpret_cast<f32*>(out), in, channels, size, swap_bytes);
         break;
-    case sample_t::f64:
+    case audio_sample_type::f64:
         samples_store(reinterpret_cast<f64*>(out), in, channels, size, swap_bytes);
         break;
     default:
@@ -270,8 +253,8 @@ struct audiofile_format
 
     bool valid() const noexcept;
 
-    sample_t sample_type() const;
-    sample_t sample_type_lpcm() const;
+    audio_sample_type sample_type() const;
+    audio_sample_type sample_type_lpcm() const;
 };
 
 struct audio_stat

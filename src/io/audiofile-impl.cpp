@@ -123,10 +123,9 @@ audio_writer_wav<T>::audio_writer_wav(std::shared_ptr<abstract_writer<>>&& write
     : writer(std::move(writer)), fmt(fmt)
 {
     drwav_data_format wav_fmt;
-    wav_fmt.channels   = static_cast<drwav_uint32>(fmt.channels);
-    wav_fmt.sampleRate = static_cast<drwav_uint32>(fmt.samplerate);
-    wav_fmt.format =
-        fmt.type >= audio_sample_type::first_float ? DR_WAVE_FORMAT_IEEE_FLOAT : DR_WAVE_FORMAT_PCM;
+    wav_fmt.channels      = static_cast<drwav_uint32>(fmt.channels);
+    wav_fmt.sampleRate    = static_cast<drwav_uint32>(fmt.samplerate);
+    wav_fmt.format        = audio_sample_is_float(fmt.type) ? DR_WAVE_FORMAT_IEEE_FLOAT : DR_WAVE_FORMAT_PCM;
     wav_fmt.bitsPerSample = static_cast<drwav_uint32>(audio_sample_bit_depth(fmt.type));
     wav_fmt.container     = fmt.use_w64 ? drwav_container_w64 : drwav_container_riff;
     f.reset(new internal_generic::wav_file());
@@ -207,9 +206,6 @@ audio_reader_wav<T>::audio_reader_wav(std::shared_ptr<abstract_reader<>>&& reade
     case DR_WAVE_FORMAT_PCM:
         switch (f->bitsPerSample)
         {
-        case 8:
-            fmt.type = audio_sample_type::i8;
-            break;
         case 16:
             fmt.type = audio_sample_type::i16;
             break;
@@ -218,9 +214,6 @@ audio_reader_wav<T>::audio_reader_wav(std::shared_ptr<abstract_reader<>>&& reade
             break;
         case 32:
             fmt.type = audio_sample_type::i32;
-            break;
-        case 64:
-            fmt.type = audio_sample_type::i64;
             break;
         default:
             fmt.type = audio_sample_type::unknown;

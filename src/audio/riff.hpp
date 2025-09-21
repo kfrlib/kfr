@@ -332,8 +332,8 @@ public:
             return unexpected(audiofile_error::io_error);
         size_t framesRead = *e / bytesPerFrame;
 
-        sample_t typ = m_format->sample_type();
-        if (typ == sample_t::unknown)
+        audio_sample_type typ = m_format->sample_type();
+        if (typ == audio_sample_type::unknown)
             return unexpected(audiofile_error::format_error);
 
         samples_load(typ, audio.data, interleaved.data(), m_format->channels * framesToRead,
@@ -562,8 +562,8 @@ public:
         m_format->total_frames += framesToWrite;
         univector<std::byte> interleaved(framesToWrite * m_format->bytes_per_pcm_frame());
 
-        sample_t typ = m_format->sample_type();
-        if (typ == sample_t::unknown)
+        audio_sample_type typ = m_format->sample_type();
+        if (typ == audio_sample_type::unknown)
             return unexpected(audiofile_error::format_error);
         samples_store(typ, interleaved.data(), audio.data, m_format->channels * framesToWrite, quant,
                       m_format->endianness != audiofile_endianness::little);

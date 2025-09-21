@@ -18,10 +18,6 @@ inline namespace KFR_ARCH_NAME
 
 TEST_CASE("sample_conversion")
 {
-    CHECK(convert_sample<float>(static_cast<i8>(-127)) == -1.f);
-    CHECK(convert_sample<float>(static_cast<i8>(0)) == 0.f);
-    CHECK(convert_sample<float>(static_cast<i8>(127)) == 1.f);
-
     CHECK(convert_sample<float>(static_cast<i16>(-32767)) == -1.f);
     CHECK(convert_sample<float>(static_cast<i16>(0)) == 0.f);
     CHECK(convert_sample<float>(static_cast<i16>(32767)) == 1.f);
@@ -33,10 +29,6 @@ TEST_CASE("sample_conversion")
     CHECK(convert_sample<float>(static_cast<i32>(-2147483647)) == -1.f);
     CHECK(convert_sample<float>(static_cast<i32>(0)) == 0.f);
     CHECK(convert_sample<float>(static_cast<i32>(2147483647)) == 1.f);
-
-    CHECK(convert_sample<i8>(-1.f) == -127);
-    CHECK(convert_sample<i8>(0.f) == 0);
-    CHECK(convert_sample<i8>(1.f) == 127);
 
     CHECK(convert_sample<i16>(-1.f) == -32767);
     CHECK(convert_sample<i16>(0.f) == 0);

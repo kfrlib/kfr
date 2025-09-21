@@ -106,8 +106,8 @@ expected<size_t, audiofile_error> RawDecoder::read_to(const audio_data_interleav
     if (framesRead == 0)
         return unexpected(audiofile_error::end_of_file);
 
-    sample_t typ = m_format->sample_type();
-    if (typ == sample_t::unknown)
+    audio_sample_type typ = m_format->sample_type();
+    if (typ == audio_sample_type::unknown)
         return unexpected(audiofile_error::format_error);
 
     samples_load(typ, data.data, interleaved.data(), m_format->channels * framesRead,
@@ -154,8 +154,8 @@ expected<void, audiofile_error> RawEncoder::write(const audio_data_interleaved& 
     size_t framesToWrite = audio.size;
     univector<std::byte> interleaved(framesToWrite * m_format->bytes_per_pcm_frame());
     audio_quantization quant(m_format->bit_depth, options.dithering);
-    sample_t typ = m_format->sample_type();
-    if (typ == sample_t::unknown)
+    audio_sample_type typ = m_format->sample_type();
+    if (typ == audio_sample_type::unknown)
         return unexpected(audiofile_error::format_error);
     samples_store(typ, interleaved.data(), audio.data, audio.total_samples(), quant,
                   m_format->endianness != audiofile_endianness::little);

@@ -35,59 +35,43 @@ namespace kfr
 
 enum class audio_sample_type
 {
-    unknown,
-    i8,
-    i16,
-    i24,
-    i32,
-    i64,
-    f32,
-    f64,
-
-    first_float = f32
+    f32     = -32,
+    f64     = -64,
+    unknown = 0,
+    // i8      = 8,
+    i16 = 16,
+    i24 = 24,
+    i32 = 32,
+    // i64     = 64,
 };
 
-inline constexpr size_t audio_sample_sizeof(audio_sample_type type)
+constexpr size_t audio_sample_bit_depth(audio_sample_type type) noexcept
 {
-    switch (type)
-    {
-    case audio_sample_type::i8:
-        return 1;
-    case audio_sample_type::i16:
-        return 2;
-    case audio_sample_type::i24:
-        return 3;
-    case audio_sample_type::i32:
-    case audio_sample_type::f32:
-        return 4;
-    case audio_sample_type::i64:
-    case audio_sample_type::f64:
-        return 8;
-    default:
-        return 0;
-    }
+    if (static_cast<int>(type) > 0)
+        return static_cast<int>(type);
+    if (static_cast<int>(type) < 0)
+        return -static_cast<int>(type);
+    return 0;
 }
 
-inline constexpr size_t audio_sample_bit_depth(audio_sample_type type)
+constexpr size_t audio_sample_sizeof(audio_sample_type type) noexcept
 {
-    return audio_sample_sizeof(type) * 8;
+    return align_up(audio_sample_bit_depth(type), 8);
 }
 
-inline namespace KFR_ARCH_NAME
-{
+constexpr bool audio_sample_is_float(audio_sample_type t) noexcept { return static_cast<int>(t) < 0; }
+
+template <typename T>
+concept audio_sample = std::floating_point<f32> || std::floating_point<f64> || std::same_as<T, int16_t> ||
+                       std::same_as<T, kfr::i24> || std::same_as<T, int32_t>;
 
 using audio_sample_type_clist =
-    cvals_t<audio_sample_type, audio_sample_type::i8, audio_sample_type::i16, audio_sample_type::i24,
-            audio_sample_type::i32, audio_sample_type::i64, audio_sample_type::f32, audio_sample_type::f64>;
+    cvals_t<audio_sample_type, audio_sample_type::i16, audio_sample_type::i24, audio_sample_type::i32,
+            audio_sample_type::f32, audio_sample_type::f64>;
 
 template <audio_sample_type type>
 struct audio_sample_get_type;
 
-template <>
-struct audio_sample_get_type<audio_sample_type::i8>
-{
-    using type = i8;
-};
 template <>
 struct audio_sample_get_type<audio_sample_type::i16>
 {
@@ -104,11 +88,6 @@ struct audio_sample_get_type<audio_sample_type::i32>
     using type = i32;
 };
 template <>
-struct audio_sample_get_type<audio_sample_type::i64>
-{
-    using type = i64;
-};
-template <>
 struct audio_sample_get_type<audio_sample_type::f32>
 {
     using type = f32;
@@ -121,13 +100,6 @@ struct audio_sample_get_type<audio_sample_type::f64>
 
 template <typename T>
 struct audio_sample_traits;
-
-template <>
-struct audio_sample_traits<i8>
-{
-    constexpr static f32 scale              = 127.f;
-    constexpr static audio_sample_type type = audio_sample_type::i8;
-};
 
 template <>
 struct audio_sample_traits<i16>
@@ -151,13 +123,6 @@ struct audio_sample_traits<i32>
 };
 
 template <>
-struct audio_sample_traits<i64>
-{
-    constexpr static f64 scale              = 9223372036854775807.0;
-    constexpr static audio_sample_type type = audio_sample_type::i64;
-};
-
-template <>
 struct audio_sample_traits<f32>
 {
     constexpr static f32 scale              = 1;
@@ -170,6 +135,9 @@ struct audio_sample_traits<f64>
     constexpr static f64 scale              = 1;
     constexpr static audio_sample_type type = audio_sample_type::f64;
 };
+
+inline namespace KFR_ARCH_NAME
+{
 
 template <typename Tout, typename Tin, typename Tout_traits = audio_sample_traits<Tout>,
           typename Tin_traits = audio_sample_traits<Tin>>

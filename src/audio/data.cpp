@@ -546,35 +546,37 @@ template void samples_store(i32*, const fbase*, size_t, const audio_quantization
 template void samples_store(f32*, const fbase*, size_t, const audio_quantization&, bool) noexcept;
 template void samples_store(f64*, const fbase*, size_t, const audio_quantization&, bool) noexcept;
 
-sample_t audiofile_format::sample_type_lpcm() const
+audio_sample_type audiofile_format::sample_type_lpcm() const
 {
-    if (bit_depth > 24)
-        return sample_t::i32;
+    if (bit_depth > 32)
+        return audio_sample_type::unknown;
+    else if (bit_depth > 24)
+        return audio_sample_type::i32;
     else if (bit_depth > 16)
-        return sample_t::i24;
+        return audio_sample_type::i24;
     else if (bit_depth > 8)
-        return sample_t::i16;
-    return sample_t::unknown;
+        return audio_sample_type::i16;
+    return audio_sample_type::unknown;
 }
-sample_t audiofile_format::sample_type() const
+audio_sample_type audiofile_format::sample_type() const
 {
     if (codec == audiofile_codec::ieee_float)
     {
         if (bit_depth == 32)
-            return sample_t::f32;
+            return audio_sample_type::f32;
         else if (bit_depth == 64)
-            return sample_t::f64;
+            return audio_sample_type::f64;
     }
     else if (codec == audiofile_codec::lpcm)
     {
         if (bit_depth > 24)
-            return sample_t::i32;
+            return audio_sample_type::i32;
         else if (bit_depth > 16)
-            return sample_t::i24;
+            return audio_sample_type::i24;
         else if (bit_depth > 8)
-            return sample_t::i16;
+            return audio_sample_type::i16;
     }
-    return sample_t::unknown;
+    return audio_sample_type::unknown;
 }
 bool audiofile_format::valid() const noexcept
 {

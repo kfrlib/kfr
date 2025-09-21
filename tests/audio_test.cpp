@@ -44,14 +44,14 @@ struct StringMaker<kfr::audiofile_error>
     static std::string convert(const kfr::audiofile_error& err) { return kfr::to_string(err); }
 };
 template <>
-struct StringMaker<kfr::sample_t>
+struct StringMaker<kfr::audio_sample_type>
 {
-    static std::string convert(const kfr::sample_t& s)
+    static std::string convert(const kfr::audio_sample_type& s)
     {
-        if (kfr::sample_is_float(s))
-            return "f" + std::to_string(kfr::sample_bits(s));
+        if (kfr::audio_sample_is_float(s))
+            return "f" + std::to_string(kfr::audio_sample_bit_depth(s));
         else
-            return "i" + std::to_string(kfr::sample_bits(s));
+            return "i" + std::to_string(kfr::audio_sample_bit_depth(s));
     }
 };
 template <>
@@ -122,8 +122,6 @@ static void testAudioEquality(const audio_data_interleaved& test, const audio_da
         testAudioEquality(data, reference.slice(start, end - start));
     }
 }
-
-static bool disable_random_reads = false;
 
 static fbase rmsThresholdDefault = kfr::dB_to_amp(-84.0);
 static fbase rmsThreshold        = rmsThresholdDefault; // 2.0 / 32768.0;
@@ -234,6 +232,9 @@ static void testAudioEquality(const audio_data_interleaved& test, const audio_da
 }
 
 #ifdef KFR_USE_STD_FILESYSTEM
+
+static bool disable_random_reads = false;
+
 static void testFormat(const std::filesystem::path& dir, bool expectedToFail, bool useOSDecoder = false)
 {
     for (auto f : std::filesystem::directory_iterator(dir))
@@ -929,13 +930,14 @@ TEST_CASE("encode and decode raw")
 
         auto audio = generate_test_audio(44100, channels, dB_to_amp(-3));
 
-        for (sample_t smp_type :
-             { sample_t::f32, sample_t::f64, sample_t::i16, sample_t::i24, sample_t::i32 })
+        for (audio_sample_type smp_type :
+             { audio_sample_type::f32, audio_sample_type::f64, audio_sample_type::i16, audio_sample_type::i24,
+               audio_sample_type::i32 })
         {
             CAPTURE(smp_type);
-            rawOptions.bit_depth = sample_bits(smp_type);
+            rawOptions.bit_depth = audio_sample_bit_depth(smp_type);
             rawOptions.codec =
-                sample_is_float(smp_type) ? audiofile_codec::ieee_float : audiofile_codec::lpcm;
+                audio_sample_is_float(smp_type) ? audiofile_codec::ieee_float : audiofile_codec::lpcm;
 
             for (audiofile_endianness endianness :
                  { audiofile_endianness::little, audiofile_endianness::big })
@@ -963,12 +965,14 @@ TEST_CASE("encode and decode")
 
         auto audio = generate_test_audio(44100, channels, dB_to_amp(-3));
 
-        for (sample_t smp_type :
-             { sample_t::f32, sample_t::f64, sample_t::i16, sample_t::i24, sample_t::i32 })
+        for (audio_sample_type smp_type :
+             { audio_sample_type::f32, audio_sample_type::f64, audio_sample_type::i16, audio_sample_type::i24,
+               audio_sample_type::i32 })
         {
             CAPTURE(smp_type);
-            format.bit_depth = sample_bits(smp_type);
-            format.codec = sample_is_float(smp_type) ? audiofile_codec::ieee_float : audiofile_codec::lpcm;
+            format.bit_depth = audio_sample_bit_depth(smp_type);
+            format.codec =
+                audio_sample_is_float(smp_type) ? audiofile_codec::ieee_float : audiofile_codec::lpcm;
             format.endianness = audiofile_endianness::little;
 
             {

@@ -131,7 +131,7 @@ struct [[deprecated("Use audio_encoder instead")]] audio_writer_wav : audio_writ
 
     const audio_format_and_length& format() const override { return fmt; }
 
-    imax tell() const override { return fmt.length; }
+    uint64_t tell() const override { return fmt.length; }
 
     bool seek(imax, seek_origin) override { return false; }
 
@@ -167,7 +167,7 @@ struct [[deprecated("Use audio_decoder instead")]] audio_reader_wav : audio_read
     const audio_format_and_length& format() const override { return fmt; }
 
     /// @brief Returns current position
-    imax tell() const override { return position; }
+    uint64_t tell() const override { return position; }
 
 private:
     std::shared_ptr<abstract_reader<>> reader;
@@ -212,7 +212,7 @@ struct [[deprecated("Use audio_decoder instead")]] audio_reader_flac : audio_rea
     const audio_format_and_length& format() const override { return fmt; }
 
     /// @brief Returns current position
-    imax tell() const override { return position; }
+    uint64_t tell() const override { return position; }
 
 private:
     std::shared_ptr<abstract_reader<>> reader;
@@ -265,7 +265,7 @@ struct [[deprecated("Use audio_decoder instead")]] audio_reader_mp3 : audio_read
     const audio_format_and_length& format() const override { return fmt; }
 
     /// @brief Returns current position
-    imax tell() const override { return position; }
+    uint64_t tell() const override { return position; }
 
 private:
     std::shared_ptr<abstract_reader<>> reader;

@@ -26,17 +26,11 @@
 #pragma once
 
 #include <cstdint>
-#ifdef KFR_USE_STD_FILESYSTEM
-#include <filesystem>
-#endif
-#include <kfr/thirdparty/expected/expected.hpp>
+#include <kfr/io/file.hpp>
 #include <kfr/audio/data.hpp>
 
 namespace kfr
 {
-
-using tl::expected;
-using tl::unexpected;
 
 enum class audiofile_error : uint32_t
 {
@@ -57,34 +51,6 @@ std::string to_string(audiofile_error err);
 
 constexpr inline size_t default_audio_frames_to_read = 16384;
 
-enum class open_file_mode
-{
-    read_existing,
-    write_new,
-    read_write_existing,
-    read_write_new,
-    append_existing,
-};
-
-#ifdef KFR_USE_STD_FILESYSTEM
-using file_path = std::filesystem::path;
-#else
-#ifdef KFR_OS_WIN
-using file_path = std::wstring;
-
-namespace details
-{
-std::wstring utf8_to_wstring(std::string_view str);
-}
-
-#else
-using file_path = std::string;
-#endif
-#endif
-
-[[nodiscard]] expected<FILE*, std::error_code> fopen_path(const file_path& path,
-                                                          open_file_mode mode) noexcept;
-
 struct raw_stream_options
 {
     uint32_t channels               = 2;
@@ -104,16 +70,5 @@ struct raw_stream_options
         return result;
     }
 };
-
-#if defined _MSC_VER // MSVC
-#define KFR_IO_SEEK_64 _fseeki64
-#define KFR_IO_TELL_64 _ftelli64
-#elif defined _WIN32 // MinGW
-#define KFR_IO_SEEK_64 fseeko64
-#define KFR_IO_TELL_64 ftello64
-#else // macOS, Linux
-#define KFR_IO_SEEK_64 fseeko
-#define KFR_IO_TELL_64 ftello
-#endif
 
 } // namespace kfr

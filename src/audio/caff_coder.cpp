@@ -361,8 +361,8 @@ public:
 
         audio_data_interleaved data(m_format->channels, framesRead - framesToSkipInNextPacket);
 
-        sample_t typ = m_format->sample_type_lpcm();
-        if (typ == sample_t::unknown)
+        audio_sample_type typ = m_format->sample_type_lpcm();
+        if (typ == audio_sample_type::unknown)
             return unexpected(audiofile_error::format_error);
         samples_load(typ, data.data,
                      (const std::byte*)theWriteBuffer.data() +
@@ -573,8 +573,8 @@ struct CAFFEncoder : public RIFFEncoder<CAFFEncoder, CAFFTraits>
 #ifdef KFR_AUDIO_ALAC
         size_t framesToWrite = audio.size;
         kfr::univector<uint8_t> interleaved(framesToWrite * inafdesc.mBytesPerFrame);
-        sample_t typ = m_format->sample_type_lpcm();
-        if (typ == sample_t::unknown)
+        audio_sample_type typ = m_format->sample_type_lpcm();
+        if (typ == audio_sample_type::unknown)
             return unexpected(audiofile_error::format_error);
         samples_store(typ, (std::byte*)interleaved.data(), audio.data, audio.size * audio.channels,
                       quantization, false);

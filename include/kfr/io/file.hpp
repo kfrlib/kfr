@@ -29,46 +29,64 @@
 #include "../simd/impl/function.hpp"
 #include "../simd/vec.hpp"
 #include <cstdio>
+#include <span>
 #include <string>
 #include <vector>
+#ifdef KFR_USE_STD_FILESYSTEM
+#include <filesystem>
+#endif
+#include <kfr/thirdparty/expected/expected.hpp>
 
 namespace kfr
 {
 
-#ifdef KFR_OS_WIN
-using filepath_char = wchar_t;
-#define KFR_FILEPATH_PREFIX_CONCAT(x, y) x##y
-#define KFR_FILEPATH(s) KFR_FILEPATH_PREFIX_CONCAT(L, s)
+using tl::expected;
+using tl::unexpected;
+
+enum class open_file_mode
+{
+    read_existing,
+    write_new,
+    read_write_existing,
+    read_write_new,
+    append_existing,
+};
+
+#ifdef KFR_USE_STD_FILESYSTEM
+#define KFR_FILEPATH(s) (s)
+using file_path = std::filesystem::path;
 #else
-using filepath_char = char;
-#define KFR_FILEPATH(s) s
+#ifdef KFR_OS_WIN
+#define KFR_FILEPATH_PREFIX_CONCAT(x, y) x##y
+#define KFR_FILEPATH(s) (KFR_FILEPATH_PREFIX_CONCAT(L, s))
+using file_path = std::wstring;
+
+namespace details
+{
+std::wstring utf8_to_wstring(std::string_view str);
+}
+
+#else
+#define KFR_FILEPATH(s) (s)
+using file_path = std::string;
+#endif
 #endif
 
-using filepath = std::basic_string<filepath_char>;
+using filepath = file_path;
+
+[[nodiscard]] expected<FILE*, std::error_code> fopen_path(const file_path& path,
+                                                          open_file_mode mode) noexcept;
 
 #if defined _MSC_VER // MSVC
-#define IO_SEEK_64 _fseeki64
-#define IO_TELL_64 _ftelli64
+#define KFR_IO_SEEK_64 _fseeki64
+#define KFR_IO_TELL_64 _ftelli64
 #elif defined _WIN32 // MingW
-#define IO_SEEK_64 fseeko64
-#define IO_TELL_64 ftello64
+#define KFR_IO_SEEK_64 fseeko64
+#define KFR_IO_TELL_64 ftello64
 #else // macOS, Linux
-#define IO_SEEK_64 fseeko
-#define IO_TELL_64 ftello
+#define KFR_IO_SEEK_64 fseeko
+#define KFR_IO_TELL_64 ftello
 #endif
-
-/// @brief Opens file using portable path (char* on posix, wchar_t* on windows)
-inline FILE* fopen_portable(const filepath_char* path, const filepath_char* mode)
-{
-#ifdef KFR_OS_WIN
-    FILE* f   = nullptr;
-    errno_t e = _wfopen_s(&f, path, mode);
-    (void)e;
-    return f;
-#else
-    return fopen(path, mode);
-#endif
-}
 
 template <typename T = void>
 constexpr inline size_t element_size()
@@ -94,39 +112,47 @@ template <typename T = void>
 struct abstract_stream
 {
     virtual ~abstract_stream() {}
-    virtual imax tell() const                          = 0;
-    virtual bool seek(imax offset, seek_origin origin) = 0;
-    bool seek(imax offset, int origin) { return seek(offset, static_cast<seek_origin>(origin)); }
-};
+    [[nodiscard]] virtual uint64_t tell() const                         = 0;
+    [[nodiscard]] virtual bool seek(int64_t offset, seek_origin origin) = 0;
+    [[nodiscard]] bool seek(int64_t offset, int origin)
+    {
+        return seek(offset, static_cast<seek_origin>(origin));
+    }
 
-namespace internal_generic
-{
-struct empty
-{
+    [[nodiscard]] std::optional<uint64_t> size()
+    {
+        uint64_t pos = tell();
+        if (!seek(0, seek_origin::end))
+            return std::nullopt;
+        uint64_t size = tell();
+        if (!seek(pos, seek_origin::begin))
+            return std::nullopt;
+        return size;
+    }
 };
-
-} // namespace internal_generic
 
 /// @brief Base class for all typed readers
 template <typename T = void>
 struct abstract_reader : abstract_stream<T>
 {
-    virtual size_t read(T* data, size_t size) = 0;
+    [[nodiscard]] virtual size_t read(T* data, size_t size) = 0;
 
-    template <univector_tag Tag>
-    size_t read(univector<T, Tag>& data)
+    [[nodiscard]] size_t read(std::convertible_to<std::span<T>> auto&& data)
+        requires(!std::is_void_v<T>)
     {
-        return read(data.data(), data.size());
+        std::span<T> s(data);
+        return read(s.data(), s.size());
     }
-    size_t read(univector_ref<T>&& data) { return read(data.data(), data.size()); }
 
-    univector<T> read(size_t size)
+    [[nodiscard]] univector<T> read(size_t size)
     {
         univector<T> result(size);
         this->read(result);
         return result;
     }
-    bool read(std::conditional_t<std::is_void_v<T>, internal_generic::empty, T>& data)
+    template <typename U = T>
+        requires(!std::is_void_v<U>)
+    [[nodiscard]] bool read(U& data)
     {
         return read(&data, 1) == 1;
     }
@@ -136,48 +162,68 @@ struct abstract_reader : abstract_stream<T>
 template <typename T = void>
 struct abstract_writer : abstract_stream<T>
 {
-    virtual size_t write(const T* data, size_t size) = 0;
+    [[nodiscard]] virtual size_t write(const T* data, size_t size) = 0;
 
-    template <univector_tag Tag>
-    size_t write(const univector<T, Tag>& data)
+    [[nodiscard]] size_t write(std::convertible_to<std::span<const T>> auto&& data)
+        requires(!std::is_void_v<T>)
     {
-        return write(data.data(), data.size());
+        std::span<const T> s(data);
+        return write(s.data(), s.size());
     }
-    size_t write(univector_ref<const T>&& data) { return write(data.data(), data.size()); }
-    bool write(const std::conditional_t<std::is_void_v<T>, internal_generic::empty, T>& data)
+
+    template <typename U = T>
+        requires(!std::is_void_v<U>)
+    [[nodiscard]] bool write(const U& data)
     {
         return write(&data, 1) == 1;
     }
 };
 
-template <typename From, typename To = void>
+template <typename From, typename To>
 struct reader_adapter : abstract_reader<To>
 {
-    static_assert(element_size<From>() % element_size<To>() == 0 ||
-                      element_size<To>() % element_size<From>() == 0,
-                  "From and To sizes must be compatible");
-    reader_adapter(std::shared_ptr<abstract_reader<From>>&& reader) : reader(std::move(reader)) {}
-    virtual size_t read(To* data, size_t size) final
+    static_assert(element_size<To>() > element_size<From>() &&
+                  element_size<To>() % element_size<From>() == 0);
+    constexpr static uint64_t scale = element_size<To>() / element_size<To>();
+
+    reader_adapter(std::shared_ptr<abstract_reader<From>> reader) : reader(std::move(reader)) {}
+
+    [[nodiscard]] size_t read(To* data, size_t size) final
     {
-        return reader->read(reinterpret_cast<From*>(data), size * element_size<From>() / element_size<To>()) *
-               element_size<To>() / element_size<From>();
+        return reader->read(reinterpret_cast<From*>(data), size * scale) / scale;
     }
+    [[nodiscard]]
+    bool seek(int64_t offset, seek_origin origin) final
+    {
+        return reader->seek(offset * scale, origin);
+    }
+
+    [[nodiscard]] uint64_t tell() const final { return reader->tell() / scale; }
+
     std::shared_ptr<abstract_reader<From>> reader;
 };
 
 template <typename From, typename To = void>
 struct writer_adapter : abstract_writer<To>
 {
-    static_assert(element_size<From>() % element_size<To>() == 0 ||
-                      element_size<To>() % element_size<From>() == 0,
-                  "From and To sizes must be compatible");
-    writer_adapter(std::shared_ptr<abstract_writer<From>>&& writer) : writer(std::move(writer)) {}
-    virtual size_t write(const To* data, size_t size) final
+    static_assert(element_size<To>() > element_size<From>() &&
+                  element_size<To>() % element_size<From>() == 0);
+    constexpr static uint64_t scale = element_size<To>() / element_size<To>();
+
+    writer_adapter(std::shared_ptr<abstract_writer<From>> writer) : writer(std::move(writer)) {}
+
+    [[nodiscard]] size_t write(const To* data, size_t size) final
     {
-        return writer->write(reinterpret_cast<const From*>(data),
-                             size * element_size<From>() / element_size<To>()) *
-               element_size<To>() / element_size<From>();
+        return writer->write(reinterpret_cast<const From*>(data), size * scale) / scale;
     }
+
+    [[nodiscard]] bool seek(int64_t offset, seek_origin origin) final
+    {
+        return writer->seek(offset * scale, origin);
+    }
+
+    [[nodiscard]] uint64_t tell() const final { return writer->tell() / scale; }
+
     std::shared_ptr<abstract_writer<From>> writer;
 };
 
@@ -201,19 +247,13 @@ using f32_writer = abstract_writer<f32>;
 
 struct file_handle
 {
-    file_handle(FILE* file) : file(file) {}
+    file_handle(FILE* file);
     file_handle()                   = delete;
     file_handle(const file_handle&) = delete;
-    file_handle(file_handle&& handle) : file(nullptr) { swap(handle); }
-    ~file_handle()
-    {
-        if (file)
-        {
-            fclose(file);
-        }
-    }
+    file_handle(file_handle&& handle);
+    ~file_handle();
     FILE* file;
-    void swap(file_handle& handle) { std::swap(file, handle.file); }
+    void swap(file_handle& handle);
 };
 
 /// @brief Typed file reader
@@ -221,16 +261,20 @@ template <typename T = void>
 struct file_reader : abstract_reader<T>
 {
     file_reader(file_handle&& handle) : handle(std::move(handle)) {}
+
     ~file_reader() override {}
+
     size_t read(T* data, size_t size) final { return fread(data, element_size<T>(), size, handle.file); }
 
     using abstract_reader<T>::read;
 
-    imax tell() const final { return IO_TELL_64(handle.file); }
-    bool seek(imax offset, seek_origin origin) final
+    uint64_t tell() const final { return KFR_IO_TELL_64(handle.file); }
+
+    bool seek(int64_t offset, seek_origin origin) final
     {
-        return !IO_SEEK_64(handle.file, offset, static_cast<int>(origin));
+        return !KFR_IO_SEEK_64(handle.file, offset, static_cast<int>(origin));
     }
+
     file_handle handle;
 };
 
@@ -239,18 +283,23 @@ template <typename T = void>
 struct file_writer : abstract_writer<T>
 {
     file_writer(file_handle&& handle) : handle(std::move(handle)) {}
+
     ~file_writer() override {}
 
     using abstract_writer<T>::write;
+
     size_t write(const T* data, size_t size) final
     {
         return fwrite(data, element_size<T>(), size, handle.file);
     }
-    imax tell() const final { return IO_TELL_64(handle.file); }
-    bool seek(imax offset, seek_origin origin) final
+
+    uint64_t tell() const final { return KFR_IO_TELL_64(handle.file); }
+
+    bool seek(int64_t offset, seek_origin origin) final
     {
-        return !IO_SEEK_64(handle.file, offset, static_cast<int>(origin));
+        return !KFR_IO_SEEK_64(handle.file, offset, static_cast<int>(origin));
     }
+
     file_handle handle;
 };
 
@@ -258,49 +307,46 @@ struct file_writer : abstract_writer<T>
 template <typename T = void>
 inline std::shared_ptr<file_reader<T>> open_file_for_reading(const filepath& path)
 {
-    std::FILE* f = fopen_portable(path.c_str(), KFR_FILEPATH("rb"));
-    return f ? std::make_shared<file_reader<T>>(f) : nullptr;
+    auto f = fopen_path(path, open_file_mode::read_existing);
+    return f ? std::make_shared<file_reader<T>>(*f) : nullptr;
 }
 
 /// @brief Opens typed file for writing
 template <typename T = void>
 inline std::shared_ptr<file_writer<T>> open_file_for_writing(const filepath& path)
 {
-    std::FILE* f = fopen_portable(path.c_str(), KFR_FILEPATH("wb"));
-    return f ? std::make_shared<file_writer<T>>(f) : nullptr;
+    auto f = fopen_path(path, open_file_mode::write_new);
+    return f ? std::make_shared<file_writer<T>>(*f) : nullptr;
 }
 
 /// @brief Opens typed file for appending
 template <typename T = void>
 inline std::shared_ptr<file_writer<T>> open_file_for_appending(const filepath& path)
 {
-    std::FILE* f = fopen_portable(path.c_str(), KFR_FILEPATH("ab"));
-    return f ? std::make_shared<file_writer<T>>(f) : nullptr;
+    auto f = fopen_path(path, open_file_mode::append_existing);
+    return f ? std::make_shared<file_writer<T>>(*f) : nullptr;
 }
 
-#ifdef KFR_OS_WIN
+#if defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM
 /// @brief Opens typed file for reading
 template <typename T = void>
 inline std::shared_ptr<file_reader<T>> open_file_for_reading(const std::string& path)
 {
-    std::FILE* f = fopen(path.c_str(), "rb");
-    return f ? std::make_shared<file_reader<T>>(f) : nullptr;
+    return open_file_for_reading<T>(details::utf8_to_wstring(path));
 }
 
 /// @brief Opens typed file for writing
 template <typename T = void>
 inline std::shared_ptr<file_writer<T>> open_file_for_writing(const std::string& path)
 {
-    std::FILE* f = fopen(path.c_str(), "wb");
-    return f ? std::make_shared<file_writer<T>>(f) : nullptr;
+    return open_file_for_writing<T>(details::utf8_to_wstring(path));
 }
 
 /// @brief Opens typed file for appending
 template <typename T = void>
 inline std::shared_ptr<file_writer<T>> open_file_for_appending(const std::string& path)
 {
-    std::FILE* f = fopen(path.c_str(), "ab");
-    return f ? std::make_shared<file_writer<T>>(f) : nullptr;
+    return open_file_for_appending<T>(details::utf8_to_wstring(path));
 }
 #endif
 

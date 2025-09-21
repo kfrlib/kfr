@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 
-add_kfr_library(NAME kfr_audio SOURCES ${KFR_AUDIO_SRC})
+add_kfr_library(NAME kfr_audio SOURCES ${KFR_AUDIO_SRC} LIBRARIES kfr_io kfr_dsp)
 
 find_package(FLAC CONFIG)
 if (TARGET FLAC::FLAC)
