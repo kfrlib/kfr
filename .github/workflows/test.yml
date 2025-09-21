@@ -25,7 +25,7 @@ jobs:
         VCPKG_HOST_TRIPLET: x64-linux
       run: |
         set -e
-        sudo apt-get update && sudo apt-get install -y ninja-build g++-aarch64-linux-gnu qemu qemu-system-arm qemu-user clang-19
+        sudo apt-get update && sudo apt-get install -y ninja-build g++-aarch64-linux-gnu qemu-system-arm qemu-user clang-19
         vcpkg install libflac minimp3 alac
         ci/run.sh build-release -DCMAKE_PREFIX_PATH=/usr/local/share/vcpkg/installed/arm64-linux -DENABLE_EXAMPLES=OFF -DCLANG_SUFFIX=-19 -DCMAKE_BUILD_TYPE=Release -DGCC_VER=13 -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
 
