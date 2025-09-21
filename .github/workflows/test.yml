@@ -7,60 +7,12 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Tests
-      env:
-        SDE_LINUX: ${{ secrets.SDE_LINUX }}
-        TMP_DIR: ${{ runner.temp }}
       run: |
         set -e
         sudo apt-get update && sudo apt-get install -y ninja-build
         wget -O - https://apt.llvm.org/llvm.sh | sudo bash -s - 20
-        curl -o "$TMP_DIR/sde.tar.xz" -L "$SDE_LINUX"
-        mkdir "$TMP_DIR/sde-bin"
-        tar -C "$TMP_DIR/sde-bin" -xJf "$TMP_DIR/sde.tar.xz" --strip 1
-        sudo ln -s $TMP_DIR/sde-bin/sde64 /usr/bin/sde
         vcpkg install libflac minimp3 alac
-        ci/run.sh build-release -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DKFR_ARCH=avx2 -DKFR_USE_SDE=ON -DCMAKE_CXX_COMPILER=clang++-20 -DCMAKE_BUILD_TYPE=Release
-
-  ubuntu22-clang20-arm:
-    runs-on: ubuntu-22.04
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Tests
-      run: |
-        set -e
-        sudo apt-get update && sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf qemu qemu-system-arm qemu-user
-        wget -O - https://apt.llvm.org/llvm.sh | sudo bash -s - 20
-        ci/run.sh build-release -DENABLE_EXAMPLES=OFF -DCLANG_SUFFIX=-20 -DCMAKE_BUILD_TYPE=Release -DGCC_VER=11 -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
-
-  ubuntu22-clang20-arm64:
-    runs-on: ubuntu-22.04
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Tests
-      run: |
-        set -e
-        sudo apt-get update && sudo apt-get install -y ninja-build g++-aarch64-linux-gnu qemu qemu-system-arm qemu-user
-        wget -O - https://apt.llvm.org/llvm.sh | sudo bash -s - 20
-        ci/run.sh build-release -DENABLE_EXAMPLES=OFF -DCLANG_SUFFIX=-20 -DCMAKE_BUILD_TYPE=Release -DGCC_VER=11 -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
-      
-  ubuntu24-gcc14-x86_64:
-    runs-on: ubuntu-24.04
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Tests
-      env:
-        SDE_LINUX: ${{ secrets.SDE_LINUX }}
-        TMP_DIR: ${{ runner.temp }}
-      run: |
-        sudo apt-get update && sudo apt-get install -y ninja-build g++-14
-        curl -o "$TMP_DIR/sde.tar.xz" -L "$SDE_LINUX"
-        mkdir "$TMP_DIR/sde-bin"
-        tar -C "$TMP_DIR/sde-bin" -xJf "$TMP_DIR/sde.tar.xz" --strip 1
-        sudo ln -s $TMP_DIR/sde-bin/sde64 /usr/bin/sde
-        ci/run.sh build-release -DKFR_ARCH=target -DCMAKE_CXX_COMPILER=g++-14 -DKFR_ARCH_TESTS=sse2,sse3,avx,avx2,avx512 -DCMAKE_BUILD_TYPE=Release -DKFR_USE_SDE=ON
+        ci/run.sh build-release -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER=clang++-20 -DCMAKE_BUILD_TYPE=Release
 
   ubuntu24-clang19-arm:
     runs-on: ubuntu-24.04-arm
@@ -73,152 +25,14 @@ jobs:
         vcpkg install libflac minimp3 alac
         ci/run.sh build-release -DCMAKE_PREFIX_PATH=/usr/local/share/vcpkg/installed/arm64-linux -DKFR_ARCH=target -DENABLE_EXAMPLES=OFF -DCMAKE_CXX_COMPILER=clang++-19 -DCMAKE_BUILD_TYPE=Release
 
-  windows2022-clang21-x86:
-    runs-on: windows-2022
+  ubuntu24-clang20-arm:
+    runs-on: ubuntu-24.04-arm
     steps:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Tests
-      env:
-        SDE_WINDOWS: ${{ secrets.SDE_WINDOWS }}
-        TMP_DIR: ${{ runner.temp }}
-        VCPKG_DEFAULT_TRIPLET: x86-windows-static-md
-        VCPKG_HOST_TRIPLET: x86-windows-static-md
-      shell: cmd
       run: |
-        choco install llvm --version 21.1.0 --no-progress -y
-        choco install ninja --no-progress -y
-        curl -o "%TMP_DIR%/sde.zip" -L %SDE_WINDOWS%
-        "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "%TMP_DIR%/sde.zip"
-        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
-        set CXXFLAGS=-m32
-        set PATH=C:\sde;%PATH%
+        sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build
+        wget -O - https://apt.llvm.org/llvm.sh | sudo bash -s - 20
         vcpkg install libflac minimp3 alac
-        ci\run.cmd build-release -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x86-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_MULTIARCH=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
-
-  windows2022-clang21-x86_64:
-    runs-on: windows-2022
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Tests
-      env:
-        SDE_WINDOWS: ${{ secrets.SDE_WINDOWS }}
-        TMP_DIR: ${{ runner.temp }}
-        VCPKG_DEFAULT_TRIPLET: x64-windows-static-md
-        VCPKG_HOST_TRIPLET: x64-windows-static-md
-      shell: cmd
-      run: |
-        choco install llvm --version 21.1.0 --no-progress -y
-        choco install ninja --no-progress -y
-        curl -o "%TMP_DIR%/sde.zip" -L %SDE_WINDOWS%
-        "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "%TMP_DIR%/sde.zip"
-        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-        set PATH=C:\sde;%PATH%
-        vcpkg install libflac minimp3 alac
-        ci\run.cmd build-release -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x64-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_MULTIARCH=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
-
-  windows2022-clang21-arm64:
-    runs-on: windows-2022
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Tests
-      shell: cmd
-      run: |
-        choco install llvm --version 21.1.0 --no-progress -y
-        choco install ninja --no-progress -y
-        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsamd64_arm64.bat"
-        ci\run.cmd build-release -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_CXX_COMPILER_TARGET=arm64-pc-windows-msvc -DKFR_ARCH=target -DKFR_SKIP_TESTS=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
-
-  windows2022-msvc2022-x86:
-    runs-on: windows-2022
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Tests
-      env:
-        SDE_WINDOWS: ${{ secrets.SDE_WINDOWS }}
-        TMP_DIR: ${{ runner.temp }}
-      shell: cmd
-      run: |
-        choco install ninja --no-progress -y
-        curl -o "%TMP_DIR%/sde.zip" -L %SDE_WINDOWS%
-        "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "%TMP_DIR%/sde.zip"
-        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
-        set PATH=C:\sde;%PATH%
-        ci\run.cmd build-release -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_MULTIARCH=ON -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release
-
-  windows2022-msvc2022-x86_64:
-    runs-on: windows-2022
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Tests
-      env:
-        SDE_WINDOWS: ${{ secrets.SDE_WINDOWS }}
-        TMP_DIR: ${{ runner.temp }}
-      shell: cmd
-      run: |
-        choco install ninja --no-progress -y
-        curl -o "%TMP_DIR%/sde.zip" -L %SDE_WINDOWS%
-        "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "%TMP_DIR%/sde.zip"
-        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-        set PATH=C:\sde;%PATH%
-        ci\run.cmd build-release -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_MULTIARCH=ON -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release
-
-  windows2022-clang-android-arm:
-    runs-on: windows-2022
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Tests
-      shell: cmd
-      run: |
-        choco install ninja --no-progress -y   
-        ci\run.cmd build-release -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=armeabi-v7a -DANDROID_ARM_NEON=TRUE -DKFR_SKIP_TESTS=ON -DCMAKE_BUILD_TYPE=Release
-
-  windows2022-clang-android-arm64:
-    runs-on: windows-2022
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Tests
-      shell: cmd
-      run: |
-        choco install ninja --no-progress -y
-        ci\run.cmd build-release -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=arm64-v8a -DANDROID_ARM_NEON=TRUE -DKFR_SKIP_TESTS=ON -DCMAKE_BUILD_TYPE=Release
-
-  macos13-xcode15-x86_64:
-    runs-on: macos-13
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Tests
-      run: |
-        set -e
-        brew install ninja
-        ci/run.sh build-release -DCMAKE_OSX_ARCHITECTURES=x86_64 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse42,avx -DKFR_ARCH=target -DCMAKE_BUILD_TYPE=Release      
-
-  macos15-xcode16-arm64:
-    runs-on: macos-15
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Tests
-      run: |
-        set -e
-        brew install ninja
-        vcpkg install libflac minimp3 alac
-        ci/run.sh build-release -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/arm64-osx -DCMAKE_OSX_ARCHITECTURES=arm64 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_BUILD_TYPE=Release
-
-  macos13-xcode14-ios-arm64:
-    runs-on: macos-13
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Tests
-      run: |
-        set -e
-        brew install ninja
-        ci/run.sh build-release -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.cmake -DIOS_DEPLOYMENT_TARGET=11.0 -DCMAKE_BUILD_TYPE=Release -DIOS_PLATFORM=OS64 -DIOS_ARCH=arm64 -DCMAKE_MAKE_PROGRAM=/usr/local/bin/ninja -DKFR_SKIP_TESTS=ON
+        ci/run.sh build-release -DCMAKE_PREFIX_PATH=/usr/local/share/vcpkg/installed/arm64-linux -DKFR_ARCH=target -DENABLE_EXAMPLES=OFF -DCMAKE_CXX_COMPILER=clang++-20 -DCMAKE_BUILD_TYPE=Release

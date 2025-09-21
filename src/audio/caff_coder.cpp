@@ -347,9 +347,12 @@ public:
             return unexpected(audiofile_error::io_error);
         uint32_t framesRead = 0;
 
-        if (theDecoder->Decode(&theInputBuffer, theWriteBuffer.data(), desc.mFramesPerPacket,
-                               desc.mChannelsPerFrame, &framesRead) != ALAC_noErr)
+        if (int d = theDecoder->Decode(&theInputBuffer, theWriteBuffer.data(), desc.mFramesPerPacket,
+                                       desc.mChannelsPerFrame, &framesRead);
+            d != ALAC_noErr)
         {
+            fprintf(stderr, "ALACDecoder::Decode failed with %d desc.mChannelsPerFrame=%u\n", d,
+                    desc.mChannelsPerFrame);
             return unexpected(audiofile_error::format_error);
         }
 
@@ -363,7 +366,10 @@ public:
 
         audio_sample_type typ = m_format->sample_type_lpcm();
         if (typ == audio_sample_type::unknown)
+        {
+            fprintf(stderr, "Unsupported sample type: %d\n", int(typ));
             return unexpected(audiofile_error::format_error);
+        }
         samples_load(typ, data.data,
                      (const std::byte*)theWriteBuffer.data() +
                          m_format->bytes_per_pcm_frame() * framesToSkipInNextPacket,
