@@ -106,8 +106,8 @@ enum class sample_t : int8_t
 
 struct audio_quantization;
 
-constexpr size_t sample_bits(sample_t t) noexcept { return std::abs(static_cast<int8_t>(t)); }
-constexpr bool sample_is_float(sample_t t) noexcept { return static_cast<int8_t>(t) < 0; }
+inline size_t sample_bits(sample_t t) noexcept { return std::abs(static_cast<int8_t>(t)); }
+inline bool sample_is_float(sample_t t) noexcept { return static_cast<int8_t>(t) < 0; }
 
 template <typename T>
 concept sample = std::floating_point<f32> || std::floating_point<f64> || std::same_as<T, int16_t> ||

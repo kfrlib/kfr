@@ -405,8 +405,10 @@ expected<uint64_t, audiofile_error> FLACEncoder::close()
     }
     file.reset();
     flacError             = false;
-    uint64_t totalWritten = m_format->total_frames;
+    uint64_t totalWritten = m_format ? m_format->total_frames : 0;
     m_format.reset();
+    if (totalWritten == 0)
+        return unexpected(audiofile_error::empty_file);
     return totalWritten;
 }
 

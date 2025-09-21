@@ -136,7 +136,7 @@ expected<size_t, audiofile_error> MP3Decoder::read_to(const audio_data_interleav
 #else
     std::vector<float> temp(output.total_samples());
     size_t framesRead = mp3dec_ex_read(&*decex, temp.data(), output.total_samples()) / m_format->channels;
-    samples_load(output.data, temp.data(), output.channels * framesRead);
+    samples_load(output.data, temp.data(), output.channels * framesRead, false);
     temp = {};
 #endif
     if (framesRead == 0) /* normal eof or error condition */

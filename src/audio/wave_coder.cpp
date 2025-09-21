@@ -250,7 +250,7 @@ struct WaveEncoder : public RIFFEncoder<WaveEncoder, WAVETraits>
         {
             // >= 4GB
             if (m_format->container == audiofile_container::wave && !m_options.switch_to_rf64_if_over_4gb)
-                return unexpected(audiofile_error::too_large_error);
+                return unexpected(audiofile_error::too_large);
 
             auto data_idx = findChunk("data");
             if (!data_idx)

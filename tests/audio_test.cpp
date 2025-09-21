@@ -43,6 +43,33 @@ struct StringMaker<kfr::audiofile_error>
 {
     static std::string convert(const kfr::audiofile_error& err) { return kfr::to_string(err); }
 };
+template <>
+struct StringMaker<kfr::sample_t>
+{
+    static std::string convert(const kfr::sample_t& s)
+    {
+        if (kfr::sample_is_float(s))
+            return "f" + std::to_string(kfr::sample_bits(s));
+        else
+            return "i" + std::to_string(kfr::sample_bits(s));
+    }
+};
+template <>
+struct StringMaker<kfr::audiofile_endianness>
+{
+    static std::string convert(const kfr::audiofile_endianness& e)
+    {
+        switch (e)
+        {
+        case kfr::audiofile_endianness::little:
+            return "little";
+        case kfr::audiofile_endianness::big:
+            return "big";
+        default:
+            return "unknown";
+        }
+    }
+};
 } // namespace Catch
 
 using namespace kfr;
@@ -114,32 +141,6 @@ fbase fastrmsdiff(const fbase* x, const fbase* y, size_t sz)
     return std::sqrt(sum / sz);
 }
 
-#if 0
-static fbase testAudioEqualityOffset(const audio_data_interleaved& test,
-                                     const audio_data_interleaved& reference, long long offs)
-{
-    fbase maxErrRMS = 0.0;
-    for (size_t i = 0; i < reference.channels; ++i)
-    {
-        fbase v;
-        v = fastrmsdiff(reference.interlaved().slice(std::max(0ll, -offs), shortlen),
-                        test.interlaved().slice(std::max(0ll, offs), shortlen));
-        if (v > rmsThresholdHigh)
-        {
-            return v;
-        }
-        v = fastrmsdiff(reference.interlaved().slice(std::max(0ll, -offs)),
-                        test.interlaved().slice(std::max(0ll, offs)));
-        if (v > rmsThresholdHigh)
-        {
-            return v;
-        }
-        maxErrRMS = std::max(v, maxErrRMS);
-    }
-    return maxErrRMS;
-}
-#endif
-
 static void testAudioEquality(const audio_data_interleaved& test, const audio_data_interleaved& reference)
 {
     CHECK(test.channels == reference.channels);
@@ -165,8 +166,8 @@ static void testAudioEquality(const audio_data_interleaved& test, const audio_da
     }
 }
 
-static void testAudioEqualityCompressed(const audio_data_interleaved& test,
-                                        const audio_data_interleaved& reference)
+[[maybe_unused]] static void testAudioEqualityCompressed(const audio_data_interleaved& test,
+                                                         const audio_data_interleaved& reference)
 {
     ptrdiff_t sizeDiff = static_cast<ptrdiff_t>(test.size) - static_cast<ptrdiff_t>(reference.size);
     if (sizeDiff == 0)
@@ -182,9 +183,12 @@ static void testAudioEqualityCompressed(const audio_data_interleaved& test,
     else if (sizeDiff > 0)
     {
         // test is longer than reference
-        audio_data_interleaved testTruncated = test.slice(sizeDiff);
-        double errRMS                        = fastrmsdiff(testTruncated.data, reference.data,
-                                                           std::min(testTruncated.total_samples(), reference.total_samples()));
+        double errRMS = fastrmsdiff(test.slice(sizeDiff).data, reference.data, reference.total_samples());
+        if (errRMS < rmsThreshold)
+        {
+            return; // all good
+        }
+        errRMS = fastrmsdiff(test.truncate(reference.size).data, reference.data, reference.total_samples());
         if (errRMS < rmsThreshold)
         {
             return; // all good
@@ -193,9 +197,12 @@ static void testAudioEqualityCompressed(const audio_data_interleaved& test,
     else
     {
         // reference is longer than test, truncate
-        audio_data_interleaved refTruncated = reference.truncate(test.size);
-        double errRMS                       = fastrmsdiff(test.data, refTruncated.data,
-                                                          std::min(test.total_samples(), refTruncated.total_samples()));
+        double errRMS = fastrmsdiff(test.data, reference.slice(-sizeDiff).data, test.total_samples());
+        if (errRMS < rmsThreshold)
+        {
+            return; // all good
+        }
+        errRMS = fastrmsdiff(test.data, reference.truncate(test.size).data, test.total_samples());
         if (errRMS < rmsThreshold)
         {
             return; // all good
@@ -205,6 +212,9 @@ static void testAudioEqualityCompressed(const audio_data_interleaved& test,
     size_t peakTest      = test.find_peak();
     size_t peakReference = reference.find_peak();
     ptrdiff_t peakDiff   = static_cast<ptrdiff_t>(peakTest) - static_cast<ptrdiff_t>(peakReference);
+    CHECK(peakDiff >= -2000);
+    CHECK(peakDiff <= 2000);
+
     // Align peaks
     audio_data_interleaved testAligned = test;
     audio_data_interleaved refAligned  = reference;
@@ -298,8 +308,8 @@ static void testFormat(const std::filesystem::path& dir, bool expectedToFail, bo
             testAudioEquality(*audio, *rawAudio);
         }
 
-        // if (!disable_random_reads)
-        // testRandomReads(decoder, *rawAudio);
+        if (!disable_random_reads)
+            testRandomReads(decoder, *rawAudio);
     }
 }
 
@@ -422,6 +432,16 @@ TEST_CASE("audio_format_os_unsupported")
 static auto data_generator(size_t size, uint32_t ch, double scale)
 {
     return scale * truncate(sinenorm(counter() * ((ch + 4) / 300.f)), size);
+}
+
+static audio_data_planar generate_test_audio(size_t size, uint32_t channels, double scale)
+{
+    audio_data_planar data(channels, size);
+    for (uint32_t ch = 0; ch < channels; ++ch)
+    {
+        data.channel(ch) = data_generator(size, ch, scale);
+    }
+    return data;
 }
 
 static void test_audiodata(audio_decoder& decoder, bool allowLengthMismatch = false,
@@ -846,6 +866,157 @@ TEST_CASE("Each channel is cache-aligned")
     for (size_t ch = 0; ch < data.channels; ++ch)
     {
         CHECK((reinterpret_cast<uintptr_t>(data.channel(ch).data()) % 64) == 0);
+    }
+}
+
+TEST_CASE("encoders")
+{
+    CHECK(create_wave_encoder() != nullptr);
+    CHECK(create_w64_encoder() != nullptr);
+    CHECK(create_raw_encoder({}) != nullptr);
+#ifdef KFR_AUDIO_FLAC
+    CHECK(create_flac_encoder() != nullptr);
+#endif
+    CHECK(create_caff_encoder() != nullptr);
+}
+
+static void test_encode_and_decode(const audio_data_interleaved& audio, const audiofile_format& fmt,
+                                   audio_encoder& encoder, audio_decoder& decoder)
+{
+    std::string name = "temp" + std::to_string(std::random_device{}()) + ".tmp";
+
+    auto e = encoder.open(name, fmt);
+    CHECK(e);
+    if (!e)
+        return;
+
+    e = encoder.write(audio);
+    CHECK(e);
+    if (!e)
+        return;
+
+    auto closed = encoder.close();
+    CHECK(closed);
+    if (!closed)
+        return;
+
+    auto r = decoder.open(name);
+    CHECK(r);
+    if (!r)
+        return;
+
+    auto decoded = decoder.read_all();
+    CHECK(decoded);
+    if (!decoded)
+        return;
+    if (fmt.codec == audiofile_codec::mp3 || fmt.codec == audiofile_codec::alac)
+        testAudioEqualityCompressed(*decoded, audio);
+    else
+        testAudioEquality(*decoded, audio);
+}
+
+TEST_CASE("encode and decode raw")
+{
+    raw_stream_options rawOptions{};
+    rawOptions.endianness  = audiofile_endianness::little;
+    rawOptions.sample_rate = 44100;
+    for (uint32_t channels : { 1, 2, 6, (int)max_audio_channels })
+    {
+        if (channels > max_audio_channels)
+            continue;
+        CAPTURE(channels);
+        rawOptions.channels = channels;
+
+        auto audio = generate_test_audio(44100, channels, dB_to_amp(-3));
+
+        for (sample_t smp_type :
+             { sample_t::f32, sample_t::f64, sample_t::i16, sample_t::i24, sample_t::i32 })
+        {
+            CAPTURE(smp_type);
+            rawOptions.bit_depth = sample_bits(smp_type);
+            rawOptions.codec =
+                sample_is_float(smp_type) ? audiofile_codec::ieee_float : audiofile_codec::lpcm;
+
+            for (audiofile_endianness endianness :
+                 { audiofile_endianness::little, audiofile_endianness::big })
+            {
+                CAPTURE(endianness);
+                rawOptions.endianness = endianness;
+                test_encode_and_decode(audio, rawOptions.to_format(), *create_raw_encoder({ {}, rawOptions }),
+                                       *create_raw_decoder({ {}, rawOptions }));
+            }
+        }
+    }
+}
+
+TEST_CASE("encode and decode")
+{
+    audiofile_format format{};
+    format.sample_rate = 44100;
+
+    for (uint32_t channels : { 1, 2, 6, (int)max_audio_channels })
+    {
+        if (channels > max_audio_channels)
+            continue;
+        CAPTURE(channels);
+        format.channels = channels;
+
+        auto audio = generate_test_audio(44100, channels, dB_to_amp(-3));
+
+        for (sample_t smp_type :
+             { sample_t::f32, sample_t::f64, sample_t::i16, sample_t::i24, sample_t::i32 })
+        {
+            CAPTURE(smp_type);
+            format.bit_depth = sample_bits(smp_type);
+            format.codec = sample_is_float(smp_type) ? audiofile_codec::ieee_float : audiofile_codec::lpcm;
+            format.endianness = audiofile_endianness::little;
+
+            {
+                INFO("wave");
+                test_encode_and_decode(audio, format, *create_wave_encoder(), *create_wave_decoder());
+            }
+            {
+                INFO("w64");
+                test_encode_and_decode(audio, format, *create_w64_encoder(), *create_w64_decoder());
+            }
+
+            if (format.codec == audiofile_codec::lpcm)
+            {
+#ifdef KFR_AUDIO_ALAC
+                if (format.channels <= 8)
+                {
+                    INFO("alac");
+                    audiofile_format formatAlac = format;
+                    formatAlac.codec            = audiofile_codec::alac;
+                    test_encode_and_decode(audio, formatAlac, *create_caff_encoder(), *create_caff_decoder());
+                }
+#endif
+#ifdef KFR_AUDIO_FLAC
+                if (format.channels <= 8)
+                {
+                    INFO("flac");
+                    audiofile_format formatFlac = format;
+                    formatFlac.codec            = audiofile_codec::flac;
+                    test_encode_and_decode(audio, formatFlac, *create_flac_encoder(), *create_flac_decoder());
+                }
+#endif
+            }
+            for (audiofile_endianness endianness :
+                 { audiofile_endianness::little, audiofile_endianness::big })
+            {
+                CAPTURE(endianness);
+                format.endianness = endianness;
+                {
+                    INFO("caff");
+                    test_encode_and_decode(audio, format, *create_caff_encoder(), *create_caff_decoder());
+                }
+                if (format.codec == audiofile_codec::lpcm || format.endianness == audiofile_endianness::big)
+                {
+                    INFO("aiff");
+                    test_encode_and_decode(audio, format, *create_aiff_encoder(), *create_aiff_decoder());
+                }
+            }
+        }
     }
 }
 

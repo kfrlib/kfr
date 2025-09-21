@@ -586,6 +586,8 @@ bool audiofile_format::valid() const noexcept
     {
         if (bit_depth <= 8 || bit_depth > 32)
             return false;
+        if (codec == audiofile_codec::flac && channels > 8)
+            return false;
     }
     else if (codec == audiofile_codec::ieee_float)
     {

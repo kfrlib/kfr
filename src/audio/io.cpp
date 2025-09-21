@@ -93,4 +93,32 @@ std::wstring utf8_to_wstring(std::string_view str)
 } // namespace details
 #endif
 
+std::string to_string(audiofile_error err)
+{
+    switch (err)
+    {
+    case audiofile_error::unknown:
+        return "unknown";
+    case audiofile_error::io_error:
+        return "io_error";
+    case audiofile_error::format_error:
+        return "format_error";
+    case audiofile_error::internal_error:
+        return "internal_error";
+    case audiofile_error::too_large:
+        return "too_large";
+    case audiofile_error::end_of_file:
+        return "end_of_file";
+    case audiofile_error::abort:
+        return "abort";
+    case audiofile_error::not_implemented:
+        return "not_implemented";
+    case audiofile_error::invalid_argument:
+        return "invalid_argument";
+    case audiofile_error::closed:
+        return "closed";
+    default:
+        return "(invalid audiofile_error: " + std::to_string(uint32_t(err)) + ")";
+    }
+}
 } // namespace kfr

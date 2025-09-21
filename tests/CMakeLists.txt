@@ -242,4 +242,6 @@ if (NOT KFR_SKIP_TESTS)
         add_test(NAME all_tests COMMAND ${EMULATOR}
                                         ${PROJECT_BINARY_DIR}/bin/all_tests)
     endif ()
+
+    add_test(NAME audio_test COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/audio_test)
 endif ()

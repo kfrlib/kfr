@@ -196,82 +196,6 @@ template <typename Fn>
     }
 }
 
-#if 0
-template <typename Traits>
-class RIFFContainer
-{
-public:
-    friend Traits;
-
-    friend struct RIFFEncoder<RIFFContainer<Traits>>;
-
-    using MainHeader                                     = typename Traits::MainHeader;
-    using IDType                                         = typename Traits::IDType;
-    using SizeType                                       = typename Traits::SizeType;
-    using MetadataParser                                 = typename Traits::MetadataParser;
-    constexpr static int chunkAlignment                  = Traits::chunkAlignment;
-    constexpr static bool chunkSizeIsAligned             = Traits::chunkSizeIsAligned;
-    using ChunkType                                      = typename Traits::ChunkType;
-    constexpr static std::optional<IDType> metadataChunk = Traits::metadataChunk;
-    constexpr static IDType audioChunk                   = Traits::audioChunk;
-    using EncodingOptions                                = typename Traits::EncodingOptions;
-    using DecodingOptions                                = typename Traits::DecodingOptions;
-
-    static_assert(chunkAlignment <= 16);
-    static_assert(chunkAlignment > 0);
-
-    struct ChunkInfo
-    {
-        ChunkType chunk;
-        /// @brief offset to chunk data, right after header
-        uint64_t fileOffset;
-        /// @brief byte size of chunk data, excluding header
-        uint64_t byteSize;
-    };
-    RIFFContainer() : m_stream(nullptr) {}
-
-    void open(std::FILE* stream) { m_stream = stream; }
-
-    ~RIFFContainer() { ASSERT(!m_currentChunkToWrite); }
-
-    const std::vector<ChunkInfo>& chunks() const { return m_chunks; }
-    uint64_t fileSize() const { return m_fileSize; }
-
-    [[nodiscard]] std::optional<size_t> findChunk(IDType id) const
-    {
-        for (size_t i = 0; i < m_chunks.size(); i++)
-        {
-            if (m_chunks[i].chunk.id == id)
-                return i;
-        }
-        return std::nullopt;
-    }
-
-    EncodingOptions encodingOptions;
-
-    uint64_t framesWritten() const { return m_framesWritten; }
-
-    void close()
-    {
-        m_framesWritten = 0;
-        m_currentChunkToWrite.reset();
-        m_currentChunkToRead.reset();
-        m_chunks.clear();
-        m_fileSize = 0;
-        m_header   = {};
-        m_stream   = nullptr;
-    }
-
-protected:
-    std::FILE* m_stream = nullptr;
-    MainHeader m_header{};
-    uint64_t m_fileSize = 0;
-    std::vector<ChunkInfo> m_chunks;
-    std::optional<size_t> m_currentChunkToWrite;
-    uint64_t m_framesWritten = 0;
-};
-#endif
-
 template <typename Decoder, typename Traits>
 struct RIFFDecoder : public audio_decoder
 {
@@ -450,6 +374,8 @@ public:
                 static_cast<Decoder*>(this)->chunkGetSize(chunk, position);
             if (!chunkRealSize)
                 return unexpected(chunkRealSize.error());
+            if (*chunkRealSize > m_fileSize - position)
+                return unexpected(audiofile_error::format_error);
             m_chunks.push_back(ChunkInfo{ chunk, position + sizeof(ChunkType), *chunkRealSize });
             position += *chunkRealSize + sizeof(ChunkType);
             position = align_up(position, chunkAlignment);
@@ -733,9 +659,9 @@ public:
                 return unexpected(audiofile_error::io_error);
             if (KFR_IO_SEEK_64(m_file.get(), fileOffset, SEEK_SET) != 0)
                 return unexpected(audiofile_error::io_error);
-            if (chunkAlignment > 1)
-                return writePadding(align_up(fileOffset, chunkAlignment) - fileOffset);
         }
+        if (chunkAlignment > 1)
+            return writePadding(align_up(fileOffset, chunkAlignment) - fileOffset);
         return {};
     }
 
@@ -906,6 +832,9 @@ public:
             return unexpected(result.error());
         uint64_t totalLength = m_format->total_frames;
         m_format.reset();
+
+        if (totalLength == 0)
+            return unexpected(audiofile_error::empty_file);
         return totalLength;
     }
 

@@ -44,36 +44,16 @@ enum class audiofile_error : uint32_t
     io_error         = 1,
     format_error     = 2,
     internal_error   = 3,
-    too_large_error  = 4, // data chunk too large for standard WAV
+    too_large        = 4, // data chunk too large for standard WAV
     end_of_file      = 5,
     abort            = 6,
     not_implemented  = 7,
     invalid_argument = 8,
     closed           = 9,
+    empty_file       = 10, // file is empty or does not contain any audio data
 };
 
-inline std::string to_string(audiofile_error err)
-{
-    switch (err)
-    {
-    case audiofile_error::unknown:
-        return "unknown";
-    case audiofile_error::io_error:
-        return "io_error";
-    case audiofile_error::format_error:
-        return "format_error";
-    case audiofile_error::internal_error:
-        return "internal_error";
-    case audiofile_error::too_large_error:
-        return "too_large_error";
-    case audiofile_error::end_of_file:
-        return "end_of_file";
-    case audiofile_error::abort:
-        return "abort";
-    default:
-        return "(invalid audiofile_error)";
-    }
-}
+std::string to_string(audiofile_error err);
 
 constexpr inline size_t default_audio_frames_to_read = 16384;
 

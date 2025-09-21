@@ -157,7 +157,8 @@ expected<void, audiofile_error> RawEncoder::write(const audio_data_interleaved& 
     sample_t typ = m_format->sample_type();
     if (typ == sample_t::unknown)
         return unexpected(audiofile_error::format_error);
-    samples_store(typ, interleaved.data(), audio.data, audio.total_samples(), quant);
+    samples_store(typ, interleaved.data(), audio.data, audio.total_samples(), quant,
+                  m_format->endianness != audiofile_endianness::little);
     m_format->total_frames += framesToWrite;
     size_t wr = fwrite(interleaved.data(), 1, interleaved.size(), file.get());
     if (wr != interleaved.size())
@@ -170,6 +171,8 @@ expected<uint64_t, audiofile_error> RawEncoder::close()
     file.reset();
     uint64_t total_frames = m_format->total_frames;
     m_format.reset();
+    if (total_frames == 0)
+        return unexpected(audiofile_error::empty_file);
     return total_frames;
 }
 
