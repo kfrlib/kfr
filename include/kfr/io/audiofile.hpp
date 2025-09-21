@@ -32,6 +32,14 @@
 #include "../simd/vec.hpp"
 #include "file.hpp"
 
+#ifdef KFR_COMPILER_IS_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 namespace kfr
 {
 
@@ -274,3 +282,9 @@ extern template struct audio_reader_mp3<f64>;
 #endif
 
 } // namespace kfr
+
+#ifdef KFR_COMPILER_IS_MSVC
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif

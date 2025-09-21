@@ -50,7 +50,6 @@ public:
     void close() override;
 
 protected:
-    std::unique_ptr<std::FILE, details::stdFILE_deleter> file;
     std::unique_ptr<FLAC__StreamDecoder, libflac_deleter> decoder;
     audio_data_interleaved packet;
     audio_data_interleaved buffer;
@@ -85,7 +84,6 @@ public:
     [[nodiscard]] expected<uint64_t, audiofile_error> close() override;
 
 protected:
-    std::unique_ptr<std::FILE, details::stdFILE_deleter> file;
     std::unique_ptr<FLAC__StreamEncoder, libflac_deleter> encoder;
     bool flacError = false;
     flac_encoding_options options;
@@ -246,14 +244,12 @@ expected<audiofile_format, audiofile_error> FLACDecoder::open(const file_path& p
     }
 
     auto f = fopen_path(path, open_file_mode::read_existing);
-    if (f)
-        file.reset(*f);
-    else
+    if (!f)
         return unexpected(audiofile_error::io_error);
 
     FLAC__StreamDecoderInitStatus init_status =
-        FLAC__stream_decoder_init_FILE(decoder.get(), file.get(), &libflac_write_callback,
-                                       &libflac_metadata_callback, &libflac_error_callback, this);
+        FLAC__stream_decoder_init_FILE(decoder.get(), *f, &libflac_write_callback, &libflac_metadata_callback,
+                                       &libflac_error_callback, this);
     if (init_status == FLAC__STREAM_DECODER_INIT_STATUS_UNSUPPORTED_CONTAINER)
         return unexpected(audiofile_error::format_error);
     else if (init_status != FLAC__STREAM_DECODER_INIT_STATUS_OK)
@@ -324,7 +320,6 @@ void FLACDecoder::close()
 {
     packet.reset();
     decoder.reset();
-    file.reset();
     flacError  = false;
     dataOffset = 0;
     m_format.reset();
@@ -334,9 +329,7 @@ expected<void, audiofile_error> FLACEncoder::open(const file_path& path, const a
                                                   audio_decoder* copyMetadataFrom)
 {
     auto f = fopen_path(path, open_file_mode::write_new);
-    if (f)
-        file.reset(*f);
-    else
+    if (!f)
         return unexpected(audiofile_error::io_error);
 
     encoder.reset(FLAC__stream_encoder_new());
@@ -364,7 +357,7 @@ expected<void, audiofile_error> FLACEncoder::open(const file_path& path, const a
     }
 
     FLAC__StreamEncoderInitStatus init_status =
-        FLAC__stream_encoder_init_FILE(encoder.get(), file.get(), nullptr, this);
+        FLAC__stream_encoder_init_FILE(encoder.get(), *f, nullptr, this);
     if (init_status != FLAC__STREAM_ENCODER_INIT_STATUS_OK)
         return unexpected(audiofile_error::internal_error);
 
@@ -403,7 +396,6 @@ expected<uint64_t, audiofile_error> FLACEncoder::close()
         FLAC__stream_encoder_finish(encoder.get());
         encoder.reset();
     }
-    file.reset();
     flacError             = false;
     uint64_t totalWritten = m_format ? m_format->total_frames : 0;
     m_format.reset();
