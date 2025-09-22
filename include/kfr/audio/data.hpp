@@ -255,6 +255,8 @@ struct audiofile_format
 
     audio_sample_type sample_type() const;
     audio_sample_type sample_type_lpcm() const;
+
+    bool operator==(const audiofile_format& other) const noexcept = default;
 };
 
 struct audio_stat
@@ -321,6 +323,8 @@ struct audio_data
     size_t capacity; /**< Allocated capacity per channel. */
     int64_t position = 0; /**< Position of the first sample in the audio data. */
     std::shared_ptr<void> deallocator; /**< Deallocator for the data. */
+
+    bool operator==(const audio_data& other) const noexcept = default;
 
     [[nodiscard]] constexpr audio_data() noexcept : size(0), capacity(0) {}
 

@@ -123,7 +123,6 @@ protected:
     std::unique_ptr<FLAC__StreamDecoder, libflac_deleter> decoder;
     audio_data_interleaved packet;
     audio_data_interleaved buffer;
-    std::shared_ptr<binary_reader> reader;
     bool flacError          = false;
     FLAC__uint64 dataOffset = 0;
     flac_decoding_options options;
@@ -212,7 +211,7 @@ protected:
                                                                void* client_data)
     {
         FLACDecoder* instance = reinterpret_cast<FLACDecoder*>(client_data);
-        size_t read_bytes     = instance->reader->read(buffer, *bytes);
+        size_t read_bytes     = instance->m_reader->read(buffer, *bytes);
         if (read_bytes == 0)
             return FLAC__STREAM_DECODER_READ_STATUS_END_OF_STREAM;
         *bytes = read_bytes;
@@ -223,7 +222,7 @@ protected:
                                                                void* client_data)
     {
         FLACDecoder* instance = reinterpret_cast<FLACDecoder*>(client_data);
-        return instance->reader->seek(absolute_byte_offset, seek_origin::begin)
+        return instance->m_reader->seek(absolute_byte_offset, seek_origin::begin)
                    ? FLAC__STREAM_DECODER_SEEK_STATUS_OK
                    : FLAC__STREAM_DECODER_SEEK_STATUS_ERROR;
     }
@@ -232,7 +231,7 @@ protected:
                                                                void* client_data)
     {
         FLACDecoder* instance = reinterpret_cast<FLACDecoder*>(client_data);
-        *absolute_byte_offset = instance->reader->tell();
+        *absolute_byte_offset = instance->m_reader->tell();
         return FLAC__STREAM_DECODER_TELL_STATUS_OK;
     }
 
@@ -241,7 +240,7 @@ protected:
                                                                    void* client_data)
     {
         FLACDecoder* instance = reinterpret_cast<FLACDecoder*>(client_data);
-        auto size             = instance->reader->size();
+        auto size             = instance->m_reader->size();
         if (size)
         {
             *stream_length = *size;
@@ -256,7 +255,7 @@ protected:
     static FLAC__bool libflac_eof_callback(const FLAC__StreamDecoder* decoder, void* client_data)
     {
         FLACDecoder* instance = reinterpret_cast<FLACDecoder*>(client_data);
-        return instance->reader->tell() >= instance->reader->size().value_or(0);
+        return instance->m_reader->tell() >= instance->m_reader->size().value_or(0);
     }
 };
 
@@ -308,11 +307,11 @@ protected:
 
 // inline bool supportsOggFlac = FLAC_API_SUPPORTS_OGG_FLAC;
 
-expected<audiofile_format, audiofile_error> FLACDecoder::open(std::shared_ptr<binary_reader> reader_)
+expected<audiofile_format, audiofile_error> FLACDecoder::open(std::shared_ptr<binary_reader> reader)
 {
-    if (!reader_)
+    if (!reader)
         return unexpected(audiofile_error::invalid_argument);
-    reader = std::move(reader_);
+    m_reader = std::move(reader);
     decoder.reset(FLAC__stream_decoder_new());
     if (!decoder)
         return unexpected(audiofile_error::internal_error);
@@ -384,10 +383,10 @@ expected<audio_data_interleaved, audiofile_error> FLACDecoder::read_packet()
 
 expected<void, audiofile_error> FLACDecoder::seek(uint64_t position)
 {
+    if (!m_reader)
+        return unexpected(audiofile_error::closed);
     if (!decoder)
         return unexpected(audiofile_error::internal_error);
-    if (!m_format)
-        return unexpected(audiofile_error::closed);
     if (position > m_format->total_frames)
         return unexpected(audiofile_error::end_of_file);
 

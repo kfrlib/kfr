@@ -34,11 +34,7 @@ namespace kfr
 struct RawDecoder : public audio_decoder
 {
 public:
-    RawDecoder(raw_decoding_options options)
-    {
-        this->options = std::move(options);
-        m_format      = this->options.raw.to_format();
-    }
+    RawDecoder(raw_decoding_options options) { this->options = std::move(options); }
     [[nodiscard]] expected<audiofile_format, audiofile_error> open(
         std::shared_ptr<binary_reader> reader) override;
     [[nodiscard]] expected<size_t, audiofile_error> read_to(const audio_data_interleaved& data) override;
@@ -99,6 +95,8 @@ expected<audiofile_format, audiofile_error> RawDecoder::open(std::shared_ptr<bin
 
 expected<size_t, audiofile_error> RawDecoder::read_to(const audio_data_interleaved& data)
 {
+    if (!m_reader)
+        return unexpected(audiofile_error::closed);
     // borrowed from RIFF::readPCMAudio
     size_t framesToRead = default_audio_frames_to_read;
 
@@ -120,6 +118,8 @@ expected<size_t, audiofile_error> RawDecoder::read_to(const audio_data_interleav
 
 expected<void, audiofile_error> RawDecoder::seek(uint64_t position)
 {
+    if (!m_reader)
+        return unexpected(audiofile_error::closed);
     if (position > m_format->total_frames)
         return unexpected(audiofile_error::end_of_file);
     if (!m_reader->seek(position * m_format->bytes_per_pcm_frame(), seek_origin::begin))
@@ -145,7 +145,7 @@ expected<void, audiofile_error> RawEncoder::open(std::shared_ptr<binary_writer> 
 
 expected<void, audiofile_error> RawEncoder::write(const audio_data_interleaved& audio)
 {
-    if (!m_format)
+    if (!m_writer)
         return unexpected(audiofile_error::closed);
     if (audio.channels != m_format->channels)
         return unexpected(audiofile_error::invalid_argument);

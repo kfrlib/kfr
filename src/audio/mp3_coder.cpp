@@ -122,6 +122,8 @@ static_assert(std::is_same_v<mp3d_sample_t, float>);
 
 expected<size_t, audiofile_error> MP3Decoder::read_to(const audio_data_interleaved& output)
 {
+    if (!m_reader)
+        return unexpected(audiofile_error::closed);
     if (output.channels != m_format->channels || output.size == 0)
     {
         return unexpected(audiofile_error::invalid_argument);
@@ -150,6 +152,8 @@ expected<size_t, audiofile_error> MP3Decoder::read_to(const audio_data_interleav
 
 expected<void, audiofile_error> MP3Decoder::seek(uint64_t position)
 {
+    if (!m_reader)
+        return unexpected(audiofile_error::closed);
     if (mp3dec_ex_seek(&*decex, position * m_format->channels))
     {
         return unexpected(audiofile_error::format_error);

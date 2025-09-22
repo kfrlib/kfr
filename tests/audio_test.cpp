@@ -951,6 +951,158 @@ TEST_CASE("encode and decode raw")
     }
 }
 
+static void sequence_1(std::unique_ptr<audio_encoder>&& e, const audiofile_format& format)
+{
+    REQUIRE(e != nullptr);
+    std::string name1 = "temp" + std::to_string(std::random_device{}()) + ".tmp";
+    std::string name2 = "temp" + std::to_string(std::random_device{}()) + ".tmp";
+
+    auto opened = e->open(name1, format);
+    CHECK(opened);
+
+    auto closed = e->close();
+    CHECK(!closed);
+    CHECK(closed.error() == audiofile_error::empty_file);
+
+    auto written = e->write({}); // writing without opening
+    CHECK(!written);
+    CHECK(written.error() == audiofile_error::closed);
+
+    opened = e->open(name2, format);
+    CHECK(opened);
+
+    closed = e->close();
+    CHECK(!closed);
+    CHECK(closed.error() == audiofile_error::empty_file);
+}
+
+TEST_CASE("encoding sequence 1")
+{
+    audiofile_format format{};
+    format.sample_rate = 44100;
+    format.channels    = 2;
+    format.bit_depth   = 16;
+    format.codec       = audiofile_codec::lpcm;
+    format.endianness  = audiofile_endianness::little;
+    {
+        INFO("wave");
+        sequence_1(create_wave_encoder(), format);
+    }
+    {
+        INFO("aiff");
+        sequence_1(create_aiff_encoder(), format);
+    }
+    {
+        INFO("w64");
+        sequence_1(create_w64_encoder(), format);
+    }
+    {
+        INFO("caff");
+        sequence_1(create_caff_encoder(), format);
+    }
+#ifdef KFR_AUDIO_FLAC
+    {
+        auto flacFormat  = format;
+        flacFormat.codec = audiofile_codec::flac;
+        INFO("flac");
+        sequence_1(create_flac_encoder(), flacFormat);
+    }
+#endif
+    {
+        INFO("raw");
+        sequence_1(create_raw_encoder({}), format);
+    }
+}
+
+static void sequence_2(std::unique_ptr<audio_decoder>&& d, const file_path& file)
+{
+    REQUIRE(d != nullptr);
+
+    auto read = d->read(1000);
+    CHECK(!read);
+    CHECK(read.error() == audiofile_error::closed);
+
+    CHECK(d->format() == std::nullopt);
+    CHECK(d->reader() == nullptr);
+
+    auto opened = d->open("this_file_does_not_exist");
+    CHECK(!opened);
+    CHECK(opened.error() == audiofile_error::not_found);
+
+    read = d->read(1000);
+    CHECK(!read);
+    CHECK(read.error() == audiofile_error::closed);
+
+    auto seek = d->seek(0);
+    CHECK(!seek);
+    CHECK(seek.error() == audiofile_error::closed);
+
+    CHECK(d->format() == std::nullopt);
+    CHECK(d->reader() == nullptr);
+
+    opened = d->open(file);
+    CHECK(opened);
+    CHECK(opened->valid());
+    CHECK(d->format());
+    CHECK(*d->format() == *opened);
+    CHECK(d->reader() != nullptr);
+
+    d->close();
+    CHECK(d->format() == std::nullopt);
+    CHECK(d->reader() == nullptr);
+    d->close();
+}
+
+TEST_CASE("decoding sequence 2")
+{
+    {
+        INFO("wave");
+        sequence_2(create_wave_decoder(),
+                   KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/testdata_2c_pcm_s24le.wav"));
+    }
+    {
+        INFO("aiff");
+        sequence_2(create_aiff_decoder(), KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/testdata_2c_s16.aiff"));
+    }
+    {
+        INFO("w64");
+        sequence_2(create_w64_decoder(), KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/testdata_2c_s16.w64"));
+    }
+    {
+        INFO("caff");
+        sequence_2(create_caff_decoder(),
+                   KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/testdata_2c_f32be.caf"));
+    }
+#ifdef KFR_AUDIO_FLAC
+    {
+        INFO("flac");
+        sequence_2(create_flac_decoder(), KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/testdata_2c_s16.flac"));
+    }
+#endif
+#ifdef KFR_AUDIO_MP3
+    {
+        INFO("mp3");
+        sequence_2(create_mp3_decoder(), KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/testdata_2c.mp3"));
+    }
+#endif
+    {
+        INFO("raw");
+        raw_decoding_options rawOptions{};
+        rawOptions.raw.channels  = 2;
+        rawOptions.raw.bit_depth = 32;
+        rawOptions.raw.codec     = audiofile_codec::ieee_float;
+        sequence_2(create_raw_decoder(rawOptions),
+                   KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/testdata_2c.f32le"));
+    }
+#ifdef KFR_OS_WIN
+    {
+        INFO("mediafoundation");
+        sequence_2(create_mediafoundation_decoder(),
+                   KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/testdata_2c_pcm_s24le.wav"));
+    }
+#endif
+}
+
 TEST_CASE("encode and decode")
 {
     audiofile_format format{};

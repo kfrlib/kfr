@@ -421,19 +421,20 @@ expected<audiofile_format, audiofile_error> MFDecoder::open(std::shared_ptr<bina
 
 expected<size_t, audiofile_error> MFDecoder::read_to(const audio_data_interleaved& output)
 {
+    if (!m_reader)
+        return unexpected(audiofile_error::closed);
     return read_buffered(output, [this]() { return read_packet(); }, buffer);
 }
 
 expected<audio_data_interleaved, audiofile_error> MFDecoder::read_packet()
 {
+    if (!m_reader)
+        return unexpected(audiofile_error::closed);
     ComPtr<IMFSample> pSample;
     ComPtr<IMFMediaBuffer> pBuffer;
     DWORD dwFlags    = 0;
     BYTE* pAudioData = NULL;
     DWORD cbBuffer   = 0;
-
-    if (!m_format.has_value())
-        return unexpected(audiofile_error::closed);
 
     audio_data_interleaved data(m_format->channels);
 
@@ -472,6 +473,8 @@ expected<audio_data_interleaved, audiofile_error> MFDecoder::read_packet()
 }
 expected<void, audiofile_error> MFDecoder::seek(uint64_t position)
 {
+    if (!m_reader)
+        return unexpected(audiofile_error::closed);
     uint64_t hnsPosition = std::floor(position * 10'000'000.0 / m_format->sample_rate);
 
     PROPVARIANT var;
