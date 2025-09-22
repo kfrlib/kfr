@@ -406,6 +406,29 @@ KFR_FUNCTION expression_iir<filters, T, E1, true> iir(E1&& e1,
     return expression_iir<filters, T, E1, true>(std::forward<E1>(e1), state);
 }
 
+/**
+ * @brief Applies forward and backward filtering to the input array using the given IIR filter parameters.
+ *
+ * This function performs zero-phase filtering by first applying the IIR filter in the forward direction
+ * and then applying it again in the reverse direction. The result is a filtered signal with minimal phase
+ * distortion.
+ *
+ * @tparam T The data type of the elements in the input array.
+ * @tparam Tag The tag type associated with the input array.
+ * @tparam Itag The tag type associated with the IIR filter parameters.
+ *
+ * @param arr The input array to be filtered. This array is modified in-place to store the filtered result.
+ * @param params The IIR filter parameters used for filtering the input array.
+ */
+template <typename T, univector_tag Tag, size_t Itag>
+KFR_FUNCTION void filtfilt(univector<T, Tag>& arr, const iir_params<T, Itag>& params)
+{
+    // Forward pass
+    arr = iir(arr, params);
+    // Backward pass
+    process(reverse(arr), iir(reverse(arr), params));
+}
+
 #define KFR_BIQUAD_DEPRECATED                                                                                \
     [[deprecated("biquad(param, expr) prototype is deprecated. Use iir(expr, param) with swapped "           \
                  "arguments")]]

@@ -195,6 +195,23 @@ int main()
     plot_save("chebyshev2_lowpass8", output,
               options + ", title='8th-order Chebyshev type II filter, lowpass'");
 
+    // --------------------------------------------------------------------------------------
+    // ----------------------------- Forward-Backward Filtering -----------------------------
+    // --------------------------------------------------------------------------------------
+    {
+        // Create a 4th-order Butterworth lowpass filter with a cutoff frequency of 500 Hz and a sample rate
+        // of 48 kHz
+        zpk<fbase> filt = iir_lowpass(butterworth<fbase>(4), 500, 48000);
+
+        output      = zeros();
+        output[512] = 1;
+
+        // Apply forward-backward filtering to a unit impulse signal to get zero-phase distortion
+        filtfilt(output, to_sos(filt));
+    }
+    plot_save("butterworth_filtfilt4", output,
+              options + ", phasearg='auto', title='4th-order Butterworth filter, lowpass, filtfilt'");
+
     println("SVG plots have been saved to svg directory");
 
     return 0;

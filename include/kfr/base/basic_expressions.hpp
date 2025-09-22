@@ -345,7 +345,7 @@ struct expression_padded : public expression_with_arguments<Arg>
 
     KFR_MEM_INTRINSIC expression_padded(Arg&& arg, typename ArgTraits::value_type fill_value)
         : expression_with_arguments<Arg>{ std::forward<Arg>(arg) }, fill_value(std::move(fill_value)),
-          input_shape(ArgTraits::get_shape(this->first()))
+          input_shape(ArgTraits::get_shape((this -> first())))
     {
     }
 };
@@ -414,7 +414,7 @@ struct expression_reverse : public expression_with_arguments<Arg>
 
     KFR_MEM_INTRINSIC expression_reverse(Arg&& arg)
         : expression_with_arguments<Arg>{ std::forward<Arg>(arg) },
-          input_shape(ArgTraits::get_shape(this->first()))
+          input_shape(ArgTraits::get_shape(this -> first()))
     {
     }
 };
@@ -451,6 +451,13 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_reverse<Arg>& self, const 
                                      const axis_params<Axis, N>& sh)
 {
     return reverse(get_elements(self.first(), self.input_shape.sub(index).sub(shape<Traits::dims>(N)), sh));
+}
+template <typename Arg, index_t Axis, size_t N, typename Traits = expression_traits<expression_reverse<Arg>>,
+          typename T = typename Traits::value_type>
+KFR_INTRINSIC void set_elements(expression_reverse<Arg>& self, const shape<Traits::dims>& index,
+                                const axis_params<Axis, N>& sh, const std::type_identity_t<vec<T, N>>& value)
+{
+    set_elements(self.first(), self.input_shape.sub(index).sub(shape<Traits::dims>(N)), sh, reverse(value));
 }
 
 } // namespace KFR_ARCH_NAME
