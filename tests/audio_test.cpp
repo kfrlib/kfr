@@ -516,11 +516,11 @@ TEST_CASE("aiff_decoder")
 TEST_CASE("raw_decoder: le")
 {
     raw_decoding_options info{};
-    info.raw.codec       = audiofile_codec::ieee_float;
-    info.raw.endianness  = audiofile_endianness::little;
-    info.raw.bit_depth   = 32;
-    info.raw.channels    = 2;
-    info.raw.sample_rate = 44100;
+    info.format.codec       = audiofile_codec::ieee_float;
+    info.format.endianness  = audiofile_endianness::little;
+    info.format.bit_depth   = 32;
+    info.format.channels    = 2;
+    info.format.sample_rate = 44100;
 
     auto decoder = create_raw_decoder(info);
     REQUIRE(decoder != nullptr);
@@ -537,11 +537,11 @@ TEST_CASE("raw_decoder: le")
 TEST_CASE("raw_decoder: be24")
 {
     raw_decoding_options info{};
-    info.raw.codec       = audiofile_codec::lpcm;
-    info.raw.endianness  = audiofile_endianness::big;
-    info.raw.bit_depth   = 24;
-    info.raw.channels    = 2;
-    info.raw.sample_rate = 44100;
+    info.format.codec       = audiofile_codec::lpcm;
+    info.format.endianness  = audiofile_endianness::big;
+    info.format.bit_depth   = 24;
+    info.format.channels    = 2;
+    info.format.sample_rate = 44100;
 
     auto decoder = create_raw_decoder(info);
     REQUIRE(decoder != nullptr);
@@ -559,21 +559,19 @@ TEST_CASE("raw_encoder: s32")
 {
     std::string name = "temp" + std::to_string(std::random_device{}()) + ".raw";
 
-    raw_encoding_options info{};
-    info.raw.codec       = audiofile_codec::lpcm;
-    info.raw.endianness  = audiofile_endianness::little;
-    info.raw.bit_depth   = 32;
-    info.raw.channels    = 2;
-    info.raw.sample_rate = 44100;
+    audiofile_format info{};
+    info.codec       = audiofile_codec::lpcm;
+    info.endianness  = audiofile_endianness::little;
+    info.bit_depth   = 32;
+    info.channels    = 2;
+    info.sample_rate = 44100;
 
-    auto encoder = create_raw_encoder(info);
+    auto encoder = create_raw_encoder({});
     REQUIRE(encoder != nullptr);
-    auto r = encoder->open(name, {});
+    auto r = encoder->open(name, info);
     REQUIRE(r);
-    // No need to call prepare for raw files
 
-    audiofile_format info2 = info.raw.to_format();
-    audio_data data(info2.channels, 44100);
+    audio_data data(info.channels, 44100);
     data.channel(0) = data_generator(data.size, 0, dB_to_amp(-3));
     data.channel(1) = data_generator(data.size, 1, dB_to_amp(-3));
 
@@ -584,9 +582,7 @@ TEST_CASE("raw_encoder: s32")
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100)); // wait for file to be written
 
-    raw_decoding_options info3{};
-    info3.raw    = info.raw;
-    auto decoder = create_raw_decoder(info3);
+    auto decoder = create_raw_decoder({ {}, info });
     REQUIRE(decoder != nullptr);
     auto r2 = decoder->open(name);
     REQUIRE(r2);
@@ -918,15 +914,15 @@ static void test_encode_and_decode(const audio_data_interleaved& audio, const au
 
 TEST_CASE("encode and decode raw")
 {
-    raw_stream_options rawOptions{};
-    rawOptions.endianness  = audiofile_endianness::little;
-    rawOptions.sample_rate = 44100;
+    audiofile_format rawFormat{};
+    rawFormat.endianness  = audiofile_endianness::little;
+    rawFormat.sample_rate = 44100;
     for (uint32_t channels : { 1, 2, 6, (int)max_audio_channels })
     {
         if (channels > max_audio_channels)
             continue;
         CAPTURE(channels);
-        rawOptions.channels = channels;
+        rawFormat.channels = channels;
 
         auto audio = generate_test_audio(44100, channels, dB_to_amp(-3));
 
@@ -935,17 +931,17 @@ TEST_CASE("encode and decode raw")
                audio_sample_type::i32 })
         {
             CAPTURE(smp_type);
-            rawOptions.bit_depth = audio_sample_bit_depth(smp_type);
-            rawOptions.codec =
+            rawFormat.bit_depth = audio_sample_bit_depth(smp_type);
+            rawFormat.codec =
                 audio_sample_is_float(smp_type) ? audiofile_codec::ieee_float : audiofile_codec::lpcm;
 
             for (audiofile_endianness endianness :
                  { audiofile_endianness::little, audiofile_endianness::big })
             {
                 CAPTURE(endianness);
-                rawOptions.endianness = endianness;
-                test_encode_and_decode(audio, rawOptions.to_format(), *create_raw_encoder({ {}, rawOptions }),
-                                       *create_raw_decoder({ {}, rawOptions }));
+                rawFormat.endianness = endianness;
+                test_encode_and_decode(audio, rawFormat, *create_raw_encoder({}),
+                                       *create_raw_decoder({ {}, rawFormat }));
             }
         }
     }
@@ -1088,9 +1084,10 @@ TEST_CASE("decoding sequence 2")
     {
         INFO("raw");
         raw_decoding_options rawOptions{};
-        rawOptions.raw.channels  = 2;
-        rawOptions.raw.bit_depth = 32;
-        rawOptions.raw.codec     = audiofile_codec::ieee_float;
+        rawOptions.format.sample_rate = 44100;
+        rawOptions.format.channels    = 2;
+        rawOptions.format.bit_depth   = 32;
+        rawOptions.format.codec       = audiofile_codec::ieee_float;
         sequence_2(create_raw_decoder(rawOptions),
                    KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/testdata_2c.f32le"));
     }

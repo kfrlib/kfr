@@ -80,7 +80,6 @@ extern std::string audio_writing_software;
 
 struct raw_encoding_options : public audio_encoding_options
 {
-    raw_stream_options raw;
 };
 
 std::unique_ptr<audio_encoder> create_raw_encoder(const raw_encoding_options& options = {});

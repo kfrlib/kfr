@@ -55,24 +55,4 @@ std::string to_string(audiofile_error err);
 
 constexpr inline size_t default_audio_frames_to_read = 16384;
 
-struct raw_stream_options
-{
-    uint32_t channels               = 2;
-    uint32_t sample_rate            = 44100;
-    audiofile_codec codec           = audiofile_codec::lpcm; // only lpcm and ieee_float supported
-    audiofile_endianness endianness = audiofile_endianness::little;
-    int8_t bit_depth                = 16;
-
-    audiofile_format to_format() const noexcept
-    {
-        audiofile_format result{};
-        result.channels    = channels;
-        result.sample_rate = sample_rate;
-        result.codec       = codec;
-        result.endianness  = endianness;
-        result.bit_depth   = bit_depth;
-        return result;
-    }
-};
-
 } // namespace kfr

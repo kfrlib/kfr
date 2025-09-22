@@ -75,7 +75,7 @@ expected<audiofile_format, audiofile_error> RawDecoder::open(std::shared_ptr<bin
         return unexpected(audiofile_error::invalid_argument);
     m_reader = std::move(reader);
 
-    m_format = this->options.raw.to_format();
+    m_format = this->options.format;
 
     if (auto size = m_reader->size())
     {
@@ -139,7 +139,7 @@ expected<void, audiofile_error> RawEncoder::open(std::shared_ptr<binary_writer> 
     if (!writer)
         return unexpected(audiofile_error::invalid_argument);
     m_writer = std::move(writer);
-    m_format = options.raw.to_format();
+    m_format = format;
     return {};
 }
 

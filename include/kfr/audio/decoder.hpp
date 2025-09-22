@@ -244,7 +244,7 @@ struct audio_decoding_options
  */
 struct raw_decoding_options : public audio_decoding_options
 {
-    raw_stream_options raw; ///< Raw stream decoding configuration.
+    audiofile_format format;
 };
 
 /**
