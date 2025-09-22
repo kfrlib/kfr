@@ -18,7 +18,7 @@ jobs:
         mkdir "$TMP_DIR/sde-bin"
         tar -C "$TMP_DIR/sde-bin" -xJf "$TMP_DIR/sde.tar.xz" --strip 1
         sudo ln -s $TMP_DIR/sde-bin/sde64 /usr/bin/sde
-        vcpkg install libflac minimp3 alac
+        vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
         ci/run.sh build-release -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DKFR_ARCH=avx2 -DKFR_USE_SDE=ON -DCMAKE_CXX_COMPILER=clang++-20 -DCMAKE_BUILD_TYPE=Release
 
   ubuntu22-clang20-arm:
@@ -70,7 +70,7 @@ jobs:
     - name: Tests
       run: |
         sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build clang-19
-        vcpkg install libflac minimp3
+        vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
         ci/run.sh build-release -DCMAKE_PREFIX_PATH=/usr/local/share/vcpkg/installed/arm64-linux -DKFR_ARCH=target -DENABLE_EXAMPLES=OFF -DCMAKE_CXX_COMPILER=clang++-19 -DCMAKE_BUILD_TYPE=Release
 
   windows2022-clang21-x86:
@@ -93,7 +93,7 @@ jobs:
         call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
         set CXXFLAGS=-m32
         set PATH=C:\sde;%PATH%
-        vcpkg install libflac minimp3 alac
+        vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
         ci\run.cmd build-release -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x86-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_MULTIARCH=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
 
   windows2022-clang21-x86_64:
@@ -115,7 +115,7 @@ jobs:
         "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "%TMP_DIR%/sde.zip"
         call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
         set PATH=C:\sde;%PATH%
-        vcpkg install libflac minimp3 alac
+        vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
         ci\run.cmd build-release -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x64-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_MULTIARCH=ON -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
 
   windows2022-clang21-arm64:
@@ -198,7 +198,7 @@ jobs:
       run: |
         set -e
         brew install ninja
-        vcpkg install libflac minimp3 alac
+        vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
         ci/run.sh build-release -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-osx -DCMAKE_OSX_ARCHITECTURES=x86_64 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse42,avx -DKFR_ARCH=target -DCMAKE_BUILD_TYPE=Release      
 
   macos15-xcode16-arm64:
@@ -210,7 +210,7 @@ jobs:
       run: |
         set -e
         brew install ninja
-        vcpkg install libflac minimp3
+        vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
         ci/run.sh build-release -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/arm64-osx -DCMAKE_OSX_ARCHITECTURES=arm64 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_BUILD_TYPE=Release
 
   macos13-xcode14-ios-arm64:
