@@ -13,3 +13,6 @@ end_of_line = lf
 
 [*.yml]
 indent_size = 2
+
+[*.yaml]
+indent_size = 2
