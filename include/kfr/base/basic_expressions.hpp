@@ -762,6 +762,19 @@ KFR_INTRINSIC expression_linspace<Tout, truncated> symmlinspace(T symsize, size_
     return { symmetric_linspace, static_cast<Tout>(symsize), size, true };
 }
 
+template <typename T, bool precise = false, bool truncated = false, typename Tout = ftype<T>>
+KFR_INTRINSIC expression_linspace<Tout, true> arange(T start, T stop, T step = 1, cbool_t<truncated> = {})
+{
+    return linspace<T, precise>(start, stop, static_cast<size_t>(std::ceil((stop - start) / step)), false,
+                                ctrue);
+}
+
+template <typename T, bool precise = false, bool truncated = false, typename Tout = ftype<T>>
+KFR_INTRINSIC expression_linspace<Tout, true> arange(T stop, cbool_t<truncated> = {})
+{
+    return linspace<T, precise>(static_cast<T>(0), stop, static_cast<size_t>(std::ceil(stop)), false, ctrue);
+}
+
 inline namespace KFR_ARCH_NAME
 {
 
