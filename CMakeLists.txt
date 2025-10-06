@@ -416,6 +416,7 @@ if (KFR_ENABLE_DFT)
     append_defines_from(kfr_dft)
 endif ()
 append_defines_from(kfr_io)
+append_defines_from(kfr_dsp)
 append_defines_from(kfr_audio)
 
 string(REPLACE "=" " " kfr_defines "${kfr_defines}")

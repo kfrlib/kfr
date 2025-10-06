@@ -16,13 +16,31 @@ KFR is an open source C++ DSP framework that contains high performance building 
 
 :star2: **New**: Explore benchmark results from the LIGO, Virgo, and KAGRA collaborations, comparing KFR performance against FFTW for signal processing in gravitational-wave research: https://ar5iv.labs.arxiv.org/html/2503.14292
 
-## KFR6
+## KFR 7
 
-New features, performance improvements, easier setup.
+KFR 7 is currently in development.
 
-:arrow_right: [What's new in KFR6](docs/docs/whatsnew6.md)
+What is already available in the `main` branch:
 
-:arrow_right: [Upgrade from a previous version](docs/docs/upgrade6.md)
+* Elliptic filter design
+* Zero-Phase IIR Filter (`filtfilt`)
+* Audio encoding/decoding with support for:
+    * Wave (WAV)
+    * W64
+    * RF64/BW64
+    * AIFF
+    * FLAC
+    * Apple CAF
+    * ALAC
+    * MP3 (decoding only)
+    * Raw PCM
+    * decoding AAC and other formats using MediaFoundation (Windows only)
+* C++20
+* New optimized functions
+* Performance improvements
+* Broader GCC support
+* Tests are migrated to Catch2 framework
+* [More to come...](https://github.com/kfrlib/kfr/issues/256)
 
 ## Our other projects
 
@@ -43,7 +61,7 @@ Compiler support:
 ![MSVC 2019](https://img.shields.io/badge/MSVC-2019%2B-brightgreen.svg?style=flat-square)
 ![Xcode 12+](https://img.shields.io/badge/Xcode-12%2B-brightgreen.svg?style=flat-square)
 
-KFR has no external dependencies except for a C++17-compatible standard C++ library. CMake is used as the build system.
+KFR has no external dependencies except for a C++20-compatible standard C++ library. CMake is used as the build system.
 
 Clang is highly recommended and proven to provide the best performance for KFR. You can use Clang as a drop-in replacement for both GCC on Linux and MSVC on Windows. On macOS, Clang is the default compiler and included in the official Xcode toolchain.
 
@@ -69,6 +87,7 @@ _Note_: ARM/AArch64 support and building the DFT module currently requires Clang
 ### DSP
 
 * IIR filter design
+  * Elliptic
   * Butterworth
   * Chebyshev type I and II
   * Bessel
@@ -110,9 +129,16 @@ _Note_: ARM/AArch64 support and building the DFT module currently requires Clang
 ### IO
 
 * Audio file reading/writing
-* WAV
-* FLAC
-* MP3
+    * Wave (WAV)
+    * W64
+    * RF64/BW64
+    * AIFF
+    * FLAC
+    * Apple CAF
+    * ALAC
+    * MP3 (decoding only)
+    * Raw PCM
+    * decoding AAC and other formats using MediaFoundation (Windows only)
 
 ### Multiarchitecture
 
