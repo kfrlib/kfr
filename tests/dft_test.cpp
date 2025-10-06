@@ -34,7 +34,9 @@ constexpr ctypes_t<float> dft_float_types{};
 
 static void full_barrier()
 {
-#if defined(KFR_ARCH_NEON)
+#if defined(KFR_ARCH_RVV)
+    asm volatile("fence rw,rw" ::: "memory");
+#elif defined(KFR_ARCH_NEON)
     asm volatile("dmb ish" ::: "memory");
 #elif defined(KFR_COMPILER_GNU)
     asm volatile("mfence" ::: "memory");
@@ -164,7 +166,7 @@ TEST_CASE("test_complex_correlate")
     CHECK(rms(cabs(c - univector<fbase>({ 1.5, 1., 1.5, 2.5, 3.75, -4., 7.75, 3.5, 1.25 }))) < 0.0001);
 }
 
-#if defined KFR_ARCH_ARM || !defined NDEBUG
+#if !defined KFR_ARCH_X86 || !defined NDEBUG
 constexpr size_t fft_stopsize = 12;
 #ifndef KFR_DFT_NO_NPo2
 constexpr size_t dft_stopsize = 101;

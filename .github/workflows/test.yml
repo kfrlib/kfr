@@ -44,7 +44,18 @@ jobs:
         sudo apt-get update && sudo apt-get install -y ninja-build g++-aarch64-linux-gnu qemu qemu-system-arm qemu-user
         wget -O - https://apt.llvm.org/llvm.sh | sudo bash -s - 20
         ci/run.sh build-release -DENABLE_EXAMPLES=OFF -DCLANG_SUFFIX=-20 -DCMAKE_BUILD_TYPE=Release -DGCC_VER=11 -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
-      
+
+  ubuntu24-clang18-riscv64:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Tests
+      run: |
+        set -e
+        sudo apt-get update && sudo apt-get install -y llvm clang ninja-build qemu-system-riscv64 qemu-user gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
+        ci/run.sh build-release -DKFR_ENABLE_DFT=OFF -DENABLE_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/riscv64.cmake
+
   ubuntu24-gcc14-x86_64:
     runs-on: ubuntu-24.04
     steps:

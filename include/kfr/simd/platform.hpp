@@ -53,6 +53,11 @@ enum class cpu_t : int
     lowest  = static_cast<int>(neon),
     highest = static_cast<int>(neon64),
 #endif
+#ifdef KFR_ARCH_RISCV
+    rvv     = 1,
+    lowest  = static_cast<int>(rvv),
+    highest = static_cast<int>(rvv),
+#endif
     native = static_cast<int>(KFR_ARCH_NAME),
 
 #ifdef KFR_ARCH_AVX
@@ -80,8 +85,12 @@ constexpr cpu_t newer(cpu_t x) { return static_cast<cpu_t>(static_cast<int>(x) +
 #ifdef KFR_ARCH_X86
 constexpr auto cpu_list = cvals_t<cpu_t, cpu_t::avx512, cpu_t::avx2, cpu_t::avx1, cpu_t::sse41, cpu_t::ssse3,
                                   cpu_t::sse3, cpu_t::sse2>();
-#else
+#endif
+#ifdef KFR_ARCH_ARM
 constexpr auto cpu_list = cvals<cpu_t, cpu_t::neon>;
+#endif
+#ifdef KFR_ARCH_RISCV
+constexpr auto cpu_list = cvals<cpu_t, cpu_t::rvv>;
 #endif
 } // namespace internal_generic
 
@@ -102,6 +111,9 @@ KFR_UNUSED static const char* cpu_name(cpu_t set)
 #endif
 #ifdef KFR_ARCH_ARM
     static const char* names[] = { "generic", "neon", "neon64" };
+#endif
+#ifdef KFR_ARCH_RISCV
+    static const char* names[] = { "generic", "rvv" };
 #endif
     if (KFR_LIKELY(set >= cpu_t::lowest && set <= cpu_t::highest))
         return names[static_cast<size_t>(set)];
@@ -247,6 +259,40 @@ struct platform<cpu_t::neon> : platform<cpu_t::common>
 template <>
 struct platform<cpu_t::neon64> : platform<cpu_t::neon>
 {
+};
+#endif
+
+#ifdef KFR_ARCH_RISCV
+template <>
+struct platform<cpu_t::common>
+{
+    constexpr static size_t native_cache_alignment        = 64;
+    constexpr static size_t native_cache_alignment_mask   = native_cache_alignment - 1;
+    constexpr static size_t maximum_vector_alignment      = 16;
+    constexpr static size_t maximum_vector_alignment_mask = maximum_vector_alignment - 1;
+
+    constexpr static size_t simd_register_count = 1;
+
+    constexpr static size_t common_float_vector_size = 16;
+    constexpr static size_t common_int_vector_size   = 16;
+
+    constexpr static size_t minimum_float_vector_size = 16;
+    constexpr static size_t minimum_int_vector_size   = 16;
+
+    constexpr static size_t native_float_vector_size = 16;
+    constexpr static size_t native_int_vector_size   = 16;
+
+    constexpr static size_t native_vector_alignment      = 16;
+    constexpr static size_t native_vector_alignment_mask = native_vector_alignment - 1;
+
+    constexpr static bool fast_unaligned = false;
+
+    constexpr static bool mask_registers = false;
+};
+template <>
+struct platform<cpu_t::rvv> : platform<cpu_t::common>
+{
+    constexpr static size_t simd_register_count = 16;
 };
 #endif
 

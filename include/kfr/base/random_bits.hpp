@@ -32,7 +32,7 @@
 #include "expression.hpp"
 #include <functional>
 
-#ifdef KFR_ARCH_ARM
+#if !defined KFR_ARCH_X86
 #define KFR_DISABLE_READCYCLECOUNTER
 #endif
 

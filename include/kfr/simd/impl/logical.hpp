@@ -262,7 +262,7 @@ KFR_INTRINSIC bitmask<N> getmask(const mask<T, N>& x)
     typename bitmask<N>::type val = 0;
     for (size_t i = 0; i < N; i++)
     {
-        val |= static_cast<int>(x[i]) << i;
+        val |= static_cast<int>(static_cast<bool>(x[i])) << i;
     }
     return val;
 }

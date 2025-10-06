@@ -231,7 +231,7 @@ if (X86)
         avx2
         avx512)
 else ()
-    set(ALLOWED_ARCHS generic neon neon64)
+    set(ALLOWED_ARCHS generic neon neon64 rvv)
 endif ()
 
 if (NOT X86)

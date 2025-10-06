@@ -7,6 +7,8 @@
 #define KFR_ARCH_X86 1
 #elif defined(__arm__) || defined(__arm64__) || defined(_M_ARM) || defined(__aarch64__)
 #define KFR_ARCH_ARM 1
+#elif defined(__riscv)
+#define KFR_ARCH_RISCV 1
 #endif
 
 #ifdef KFR_ARCH_X86
@@ -179,6 +181,25 @@
 #define KFR_ARCH_AARCH64 1
 #endif
 
+#ifdef KFR_ARCH_RISCV
+#if defined(__riscv_xlen) && __riscv_xlen == 64
+#define KFR_ARCH_X64 1
+#define KFR_ARCH_BITNESS_NAME "64-bit"
+#define KFR_ARCH_RISCV64 1
+#else
+#define KFR_ARCH_X32 1
+#define KFR_ARCH_BITNESS_NAME "32-bit"
+#define KFR_ARCH_RISCV32 1
+#endif
+
+#if defined(__riscv_v)
+#define KFR_ARCH_RVV 1
+#define KFR_ARCH_NAME rvv
+#else
+#error "KFR requires Vector extension on RISC-V"
+#endif
+#endif
+
 #ifndef KFR_ARCH_NAME
 #define KFR_ARCH_NAME generic
 #endif
@@ -196,6 +217,8 @@
 
 #define KFR_ARCH_ID_NEON 1
 #define KFR_ARCH_ID_NEON64 2
+
+#define KFR_ARCH_ID_RVV 1
 
 #ifdef KFR_ENABLE_SSE2
 #define KFR_EXPAND_IF_ARCH_sse2(...) __VA_ARGS__
