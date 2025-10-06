@@ -232,6 +232,8 @@ struct is_vec_impl<vec<T, N>> : std::true_type
 };
 } // namespace internal
 
+struct from_lambda {};
+
 template <typename T>
 constexpr inline bool is_vec = internal::is_vec_impl<T>::value;
 
@@ -367,7 +369,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     // from lambda
     template <typename Fn>
         requires(std::is_invocable_r_v<T, Fn, size_t>)
-    KFR_MEM_INTRINSIC vec(Fn&& fn) noexcept
+    KFR_MEM_INTRINSIC vec(from_lambda, Fn&& fn) noexcept
     {
         for (size_t i = 0; i < N; ++i)
         {
