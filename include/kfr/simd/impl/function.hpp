@@ -137,7 +137,7 @@ using mu16avx512 = mask<u16, 32>;
 using mu32avx512 = mask<u32, 16>;
 using mu64avx512 = mask<u64, 8>;
 
-#else
+#elif defined KFR_ARCH_ARM
 using f32neon = vec<f32, 4>;
 using f64neon = vec<f64, 2>;
 using i8neon  = vec<i8, 16>;
@@ -159,6 +159,31 @@ using mu8neon  = mask<u8, 16>;
 using mu16neon = mask<u16, 8>;
 using mu32neon = mask<u32, 4>;
 using mu64neon = mask<u64, 2>;
+
+#elif defined KFR_ARCH_RISCV
+
+using f32rvv = vec<f32, 4>;
+using f64rvv = vec<f64, 2>;
+using i8rvv  = vec<i8, 16>;
+using i16rvv = vec<i16, 8>;
+using i32rvv = vec<i32, 4>;
+using i64rvv = vec<i64, 2>;
+using u8rvv  = vec<u8, 16>;
+using u16rvv = vec<u16, 8>;
+using u32rvv = vec<u32, 4>;
+using u64rvv = vec<u64, 2>;
+
+using mf32rvv = mask<f32, 4>;
+using mf64rvv = mask<f64, 2>;
+using mi8rvv  = mask<i8, 16>;
+using mi16rvv = mask<i16, 8>;
+using mi32rvv = mask<i32, 4>;
+using mi64rvv = mask<i64, 2>;
+using mu8rvv  = mask<u8, 16>;
+using mu16rvv = mask<u16, 8>;
+using mu32rvv = mask<u32, 4>;
+using mu64rvv = mask<u64, 2>;
+
 #endif
 
 template <typename T>

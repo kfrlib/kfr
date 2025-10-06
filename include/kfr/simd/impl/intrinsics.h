@@ -16,6 +16,10 @@
 #include <arm_neon.h>
 #endif
 
+#ifdef KFR_ARCH_RVV
+#include <riscv_vector.h>
+#endif
+
 #if defined KFR_COMPILER_GCC && defined KFR_ARCH_X86
 #include <x86intrin.h>
 #endif

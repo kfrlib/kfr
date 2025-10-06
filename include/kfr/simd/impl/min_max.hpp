@@ -173,6 +173,81 @@ KFR_INTRINSIC f64neon max(const f64neon& x, const f64neon& y) { return select(x 
 KFR_HANDLE_ALL_SIZES_2(min)
 KFR_HANDLE_ALL_SIZES_2(max)
 
+#elif KFR_ARCH_RVV && defined KFR_NATIVE_INTRINSICS
+
+KFR_INTRINSIC i8rvv min(const i8rvv& x, const i8rvv& y) { return __riscv_vmin_vv_i8m1(x.v, y.v, i8rvv::SN); }
+KFR_INTRINSIC u8rvv min(const u8rvv& x, const u8rvv& y) { return __riscv_vminu_vv_u8m1(x.v, y.v, u8rvv::SN); }
+KFR_INTRINSIC i16rvv min(const i16rvv& x, const i16rvv& y)
+{
+    return __riscv_vmin_vv_i16m1(x.v, y.v, i16rvv::SN);
+}
+KFR_INTRINSIC u16rvv min(const u16rvv& x, const u16rvv& y)
+{
+    return __riscv_vminu_vv_u16m1(x.v, y.v, u16rvv::SN);
+}
+KFR_INTRINSIC i32rvv min(const i32rvv& x, const i32rvv& y)
+{
+    return __riscv_vmin_vv_i32m1(x.v, y.v, i32rvv::SN);
+}
+KFR_INTRINSIC u32rvv min(const u32rvv& x, const u32rvv& y)
+{
+    return __riscv_vminu_vv_u32m1(x.v, y.v, u32rvv::SN);
+}
+KFR_INTRINSIC i64rvv min(const i64rvv& x, const i64rvv& y)
+{
+    return __riscv_vmin_vv_i64m1(x.v, y.v, i64rvv::SN);
+}
+KFR_INTRINSIC u64rvv min(const u64rvv& x, const u64rvv& y)
+{
+    return __riscv_vminu_vv_u64m1(x.v, y.v, u64rvv::SN);
+}
+KFR_INTRINSIC f32rvv min(const f32rvv& x, const f32rvv& y)
+{
+    return __riscv_vfmin_vv_f32m1(x.v, y.v, f32rvv::SN);
+}
+KFR_INTRINSIC f64rvv min(const f64rvv& x, const f64rvv& y)
+{
+    return __riscv_vfmin_vv_f64m1(x.v, y.v, f64rvv::SN);
+}
+
+KFR_INTRINSIC i8rvv max(const i8rvv& x, const i8rvv& y) { return __riscv_vmax_vv_i8m1(x.v, y.v, i8rvv::SN); }
+KFR_INTRINSIC u8rvv max(const u8rvv& x, const u8rvv& y) { return __riscv_vmaxu_vv_u8m1(x.v, y.v, u8rvv::SN); }
+KFR_INTRINSIC i16rvv max(const i16rvv& x, const i16rvv& y)
+{
+    return __riscv_vmax_vv_i16m1(x.v, y.v, i16rvv::SN);
+}
+KFR_INTRINSIC u16rvv max(const u16rvv& x, const u16rvv& y)
+{
+    return __riscv_vmaxu_vv_u16m1(x.v, y.v, u16rvv::SN);
+}
+KFR_INTRINSIC i32rvv max(const i32rvv& x, const i32rvv& y)
+{
+    return __riscv_vmax_vv_i32m1(x.v, y.v, i32rvv::SN);
+}
+KFR_INTRINSIC u32rvv max(const u32rvv& x, const u32rvv& y)
+{
+    return __riscv_vmaxu_vv_u32m1(x.v, y.v, u32rvv::SN);
+}
+KFR_INTRINSIC i64rvv max(const i64rvv& x, const i64rvv& y)
+{
+    return __riscv_vmax_vv_i64m1(x.v, y.v, i64rvv::SN);
+}
+KFR_INTRINSIC u64rvv max(const u64rvv& x, const u64rvv& y)
+{
+    return __riscv_vmaxu_vv_u64m1(x.v, y.v, u64rvv::SN);
+}
+KFR_INTRINSIC f32rvv max(const f32rvv& x, const f32rvv& y)
+{
+    return __riscv_vfmax_vv_f32m1(x.v, y.v, f32rvv::SN);
+}
+KFR_INTRINSIC f64rvv max(const f64rvv& x, const f64rvv& y)
+{
+    return __riscv_vfmax_vv_f64m1(x.v, y.v, f64rvv::SN);
+}
+
+KFR_HANDLE_ALL_SIZES_2(min)
+KFR_HANDLE_ALL_SIZES_2(max)
+
 #else
 
 // fallback

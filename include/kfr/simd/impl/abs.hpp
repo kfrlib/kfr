@@ -111,6 +111,39 @@ KFR_INTRINSIC f64neon abs(const f64neon& x) noexcept { return x & special_consta
 
 KFR_HANDLE_ALL_SIZES_1(abs)
 
+#elif defined KFR_ARCH_RVV && defined KFR_NATIVE_INTRINSICS
+
+KFR_INTRINSIC i8rvv abs(const i8rvv& x) noexcept
+{
+    vbool8_t mask = __riscv_vmslt_vx_i8m1_b8(x.v, 0, i8rvv::SN);
+    return __riscv_vmerge_vvm_i8m1(x.v, __riscv_vneg_v_i8m1(x.v, i8rvv::SN), mask, i8rvv::SN);
+}
+KFR_INTRINSIC i16rvv abs(const i16rvv& x) noexcept
+{
+    vbool16_t mask = __riscv_vmslt_vx_i16m1_b16(x.v, 0, i16rvv::SN);
+    return __riscv_vmerge_vvm_i16m1(x.v, __riscv_vneg_v_i16m1(x.v, i16rvv::SN), mask, i16rvv::SN);
+}
+KFR_INTRINSIC i32rvv abs(const i32rvv& x) noexcept
+{
+    vbool32_t mask = __riscv_vmslt_vx_i32m1_b32(x.v, 0, i32rvv::SN);
+    return __riscv_vmerge_vvm_i32m1(x.v, __riscv_vneg_v_i32m1(x.v, i32rvv::SN), mask, i32rvv::SN);
+}
+KFR_INTRINSIC i64rvv abs(const i64rvv& x) noexcept
+{
+    vbool64_t mask = __riscv_vmslt_vx_i64m1_b64(x.v, 0, i64rvv::SN);
+    return __riscv_vmerge_vvm_i64m1(x.v, __riscv_vneg_v_i64m1(x.v, i64rvv::SN), mask, i64rvv::SN);
+}
+
+KFR_INTRINSIC u8rvv abs(const u8rvv& x) noexcept { return x; }
+KFR_INTRINSIC u16rvv abs(const u16rvv& x) noexcept { return x; }
+KFR_INTRINSIC u32rvv abs(const u32rvv& x) noexcept { return x; }
+KFR_INTRINSIC u64rvv abs(const u64rvv& x) noexcept { return x; }
+
+KFR_INTRINSIC f32rvv abs(const f32rvv& x) noexcept { return __riscv_vfabs_v_f32m1(x.v, f32rvv::SN); }
+KFR_INTRINSIC f64rvv abs(const f64rvv& x) noexcept { return __riscv_vfabs_v_f64m1(x.v, f64rvv::SN); }
+
+KFR_HANDLE_ALL_SIZES_1(abs)
+
 #else
 
 // floating point
