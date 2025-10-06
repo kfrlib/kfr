@@ -34,7 +34,10 @@ What is already available in the `main` branch:
     * ALAC
     * MP3 (decoding only)
     * Raw PCM
-    * decoding AAC and other formats using MediaFoundation (Windows only)
+    * decoding AAC and other formats using MediaFoundation (Windows only)   
+* Basic RISC-V support
+    * Only CPUs with VLEN >= 128 are supported
+    * Linux only, clang required
 * C++20
 * New optimized functions
 * Performance improvements
