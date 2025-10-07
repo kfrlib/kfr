@@ -395,6 +395,31 @@ audio_stat audio_data<Interleaved>::stat() const noexcept
     return result;
 }
 
+template <bool Interleaved>
+bool audio_data<Interleaved>::is_silent(fbase threshold) const noexcept
+{
+    if constexpr (Interleaved)
+    {
+        for (size_t i = 0; i < size * channels; ++i)
+        {
+            if (std::abs(data[i]) > threshold)
+                return false;
+        }
+    }
+    else
+    {
+        for (size_t i = 0; i < size; ++i)
+        {
+            for (size_t ch = 0; ch < channels; ++ch)
+            {
+                if (std::abs(data[ch][i]) > threshold)
+                    return false;
+            }
+        }
+    }
+    return true;
+}
+
 template struct audio_data<false>;
 template struct audio_data<true>;
 

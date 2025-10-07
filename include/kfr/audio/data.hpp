@@ -535,6 +535,16 @@ struct audio_data
      */
     [[nodiscard]] audio_stat stat() const noexcept;
 
+    /**
+     * @brief Checks whether all samples in the buffer are effectively silent within a given amplitude threshold.
+     *
+     * @param threshold Non-negative amplitude threshold. Any sample with absolute value
+     *                  strictly greater than this threshold makes the buffer non-silent. Values exactly
+     *                  equal to the threshold are treated as silent. Default: 1e-5.
+     * @return true if every sample lies within [-threshold, threshold]; false otherwise.
+     */
+    [[nodiscard]] bool is_silent(fbase threshold = fbase(1e-5)) const noexcept;
+
     [[nodiscard]] size_t find_peak() const noexcept;
 
     /**
