@@ -36,101 +36,92 @@ namespace kfr
 {
 
 /**
- * @brief Base class for audio decoders.
- *
- * Provides an interface for opening, reading, seeking, and closing audio files.
- * Derived classes implement format-specific decoding backends.
+ * @brief Abstract base class for audio decoders providing methods for opening and reading audio files.
  */
 struct audio_decoder
 {
 public:
     virtual ~audio_decoder();
 
+    /**
+     * @brief Opens an audio file using a binary reader and retrieves its format.
+     * @param reader Shared pointer to a binary reader.
+     * @return Audio format on success, or an error code on failure.
+     */
     [[nodiscard]] virtual expected<audiofile_format, audiofile_error> open(
         std::shared_ptr<binary_reader> reader) = 0;
 
     /**
-     * @brief Open an audio file for reading and retrieve its format information.
-     *
-     * @param path The path to the audio file.
-     * @return The audio format on success, or an error code on failure.
+     * @brief Opens an audio file from a file path and retrieves its format.
+     * @param path Path to the audio file.
+     * @return Audio format on success, or an error code on failure.
      */
     [[nodiscard]] expected<audiofile_format, audiofile_error> open(const file_path& path);
 
 #if defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM
     /**
-     * @brief Open an audio file using a UTF-8 encoded string path.
-     *
-     * @param path The UTF-8 encoded file path.
-     * @return The audio format on success, or an error code on failure.
+     * @brief Opens an audio file using a UTF-8 encoded string path (Windows-specific).
+     * @param path UTF-8 encoded file path.
+     * @return Audio format on success, or an error code on failure.
      */
     [[nodiscard]] expected<audiofile_format, audiofile_error> open(const std::string& path);
 #endif
 
     /**
-     * @brief Read audio frames into an interleaved buffer.
-     *
+     * @brief Reads audio frames into an interleaved buffer.
      * @param output Destination buffer for decoded samples.
-     * @return The number of frames read on success, or an error code on failure.
+     * @return Number of frames read on success, or an error code on failure.
      */
     [[nodiscard]] virtual expected<size_t, audiofile_error> read_to(const audio_data_interleaved& output) = 0;
 
     /**
-     * @brief Read up to a maximum number of audio frames into a newly allocated buffer.
-     *
-     * @param maximum_frames The maximum number of frames to read.
-     * @return The audio data on success, or an error code on failure.
+     * @brief Reads up to a maximum number of audio frames into a newly allocated buffer.
+     * @param maximum_frames Maximum number of frames to read.
+     * @return Audio data on success, or an error code on failure.
      */
     [[nodiscard]] expected<audio_data_interleaved, audiofile_error> read(size_t maximum_frames);
 
     /**
-     * @brief Determine whether seeking is precise for this decoder.
-     *
+     * @brief Determines whether seeking is precise for this decoder.
      * @return True if seeking is precise, false otherwise.
      */
     [[nodiscard]] virtual bool seek_is_precise() const;
 
     /**
-     * @brief Seek to a specific position in the audio stream.
-     *
+     * @brief Seeks to a specific sample position in the audio stream.
      * @param position Target position in sample frames.
-     * @return Success, or audiofile_error::EndOfFile if beyond the stream length.
+     * @return Success, or an error code if seeking fails.
      */
     [[nodiscard]] virtual expected<void, audiofile_error> seek(uint64_t position) = 0;
 
     /**
-     * @brief Read the entire audio stream into an interleaved buffer.
-     *
-     * @return The audio data on success, or an error code on failure.
+     * @brief Reads the entire audio stream into an interleaved buffer.
+     * @return Audio data on success, or an error code on failure.
      */
     [[nodiscard]] expected<audio_data_interleaved, audiofile_error> read_all();
 
     /**
-     * @brief Read the entire audio stream into a planar buffer.
-     *
-     * @return The audio data on success, or an error code on failure.
+     * @brief Reads the entire audio stream into a planar buffer.
+     * @return Audio data on success, or an error code on failure.
      */
     [[nodiscard]] expected<audio_data_planar, audiofile_error> read_all_planar();
 
     /**
-     * @brief Get the format of the opened audio file.
-     *
-     * @return The audio format if available, or std::nullopt.
+     * @brief Retrieves the format of the currently opened audio file.
+     * @return Audio format if available, or std::nullopt.
      */
     [[nodiscard]] const std::optional<audiofile_format>& format() const;
 
     /**
-     * @brief Check whether the file has a chunk with the specified ID.
-     *
-     * @param chunk_id Identifier of the chunk to search for.
-     * @return The chunk size if found, or std::nullopt.
+     * @brief Checks if the file contains a chunk with the specified ID.
+     * @param chunk_id Identifier of the chunk.
+     * @return Chunk size if found, or std::nullopt.
      */
     virtual std::optional<uint64_t> has_chunk(std::span<const std::byte> chunk_id) const;
 
     /**
-     * @brief Read a chunk of data by its identifier.
-     *
-     * @param chunk_id The chunk ID to read.
+     * @brief Reads a RIFF chunk by its identifier.
+     * @param chunk_id Chunk ID to read.
      * @param handler Callback invoked with chunk data.
      * @param buffer_size Buffer size for reading, defaults to 64 KiB.
      * @return Success or an error code.
@@ -140,21 +131,31 @@ public:
         size_t buffer_size = 65536);
 
     /**
-     * @brief Read a chunk of data into a byte vector.
-     *
-     * @param chunk_id The chunk ID to read.
-     * @return The chunk data on success, or an error code on failure.
+     * @brief Reads a RIFF chunk into a byte vector.
+     * @param chunk_id Chunk ID to read.
+     * @return Chunk data on success, or an error code on failure.
      */
     expected<std::vector<uint8_t>, audiofile_error> read_chunk_bytes(std::span<const std::byte> chunk_id);
 
     /**
-     * @brief Close the underlying file and release resources.
+     * @brief Closes the audio file and releases resources.
      */
     virtual void close() = 0;
 
+    /**
+     * @brief Retrieves the binary reader associated with the decoder.
+     * @return Shared pointer to the binary reader.
+     */
     std::shared_ptr<binary_reader> reader() const noexcept { return m_reader; }
 
 protected:
+    /**
+     * @brief Reads audio frames into a buffer using a custom read function.
+     * @param output Destination buffer for decoded samples.
+     * @param read_packet Function to read audio packets.
+     * @param buffer Temporary buffer for intermediate data.
+     * @return Number of frames read on success, or an error code on failure.
+     */
     expected<size_t, audiofile_error> read_buffered(
         const audio_data_interleaved& output,
         const std::function<expected<audio_data_interleaved, audiofile_error>()>& read_packet,
@@ -172,17 +173,15 @@ using audiofile_header = std::array<std::byte, 16>;
 
 /**
  * @brief Reads the header of an audio file.
- *
- * @param path The file path to the audio file.
- * @return The audio file header on success, or an error code on failure.
+ * @param path Path to the audio file.
+ * @return Audio file header on success, or an error code on failure.
  */
 [[nodiscard]] expected<audiofile_header, std::error_code> read_audiofile_header(const file_path& path);
 
 /**
  * @brief Determines the audio container type from a file extension.
- *
- * @param extension The file extension (with leading dot).
- * @return The detected audio container type.
+ * @param extension File extension with leading dot.
+ * @return Detected audio container type.
  */
 [[nodiscard]] audiofile_container audiofile_container_from_extension(std::string_view extension);
 
@@ -196,26 +195,29 @@ struct audio_decoding_options
 
 /**
  * @brief Creates an audio decoder for a specific container type.
- *
- * @param container The audio container type.
+ * @param container Audio container type.
  * @param options Optional decoding options.
- * @return A unique pointer to the created decoder.
+ * @return Unique pointer to the created decoder.
  */
 [[nodiscard]] std::unique_ptr<audio_decoder> create_decoder_for_container(
     audiofile_container container, const audio_decoding_options& options = {});
 
 /**
  * @brief Creates an audio decoder for a file.
- *
- * @param path The path to the audio file.
+ * @param path Path to the audio file.
  * @param options Optional decoding options.
- * @return A unique pointer to the created decoder.
+ * @return Unique pointer to the created decoder.
  */
 [[nodiscard]] std::unique_ptr<audio_decoder> create_decoder_for_file(
     const file_path& path, const audio_decoding_options& options = {});
 
 #if defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM
-/// @copydoc read_audiofile_header(const file_path&)
+/**
+ * @brief Creates an audio decoder from a file header.
+ * @param header Audio file header.
+ * @param options Optional decoding options.
+ * @return Unique pointer to the created decoder.
+ */
 [[nodiscard]] inline expected<audiofile_header, std::error_code> read_audiofile_header(
     const std::string& path)
 {
@@ -388,7 +390,7 @@ struct mediafoundation_decoding_options : public audio_decoding_options
 namespace details
 {
 /**
- * @brief Check whether an audio file header matches a specific byte pattern.
+ * @brief Checks whether an audio file header matches a specific pattern (dot is any byte).
  *
  * @param header The audio file header.
  * @param h The expected header string.
