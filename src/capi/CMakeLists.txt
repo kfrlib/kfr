@@ -26,7 +26,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif ()
 
 add_library(kfr_capi SHARED capi.cpp)
-target_link_libraries(kfr_capi PRIVATE kfr_dft kfr_dsp)
+target_link_libraries(kfr_capi PRIVATE kfr_dft kfr_dsp kfr_audio)
 
 target_compile_definitions(kfr_capi PRIVATE KFR_BUILDING_DLL=1)
 

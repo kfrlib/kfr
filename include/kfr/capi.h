@@ -39,6 +39,8 @@
 #define KFR_ARCH_IS_X86 1
 #elif defined(__arm__) || defined(__arm64__) || defined(_M_ARM) || defined(__aarch64__)
 #define KFR_ARCH_IS_ARM 1
+#elif defined(__riscv)
+#define KFR_ARCH_IS_RISCV 1
 #endif
 
 // Calling convention definition
