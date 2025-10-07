@@ -94,13 +94,13 @@ project(
     kfr
     VERSION ${KFR_VERSION}
     LANGUAGES CXX)
-    
+
 if (DEBUG_CMAKE)
     get_cmake_property(VARS VARIABLES)
-    list (SORT VARS)
+    list(SORT VARS)
     foreach (VAR ${VARS})
         message(STATUS "${VAR}=${${VAR}}")
-    endforeach()
+    endforeach ()
 endif ()
 
 set(CMAKE_CXX_STANDARD 20)
@@ -132,8 +132,12 @@ if (CPU_ARCH)
 endif ()
 
 if (EMSCRIPTEN)
-    set(KFR_ARCH "sse41" CACHE STRING "")
-    set(KFR_ENABLE_MULTIARCH OFF CACHE BOOL "")
+    set(KFR_ARCH
+        "sse41"
+        CACHE STRING "")
+    set(KFR_ENABLE_MULTIARCH
+        OFF
+        CACHE BOOL "")
 endif ()
 
 set(X86 FALSE)
@@ -195,12 +199,17 @@ option(KFR_SKIP_TESTS "Build tests but don't run tests" OFF)
 option(KFR_ENABLE_CAPI_BUILD "Enable KFR C API building" OFF)
 option(KFR_INSTALL_HEADERS "Include headers in installation" ON)
 option(KFR_INSTALL_LIBRARIES "Include libraries in installation" ON)
+option(KFR_MANAGED_ALLOCATION
+       "Use KFR managed memory (copy-free aligned reallocation, ref counting)"
+       OFF)
 mark_as_advanced(KFR_ENABLE_ASMTEST)
 mark_as_advanced(KFR_REGENERATE_TESTS)
 mark_as_advanced(KFR_DISABLE_CLANG_EXTENSIONS)
 
 if (CMAKE_ANDROID_ARCH_ABI)
-    set(KFR_ENABLE_MULTIARCH OFF CACHE INTERNAL "" FORCE)
+    set(KFR_ENABLE_MULTIARCH
+        OFF
+        CACHE INTERNAL "" FORCE)
 endif ()
 
 if (KFR_ENABLE_CAPI_BUILD AND NOT KFR_ENABLE_DFT)
@@ -277,9 +286,10 @@ else ()
             "Default CPU architecture for KFR is ${KFR_ARCH} (set by KFR_ARCH)")
 endif ()
 
-
 if (X86 AND KFR_ARCH STREQUAL "target")
-    set(KFR_ARCH sse2 CACHE INTERNAL "Default CPU" FORCE)
+    set(KFR_ARCH
+        sse2
+        CACHE INTERNAL "Default CPU" FORCE)
 endif ()
 
 if (NOT KFR_ARCH IN_LIST ALLOWED_ARCHS)
@@ -379,7 +389,13 @@ if (KFR_EXTENDED_TESTS)
     target_compile_definitions(kfr INTERFACE -DKFR_EXTENDED_TESTS)
 endif ()
 
-set(KFR_DEBUG_INSTALL_SUFFIX "/debug" CACHE STRING "")
+if (KFR_MANAGED_ALLOCATION)
+    target_compile_definitions(kfr INTERFACE -DKFR_MANAGED_ALLOCATION=1)
+endif ()
+
+set(KFR_DEBUG_INSTALL_SUFFIX
+    "/debug"
+    CACHE STRING "")
 
 add_subdirectory(src/dsp)
 add_subdirectory(src/io)
@@ -470,10 +486,10 @@ install(
     CONFIGURATIONS Debug Release
     FILE KFRConfig.cmake)
 
-write_basic_package_version_file(KFRConfigVersion.cmake
-    VERSION ${KFR_VERSION} 
+write_basic_package_version_file(
+    KFRConfigVersion.cmake
+    VERSION ${KFR_VERSION}
     COMPATIBILITY SameMinorVersion)
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/KFRConfigVersion.cmake"
-    DESTINATION
-    "${KFR_INSTALL_CMAKEDIR}" )
+        DESTINATION "${KFR_INSTALL_CMAKEDIR}")

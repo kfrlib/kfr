@@ -155,7 +155,7 @@ struct expression_resource_impl : expression_resource
 
 public:
 #ifdef __cpp_aligned_new
-    static void operator delete(void* p, std::align_val_t al) noexcept { details::aligned_release(p); }
+    static void operator delete(void* p, std::align_val_t al) noexcept { details::aligned_free(p); }
 #endif
 
 private:

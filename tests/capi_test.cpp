@@ -29,6 +29,7 @@ void test_memory()
     uint8_t* d = (uint8_t*)(kfr_allocate(256));
     for (size_t i = 0; i < 256; i++)
         d[i] = i;
+#ifdef KFR_MANAGED_ALLOCATION
     CHECK(kfr_allocated_size(d) == 256, "kfr_allocated_size: wrong size: %zu", kfr_allocated_size(d));
     d = (uint8_t*)(kfr_reallocate(d, 512));
     CHECK(kfr_allocated_size(d) == 512, "kfr_allocated_size: wrong size: %zu", kfr_allocated_size(d));
@@ -36,6 +37,7 @@ void test_memory()
     {
         CHECK(d[i] == i, "kfr_reallocate: data lost after reallocation\n");
     }
+#endif
     kfr_deallocate(d);
 
     void* page = kfr_allocate_aligned(4096, 4096);

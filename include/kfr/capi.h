@@ -28,6 +28,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+// #define KFR_MANAGED_ALLOCATION 1
+
 #if defined __STDC_IEC_559_COMPLEX__ && !defined KFR_NO_C_COMPLEX_TYPES
 #include <complex.h>
 #endif
@@ -152,6 +154,10 @@ KFR_API_SPEC void* kfr_allocate(size_t size);
 /// @brief Allocates aligned memory of specified size and alignment.
 KFR_API_SPEC void* kfr_allocate_aligned(size_t size, size_t alignment);
 
+/// @brief Deallocates memory.
+KFR_API_SPEC void kfr_deallocate(void* ptr);
+
+#ifdef KFR_MANAGED_ALLOCATION
 /// @brief Reallocates memory to new size.
 KFR_API_SPEC void* kfr_reallocate(void* ptr, size_t new_size);
 
@@ -164,11 +170,9 @@ KFR_API_SPEC void* kfr_add_ref(void* ptr);
 /// @brief Releases a reference to the allocated memory.
 KFR_API_SPEC void kfr_release(void* ptr);
 
-/// @brief Deallocates memory.
-KFR_API_SPEC void kfr_deallocate(void* ptr);
-
 /// @brief Returns allocated memory size.
 KFR_API_SPEC size_t kfr_allocated_size(void* ptr);
+#endif
 
 /// Enumeration for DFT packing format. See https://www.kfr.dev/docs/latest/dft_format/ for details
 typedef enum KFR_DFT_PACK_FORMAT

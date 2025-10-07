@@ -55,12 +55,16 @@ static_assert(sizeof(mem_header) == sizeof(size_t) + 2 * sizeof(u16) + sizeof(un
 
 inline mem_header* aligned_header(void* ptr) { return ptr_cast<mem_header>(ptr) - 1; }
 
+#ifdef KFR_MANAGED_ALLOCATION
 inline size_t aligned_size(void* ptr) { return aligned_header(ptr)->size; }
+#endif
 
 inline void* aligned_malloc(size_t size, size_t alignment)
 {
     if (alignment == 0 || alignment > 32768)
         return nullptr;
+
+#ifdef KFR_MANAGED_ALLOCATION
     get_memory_statistics().allocation_count++;
     get_memory_statistics().allocation_size += size;
     void* ptr = malloc(size + (alignment - 1) + sizeof(mem_header));
@@ -73,8 +77,19 @@ inline void* aligned_malloc(size_t size, size_t alignment)
     aligned_header(aligned_ptr)->references() = 1;
     aligned_header(aligned_ptr)->size         = size;
     return aligned_ptr;
+#else
+#ifdef _MSC_VER
+    return _aligned_malloc(align_up(size, alignment), alignment);
+#else
+    void* ptr = nullptr;
+    if (posix_memalign(&ptr, alignment, align_up(size, alignment)) != 0)
+        return nullptr;
+    return ptr;
+#endif
+#endif
 }
 
+#ifdef KFR_MANAGED_ALLOCATION
 inline void aligned_force_free(void* ptr)
 {
     get_memory_statistics().deallocation_count++;
@@ -83,13 +98,23 @@ inline void aligned_force_free(void* ptr)
 }
 
 inline void aligned_add_ref(void* ptr) { aligned_header(ptr)->references()++; }
+#endif
 
 inline void aligned_free(void* ptr)
 {
+#ifdef KFR_MANAGED_ALLOCATION
     if (--aligned_header(ptr)->references() == 0)
         aligned_force_free(ptr);
+#else
+#ifdef _MSC_VER
+    return _aligned_free(ptr);
+#else
+    return std::free(ptr);
+#endif
+#endif
 }
 
+#ifdef KFR_MANAGED_ALLOCATION
 inline void aligned_release(void* ptr) { aligned_free(ptr); }
 
 inline void* aligned_reallocate(void* ptr, size_t new_size, size_t alignment)
@@ -122,6 +147,7 @@ inline void* aligned_reallocate(void* ptr, size_t new_size, size_t alignment)
         }
     }
 }
+#endif
 } // namespace details
 
 constexpr inline size_t default_memory_alignment = 64;

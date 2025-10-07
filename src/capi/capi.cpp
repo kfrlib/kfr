@@ -196,6 +196,7 @@ KFR_API_SPEC void* kfr_allocate_aligned(size_t size, size_t alignment)
     return details::aligned_malloc(size, alignment);
 }
 KFR_API_SPEC void kfr_deallocate(void* ptr) { return details::aligned_free(ptr); }
+#ifdef KFR_MANAGED_ALLOCATION
 KFR_API_SPEC size_t kfr_allocated_size(void* ptr) { return details::aligned_size(ptr); }
 
 KFR_API_SPEC void* kfr_add_ref(void* ptr)
@@ -213,6 +214,7 @@ KFR_API_SPEC void* kfr_reallocate_aligned(void* ptr, size_t new_size, size_t ali
 {
     return details::aligned_reallocate(ptr, new_size, alignment);
 }
+#endif
 
 KFR_API_SPEC KFR_DFT_PLAN_F32* kfr_dft_create_plan_f32(size_t size)
 {
