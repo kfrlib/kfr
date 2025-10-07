@@ -91,7 +91,7 @@ enum
 };
 
 /// Library version definitions
-#define KFR_HEADERS_VERSION 60000
+#define KFR_HEADERS_VERSION 70000
 
 /// @brief Returns the library version as a string.
 KFR_API_SPEC const char* kfr_version_string();
