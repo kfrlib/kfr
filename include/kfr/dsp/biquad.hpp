@@ -429,79 +429,6 @@ KFR_FUNCTION void filtfilt(univector<T, Tag>& arr, const iir_params<T, Itag>& pa
     process(reverse(arr), iir(reverse(arr), params));
 }
 
-#define KFR_BIQUAD_DEPRECATED                                                                                \
-    [[deprecated("biquad(param, expr) prototype is deprecated. Use iir(expr, param) with swapped "           \
-                 "arguments")]]
-
-/**
- * @brief Returns template expressions that applies biquad filter to the input.
- * @param bq Biquad coefficients
- * @param e1 Input expression
- */
-template <typename T, typename E1>
-KFR_BIQUAD_DEPRECATED KFR_FUNCTION expression_iir<1, T, E1> biquad(const biquad_section<T>& bq, E1&& e1)
-{
-    const biquad_section<T> bqs[1] = { bq };
-    return expression_iir<1, T, E1>(std::forward<E1>(e1), iir_state{ iir_params{ bqs } });
-}
-
-/**
- * @brief Returns template expressions that applies cascade of biquad filters to the input.
- * @param bq Array of biquad coefficients
- * @param e1 Input expression
- * @note This implementation introduces delay of N - 1 samples, where N is the filter count.
- */
-template <size_t filters, typename T, typename E1>
-KFR_BIQUAD_DEPRECATED KFR_FUNCTION expression_iir_l<filters, T, E1> biquad_l(
-    const biquad_section<T> (&bq)[filters], E1&& e1)
-{
-    return expression_iir_l<filters, T, E1>(std::forward<E1>(e1), iir_state{ iir_params{ bq } });
-}
-
-/**
- * @brief Returns template expressions that applies cascade of biquad filters to the input.
- * @param bq Array of biquad coefficients
- * @param e1 Input expression
- * @note This implementation has zero latency
- */
-template <size_t filters, typename T, typename E1>
-KFR_BIQUAD_DEPRECATED KFR_FUNCTION expression_iir<filters, T, E1> biquad(
-    const biquad_section<T> (&bq)[filters], E1&& e1)
-{
-    return expression_iir<filters, T, E1>(std::forward<E1>(e1), iir_state{ iir_params{ bq } });
-}
-
-/**
- * @brief Returns template expressions that applies cascade of biquad filters to the input.
- * @param bq Array of biquad coefficients
- * @param e1 Input expression
- * @note This implementation has zero latency
- */
-template <size_t maxfiltercount = 4, typename T, typename E1>
-KFR_BIQUAD_DEPRECATED KFR_FUNCTION expression_handle<T, 1> biquad(const biquad_section<T>* bq, size_t count,
-                                                                  E1&& e1)
-{
-    KFR_LOGIC_CHECK(next_poweroftwo(count) <= maxfiltercount,
-                    "biquad: too many biquad sections. Use higher maxfiltercount");
-    return cswitch(
-        cfilter(internal_generic::biquad_sizes, internal_generic::biquad_sizes <= csize_t<maxfiltercount>{}),
-        next_poweroftwo(count),
-        [&](auto x)
-        {
-            constexpr size_t filters = x;
-            return to_handle(expression_iir<filters, T, E1>(std::forward<E1>(e1),
-                                                            iir_state{ iir_params<T, filters>(bq, count) }));
-        },
-        [&] { return to_handle(fixshape(zeros<T>(), fixed_shape<infinite_size>)); });
-}
-
-template <size_t maxfiltercount = 4, typename T, typename E1>
-KFR_BIQUAD_DEPRECATED KFR_FUNCTION expression_handle<T, 1> biquad(const std::vector<biquad_section<T>>& bq,
-                                                                  E1&& e1)
-{
-    return biquad<maxfiltercount>(bq.data(), bq.size(), std::forward<E1>(e1));
-}
-
 template <size_t filters, typename T, typename E1>
 using expression_biquads_l = expression_iir_l<filters, T, E1>;
 
@@ -511,24 +438,9 @@ using expression_biquads = expression_iir<filters, T, E1>;
 } // namespace KFR_ARCH_NAME
 
 template <typename T>
-using biquad_params [[deprecated("biquad_params is deprecated. Use biquad_section")]] = biquad_section<T>;
-
-template <typename T, size_t filters = tag_dynamic_vector>
-using biquad_blocks [[deprecated("biquad_blocks is deprecated. Use iir_params")]] = iir_params<T, filters>;
-
-template <typename T>
 class iir_filter : public expression_filter<T>
 {
 public:
     iir_filter(const iir_params<T>& params);
-
-    [[deprecated("iir_filter(bq, count) is deprecated. Use iir_filter(iir_params{bq, count})")]] iir_filter(
-        const biquad_section<T>* bq, size_t count)
-        : iir_filter(iir_params<T>(bq, count))
-    {
-    }
 };
-
-template <typename T>
-using biquad_filter [[deprecated("biquad_filter is deprecated. Use iir_filter")]] = iir_filter<T>;
 } // namespace kfr
