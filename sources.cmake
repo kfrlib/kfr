@@ -377,6 +377,7 @@ set(
     ${PROJECT_SOURCE_DIR}/tests/unit/base/univector.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/biquad.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/biquad_design.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/dsp/dcremove.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/delay.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/dsp.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/ebu.cpp
