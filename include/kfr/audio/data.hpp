@@ -48,9 +48,17 @@ static_assert(max_audio_channels >= 2, "KFR_MAX_AUDIO_CHANNELS must be >= 2");
 static_assert(max_audio_channels <= 64, "KFR_MAX_AUDIO_CHANNELS must be <= 64");
 #endif
 
+/**
+ * @brief Determines the channel type based on interleaving.
+ * @tparam T Data type.
+ * @tparam Interleaved Whether the data is interleaved.
+ */
 template <typename T, size_t Interleaved>
 using chan = std::conditional_t<Interleaved, T, std::array<T, max_audio_channels>>;
 
+/**
+ * @brief Supported audio file container formats.
+ */
 enum class audiofile_container : uint8_t
 {
     unknown = 0,
@@ -64,6 +72,9 @@ enum class audiofile_container : uint8_t
     mp3, ///< MPEG audio
 };
 
+/**
+ * @brief Supported audio file codecs.
+ */
 enum class audiofile_codec : uint8_t
 {
     unknown = 0,
@@ -74,12 +85,20 @@ enum class audiofile_codec : uint8_t
     mp3,
 };
 
+/**
+ * @brief Endianness of audio data.
+ */
 enum class audiofile_endianness : uint8_t
 {
     little,
     big,
 };
 
+/**
+ * @brief Checks if a container supports a single codec.
+ * @param container Audio file container format.
+ * @return True if the container supports a single codec, false otherwise.
+ */
 constexpr bool is_single_codec(audiofile_container container)
 {
     switch (container)
@@ -92,26 +111,85 @@ constexpr bool is_single_codec(audiofile_container container)
     }
 }
 
+/**
+ * @brief Metadata map for storing key-value pairs.
+ */
 using metadata_map = std::map<std::string, std::string>;
 
 struct audio_quantization;
 
+/**
+ * @brief Loads audio samples into a floating-point buffer.
+ * @tparam Tin Input sample type.
+ * @param out Destination buffer.
+ * @param in Source buffer.
+ * @param size Number of samples.
+ * @param swap_bytes Whether to swap bytes.
+ */
 template <typename Tin>
 void samples_load(fbase* out, const Tin* in, size_t size, bool swap_bytes = false) noexcept;
+
+/**
+ * @brief Loads interleaved audio samples into a planar floating-point buffer.
+ * @tparam Tin Input sample type.
+ * @param out Destination buffers for each channel.
+ * @param in Source buffer.
+ * @param channels Number of channels.
+ * @param size Number of samples per channel.
+ * @param swap_bytes Whether to swap bytes.
+ */
 template <typename Tin>
 void samples_load(fbase* const out[], const Tin* in, size_t channels, size_t size,
                   bool swap_bytes = false) noexcept;
 
+/**
+ * @brief Stores floating-point samples into a buffer with quantization.
+ * @tparam Tout Output sample type.
+ * @param out Destination buffer.
+ * @param in Source buffer.
+ * @param size Number of samples.
+ * @param quantization Quantization parameters.
+ * @param swap_bytes Whether to swap bytes.
+ */
 template <typename Tout>
 void samples_store(Tout* out, const fbase* in, size_t size, const audio_quantization& quantization,
                    bool swap_bytes = false) noexcept;
+
+/**
+ * @brief Stores planar floating-point samples into an interleaved buffer with quantization.
+ * @tparam Tout Output sample type.
+ * @param out Destination buffer.
+ * @param in Source buffers for each channel.
+ * @param channels Number of channels.
+ * @param size Number of samples per channel.
+ * @param quantization Quantization parameters.
+ * @param swap_bytes Whether to swap bytes.
+ */
 template <typename Tout>
 void samples_store(Tout* out, const fbase* const in[], size_t channels, size_t size,
                    const audio_quantization& quantization, bool swap_bytes = false) noexcept;
+
+/**
+ * @brief Stores planar floating-point samples into a interleaved buffer.
+ * @tparam Tout Output sample type.
+ * @param out Destination buffer.
+ * @param in Source buffers for each channel.
+ * @param channels Number of channels.
+ * @param size Number of samples per channel.
+ * @param swap_bytes Whether to swap bytes.
+ */
 template <typename Tout>
 void samples_store(Tout* out, const fbase* const in[], size_t channels, size_t size,
                    bool swap_bytes = false) noexcept;
 
+/**
+ * @brief Loads audio samples based on sample type.
+ * @param type Audio sample type.
+ * @param out Destination buffer.
+ * @param in Source buffer.
+ * @param size Number of samples.
+ * @param swap_bytes Whether to swap bytes.
+ */
 KFR_INTRINSIC void samples_load(audio_sample_type type, fbase* out, const std::byte* in, size_t size,
                                 bool swap_bytes = false) noexcept
 {
@@ -136,6 +214,16 @@ KFR_INTRINSIC void samples_load(audio_sample_type type, fbase* out, const std::b
         KFR_UNREACHABLE;
     }
 }
+
+/**
+ * @brief Loads interleaved audio samples based on sample type.
+ * @param type Audio sample type.
+ * @param out Destination buffers for each channel.
+ * @param in Source buffer.
+ * @param channels Number of channels.
+ * @param size Number of samples per channel.
+ * @param swap_bytes Whether to swap bytes.
+ */
 KFR_INTRINSIC void samples_load(audio_sample_type type, fbase* const out[], const std::byte* in,
                                 size_t channels, size_t size, bool swap_bytes = false) noexcept
 {
@@ -161,6 +249,15 @@ KFR_INTRINSIC void samples_load(audio_sample_type type, fbase* const out[], cons
     }
 }
 
+/**
+ * @brief Stores audio samples based on sample type with quantization.
+ * @param type Audio sample type.
+ * @param out Destination buffer.
+ * @param in Source buffer.
+ * @param size Number of samples.
+ * @param quantization Quantization parameters.
+ * @param swap_bytes Whether to swap bytes.
+ */
 KFR_INTRINSIC void samples_store(audio_sample_type type, std::byte* out, const fbase* in, size_t size,
                                  const audio_quantization& quantization, bool swap_bytes = false) noexcept
 {
@@ -185,6 +282,17 @@ KFR_INTRINSIC void samples_store(audio_sample_type type, std::byte* out, const f
         KFR_UNREACHABLE;
     }
 }
+
+/**
+ * @brief Stores interleaved audio samples based on sample type with quantization.
+ * @param type Audio sample type.
+ * @param out Destination buffer.
+ * @param in Source buffers for each channel.
+ * @param channels Number of channels.
+ * @param size Number of samples per channel.
+ * @param quantization Quantization parameters.
+ * @param swap_bytes Whether to swap bytes.
+ */
 KFR_INTRINSIC void samples_store(audio_sample_type type, std::byte* out, const fbase* const in[],
                                  size_t channels, size_t size, const audio_quantization& quantization,
                                  bool swap_bytes = false) noexcept
@@ -210,6 +318,17 @@ KFR_INTRINSIC void samples_store(audio_sample_type type, std::byte* out, const f
         KFR_UNREACHABLE;
     }
 }
+
+/**
+ * @brief Stores interleaved audio samples based on sample type.
+ * @param type Audio sample type.
+ * @param out Destination buffer.
+ * @param in Source buffers for each channel.
+ * @param channels Number of channels.
+ * @param size Number of samples per channel.
+ * @param swap_bytes Whether to swap bytes.
+ */
+
 KFR_INTRINSIC void samples_store(audio_sample_type type, std::byte* out, const fbase* const in[],
                                  size_t channels, size_t size, bool swap_bytes = false) noexcept
 {
@@ -235,6 +354,9 @@ KFR_INTRINSIC void samples_store(audio_sample_type type, std::byte* out, const f
     }
 }
 
+/**
+ * @brief Represents the format of an audio file.
+ */
 struct audiofile_format
 {
     audiofile_container container   = audiofile_container::unknown; /**< Container format. */
@@ -259,6 +381,9 @@ struct audiofile_format
     bool operator==(const audiofile_format& other) const noexcept = default;
 };
 
+/**
+ * @brief Represents audio statistics such as peak and RMS values.
+ */
 struct audio_stat
 {
     fbase peak;
@@ -283,6 +408,10 @@ struct lambda_deallocator
 };
 } // namespace details
 
+/**
+ * @brief Represents a strided audio channel.
+ * @tparam T Data type.
+ */
 template <typename T>
 struct strided_channel
 {
@@ -314,6 +443,14 @@ KFR_INTRINSIC void set_elements(strided_channel<T>& self, const shape<1>& index,
     scatter_stride<N>(self.data + index.front() * self.stride, value, self.stride);
 }
 
+/**
+ * @brief Contiguous audio buffer with optional interleaving.
+ *
+ * Stores multi-channel audio either as planar (separate channel buffers) or interleaved
+ * (single strided buffer). Provides allocation, slicing, arithmetic, and traversal utilities.
+ *
+ * @tparam Interleaved If true, samples are interleaved; otherwise planar per-channel pointers.
+ */
 template <bool Interleaved = false>
 struct audio_data
 {
@@ -328,6 +465,15 @@ struct audio_data
 
     [[nodiscard]] constexpr audio_data() noexcept : size(0), capacity(0) {}
 
+    /**
+     * @brief Converts between planar and interleaved layouts.
+     *
+     * Constructs an audio_data with the same channel count and frame count as @p other,
+     * converting sample storage between interleaved and non-interleaved layouts as needed.
+     * If @p other is empty, the result is empty.
+     *
+     * @param other Source buffer with the opposite interleaving layout.
+     */
     [[nodiscard]] audio_data(const audio_data<!Interleaved>& other) : audio_data(other.channels, other.size)
     {
         if (other.empty())
@@ -358,8 +504,34 @@ struct audio_data
     [[nodiscard]] audio_data(std::span<fbase* const> pointers, size_t size)
         requires(!Interleaved);
 
+    /**
+     * @brief Constructs an audio_data buffer with the specified channel count and optional initial size.
+     *
+     * Allocates aligned storage and initializes channel pointers according to layout:
+     * - Interleaved: a single contiguous block.
+     * - Planar: per-channel blocks aligned to 64 bytes (allocated as single memory block).
+     *
+     * If size is 0, an empty buffer is created without allocating sample storage.
+     *
+     * Capacity is set to size, and can be increased later via reserve().
+     *
+     * @param channels Number of audio channels (1..max_audio_channels).
+     * @param size Optional initial number of samples per channel (capacity); 0 defers allocation.
+     *
+     * @pre channels > 0 && channels <= max_audio_channels
+     * @post Channel pointers are initialized; storage (if allocated) is owned and freed automatically.
+     * @throws std::bad_alloc If memory allocation fails.
+     */
     [[nodiscard]] explicit audio_data(size_t channels, size_t size = 0);
 
+    /**
+     * @brief Constructs an audio buffer and initializes all samples to a constant value.
+     * @param channels Number of channels to allocate.
+     * @param size Number of samples per channel.
+     * @param value Initial sample value applied to every element.
+     * @note Equivalent to constructing with (channels, size) and then filling with value.
+     * @throws std::bad_alloc If memory allocation fails.
+     */
     [[nodiscard]] audio_data(size_t channels, size_t size, fbase value);
 
     /**
@@ -404,8 +576,30 @@ struct audio_data
      */
     void clear();
 
+    /**
+     * Resizes the container to hold exactly new_size elements.
+     *
+     * - If new_size <= current capacity, adjusts size without reallocating.
+     * - Otherwise, increases capacity (rounded up) via reserve() and then updates size.
+     *
+     * Preserves existing elements up to min(old_size, new_size). When growing, newly
+     * added elements may be left uninitialized. Shrinking does not reduce capacity.
+     * May reallocate on growth, invalidating pointers/references to elements.
+     *
+     * @param new_size Number of elements desired.
+     */
     void resize(size_t new_size);
 
+    /**
+     * @brief Resize to the specified length and initialize newly added samples.
+     *
+     * Preserves existing data. If the size grows, the appended region is filled with the given value;
+     * if it shrinks, the buffer is truncated. Works with both interleaved and planar layouts, applying
+     * initialization across all channels as appropriate.
+     *
+     * @param new_size Target number of frames (samples per channel).
+     * @param value Sample value used to initialize newly created elements.
+     */
     void resize(size_t new_size, fbase value);
 
     void reserve(size_t new_capacity);
@@ -422,6 +616,12 @@ struct audio_data
 
     void swap(audio_data& other) noexcept;
 
+    /**
+     * @brief Check whether this audio data container is empty.
+     * @details Considered empty if either the number of channels is zero or the size (samples/frames) is
+     * zero.
+     * @returns true if no channels or no samples.
+     */
     [[nodiscard]] bool empty() const noexcept { return channels == 0 || size == 0; }
 
     /**
@@ -635,12 +835,19 @@ using audio_data_planar = audio_data<false>;
  */
 using audio_data_interleaved = audio_data<true>;
 
+/**
+ * @brief Supported audio dithering methods.
+ */
 enum class audio_dithering
 {
     none,
     rectangular,
     triangular,
 };
+
+/**
+ * @brief Represents the state of audio dithering.
+ */
 
 struct audio_dithering_state
 {
@@ -662,6 +869,9 @@ struct audio_dithering_state
     }
 };
 
+/**
+ * @brief Represents audio quantization parameters.
+ */
 struct audio_quantization
 {
     audio_dithering_state dither;
