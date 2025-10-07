@@ -24,6 +24,7 @@
   See https://www.kfrlib.com for details.
  */
 #include <kfr/audio/encoder.hpp>
+#include <kfr/audio/decoder.hpp>
 
 namespace kfr
 {
@@ -59,15 +60,21 @@ expected<void, audiofile_error> encode_audio_file(const file_path& path, const a
                                                   audio_decoder* copyMetadataFrom,
                                                   const audio_encoding_options& options)
 {
+    audiofile_format i_format = format;
+    i_format.channels         = data.channels;
+    if (i_format.container == audiofile_container::unknown)
+    {
+        i_format.container = audiofile_container_from_extension(file_extension(path));
+    }
     // Create the appropriate encoder based on the format
-    std::unique_ptr<audio_encoder> encoder = create_encoder_for_container(format.container, options);
+    std::unique_ptr<audio_encoder> encoder = create_encoder_for_container(i_format.container, options);
     if (!encoder)
     {
         return unexpected(audiofile_error::invalid_argument);
     }
 
     // Open the file for writing
-    auto result = encoder->open(path, format, copyMetadataFrom);
+    auto result = encoder->open(path, i_format, copyMetadataFrom);
     if (!result)
     {
         return unexpected(result.error());
@@ -96,15 +103,23 @@ expected<void, audiofile_error> encode_audio_file(const file_path& path, const a
                                                                 audio_decoder* copyMetadataFrom,
                                                                 const audio_encoding_options& options)
 {
-    // Create the appropriate encoder based on the format
-    std::unique_ptr<audio_encoder> encoder = create_encoder_for_container(format.container, options);
+    // Create the appropriate encoder based on the format or file extension
+    audiofile_format i_format = format;
+    i_format.channels         = data.channels;
+
+    if (i_format.container == audiofile_container::unknown)
+    {
+        i_format.container = audiofile_container_from_extension(file_extension(path));
+    }
+
+    std::unique_ptr<audio_encoder> encoder = create_encoder_for_container(i_format.container, options);
     if (!encoder)
     {
         return unexpected(audiofile_error::invalid_argument);
     }
 
     // Open the file for writing
-    auto result = encoder->open(path, format, copyMetadataFrom);
+    auto result = encoder->open(path, i_format, copyMetadataFrom);
     if (!result)
     {
         return unexpected(result.error());

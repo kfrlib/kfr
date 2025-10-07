@@ -55,6 +55,8 @@ enum class open_file_mode
 #ifdef KFR_USE_STD_FILESYSTEM
 #define KFR_FILEPATH(s) (s)
 using file_path = std::filesystem::path;
+
+inline std::string file_extension(const file_path& path) { return path.extension().string(); }
 #else
 #ifdef KFR_OS_WIN
 #define KFR_FILEPATH_PREFIX_CONCAT(x, y) x##y
@@ -64,11 +66,28 @@ using file_path = std::wstring;
 namespace details
 {
 std::wstring utf8_to_wstring(std::string_view str);
+std::string wstring_to_utf8(std::wstring_view str);
+} // namespace details
+
+inline std::string file_extension(const file_path& path)
+{
+    auto pos = path.find_last_of(L'.');
+    if (pos == std::wstring::npos || pos == path.size() - 1)
+        return {};
+    return details::wstring_to_utf8(path.substr(pos));
 }
 
 #else
 #define KFR_FILEPATH(s) (s)
 using file_path = std::string;
+
+inline std::string file_extension(const file_path& path)
+{
+    auto pos = path.find_last_of(L'.');
+    if (pos == std::string::npos || pos == path.size() - 1)
+        return {};
+    return path.substr(pos);
+}
 #endif
 #endif
 

@@ -225,6 +225,8 @@ static audiofile_error map_hresult_to_error(HRESULT hr)
 
 using MFSample = float;
 
+namespace details
+{
 std::string wstring_to_utf8(std::wstring_view wstr)
 {
     if (wstr.empty())
@@ -251,6 +253,7 @@ std::string wstring_to_utf8(std::wstring_view wstr)
     }
     return result;
 }
+} // namespace details
 
 static std::map<std::string, std::string> readMeta(ComPtr<IMFSourceReader> pReader)
 {
@@ -311,16 +314,16 @@ static std::map<std::string, std::string> readMeta(ComPtr<IMFSourceReader> pRead
 
             if (SUCCEEDED(spMetadata->GetProperty(key, &varVal)))
             {
-                std::string sKey = wstring_to_utf8(key);
+                std::string sKey = details::wstring_to_utf8(key);
 
                 std::string sVal;
                 if (varVal.vt == VT_LPWSTR && varVal.pwszVal)
                 {
-                    sVal = wstring_to_utf8(varVal.pwszVal);
+                    sVal = details::wstring_to_utf8(varVal.pwszVal);
                 }
                 else if (varVal.vt == VT_BSTR && varVal.bstrVal)
                 {
-                    sVal = wstring_to_utf8(varVal.bstrVal);
+                    sVal = details::wstring_to_utf8(varVal.bstrVal);
                 }
                 else if (varVal.vt == VT_UI4)
                 {

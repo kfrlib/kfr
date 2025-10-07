@@ -715,6 +715,12 @@ public:
             return unexpected(e.error());
 
         m_format = format;
+        if (m_format->codec == audiofile_codec::unknown)
+        {
+            m_format->codec = audiofile_codec::lpcm;
+        }
+        if (m_format->bit_depth == 0)
+            m_format->bit_depth = m_format->codec == audiofile_codec::lpcm ? 16 : 32;
         if (!m_format->valid())
         {
             return unexpected(audiofile_error::invalid_argument);
