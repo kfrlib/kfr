@@ -22,5 +22,5 @@
  */
 #pragma once
 
-#include "runtime/cpuid.hpp"
 #include "runtime/cpuid_auto.hpp"
+#include "runtime/cpuid.hpp"

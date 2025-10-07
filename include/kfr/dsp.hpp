@@ -24,15 +24,16 @@
 
 #include "base.hpp"
 
-#include "dsp/biquad.hpp"
 #include "dsp/biquad_design.hpp"
+#include "dsp/biquad.hpp"
 #include "dsp/dcremove.hpp"
 #include "dsp/delay.hpp"
 #include "dsp/ebu.hpp"
-#include "dsp/fir.hpp"
 #include "dsp/fir_design.hpp"
+#include "dsp/fir.hpp"
 #include "dsp/goertzel.hpp"
 #include "dsp/iir_design.hpp"
+#include "dsp/iir.hpp"
 #include "dsp/mixdown.hpp"
 #include "dsp/oscillators.hpp"
 #include "dsp/sample_rate_conversion.hpp"
