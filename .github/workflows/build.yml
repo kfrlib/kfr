@@ -67,6 +67,25 @@ jobs:
         name: linux-arm64
         path: ${{ github.workspace }}/dist
 
+  binaries-linux-riscv64:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Build
+      run: |
+        set -e
+        sudo apt-get update && sudo apt-get install -y clang llvm ninja-build g++-riscv64-linux-gnu
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=rvv -DCMAKE_TOOLCHAIN_FILE=../cmake/riscv64.cmake
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=rvv -DCMAKE_TOOLCHAIN_FILE=../cmake/riscv64.cmake
+        ninja -C build-release install
+        ninja -C build-debug install
+    - name: Binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-riscv64
+        path: ${{ github.workspace }}/dist
+
   binaries-windows-x86:
     runs-on: windows-2022
     steps:
