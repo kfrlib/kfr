@@ -232,14 +232,6 @@ struct dft_plan
      */
     bool is_initialized() const { return size != 0; }
 
-    [[deprecated("cpu parameter is deprecated. Runtime dispatch is used if built with "
-                 "KFR_ENABLE_MULTIARCH")]] explicit dft_plan(cpu_t cpu, size_t size,
-                                                             dft_order order = dft_order::normal)
-        : dft_plan(size, order)
-    {
-        (void)cpu;
-    }
-
     /**
      * @brief Constructs a DFT plan with the specified size and order.
      *
@@ -483,14 +475,6 @@ struct dft_plan_real : dft_plan<T>
     constexpr static size_t complex_size_for(size_t size, dft_pack_format fmt)
     {
         return fmt == dft_pack_format::CCs ? size / 2 + 1 : size / 2;
-    }
-
-    [[deprecated("cpu parameter is deprecated. Runtime dispatch is used if built with "
-                 "KFR_ENABLE_MULTIARCH")]] explicit dft_plan_real(cpu_t cpu, size_t size,
-                                                                  dft_pack_format fmt = dft_pack_format::CCs)
-        : dft_plan_real(size, fmt)
-    {
-        (void)cpu;
     }
 
     explicit dft_plan_real(size_t size, dft_pack_format fmt = dft_pack_format::CCs,
@@ -944,12 +928,6 @@ template <typename T>
 struct dct_plan : dft_plan<T>
 {
     dct_plan(size_t size) : dft_plan<T>(size) { this->temp_size += sizeof(complex<T>) * size * 2; }
-
-    [[deprecated("cpu parameter is deprecated. Runtime dispatch is used if built with "
-                 "KFR_ENABLE_MULTIARCH")]] dct_plan(cpu_t cpu, size_t size)
-        : dct_plan(size)
-    {
-    }
 
     KFR_MEM_INTRINSIC void execute(T* out, const T* in, u8* temp, bool inverse = false) const
     {
