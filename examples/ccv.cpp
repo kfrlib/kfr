@@ -1,6 +1,6 @@
 /*
  * ccv, part of KFR (https://www.kfr.dev)
- * Copyright (C) 2016-2023 Dan Cazarin
+ * Copyright (C) 2016-2025 Dan Casarin
  * See LICENSE.txt for details
  */
 
