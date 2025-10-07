@@ -326,6 +326,7 @@ set(
     ${PROJECT_SOURCE_DIR}/src/dsp/fir.cpp
     ${PROJECT_SOURCE_DIR}/src/dsp/iir_design.cpp
     ${PROJECT_SOURCE_DIR}/src/dsp/sample_rate_conversion.cpp
+    ${PROJECT_SOURCE_DIR}/src/dsp/speaker.cpp
     ${PROJECT_SOURCE_DIR}/src/dsp/version.cpp
 )
 

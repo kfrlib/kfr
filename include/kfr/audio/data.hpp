@@ -242,9 +242,9 @@ struct audiofile_format
     audiofile_endianness endianness = audiofile_endianness::little; /**< Endianness of the audio data. */
     uint8_t bit_depth               = 0; /**< Bits per sample. */
 
-    uint32_t channels           = 0; /**< Number of channels. */
-    uint32_t sample_rate        = 0; /**< Sample rate in Hz. */
-    SpeakerArrangement speakers = SpeakerArrangement::None; /**< Speaker arrangement. */
+    uint32_t channels            = 0; /**< Number of channels. */
+    uint32_t sample_rate         = 0; /**< Sample rate in Hz. */
+    speaker_arrangement speakers = speaker_arrangement::None; /**< Speaker arrangement. */
 
     uint64_t total_frames = 0;
     metadata_map metadata; /**< Key-value metadata pairs. */
@@ -536,7 +536,8 @@ struct audio_data
     [[nodiscard]] audio_stat stat() const noexcept;
 
     /**
-     * @brief Checks whether all samples in the buffer are effectively silent within a given amplitude threshold.
+     * @brief Checks whether all samples in the buffer are effectively silent within a given amplitude
+     * threshold.
      *
      * @param threshold Non-negative amplitude threshold. Any sample with absolute value
      *                  strictly greater than this threshold makes the buffer non-silent. Values exactly

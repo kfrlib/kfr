@@ -25,12 +25,15 @@
  */
 #pragma once
 
+#include <span>
+#include <array>
+
 namespace kfr
 {
 
-/// @brief Speaker positions
+/// @brief Speaker types (positions)
 /// Matches VST3 definitions
-enum class Speaker : int
+enum class speaker_type : int
 {
     None          = -1,
     Mono          = 0,
@@ -64,7 +67,7 @@ enum class Speaker : int
 
 /// @brief Predefined speaker arrangements
 /// Matches VST3 definitions
-enum class SpeakerArrangement : int
+enum class speaker_arrangement : int
 {
     None           = -1,
     Mono           = 0,
@@ -98,35 +101,23 @@ enum class SpeakerArrangement : int
     Arr102         = 28
 };
 
+using Speaker [[deprecated("Use speaker_type instead")]]                   = speaker_type;
+using SpeakerArrangement [[deprecated("Use speaker_arrangement instead")]] = speaker_arrangement;
+
+/**
+ * @brief Returns the canonical channel list for a speaker arrangement.
+ *
+ * Maps a speaker_arrangement to an ordered, immutable sequence of speaker_type values.
+ * The returned span references static storage valid for the program lifetime and performs no allocations.
+ *
+ * @param arr The speaker arrangement to resolve.
+ * @return std::span<const speaker_type> Ordered channels for the arrangement, or an empty span if
+ * unsupported.
+ */
+std::span<const speaker_type> arrangement_speakers(speaker_arrangement arr) noexcept;
+
 /// @brief Returns a predefined speaker arrangement for a given number of channels
-/// If no predefined arrangement exists, returns SpeakerArrangement::None
-inline SpeakerArrangement arrangement_for_channels(size_t count)
-{
-    switch (count)
-    {
-    case 1:
-        return SpeakerArrangement::Mono;
-    case 2:
-        return SpeakerArrangement::Stereo;
-    case 3:
-        return SpeakerArrangement::Music30;
-    case 4:
-        return SpeakerArrangement::Music40;
-    case 5:
-        return SpeakerArrangement::Arr50;
-    case 6:
-        return SpeakerArrangement::Arr51;
-    case 7:
-        return SpeakerArrangement::Music61;
-    case 8:
-        return SpeakerArrangement::Music71;
-    case 9:
-        return SpeakerArrangement::Music81;
-    case 12:
-        return SpeakerArrangement::Arr102;
-    default:
-        return SpeakerArrangement::None;
-    }
-}
+/// If no predefined arrangement exists, returns speaker_arrangement::None
+speaker_arrangement arrangement_for_channels(size_t count) noexcept;
 
 } // namespace kfr

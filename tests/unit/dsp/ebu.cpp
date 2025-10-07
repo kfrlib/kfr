@@ -35,7 +35,8 @@ template <typename T>
 static void ebu_test_stereo(int sample_rate, const std::initializer_list<TestFragment>& fragments, T refM,
                             T refS, T refI, T refLRA)
 {
-    ebu_r128<T> loudness(sample_rate, { Speaker::Left, Speaker::Right });
+    ebu_r128<T> loudness(sample_rate,
+                         std::initializer_list<speaker_type>{ speaker_type::Left, speaker_type::Right });
 
     size_t total_length = 0;
     for (const TestFragment& f : fragments)
@@ -86,8 +87,9 @@ static void ebu_test_multichannel(int sample_rate,
                                   const std::initializer_list<TestFragmentMultichannel>& fragments, T refM,
                                   T refS, T refI, T refLRA)
 {
-    ebu_r128<T> loudness(sample_rate, { Speaker::Left, Speaker::Right, Speaker::Center, Speaker::LeftSurround,
-                                        Speaker::RightSurround });
+    ebu_r128<T> loudness(sample_rate, std::initializer_list<speaker_type>{
+                                          speaker_type::Left, speaker_type::Right, speaker_type::Center,
+                                          speaker_type::LeftSurround, speaker_type::RightSurround });
 
     size_t total_length = 0;
     for (const TestFragmentMultichannel& f : fragments)

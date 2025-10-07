@@ -201,7 +201,7 @@ struct ebu_channel
 {
 public:
     friend struct ebu_r128<T>;
-    ebu_channel(int sample_rate, Speaker speaker, int packet_size_factor = 1, T input_gain = 1)
+    ebu_channel(int sample_rate, speaker_type speaker, int packet_size_factor = 1, T input_gain = 1)
         : m_sample_rate(sample_rate), m_speaker(speaker), m_input_gain(input_gain),
           m_packet_size(sample_rate / 10 / packet_size_factor), m_kfilter(make_kfilter<T>(sample_rate)),
           m_short_sum_of_squares(3000 / 100 * packet_size_factor),
@@ -210,12 +210,12 @@ public:
     {
         switch (speaker)
         {
-        case Speaker::Lfe:
-        case Speaker::Lfe2:
+        case speaker_type::Lfe:
+        case speaker_type::Lfe2:
             m_output_energy_gain = 0.0;
             break;
-        case Speaker::LeftSurround:
-        case Speaker::RightSurround:
+        case speaker_type::LeftSurround:
+        case speaker_type::RightSurround:
             m_output_energy_gain = static_cast<T>(dB_to_power(+1.5));
             break;
         default:
@@ -238,11 +238,11 @@ public:
         m_short_sum_of_squares.ringbuf_write(m_short_sum_of_squares_cursor, filtered_sum_of_squares);
         m_momentary_sum_of_squares.ringbuf_write(m_momentary_sum_of_squares_cursor, filtered_sum_of_squares);
     }
-    Speaker get_speaker() const { return m_speaker; }
+    speaker_type get_speaker() const { return m_speaker; }
 
 private:
     const int m_sample_rate;
-    const Speaker m_speaker;
+    const speaker_type m_speaker;
     const T m_input_gain;
     const size_t m_packet_size;
     expression_handle<T, 1> m_kfilter;
@@ -260,7 +260,7 @@ struct ebu_r128
 {
 public:
     // Correct values for packet_size_factor: 1 (10Hz refresh rate), 2 (20Hz), 3 (30Hz)
-    ebu_r128(int sample_rate, const std::vector<Speaker>& channels, int packet_size_factor = 1)
+    ebu_r128(int sample_rate, std::span<const speaker_type> channels, int packet_size_factor = 1)
         : m_sample_rate(sample_rate), m_running(true), m_need_reset(false),
           m_packet_size(sample_rate / 10 / packet_size_factor)
     {
@@ -268,7 +268,7 @@ public:
         KFR_LOGIC_CHECK(sample_rate > 0, "sample_rate must be greater than 0");
         KFR_LOGIC_CHECK(packet_size_factor >= 1 && packet_size_factor <= 6,
                         "packet_size_factor must be in range [1..6]");
-        for (Speaker sp : channels)
+        for (speaker_type sp : channels)
         {
             m_channels.emplace_back(sample_rate, sp, packet_size_factor, T(1));
         }
