@@ -24,7 +24,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
-        name: linux-x86_64
+        name: kfr-linux-x86_64
         path: ${{ github.workspace }}/dist
 
   binaries-linux-arm:
@@ -44,7 +44,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
-        name: linux-arm
+        name: kfr-linux-arm
         path: ${{ github.workspace }}/dist
 
   binaries-linux-arm64:
@@ -64,7 +64,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
-        name: linux-arm64
+        name: kfr-linux-arm64
         path: ${{ github.workspace }}/dist
 
   binaries-linux-riscv64:
@@ -83,7 +83,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
-        name: linux-riscv64
+        name: kfr-linux-riscv64
         path: ${{ github.workspace }}/dist
 
   binaries-windows-x86:
@@ -105,7 +105,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
-        name: windows-x86
+        name: kfr-windows-x86
         path: ${{ github.workspace }}/dist
 
   binaries-windows-x86_64:
@@ -126,7 +126,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
-        name: windows-x86_64
+        name: kfr-windows-x86_64
         path: ${{ github.workspace }}/dist
 
   binaries-windows-arm64:
@@ -147,7 +147,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
-        name: windows-arm64
+        name: kfr-windows-arm64
         path: ${{ github.workspace }}/dist
 
   binaries-android-armeabi-v7a:
@@ -166,7 +166,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
-        name: android-armeabi-v7a
+        name: kfr-android-armeabi-v7a
         path: ${{ github.workspace }}/dist
 
   binaries-android-arm64-v8a:
@@ -185,7 +185,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
-        name: android-arm64-v8a
+        name: kfr-android-arm64-v8a
         path: ${{ github.workspace }}/dist
 
   binaries-android-x86:
@@ -204,7 +204,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
-        name: android-x86
+        name: kfr-android-x86
         path: ${{ github.workspace }}/dist
 
   binaries-android-x86_64:
@@ -223,7 +223,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
-        name: android-x86_64
+        name: kfr-android-x86_64
         path: ${{ github.workspace }}/dist
 
   binaries-macos-x86_64:
@@ -241,7 +241,25 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
-        name: macos-x86_64
+        name: kfr-macos-x86_64
+        path: ${{ github.workspace }}/dist
+
+  binaries-macos-universal:
+    runs-on: macos-13
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Build
+      run: |
+        brew install ninja
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse41
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse41
+        ninja -C build-release install
+        ninja -C build-debug install
+    - name: Binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: kfr-macos-universal
         path: ${{ github.workspace }}/dist
 
   binaries-macos-arm64:
@@ -259,7 +277,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
-        name: macos-arm64
+        name: kfr-macos-arm64
         path: ${{ github.workspace }}/dist
 
   upload-release:
