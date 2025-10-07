@@ -28,8 +28,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-// #define KFR_MANAGED_ALLOCATION 1
-
 #if defined __STDC_IEC_559_COMPLEX__ && !defined KFR_NO_C_COMPLEX_TYPES
 #include <complex.h>
 #endif
@@ -44,16 +42,19 @@
 #endif
 
 // Calling convention definition
+#if defined KFR_ARCH_IS_X86
 #if defined(_M_X64) || defined(__x86_64__)
+// 64-bit systems use the same calling convention
 #define KFR_CDECL
 #else
-#ifdef _WIN32
+#if defined(_MSC_VER)
 #define KFR_CDECL __cdecl
-#elif defined KFR_ARCH_IS_X86
-#define KFR_CDECL __attribute__((__cdecl__))
+#else
+#define KFR_CDECL __attribute__((cdecl))
+#endif
+#endif
 #else
 #define KFR_CDECL
-#endif
 #endif
 
 // DLL export/import macros
@@ -74,6 +75,24 @@
 #ifdef __cplusplus
 extern "C"
 {
+#endif
+
+/* Check for C99 or later */
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+/* C99 or later - use _Bool */
+typedef _Bool kfr_bool;
+#define KFR_TRUE 1
+#define KFR_FALSE 0
+#elif defined(__cplusplus)
+/* C++ - use bool */
+typedef bool kfr_bool;
+#define KFR_TRUE true
+#define KFR_FALSE false
+#else
+/* C89 - fallback to char */
+typedef char kfr_bool;
+#define KFR_TRUE 1
+#define KFR_FALSE 0
 #endif
 
 /// Supported architectures enumeration
@@ -122,9 +141,6 @@ typedef double kfr_c64;
 #define KFR_COMPLEX_SIZE_MULTIPLIER 2
 #endif
 
-typedef size_t kfr_size_t;
-typedef int32_t kfr_int32_t;
-
 /// Macro to define opaque structures for different DFT, DCT, and filter plans
 #define KFR_OPAQUE_STRUCT(NAME)                                                                              \
     typedef struct NAME                                                                                      \
@@ -150,10 +166,10 @@ KFR_OPAQUE_STRUCT(KFR_FILTER_C64)
 /// Default memory alignment
 #define KFR_DEFAULT_ALIGNMENT 64
 
-/// @brief Allocates memory of specified size.
+/// @brief Allocates memory of specified size with default alignment (64 bytes).
 KFR_API_SPEC void* kfr_allocate(size_t size);
 
-/// @brief Allocates aligned memory of specified size and alignment.
+/// @brief Allocates memory with specified alignment (must be a power of two).
 KFR_API_SPEC void* kfr_allocate_aligned(size_t size, size_t alignment);
 
 /// @brief Deallocates memory.
@@ -176,11 +192,11 @@ KFR_API_SPEC void kfr_release(void* ptr);
 KFR_API_SPEC size_t kfr_allocated_size(void* ptr);
 #endif
 
-/// Enumeration for DFT packing format. See https://www.kfr.dev/docs/latest/dft_format/ for details
+/// @brief DFT packing format for real DFTs. See https://www.kfr.dev/docs/latest/dft_format/ for details.
 typedef enum KFR_DFT_PACK_FORMAT
 {
-    Perm = 0,
-    CCs  = 1
+    Perm = 0, ///< Permuted format (N/2 complex values).
+    CCs  = 1 ///< Conjugate-complex symmetric format (N/2 + 1 complex values).
 } KFR_DFT_PACK_FORMAT;
 
 /**
@@ -365,11 +381,11 @@ KFR_API_SPEC KFR_DFT_REAL_PLAN_F32* kfr_dft_real_create_plan_f32(size_t size,
                                                                  KFR_DFT_PACK_FORMAT pack_format);
 
 KFR_API_SPEC KFR_DFT_REAL_PLAN_F32* kfr_dft_real_create_2d_plan_f32(size_t size1, size_t size2,
-                                                                    bool real_out_is_enough);
+                                                                    kfr_bool real_out_is_enough);
 KFR_API_SPEC KFR_DFT_REAL_PLAN_F32* kfr_dft_real_create_3d_plan_f32(size_t size1, size_t size2, size_t size3,
-                                                                    bool real_out_is_enough);
+                                                                    kfr_bool real_out_is_enough);
 KFR_API_SPEC KFR_DFT_REAL_PLAN_F32* kfr_dft_real_create_md_plan_f32(size_t dims, const unsigned* shape,
-                                                                    bool real_out_is_enough);
+                                                                    kfr_bool real_out_is_enough);
 
 /**
  * @brief Create a real DFT plan (Double precision).

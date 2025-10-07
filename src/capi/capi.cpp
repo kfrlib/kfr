@@ -226,8 +226,7 @@ KFR_API_SPEC KFR_DFT_PLAN_F32* kfr_dft_create_plan_f32(size_t size)
 KFR_API_SPEC KFR_DFT_PLAN_F32* kfr_dft_create_2d_plan_f32(size_t size1, size_t size2)
 {
     return try_fn(
-        [&]()
-        {
+        [&]() {
             return reinterpret_cast<KFR_DFT_PLAN_F32*>(
                 new var_dft_plan_impl<float, 2>(shape{ size1, size2 }));
         },
@@ -262,8 +261,7 @@ KFR_API_SPEC KFR_DFT_PLAN_F64* kfr_dft_create_plan_f64(size_t size)
 KFR_API_SPEC KFR_DFT_PLAN_F64* kfr_dft_create_2d_plan_f64(size_t size1, size_t size2)
 {
     return try_fn(
-        [&]()
-        {
+        [&]() {
             return reinterpret_cast<KFR_DFT_PLAN_F64*>(
                 new var_dft_plan_impl<double, 2>(shape{ size1, size2 }));
         },
@@ -379,35 +377,35 @@ KFR_API_SPEC KFR_DFT_REAL_PLAN_F32* kfr_dft_real_create_plan_f32(size_t size, KF
 }
 
 KFR_API_SPEC KFR_DFT_REAL_PLAN_F32* kfr_dft_real_create_2d_plan_f32(size_t size1, size_t size2,
-                                                                    bool real_out_is_enough)
+                                                                    kfr_bool real_out_is_enough)
 {
     return try_fn(
         [&]()
         {
             return reinterpret_cast<KFR_DFT_REAL_PLAN_F32*>(
-                new var_dft_plan_real_impl<float, 2>(shape{ size1, size2 }, real_out_is_enough));
+                new var_dft_plan_real_impl<float, 2>(shape{ size1, size2 }, bool(real_out_is_enough)));
         },
         nullptr);
 }
 KFR_API_SPEC KFR_DFT_REAL_PLAN_F32* kfr_dft_real_create_3d_plan_f32(size_t size1, size_t size2, size_t size3,
-                                                                    bool real_out_is_enough)
+                                                                    kfr_bool real_out_is_enough)
 {
     return try_fn(
         [&]()
         {
             return reinterpret_cast<KFR_DFT_REAL_PLAN_F32*>(
-                new var_dft_plan_real_impl<float, 3>(shape{ size1, size2, size3 }, real_out_is_enough));
+                new var_dft_plan_real_impl<float, 3>(shape{ size1, size2, size3 }, bool(real_out_is_enough)));
         },
         nullptr);
 }
 KFR_API_SPEC KFR_DFT_REAL_PLAN_F32* kfr_dft_real_create_md_plan_f32(size_t dims, const unsigned* shape,
-                                                                    bool real_out_is_enough)
+                                                                    kfr_bool real_out_is_enough)
 {
     return try_fn(
         [&]()
         {
             return reinterpret_cast<KFR_DFT_REAL_PLAN_F32*>(new var_dft_plan_real_impl<float, dynamic_shape>(
-                init_shape(dims, shape), real_out_is_enough));
+                init_shape(dims, shape), bool(real_out_is_enough)));
         },
         nullptr);
 }
@@ -461,8 +459,7 @@ KFR_API_SPEC void kfr_dft_real_execute_f64(KFR_DFT_REAL_PLAN_F64* plan, kfr_c64*
                                            uint8_t* temp)
 {
     try_fn(
-        [&]()
-        {
+        [&]() {
             reinterpret_cast<var_dft_plan<double>*>(plan)->execute(reinterpret_cast<double*>(out), in, temp);
         });
 }
