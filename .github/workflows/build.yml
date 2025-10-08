@@ -293,8 +293,10 @@ jobs:
       - binaries-linux-arm
       - binaries-linux-arm64
       - binaries-linux-x86_64
+      - binaries-linux-riscv64
       - binaries-macos-arm64
       - binaries-macos-x86_64
+      - binaries-macos-universal
       - binaries-windows-arm64
       - binaries-windows-x86
       - binaries-windows-x86_64
@@ -310,16 +312,18 @@ jobs:
         set -e
         ls -laR ${{github.workspace}}
         sudo apt-get update && sudo apt-get install -y zip
-        zip -r android-arm64-v8a.zip   android-arm64-v8a
-        zip -r android-armeabi-v7a.zip android-armeabi-v7a
-        zip -r android-x86.zip         android-x86
-        zip -r android-x86_64.zip      android-x86_64
-        zip -r linux-arm.zip           linux-arm
-        zip -r linux-arm64.zip         linux-arm64
-        zip -r linux-x86_64.zip        linux-x86_64
-        zip -r macos-arm64.zip         macos-arm64
-        zip -r macos-x86_64.zip        macos-x86_64
-        zip -r windows-arm64.zip       windows-arm64
-        zip -r windows-x86.zip         windows-x86
-        zip -r windows-x86_64.zip      windows-x86_64
+        zip -r kfr-android-arm64-v8a.zip   kfr-android-arm64-v8a
+        zip -r kfr-android-armeabi-v7a.zip kfr-android-armeabi-v7a
+        zip -r kfr-android-x86.zip         kfr-android-x86
+        zip -r kfr-android-x86_64.zip      kfr-android-x86_64
+        zip -r kfr-linux-arm.zip           kfr-linux-arm
+        zip -r kfr-linux-arm64.zip         kfr-linux-arm64
+        zip -r kfr-linux-x86_64.zip        kfr-linux-x86_64
+        zip -r kfr-linux-riscv64.zip       kfr-linux-riscv64
+        zip -r kfr-macos-arm64.zip         kfr-macos-arm64
+        zip -r kfr-macos-x86_64.zip        kfr-macos-x86_64
+        zip -r kfr-macos-universal.zip     kfr-macos-universal
+        zip -r kfr-windows-arm64.zip       kfr-windows-arm64
+        zip -r kfr-windows-x86.zip         kfr-windows-x86
+        zip -r kfr-windows-x86_64.zip      kfr-windows-x86_64
         gh release create --draft --notes "Draft Release" --title "KFR ${{github.ref_name}}" ${{github.ref_name}} *.zip
