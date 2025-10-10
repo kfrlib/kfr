@@ -55,3 +55,61 @@ KFR_INLINE void builtin_memcpy(void* dest, const void* src, size_t size) { ::mem
 KFR_INLINE void builtin_memmove(void* dest, const void* src, size_t size) { ::memmove(dest, src, size); }
 KFR_INLINE void builtin_memset(void* dest, int val, size_t size) { ::memset(dest, val, size); }
 #endif
+
+#ifdef __cplusplus
+
+namespace kfr
+{
+/**
+ * @brief RAII guard that enables flush-to-zero (FTZ) and denormals-are-zero (DAZ)
+ *        on supported CPUs (x86/x86_64, AArch64), restoring previous state on destruction.
+ */
+struct scoped_flush_denormals
+{
+public:
+    scoped_flush_denormals() noexcept
+    {
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86)
+        // x86/x64: use MXCSR
+        old_mxcsr_             = _mm_getcsr();
+        unsigned int new_mxcsr = old_mxcsr_ | (1 << 15) | (1 << 6); // FTZ | DAZ
+        _mm_setcsr(new_mxcsr);
+
+#elif defined(__aarch64__) || defined(__arm__)
+        // ARM/AArch64: use FPCR (bit 24 = FZ)
+        asm volatile("mrs %0, fpcr" : "=r"(old_fpcr_));
+        uint64_t new_fpcr = old_fpcr_ | (1ull << 24);
+        asm volatile("msr fpcr, %0" : : "r"(new_fpcr));
+
+#else
+        // Unsupported architecture: do nothing
+#endif
+    }
+
+    ~scoped_flush_denormals() noexcept
+    {
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86)
+        _mm_setcsr(old_mxcsr_);
+
+#elif defined(__aarch64__) || defined(__arm__)
+        asm volatile("msr fpcr, %0" : : "r"(old_fpcr_));
+
+#else
+        // No state to restore
+#endif
+    }
+
+    scoped_flush_denormals(const scoped_flush_denormals&)            = delete;
+    scoped_flush_denormals& operator=(const scoped_flush_denormals&) = delete;
+
+private:
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86)
+    unsigned int old_mxcsr_;
+#elif defined(__aarch64__) || defined(__arm__)
+    uint64_t old_fpcr_;
+#endif
+};
+
+} // namespace kfr
+
+#endif
