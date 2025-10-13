@@ -52,4 +52,56 @@ void process_chunk(univector_ref<const double> input) {
 }
 ```
 
+## Processing audio streams or files in chunks
+
+For large audio files or real-time streams, the signal should be processed in sequential chunks rather than loading the entire content into memory.
+Each channel should maintain its own `samplerate_converter` instance across all iterations.
+
+1. **Initialize converters** once before the loop.
+2. **Determine chunk sizes** based on target output rate:
+
+   * Use `resampler.input_size_for_output(chunk_size)` to compute how many input frames to read for a given number of desired output frames.
+   * For the first chunk, include the delay compensation from `resampler.get_delay()`.
+3. **Read a chunk of input samples**, deinterleave if multichannel.
+4. **Call `process` for each channel**:
+
+   * Optionally skip the initial delay samples (`r.skip(r.get_delay(), input)` on the first chunk).
+   * Call `r.process(output, input)` to resample.
+5. **Write the resulting output chunk** to the encoder or output stream.
+6. **Repeat until the decoder signals end of file or stream.**
+
+### Example (simplified loop)
+
+```c++
+std::vector<samplerate_converter<float>> resamplers(channels);
+for (size_t ch = 0; ch < channels; ++ch)
+    resamplers[ch] = resampler<float>(resample_quality::high, output_sr, input_sr);
+
+constexpr size_t output_chunk_size = 16384;
+audio_data output_chunk(channels, output_chunk_size);
+audio_data input_chunk(channels, resamplers[0].input_size_for_output(output_chunk_size));
+
+bool first_chunk = true;
+
+for (;;) {
+    auto frames_read = decoder->read_to(input_chunk_interleaved.truncate(input_chunk.size()));
+    if (!frames_read || frames_read.error() == audiofile_error::end_of_file) break;
+
+    input_chunk = input_chunk_interleaved.truncate(*frames_read);
+
+    for (size_t ch = 0; ch < channels; ++ch) {
+        auto& r = resamplers[ch];
+        if (first_chunk)
+            r.skip(r.get_delay(), input_chunk.channel(ch));
+        r.process(output_chunk.channel(ch), input_chunk.channel(ch));
+    }
+
+    encoder->write(output_chunk);
+    first_chunk = false;
+}
+encoder->close();
+```
+
+This approach minimizes memory use, supports long recordings or live input, and maintains sample-rate accuracy by preserving converter state across chunks.
+
 [See also a gallery with results of applying various SRC presets](src_gallery.md)
