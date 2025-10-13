@@ -301,15 +301,28 @@ public:
 
     void process_packet(const std::initializer_list<univector_dyn<T>>& source)
     {
-        process_packet<tag_dynamic_vector>(source);
+        process_packet_impl<tag_dynamic_vector>(source);
     }
     void process_packet(const std::initializer_list<univector_ref<T>>& source)
     {
-        process_packet<tag_array_ref>(source);
+        process_packet_impl<tag_array_ref>(source);
+    }
+    void process_packet(std::span<const univector_dyn<T>> source)
+    {
+        process_packet_impl<tag_dynamic_vector>(source);
+    }
+    void process_packet(std::span<const univector_ref<T>> source)
+    {
+        process_packet_impl<tag_array_ref>(source);
     }
 
+    void start() { m_running = true; }
+    void stop() { m_running = false; }
+    void reset() { m_need_reset = true; }
+
+private:
     template <univector_tag Tag>
-    void process_packet(const std::vector<univector<T, Tag>>& source)
+    void process_packet_impl(std::span<const univector<T, Tag>> source)
     {
         T momentary = 0;
         T shortterm = 0;
@@ -343,12 +356,6 @@ public:
             m_lra_buffer.push(shortterm);
         }
     }
-
-    void start() { m_running = true; }
-    void stop() { m_running = false; }
-    void reset() { m_need_reset = true; }
-
-private:
     int m_sample_rate;
     bool m_running;
     bool m_need_reset;
