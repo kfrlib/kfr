@@ -140,6 +140,8 @@ if (EMSCRIPTEN)
         CACHE BOOL "")
 endif ()
 
+message(STATUS "CMAKE_OSX_ARCHITECTURES = ${CMAKE_OSX_ARCHITECTURES}")
+
 set(X86 FALSE)
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
     set(X86 TRUE)
@@ -161,11 +163,25 @@ if (CMAKE_OSX_ARCHITECTURES MATCHES "[Aa][Rr][Mm]64")
     endif ()
 endif ()
 
+if (X86)
+    message(STATUS "X86: TRUE")
+else ()
+    message(STATUS "X86: FALSE")
+endif ()
+
+if (OSX_UNIVERSAL)
+    message(STATUS "OSX_UNIVERSAL: TRUE")
+else ()
+    message(STATUS "OSX_UNIVERSAL: FALSE")
+endif ()
+
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(BITNESS64 TRUE)
 else ()
     set(BITNESS64 FALSE)
 endif ()
+
+message(STATUS "BITNESS64: ${BITNESS64}")
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL
                                               "AppleClang")
@@ -224,6 +240,8 @@ if (NOT KFR_ARCH)
     set(KFR_ARCH target)
 endif ()
 
+message(STATUS "KFR_ARCH: ${KFR_ARCH}")
+
 if (KFR_ARCH STREQUAL "detect")
     set(KFR_ARCH host)
 endif ()
@@ -247,6 +265,7 @@ endif ()
 
 if (NOT X86)
     if (KFR_ARCH IN_LIST DETECT_NAMES)
+        message(STATUS "Cpu detection is disabled on non-x86, setting neon (KFR_ARCH=${KFR_ARCH})")
         if (BITNESS64)
             set(KFR_ARCH neon64)
         else ()
@@ -254,6 +273,8 @@ if (NOT X86)
         endif ()
     endif ()
 endif ()
+
+message(STATUS "KFR_ARCH: ${KFR_ARCH}")
 
 if (KFR_ARCH IN_LIST DETECT_NAMES AND NOT CMAKE_CROSSCOMPILING)
     message(STATUS "Detecting ${KFR_ARCH} architecture")
