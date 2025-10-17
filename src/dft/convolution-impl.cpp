@@ -23,6 +23,9 @@
   disclosing the source code of your own applications.
   See https://www.kfrlib.com for details.
  */
+#include <kfr/cident.h>
+#if !defined KFR_SKIP_IF_NON_X86 || defined(KFR_ARCH_X86)
+
 #include <kfr/base/simd_expressions.hpp>
 #include <kfr/dft/convolution.hpp>
 #include <kfr/simd/complex.hpp>
@@ -263,3 +266,5 @@ template class convolve_filter<complex<double>>;
 #endif
 
 } // namespace kfr
+
+#endif

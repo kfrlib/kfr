@@ -23,6 +23,9 @@
   disclosing the source code of your own applications.
   See https://www.kfrlib.com for details.
  */
+#include <kfr/cident.h>
+#if !defined KFR_SKIP_IF_NON_X86 || defined(KFR_ARCH_X86)
+
 #include <kfr/dsp/sample_rate_conversion.hpp>
 #include <kfr/multiarch.h>
 
@@ -177,3 +180,5 @@ template struct samplerate_converter<complex<double>>;
 #endif
 
 } // namespace kfr
+
+#endif

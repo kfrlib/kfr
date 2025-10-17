@@ -23,7 +23,13 @@
   disclosing the source code of your own applications.
   See https://www.kfrlib.com for details.
  */
+ 
+#include <kfr/cident.h>
+#if !defined KFR_SKIP_IF_NON_X86 || defined(KFR_ARCH_X86)
+
 #include "fft-impl.hpp"
 
 #define FLOAT float
 #include "fft-templates.hpp"
+
+#endif

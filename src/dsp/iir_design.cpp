@@ -23,6 +23,8 @@
   disclosing the source code of your own applications.
   See https://www.kfrlib.com for details.
  */
+#include <kfr/cident.h>
+#if !defined KFR_SKIP_IF_NON_X86 || defined(KFR_ARCH_X86)
 
 #include <kfr/test/assert.hpp>
 #include <kfr/base.hpp>
@@ -1368,3 +1370,5 @@ zpk iir_bandstop(const zpk& filter, double lowfreq, double highfreq, double fs)
 }
 } // namespace KFR_ARCH_NAME
 } // namespace kfr
+
+#endif
