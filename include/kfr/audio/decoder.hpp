@@ -334,7 +334,6 @@ struct flac_decoding_options : public audio_decoding_options
 [[nodiscard]] std::unique_ptr<audio_decoder> create_flac_decoder(const flac_decoding_options& options = {});
 #endif
 
-#ifdef KFR_AUDIO_MP3
 /**
  * @brief Options for decoding MP3 audio files.
  */
@@ -349,7 +348,6 @@ struct mp3_decoding_options : public audio_decoding_options
  * @return A unique pointer to the created MP3 decoder.
  */
 [[nodiscard]] std::unique_ptr<audio_decoder> create_mp3_decoder(const mp3_decoding_options& options = {});
-#endif
 
 #ifdef KFR_OS_WIN
 /**

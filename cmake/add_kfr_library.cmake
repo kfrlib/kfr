@@ -36,6 +36,7 @@ function (add_kfr_library)
         link_as_whole(${LIB_NAME} INTERFACE ${LIB_NAME}_${BASE_ARCH})
 
         list(APPEND ${LIB_NAME}_TARGETS ${LIB_NAME})
+        target_compile_definitions(${LIB_NAME} INTERFACE ${LIB_PUBLIC_DEFINITIONS})
     else ()
         add_library(${LIB_NAME} STATIC ${LIB_SOURCES})
         list(APPEND ${LIB_NAME}_LIBS ${LIB_NAME})
@@ -52,6 +53,7 @@ function (add_kfr_library)
         target_compile_options(${LIB} PRIVATE ${LIB_OPTIONS})
         target_include_directories(${LIB} PRIVATE ${LIB_INCLUDE_DIRECTORIES})
     endforeach ()
+    
 
     set(${LIB_NAME}_LIBS
         ${${LIB_NAME}_LIBS}

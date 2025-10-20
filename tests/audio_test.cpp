@@ -613,7 +613,6 @@ TEST_CASE("flac_decoder")
 }
 #endif
 
-#ifdef KFR_AUDIO_MP3
 TEST_CASE("mp3_decoder")
 {
     auto decoder = create_mp3_decoder();
@@ -627,7 +626,6 @@ TEST_CASE("mp3_decoder")
 
     test_audiodata(*decoder, false, 0.01, dB_to_amp(-3.445));
 }
-#endif
 
 TEST_CASE("caff_decoder")
 {
@@ -792,9 +790,7 @@ TEST_CASE("create_decoder_for_container")
 #ifdef KFR_AUDIO_FLAC
     CHECK(create_decoder_for_container(audiofile_container::flac) != nullptr);
 #endif
-#ifdef KFR_AUDIO_MP3
     CHECK(create_decoder_for_container(audiofile_container::mp3) != nullptr);
-#endif
     CHECK(create_decoder_for_container(audiofile_container::unknown) == nullptr);
 }
 
@@ -807,9 +803,7 @@ TEST_CASE("every decoder must report io_error for non-existing file")
 #ifdef KFR_AUDIO_FLAC
              audiofile_container::flac,
 #endif
-#ifdef KFR_AUDIO_MP3
              audiofile_container::mp3,
-#endif
          })
     {
         auto decoder = create_decoder_for_container(c);
@@ -1075,12 +1069,10 @@ TEST_CASE("decoding sequence 2")
         sequence_2(create_flac_decoder(), KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/testdata_2c_s16.flac"));
     }
 #endif
-#ifdef KFR_AUDIO_MP3
     {
         INFO("mp3");
         sequence_2(create_mp3_decoder(), KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/testdata_2c.mp3"));
     }
-#endif
     {
         INFO("raw");
         raw_decoding_options rawOptions{};

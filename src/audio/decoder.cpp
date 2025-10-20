@@ -107,10 +107,8 @@ std::unique_ptr<audio_decoder> create_decoder_for_container(audiofile_container 
     case audiofile_container::flac:
         return create_flac_decoder({ options });
 #endif
-#ifdef KFR_AUDIO_MP3
     case audiofile_container::mp3:
         return create_mp3_decoder({ options });
-#endif
     default:
         return nullptr;
     }
@@ -147,11 +145,9 @@ std::unique_ptr<audio_decoder> create_decoder_from_header(const audiofile_header
     if (header_is(header, "fLaC............"))
         return create_flac_decoder({ options });
 #endif
-#ifdef KFR_AUDIO_MP3
     if (header_is(header, "ID3.............") ||
         (header[0] == std::byte(0xFF) && (header[1] & std::byte(0xE0)) == std::byte(0xE0)))
         return create_mp3_decoder({ options });
-#endif
     return nullptr;
 }
 

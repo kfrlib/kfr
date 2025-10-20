@@ -243,8 +243,6 @@ if (NOT KFR_ARCH)
     set(KFR_ARCH target)
 endif ()
 
-message(STATUS "KFR_ARCH: ${KFR_ARCH}")
-
 if (KFR_ARCH STREQUAL "detect")
     set(KFR_ARCH host)
 endif ()
@@ -494,28 +492,29 @@ endif ()
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
-set(KFR_INSTALL_CMAKEDIR
-    "${CMAKE_INSTALL_LIBDIR}/cmake/kfr"
-    CACHE STRING "Path to KFR CMake files")
-
-configure_package_config_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config.cmake.in
-    "${CMAKE_CURRENT_BINARY_DIR}/KFRConfig.cmake"
-    INSTALL_DESTINATION "lib/cmake/kfr"
-    NO_SET_AND_CHECK_MACRO NO_CHECK_REQUIRED_COMPONENTS_MACRO)
-
-install(TARGETS kfr EXPORT kfr_export)
-
-install(
-    EXPORT kfr_export
-    DESTINATION "${KFR_INSTALL_CMAKEDIR}"
-    CONFIGURATIONS Debug Release
-    FILE KFRConfig.cmake)
-
 write_basic_package_version_file(
     KFRConfigVersion.cmake
     VERSION ${KFR_VERSION}
     COMPATIBILITY SameMinorVersion)
 
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/KFRConfigVersion.cmake"
-        DESTINATION "${KFR_INSTALL_CMAKEDIR}")
+set(KFR_INSTALL_CMAKEDIR
+    "${CMAKE_INSTALL_LIBDIR}/cmake/kfr"
+    CACHE STRING "Path to KFR CMake files")
+
+install(FILES 
+    ${CMAKE_CURRENT_BINARY_DIR}/KFRConfigVersion.cmake
+    DESTINATION ${KFR_INSTALL_CMAKEDIR})
+
+configure_package_config_file(
+    ${CMAKE_CURRENT_LIST_DIR}/cmake/config.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/KFRConfig.cmake
+    INSTALL_DESTINATION "lib/cmake/kfr")
+
+install(TARGETS kfr EXPORT KFRTargets)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/KFRConfig.cmake DESTINATION "${KFR_INSTALL_CMAKEDIR}")
+
+install(
+    EXPORT KFRTargets
+    DESTINATION "${KFR_INSTALL_CMAKEDIR}"
+    CONFIGURATIONS Debug Release)

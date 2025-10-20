@@ -18,7 +18,7 @@ endforeach ()
 if (KFR_INSTALL_LIBRARIES)
     install(
         TARGETS ${kfr_dft_TARGETS}
-        EXPORT kfr_export
+        EXPORT KFRTargets
         ARCHIVE DESTINATION lib$<$<CONFIG:Debug>:${KFR_DEBUG_INSTALL_SUFFIX}>
         LIBRARY DESTINATION lib$<$<CONFIG:Debug>:${KFR_DEBUG_INSTALL_SUFFIX}>
         RUNTIME DESTINATION bin$<$<CONFIG:Debug>:${KFR_DEBUG_INSTALL_SUFFIX}>)

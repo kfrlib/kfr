@@ -8,7 +8,7 @@ on:
 
 jobs:
   binaries-linux-x86_64:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -16,9 +16,10 @@ jobs:
       run: |
         set -e
         sudo apt-get update && sudo apt-get install -y ninja-build
-        wget -O - https://apt.llvm.org/llvm.sh | sudo bash -s - 17
-        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER=clang++-17
-        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER=clang++-17
+        ci/llvm-linux.sh
+        vcpkg install --triplet=x64-linux libflac minimp3 boost-math
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER=clang++
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER=clang++
         ninja -C build-release install
         ninja -C build-debug install
     - name: Binaries
@@ -28,7 +29,7 @@ jobs:
         path: ${{ github.workspace }}/dist
 
   binaries-linux-arm:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -36,9 +37,10 @@ jobs:
       run: |
         set -e
         sudo apt-get update && sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf
-        wget -O - https://apt.llvm.org/llvm.sh | sudo bash -s - 17
-        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCLANG_SUFFIX=-17 -DGCC_VER=11 -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
-        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCLANG_SUFFIX=-17 -DGCC_VER=11 -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
+        ci/llvm-linux.sh
+        vcpkg install --triplet=arm-linux libflac minimp3 boost-math
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/arm-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/arm-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
         ninja -C build-release install
         ninja -C build-debug install
     - name: Binaries
@@ -48,7 +50,7 @@ jobs:
         path: ${{ github.workspace }}/dist
 
   binaries-linux-arm64:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -56,9 +58,10 @@ jobs:
       run: |
         set -e
         sudo apt-get update && sudo apt-get install -y ninja-build g++-aarch64-linux-gnu
-        wget -O - https://apt.llvm.org/llvm.sh | sudo bash -s - 17
-        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCLANG_SUFFIX=-17 -DGCC_VER=11 -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
-        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCLANG_SUFFIX=-17 -DGCC_VER=11 -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
+        ci/llvm-linux.sh
+        vcpkg install --triplet=arm64-linux libflac minimp3 boost-math
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/arm64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/arm64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
         ninja -C build-release install
         ninja -C build-debug install
     - name: Binaries
@@ -75,9 +78,11 @@ jobs:
     - name: Build
       run: |
         set -e
-        sudo apt-get update && sudo apt-get install -y clang llvm ninja-build g++-riscv64-linux-gnu
-        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=rvv -DCMAKE_TOOLCHAIN_FILE=../cmake/riscv64.cmake
-        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=rvv -DCMAKE_TOOLCHAIN_FILE=../cmake/riscv64.cmake
+        sudo apt-get update && sudo apt-get install -y ninja-build g++-riscv64-linux-gnu
+        ci/llvm-linux.sh
+        vcpkg install --triplet=riscv64-linux libflac minimp3 boost-math
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/riscv64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=rvv -DCMAKE_TOOLCHAIN_FILE=../cmake/riscv64.cmake
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/riscv64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=rvv -DCMAKE_TOOLCHAIN_FILE=../cmake/riscv64.cmake
         ninja -C build-release install
         ninja -C build-debug install
     - name: Binaries
@@ -96,10 +101,11 @@ jobs:
       run: |
         choco install llvm --version 17.0.6 --no-progress -y
         choco install ninja --no-progress -y
+        vcpkg install --triplet=x86-windows-static-md libflac minimp3 boost-math
         call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
         set CXXFLAGS=-m32
-        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
-        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x86-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x86-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
         ninja -C build-release install
         ninja -C build-debug install  
     - name: Binaries
@@ -118,9 +124,10 @@ jobs:
       run: |
         choco install llvm --version 17.0.6 --no-progress -y
         choco install ninja --no-progress -y
+        vcpkg install --triplet=x64-windows-static-md libflac minimp3 boost-math
         call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
-        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x64-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x64-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
         ninja -C build-release install
         ninja -C build-debug install
     - name: Binaries
@@ -139,9 +146,10 @@ jobs:
       run: |
         choco install llvm --version 17.0.6 --no-progress -y
         choco install ninja --no-progress -y
+        vcpkg install --triplet=arm64-windows-static-md libflac minimp3 boost-math
         call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsamd64_arm64.bat"
-        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=target -DCMAKE_CXX_COMPILER_TARGET=arm64-pc-windows-msvc -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
-        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=target -DCMAKE_CXX_COMPILER_TARGET=arm64-pc-windows-msvc -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/arm64-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=target -DCMAKE_CXX_COMPILER_TARGET=arm64-pc-windows-msvc -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/arm64-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=target -DCMAKE_CXX_COMPILER_TARGET=arm64-pc-windows-msvc -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
         ninja -C build-release install
         ninja -C build-debug install
     - name: Binaries
@@ -159,8 +167,9 @@ jobs:
       shell: cmd
       run: |
         choco install ninja --no-progress -y
-        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=armeabi-v7a -DANDROID_ARM_NEON=TRUE
-        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=armeabi-v7a -DANDROID_ARM_NEON=TRUE
+        vcpkg install --triplet=arm-neon-android libflac minimp3 boost-math
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/arm-neon-android -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=armeabi-v7a -DANDROID_ARM_NEON=TRUE
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/arm-neon-android -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=armeabi-v7a -DANDROID_ARM_NEON=TRUE
         ninja -C build-release install
         ninja -C build-debug install
     - name: Binaries
@@ -178,8 +187,9 @@ jobs:
       shell: cmd
       run: |
         choco install ninja --no-progress -y
-        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=arm64-v8a -DANDROID_ARM_NEON=TRUE
-        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=arm64-v8a -DANDROID_ARM_NEON=TRUE
+        vcpkg install --triplet=arm64-android libflac minimp3 boost-math
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/arm64-android -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=arm64-v8a -DANDROID_ARM_NEON=TRUE
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/arm64-android -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=arm64-v8a -DANDROID_ARM_NEON=TRUE
         ninja -C build-release install
         ninja -C build-debug install
     - name: Binaries
@@ -197,8 +207,9 @@ jobs:
       shell: cmd
       run: |
         choco install ninja --no-progress -y
-        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=ssse3 -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86
-        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=ssse3 -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86
+        vcpkg install --triplet=x86-android libflac minimp3 boost-math
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x86-android -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=ssse3 -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x86-android -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=ssse3 -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86
         ninja -C build-release install
         ninja -C build-debug install
     - name: Binaries
@@ -216,8 +227,9 @@ jobs:
       shell: cmd
       run: |
         choco install ninja --no-progress -y
-        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse42 -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86_64
-        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja  -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse42 -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86_64
+        vcpkg install --triplet=x64-android libflac minimp3 boost-math
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x64-android -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse42 -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86_64
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x64-android -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse42 -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86_64
         ninja -C build-release install
         ninja -C build-debug install
     - name: Binaries
@@ -227,7 +239,7 @@ jobs:
         path: ${{ github.workspace }}/dist
 
   binaries-macos-x86_64:
-    runs-on: macos-13
+    runs-on: macos-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -246,7 +258,7 @@ jobs:
         path: ${{ github.workspace }}/dist
 
   binaries-macos-universal:
-    runs-on: macos-13
+    runs-on: macos-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -267,7 +279,7 @@ jobs:
         path: ${{ github.workspace }}/dist
 
   binaries-macos-arm64:
-    runs-on: macos-13
+    runs-on: macos-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v4

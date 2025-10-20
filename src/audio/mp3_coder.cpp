@@ -26,8 +26,6 @@
 
 #include <kfr/audio/decoder.hpp>
 
-#ifdef KFR_AUDIO_MP3
-
 #define MINIMP3_NO_STDIO 1
 #define MINIMP3_FLOAT_OUTPUT 1
 #define MINIMP3_IMPLEMENTATION 1
@@ -166,5 +164,3 @@ std::unique_ptr<audio_decoder> create_mp3_decoder(const mp3_decoding_options& op
     return std::unique_ptr<audio_decoder>(new MP3Decoder(options));
 }
 } // namespace kfr
-
-#endif

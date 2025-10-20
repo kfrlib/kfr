@@ -2,7 +2,7 @@ name: Test
 on: push
 jobs:
   ubuntu22-clang20-x86_64:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -13,37 +13,37 @@ jobs:
       run: |
         set -e
         sudo apt-get update && sudo apt-get install -y ninja-build
-        wget -O - https://apt.llvm.org/llvm.sh | sudo bash -s - 20
+        ci/llvm-linux.sh
         curl -o "$TMP_DIR/sde.tar.xz" -L "$SDE_LINUX"
         mkdir "$TMP_DIR/sde-bin"
         tar -C "$TMP_DIR/sde-bin" -xJf "$TMP_DIR/sde.tar.xz" --strip 1
         sudo ln -s $TMP_DIR/sde-bin/sde64 /usr/bin/sde
         vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac boost-math
-        ci/run.sh build-release -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DKFR_ARCH=avx2 -DKFR_USE_SDE=ON -DCMAKE_CXX_COMPILER=clang++-20 -DCMAKE_BUILD_TYPE=Release
+        ci/run.sh build-release -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DKFR_ARCH=avx2 -DKFR_USE_SDE=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release
 
   ubuntu22-clang20-arm:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Tests
       run: |
         set -e
-        sudo apt-get update && sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf qemu qemu-system-arm qemu-user
-        wget -O - https://apt.llvm.org/llvm.sh | sudo bash -s - 20
-        ci/run.sh build-release -DENABLE_EXAMPLES=OFF -DCLANG_SUFFIX=-20 -DCMAKE_BUILD_TYPE=Release -DGCC_VER=11 -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
+        sudo apt-get update && sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf qemu-system-arm qemu-user
+        ci/llvm-linux.sh
+        ci/run.sh build-release -DENABLE_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
 
   ubuntu22-clang20-arm64:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Tests
       run: |
         set -e
-        sudo apt-get update && sudo apt-get install -y ninja-build g++-aarch64-linux-gnu qemu qemu-system-arm qemu-user
-        wget -O - https://apt.llvm.org/llvm.sh | sudo bash -s - 20
-        ci/run.sh build-release -DENABLE_EXAMPLES=OFF -DCLANG_SUFFIX=-20 -DCMAKE_BUILD_TYPE=Release -DGCC_VER=11 -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
+        sudo apt-get update && sudo apt-get install -y ninja-build g++-aarch64-linux-gnu qemu-system-arm qemu-user
+        ci/llvm-linux.sh
+        ci/run.sh build-release -DENABLE_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
 
   ubuntu24-clang18-riscv64:
     runs-on: ubuntu-24.04
@@ -53,7 +53,8 @@ jobs:
     - name: Tests
       run: |
         set -e
-        sudo apt-get update && sudo apt-get install -y llvm clang llvm ninja-build qemu-system-riscv64 qemu-user gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
+        sudo apt-get update && sudo apt-get install -y llvm ninja-build qemu-system-riscv64 qemu-user gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
+        ci/llvm-linux.sh
         ci/run.sh build-release -DKFR_ENABLE_DFT=OFF -DENABLE_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/riscv64.cmake
 
   ubuntu24-gcc14-x86_64:
