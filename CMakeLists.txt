@@ -219,6 +219,8 @@ option(KFR_INSTALL_LIBRARIES "Include libraries in installation" ON)
 option(KFR_MANAGED_ALLOCATION
        "Use KFR managed memory (copy-free aligned reallocation, ref counting)"
        OFF)
+option(KFR_USE_BOOST_MATH "Use Boost.Math (standalone) to support Elliptic filters" ON)
+option(KFR_USE_BOOST "Use Boost to support Elliptic filters. Enable this only if you're already using Boost" OFF)
 mark_as_advanced(KFR_ENABLE_ASMTEST)
 mark_as_advanced(KFR_REGENERATE_TESTS)
 mark_as_advanced(KFR_DISABLE_CLANG_EXTENSIONS)
