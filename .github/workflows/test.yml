@@ -1,7 +1,7 @@
 name: Test
 on: push
 jobs:
-  ubuntu22-clang20-x86_64:
+  ubuntu22-clang21-x86_64:
     runs-on: ubuntu-24.04
     steps:
     - name: Checkout
@@ -21,7 +21,7 @@ jobs:
         vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac boost-math
         ci/run.sh build-release -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DKFR_ARCH=avx2 -DKFR_USE_SDE=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release
 
-  ubuntu22-clang20-arm:
+  ubuntu22-clang21-arm:
     runs-on: ubuntu-24.04
     steps:
     - name: Checkout
@@ -33,7 +33,7 @@ jobs:
         ci/llvm-linux.sh
         ci/run.sh build-release -DENABLE_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
 
-  ubuntu22-clang20-arm64:
+  ubuntu22-clang21-arm64:
     runs-on: ubuntu-24.04
     steps:
     - name: Checkout
@@ -45,7 +45,7 @@ jobs:
         ci/llvm-linux.sh
         ci/run.sh build-release -DENABLE_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
 
-  ubuntu24-clang18-riscv64:
+  ubuntu24-clang21-riscv64:
     runs-on: ubuntu-24.04
     steps:
     - name: Checkout

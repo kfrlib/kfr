@@ -28,7 +28,6 @@
 
 namespace kfr
 {
-#pragma pack(push, 1)
 
 struct AIFFHeader
 {
@@ -44,6 +43,7 @@ struct AIFFFVER
 
 inline void fixByteOrder(AIFFFVER& val) { details::convert_endianness(val.fmtDate); }
 
+#pragma pack(push, 1)
 struct AIFFCOMM
 {
     uint16_t channels;
@@ -51,8 +51,9 @@ struct AIFFCOMM
     uint16_t sampleSize;
     float80_t sample_rate;
 };
+#pragma pack(pop)
 
-struct AIFFCOMM2 : public AIFFCOMM
+struct alignas(2) AIFFCOMM2 : public AIFFCOMM
 {
     FourCC compressionID;
     uint8_t compressionName[2];
@@ -63,8 +64,6 @@ struct AIFFSSND
     uint32_t offset;
     uint32_t blockSize;
 };
-
-#pragma pack(pop)
 
 static_assert(sizeof(AIFFCOMM) == 18);
 static_assert(sizeof(AIFFCOMM2) == 24);
