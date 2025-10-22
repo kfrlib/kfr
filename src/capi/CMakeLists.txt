@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with KFR.
 
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.16)
 
 if (NOT WIN32)
     set(CMAKE_CXX_VISIBILITY_PRESET "hidden")

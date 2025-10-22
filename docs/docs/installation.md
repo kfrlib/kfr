@@ -16,7 +16,7 @@ KFR is tested and supported on the following systems and architectures:
 
 ## Prerequisites
 
-* CMake 3.12 or newer for building tests and examples
+* CMake 3.16 or newer for building tests and examples
 * Python 3.6+ for running examples
 * (recommended) Ninja (https://ninja-build.org/) for faster builds
 
