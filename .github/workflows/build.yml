@@ -15,13 +15,23 @@ jobs:
     - name: Build
       run: |
         set -e
-        sudo apt-get update && sudo apt-get install -y ninja-build
+        sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends ninja-build
         ci/llvm-linux.sh
         vcpkg install --triplet=x64-linux libflac minimp3 boost-math
         cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER=clang++
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER=clang++
         ninja -C build-release install
         ninja -C build-debug install
+    - name: Quick test 1
+      run: |
+        cmake -B build-test1 -S tests/usage-config -DCMAKE_PREFIX_PATH=${{ github.workspace }}/dist
+        cmake --build build-test1
+        ctest --test-dir build-test1 -V -C Release
+    - name: Quick test 2
+      run: |
+        cmake -B build-test2 -S tests/usage-manual -DKFR_DIR=${{ github.workspace }}/dist
+        cmake --build build-test2
+        ctest --test-dir build-test2 -V -C Release
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
@@ -36,13 +46,23 @@ jobs:
     - name: Build
       run: |
         set -e
-        sudo apt-get update && sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf
+        sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends ninja-build g++-arm-linux-gnueabihf
         ci/llvm-linux.sh
         vcpkg install --triplet=arm-linux libflac minimp3 boost-math
         cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/arm-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/arm-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
         ninja -C build-release install
         ninja -C build-debug install
+    - name: Quick test 1
+      run: |
+        cmake -B build-test1 -S tests/usage-config -DCMAKE_PREFIX_PATH=${{ github.workspace }}/dist -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
+        cmake --build build-test1
+        ctest --test-dir build-test1 -V -C Release
+    - name: Quick test 2
+      run: |
+        cmake -B build-test2 -S tests/usage-manual -DKFR_DIR=${{ github.workspace }}/dist -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
+        cmake --build build-test2
+        ctest --test-dir build-test2 -V -C Release
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
@@ -57,13 +77,23 @@ jobs:
     - name: Build
       run: |
         set -e
-        sudo apt-get update && sudo apt-get install -y ninja-build g++-aarch64-linux-gnu
+        sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends ninja-build g++-aarch64-linux-gnu
         ci/llvm-linux.sh
         vcpkg install --triplet=arm64-linux libflac minimp3 boost-math
         cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/arm64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/arm64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
         ninja -C build-release install
         ninja -C build-debug install
+    - name: Quick test 1
+      run: |
+        cmake -B build-test1 -S tests/usage-config -DCMAKE_PREFIX_PATH=${{ github.workspace }}/dist -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
+        cmake --build build-test1
+        ctest --test-dir build-test1 -V -C Release
+    - name: Quick test 2
+      run: |
+        cmake -B build-test2 -S tests/usage-manual -DKFR_DIR=${{ github.workspace }}/dist -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
+        cmake --build build-test2
+        ctest --test-dir build-test2 -V -C Release
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
@@ -78,13 +108,23 @@ jobs:
     - name: Build
       run: |
         set -e
-        sudo apt-get update && sudo apt-get install -y ninja-build g++-riscv64-linux-gnu
+        sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends ninja-build g++-riscv64-linux-gnu
         ci/llvm-linux.sh
         vcpkg install --triplet=riscv64-linux libflac minimp3 boost-math
         cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/riscv64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=rvv -DCMAKE_TOOLCHAIN_FILE=../cmake/riscv64.cmake
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/riscv64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=rvv -DCMAKE_TOOLCHAIN_FILE=../cmake/riscv64.cmake
         ninja -C build-release install
         ninja -C build-debug install
+    - name: Quick test 1
+      run: |
+        cmake -B build-test1 -S tests/usage-config -DCMAKE_PREFIX_PATH=${{ github.workspace }}/dist -DCMAKE_TOOLCHAIN_FILE=../cmake/riscv64.cmake
+        cmake --build build-test1
+        ctest --test-dir build-test1 -V -C Release
+    - name: Quick test 2
+      run: |
+        cmake -B build-test2 -S tests/usage-manual -DKFR_DIR=${{ github.workspace }}/dist -DCMAKE_TOOLCHAIN_FILE=../cmake/riscv64.cmake
+        cmake --build build-test2
+        ctest --test-dir build-test2 -V -C Release
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
@@ -99,7 +139,7 @@ jobs:
     - name: Build
       shell: cmd
       run: |
-        choco install llvm --version 17.0.6 --no-progress -y
+        choco install llvm --version 21.1.0 --no-progress -y
         choco install ninja --no-progress -y
         vcpkg install --triplet=x86-windows-static-md libflac minimp3 boost-math
         call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
@@ -107,7 +147,19 @@ jobs:
         cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x86-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x86-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
         ninja -C build-release install
-        ninja -C build-debug install  
+        ninja -C build-debug install
+    - name: Quick test 1
+      shell: cmd
+      run: |
+        cmake -B build-test1 -S tests/usage-config -G "Visual Studio 17 2022" -A Win32 -DCMAKE_PREFIX_PATH=${{ github.workspace }}/dist
+        cmake --build build-test1 --config Release
+        ctest --test-dir build-test1 -V -C Release
+    - name: Quick test 2
+      shell: cmd
+      run: |
+        cmake -B build-test2 -S tests/usage-manual -G "Visual Studio 17 2022" -A Win32 -DKFR_DIR=${{ github.workspace }}/dist
+        cmake --build build-test2 --config Release
+        ctest --test-dir build-test2 -V -C Release
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
@@ -122,7 +174,7 @@ jobs:
     - name: Build
       shell: cmd
       run: |
-        choco install llvm --version 17.0.6 --no-progress -y
+        choco install llvm --version 21.1.0 --no-progress -y
         choco install ninja --no-progress -y
         vcpkg install --triplet=x64-windows-static-md libflac minimp3 boost-math
         call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
@@ -130,6 +182,18 @@ jobs:
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x64-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=sse2 -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
         ninja -C build-release install
         ninja -C build-debug install
+    - name: Quick test 1
+      shell: cmd
+      run: |
+        cmake -B build-test1 -S tests/usage-config -DCMAKE_PREFIX_PATH=${{ github.workspace }}/dist
+        cmake --build build-test1 --config Release
+        ctest --test-dir build-test1 -V -C Release
+    - name: Quick test 2
+      shell: cmd
+      run: |
+        cmake -B build-test2 -S tests/usage-manual -DKFR_DIR=${{ github.workspace }}/dist
+        cmake --build build-test2 --config Release
+        ctest --test-dir build-test2 -V -C Release
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
@@ -137,21 +201,33 @@ jobs:
         path: ${{ github.workspace }}/dist
 
   binaries-windows-arm64:
-    runs-on: windows-2022
+    runs-on: windows-11-arm
     steps:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Build
       shell: cmd
       run: |
-        choco install llvm --version 17.0.6 --no-progress -y
+        choco install llvm --version 21.1.0 --no-progress -y
         choco install ninja --no-progress -y
         vcpkg install --triplet=arm64-windows-static-md libflac minimp3 boost-math
-        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsamd64_arm64.bat"
+        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
         cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/arm64-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=target -DCMAKE_CXX_COMPILER_TARGET=arm64-pc-windows-msvc -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/arm64-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=target -DCMAKE_CXX_COMPILER_TARGET=arm64-pc-windows-msvc -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
         ninja -C build-release install
         ninja -C build-debug install
+    - name: Quick test 1
+      shell: cmd
+      run: |
+        cmake -B build-test1 -S tests/usage-config -GNinja -DCMAKE_PREFIX_PATH=${{ github.workspace }}/dist -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
+        cmake --build build-test1 --config Release
+        ctest --test-dir build-test1 -V -C Release
+    - name: Quick test 2
+      shell: cmd
+      run: |
+        cmake -B build-test2 -S tests/usage-manual -GNinja -DKFR_DIR=${{ github.workspace }}/dist -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
+        cmake --build build-test2 --config Release
+        ctest --test-dir build-test2 -V -C Release
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
@@ -172,6 +248,16 @@ jobs:
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/arm-neon-android -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=armeabi-v7a -DANDROID_ARM_NEON=TRUE
         ninja -C build-release install
         ninja -C build-debug install
+    - name: Quick test 1
+      shell: cmd
+      run: |
+        cmake -B build-test1 -S tests/usage-config -GNinja -DCMAKE_PREFIX_PATH=${{ github.workspace }}/dist -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=armeabi-v7a -DANDROID_ARM_NEON=TRUE
+        cmake --build build-test1
+    - name: Quick test 2
+      shell: cmd
+      run: |
+        cmake -B build-test2 -S tests/usage-manual -GNinja -DKFR_DIR=${{ github.workspace }}/dist -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=armeabi-v7a -DANDROID_ARM_NEON=TRUE
+        cmake --build build-test2
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
@@ -192,6 +278,16 @@ jobs:
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/arm64-android -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=arm64-v8a -DANDROID_ARM_NEON=TRUE
         ninja -C build-release install
         ninja -C build-debug install
+    - name: Quick test 1
+      shell: cmd
+      run: |
+        cmake -B build-test1 -S tests/usage-config -GNinja -DCMAKE_PREFIX_PATH=${{ github.workspace }}/dist -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=arm64-v8a
+        cmake --build build-test1
+    - name: Quick test 2
+      shell: cmd
+      run: |
+        cmake -B build-test2 -S tests/usage-manual -GNinja -DKFR_DIR=${{ github.workspace }}/dist -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=arm64-v8a
+        cmake --build build-test2
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
@@ -212,6 +308,16 @@ jobs:
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x86-android -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=ssse3 -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86
         ninja -C build-release install
         ninja -C build-debug install
+    - name: Quick test 1
+      shell: cmd
+      run: |
+        cmake -B build-test1 -S tests/usage-config -GNinja -DCMAKE_PREFIX_PATH=${{ github.workspace }}/dist -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86
+        cmake --build build-test1
+    - name: Quick test 2
+      shell: cmd
+      run: |
+        cmake -B build-test2 -S tests/usage-manual -GNinja -DKFR_DIR=${{ github.workspace }}/dist -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86
+        cmake --build build-test2
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
@@ -232,6 +338,16 @@ jobs:
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x64-android -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse42 -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86_64
         ninja -C build-release install
         ninja -C build-debug install
+    - name: Quick test 1
+      shell: cmd
+      run: |
+        cmake -B build-test1 -S tests/usage-config -GNinja -DCMAKE_PREFIX_PATH=${{ github.workspace }}/dist -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86_64
+        cmake --build build-test1
+    - name: Quick test 2
+      shell: cmd
+      run: |
+        cmake -B build-test2 -S tests/usage-manual -GNinja -DKFR_DIR=${{ github.workspace }}/dist -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86_64
+        cmake --build build-test2
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
@@ -251,6 +367,16 @@ jobs:
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-osx -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse41
         ninja -C build-release install
         ninja -C build-debug install
+    - name: Quick test 1
+      run: |
+        cmake -B build-test1 -S tests/usage-config -GXcode -DCMAKE_PREFIX_PATH=${{ github.workspace }}/dist -DCMAKE_OSX_ARCHITECTURES=x86_64
+        cmake --build build-test1 --config Release
+        ctest --test-dir build-test1 -V -C Release
+    - name: Quick test 2
+      run: |
+        cmake -B build-test2 -S tests/usage-manual -GXcode -DKFR_DIR=${{ github.workspace }}/dist -DCMAKE_OSX_ARCHITECTURES=x86_64
+        cmake --build build-test2 --config Release
+        ctest --test-dir build-test2 -V -C Release
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
@@ -272,6 +398,18 @@ jobs:
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/uni-osx -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse41
         ninja -C build-release install
         ninja -C build-debug install
+    - name: Quick test 1
+      run: |
+        cmake -B build-test1 -S tests/usage-config -GXcode -DCMAKE_PREFIX_PATH=${{ github.workspace }}/dist -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+        cmake --build build-test1 --config Release
+        arch -x86_64 build-test1/Release/kfr-app
+        arch -arm64 build-test1/Release/kfr-app
+    - name: Quick test 2
+      run: |
+        cmake -B build-test2 -S tests/usage-manual -GXcode -DKFR_DIR=${{ github.workspace }}/dist -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+        cmake --build build-test2 --config Release
+        arch -x86_64 build-test2/Release/kfr-app
+        arch -arm64 build-test2/Release/kfr-app
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
@@ -291,6 +429,16 @@ jobs:
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/arm64-osx -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target
         ninja -C build-release install
         ninja -C build-debug install
+    - name: Quick test 1
+      run: |
+        cmake -B build-test1 -S tests/usage-config -GXcode -DCMAKE_PREFIX_PATH=${{ github.workspace }}/dist -DCMAKE_OSX_ARCHITECTURES=arm64
+        cmake --build build-test1 --config Release
+        ctest --test-dir build-test1 -V -C Release
+    - name: Quick test 2
+      run: |
+        cmake -B build-test2 -S tests/usage-manual -GXcode -DKFR_DIR=${{ github.workspace }}/dist -DCMAKE_OSX_ARCHITECTURES=arm64
+        cmake --build build-test2 --config Release
+        ctest --test-dir build-test2 -V -C Release
     - name: Binaries
       uses: actions/upload-artifact@v4
       with:
@@ -328,7 +476,7 @@ jobs:
       run: |
         set -e
         ls -laR ${{github.workspace}}
-        sudo apt-get update && sudo apt-get install -y zip
+        sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends zip
         zip -r kfr-android-arm64-v8a.zip   kfr-android-arm64-v8a
         zip -r kfr-android-armeabi-v7a.zip kfr-android-armeabi-v7a
         zip -r kfr-android-x86.zip         kfr-android-x86

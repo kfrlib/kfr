@@ -12,7 +12,7 @@ jobs:
         TMP_DIR: ${{ runner.temp }}
       run: |
         set -e
-        sudo apt-get update && sudo apt-get install -y ninja-build
+        sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends ninja-build
         ci/llvm-linux.sh
         curl -o "$TMP_DIR/sde.tar.xz" -L "$SDE_LINUX"
         mkdir "$TMP_DIR/sde-bin"
@@ -29,7 +29,7 @@ jobs:
     - name: Tests
       run: |
         set -e
-        sudo apt-get update && sudo apt-get install -y ninja-build g++-arm-linux-gnueabihf qemu-system-arm qemu-user
+        sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends ninja-build g++-arm-linux-gnueabihf qemu-system-arm qemu-user
         ci/llvm-linux.sh
         ci/run.sh build-release -DENABLE_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
 
@@ -41,7 +41,7 @@ jobs:
     - name: Tests
       run: |
         set -e
-        sudo apt-get update && sudo apt-get install -y ninja-build g++-aarch64-linux-gnu qemu-system-arm qemu-user
+        sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends ninja-build g++-aarch64-linux-gnu qemu-system-arm qemu-user
         ci/llvm-linux.sh
         ci/run.sh build-release -DENABLE_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
 
@@ -53,7 +53,7 @@ jobs:
     - name: Tests
       run: |
         set -e
-        sudo apt-get update && sudo apt-get install -y llvm ninja-build qemu-system-riscv64 qemu-user gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
+        sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends llvm ninja-build qemu-system-riscv64 qemu-user gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
         ci/llvm-linux.sh
         ci/run.sh build-release -DKFR_ENABLE_DFT=OFF -DENABLE_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/riscv64.cmake
 
@@ -67,7 +67,7 @@ jobs:
         SDE_LINUX: ${{ secrets.SDE_LINUX }}
         TMP_DIR: ${{ runner.temp }}
       run: |
-        sudo apt-get update && sudo apt-get install -y ninja-build g++-14
+        sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends ninja-build g++-14
         curl -o "$TMP_DIR/sde.tar.xz" -L "$SDE_LINUX"
         mkdir "$TMP_DIR/sde-bin"
         tar -C "$TMP_DIR/sde-bin" -xJf "$TMP_DIR/sde.tar.xz" --strip 1
@@ -81,7 +81,7 @@ jobs:
       uses: actions/checkout@v4
     - name: Tests
       run: |
-        sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build clang-19
+        sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends build-essential cmake ninja-build clang-19
         vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac boost-math
         ci/run.sh build-release -DCMAKE_PREFIX_PATH=/usr/local/share/vcpkg/installed/arm64-linux -DKFR_ARCH=target -DENABLE_EXAMPLES=OFF -DCMAKE_CXX_COMPILER=clang++-19 -DCMAKE_BUILD_TYPE=Release
 
