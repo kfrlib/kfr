@@ -29,5 +29,5 @@ The KFR implementation of the FFT:
 * has special implementations for FFT sizes up to 1024
 * has no external dependencies
 * is thread-safe, with no global data
-* is written in modern C++17
+* is written in modern C++20
 * is open source (GPL v2+ license, commercial license is availalble for closed source projects, see https://kfr.dev )

@@ -33,7 +33,7 @@ input:
     compile_options:
       - "-DKFR_ENABLE_FLAC=1"
       - "-DKFR_FORCE_GENERIC_CPU=1"
-      - "-std=gnu++17"
+      - "-std=gnu++20"
       - "-DDOCUMENTATION"
 
 repository: https://github.com/kfrlib/kfr/blob/{TAG}/include/kfr/{FILE}#L{LINE}
