@@ -219,13 +219,13 @@ jobs:
     - name: Quick test 1
       shell: cmd
       run: |
-        cmake -B build-test1 -S tests/usage-config -GNinja -DCMAKE_PREFIX_PATH=${{ github.workspace }}/dist -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
+        cmake -B build-test1 -S tests/usage-config -GNinja -DCMAKE_PREFIX_PATH=${{ github.workspace }}/dist -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_C_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
         cmake --build build-test1 --config Release
         ctest --test-dir build-test1 -V -C Release
     - name: Quick test 2
       shell: cmd
       run: |
-        cmake -B build-test2 -S tests/usage-manual -GNinja -DKFR_DIR=${{ github.workspace }}/dist -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
+        cmake -B build-test2 -S tests/usage-manual -GNinja -DKFR_DIR=${{ github.workspace }}/dist -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_C_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
         cmake --build build-test2 --config Release
         ctest --test-dir build-test2 -V -C Release
     - name: Binaries
