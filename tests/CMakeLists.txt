@@ -71,6 +71,7 @@ if (KFR_ENABLE_CAPI_BUILD)
     target_include_directories(capi_test
                                PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include)
     target_link_libraries(capi_test PRIVATE kfr_capi)
+    target_compile_features(capi_test PRIVATE cxx_std_14)
 endif ()
 
 if (KFR_ENABLE_ASMTEST)
