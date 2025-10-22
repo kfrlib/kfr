@@ -43,3 +43,8 @@
 #include "dsp/waveshaper.hpp"
 #include "dsp/weighting.hpp"
 #include "dsp/window.hpp"
+
+namespace kfr
+{
+const char* library_version_dsp();
+}

@@ -28,3 +28,16 @@
 #include "audio/decoder.hpp"
 #include "audio/encoder.hpp"
 #include "audio/io.hpp"
+
+namespace kfr
+{
+const char* library_version_audio();
+/**
+ * @brief Returns a comma-separated list of enabled audio codecs.
+ *
+ * Example: "wav,mp3,w64,aiff,caf,rf64,bw64,raw,flac,alac"
+ *
+ * @return const char*
+ */
+const char* library_version_codecs();
+} // namespace kfr

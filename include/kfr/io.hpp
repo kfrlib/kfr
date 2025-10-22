@@ -28,3 +28,8 @@
 #include "io/file.hpp"
 #include "io/python_plot.hpp"
 #include "io/tostring.hpp"
+
+namespace kfr
+{
+const char* library_version_io();
+}

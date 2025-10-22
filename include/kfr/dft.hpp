@@ -28,3 +28,8 @@
 #include "dft/convolution.hpp"
 #include "dft/fft.hpp"
 #include "dft/reference_dft.hpp"
+
+namespace kfr
+{
+const char* library_version_dft();
+}
