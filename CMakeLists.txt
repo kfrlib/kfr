@@ -103,10 +103,6 @@ if (DEBUG_CMAKE)
     endforeach ()
 endif ()
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${PROJECT_BINARY_DIR}/bin)
@@ -373,6 +369,9 @@ endif ()
 # KFR library
 add_library(kfr INTERFACE)
 # target_sources(kfr INTERFACE ${KFR_SRC})
+
+target_compile_features(kfr INTERFACE cxx_std_20)
+
 target_include_directories(
     kfr INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
                   $<INSTALL_INTERFACE:include>)
@@ -391,7 +390,7 @@ else ()
     target_link_libraries(kfr INTERFACE ${STD_LIB} ${PTHREAD_LIB} m)
 endif ()
 if (KFR_DISABLE_CLANG_EXTENSIONS)
-    target_compile_definitions(kfr INTERFACE -DKFR_DISABLE_CLANG_EXT)
+    target_compile_definitions(kfr INTERFACE $<BUILD_INTERFACE:KFR_DISABLE_CLANG_EXT>)
 endif ()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wno-ignored-qualifiers -Wno-psabi)
@@ -407,14 +406,14 @@ if (MSVC)
 endif ()
 
 if (NOT KFR_ENABLE_DFT)
-    target_compile_definitions(kfr INTERFACE -DKFR_NO_DFT)
+    target_compile_definitions(kfr INTERFACE $<BUILD_INTERFACE:KFR_NO_DFT>)
 endif ()
 if (KFR_EXTENDED_TESTS)
-    target_compile_definitions(kfr INTERFACE -DKFR_EXTENDED_TESTS)
+    target_compile_definitions(kfr INTERFACE $<BUILD_INTERFACE:KFR_EXTENDED_TESTS>)
 endif ()
 
 if (KFR_MANAGED_ALLOCATION)
-    target_compile_definitions(kfr INTERFACE -DKFR_MANAGED_ALLOCATION=1)
+    target_compile_definitions(kfr INTERFACE $<BUILD_INTERFACE:KFR_MANAGED_ALLOCATION=1>)
 endif ()
 
 set(KFR_DEBUG_INSTALL_SUFFIX
@@ -459,7 +458,10 @@ append_defines_from(kfr_io)
 append_defines_from(kfr_dsp)
 append_defines_from(kfr_audio)
 
+string(REPLACE "$<BUILD_INTERFACE:" "" kfr_defines "${kfr_defines}")
+string(REPLACE ">" "" kfr_defines "${kfr_defines}")
 string(REPLACE "=" " " kfr_defines "${kfr_defines}")
+list(FILTER kfr_defines EXCLUDE REGEX "^$")
 string(REPLACE ";" "\n#define " kfr_defines "${kfr_defines}")
 if (kfr_defines)
     set(kfr_defines "#define ${kfr_defines}\n")
