@@ -197,8 +197,16 @@ include(cmake/add_kfr_library.cmake)
 include(sources.cmake)
 include(CMakeDependentOption)
 
-option(KFR_ENABLE_MULTIARCH
+if (NOT X86)
+    set(KFR_ENABLE_MULTIARCH
+        OFF
+        CACHE INTERNAL "" FORCE)
+endif ()
+
+if (X86)
+    option(KFR_ENABLE_MULTIARCH
        "Multiple architectures will be built with runtime dispatch" ON)
+endif ()
 
 option(ENABLE_TESTS "Enable KFR tests" OFF)
 cmake_dependent_option(ENABLE_EXAMPLES "Enable KFR examples" ON "ENABLE_TESTS"
