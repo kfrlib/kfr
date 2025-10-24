@@ -194,7 +194,7 @@ KFR_FUNCTION expression_make_function<fn::tandeg, E1> tandeg(E1&& x)
  * @brief Returns template expression that returns the arc sine of x.
  */
 template <expression_argument E1>
-KFR_INTRINSIC expression_make_function<fn::asin, E1> asin(E1&& x)
+KFR_FUNCTION expression_make_function<fn::asin, E1> asin(E1&& x)
 {
     return { fn::asin(), std::forward<E1>(x) };
 }
@@ -203,7 +203,7 @@ KFR_INTRINSIC expression_make_function<fn::asin, E1> asin(E1&& x)
  * @brief Returns template expression that returns the arc cosine of x.
  */
 template <expression_argument E1>
-KFR_INTRINSIC expression_make_function<fn::acos, E1> acos(E1&& x)
+KFR_FUNCTION expression_make_function<fn::acos, E1> acos(E1&& x)
 {
     return { fn::acos(), std::forward<E1>(x) };
 }
