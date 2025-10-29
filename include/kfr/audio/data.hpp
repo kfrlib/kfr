@@ -504,6 +504,17 @@ struct audio_data
     [[nodiscard]] audio_data(std::span<fbase* const> pointers, size_t size)
         requires(!Interleaved);
 
+    [[nodiscard]] audio_data(fbase* pointer, size_t channels, size_t size)
+        requires(Interleaved);
+
+    template <std::invocable Fn>
+    [[nodiscard]] audio_data(fbase* pointer, size_t channels, size_t size, Fn&& deallocator)
+        requires(Interleaved)
+        : audio_data(pointer, channels, size)
+    {
+        deallocator.reset(new details::lambda_deallocator<Fn>{ std::forward<Fn>(deallocator) });
+    }
+
     /**
      * @brief Constructs an audio_data buffer with the specified channel count and optional initial size.
      *

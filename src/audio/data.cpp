@@ -39,6 +39,15 @@ audio_data<Interleaved>::audio_data(std::span<fbase* const> pointers, size_t siz
 }
 
 template <bool Interleaved>
+audio_data<Interleaved>::audio_data(fbase* pointer, size_t channels, size_t size)
+    requires(Interleaved)
+    : channels(channels), data(pointer), size(size), capacity(size)
+{
+    KFR_ASSERT(channels > 0);
+    KFR_ASSERT(channels <= max_audio_channels);
+}
+
+template <bool Interleaved>
 audio_data<Interleaved>::audio_data(size_t channels, size_t size)
     : channels(channels), size(size), capacity(size)
 {
