@@ -200,7 +200,7 @@ int main()
     // ---------------------------------- Elliptic filters ----------------------------------
     // --------------------------------------------------------------------------------------
     {
-        // Create an 10th-order Elliptic lowpass filter with a cutoff frequency of 1000hz
+        // Create a 10th-order Elliptic lowpass filter with a cutoff frequency of 1000hz
         // 2 dB ripple in the passband and 60 dB attenuation in the stopband
         zpk filt = iir_lowpass(elliptic(10, 2, 60), 1000, 48000);
         // Convert the filter to second-order sections (SOS).
