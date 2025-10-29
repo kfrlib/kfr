@@ -288,6 +288,48 @@ KFR_INTRINSIC expression_make_function<fn::greaterorequal, E1, E2> operator>=(E1
 
 #endif
 
+template <typename E1, typename E2>
+    requires expression_arguments<E1, E2>
+KFR_INTRINSIC expression_make_function<fn::equal, E1, E2> eq(E1&& e1, E2&& e2)
+{
+    return { fn::equal(), std::forward<E1>(e1), std::forward<E2>(e2) };
+}
+
+template <typename E1, typename E2>
+    requires expression_arguments<E1, E2>
+KFR_INTRINSIC expression_make_function<fn::notequal, E1, E2> ne(E1&& e1, E2&& e2)
+{
+    return { fn::notequal(), std::forward<E1>(e1), std::forward<E2>(e2) };
+}
+
+template <typename E1, typename E2>
+    requires expression_arguments<E1, E2>
+KFR_INTRINSIC expression_make_function<fn::less, E1, E2> lt(E1&& e1, E2&& e2)
+{
+    return { fn::less(), std::forward<E1>(e1), std::forward<E2>(e2) };
+}
+
+template <typename E1, typename E2>
+    requires expression_arguments<E1, E2>
+KFR_INTRINSIC expression_make_function<fn::greater, E1, E2> gt(E1&& e1, E2&& e2)
+{
+    return { fn::greater(), std::forward<E1>(e1), std::forward<E2>(e2) };
+}
+
+template <typename E1, typename E2>
+    requires expression_arguments<E1, E2>
+KFR_INTRINSIC expression_make_function<fn::lessorequal, E1, E2> le(E1&& e1, E2&& e2)
+{
+    return { fn::lessorequal(), std::forward<E1>(e1), std::forward<E2>(e2) };
+}
+
+template <typename E1, typename E2>
+    requires expression_arguments<E1, E2>
+KFR_INTRINSIC expression_make_function<fn::greaterorequal, E1, E2> ge(E1&& e1, E2&& e2)
+{
+    return { fn::greaterorequal(), std::forward<E1>(e1), std::forward<E2>(e2) };
+}
+
 /// @brief Returns the real part of the complex value
 template <expression_argument E1>
 KFR_INTRINSIC expression_make_function<fn::real, E1> real(E1&& x)
