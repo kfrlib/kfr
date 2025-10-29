@@ -229,6 +229,7 @@ option(KFR_MANAGED_ALLOCATION
        OFF)
 option(KFR_USE_BOOST_MATH "Use Boost.Math (standalone) to support Elliptic filters" ON)
 option(KFR_USE_BOOST "Use Boost to support Elliptic filters. Enable this only if you're already using Boost" OFF)
+option(KFR_USE_STD_FILESYSTEM "Use std::filesystem for path arguments" OFF)
 mark_as_advanced(KFR_ENABLE_ASMTEST)
 mark_as_advanced(KFR_REGENERATE_TESTS)
 mark_as_advanced(KFR_DISABLE_CLANG_EXTENSIONS)
