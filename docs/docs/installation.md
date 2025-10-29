@@ -144,6 +144,8 @@ target_link_libraries(your_executable_or_library PUBLIC kfr_dsp)
 target_link_libraries(your_executable_or_library PUBLIC kfr_dft)
 # for <kfr/io.hpp>
 target_link_libraries(your_executable_or_library PUBLIC kfr_io)
+# for <kfr/audio.hpp>
+target_link_libraries(your_executable_or_library PUBLIC kfr_audio)
 ```
 
 ### Makefile, command line etc (Unix-like systems, not recommended)

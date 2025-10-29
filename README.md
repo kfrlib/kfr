@@ -16,11 +16,7 @@ KFR is an open source C++ DSP framework that contains high performance building 
 
 :star2: **New**: Explore benchmark results from the LIGO, Virgo, and KAGRA collaborations, comparing KFR performance against FFTW for signal processing in gravitational-wave research: https://ar5iv.labs.arxiv.org/html/2503.14292
 
-## KFR 7
-
-KFR 7 is currently in development.
-
-What is already available in the `main` branch:
+## KFR 7 - What's New
 
 * Elliptic filter design
 * Zero-Phase IIR Filter (`filtfilt`)
@@ -34,7 +30,8 @@ What is already available in the `main` branch:
     * ALAC
     * MP3 (decoding only)
     * Raw PCM
-    * decoding AAC and other formats using MediaFoundation (Windows only)   
+    * decoding AAC and other formats using MediaFoundation (Windows only)
+* Universal macOS Binaries (Intel + Apple Silicon)
 * Basic RISC-V support
     * Only CPUs with VLEN >= 128 are supported
     * Linux only, clang required
@@ -43,7 +40,12 @@ What is already available in the `main` branch:
 * Performance improvements
 * Broader GCC support
 * Tests are migrated to Catch2 framework
-* [More to come...](https://github.com/kfrlib/kfr/issues/256)
+* Progress since KFR 6:
+    * Multidimensional DFT via the C API
+    * DFT performance improved by up to 80% on ARM and ARM64
+    * New Android x86/x64 and Linux ARM/AArch64 builds
+    * Matrix transpose up to 30% faster
+* [More](docs/docs/whatsnew7.md)
 
 ## Our other projects
 
@@ -59,28 +61,26 @@ What is already available in the `main` branch:
 
 Compiler support:
 
-![Clang 11+](https://img.shields.io/badge/Clang-11%2B-brightgreen.svg?style=flat-square)
-![GCC 7+](https://img.shields.io/badge/GCC-7%2B-brightgreen.svg?style=flat-square)
-![MSVC 2019](https://img.shields.io/badge/MSVC-2019%2B-brightgreen.svg?style=flat-square)
-![Xcode 12+](https://img.shields.io/badge/Xcode-12%2B-brightgreen.svg?style=flat-square)
+![Clang 16+](https://img.shields.io/badge/Clang-16%2B-brightgreen.svg?style=flat-square)
+![GCC 11+](https://img.shields.io/badge/GCC-11%2B-brightgreen.svg?style=flat-square)
+![MSVC 2022](https://img.shields.io/badge/MSVC-2022%2B-brightgreen.svg?style=flat-square)
+![Xcode 13+](https://img.shields.io/badge/Xcode-13%2B-brightgreen.svg?style=flat-square)
 
 KFR has no external dependencies except for a C++20-compatible standard C++ library. CMake is used as the build system.
 
 Clang is highly recommended and proven to provide the best performance for KFR. You can use Clang as a drop-in replacement for both GCC on Linux and MSVC on Windows. On macOS, Clang is the default compiler and included in the official Xcode toolchain.
 
-_Note_: ARM/AArch64 support and building the DFT module currently requires Clang due to internal compiler errors and a lack of some optimizations in GCC and MSVC.
+_Note_: ARM/AArch64/RISC-V support and building the DFT module currently requires Clang due to internal compiler errors and a lack of some optimizations in GCC and MSVC.
 
 :arrow_right: See [Installation](docs/docs/installation.md) docs for more details
 
 ## Features
 
-:star2: — new in KFR6
-
 ### FFT/DFT
 * Optimized DFT implementation for any size (non-power of two sizes are supported)
 * DFT performance is on par with the most performant implementation currently available [See Benchmarks](#benchmark-results)
 * Real forward and inverse DFT
-* :star2: Multidimensional complex and real DFT
+* Multidimensional complex and real DFT
 * Discrete Cosine Transform type II (and its inverse, also called DCT type III)
 * Convolution using FFT
 * Convolution filter
@@ -96,6 +96,7 @@ _Note_: ARM/AArch64 support and building the DFT module currently requires Clang
   * Bessel
   * Lowpass, highpass, bandpass and bandstop filters
   * Conversion of arbitrary filter from {Z, P, K} to SOS format (suitable for biquad function and filter)
+* Zero-Phase IIR Filtering
 * Biquad filter [See Benchmarks](#benchmark-results)
 * Simple biquad filter design
 * FIR filter design using window method
@@ -107,14 +108,17 @@ _Note_: ARM/AArch64 support and building the DFT module currently requires Clang
 ### Base
 
 * Tensors (multidimensional arrays)
-* :star2: .npy support (reading/writing)
-* :star2: Matrix transpose
+* .npy support (reading/writing)
+* Matrix transpose
 * Statistical functions
 * Random number generation
 * Template expressions (See examples)
 * Ring (Circular) buffer
-* :star2: Windows arm64 support
-* :star2: Emscripten (wasm/wasm64) support
+* Windows arm64 support
+* RISC-V support
+* Emscripten (wasm/wasm64) support
+* Scoped control over denormal flushing for stable floating-point behavior
+* Interleaved and planar data support with sample type conversion
 
 ### Math
 
@@ -147,13 +151,13 @@ _Note_: ARM/AArch64 support and building the DFT module currently requires Clang
 
 The multiarchitecture mode enables building algorithms for multiple architectures with runtime dispatch to detect the CPU of the target machine and select the best code path
 
-* :star2: Multiarchitecture for DFT, resampling, FIR and IIR filters.
+* Multiarchitecture for DFT, resampling, FIR and IIR filters.
 
 ### C API
 
 C API is available and includes a subset of KFR features including FFT and filter processing.
 
-* :star2: Support for non x86 systems.
+* Support for non x86 systems.
 
 ## Benchmark results
 
@@ -186,11 +190,11 @@ See [fft benchmark](https://github.com/kfrlib/fft-benchmark) for details about b
 
 ## Documentation
 
-KFR 6 (latest)
+KFR 7 (latest)
 https://www.kfrlib.com/docs/latest/
 
-KFR 5
-https://www.kfrlib.com/docs/v5/
+KFR 6
+https://www.kfrlib.com/docs/v6/
 
 Built with
 * [cxxdox - generates markdown docs from C++](https://github.com/kfrlib/cxxdox)
@@ -203,7 +207,7 @@ Built with
 
 `main` - current stable version passing all compiler/architecture tests.
 
-`v5` - previous version of KFR (no new features, fixes only)
+`v6` - previous version of KFR (no new features, fixes only)
 
 ## License
 

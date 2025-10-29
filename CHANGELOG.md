@@ -1,5 +1,121 @@
 # Changelog
 
+## 7.0.0
+
+#### Added
+
+* macOS universal binaries
+* New module: `audio`
+* New Wave, AIFF, FLAC, and Mp3 (via `minimp3`) encoders/decoders
+* Apple ALAC support
+* Apple CAF container support
+* RF64/BW64 container support
+* RISC-V support
+* RISC-V prebuilt binaries
+* New ARM and ARM64 toolchain implementation
+* New RISC-V 64 toolchain for `riscv64-linux-gnu`
+* `macos-merge-binaries.cmake` merges two directories into one with universal binaries
+* Custom port to fix the `macosforge/alac` bug
+* New `elliptic` function to design elliptic filters with ripple parameters (follows SciPy semantics)
+* Version information added for each module (`library_version_dsp`, `library_version_audio`, etc.)
+* `samples_store` and `samples_load` convert audio channels to/from stored formats (integer and floating-point, optional dithering)
+* `strided_channel` class for reading/writing strided data in KFR expressions
+* `audio_data` class providing a unified interface for interleaved/planar audio data
+* Zero-copy construction from user-supplied pointers for `audio_data`
+* Computing statistics for `audio_data`: Peak and RMS
+* Per-channel processing for `audio_data`
+* Basic dithering support: Rectangular and Triangular
+* `audio_encoder` and `audio_decoder` base classes for encoding/decoding audio
+* Reading RIFF chunks in `audio_decoder`
+* Audio format detection from the first 16 bytes
+* Audio format selection from file extension
+* Raw decoder/encoder
+* Audio decoder based on Media Foundation for Windows
+* Automatic switch from standard Wave to RF64 if audio exceeds 4 GB (can be disabled with `switch_to_rf64_if_over_4gb`)
+* `encode_audio_file` and `decode_audio_file` functions for simplified file handling
+* `arange` function added (similar to NumPy’s)
+* Added `has_expression_traits`, `input_expression`, `output_expression`, and `input_output_expression` concepts
+* `expr_element` concept defines valid expression element types
+* Added `f_class`, `i_class`, and `u_class` concepts (`is_f_class`, `is_i_class`, `is_u_class`)
+* Added `not_f_class`, `not_i_class`, and `not_u_class` concepts
+* `has_data_size` concept checks for `std::data` and `std::size` definitions
+* Added `filtfilt` for forward-backward IIR filtering
+* Added `arrangement_speakers` and `arrangement_for_channels` functions
+* Added `fopen_path` for cross-platform UTF-8 file access; replaces `fopen_portable`
+* `memory_reader` and `memory_writer` adapters for user memory buffers
+* Added more tests for vector concatenation and slicing
+* Minimal usage examples added under `tests/usage-config` and `tests/usage-manual`
+* New RISC-V vector types: `f32rvv`, `i32rvv`, `u32rvv`, etc.
+* Added `simd_compat` concept to verify SIMD element compatibility
+* Added `scoped_flush_denormals` RAII class to enable flush-to-zero semantics on x86 and ARM
+* `test_matrix` function introduced (replaces `testo::matrix` for Catch2 compatibility)
+
+#### Changed
+
+* Prebuilt binaries are tested after build
+* Prebuilt binaries use Clang 21
+* `KFR_ENABLE_MULTIARCH` is forcibly turned off for non-x86
+* `KFR_USE_BOOST_MATH` option enables the use of standalone Boost.Math for elliptic filters (on by default)
+* `KFR_USE_BOOST` option switches to using Boost.Math from a full Boost installation. Enable if you already use Boost
+* C++20 standard is now handled via the `cxx_std_20` CMake feature and inherited by dependent targets
+* Refactored CMake config with separate targets and dependency handling
+* `add_kfr_library` refactored to distinguish between private and public dependencies and definitions
+* In multiarch builds, the base architecture is now named exactly as the module itself (was: `kfr_dsp_sse2`, `kfr_dsp_avx2`; now: `kfr_dsp`, `kfr_dsp_avx2`)
+* Examples and tools migrated to the new audio I/O code
+* All third-party libraries moved to `src/thirdparty` or `include/kfr/thirdparty`
+* Old audio I/O handled by `audio_reader` and `audio_writer` is now deprecated
+* `reverse` expression is now writable
+* `audio_sample_type` now represents bit depth; negative if floating-point
+* `convert_endianness` now accepts references to data types
+* `samplerate_converter` is now default-, move-constructible, and move-assignable
+* `IO_SEEK_64` and `IO_TELL_64` macros renamed to `KFR_IO_SEEK_64` and `KFR_IO_TELL_64`
+* `get_nth_type` optimized for Clang and GCC
+* All `constexpr` variables now marked `inline`
+* `is_poweroftwo`, `next_poweroftwo`, `ilog2`, etc., now use C++20 `<bit>` header
+* Sample Rate Converter tool refactored for chunked resampling
+* [Breaking change] CMake 3.16 required
+* [Breaking change] `cometa` namespace merged into `kfr`; Cometa is no longer distributed separately. Replace `cometa` with `kfr` in your sources
+* [Breaking change] All macros renamed from `CMT_` to `KFR_`; replace all occurrences of `CMT_` with `KFR_`
+* [Breaking change] All macros renamed from `TESTO_` to `KFR_`; replace all occurrences of `TESTO_` with `KFR_`
+* [Breaking change] `cometa.hpp` renamed to `meta.hpp`; `kfr/cometa/*.hpp` renamed to `kfr/meta/*.hpp`. Update your includes accordingly
+* [Breaking change] `kfr/testo/*.hpp` renamed to `kfr/test/*.hpp`
+* [Breaking change] Some classes and functions no longer accept a template parameter and now default to `double` for maximum precision. Related changes:
+  * `zpk<float_type>` replaced with `zpk`
+  * `bessel<float_type>` and `butterworth<float_type>` replaced with `bessel` and `butterworth`
+  * `bilinear<float_type>`, `lp2lp_zpk<float_type>`, `lp2bs_zpk<float_type>`, `lp2bp_zpk<float_type>`, `lp2hp_zpk<float_type>`, and `warp_freq<float_type>` replaced with non-template equivalents
+  * `iir_lowpass<float_type>`, `iir_highpass<float_type>`, `iir_bandpass<float_type>`, `iir_bandstop<float_type>` replaced with non-template equivalents
+  * `iir_params<float_type>` still accepts a template parameter to control precision
+  * `to_sos` now accepts `float_type` (default `double`) to return `iir_params<float_type>`
+  * New `elliptic` function follows the same rule and always produces double-precision `zpk`
+* `intrinsics` namespace renamed to `intr`
+* Many functions from `iir_design.hpp` moved to `src/iir_design.cpp`
+* Documentation updates: applying FIR/IIR filters, computing loudness, performing sample conversion
+* [Breaking change] `KFR_ACCEPT_EXPRESSIONS` removed; replaced with `expression_argument` and `expression_arguments` concepts
+* [Breaking change] `identity` removed; replaced with C++ `std::type_identity_t`
+* [Breaking change] `output_expression` concept replaces `enable_if_output_expression` trait
+* [Breaking change] 8-bit sample support removed
+* [Breaking change] Fixed typo: `convert_endianess` → `convert_endianness`
+* [Breaking change] `CMT_NOEXCEPT` removed; use `noexcept`
+* [Breaking change] C API: `kfr_size_t` and `kfr_int32_t` removed; use `size_t` and `int32_t`
+* [Breaking change] `Speaker` → `speaker_type`, `SpeakerArrangement` → `speaker_arrangement`
+* [Breaking change] `from_lambda` parameter required to construct `vec` from a lambda generator
+* `ebu_r128` now accepts `std::span` instead of `std::vector`
+* `arraysize` and `carraysize` removed; use `std::size` from C++17
+* Removed C++17 compatibility definitions for non-compliant compilers
+* More functions marked `noexcept` and `constexpr`
+* `CMT_ENABLE_IF` mostly replaced with concepts and `requires`; `KFR_ENABLE_IF` still available
+* `CMT_CLANG_EXT` renamed to `KFR_VEC_EXT` and now usable with GCC
+* C API can now be built without exceptions
+* `numeric` concept replaces `is_numeric<T1>` predicate
+* `aligned_size`, `aligned_force_free`, `aligned_release`, and `aligned_reallocate` only defined if `KFR_MANAGED_ALLOCATION` is on (default off)
+
+#### Fixed
+
+* Custom port to fix the `macosforge/alac` bug
+* Fixed generic fallback for `bittestany`
+* Fixed u8/i8 shifts on x86 and related tests
+* Various smaller fixes
+
 ## 6.3.1
 
 #### Fixed
