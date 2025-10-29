@@ -26,17 +26,20 @@ function (add_kfr_library)
             target_link_libraries(${LIB_NAME} INTERFACE ${LIB_NAME}_${ARCH})
             target_set_arch(${LIB_NAME}_${ARCH} PRIVATE ${ARCH})
             if (NOT ARCH STREQUAL BASE_ARCH)
-                target_compile_definitions(${LIB_NAME}_${ARCH} PRIVATE KFR_SKIP_IF_NON_X86=1)
+                target_compile_definitions(${LIB_NAME}_${ARCH}
+                                           PRIVATE KFR_SKIP_IF_NON_X86=1)
             endif ()
         endforeach ()
         target_compile_definitions(${LIB_NAME}_${BASE_ARCH}
                                    PRIVATE KFR_BASE_ARCH=1)
-        set_target_properties(${LIB_NAME}_${BASE_ARCH} PROPERTIES OUTPUT_NAME ${LIB_NAME})
+        set_target_properties(${LIB_NAME}_${BASE_ARCH} PROPERTIES OUTPUT_NAME
+                                                                  ${LIB_NAME})
 
         link_as_whole(${LIB_NAME} INTERFACE ${LIB_NAME}_${BASE_ARCH})
 
         list(APPEND ${LIB_NAME}_TARGETS ${LIB_NAME})
-        target_compile_definitions(${LIB_NAME} INTERFACE $<BUILD_INTERFACE:${LIB_PUBLIC_DEFINITIONS}>)
+        target_compile_definitions(
+            ${LIB_NAME} INTERFACE $<BUILD_INTERFACE:${LIB_PUBLIC_DEFINITIONS}>)
     else ()
         add_library(${LIB_NAME} STATIC ${LIB_SOURCES})
         list(APPEND ${LIB_NAME}_LIBS ${LIB_NAME})
@@ -49,11 +52,11 @@ function (add_kfr_library)
         target_link_libraries(${LIB} PRIVATE ${LIB_LIBRARIES})
         target_link_libraries(${LIB} PUBLIC ${LIB_PUBLIC_LIBRARIES})
         target_compile_definitions(${LIB} PRIVATE ${LIB_DEFINITIONS})
-        target_compile_definitions(${LIB} PUBLIC $<BUILD_INTERFACE:${LIB_PUBLIC_DEFINITIONS}>)
+        target_compile_definitions(
+            ${LIB} PUBLIC $<BUILD_INTERFACE:${LIB_PUBLIC_DEFINITIONS}>)
         target_compile_options(${LIB} PRIVATE ${LIB_OPTIONS})
         target_include_directories(${LIB} PRIVATE ${LIB_INCLUDE_DIRECTORIES})
     endforeach ()
-    
 
     set(${LIB_NAME}_LIBS
         ${${LIB_NAME}_LIBS}

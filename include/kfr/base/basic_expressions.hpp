@@ -345,7 +345,7 @@ struct expression_padded : public expression_with_arguments<Arg>
 
     KFR_MEM_INTRINSIC expression_padded(Arg&& arg, typename ArgTraits::value_type fill_value)
         : expression_with_arguments<Arg>{ std::forward<Arg>(arg) }, fill_value(std::move(fill_value)),
-          input_shape(ArgTraits::get_shape((this -> first())))
+          input_shape(ArgTraits::get_shape((this->first())))
     {
     }
 };
@@ -414,7 +414,7 @@ struct expression_reverse : public expression_with_arguments<Arg>
 
     KFR_MEM_INTRINSIC expression_reverse(Arg&& arg)
         : expression_with_arguments<Arg>{ std::forward<Arg>(arg) },
-          input_shape(ArgTraits::get_shape(this -> first()))
+          input_shape(ArgTraits::get_shape(this->first()))
     {
     }
 };

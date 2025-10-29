@@ -26,7 +26,6 @@
 #include <kfr/cident.h>
 #if !defined KFR_SKIP_IF_NON_X86 || defined(KFR_ARCH_X86)
 
-
 #include "dft-impl.hpp"
 
 #define FLOAT double

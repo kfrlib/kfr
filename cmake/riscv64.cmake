@@ -3,7 +3,9 @@ set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_PROCESSOR riscv64)
 
 set(EMULATOR qemu-riscv64)
-set(QEMU_LD_PREFIX "/usr/riscv64-linux-gnu/" CACHE INTERNAL "")
+set(QEMU_LD_PREFIX
+    "/usr/riscv64-linux-gnu/"
+    CACHE INTERNAL "")
 list(APPEND EMULATOR "-L")
 list(APPEND EMULATOR ${QEMU_LD_PREFIX})
 
@@ -18,8 +20,12 @@ set(CMAKE_OBJDUMP llvm-objdump)
 set(CMAKE_RANLIB llvm-ranlib)
 
 # Set compiler flags for RISC-V 64-bit with vector extensions
-set(CMAKE_C_FLAGS "--target=riscv64-linux-gnu -march=rv64gcv" CACHE STRING "C flags")
-set(CMAKE_CXX_FLAGS "--target=riscv64-linux-gnu -march=rv64gcv" CACHE STRING "C++ flags")
+set(CMAKE_C_FLAGS
+    "--target=riscv64-linux-gnu -march=rv64gcv"
+    CACHE STRING "C flags")
+set(CMAKE_CXX_FLAGS
+    "--target=riscv64-linux-gnu -march=rv64gcv"
+    CACHE STRING "C++ flags")
 
 # Set the target environment path
 set(CMAKE_FIND_ROOT_PATH /usr/riscv64-linux-gnu)

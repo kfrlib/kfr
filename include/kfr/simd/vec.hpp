@@ -232,7 +232,9 @@ struct is_vec_impl<vec<T, N>> : std::true_type
 };
 } // namespace internal
 
-struct from_lambda {};
+struct from_lambda
+{
+};
 
 template <typename T>
 constexpr inline bool is_vec = internal::is_vec_impl<T>::value;

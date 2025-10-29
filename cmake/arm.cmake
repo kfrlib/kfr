@@ -3,7 +3,9 @@ set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_PROCESSOR arm)
 
 set(EMULATOR qemu-arm)
-set(QEMU_LD_PREFIX "/usr/arm-linux-gnueabihf/" CACHE INTERNAL "")
+set(QEMU_LD_PREFIX
+    "/usr/arm-linux-gnueabihf/"
+    CACHE INTERNAL "")
 list(APPEND EMULATOR "-L")
 list(APPEND EMULATOR ${QEMU_LD_PREFIX})
 
@@ -18,8 +20,12 @@ set(CMAKE_OBJDUMP llvm-objdump)
 set(CMAKE_RANLIB llvm-ranlib)
 
 # Set compiler flags for ARM
-set(CMAKE_C_FLAGS "--target=arm-linux-gnueabihf -mcpu=cortex-a15 -mfpu=neon-vfpv4 -mfloat-abi=hard" CACHE STRING "C flags")
-set(CMAKE_CXX_FLAGS "--target=arm-linux-gnueabihf -mcpu=cortex-a15 -mfpu=neon-vfpv4 -mfloat-abi=hard" CACHE STRING "C++ flags")
+set(CMAKE_C_FLAGS
+    "--target=arm-linux-gnueabihf -mcpu=cortex-a15 -mfpu=neon-vfpv4 -mfloat-abi=hard"
+    CACHE STRING "C flags")
+set(CMAKE_CXX_FLAGS
+    "--target=arm-linux-gnueabihf -mcpu=cortex-a15 -mfpu=neon-vfpv4 -mfloat-abi=hard"
+    CACHE STRING "C++ flags")
 
 # Set the target environment path
 set(CMAKE_FIND_ROOT_PATH /usr/arm-linux-gnueabihf)

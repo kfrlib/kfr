@@ -41,7 +41,8 @@ if (KFR_ENABLE_DFT)
 endif ()
 
 add_executable(sample_rate_conversion sample_rate_conversion.cpp)
-target_link_libraries(sample_rate_conversion kfr kfr_io kfr_dsp kfr_audio use_arch)
+target_link_libraries(sample_rate_conversion kfr kfr_io kfr_dsp kfr_audio
+                      use_arch)
 
 if (KFR_ENABLE_DFT)
     add_executable(dft dft.cpp)

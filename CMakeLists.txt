@@ -160,7 +160,8 @@ else ()
     if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
         set(X86 TRUE)
     endif ()
-    if (CMAKE_CXX_COMPILER_TARGET MATCHES "^([Aa][Rr][Mm]|[Aa][Aa][Rr][Cc][Hh]|[Rr][Vv][Vv])")
+    if (CMAKE_CXX_COMPILER_TARGET MATCHES
+        "^([Aa][Rr][Mm]|[Aa][Aa][Rr][Cc][Hh]|[Rr][Vv][Vv])")
         set(X86 FALSE)
     endif ()
     if (CMAKE_ANDROID_ARCH_ABI MATCHES "x86")
@@ -205,7 +206,7 @@ endif ()
 
 if (X86)
     option(KFR_ENABLE_MULTIARCH
-       "Multiple architectures will be built with runtime dispatch" ON)
+           "Multiple architectures will be built with runtime dispatch" ON)
 endif ()
 
 option(ENABLE_TESTS "Enable KFR tests" OFF)
@@ -227,8 +228,12 @@ option(KFR_INSTALL_LIBRARIES "Include libraries in installation" ON)
 option(KFR_MANAGED_ALLOCATION
        "Use KFR managed memory (copy-free aligned reallocation, ref counting)"
        OFF)
-option(KFR_USE_BOOST_MATH "Use Boost.Math (standalone) to support Elliptic filters" ON)
-option(KFR_USE_BOOST "Use Boost to support Elliptic filters. Enable this only if you're already using Boost" OFF)
+option(KFR_USE_BOOST_MATH
+       "Use Boost.Math (standalone) to support Elliptic filters" ON)
+option(
+    KFR_USE_BOOST
+    "Use Boost to support Elliptic filters. Enable this only if you're already using Boost"
+    OFF)
 option(KFR_USE_STD_FILESYSTEM "Use std::filesystem for path arguments" OFF)
 mark_as_advanced(KFR_ENABLE_ASMTEST)
 mark_as_advanced(KFR_REGENERATE_TESTS)
@@ -273,7 +278,10 @@ endif ()
 
 if (NOT X86)
     if (KFR_ARCH IN_LIST DETECT_NAMES)
-        message(STATUS "Cpu detection is disabled on non-x86, setting neon (KFR_ARCH=${KFR_ARCH})")
+        message(
+            STATUS
+                "Cpu detection is disabled on non-x86, setting neon (KFR_ARCH=${KFR_ARCH})"
+        )
         if (BITNESS64)
             set(KFR_ARCH neon64)
         else ()
@@ -291,8 +299,7 @@ if (KFR_ARCH IN_LIST DETECT_NAMES AND NOT CMAKE_CROSSCOMPILING)
         ${CMAKE_CURRENT_SOURCE_DIR}/cmake/detect_cpu.cpp
         CMAKE_FLAGS
             "-DINCLUDE_DIRECTORIES=${CMAKE_CURRENT_SOURCE_DIR}/include"
-            -DCMAKE_CXX_STANDARD=20
-            -DCMAKE_CXX_STANDARD_REQUIRED=ON
+            -DCMAKE_CXX_STANDARD=20 -DCMAKE_CXX_STANDARD_REQUIRED=ON
             "-DCOMPILE_DEFINITIONS=-DCPU_${KFR_ARCH}=1"
         COMPILE_OUTPUT_VARIABLE COMPILE_OUT
         RUN_OUTPUT_VARIABLE RUN_OUT)
@@ -400,7 +407,8 @@ else ()
     target_link_libraries(kfr INTERFACE ${STD_LIB} ${PTHREAD_LIB} m)
 endif ()
 if (KFR_DISABLE_CLANG_EXTENSIONS)
-    target_compile_definitions(kfr INTERFACE $<BUILD_INTERFACE:KFR_DISABLE_CLANG_EXT>)
+    target_compile_definitions(
+        kfr INTERFACE $<BUILD_INTERFACE:KFR_DISABLE_CLANG_EXT>)
 endif ()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wno-ignored-qualifiers -Wno-psabi)
@@ -419,11 +427,13 @@ if (NOT KFR_ENABLE_DFT)
     target_compile_definitions(kfr INTERFACE $<BUILD_INTERFACE:KFR_NO_DFT>)
 endif ()
 if (KFR_EXTENDED_TESTS)
-    target_compile_definitions(kfr INTERFACE $<BUILD_INTERFACE:KFR_EXTENDED_TESTS>)
+    target_compile_definitions(kfr
+                               INTERFACE $<BUILD_INTERFACE:KFR_EXTENDED_TESTS>)
 endif ()
 
 if (KFR_MANAGED_ALLOCATION)
-    target_compile_definitions(kfr INTERFACE $<BUILD_INTERFACE:KFR_MANAGED_ALLOCATION=1>)
+    target_compile_definitions(
+        kfr INTERFACE $<BUILD_INTERFACE:KFR_MANAGED_ALLOCATION=1>)
 endif ()
 
 set(KFR_DEBUG_INSTALL_SUFFIX
@@ -513,9 +523,8 @@ set(KFR_INSTALL_CMAKEDIR
     "${CMAKE_INSTALL_LIBDIR}/cmake/kfr"
     CACHE STRING "Path to KFR CMake files")
 
-install(FILES 
-    ${CMAKE_CURRENT_BINARY_DIR}/KFRConfigVersion.cmake
-    DESTINATION ${KFR_INSTALL_CMAKEDIR})
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/KFRConfigVersion.cmake
+        DESTINATION ${KFR_INSTALL_CMAKEDIR})
 
 configure_package_config_file(
     ${CMAKE_CURRENT_LIST_DIR}/cmake/config.cmake.in
@@ -524,7 +533,8 @@ configure_package_config_file(
 
 install(TARGETS kfr EXPORT KFRTargets)
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/KFRConfig.cmake DESTINATION "${KFR_INSTALL_CMAKEDIR}")
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/KFRConfig.cmake
+        DESTINATION "${KFR_INSTALL_CMAKEDIR}")
 
 install(
     EXPORT KFRTargets

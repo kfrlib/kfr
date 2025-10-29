@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 
-add_kfr_library(NAME kfr_dft MULTIARCH SOURCES ${KFR_DFT_SRC})
+add_kfr_library(
+    NAME kfr_dft
+    MULTIARCH
+    SOURCES ${KFR_DFT_SRC})
 
 function (dft_compile_options LIB)
     if (MSVC AND CLANG)

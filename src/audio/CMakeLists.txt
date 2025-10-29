@@ -22,7 +22,8 @@ if (TARGET FLAC::FLAC)
     else ()
         message(STATUS "FLAC found, enabling FLAC support in kfr_audio")
         target_link_libraries(kfr_audio PUBLIC $<BUILD_INTERFACE:FLAC::FLAC>)
-        target_compile_definitions(kfr_audio PUBLIC $<BUILD_INTERFACE:KFR_AUDIO_FLAC=1>)
+        target_compile_definitions(kfr_audio
+                                   PUBLIC $<BUILD_INTERFACE:KFR_AUDIO_FLAC=1>)
         set(KFR_AUDIO_FLAC
             TRUE
             CACHE BOOL "FLAC support enabled in kfr_audio" FORCE)
@@ -57,7 +58,8 @@ if (ALAC_INCLUDE_DIRS AND ALAC_LIBRARY)
                    INTERFACE_INCLUDE_DIRECTORIES "${ALAC_INCLUDE_DIR}")
     message(STATUS "ALAC found, enabling ALAC support in kfr_audio")
     target_link_libraries(kfr_audio PUBLIC $<BUILD_INTERFACE:ALAC::ALAC>)
-    target_compile_definitions(kfr_audio PUBLIC $<BUILD_INTERFACE:KFR_AUDIO_ALAC=1>)
+    target_compile_definitions(kfr_audio
+                               PUBLIC $<BUILD_INTERFACE:KFR_AUDIO_ALAC=1>)
     set(KFR_AUDIO_ALAC
         TRUE
         CACHE BOOL "ALAC support enabled in kfr_audio" FORCE)

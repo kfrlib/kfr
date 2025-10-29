@@ -63,7 +63,8 @@ endfunction ()
 
 # Function to compare two files for equality
 function (compare_files file1 file2 are_equal_var)
-    execute_process(COMMAND cmp -s "${file1}" "${file2}" RESULT_VARIABLE cmp_result)
+    execute_process(COMMAND cmp -s "${file1}" "${file2}"
+                    RESULT_VARIABLE cmp_result)
     if (cmp_result EQUAL 0)
         set(${are_equal_var}
             TRUE
@@ -114,43 +115,66 @@ function (merge_file arm64_file x64_file output_file)
 
     # Ensure both files are either Mach-O/static lib or neither
     if (is_arm64_macho AND NOT is_x64_macho)
-        message(FATAL_ERROR "File type mismatch: ${arm64_file} is Mach-O/static lib, but ${x64_file} is not")
+        message(
+            FATAL_ERROR
+                "File type mismatch: ${arm64_file} is Mach-O/static lib, but ${x64_file} is not"
+        )
     endif ()
     if (NOT is_arm64_macho AND is_x64_macho)
-        message(FATAL_ERROR "File type mismatch: ${x64_file} is Mach-O/static lib, but ${arm64_file} is not")
+        message(
+            FATAL_ERROR
+                "File type mismatch: ${x64_file} is Mach-O/static lib, but ${arm64_file} is not"
+        )
     endif ()
 
     if (is_arm64_macho AND is_x64_macho)
         # Run lipo to create fat binary
-        execute_process(COMMAND "${LIPO}" -create "${arm64_file}" "${x64_file}" -output "${output_file}"
-                        RESULT_VARIABLE lipo_result)
+        execute_process(
+            COMMAND "${LIPO}" -create "${arm64_file}" "${x64_file}" -output
+                    "${output_file}" RESULT_VARIABLE lipo_result)
         if (NOT lipo_result EQUAL 0)
-            message(FATAL_ERROR "Failed to merge ${arm64_file} and ${x64_file} with lipo")
+            message(
+                FATAL_ERROR
+                    "Failed to merge ${arm64_file} and ${x64_file} with lipo")
         endif ()
-        message(STATUS "Merged ${arm64_file} and ${x64_file} into ${output_file}")
+        message(
+            STATUS "Merged ${arm64_file} and ${x64_file} into ${output_file}")
     else ()
         # Check for preference lists
         file_matches_preference("${arm64_file}" "${PREFER_X64}" prefer_x64)
         file_matches_preference("${arm64_file}" "${PREFER_ARM64}" prefer_arm64)
 
         if (prefer_x64 AND prefer_arm64)
-            message(FATAL_ERROR "File ${arm64_file} matches both PREFER_X64 and PREFER_ARM64 lists")
+            message(
+                FATAL_ERROR
+                    "File ${arm64_file} matches both PREFER_X64 and PREFER_ARM64 lists"
+            )
         elseif (prefer_x64)
             file(COPY_FILE "${x64_file}" "${output_file}")
-            message(STATUS "Copied ${x64_file} to ${output_file} (PREFER_X64 match)")
+            message(
+                STATUS "Copied ${x64_file} to ${output_file} (PREFER_X64 match)"
+            )
         elseif (prefer_arm64)
             file(COPY_FILE "${arm64_file}" "${output_file}")
-            message(STATUS "Copied ${arm64_file} to ${output_file} (PREFER_ARM64 match)")
+            message(
+                STATUS
+                    "Copied ${arm64_file} to ${output_file} (PREFER_ARM64 match)"
+            )
         else ()
             # Compare files if not Mach-O or static library and no preference
             compare_files("${arm64_file}" "${x64_file}" files_equal)
             if (NOT files_equal)
                 message(
-                    FATAL_ERROR "Non-Mach-O files differ: ${arm64_file} and ${x64_file}\nDiff output:\n${DIFF_OUTPUT}")
+                    FATAL_ERROR
+                        "Non-Mach-O files differ: ${arm64_file} and ${x64_file}\nDiff output:\n${DIFF_OUTPUT}"
+                )
             endif ()
             # Copy x64 file
             file(COPY_FILE "${x64_file}" "${output_file}")
-            message(STATUS "Copied ${x64_file} to ${output_file} (non-Mach-O or non-static library)")
+            message(
+                STATUS
+                    "Copied ${x64_file} to ${output_file} (non-Mach-O or non-static library)"
+            )
         endif ()
     endif ()
 endfunction ()
@@ -198,7 +222,10 @@ function (process_directory arm64_base x64_base output_base)
         # Clean up temporary files
         file(REMOVE "${temp_arm64_list}" "${temp_x64_list}")
 
-        message(FATAL_ERROR "Directories have different sets of files. Diff output:\n${diff_output}")
+        message(
+            FATAL_ERROR
+                "Directories have different sets of files. Diff output:\n${diff_output}"
+        )
     endif ()
 
     foreach (item ${arm64_items})
