@@ -108,6 +108,7 @@
 * C API can now be built without exceptions
 * `numeric` concept replaces `is_numeric<T1>` predicate
 * `aligned_size`, `aligned_force_free`, `aligned_release`, and `aligned_reallocate` only defined if `KFR_MANAGED_ALLOCATION` is on (default off)
+* Audio and IO modules can now be disabled during KFR build with `KFR_ENABLE_AUDIO` and `KFR_ENABLE_IO` options (both on by default) @jcelerier
 
 #### Fixed
 
@@ -115,6 +116,7 @@
 * Fixed generic fallback for `bittestany`
 * Fixed u8/i8 shifts on x86 and related tests
 * Various smaller fixes
+* C++23 compatibility fixes
 
 ## 6.3.1
 
