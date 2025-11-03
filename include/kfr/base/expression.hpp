@@ -147,7 +147,7 @@ template <typename E>
 concept expression_argument = input_expression<E> && expression_traits<E>::explicit_operand;
 
 template <typename... E>
-concept expression_arguments = ((input_expression<E> && expression_traits<E>::explicit_operand) || ...);
+concept expression_arguments = (input_expression<E> && ...) && (expression_argument<E> || ...);
 
 template <typename T>
 concept input_output_expression = input_expression<T> && output_expression<T>;

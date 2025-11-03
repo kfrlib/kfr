@@ -506,64 +506,64 @@ KFR_INTRINSIC expression_make_function<fn::satsub, E1, E2> satsub(E1&& x, E2&& y
 }
 
 template <input_output_expression E1, input_expression E2>
-KFR_INTRINSIC E1& operator+=(E1&& e1, E2&& e2)
+KFR_INTRINSIC std::remove_reference_t<E1> operator+=(E1&& e1, E2&& e2)
 {
     process(e1, operator+(e1, e2));
-    return e1;
+    return std::forward<E1>(e1);
 }
 template <input_output_expression E1, input_expression E2>
-KFR_INTRINSIC E1& operator-=(E1&& e1, E2&& e2)
+KFR_INTRINSIC std::remove_reference_t<E1> operator-=(E1&& e1, E2&& e2)
 {
     process(e1, operator-(e1, e2));
-    return e1;
+    return std::forward<E1>(e1);
 }
 template <input_output_expression E1, input_expression E2>
-KFR_INTRINSIC E1& operator*=(E1&& e1, E2&& e2)
+KFR_INTRINSIC std::remove_reference_t<E1> operator*=(E1&& e1, E2&& e2)
 {
     process(e1, operator*(e1, e2));
-    return e1;
+    return std::forward<E1>(e1);
 }
 template <input_output_expression E1, input_expression E2>
-KFR_INTRINSIC E1& operator/=(E1&& e1, E2&& e2)
+KFR_INTRINSIC std::remove_reference_t<E1> operator/=(E1&& e1, E2&& e2)
 {
     process(e1, operator/(e1, e2));
-    return e1;
+    return std::forward<E1>(e1);
 }
 template <input_output_expression E1, input_expression E2>
-KFR_INTRINSIC E1& operator%=(E1&& e1, E2&& e2)
+KFR_INTRINSIC std::remove_reference_t<E1> operator%=(E1&& e1, E2&& e2)
 {
     process(e1, operator%(e1, e2));
-    return e1;
+    return std::forward<E1>(e1);
 }
 template <input_output_expression E1, input_expression E2>
-KFR_INTRINSIC E1& operator|=(E1&& e1, E2&& e2)
+KFR_INTRINSIC std::remove_reference_t<E1> operator|=(E1&& e1, E2&& e2)
 {
     process(e1, operator|(e1, e2));
-    return e1;
+    return std::forward<E1>(e1);
 }
 template <input_output_expression E1, input_expression E2>
-KFR_INTRINSIC E1& operator&=(E1&& e1, E2&& e2)
+KFR_INTRINSIC std::remove_reference_t<E1> operator&=(E1&& e1, E2&& e2)
 {
     process(e1, operator&(e1, e2));
-    return e1;
+    return std::forward<E1>(e1);
 }
 template <input_output_expression E1, input_expression E2>
-KFR_INTRINSIC E1& operator^=(E1&& e1, E2&& e2)
+KFR_INTRINSIC std::remove_reference_t<E1> operator^=(E1&& e1, E2&& e2)
 {
     process(e1, operator^(e1, e2));
-    return e1;
+    return std::forward<E1>(e1);
 }
 template <input_output_expression E1, input_expression E2>
-KFR_INTRINSIC E1& operator<<=(E1&& e1, E2&& e2)
+KFR_INTRINSIC std::remove_reference_t<E1> operator<<=(E1&& e1, E2&& e2)
 {
     process(e1, operator<<(e1, e2));
-    return e1;
+    return std::forward<E1>(e1);
 }
 template <input_output_expression E1, input_expression E2>
-KFR_INTRINSIC E1& operator>>=(E1&& e1, E2&& e2)
+KFR_INTRINSIC std::remove_reference_t<E1> operator>>=(E1&& e1, E2&& e2)
 {
     process(e1, operator>>(e1, e2));
-    return e1;
+    return std::forward<E1>(e1);
 }
 
 } // namespace KFR_ARCH_NAME

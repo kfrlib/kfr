@@ -1517,12 +1517,18 @@ KFR_INTRINSIC void cwrite_transposed(cbool_t<transposed>, complex<T>* ptr, vec<T
 template <size_t I, size_t radix, typename T, size_t N, size_t width = N / 2>
 KFR_INTRINSIC vec<T, N> mul_tw(cbool_t<false>, const vec<T, N>& x, const complex<T>* twiddle)
 {
-    return I == 0 ? x : cmul(x, cread<width>(twiddle + width * (I - 1)));
+    if constexpr (I == 0)
+        return x;
+    else
+        return cmul(x, cread<width>(twiddle + width * (I - 1)));
 }
 template <size_t I, size_t radix, typename T, size_t N, size_t width = N / 2>
 KFR_INTRINSIC vec<T, N> mul_tw(cbool_t<true>, const vec<T, N>& x, const complex<T>* twiddle)
 {
-    return I == 0 ? x : cmul_conj(x, cread<width>(twiddle + width * (I - 1)));
+    if constexpr (I == 0)
+        return x;
+    else
+        return cmul_conj(x, cread<width>(twiddle + width * (I - 1)));
 }
 
 // Non-final
