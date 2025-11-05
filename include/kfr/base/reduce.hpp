@@ -412,19 +412,43 @@ struct variance_helper
 };
 } // namespace internal
 
+/**
+ * @brief Computes the variance of the given input expression.
+ *
+ * This function calculates the variance of the elements in the input expression `x`.
+ *
+ * @tparam E1 The type of the input expression.
+ * @tparam T The value type of the expression elements.
+ *
+ * @param x The input expression for which the variance is to be computed.
+ *          Must be a sized expression.
+ *
+ * @return The variance of the elements in the input expression.
+ */
 template <input_expression E1, typename T = expression_value_type<E1>>
 KFR_FUNCTION T variance(const E1& x)
 {
     static_assert(!is_infinite<decltype(x)>, "e1 must be a sized expression (use slice())");
     T k = get_element(x, shape{ 0 });
     return reduce(x, fn::add(), internal::variance_helper<T>{ k },
-                  [](const vec<T, 2>& x, size_t count) -> T KFR_INLINE_LAMBDA
+                  [](const vec<T, 2>& x, size_t count) KFR_INLINE_LAMBDA -> T
                   {
                       // x[0] = sum(x - mean), x[1] = sum((x - mean)^2)
-                      return (x[1] - sqr(x[0]) / count) / count;
+                      return (x[1] - sqr(x[0]) / T(count)) / T(count);
                   });
 }
 
+/**
+ * @brief Computes the standard deviation of the given expression.
+ *
+ * This function calculates the standard deviation of the input expression `x`.
+ * The input must be a sized expression.
+ *
+ * @tparam T The return type of the standard deviation.
+ * @tparam E1 The type of the input expression.
+ * @param x The input expression for which the standard deviation is computed.
+ * @return The standard deviation of the input expression.
+ */
 template <input_expression E1, typename T = expression_value_type<E1>>
 KFR_FUNCTION T stddev(const E1& x)
 {
