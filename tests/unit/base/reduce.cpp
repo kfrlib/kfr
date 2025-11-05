@@ -28,6 +28,8 @@ TEST_CASE("reduce")
         CHECK_THAT((sumsqr(a)), DeepMatcher(136));
         CHECK_THAT((rms(a)), DeepMatcher(4.760952285695233f));
         CHECK_THAT((product(a)), DeepMatcher(-1080));
+        CHECK_THAT((variance(a)), DeepMatcher(21.66666666f));
+        CHECK_THAT((stddev(a)), DeepMatcher(4.654746681256314f));
     }
     {
         univector<double, 6> a({ 1, 2, 3, 4, 5, -9 });
@@ -40,6 +42,8 @@ TEST_CASE("reduce")
         CHECK_THAT((sumsqr(a)), DeepMatcher(136));
         CHECK_THAT((rms(a)), DeepMatcher(4.760952285695233));
         CHECK_THAT((product(a)), DeepMatcher(-1080));
+        CHECK_THAT((variance(a)), DeepMatcher(21.666666666666668));
+        CHECK_THAT((stddev(a)), DeepMatcher(4.654746681256314));
     }
     {
         univector<int, 6> a({ 1, 2, 3, 4, 5, -9 });
