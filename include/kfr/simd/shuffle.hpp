@@ -188,7 +188,7 @@ KFR_FN(padlow)
 template <size_t Nout, typename T>
 KFR_INTRINSIC vec<T, Nout> extend(const vec<T, 1>& x)
 {
-    return vec<T, Nout>(x.front());
+    return repeat<Nout>(vec<T, 1>(x.front()));
 }
 template <size_t Nout, typename T, size_t N>
     requires(N != Nout && N > 1)
