@@ -133,6 +133,17 @@ target_link_libraries(all_tests kfr use_arch kfr_dsp)
 if (KFR_ENABLE_DFT)
     target_link_libraries(all_tests kfr_dft)
 endif ()
+
+if (NOT TARGET kfr_dsp)
+    message(FATAL_ERROR "KFR DSP module is not built, cannot build tests")
+endif ()
+if (NOT TARGET kfr_io)
+    message(FATAL_ERROR "KFR IO module is not built, cannot build tests")
+endif ()
+if (NOT TARGET kfr_audio)
+    message(FATAL_ERROR "KFR Audio module is not built, cannot build tests")
+endif ()
+
 target_link_libraries(all_tests kfr_io)
 
 option(KFR_NO_PERF_TESTS "Disable performance tests" OFF)
