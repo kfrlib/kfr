@@ -1,4 +1,4 @@
-# KFR 6 Documentation
+# KFR 7 Documentation
 
 ## Getting started
 
@@ -39,7 +39,7 @@
 
 ## Function reference
 
-* [Function reference](auto/refindex.md)
+* [Function reference](auto/index.md)
 
 ## KFR 6
 

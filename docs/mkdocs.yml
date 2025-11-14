@@ -5,6 +5,7 @@ theme:
     - navigation.tabs
     - navigation.top
     - content.code.copy
+    - navigation.indexes
   palette:
     # Palette toggle for light mode
     - scheme: default
@@ -30,9 +31,60 @@ extra:
 
 copyright: "Copyright &copy; 2016 - 2025 KFR"
 
+validation:
+  links:
+    absolute_links: relative_to_docs
+
 plugins:
   - search
   - privacy
+  - gh-admonitions
+  - cxxdox:
+      title: KFR API Reference
+      path_prefix: auto/
+      input:
+        - include:
+            - ../include/kfr/all.hpp # relative to mkdocs.yml
+          exclude:
+            - ../include/kfr/thirparty
+          exclude_symbols:
+            - "*::intr::*"
+            - "*::internal::*"
+            - "*::details::*"
+            - "*::fn::*"
+            - "*::internal_generic::*"
+            - "tl::*"
+          hide_tokens:
+            - KFR_INLINE
+            - KFR_INTRINSIC
+            - KFR_MEM_INTRINSIC
+            - KFR_FUNCTION
+            - KFR_INTRINSIC
+            - KFR_MEM_INTRINSIC
+            - KFR_UNUSED
+            - KFR_INLINE
+            - KFR_API_SPEC
+          compile_options:
+            - -std=c++20
+            - "-DDOCUMENTATION"
+            - "-DKFR_FORCE_GENERIC_CPU=1"
+            - "-I../include"
+        - include:
+            - ../include/kfr/capi.h # relative to mkdocs.yml
+          hide_tokens:
+            - KFR_INLINE
+            - KFR_INTRINSIC
+            - KFR_MEM_INTRINSIC
+            - KFR_FUNCTION
+            - KFR_INTRINSIC
+            - KFR_MEM_INTRINSIC
+            - KFR_UNUSED
+            - KFR_INLINE
+            - KFR_API_SPEC
+          compile_options:
+            - -std=c99
+            - "-DDOCUMENTATION"
+            - "-I../include"
 
 markdown_extensions:
   - admonition
@@ -55,10 +107,10 @@ markdown_extensions:
 
 extra_javascript:
   - js/math.js
-  - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.9.0/katex.min.js
+  - https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex.min.js
 
 extra_css:
-  - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.9.0/katex.min.css
+  - https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex.min.css
   - css/fix.css
 
 repo_url: https://github.com/kfrlib/kfr
@@ -99,52 +151,7 @@ nav:
       - read_audio.md
       - file_support.md
       - plot.md
-  - Reference:
-      - auto/refindex.md
-      - auto/capi.md
-      - Math:
-          - auto/complex.md
-          - auto/constants.md
-          - auto/logical.md
-          - auto/basic_math.md
-          - auto/exponential.md
-          - auto/round.md
-          - auto/saturation.md
-          - auto/trigonometric.md
-          - auto/hyperbolic.md
-          - auto/horizontal.md
-          - auto/other_math.md
-      - Base:
-          - auto/base.md
-          - auto/types.md
-          - auto/univector.md
-          - auto/tensor.md
-          - auto/expressions.md
-          - auto/generators.md
-          - auto/reducing.md
-          - auto/random.md
-          - auto/memory.md
-          - auto/conversion.md
-          - auto/sort.md
-          - auto/utility.md
-          - auto/array.md
-      - DSP:
-          - auto/filter.md
-          - auto/biquad.md
-          - auto/fir.md
-          - auto/window.md
-          - auto/dsp.md
-          - auto/dsp_extra.md
-      - DFT:
-          - auto/convolution.md
-          - auto/dft.md
-      - IO:
-          - auto/binary_io.md
-          - auto/audio_io.md
-          - auto/plotting.md
-          - auto/string_io.md
-      - Other functions: auto/default.md
-      - auto/cpuid.md
-      - auto/meta.md
+  - API Reference:
+      - auto/index.md
 
   - kfr.dev: https://kfr.dev

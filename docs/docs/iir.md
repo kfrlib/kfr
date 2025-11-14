@@ -213,5 +213,5 @@ plot_save("bessel_lowpass12", output, options + ", title='12th-order Bessel filt
 ## See Also
 
 - [Biquad Filter Documentation](bq.md)
-- [Filter Class Definition](auto/filter.md)
+- [Filter Class Definition](auto/classes/kfr.filter.t.md)
 - [Gallery with results of applying various IIR filters](iir_gallery.md)

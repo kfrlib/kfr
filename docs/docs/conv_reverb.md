@@ -14,7 +14,7 @@ reverb.apply(audio);
 ```
 
 !!! note
-    `convolve_filter` uses [Filter API](auto/filter.md) and preserves its internal state between calls to `apply`.
+    `convolve_filter` uses [Filter API](auto/classes/kfr.filter.t.md) and preserves its internal state between calls to `apply`.
     Audio can be processed in chunks.
     Use `reset` function to reset its internal state.
 

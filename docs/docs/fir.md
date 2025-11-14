@@ -18,16 +18,17 @@ filter_fir<float> filter(taps);
 ```
 
 KFR supports following filter types:
-* Low-pass: `fir_lowpass(taps, cutoff, window, normalize)`
-* High-pass: `fir_highpass(taps, cutoff, window, normalize)`
-* Band-pass: `fir_bandpass(taps, cutoff1, cutoff2, window, normalize)`
-* Band-stop: `fir_bandstop(taps, cutoff1, cutoff2, window, normalize)`
 
-You can pass your own coefficients to the `filter_fir` constructor or use another method to calculate coefficients for the filter.
+* Low-pass: [[fir_lowpass]]
+* High-pass: [[fir_highpass]]
+* Band-pass: [[fir_bandpass]]
+* Band-stop: [[fir_bandstop]]
 
-Use the `apply` function to apply the filter to audio.
+You can pass your own coefficients to the [[fir_filter]] constructor or use another method to calculate coefficients for the filter.
 
-All the internal state (delay line, etc.) is preserved between calls to apply. Use `reset` to reset the filter's internal state.
+Use the [[filter<T>::apply]] function to apply the filter to audio.
+
+All the internal state (delay line, etc.) is preserved between calls to apply. Use [[filter<T>::reset]] to reset the filter's internal state.
 
 > [!note]
 > Note that for a high-pass FIR filter, the number of taps must be odd.
@@ -92,6 +93,6 @@ filter.apply(output, input);
 
 [convolve_filter](convolution.md) is numerically equivalent to an FIR filter but uses DFT internally for better performance.
 
-See also [Filter Class Definition](auto/filter.md)
+See also [Filter Class Definition](auto/classes/kfr.filter.t.md)
 
 [See also a gallery with results of applying various FIR filters](fir_gallery.md)

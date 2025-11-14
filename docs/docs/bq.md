@@ -133,6 +133,6 @@ filtfilt(data, params); // Apply forward and backward filtering in-place
 
 ## See Also
 
-- [Filter Class Definition](auto/filter.md)
+- [Filter Class Definition](auto/classes/kfr.filter.t.md)
 - [FIR Filter Documentation](fir.md)
 - [Gallery with results of applying various Biquad filters](bq_gallery.md)

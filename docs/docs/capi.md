@@ -29,4 +29,4 @@ ninja -C build install
 
 ## C API Reference
 
-See [C API Reference](auto/capi.md).
+See [C API Reference](auto/groups/capi.md).

@@ -105,3 +105,6 @@ lcov.info
 
 # clangd
 .cache
+
+docs/site
+docs/out.json
