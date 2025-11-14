@@ -9,10 +9,13 @@
 #### Changed
 
 * Audio and IO modules can now be disabled during KFR build with `KFR_ENABLE_AUDIO` and `KFR_ENABLE_IO` options (both on by default) @jcelerier
+* DSP module can be disabled too with `KFR_ENABLE_DSP` option (on by default)
+* Documentation migrated to mkdocs + cxxdox 2
 
 #### Fixed
 
 * C++23 compatibility fixes
+* Fixed `extend(vec)` function for compound vectors
 
 ## 7.0.0
 
