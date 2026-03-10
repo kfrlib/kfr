@@ -75,7 +75,7 @@ protected:
      * @param n Normalized sample position.
      * @return The window value.
      */
-    KFR_MEM_INTRINSIC ftype window(ftype n) const
+    KFR_MEM_INTRINSIC fbase window(fbase n) const
     {
         return modzerobessel(kaiser_beta * sqrt(1 - sqr(2 * n - 1))) * reciprocal(modzerobessel(kaiser_beta));
     }
@@ -111,9 +111,9 @@ public:
      * @param quality The sample rate conversion quality.
      * @return Sidelobe attenuation in dB.
      */
-    static KFR_MEM_INTRINSIC ftype sidelobe_attenuation(sample_rate_conversion_quality quality)
+    static KFR_MEM_INTRINSIC fbase sidelobe_attenuation(sample_rate_conversion_quality quality)
     {
-        return (static_cast<int>(quality) - 3) * ftype(20);
+        return (static_cast<int>(quality) - 3) * fbase(20);
     }
 
     /**
@@ -121,9 +121,9 @@ public:
      * @param quality The sample rate conversion quality.
      * @return Transition width in radians.
      */
-    static KFR_MEM_INTRINSIC ftype transition_width(sample_rate_conversion_quality quality)
+    static KFR_MEM_INTRINSIC fbase transition_width(sample_rate_conversion_quality quality)
     {
-        return (sidelobe_attenuation(quality) - 8) / (filter_order(quality) - 1) / ftype(2.285);
+        return (sidelobe_attenuation(quality) - 8) / (filter_order(quality) - 1) / fbase(2.285);
     }
 
     /**
@@ -131,13 +131,13 @@ public:
      * @param quality The sample rate conversion quality.
      * @return The Kaiser beta parameter.
      */
-    static KFR_MEM_INTRINSIC ftype window_param(sample_rate_conversion_quality quality)
+    static KFR_MEM_INTRINSIC fbase window_param(sample_rate_conversion_quality quality)
     {
-        const ftype att = sidelobe_attenuation(quality);
+        const fbase att = sidelobe_attenuation(quality);
         if (att > 50)
-            return ftype(0.1102) * (att - ftype(8.7));
+            return fbase(0.1102) * (att - fbase(8.7));
         if (att >= 21)
-            return ftype(0.5842) * pow(att - 21, ftype(0.4)) + ftype(0.07886) * (att - 21);
+            return fbase(0.5842) * pow(att - 21, fbase(0.4)) + fbase(0.07886) * (att - 21);
         return 0;
     }
 
@@ -150,7 +150,7 @@ public:
      * @param cutoff Cutoff frequency as a fraction of the Nyquist frequency (default: 0.5).
      */
     samplerate_converter(sample_rate_conversion_quality quality, itype interpolation_factor,
-                         itype decimation_factor, ftype scale = ftype(1), ftype cutoff = 0.5f);
+                         itype decimation_factor, fbase scale = ftype(1), fbase cutoff = 0.5f);
 
     samplerate_converter()                                           = default;
     samplerate_converter(samplerate_converter&&) noexcept            = default;
@@ -261,7 +261,7 @@ public:
      * @brief Gets the fractional delay introduced by the resampler.
      * @return Fractional delay in samples.
      */
-    KFR_MEM_INTRINSIC double get_fractional_delay() const { return (taps - 1) * 0.5 / decimation_factor; }
+    KFR_MEM_INTRINSIC fbase get_fractional_delay() const { return (taps - 1) * 0.5 / decimation_factor; }
 
     /**
      * @brief Gets the integer delay introduced by the resampler.
@@ -269,7 +269,7 @@ public:
      */
     KFR_MEM_INTRINSIC size_t get_delay() const { return static_cast<size_t>(get_fractional_delay()); }
 
-    ftype kaiser_beta; /**< Kaiser window beta parameter. */
+    fbase kaiser_beta; /**< Kaiser window beta parameter. */
     itype depth; /**< Processing depth. */
     itype taps; /**< Number of filter taps. */
     size_t order; /**< Filter order. */

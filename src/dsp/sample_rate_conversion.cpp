@@ -39,7 +39,7 @@ KFR_MULTI_PROTO(namespace impl {
         using itype = typename kfr::samplerate_converter<T>::itype;
         using ftype = typename kfr::samplerate_converter<T>::ftype;
         void init(sample_rate_conversion_quality quality, itype interpolation_factor, itype decimation_factor,
-                  subtype<T> scale, subtype<T> cutoff);
+                  fbase scale, fbase cutoff);
         size_t process_impl(univector_ref<T> output, univector_ref<const T> input);
     };
 } // namespace impl
@@ -52,7 +52,7 @@ namespace impl
 
 template <typename T>
 void samplerate_converter<T>::init(sample_rate_conversion_quality quality, itype interpolation_factor,
-                                   itype decimation_factor, subtype<T> scale, subtype<T> cutoff)
+                                   itype decimation_factor, fbase scale, fbase cutoff)
 {
     this->kaiser_beta     = this->window_param(quality);
     this->depth           = static_cast<itype>(this->filter_order(quality));
@@ -73,14 +73,14 @@ void samplerate_converter<T>::init(sample_rate_conversion_quality quality, itype
     this->filter         = univector<T>(size_t(this->taps), T());
     this->delay          = univector<T>(size_t(this->depth), T());
 
-    cutoff = cutoff - this->transition_width() / c_pi<ftype, 4>;
+    cutoff = cutoff - this->transition_width() / c_pi<fbase, 4>;
 
     cutoff = cutoff / std::max(decimation_factor, interpolation_factor);
 
     for (itype j = 0, jj = 0; j < this->taps; j++)
     {
         this->filter[size_t(j)] =
-            sinc((jj - halftaps) * cutoff * c_pi<ftype, 2>) * this->window(ftype(jj) / ftype(this->taps - 1));
+            sinc((jj - halftaps) * cutoff * c_pi<fbase, 2>) * this->window(fbase(jj) / fbase(this->taps - 1));
         jj += size_t(interpolation_factor);
         if (jj >= this->taps)
             jj = jj - this->taps + 1;
@@ -88,6 +88,15 @@ void samplerate_converter<T>::init(sample_rate_conversion_quality quality, itype
 
     const T s    = reciprocal(sum(this->filter)) * static_cast<ftype>(interpolation_factor * scale);
     this->filter = this->filter * s;
+}
+
+template <typename T>
+KFR_INLINE static T safe_dotproduct(univector_ref<const T> a, univector_ref<const T> b)
+{
+    size_t min_length = std::min(a.size(), b.size());
+    if (min_length == 0)
+        return T(0);
+    return dotproduct(a.truncate(min_length), b.truncate(min_length));
 }
 
 template <typename T>
@@ -113,18 +122,16 @@ size_t samplerate_converter<T>::process_impl(univector_ref<T> output, univector_
         }
         else if (input_start >= this->input_position)
         {
-            output[i] = dotproduct(
-                truncate(padded(input.slice(input_start - this->input_position, this->depth)), this->depth),
-                tap_ptr.truncate(this->depth));
+            output[i] =
+                safe_dotproduct<T>(input.slice(input_start - this->input_position, this->depth), tap_ptr);
         }
         else
         {
             const itype prev_count = this->input_position - input_start;
-            output[i]              = dotproduct(this->delay.slice(size_t(this->depth - prev_count)),
-                                                tap_ptr.truncate(prev_count)) +
-                        dotproduct(truncate(padded(input.truncate(size_t(this->depth - prev_count))),
-                                            size_t(this->depth - prev_count)),
-                                   tap_ptr.slice(size_t(prev_count), size_t(this->depth - prev_count)));
+            output[i]              = safe_dotproduct<T>(this->delay.slice(size_t(this->depth - prev_count)),
+                                                        tap_ptr.truncate(prev_count)) +
+                        safe_dotproduct<T>(
+                            input, tap_ptr.slice(size_t(prev_count), size_t(this->depth - prev_count)));
         }
     }
 
@@ -159,7 +166,7 @@ template struct samplerate_converter<complex<double>>;
 template <typename T>
 samplerate_converter<T>::samplerate_converter(sample_rate_conversion_quality quality,
                                               itype interpolation_factor, itype decimation_factor,
-                                              ftype scale, ftype cutoff)
+                                              fbase scale, fbase cutoff)
 {
     KFR_MULTI_GATE(reinterpret_cast<ns::impl::samplerate_converter<T>*>(this)->init(
         quality, interpolation_factor, decimation_factor, scale, cutoff));
