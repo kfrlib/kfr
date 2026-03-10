@@ -28,6 +28,7 @@
 #include "dft/convolution.hpp"
 #include "dft/fft.hpp"
 #include "dft/reference_dft.hpp"
+#include "dft/dft_resampler.hpp"
 
 namespace kfr
 {
