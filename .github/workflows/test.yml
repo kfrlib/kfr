@@ -201,19 +201,29 @@ jobs:
         choco install ninja --no-progress -y
         ci\run.cmd build-release -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=arm64-v8a -DANDROID_ARM_NEON=TRUE -DKFR_SKIP_TESTS=ON -DCMAKE_BUILD_TYPE=Release
 
-  macos13-xcode15-x86_64:
-    runs-on: macos-13
+  macos15-xcode16-x86_64:
+    runs-on: macos-15-intel
     steps:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Tests
       run: |
         set -e
-        brew install ninja
         vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
         ci/run.sh build-release -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-osx -DCMAKE_OSX_ARCHITECTURES=x86_64 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse42,avx -DKFR_ARCH=target -DCMAKE_BUILD_TYPE=Release      
 
-  macos15-xcode16-arm64:
+  macos26-xcode26-arm64:
+    runs-on: macos-26
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Tests
+      run: |
+        set -e
+        vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
+        ci/run.sh build-release -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/arm64-osx -DCMAKE_OSX_ARCHITECTURES=arm64 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_BUILD_TYPE=Release
+
+  macos15-xcode16-ios-arm64:
     runs-on: macos-15
     steps:
     - name: Checkout
@@ -222,16 +232,4 @@ jobs:
       run: |
         set -e
         brew install ninja
-        vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
-        ci/run.sh build-release -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/arm64-osx -DCMAKE_OSX_ARCHITECTURES=arm64 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_BUILD_TYPE=Release
-
-  macos13-xcode14-ios-arm64:
-    runs-on: macos-13
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Tests
-      run: |
-        set -e
-        brew install ninja
-        ci/run.sh build-release -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.cmake -DIOS_DEPLOYMENT_TARGET=11.0 -DCMAKE_BUILD_TYPE=Release -DIOS_PLATFORM=OS64 -DIOS_ARCH=arm64 -DCMAKE_MAKE_PROGRAM=/usr/local/bin/ninja -DKFR_SKIP_TESTS=ON
+        ci/run.sh build-release -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.cmake -DIOS_DEPLOYMENT_TARGET=11.0 -DCMAKE_BUILD_TYPE=Release -DIOS_PLATFORM=OS64 -DIOS_ARCH=arm64 -DCMAKE_MAKE_PROGRAM=$(brew --prefix ninja)/bin/ninja -DKFR_SKIP_TESTS=ON
