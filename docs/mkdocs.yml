@@ -47,6 +47,7 @@ plugins:
             - ../include/kfr/all.hpp # relative to mkdocs.yml
           exclude:
             - ../include/kfr/thirparty
+            - "*/impl/*"
           exclude_symbols:
             - "*::intr::*"
             - "*::internal::*"
@@ -85,6 +86,10 @@ plugins:
             - -std=c99
             - "-DDOCUMENTATION"
             - "-I../include"
+  - minify:
+      minify_html: true
+      htmlmin_opts:
+          remove_comments: true
 
 markdown_extensions:
   - admonition
