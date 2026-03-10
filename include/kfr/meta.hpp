@@ -206,9 +206,9 @@ struct get_nth_e;
 template <size_t index, typename... Types>
 struct get_nth_type
 {
-#if defined(__clang__) && __has_builtin(__type_pack_element)
+#if KFR_HAS_BUILTIN(__type_pack_element)
     using type = __type_pack_element<index, Types...>;
-#elif defined(__GNUC__) && __has_builtin(__builtin_type_pack_element)
+#elif KFR_HAS_BUILTIN(__builtin_type_pack_element)
     using type = __builtin_type_pack_element(index, Types...);
 #else
     using type = std::tuple_element_t<index, std::tuple<Types...>>;
