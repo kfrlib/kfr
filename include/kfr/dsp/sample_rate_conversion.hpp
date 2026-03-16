@@ -96,6 +96,13 @@ protected:
     }
 
 public:
+    void reset() noexcept
+    {
+        this->input_position  = 0;
+        this->output_position = 0;
+        this->delay           = zeros<T>();
+    }
+
     /**
      * @brief Computes the filter order for a given quality level.
      * @param quality The sample rate conversion quality.
@@ -133,7 +140,10 @@ public:
      */
     static KFR_MEM_INTRINSIC fbase window_param(sample_rate_conversion_quality quality)
     {
-        const fbase att = sidelobe_attenuation(quality);
+        return window_param(sidelobe_attenuation(quality));
+    }
+    static KFR_MEM_INTRINSIC fbase window_param(fbase att)
+    {
         if (att > 50)
             return fbase(0.1102) * (att - fbase(8.7));
         if (att >= 21)
@@ -151,6 +161,9 @@ public:
      */
     samplerate_converter(sample_rate_conversion_quality quality, itype interpolation_factor,
                          itype decimation_factor, fbase scale = ftype(1), fbase cutoff = 0.5f);
+
+    samplerate_converter(int taps, itype interpolation_factor, itype decimation_factor, fbase scale,
+                         fbase cutoff, fbase sidelobe_attenuation, fbase transition_width);
 
     samplerate_converter()                                           = default;
     samplerate_converter(samplerate_converter&&) noexcept            = default;
