@@ -26,6 +26,11 @@
 #pragma once
 
 #include "dft-fft.hpp"
+#ifdef KFR_DFT_MEASURE_STAGE_TIME
+#include <kfr/runtime/time.hpp>
+#endif
+
+#define KFR_NEW_SMALL_FFT
 
 KFR_PRAGMA_GNU(GCC diagnostic push)
 #if KFR_HAS_WARNING("-Wshadow")
@@ -1953,7 +1958,14 @@ void dft_execute(const dft_plan<T>& plan, cbool_t<inverse>, complex<T>* out, con
     auto&& stages = plan.stages[inverse];
     if (stages.size() == 1 && (stages[0]->can_inplace || in != out))
     {
-        return stages[0]->execute(cbool<inverse>, out, in, temp);
+#ifdef KFR_DFT_MEASURE_STAGE_TIME
+        uint64_t time_before = clock_now();
+#endif
+        stages[0]->execute(cbool<inverse>, out, in, temp);
+#ifdef KFR_DFT_MEASURE_STAGE_TIME
+        stages[0]->time += clock_elapsed(time_before);
+#endif
+        return;
     }
     size_t stack[DFT_MAX_STAGES] = { 0 };
 
@@ -1990,7 +2002,13 @@ void dft_execute(const dft_plan<T>& plan, cbool_t<inverse>, complex<T>* out, con
                 {
                     complex<T>* rout = select_out(plan, disposition, rdepth, stages.size(), out, scratch);
                     const complex<T>* rin = select_in(plan, disposition, rdepth, out, in, scratch);
+#ifdef KFR_DFT_MEASURE_STAGE_TIME
+                    uint64_t time_before = clock_now();
+#endif
                     stages[rdepth]->execute(cbool<inverse>, rout + offset, rin + offset, temp);
+#ifdef KFR_DFT_MEASURE_STAGE_TIME
+                    stages[rdepth]->time += clock_elapsed(time_before);
+#endif
                     offset += stages[rdepth]->out_offset;
                     stack[rdepth]++;
                     if (rdepth < count - 1 && stages[rdepth + 1]->recursion)
@@ -2009,7 +2027,13 @@ void dft_execute(const dft_plan<T>& plan, cbool_t<inverse>, complex<T>* out, con
             dft_stage<T>* stage      = stages[depth];
             while (offset < plan.size)
             {
+#ifdef KFR_DFT_MEASURE_STAGE_TIME
+                uint64_t time_before = clock_now();
+#endif
                 stage->execute(cbool<inverse>, cur_out + offset, cur_in + offset, temp);
+#ifdef KFR_DFT_MEASURE_STAGE_TIME
+                stage->time += clock_elapsed(time_before);
+#endif
                 offset += stage->stage_size;
             }
             depth++;

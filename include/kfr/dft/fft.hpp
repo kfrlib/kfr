@@ -72,6 +72,10 @@ struct dft_stage
     bool can_inplace  = true;
     bool need_reorder = true;
 
+#ifdef KFR_DFT_MEASURE_STAGE_TIME
+    double time = 0;
+#endif
+
     void initialize(size_t size) { do_initialize(size); }
 
     virtual void dump() const
@@ -437,6 +441,30 @@ struct dft_plan
         internal_generic::dft_progressive_step(*this, progressive);
         return ++progressive.step < stages[progressive.inverse].size();
     }
+
+#ifdef KFR_DFT_MEASURE_STAGE_TIME
+    void reset_time()
+    {
+        for (auto& stage : all_stages)
+        {
+            stage->time = 0;
+        }
+    }
+
+    void dump_times(uint64_t invocations = 1, bool reset = true)
+    {
+        double sum = 0;
+        printf("DFT plan %zu\n", size);
+        for (auto& stage : all_stages)
+        {
+            printf("  %s: %.3f us\n", stage->name ? stage->name : "unnamed", stage->time * 1e6 / invocations);
+            sum += stage->time;
+        }
+        printf("Total: %.3f us\n", sum * 1e6 / invocations);
+        if (reset)
+            reset_time();
+    }
+#endif
 
 protected:
     struct noinit
