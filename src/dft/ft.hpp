@@ -1982,6 +1982,7 @@ KFR_INTRINSIC void bfly(cbool_t<split>, cvec<T, N>& w0, cvec<T, N>& w1)
  */
 template <bool inverse = false, size_t N, typename T>
 KFR_INTRINSIC void bfly(cfalse_t /*split*/, cvec<T, N>& w0, cvec<T, N>& w1, cvec<T, N>& w2, cvec<T, N>& w3)
+    requires(N > 1)
 {
     cvec<T, N> sum02, sum13, diff02, diff13;
     sum02  = w0 + w2;
@@ -2006,6 +2007,7 @@ KFR_INTRINSIC void bfly(cfalse_t /*split*/, cvec<T, N>& w0, cvec<T, N>& w1, cvec
 
 template <bool inverse = false, size_t N, typename T>
 KFR_INTRINSIC void bfly(ctrue_t /*split*/, cvec<T, N>& w0, cvec<T, N>& w1, cvec<T, N>& w2, cvec<T, N>& w3)
+    requires(N > 1)
 {
     cvec<T, N> sum02, sum13, diff02, diff13;
     vec<T, N> diff02re, diff13re;
@@ -2045,6 +2047,7 @@ KFR_INTRINSIC vec<T, 2 * N> concat_split(vec<T, N>& a, vec<T, N>& b)
 template <bool inverse = false, size_t N, typename T>
 KFR_INTRINSIC void bfly(cbool_t<false>, cvec<T, N>& w0, cvec<T, N>& w1, cvec<T, N>& w2, cvec<T, N>& w3,
                         cvec<T, N>& w4, cvec<T, N>& w5, cvec<T, N>& w6, cvec<T, N>& w7)
+    requires(N > 1)
 {
     cvec<T, N> b0 = w0, b2 = w2, b4 = w4, b6 = w6;
     bfly<inverse, N>(cbool<false>, b0, b2, b4, b6);
@@ -2066,6 +2069,7 @@ KFR_INTRINSIC void bfly(cbool_t<false>, cvec<T, N>& w0, cvec<T, N>& w1, cvec<T, 
 template <bool inverse = false, size_t N, typename T>
 KFR_INTRINSIC void bfly(cbool_t<true>, cvec<T, N>& w0, cvec<T, N>& w1, cvec<T, N>& w2, cvec<T, N>& w3,
                         cvec<T, N>& w4, cvec<T, N>& w5, cvec<T, N>& w6, cvec<T, N>& w7)
+    requires(N > 1)
 {
     constexpr T isqrt2 = static_cast<T>(0.70710678118654752440084436210485);
 
@@ -2130,7 +2134,8 @@ template <bool inverse = false, size_t N, typename T, bool split>
 KFR_INTRINSIC void bfly(cbool_t<split>, cvec<T, N>& w0, cvec<T, N>& w1, cvec<T, N>& w2, cvec<T, N>& w3,
                         cvec<T, N>& w4, cvec<T, N>& w5, cvec<T, N>& w6, cvec<T, N>& w7, cvec<T, N>& w8,
                         cvec<T, N>& w9, cvec<T, N>& w10, cvec<T, N>& w11, cvec<T, N>& w12, cvec<T, N>& w13,
-                        cvec<T, N>& w14, cvec<T, N>& w15) requires (N > 1)
+                        cvec<T, N>& w14, cvec<T, N>& w15)
+    requires(N > 1)
 {
     // First butterflies
     bfly<inverse, N>(cbool<split>, w0, w4, w8, w12);
@@ -2317,7 +2322,7 @@ template <size_t Radix, typename T, size_t N, bool split_on_read = false, uintpt
 struct bfly_read
 {
     static_assert(!split_on_read, "Split on read is not compatible with fixed stride");
-    static_assert(fixed_stride < N);
+    static_assert(fixed_stride < N || N == 1);
     const std::complex<T>* in;
     size_t stride_not_used;
 
