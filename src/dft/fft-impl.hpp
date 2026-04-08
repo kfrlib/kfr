@@ -291,37 +291,6 @@ KFR_NOINLINE void initialize_twiddles(complex<T>*& twiddle, size_t stage_size, s
     }
 }
 
-#ifdef KFR_NO_PREFETCH
-#define KFR_PREFETCH(addr)                                                                                   \
-    do                                                                                                       \
-    {                                                                                                        \
-        (void)(addr);                                                                                        \
-    } while (0)
-#else
-
-#if defined KFR_ARCH_SSE
-#ifdef KFR_COMPILER_GNU
-#define KFR_PREFETCH(addr) __builtin_prefetch(::kfr::ptr_cast<void>(addr), 0, _MM_HINT_T0);
-#else
-#define KFR_PREFETCH(addr) _mm_prefetch(::kfr::ptr_cast<char>(addr), _MM_HINT_T0);
-#endif
-#else
-#define KFR_PREFETCH(addr) __builtin_prefetch(::kfr::ptr_cast<void>(addr));
-#endif
-#endif
-
-template <size_t size = 1, typename T>
-KFR_INTRINSIC void prefetch_one(const complex<T>* in)
-{
-    KFR_PREFETCH(in);
-    if constexpr (sizeof(complex<T>) * size > 64)
-        KFR_PREFETCH(in + 64);
-    if constexpr (sizeof(complex<T>) * size > 128)
-        KFR_PREFETCH(in + 128);
-    if constexpr (sizeof(complex<T>) * size > 192)
-        KFR_PREFETCH(in + 192);
-}
-
 template <size_t size = 1, typename T>
 KFR_INTRINSIC void prefetch_four(size_t stride, const complex<T>* in)
 {
@@ -1950,7 +1919,7 @@ complex<T>* select_out(const dft_plan<T>& plan, typename dft_plan<T>::bitset dis
 template <typename T, bool inverse>
 void dft_execute(const dft_plan<T>& plan, cbool_t<inverse>, complex<T>* out, const complex<T>* in, u8* temp)
 {
-    if (temp == nullptr && plan.temp_size > 0)
+    if (temp == nullptr && plan.temp_size > 0) [[unlikely]]
     {
         return call_with_temp(plan.temp_size, std::bind(&impl::dft_execute<T, inverse>, std::cref(plan),
                                                         cbool_t<inverse>{}, out, in, std::placeholders::_1));
