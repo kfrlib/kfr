@@ -523,7 +523,10 @@ KFR_FN(transposeinverse)
 template <size_t side, typename T, size_t N>
 KFR_INTRINSIC vec<T, N> ctranspose(const vec<T, N>& x)
 {
-    return transpose<side, 2>(x);
+    if constexpr (side <= 1 || side >= N / 2)
+        return x;
+    else
+        return transpose<side, 2>(x);
 }
 KFR_FN(ctranspose)
 
@@ -533,6 +536,44 @@ KFR_INTRINSIC vec<T, N> ctransposeinverse(const vec<T, N>& x)
     return transposeinverse<side, 2>(x);
 }
 KFR_FN(ctransposeinverse)
+
+namespace internal
+{
+
+template <size_t... A, size_t... I>
+constexpr size_t shufflebits(size_t x, elements_t<A...>, csizes_t<I...>) noexcept
+{
+    return ((((x >> A) & 1u) << I) | ...);
+}
+
+template <size_t... A>
+constexpr size_t shufflebits(size_t x, elements_t<A...>) noexcept
+{
+    return shufflebits(x, elements<A...>, csizeseq<sizeof...(A)>);
+}
+
+template <typename Indices, size_t... A>
+struct indexbit_gen;
+
+template <size_t... I, size_t... A>
+struct indexbit_gen<csizes_t<I...>, A...>
+{
+    using type = elements_t<shufflebits(I, elements<A...>, csizeseq<sizeof...(A)>)...>;
+};
+} // namespace internal
+
+template <size_t group = 1, typename T, size_t N, size_t... A>
+KFR_INTRINSIC vec<T, N> shuffleindexbits(const vec<T, N>& x, elements_t<A...>)
+{
+    static_assert(is_poweroftwo(group), "group must be a power of two");
+    static_assert(is_poweroftwo(N), "N must be a power of two");
+    static_assert(sizeof...(A) == ilog2(N / group), "Number of axes must be log2(N/group)");
+
+    constexpr auto indices        = typename internal::indexbit_gen<csizeseq_t<N / group>, A...>::type{};
+    constexpr auto scaled_indices = scale<group>(indices);
+
+    return x.shuffle(scaled_indices);
+}
 
 template <size_t group = 1, typename T, size_t N, size_t Nout = N * 2, size_t size = Nout / group,
           size_t side2 = 2, size_t side1 = size / side2>
