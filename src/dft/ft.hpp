@@ -52,6 +52,28 @@ inline namespace KFR_ARCH_NAME
 template <typename T, size_t N>
 using cvec = vec<T, N * 2>;
 
+namespace internal
+{
+
+template <typename Class, typename Arg, typename Seq>
+struct accepts_n_args_impl;
+
+template <typename Class, typename Arg, size_t... Is>
+struct accepts_n_args_impl<Class, Arg, std::index_sequence<Is...>>
+{
+    template <size_t>
+    using arg_t = Arg;
+
+    static constexpr bool value = requires(Class t) {
+        { t(std::declval<arg_t<Is>>()...) };
+    };
+};
+
+} // namespace internal
+
+template <typename Class, typename T, size_t N, size_t Radix>
+concept bfly_step = internal::accepts_n_args_impl<Class, cvec<T, N>&, std::make_index_sequence<Radix>>::value;
+
 namespace intr
 {
 
@@ -122,6 +144,27 @@ KFR_INTRINSIC vec<T, N> cmul_conj(const vec<T, 2>& x, const vec<T, N>& y)
 {
     vec<T, N> xx = resize<N>(x);
     return cmul_conj(xx, y);
+}
+
+/// Complex Multiplication with optional conjugation of the second operand
+template <bool inverse, typename T, size_t N>
+KFR_INTRINSIC vec<T, N> cmuli(cfalse_t, const vec<T, N>& x, const vec<T, N>& y)
+{
+    if constexpr (inverse)
+        return cmul_conj(x, y);
+    else
+        return cmul(x, y);
+}
+/// Complex Multiplication with optional conjugation of the second operand
+template <bool inverse, typename T, size_t N>
+KFR_INTRINSIC vec<T, N> cmuli(ctrue_t, const vec<T, N>& x, const vec<T, N>& y)
+{
+    if constexpr (inverse)
+        return concat(/*re:*/ low(x) * low(y) + high(x) * high(y),
+                      /*im:*/ high(x) * low(y) - low(x) * high(y));
+    else
+        return concat(/*re:*/ low(x) * low(y) - high(x) * high(y),
+                      /*im:*/ low(x) * high(y) + high(x) * low(y));
 }
 
 template <size_t N, bool A = false, typename T>
@@ -1883,6 +1926,351 @@ KFR_NOINLINE cvec<T, 1> calculate_twiddle(size_t n, size_t size)
     return result;
 }
 
+template <bool inverse, typename T>
+KFR_INTRINSIC void bfly_packed(csize_t<1>, cvec<T, 1>& w)
+{
+    // Noop
+}
+
+template <bool inverse, typename T>
+KFR_INTRINSIC void bfly_packed(csize_t<2>, cvec<T, 2>& w)
+{
+    w = w.shuffle(elements<0, 1, 0, 1>) + (w.shuffle(elements<2, 3, 2, 3>) ^ vec<T, 4>(T(), T(), -T(), -T()));
+}
+
+template <bool inverse, typename T>
+KFR_INTRINSIC void bfly_packed(csize_t<4>, cvec<T, 4>& w)
+{
+    cvec<T, 2> w01, w23;
+    split(w, w01, w23);
+
+    cvec<T, 2> sum, diff;
+    sum  = w01 + w23;
+    diff = w01 - w23;
+
+    diff = diff.shuffle(elements<0, 1, 3, 2>); // swap<2>
+    if constexpr (inverse)
+    {
+        diff = (diff ^ vec<T, 4>(T(), T(), -T(), T()));
+    }
+    else
+    {
+        diff = (diff ^ vec<T, 4>(T(), T(), T(), -T()));
+    }
+    cvec<T, 4> sumdiff     = concat(sum, diff);
+    cvec<T, 2> lowsumdiff  = sumdiff.shuffle(elements<0, 1, 4, 5>);
+    cvec<T, 2> highsumdiff = sumdiff.shuffle(elements<2, 3, 6, 7>);
+
+    w = concat(lowsumdiff + highsumdiff, //
+               lowsumdiff - highsumdiff);
+}
+
+template <bool inverse = false, size_t N, typename T, bool split = false>
+KFR_INTRINSIC void bfly(cbool_t<split>, cvec<T, N>& w0, cvec<T, N>& w1)
+{
+    cvec<T, N> sum = w0 + w1;
+    w1             = w0 - w1;
+    w0             = sum;
+}
+
+/**
+ * @brief Performs a radix-4 butterfly on SIMD complex vectors.
+ *
+ * @tparam T The type of the elements in the complex vectors.
+ * @tparam N The size of the complex vectors.
+ * @tparam inverse A boolean indicating whether the operation is an inverse transform.
+ */
+template <bool inverse = false, size_t N, typename T>
+KFR_INTRINSIC void bfly(cfalse_t /*split*/, cvec<T, N>& w0, cvec<T, N>& w1, cvec<T, N>& w2, cvec<T, N>& w3)
+{
+    cvec<T, N> sum02, sum13, diff02, diff13;
+    sum02  = w0 + w2;
+    sum13  = w1 + w3;
+    diff02 = w0 - w2;
+    diff13 = w1 - w3;
+    w0     = sum02 + sum13;
+    w2     = sum02 - sum13;
+    if constexpr (inverse)
+    {
+        diff13 = (diff13 ^ broadcast<N * 2, T>(T(), -T()));
+        diff13 = swap<2>(diff13);
+    }
+    else
+    {
+        diff13 = swap<2>(diff13);
+        diff13 = (diff13 ^ broadcast<N * 2, T>(T(), -T()));
+    }
+    w1 = diff02 + diff13;
+    w3 = diff02 - diff13;
+}
+
+template <bool inverse = false, size_t N, typename T>
+KFR_INTRINSIC void bfly(ctrue_t /*split*/, cvec<T, N>& w0, cvec<T, N>& w1, cvec<T, N>& w2, cvec<T, N>& w3)
+{
+    cvec<T, N> sum02, sum13, diff02, diff13;
+    vec<T, N> diff02re, diff13re;
+    vec<T, N> diff02im, diff13im;
+
+    sum02 = w0 + w2;
+    sum13 = w1 + w3;
+
+    diff02 = w0 - w2;
+    diff13 = w1 - w3;
+
+    w0 = sum02 + sum13;
+    w2 = sum02 - sum13;
+    split(diff02, diff02re, diff02im);
+    split(diff13, diff13re, diff13im);
+
+    (inverse ? w3 : w1) = concat(diff02re + diff13im, diff02im - diff13re);
+    (inverse ? w1 : w3) = concat(diff02re - diff13im, diff02im + diff13re);
+}
+
+template <bool split, typename T, size_t N>
+KFR_INTRINSIC vec<T, 2 * N> concat_split(vec<T, N>& a, vec<T, N>& b)
+{
+    if constexpr (!split)
+        return concat(a, b); // Interleaved
+    else
+        return concat(low(a), low(b), high(a), high(b)); // Split
+}
+
+/**
+ * @brief Performs a radix-8 butterfly on SIMD complex vectors.
+ *
+ * @tparam T The type of the elements in the complex vectors.
+ * @tparam N The size of the complex vectors.
+ * @tparam inverse A boolean indicating whether the operation is an inverse transform.
+ */
+template <bool inverse = false, size_t N, typename T>
+KFR_INTRINSIC void bfly(cbool_t<false>, cvec<T, N>& w0, cvec<T, N>& w1, cvec<T, N>& w2, cvec<T, N>& w3,
+                        cvec<T, N>& w4, cvec<T, N>& w5, cvec<T, N>& w6, cvec<T, N>& w7)
+{
+    cvec<T, N> b0 = w0, b2 = w2, b4 = w4, b6 = w6;
+    bfly<inverse, N>(cbool<false>, b0, b2, b4, b6);
+    cvec<T, N> b1 = w1, b3 = w3, b5 = w5, b7 = w7;
+    bfly<inverse, N>(cbool<false>, b1, b3, b5, b7);
+    b3 = cmul_by_twiddle<1, 8, inverse>(cbool<false>, b3);
+    b5 = cmul_by_twiddle<2, 8, inverse>(cbool<false>, b5);
+    b7 = cmul_by_twiddle<3, 8, inverse>(cbool<false>, b7);
+    w0 = b0 + b1;
+    w4 = b0 - b1;
+    w1 = b2 + b3;
+    w5 = b2 - b3;
+    w2 = b4 + b5;
+    w6 = b4 - b5;
+    w3 = b6 + b7;
+    w7 = b6 - b7;
+}
+
+template <bool inverse = false, size_t N, typename T>
+KFR_INTRINSIC void bfly(cbool_t<true>, cvec<T, N>& w0, cvec<T, N>& w1, cvec<T, N>& w2, cvec<T, N>& w3,
+                        cvec<T, N>& w4, cvec<T, N>& w5, cvec<T, N>& w6, cvec<T, N>& w7)
+{
+    constexpr T isqrt2 = static_cast<T>(0.70710678118654752440084436210485);
+
+    // Sign mask for ∓j rotation in split [re|im] layout via XOR with signed zeros
+    // Forward (-j): [re,im] → [im,-re]  needs neg on second half
+    // Inverse (+j): [re,im] → [-im,re]  needs neg on first half
+    const vec<T, 2 * N> jmask = inverse ? concat(broadcast<N>(-T()), broadcast<N>(T()))
+                                        : concat(broadcast<N>(T()), broadcast<N>(-T()));
+
+    // ∓j rotation: swap re/im halves then flip sign via XOR
+    auto jrot = [&](const vec<T, 2 * N>& v)
+                    KFR_INLINE_LAMBDA -> vec<T, 2 * N> { return concat(high(v), low(v)) ^ jmask; };
+
+    // Stage 1: Pairwise sums/diffs — identical on re and im, full 2N width
+    vec<T, 2 * N> s04 = w0 + w4, s26 = w2 + w6;
+    vec<T, 2 * N> d04 = w0 - w4, d26 = w2 - w6;
+    vec<T, 2 * N> s15 = w1 + w5, s37 = w3 + w7;
+    vec<T, 2 * N> d15 = w1 - w5, d37 = w3 - w7;
+
+    // Stage 2: Sub-butterflies on even (0,2,4,6) and odd (1,3,5,7) groups
+    vec<T, 2 * N> e0   = s04 + s26;
+    vec<T, 2 * N> e2   = s04 - s26;
+    vec<T, 2 * N> d26j = jrot(d26);
+    vec<T, 2 * N> e1   = d04 + d26j;
+    vec<T, 2 * N> e3   = d04 - d26j;
+
+    vec<T, 2 * N> o0   = s15 + s37;
+    vec<T, 2 * N> o2   = s15 - s37;
+    vec<T, 2 * N> d37j = jrot(d37);
+    vec<T, 2 * N> o1   = d15 + d37j;
+    vec<T, 2 * N> o3   = d15 - d37j;
+
+    // Twiddle factors on odd outputs
+    // W8^1: isqrt2 * (o1 + jrot(o1))
+    vec<T, 2 * N> t1 = (o1 + jrot(o1)) * isqrt2;
+    // W8^2: jrot(o2)
+    vec<T, 2 * N> t2 = jrot(o2);
+    // W8^3: isqrt2 * (jrot(o3) - o3)
+    vec<T, 2 * N> t3 = (jrot(o3) - o3) * isqrt2;
+
+    // Final butterfly: combine even and odd
+    w0 = e0 + o0;
+    w1 = e1 + t1;
+    w2 = e2 + t2;
+    w3 = e3 + t3;
+    w4 = e0 - o0;
+    w5 = e1 - t1;
+    w6 = e2 - t2;
+    w7 = e3 - t3;
+}
+
+/**
+ * @brief Performs a radix-16 butterfly on SIMD complex vectors.
+ *
+ * This function applies a butterfly operation on SIMD vectors of complex numbers.
+ *
+ * @tparam T The type of the elements in the complex vectors.
+ * @tparam N The size of the complex vectors.
+ * @tparam inverse A boolean indicating whether the operation is an inverse transform.
+ */
+template <bool inverse = false, size_t N, typename T, bool split>
+KFR_INTRINSIC void bfly(cbool_t<split>, cvec<T, N>& w0, cvec<T, N>& w1, cvec<T, N>& w2, cvec<T, N>& w3,
+                        cvec<T, N>& w4, cvec<T, N>& w5, cvec<T, N>& w6, cvec<T, N>& w7, cvec<T, N>& w8,
+                        cvec<T, N>& w9, cvec<T, N>& w10, cvec<T, N>& w11, cvec<T, N>& w12, cvec<T, N>& w13,
+                        cvec<T, N>& w14, cvec<T, N>& w15) requires (N > 1)
+{
+    // First butterflies
+    bfly<inverse, N>(cbool<split>, w0, w4, w8, w12);
+    bfly<inverse, N>(cbool<split>, w1, w5, w9, w13);
+    bfly<inverse, N>(cbool<split>, w2, w6, w10, w14);
+    bfly<inverse, N>(cbool<split>, w3, w7, w11, w15);
+
+    // Transpose w
+    std::swap(w1, w4);
+    std::swap(w2, w8);
+    std::swap(w3, w12);
+    std::swap(w6, w9);
+    std::swap(w7, w13);
+    std::swap(w11, w14);
+
+    // apply twiddle factors
+    w5  = cmul_by_twiddle<1, 16, inverse>(cbool<split>, w5);
+    w6  = cmul_by_twiddle<2, 16, inverse>(cbool<split>, w6);
+    w7  = cmul_by_twiddle<3, 16, inverse>(cbool<split>, w7);
+    w9  = cmul_by_twiddle<2, 16, inverse>(cbool<split>, w9);
+    w10 = cmul_by_twiddle<4, 16, inverse>(cbool<split>, w10);
+    w11 = cmul_by_twiddle<6, 16, inverse>(cbool<split>, w11);
+    w13 = cmul_by_twiddle<3, 16, inverse>(cbool<split>, w13);
+    w14 = cmul_by_twiddle<6, 16, inverse>(cbool<split>, w14);
+    w15 = cmul_by_twiddle<9, 16, inverse>(cbool<split>, w15);
+
+    // final butterflies
+    bfly<inverse, N>(cbool<split>, w0, w4, w8, w12);
+    bfly<inverse, N>(cbool<split>, w1, w5, w9, w13);
+    bfly<inverse, N>(cbool<split>, w2, w6, w10, w14);
+    bfly<inverse, N>(cbool<split>, w3, w7, w11, w15);
+}
+
+template <bool inverse, typename T, size_t Radix>
+KFR_INTRINSIC void bfly_packed(csize_t<Radix>, cvec<T, +Radix>& w)
+{
+    static_assert(Radix >= 8);
+    constexpr size_t log2n = std::countr_zero(Radix);
+    constexpr size_t r1    = 1 << ((log2n) / 2);
+    constexpr size_t r2    = 1 << ((log2n + 1) / 2);
+
+    [&w]<size_t... I1, size_t... I2>(csizes_t<I1...>, csizes_t<I2...>) KFR_INLINE_LAMBDA { //
+        cvec<T, r2> w1[r1];
+        split(w, w1[I1]...);
+        bfly<inverse, r2>(cfalse, w1[I1]...);
+        ((w1[I1] = cmul(w1[I1], fixed_twiddle<T, r2, Radix, 0, I1, inverse>())), ...);
+        w = concat(w1[I1]...);
+        w = ctranspose<r2>(w);
+        cvec<T, r1> w2[r2];
+        split(w, w2[I2]...);
+        bfly<inverse, r1>(cfalse, w2[I2]...);
+        w = concat(w2[I2]...);
+    }(csizeseq_t<r1>{}, csizeseq_t<r2>{});
+}
+
+template <bool inverse = false, size_t N, typename T, bool split_format = false>
+KFR_INTRINSIC void bfly(cbool_t<split_format>, cvec<T, 1>& w0, cvec<T, 1>& w1)
+{
+    cvec<T, 2> w = concat(w0, w1);
+    bfly_packed<inverse, T>(csize_t<2>(), w);
+    split(w, w0, w1);
+}
+
+template <bool inverse = false, size_t N, typename T, bool split_format = false>
+KFR_INTRINSIC void bfly(cbool_t<split_format>, cvec<T, 1>& w0, cvec<T, 1>& w1, cvec<T, 1>& w2, cvec<T, 1>& w3)
+{
+    cvec<T, 4> w = concat(w0, w1, w2, w3);
+    bfly_packed<inverse, T>(csize_t<4>(), w);
+    split(w, w0, w1, w2, w3);
+}
+template <bool inverse = false, size_t N, typename T, bool split_format = false>
+KFR_INTRINSIC void bfly(cbool_t<split_format>, cvec<T, 1>& w0, cvec<T, 1>& w1, cvec<T, 1>& w2, cvec<T, 1>& w3,
+                        cvec<T, 1>& w4, cvec<T, 1>& w5, cvec<T, 1>& w6, cvec<T, 1>& w7)
+{
+    cvec<T, 8> w = concat(w0, w1, w2, w3, w4, w5, w6, w7);
+    bfly_packed<inverse, T>(csize_t<8>(), w);
+    split(w, w0, w1, w2, w3, w4, w5, w6, w7);
+}
+
+template <bool inverse = false, size_t N, typename T, bool split_format = false>
+KFR_INTRINSIC void bfly(cbool_t<split_format>, cvec<T, 1>& w0, cvec<T, 1>& w1, cvec<T, 1>& w2, cvec<T, 1>& w3,
+                        cvec<T, 1>& w4, cvec<T, 1>& w5, cvec<T, 1>& w6, cvec<T, 1>& w7, cvec<T, 1>& w8,
+                        cvec<T, 1>& w9, cvec<T, 1>& w10, cvec<T, 1>& w11, cvec<T, 1>& w12, cvec<T, 1>& w13,
+                        cvec<T, 1>& w14, cvec<T, 1>& w15)
+{
+    cvec<T, 16> w = concat(w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, w11, w12, w13, w14, w15);
+    bfly_packed<inverse, T>(csize_t<16>(), w);
+    split(w, w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, w11, w12, w13, w14, w15);
+}
+
+template <bool inverse, typename T, size_t Radix>
+KFR_INTRINSIC void bfly_packed(csize_t<Radix>, std::complex<T>* out, const std::complex<T>* in)
+{
+    if constexpr (Radix < 8)
+    {
+        cvec<T, Radix> w = cread<Radix>(in);
+        bfly_packed<inverse, T>(csize_t<Radix>(), w);
+        cwrite<Radix>(out, w);
+        return;
+    }
+    else
+    {
+        constexpr size_t log2n = std::countr_zero(Radix);
+        constexpr size_t r1    = 1 << ((log2n + 1) / 2);
+        constexpr size_t r2    = 1 << ((log2n) / 2);
+
+        constexpr bool split_format = false;
+
+        [&]<size_t... I1, size_t... I2>(csizes_t<I1...>, csizes_t<I2...>) KFR_INLINE_LAMBDA { //
+            cvec<T, r2> w1[r1];
+            ((w1[I1] = cread_split<r2, false, split_format>(in + I1 * r2)), ...);
+            bfly<inverse, r2>(cbool<split_format>, w1[I1]...);
+            ((w1[I1] =
+                  cmuli<false>(cbool<split_format>, w1[I1], fixed_twiddle<T, r2, Radix, 0, I1, inverse>())),
+             ...);
+            cvec<T, Radix> w = concat(w1[I1]...);
+            w                = ctranspose<r2>(w);
+            cvec<T, r1> w2[r2];
+            split(w, w2[I2]...);
+            bfly<inverse, r1>(cbool<split_format>, w2[I2]...);
+            ((cwrite_split<r1, false, split_format>(out + I2 * r1, w2[I2])), ...);
+        }(csizeseq_t<r1>{}, csizeseq_t<r2>{});
+    }
+}
+
+#define KFR_BFLY_NOP(...) ((void)0)
+#ifdef KFR_BFLY_DEBUG
+#define KFR_BFLY_TRACE(...) println(__VA_ARGS__)
+#define KFR_BFLY_TRACE_RD(...) println("    rd ", __VA_ARGS__)
+#define KFR_BFLY_TRACE_WR(...) println("    wr ", __VA_ARGS__)
+#define KFR_BFLY_TRACE_BF(...) println("    bf ", __VA_ARGS__)
+#define KFR_BFLY_TRACE_TW(...) println("    tw ", __VA_ARGS__)
+#else
+#define KFR_BFLY_TRACE(...) KFR_BFLY_NOP(__VA_ARGS__)
+#define KFR_BFLY_TRACE_RD(...) KFR_BFLY_NOP(__VA_ARGS__)
+#define KFR_BFLY_TRACE_WR(...) KFR_BFLY_NOP(__VA_ARGS__)
+#define KFR_BFLY_TRACE_BF(...) KFR_BFLY_NOP(__VA_ARGS__)
+#define KFR_BFLY_TRACE_TW(...) KFR_BFLY_NOP(__VA_ARGS__)
+#endif
+
 #ifdef KFR_NO_PREFETCH
 #define KFR_PREFETCH(addr)                                                                                   \
     do                                                                                                       \
@@ -1920,6 +2308,238 @@ KFR_INTRINSIC void cprefetch(const std::complex<T>* in, size_t stride) noexcept
     [&]<size_t... I>(csizes_t<I...>) KFR_INLINE_LAMBDA
     { ((prefetch_one<N>(in), static_cast<void>(I), in += stride), ...); }(csizeseq_t<Radix>{});
 }
+
+/**
+ * @brief Butterfly read step
+ */
+template <size_t Radix, typename T, size_t N, bool split_on_read = false, uintptr_t prefetch = 0,
+          size_t fixed_stride = 0>
+struct bfly_read
+{
+    static_assert(!split_on_read, "Split on read is not compatible with fixed stride");
+    static_assert(fixed_stride < N);
+    const std::complex<T>* in;
+    size_t stride_not_used;
+
+    KFR_INLINE_MEMBER void operator()(auto&&... w) noexcept
+    {
+        static_assert(sizeof...(w) == Radix);
+        if constexpr (prefetch > 0)
+            prefetch_one<N>(in + N * Radix * prefetch);
+
+        cvec<T, N * Radix> c = cread<N * Radix>(in);
+        c                    = transpose<Radix, 2 * fixed_stride>(c);
+        split(c, w...);
+    }
+
+    KFR_INLINE_MEMBER void begin() noexcept {}
+    KFR_INLINE_MEMBER void end() noexcept {}
+    KFR_INLINE_MEMBER void advance() noexcept { in += N * Radix; }
+};
+
+template <size_t Radix, typename T, size_t N, bool split_on_read, uintptr_t prefetch>
+struct bfly_read<Radix, T, N, split_on_read, prefetch, 0>
+{
+    const std::complex<T>* in;
+    size_t stride;
+    KFR_INLINE_MEMBER void operator()(auto&&... w) noexcept
+    {
+        static_assert(sizeof...(w) == Radix);
+        if constexpr (prefetch > 0)
+            cprefetch<Radix, N>(in + N * prefetch, stride);
+
+        KFR_BFLY_TRACE("bfly_read: in=", fmt<'x'>(uintptr_t(in)), " stride=", stride);
+        ((w = cread_split<N, false, split_on_read>(in), KFR_BFLY_TRACE_RD(w, " <- ", fmt<'x'>(uintptr_t(in))),
+          in += stride),
+         ...);
+    }
+
+    KFR_INLINE_MEMBER void begin() noexcept {}
+    KFR_INLINE_MEMBER void end() noexcept {}
+    KFR_INLINE_MEMBER void advance() noexcept { in -= stride * Radix - N; }
+};
+
+/**
+ * @brief Butterfly compute step
+ */
+template <size_t Radix, typename T, size_t N, bool inverse, bool split = false>
+struct bfly_bfly
+{
+    KFR_INLINE_MEMBER void operator()(auto&&... w) noexcept
+    {
+        static_assert(sizeof...(w) == Radix);
+        KFR_BFLY_TRACE("bfly_bfly: Radix=", Radix);
+        bfly<inverse, N>(cbool<split>, w...);
+    }
+
+    KFR_INLINE_MEMBER void begin() noexcept {}
+    KFR_INLINE_MEMBER void end() noexcept {}
+    KFR_INLINE_MEMBER void advance() noexcept {}
+};
+
+/**
+ * @brief Butterfly write step with bit-reversal and transposition.
+ */
+template <size_t Radix, typename T, size_t N, bool interleave_on_write = false, size_t fixed_stride = 0>
+struct bfly_write
+{
+    static_assert(fixed_stride < N);
+    std::complex<T>* out;
+    size_t stride_not_used;
+
+    KFR_INLINE_MEMBER void operator()(auto&&... w) noexcept
+    {
+        if constexpr (interleave_on_write)
+        {
+            ((w = interleavehalves(w)), ...);
+        }
+        static_assert(sizeof...(w) == Radix);
+        cvec<T, N * Radix> c = concat(w...);
+        c                    = transposeinverse<Radix, 2 * fixed_stride>(c);
+        cwrite<N * Radix>(out, c);
+    }
+
+    KFR_INLINE_MEMBER void begin() noexcept {}
+    KFR_INLINE_MEMBER void end() noexcept {}
+    KFR_INLINE_MEMBER void advance() noexcept { out += N * Radix; }
+};
+
+/**
+ * @brief Butterfly write step
+ */
+template <size_t Radix, typename T, size_t N, bool interleave_on_write>
+struct bfly_write<Radix, T, N, interleave_on_write, 0>
+{
+    std::complex<T>* out;
+    size_t stride;
+    KFR_INLINE_MEMBER void operator()(auto&&... w) noexcept
+    {
+        static_assert(sizeof...(w) == Radix);
+        KFR_BFLY_TRACE("bfly_write: out=", fmt<'x'>(uintptr_t(out)), " stride=", stride);
+
+        ((cwrite_split<N, false, interleave_on_write>(out, w),
+          KFR_BFLY_TRACE_WR(w, " -> ", fmt<'x'>(uintptr_t(out))), out += stride),
+         ...);
+    }
+
+    KFR_INLINE_MEMBER void begin() noexcept {}
+    KFR_INLINE_MEMBER void end() noexcept {}
+    KFR_INLINE_MEMBER void advance() noexcept { out -= stride * Radix - N; }
+};
+
+template <size_t Radix, typename T, size_t N>
+struct bfly_permute
+{
+    KFR_INLINE_MEMBER void permute(cvec<T, N>& w0, cvec<T, N>& w1)
+    {
+        // Noop
+    }
+    KFR_INLINE_MEMBER void permute(cvec<T, N>& w0, cvec<T, N>& w1, cvec<T, N>& w2, cvec<T, N>& w3)
+    {
+        std::swap(w1, w2);
+    }
+    KFR_INLINE_MEMBER void permute(cvec<T, N>& w0, cvec<T, N>& w1, cvec<T, N>& w2, cvec<T, N>& w3,
+                                   cvec<T, N>& w4, cvec<T, N>& w5, cvec<T, N>& w6, cvec<T, N>& w7)
+    {
+        std::swap(w1, w4);
+        std::swap(w3, w6);
+    }
+    KFR_INLINE_MEMBER void permute(cvec<T, N>& w0, cvec<T, N>& w1, cvec<T, N>& w2, cvec<T, N>& w3,
+                                   cvec<T, N>& w4, cvec<T, N>& w5, cvec<T, N>& w6, cvec<T, N>& w7,
+                                   cvec<T, N>& w8, cvec<T, N>& w9, cvec<T, N>& w10, cvec<T, N>& w11,
+                                   cvec<T, N>& w12, cvec<T, N>& w13, cvec<T, N>& w14, cvec<T, N>& w15)
+    {
+        std::swap(w1, w8);
+        std::swap(w2, w4);
+        std::swap(w3, w12);
+        std::swap(w5, w10);
+        std::swap(w7, w14);
+        std::swap(w11, w13);
+    }
+    KFR_INLINE_MEMBER void operator()(auto&&... w) noexcept { permute(w...); }
+    KFR_INLINE_MEMBER void begin() noexcept {}
+    KFR_INLINE_MEMBER void end() noexcept {}
+    KFR_INLINE_MEMBER void advance() noexcept {}
+};
+
+/**
+ * @brief Twiddle application step.
+ */
+template <size_t Radix, typename T, size_t N, bool inverse, bool split = false>
+struct bfly_twiddle
+{
+    const std::complex<T>*& tw;
+    KFR_INLINE_MEMBER void operator()(auto&& w0, auto&&... w) noexcept
+    {
+        static_assert(1 + sizeof...(w) == Radix);
+        KFR_BFLY_TRACE("bfly_twiddle: tw=", fmt<'x'>(uintptr_t(tw)));
+        ((w = cmuli<inverse>(cbool<split>, w, cread<N>(tw)),
+          KFR_BFLY_TRACE_TW(cread<N>(tw), " <- ", fmt<'x'>(uintptr_t(tw))), tw += N),
+         ...);
+    }
+    KFR_INLINE_MEMBER void begin() noexcept {}
+    KFR_INLINE_MEMBER void end() noexcept {}
+    KFR_INLINE_MEMBER void advance() noexcept {}
+};
+
+/**
+ * @brief Scaling step
+ */
+template <typename T>
+struct bfly_scale
+{
+    T scale;
+    KFR_INLINE_MEMBER void operator()(auto&&... w) noexcept { ((w = w * scale), ...); }
+
+    KFR_INLINE_MEMBER void begin() noexcept {}
+    KFR_INLINE_MEMBER void end() noexcept {}
+    KFR_INLINE_MEMBER void advance() noexcept {}
+};
+
+template <size_t N, typename T, size_t... I, size_t Radix = sizeof...(I), bfly_step<T, N, Radix>... Step>
+KFR_INTRINSIC void bfly_kernel(csizes_t<I...>, Step&&... step)
+{
+#ifdef __clang__
+    asm volatile("# ");
+#endif
+    cvec<T, N> w[Radix];
+
+    ((step(w[I]...)), ...);
+#ifdef __clang__
+    asm volatile("# ");
+#endif
+}
+
+/**
+ * @brief Computes the butterfly SIMD width for a given radix.
+ */
+template <typename T>
+constexpr size_t bflyw(size_t n)
+{
+    return vector_capacity<T> / 4 / n;
+}
+
+template <size_t Radix, typename T, size_t N, size_t Unroll = 1, bfly_step<T, N, Radix>... Step>
+KFR_INTRINSIC void bfly_loop(size_t count, Step&&... step)
+{
+    const size_t countn = count / N;
+#ifdef __clang__
+    __builtin_assume(countn > 0);
+    __builtin_assume(countn % Unroll == 0);
+#endif
+    (step.begin(), ...);
+    KFR_PRAGMA_CLANG(clang loop unroll_count(Unroll))
+    for (size_t i = 0; i < countn; i++)
+    {
+        bfly_kernel<N, T>(csizeseq_t<Radix>{}, step...);
+
+        (step.advance(), ...);
+    }
+    (step.end(), ...);
+}
+
+template <typename T>
+constexpr inline size_t bfly_max_packed_radix = vector_capacity<T> / 4;
 
 } // namespace intr
 } // namespace KFR_ARCH_NAME
