@@ -2383,7 +2383,7 @@ struct bfly_bfly
 template <size_t Radix, typename T, size_t N, bool interleave_on_write = false, size_t fixed_stride = 0>
 struct bfly_write
 {
-    static_assert(fixed_stride < N);
+    static_assert(fixed_stride < N || N == 1);
     std::complex<T>* out;
     size_t stride_not_used;
 

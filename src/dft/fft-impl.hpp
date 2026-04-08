@@ -315,6 +315,7 @@ static void initialize_twiddle_autosort(size_t N, size_t w, complex<T>*& twiddle
 template <typename T, size_t cols, size_t rows, size_t col_w, bool split>
 struct fourstep_twiddles
 {
+    static_assert(col_w > 0, "col_w cannot be zero");
     static_assert(std::has_single_bit(cols), "cols must be a power of 2");
     static_assert(std::has_single_bit(rows), "rows must be a power of 2");
 
@@ -377,8 +378,8 @@ KFR_INLINE void fourstep(std::complex<T>* out, const std::complex<T>* in)
     constexpr bool fit_registers = r1 * r2 * 2 <= vector_capacity<T>;
     constexpr size_t width_scale = fit_registers ? 1 : 2;
 
-    constexpr size_t n1 = std::min(bflyw<T>(r1) * width_scale, r2);
-    constexpr size_t n2 = std::min(bflyw<T>(r2) * width_scale, r1);
+    constexpr size_t n1 = std::clamp(bflyw<T>(r1) * width_scale, size_t(1), r2);
+    constexpr size_t n2 = std::clamp(bflyw<T>(r2) * width_scale, size_t(1), r1);
     static constexpr fourstep_twiddles<T, r2, r1, n1, split> twiddles{};
     const std::complex<T>* tw = twiddles.data();
 
