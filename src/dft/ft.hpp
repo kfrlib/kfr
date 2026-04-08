@@ -521,6 +521,66 @@ KFR_INTRINSIC vec<T, width> cmul_by_twiddle(const vec<T, width>& x)
     }
 }
 
+template <size_t k, size_t size, bool inverse = false, typename T, size_t width,
+          size_t kk = (inverse ? size - k : k) % size>
+KFR_INTRINSIC vec<T, width> cmul_by_twiddle(ctrue_t, const vec<T, width>& x)
+{
+    constexpr T isqrt2 = static_cast<T>(0.70710678118654752440084436210485);
+    vec<T, width / 2> re, im;
+    split(x, re, im);
+    if constexpr (kk == 0)
+    {
+        return concat(re, im); // ok
+    }
+    else if constexpr (kk == size * 1 / 8)
+    {
+        // swap<2>(subadd(swap<2>(x), x)) * isqrt2;
+        return concat(re + im, im - re) * isqrt2;
+    }
+    else if constexpr (kk == size * 2 / 8)
+    {
+        // negodd(swap<2>(x));
+        return concat(im, -re);
+    }
+    else if constexpr (kk == size * 3 / 8)
+    {
+        // subadd(x, swap<2>(x)) * -isqrt2;
+        return concat(-(re - im), -(re + im)) * isqrt2;
+    }
+    else if constexpr (kk == size * 4 / 8)
+    {
+        return -concat(re, im); // ok
+    }
+    else if constexpr (kk == size * 5 / 8)
+    {
+        // swap<2>(subadd(swap<2>(x), x)) * -isqrt2;
+        return concat(-(re + im), re - im) * isqrt2;
+    }
+    else if constexpr (kk == size * 6 / 8)
+    {
+        // swap<2>(negodd(x));
+        return concat(-im, re);
+    }
+    else if constexpr (kk == size * 7 / 8)
+    {
+        // subadd(x, swap<2>(x)) * isqrt2;
+        return concat(re - im, re + im) * isqrt2;
+    }
+    else
+    {
+        T twre = fixed_twiddle<T, 1, size, kk>()[0];
+        T twim = fixed_twiddle<T, 1, size, kk>()[1];
+        return concat(re * twre - im * twim, re * twim + im * twre);
+    }
+}
+
+template <size_t k, size_t size, bool inverse = false, typename T, size_t width,
+          size_t kk = (inverse ? size - k : k) % size>
+KFR_INTRINSIC vec<T, width> cmul_by_twiddle(cfalse_t, const vec<T, width>& x)
+{
+    return cmul_by_twiddle<k, size, inverse, T, width>(x);
+}
+
 template <size_t N, typename T>
 KFR_INTRINSIC void butterfly2(const cvec<T, N>& a0, const cvec<T, N>& a1, cvec<T, N>& w0, cvec<T, N>& w1)
 {
@@ -575,12 +635,9 @@ KFR_INTRINSIC void butterfly4(ctrue_t /*split_format*/, const cvec<T, N>& a0, co
                               const cvec<T, N>& a2, const cvec<T, N>& a3, cvec<T, N>& w0, cvec<T, N>& w1,
                               cvec<T, N>& w2, cvec<T, N>& w3)
 {
-    vec<T, N> re0, im0, re1, im1, re2, im2, re3, im3;
-    vec<T, N> wre0, wim0, wre1, wim1, wre2, wim2, wre3, wim3;
-
     cvec<T, N> sum02, sum13, diff02, diff13;
-    vec<T, N> sum02re, sum13re, diff02re, diff13re;
-    vec<T, N> sum02im, sum13im, diff02im, diff13im;
+    vec<T, N> diff02re, diff13re;
+    vec<T, N> diff02im, diff13im;
 
     sum02 = a0 + a2;
     sum13 = a1 + a3;
@@ -1824,6 +1881,44 @@ KFR_NOINLINE cvec<T, 1> calculate_twiddle(size_t n, size_t size)
         result = -result;
 
     return result;
+}
+
+#ifdef KFR_NO_PREFETCH
+#define KFR_PREFETCH(addr)                                                                                   \
+    do                                                                                                       \
+    {                                                                                                        \
+        (void)(addr);                                                                                        \
+    } while (0)
+#else
+
+#if defined KFR_ARCH_SSE
+#ifdef KFR_COMPILER_GNU
+#define KFR_PREFETCH(addr) __builtin_prefetch(::kfr::ptr_cast<void>(addr), 0, _MM_HINT_T0);
+#else
+#define KFR_PREFETCH(addr) _mm_prefetch(::kfr::ptr_cast<char>(addr), _MM_HINT_T0);
+#endif
+#else
+#define KFR_PREFETCH(addr) __builtin_prefetch(::kfr::ptr_cast<void>(addr));
+#endif
+#endif
+
+template <size_t size = 1, typename T>
+KFR_INTRINSIC void prefetch_one(const complex<T>* in)
+{
+    KFR_PREFETCH(in);
+    if constexpr (sizeof(complex<T>) * size > 64)
+        KFR_PREFETCH(in + 64);
+    if constexpr (sizeof(complex<T>) * size > 128)
+        KFR_PREFETCH(in + 128);
+    if constexpr (sizeof(complex<T>) * size > 192)
+        KFR_PREFETCH(in + 192);
+}
+
+template <size_t Radix, size_t N, typename T>
+KFR_INTRINSIC void cprefetch(const std::complex<T>* in, size_t stride) noexcept
+{
+    [&]<size_t... I>(csizes_t<I...>) KFR_INLINE_LAMBDA
+    { ((prefetch_one<N>(in), static_cast<void>(I), in += stride), ...); }(csizeseq_t<Radix>{});
 }
 
 } // namespace intr

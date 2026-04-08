@@ -25,8 +25,11 @@
  */
 #pragma once
 
+#include <span>
+
 #include <kfr/simd/complex.hpp>
 #include <kfr/simd/constants.hpp>
+#include <kfr/simd/read_write.hpp>
 #include <kfr/simd/digitreverse.hpp>
 #include <kfr/simd/vec.hpp>
 
@@ -71,7 +74,11 @@ inline u32 bitrev_using_table(u32 x, size_t bits, cbool_t<use_table>)
     }
     else
     {
+#ifdef __clang__
+        return __builtin_bitreverse32(x) >> (32 - bits);
+#else
         return bitreverse<32>(x) >> (32 - bits);
+#endif
     }
 #endif
 }
