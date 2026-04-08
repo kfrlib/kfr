@@ -106,397 +106,280 @@ inline u32 dig4rev_using_table(u32 x, size_t bits)
 #endif
 }
 
-template <size_t log2n, size_t bitrev, typename T>
-KFR_INTRINSIC void fft_reorder_swap(T* inout, size_t i)
+template <typename T, size_t N>
+KFR_INTRINSIC void br_simd(std::complex<T>* data, csize_t<N>)
 {
-    using cxx           = cvec<T, 16>;
-    constexpr size_t N  = 1 << log2n;
-    constexpr size_t N4 = 2 * N / 4;
-
-    cxx vi = cread_group<4, 4, N4 / 2, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + i));
-    vi     = digitreverse<bitrev, 2>(vi);
-    cwrite_group<4, 4, N4 / 2, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + i), vi);
-}
-
-template <size_t log2n, size_t bitrev, typename T>
-KFR_INTRINSIC void fft_reorder_swap_two(T* inout, size_t i, size_t j)
-{
-    KFR_ASSUME(i != j);
-    using cxx           = cvec<T, 16>;
-    constexpr size_t N  = 1 << log2n;
-    constexpr size_t N4 = 2 * N / 4;
-
-    cxx vi = cread_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + i), N4 / 2);
-    cxx vj = cread_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + j), N4 / 2);
-
-    vi = digitreverse<bitrev, 2>(vi);
-    cwrite_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + i), N4 / 2, vi);
-    vj = digitreverse<bitrev, 2>(vj);
-    cwrite_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + j), N4 / 2, vj);
-}
-
-template <size_t log2n, size_t bitrev, typename T>
-KFR_INTRINSIC void fft_reorder_swap(T* inout, size_t i, size_t j)
-{
-    KFR_ASSUME(i != j);
-    using cxx           = cvec<T, 16>;
-    constexpr size_t N  = 1 << log2n;
-    constexpr size_t N4 = 2 * N / 4;
-
-    cxx vi = cread_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + i), N4 / 2);
-    cxx vj = cread_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + j), N4 / 2);
-
-    vi = digitreverse<bitrev, 2>(vi);
-    cwrite_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + j), N4 / 2, vi);
-    vj = digitreverse<bitrev, 2>(vj);
-    cwrite_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + i), N4 / 2, vj);
-}
-
-template <size_t log2n, size_t bitrev, typename T>
-KFR_INTRINSIC void fft_reorder_swap(complex<T>* inout, size_t i)
-{
-    fft_reorder_swap<log2n, bitrev>(ptr_cast<T>(inout), i * 2);
-}
-
-template <size_t log2n, size_t bitrev, typename T>
-KFR_INTRINSIC void fft_reorder_swap_two(complex<T>* inout, size_t i0, size_t i1)
-{
-    fft_reorder_swap_two<log2n, bitrev>(ptr_cast<T>(inout), i0 * 2, i1 * 2);
-}
-
-template <size_t log2n, size_t bitrev, typename T>
-KFR_INTRINSIC void fft_reorder_swap(complex<T>* inout, size_t i, size_t j)
-{
-    fft_reorder_swap<log2n, bitrev>(ptr_cast<T>(inout), i * 2, j * 2);
+    vec<T, N * 2> v = kfr::read<N * 2>(reinterpret_cast<T*>(data));
+    v               = bitreverse<2>(v);
+    write(reinterpret_cast<T*>(data), v);
 }
 
 template <typename T>
-KFR_INTRINSIC void fft_reorder(complex<T>* inout, csize_t<11>)
+constexpr inline size_t br_type_penalty = 2; // std::is_same_v<T, float> ? 2 : 1;
+
+template <typename T, size_t N>
+KFR_INTRINSIC void br_prefetch(std::complex<T>* data0, std::complex<T>* data1, csize_t<N>, size_t stride)
 {
-    fft_reorder_swap_two<11>(inout, 0 * 4, 8 * 4);
-    fft_reorder_swap<11>(inout, 1 * 4, 64 * 4);
-    fft_reorder_swap<11>(inout, 2 * 4, 32 * 4);
-    fft_reorder_swap<11>(inout, 3 * 4, 96 * 4);
-    fft_reorder_swap<11>(inout, 4 * 4, 16 * 4);
-    fft_reorder_swap<11>(inout, 5 * 4, 80 * 4);
-    fft_reorder_swap<11>(inout, 6 * 4, 48 * 4);
-    fft_reorder_swap<11>(inout, 7 * 4, 112 * 4);
-    fft_reorder_swap<11>(inout, 9 * 4, 72 * 4);
-    fft_reorder_swap<11>(inout, 10 * 4, 40 * 4);
-    fft_reorder_swap<11>(inout, 11 * 4, 104 * 4);
-    fft_reorder_swap<11>(inout, 12 * 4, 24 * 4);
-    fft_reorder_swap<11>(inout, 13 * 4, 88 * 4);
-    fft_reorder_swap<11>(inout, 14 * 4, 56 * 4);
-    fft_reorder_swap<11>(inout, 15 * 4, 120 * 4);
-    fft_reorder_swap<11>(inout, 17 * 4, 68 * 4);
-    fft_reorder_swap<11>(inout, 18 * 4, 36 * 4);
-    fft_reorder_swap<11>(inout, 19 * 4, 100 * 4);
-    fft_reorder_swap_two<11>(inout, 20 * 4, 28 * 4);
-    fft_reorder_swap<11>(inout, 21 * 4, 84 * 4);
-    fft_reorder_swap<11>(inout, 22 * 4, 52 * 4);
-    fft_reorder_swap<11>(inout, 23 * 4, 116 * 4);
-    fft_reorder_swap<11>(inout, 25 * 4, 76 * 4);
-    fft_reorder_swap<11>(inout, 26 * 4, 44 * 4);
-    fft_reorder_swap<11>(inout, 27 * 4, 108 * 4);
-    fft_reorder_swap<11>(inout, 29 * 4, 92 * 4);
-    fft_reorder_swap<11>(inout, 30 * 4, 60 * 4);
-    fft_reorder_swap<11>(inout, 31 * 4, 124 * 4);
-    fft_reorder_swap<11>(inout, 33 * 4, 66 * 4);
-    fft_reorder_swap_two<11>(inout, 34 * 4, 42 * 4);
-    fft_reorder_swap<11>(inout, 35 * 4, 98 * 4);
-    fft_reorder_swap<11>(inout, 37 * 4, 82 * 4);
-    fft_reorder_swap<11>(inout, 38 * 4, 50 * 4);
-    fft_reorder_swap<11>(inout, 39 * 4, 114 * 4);
-    fft_reorder_swap<11>(inout, 41 * 4, 74 * 4);
-    fft_reorder_swap<11>(inout, 43 * 4, 106 * 4);
-    fft_reorder_swap<11>(inout, 45 * 4, 90 * 4);
-    fft_reorder_swap<11>(inout, 46 * 4, 58 * 4);
-    fft_reorder_swap<11>(inout, 47 * 4, 122 * 4);
-    fft_reorder_swap<11>(inout, 49 * 4, 70 * 4);
-    fft_reorder_swap<11>(inout, 51 * 4, 102 * 4);
-    fft_reorder_swap<11>(inout, 53 * 4, 86 * 4);
-    fft_reorder_swap_two<11>(inout, 54 * 4, 62 * 4);
-    fft_reorder_swap<11>(inout, 55 * 4, 118 * 4);
-    fft_reorder_swap<11>(inout, 57 * 4, 78 * 4);
-    fft_reorder_swap<11>(inout, 59 * 4, 110 * 4);
-    fft_reorder_swap<11>(inout, 61 * 4, 94 * 4);
-    fft_reorder_swap<11>(inout, 63 * 4, 126 * 4);
-    fft_reorder_swap_two<11>(inout, 65 * 4, 73 * 4);
-    fft_reorder_swap<11>(inout, 67 * 4, 97 * 4);
-    fft_reorder_swap<11>(inout, 69 * 4, 81 * 4);
-    fft_reorder_swap<11>(inout, 71 * 4, 113 * 4);
-    fft_reorder_swap<11>(inout, 75 * 4, 105 * 4);
-    fft_reorder_swap<11>(inout, 77 * 4, 89 * 4);
-    fft_reorder_swap<11>(inout, 79 * 4, 121 * 4);
-    fft_reorder_swap<11>(inout, 83 * 4, 101 * 4);
-    fft_reorder_swap_two<11>(inout, 85 * 4, 93 * 4);
-    fft_reorder_swap<11>(inout, 87 * 4, 117 * 4);
-    fft_reorder_swap<11>(inout, 91 * 4, 109 * 4);
-    fft_reorder_swap<11>(inout, 95 * 4, 125 * 4);
-    fft_reorder_swap_two<11>(inout, 99 * 4, 107 * 4);
-    fft_reorder_swap<11>(inout, 103 * 4, 115 * 4);
-    fft_reorder_swap<11>(inout, 111 * 4, 123 * 4);
-    fft_reorder_swap_two<11>(inout, 119 * 4, 127 * 4);
+    cprefetch<N, N, T>(data0, stride);
+    cprefetch<N, N, T>(data1, stride);
 }
 
-template <typename T>
-KFR_INTRINSIC void fft_reorder(complex<T>* inout, csize_t<7>)
+template <bool swap, typename T, size_t N>
+KFR_INTRINSIC void br_simd_two(std::complex<T>* data0, std::complex<T>* data1, csize_t<N>, size_t stride)
+    requires((N * N * 2 * br_type_penalty<T>) < vector_capacity<T>)
 {
-    constexpr size_t bitrev = 2;
-    fft_reorder_swap_two<7, bitrev>(inout, 0 * 4, 2 * 4);
-    fft_reorder_swap<7, bitrev>(inout, 1 * 4, 4 * 4);
-    fft_reorder_swap<7, bitrev>(inout, 3 * 4, 6 * 4);
-    fft_reorder_swap_two<7, bitrev>(inout, 5 * 4, 7 * 4);
-}
-
-template <typename T>
-KFR_INTRINSIC void fft_reorder(complex<T>* inout, csize_t<8>, cfalse_t /* use_br2 */)
-{
-    constexpr size_t bitrev = 4;
-    fft_reorder_swap_two<8, bitrev>(inout, 0 * 4, 5 * 4);
-    fft_reorder_swap<8, bitrev>(inout, 1 * 4, 4 * 4);
-    fft_reorder_swap<8, bitrev>(inout, 2 * 4, 8 * 4);
-    fft_reorder_swap<8, bitrev>(inout, 3 * 4, 12 * 4);
-    fft_reorder_swap<8, bitrev>(inout, 6 * 4, 9 * 4);
-    fft_reorder_swap<8, bitrev>(inout, 7 * 4, 13 * 4);
-    fft_reorder_swap_two<8, bitrev>(inout, 10 * 4, 15 * 4);
-    fft_reorder_swap<8, bitrev>(inout, 11 * 4, 14 * 4);
-}
-
-template <typename T>
-KFR_INTRINSIC void fft_reorder(complex<T>* inout, csize_t<8>, ctrue_t /* use_br2 */)
-{
-    constexpr size_t bitrev = 2;
-    fft_reorder_swap_two<8, bitrev>(inout, 0 * 4, 6 * 4);
-    fft_reorder_swap<8, bitrev>(inout, 1 * 4, 8 * 4);
-    fft_reorder_swap<8, bitrev>(inout, 2 * 4, 4 * 4);
-    fft_reorder_swap<8, bitrev>(inout, 3 * 4, 12 * 4);
-    fft_reorder_swap<8, bitrev>(inout, 5 * 4, 10 * 4);
-    fft_reorder_swap<8, bitrev>(inout, 7 * 4, 14 * 4);
-    fft_reorder_swap_two<8, bitrev>(inout, 9 * 4, 15 * 4);
-    fft_reorder_swap<8, bitrev>(inout, 11 * 4, 13 * 4);
-}
-
-template <typename T>
-KFR_INTRINSIC void fft_reorder(complex<T>* inout, csize_t<9>)
-{
-    constexpr size_t bitrev = 2;
-    fft_reorder_swap_two<9, bitrev>(inout, 0 * 4, 4 * 4);
-    fft_reorder_swap<9, bitrev>(inout, 1 * 4, 16 * 4);
-    fft_reorder_swap<9, bitrev>(inout, 2 * 4, 8 * 4);
-    fft_reorder_swap<9, bitrev>(inout, 3 * 4, 24 * 4);
-    fft_reorder_swap<9, bitrev>(inout, 5 * 4, 20 * 4);
-    fft_reorder_swap<9, bitrev>(inout, 6 * 4, 12 * 4);
-    fft_reorder_swap<9, bitrev>(inout, 7 * 4, 28 * 4);
-    fft_reorder_swap<9, bitrev>(inout, 9 * 4, 18 * 4);
-    fft_reorder_swap_two<9, bitrev>(inout, 10 * 4, 14 * 4);
-    fft_reorder_swap<9, bitrev>(inout, 11 * 4, 26 * 4);
-    fft_reorder_swap<9, bitrev>(inout, 13 * 4, 22 * 4);
-    fft_reorder_swap<9, bitrev>(inout, 15 * 4, 30 * 4);
-    fft_reorder_swap_two<9, bitrev>(inout, 17 * 4, 21 * 4);
-    fft_reorder_swap<9, bitrev>(inout, 19 * 4, 25 * 4);
-    fft_reorder_swap<9, bitrev>(inout, 23 * 4, 29 * 4);
-    fft_reorder_swap_two<9, bitrev>(inout, 27 * 4, 31 * 4);
-}
-
-template <typename T>
-KFR_INTRINSIC void fft_reorder(complex<T>* inout, csize_t<10>, ctrue_t /* use_br2 */)
-{
-    constexpr size_t bitrev = 2;
-    fft_reorder_swap_two<10, bitrev>(inout, 0 * 4, 12 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 1 * 4, 32 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 2 * 4, 16 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 3 * 4, 48 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 4 * 4, 8 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 5 * 4, 40 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 6 * 4, 24 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 7 * 4, 56 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 9 * 4, 36 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 10 * 4, 20 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 11 * 4, 52 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 13 * 4, 44 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 14 * 4, 28 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 15 * 4, 60 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 17 * 4, 34 * 4);
-    fft_reorder_swap_two<10, bitrev>(inout, 18 * 4, 30 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 19 * 4, 50 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 21 * 4, 42 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 22 * 4, 26 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 23 * 4, 58 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 25 * 4, 38 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 27 * 4, 54 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 29 * 4, 46 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 31 * 4, 62 * 4);
-    fft_reorder_swap_two<10, bitrev>(inout, 33 * 4, 45 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 35 * 4, 49 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 37 * 4, 41 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 39 * 4, 57 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 43 * 4, 53 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 47 * 4, 61 * 4);
-    fft_reorder_swap_two<10, bitrev>(inout, 51 * 4, 63 * 4);
-    fft_reorder_swap<10, bitrev>(inout, 55 * 4, 59 * 4);
-}
-
-template <typename T, bool use_br2>
-KFR_INTRINSIC void cwrite_reordered(T* out, const cvec<T, 16>& value, size_t N4, cbool_t<use_br2>)
-{
-    cwrite_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(out), N4,
-                                            digitreverse<(use_br2 ? 2 : 4), 2>(value));
-}
-
-template <typename T, bool use_br2>
-KFR_INTRINSIC void fft_reorder_swap_n4(T* inout, size_t i, size_t j, size_t N4, cbool_t<use_br2>)
-{
-    KFR_ASSUME(i != j);
-    const cvec<T, 16> vi = cread_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + i), N4);
-    const cvec<T, 16> vj = cread_group<4, 4, fft_reorder_aligned>(ptr_cast<complex<T>>(inout + j), N4);
-    cwrite_reordered(inout + j, vi, N4, cbool_t<use_br2>());
-    cwrite_reordered(inout + i, vj, N4, cbool_t<use_br2>());
-}
-
-template <typename T, bool use_table>
-KFR_INTRINSIC void fft_reorder(complex<T>* inout, size_t log2n, ctrue_t use_br2, cbool_t<use_table>)
-{
-    const size_t N         = size_t(1) << log2n;
-    const size_t N4        = N / 4;
-    const size_t iend      = N / 16 * 4 * 2;
-    constexpr size_t istep = 2 * 4;
-    const size_t jstep1    = (1 << (log2n - 5)) * 4 * 2;
-    const size_t jstep2 = size_t(size_t(1) << (log2n - 5)) * 4 * 2 - size_t(size_t(1) << (log2n - 6)) * 4 * 2;
-    T* io               = ptr_cast<T>(inout);
-
-    for (size_t i = 0; i < iend;)
+    auto v0 = read_group<N, N, 2>(reinterpret_cast<T*>(data0), stride);
+    auto v1 = read_group<N, N, 2>(reinterpret_cast<T*>(data1), stride);
+    v0      = bitreverse<2>(v0);
+    v1      = bitreverse<2>(v1);
+    if constexpr (swap)
     {
-        size_t j = bitrev_using_table(static_cast<u32>(i >> 3), log2n - 4, cbool<use_table>) << 3;
-        if (i >= j)
-        {
-            fft_reorder_swap_n4(io, i, j, N4, use_br2);
-        }
-        else
-        {
-            i += 4 * istep;
-            continue;
-        }
-        i += istep;
-        j = j + jstep1;
-
-        if (i >= j)
-        {
-            fft_reorder_swap_n4(io, i, j, N4, use_br2);
-        }
-        i += istep;
-        j = j - jstep2;
-
-        if (i >= j)
-        {
-            fft_reorder_swap_n4(io, i, j, N4, use_br2);
-        }
-        i += istep;
-        j = j + jstep1;
-
-        if (i >= j)
-        {
-            fft_reorder_swap_n4(io, i, j, N4, use_br2);
-        }
-        i += istep;
+        std::swap(v0, v1);
     }
+    write_group<N, N, 2>(reinterpret_cast<T*>(data0), stride, v0);
+    write_group<N, N, 2>(reinterpret_cast<T*>(data1), stride, v1);
 }
 
-template <typename T>
-KFR_INTRINSIC void fft_reorder(complex<T>* inout, size_t log2n, ctrue_t use_br2)
+template <bool swap, typename T, size_t N>
+KFR_INTRINSIC void br_simd_two(std::complex<T>* data0, std::complex<T>* data1, csize_t<N>, size_t stride)
+    requires((N * N * 2 * br_type_penalty<T>) == vector_capacity<T>)
 {
-    if (log2n - 4 > bitrev_table_log2N)
+    if constexpr (!swap)
     {
-        fft_reorder(inout, log2n, ctrue, cfalse);
+        // data0 -> data0
+        auto v = read_group<N, N, 2>(reinterpret_cast<T*>(data0), stride);
+        v      = bitreverse<2>(v);
+        write_group<N, N, 2>(reinterpret_cast<T*>(data0), stride, v);
+
+        // data1 -> data1
+        v = read_group<N, N, 2>(reinterpret_cast<T*>(data1), stride);
+        v = bitreverse<2>(v);
+        write_group<N, N, 2>(reinterpret_cast<T*>(data1), stride, v);
     }
     else
     {
-        fft_reorder(inout, log2n, ctrue, ctrue);
+        alignas(64) std::complex<T> temp[N * N];
+        // data0 -> temp
+        auto v = read_group<N, N, 2>(reinterpret_cast<T*>(data0), stride);
+        v      = bitreverse<2>(v);
+        write(reinterpret_cast<T*>(temp), v);
+
+        // data1 -> data0
+        v = read_group<N, N, 2>(reinterpret_cast<T*>(data1), stride);
+        v = bitreverse<2>(v);
+        write_group<N, N, 2>(reinterpret_cast<T*>(data0), stride, v);
+
+        // temp -> data1
+        v = kfr::read<N * N * 2>(reinterpret_cast<T*>(temp));
+        write_group<N, N, 2>(reinterpret_cast<T*>(data1), stride, v);
     }
 }
 
-template <typename T>
-KFR_INTRINSIC void fft_reorder(complex<T>* inout, size_t log2n, cfalse_t use_br2)
+template <bool swap, typename T, size_t N>
+KFR_INTRINSIC void br_simd_two(std::complex<T>* data0, std::complex<T>* data1, csize_t<N>, size_t stride)
+    requires((N * N * 2 * br_type_penalty<T>) > vector_capacity<T>)
 {
-    const size_t N         = size_t(1) << log2n;
-    const size_t N4        = N / 4;
-    const size_t N16       = N * 2 / 16;
-    size_t iend            = N16;
-    constexpr size_t istep = 2 * 4;
-    const size_t jstep     = N / 64 * 4 * 2;
-    T* io                  = ptr_cast<T>(inout);
+    constexpr size_t N2 = N / 2;
 
-    size_t i = 0;
-    KFR_PRAGMA_CLANG(clang loop unroll_count(2))
-    for (; i < iend;)
+    if constexpr (!swap)
     {
-        size_t j = dig4rev_using_table(static_cast<u32>(i >> 3), log2n - 4) << 3;
-
-        if (i >= j)
-            fft_reorder_swap_n4(io, i, j, N4, use_br2);
-        i += istep * 4;
+        for (auto* data : { data0, data1 })
+        {
+            br_simd_two<false>(data, data + stride + N2, csize<N2>, 2 * stride); //  0,  3
+            br_simd_two<true>(data + N2, data + stride, csize<N2>,
+                              2 * stride); //  1 <-> 2
+        }
     }
-    iend += N16;
-    KFR_PRAGMA_CLANG(clang loop unroll_count(2))
-    for (; i < iend;)
+    else
     {
-        size_t j = dig4rev_using_table(static_cast<u32>(i >> 3), log2n - 4) << 3;
+        br_simd_two<true>(data0, data1, csize<N2>, 2 * stride); // 0
 
-        fft_reorder_swap_n4(io, i, j, N4, use_br2);
+        br_simd_two<true>(data0 + stride, data1 + N2, csize<N2>, 2 * stride); // 1 <-> 2
+        br_simd_two<true>(data0 + N2, data1 + stride, csize<N2>, 2 * stride); // 1 <-> 2
 
-        i += istep;
-        j = j + jstep;
-
-        if (i >= j)
-            fft_reorder_swap_n4(io, i, j, N4, use_br2);
-        i += istep * 3;
-    }
-    iend += N16;
-    KFR_PRAGMA_CLANG(clang loop unroll_count(2))
-    for (; i < iend;)
-    {
-        size_t j = dig4rev_using_table(static_cast<u32>(i >> 3), log2n - 4) << 3;
-
-        fft_reorder_swap_n4(io, i, j, N4, use_br2);
-
-        i += istep;
-        j = j + jstep;
-
-        fft_reorder_swap_n4(io, i, j, N4, use_br2);
-
-        i += istep;
-        j = j + jstep;
-
-        if (i >= j)
-            fft_reorder_swap_n4(io, i, j, N4, use_br2);
-        i += istep * 2;
-    }
-    iend += N16;
-    KFR_PRAGMA_CLANG(clang loop unroll_count(2))
-    for (; i < iend;)
-    {
-        size_t j = dig4rev_using_table(static_cast<u32>(i >> 3), log2n - 4) << 3;
-
-        fft_reorder_swap_n4(io, i, j, N4, use_br2);
-
-        i += istep;
-        j = j + jstep;
-
-        fft_reorder_swap_n4(io, i, j, N4, use_br2);
-
-        i += istep;
-        j = j + jstep;
-
-        fft_reorder_swap_n4(io, i, j, N4, use_br2);
-
-        i += istep;
-        j = j + jstep;
-
-        if (i >= j)
-            fft_reorder_swap_n4(io, i, j, N4, use_br2);
-        i += istep;
+        br_simd_two<true>(data0 + stride + N2, data1 + stride + N2, csize<N2>, 2 * stride); // 3
     }
 }
+
+template <typename T, size_t N>
+KFR_INTRINSIC void br_simd_one(std::complex<T>* data, csize_t<N>, size_t stride)
+{
+    constexpr size_t N2 = N / 2;
+    br_simd_two<false>(data, data + stride + N2, csize<N2>, 2 * stride); //  0,  3
+    br_simd_two<true>(data + N2, data + stride, csize<N2>, 2 * stride); //  1 <-> 2
+}
+
+template <typename T, size_t Extent>
+KFR_INTRINSIC void br_small(uint32_t log2n, std::span<std::complex<T>, Extent> data)
+{
+    switch (log2n)
+    {
+    case 6:
+        return br_simd_one(data.data(), csize_t<8>{}, 8);
+    case 5:
+        [[unlikely]] return br_simd(data.data(), csize_t<32>{});
+    case 4:
+        [[unlikely]] return br_simd(data.data(), csize_t<16>{});
+    case 3:
+        [[unlikely]] return br_simd(data.data(), csize_t<8>{});
+    case 2:
+        [[unlikely]] return br_simd(data.data(), csize_t<4>{});
+    case 1:
+    case 0:
+        break;
+    default:
+        KFR_UNREACHABLE;
+    }
+}
+
+#if defined(_MSC_VER) && !defined(__clang__)
+KFR_INTRINSIC uint32_t lzcnt_u32(uint32_t x) noexcept
+{
+    unsigned long index;
+    _BitScanReverse(&index, x);
+    return 31 - (unsigned int)index;
+}
+KFR_INTRINSIC uint32_t tzcnt_u32(uint32_t x) noexcept
+{
+    unsigned long index;
+    _BitScanForward(&index, x);
+    return (uint32_t)index;
+}
+#else
+#define lzcnt_u32(x) __builtin_clz(x)
+#define tzcnt_u32(x) __builtin_ctz(x)
+#endif
+
+template <typename T, size_t Extent = std::dynamic_extent, bool large>
+KFR_INTRINSIC void br_impl(uint32_t log2n, std::span<std::complex<T>, Extent> data, cbool_t<large>)
+{
+    constexpr uint32_t group_log2n = std::is_same_v<T, double> ? 2 : (large ? 3 : 2);
+    // log2n(N) in NxN group
+    constexpr uint32_t group_n         = 1u << group_log2n; // N in NxN group
+    constexpr uint32_t group_log2narea = 2 * group_log2n; // log2n(N^2) in NxN group
+    uint32_t log2numgroups             = log2n - group_log2narea; // log2(num_groups)
+    uint32_t numgroups                 = 1u << log2numgroups; // num_groups
+    size_t stride                      = 1u << (log2n - group_log2n); // size / group_n
+
+    uint32_t half_numgroups = numgroups / 2;
+
+    auto prefetch = [&](uint32_t i, uint32_t j) KFR_INLINE_LAMBDA
+    {
+        if (i == j) [[unlikely]]
+        {
+            uint32_t mi = numgroups - 1 - i;
+            br_prefetch(data.data() + i * group_n, data.data() + mi * group_n, csize_t<group_n>{}, stride);
+        }
+        else if (i < j)
+        {
+            br_prefetch(data.data() + i * group_n, data.data() + j * group_n, csize_t<group_n>{}, stride);
+        }
+        else
+        {
+            uint32_t mi = numgroups - 1 - i;
+            uint32_t mj = numgroups - 1 - j;
+            br_prefetch(data.data() + mj * group_n, data.data() + mi * group_n, csize_t<group_n>{}, stride);
+        }
+    };
+
+    auto process = [&](uint32_t i, uint32_t j) KFR_INLINE_LAMBDA
+    {
+        if (i == j) [[unlikely]]
+        {
+            uint32_t mi = numgroups - 1 - i;
+            br_simd_two<false>(data.data() + i * group_n, data.data() + mi * group_n, csize_t<group_n>{},
+                               stride);
+        }
+        else if (i < j)
+        {
+            br_simd_two<true>(data.data() + i * group_n, data.data() + j * group_n, csize_t<group_n>{},
+                              stride);
+        }
+        else
+        {
+            uint32_t mi = numgroups - 1 - i;
+            uint32_t mj = numgroups - 1 - j;
+            br_simd_two<true>(data.data() + mj * group_n, data.data() + mi * group_n, csize_t<group_n>{},
+                              stride);
+        }
+    };
+
+    if constexpr (!large)
+    {
+        if (half_numgroups == 1)
+        {
+            process(0, 0);
+            return;
+        }
+        else if (half_numgroups == 2)
+        {
+            process(0, 0);
+            process(1, half_numgroups);
+            return;
+        }
+        else if (half_numgroups == 4)
+        {
+            process(0, 0);
+            process(1, half_numgroups);
+            process(2, half_numgroups / 2);
+            process(3, half_numgroups * 3 / 2);
+            return;
+        }
+        else if (half_numgroups == 8)
+        {
+            process(0, 0);
+            process(1, half_numgroups);
+            process(2, half_numgroups / 2);
+            process(3, half_numgroups * 3 / 2);
+            process(4, half_numgroups / 4);
+            process(5, half_numgroups / 4 + half_numgroups);
+            process(6, half_numgroups / 4 + half_numgroups / 2);
+            process(7, half_numgroups / 4 + half_numgroups * 3 / 2);
+            return;
+        }
+    }
+
+    process(0, 0);
+
+    uint32_t j          = 1u << (log2numgroups - 1); // bit-reversed index of i=1
+    const uint32_t mask = (1u << log2numgroups) - 1u;
+
+    for (uint32_t i = 1; i < half_numgroups; i++)
+    {
+        uint32_t bit    = 0x80000000u >> lzcnt_u32(mask ^ j);
+        uint32_t next_j = (j & (bit - 1u)) | bit;
+
+        if constexpr (large)
+        {
+            prefetch(i + 1, next_j);
+        }
+
+        process(i, j);
+
+        j = next_j;
+    }
+}
+
+template <typename T, size_t Extent = std::dynamic_extent>
+void br(std::span<std::complex<T>, Extent> data)
+{
+    uint32_t log2n = tzcnt_u32(uint32_t(data.size()));
+
+    if (log2n <= 6) [[unlikely]]
+    {
+        return br_small(log2n, data);
+    }
+    bool large = log2n > 14;
+    if (large) [[unlikely]]
+    {
+        return br_impl<T, Extent>(log2n, data, cbool_t<true>());
+    }
+    else
+    {
+        return br_impl<T, Extent>(log2n, data, cbool_t<false>());
+    }
+}
+
 } // namespace intr
 } // namespace KFR_ARCH_NAME
 } // namespace kfr
