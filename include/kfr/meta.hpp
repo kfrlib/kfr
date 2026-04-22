@@ -302,6 +302,18 @@ struct cvals_t
         return {};
     }
 
+    template <typename U>
+    struct subscript_t {
+
+    };
+    template <size_t... indices>
+    struct subscript_t<cvals_t<size_t, indices...>> {
+        using type = cvals_t<T, details::get_nth_e<indices, type>::value...>;
+    };
+    
+    template <typename U>
+    using subscript = typename subscript_t<U>::type;
+
     // MSVC requires static_cast<T> here:
     /// Returns a new list with `Fn` applied to each value
     template <typename Fn>
