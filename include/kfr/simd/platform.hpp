@@ -339,5 +339,170 @@ struct vec;
 template <typename T, size_t N = vector_width<T>>
 using mask = vec<bit<T>, N>;
 
+#ifdef KFR_ARCH_AVX512
+template <typename T>
+struct native_vector_type
+{
+    using type = __m512i;
+};
+template <>
+struct native_vector_type<float>
+{
+    using type = __m512;
+};
+template <>
+struct native_vector_type<double>
+{
+    using type = __m512d;
+};
+#elif defined KFR_ARCH_AVX
+template <typename T>
+struct native_vector_type
+{
+    using type = __m256i;
+};
+template <>
+struct native_vector_type<float>
+{
+    using type = __m256;
+};
+template <>
+struct native_vector_type<double>
+{
+    using type = __m256d;
+};
+#elif defined KFR_ARCH_SSE2
+
+template <typename T>
+struct native_vector_type
+{
+    using type = __m128i;
+};
+template <>
+struct native_vector_type<float>
+{
+    using type = __m128;
+};
+template <>
+struct native_vector_type<double>
+{
+    using type = __m128d;
+};
+#elif defined KFR_ARCH_NEON
+template <typename T>
+struct native_vector_type
+{
+};
+template <>
+struct native_vector_type<float>
+{
+    using type = float32x4_t;
+};
+#ifdef __aarch64__
+template <>
+struct native_vector_type<double>
+{
+    using type = float64x2_t;
+};
+#endif
+template <>
+struct native_vector_type<int64_t>
+{
+    using type = int64x2_t;
+};
+template <>
+struct native_vector_type<uint64_t>
+{
+    using type = uint64x2_t;
+};
+template <>
+struct native_vector_type<int32_t>
+{
+    using type = int32x4_t;
+};
+template <>
+struct native_vector_type<uint32_t>
+{
+    using type = uint32x4_t;
+};
+template <>
+struct native_vector_type<int16_t>
+{
+    using type = int16x8_t;
+};
+template <>
+struct native_vector_type<uint16_t>
+{
+    using type = uint16x8_t;
+};
+template <>
+struct native_vector_type<int8_t>
+{
+    using type = int8x16_t;
+};
+template <>
+struct native_vector_type<uint8_t>
+{
+    using type = uint8x16_t;
+};
+
+#elif defined KFR_ARCH_RVV
+template <typename T>
+struct native_vector_type
+{
+};
+template <>
+struct native_vector_type<float>
+{
+    using type = vfloat32m1_t;
+};
+template <>
+struct native_vector_type<double>
+{
+    using type = vfloat64m1_t;
+};
+template <>
+struct native_vector_type<int64_t>
+{
+    using type = vint64m1_t;
+};
+template <>
+struct native_vector_type<uint64_t>
+{
+    using type = vuint64m1_t;
+};
+template <>
+struct native_vector_type<int32_t>
+{
+    using type = vint32m1_t;
+};
+template <>
+struct native_vector_type<uint32_t>
+{
+    using type = vuint32m1_t;
+};
+template <>
+struct native_vector_type<int16_t>
+{
+    using type = vint16m1_t;
+};
+template <>
+struct native_vector_type<uint16_t>
+{
+    using type = vuint16m1_t;
+};
+template <>
+struct native_vector_type<int8_t>
+{
+    using type = vint8m1_t;
+};
+template <>
+struct native_vector_type<uint8_t>
+{
+    using type = vuint8m1_t;
+};
+
+#endif
+
 } // namespace KFR_ARCH_NAME
 } // namespace kfr
