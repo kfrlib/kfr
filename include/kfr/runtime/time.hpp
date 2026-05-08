@@ -27,8 +27,12 @@
 
 #include "../kfr.h"
 
+#include <array>
 #include <cstdint>
 #include <chrono>
+#include <iostream>
+#include <cstdio>
+#include <algorithm>
 
 // Platform Detection
 #if defined(_WIN32)
@@ -42,25 +46,31 @@
 #include <unistd.h>
 #endif
 
+#include <cinttypes>
+
 namespace kfr
 {
 
+template <bool fence = true>
 KFR_INLINE uint64_t rdtsc() noexcept
 {
+    if constexpr (fence)
+    {
 #if defined(__x86_64__) || defined(_M_X64)
-    // lfence: execution serialization — drains the out-of-order engine so that
-    // all prior instructions retire before RDTSC, and RDTSC completes before
-    // any subsequent instruction starts.
-    _mm_lfence();
+        // lfence: execution serialization — drains the out-of-order engine so that
+        // all prior instructions retire before RDTSC, and RDTSC completes before
+        // any subsequent instruction starts.
+        _mm_lfence();
 #elif defined(__aarch64__)
-    // isb: instruction synchronization barrier — flushes the pipeline so that
-    // all prior instructions are complete before the counter is read.
-    // dmb (what atomic_thread_fence emits) only orders *memory* accesses and
-    // does not prevent the CPU from speculating across it.
-    asm volatile("isb" ::: "memory");
+        // isb: instruction synchronization barrier — flushes the pipeline so that
+        // all prior instructions are complete before the counter is read.
+        // dmb (what atomic_thread_fence emits) only orders *memory* accesses and
+        // does not prevent the CPU from speculating across it.
+        asm volatile("isb" ::: "memory");
 #else
-    std::atomic_thread_fence(std::memory_order_seq_cst);
+        std::atomic_thread_fence(std::memory_order_seq_cst);
 #endif
+    }
 
 #if defined(__aarch64__)
     uint64_t tsc;
@@ -71,15 +81,147 @@ KFR_INLINE uint64_t rdtsc() noexcept
     uint64_t tsc = __rdtsc();
 #endif
 
+    if constexpr (fence)
+    {
 #if defined(__x86_64__) || defined(_M_X64)
-    _mm_lfence();
+        _mm_lfence();
 #elif defined(__aarch64__)
-    asm volatile("isb" ::: "memory");
+        asm volatile("isb" ::: "memory");
 #else
-    std::atomic_thread_fence(std::memory_order_seq_cst);
+        std::atomic_thread_fence(std::memory_order_seq_cst);
 #endif
+    }
     return tsc;
 }
+
+inline std::chrono::nanoseconds steady_time()
+{
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now().time_since_epoch());
+}
+
+inline double measure_rdtsc_cycle_time()
+{
+#if defined(__aarch64__)
+    // On AArch64 the virtual counter CNTVCT_EL0 is driven by a fixed-frequency
+    // oscillator whose rate is published in CNTFRQ_EL0. No measurement loop is
+    // needed — just read the register directly.
+    uint64_t cntfrq;
+    asm volatile("mrs %0, CNTFRQ_EL0" : "=r"(cntfrq));
+    tsc_scale = 1e9 / static_cast<double>(cntfrq); // ns per tick
+#elif defined KFR_ARCH_X86
+    // On x86, busy-wait against steady_time() so the CPU stays at its full running
+    // frequency throughout calibration (sleep_for causes a frequency drop on
+    // wakeup that corrupts the TSC-to-wall-clock ratio).
+    constexpr int count     = 10;
+    constexpr auto interval = std::chrono::milliseconds(50);
+    double tsc_freq         = 0;
+    for (int i = 0; i < count; ++i)
+    {
+        // Align to a fresh steady_time() tick to avoid a partial first interval.
+        std::chrono::nanoseconds os_start = steady_time();
+        while (steady_time() == os_start)
+            ;
+        os_start           = steady_time();
+        uint64_t tsc_start = rdtsc();
+        std::chrono::nanoseconds os_end;
+        do
+        {
+            os_end = steady_time();
+        } while (os_end - os_start < interval);
+        uint64_t tsc_duration                = rdtsc() - tsc_start;
+        std::chrono::nanoseconds os_duration = os_end - os_start;
+        tsc_freq += tsc_duration / static_cast<double>(os_duration.count());
+    }
+    tsc_freq /= count; // ticks/ns
+    return 1.0 / tsc_freq;
+#else
+    return 0;
+#endif
+}
+
+template <size_t max_count = 64, bool fence = true>
+struct timestamps
+{
+    static uint64_t compute_rdtsc_overhead()
+    {
+        uint64_t result = 0;
+#ifdef KFR_RECORD_TIMESTAMPS
+        std::array<uint64_t, 50> overhead_samples{};
+
+        // compute rdtsc_overhead as the average of several back-to-back rdtsc calls, to improve accuracy of
+        // short measurements
+        for (size_t i = 0; i < overhead_samples.size(); ++i)
+        {
+            uint64_t start      = rdtsc<fence>();
+            uint64_t dur        = rdtsc<fence>() - start;
+            overhead_samples[i] = dur;
+        }
+        std::sort(overhead_samples.begin(), overhead_samples.end());
+        // 25th percentile
+        result = overhead_samples[overhead_samples.size() / 4];
+#endif
+        return result;
+    }
+    static inline uint64_t rdtsc_overhead = compute_rdtsc_overhead();
+
+    uint64_t last = 0;
+    uint64_t dur[max_count]{};
+    const char* msg[max_count]{};
+    size_t count = 0;
+
+    KFR_INTRINSIC void init() noexcept
+    {
+        last  = rdtsc<fence>();
+        count = 0;
+    }
+
+    timestamps min(const timestamps& other) const noexcept
+    {
+        if (this->count != other.count)
+            return other.count < this->count ? *this : other;
+        timestamps result;
+        result.count = count;
+        for (size_t i = 0; i < result.count; ++i)
+        {
+            if (dur[i] < other.dur[i])
+            {
+                result.dur[i] = dur[i];
+                result.msg[i] = msg[i];
+            }
+            else
+            {
+                result.dur[i] = other.dur[i];
+                result.msg[i] = other.msg[i];
+            }
+        }
+        return result;
+    }
+
+    KFR_INTRINSIC bool record(const char* msg) noexcept
+    {
+#ifdef KFR_RECORD_TIMESTAMPS
+        if (count < max_count)
+        {
+            uint64_t now      = rdtsc<fence>();
+            uint64_t duration = now - last;
+            this->dur[count]  = duration > rdtsc_overhead ? duration - rdtsc_overhead : 0;
+            last              = now;
+            this->msg[count]  = msg;
+            ++count;
+            return true;
+        }
+        else
+        {
+            this->msg[max_count - 1] = "overflow";
+            return false;
+        }
+#else
+        (void)msg;
+        return false;
+#endif
+    }
+};
 
 /**
  * @brief Returns the current value of the OS's highest-resolution monotonic clock.
