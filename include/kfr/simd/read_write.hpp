@@ -48,10 +48,20 @@ KFR_INTRINSIC void write(T* dest, const vec<T, N>& value)
 
 namespace internal
 {
+template <typename T, size_t N, size_t count, size_t... indices>
+KFR_INTRINSIC vec<T, N * count> concat_read_chunks(const vec<T, N> (&chunks)[count], csizes_t<indices...>)
+{
+    static_assert(count == sizeof...(indices));
+    return concat(chunks[indices]...);
+}
+
 template <size_t group, size_t count, size_t N, bool A, typename T, size_t... indices>
 KFR_INTRINSIC vec<T, group * count * N> read_group_impl(const T* src, size_t stride, csizes_t<indices...>)
 {
-    return concat(intr::read(cbool<A>, csize<N * group>, src + group * stride * indices)...);
+    const vec<T, group * N> chunks[] = {
+        intr::read(cbool<A>, csize<N * group>, src + group * stride * indices)...
+    };
+    return concat_read_chunks(chunks, csizes_t<indices...>());
 }
 template <size_t group, size_t count, size_t N, bool A, typename T, size_t... indices>
 KFR_INTRINSIC void write_group_impl(T* dest, size_t stride, const vec<T, group * count * N>& value,
@@ -108,7 +118,10 @@ KFR_INTRINSIC vec<T, Nout> gather_stride(const T* base, csizes_t<Indices...>)
 template <size_t Nout, size_t groupsize, typename T, size_t... Indices>
 KFR_INTRINSIC vec<T, Nout> gather_stride_s(const T* base, size_t stride, csizes_t<Indices...>)
 {
-    return concat(read<groupsize>(base + Indices * groupsize * stride)...);
+    const vec<T, groupsize> chunks[] = {
+        read<groupsize>(base + Indices * groupsize * stride)...
+    };
+    return concat_read_chunks(chunks, csizes_t<Indices...>());
 }
 } // namespace internal
 
@@ -144,7 +157,10 @@ template <size_t groupsize, typename T, size_t N, typename IT, size_t... Indices
 KFR_INTRINSIC vec<T, N * groupsize> gather_helper(const T* base, const vec<IT, N>& offset,
                                                   csizes_t<Indices...>)
 {
-    return concat(read<groupsize>(base + groupsize * offset[Indices])...);
+    const vec<T, groupsize> chunks[] = {
+        read<groupsize>(base + groupsize * offset[Indices])...
+    };
+    return concat_read_chunks(chunks, csizes_t<Indices...>());
 }
 } // namespace internal
 template <size_t groupsize = 1, typename T, size_t N, typename IT>
