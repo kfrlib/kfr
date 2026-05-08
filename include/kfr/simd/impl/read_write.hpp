@@ -336,7 +336,9 @@ template <size_t N, typename T, size_t Nlow = prev_poweroftwo(N - 1)>
     requires(N != 1 && !is_simd_size<T>(N))
 KFR_INTRINSIC vec<T, N> read(cunaligned_t, csize_t<N>, const T* ptr) noexcept
 {
-    return concat(read(cunaligned, csize<Nlow>, ptr), read(cunaligned, csize<N - Nlow>, ptr + Nlow));
+    auto low = read(cunaligned, csize<Nlow>, ptr);
+    auto high = read(cunaligned, csize<N - Nlow>, ptr + Nlow);
+    return concat(low, high);
 }
 
 template <size_t N, typename T, size_t Nlow = prev_poweroftwo(N - 1)>
@@ -356,7 +358,7 @@ KFR_INTRINSIC simd<T, N> simd_read(const T* src) noexcept
 }
 
 template <size_t N, bool A = false, typename T>
-    requires(is_poweroftwo(N))
+    requires(N <= vector_width<T> && is_poweroftwo(N))
 KFR_INTRINSIC vec<T, N> read(cunaligned_t, csize_t<N>, const T* src) noexcept
 {
     // Clang requires a separate function returning vector (simd).
@@ -365,22 +367,24 @@ KFR_INTRINSIC vec<T, N> read(cunaligned_t, csize_t<N>, const T* src) noexcept
 }
 
 template <size_t N, bool A = false, typename T>
-    requires(!is_poweroftwo(N))
+    requires(N > vector_width<T> || !is_poweroftwo(N))
 KFR_INTRINSIC vec<T, N> read(cunaligned_t, csize_t<N>, const T* src) noexcept
 {
-    constexpr size_t first = prev_poweroftwo(N);
-    return concat(read(cunaligned, csize<first>, src), read(cunaligned, csize<N - first>, src + first));
+    constexpr size_t first = prev_poweroftwo(N - 1);
+    auto low               = read(cunaligned, csize<first>, src);
+    auto high              = read(cunaligned, csize<N - first>, src + first);
+    return concat(low, high);
 }
 
 template <bool A = false, size_t N, typename T>
-    requires(is_poweroftwo(N))
+    requires(N <= vector_width<T> && is_poweroftwo(N))
 KFR_INTRINSIC void write(cunaligned_t, T* dest, const vec<T, N>& x) noexcept
 {
     reinterpret_cast<typename simd_storage<T, N, A>::pointer>(dest)->value = x.v;
 }
 
 template <bool A = false, size_t N, typename T, size_t Nlow = prev_poweroftwo(N - 1)>
-    requires(!is_poweroftwo(N))
+    requires(N > vector_width<T> || !is_poweroftwo(N))
 KFR_INTRINSIC void write(cunaligned_t, T* dest, const vec<T, N>& x) noexcept
 {
     write(cunaligned, dest, x.shuffle(csizeseq<Nlow>));
