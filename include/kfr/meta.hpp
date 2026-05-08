@@ -253,14 +253,15 @@ struct cvals_t
     }
 
     template <typename U>
-    struct subscript_t {
-
+    struct subscript_t
+    {
     };
     template <size_t... indices>
-    struct subscript_t<cvals_t<size_t, indices...>> {
+    struct subscript_t<cvals_t<size_t, indices...>>
+    {
         using type = cvals_t<T, details::get_nth_e<indices, type>::value...>;
     };
-    
+
     template <typename U>
     using subscript = typename subscript_t<U>::type;
 
@@ -868,7 +869,8 @@ struct swallow
     struct fn_##fn                                                                                           \
     {                                                                                                        \
         template <typename... Args>                                                                          \
-        KFR_INLINE_MEMBER decltype(fn(std::declval<Args>()...)) operator()(Args&&... args) const noexcept    \
+        KFR_INLINE_MEMBER constexpr decltype(fn(std::declval<Args>()...)) operator()(                        \
+            Args&&... args) const noexcept                                                                   \
         {                                                                                                    \
             return fn(std::forward<Args>(args)...);                                                          \
         }                                                                                                    \
@@ -881,7 +883,7 @@ struct swallow
     struct fn_##fn                                                                                           \
     {                                                                                                        \
         template <typename... Args>                                                                          \
-        KFR_INLINE_MEMBER decltype(fn<KFR_ESC tpl_args>(std::declval<Args>()...)) operator()(                \
+        KFR_INLINE_MEMBER constexpr decltype(fn<KFR_ESC tpl_args>(std::declval<Args>()...)) operator()(      \
             Args&&... args) const noexcept                                                                   \
         {                                                                                                    \
             return fn<KFR_ESC tpl_args>(std::forward<Args>(args)...);                                        \
@@ -1017,7 +1019,7 @@ using value_type_of = typename std::decay_t<T>::value_type;
 namespace details
 {
 template <typename T, T value, typename Fn>
-void cforeach_impl(Fn&& fn)
+constexpr void cforeach_impl(Fn&& fn)
 {
     fn(cval_t<T, value>());
 }
@@ -1025,7 +1027,7 @@ void cforeach_impl(Fn&& fn)
 #endif
 
 template <typename T, T... values, typename Fn>
-KFR_INTRINSIC void cforeach(cvals_t<T, values...>, Fn&& fn)
+KFR_INTRINSIC constexpr void cforeach(cvals_t<T, values...>, Fn&& fn)
 {
 #ifdef KFR_COMPILER_CLANG
     swallow{ (fn(cval_t<T, values>()), void(), 0)... };
@@ -1035,7 +1037,7 @@ KFR_INTRINSIC void cforeach(cvals_t<T, values...>, Fn&& fn)
 }
 
 template <has_begin_end T, typename Fn>
-KFR_INTRINSIC void cforeach(T&& list, Fn&& fn)
+KFR_INTRINSIC constexpr void cforeach(T&& list, Fn&& fn)
 {
     for (const auto& v : list)
     {
@@ -1047,30 +1049,31 @@ namespace details
 {
 
 template <size_t index, typename... types>
-KFR_INTRINSIC auto get_type_arg(ctypes_t<types...>) noexcept
+KFR_INTRINSIC constexpr auto get_type_arg(ctypes_t<types...>) noexcept
 {
     return ctype_t<typename details::get_nth_type<index, types...>::type>();
 }
 
 template <typename T0, typename... types, typename Fn, size_t... indices>
-KFR_INTRINSIC void cforeach_types_impl(ctypes_t<T0, types...> type_list, Fn&& fn, csizes_t<indices...>)
+KFR_INTRINSIC constexpr void cforeach_types_impl(ctypes_t<T0, types...> type_list, Fn&& fn,
+                                                 csizes_t<indices...>)
 {
     swallow{ (fn(get_type_arg<indices>(type_list)), void(), 0)... };
 }
 template <typename Fn>
-KFR_INTRINSIC void cforeach_types_impl(ctypes_t<>, Fn&&, csizes_t<>)
+KFR_INTRINSIC constexpr void cforeach_types_impl(ctypes_t<>, Fn&&, csizes_t<>)
 {
 }
 } // namespace details
 
 template <typename... Ts, typename Fn>
-KFR_INTRINSIC void cforeach(ctypes_t<Ts...> types, Fn&& fn)
+KFR_INTRINSIC constexpr void cforeach(ctypes_t<Ts...> types, Fn&& fn)
 {
     details::cforeach_types_impl(types, std::forward<Fn>(fn), csizeseq_t<sizeof...(Ts)>());
 }
 
 template <typename A0, typename A1, typename Fn>
-KFR_INTRINSIC void cforeach(A0&& a0, A1&& a1, Fn&& fn)
+KFR_INTRINSIC constexpr void cforeach(A0&& a0, A1&& a1, Fn&& fn)
 {
     // Default capture causes ICE in Intel C++
     cforeach(std::forward<A0>(a0), //
@@ -1081,7 +1084,7 @@ KFR_INTRINSIC void cforeach(A0&& a0, A1&& a1, Fn&& fn)
 }
 
 template <typename A0, typename A1, typename A2, typename Fn>
-KFR_INTRINSIC void cforeach(A0&& a0, A1&& a1, A2&& a2, Fn&& fn)
+KFR_INTRINSIC constexpr void cforeach(A0&& a0, A1&& a1, A2&& a2, Fn&& fn)
 {
     // Default capture causes ICE in Intel C++
     cforeach(std::forward<A0>(a0), //
@@ -1097,7 +1100,7 @@ KFR_INTRINSIC void cforeach(A0&& a0, A1&& a1, A2&& a2, Fn&& fn)
 }
 
 template <typename A0, typename A1, typename A2, typename A3, typename Fn>
-KFR_INTRINSIC void cforeach(A0&& a0, A1&& a1, A2&& a2, A3&& a3, Fn&& fn)
+KFR_INTRINSIC constexpr void cforeach(A0&& a0, A1&& a1, A2&& a2, A3&& a3, Fn&& fn)
 {
     // Default capture causes ICE in Intel C++
     cforeach(std::forward<A0>(a0), //
@@ -1115,26 +1118,26 @@ KFR_INTRINSIC void cforeach(A0&& a0, A1&& a1, A2&& a2, A3&& a3, Fn&& fn)
 }
 
 template <typename TrueFn, typename FalseFn = fn_noop>
-KFR_INTRINSIC decltype(auto) cif(cbool_t<true>, TrueFn&& truefn, FalseFn&& = FalseFn())
+KFR_INTRINSIC constexpr decltype(auto) cif(cbool_t<true>, TrueFn&& truefn, FalseFn&& = FalseFn())
 {
     return truefn(ctrue);
 }
 
 template <typename TrueFn, typename FalseFn = fn_noop>
-KFR_INTRINSIC decltype(auto) cif(cbool_t<false>, TrueFn&&, FalseFn&& falsefn = FalseFn())
+KFR_INTRINSIC constexpr decltype(auto) cif(cbool_t<false>, TrueFn&&, FalseFn&& falsefn = FalseFn())
 {
     return falsefn(cfalse);
 }
 
 template <typename T, T start, T stop, typename BodyFn>
-KFR_INTRINSIC decltype(auto) cfor(cval_t<T, start>, cval_t<T, stop>, BodyFn&& bodyfn)
+KFR_INTRINSIC constexpr decltype(auto) cfor(cval_t<T, start>, cval_t<T, stop>, BodyFn&& bodyfn)
 {
     return cforeach(cvalseq_t<T, stop - start, start>(), std::forward<BodyFn>(bodyfn));
 }
 
 template <typename T, T... vs, typename U, typename Function, typename Fallback = fn_noop>
-KFR_INTRINSIC void cswitch(cvals_t<T, vs...>, const U& value, Function&& function,
-                           Fallback&& fallback = Fallback())
+KFR_INTRINSIC constexpr void cswitch(cvals_t<T, vs...>, const U& value, Function&& function,
+                                     Fallback&& fallback = Fallback())
 {
     bool result = false;
     swallow{ (result = result || ((vs == value) ? (function(cval_t<T, vs>()), void(), true) : false), void(),
@@ -1144,15 +1147,15 @@ KFR_INTRINSIC void cswitch(cvals_t<T, vs...>, const U& value, Function&& functio
 }
 
 template <typename T, typename Fn, typename DefFn = fn_noop, typename CmpFn = fn_is_equal>
-KFR_INTRINSIC decltype(auto) cswitch(cvals_t<T>, std::type_identity_t<T>, Fn&&, DefFn&& deffn = DefFn(),
-                                     CmpFn&& = CmpFn())
+KFR_INTRINSIC constexpr decltype(auto) cswitch(cvals_t<T>, std::type_identity_t<T>, Fn&&,
+                                               DefFn&& deffn = DefFn(), CmpFn&& = CmpFn())
 {
     return deffn();
 }
 
 template <typename T, T v0, T... values, typename Fn, typename DefFn = fn_noop, typename CmpFn = fn_is_equal>
-KFR_INTRINSIC decltype(auto) cswitch(cvals_t<T, v0, values...>, std::type_identity_t<T> value, Fn&& fn,
-                                     DefFn&& deffn = DefFn(), CmpFn&& cmpfn = CmpFn())
+KFR_INTRINSIC constexpr decltype(auto) cswitch(cvals_t<T, v0, values...>, std::type_identity_t<T> value,
+                                               Fn&& fn, DefFn&& deffn = DefFn(), CmpFn&& cmpfn = CmpFn())
 {
     if (cmpfn(value, v0))
     {
@@ -1168,24 +1171,24 @@ KFR_INTRINSIC decltype(auto) cswitch(cvals_t<T, v0, values...>, std::type_identi
 namespace details
 {
 template <typename T, typename Fn1, typename Fn2, typename... Fns>
-KFR_INTRINSIC decltype(auto) cmatch_impl(T&& value, Fn1&& first, Fn2&& second, Fns&&... rest);
+KFR_INTRINSIC constexpr decltype(auto) cmatch_impl(T&& value, Fn1&& first, Fn2&& second, Fns&&... rest);
 template <typename T, typename Fn, typename... Ts>
-KFR_INTRINSIC decltype(auto) cmatch_impl(T&& value, Fn&& last);
+KFR_INTRINSIC constexpr decltype(auto) cmatch_impl(T&& value, Fn&& last);
 
 template <typename T, typename Fn, typename... Fns>
-KFR_INTRINSIC decltype(auto) cmatch_impl2(cbool_t<true>, T&& value, Fn&& fn, Fns&&...)
+KFR_INTRINSIC constexpr decltype(auto) cmatch_impl2(cbool_t<true>, T&& value, Fn&& fn, Fns&&...)
 {
     return fn(std::forward<T>(value));
 }
 
 template <typename T, typename Fn, typename... Fns>
-KFR_INTRINSIC decltype(auto) cmatch_impl2(cbool_t<false>, T&& value, Fn&&, Fns&&... rest)
+KFR_INTRINSIC constexpr decltype(auto) cmatch_impl2(cbool_t<false>, T&& value, Fn&&, Fns&&... rest)
 {
     return cmatch_impl(std::forward<T>(value), std::forward<Fns>(rest)...);
 }
 
 template <typename T, typename Fn1, typename Fn2, typename... Fns>
-KFR_INTRINSIC decltype(auto) cmatch_impl(T&& value, Fn1&& first, Fn2&& second, Fns&&... rest)
+KFR_INTRINSIC constexpr decltype(auto) cmatch_impl(T&& value, Fn1&& first, Fn2&& second, Fns&&... rest)
 {
     using first_arg        = typename function_arguments<Fn1>::template nth<0>;
     constexpr bool is_same = std::is_same_v<std::decay_t<T>, std::decay_t<first_arg>>;
@@ -1194,23 +1197,23 @@ KFR_INTRINSIC decltype(auto) cmatch_impl(T&& value, Fn1&& first, Fn2&& second, F
 }
 
 template <typename T, typename Fn, typename... Ts>
-KFR_INTRINSIC decltype(auto) cmatch_impl(T&& value, Fn&& last)
+KFR_INTRINSIC constexpr decltype(auto) cmatch_impl(T&& value, Fn&& last)
 {
     return last(std::forward<T>(value));
 }
 } // namespace details
 
 template <typename T, typename Fn, typename... Args>
-KFR_INTRINSIC decltype(auto) cmatch(T&& value, Fn&& fn, Args... args)
+KFR_INTRINSIC constexpr decltype(auto) cmatch(T&& value, Fn&& fn, Args... args)
 {
     return details::cmatch_impl(std::forward<T>(value), std::forward<Fn>(fn), std::forward<Args>(args)...);
 }
 
 template <typename T, T... values>
-KFR_INTRINSIC size_t cfind(cvals_t<T, values...>, std::type_identity_t<T> value)
+KFR_INTRINSIC constexpr size_t cfind(cvals_t<T, values...>, std::type_identity_t<T> value)
 {
-    static constexpr T temp[]    = { values... };
-    static constexpr size_t size = sizeof...(values);
+    constexpr T temp[]    = { values... };
+    constexpr size_t size = sizeof...(values);
     for (size_t i = 0; i < size; i++)
     {
         if (temp[i] == value)
@@ -1469,6 +1472,33 @@ constexpr inline cvalseq_t<T, size, start, step> cvalseq{};
 
 template <size_t size, size_t start = 0, ptrdiff_t step = 1>
 constexpr inline cvalseq_t<size_t, size, start, step> csizeseq{};
+
+template <size_t stop, size_t start, bool conditional = false>
+struct cfor_t
+{
+    template <typename Fn>
+    constexpr KFR_MEM_INTRINSIC void operator=(Fn&& fn) const
+    {
+        if constexpr (conditional)
+        {
+            [&]<size_t... i>(csizes_t<i...>) KFR_INLINE_LAMBDA { //
+                std::ignore = (... && std::forward<Fn>(fn)(csize<i>));
+            }(csizeseq<stop - start, start>);
+        }
+        else
+        {
+            [&]<size_t... i>(csizes_t<i...>) KFR_INLINE_LAMBDA { //
+                ((std::forward<Fn>(fn)(csize<i>), void()), ...);
+            }(csizeseq<stop - start, start>);
+        }
+    }
+};
+
+template <size_t stop, size_t start, bool conditional = false>
+constexpr inline cfor_t<stop, start, conditional> cfor_v{};
+
+#define KFR_FOR(var, init, stop) cfor_v<stop, init> = [&]<size_t var>(csize_t<var>) KFR_INLINE_LAMBDA
+#define KFR_FORC(var, init, stop) cfor_v<stop, init, true> = [&]<size_t var>(csize_t<var>) KFR_INLINE_LAMBDA
 
 template <size_t size, int start = 0, ptrdiff_t step = 1>
 constexpr inline cvalseq_t<int, size, start, step> cintseq{};
@@ -1735,6 +1765,38 @@ struct special_value
         return u.value;
     }
 };
+
+template <size_t size, auto... Fn>
+struct map_indices_impl
+{
+    using input_type = csizeseq_t<size>;
+
+    template <size_t... I>
+    static constexpr auto helper(csizes_t<I...>)
+    {
+        constexpr auto apply = [](size_t x)
+        {
+            constexpr auto fns = std::tuple{ Fn... };
+            [&]<size_t... J>(csizes_t<J...>)
+            { ((x = std::get<sizeof...(Fn) - 1 - J>(fns)(x)), ...); }(csizeseq_t<sizeof...(Fn)>{});
+            return x;
+        };
+
+        return csizes_t<apply(I)...>{};
+    }
+
+    using type = decltype(helper(input_type{}));
+};
+
+template <size_t size, auto... Fn>
+using map_indices_t = typename map_indices_impl<size, Fn...>::type;
+
+template <size_t size, auto... Fn>
+constexpr auto map_indices() -> map_indices_t<size, Fn...>
+{
+    return {};
+}
+
 KFR_PRAGMA_MSVC(warning(pop))
 
 KFR_PRAGMA_GNU(GCC diagnostic pop)
