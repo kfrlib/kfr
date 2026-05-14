@@ -151,7 +151,7 @@ struct platform;
 template <>
 struct platform<cpu_t::common>
 {
-    constexpr static size_t native_cache_alignment        = 64;
+    constexpr static size_t native_cache_alignment        = KFR_CACHE_LINE_SIZE;
     constexpr static size_t native_cache_alignment_mask   = native_cache_alignment - 1;
     constexpr static size_t maximum_vector_alignment      = 64;
     constexpr static size_t maximum_vector_alignment_mask = maximum_vector_alignment - 1;
@@ -228,7 +228,7 @@ struct platform<cpu_t::avx512> : platform<cpu_t::avx2>
 template <>
 struct platform<cpu_t::common>
 {
-    constexpr static size_t native_cache_alignment        = 64;
+    constexpr static size_t native_cache_alignment        = KFR_CACHE_LINE_SIZE;
     constexpr static size_t native_cache_alignment_mask   = native_cache_alignment - 1;
     constexpr static size_t maximum_vector_alignment      = 16;
     constexpr static size_t maximum_vector_alignment_mask = maximum_vector_alignment - 1;

@@ -150,7 +150,7 @@ inline void* aligned_reallocate(void* ptr, size_t new_size, size_t alignment)
 #endif
 } // namespace details
 
-constexpr inline size_t default_memory_alignment = 64;
+constexpr inline size_t default_memory_alignment = KFR_CACHE_LINE_SIZE;
 
 /// @brief Allocates aligned memory
 template <typename T = void, size_t alignment = default_memory_alignment>

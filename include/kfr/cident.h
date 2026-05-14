@@ -735,3 +735,25 @@
         __assume(false);                                                                                     \
     } while (0)
 #endif
+
+
+#ifdef KFR_COMPILER_MSVC
+#define KFR_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
+#else
+#define KFR_NO_UNIQUE_ADDRESS [[no_unique_address]]
+#endif
+
+// Cache line size (best effort detection)
+// __GCC_DESTRUCTIVE_SIZE: GCC 12+ / Clang: compiler-provided hardware destructive interference size
+#if defined(__GCC_DESTRUCTIVE_SIZE)
+#define KFR_CACHE_LINE_SIZE __GCC_DESTRUCTIVE_SIZE
+#elif defined(KFR_OS_APPLE) && defined(KFR_ARCH_ARM64)
+// Apple Silicon (M1/M2/M3+) uses 128-byte cache lines
+#define KFR_CACHE_LINE_SIZE 128
+#elif defined(KFR_ARCH_X86) || defined(KFR_ARCH_ARM) || defined(KFR_ARCH_RISCV)
+// x86/x86_64, ARM/AArch64, RISC-V: typically 64 bytes
+#define KFR_CACHE_LINE_SIZE 64
+#else
+#define KFR_CACHE_LINE_SIZE 64
+#endif
+

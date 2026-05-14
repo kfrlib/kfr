@@ -629,7 +629,7 @@ struct lockfree_ring_buffer
 
 private:
     std::atomic<size_t> front;
-    char cacheline_filler[64 - sizeof(std::atomic<size_t>)];
+    char cacheline_filler[KFR_CACHE_LINE_SIZE - sizeof(std::atomic<size_t>)];
     std::atomic<size_t> tail;
 };
 inline namespace KFR_ARCH_NAME

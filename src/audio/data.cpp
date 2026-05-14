@@ -55,7 +55,7 @@ audio_data<Interleaved>::audio_data(size_t channels, size_t size)
     KFR_ASSERT(channels <= max_audio_channels);
     if (!empty())
     {
-        constexpr size_t sampleAlignment = Interleaved ? 1 : 64 / sizeof(fbase);
+        constexpr size_t sampleAlignment = Interleaved ? 1 : KFR_CACHE_LINE_SIZE / sizeof(fbase);
         std::shared_ptr<details::aligned_deallocator> dealloc(new details::aligned_deallocator{
             kfr::aligned_allocate<fbase>(channels * align_up(capacity, sampleAlignment)) });
         if constexpr (Interleaved)
