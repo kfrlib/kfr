@@ -259,7 +259,7 @@ struct cvals_t
     template <size_t... indices>
     struct subscript_t<cvals_t<size_t, indices...>>
     {
-        using type = cvals_t<T, details::get_nth_e<indices, type>::value...>;
+        using type = cvals_t<T, details::get_nth_e<indices, cvals_t<T, values...>>::value...>;
     };
 
     template <typename U>
