@@ -63,12 +63,12 @@ template <typename T>
 constexpr inline size_t expression_dims = expression_traits<T>::dims;
 
 template <typename T>
-constexpr KFR_INTRINSIC shape<expression_dims<T>> get_shape(T&& expr)
+constexpr inline shape<expression_dims<T>> get_shape(T&& expr)
 {
     return expression_traits<T>::get_shape(expr);
 }
 template <typename T>
-constexpr KFR_INTRINSIC shape<expression_dims<T>> get_shape()
+constexpr inline shape<expression_dims<T>> get_shape()
 {
     return expression_traits<T>::get_shape();
 }
@@ -104,8 +104,8 @@ struct expression_traits<T>
 {
     using value_type             = typename T::value_type;
     constexpr static size_t dims = T::dims;
-    constexpr static KFR_INTRINSIC shape<dims> get_shape(const T& self) { return T::get_shape(self); }
-    constexpr static KFR_INTRINSIC shape<dims> get_shape() { return T::get_shape(); }
+    constexpr static shape<dims> get_shape(const T& self) { return T::get_shape(self); }
+    constexpr static shape<dims> get_shape() { return T::get_shape(); }
 
     constexpr static inline bool explicit_operand = T::explicit_operand;
     constexpr static inline bool random_access    = T::random_access;
@@ -454,7 +454,7 @@ struct expression_function : expression_with_arguments<Args...>, expression_trai
     }
     constexpr static shape<dims> get_shape() { return expression_function::fold_idx(lambda_get_shape{}); }
 #else
-    constexpr KFR_INTRINSIC static shape<dims> get_shape(const expression_function& self)
+    constexpr static shape<dims> get_shape(const expression_function& self)
     {
         return self.fold(
             [&](auto&&... args) KFR_INLINE_LAMBDA constexpr -> auto
@@ -463,7 +463,7 @@ struct expression_function : expression_with_arguments<Args...>, expression_trai
                     expression_traits<decltype(args)>::get_shape(args)...);
             });
     }
-    constexpr KFR_INTRINSIC static shape<dims> get_shape()
+    constexpr static shape<dims> get_shape()
     {
         return expression_function::fold_idx(
             [&](auto... args) KFR_INLINE_LAMBDA constexpr -> auto
