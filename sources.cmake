@@ -50,6 +50,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/base/impl/static_array.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/cache.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/convolution.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/dft/dft_resampler.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/fft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dft/reference_dft.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/dsp/biquad.hpp
@@ -109,6 +110,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/meta/tuple.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/runtime/cpuid.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/runtime/cpuid_auto.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/runtime/time.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/abs.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/clamp.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/comparison.hpp
@@ -305,6 +307,7 @@ set(
     KFR_RUNTIME_HDR
     ${PROJECT_SOURCE_DIR}/include/kfr/runtime/cpuid.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/runtime/cpuid_auto.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/runtime/time.hpp
 )
 
     
