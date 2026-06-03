@@ -29,6 +29,7 @@
 #include "../version.hpp"
 #include "constants.hpp"
 #include "impl/backend.hpp"
+#include "impl/bitindex.hpp"
 
 /**
  *  @brief Internal macro for functions
@@ -239,6 +240,9 @@ struct from_lambda
 template <typename T>
 constexpr inline bool is_vec = internal::is_vec_impl<T>::value;
 
+template <size_t k, std::array<size_t, k> perm, typename T, size_t N = 1u << k>
+KFR_INTRINSIC vec<T, N> optimized_bitshuffle(const vec<T, N>& w) noexcept;
+
 template <typename T, size_t N_>
 struct alignas(internal::vec_alignment<T, N_>) vec
 {
@@ -419,8 +423,29 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     template <size_t... indices>
     KFR_MEM_INTRINSIC vec<value_type, sizeof...(indices)> shuffle(csizes_t<indices...> i) const noexcept
     {
-        return vec<value_type, sizeof...(indices)>(
-            intr::simd_shuffle(intr::simd_t<unwrap_bit<ST>, SN>{}, v, scale<SW>(i), overload_auto));
+#ifndef KFR_DISABLE_OPTIMIZED_SHUFFLE
+        if constexpr (sizeof...(indices) == N && is_poweroftwo(N) &&
+                      !std::is_same_v<csizes_t<indices...>, csizeseq_t<sizeof...(indices)>> &&
+                      (std::is_same_v<float, T> || std::is_same_v<double, T>) && N >= 2 * vector_width<T>)
+        {
+            constexpr size_t k  = std::countr_zero(N);
+            constexpr auto perm = internal_generic::to_bit_indices<N>({ indices... });
+            if constexpr (perm != bitperm<k>{})
+            {
+                return bitpermute<k, perm, T>(*this);
+            }
+            else
+            {
+                return vec<value_type, sizeof...(indices)>(
+                    intr::simd_shuffle(intr::simd_t<unwrap_bit<ST>, SN>{}, v, scale<SW>(i), overload_auto));
+            }
+        }
+        else
+#endif
+        {
+            return vec<value_type, sizeof...(indices)>(
+                intr::simd_shuffle(intr::simd_t<unwrap_bit<ST>, SN>{}, v, scale<SW>(i), overload_auto));
+        }
     }
 
     template <size_t... indices>
@@ -1335,7 +1360,7 @@ void test_function1(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
                     }
                 });
 
-    test_matrix(named("type") = test_catogories::types(cint < Cat & ~1 >),
+    test_matrix(named("type") = test_catogories::types(cint<Cat & ~1>),
                 [&](auto type)
                 {
                     using T   = typename decltype(type)::type;
@@ -1370,7 +1395,7 @@ void test_function2(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
             }
         });
 
-    test_matrix(named("type") = test_catogories::types(cint < Cat & ~1 >),
+    test_matrix(named("type") = test_catogories::types(cint<Cat & ~1>),
                 [&](auto type)
                 {
                     using T    = typename decltype(type)::type;
