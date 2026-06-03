@@ -144,6 +144,7 @@ KFR_NOINLINE static T safe_dotproduct(univector_ref<const T> a, univector_ref<co
     if (min_length == 0)
         return T(0);
 
+#ifdef __clang__
     using reducer_t =
         expression_reduce<T, 1, T, T, fn::add, fn_generic::pass_through, fn_generic::pass_through>;
 
@@ -151,6 +152,9 @@ KFR_NOINLINE static T safe_dotproduct(univector_ref<const T> a, univector_ref<co
     constexpr size_t w = maximum_vector_size<T> * 4;
     process<w>(red, a.truncate(min_length) * b.truncate(min_length));
     return red.get();
+#else
+    return dotproduct(a.truncate(min_length), b.truncate(min_length));
+#endif
 }
 
 template <typename T>
