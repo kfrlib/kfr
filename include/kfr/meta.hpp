@@ -1310,7 +1310,7 @@ constexpr KFR_INTRINSIC T align_down(T x, std::type_identity_t<T> alignment) noe
 template <typename T>
 constexpr KFR_INTRINSIC T* align_down(T* x, size_t alignment) noexcept
 {
-    return reinterpret_cast<T*>(align_down(reinterpret_cast<size_t>(x), alignment));
+    return reinterpret_cast<T*>(align_down(reinterpret_cast<uintptr_t>(x), alignment));
 }
 
 template <typename T>
@@ -1321,7 +1321,7 @@ constexpr KFR_INTRINSIC T align_up(T x, std::type_identity_t<T> alignment) noexc
 template <typename T>
 constexpr KFR_INTRINSIC T* align_up(T* x, size_t alignment) noexcept
 {
-    return reinterpret_cast<T*>(align_up(reinterpret_cast<size_t>(x), alignment));
+    return reinterpret_cast<T*>(align_up(reinterpret_cast<uintptr_t>(x), alignment));
 }
 
 template <typename T>
@@ -1796,6 +1796,11 @@ constexpr auto map_indices() -> map_indices_t<size, Fn...>
 {
     return {};
 }
+
+template <int tag>
+struct empty_struct
+{
+};
 
 KFR_PRAGMA_MSVC(warning(pop))
 
