@@ -50,7 +50,7 @@ struct bitperm_op
 };
 
 template <typename T>
-constexpr inline nullptr_t bitperm_ops{};
+constexpr inline std::nullptr_t bitperm_ops{};
 
 #ifdef __AVX__
 
