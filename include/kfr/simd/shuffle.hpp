@@ -28,6 +28,7 @@
 #include "mask.hpp"
 #include "types.hpp"
 #include "vec.hpp"
+#include "bitshuffle.hpp"
 
 #include <tuple>
 #include <utility>

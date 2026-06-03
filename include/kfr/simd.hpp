@@ -23,6 +23,7 @@
 #pragma once
 
 #include "simd/abs.hpp"
+#include "simd/bitshuffle.hpp"
 #include "simd/clamp.hpp"
 #include "simd/comparison.hpp"
 #include "simd/complex_type.hpp"
