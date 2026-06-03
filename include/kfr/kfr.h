@@ -33,8 +33,8 @@
 #include "cident.h"
 
 #define KFR_VERSION_MAJOR 7
-#define KFR_VERSION_MINOR 0
-#define KFR_VERSION_PATCH 1
+#define KFR_VERSION_MINOR 1
+#define KFR_VERSION_PATCH 0
 #define KFR_VERSION_LABEL ""
 
 #define KFR_VERSION_STRING                                                                                   \
@@ -114,4 +114,13 @@ constexpr inline const char version_full[] = KFR_VERSION_FULL;
 
 #if !defined KFR_ARCH_X86 && !defined KFR_COMPILER_CLANG
 #error "Non-x86 builds require Clang compiler"
+#endif
+
+#if defined KFR_ENABLE_EXPOSE && (defined __GNUC__ || defined __clang__)
+#define KFR_EXPOSE_VALUE(...) __asm__ volatile("" : : "a"(__VA_ARGS__))
+#else
+#define KFR_EXPOSE_VALUE(...)                                                                                \
+    do                                                                                                       \
+    {                                                                                                        \
+    } while (0)
 #endif
