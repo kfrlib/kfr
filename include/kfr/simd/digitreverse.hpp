@@ -150,6 +150,11 @@ constexpr KFR_INTRINSIC u32 bitreverse(u32 x)
     return internal::digitreverse_impl<bits>(x, csize_t<2>());
 }
 
+constexpr KFR_INTRINSIC u32 bitreverse(u32 x, size_t bits)
+{
+    return internal::digitreverse_impl<32>(x, csize_t<2>()) >> (32 - bits);
+}
+
 /**
  * @brief Reverses the digits of the given unsigned integer in base-4 (quaternary), using the lowest `bits`
  * digits.
