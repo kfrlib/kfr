@@ -89,6 +89,13 @@ constexpr std::array<size_t, N> from_bit_indices(const bitperm<k>& bit_indices)
     return result;
 }
 
+template <size_t k, bitperm<k> bit_indices>
+constexpr auto to_elements()
+{
+    return []<size_t... I>(csizes_t<I...>)
+    { return elements_t<shuffle_bits(I, bit_indices)...>{}; }(csizeseq_t<(1u << k)>{});
+}
+
 template <typename T, size_t N>
 constexpr bool is_permutation(std::array<T, N> arr)
 {

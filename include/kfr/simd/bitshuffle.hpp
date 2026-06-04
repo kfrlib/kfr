@@ -34,8 +34,42 @@
 namespace kfr
 {
 
+#if defined(KFR_ARCH_RVV) || defined(KFR_ARCH_AVX512)
+#define KFR_DISABLE_BITSHUFFLE 1
+#endif
+
 inline namespace KFR_ARCH_NAME
 {
+
+template <size_t count, typename T, size_t N, typename V>
+KFR_INTRINSIC void split_native(const vec<T, N>& in, V (&out)[count])
+{
+    static_assert(is_poweroftwo(count));
+    static_assert(is_poweroftwo(N));
+    constexpr size_t S = N / count;
+    [&]<size_t... I>(csizes_t<I...>) KFR_INLINE_LAMBDA
+    { ((out[I] = static_cast<V>(slice<S * I, S>(in).v)), ...); }(csizeseq_t<count>{});
+}
+
+template <size_t count, typename T, size_t N, typename V>
+KFR_INTRINSIC vec<T, N> concat_native_recursive(const V* in)
+{
+    if constexpr (count == 1)
+        return vec<T, N>(in[0]);
+    else
+        return concat(concat_native_recursive<count / 2, T, N / 2, V>(in),
+                      concat_native_recursive<count / 2, T, N / 2, V>(in + count / 2));
+}
+
+template <typename T, size_t N, typename V, size_t count>
+KFR_INTRINSIC void concat_native(vec<T, N>& out, const V (&in)[count])
+{
+    static_assert(is_poweroftwo(count));
+    static_assert(is_poweroftwo(N));
+    out = concat_native_recursive<count, T, N, V>(in);
+}
+
+#ifndef KFR_DISABLE_BITSHUFFLE
 
 struct bitperm_step
 {
@@ -137,34 +171,6 @@ consteval bitperm_plan<T> find_min_plan(bitperm<N> target_prefix)
     return plan;
 }
 
-template <size_t count, typename T, size_t N, typename V>
-KFR_INTRINSIC void split_native(const vec<T, N>& in, V (&out)[count])
-{
-    static_assert(is_poweroftwo(count));
-    static_assert(is_poweroftwo(N));
-    constexpr size_t S = N / count;
-    [&]<size_t... I>(csizes_t<I...>) KFR_INLINE_LAMBDA
-    { ((out[I] = static_cast<V>(slice<S * I, S>(in).v)), ...); }(csizeseq_t<count>{});
-}
-
-template <size_t count, typename T, size_t N, typename V>
-KFR_INTRINSIC vec<T, N> concat_native_recursive(const V* in)
-{
-    if constexpr (count == 1)
-        return vec<T, N>(in[0]);
-    else
-        return concat(concat_native_recursive<count / 2, T, N / 2, V>(in),
-                      concat_native_recursive<count / 2, T, N / 2, V>(in + count / 2));
-}
-
-template <typename T, size_t N, typename V, size_t count>
-KFR_INTRINSIC void concat_native(vec<T, N>& out, const V (&in)[count])
-{
-    static_assert(is_poweroftwo(count));
-    static_assert(is_poweroftwo(N));
-    out = concat_native_recursive<count, T, N, V>(in);
-}
-
 template <bitperm_step step, typename T, size_t count>
 KFR_INTRINSIC void bitpermute_step(typename native_vector_type<T>::type (&out)[count],
                                    const typename native_vector_type<T>::type (&in)[count])
@@ -188,45 +194,62 @@ KFR_INTRINSIC void bitpermute_step(typename native_vector_type<T>::type (&out)[c
     }(csizeseq_t<count / 2>{});
 }
 
+#endif
+
 template <size_t k, bitperm<k> perm, typename T, size_t N = 1u << k>
 KFR_INTRINSIC vec<T, N> bitpermute(const vec<T, N>& w)
 {
-    static_assert(ilog2(N) <= 8);
-    constexpr auto plan = find_min_plan<T>(perm);
-    static_assert(plan.found, "No plan found for this permutation");
-
-    using V                   = typename native_vector_type<T>::type;
-    constexpr size_t elements = sizeof(V) / sizeof(T);
-    constexpr size_t count    = N / elements;
-
-    V x[count];
-    V y[count];
-    if constexpr (plan.count % 2 == 0)
+#ifdef KFR_DISABLE_BITSHUFFLE
+    return vec<T, N>(
+        intr::simd_shuffle(intr::simd_t<T, N>{}, w.v, internal_generic::to_elements<k, perm>(), overload_auto));
+#else
+#if defined KFR_ARCH_ARM && !defined(KFR_ARCH_NEON64)
+    if constexpr (std::is_same_v<T, double>)
     {
-        split_native(w, y);
+        return vec<T, N>(intr::simd_shuffle(intr::simd_t<T, N>{}, w.v, internal_generic::to_elements<k, perm>(),
+                                            overload_auto));
     }
     else
+#endif
     {
-        split_native(w, x);
-    }
+        static_assert(ilog2(N) <= 8);
+        constexpr auto plan = find_min_plan<T>(perm);
+        static_assert(plan.found, "No plan found for this permutation");
 
-    KFR_FOR(i, 0, plan.count)
-    {
-        if constexpr ((plan.count - 1 - i) % 2 == 0)
+        using V                   = typename native_vector_type<T>::type;
+        constexpr size_t elements = sizeof(V) / sizeof(T);
+        constexpr size_t count    = N / elements;
+
+        V x[count];
+        V y[count];
+        if constexpr (plan.count % 2 == 0)
         {
-            bitpermute_step<plan.steps[i], T>(y, x);
+            split_native(w, y);
         }
         else
         {
-            bitpermute_step<plan.steps[i], T>(x, y);
+            split_native(w, x);
         }
-    };
 
-    KFR_FOR(i, 0, count) { x[i] = y[internal_generic::shuffle_bits(i, plan.final_perm)]; };
+        KFR_FOR(i, 0, plan.count)
+        {
+            if constexpr ((plan.count - 1 - i) % 2 == 0)
+            {
+                bitpermute_step<plan.steps[i], T>(y, x);
+            }
+            else
+            {
+                bitpermute_step<plan.steps[i], T>(x, y);
+            }
+        };
 
-    vec<T, N> result;
-    concat_native(result, x);
-    return result;
+        KFR_FOR(i, 0, count) { x[i] = y[internal_generic::shuffle_bits(i, plan.final_perm)]; };
+
+        vec<T, N> result;
+        concat_native(result, x);
+        return result;
+    }
+#endif
 }
 
 #ifdef KFR_DISABLE_OPTIMIZED_SHUFFLE

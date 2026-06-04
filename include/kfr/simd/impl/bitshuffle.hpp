@@ -52,14 +52,14 @@ struct bitperm_op
 template <typename T>
 constexpr inline std::nullptr_t bitperm_ops{};
 
-#ifdef __AVX__
+#ifdef KFR_ARCH_AVX
 
 template <>
 constexpr inline bitperm_op<double> bitperm_ops<double>[] = {
     { 2, 1, 0 }, // Op 0
     { 0, 2, 1 }, // Op 1
     { 2, 0, 1 }, // Op 2
-#ifdef __AVX2__
+#ifdef KFR_ARCH_AVX2
     { 1, 0, 2 }, // Op 3
 #endif
 };
@@ -93,7 +93,7 @@ KFR_INTRINSIC void bitpermute_pair<2>(__m256d& r0, __m256d& r1, __m256d x0, __m2
     r0               = _mm256_permute2f128_pd(t0, t1, 0x20); // [0, 4, 1, 5]
     r1               = _mm256_permute2f128_pd(t0, t1, 0x31); // [2, 6, 3, 7]
 }
-#ifdef __AVX2__
+#ifdef KFR_ARCH_AVX2
 template <>
 KFR_INTRINSIC void bitpermute_pair<3>(__m256d& r0, __m256d& r1, __m256d x0, __m256d x1) noexcept
 {
@@ -112,7 +112,7 @@ constexpr inline bitperm_op<float> bitperm_ops<float>[] = {
     { 3, 0, 2, 1 }, // Op 3
     { 1, 0, 2, 3 }, // Op 4
     { 3, 1, 2, 0 }, // Op 5
-#ifdef __AVX2__
+#ifdef KFR_ARCH_AVX2
     { 0, 2, 1, 3 }, // Op 6
     { 2, 1, 0, 3 }, // Op 7
 #endif
@@ -186,7 +186,7 @@ KFR_INTRINSIC void bitpermute_pair<5>(__m256& r0, __m256& r1, __m256 v0, __m256 
 #endif
 }
 
-#ifdef __AVX2__
+#ifdef KFR_ARCH_AVX2
 template <>
 KFR_INTRINSIC void bitpermute_pair<6>(__m256& r0, __m256& r1, __m256 v0, __m256 v1) noexcept
 {
@@ -204,7 +204,7 @@ KFR_INTRINSIC void bitpermute_pair<7>(__m256& r0, __m256& r1, __m256 v0, __m256 
 }
 #endif
 
-#elif defined __SSE2__
+#elif defined KFR_ARCH_SSE2
 
 template <>
 constexpr inline bitperm_op<double> bitperm_ops<double>[] = {
