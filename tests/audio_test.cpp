@@ -856,7 +856,7 @@ TEST_CASE("Each channel is cache-aligned")
     audio_data data(16, 1);
     for (size_t ch = 0; ch < data.channels; ++ch)
     {
-        CHECK((reinterpret_cast<uintptr_t>(data.channel(ch).data()) % 64) == 0);
+        CHECK((reinterpret_cast<uintptr_t>(data.channel(ch).data()) % KFR_CACHE_LINE_SIZE) == 0);
     }
 }
 
