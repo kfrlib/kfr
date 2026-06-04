@@ -72,6 +72,22 @@ struct dft_stage
     bool can_inplace  = true;
     bool need_reorder = true;
 
+    inline static void* operator new(size_t size) noexcept
+    {
+        return details::aligned_malloc(size, default_memory_alignment);
+    }
+    inline static void operator delete(void* ptr) noexcept { details::aligned_free(ptr); }
+#ifdef __cpp_aligned_new
+    inline static void* operator new(size_t size, std::align_val_t al) noexcept
+    {
+        return details::aligned_malloc(size, std::max(default_memory_alignment, static_cast<size_t>(al)));
+    }
+    inline static void operator delete(void* ptr, std::align_val_t al) noexcept
+    {
+        details::aligned_free(ptr);
+    }
+#endif
+
 #ifdef KFR_DFT_MEASURE_STAGE_TIME
     double time = 0;
 #endif
