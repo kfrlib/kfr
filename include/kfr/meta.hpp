@@ -1771,6 +1771,21 @@ struct map_indices_impl
 {
     using input_type = csizeseq_t<size>;
 
+#if defined KFR_COMPILER_IS_MSVC
+    template <size_t... J>
+    static constexpr size_t apply_impl(size_t x, csizes_t<J...>) noexcept
+    {
+        constexpr auto fns = std::tuple{ Fn... };
+        ((x = std::get<sizeof...(Fn) - 1 - J>(fns)(x)), ...);
+        return x;
+    }
+
+    template <size_t... I>
+    static constexpr auto helper(csizes_t<I...>)
+    {
+        return csizes_t<apply_impl(I, csizeseq_t<sizeof...(Fn)>{})...>{};
+    }
+#else
     template <size_t... I>
     static constexpr auto helper(csizes_t<I...>)
     {
@@ -1784,6 +1799,7 @@ struct map_indices_impl
 
         return csizes_t<apply(I)...>{};
     }
+#endif
 
     using type = decltype(helper(input_type{}));
 };
