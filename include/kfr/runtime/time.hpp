@@ -34,7 +34,9 @@
 #include <chrono>
 #include <iostream>
 #include <cstdio>
+#include <atomic>
 #include <algorithm>
+#include <cinttypes>
 
 // Platform Detection
 #if defined(_WIN32)
@@ -47,8 +49,6 @@
 #include <time.h>
 #include <unistd.h>
 #endif
-
-#include <cinttypes>
 
 namespace kfr
 {
@@ -110,7 +110,7 @@ inline double measure_rdtsc_cycle_time()
     // needed — just read the register directly.
     uint64_t cntfrq;
     asm volatile("mrs %0, CNTFRQ_EL0" : "=r"(cntfrq));
-    tsc_scale = 1e9 / static_cast<double>(cntfrq); // ns per tick
+    return 1e9 / static_cast<double>(cntfrq); // ns per tick
 #elif defined KFR_ARCH_X86
     // On x86, busy-wait against steady_time() so the CPU stays at its full running
     // frequency throughout calibration (sleep_for causes a frequency drop on

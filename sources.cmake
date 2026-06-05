@@ -112,6 +112,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/runtime/cpuid_auto.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/runtime/time.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/abs.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/bitshuffle.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/clamp.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/comparison.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/complex.hpp
@@ -139,6 +140,8 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/basicoperators_clang.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/basicoperators_complex.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/basicoperators_generic.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/bitindex.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/bitshuffle.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/clamp.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/function.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/logical.hpp
@@ -164,6 +167,7 @@ set(
 set(
     KFR_SIMD_HDR
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/abs.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/bitshuffle.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/clamp.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/comparison.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/complex.hpp
@@ -191,6 +195,8 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/basicoperators_clang.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/basicoperators_complex.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/basicoperators_generic.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/bitindex.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/bitshuffle.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/clamp.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/function.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/simd/impl/logical.hpp
@@ -319,6 +325,8 @@ set(
     ${PROJECT_SOURCE_DIR}/src/dft/dft.cpp
     ${PROJECT_SOURCE_DIR}/src/dft/fft-impl-f32.cpp
     ${PROJECT_SOURCE_DIR}/src/dft/fft-impl-f64.cpp
+    ${PROJECT_SOURCE_DIR}/src/dft/ngfft-impl-f32.cpp
+    ${PROJECT_SOURCE_DIR}/src/dft/ngfft-impl-f64.cpp
     ${PROJECT_SOURCE_DIR}/src/dft/version.cpp
 )
 

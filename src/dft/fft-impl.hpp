@@ -48,8 +48,28 @@ KFR_PRAGMA_MSVC(warning(disable : 4100))
 
 namespace kfr
 {
+
+struct timestamp_radixpass
+{
+};
+
 inline namespace KFR_ARCH_NAME
 {
+
+namespace impl
+{
+
+template <typename T, dft_algorithm algo>
+size_t ngfft_twiddle_count(ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>);
+
+template <typename T, dft_algorithm algo>
+void ngfft_initialize(ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>);
+
+template <typename T, dft_algorithm algo, bool inverse>
+void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, cbool_t<inverse>,
+                   complex<T>* inout);
+
+} // namespace impl
 
 template <typename T>
 inline std::bitset<DFT_MAX_STAGES> fft_algorithm_selection;
@@ -79,6 +99,8 @@ inline bool use_autosort(size_t log2n)
 #define KFR_AUTOSORT_FOR_512
 #define KFR_AUTOSORT_FOR_1024
 #endif
+
+#if 1
 
 #ifdef KFR_ARCH_AVX
 template <>
@@ -122,6 +144,8 @@ KFR_INTRINSIC vec<float, 64> ctranspose<4, float, 64>(const vec<float, 64>& v32)
     split(hi, a4, a5, a6, a7);
     return concat(a0, a4, a1, a5, a2, a6, a3, a7);
 }
+
+#endif
 
 namespace intr
 {
@@ -209,7 +233,7 @@ KFR_INTRINSIC void autosort_pass_first(csize_t<Radix>, size_t N, csize_t<width>,
         bfly_write<Radix, T, width, interleave_write, 1>{ out });
 }
 
-template <size_t Radix, typename T, size_t N, bool inverse, bool split>
+template <size_t Radix, typename T, size_t N, bool inverse, bool split_format>
 struct bfly_static_twiddle
 {
     cvec<T, Radix - 1> tw_pkd;
@@ -217,7 +241,7 @@ struct bfly_static_twiddle
     template <size_t i>
     KFR_INLINE_MEMBER cvec<T, N> unpack() noexcept
     {
-        if constexpr (split)
+        if constexpr (split_format)
         {
             return concat(repeat<N>(slice<i * 2, 1>(tw_pkd)), // re
                           repeat<N>(slice<i * 2 + 1, 1>(tw_pkd)) // im
@@ -228,13 +252,15 @@ struct bfly_static_twiddle
             return repeat<N>(slice<i * 2, 2>(tw_pkd));
         }
     }
-    KFR_INLINE_MEMBER void operator()(auto&& w0, auto&&... w) noexcept
+    KFR_INLINE_MEMBER void operator()(cvec<T, N * Radix>& ww) noexcept
     {
-        static_assert(1 + sizeof...(w) == Radix);
-
         [&]<size_t... I>(csizes_t<I...>) KFR_INLINE_LAMBDA { //
-            ((w = cmuli<inverse>(cbool<split>, w, unpack<I>())), ...);
-        }(csizeseq<Radix - 1>);
+            cvec<T, N> w[Radix];
+            split(ww, w[I]...);
+            ((I == 0 ? void() : (w[I] = cmuli<inverse>(cbool<split_format>, w[I], unpack<I - 1>()), void())),
+             ...);
+            ww = concat(w[I]...);
+        }(csizeseq<Radix>);
     }
     KFR_INLINE_MEMBER void begin() noexcept {}
     KFR_INLINE_MEMBER void end() noexcept {}
@@ -312,92 +338,6 @@ static void initialize_twiddle_autosort(size_t N, size_t w, complex<T>*& twiddle
     twiddle += N / Radix * (Radix - 1);
 }
 
-template <typename T, size_t cols, size_t rows, size_t col_w, bool split>
-struct fourstep_twiddles
-{
-    static_assert(col_w > 0, "col_w cannot be zero");
-    static_assert(std::has_single_bit(cols), "cols must be a power of 2");
-    static_assert(std::has_single_bit(rows), "rows must be a power of 2");
-
-    constexpr fourstep_twiddles() noexcept
-    {
-        constexpr size_t block_size = col_w * (rows - 1);
-        for (size_t r = 1; r < rows; ++r)
-        {
-            for (size_t c = 0; c < cols; ++c)
-            {
-                size_t k = r * c;
-
-                std::complex<T> v;
-                if constexpr (cols * rows <= 256)
-                {
-                    // constexpr-friendly twiddle factor generation using lookup tables
-                    v = {
-                        cos_using_table<T>(cols * rows, k),
-                        -sin_using_table<T>(cols * rows, k),
-                    };
-                }
-                else
-                {
-                    T a = c_pi<T, 2> * (T(k) / T(cols * rows));
-                    v   = { std::cos(a), -std::sin(a) };
-                }
-
-                size_t b = c / col_w; // block
-                size_t o = c % col_w; // offset
-
-                size_t block_offs = b * block_size * 2 + (r - 1) * col_w * 2;
-                if constexpr (split)
-                {
-                    twiddles[block_offs + o]         = v.real();
-                    twiddles[block_offs + o + col_w] = v.imag();
-                }
-                else
-                {
-                    twiddles[block_offs + o * 2 + 0] = v.real();
-                    twiddles[block_offs + o * 2 + 1] = v.imag();
-                }
-            }
-        }
-    }
-
-    std::array<T, 2 * cols*(rows - 1)> twiddles;
-
-    KFR_INTRINSIC const std::complex<T>* data() const noexcept
-    {
-        return reinterpret_cast<const std::complex<T>*>(twiddles.data());
-    }
-};
-
-template <bool inverse, size_t r1, size_t r2, bool split = false, typename T>
-KFR_INLINE void fourstep(std::complex<T>* out, const std::complex<T>* in)
-{
-    alignas(64) T scratch_buf[r1 * r2 * 2];
-    std::complex<T>* KFR_RESTRICT scratch = reinterpret_cast<std::complex<T>*>(scratch_buf);
-
-    constexpr bool fit_registers = r1 * r2 * 2 <= vector_capacity<T>;
-    constexpr size_t width_scale = fit_registers ? 1 : 2;
-
-    constexpr size_t n1 = std::clamp(bflyw<T>(r1) * width_scale, size_t(1), r2);
-    constexpr size_t n2 = std::clamp(bflyw<T>(r2) * width_scale, size_t(1), r1);
-    static constexpr fourstep_twiddles<T, r2, r1, n1, split> twiddles{};
-    const std::complex<T>* tw = twiddles.data();
-
-    bfly_loop<r1, T, n1, 2>( //
-        r2, //
-        bfly_read<r1, T, n1, split>{ in, r2 }, //
-        bfly_bfly<r1, T, n1, inverse, split>{}, //
-        bfly_twiddle<r1, T, n1, inverse, split>{ tw }, //
-        bfly_write<r1, T, n1, split, 1>{ scratch } //
-    );
-
-    bfly_loop<r2, T, n2, 2>( //
-        r1, //
-        bfly_read<r2, T, n2, split>{ scratch, r1 }, //
-        bfly_bfly<r2, T, n2, inverse, split>{}, //
-        bfly_write<r2, T, n2, split>{ out, r1 });
-}
-
 template <typename T>
 struct fft_config
 {
@@ -415,7 +355,7 @@ constexpr inline bool fft_recursion = true;
 template <typename T, bool splitin>
 struct fft_stage_impl : dft_stage<T>
 {
-    fft_stage_impl(size_t stage_size)
+    explicit fft_stage_impl(size_t stage_size)
     {
         this->name       = dft_name(this);
         this->radix      = 4;
@@ -461,7 +401,7 @@ struct fft_stage_impl : dft_stage<T>
 template <typename T, bool splitin, size_t size>
 struct fft_final_stage_impl : dft_stage<T>
 {
-    fft_final_stage_impl(size_t)
+    explicit fft_final_stage_impl(size_t)
     {
         this->name       = dft_name(this);
         this->radix      = size;
@@ -575,7 +515,7 @@ struct fft_final_stage_impl : dft_stage<T>
 template <typename T>
 struct fft_reorder_stage_impl : dft_stage<T>
 {
-    fft_reorder_stage_impl(size_t stage_size)
+    explicit fft_reorder_stage_impl(size_t stage_size)
     {
         this->name       = dft_name(this);
         this->stage_size = stage_size;
@@ -590,6 +530,33 @@ struct fft_reorder_stage_impl : dft_stage<T>
     KFR_MEM_INTRINSIC void do_execute(complex<T>* out, const complex<T>*, u8*)
     {
         intr::br<T>(std::span(out, this->stage_size));
+    }
+};
+
+template <typename T, dft_algorithm algo>
+struct fft_ng_stage_impl : dft_stage<T>
+{
+    explicit fft_ng_stage_impl(size_t stage_size)
+    {
+        this->name       = dft_name(this);
+        this->stage_size = stage_size;
+        this->user       = std::countr_zero(stage_size);
+        ngfft_plan<T> plan{ uint8_t(this->user), nullptr };
+        this->data_size = sizeof(complex<T>) * impl::ngfft_twiddle_count(plan, cval<dft_algorithm, algo>);
+    }
+
+    virtual void do_initialize(size_t) override final
+    {
+        ngfft_plan<T> plan{ uint8_t(this->user), ptr_cast<complex<T>>(this->data) };
+        impl::ngfft_initialize(plan, cval<dft_algorithm, algo>);
+    }
+
+    DFT_STAGE_FN
+    template <bool inverse>
+    KFR_MEM_INTRINSIC void do_execute(complex<T>* out, const complex<T>*, u8*)
+    {
+        ngfft_plan<T> plan{ uint8_t(this->user), ptr_cast<complex<T>>(this->data) };
+        impl::ngfft_execute(plan, cval<dft_algorithm, algo>, cbool_t<inverse>(), out);
     }
 };
 
@@ -677,19 +644,7 @@ struct fft_specialization : dft_stage<T>
     template <bool inverse>
     KFR_MEM_INTRINSIC void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
-        constexpr size_t Radix = 1u << log2n;
-        if constexpr (Radix <= bfly_max_packed_radix<T>)
-        {
-            // In-register FFT for small sizes
-            bfly_packed<inverse>(csize_t<Radix>{}, out, in);
-        }
-        else
-        {
-            // For larger sizes, use the four-step algorithm to stay within register limits
-            constexpr size_t r1 = 1 << ((log2n + 1) / 2);
-            constexpr size_t r2 = 1 << (log2n / 2);
-            fourstep<inverse, r1, r2>(out, in);
-        }
+        bfly_small<log2n, inverse>(out, in);
     }
 };
 
@@ -866,16 +821,23 @@ struct fft_specialization<T, 11> : dft_stage<T>
 };
 #endif
 
-template <bool first, typename T, bool autosort>
-void make_fft_stages(dft_plan<T>* self, cbool_t<autosort>, size_t stage_size, cbool_t<first>)
+enum class dft_algo
 {
-    if constexpr (autosort)
+    classic,
+    autosort,
+    ng,
+};
+
+template <bool first, typename T, dft_algo algo>
+void make_fft_stages(dft_plan<T>* self, cval_t<dft_algo, algo>, size_t stage_size, cbool_t<first>)
+{
+    if constexpr (algo == dft_algo::autosort)
     {
         if (stage_size >= 16)
         {
             add_stage<fft_autosort_stage_impl<T, first, false, false>>(self, stage_size,
                                                                        self->size / stage_size);
-            make_fft_stages(self, ctrue, stage_size / 4, cfalse);
+            make_fft_stages(self, cval<dft_algo, algo>, stage_size / 4, cfalse);
         }
         else
         {
@@ -887,23 +849,43 @@ void make_fft_stages(dft_plan<T>* self, cbool_t<autosort>, size_t stage_size, cb
                                                                           self->size / stage_size);
         }
     }
+    else if constexpr (algo == dft_algo::ng)
+    {
+        switch (fft_ng_algorithm)
+        {
+        case dft_algorithm::mixedradix_dif:
+            add_stage<fft_ng_stage_impl<T, dft_algorithm::mixedradix_dif>>(self,
+                                                                                             stage_size);
+            break;
+        case dft_algorithm::mixedradix_dit:
+            add_stage<fft_ng_stage_impl<T, dft_algorithm::mixedradix_dit>>(self,
+                                                                                             stage_size);
+            break;
+        case dft_algorithm::fourstep:
+            add_stage<fft_ng_stage_impl<T, dft_algorithm::fourstep>>(self, stage_size);
+            break;
+        default:
+            KFR_UNREACHABLE;
+        }
+    }
     else
     {
-        if (stage_size >= 2048)
+        constexpr size_t final_size = 2048; // default is 1024
+        if (stage_size > final_size)
         {
             add_stage<fft_stage_impl<T, !first>>(self, stage_size);
 
-            make_fft_stages(self, cfalse, stage_size / 4, cfalse);
+            make_fft_stages(self, cval<dft_algo, algo>, stage_size / 4, cfalse);
         }
         else
         {
-            if (std::countr_zero(self->size) % 2 == 0) // is even
+            if (std::countr_zero(self->size) % 2 == std::countr_zero(final_size) % 2) // is even
             {
-                add_stage<fft_final_stage_impl<T, !first, 1024>>(self, 1024);
+                add_stage<fft_final_stage_impl<T, !first, final_size>>(self, final_size);
             }
             else
             {
-                add_stage<fft_final_stage_impl<T, !first, 512>>(self, 512);
+                add_stage<fft_final_stage_impl<T, !first, final_size / 2>>(self, final_size / 2);
             }
             add_stage<fft_reorder_stage_impl<T>>(self, self->size);
         }
@@ -913,15 +895,20 @@ void make_fft_stages(dft_plan<T>* self, cbool_t<autosort>, size_t stage_size, cb
 } // namespace intr
 
 template <typename T>
-void make_fft(dft_plan<T>* self, size_t stage_size, bool autosort)
+void make_fft(dft_plan<T>* self, size_t stage_size, bool autosort, bool ng)
 {
-    if (autosort)
+    using namespace intr;
+    if (ng)
     {
-        intr::make_fft_stages(self, ctrue, stage_size, ctrue);
+        make_fft_stages(self, cval<dft_algo, dft_algo::ng>, stage_size, ctrue);
+    }
+    else if (autosort)
+    {
+        make_fft_stages(self, cval<dft_algo, dft_algo::autosort>, stage_size, ctrue);
     }
     else
     {
-        intr::make_fft_stages(self, cfalse, stage_size, ctrue);
+        make_fft_stages(self, cval<dft_algo, dft_algo::classic>, stage_size, ctrue);
     }
 }
 
@@ -984,7 +971,8 @@ template <typename T>
 KFR_INTRINSIC void init_fft(dft_plan<T>* self, size_t size, dft_order)
 {
     const size_t log2n  = ilog2(size);
-    const bool autosort = use_autosort<T>(ilog2(size)) || self->progressive_optimized;
+    const bool autosort = fft_autosort && (use_autosort<T>(ilog2(size)) || self->progressive_optimized);
+    const bool ng       = fft_ng;
     cswitch(
         csizes_t<0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
 #ifdef KFR_AUTOSORT_FOR_2048
@@ -999,7 +987,7 @@ KFR_INTRINSIC void init_fft(dft_plan<T>* self, size_t size, dft_order)
             constexpr size_t log2nv = val_of(decltype(log2n)());
             add_stage<intr::fft_specialization<T, log2nv>>(self, size);
         },
-        [&]() { make_fft(self, size, autosort); });
+        [&]() { make_fft(self, size, autosort, ng); });
 }
 
 template <typename T>
@@ -1161,14 +1149,15 @@ void dft_initialize(dft_plan<T>& plan)
 }
 
 template <typename T>
-const complex<T>* select_in(const dft_plan<T>& plan, typename dft_plan<T>::bitset disposition, size_t stage,
-                            const complex<T>* out, const complex<T>* in, const complex<T>* scratch)
+KFR_INTRINSIC const complex<T>* select_in(const dft_plan<T>& plan, typename dft_plan<T>::bitset disposition,
+                                          size_t stage, const complex<T>* out, const complex<T>* in,
+                                          const complex<T>* scratch)
 {
     return disposition.test(stage) ? scratch : stage == 0 ? in : out;
 }
 template <typename T>
-complex<T>* select_out(const dft_plan<T>& plan, typename dft_plan<T>::bitset disposition, size_t stage,
-                       size_t total_stages, complex<T>* out, complex<T>* scratch)
+KFR_INTRINSIC complex<T>* select_out(const dft_plan<T>& plan, typename dft_plan<T>::bitset disposition,
+                                     size_t stage, size_t total_stages, complex<T>* out, complex<T>* scratch)
 {
     return stage == total_stages - 1 ? out : disposition.test(stage + 1) ? scratch : out;
 }
