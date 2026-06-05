@@ -33,7 +33,9 @@
 #include "../simd/complex.hpp"
 #include "../simd/constants.hpp"
 #include <bitset>
+#include <chrono>
 #include <functional>
+#include <initializer_list>
 
 KFR_PRAGMA_GNU(GCC diagnostic push)
 #if KFR_HAS_WARNING("-Wshadow")
@@ -1063,6 +1065,153 @@ void fft_multiply_accumulate(univector<complex<T>, Tag1>& dest, const univector<
         dest[0] = f0;
 }
 } // namespace KFR_ARCH_NAME
+
+template <typename T>
+struct ngfft_plan
+{
+    /// Log2 of the FFT size
+    uint8_t l2fftsize;
+    /// User-allocated pointer to twiddles. Format is implementation-defined.
+    /// Call ngfft_twiddle_count to get the required size. Must be cacheline-aligned
+    complex<T>* twiddles = nullptr;
+};
+
+enum class dft_family
+{
+    mixedradix,
+    fourstep,
+};
+
+enum class dft_algorithm
+{
+    mixedradix_dif,
+    mixedradix_dit,
+    fourstep,
+};
+
+enum class dft_decomp : uint8_t
+{
+    dif, ///< Decimation-in-frequency
+    dit, ///< Decimation-in-time
+};
+
+/*
+    Returns the size of the internal data structure for the given FFT size and algorithm.
+*/
+template <typename T, dft_algorithm algo>
+size_t ngfft_twiddle_count(ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>);
+
+template <typename T, dft_algorithm algo>
+void ngfft_initialize(ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>);
+
+template <typename T, dft_algorithm algo, bool inverse>
+void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, cbool_t<inverse>,
+                   complex<T>* inout);
+
+template <typename T, dft_algorithm algo>
+inline void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, bool inverse,
+                          complex<T>* inout)
+{
+    if (inverse)
+    {
+        return ngfft_execute<T, algo, true>(plan, ctrue, ctrue, inout);
+    }
+    else
+    {
+        return ngfft_execute<T, algo, false>(plan, cfalse, cfalse, inout);
+    }
+}
+
+template <typename T>
+inline size_t ngfft_twiddle_count(ngfft_plan<T>& plan, dft_algorithm algo)
+{
+    switch (algo)
+    {
+    case dft_algorithm::mixedradix_dif:
+        return ngfft_twiddle_count(plan, cval<dft_algorithm, dft_algorithm::mixedradix_dif>);
+    case dft_algorithm::mixedradix_dit:
+        return ngfft_twiddle_count(plan, cval<dft_algorithm, dft_algorithm::mixedradix_dit>);
+    case dft_algorithm::fourstep:
+        return ngfft_twiddle_count(plan, cval<dft_algorithm, dft_algorithm::fourstep>);
+    }
+    return 0;
+}
+
+template <typename T>
+inline void ngfft_initialize(ngfft_plan<T>& plan, dft_algorithm algo)
+{
+    switch (algo)
+    {
+    case dft_algorithm::mixedradix_dif:
+        return ngfft_initialize(plan, cval<dft_algorithm, dft_algorithm::mixedradix_dif>);
+    case dft_algorithm::mixedradix_dit:
+        return ngfft_initialize(plan, cval<dft_algorithm, dft_algorithm::mixedradix_dit>);
+    case dft_algorithm::fourstep:
+        return ngfft_initialize(plan, cval<dft_algorithm, dft_algorithm::fourstep>);
+    }
+}
+
+template <typename T, bool inverse>
+inline void ngfft_execute(const ngfft_plan<T>& plan, cbool_t<inverse>, complex<T>* inout, dft_algorithm algo)
+{
+    switch (algo)
+    {
+    case dft_algorithm::mixedradix_dif:
+        return ngfft_execute(plan, cval<dft_algorithm, dft_algorithm::mixedradix_dif>, cbool_t<inverse>(),
+                             inout);
+    case dft_algorithm::mixedradix_dit:
+        return ngfft_execute(plan, cval<dft_algorithm, dft_algorithm::mixedradix_dit>, cbool_t<inverse>(),
+                             inout);
+    case dft_algorithm::fourstep:
+        return ngfft_execute(plan, cval<dft_algorithm, dft_algorithm::fourstep>, cbool_t<inverse>(), inout);
+    }
+}
+
+template <typename T>
+inline void ngfft_execute(const ngfft_plan<T>& plan, bool inverse, complex<T>* inout, dft_algorithm algo)
+{
+    if (inverse)
+        return ngfft_execute(plan, ctrue, inout, algo);
+    else
+        return ngfft_execute(plan, cfalse, inout, algo);
+}
+
+/// @brief Measures the execution time of different FFT algorithms and returns the best one for the given
+/// log-2 size.
+template <typename T>
+dft_algorithm ngfft_measure(uint8_t l2fftsize,
+                            std::chrono::nanoseconds measure_time      = std::chrono::milliseconds(100),
+                            std::initializer_list<dft_algorithm> algos = {
+                                dft_algorithm::mixedradix_dif,
+                                dft_algorithm::mixedradix_dit,
+                                dft_algorithm::fourstep,
+                            });
+
+extern bool fft_ng;
+extern bool fft_autosort;
+extern dft_algorithm fft_ng_algorithm;
+
+namespace internal_generic
+{
+
+constexpr inline dft_decomp to_decomp(dft_algorithm algo) noexcept
+{
+    if (algo == dft_algorithm::mixedradix_dif)
+        return dft_decomp::dif;
+    else
+        return dft_decomp::dit;
+}
+
+constexpr inline dft_family to_family(dft_algorithm algo) noexcept
+{
+    if (algo == dft_algorithm::fourstep)
+        return dft_family::fourstep;
+    else
+        return dft_family::mixedradix;
+}
+
+} // namespace internal_generic
+
 } // namespace kfr
 
 KFR_PRAGMA_GNU(GCC diagnostic pop)
