@@ -32,6 +32,7 @@
 #include <kfr/simd/read_write.hpp>
 #include <kfr/simd/digitreverse.hpp>
 #include <kfr/simd/vec.hpp>
+#include <kfr/runtime/time.hpp>
 
 #include "data/bitrev.hpp"
 
@@ -115,7 +116,7 @@ KFR_INTRINSIC void br_simd(std::complex<T>* data, csize_t<N>)
 }
 
 template <typename T>
-constexpr inline size_t br_type_penalty = 2; // std::is_same_v<T, float> ? 2 : 1;
+constexpr inline size_t br_type_penalty = 1; // std::is_same_v<T, float> ? 2 : 1;
 
 template <typename T, size_t N>
 KFR_INTRINSIC void br_prefetch(std::complex<T>* data0, std::complex<T>* data1, csize_t<N>, size_t stride)
@@ -128,10 +129,10 @@ template <bool swap, typename T, size_t N>
 KFR_INTRINSIC void br_simd_two(std::complex<T>* data0, std::complex<T>* data1, csize_t<N>, size_t stride)
     requires((N * N * 2 * br_type_penalty<T>) < vector_capacity<T>)
 {
-    auto v0 = read_group<N, N, 2>(reinterpret_cast<T*>(data0), stride);
-    auto v1 = read_group<N, N, 2>(reinterpret_cast<T*>(data1), stride);
-    v0      = bitreverse<2>(v0);
-    v1      = bitreverse<2>(v1);
+    cvec<T, N * N> v0 = read_group<N, N, 2>(reinterpret_cast<const T*>(data0), stride);
+    cvec<T, N * N> v1 = read_group<N, N, 2>(reinterpret_cast<const T*>(data1), stride);
+    v0                = bitreverse<2>(v0);
+    v1                = bitreverse<2>(v1);
     if constexpr (swap)
     {
         std::swap(v0, v1);
@@ -142,62 +143,29 @@ KFR_INTRINSIC void br_simd_two(std::complex<T>* data0, std::complex<T>* data1, c
 
 template <bool swap, typename T, size_t N>
 KFR_INTRINSIC void br_simd_two(std::complex<T>* data0, std::complex<T>* data1, csize_t<N>, size_t stride)
-    requires((N * N * 2 * br_type_penalty<T>) == vector_capacity<T>)
+    requires((N * N * 2 * br_type_penalty<T>) >= vector_capacity<T>)
 {
-    if constexpr (!swap)
-    {
-        // data0 -> data0
-        auto v = read_group<N, N, 2>(reinterpret_cast<T*>(data0), stride);
-        v      = bitreverse<2>(v);
-        write_group<N, N, 2>(reinterpret_cast<T*>(data0), stride, v);
-
-        // data1 -> data1
-        v = read_group<N, N, 2>(reinterpret_cast<T*>(data1), stride);
-        v = bitreverse<2>(v);
-        write_group<N, N, 2>(reinterpret_cast<T*>(data1), stride, v);
-    }
-    else
-    {
-        alignas(64) std::complex<T> temp[N * N];
-        // data0 -> temp
-        auto v = read_group<N, N, 2>(reinterpret_cast<T*>(data0), stride);
-        v      = bitreverse<2>(v);
-        write(reinterpret_cast<T*>(temp), v);
-
-        // data1 -> data0
-        v = read_group<N, N, 2>(reinterpret_cast<T*>(data1), stride);
-        v = bitreverse<2>(v);
-        write_group<N, N, 2>(reinterpret_cast<T*>(data0), stride, v);
-
-        // temp -> data1
-        v = kfr::read<N * N * 2>(reinterpret_cast<T*>(temp));
-        write_group<N, N, 2>(reinterpret_cast<T*>(data1), stride, v);
-    }
-}
-
-template <bool swap, typename T, size_t N>
-KFR_INTRINSIC void br_simd_two(std::complex<T>* data0, std::complex<T>* data1, csize_t<N>, size_t stride)
-    requires((N * N * 2 * br_type_penalty<T>) > vector_capacity<T>)
-{
-    constexpr size_t N2 = N / 2;
+    constexpr size_t N2  = N / 2;
+    const size_t stride2 = 2 * stride;
 
     if constexpr (!swap)
     {
-        for (auto* data : { data0, data1 })
-        {
-            br_simd_two<false>(data, data + stride + N2, csize<N2>, 2 * stride); //  0,  3
-            br_simd_two<true>(data + N2, data + stride, csize<N2>,
-                              2 * stride); //  1 <-> 2
-        }
+        br_simd_two<false>(data0, data0 + stride + N2, csize<N2>, stride2); //  0,  3
+        br_simd_two<true>(data0 + N2, data0 + stride, csize<N2>,
+                          stride2); //  1 <-> 2
+
+        br_simd_two<false>(data1, data1 + stride + N2, csize<N2>, stride2); //  0,  3
+        br_simd_two<true>(data1 + N2, data1 + stride, csize<N2>,
+                          stride2); //  1 <-> 2
     }
     else
     {
-        br_simd_two<true>(data0, data1, csize<N2>, 2 * stride); // 0
+        br_simd_two<true>(data0, data1, csize<N2>, stride2); // 0
 
-        br_simd_two<true>(data0 + stride, data1 + N2, csize<N2>, 2 * stride); // 1 <-> 2
-        br_simd_two<true>(data0 + N2, data1 + stride, csize<N2>, 2 * stride); // 1 <-> 2
+        br_simd_two<true>(data0 + stride, data1 + N2, csize<N2>, stride2); // 1 <-> 2
+        br_simd_two<true>(data0 + N2, data1 + stride, csize<N2>, stride2); // 1 <-> 2
 
-        br_simd_two<true>(data0 + stride + N2, data1 + stride + N2, csize<N2>, 2 * stride); // 3
+        br_simd_two<true>(data0 + stride + N2, data1 + stride + N2, csize<N2>, stride2); // 3
     }
 }
 
@@ -251,55 +219,47 @@ KFR_INTRINSIC uint32_t tzcnt_u32(uint32_t x) noexcept
 #endif
 
 template <typename T, size_t Extent = std::dynamic_extent, bool large>
-KFR_INTRINSIC void br_impl(uint32_t log2n, std::span<std::complex<T>, Extent> data, cbool_t<large>)
+void br_impl(uint32_t log2n, std::span<std::complex<T>, Extent> data, cbool_t<large>)
 {
-    constexpr uint32_t group_log2n = std::is_same_v<T, double> ? 2 : (large ? 3 : 2);
+    constexpr uint32_t group_log2n = std::is_same_v<T, double> ? 2 : 3;
     // log2n(N) in NxN group
-    constexpr uint32_t group_n         = 1u << group_log2n; // N in NxN group
+    constexpr size_t group_n           = size_t(1) << group_log2n; // N in NxN group
     constexpr uint32_t group_log2narea = 2 * group_log2n; // log2n(N^2) in NxN group
     uint32_t log2numgroups             = log2n - group_log2narea; // log2(num_groups)
-    uint32_t numgroups                 = 1u << log2numgroups; // num_groups
-    size_t stride                      = 1u << (log2n - group_log2n); // size / group_n
+    size_t numgroups                   = size_t(1) << log2numgroups; // num_groups
+    const size_t numgroups_minus1      = numgroups - 1;
+    size_t stride                      = size_t(1) << (log2n - group_log2n); // size / group_n
 
-    uint32_t half_numgroups = numgroups / 2;
+    size_t half_numgroups = numgroups / 2;
 
-    auto prefetch = [&](uint32_t i, uint32_t j) KFR_INLINE_LAMBDA
+    auto prefetch = [&](size_t i, size_t j) KFR_INLINE_LAMBDA
     {
         if (i == j) [[unlikely]]
         {
-            uint32_t mi = numgroups - 1 - i;
+            size_t mi = numgroups_minus1 - i;
             br_prefetch(data.data() + i * group_n, data.data() + mi * group_n, csize_t<group_n>{}, stride);
-        }
-        else if (i < j)
-        {
-            br_prefetch(data.data() + i * group_n, data.data() + j * group_n, csize_t<group_n>{}, stride);
         }
         else
         {
-            uint32_t mi = numgroups - 1 - i;
-            uint32_t mj = numgroups - 1 - j;
-            br_prefetch(data.data() + mj * group_n, data.data() + mi * group_n, csize_t<group_n>{}, stride);
+            size_t a = (i < j) ? i : (numgroups_minus1 - j);
+            size_t b = (i < j) ? j : (numgroups_minus1 - i);
+            br_prefetch(data.data() + a * group_n, data.data() + b * group_n, csize_t<group_n>{}, stride);
         }
     };
 
-    auto process = [&](uint32_t i, uint32_t j) KFR_INLINE_LAMBDA
+    auto process = [&](size_t i, size_t j) KFR_INLINE_LAMBDA
     {
         if (i == j) [[unlikely]]
         {
-            uint32_t mi = numgroups - 1 - i;
+            size_t mi = numgroups_minus1 - i;
             br_simd_two<false>(data.data() + i * group_n, data.data() + mi * group_n, csize_t<group_n>{},
                                stride);
         }
-        else if (i < j)
-        {
-            br_simd_two<true>(data.data() + i * group_n, data.data() + j * group_n, csize_t<group_n>{},
-                              stride);
-        }
         else
         {
-            uint32_t mi = numgroups - 1 - i;
-            uint32_t mj = numgroups - 1 - j;
-            br_simd_two<true>(data.data() + mj * group_n, data.data() + mi * group_n, csize_t<group_n>{},
+            size_t a = (i < j) ? i : (numgroups_minus1 - j);
+            size_t b = (i < j) ? j : (numgroups_minus1 - i);
+            br_simd_two<true>(data.data() + a * group_n, data.data() + b * group_n, csize_t<group_n>{},
                               stride);
         }
     };
@@ -361,22 +321,52 @@ KFR_INTRINSIC void br_impl(uint32_t log2n, std::span<std::complex<T>, Extent> da
 }
 
 template <typename T, size_t Extent = std::dynamic_extent>
-void br(std::span<std::complex<T>, Extent> data)
+KFR_INTRINSIC void br(std::span<std::complex<T>, Extent> data)
 {
-    uint32_t log2n = tzcnt_u32(uint32_t(data.size()));
+    if constexpr (Extent != std::dynamic_extent)
+    {
+        // Known at compile time
+        constexpr uint32_t log2n = std::countr_zero(Extent);
 
-    if (log2n <= 6) [[unlikely]]
-    {
-        return br_small(log2n, data);
-    }
-    bool large = log2n > 14;
-    if (large) [[unlikely]]
-    {
-        return br_impl<T, Extent>(log2n, data, cbool_t<true>());
+        if constexpr (log2n <= 6)
+        {
+            br_small(log2n, data);
+        }
+        else
+        {
+            constexpr bool large = log2n > 14;
+            if constexpr (large)
+            {
+                br_impl<T, Extent>(log2n, data, cbool_t<true>());
+            }
+            else
+            {
+                br_impl<T, Extent>(log2n, data, cbool_t<false>());
+            }
+        }
     }
     else
     {
-        return br_impl<T, Extent>(log2n, data, cbool_t<false>());
+        // Known only at runtime
+
+        uint32_t log2n = tzcnt_u32(uint32_t(data.size()));
+
+        if (log2n <= 6) [[unlikely]]
+        {
+            br_small(log2n, data);
+        }
+        else
+        {
+            bool large = log2n > 14;
+            if (large) [[unlikely]]
+            {
+                br_impl<T, Extent>(log2n, data, cbool_t<true>());
+            }
+            else
+            {
+                br_impl<T, Extent>(log2n, data, cbool_t<false>());
+            }
+        }
     }
 }
 
