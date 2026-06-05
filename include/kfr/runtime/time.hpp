@@ -27,6 +27,8 @@
 
 #include "../kfr.h"
 
+#include <kfr/simd/impl/intrinsics.h>
+
 #include <array>
 #include <cstdint>
 #include <chrono>
