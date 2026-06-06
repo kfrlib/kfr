@@ -142,9 +142,31 @@ inline double measure_rdtsc_cycle_time()
 #endif
 }
 
+/**
+ * @brief High-resolution scoped profiler using RDTSC (x86) or CNTVCT_EL0 (AArch64).
+ *
+ * Records a sequence of timestamped checkpoints during execution. Each call to
+ * @ref record captures the elapsed cycle count since the previous checkpoint
+ * (or since @ref init), subtracts the measured RDTSC overhead, and stores an
+ * optional label. At most @p max_count entries are kept; further calls are
+ * flagged as overflow.
+ *
+ * Overhead calibration is performed once at startup via @ref compute_rdtsc_overhead.
+ *
+ * @tparam max_count Maximum number of timestamp entries (default 64).
+ * @tparam fence    If true, insert serialization fences around the hardware
+ *                  counter read to reduce out-of-order measurement error.
+ */
 template <size_t max_count = 64, bool fence = true>
 struct timestamps
 {
+    /** @brief Measure and return the RDTSC read overhead in cycles.
+     *
+     * Takes 50 back-to-back RDTSC readings, sorts them, and returns the
+     * 25th-percentile value. This value is subtracted from every recorded
+     * duration so that short measurements are not dominated by the cost of
+     * reading the counter itself.
+     */
     static uint64_t compute_rdtsc_overhead()
     {
         uint64_t result = 0;
@@ -172,12 +194,19 @@ struct timestamps
     const char* msg[max_count]{};
     size_t count = 0;
 
+    /** @brief Reset the profiler, capturing the current cycle count as time zero. */
     KFR_INTRINSIC void init() noexcept
     {
         last  = rdtsc<fence>();
         count = 0;
     }
 
+    /** @brief Return a new timestamps object containing the per-slot minimum durations.
+     *
+     * For each recorded slot, the smaller duration (and its associated label) is
+     * selected from this and @p other. If the two objects have different counts,
+     * the one with fewer entries is returned as-is.
+     */
     timestamps min(const timestamps& other) const noexcept
     {
         if (this->count != other.count)
@@ -200,6 +229,14 @@ struct timestamps
         return result;
     }
 
+    /** @brief Record a timestamp checkpoint with an optional label.
+     *
+     * Computes the elapsed cycles since the last checkpoint (or @ref init),
+     * subtracts the pre-calibrated RDTSC overhead, and stores the result.
+     *
+     * @param msg Short description stored alongside this checkpoint.
+     * @return true if the entry was recorded; false if max_count was exceeded.
+     */
     KFR_INTRINSIC bool record(const char* msg) noexcept
     {
 #ifdef KFR_RECORD_TIMESTAMPS
