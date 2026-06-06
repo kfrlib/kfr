@@ -541,84 +541,86 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_iterate_recursive(
 
     if constexpr (half.single_pass || (half.l2size <= half.l2remaining + 2 * l2baseradix))
     {
-        // Avoiding overhead of recursion
-        sandwich_iterate<traits, dir, half>(
-            l2fftsize, [&]<uint8_t l2passradix, uint8_t l2bf, uint8_t l2bl>(
-                           const bfly_pass<l2passradix, l2bf, l2bl>& pass) KFR_INLINE_LAMBDA
-            { twiddle = fn(pass, total_width, total_width, pass.blocks(), inout, 0, twiddle); });
+        constexpr size_t slice_width    = size_t(1) << (14 - l2elementsize<T> - l2baseradix); // 16KiB
+        const complex<T>* saved_twiddle = twiddle;
+
+        for (size_t slice_offset = 0;;)
+        {
+            twiddle                    = saved_twiddle;
+            const size_t process_width = std::min(slice_width, total_width - slice_offset);
+            // Avoiding overhead of recursion
+            sandwich_iterate<traits, dir, half>(
+                l2fftsize,
+                [&]<uint8_t l2passradix, uint8_t l2bf, uint8_t l2bl>(
+                    const bfly_pass<l2passradix, l2bf, l2bl>& pass) KFR_INLINE_LAMBDA {
+                    twiddle =
+                        fn(pass, process_width, total_width, pass.blocks(), inout, slice_offset, twiddle);
+                });
+            slice_offset += slice_width;
+            if (slice_offset >= total_width)
+                break;
+        }
     }
     else
     {
-        if (l2fftsize <= half.l2remaining + l2baseradix) [[unlikely]]
+        constexpr size_t R         = size_t(1) << l2baseradix;
+        const uint8_t l2fmb        = l2fftsize - l2baseradix;
+        const uint8_t l2items      = uint8_t(l2fftsize - half.l2remaining);
+        const size_t process_width = total_width;
+
+        if constexpr (dir == dft_decomp::dit)
         {
-            // Avoiding overhead of recursion
-            sandwich_iterate<traits, dir, half>(
-                l2fftsize, [&]<uint8_t l2passradix, uint8_t l2bf, uint8_t l2bl>(
-                               const bfly_pass<l2passradix, l2bf, l2bl>& pass) KFR_INLINE_LAMBDA
-                { twiddle = fn(pass, total_width, total_width, pass.blocks(), inout, 0, twiddle); });
+            const complex<T>* saved_twiddle = twiddle;
+
+            size_t offset = total_width << l2fftsize; // end of the buffer
+
+            // traverses backwards
+            traverse_childrenfirst<R>(
+                l2items,
+                [&](uint8_t /* levels_down */) KFR_INLINE_LAMBDA { // Merged leaf: all R siblings at once
+                    const bfly_pass pass(cl2radix<half.l2remaining>{}, cl2butterflies<0>{},
+                                         uint8_t(l2fftsize - half.l2remaining));
+                    offset -= total_width << (l2baseradix + pass.l2block_size());
+                    twiddle = fn(pass, process_width, total_width, R, inout, offset, saved_twiddle);
+                },
+                [&](uint8_t depth) KFR_INLINE_LAMBDA { // Non-leaf: one sub-problem at current depth
+                    const uint8_t l2bl = uint8_t(depth * l2baseradix);
+                    const bfly_pass pass(cl2radix<l2baseradix>{}, uint8_t(l2fmb - l2bl), l2bl);
+                    twiddle = fn(pass, process_width, total_width, 1, inout, offset, twiddle);
+                },
+                [&]() KFR_INLINE_LAMBDA { // Root: one block, all butterflies
+                    const bfly_pass pass(cl2radix<l2baseradix>{}, l2fmb, cl2blocks<0>{});
+                    twiddle = fn(pass, process_width, total_width, 1, inout, offset, twiddle);
+                });
         }
-        else
+        else // DIF
         {
-            const uint8_t l2fmb   = l2fftsize - l2baseradix;
-            const uint8_t l2items = uint8_t(l2fftsize - half.l2remaining);
-            constexpr size_t R    = size_t(1) << l2baseradix;
+            const uint8_t max_depth = l2items / l2baseradix;
 
-            const size_t process_width = total_width;
+            size_t offset = 0;
 
-            if constexpr (dir == dft_decomp::dit)
-            {
-                const complex<T>* saved_twiddle = twiddle;
-
-                size_t offset = total_width << l2fftsize; // end of the buffer
-
-                // traverses backwards
-                traverse_childrenfirst<R>(
-                    l2items,
-                    [&](uint8_t /* levels_down */) KFR_INLINE_LAMBDA { // Merged leaf: all R siblings at once
-                        const bfly_pass pass(cl2radix<half.l2remaining>{}, cl2butterflies<0>{},
-                                             uint8_t(l2fftsize - half.l2remaining));
-                        offset -= total_width << (l2baseradix + pass.l2block_size());
-                        twiddle = fn(pass, process_width, total_width, R, inout, offset, saved_twiddle);
-                    },
-                    [&](uint8_t depth) KFR_INLINE_LAMBDA { // Non-leaf: one sub-problem at current depth
-                        const uint8_t l2bl = uint8_t(depth * l2baseradix);
-                        const bfly_pass pass(cl2radix<l2baseradix>{}, uint8_t(l2fmb - l2bl), l2bl);
-                        twiddle = fn(pass, process_width, total_width, 1, inout, offset, twiddle);
-                    },
-                    [&]() KFR_INLINE_LAMBDA { // Root: one block, all butterflies
-                        const bfly_pass pass(cl2radix<l2baseradix>{}, l2fmb, cl2blocks<0>{});
-                        twiddle = fn(pass, process_width, total_width, 1, inout, offset, twiddle);
-                    });
-            }
-            else // DIF
-            {
-                const uint8_t max_depth = l2items / l2baseradix;
-
-                size_t offset = 0;
-
-                traverse_parentfirst<R>(
-                    l2items,
-                    [&]() KFR_INLINE_LAMBDA { // Root: one block, all butterflies
-                        const bfly_pass pass(cl2radix<l2baseradix>{}, l2fmb, cl2blocks<0>{});
-                        twiddle = fn(pass, process_width, total_width, 1, inout, offset, twiddle);
-                    },
-                    [&](uint8_t depth) KFR_INLINE_LAMBDA { // Non-leaf: one sub-problem at current depth
-                        const uint8_t l2bl = uint8_t(depth * l2baseradix);
-                        const bfly_pass pass(cl2radix<l2baseradix>{}, uint8_t(l2fmb - l2bl), l2bl);
-                        twiddle = fn(pass, process_width, total_width, 1, inout, offset, twiddle);
-                    },
-                    [&](uint8_t levels_up) KFR_INLINE_LAMBDA { // Merged leaf: all R siblings at once
-                        const bfly_pass pass(cl2radix<half.l2remaining>{}, cl2butterflies<0>{},
-                                             uint8_t(l2fftsize - half.l2remaining));
-                        fn(pass, process_width, total_width, R, inout, offset, twiddle);
-                        offset += total_width << (l2baseradix + pass.l2block_size());
-                        if (levels_up < max_depth)
-                        {
-                            twiddle -= (size_t(1) << (half.l2remaining + l2baseradix * levels_up)) -
-                                       (size_t(1) << half.l2remaining) - (R - 1) * levels_up;
-                        }
-                    });
-            }
+            traverse_parentfirst<R>(
+                l2items,
+                [&]() KFR_INLINE_LAMBDA { // Root: one block, all butterflies
+                    const bfly_pass pass(cl2radix<l2baseradix>{}, l2fmb, cl2blocks<0>{});
+                    twiddle = fn(pass, process_width, total_width, 1, inout, offset, twiddle);
+                },
+                [&](uint8_t depth) KFR_INLINE_LAMBDA { // Non-leaf: one sub-problem at current depth
+                    const uint8_t l2bl = uint8_t(depth * l2baseradix);
+                    const bfly_pass pass(cl2radix<l2baseradix>{}, uint8_t(l2fmb - l2bl), l2bl);
+                    twiddle = fn(pass, process_width, total_width, 1, inout, offset, twiddle);
+                },
+                [&](uint8_t levels_up) KFR_INLINE_LAMBDA { // Merged leaf: all R siblings at once
+                    const bfly_pass pass(cl2radix<half.l2remaining>{}, cl2butterflies<0>{},
+                                         uint8_t(l2fftsize - half.l2remaining));
+                    fn(pass, process_width, total_width, R, inout, offset, twiddle);
+                    offset += total_width << (l2baseradix + pass.l2block_size());
+                    if (levels_up < max_depth)
+                    {
+                        twiddle -= (size_t(1) << (half.l2remaining + l2baseradix * levels_up)) -
+                                   (size_t(1) << half.l2remaining) - (R - 1) * levels_up;
+                    }
+                });
         }
     }
 
@@ -715,20 +717,21 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_half(
                 {
                     uint8_t l2stride = countr_zero(stride);
 
-                    const size_t b_offset = offset >> (l2stride + pass.l2block_size());
+                    const size_t b_offset    = offset >> (l2stride + pass.l2block_size());
+                    const size_t lane_offset = offset & (stride - 1);
 
                     for (size_t b = 0; b < blocks; ++b)
                     {
                         bfly_parallel_bfly<R, T, w, inverse, bfly_twiddles_type::matrix, dir, false, true,
                                            prefetch>
-                            bf{ io, stride, twiddle + (b + b_offset) * lane_width * R };
+                            bf{ io, stride, twiddle + ((b + b_offset) * stride + lane_offset) * R };
 
                         bfly_loop<R, T, w, u>( //
                             lane_width, //
                             bf);
                         io += stride << pass.l2block_size();
                     }
-                    twiddle += pass.blocks() * lane_width * R;
+                    twiddle += pass.blocks() * stride * R;
                 }
                 else
                 {
