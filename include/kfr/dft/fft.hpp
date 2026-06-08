@@ -1066,13 +1066,54 @@ void fft_multiply_accumulate(univector<complex<T>, Tag1>& dest, const univector<
 }
 } // namespace KFR_ARCH_NAME
 
+/**
+ * @brief Plan structure for the ng FFT algorithms (new in KFR 7.1).
+ *
+ * The ngFFT family provides lightweight, in-place FFT computation that requires
+ * only a pre-computed twiddle factor table and no additional scratch (temporary)
+ * buffer. This makes it suitable for environments where memory allocations must
+ * be minimised or fully controlled by the caller.
+ *
+ * @par Key characteristics:
+ *  - **Always in-place** — the input buffer is overwritten with the result.
+ *  - **No scratch buffer required** — unlike the general-purpose @ref dft_plan,
+ *    ngFFT does not allocate or need a temporary working buffer.
+ *  - **Twiddle-initialisation only** — after setting @ref l2fftsize, the caller
+ *    allocates a twiddle buffer (cache-line aligned), queries its required size
+ *    via @ref ngfft_twiddle_count(), and initialises it with @ref ngfft_initialize().
+ *    The twiddle buffer can be reused across executions for the same FFT size
+ *    and algorithm.
+ *
+ * @par Lifetime & ownership:
+ * The plan does **not** own the twiddle buffer. The caller is responsible for
+ * allocating (with sufficient alignment) and deallocating it.
+ *
+ * @par Usage example:
+ * @code{.cpp}
+ * ngfft_plan<float> plan{ 16 };          // log2 of FFT size → 2^16 = 65536
+ * plan.twiddles = aligned_allocate<complex<float>>(ngfft_twiddle_count(plan));
+ * ngfft_initialize(plan);                // precompute twiddle factors
+ *
+ * ngfft_execute(plan, false, data);      // forward FFT, in-place
+ *
+ * aligned_deallocate(plan.twiddles);     // free twiddle buffer when done
+ * @endcode
+ *
+ * @tparam T Floating-point scalar type (float or double).
+ *
+ * @see ngfft_twiddle_count()
+ * @see ngfft_initialize()
+ * @see ngfft_execute()
+ * @see dft_algorithm
+ */
 template <typename T>
 struct ngfft_plan
 {
-    /// Log2 of the FFT size
+    /// Log2 of the FFT size (e.g. 16 means a 65536-point FFT).
     uint8_t l2fftsize;
-    /// User-allocated pointer to twiddles. Format is implementation-defined.
-    /// Call ngfft_twiddle_count to get the required size. Must be cacheline-aligned
+    /// User-allocated pointer to twiddle factors. The required element count
+    /// is obtained from ngfft_twiddle_count(); the buffer must be cache-line
+    /// aligned. Initialise via ngfft_initialize() before first use.
     complex<T>* twiddles = nullptr;
 };
 
@@ -1123,7 +1164,7 @@ inline void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>
 }
 
 template <typename T>
-inline size_t ngfft_twiddle_count(ngfft_plan<T>& plan, dft_algorithm algo)
+inline size_t ngfft_twiddle_count(ngfft_plan<T>& plan, dft_algorithm algo = dft_algorithm::fourstep)
 {
     switch (algo)
     {
@@ -1138,7 +1179,7 @@ inline size_t ngfft_twiddle_count(ngfft_plan<T>& plan, dft_algorithm algo)
 }
 
 template <typename T>
-inline void ngfft_initialize(ngfft_plan<T>& plan, dft_algorithm algo)
+inline void ngfft_initialize(ngfft_plan<T>& plan, dft_algorithm algo = dft_algorithm::fourstep)
 {
     switch (algo)
     {
@@ -1152,7 +1193,8 @@ inline void ngfft_initialize(ngfft_plan<T>& plan, dft_algorithm algo)
 }
 
 template <typename T, bool inverse>
-inline void ngfft_execute(const ngfft_plan<T>& plan, cbool_t<inverse>, complex<T>* inout, dft_algorithm algo)
+inline void ngfft_execute(const ngfft_plan<T>& plan, cbool_t<inverse>, complex<T>* inout,
+                          dft_algorithm algo = dft_algorithm::fourstep)
 {
     switch (algo)
     {
@@ -1168,7 +1210,8 @@ inline void ngfft_execute(const ngfft_plan<T>& plan, cbool_t<inverse>, complex<T
 }
 
 template <typename T>
-inline void ngfft_execute(const ngfft_plan<T>& plan, bool inverse, complex<T>* inout, dft_algorithm algo)
+inline void ngfft_execute(const ngfft_plan<T>& plan, bool inverse, complex<T>* inout,
+                          dft_algorithm algo = dft_algorithm::fourstep)
 {
     if (inverse)
         return ngfft_execute(plan, ctrue, inout, algo);
