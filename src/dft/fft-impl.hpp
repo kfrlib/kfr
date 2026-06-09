@@ -100,53 +100,6 @@ inline bool use_autosort(size_t log2n)
 #define KFR_AUTOSORT_FOR_1024
 #endif
 
-#if 1
-
-#ifdef KFR_ARCH_AVX
-template <>
-KFR_INTRINSIC vec<float, 32> ctranspose<4, float, 32>(const vec<float, 32>& v16)
-{
-    cvec<float, 4> r0, r1, r2, r3;
-    split(v16, r0, r1, r2, r3);
-    const __m256d t0 = _mm256_unpacklo_pd(_mm256_castps_pd(r0.v), _mm256_castps_pd(r1.v));
-    const __m256d t1 = _mm256_unpacklo_pd(_mm256_castps_pd(r2.v), _mm256_castps_pd(r3.v));
-    const __m256d t2 = _mm256_unpackhi_pd(_mm256_castps_pd(r0.v), _mm256_castps_pd(r1.v));
-    const __m256d t3 = _mm256_unpackhi_pd(_mm256_castps_pd(r2.v), _mm256_castps_pd(r3.v));
-    r0.v             = _mm256_castpd_ps(_mm256_permute2f128_pd(t0, t1, 0x20));
-    r1.v             = _mm256_castpd_ps(_mm256_permute2f128_pd(t2, t3, 0x20));
-    r2.v             = _mm256_castpd_ps(_mm256_permute2f128_pd(t0, t1, 0x31));
-    r3.v             = _mm256_castpd_ps(_mm256_permute2f128_pd(t2, t3, 0x31));
-    return concat(r0, r1, r2, r3);
-}
-#endif
-
-template <>
-KFR_INTRINSIC vec<float, 64> ctranspose<8, float, 64>(const vec<float, 64>& v32)
-{
-    cvec<float, 4> a0, a1, a2, a3, a4, a5, a6, a7;
-    split(v32, a0, a1, a2, a3, a4, a5, a6, a7);
-    cvec<float, 16> even = concat(a0, a2, a4, a6);
-    cvec<float, 16> odd  = concat(a1, a3, a5, a7);
-    even                 = ctranspose<4>(even);
-    odd                  = ctranspose<4>(odd);
-    return concat(even, odd);
-}
-
-template <>
-KFR_INTRINSIC vec<float, 64> ctranspose<4, float, 64>(const vec<float, 64>& v32)
-{
-    cvec<float, 16> lo, hi;
-    split(v32, lo, hi);
-    lo = ctranspose<4>(lo);
-    hi = ctranspose<4>(hi);
-    cvec<float, 4> a0, a1, a2, a3, a4, a5, a6, a7;
-    split(lo, a0, a1, a2, a3);
-    split(hi, a4, a5, a6, a7);
-    return concat(a0, a4, a1, a5, a2, a6, a3, a7);
-}
-
-#endif
-
 namespace intr
 {
 
