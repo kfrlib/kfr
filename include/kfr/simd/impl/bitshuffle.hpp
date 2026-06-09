@@ -79,7 +79,7 @@ KFR_INTRINSIC void bitpermute_pair<1>(__m256d& r0, __m256d& r1, __m256d x0, __m2
 {
     // bits: {0, 2, 1}
     // elements: {0, 1, 4, 5, 2, 3, 6, 7}
-    r0 = _mm256_permute2f128_pd(x0, x1, 0x20);
+    r0 = _mm256_insertf128_pd(x0, _mm256_castpd256_pd128(x1), 1);
     r1 = _mm256_permute2f128_pd(x0, x1, 0x31);
 }
 
@@ -90,7 +90,7 @@ KFR_INTRINSIC void bitpermute_pair<2>(__m256d& r0, __m256d& r1, __m256d x0, __m2
     // elements: {0, 4, 1, 5, 2, 6, 3, 7}
     const __m256d t0 = _mm256_shuffle_pd(x0, x1, 0x0); // [0, 4, 2, 6]
     const __m256d t1 = _mm256_shuffle_pd(x0, x1, 0xF); // [1, 5, 3, 7]
-    r0               = _mm256_permute2f128_pd(t0, t1, 0x20); // [0, 4, 1, 5]
+    r0               = _mm256_insertf128_pd(t0, _mm256_castpd256_pd128(t1), 1); // [0, 4, 1, 5]
     r1               = _mm256_permute2f128_pd(t0, t1, 0x31); // [2, 6, 3, 7]
 }
 #ifdef KFR_ARCH_AVX2
@@ -281,8 +281,7 @@ constexpr inline bitperm_op<float> bitperm_ops<float>[] = {
 };
 
 template <int op_idx>
-KFR_INTRINSIC void bitpermute_pair(float32x4_t& r0, float32x4_t& r1, float32x4_t v0,
-                                   float32x4_t v1) noexcept;
+KFR_INTRINSIC void bitpermute_pair(float32x4_t& r0, float32x4_t& r1, float32x4_t v0, float32x4_t v1) noexcept;
 
 template <>
 KFR_INTRINSIC void bitpermute_pair<0>(float32x4_t& r0, float32x4_t& r1, float32x4_t v0,
@@ -340,8 +339,7 @@ constexpr inline bitperm_op<double> bitperm_ops<double>[] = {
 };
 
 template <int op_idx>
-KFR_INTRINSIC void bitpermute_pair(float64x2_t& r0, float64x2_t& r1, float64x2_t v0,
-                                   float64x2_t v1) noexcept;
+KFR_INTRINSIC void bitpermute_pair(float64x2_t& r0, float64x2_t& r1, float64x2_t v0, float64x2_t v1) noexcept;
 
 template <>
 KFR_INTRINSIC void bitpermute_pair<0>(float64x2_t& r0, float64x2_t& r1, float64x2_t v0,
