@@ -480,13 +480,13 @@ KFR_INTRINSIC void mixedradix_body(std::complex<typename traits::type>* inout,
 
         for (size_t b = 0; b < num_blocks; ++b)
         {
-            const std::complex<T>* tw = twiddles;
             bfly_loop<R, T, width>( //
                 butterflies_v, //
-                bfly_combined_bfly<R, T, width, inverse, dir, split_format, prefetch_offset>{
+                bfly_parallel_bfly<R, T, width, inverse, bfly_twiddles_type::vector, dir, split_format,
+                                   split_format, prefetch_offset>{
                     inout,
                     butterflies_v,
-                    tw,
+                    twiddles,
                 });
             inout += block_size;
         }
