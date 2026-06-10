@@ -1119,14 +1119,11 @@ struct ngfft_plan
 
 enum class dft_family
 {
-    mixedradix,
     fourstep,
 };
 
 enum class dft_algorithm
 {
-    mixedradix_dif,
-    mixedradix_dit,
     fourstep,
 };
 
@@ -1168,10 +1165,6 @@ inline size_t ngfft_twiddle_count(ngfft_plan<T>& plan, dft_algorithm algo = dft_
 {
     switch (algo)
     {
-    case dft_algorithm::mixedradix_dif:
-        return ngfft_twiddle_count(plan, cval<dft_algorithm, dft_algorithm::mixedradix_dif>);
-    case dft_algorithm::mixedradix_dit:
-        return ngfft_twiddle_count(plan, cval<dft_algorithm, dft_algorithm::mixedradix_dit>);
     case dft_algorithm::fourstep:
         return ngfft_twiddle_count(plan, cval<dft_algorithm, dft_algorithm::fourstep>);
     }
@@ -1183,10 +1176,6 @@ inline void ngfft_initialize(ngfft_plan<T>& plan, dft_algorithm algo = dft_algor
 {
     switch (algo)
     {
-    case dft_algorithm::mixedradix_dif:
-        return ngfft_initialize(plan, cval<dft_algorithm, dft_algorithm::mixedradix_dif>);
-    case dft_algorithm::mixedradix_dit:
-        return ngfft_initialize(plan, cval<dft_algorithm, dft_algorithm::mixedradix_dit>);
     case dft_algorithm::fourstep:
         return ngfft_initialize(plan, cval<dft_algorithm, dft_algorithm::fourstep>);
     }
@@ -1198,12 +1187,6 @@ inline void ngfft_execute(const ngfft_plan<T>& plan, cbool_t<inverse>, complex<T
 {
     switch (algo)
     {
-    case dft_algorithm::mixedradix_dif:
-        return ngfft_execute(plan, cval<dft_algorithm, dft_algorithm::mixedradix_dif>, cbool_t<inverse>(),
-                             inout);
-    case dft_algorithm::mixedradix_dit:
-        return ngfft_execute(plan, cval<dft_algorithm, dft_algorithm::mixedradix_dit>, cbool_t<inverse>(),
-                             inout);
     case dft_algorithm::fourstep:
         return ngfft_execute(plan, cval<dft_algorithm, dft_algorithm::fourstep>, cbool_t<inverse>(), inout);
     }
@@ -1219,17 +1202,6 @@ inline void ngfft_execute(const ngfft_plan<T>& plan, bool inverse, complex<T>* i
         return ngfft_execute(plan, cfalse, inout, algo);
 }
 
-/// @brief Measures the execution time of different FFT algorithms and returns the best one for the given
-/// log-2 size.
-template <typename T>
-dft_algorithm ngfft_measure(uint8_t l2fftsize,
-                            std::chrono::nanoseconds measure_time      = std::chrono::milliseconds(100),
-                            std::initializer_list<dft_algorithm> algos = {
-                                dft_algorithm::mixedradix_dif,
-                                dft_algorithm::mixedradix_dit,
-                                dft_algorithm::fourstep,
-                            });
-
 extern bool fft_ng;
 extern bool fft_autosort;
 extern dft_algorithm fft_ng_algorithm;
@@ -1237,21 +1209,7 @@ extern dft_algorithm fft_ng_algorithm;
 namespace internal_generic
 {
 
-constexpr inline dft_decomp to_decomp(dft_algorithm algo) noexcept
-{
-    if (algo == dft_algorithm::mixedradix_dif)
-        return dft_decomp::dif;
-    else
-        return dft_decomp::dit;
-}
-
-constexpr inline dft_family to_family(dft_algorithm algo) noexcept
-{
-    if (algo == dft_algorithm::fourstep)
-        return dft_family::fourstep;
-    else
-        return dft_family::mixedradix;
-}
+constexpr inline dft_family to_family(dft_algorithm algo) noexcept { return dft_family::fourstep; }
 
 } // namespace internal_generic
 

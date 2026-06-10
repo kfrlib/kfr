@@ -425,13 +425,6 @@ concept dft_traits = requires {
     requires(T::l2maxradix >= T::l2baseradix);
 };
 
-template <dft_traits traits>
-constexpr dft_decomp algo_dir() noexcept
-{
-    static_assert(traits::algo != dft_algorithm::fourstep);
-    return internal_generic::to_decomp(traits::algo);
-}
-
 template <dft_family family>
 struct dft_config;
 

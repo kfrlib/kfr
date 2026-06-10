@@ -34,33 +34,13 @@ inline namespace KFR_ARCH_NAME
 namespace impl
 {
 template size_t ngfft_twiddle_count<FLOAT>(ngfft_plan<FLOAT>&,
-                                           cval_t<dft_algorithm, dft_algorithm::mixedradix_dif>);
-template size_t ngfft_twiddle_count<FLOAT>(ngfft_plan<FLOAT>&,
-                                           cval_t<dft_algorithm, dft_algorithm::mixedradix_dit>);
-template size_t ngfft_twiddle_count<FLOAT>(ngfft_plan<FLOAT>&,
                                            cval_t<dft_algorithm, dft_algorithm::fourstep>);
 
-template void ngfft_initialize<FLOAT>(ngfft_plan<FLOAT>&,
-                                      cval_t<dft_algorithm, dft_algorithm::mixedradix_dif>);
-template void ngfft_initialize<FLOAT>(ngfft_plan<FLOAT>&,
-                                      cval_t<dft_algorithm, dft_algorithm::mixedradix_dit>);
 template void ngfft_initialize<FLOAT>(ngfft_plan<FLOAT>&, cval_t<dft_algorithm, dft_algorithm::fourstep>);
 
-template void ngfft_execute<FLOAT>(const ngfft_plan<FLOAT>&,
-                                   cval_t<dft_algorithm, dft_algorithm::mixedradix_dif>, cbool_t<false>,
-                                   complex<FLOAT>*);
-template void ngfft_execute<FLOAT>(const ngfft_plan<FLOAT>&,
-                                   cval_t<dft_algorithm, dft_algorithm::mixedradix_dit>, cbool_t<false>,
-                                   complex<FLOAT>*);
 template void ngfft_execute<FLOAT>(const ngfft_plan<FLOAT>&, cval_t<dft_algorithm, dft_algorithm::fourstep>,
                                    cbool_t<false>, complex<FLOAT>*);
 
-template void ngfft_execute<FLOAT>(const ngfft_plan<FLOAT>&,
-                                   cval_t<dft_algorithm, dft_algorithm::mixedradix_dif>, cbool_t<true>,
-                                   complex<FLOAT>*);
-template void ngfft_execute<FLOAT>(const ngfft_plan<FLOAT>&,
-                                   cval_t<dft_algorithm, dft_algorithm::mixedradix_dit>, cbool_t<true>,
-                                   complex<FLOAT>*);
 template void ngfft_execute<FLOAT>(const ngfft_plan<FLOAT>&, cval_t<dft_algorithm, dft_algorithm::fourstep>,
                                    cbool_t<true>, complex<FLOAT>*);
 } // namespace impl
