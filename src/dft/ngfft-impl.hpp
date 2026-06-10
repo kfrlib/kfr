@@ -26,7 +26,6 @@
 #pragma once
 
 #include "ngfft.hpp"
-#include "mixedradix.hpp"
 #include "sandwich.hpp"
 
 #include "kfr/runtime/time.hpp"
@@ -153,15 +152,7 @@ struct make_dft_traits_for_arch
     constexpr static dft_algorithm algo         = algo_;
     constexpr static uint8_t l2baseradix        = 2;
 
-    constexpr static uint8_t compute_l2maxradix() noexcept
-    {
-        if constexpr (algo == dft_algorithm::fourstep)
-            return 3;
-        else if constexpr (std::is_same_v<T_, float>)
-            return 4;
-        else
-            return 3;
-    }
+    constexpr static uint8_t compute_l2maxradix() noexcept { return 3; }
     constexpr static uint8_t compute_l2maxsingleradix() noexcept
     {
         if constexpr (std::is_same_v<T_, float>)

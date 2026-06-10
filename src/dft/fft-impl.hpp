@@ -806,14 +806,6 @@ void make_fft_stages(dft_plan<T>* self, cval_t<dft_algo, algo>, size_t stage_siz
     {
         switch (fft_ng_algorithm)
         {
-        case dft_algorithm::mixedradix_dif:
-            add_stage<fft_ng_stage_impl<T, dft_algorithm::mixedradix_dif>>(self,
-                                                                                             stage_size);
-            break;
-        case dft_algorithm::mixedradix_dit:
-            add_stage<fft_ng_stage_impl<T, dft_algorithm::mixedradix_dit>>(self,
-                                                                                             stage_size);
-            break;
         case dft_algorithm::fourstep:
             add_stage<fft_ng_stage_impl<T, dft_algorithm::fourstep>>(self, stage_size);
             break;
