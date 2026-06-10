@@ -34,6 +34,7 @@
 #include <kfr/simd/vec.hpp>
 #include <kfr/runtime/time.hpp>
 
+#include <kfr/dft/fft.hpp>
 #include <kfr/base/memory.hpp>
 #include "data/sincos.hpp"
 
@@ -2812,6 +2813,285 @@ KFR_INTRINSIC void bfly_small(complex<T>* out, const complex<T>* in)
         fourstep<inverse, r1, r2>(out, in);
     }
 }
+
+} // namespace intr
+} // namespace KFR_ARCH_NAME
+
+template <size_t side1, size_t side2>
+constexpr size_t transpose_index(size_t i) noexcept
+{
+    size_t N = side1 * side2;
+    return (i % N % side2) * side1 + i % N / side2 + (i / N) * N;
+}
+
+static_assert(std::is_same_v<map_indices_t<8, transpose_index<2, 4>>, csizes_t<0, 2, 4, 6, 1, 3, 5, 7>>);
+
+// Self-inverse, swap two lowest bits
+template <typename T>
+constexpr size_t shuffle_optimizer(size_t i) noexcept
+{
+    return i;
+}
+
+template <>
+constexpr size_t shuffle_optimizer<double>(size_t i) noexcept
+{
+    return (i & ~3) | ((i & 1) << 1) | ((i & 2) >> 1);
+}
+
+template <>
+constexpr size_t shuffle_optimizer<float>(size_t i) noexcept
+{
+    return shuffle_optimizer<double>(i / 2) * 2 + (i % 2);
+}
+
+template <size_t split_width, typename T = void>
+constexpr size_t split_permute(size_t i) noexcept
+{
+    static_assert(std::has_single_bit(split_width));
+    if constexpr (!std::is_same_v<void, T>)
+    {
+        if constexpr (split_width >= 32 / sizeof(T))
+        {
+            i = shuffle_optimizer<T>(i);
+        }
+    }
+    i = transpose_index<2, split_width>(i);
+    return i;
+}
+
+template <size_t split_width, typename T = void>
+constexpr size_t interleave_permute(size_t i) noexcept
+{
+    static_assert(std::has_single_bit(split_width));
+    i = transpose_index<split_width, 2>(i);
+    if constexpr (!std::is_same_v<void, T>)
+    {
+        if constexpr (split_width >= 32 / sizeof(T))
+        {
+            i = shuffle_optimizer<T>(i);
+        }
+    }
+    return i;
+}
+
+template <size_t radix, size_t stride, size_t side2>
+constexpr size_t ctranspose_permute(size_t i) noexcept
+{
+    if constexpr (stride == 0)
+    {
+        return i; // No permutation if stride is zero
+    }
+    else
+    {
+        static_assert(std::has_single_bit(radix));
+        static_assert(std::has_single_bit(stride));
+        static_assert(std::has_single_bit(side2));
+        constexpr size_t group2 = 2 * stride;
+        return transpose_index<radix, side2>(i / group2) * group2 + i % group2;
+    }
+}
+
+enum class bfly_twiddles_type
+{
+    none,
+    scalar,
+    vector,
+    matrix,
+};
+
+inline namespace KFR_ARCH_NAME
+{
+namespace intr
+{
+
+template <size_t Radix, typename T, size_t N, bfly_twiddles_type twiddles>
+struct bfly_parallel_bfly_base
+{
+};
+
+template <size_t Radix, typename T, size_t N>
+struct bfly_parallel_bfly_base<Radix, T, N, bfly_twiddles_type::scalar>
+{
+    cvec<T, N> tw[Radix - 1];
+};
+template <size_t Radix, typename T, size_t N>
+struct bfly_parallel_bfly_base<Radix, T, N, bfly_twiddles_type::matrix>
+{
+    mutable const complex<T>* tw;
+};
+template <size_t Radix, typename T, size_t N>
+struct bfly_parallel_bfly_base<Radix, T, N, bfly_twiddles_type::vector>
+{
+    mutable const complex<T>* tw;
+};
+
+template <size_t Radix, typename T, size_t N, bool inverse, bfly_twiddles_type twiddles, dft_decomp decomp,
+          bool in_split, bool out_split, size_t prefetch = 0>
+struct bfly_parallel_bfly : bfly_parallel_bfly_base<Radix, T, N, twiddles>
+{
+    constexpr static bool split_format = in_split || out_split;
+
+    template <size_t I>
+    KFR_MEM_INTRINSIC static cvec<T, N> tw_read(const std::complex<T>* tw) noexcept
+    {
+        if constexpr (split_format)
+        {
+            return concat(broadcast<N>(tw[I].real()), broadcast<N>(tw[I].imag()));
+        }
+        else
+        {
+            cvec<T, 1> v = cread<1>(tw + I);
+            return repeat<N>(v);
+        }
+    }
+
+    complex<T>* inout;
+    size_t stride;
+
+    KFR_MEM_INTRINSIC bfly_parallel_bfly(complex<T>* inout, size_t stride, const std::complex<T>* tw)
+        requires(twiddles != bfly_twiddles_type::none)
+        : inout(inout), stride(stride)
+    {
+        if constexpr (twiddles == bfly_twiddles_type::scalar)
+        {
+            // Scalar twiddles, pre-read into vector registers
+            KFR_FOR(I, 0, Radix - 1) { this->tw[I] = tw_read<I>(tw); };
+        }
+        else
+        {
+            // Matrix twiddles, just store the pointer
+            this->tw = tw;
+        }
+    }
+    KFR_MEM_INTRINSIC bfly_parallel_bfly(complex<T>* inout, size_t stride)
+        requires(twiddles == bfly_twiddles_type::none)
+        : inout(inout), stride(stride)
+    {
+    }
+
+    template <size_t I>
+    KFR_MEM_INTRINSIC cvec<T, N> get_tw() const noexcept
+        requires(twiddles != bfly_twiddles_type::none)
+    {
+        if constexpr (twiddles == bfly_twiddles_type::scalar)
+        {
+            return this->tw[I - 1];
+        }
+        else
+        {
+            cvec<T, N> w = cread<N>(this->tw);
+            this->tw += N;
+            return w;
+        }
+    }
+
+    constexpr static size_t br(size_t n) noexcept { return bitreverse<ilog2(Radix)>(n); }
+
+    using InterleaveIndices   = map_indices_t<2 * N, interleave_permute<N, T>>;
+    using DeinterleaveIndices = map_indices_t<2 * N, split_permute<N, T>>;
+
+    KFR_INTRINSIC static cvec<T, N> interleave(const cvec<T, N>& w)
+    {
+        if constexpr (split_format && !out_split)
+            return w.shuffle(InterleaveIndices{});
+        else
+            return w;
+    }
+    KFR_INTRINSIC static cvec<T, N> deinterleave(const cvec<T, N>& w)
+    {
+        if constexpr (split_format && !in_split)
+            return w.shuffle(DeinterleaveIndices{});
+        else
+            return w;
+    }
+
+    template <size_t I>
+    KFR_INLINE_MEMBER cvec<T, N> read_in() const
+    {
+        cvec<T, N> w;
+        if constexpr (I == 0 && twiddles != bfly_twiddles_type::matrix)
+        {
+            w = deinterleave(cread_prefetch<N, prefetch>(this->inout));
+        }
+        else if constexpr (decomp == dft_decomp::dit)
+        {
+            constexpr size_t J = br(I);
+            if constexpr (twiddles != bfly_twiddles_type::none)
+            {
+                w = cmuli<inverse>(cbool<split_format>,
+                                   deinterleave(cread_prefetch<N, prefetch>(this->inout + J * this->stride)),
+                                   get_tw<I>());
+            }
+            else
+            {
+                w = deinterleave(cread_prefetch<N, prefetch>(this->inout + J * this->stride));
+            }
+        }
+        else
+        {
+            w = deinterleave(cread_prefetch<N, prefetch>(this->inout + I * this->stride));
+        }
+        return w;
+    }
+
+    template <size_t I>
+    KFR_INLINE_MEMBER void write_out(const cvec<T, N>& w) const
+    {
+        if constexpr (I == 0 && twiddles != bfly_twiddles_type::matrix)
+        {
+            cwrite<N, false>(this->inout, interleave(w));
+        }
+        else if constexpr (decomp == dft_decomp::dif)
+        {
+            constexpr size_t J = br(I);
+            if constexpr (twiddles != bfly_twiddles_type::none)
+            {
+                cwrite<N, false>(this->inout + J * this->stride,
+                                 interleave(cmuli<inverse>(cbool<split_format>, w, get_tw<I>())));
+            }
+            else
+            {
+                cwrite<N, false>(this->inout + J * this->stride, interleave(w));
+            }
+        }
+        else
+        {
+            cwrite<N, false>(this->inout + I * this->stride, interleave(w));
+        }
+    }
+
+    template <size_t... I>
+    KFR_INLINE_MEMBER void read_all(cvec<T, N> w[Radix])
+    {
+        (void(w[I] = read_in<I>()), ...);
+    }
+
+    template <size_t... I>
+    KFR_INLINE_MEMBER void write_all(cvec<T, N> w[Radix])
+    {
+        (write_out<I>(w[I]), ...);
+    }
+
+    KFR_INLINE_MEMBER void operator()(cvec<T, N * Radix>& ww) noexcept
+    {
+        [&]<size_t... I>(csizes_t<I...>) KFR_INLINE_LAMBDA
+        {
+            cvec<T, N> w[Radix];
+
+            read_all<I...>(w);
+
+            KFR_BFLY_TRACE("bfly_bfly: Radix=", Radix);
+            bfly<inverse, N>(cbool<split_format>, w[I]...);
+
+            write_all<I...>(w);
+        }(csizeseq<Radix>);
+    }
+
+    KFR_INLINE_MEMBER void begin() noexcept {}
+    KFR_INLINE_MEMBER void end() noexcept {}
+    KFR_INLINE_MEMBER void advance() noexcept { this->inout += N; }
+};
 
 } // namespace intr
 
