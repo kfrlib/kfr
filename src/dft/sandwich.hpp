@@ -408,12 +408,12 @@ constexpr KFR_INTRINSIC void sandwich_iterate(uint8_t l2fftsize, const dft_sandw
     {
         // butterflies=max blocks=1
         fn(bfly_pass(cl2radix<l2baseradix>{}, uint8_t(l2fmb), cl2blocks<0>{}));
-        uint8_t l2stride = l2fmb - l2baseradix;
 
-        while (l2stride >= half.l2remaining)
+        uint8_t l2stride = l2fmb;
+        while (l2stride >= half.l2remaining + l2baseradix)
         {
-            fn(bfly_pass(cl2radix<l2baseradix>{}, uint8_t(l2stride), uint8_t(l2fmb - l2stride)));
             l2stride -= l2baseradix;
+            fn(bfly_pass(cl2radix<l2baseradix>{}, uint8_t(l2stride), uint8_t(l2fmb - l2stride)));
         }
 
         // butterflies=1 blocks=max
