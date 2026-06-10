@@ -2010,6 +2010,7 @@ KFR_INTRINSIC void bfly_packed(csize_t<4>, cvec<T, 4>& w)
 
 template <bool inverse = false, size_t N, typename T, bool split = false>
 KFR_INTRINSIC void bfly(cbool_t<split>, cvec<T, N>& w0, cvec<T, N>& w1)
+    requires(N > 1)
 {
     cvec<T, N> sum = w0 + w1;
     w1             = w0 - w1;

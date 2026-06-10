@@ -170,13 +170,17 @@ struct make_dft_traits_for_arch
             return 3;
     }
 
-    constexpr static uint8_t l2maxradix = compute_l2maxradix();
     constexpr static uint8_t l2basewidth =
         arch.l2regbitwidth + arch.l2regcount - l2complex_bitwidth - 1 - l2baseradix;
+
+    constexpr static uint8_t l2radixlimit = l2basewidth + l2baseradix;
+
     constexpr static uint8_t l2minsplitwidth  = arch.l2regbitwidth - l2complex_bitwidth + 1;
     constexpr static uint8_t l2basesplitwidth = l2basewidth >= l2minsplitwidth ? l2basewidth : 0;
 
-    constexpr static uint8_t l2maxsingleradix = compute_l2maxsingleradix();
+    constexpr static uint8_t l2maxradix = std::min(compute_l2maxradix(), l2radixlimit);
+
+    constexpr static uint8_t l2maxsingleradix = std::min(compute_l2maxsingleradix(), l2radixlimit);
 };
 
 namespace dft_internal
