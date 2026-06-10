@@ -249,9 +249,9 @@ TEST_CASE("fft_accuracy")
 
             for (bool inverse : { false, true })
             {
+                INFO((inverse ? "complex-inverse" : "complex-direct"));
                 for (bool progressive_optimized : { false, true })
                 {
-                    INFO((inverse ? "complex-inverse" : "complex-direct"));
                     INFO((progressive_optimized ? "progressive-optimized" : "single-call-optimized"));
                     univector<complex<float_type>> in =
                         truncate(gen_random_range<float_type>(gen, -1.0, +1.0), size);
@@ -299,6 +299,31 @@ TEST_CASE("fft_accuracy")
                     CHECK(rms_diff_inplace_progressive <= min_prec);
                     const float_type rms_diff_outofplace_progressive = rms(cabs(refout - outo));
                     CHECK(rms_diff_outofplace_progressive <= min_prec);
+                }
+
+                if (is_poweroftwo(size))
+                {
+                    const uint8_t l2size = ilog2(size);
+                    ngfft_plan<float_type> plan{ l2size };
+                    size_t twiddle_count = ngfft_twiddle_count<float_type>(plan);
+                    if (twiddle_count != SIZE_MAX)
+                    {
+                        univector<complex<float_type>> in =
+                            truncate(gen_random_range<float_type>(gen, -1.0, +1.0), size);
+                        univector<complex<float_type>> out    = in;
+                        univector<complex<float_type>> refout = out;
+
+                        reference_dft(refout.data(), in.data(), size, inverse);
+
+                        univector<complex<float_type>> twiddles(twiddle_count);
+                        plan.twiddles = twiddles.data();
+                        ngfft_initialize<float_type>(plan);
+
+                        ngfft_execute(plan, inverse, out.data());
+
+                        const float_type rms_diff_inplace_ng = rms(cabs(refout - out));
+                        CHECK(rms_diff_inplace_ng <= min_prec);
+                    }
                 }
             }
 

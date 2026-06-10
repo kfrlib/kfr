@@ -1175,7 +1175,7 @@ inline size_t ngfft_twiddle_count(ngfft_plan<T>& plan, dft_algorithm algo = dft_
     case dft_algorithm::fourstep:
         return ngfft_twiddle_count(plan, cval<dft_algorithm, dft_algorithm::fourstep>);
     }
-    return 0;
+    return SIZE_MAX;
 }
 
 template <typename T>

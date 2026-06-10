@@ -847,7 +847,7 @@ KFR_NOINLINE void sandwich(complex<typename traits::type>* inout, uint8_t l2ffts
                 constexpr size_t jj = j * w;
                 complex<T>* io      = inout + i * r1 + jj;
                 cvec<T, w> v        = cread<w>(io);
-                v = cmuli<inverse>(cfalse, v, fixed_twiddle<T, w, r1 * r2, jj * ii, ii, inverse>());
+                v = cmuli<inverse>(cfalse, v, fixed_twiddle<T, w, r1 * r2, jj * ii, ii, false>());
                 cwrite<w>(io, v);
             };
         };
