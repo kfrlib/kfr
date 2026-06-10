@@ -184,11 +184,13 @@ using fn_transpose = void (*)(complex<T>*, const complex<T>*, shape<2>);
 template <typename T>
 void dft_initialize_transpose(fn_transpose<T>& transpose);
 
+#ifdef KFR_CLASSIC_FFT
 template <typename T>
 void dft_progressive_start(const dft_plan<T>& plan, typename dft_plan<T>::progressive& progressive,
                            bool inverse, complex<T>* out, const complex<T>* in, u8* temp);
 template <typename T>
 void dft_progressive_step(const dft_plan<T>& plan, typename dft_plan<T>::progressive& progressive);
+#endif
 
 } // namespace internal_generic
 
@@ -409,6 +411,7 @@ struct dft_plan
     static bitset precompute_disposition(int num_stages, bitset can_inplace_per_stage,
                                          bool inplace_requested);
 
+#ifdef KFR_CLASSIC_FFT
     /** Internal data structure for progressive execution of the DFT.
         Do not access the members directly as they may change in future versions.
      */
@@ -459,6 +462,7 @@ struct dft_plan
         internal_generic::dft_progressive_step(*this, progressive);
         return ++progressive.step < stages[progressive.inverse].size();
     }
+#endif
 
 #ifdef KFR_DFT_MEASURE_STAGE_TIME
     void reset_time()
@@ -588,6 +592,7 @@ struct dft_plan_real : dft_plan<T>
         this->execute_dft(ctrue, ptr_cast<complex<T>>(out.data()), in.data(), temp);
     }
 
+#ifdef KFR_CLASSIC_FFT
     using progressive = typename dft_plan<T>::progressive;
 
     KFR_MEM_INTRINSIC progressive progressive_start(T* out, const complex<T>* in, u8* temp) const
@@ -609,6 +614,7 @@ struct dft_plan_real : dft_plan<T>
                                                 temp);
         return result;
     }
+#endif
 };
 
 /// @brief Multidimensional DFT
@@ -1140,7 +1146,7 @@ template <typename T, dft_algorithm algo>
 size_t ngfft_twiddle_count(ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>);
 
 template <typename T, dft_algorithm algo>
-void ngfft_initialize(ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>);
+bool ngfft_initialize(ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>);
 
 template <typename T, dft_algorithm algo, bool inverse>
 void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, cbool_t<inverse>,
@@ -1167,17 +1173,20 @@ inline size_t ngfft_twiddle_count(ngfft_plan<T>& plan, dft_algorithm algo = dft_
     {
     case dft_algorithm::fourstep:
         return ngfft_twiddle_count(plan, cval<dft_algorithm, dft_algorithm::fourstep>);
+    default:
+        KFR_UNREACHABLE;
     }
-    return SIZE_MAX;
 }
 
 template <typename T>
-inline void ngfft_initialize(ngfft_plan<T>& plan, dft_algorithm algo = dft_algorithm::fourstep)
+inline bool ngfft_initialize(ngfft_plan<T>& plan, dft_algorithm algo = dft_algorithm::fourstep)
 {
     switch (algo)
     {
     case dft_algorithm::fourstep:
         return ngfft_initialize(plan, cval<dft_algorithm, dft_algorithm::fourstep>);
+    default:
+        KFR_UNREACHABLE;
     }
 }
 
@@ -1189,6 +1198,8 @@ inline void ngfft_execute(const ngfft_plan<T>& plan, cbool_t<inverse>, complex<T
     {
     case dft_algorithm::fourstep:
         return ngfft_execute(plan, cval<dft_algorithm, dft_algorithm::fourstep>, cbool_t<inverse>(), inout);
+    default:
+        KFR_UNREACHABLE;
     }
 }
 
@@ -1202,9 +1213,11 @@ inline void ngfft_execute(const ngfft_plan<T>& plan, bool inverse, complex<T>* i
         return ngfft_execute(plan, cfalse, inout, algo);
 }
 
+#ifdef KFR_CLASSIC_FFT
 extern bool fft_ng;
 extern bool fft_autosort;
 extern dft_algorithm fft_ng_algorithm;
+#endif
 
 namespace internal_generic
 {

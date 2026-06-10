@@ -239,6 +239,7 @@ option(
     "Use Boost to support Elliptic filters. Enable this only if you're already using Boost"
     OFF)
 option(KFR_USE_STD_FILESYSTEM "Use std::filesystem for path arguments" OFF)
+option(KFR_CLASSIC_FFT "Use classic pre-7.1 FFT algorithm" OFF)
 mark_as_advanced(KFR_ENABLE_ASMTEST)
 mark_as_advanced(KFR_REGENERATE_TESTS)
 mark_as_advanced(KFR_DISABLE_CLANG_EXTENSIONS)
@@ -365,6 +366,10 @@ string(REPLACE ";" ", " KFR_ARCHS_COMMA "${KFR_ARCHS}")
 
 if (KFR_ENABLE_MULTIARCH)
     add_compile_definitions(KFR_ENABLED_ARCHS="${KFR_ARCHS_COMMA}")
+endif ()
+
+if (KFR_CLASSIC_FFT)
+    add_compile_definitions(KFR_CLASSIC_FFT=1)
 endif ()
 
 add_library(use_arch INTERFACE)

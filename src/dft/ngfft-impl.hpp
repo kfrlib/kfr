@@ -69,10 +69,16 @@ constexpr uint8_t l2minfftsize() noexcept
 template <dft_traits traits>
 constexpr uint8_t numfftsizes() noexcept
 {
-    return maxfftsize<typename traits::type> - l2minfftsize<traits>() + 1;
+    return maxfftsize<typename traits::type> + 1;
 }
 
 } // namespace dft_internal
+
+template <uint8_t l2size, bool inverse, typename T>
+void ng_do_small_dft(const ngfft_plan<T>& plan, std::complex<T>* inout) noexcept
+{
+    intr::bfly_small<l2size, inverse>(inout, inout);
+}
 
 template <dft_traits traits, uint8_t numfftsizes = dft_internal::numfftsizes<traits>()>
 constexpr std::array<dft_specialization<typename traits::type, to_family(traits::algo)>, numfftsizes>
@@ -86,23 +92,35 @@ generate_dft_specializations() noexcept
 
     KFR_FOR(i, 0, numfftsizes)
     {
-        constexpr uint8_t l2fftsize        = i + l2minsize;
-        constexpr dft_config_t<traits> cfg = ng_config<traits>(cfamily, l2fftsize);
-
-        specs[i].config        = cfg;
-        specs[i].twiddle_count = ng_twiddle_count<traits>(l2fftsize, cfg);
-        specs[i].initializer   = &ng_do_init_dft<traits>;
-        if constexpr (l2fftsize <= numfixedfftsizes)
+        constexpr uint8_t l2fftsize = i;
+        if constexpr (l2fftsize < l2minsize)
         {
-            // FFT size known at compile time, can use fixed-size routine
-            specs[i].forward  = &ng_do_fixed_dft<traits, cfg, l2fftsize, false>;
-            specs[i].backward = &ng_do_fixed_dft<traits, cfg, l2fftsize, true>;
+            specs[i].config        = {};
+            specs[i].twiddle_count = 0;
+            specs[i].initializer   = nullptr;
+            specs[i].forward       = &ng_do_small_dft<l2fftsize, false, T>;
+            specs[i].backward      = &ng_do_small_dft<l2fftsize, true, T>;
         }
         else
         {
-            // FFT size not known at compile time, use variable-size routine
-            specs[i].forward  = &ng_do_dft<traits, cfg, false>;
-            specs[i].backward = &ng_do_dft<traits, cfg, true>;
+            constexpr dft_config_t<traits> cfg = ng_config<traits>(cfamily, l2fftsize);
+
+            specs[i].config        = cfg;
+            specs[i].twiddle_count = ng_twiddle_count<traits>(l2fftsize, cfg);
+            if (specs[i].twiddle_count)
+                specs[i].initializer = &ng_do_init_dft<traits>;
+            if constexpr (l2fftsize <= numfixedfftsizes)
+            {
+                // FFT size known at compile time, can use fixed-size routine
+                specs[i].forward  = &ng_do_fixed_dft<traits, cfg, l2fftsize, false>;
+                specs[i].backward = &ng_do_fixed_dft<traits, cfg, l2fftsize, true>;
+            }
+            else
+            {
+                // FFT size not known at compile time, use variable-size routine
+                specs[i].forward  = &ng_do_dft<traits, cfg, false>;
+                specs[i].backward = &ng_do_dft<traits, cfg, true>;
+            }
         }
     };
 
@@ -190,25 +208,32 @@ size_t ngfft_twiddle_count_internal(ngfft_plan<typename traits::type>& plan)
 {
     using namespace dft_internal;
 
-    if (plan.l2fftsize - l2minfftsize<traits>() >= specs<traits>.size()) [[unlikely]]
+    if (plan.l2fftsize >= specs<traits>.size()) [[unlikely]]
     {
         return SIZE_MAX; // Invalid FFT size, return max size to indicate error
     }
 
-    return specs<traits>[plan.l2fftsize - l2minfftsize<traits>()].twiddle_count;
+    return specs<traits>[plan.l2fftsize].twiddle_count;
 }
 
 template <dft_traits traits>
-void ngfft_initialize_internal(ngfft_plan<typename traits::type>& plan)
+bool ngfft_initialize_internal(ngfft_plan<typename traits::type>& plan)
 {
     using namespace dft_internal;
-    if (plan.l2fftsize - l2minfftsize<traits>() >= specs<traits>.size()) [[unlikely]]
+    if (plan.l2fftsize >= specs<traits>.size()) [[unlikely]]
     {
-        return; // Invalid FFT size, do nothing
+        return false; // Invalid FFT size, do nothing
     }
 
-    specs<traits>[plan.l2fftsize - l2minfftsize<traits>()].initializer(
-        plan, specs<traits>[plan.l2fftsize - l2minfftsize<traits>()].config);
+    if (specs<traits>[plan.l2fftsize].twiddle_count > 0 && plan.twiddles == nullptr)
+    {
+        // User did not provide twiddle buffer, but specialization requires twiddles - cannot initialize
+        return false;
+    }
+
+    if (specs<traits>[plan.l2fftsize].initializer) [[likely]]
+        specs<traits>[plan.l2fftsize].initializer(plan, specs<traits>[plan.l2fftsize].config);
+    return true;
 }
 
 template <dft_traits traits, bool inverse>
@@ -216,15 +241,15 @@ void ngfft_execute_internal(const ngfft_plan<typename traits::type>& plan, cbool
                             complex<typename traits::type>* inout)
 {
     using namespace dft_internal;
-    if (plan.l2fftsize - l2minfftsize<traits>() >= specs<traits>.size()) [[unlikely]]
+    if (plan.l2fftsize >= specs<traits>.size()) [[unlikely]]
     {
         return; // Invalid FFT size, do nothing
     }
 
     if constexpr (inverse)
-        specs<traits>[plan.l2fftsize - l2minfftsize<traits>()].backward(plan, inout);
+        specs<traits>[plan.l2fftsize].backward(plan, inout);
     else
-        specs<traits>[plan.l2fftsize - l2minfftsize<traits>()].forward(plan, inout);
+        specs<traits>[plan.l2fftsize].forward(plan, inout);
 }
 
 template <dft_traits traits>
@@ -232,7 +257,7 @@ const dft_specialization<typename traits::type, to_family(traits::algo)>& ngfft_
     uint8_t l2fftsize) noexcept
 {
     using namespace dft_internal;
-    return specs<traits>[l2fftsize - l2minfftsize<traits>()];
+    return specs<traits>[l2fftsize];
 }
 
 template <dft_algorithm algo, typename T>
@@ -249,7 +274,7 @@ size_t ngfft_twiddle_count(ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>)
 }
 
 template <typename T, dft_algorithm algo>
-void ngfft_initialize(ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>)
+bool ngfft_initialize(ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>)
 {
     using traits = ngfft_traits<algo, T>;
 

@@ -36,7 +36,7 @@ namespace impl
 template size_t ngfft_twiddle_count<FLOAT>(ngfft_plan<FLOAT>&,
                                            cval_t<dft_algorithm, dft_algorithm::fourstep>);
 
-template void ngfft_initialize<FLOAT>(ngfft_plan<FLOAT>&, cval_t<dft_algorithm, dft_algorithm::fourstep>);
+template bool ngfft_initialize<FLOAT>(ngfft_plan<FLOAT>&, cval_t<dft_algorithm, dft_algorithm::fourstep>);
 
 template void ngfft_execute<FLOAT>(const ngfft_plan<FLOAT>&, cval_t<dft_algorithm, dft_algorithm::fourstep>,
                                    cbool_t<false>, complex<FLOAT>*);
