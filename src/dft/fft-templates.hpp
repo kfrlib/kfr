@@ -40,9 +40,11 @@ template void dft_execute<FLOAT>(const dft_plan<FLOAT>&, cbool_t<false>, complex
 template void dft_execute<FLOAT>(const dft_plan<FLOAT>&, cbool_t<true>, complex<FLOAT>*,
                                  const complex<FLOAT>*, u8*);
 template void dft_initialize_transpose<FLOAT>(internal_generic::fn_transpose<FLOAT>&);
+#ifdef KFR_CLASSIC_FFT
 template void dft_progressive_start(const dft_plan<FLOAT>&, typename dft_plan<FLOAT>::progressive&, bool,
                                     complex<FLOAT>*, const complex<FLOAT>*, u8*);
 template void dft_progressive_step(const dft_plan<FLOAT>&, typename dft_plan<FLOAT>::progressive&);
+#endif
 } // namespace impl
 } // namespace KFR_ARCH_NAME
 } // namespace kfr

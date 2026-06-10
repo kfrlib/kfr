@@ -63,7 +63,7 @@ template <typename T, dft_algorithm algo>
 size_t ngfft_twiddle_count(ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>);
 
 template <typename T, dft_algorithm algo>
-void ngfft_initialize(ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>);
+bool ngfft_initialize(ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>);
 
 template <typename T, dft_algorithm algo, bool inverse>
 void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, cbool_t<inverse>,
@@ -102,6 +102,7 @@ inline bool use_autosort(size_t log2n)
 
 namespace intr
 {
+#ifdef KFR_CLASSIC_FFT
 
 template <typename T, size_t width>
 KFR_INTRINSIC void initialize_twiddles_impl(complex<T>*& twiddle, size_t nn, size_t nnstep, size_t size,
@@ -290,6 +291,7 @@ static void initialize_twiddle_autosort(size_t N, size_t w, complex<T>*& twiddle
     }
     twiddle += N / Radix * (Radix - 1);
 }
+#endif
 
 template <typename T>
 struct fft_config
@@ -304,6 +306,37 @@ struct fft_config
 };
 
 constexpr inline bool fft_recursion = true;
+
+template <typename T, dft_algorithm algo>
+struct fft_ng_stage_impl : dft_stage<T>
+{
+    explicit fft_ng_stage_impl(size_t stage_size)
+    {
+        this->name       = dft_name(this);
+        this->stage_size = stage_size;
+        this->user       = std::countr_zero(stage_size);
+        ngfft_plan<T> plan{ uint8_t(this->user), nullptr };
+        this->data_size = sizeof(complex<T>) * impl::ngfft_twiddle_count(plan, cval<dft_algorithm, algo>);
+    }
+
+    virtual void do_initialize(size_t) override final
+    {
+        ngfft_plan<T> plan{ uint8_t(this->user), ptr_cast<complex<T>>(this->data) };
+        impl::ngfft_initialize(plan, cval<dft_algorithm, algo>);
+    }
+
+    DFT_STAGE_FN
+    template <bool inverse>
+    KFR_MEM_INTRINSIC void do_execute(complex<T>* out, const complex<T>* in, u8*)
+    {
+        if (in != out) [[unlikely]]
+            builtin_memcpy(out, in, sizeof(complex<T>) * this->stage_size);
+        ngfft_plan<T> plan{ uint8_t(this->user), ptr_cast<complex<T>>(this->data) };
+        impl::ngfft_execute(plan, cval<dft_algorithm, algo>, cbool_t<inverse>(), out);
+    }
+};
+
+#ifdef KFR_CLASSIC_FFT
 
 template <typename T, bool splitin>
 struct fft_stage_impl : dft_stage<T>
@@ -486,33 +519,6 @@ struct fft_reorder_stage_impl : dft_stage<T>
     }
 };
 
-template <typename T, dft_algorithm algo>
-struct fft_ng_stage_impl : dft_stage<T>
-{
-    explicit fft_ng_stage_impl(size_t stage_size)
-    {
-        this->name       = dft_name(this);
-        this->stage_size = stage_size;
-        this->user       = std::countr_zero(stage_size);
-        ngfft_plan<T> plan{ uint8_t(this->user), nullptr };
-        this->data_size = sizeof(complex<T>) * impl::ngfft_twiddle_count(plan, cval<dft_algorithm, algo>);
-    }
-
-    virtual void do_initialize(size_t) override final
-    {
-        ngfft_plan<T> plan{ uint8_t(this->user), ptr_cast<complex<T>>(this->data) };
-        impl::ngfft_initialize(plan, cval<dft_algorithm, algo>);
-    }
-
-    DFT_STAGE_FN
-    template <bool inverse>
-    KFR_MEM_INTRINSIC void do_execute(complex<T>* out, const complex<T>*, u8*)
-    {
-        ngfft_plan<T> plan{ uint8_t(this->user), ptr_cast<complex<T>>(this->data) };
-        impl::ngfft_execute(plan, cval<dft_algorithm, algo>, cbool_t<inverse>(), out);
-    }
-};
-
 template <typename T, bool is_first, bool is_last, bool radix8>
 struct fft_autosort_stage_impl : dft_stage<T>
 {
@@ -675,7 +681,7 @@ struct fft_specialization<T, 9> : fft_final_stage_impl<T, false, 512>
             intr::br(std::span<std::complex<T>, 512>{ out, 512 });
     }
 };
-#endif
+#endif /* KFR_AUTOSORT_FOR_512 */
 
 #ifdef KFR_AUTOSORT_FOR_1024
 template <typename T>
@@ -732,7 +738,7 @@ struct fft_specialization<T, 10> : fft_final_stage_impl<T, false, 1024>
             intr::br(std::span<std::complex<T>, 1024>{ out, 1024 });
     }
 };
-#endif
+#endif /* KFR_AUTOSORT_FOR_1024 */
 
 #ifdef KFR_AUTOSORT_FOR_2048
 template <typename T>
@@ -772,8 +778,11 @@ struct fft_specialization<T, 11> : dft_stage<T>
         autosort_pass_last(csize<8>, 256, csize<width>, no, no, no, cbool<inverse>, out, out, tw);
     }
 };
-#endif
+#endif /* KFR_AUTOSORT_FOR_2048 */
 
+#endif /* KFR_CLASSIC_FFT */
+
+#ifdef KFR_CLASSIC_FFT
 enum class dft_algo
 {
     classic,
@@ -784,7 +793,11 @@ enum class dft_algo
 template <bool first, typename T, dft_algo algo>
 void make_fft_stages(dft_plan<T>* self, cval_t<dft_algo, algo>, size_t stage_size, cbool_t<first>)
 {
-    if constexpr (algo == dft_algo::autosort)
+    if constexpr (algo == dft_algo::ng)
+    {
+        add_stage<fft_ng_stage_impl<T, dft_algorithm::fourstep>>(self, stage_size);
+    }
+    else if constexpr (algo == dft_algo::autosort)
     {
         if (stage_size >= 16)
         {
@@ -800,17 +813,6 @@ void make_fft_stages(dft_plan<T>* self, cval_t<dft_algo, algo>, size_t stage_siz
             else
                 add_stage<fft_autosort_stage_impl<T, false, true, false>>(self, stage_size,
                                                                           self->size / stage_size);
-        }
-    }
-    else if constexpr (algo == dft_algo::ng)
-    {
-        switch (fft_ng_algorithm)
-        {
-        case dft_algorithm::fourstep:
-            add_stage<fft_ng_stage_impl<T, dft_algorithm::fourstep>>(self, stage_size);
-            break;
-        default:
-            KFR_UNREACHABLE;
         }
     }
     else
@@ -836,9 +838,11 @@ void make_fft_stages(dft_plan<T>* self, cval_t<dft_algo, algo>, size_t stage_siz
         }
     }
 }
+#endif
 
 } // namespace intr
 
+#ifdef KFR_CLASSIC_FFT
 template <typename T>
 void make_fft(dft_plan<T>* self, size_t stage_size, bool autosort, bool ng)
 {
@@ -856,6 +860,7 @@ void make_fft(dft_plan<T>* self, size_t stage_size, bool autosort, bool ng)
         make_fft_stages(self, cval<dft_algo, dft_algo::classic>, stage_size, ctrue);
     }
 }
+#endif
 
 template <typename T>
 struct reverse_wrapper
@@ -915,6 +920,7 @@ KFR_INTRINSIC void initialize_order(dft_plan<T>* self)
 template <typename T>
 KFR_INTRINSIC void init_fft(dft_plan<T>* self, size_t size, dft_order)
 {
+#ifdef KFR_CLASSIC_FFT
     const size_t log2n  = ilog2(size);
     const bool autosort = fft_autosort && (use_autosort<T>(ilog2(size)) || self->progressive_optimized);
     const bool ng       = fft_ng;
@@ -933,6 +939,10 @@ KFR_INTRINSIC void init_fft(dft_plan<T>* self, size_t size, dft_order)
             add_stage<intr::fft_specialization<T, log2nv>>(self, size);
         },
         [&]() { make_fft(self, size, autosort, ng); });
+
+#else
+    add_stage<intr::fft_ng_stage_impl<T, dft_algorithm::fourstep>>(self, size);
+#endif
 }
 
 template <typename T>

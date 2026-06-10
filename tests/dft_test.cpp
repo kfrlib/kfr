@@ -250,7 +250,12 @@ TEST_CASE("fft_accuracy")
             for (bool inverse : { false, true })
             {
                 INFO((inverse ? "complex-inverse" : "complex-direct"));
-                for (bool progressive_optimized : { false, true })
+                for (bool progressive_optimized : { false
+#ifdef KFR_CLASSIC_FFT
+                                                    ,
+                                                    true
+#endif
+                     })
                 {
                     INFO((progressive_optimized ? "progressive-optimized" : "single-call-optimized"));
                     univector<complex<float_type>> in =
@@ -277,6 +282,7 @@ TEST_CASE("fft_accuracy")
                     const float_type rms_diff_outofplace = rms(cabs(refout - outo));
                     CHECK(rms_diff_outofplace <= min_prec);
 
+#ifdef KFR_CLASSIC_FFT
                     // Test progressive (step-by-step) execution
                     int steps = dft.progressive_total_steps();
                     auto prog = dft.progressive_start(inverse, outo.data(), in.data(), temp.data());
@@ -299,6 +305,7 @@ TEST_CASE("fft_accuracy")
                     CHECK(rms_diff_inplace_progressive <= min_prec);
                     const float_type rms_diff_outofplace_progressive = rms(cabs(refout - outo));
                     CHECK(rms_diff_outofplace_progressive <= min_prec);
+#endif
                 }
 
                 if (is_poweroftwo(size))
@@ -351,6 +358,7 @@ TEST_CASE("fft_accuracy")
                     const float_type rms_diff_inplace = rms(cabs(refout - outi.truncate(csize)));
                     CHECK(rms_diff_inplace <= min_prec);
 
+#ifdef KFR_CLASSIC_FFT
                     int steps = dft.progressive_total_steps();
                     auto prog = dft.progressive_start(out.data(), in.data(), temp.data());
                     while (dft.progressive_step(prog))
@@ -372,6 +380,7 @@ TEST_CASE("fft_accuracy")
                     CHECK(steps == 1);
                     const float_type rms_diff_inplace_progressive = rms(cabs(refout - outi.truncate(csize)));
                     CHECK(rms_diff_inplace_progressive <= min_prec);
+#endif
                 }
 
                 {
@@ -390,6 +399,7 @@ TEST_CASE("fft_accuracy")
                     const float_type rms_diff_inplace = rms(in - outi.truncate(size));
                     CHECK(rms_diff_inplace <= min_prec);
 
+#ifdef KFR_CLASSIC_FFT
                     int steps = dft.progressive_total_steps();
                     auto prog = dft.progressive_start(out2.data(), out.data(), temp.data());
                     while (dft.progressive_step(prog))
@@ -413,6 +423,7 @@ TEST_CASE("fft_accuracy")
                     outi                                          = outi / size;
                     const float_type rms_diff_inplace_progressive = rms(in - outi.truncate(size));
                     CHECK(rms_diff_inplace_progressive <= min_prec);
+#endif
                 }
             }
         });
