@@ -68,22 +68,18 @@ namespace intr
 
 KFR_INTRINSIC constexpr std::pair<uint8_t, uint8_t> sandwich_split_size(uint8_t l2fftsize) noexcept
 {
-    if (l2fftsize == 10)
-    {
-        return { 4, 6 };
-    }
-
-    if (l2fftsize >= 16)
+    if (l2fftsize >= 10)
     {
         return { l2fftsize - 6, 6 };
     }
-#if 1
-    uint8_t l2r1 = ((l2fftsize / 2 + 1)) & ~1u; // radix-4 aligned
-#else
-    uint8_t l2r1 = l2fftsize / 2;
-#endif
-    uint8_t l2r2 = l2fftsize - l2r1;
-    return { l2r1, l2r2 };
+    else if (l2fftsize >= 6)
+    {
+        return { l2fftsize - 4, 4 };
+    }
+    else
+    {
+        return { l2fftsize / 2, l2fftsize - l2fftsize / 2 };
+    }
 }
 
 template <dft_traits traits>
