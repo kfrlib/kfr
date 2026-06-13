@@ -543,6 +543,10 @@ if (KFR_INSTALL_HEADERS)
         RENAME config.h)
 endif ()
 
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt
+              ${CMAKE_CURRENT_SOURCE_DIR}/README.md
+        DESTINATION .)
+
 # uninstall target
 if (NOT TARGET uninstall)
     configure_file(
