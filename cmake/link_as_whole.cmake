@@ -9,7 +9,7 @@ function (link_as_whole TARGET TYPE LIBRARY)
         target_link_options(
             ${TARGET}
             ${TYPE}
-            "LINKER:--push-state,--whole-archive,$<TARGET_FILE:${LIBRARY}>,--pop-state"
+            "LINKER:--whole-archive,$<TARGET_FILE:${LIBRARY}>,--no-whole-archive"
         )
     endif ()
 endfunction ()

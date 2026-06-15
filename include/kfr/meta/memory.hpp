@@ -78,7 +78,7 @@ inline void* aligned_malloc(size_t size, size_t alignment)
     aligned_header(aligned_ptr)->size         = size;
     return aligned_ptr;
 #else
-#ifdef _MSC_VER
+#if defined(_WIN32)
     return _aligned_malloc(align_up(size, alignment), alignment);
 #else
     void* ptr = nullptr;
@@ -106,7 +106,7 @@ inline void aligned_free(void* ptr)
     if (--aligned_header(ptr)->references() == 0)
         aligned_force_free(ptr);
 #else
-#ifdef _MSC_VER
+#if defined(_WIN32)
     return _aligned_free(ptr);
 #else
     return std::free(ptr);
