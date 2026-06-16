@@ -1317,9 +1317,12 @@ void dft_real_initialize(dft_plan_real<T>& plan)
     if (plan.size == 0)
         return;
     initialize_stages(&plan);
-    add_stage<intr::dft_stage_real_repack<T>, false>(&plan, plan.size, plan.fmt);
-    plan.stages[0].push_back(plan.all_stages.back().get());
-    plan.stages[1].insert(plan.stages[1].begin(), plan.all_stages.back().get());
+    if (plan.size % 2 == 0)
+    {
+        add_stage<intr::dft_stage_real_repack<T>, false>(&plan, plan.size, plan.fmt);
+        plan.stages[0].push_back(plan.all_stages.back().get());
+        plan.stages[1].insert(plan.stages[1].begin(), plan.all_stages.back().get());
+    }
     initialize_data(&plan);
     initialize_order(&plan);
 }

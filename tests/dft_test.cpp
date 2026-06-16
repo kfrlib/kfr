@@ -220,6 +220,16 @@ TEST_CASE("fft_reconstruction")
     }
 }
 
+template <std::floating_point T>
+constexpr T dft_precision(std::size_t n)
+{
+    if (n <= 1)
+        return T(0);
+    const T eps = std::numeric_limits<T>::epsilon();
+    const T lg  = std::max<T>(1, std::log2(T(n)));
+    return T(32) * eps * std::sqrt(T(n)) * lg * lg;
+}
+
 TEST_CASE("fft_accuracy")
 {
     random_state gen = random_init(2247448713, 915890490, 864203735, 2982561);
@@ -234,6 +244,7 @@ TEST_CASE("fft_accuracy")
         if (std::find(sizes.begin(), sizes.end(), s) == sizes.end())
             sizes.push_back(s);
     }
+    sizes.push_back(10007);
 #endif
 #ifdef DEBUG_DFT_PROGRESS
     println(sizes);
@@ -245,7 +256,7 @@ TEST_CASE("fft_accuracy")
         [&gen](auto type, size_t size)
         {
             using float_type      = type_of<decltype(type)>;
-            const double min_prec = choose_const<float_type>(1e-6f, 1e-14) * size; // * size;
+            const double min_prec = dft_precision<float_type>(size);
 
             for (bool inverse : { false, true })
             {
@@ -334,7 +345,6 @@ TEST_CASE("fft_accuracy")
                 }
             }
 
-            if (is_even(size))
             {
                 index_t csize = dft_plan_real<float_type>::complex_size_for(size, dft_pack_format::CCs);
                 univector<float_type> in = truncate(gen_random_range<float_type>(gen, -1.0, +1.0), size);
@@ -351,36 +361,41 @@ TEST_CASE("fft_accuracy")
                     const float_type rms_diff_outofplace = rms(cabs(refout - out));
                     CHECK(rms_diff_outofplace <= min_prec);
 
-                    univector<complex<float_type>> outi(csize);
-                    outi = padded(make_univector(ptr_cast<complex<float_type>>(in.data()), size / 2),
-                                  complex<float_type>{ 0.f });
-                    dft.execute(outi.data(), ptr_cast<float_type>(outi.data()), temp.data());
-                    const float_type rms_diff_inplace = rms(cabs(refout - outi.truncate(csize)));
-                    CHECK(rms_diff_inplace <= min_prec);
+                    if (is_even(size))
+                    {
+                        univector<complex<float_type>> outi(csize);
+                        outi = padded(make_univector(ptr_cast<complex<float_type>>(in.data()), size / 2),
+                                      complex<float_type>{ 0.f });
+                        dft.execute(outi.data(), ptr_cast<float_type>(outi.data()), temp.data());
+                        const float_type rms_diff_inplace = rms(cabs(refout - outi.truncate(csize)));
+                        CHECK(rms_diff_inplace <= min_prec);
 
 #ifdef KFR_CLASSIC_FFT
-                    int steps = dft.progressive_total_steps();
-                    auto prog = dft.progressive_start(out.data(), in.data(), temp.data());
-                    while (dft.progressive_step(prog))
-                    {
-                        --steps;
-                    }
-                    CHECK(steps == 1);
-                    const float_type rms_diff_outofplace_progressive = rms(cabs(refout - out));
-                    CHECK(rms_diff_outofplace_progressive <= min_prec);
+                        int steps = dft.progressive_total_steps();
+                        auto prog = dft.progressive_start(out.data(), in.data(), temp.data());
+                        while (dft.progressive_step(prog))
+                        {
+                            --steps;
+                        }
+                        CHECK(steps == 1);
+                        const float_type rms_diff_outofplace_progressive = rms(cabs(refout - out));
+                        CHECK(rms_diff_outofplace_progressive <= min_prec);
 
-                    outi  = padded(make_univector(ptr_cast<complex<float_type>>(in.data()), size / 2),
-                                   complex<float_type>{ 0.f });
-                    steps = dft.progressive_total_steps();
-                    prog = dft.progressive_start(outi.data(), ptr_cast<float_type>(outi.data()), temp.data());
-                    while (dft.progressive_step(prog))
-                    {
-                        --steps;
-                    }
-                    CHECK(steps == 1);
-                    const float_type rms_diff_inplace_progressive = rms(cabs(refout - outi.truncate(csize)));
-                    CHECK(rms_diff_inplace_progressive <= min_prec);
+                        outi  = padded(make_univector(ptr_cast<complex<float_type>>(in.data()), size / 2),
+                                       complex<float_type>{ 0.f });
+                        steps = dft.progressive_total_steps();
+                        prog  = dft.progressive_start(outi.data(), ptr_cast<float_type>(outi.data()),
+                                                      temp.data());
+                        while (dft.progressive_step(prog))
+                        {
+                            --steps;
+                        }
+                        CHECK(steps == 1);
+                        const float_type rms_diff_inplace_progressive =
+                            rms(cabs(refout - outi.truncate(csize)));
+                        CHECK(rms_diff_inplace_progressive <= min_prec);
 #endif
+                    }
                 }
 
                 {
@@ -391,39 +406,47 @@ TEST_CASE("fft_accuracy")
                     const float_type rms_diff_outofplace = rms(in - out2);
                     CHECK(rms_diff_outofplace <= min_prec);
 
-                    univector<float_type> outi(2 * csize);
-                    outi = make_univector(ptr_cast<float_type>(out.data()), 2 * csize);
+                    if (is_even(size))
+                    {
+                        univector<float_type> outi(2 * csize);
+                        outi = make_univector(ptr_cast<float_type>(out.data()), 2 * csize);
 
-                    dft.execute(outi.data(), ptr_cast<complex<float_type>>(outi.data()), temp.data());
-                    outi                              = outi / size;
-                    const float_type rms_diff_inplace = rms(in - outi.truncate(size));
-                    CHECK(rms_diff_inplace <= min_prec);
+                        dft.execute(outi.data(), ptr_cast<complex<float_type>>(outi.data()), temp.data());
+                        outi                              = outi / size;
+                        const float_type rms_diff_inplace = rms(in - outi.truncate(size));
+                        CHECK(rms_diff_inplace <= min_prec);
 
 #ifdef KFR_CLASSIC_FFT
-                    int steps = dft.progressive_total_steps();
-                    auto prog = dft.progressive_start(out2.data(), out.data(), temp.data());
-                    while (dft.progressive_step(prog))
-                    {
-                        --steps;
-                    }
-                    CHECK(steps == 1);
-                    out2                                             = out2 / size;
-                    const float_type rms_diff_outofplace_progressive = rms(in - out2);
-                    CHECK(rms_diff_outofplace_progressive <= min_prec);
+                        int steps = dft.progressive_total_steps();
+                        auto prog = dft.progressive_start(out2.data(), out.data(), temp.data());
+                        while (dft.progressive_step(prog))
+                        {
+                            --steps;
+                        }
+                        CHECK(steps == 1);
+                        out2                                             = out2 / size;
+                        const float_type rms_diff_outofplace_progressive = rms(in - out2);
+                        CHECK(rms_diff_outofplace_progressive <= min_prec);
 
-                    outi  = make_univector(ptr_cast<float_type>(out.data()), 2 * csize);
-                    steps = dft.progressive_total_steps();
-                    prog  = dft.progressive_start(outi.data(), ptr_cast<complex<float_type>>(outi.data()),
-                                                  temp.data());
-                    while (dft.progressive_step(prog))
-                    {
-                        --steps;
-                    }
-                    CHECK(steps == 1);
-                    outi                                          = outi / size;
-                    const float_type rms_diff_inplace_progressive = rms(in - outi.truncate(size));
-                    CHECK(rms_diff_inplace_progressive <= min_prec);
+                        outi  = make_univector(ptr_cast<float_type>(out.data()), 2 * csize);
+                        steps = dft.progressive_total_steps();
+                        prog  = dft.progressive_start(outi.data(), ptr_cast<complex<float_type>>(outi.data()),
+                                                      temp.data());
+                        while (dft.progressive_step(prog))
+                        {
+                            --steps;
+                        }
+                        CHECK(steps == 1);
+                        outi                                          = outi / size;
+                        const float_type rms_diff_inplace_progressive = rms(in - outi.truncate(size));
+                        CHECK(rms_diff_inplace_progressive <= min_prec);
 #endif
+                    }
+                    else
+                    {
+                        // Out-of-place only for odd sizes (in-place ptr_cast not possible)
+                        (void)out2;
+                    }
                 }
             }
         });

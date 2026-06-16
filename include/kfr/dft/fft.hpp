@@ -153,10 +153,10 @@ enum class dft_order
  */
 enum class dft_pack_format
 {
-    /// Packed format: {X[0].r, X[N].r}, ... {X[i].r, X[i].i}, ... {X[N-1].r, X[N-1].i}
+    /// Packed format: {DC, Nyquist}, X[1], X[2], ..., X[N/2-1]
     /// Number of complex samples is $\frac{N}{2}$ where N is the number of real samples
     Perm,
-    /// Conjugate-symmetric format: {X[0].r, 0}, ... {X[i].r, X[i].i}, ... {X[N-1].r, X[N-1].i}, {X[N].r, 0}
+    /// Conjugate-symmetric format: {DC, 0}, X[1], X[2], ..., X[N/2-1], {Nyquist, 0}
     /// Number of complex samples is $\frac{N}{2}+1$ where N is the number of real samples
     CCs,
 };
@@ -505,6 +505,8 @@ protected:
     }
 };
 
+#define KFR_DFT_SUPPORTS_ODD_REAL 1
+
 /// @brief Real-to-complex and Complex-to-real 1D DFT
 template <typename T>
 struct dft_plan_real : dft_plan<T>
@@ -524,15 +526,15 @@ struct dft_plan_real : dft_plan<T>
     size_t complex_size() const { return complex_size_for(size, fmt); }
     constexpr static size_t complex_size_for(size_t size, dft_pack_format fmt)
     {
-        return fmt == dft_pack_format::CCs ? size / 2 + 1 : size / 2;
+        return fmt == dft_pack_format::CCs ? size / 2 + 1 : (size + 1) / 2;
     }
 
     explicit dft_plan_real(size_t size, dft_pack_format fmt = dft_pack_format::CCs,
                            bool progressive_optimized = false)
-        : dft_plan<T>(typename dft_plan<T>::noinit{}, size / 2, dft_order::normal, progressive_optimized),
+        : dft_plan<T>(typename dft_plan<T>::noinit{}, size % 2 ? size : size / 2, dft_order::normal,
+                      progressive_optimized),
           size(size), fmt(fmt)
     {
-        KFR_LOGIC_CHECK(is_even(size), "dft_plan_real requires size to be even");
         internal_generic::dft_real_initialize(*this);
     }
 
@@ -559,39 +561,93 @@ struct dft_plan_real : dft_plan<T>
 
     KFR_MEM_INTRINSIC void execute(complex<T>* out, const T* in, u8* temp, cdirect_t = {}) const
     {
-        this->execute_dft(cfalse, out, ptr_cast<complex<T>>(in), temp);
+        if (this->size % 2 == 0)
+        {
+            this->execute_dft(cfalse, out, ptr_cast<complex<T>>(in), temp);
+        }
+        else
+        {
+            call_with_temp(sizeof(complex<T>) * this->size,
+                           [&](u8* complex_buf)
+                           {
+                               complex<T>* tmp = ptr_cast<complex<T>>(complex_buf);
+                               // Copy real input to temporary complex buffer with zero imaginary parts
+                               process(make_univector(tmp, this->size), make_univector(in, this->size));
+
+                               // Execute DFT on the temporary buffer
+                               this->execute_dft(cfalse, tmp, tmp, temp);
+                               // Copy the first N/2+1 values of result to the output buffer
+                               const size_t csize = complex_size();
+                               builtin_memcpy(out, tmp, sizeof(complex<T>) * csize);
+                           });
+        }
     }
     KFR_MEM_INTRINSIC void execute(T* out, const complex<T>* in, u8* temp, cinvert_t = {}) const
     {
-        this->execute_dft(ctrue, ptr_cast<complex<T>>(out), in, temp);
+        if (this->size % 2 == 0)
+        {
+            this->execute_dft(ctrue, ptr_cast<complex<T>>(out), in, temp);
+        }
+        else
+        {
+            call_with_temp(sizeof(complex<T>) * this->size,
+                           [&](u8* complex_buf)
+                           {
+                               complex<T>* tmp = ptr_cast<complex<T>>(complex_buf);
+                               // Copy complex input to temporary complex buffer, reconstructing the second
+                               // half of the spectrum
+                               reconstruct_spectrum(tmp, in);
+                               // Execute IDFT on the temporary buffer
+                               this->execute_dft(ctrue, tmp, tmp, temp);
+                               // Copy the real parts of the result to the output buffer
+                               process(make_univector(out, this->size),
+                                       real(make_univector(tmp, this->size)));
+                           });
+        }
     }
 
     template <univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
     KFR_MEM_INTRINSIC void execute(univector<complex<T>, Tag1>& out, const univector<T, Tag2>& in,
                                    univector<u8, Tag3>& temp, cdirect_t = {}) const
     {
-        this->execute_dft(cfalse, out.data(), ptr_cast<complex<T>>(in.data()), temp.data());
+        this->execute(out.data(), in.data(), temp.data(), cdirect_t());
     }
     template <univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
     KFR_MEM_INTRINSIC void execute(univector<T, Tag1>& out, const univector<complex<T>, Tag2>& in,
                                    univector<u8, Tag3>& temp, cinvert_t = {}) const
     {
-        this->execute_dft(ctrue, ptr_cast<complex<T>>(out.data()), in.data(), temp.data());
+        this->execute(out.data(), in.data(), temp.data(), cinvert_t());
     }
 
     template <univector_tag Tag1, univector_tag Tag2>
     KFR_MEM_INTRINSIC void execute(univector<complex<T>, Tag1>& out, const univector<T, Tag2>& in, u8* temp,
                                    cdirect_t = {}) const
     {
-        this->execute_dft(cfalse, out.data(), ptr_cast<complex<T>>(in.data()), temp);
+        this->execute(out.data(), in.data(), temp, cdirect_t());
     }
     template <univector_tag Tag1, univector_tag Tag2>
     KFR_MEM_INTRINSIC void execute(univector<T, Tag1>& out, const univector<complex<T>, Tag2>& in, u8* temp,
                                    cinvert_t = {}) const
     {
-        this->execute_dft(ctrue, ptr_cast<complex<T>>(out.data()), in.data(), temp);
+        this->execute(out.data(), in.data(), temp, cinvert_t());
     }
 
+private:
+    KFR_INTRINSIC void reconstruct_spectrum(complex<T>* tmp, const complex<T>* in) const
+    {
+        // Input: (N+1)/2 complex values (first half of Hermitian-symmetric spectrum)
+        // Output: N complex values (full spectrum with conjugate symmetry)
+        //   tmp[k] = in[k]           for k = 0 .. (N-1)/2
+        //   tmp[k] = conj(in[N-k])   for k = (N+1)/2 .. N-1
+        const size_t N     = this->size;
+        const size_t csize = complex_size(); // (N+1)/2
+        builtin_memcpy(tmp, in, sizeof(complex<T>) * csize);
+        // Reconstruct the second half using Hermitian symmetry: X[N-k] = conj(X[k])
+        // For k from 1 to (N-1)/2, set tmp[N-k] = conj(in[k])
+        process(make_univector(tmp + csize, csize - 1), reverse(cconj(make_univector(in + 1, csize - 1))));
+    }
+
+public:
 #ifdef KFR_CLASSIC_FFT
     using progressive = typename dft_plan<T>::progressive;
 
