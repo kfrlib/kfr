@@ -1705,18 +1705,19 @@ KFR_INTRINSIC void butterflies(size_t count, csize_t<width>, Args&&... args)
     butterfly_cycle(i, count, csize_t<width>(), std::forward<Args>(args)...);
 }
 
-template <typename T, bool inverse, typename Tradix, typename Tstride>
+template <typename T, bool inverse, typename Tradix, typename Tstride, typename Tistride>
 KFR_INTRINSIC void generic_butterfly_cycle(csize_t<0>, Tradix, cbool_t<inverse>, complex<T>*,
                                            const complex<T>*, Tstride, size_t, size_t, const complex<T>*,
-                                           size_t)
+                                           size_t, Tistride)
 {
 }
 
 template <size_t width, bool inverse, typename T, typename Tradix, typename Thalfradix,
-          typename Thalfradixsqr, typename Tstride>
+          typename Thalfradixsqr, typename Tstride, typename Tistride>
 KFR_INTRINSIC void generic_butterfly_cycle(csize_t<width>, Tradix radix, cbool_t<inverse>, complex<T>* out,
                                            const complex<T>* in, Tstride ostride, Thalfradix halfradix,
-                                           Thalfradixsqr halfradix_sqr, const complex<T>* twiddle, size_t i)
+                                           Thalfradixsqr halfradix_sqr, const complex<T>* twiddle, size_t i,
+                                           Tistride istride)
 {
     KFR_LOOP_NOUNROLL
     for (; i < halfradix / width * width; i += width)
@@ -1727,8 +1728,8 @@ KFR_INTRINSIC void generic_butterfly_cycle(csize_t<width>, Tradix radix, cbool_t
 
         for (size_t j = 0; j < halfradix; j++)
         {
-            const cvec<T, 1> ina = cread<1>(in + (1 + j));
-            const cvec<T, 1> inb = cread<1>(in + radix - (j + 1));
+            const cvec<T, 1> ina = cread<1>(in + (1 + j) * istride);
+            const cvec<T, 1> inb = cread<1>(in + (radix - (j + 1)) * istride);
             cvec<T, width> tw    = cread<width>(twiddle);
             if constexpr (inverse)
                 tw = negodd /*cconj*/ (tw);
@@ -1751,7 +1752,7 @@ KFR_INTRINSIC void generic_butterfly_cycle(csize_t<width>, Tradix radix, cbool_t
         }
     }
     generic_butterfly_cycle(csize_t<width / 2>(), radix, cbool_t<inverse>(), out, in, ostride, halfradix,
-                            halfradix_sqr, twiddle, i);
+                            halfradix_sqr, twiddle, i, istride);
 }
 
 template <typename T>
@@ -1766,55 +1767,82 @@ KFR_INTRINSIC vec<T, 2> hcadd(vec<T, N> value)
     return hcadd(low(value) + high(value));
 }
 
-template <size_t width, typename T, bool inverse, typename Tstride = csize_t<1>>
+template <size_t width, typename T, bool inverse, typename Tstride = csize_t<1>,
+          typename Tistride = csize_t<1>>
 KFR_INTRINSIC void generic_butterfly_w(size_t radix, cbool_t<inverse>, complex<T>* out, const complex<T>* in,
-                                       const complex<T>* twiddle, Tstride ostride = Tstride{})
+                                       const complex<T>* twiddle, Tstride ostride = Tstride{},
+                                       Tistride istride = Tistride{})
 {
     KFR_ASSUME(radix > 0);
     {
-        cvec<T, width> sum = T();
-        size_t j           = 0;
-        KFR_LOOP_NOUNROLL
-        for (; j < radix / width * width; j += width)
-        {
-            sum += cread<width>(in + j);
-        }
         cvec<T, 1> sums = T();
-        KFR_LOOP_NOUNROLL
-        for (; j < radix; j++)
+        if (is_constant_val(istride))
         {
-            sums += cread<1>(in + j);
+            cvec<T, width> sum = T();
+            size_t j           = 0;
+            KFR_LOOP_NOUNROLL
+            for (; j < radix / width * width; j += width)
+            {
+                sum += cread<width>(in + j);
+            }
+            KFR_LOOP_NOUNROLL
+            for (; j < radix; j++)
+            {
+                sums += cread<1>(in + j);
+            }
+            sums += hcadd(sum);
         }
-        cwrite<1>(out, hcadd(sum) + sums);
+        else
+        {
+            KFR_LOOP_NOUNROLL
+            for (size_t j = 0; j < radix; j++)
+            {
+                sums += cread<1>(in + j * istride);
+            }
+        }
+        cwrite<1>(out, sums);
     }
     const auto halfradix = radix / 2;
     KFR_ASSUME(halfradix > 0);
     size_t i = 0;
 
     generic_butterfly_cycle(csize_t<width>(), radix, cbool_t<inverse>(), out, in, ostride, halfradix,
-                            halfradix * halfradix, twiddle, i);
+                            halfradix * halfradix, twiddle, i, istride);
 }
 
-template <size_t width, size_t radix, typename T, bool inverse, typename Tstride = csize_t<1>>
+template <size_t width, size_t radix, typename T, bool inverse, typename Tstride = csize_t<1>,
+          typename Tistride = csize_t<1>>
 KFR_INTRINSIC void spec_generic_butterfly_w(csize_t<radix>, cbool_t<inverse>, complex<T>* out,
                                             const complex<T>* in, const complex<T>* twiddle,
-                                            Tstride ostride = Tstride{})
+                                            Tstride ostride = Tstride{}, Tistride istride = Tistride{})
 {
     {
-        cvec<T, width> sum = T();
-        size_t j           = 0;
-        KFR_LOOP_UNROLL
-        for (; j < radix / width * width; j += width)
-        {
-            sum += cread<width>(in + j);
-        }
         cvec<T, 1> sums = T();
-        KFR_LOOP_UNROLL
-        for (; j < radix; j++)
+        if (is_constant_val(istride))
         {
-            sums += cread<1>(in + j);
+            cvec<T, width> sum = T();
+            size_t j           = 0;
+            KFR_LOOP_UNROLL
+            for (; j < radix / width * width; j += width)
+            {
+                sum += cread<width>(in + j);
+            }
+            KFR_LOOP_UNROLL
+            for (; j < radix; j++)
+            {
+                sums += cread<1>(in + j);
+            }
+            sums += hcadd(sum);
         }
-        cwrite<1>(out, hcadd(sum) + sums);
+        else
+        {
+            KFR_LOOP_NOUNROLL
+            for (size_t j = 0; j < radix; j++)
+            {
+                sums += cread<1>(in + j * istride);
+            }
+        }
+        cwrite<1>(out, sums);
     }
     const size_t halfradix     = radix / 2;
     const size_t halfradix_sqr = halfradix * halfradix;
@@ -1822,24 +1850,25 @@ KFR_INTRINSIC void spec_generic_butterfly_w(csize_t<radix>, cbool_t<inverse>, co
     size_t i = 0;
 
     generic_butterfly_cycle(csize_t<width>(), radix, cbool_t<inverse>(), out, in, ostride, halfradix,
-                            halfradix_sqr, twiddle, i);
+                            halfradix_sqr, twiddle, i, istride);
 }
 
-template <typename T, bool inverse, typename Tstride = csize_t<1>>
+template <typename T, bool inverse, typename Tstride = csize_t<1>, typename Tistride = csize_t<1>>
 KFR_INTRINSIC void generic_butterfly(size_t radix, cbool_t<inverse>, complex<T>* out, const complex<T>* in,
-                                     complex<T>*, const complex<T>* twiddle, Tstride ostride = {})
+                                     complex<T>*, const complex<T>* twiddle, Tstride ostride = {},
+                                     Tistride istride = {})
 {
     cswitch(
         csizes_t<11, 13>(), radix,
         [&](auto radix_) KFR_INLINE_LAMBDA
         {
             constexpr size_t width = vector_width<T>;
-            spec_generic_butterfly_w<width>(radix_, cbool_t<inverse>(), out, in, twiddle, ostride);
+            spec_generic_butterfly_w<width>(radix_, cbool_t<inverse>(), out, in, twiddle, ostride, istride);
         },
         [&]() KFR_INLINE_LAMBDA
         {
             constexpr size_t width = vector_width<T>;
-            generic_butterfly_w<width>(radix, cbool_t<inverse>(), out, in, twiddle, ostride);
+            generic_butterfly_w<width>(radix, cbool_t<inverse>(), out, in, twiddle, ostride, istride);
         });
 }
 
