@@ -162,9 +162,9 @@ KFR_INTRINSIC void sandwich_iterate(uint8_t l2fftsize, Fn&& fn)
     {
         // butterflies=max blocks=1
         fn(bfly_pass(cl2radix<l2baseradix>{}, uint8_t(l2fmb), cl2blocks<0>{}));
-        uint8_t l2stride = l2fmb - l2baseradix;
+        int l2stride = l2fmb - l2baseradix;
 
-        while (l2stride >= half.l2remaining)
+        while (l2stride >= static_cast<int>(half.l2remaining))
         {
             fn(bfly_pass(cl2radix<l2baseradix>{}, uint8_t(l2stride), uint8_t(l2fmb - l2stride)));
             l2stride -= l2baseradix;
