@@ -901,12 +901,12 @@ struct dft_plan_md_real
     }
     void execute(complex<T>* out, const T* in, u8* temp, bool inverse) const
     {
-        KFR_LOGIC_CHECK(inverse, "dft_plan_md_real: incorrect usage");
+        KFR_LOGIC_CHECK(!inverse, "dft_plan_md_real: incorrect usage");
         execute_dft(cfalse, out, in, temp);
     }
     void execute(T* out, const complex<T>* in, u8* temp, bool inverse) const
     {
-        KFR_LOGIC_CHECK(!inverse, "dft_plan_md_real: incorrect usage");
+        KFR_LOGIC_CHECK(inverse, "dft_plan_md_real: incorrect usage");
         execute_dft(ctrue, out, in, temp);
     }
 
@@ -1214,11 +1214,11 @@ inline void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>
 {
     if (inverse)
     {
-        return ngfft_execute<T, algo, true>(plan, ctrue, ctrue, inout);
+        return ngfft_execute<T, algo, true>(plan, cval<dft_algorithm, algo>, ctrue, inout);
     }
     else
     {
-        return ngfft_execute<T, algo, false>(plan, cfalse, cfalse, inout);
+        return ngfft_execute<T, algo, false>(plan, cval<dft_algorithm, algo>, cfalse, inout);
     }
 }
 
