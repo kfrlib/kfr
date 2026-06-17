@@ -2,6 +2,7 @@
 
 ## Getting started
 
+* [Introduction](introduction.md)
 * [What's new in KFR 7](whatsnew7.md)
 * [Installation](installation.md)
 * [Basics](basics.md)
