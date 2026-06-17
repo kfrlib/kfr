@@ -268,7 +268,7 @@ constexpr KFR_INTRINSIC vec<T, N> imag(const vec<complex<T>, N>& value)
 KFR_FN(imag)
 
 /// @brief Constructs complex value from real and imaginary parts
-template <typename T1, typename T2 = T1, size_t N, typename T = std::common_type_t<T1, T2>>
+template <typename T1, typename T2 = T1, size_t N, typename T = flt_type<std::common_type_t<T1, T2>>>
 constexpr KFR_INTRINSIC vec<complex<T>, N> make_complex(const vec<T1, N>& real,
                                                         const vec<T2, N>& imag = T2(0))
 {
@@ -276,7 +276,7 @@ constexpr KFR_INTRINSIC vec<complex<T>, N> make_complex(const vec<T1, N>& real,
 }
 
 /// @brief Constructs complex value from real and imaginary parts
-template <numeric T1, numeric T2 = T1, typename T = std::common_type_t<T1, T2>>
+template <numeric T1, numeric T2 = T1, typename T = flt_type<std::common_type_t<T1, T2>>>
 constexpr KFR_INTRINSIC complex<T> make_complex(T1 real, T2 imag = T2(0))
 {
     return complex<T>(promoteto<T>(real), promoteto<T>(imag));
