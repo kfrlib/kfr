@@ -386,38 +386,54 @@ struct audiofile_format
  */
 struct audio_stat
 {
-    fbase peak;
-    fbase rms;
+    fbase peak; ///< Peak absolute sample value across all channels.
+    fbase rms;  ///< Root mean square of all samples across all channels.
 };
 
 namespace details
 {
 
+/**
+ * @brief Rounds a size up to the next power of two.
+ * @param size Requested size in elements.
+ * @return Smallest power of two greater than or equal to @p size.
+ */
 inline size_t round_capacity(size_t size) { return std::bit_ceil(size); }
 
+/**
+ * @brief RAII wrapper that deallocates an aligned fbase buffer on destruction.
+ */
 struct aligned_deallocator
 {
-    fbase* ptr;
+    fbase* ptr; ///< Pointer to the aligned buffer to deallocate.
     ~aligned_deallocator() { kfr::aligned_deallocate(ptr); }
 };
+/**
+ * @brief RAII wrapper that invokes a callable on destruction.
+ * @tparam Fn Callable type with no arguments and void return.
+ */
 template <typename Fn>
 struct lambda_deallocator
 {
-    Fn fn;
+    Fn fn; ///< Callable invoked in the destructor.
     ~lambda_deallocator() { fn(); }
 };
 } // namespace details
 
 /**
  * @brief Represents a strided audio channel.
+ *
+ * Provides a view over a single channel of an interleaved audio buffer, where
+ * successive samples are separated by a fixed stride in memory.
+ *
  * @tparam T Data type.
  */
 template <typename T>
 struct strided_channel
 {
-    T* data;
-    size_t size;
-    size_t stride;
+    T* data;     ///< Pointer to the first sample of the channel.
+    size_t size; ///< Number of samples in the channel.
+    size_t stride; ///< Stride (in elements) between successive samples.
 };
 
 template <typename T>
@@ -464,7 +480,6 @@ struct audio_data
     bool operator==(const audio_data& other) const noexcept = default;
 
     [[nodiscard]] constexpr audio_data() noexcept : size(0), capacity(0) {}
-
     /**
      * @brief Converts between planar and interleaved layouts.
      *
@@ -493,6 +508,18 @@ struct audio_data
     audio_data& operator=(const audio_data&) noexcept = default;
     audio_data& operator=(audio_data&&) noexcept      = default;
 
+    /**
+     * @brief Constructs a planar audio_data view from external channel pointers with a custom deallocator.
+     *
+     * Takes ownership of the provided channel pointers and registers @p deallocator to be invoked
+     * when this audio_data is destroyed. The buffer is treated as planar (one pointer per channel).
+     *
+     * @param pointers Span of per-channel fbase pointers (one per channel).
+     * @param size Number of samples per channel.
+     * @param deallocator Callable invoked on destruction to release the underlying storage.
+     *
+     * @pre pointers.size() > 0 && pointers.size() <= max_audio_channels
+     */
     template <std::invocable Fn>
     [[nodiscard]] audio_data(std::span<fbase* const> pointers, size_t size, Fn&& deallocator)
         requires(!Interleaved)
@@ -501,12 +528,48 @@ struct audio_data
         deallocator.reset(new details::lambda_deallocator<Fn>{ std::forward<Fn>(deallocator) });
     }
 
+    /**
+     * @brief Constructs a planar audio_data view from external channel pointers.
+     *
+     * The resulting audio_data does not own the storage; the caller must keep the buffers alive
+     * for the lifetime of this object. Channel count is taken from @p pointers.size().
+     *
+     * @param pointers Span of per-channel fbase pointers (one per channel).
+     * @param size Number of samples per channel.
+     *
+     * @pre pointers.size() > 0 && pointers.size() <= max_audio_channels
+     */
     [[nodiscard]] audio_data(std::span<fbase* const> pointers, size_t size)
         requires(!Interleaved);
 
+    /**
+     * @brief Constructs an interleaved audio_data view from an external buffer.
+     *
+     * The resulting audio_data does not own the storage; the caller must keep the buffer alive
+     * for the lifetime of this object. Samples are assumed to be interleaved across @p channels.
+     *
+     * @param pointer Pointer to the interleaved sample buffer (size * channels elements).
+     * @param channels Number of interleaved channels.
+     * @param size Number of frames (samples per channel).
+     *
+     * @pre channels > 0 && channels <= max_audio_channels
+     */
     [[nodiscard]] audio_data(fbase* pointer, size_t channels, size_t size)
         requires(Interleaved);
 
+    /**
+     * @brief Constructs an interleaved audio_data view from an external buffer with a custom deallocator.
+     *
+     * Takes ownership of the provided interleaved buffer and registers @p deallocator to be invoked
+     * when this audio_data is destroyed.
+     *
+     * @param pointer Pointer to the interleaved sample buffer (size * channels elements).
+     * @param channels Number of interleaved channels.
+     * @param size Number of frames (samples per channel).
+     * @param deallocator Callable invoked on destruction to release the underlying storage.
+     *
+     * @pre channels > 0 && channels <= max_audio_channels
+     */
     template <std::invocable Fn>
     [[nodiscard]] audio_data(fbase* pointer, size_t channels, size_t size, Fn&& deallocator)
         requires(Interleaved)
@@ -613,18 +676,73 @@ struct audio_data
      */
     void resize(size_t new_size, fbase value);
 
+    /**
+     * @brief Increases the allocated capacity, preserving existing samples.
+     *
+     * If @p new_capacity is greater than the current capacity, allocates a new buffer, copies the
+     * existing @p size samples into it, and replaces the storage. If @p new_capacity is less than
+     * or equal to the current capacity, the capacity is lowered to @p new_capacity without
+     * reallocating (existing samples up to @p size are preserved). The size is unchanged.
+     *
+     * @param new_capacity Target capacity in frames (samples per channel).
+     */
     void reserve(size_t new_capacity);
 
+    /**
+     * @brief Appends samples from another buffer with the same layout.
+     *
+     * Grows this buffer to fit @p other.size additional frames and copies @p other's samples
+     * after the current contents. If this buffer is empty, it becomes a copy of @p other.
+     *
+     * @param other Source buffer (same interleaving layout) to append.
+     */
     void append(const audio_data& other);
 
+    /**
+     * @brief Prepends samples from another buffer with the same layout.
+     *
+     * Grows this buffer to fit @p other.size additional frames, shifts existing samples forward,
+     * and copies @p other's samples at the beginning. The position is decreased by @p other.size.
+     * If this buffer is empty, it becomes a copy of @p other.
+     *
+     * @param other Source buffer (same interleaving layout) to prepend.
+     */
     void prepend(const audio_data& other);
 
+    /**
+     * @brief Appends samples from a buffer with the opposite layout.
+     *
+     * Grows this buffer to fit @p other.size additional frames and converts @p other's samples
+     * (interleaved <-> planar) into this buffer's layout. If this buffer is empty, it becomes
+     * a layout-converted copy of @p other.
+     *
+     * @param other Source buffer with the opposite interleaving layout to append.
+     */
     void append(const audio_data<!Interleaved>& other);
 
+    /**
+     * @brief Prepends samples from a buffer with the opposite layout.
+     *
+     * Grows this buffer to fit @p other.size additional frames, shifts existing samples forward,
+     * converts @p other's samples (interleaved <-> planar) into this buffer's layout, and places
+     * them at the beginning. The position is decreased by @p other.size. If this buffer is empty,
+     * it becomes a layout-converted copy of @p other.
+     *
+     * @param other Source buffer with the opposite interleaving layout to prepend.
+     */
     void prepend(const audio_data<!Interleaved>& other);
 
+    /**
+     * @brief Swaps two audio_data buffers.
+     * @param a First buffer.
+     * @param b Second buffer.
+     */
     friend void swap(audio_data& a, audio_data& b) noexcept { a.swap(b); }
 
+    /**
+     * @brief Exchanges the contents of this buffer with @p other.
+     * @param other Buffer to swap contents with.
+     */
     void swap(audio_data& other) noexcept;
 
     /**
@@ -858,14 +976,20 @@ enum class audio_dithering
 
 /**
  * @brief Represents the state of audio dithering.
+ *
+ * Holds the dithering method, amplitude scale, and a random number generator used to
+ * produce dither noise during sample quantization.
  */
-
 struct audio_dithering_state
 {
-    audio_dithering dithering;
-    fbase scale;
-    mutable std::mt19937_64 rnd{ std::random_device{}() };
-    mutable std::uniform_real_distribution<fbase> dist{ fbase(-0.5), fbase(+0.5) };
+    audio_dithering dithering; ///< Active dithering method.
+    fbase scale;               ///< Amplitude scale applied to the generated noise.
+    mutable std::mt19937_64 rnd{ std::random_device{}() }; ///< Random number generator.
+    mutable std::uniform_real_distribution<fbase> dist{ fbase(-0.5), fbase(+0.5) }; ///< Uniform distribution in [-0.5, +0.5).
+    /**
+     * @brief Generates one dither sample according to the configured method.
+     * @return A dither noise value scaled by @ref scale; zero for audio_dithering::none.
+     */
     fbase operator()() const
     {
         switch (dithering)
@@ -882,11 +1006,18 @@ struct audio_dithering_state
 
 /**
  * @brief Represents audio quantization parameters.
+ *
+ * Combines a dithering configuration with the bit depth used to derive the noise scale.
  */
 struct audio_quantization
 {
-    audio_dithering_state dither;
+    audio_dithering_state dither; ///< Dithering state used during quantization.
 
+    /**
+     * @brief Constructs quantization parameters for the given bit depth and dithering method.
+     * @param bit_depth Target bit depth; sets the dither noise scale to 1 / 2^bit_depth.
+     * @param dithering Dithering method to apply.
+     */
     audio_quantization(int bit_depth, audio_dithering dithering)
         : dither{ dithering, fbase(1.0) / (1ull << bit_depth) }
     {
@@ -896,8 +1027,15 @@ struct audio_quantization
 namespace details
 {
 
+/**
+ * @brief Deleter for std::FILE* used with smart pointers (e.g. std::unique_ptr).
+ */
 struct stdFILE_deleter
 {
+    /**
+     * @brief Closes the file if the pointer is non-null.
+     * @param f File pointer to close (may be null).
+     */
     void operator()(std::FILE* f) const noexcept
     {
         if (f)
