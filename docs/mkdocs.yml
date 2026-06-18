@@ -1,6 +1,7 @@
 site_name: KFR
 theme:
   name: "material"
+  custom_dir: custom
   features:
     - navigation.tabs
     - navigation.top
