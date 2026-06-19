@@ -27,15 +27,42 @@ KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wused-but-marked-unused")
 namespace kfr
 {
 
+/**
+ * @brief Primary template for converting a value of type @c T to its string representation.
+ *
+ * Specializations provide a @c type alias (the type actually passed to printf-style
+ * formatting) and a @c get function returning the packable value.
+ *
+ * @tparam T Type to represent.
+ */
 template <typename T>
 struct representation;
 
+/**
+ * @brief Alias for the type used by @ref representation<T> when formatting values of type @c T.
+ */
 template <typename T>
 using repr_type = typename representation<T>::type;
 
+/**
+ * @brief Convert arbitrary values to a @c std::string using KFR's built-in formatting.
+ *
+ * @note These helpers have limited capabilities and exist only to make string
+ *       processing/printing inside KFR easier. For anything non-trivial prefer a
+ *       more capable formatting library.
+ */
 template <typename... Args>
 KFR_INLINE std::string as_string(const Args&... args);
 
+/**
+ * @brief Wrapper that carries a value together with printf-style format options.
+ *
+ * @tparam t     Conversion specifier character (e.g. @c 'f', @c 'e', @c 'x').
+ *              A value of @c -1 means "use the default specifier for the type".
+ * @tparam width Minimum field width (@c -1 for none).
+ * @tparam prec  Precision (@c -1 for none).
+ * @tparam T     Type of the wrapped value.
+ */
 template <typename T, char t = static_cast<char>(-1), int width = -1, int prec = -1>
 struct fmt_t
 {
@@ -250,6 +277,9 @@ KFR_INLINE auto build_fmt(const std::string& str, ctypes_t<Arg, Args...>)
 }
 } // namespace details
 
+/**
+ * @brief Default representation: the value is forwarded as-is to the formatting layer.
+ */
 template <typename T>
 struct representation
 {
@@ -257,12 +287,31 @@ struct representation
     static constexpr auto get(const T& value) noexcept { return details::pack_value(value); }
 };
 
+/**
+ * @brief Wrap @p value with a custom conversion specifier.
+ *
+ * @tparam t     Conversion specifier character (e.g. @c 'f', @c 'e', @c 'x').
+ * @tparam width Minimum field width (@c -1 for none).
+ * @tparam prec  Precision (@c -1 for none).
+ * @tparam T     Type of the value.
+ * @param  value Value to format.
+ * @return @ref fmt_t bound to @p value.
+ */
 template <char t, int width = -1, int prec = -1, typename T>
 KFR_INLINE fmt_t<T, t, width, prec> fmt(const T& value)
 {
     return { value };
 }
 
+/**
+ * @brief Wrap @p value with only width/precision, keeping the default conversion specifier.
+ *
+ * @tparam width Minimum field width (@c -1 for none).
+ * @tparam prec  Precision (@c -1 for none).
+ * @tparam T     Type of the value.
+ * @param  value Value to format.
+ * @return @ref fmt_t bound to @p value.
+ */
 template <int width = -1, int prec = -1, typename T>
 KFR_INLINE fmt_t<T, static_cast<char>(-1), width, prec> fmtwidth(const T& value)
 {
@@ -273,8 +322,18 @@ KFR_PRAGMA_GNU(GCC diagnostic push)
 KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wpragmas")
 KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wgnu-string-literal-operator-template")
 
+/**
+ * @brief Build a compile-time printf format string from a literal template and argument types.
+ *
+ * Each @c '@' character in the literal is replaced by the format specifier
+ * corresponding to the next argument type; all other characters are copied verbatim.
+ */
 constexpr auto build_fmt_str(cchars_t<>, ctypes_t<>) { return make_cstring(""); }
 
+/**
+ * @brief Build a compile-time format string: replace the leading @c '@' with the
+ *        specifier for @c Arg and recurse on the remaining arguments.
+ */
 template <char... chars, typename Arg, typename... Args>
 constexpr auto build_fmt_str(cchars_t<'@', chars...>, ctypes_t<Arg, Args...>)
 {
@@ -282,6 +341,9 @@ constexpr auto build_fmt_str(cchars_t<'@', chars...>, ctypes_t<Arg, Args...>)
                           build_fmt_str(cchars_t<chars...>(), ctypes_t<Args...>()));
 }
 
+/**
+ * @brief Build a compile-time format string: copy a literal character and recurse.
+ */
 template <char ch, char... chars, typename... Args>
 constexpr auto build_fmt_str(cchars_t<ch, chars...>, ctypes_t<Args...>)
 {
@@ -289,9 +351,21 @@ constexpr auto build_fmt_str(cchars_t<ch, chars...>, ctypes_t<Args...>)
                           build_fmt_str(cchars_t<chars...>(), ctypes_t<Args...>()));
 }
 
+/**
+ * @brief Callable object holding a compile-time format literal (built by @c operator""_format).
+ *
+ * Calling the object formats the supplied arguments according to the literal, where
+ * each @c '@' is replaced by the appropriate conversion specifier for the corresponding
+ * argument type, and returns the result as a @c std::string.
+ */
 template <char... chars>
 struct format_t
 {
+    /**
+     * @brief Format the given arguments using the stored literal.
+     * @param args Values to format.
+     * @return Formatted string.
+     */
     template <typename... Args>
     inline std::string operator()(const Args&... args)
     {
@@ -308,9 +382,20 @@ struct format_t
     }
 };
 
+/**
+ * @brief Callable object holding a compile-time format literal (built by @c operator""_print).
+ *
+ * Calling the object prints the supplied arguments to standard output according to
+ * the literal, where each @c '@' is replaced by the appropriate conversion specifier
+ * for the corresponding argument type.
+ */
 template <char... chars>
 struct print_t
 {
+    /**
+     * @brief Print the given arguments to stdout using the stored literal.
+     * @param args Values to print.
+     */
     template <typename... Args>
     KFR_INLINE void operator()(const Args&... args)
     {
@@ -322,12 +407,22 @@ struct print_t
 
 #if defined KFR_COMPILER_GNU && !defined(KFR_COMPILER_INTEL)
 
+/**
+ * @brief User-defined literal returning a @ref format_t for the given string literal.
+ *
+ * Use @c '@' as a placeholder for each argument, e.g. @c "x=@, y=@\n"_format(x, y).
+ */
 template <typename Char, Char... chars>
 constexpr format_t<chars...> operator""_format()
 {
     return {};
 }
 
+/**
+ * @brief User-defined literal returning a @ref print_t for the given string literal.
+ *
+ * Use @c '@' as a placeholder for each argument, e.g. @c "x=@, y=@\n"_print(x, y).
+ */
 template <typename Char, Char... chars>
 constexpr KFR_INLINE print_t<chars...> operator""_print()
 {
@@ -338,6 +433,15 @@ constexpr KFR_INLINE print_t<chars...> operator""_print()
 
 KFR_PRAGMA_GNU(GCC diagnostic pop)
 
+/**
+ * @brief Print to stdout using a @c "{}"-based format string.
+ *
+ * Each @c "{}" placeholder is replaced at runtime by the conversion specifier of
+ * the corresponding argument type.
+ *
+ * @param fmt  Format string with @c "{}" placeholders.
+ * @param args Values to print.
+ */
 template <typename... Args>
 KFR_INLINE void printfmt(const std::string& fmt, const Args&... args)
 {
@@ -345,6 +449,13 @@ KFR_INLINE void printfmt(const std::string& fmt, const Args&... args)
     std::printf(format_str.data(), details::pack_value(representation<Args>::get(args))...);
 }
 
+/**
+ * @brief Print to a file @p f using a @c "{}"-based format string.
+ *
+ * @param f    Output stream.
+ * @param fmt  Format string with @c "{}" placeholders.
+ * @param args Values to print.
+ */
 template <typename... Args>
 KFR_INLINE void fprintfmt(FILE* f, const std::string& fmt, const Args&... args)
 {
@@ -352,6 +463,15 @@ KFR_INLINE void fprintfmt(FILE* f, const std::string& fmt, const Args&... args)
     std::fprintf(f, format_str.data(), details::pack_value(representation<Args>::get(args))...);
 }
 
+/**
+ * @brief Write to a buffer using a @c "{}"-based format string.
+ *
+ * @param str  Destination buffer.
+ * @param size Size of @p str in bytes.
+ * @param fmt  Format string with @c "{}" placeholders.
+ * @param args Values to format.
+ * @return Number of characters that would have been written (excluding the null terminator).
+ */
 template <typename... Args>
 KFR_INLINE int snprintfmt(char* str, size_t size, const std::string& fmt, const Args&... args)
 {
@@ -360,6 +480,13 @@ KFR_INLINE int snprintfmt(char* str, size_t size, const std::string& fmt, const 
                          details::pack_value(representation<Args>::get(args))...);
 }
 
+/**
+ * @brief Format values into a @c std::string using a @c "{}"-based format string.
+ *
+ * @param fmt  Format string with @c "{}" placeholders.
+ * @param args Values to format.
+ * @return Formatted string.
+ */
 template <typename... Args>
 KFR_INLINE std::string format(const std::string& fmt, const Args&... args)
 {
@@ -384,6 +511,15 @@ constexpr auto get_value_fmt()
 }
 } // namespace details
 
+/**
+ * @brief Print values to stdout, each formatted with its default conversion specifier.
+ *
+ * @note These helpers have limited capabilities and exist only to make string
+ *       processing/printing inside KFR easier. For anything non-trivial prefer a
+ *       more capable formatting library.
+ *
+ * @param args Values to print.
+ */
 template <typename... Args>
 KFR_INLINE void print(const Args&... args)
 {
@@ -392,6 +528,15 @@ KFR_INLINE void print(const Args&... args)
     std::printf(str, details::pack_value(representation<Args>::get(args))...);
 }
 
+/**
+ * @brief Print values to stdout followed by a newline.
+ *
+ * @note These helpers have limited capabilities and exist only to make string
+ *       processing/printing inside KFR easier. For anything non-trivial prefer a
+ *       more capable formatting library.
+ *
+ * @param args Values to print.
+ */
 template <typename... Args>
 KFR_INLINE void println(const Args&... args)
 {
@@ -400,6 +545,11 @@ KFR_INLINE void println(const Args&... args)
     std::printf(str, details::pack_value(representation<Args>::get(args))...);
 }
 
+/**
+ * @brief Print values to stderr, each formatted with its default conversion specifier.
+ *
+ * @param args Values to print.
+ */
 template <typename... Args>
 KFR_INLINE void error(const Args&... args)
 {
@@ -408,6 +558,11 @@ KFR_INLINE void error(const Args&... args)
     std::fprintf(stderr, str, details::pack_value(representation<Args>::get(args))...);
 }
 
+/**
+ * @brief Print values to stderr followed by a newline, then flush stderr.
+ *
+ * @param args Values to print.
+ */
 template <typename... Args>
 KFR_INLINE void errorln(const Args&... args)
 {
@@ -417,6 +572,16 @@ KFR_INLINE void errorln(const Args&... args)
     std::fflush(stderr);
 }
 
+/**
+ * @brief Convert values to a @c std::string, each formatted with its default conversion specifier.
+ *
+ * @note These helpers have limited capabilities and exist only to make string
+ *       processing/printing inside KFR easier. For anything non-trivial prefer a
+ *       more capable formatting library.
+ *
+ * @param args Values to convert.
+ * @return String representation of the concatenated values.
+ */
 template <typename... Args>
 KFR_INLINE std::string as_string(const Args&... args)
 {
@@ -433,42 +598,96 @@ KFR_INLINE std::string as_string(const Args&... args)
     return result;
 }
 
+/**
+ * @brief Right-align @p text within a field of @p size characters by prepending @p character.
+ *
+ * @param size      Total field width.
+ * @param text      Text to pad.
+ * @param character Padding character (default space).
+ * @return Padded string.
+ */
 inline std::string padright(size_t size, const std::string& text, char character = ' ')
 {
     const size_t pad = size >= text.size() ? size - text.size() : 0;
     return std::string(pad, character) + text;
 }
 
+/**
+ * @brief Left-align @p text within a field of @p size characters by appending @p character.
+ *
+ * @param size      Total field width.
+ * @param text      Text to pad.
+ * @param character Padding character (default space).
+ * @return Padded string.
+ */
 inline std::string padleft(size_t size, const std::string& text, char character = ' ')
 {
     const size_t pad = size >= text.size() ? size - text.size() : 0;
     return text + std::string(pad, character);
 }
 
+/**
+ * @brief Center @p text within a field of @p size characters using @p character.
+ *
+ * When the padding cannot be split evenly the extra character is placed on the right.
+ *
+ * @param size      Total field width.
+ * @param text      Text to pad.
+ * @param character Padding character (default space).
+ * @return Padded string.
+ */
 inline std::string padcenter(size_t size, const std::string& text, char character = ' ')
 {
     const size_t pad = size >= text.size() ? size - text.size() : 0;
     return std::string(pad / 2, character) + text + std::string(pad - pad / 2, character);
 }
 
+/**
+ * @brief Wrap the string representation of @p x in double quotes.
+ *
+ * @tparam T Type of the value.
+ * @param  x  Value to quote.
+ * @return @c "\"" + as_string(x) + "\"".
+ */
 template <typename T>
 inline std::string q(T x)
 {
     return "\"" + as_string(std::forward<T>(x)) + "\"";
 }
 
+/**
+ * @brief Convert a single value to a string (terminator of @ref join).
+ *
+ * @tparam T Type of the value.
+ * @param  x  Value to convert.
+ * @return String representation of @p x.
+ */
 template <typename T>
 inline std::string join(T x)
 {
     return as_string(std::forward<T>(x));
 }
 
+/**
+ * @brief Join values into a comma-separated string of the form @c "{x}, {y}, {rest...}".
+ *
+ * @tparam T  Type of the first value.
+ * @tparam U  Type of the second value.
+ * @tparam Ts Types of the remaining values.
+ * @param  x    First value.
+ * @param  y    Second value.
+ * @param  rest Remaining values.
+ * @return Comma-separated string.
+ */
 template <typename T, typename U, typename... Ts>
 inline std::string join(T x, U y, Ts... rest)
 {
     return format("{}, {}", x, join(std::forward<U>(y), std::forward<Ts>(rest)...));
 }
 
+/**
+ * @brief Representation of @ref named_arg as @c "name = value".
+ */
 template <typename T>
 struct representation<named_arg<T>>
 {
@@ -479,6 +698,9 @@ struct representation<named_arg<T>>
     }
 };
 
+/**
+ * @brief Representation of @c std::pair as @c "(first; second)".
+ */
 template <typename T1, typename T2>
 struct representation<std::pair<T1, T2>>
 {
@@ -489,6 +711,9 @@ struct representation<std::pair<T1, T2>>
     }
 };
 
+/**
+ * @brief Representation of @c std::unique_ptr as @c "Type(value)" or @c "Type(nullptr)".
+ */
 template <typename T1>
 struct representation<std::unique_ptr<T1>>
 {
@@ -502,6 +727,9 @@ struct representation<std::unique_ptr<T1>>
     }
 };
 
+/**
+ * @brief Representation of @c std::weak_ptr as @c "Type(value)" or @c "Type(nullptr)".
+ */
 template <typename T1>
 struct representation<std::weak_ptr<T1>>
 {
@@ -516,6 +744,9 @@ struct representation<std::weak_ptr<T1>>
     }
 };
 
+/**
+ * @brief Representation of @c std::shared_ptr as @c "Type(value)" or @c "Type(nullptr)".
+ */
 template <typename T1>
 struct representation<std::shared_ptr<T1>>
 {
@@ -529,6 +760,9 @@ struct representation<std::shared_ptr<T1>>
     }
 };
 
+/**
+ * @brief Representation of @c std::shared_ptr<void> as @c "Type(pointer)" or @c "Type(nullptr)".
+ */
 template <>
 struct representation<std::shared_ptr<void>>
 {
@@ -583,17 +817,42 @@ KFR_INTRINSIC bool increment_indices(std::array<size_t, dims>& indices, const st
 }
 } // namespace details
 
+/**
+ * @brief Wrap @p val with the format type @c Fmt when @c Fmt is not @c void.
+ */
 template <typename U, typename Fmt>
 KFR_INTRINSIC Fmt wrap_fmt(const U& val, ctype_t<Fmt>)
 {
     return Fmt{ val };
 }
+/**
+ * @brief Identity pass-through used when no format type is specified.
+ */
 template <typename U>
 KFR_INTRINSIC U wrap_fmt(const U& val, ctype_t<void>)
 {
     return val;
 }
 
+/**
+ * @brief Render a multi-dimensional array as a nested, brace-delimited string.
+ *
+ * The array shape is given by @p shape and each element is obtained by invoking
+ * @p getter with a @c std::array<size_t, Dims> index. Newlines are inserted when
+ * an inner dimension is exhausted or @p max_columns is reached.
+ *
+ * @tparam Fmt    Optional @ref fmt_t type used to format each element (@c void = default).
+ * @tparam Dims   Number of dimensions.
+ * @tparam Getter Callable returning the element at a given index.
+ * @param shape          Extent of each dimension.
+ * @param getter         Function returning the element for a multi-index.
+ * @param max_columns    Maximum number of values printed per line (0 = unlimited).
+ * @param max_dimensions Controls line breaks between inner dimensions.
+ * @param separator      Separator between adjacent values.
+ * @param open           String used to open a dimension.
+ * @param close          String used to close a dimension.
+ * @return Formatted string.
+ */
 template <typename Fmt = void, size_t Dims, typename Getter>
 std::string array_to_string(const std::array<size_t, Dims>& shape, Getter&& getter, int max_columns = 16,
                             int max_dimensions = INT_MAX, std::string_view separator = ", ",
@@ -656,6 +915,21 @@ std::string array_to_string(const std::array<size_t, Dims>& shape, Getter&& gett
     return ss;
 }
 
+/**
+ * @brief Convenience overload of @ref array_to_string for a one-dimensional array
+ *        accessed through a getter callable.
+ *
+ * @tparam Fmt    Optional @ref fmt_t type used to format each element (@c void = default).
+ * @tparam Getter Callable returning the element at a given linear index.
+ * @param size           Number of elements.
+ * @param getter         Function returning the element for an index.
+ * @param max_columns    Maximum number of values printed per line (0 = unlimited).
+ * @param max_dimensions Controls line breaks.
+ * @param separator      Separator between adjacent values.
+ * @param open           String used to open the array.
+ * @param close          String used to close the array.
+ * @return Formatted string.
+ */
 template <typename Fmt = void, typename Getter>
 std::string array_to_string(size_t size, Getter&& getter, int max_columns = 16, int max_dimensions = INT_MAX,
                             std::string_view separator = ", ", std::string_view open = "{",
@@ -664,6 +938,20 @@ std::string array_to_string(size_t size, Getter&& getter, int max_columns = 16, 
     return array_to_string<Fmt>(std::array<size_t, 1>{ size }, std::forward<Getter>(getter), max_columns,
                                 max_dimensions, std::move(separator), std::move(open), std::move(close));
 }
+/**
+ * @brief Convenience overload of @ref array_to_string for a raw pointer buffer.
+ *
+ * @tparam Fmt Optional @ref fmt_t type used to format each element (@c void = default).
+ * @tparam T   Element type.
+ * @param size           Number of elements.
+ * @param data           Pointer to the first element.
+ * @param max_columns    Maximum number of values printed per line (0 = unlimited).
+ * @param max_dimensions Controls line breaks.
+ * @param separator      Separator between adjacent values.
+ * @param open           String used to open the array.
+ * @param close          String used to close the array.
+ * @return Formatted string.
+ */
 template <typename Fmt = void, typename T>
 std::string array_to_string(size_t size, T* data, int max_columns = 16, int max_dimensions = INT_MAX,
                             std::string_view separator = ", ", std::string_view open = "{",
@@ -674,6 +962,9 @@ std::string array_to_string(size_t size, T* data, int max_columns = 16, int max_
         max_columns, max_dimensions, std::move(separator), std::move(open), std::move(close));
 }
 
+/**
+ * @brief Representation of @c std::array as a brace-delimited list of its elements.
+ */
 template <typename T, size_t Size>
 struct representation<std::array<T, Size>>
 {
@@ -683,6 +974,9 @@ struct representation<std::array<T, Size>>
         return array_to_string(value.size(), value.data());
     }
 };
+/**
+ * @brief Representation of @c std::vector as a brace-delimited list of its elements.
+ */
 template <typename T, typename Allocator>
 struct representation<std::vector<T, Allocator>>
 {
@@ -692,6 +986,9 @@ struct representation<std::vector<T, Allocator>>
         return array_to_string(value.size(), value.data());
     }
 };
+/**
+ * @brief Representation of @c std::string_view as a @c std::string.
+ */
 template <>
 struct representation<std::string_view>
 {
