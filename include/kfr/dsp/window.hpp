@@ -35,6 +35,9 @@
 namespace kfr
 {
 
+/**
+ * @brief Window function types supported by KFR
+ */
 enum class window_type
 {
     rectangular     = 1,
@@ -56,12 +59,24 @@ enum class window_type
     tukey           = 17,
 };
 
+/**
+ * @brief Compile-time window type tag
+ */
 template <window_type type>
 using cwindow_type_t = cval_t<window_type, type>;
 
+/**
+ * @brief Compile-time window type value
+ */
 template <window_type type>
 constexpr cwindow_type_t<type> cwindow_type{};
 
+/**
+ * @brief Window symmetry mode
+ *
+ * `symmetric` yields a window symmetric about its center (suitable for FIR filter design).
+ * `periodic` yields a window periodic with the window length (suitable for spectral analysis / DFT).
+ */
 enum class window_symmetry
 {
     periodic,
@@ -71,6 +86,9 @@ enum class window_symmetry
 inline namespace KFR_ARCH_NAME
 {
 
+/**
+ * @brief Selects the abscissa range and endpoint handling used by window expressions
+ */
 enum class window_metrics
 {
     metrics_0_1,
@@ -80,6 +98,12 @@ enum class window_metrics
     metrics_m1_1_trunc2,
 };
 
+/**
+ * @brief Linspace expression specialized for window abscissa generation
+ *
+ * Builds the argument range consumed by window expressions according to the chosen window_metrics
+ * and symmetry mode.
+ */
 template <typename T>
 struct window_linspace : expression_linspace<T>
 {
@@ -124,6 +148,11 @@ struct window_linspace : expression_linspace<T>
     }
 };
 
+/**
+ * @brief Base class for all window expressions
+ *
+ * Stores the window length and exposes the shape interface required by expression evaluators.
+ */
 template <typename T>
 struct expression_window : expression_traits_defaults
 {
@@ -141,6 +170,9 @@ struct expression_window : expression_traits_defaults
     size_t size() const { return m_size; }
 };
 
+/**
+ * @brief Rectangular window expression (all ones within the window)
+ */
 template <typename T>
 struct expression_rectangular : expression_window<T>
 {
@@ -148,6 +180,7 @@ struct expression_rectangular : expression_window<T>
         : expression_window<T>(size)
     {
     }
+    /// Internal ADL-provided implementation for `expression_rectangular` expressions
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_rectangular& self, shape<1> index,
                                                 axis_params<0, N>)
@@ -158,6 +191,9 @@ struct expression_rectangular : expression_window<T>
     }
 };
 
+/**
+ * @brief Base class for windows parameterized by a linspace and a scalar argument
+ */
 template <typename T, window_metrics metrics>
 struct expression_window_with_metrics : expression_window<T>
 {
@@ -172,12 +208,16 @@ protected:
     T arg;
 };
 
+/**
+ * @brief Triangular window expression
+ */
 template <typename T>
 struct expression_triangular : expression_window_with_metrics<T, window_metrics::metrics_m1_1_trunc2>
 {
     using expression_window_with_metrics<T,
                                          window_metrics::metrics_m1_1_trunc2>::expression_window_with_metrics;
 
+    /// Internal ADL-provided implementation for `expression_triangular` expressions
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_triangular& self, shape<1> index,
                                                 axis_params<0, N> sh)
@@ -186,10 +226,14 @@ struct expression_triangular : expression_window_with_metrics<T, window_metrics:
     }
 };
 
+/**
+ * @brief Bartlett window expression (triangular reaching zero at the edges)
+ */
 template <typename T>
 struct expression_bartlett : expression_window_with_metrics<T, window_metrics::metrics_m1_1>
 {
     using expression_window_with_metrics<T, window_metrics::metrics_m1_1>::expression_window_with_metrics;
+    /// Internal ADL-provided implementation for `expression_bartlett` expressions
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_bartlett& self, shape<1> index,
                                                 axis_params<0, N> sh)
@@ -198,11 +242,15 @@ struct expression_bartlett : expression_window_with_metrics<T, window_metrics::m
     }
 };
 
+/**
+ * @brief Cosine window expression (sin(pi*x))
+ */
 template <typename T>
 struct expression_cosine : expression_window_with_metrics<T, window_metrics::metrics_0_1>
 {
     using expression_window_with_metrics<T, window_metrics::metrics_0_1>::expression_window_with_metrics;
 
+    /// Internal ADL-provided implementation for `expression_cosine` expressions
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_cosine& self, shape<1> index,
                                                 axis_params<0, N> sh)
@@ -210,12 +258,16 @@ struct expression_cosine : expression_window_with_metrics<T, window_metrics::met
         return sin(c_pi<T> * (get_elements(self.linspace, index, sh)));
     }
 };
+/**
+ * @brief Cosine window expression (numpy-compatible)
+ */
 template <typename T>
 struct expression_cosine_np : expression_window_with_metrics<T, window_metrics::metrics_m1_1_trunc>
 {
     using expression_window_with_metrics<T,
                                          window_metrics::metrics_m1_1_trunc>::expression_window_with_metrics;
 
+    /// Internal ADL-provided implementation for `expression_cosine_np` expressions
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_cosine_np& self, shape<1> index,
                                                 axis_params<0, N> sh)
@@ -224,11 +276,15 @@ struct expression_cosine_np : expression_window_with_metrics<T, window_metrics::
     }
 };
 
+/**
+ * @brief Hann window expression (0.5*(1-cos(2*pi*x)))
+ */
 template <typename T>
 struct expression_hann : expression_window_with_metrics<T, window_metrics::metrics_0_1>
 {
     using expression_window_with_metrics<T, window_metrics::metrics_0_1>::expression_window_with_metrics;
 
+    /// Internal ADL-provided implementation for `expression_hann` expressions
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_hann& self, shape<1> index,
                                                 axis_params<0, N> sh)
@@ -237,11 +293,15 @@ struct expression_hann : expression_window_with_metrics<T, window_metrics::metri
     }
 };
 
+/**
+ * @brief Bartlett-Hann window expression
+ */
 template <typename T>
 struct expression_bartlett_hann : expression_window_with_metrics<T, window_metrics::metrics_0_1>
 {
     using expression_window_with_metrics<T, window_metrics::metrics_0_1>::expression_window_with_metrics;
 
+    /// Internal ADL-provided implementation for `expression_bartlett_hann` expressions
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_bartlett_hann& self, shape<1> index,
                                                 axis_params<0, N> sh)
@@ -251,6 +311,9 @@ struct expression_bartlett_hann : expression_window_with_metrics<T, window_metri
     }
 };
 
+/**
+ * @brief Hamming window expression
+ */
 template <typename T>
 struct expression_hamming : expression_window_with_metrics<T, window_metrics::metrics_0_1>
 {
@@ -258,6 +321,7 @@ struct expression_hamming : expression_window_with_metrics<T, window_metrics::me
         : expression_window_with_metrics<T, window_metrics::metrics_0_1>(size, alpha, symmetry)
     {
     }
+    /// Internal ADL-provided implementation for `expression_hamming` expressions
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_hamming& self, shape<1> index,
                                                 axis_params<0, N> sh)
@@ -266,11 +330,15 @@ struct expression_hamming : expression_window_with_metrics<T, window_metrics::me
     }
 };
 
+/**
+ * @brief Bohman window expression (product of cosine and linear taper)
+ */
 template <typename T>
 struct expression_bohman : expression_window_with_metrics<T, window_metrics::metrics_m1_1>
 {
     using expression_window_with_metrics<T, window_metrics::metrics_m1_1>::expression_window_with_metrics;
 
+    /// Internal ADL-provided implementation for `expression_bohman` expressions
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_bohman& self, shape<1> index,
                                                 axis_params<0, N> sh)
@@ -280,6 +348,9 @@ struct expression_bohman : expression_window_with_metrics<T, window_metrics::met
     }
 };
 
+/**
+ * @brief Blackman window expression (parameterized by alpha)
+ */
 template <typename T>
 struct expression_blackman : expression_window_with_metrics<T, window_metrics::metrics_0_1>
 {
@@ -290,6 +361,7 @@ struct expression_blackman : expression_window_with_metrics<T, window_metrics::m
           a0((1 - alpha) * 0.5), a1(0.5), a2(alpha * 0.5)
     {
     }
+    /// Internal ADL-provided implementation for `expression_blackman` expressions
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_blackman& self, shape<1> index,
                                                 axis_params<0, N> sh)
@@ -302,11 +374,15 @@ private:
     T a0, a1, a2;
 };
 
+/**
+ * @brief Blackman-Harris window expression (4-term minimum sidelobe window)
+ */
 template <typename T>
 struct expression_blackman_harris : expression_window_with_metrics<T, window_metrics::metrics_0_1>
 {
     using expression_window_with_metrics<T, window_metrics::metrics_0_1>::expression_window_with_metrics;
 
+    /// Internal ADL-provided implementation for `expression_blackman_harris` expressions
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_blackman_harris& self, shape<1> index,
                                                 axis_params<0, N> sh)
@@ -316,6 +392,9 @@ struct expression_blackman_harris : expression_window_with_metrics<T, window_met
     }
 };
 
+/**
+ * @brief Kaiser window expression (shaped by the zeroth-order modified Bessel function)
+ */
 template <typename T>
 struct expression_kaiser : expression_window_with_metrics<T, window_metrics::metrics_m1_1>
 {
@@ -324,6 +403,7 @@ struct expression_kaiser : expression_window_with_metrics<T, window_metrics::met
           m(reciprocal(modzerobessel(make_vector(beta))[0]))
     {
     }
+    /// Internal ADL-provided implementation for `expression_kaiser` expressions
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_kaiser& self, shape<1> index,
                                                 axis_params<0, N> sh)
@@ -335,11 +415,15 @@ private:
     T m;
 };
 
+/**
+ * @brief Flat-top window expression (5-term window for accurate amplitude estimation)
+ */
 template <typename T>
 struct expression_flattop : expression_window_with_metrics<T, window_metrics::metrics_0_1>
 {
     using expression_window_with_metrics<T, window_metrics::metrics_0_1>::expression_window_with_metrics;
 
+    /// Internal ADL-provided implementation for `expression_flattop` expressions
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_flattop& self, shape<1> index,
                                                 axis_params<0, N> sh)
@@ -354,6 +438,9 @@ struct expression_flattop : expression_window_with_metrics<T, window_metrics::me
     }
 };
 
+/**
+ * @brief Gaussian window expression
+ */
 template <typename T>
 struct expression_gaussian : expression_window_with_metrics<T, window_metrics::metrics_m1_1_trunc>
 {
@@ -362,6 +449,7 @@ struct expression_gaussian : expression_window_with_metrics<T, window_metrics::m
         : expression_window_with_metrics<T, window_metrics::metrics_m1_1_trunc>(size, alpha, symmetry)
     {
     }
+    /// Internal ADL-provided implementation for `expression_gaussian` expressions
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_gaussian& self, shape<1> index,
                                                 axis_params<0, N> sh)
@@ -370,10 +458,14 @@ struct expression_gaussian : expression_window_with_metrics<T, window_metrics::m
     }
 };
 
+/**
+ * @brief Lanczos window expression (sinc based)
+ */
 template <typename T>
 struct expression_lanczos : expression_window_with_metrics<T, window_metrics::metrics_mpi_pi>
 {
     using expression_window_with_metrics<T, window_metrics::metrics_mpi_pi>::expression_window_with_metrics;
+    /// Internal ADL-provided implementation for `expression_lanczos` expressions
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_lanczos& self, shape<1> index,
                                                 axis_params<0, N> sh)
@@ -382,6 +474,9 @@ struct expression_lanczos : expression_window_with_metrics<T, window_metrics::me
     }
 };
 
+/**
+ * @brief Planck-taper window expression (smooth flat-top taper controlled by epsilon)
+ */
 template <typename T>
 struct expression_planck_taper : expression_window_with_metrics<T, window_metrics::metrics_m1_1>
 {
@@ -389,6 +484,7 @@ struct expression_planck_taper : expression_window_with_metrics<T, window_metric
         : expression_window_with_metrics<T, window_metrics::metrics_m1_1>(size, epsilon, symmetry)
     {
     }
+    /// Internal ADL-provided implementation for `expression_planck_taper` expressions
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_planck_taper& self, shape<1> index,
                                                 axis_params<0, N> sh)
@@ -399,6 +495,9 @@ struct expression_planck_taper : expression_window_with_metrics<T, window_metric
     }
 };
 
+/**
+ * @brief Tukey window expression (tapered cosine, numpy-compatible)
+ */
 template <typename T>
 struct expression_tukey : expression_window_with_metrics<T, window_metrics::metrics_m1_1>
 {
@@ -406,6 +505,7 @@ struct expression_tukey : expression_window_with_metrics<T, window_metrics::metr
         : expression_window_with_metrics<T, window_metrics::metrics_m1_1>(size, epsilon, symmetry)
     {
     }
+    /// Internal ADL-provided implementation for `expression_tukey` expressions
     template <size_t N>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_tukey& self, shape<1> index,
                                                 axis_params<0, N> sh)
@@ -416,6 +516,9 @@ struct expression_tukey : expression_window_with_metrics<T, window_metrics::metr
     }
 };
 
+/**
+ * @brief Type trait mapping a window_type to its corresponding expression type
+ */
 template <window_type>
 struct window_by_type;
 
@@ -446,7 +549,8 @@ KFR_WINDOW_BY_TYPE(tukey)
 #undef KFR_WINDOW_BY_TYPE
 
 /**
- * @brief Returns template expression that generates Rrectangular window of length @c size
+ * @brief Returns template expression that generates a rectangular window of length @c size
+ * @param size Length of the window
  */
 template <typename T = fbase>
 KFR_FUNCTION expression_rectangular<T> window_rectangular(size_t size, ctype_t<T> = ctype_t<T>())
@@ -455,7 +559,8 @@ KFR_FUNCTION expression_rectangular<T> window_rectangular(size_t size, ctype_t<T
 }
 
 /**
- * @brief Returns template expression that generates Triangular window of length @c size
+ * @brief Returns template expression that generates a triangular window of length @c size
+ * @param size Length of the window
  */
 template <typename T = fbase>
 KFR_FUNCTION expression_triangular<T> window_triangular(size_t size, ctype_t<T> = ctype_t<T>())
@@ -464,7 +569,8 @@ KFR_FUNCTION expression_triangular<T> window_triangular(size_t size, ctype_t<T> 
 }
 
 /**
- * @brief Returns template expression that generates Bartlett window of length @c size
+ * @brief Returns template expression that generates a Bartlett window of length @c size
+ * @param size Length of the window
  */
 template <typename T = fbase>
 KFR_FUNCTION expression_bartlett<T> window_bartlett(size_t size, ctype_t<T> = ctype_t<T>())
@@ -473,7 +579,8 @@ KFR_FUNCTION expression_bartlett<T> window_bartlett(size_t size, ctype_t<T> = ct
 }
 
 /**
- * @brief Returns template expression that generates Cosine window of length @c size
+ * @brief Returns template expression that generates a cosine window of length @c size
+ * @param size Length of the window
  */
 template <typename T = fbase>
 KFR_FUNCTION expression_cosine<T> window_cosine(size_t size, ctype_t<T> = ctype_t<T>())
@@ -482,7 +589,8 @@ KFR_FUNCTION expression_cosine<T> window_cosine(size_t size, ctype_t<T> = ctype_
 }
 
 /**
- * @brief Returns template expression that generates Cosine window (numpy compatible) of length @c size
+ * @brief Returns template expression that generates a cosine window (numpy compatible) of length @c size
+ * @param size Length of the window
  */
 template <typename T = fbase>
 KFR_FUNCTION expression_cosine_np<T> window_cosine_np(size_t size, ctype_t<T> = ctype_t<T>())
@@ -491,7 +599,8 @@ KFR_FUNCTION expression_cosine_np<T> window_cosine_np(size_t size, ctype_t<T> = 
 }
 
 /**
- * @brief Returns template expression that generates Hann window of length @c size
+ * @brief Returns template expression that generates a Hann window of length @c size
+ * @param size Length of the window
  */
 template <typename T = fbase>
 KFR_FUNCTION expression_hann<T> window_hann(size_t size, ctype_t<T> = ctype_t<T>())
@@ -500,7 +609,8 @@ KFR_FUNCTION expression_hann<T> window_hann(size_t size, ctype_t<T> = ctype_t<T>
 }
 
 /**
- * @brief Returns template expression that generates Bartlett-Hann window of length @c size
+ * @brief Returns template expression that generates a Bartlett-Hann window of length @c size
+ * @param size Length of the window
  */
 template <typename T = fbase>
 KFR_FUNCTION expression_bartlett_hann<T> window_bartlett_hann(size_t size, ctype_t<T> = ctype_t<T>())
@@ -509,8 +619,9 @@ KFR_FUNCTION expression_bartlett_hann<T> window_bartlett_hann(size_t size, ctype
 }
 
 /**
- * @brief Returns template expression that generates Hamming window of length @c size where &alpha; = @c
- * alpha
+ * @brief Returns template expression that generates a Hamming window of length @c size where &alpha; = @c alpha
+ * @param size Length of the window
+ * @param alpha Alpha coefficient (cosine weight); default 0.54
  */
 template <typename T = fbase>
 KFR_FUNCTION expression_hamming<T> window_hamming(size_t size, std::type_identity_t<T> alpha = 0.54,
@@ -520,7 +631,8 @@ KFR_FUNCTION expression_hamming<T> window_hamming(size_t size, std::type_identit
 }
 
 /**
- * @brief Returns template expression that generates Bohman window of length @c size
+ * @brief Returns template expression that generates a Bohman window of length @c size
+ * @param size Length of the window
  */
 template <typename T = fbase>
 KFR_FUNCTION expression_bohman<T> window_bohman(size_t size, ctype_t<T> = ctype_t<T>())
@@ -529,8 +641,10 @@ KFR_FUNCTION expression_bohman<T> window_bohman(size_t size, ctype_t<T> = ctype_
 }
 
 /**
- * @brief Returns template expression that generates Blackman window of length @c size where &alpha; = @c
- * alpha
+ * @brief Returns template expression that generates a Blackman window of length @c size where &alpha; = @c alpha
+ * @param size Length of the window
+ * @param alpha Alpha coefficient controlling the Blackman shape; default 0.16
+ * @param symmetry Symmetry mode of the window
  */
 template <typename T = fbase>
 KFR_FUNCTION expression_blackman<T> window_blackman(size_t size, std::type_identity_t<T> alpha = 0.16,
@@ -541,7 +655,9 @@ KFR_FUNCTION expression_blackman<T> window_blackman(size_t size, std::type_ident
 }
 
 /**
- * @brief Returns template expression that generates Blackman-Harris window of length @c size
+ * @brief Returns template expression that generates a Blackman-Harris window of length @c size
+ * @param size Length of the window
+ * @param symmetry Symmetry mode of the window
  */
 template <typename T = fbase>
 KFR_FUNCTION expression_blackman_harris<T> window_blackman_harris(
@@ -551,8 +667,9 @@ KFR_FUNCTION expression_blackman_harris<T> window_blackman_harris(
 }
 
 /**
- * @brief Returns template expression that generates Kaiser window of length @c size where &beta; = @c
- * beta
+ * @brief Returns template expression that generates a Kaiser window of length @c size where &beta; = @c beta
+ * @param size Length of the window
+ * @param beta Beta coefficient controlling sidelobe attenuation; default 0.5
  */
 template <typename T = fbase>
 KFR_FUNCTION expression_kaiser<T> window_kaiser(size_t size, std::type_identity_t<T> beta = T(0.5),
@@ -562,7 +679,8 @@ KFR_FUNCTION expression_kaiser<T> window_kaiser(size_t size, std::type_identity_
 }
 
 /**
- * @brief Returns template expression that generates Flat top window of length @c size
+ * @brief Returns template expression that generates a flat-top window of length @c size
+ * @param size Length of the window
  */
 template <typename T = fbase>
 KFR_FUNCTION expression_flattop<T> window_flattop(size_t size, ctype_t<T> = ctype_t<T>())
@@ -571,8 +689,9 @@ KFR_FUNCTION expression_flattop<T> window_flattop(size_t size, ctype_t<T> = ctyp
 }
 
 /**
- * @brief Returns template expression that generates Gaussian window of length @c size where &alpha; = @c
- * alpha
+ * @brief Returns template expression that generates a Gaussian window of length @c size where &alpha; = @c alpha
+ * @param size Length of the window
+ * @param alpha Alpha coefficient (std / 2N); default 2.5
  */
 template <typename T = fbase>
 KFR_FUNCTION expression_gaussian<T> window_gaussian(size_t size, std::type_identity_t<T> alpha = 2.5,
@@ -582,7 +701,8 @@ KFR_FUNCTION expression_gaussian<T> window_gaussian(size_t size, std::type_ident
 }
 
 /**
- * @brief Returns template expression that generates Lanczos window of length @c size
+ * @brief Returns template expression that generates a Lanczos window of length @c size
+ * @param size Length of the window
  */
 template <typename T = fbase>
 KFR_FUNCTION expression_lanczos<T> window_lanczos(size_t size, ctype_t<T> = ctype_t<T>())
@@ -591,7 +711,10 @@ KFR_FUNCTION expression_lanczos<T> window_lanczos(size_t size, ctype_t<T> = ctyp
 }
 
 /**
- * @brief Returns template expression that generates Planck-taper window of length @c size
+ * @brief Returns template expression that generates a Planck-taper window of length @c size
+ * @param size Length of the window
+ * @param epsilon Fraction of the window occupied by the taper (0 < epsilon < 1)
+ * @param symmetry Symmetry mode of the window
  */
 template <typename T = fbase>
 KFR_FUNCTION expression_planck_taper<T> window_planck_taper(
@@ -602,7 +725,10 @@ KFR_FUNCTION expression_planck_taper<T> window_planck_taper(
 }
 
 /**
- * @brief Returns template expression that generates Tukey window of length @c size (numpy compatible)
+ * @brief Returns template expression that generates a Tukey window of length @c size (numpy compatible)
+ * @param size Length of the window
+ * @param alpha Fraction of the window inside the cosine tapered region (0 < alpha < 1)
+ * @param symmetry Symmetry mode of the window
  */
 template <typename T = fbase>
 KFR_FUNCTION expression_tukey<T> window_tukey(size_t size, std::type_identity_t<T> alpha,
@@ -612,6 +738,15 @@ KFR_FUNCTION expression_tukey<T> window_tukey(size_t size, std::type_identity_t<
     return expression_tukey<T>(size, alpha, symmetry);
 }
 
+/**
+ * @brief Returns a window expression of the requested compile-time type
+ * @tparam T Sample type (defaults to fbase)
+ * @tparam type Window type (compile-time)
+ * @param size Length of the window
+ * @param win_param Window-specific parameter (alpha/beta/epsilon); ignored by parameterless windows
+ * @param symmetry Symmetry mode of the window
+ * @return Window expression of the corresponding type
+ */
 template <typename T           = fbase, window_type type,
           typename window_expr = typename window_by_type<type>::template type<T>>
 KFR_NOINLINE window_expr window(size_t size, cval_t<window_type, type>,
@@ -622,6 +757,15 @@ KFR_NOINLINE window_expr window(size_t size, cval_t<window_type, type>,
     return window_expr(size, win_param, symmetry);
 }
 
+/**
+ * @brief Returns a type-erased window expression of the requested runtime type
+ * @tparam T Sample type (defaults to fbase)
+ * @param size Length of the window
+ * @param type Window type (runtime)
+ * @param win_param Window-specific parameter (alpha/beta/epsilon); ignored by parameterless windows
+ * @param symmetry Symmetry mode of the window
+ * @return Handle to the window expression of the corresponding type
+ */
 template <typename T = fbase>
 KFR_NOINLINE expression_handle<T> window(size_t size, window_type type, std::type_identity_t<T> win_param,
                                          window_symmetry symmetry = window_symmetry::symmetric,

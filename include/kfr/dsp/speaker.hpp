@@ -31,77 +31,88 @@
 namespace kfr
 {
 
-/// @brief Speaker types (positions)
-/// Matches VST3 definitions
+/**
+ * @brief Speaker types (channel positions).
+ *
+ * Matches VST3 speaker type definitions. Several enumerators provide short aliases
+ * (e.g. `M` for `Mono`, `L` for `Left`) that share the same numeric value.
+ */
 enum class speaker_type : int
 {
-    None          = -1,
-    Mono          = 0,
-    M             = static_cast<int>(Mono),
-    Left          = 1,
-    L             = static_cast<int>(Left),
-    Right         = 2,
-    R             = static_cast<int>(Right),
-    Center        = 3,
-    C             = static_cast<int>(Center),
-    Lfe           = 4,
-    Ls            = 5,
-    LeftSurround  = static_cast<int>(Ls),
-    Rs            = 6,
-    RightSurround = static_cast<int>(Rs),
-    Lc            = 7,
-    Rc            = 8,
-    S             = 9,
-    Cs            = static_cast<int>(S),
-    Sl            = 10,
-    Sr            = 11,
-    Tm            = 12,
-    Tfl           = 13,
-    Tfc           = 14,
-    Tfr           = 15,
-    Trl           = 16,
-    Trc           = 17,
-    Trr           = 18,
-    Lfe2          = 19
+    None          = -1, ///< No speaker / unspecified.
+    Mono          = 0, ///< Mono (front center, single channel).
+    M             = static_cast<int>(Mono), ///< Alias for Mono.
+    Left          = 1, ///< Front left.
+    L             = static_cast<int>(Left), ///< Alias for Left.
+    Right         = 2, ///< Front right.
+    R             = static_cast<int>(Right), ///< Alias for Right.
+    Center        = 3, ///< Front center.
+    C             = static_cast<int>(Center), ///< Alias for Center.
+    Lfe           = 4, ///< Low-frequency effects (subwoofer).
+    Ls            = 5, ///< Left surround.
+    LeftSurround  = static_cast<int>(Ls), ///< Alias for Ls.
+    Rs            = 6, ///< Right surround.
+    RightSurround = static_cast<int>(Rs), ///< Alias for Rs.
+    Lc            = 7, ///< Left center (front, between L and C).
+    Rc            = 8, ///< Right center (front, between R and C).
+    S             = 9, ///< Rear surround (single).
+    Cs            = static_cast<int>(S), ///< Alias for S (center surround).
+    Sl            = 10, ///< Side left.
+    Sr            = 11, ///< Side right.
+    Tm            = 12, ///< Top middle.
+    Tfl           = 13, ///< Top front left.
+    Tfc           = 14, ///< Top front center.
+    Tfr           = 15, ///< Top front right.
+    Trl           = 16, ///< Top rear left.
+    Trc           = 17, ///< Top rear center.
+    Trr           = 18, ///< Top rear right.
+    Lfe2          = 19 ///< Second low-frequency effects channel.
 };
 
-/// @brief Predefined speaker arrangements
-/// Matches VST3 definitions
+/**
+ * @brief Predefined speaker arrangements.
+ *
+ * Matches VST3 speaker arrangement definitions. Each value names a canonical
+ * channel layout (e.g. `Stereo`, `Music51`, `Cine71`); see
+ * @ref arrangement_speakers() for the channel sequence of each arrangement.
+ */
 enum class speaker_arrangement : int
 {
-    None           = -1,
-    Mono           = 0,
-    Stereo         = 1,
-    StereoSurround = 2,
-    StereoCenter   = 3,
-    StereoSide     = 4,
-    StereoCLfe     = 5,
-    Cine30         = 6,
-    Music30        = 7,
-    Cine31         = 8,
-    Music31        = 9,
-    Cine40         = 10,
-    Music40        = 11,
-    Cine41         = 12,
-    Music41        = 13,
-    Arr50          = 14,
-    Arr51          = 15,
-    Cine60         = 16,
-    Music60        = 17,
-    Cine61         = 18,
-    Music61        = 19,
-    Cine70         = 20,
-    Music70        = 21,
-    Cine71         = 22,
-    Music71        = 23,
-    Cine80         = 24,
-    Music80        = 25,
-    Cine81         = 26,
-    Music81        = 27,
-    Arr102         = 28
+    None           = -1, ///< No arrangement / unspecified.
+    Mono           = 0, ///< Single mono channel (M).
+    Stereo         = 1, ///< L, R.
+    StereoSurround = 2, ///< Ls, Rs.
+    StereoCenter   = 3, ///< Lc, Rc.
+    StereoSide     = 4, ///< Sl, Sr.
+    StereoCLfe     = 5, ///< C, Lfe.
+    Cine30         = 6, ///< L, R, C (cinema 3.0).
+    Music30        = 7, ///< L, R, S (music 3.0).
+    Cine31         = 8, ///< L, R, C, Lfe (cinema 3.1).
+    Music31        = 9, ///< L, R, S, Lfe (music 3.1).
+    Cine40         = 10, ///< L, R, C, Cs (cinema 4.0).
+    Music40        = 11, ///< L, R, Ls, Rs (music 4.0).
+    Cine41         = 12, ///< L, R, C, Cs, Lfe (cinema 4.1).
+    Music41        = 13, ///< L, R, Ls, Rs, Lfe (music 4.1).
+    Arr50          = 14, ///< L, R, C, Ls, Rs (5.0).
+    Arr51          = 15, ///< L, R, C, Lfe, Ls, Rs (5.1).
+    Cine60         = 16, ///< L, R, C, Ls, Rs, Cs (cinema 6.0).
+    Music60        = 17, ///< L, R, Ls, Rs, Sl, Sr (music 6.0).
+    Cine61         = 18, ///< L, R, C, Lfe, Ls, Rs, Cs (cinema 6.1).
+    Music61        = 19, ///< L, R, Lfe, Ls, Rs, Sl, Sr (music 6.1).
+    Cine70         = 20, ///< L, R, C, Ls, Rs, Lc, Rc (cinema 7.0).
+    Music70        = 21, ///< L, R, C, Ls, Rs, Sl, Sr (music 7.0).
+    Cine71         = 22, ///< L, R, C, Lfe, Ls, Rs, Lc, Rc (cinema 7.1).
+    Music71        = 23, ///< L, R, C, Lfe, Ls, Rs, Sl, Sr (music 7.1).
+    Cine80         = 24, ///< L, R, C, Ls, Rs, Lc, Rc, Cs (cinema 8.0).
+    Music80        = 25, ///< L, R, C, Ls, Rs, Sl, Sr, Cs (music 8.0).
+    Cine81         = 26, ///< L, R, C, Lfe, Ls, Rs, Lc, Rc, Cs (cinema 8.1).
+    Music81        = 27, ///< L, R, C, Lfe, Ls, Rs, Sl, Sr, Cs (music 8.1).
+    Arr102         = 28 ///< L, R, C, Lfe, Ls, Rs, Lc, Rc, Tfl, Tfr, Trl, Trr (10.2).
 };
 
-using Speaker [[deprecated("Use speaker_type instead")]]                   = speaker_type;
+/** @deprecated Use speaker_type instead. */
+using Speaker [[deprecated("Use speaker_type instead")]] = speaker_type;
+/** @deprecated Use speaker_arrangement instead. */
 using SpeakerArrangement [[deprecated("Use speaker_arrangement instead")]] = speaker_arrangement;
 
 /**
@@ -111,13 +122,22 @@ using SpeakerArrangement [[deprecated("Use speaker_arrangement instead")]] = spe
  * The returned span references static storage valid for the program lifetime and performs no allocations.
  *
  * @param arr The speaker arrangement to resolve.
- * @return std::span<const speaker_type> Ordered channels for the arrangement, or an empty span if
- * unsupported.
+ * @return Ordered channels for the arrangement, or an empty span if unsupported
+ *         (e.g. speaker_arrangement::None).
  */
 std::span<const speaker_type> arrangement_speakers(speaker_arrangement arr) noexcept;
 
-/// @brief Returns a predefined speaker arrangement for a given number of channels
-/// If no predefined arrangement exists, returns speaker_arrangement::None
+/**
+ * @brief Returns a predefined speaker arrangement for a given number of channels.
+ *
+ * Selects a canonical layout for the given channel count, preferring the
+ * `Music`/`Arr` variants over the corresponding `Cine` variants where both exist
+ * (e.g. 3 channels -> Music30, 8 channels -> Music71).
+ *
+ * @param count Number of channels in the layout.
+ * @return A matching predefined speaker_arrangement, or speaker_arrangement::None
+ *         if no predefined layout exists for the given count.
+ */
 speaker_arrangement arrangement_for_channels(size_t count) noexcept;
 
 } // namespace kfr

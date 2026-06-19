@@ -35,6 +35,7 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
+/** @brief Sample rate expressed in Hertz. */
 using sample_rate_t = double;
 
 namespace intr
@@ -131,72 +132,154 @@ KFR_I_FN(dB_to_amp)
 KFR_I_FN(power_to_dB)
 KFR_I_FN(dB_to_power)
 
+/**
+ * @brief Convert a MIDI note number to frequency in Hertz.
+ *
+ * Uses A4 (note 69) = 440 Hz as the reference tuning. NaNs in the result are
+ * replaced with -infinity.
+ *
+ * @param x MIDI note number (60 = middle C).
+ * @return Frequency in Hertz.
+ */
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> note_to_hertz(const T1& x)
 {
     return intr::note_to_hertz(x);
 }
 
+/**
+ * @brief Convert a MIDI note number expression to frequency in Hertz.
+ *
+ * @param x Expression yielding MIDI note numbers (60 = middle C).
+ * @return Expression yielding frequencies in Hertz.
+ */
 template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::note_to_hertz, E1> note_to_hertz(E1&& x)
 {
     return { fn::note_to_hertz(), std::forward<E1>(x) };
 }
 
+/**
+ * @brief Convert a frequency in Hertz to a MIDI note number.
+ *
+ * Uses A4 (note 69) = 440 Hz as the reference tuning.
+ *
+ * @param x Frequency in Hertz.
+ * @return MIDI note number (fractional for non-standard frequencies).
+ */
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> hertz_to_note(const T1& x)
 {
     return intr::hertz_to_note(x);
 }
 
+/**
+ * @brief Convert a frequency expression in Hertz to MIDI note numbers.
+ *
+ * @param x Expression yielding frequencies in Hertz.
+ * @return Expression yielding MIDI note numbers.
+ */
 template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::hertz_to_note, E1> hertz_to_note(E1&& x)
 {
     return { fn::hertz_to_note(), std::forward<E1>(x) };
 }
 
+/**
+ * @brief Convert an amplitude value to decibels (20*log10).
+ *
+ * The conversion is based on the absolute value, so the sign of the input is
+ * ignored. An input of 0 yields -infinity.
+ *
+ * @param x Amplitude (1.0 corresponds to 0 dB).
+ * @return Level in decibels.
+ */
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> amp_to_dB(const T1& x)
 {
     return intr::amp_to_dB(x);
 }
 
+/**
+ * @brief Convert an amplitude expression to decibels (20*log10).
+ *
+ * @param x Expression yielding amplitudes (1.0 corresponds to 0 dB).
+ * @return Expression yielding levels in decibels.
+ */
 template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::amp_to_dB, E1> amp_to_dB(E1&& x)
 {
     return { fn::amp_to_dB(), std::forward<E1>(x) };
 }
 
+/**
+ * @brief Convert a level in decibels to an amplitude (10^(dB/20)).
+ *
+ * @param x Level in decibels (0 dB corresponds to amplitude 1.0).
+ * @return Amplitude.
+ */
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> dB_to_amp(const T1& x)
 {
     return intr::dB_to_amp(x);
 }
 
+/**
+ * @brief Convert a decibel level expression to amplitudes (10^(dB/20)).
+ *
+ * @param x Expression yielding levels in decibels (0 dB corresponds to amplitude 1.0).
+ * @return Expression yielding amplitudes.
+ */
 template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::dB_to_amp, E1> dB_to_amp(E1&& x)
 {
     return { fn::dB_to_amp(), std::forward<E1>(x) };
 }
 
+/**
+ * @brief Convert a power value to decibels (10*log10).
+ *
+ * @param x Power (1.0 corresponds to 0 dB).
+ * @return Power level in decibels.
+ */
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> power_to_dB(const T1& x)
 {
     return intr::power_to_dB(x);
 }
 
+/**
+ * @brief Convert a power expression to decibels (10*log10).
+ *
+ * @param x Expression yielding power values (1.0 corresponds to 0 dB).
+ * @return Expression yielding power levels in decibels.
+ */
 template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::power_to_dB, E1> power_to_dB(E1&& x)
 {
     return { fn::power_to_dB(), std::forward<E1>(x) };
 }
 
+/**
+ * @brief Convert a power level in decibels to a power value (10^(dB/10)).
+ *
+ * An input of -infinity yields 0.
+ *
+ * @param x Power level in decibels (0 dB corresponds to power 1.0).
+ * @return Power.
+ */
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> dB_to_power(const T1& x)
 {
     return intr::dB_to_power(x);
 }
 
+/**
+ * @brief Convert a power level expression in decibels to power values (10^(dB/10)).
+ *
+ * @param x Expression yielding power levels in decibels (0 dB corresponds to power 1.0).
+ * @return Expression yielding power values.
+ */
 template <expression_argument E1>
 KFR_FUNCTION expression_function<fn::dB_to_power, E1> dB_to_power(E1&& x)
 {

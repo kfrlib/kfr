@@ -44,22 +44,45 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
+/**
+ * @brief Convert mean-square energy to loudness in LUFS.
+ *
+ * Implements the EBU R128 mapping @f$ L = 10 \cdot \log_{10}(z) - 0.691 @f$,
+ * where @c z is the K-weighted mean-square energy.
+ * @param energy K-weighted mean-square energy (linear, not dB).
+ * @return Loudness in LUFS.
+ */
 template <typename T>
 KFR_INTRINSIC T energy_to_loudness(T energy)
 {
     return T(10) * log10(energy) - T(0.691);
 }
 
+/**
+ * @brief Inverse of @ref energy_to_loudness: convert LUFS back to linear energy.
+ *
+ * @param loudness Loudness in LUFS.
+ * @return K-weighted mean-square energy (linear).
+ */
 template <typename T>
 KFR_INTRINSIC T loudness_to_energy(T loudness)
 {
     return exp10((loudness + T(0.691)) * T(0.1));
 }
 
+/**
+ * @brief Buffer of momentary mean-square energies used to compute the
+ *        integrated (program) loudness per EBU R128 §3560.
+ *
+ * Samples below -70 LUFS are discarded on push. The integrated value is
+ * computed lazily and cached: it is the mean of the energies that lie above
+ * a relative gate set 10 LU below the ungated mean.
+ */
 template <typename T>
 struct integrated_vec : public univector<T>
 {
 private:
+    /** @brief Compute and cache the integrated loudness from the stored energies. */
     void compute() const
     {
         const T z_total = mean(static_cast<const univector<T>&>(*this));
@@ -91,6 +114,12 @@ private:
 
 public:
     integrated_vec() : m_integrated(-c_infinity<T>), m_integrated_cached(false) {}
+    /**
+     * @brief Append a momentary mean-square energy sample.
+     *
+     * Samples whose loudness is below -70 LUFS (absolute gate) are rejected.
+     * @param mean_square Momentary mean-square energy for one 400 ms window.
+     */
     void push(T mean_square)
     {
         T lk = energy_to_loudness(mean_square);
@@ -100,11 +129,13 @@ public:
             m_integrated_cached = false;
         }
     }
+    /** @brief Clear the buffer and invalidate the cached result. */
     void reset()
     {
         m_integrated_cached = false;
         this->clear();
     }
+    /** @brief Return the integrated loudness in LUFS, recomputing if needed. */
     T get() const
     {
         if (!m_integrated_cached)
@@ -119,10 +150,20 @@ private:
     mutable bool m_integrated_cached;
 };
 
+/**
+ * @brief Sorted buffer of short-term mean-square energies used to compute the
+ *        Loudness Range (LRA) per EBU R128 / ITU-R BS.1770.
+ *
+ * Samples below -70 LUFS are rejected on push; the rest are kept in ascending
+ * order so that percentile lookups are O(log n). LRA is the difference between
+ * the 95 % and 10 % percentiles of the loudness distribution above a relative
+ * gate set 20 LU below the ungated mean.
+ */
 template <typename T>
 struct lra_vec : public univector<T>
 {
 private:
+    /** @brief Compute and cache the 10 % / 95 % percentile loudness values. */
     void compute() const
     {
         m_range_high            = -70;
@@ -154,6 +195,12 @@ private:
 
 public:
     lra_vec() : m_range_low(-70), m_range_high(-70), m_lra_cached(false) {}
+    /**
+     * @brief Insert a short-term mean-square energy sample, keeping the buffer sorted.
+     *
+     * Samples whose loudness is below -70 LUFS are rejected.
+     * @param mean_square Short-term mean-square energy for one 3 s window.
+     */
     void push(T mean_square)
     {
         const T lk = energy_to_loudness(mean_square);
@@ -164,11 +211,18 @@ public:
             m_lra_cached = false;
         }
     }
+    /** @brief Clear the buffer and invalidate the cached result. */
     void reset()
     {
         m_lra_cached = false;
         this->clear();
     }
+    /**
+     * @brief Return the LRA percentile loudness bounds.
+     * @param low  Out: 10 % percentile loudness in LUFS.
+     * @param high Out: 95 % percentile loudness in LUFS.
+     * @note LRA = @c high - @c low.
+     */
     void get(T& low, T& high) const
     {
         if (!m_lra_cached)
@@ -183,6 +237,15 @@ private:
     mutable bool m_lra_cached;
 };
 
+/**
+ * @brief Build the EBU R128 K-weighting pre-filter as an IIR expression handle.
+ *
+ * The K-filter is a +4 dB high-shelf at 1681.81 Hz followed by a high-pass at
+ * 38.1106678 Hz (Q = 0.5, normalized). It must be applied to each channel
+ * before measuring energy.
+ * @param samplerate Sample rate in Hz.
+ * @return Expression handle accepting one input sample block.
+ */
 template <typename T>
 KFR_INTRINSIC expression_handle<T, 1> make_kfilter(int samplerate)
 {
@@ -196,11 +259,29 @@ KFR_INTRINSIC expression_handle<T, 1> make_kfilter(int samplerate)
 template <typename T>
 struct ebu_r128;
 
+/**
+ * @brief Single-channel loudness measurement front-end.
+ *
+ * Applies the K-weighting filter to each packet, then accumulates the
+ * filtered sum-of-squares into two ring buffers:
+ *  - @ref m_momentary_sum_of_squares covers 400 ms (momentary loudness, M).
+ *  - @ref m_short_sum_of_squares covers 3 s (short-term loudness, S).
+ *
+ * Per-channel output gain accounts for the EBU channel weighting
+ * (e.g. +1.5 dB for surrounds, 0 dB for LFE).
+ */
 template <typename T>
 struct ebu_channel
 {
 public:
     friend struct ebu_r128<T>;
+    /**
+     * @brief Construct a channel front-end.
+     * @param sample_rate         Sample rate in Hz.
+     * @param speaker             Speaker role (determines output weighting).
+     * @param packet_size_factor  1 = 10 Hz refresh, 2 = 20 Hz, 3 = 30 Hz.
+     * @param input_gain          Linear gain applied to the input before filtering.
+     */
     ebu_channel(int sample_rate, speaker_type speaker, int packet_size_factor = 1, T input_gain = 1)
         : m_sample_rate(sample_rate), m_speaker(speaker), m_input_gain(input_gain),
           m_packet_size(sample_rate / 10 / packet_size_factor), m_kfilter(make_kfilter<T>(sample_rate)),
@@ -224,12 +305,20 @@ public:
         reset();
     }
 
+    /** @brief Zero the momentary and short-term sum-of-squares ring buffers. */
     void reset()
     {
         std::fill(m_short_sum_of_squares.begin(), m_short_sum_of_squares.end(), T(0));
         std::fill(m_momentary_sum_of_squares.begin(), m_momentary_sum_of_squares.end(), T(0));
     }
 
+    /**
+     * @brief Process one packet of @ref m_packet_size samples.
+     *
+     * Filters the input through the K-filter and adds the resulting
+     * sum-of-squares to both ring buffers (overwriting the oldest slot).
+     * @param src Pointer to @ref m_packet_size input samples.
+     */
     void process_packet(const T* src)
     {
         substitute(m_kfilter, to_handle(make_univector(src, m_packet_size) * m_input_gain));
@@ -238,6 +327,7 @@ public:
         m_short_sum_of_squares.ringbuf_write(m_short_sum_of_squares_cursor, filtered_sum_of_squares);
         m_momentary_sum_of_squares.ringbuf_write(m_momentary_sum_of_squares_cursor, filtered_sum_of_squares);
     }
+    /** @brief Return the speaker role assigned to this channel. */
     speaker_type get_speaker() const { return m_speaker; }
 
 private:
@@ -255,11 +345,28 @@ private:
     size_t m_momentary_sum_of_squares_cursor;
 };
 
+/**
+ * @brief EBU R128 loudness meter.
+ *
+ * Computes momentary (M, 400 ms), short-term (S, 3 s), integrated (I) and
+ * loudness range (LRA) values for a multi-channel signal, per
+ * EBU Tech 3341 / R128 s2 and EBU R128 s3 (LRA).
+ *
+ * Packets are @c sample_rate/10/ @c packet_size_factor samples long, i.e. the
+ * measurement refresh rate is @c 10 * packet_size_factor Hz.
+ */
 template <typename T>
 struct ebu_r128
 {
 public:
-    // Correct values for packet_size_factor: 1 (10Hz refresh rate), 2 (20Hz), 3 (30Hz)
+    /**
+     * @brief Construct the meter.
+     * @param sample_rate         Sample rate in Hz.
+     * @param channels            Speaker roles for each input channel (L, R, C, Ls, Rs, LFE, ...).
+     * @param packet_size_factor  Refresh multiplier: 1 = 10 Hz, 2 = 20 Hz, 3 = 30 Hz (range [1..6]).
+     *
+     * One @ref ebu_channel is created per entry in @c channels, in order.
+     */
     ebu_r128(int sample_rate, std::span<const speaker_type> channels, int packet_size_factor = 1)
         : m_sample_rate(sample_rate), m_running(true), m_need_reset(false),
           m_packet_size(sample_rate / 10 / packet_size_factor)
@@ -274,10 +381,21 @@ public:
         }
     }
 
+    /** @brief Return the configured sample rate in Hz. */
     int sample_rate() const { return m_sample_rate; }
 
+    /** @brief Return the number of samples per packet (= sample_rate / refresh_rate). */
     size_t packet_size() const { return m_packet_size; }
 
+    /**
+     * @brief Read all measured loudness values.
+     * @param loudness_momentary     Out: momentary loudness M (400 ms), LUFS.
+     * @param loudness_short         Out: short-term loudness S (3 s), LUFS.
+     * @param loudness_intergrated   Out: integrated program loudness I, LUFS.
+     * @param loudness_range_low     Out: LRA 10 % percentile, LUFS.
+     * @param loudness_range_high    Out: LRA 95 % percentile, LUFS.
+     * @note LRA = @c loudness_range_high - @c loudness_range_low.
+     */
     void get_values(T& loudness_momentary, T& loudness_short, T& loudness_intergrated, T& loudness_range_low,
                     T& loudness_range_high)
     {
@@ -296,31 +414,60 @@ public:
         m_lra_buffer.get(loudness_range_low, loudness_range_high);
     }
 
+    /** @brief Access channel @c index (read-only). */
     const ebu_channel<T>& operator[](size_t index) const { return m_channels[index]; }
+    /** @brief Return the number of channels. */
     size_t count() const { return m_channels.size(); }
 
+    /**
+     * @brief Process one packet for every channel.
+     *
+     * Each entry of @c source must contain exactly @ref packet_size() samples
+     * and correspond, in order, to the channels passed to the constructor.
+     * Updates the momentary, short-term, integrated and LRA buffers while
+     * @ref m_running is true.
+     */
     void process_packet(const std::initializer_list<univector_dyn<T>>& source)
     {
         process_packet_impl<tag_dynamic_vector>(source);
     }
+    /// @copydoc process_packet(const std::initializer_list<univector_dyn<T>>&)
     void process_packet(const std::initializer_list<univector_ref<T>>& source)
     {
         process_packet_impl<tag_array_ref>(source);
     }
+    /// @copydoc process_packet(const std::initializer_list<univector_dyn<T>>&)
     void process_packet(std::span<const univector_dyn<T>> source)
     {
         process_packet_impl<tag_dynamic_vector>(source);
     }
+    /// @copydoc process_packet(const std::initializer_list<univector_dyn<T>>&)
     void process_packet(std::span<const univector_ref<T>> source)
     {
         process_packet_impl<tag_array_ref>(source);
     }
 
+    /** @brief (Re)start measurement: subsequent packets update the buffers. */
     void start() { m_running = true; }
+    /** @brief Pause measurement: packets are still filtered but buffers are frozen. */
     void stop() { m_running = false; }
+    /**
+     * @brief Request a deferred reset of all channels and accumulators.
+     *
+     * The reset is applied at the start of the next @ref process_packet call,
+     * so that the in-flight packet is not lost.
+     */
     void reset() { m_need_reset = true; }
 
 private:
+    /**
+     * @brief Per-packet implementation shared by all @ref process_packet overloads.
+     *
+     * Filters every channel, accumulates momentary/short-term energy, and (when
+     * running) pushes those energies into the integrated and LRA buffers. Honors
+     * a pending @ref reset() request before accumulating.
+     * @param source One packet per channel, in constructor order.
+     */
     template <univector_tag Tag>
     void process_packet_impl(std::span<const univector<T, Tag>> source)
     {

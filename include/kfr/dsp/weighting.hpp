@@ -97,36 +97,105 @@ KFR_I_FN(aweighting)
 KFR_I_FN(bweighting)
 KFR_I_FN(cweighting)
 
+/**
+ * @brief A-weighting filter response for a scalar frequency.
+ *
+ * Returns the A-weighting gain (linear magnitude, not decibels) for the given
+ * frequency @p x in Hz. The result is normalized so that the response at
+ * 1 kHz is unity (0 dB). Use this on spectrum magnitudes (gains); convert to
+ * dB afterwards if a decibel-scaled weighting is required.
+ *
+ * @tparam T1 Numeric scalar type.
+ * @param x Frequency in Hz.
+ * @return A-weighting gain (linear) at @p x.
+ */
 template <numeric T1>
 KFR_INTRINSIC T1 aweighting(const T1& x)
 {
     return intr::aweighting(x);
 }
 
+/**
+ * @brief A-weighting filter response as an expression.
+ *
+ * Builds an expression that applies the A-weighting gain (linear magnitude,
+ * not decibels) element-wise to its input. Intended for use on spectrum
+ * magnitudes (gains); the input is interpreted as frequency in Hz.
+ *
+ * @tparam E1 Input expression type.
+ * @param x Input expression of frequencies in Hz.
+ * @return Expression producing A-weighting gains (linear) element-wise.
+ */
 template <expression_argument E1>
 KFR_INTRINSIC expression_function<fn::aweighting, E1> aweighting(E1&& x)
 {
     return { fn::aweighting(), std::forward<E1>(x) };
 }
 
+/**
+ * @brief B-weighting filter response for a scalar frequency.
+ *
+ * Returns the B-weighting gain (linear magnitude, not decibels) for the given
+ * frequency @p x in Hz. The result is normalized so that the response at
+ * 1 kHz is unity (0 dB). Use this on spectrum magnitudes (gains); convert to
+ * dB afterwards if a decibel-scaled weighting is required.
+ *
+ * @tparam T1 Numeric scalar type.
+ * @param x Frequency in Hz.
+ * @return B-weighting gain (linear) at @p x.
+ */
 template <numeric T1>
 KFR_INTRINSIC T1 bweighting(const T1& x)
 {
     return intr::bweighting(x);
 }
 
+/**
+ * @brief B-weighting filter response as an expression.
+ *
+ * Builds an expression that applies the B-weighting gain (linear magnitude,
+ * not decibels) element-wise to its input. Intended for use on spectrum
+ * magnitudes (gains); the input is interpreted as frequency in Hz.
+ *
+ * @tparam E1 Input expression type.
+ * @param x Input expression of frequencies in Hz.
+ * @return Expression producing B-weighting gains (linear) element-wise.
+ */
 template <expression_argument E1>
 KFR_INTRINSIC expression_function<fn::bweighting, E1> bweighting(E1&& x)
 {
     return { fn::bweighting(), std::forward<E1>(x) };
 }
 
+/**
+ * @brief C-weighting filter response for a scalar frequency.
+ *
+ * Returns the C-weighting gain (linear magnitude, not decibels) for the given
+ * frequency @p x in Hz. The result is normalized so that the response at
+ * 1 kHz is unity (0 dB). Use this on spectrum magnitudes (gains); convert to
+ * dB afterwards if a decibel-scaled weighting is required.
+ *
+ * @tparam T1 Numeric scalar type.
+ * @param x Frequency in Hz.
+ * @return C-weighting gain (linear) at @p x.
+ */
 template <numeric T1>
 KFR_INTRINSIC T1 cweighting(const T1& x)
 {
     return intr::cweighting(x);
 }
 
+/**
+ * @brief C-weighting filter response as an expression.
+ *
+ * Builds an expression that applies the C-weighting gain (linear magnitude,
+ * not decibels) element-wise to its input. Intended for use on spectrum
+ * magnitudes (gains); the input is interpreted as frequency in Hz.
+ *
+ * @tparam E1 Input expression type.
+ * @param x Input expression of frequencies in Hz.
+ * @return Expression producing C-weighting gains (linear) element-wise.
+ */
 template <expression_argument E1>
 KFR_INTRINSIC expression_function<fn::cweighting, E1> cweighting(E1&& x)
 {

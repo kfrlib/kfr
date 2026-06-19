@@ -122,11 +122,13 @@ KFR_I_FN_FULL(fir_bandpass, internal::fir_bandpass)
 KFR_I_FN_FULL(fir_bandstop, internal::fir_bandstop)
 
 /**
- * @brief Calculates coefficients for the low-pass FIR filter
- * @param taps array where computed coefficients are stored
- * @param cutoff Normalized frequency (frequency_Hz / samplerate_Hz)
- * @param window pointer to a window function
- * @param normalize true for normalized coefficients
+ * @brief Calculates coefficients for the low-pass FIR filter using the windowed-sinc method.
+ * @param taps array where computed coefficients are stored. Size determines the filter order (size-1).
+ * @param cutoff Normalized cutoff frequency (frequency_Hz / samplerate_Hz), where 0.5 corresponds to Nyquist.
+ * @param window handle to a window function applied to the sinc impulse response.
+ * @param normalize when true, scales taps so the DC gain is unity.
+ *
+ * For odd-length taps the center coefficient is set to `2*cutoff` to avoid the sinc singularity.
  */
 template <typename T, univector_tag Tag>
 KFR_INTRINSIC void fir_lowpass(univector<T, Tag>& taps, std::type_identity_t<T> cutoff,
@@ -136,11 +138,14 @@ KFR_INTRINSIC void fir_lowpass(univector<T, Tag>& taps, std::type_identity_t<T> 
 }
 
 /**
- * @brief Calculates coefficients for the high-pass FIR filter
- * @param taps array where computed coefficients are stored
- * @param cutoff Normalized frequency (frequency_Hz / samplerate_Hz)
- * @param window pointer to a window function
- * @param normalize true for normalized coefficients
+ * @brief Calculates coefficients for the high-pass FIR filter using the windowed-sinc method.
+ * @param taps array where computed coefficients are stored. Size determines the filter order (size-1).
+ * @param cutoff Normalized cutoff frequency (frequency_Hz / samplerate_Hz), where 0.5 corresponds to Nyquist.
+ * @param window handle to a window function applied to the sinc impulse response.
+ * @param normalize when true, scales taps so the DC gain is unity.
+ *
+ * Spectral inversion of the low-pass prototype is used. For odd-length taps the center coefficient is set
+ * to `1 - 2*cutoff`.
  */
 template <typename T, univector_tag Tag>
 KFR_INTRINSIC void fir_highpass(univector<T, Tag>& taps, std::type_identity_t<T> cutoff,
@@ -150,12 +155,17 @@ KFR_INTRINSIC void fir_highpass(univector<T, Tag>& taps, std::type_identity_t<T>
 }
 
 /**
- * @brief Calculates coefficients for the band-pass FIR filter
- * @param taps array where computed coefficients are stored
- * @param frequency1 Normalized frequency (frequency_Hz / samplerate_Hz)
- * @param frequency2 Normalized frequency (frequency_Hz / samplerate_Hz)
- * @param window pointer to a window function
- * @param normalize true for normalized coefficients
+ * @brief Calculates coefficients for the band-pass FIR filter using the windowed-sinc method.
+ * @param taps array where computed coefficients are stored. Size determines the filter order (size-1).
+ * @param frequency1 Normalized lower band edge (frequency_Hz / samplerate_Hz), where 0.5 corresponds to
+ * Nyquist.
+ * @param frequency2 Normalized upper band edge (frequency_Hz / samplerate_Hz), where 0.5 corresponds to
+ * Nyquist.
+ * @param window handle to a window function applied to the sinc impulse response.
+ * @param normalize when true, scales taps so the DC gain is unity.
+ *
+ * Constructed as the difference of two low-pass prototypes (cutoffs at frequency2 and frequency1).
+ * For odd-length taps the center coefficient is set to `2*(frequency2 - frequency1)`.
  */
 template <typename T, univector_tag Tag>
 KFR_INTRINSIC void fir_bandpass(univector<T, Tag>& taps, std::type_identity_t<T> frequency1,
@@ -166,12 +176,17 @@ KFR_INTRINSIC void fir_bandpass(univector<T, Tag>& taps, std::type_identity_t<T>
 }
 
 /**
- * @brief Calculates coefficients for the band-stop FIR filter
- * @param taps array where computed coefficients are stored
- * @param frequency1 Normalized frequency (frequency_Hz / samplerate_Hz)
- * @param frequency2 Normalized frequency (frequency_Hz / samplerate_Hz)
- * @param window pointer to a window function
- * @param normalize true for normalized coefficients
+ * @brief Calculates coefficients for the band-stop (notch) FIR filter using the windowed-sinc method.
+ * @param taps array where computed coefficients are stored. Size determines the filter order (size-1).
+ * @param frequency1 Normalized lower band edge (frequency_Hz / samplerate_Hz), where 0.5 corresponds to
+ * Nyquist.
+ * @param frequency2 Normalized upper band edge (frequency_Hz / samplerate_Hz), where 0.5 corresponds to
+ * Nyquist.
+ * @param window handle to a window function applied to the sinc impulse response.
+ * @param normalize when true, scales taps so the DC gain is unity.
+ *
+ * Constructed as a low-pass (cutoff at frequency1) minus a second low-pass (cutoff at frequency2).
+ * For odd-length taps the center coefficient is set to `1 - 2*(frequency2 - frequency1)`.
  */
 template <typename T, univector_tag Tag>
 KFR_INTRINSIC void fir_bandstop(univector<T, Tag>& taps, std::type_identity_t<T> frequency1,

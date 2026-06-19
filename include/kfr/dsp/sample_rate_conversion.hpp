@@ -52,6 +52,9 @@ enum class sample_rate_conversion_quality : int
     perfect = 12 /**< Perfect quality (highest, slowest). */
 };
 
+/**
+ * @brief Alias for sample_rate_conversion_quality.
+ */
 using resample_quality = sample_rate_conversion_quality;
 
 /**
@@ -96,6 +99,13 @@ protected:
     }
 
 public:
+    /**
+     * @brief Resets the converter to its initial state.
+     *
+     * Clears the internal input/output positions and zeroes the delay line, so the
+     * next call to `process` or `skip` behaves as if the converter were freshly
+     * constructed (without reinitializing the filter coefficients).
+     */
     void reset() noexcept
     {
         this->input_position  = 0;
@@ -162,17 +172,58 @@ public:
     samplerate_converter(sample_rate_conversion_quality quality, itype interpolation_factor,
                          itype decimation_factor, fbase scale = ftype(1), fbase cutoff = 0.5f);
 
+    /**
+     * @brief Constructs a sample rate converter from explicit filter parameters.
+     * @param taps Number of taps per polyphase branch (processing depth).
+     * @param interpolation_factor Factor by which to interpolate the input signal.
+     * @param decimation_factor Factor by which to decimate the output signal.
+     * @param scale Scaling factor applied to the output.
+     * @param cutoff Cutoff frequency as a fraction of the Nyquist frequency.
+     * @param sidelobe_attenuation Sidelobe attenuation in dB used to derive the Kaiser window.
+     * @param transition_width Transition width in radians used to adjust the cutoff.
+     */
     samplerate_converter(int taps, itype interpolation_factor, itype decimation_factor, fbase scale,
                          fbase cutoff, fbase sidelobe_attenuation, fbase transition_width);
 
-    samplerate_converter()                                           = default;
-    samplerate_converter(samplerate_converter&&) noexcept            = default;
+    /**
+     * @brief Default constructor.
+     *
+     * Leaves the converter in an uninitialized state: no filter coefficients,
+     * zero factors, and an empty delay line. Any non-static member function
+     * other than `reset` must not be called until the converter is assigned a
+     * fully-constructed instance (e.g. via move assignment).
+     */
+    samplerate_converter() = default;
+
+    /**
+     * @brief Move constructor.
+     *
+     * Transfers ownership of the filter coefficients, delay line, and current
+     * input/output positions from `other`. The moved-from object is left in a
+     * valid but unspecified state.
+     */
+    samplerate_converter(samplerate_converter&&) noexcept = default;
+
+    /**
+     * @brief Move assignment operator.
+     *
+     * Transfers ownership of the filter coefficients, delay line, and current
+     * input/output positions from `other`, releasing any resources previously
+     * held by `*this`. The moved-from object is left in a valid but unspecified
+     * state.
+     * @param other The converter to move from.
+     * @return A reference to `*this`.
+     */
     samplerate_converter& operator=(samplerate_converter&&) noexcept = default;
 
     /**
-     * @brief Converts an input position to an intermediate position.
+     * @brief Converts an input position to an intermediate (interpolated) position.
+     *
+     * The intermediate domain is the high-rate domain obtained after
+     * interpolation and before decimation. This maps an input sample index to
+     * its corresponding index in that domain.
      * @param in_pos Input position.
-     * @return Intermediate position.
+     * @return Intermediate position `in_pos * interpolation_factor`.
      */
     KFR_MEM_INTRINSIC itype input_position_to_intermediate(itype in_pos) const
     {
@@ -180,9 +231,12 @@ public:
     }
 
     /**
-     * @brief Converts an output position to an intermediate position.
+     * @brief Converts an output position to an intermediate (pre-decimation) position.
+     *
+     * Maps an output sample index back to its corresponding index in the
+     * high-rate intermediate domain.
      * @param out_pos Output position.
-     * @return Intermediate position.
+     * @return Intermediate position `out_pos * decimation_factor`.
      */
     KFR_MEM_INTRINSIC itype output_position_to_intermediate(itype out_pos) const
     {
@@ -190,7 +244,11 @@ public:
     }
 
     /**
-     * @brief Converts an input position to an output position.
+     * @brief Converts an input position to the corresponding output position.
+     *
+     * Uses floor division of the intermediate position by the decimation factor,
+     * so the result is the index of the output sample that consumes the given
+     * input sample (or the last output sample produced at or before it).
      * @param in_pos Input position.
      * @return Corresponding output position.
      */
@@ -200,7 +258,11 @@ public:
     }
 
     /**
-     * @brief Converts an output position to an input position.
+     * @brief Converts an output position to the corresponding input position.
+     *
+     * Uses floor division of the intermediate position by the interpolation
+     * factor, so the result is the index of the input sample needed to produce
+     * the given output sample.
      * @param out_pos Output position.
      * @return Corresponding input position.
      */
@@ -210,7 +272,11 @@ public:
     }
 
     /**
-     * @brief Calculates the output size for a given input size (push method).
+     * @brief Calculates the output size produced for a given input size (push method).
+     *
+     * Accounts for the current input/output positions, so the returned value is
+     * the exact number of output samples that `process` will write when given
+     * `input_size` new input samples.
      * @param input_size Size of the input buffer.
      * @return Required output buffer size.
      */
@@ -221,7 +287,11 @@ public:
     }
 
     /**
-     * @brief Calculates the input size for a given output size (pull method).
+     * @brief Calculates the input size required to produce a given output size (pull method).
+     *
+     * Accounts for the current input/output positions, so the returned value is
+     * the exact number of input samples that must be supplied to `process` in
+     * order to produce `output_size` output samples.
      * @param output_size Size of the output buffer.
      * @return Required input buffer size.
      */
@@ -233,6 +303,12 @@ public:
 
     /**
      * @brief Skips a specified number of output samples, updating internal state.
+     *
+     * Consumes the corresponding input samples (as given by
+     * `input_size_for_output`) without producing any output, and updates the
+     * delay line so that subsequent calls to `process` continue seamlessly.
+     * This is typically used to discard the FIR filter's group delay at the
+     * start of a stream.
      * @param output_size Number of output samples to skip.
      * @param input Input buffer to consume.
      * @return Number of input samples consumed.
@@ -259,10 +335,16 @@ public:
 
     /**
      * @brief Processes input data to produce resampled output (pull or push method).
+     *
+     * Reads samples from `input`, advances the internal input/output positions,
+     * and writes the resampled result to `output`. The number of input samples
+     * consumed is given by `input_size_for_output(output.size())`; the number of
+     * output samples produced equals `output.size()`. The delay line is updated
+     * so that consecutive calls operate on a contiguous stream.
+     * @tparam Tag Type tag for the univector output.
      * @param output Output buffer to write resampled data.
      * @param input Input buffer to read samples from.
      * @return Number of input samples processed.
-     * @tparam Tag Type tag for the univector output.
      */
     template <univector_tag Tag>
     size_t process(univector<T, Tag>& output, univector_ref<const T> input)
@@ -272,13 +354,20 @@ public:
 
     /**
      * @brief Gets the fractional delay introduced by the resampler.
-     * @return Fractional delay in samples.
+     *
+     * The delay is the group delay of the symmetric FIR filter, expressed in
+     * output-sample units.
+     * @return Fractional delay in output samples.
      */
     KFR_MEM_INTRINSIC fbase get_fractional_delay() const { return (taps - 1) * 0.5 / decimation_factor; }
 
     /**
      * @brief Gets the integer delay introduced by the resampler.
-     * @return Delay in samples.
+     *
+     * Returns `get_fractional_delay()` truncated to an integer. This is the
+     * number of leading output samples that should be discarded (e.g. via
+     * `skip`) to align the output with the input.
+     * @return Delay in output samples.
      */
     KFR_MEM_INTRINSIC size_t get_delay() const { return static_cast<size_t>(get_fractional_delay()); }
 
@@ -419,6 +508,19 @@ struct expression_downsample<4, offset, E> : expression_with_arguments<E>
 };
 } // namespace internal
 
+/**
+ * @brief Downsamples a signal by a factor of 2 by selecting every other sample.
+ *
+ * @warning This function does NOT apply any anti-aliasing filter. It simply drops
+ * samples (keeping samples at positions `offset`, `offset+2`, `offset+4`, ...).
+ * Use this only when no filtering is desired; otherwise prefer a proper
+ * `samplerate_converter` with a decimation factor of 2.
+ *
+ * @tparam E1 The input expression type.
+ * @tparam offset Index of the first sample to keep (0 or 1).
+ * @param e1 The input expression.
+ * @return An expression producing the downsampled signal.
+ */
 template <typename E1, size_t offset = 0>
 KFR_FUNCTION internal::expression_downsample<2, offset, E1> downsample2(E1&& e1,
                                                                         csize_t<offset> = csize_t<0>())
@@ -426,6 +528,19 @@ KFR_FUNCTION internal::expression_downsample<2, offset, E1> downsample2(E1&& e1,
     return internal::expression_downsample<2, offset, E1>(std::forward<E1>(e1));
 }
 
+/**
+ * @brief Downsamples a signal by a factor of 4 by selecting every fourth sample.
+ *
+ * @warning This function does NOT apply any anti-aliasing filter. It simply drops
+ * samples (keeping samples at positions `offset`, `offset+4`, `offset+8`, ...).
+ * Use this only when no filtering is desired; otherwise prefer a proper
+ * `samplerate_converter` with a decimation factor of 4.
+ *
+ * @tparam E1 The input expression type.
+ * @tparam offset Index of the first sample to keep (0, 1, 2, or 3).
+ * @param e1 The input expression.
+ * @return An expression producing the downsampled signal.
+ */
 template <typename E1, size_t offset = 0>
 KFR_FUNCTION internal::expression_downsample<4, offset, E1> downsample4(E1&& e1,
                                                                         csize_t<offset> = csize_t<0>())
@@ -433,12 +548,36 @@ KFR_FUNCTION internal::expression_downsample<4, offset, E1> downsample4(E1&& e1,
     return internal::expression_downsample<4, offset, E1>(std::forward<E1>(e1));
 }
 
+/**
+ * @brief Upsamples a signal by a factor of 2 by inserting zero samples.
+ *
+ * @warning This function does NOT apply any interpolation filter. It inserts a
+ * zero sample between each pair of consecutive input samples. Use this only when
+ * no filtering is desired; otherwise prefer a proper `samplerate_converter`
+ * with an interpolation factor of 2.
+ *
+ * @tparam E1 The input expression type.
+ * @param e1 The input expression.
+ * @return An expression producing the upsampled signal.
+ */
 template <typename E1>
 KFR_FUNCTION internal::expression_upsample<2, E1> upsample2(E1&& e1)
 {
     return internal::expression_upsample<2, E1>(std::forward<E1>(e1));
 }
 
+/**
+ * @brief Upsamples a signal by a factor of 4 by inserting zero samples.
+ *
+ * @warning This function does NOT apply any interpolation filter. It inserts three
+ * zero samples between each pair of consecutive input samples. Use this only when
+ * no filtering is desired; otherwise prefer a proper `samplerate_converter` with
+ * an interpolation factor of 4.
+ *
+ * @tparam E1 The input expression type.
+ * @param e1 The input expression.
+ * @return An expression producing the upsampled signal.
+ */
 template <typename E1>
 KFR_FUNCTION internal::expression_upsample<4, E1> upsample4(E1&& e1)
 {
@@ -468,6 +607,17 @@ KFR_FUNCTION samplerate_converter<T> sample_rate_converter(sample_rate_conversio
 }
 
 // Deprecated in 0.9.2
+/**
+ * @brief Helper function to create a sample rate converter instance.
+ * @deprecated Deprecated in 0.9.2. Use `sample_rate_converter` instead.
+ * @tparam T Data type of the audio samples (default: fbase).
+ * @param quality The desired conversion quality.
+ * @param interpolation_factor Factor by which to interpolate the input signal.
+ * @param decimation_factor Factor by which to decimate the output signal.
+ * @param scale Scaling factor for the output (default: 1).
+ * @param cutoff Cutoff frequency as a fraction of the Nyquist frequency (default: 0.5).
+ * @return A configured samplerate_converter instance.
+ */
 template <typename T = fbase>
 KFR_FUNCTION samplerate_converter<T> resampler(sample_rate_conversion_quality quality,
                                                size_t interpolation_factor, size_t decimation_factor,
