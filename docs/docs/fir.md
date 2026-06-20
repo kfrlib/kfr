@@ -5,7 +5,11 @@
 ```c++ linenums="1"
 // Initialize window function
 expression_handle<fbase> kaiser = to_handle(window_kaiser(taps.size(), 3.0));
+```
 
+See [Expression handles](handle.md) for details on `expression_handle` and `to_handle`.
+
+```c++ linenums="1"
 // Initialize taps
 // 0.2 is the lower cutoff frequency (normalized to Sample rate, frequency_Hz / samplerate_Hz)
 // 0.45 is the upper cutoff frequency (normalized to Sample rate, frequency_Hz / samplerate_Hz)
@@ -91,7 +95,7 @@ auto input = counter();
 filter.apply(output, input);
 ```
 
-[convolve_filter](convolution.md) is numerically equivalent to an FIR filter but uses DFT internally for better performance.
+[convolve_filter](convolution.md) is numerically equivalent to an [FIR](dsp_glossary.md#fir-finite-impulse-response) filter but uses [DFT](dsp_glossary.md#dft-vs-fft) internally for better performance.
 
 See also [Filter Class Definition](auto/classes/kfr.filter.t.md)
 

@@ -1,6 +1,6 @@
 # More about FFT/DFT
 
-The Fast Fourier Transform (FFT) can be used to perform:
+The [Fast Fourier Transform (FFT)](dsp_glossary.md#dft-vs-fft) can be used to perform:
 
 * [Convolution (including convolution reverberation)](convolution.md)
 * Cross-correlation and auto-correlation

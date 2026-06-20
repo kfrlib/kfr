@@ -10,7 +10,7 @@ KFR provides support for both raw and encoded audio formats. It handles a range 
 
 ### Integer PCM
 
-* Bit depth: 16–32 bits
+* [Bit depth](dsp_glossary.md#bit-depth): 16–32 bits
 * Signed only
 * Endianness: Little and Big endian
 * Channels: Any number (concrete formats may impose limits)

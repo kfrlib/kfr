@@ -17,10 +17,8 @@ reverb.apply(audio);
     `convolve_filter` uses [Filter API](auto/classes/kfr.filter.t.md) and preserves its internal state between calls to `apply`.
     Audio can be processed in chunks.
     Use `reset` function to reset its internal state.
-
-    `convolve_filter` has zero latency.
-
-    Internally, [FFT](dft.md) is used for performing convolution
+    `convolve_filter` has zero [latency](dsp_glossary.md#latency).
+    Internally, [FFT](dft.md) is used for performing [convolution](dsp_glossary.md#convolution)
 
 ### True stereo version
 

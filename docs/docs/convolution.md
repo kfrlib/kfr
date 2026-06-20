@@ -2,12 +2,12 @@
 
 ## Implementation Details
 
-The convolution filter efficiently computes the convolution of two signals.
-The efficiency is achieved by employing the FFT and the circular convolution
+The [convolution](dsp_glossary.md#convolution) filter efficiently computes the convolution of two signals.
+The efficiency is achieved by employing the [FFT](dsp_glossary.md#dft-vs-fft) and the circular convolution
 theorem.  The algorithm is a variant of the [overlap-add
 method](https://en.wikipedia.org/wiki/Overlap%E2%80%93add_method).  It works on
 a fixed block size $B$ for arbitrarily long input signals.  Thus, the
-convolution of a streaming input signal with a long FIR filter $h[n]$ (where
+convolution of a streaming input signal with a long [FIR](dsp_glossary.md#fir-finite-impulse-response) filter $h[n]$ (where
 the length of $h[n]$ may exceed the block size $B$) is computed with a
 fixed complexity $O(B \log B)$.
 

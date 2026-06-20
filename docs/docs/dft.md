@@ -1,6 +1,6 @@
 # How to apply Fast Fourier Transform
 
-This article demonstrates how to use the Fast Fourier Transform and apply both forward and inverse FFT on complex and real data using the KFR framework.
+This article demonstrates how to use the [Fast Fourier Transform](dsp_glossary.md#dft-vs-fft) and apply both forward and inverse FFT on complex and real data using the KFR framework.
 
 KFR DFT supports all sizes, and KFR automatically chooses the best algorithm to perform DFT for the given size.
 
@@ -28,7 +28,7 @@ Scaling is not performed by KFR. To get output in the same scale as input, divid
 
 ### Real input, complex output
 
-Frequency data is stored in [CCS or Perm format](dft_format.md).
+Frequency data is stored in [CCS or Perm format](dsp_glossary.md#dft-real-data-layout).
 
 The size of the output data is equal to `size/2+1` for CCS and `size/2` for Perm format.
 

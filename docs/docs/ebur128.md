@@ -1,4 +1,4 @@
-# How to measure loudness according to EBU R 128
+# How to measure loudness according to [EBU R 128](dsp_glossary.md#ebu-r128)
 
 KFR implements EBU R128 compliant loudness metering through the `ebu_r128<T>` class in the DSP module. It performs momentary (M), short-term (S), and integrated (I) loudness evaluation along with loudness range (LRA) as defined by EBU Tech 3341.
 

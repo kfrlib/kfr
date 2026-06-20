@@ -130,6 +130,7 @@ nav:
       - installation.md
       - basics.md
       - expressions.md
+      - handle.md
       - capi.md
       - upgrade7.md
       - benchmarking.md
@@ -149,6 +150,7 @@ nav:
       - src_gallery.md
       - window_gallery.md
       - convolution.md
+      - dsp_glossary.md
   - DFT:
       - dft.md
       - dft2.md

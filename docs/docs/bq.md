@@ -2,7 +2,7 @@
 
 ## Filter Initialization
 
-Biquad filters, also known as second-order section (SOS) filters, are widely used in digital signal processing for their versatility and efficiency. The KFR library provides functions to design and apply biquad filters with various frequency response characteristics.
+[Biquad](dsp_glossary.md#biquad-sos) filters, also known as second-order section (SOS) filters, are widely used in digital signal processing for their versatility and efficiency. The KFR library provides functions to design and apply biquad filters with various [frequency response](dsp_glossary.md#filter-band-types) characteristics.
 
 To initialize a biquad filter, you first create a `biquad_section` to hold the filter coefficients, then use `iir_params` to configure the filter, and finally instantiate a `filter_iir` object to apply the filter.
 

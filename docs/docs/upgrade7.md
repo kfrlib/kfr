@@ -1,5 +1,22 @@
 # KFR 7 Upgrade Guide
 
+## C++20 required
+
+KFR 7 requires a C++20 compliant compiler. This is a breaking change from KFR 6,
+which only required C++17. Make sure your project is built with `-std=c++20`
+(or `/std:c++20` on MSVC) and that your toolchain supports C++20.
+
+### Minimum compiler versions
+
+| Compiler | Minimum version |
+|----------|-----------------|
+| MSVC     | 2022 (19.30+)   |
+| GCC      | 10              |
+| Clang    | 12              |
+
+On Windows, Visual Studio 2022 is now the minimum supported MSVC compiler. Older
+versions (including Visual Studio 2019) cannot build KFR 7.
+
 ## Audio reading/writing
 
 KFR 7 introduces a new audio I/O module that replaces the previous `audio_reader` and `audio_writer` interface. The new module provides broader support for audio formats and improved workflows.

@@ -15,12 +15,12 @@ building blocks for signal processing. It covers a wide range of functionality,
 including:
 
 * Fast Fourier Transforms and Discrete Cosine Transforms of arbitrary size
-* IIR, FIR and biquad filter design and application
-* Sample-rate conversion with configurable quality and linear phase
-* Convolution and convolution reverb
+* [IIR](dsp_glossary.md#iir-infinite-impulse-response), [FIR](dsp_glossary.md#fir-finite-impulse-response) and [biquad](dsp_glossary.md#biquad-sos) filter design and application
+* [Sample-rate conversion](src.md) with configurable quality and linear phase
+* [Convolution](dsp_glossary.md#convolution) and [convolution reverb](dsp_glossary.md#convolution-reverb)
 * Audio file reading and writing for many common formats
 * Mathematical functions, statistics, random number generation and tensors
-* A SIMD abstraction layer that scales from scalar code up to AVX-512 and NEON
+* A [SIMD](dsp_glossary.md#simd-single-instruction-multiple-data) abstraction layer that scales from scalar code up to AVX-512 and NEON
 
 Everything is written in modern C++20 and is built with CMake. KFR has no
 external runtime dependencies beyond a C++20-compatible standard library,
@@ -36,10 +36,10 @@ span brain-computer interfaces, medical equipment, digital music, satellite
 communications, industrial control systems, and robotics.
 
 Because the software scales efficiently, it is deployed on hardware ranging
-from smartphones to supercomputers, operating across terrestrial, aerial, and
-aerospace environments. KFR's user base ranges from independent developers and
-major scientific collaborations to Fortune 500 companies with over 100,000
-employees.
+from microcomputers and smartphones to supercomputers, operating across
+terrestrial, aerial, and aerospace environments. KFR's user base ranges from
+independent developers to major scientific collaborations and Fortune 500
+companies.
 
 KFR is extensively tested on all supported architectures and has more than
 10 years of history of continuous development and real-world deployment.
@@ -52,16 +52,16 @@ expressive but slow. KFR tries to give you both.
 
 ### Performance first
 
-Every algorithm in KFR is implemented on top of an explicit SIMD layer. Rather
+Every algorithm in KFR is implemented on top of an explicit [SIMD](dsp_glossary.md#simd-single-instruction-multiple-data) layer. Rather
 than relying on the compiler's auto-vectorizer, KFR uses a `vec<T, N>` type that
 abstracts CPU-specific intrinsics and is specialized for SSE, AVX, AVX-512 and
 NEON. Data containers such as `univector` allocate memory aligned to 64-byte
 boundaries so that wide SIMD loads are always possible. Hot paths are
-hand-tuned, and the DFT implementation in particular is competitive with the
-fastest general-purpose FFT implementations available.
+hand-tuned, and the [DFT](dsp_glossary.md#dft-vs-fft) implementation in particular is competitive with the
+fastest general-purpose [FFT](dsp_glossary.md#dft-vs-fft) implementations available.
 
 For cases where a single binary must run on many different CPUs, KFR provides a
-multiarchitecture mode that compiles several code paths and dispatches to the
+[multiarchitecture](dsp_glossary.md#multiarchitecture-dispatch) mode that compiles several code paths and dispatches to the
 best one at runtime. This is available for DFT, resampling, and FIR/IIR
 filtering.
 
@@ -69,7 +69,7 @@ filtering.
 
 Performance never forces you into a fixed API. KFR is built on the
 [Expression](expressions.md) concept: operations on arrays return lazy
-expression objects that are only evaluated when their results are actually
+[expression templates](dsp_glossary.md#expression-templates) that are only evaluated when their results are actually
 needed. This lets you compose algorithms in a natural, readable way while the
 library fuses operations together and vectorizes them as a whole.
 
@@ -84,16 +84,16 @@ Because KFR covers the full chain from raw numerics to audio file I/O, it is a
 good fit for a wide variety of workloads:
 
 * **Audio processing** — design filters, apply them to streaming audio, convert
-  between sample rates, measure loudness to EBU R128, and read or write WAV,
+  between sample rates, measure loudness to [EBU R128](dsp_glossary.md#ebu-r128), and read or write WAV,
   FLAC, AIFF, ALAC, MP3 and other formats. See
   [How to read or write an audio file](read_audio.md) and
   [How to apply a FIR filter](fir.md).
-* **Scientific computing** — perform FFT-based spectral analysis, convolve large
+* **Scientific computing** — perform [FFT](dsp_glossary.md#dft-vs-fft)-based spectral analysis, [convolve](dsp_glossary.md#convolution) large
   signals, work with multidimensional data through the `tensor` type, and read
   or write `.npy` files for interop with the Python ecosystem.
-* **Communications and measurement** — generate oscillators, apply Goertzel
+* **Communications and measurement** — generate [oscillators](dsp_glossary.md#oscillator), apply [Goertzel](dsp_glossary.md#goertzel-algorithm)
   detection, design elliptic or Chebyshev filters with tight tolerances, and
-  process real-time data through ring buffers.
+  process real-time data through [ring buffers](dsp_glossary.md#ring-buffer).
 * **Embedded and cross-platform DSP** — build the same code for x86, ARM,
   AArch64 and RISC-V, with runtime dispatch picking the best implementation per
   device.
@@ -137,7 +137,7 @@ A few things worth noticing in this snippet:
 ## Filters and signal processing
 
 Filter design in KFR reads almost like a textbook. You pick an approximation
-(Butterworth, Chebyshev I/II, elliptic or Bessel), choose a band type, and
+([Butterworth, Chebyshev I/II, elliptic or Bessel](dsp_glossary.md#analog-iir-filters-vs-digital-filters)), choose a band type, and
 apply it to a signal:
 
 ```c++
@@ -147,17 +147,17 @@ apply it to a signal:
 using namespace kfr;
 
 int main() {
-    // 8th-order elliptic lowpass at 1 kHz, sampled at 48 kHz
+    // 8th-order elliptic [lowpass](dsp_glossary.md#filter-band-types) at 1 kHz, sampled at 48 kHz
     // rp = 0.1 dB passband ripple, rs = 40 dB stopband attenuation
     // (mirrors scipy.signal.ellip's N, rp, rs arguments)
-    zpk filt = iir_lowpass(elliptic(8, 0.1, 40.0), 1000, 48000);
+    [zpk](dsp_glossary.md#zero-pole-gain-zpk) filt = iir_lowpass(elliptic(8, 0.1, 40.0), 1000, 48000);
 
     // Apply it to an impulse to obtain the impulse response
     univector<fbase, 1024> response = iir(unitimpulse(), filt);
 }
 ```
 
-The same `iir` function accepts biquad cascades, so you can mix designs freely.
+The same `iir` function accepts [biquad](dsp_glossary.md#biquad-sos) cascades, so you can mix designs freely.
 For details and gallery examples, see [How to apply a Biquad filter](bq.md),
 [IIR filters](iir.md) and [FIR filters](fir.md).
 
@@ -189,7 +189,7 @@ without padding or windowing workarounds.
 ### Real and complex transforms
 
 Both complex-to-complex and real-to-complex transforms are available. Real
-transforms pack the output using either CCS or Perm format, which roughly
+transforms pack the output using either [CCS or Perm format](dsp_glossary.md#dft-real-data-layout), which roughly
 halves both memory and computation. The format is documented in
 [DFT data layout](dft_format.md).
 
@@ -226,11 +226,11 @@ transforms. See [How to apply Fast Fourier Transform](dft.md) and
 Because the FFT is fast, it enables a family of higher-level operations that
 KFR exposes directly:
 
-* **Convolution** of long signals via overlap-add, used internally by the
+* **[Convolution](dsp_glossary.md#convolution)** of long signals via overlap-add, used internally by the
   convolution filter. See [Convolution filter details](convolution.md).
-* **Convolution reverb** for applying impulse responses to audio. See
+* **[Convolution reverb](dsp_glossary.md#convolution-reverb)** for applying impulse responses to audio. See
   [How to apply Convolution Reverb](conv_reverb.md).
-* **Discrete Cosine Transform** (DCT-II and its inverse DCT-III), useful for
+* **Discrete Cosine Transform** ([DCT](dsp_glossary.md#discrete-cosine-transform-dct)-II and its inverse DCT-III), useful for
   compression and spectral analysis.
 * **Multidimensional DFT** for image and tensor processing.
 

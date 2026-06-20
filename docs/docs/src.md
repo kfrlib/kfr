@@ -1,5 +1,7 @@
 # How to do Sample Rate Conversion
 
+KFR's resampler uses [polyphase sample rate conversion](dsp_glossary.md#polyphase-sample-rate-conversion) and, for some quality levels, the [window-sinc method](dsp_glossary.md#window-sinc-method).
+
 ## How to apply a Sample Rate Conversion to a contiguous signal?
 
 For a continuous signal, the same instance of the `samplerate_converter` class should be used across all subsequent calls, rather than creating a new instance for each fragment. In the case of stereo audio, two instances (one per channel) are required.

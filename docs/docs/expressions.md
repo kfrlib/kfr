@@ -27,7 +27,12 @@ get_element(counter(0, 1, 10, 100), {1, 2, 3}) == 321
 Calling functions or operators on expressions or arrays of data is performed lazily in KFR.
 This allows better optimization and does not require saving temporary data.
 
-Internally a C++ technique called [Expression templates](https://en.wikipedia.org/wiki/Expression_templates) is used but expressions processing is explicitly vectorized in KFR. You can control some aspects of vectorization.
+!!! note
+    When the concrete expression type needs to be hidden — for example to store an
+    expression in a container, pass it across a translation unit, or expose it in a C
+    API — KFR provides type-erased [expression handles](handle.md).
+
+Internally a C++ technique called [Expression templates](dsp_glossary.md#expression-templates) is used but expressions processing is explicitly [vectorized](dsp_glossary.md#simd-single-instruction-multiple-data) in KFR. You can control some aspects of vectorization.
 
 ## Functions and operators
 

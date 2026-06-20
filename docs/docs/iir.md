@@ -1,10 +1,10 @@
 # How to Design and Apply IIR Filters with KFR
 
-This guide explains how to design and apply Infinite Impulse Response (IIR) filters using the KFR library. IIR filters are powerful tools in digital signal processing, offering efficient frequency-selective filtering for applications like audio processing, noise reduction, and signal analysis. KFR supports several IIR filter types, including Butterworth, Chebyshev Type I, Chebyshev Type II, Bessel, and Elliptic filters, with functions to create low-pass, high-pass, bandpass, and bandstop filters.
+This guide explains how to design and apply [Infinite Impulse Response (IIR)](dsp_glossary.md#iir-infinite-impulse-response) filters using the KFR library. IIR filters are powerful tools in digital signal processing, offering efficient frequency-selective filtering for applications like audio processing, noise reduction, and signal analysis. KFR supports several IIR filter types, including [Butterworth, Chebyshev Type I, Chebyshev Type II, Bessel, and Elliptic](dsp_glossary.md#analog-iir-filters-vs-digital-filters) filters, with functions to create [low-pass, high-pass, bandpass, and bandstop](dsp_glossary.md#filter-band-types) filters.
 
 ## Overview of IIR Filters in KFR
 
-KFR provides a robust framework for designing IIR filters in zero-pole-gain (ZPK) form and converting them to second-order sections (SOS) for stable implementation. The library includes functions to design filters with specific characteristics and apply them to signals using the `filter_iir` class.
+KFR provides a robust framework for designing IIR filters in [zero-pole-gain (ZPK)](dsp_glossary.md#zero-pole-gain-zpk) form and converting them to [second-order sections (SOS)](dsp_glossary.md#biquad-sos) for stable implementation. The library includes functions to design filters with specific characteristics and apply them to signals using the `filter_iir` class.
 
 ### Supported IIR Filter Types
 

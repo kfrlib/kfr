@@ -1,5 +1,8 @@
 # FIR filters code & examples
 
+The examples below use [expression handles](handle.md) (`expression_handle` / `to_handle`)
+to pass window functions to the FIR design routines.
+
 ## Bandpass, 127, Kaiser 
 
 Code
