@@ -619,7 +619,8 @@ KFR_FUNCTION expression_bartlett_hann<T> window_bartlett_hann(size_t size, ctype
 }
 
 /**
- * @brief Returns template expression that generates a Hamming window of length @c size where &alpha; = @c alpha
+ * @brief Returns template expression that generates a Hamming window of length @c size where &alpha; = @c
+ * alpha
  * @param size Length of the window
  * @param alpha Alpha coefficient (cosine weight); default 0.54
  */
@@ -641,7 +642,8 @@ KFR_FUNCTION expression_bohman<T> window_bohman(size_t size, ctype_t<T> = ctype_
 }
 
 /**
- * @brief Returns template expression that generates a Blackman window of length @c size where &alpha; = @c alpha
+ * @brief Returns template expression that generates a Blackman window of length @c size where &alpha; = @c
+ * alpha
  * @param size Length of the window
  * @param alpha Alpha coefficient controlling the Blackman shape; default 0.16
  * @param symmetry Symmetry mode of the window
@@ -689,7 +691,8 @@ KFR_FUNCTION expression_flattop<T> window_flattop(size_t size, ctype_t<T> = ctyp
 }
 
 /**
- * @brief Returns template expression that generates a Gaussian window of length @c size where &alpha; = @c alpha
+ * @brief Returns template expression that generates a Gaussian window of length @c size where &alpha; = @c
+ * alpha
  * @param size Length of the window
  * @param alpha Alpha coefficient (std / 2N); default 2.5
  */

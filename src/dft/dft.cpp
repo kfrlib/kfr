@@ -33,7 +33,7 @@
 namespace kfr
 {
 #ifdef KFR_CLASSIC_FFT
-bool fft_ng = false;
+bool fft_ng                    = false;
 bool fft_autosort              = true;
 dft_algorithm fft_ng_algorithm = dft_algorithm::fourstep;
 #endif
@@ -150,15 +150,6 @@ KFR_MULTI_PROTO(namespace impl {
     template <typename T>
     void dft_initialize_transpose(internal_generic::fn_transpose<T> & transpose);
 
-#ifdef KFR_CLASSIC_FFT
-    template <typename T>
-    void dft_progressive_start(const dft_plan<T>& plan, typename dft_plan<T>::progressive& progressive,
-                               bool inverse, complex<T>* out, const complex<T>* in, u8* temp);
-
-    template <typename T>
-    void dft_progressive_step(const dft_plan<T>& plan, typename dft_plan<T>::progressive& progressive);
-#endif
-
     template <typename T, dft_algorithm algo>
     size_t ngfft_twiddle_count(ngfft_plan<T> & plan, cval_t<dft_algorithm, algo>);
     template <typename T, dft_algorithm algo>
@@ -167,6 +158,17 @@ KFR_MULTI_PROTO(namespace impl {
     void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, cbool_t<inverse>,
                        complex<T>* inout);
 })
+
+#ifdef KFR_CLASSIC_FFT
+KFR_MULTI_PROTO(namespace impl {
+    template <typename T>
+    void dft_progressive_start(const dft_plan<T>& plan, typename dft_plan<T>::progressive& progressive,
+                               bool inverse, complex<T>* out, const complex<T>* in, u8* temp);
+
+    template <typename T>
+    void dft_progressive_step(const dft_plan<T>& plan, typename dft_plan<T>::progressive& progressive);
+})
+#endif
 
 #ifdef KFR_MULTI_NEEDS_GATE
 

@@ -336,7 +336,7 @@ template <size_t N, typename T, size_t Nlow = prev_poweroftwo(N - 1)>
     requires(N != 1 && !is_simd_size<T>(N))
 KFR_INTRINSIC vec<T, N> read(cunaligned_t, csize_t<N>, const T* ptr) noexcept
 {
-    auto low = read(cunaligned, csize<Nlow>, ptr);
+    auto low  = read(cunaligned, csize<Nlow>, ptr);
     auto high = read(cunaligned, csize<N - Nlow>, ptr + Nlow);
     return concat(low, high);
 }

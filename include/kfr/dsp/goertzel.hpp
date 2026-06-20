@@ -100,11 +100,11 @@ struct expression_goertzel : expression_traits_defaults
         }
     }
     complex<T>& result; ///< Output complex bin value (written on destruction).
-    const T omega;      ///< Target angular frequency [rad/sample].
-    const T coeff;      ///< Precomputed resonator coefficient `2*cos(omega)`.
-    T q0;               ///< Current filter output (working state).
-    T q1;               ///< Previous output sample (working state).
-    T q2;               ///< Output sample two steps back (working state).
+    const T omega; ///< Target angular frequency [rad/sample].
+    const T coeff; ///< Precomputed resonator coefficient `2*cos(omega)`.
+    T q0; ///< Current filter output (working state).
+    T q1; ///< Previous output sample (working state).
+    T q2; ///< Output sample two steps back (working state).
 };
 
 /**
@@ -176,12 +176,12 @@ struct expression_parallel_goertzel : expression_traits_defaults
             self.q1 = self.q0;
         }
     }
-    complex<T>* result;          ///< Output array of `width` complex bin values.
-    const vec<T, width> omega;   ///< SIMD vector of target angular frequencies.
-    const vec<T, width> coeff;   ///< Precomputed coefficients `2*cos(omega)`.
-    vec<T, width> q0;            ///< Current filter outputs (working state).
-    vec<T, width> q1;            ///< Previous output samples (working state).
-    vec<T, width> q2;            ///< Output samples two steps back (working state).
+    complex<T>* result; ///< Output array of `width` complex bin values.
+    const vec<T, width> omega; ///< SIMD vector of target angular frequencies.
+    const vec<T, width> coeff; ///< Precomputed coefficients `2*cos(omega)`.
+    vec<T, width> q0; ///< Current filter outputs (working state).
+    vec<T, width> q1; ///< Previous output samples (working state).
+    vec<T, width> q2; ///< Output samples two steps back (working state).
 };
 
 /**

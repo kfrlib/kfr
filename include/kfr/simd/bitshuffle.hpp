@@ -200,14 +200,14 @@ template <size_t k, bitperm<k> perm, typename T, size_t N = 1u << k>
 KFR_INTRINSIC vec<T, N> bitpermute(const vec<T, N>& w)
 {
 #ifdef KFR_DISABLE_BITSHUFFLE
-    return vec<T, N>(
-        intr::simd_shuffle(intr::simd_t<T, N>{}, w.v, internal_generic::to_elements<k, perm>(), overload_auto));
+    return vec<T, N>(intr::simd_shuffle(intr::simd_t<T, N>{}, w.v, internal_generic::to_elements<k, perm>(),
+                                        overload_auto));
 #else
 #if defined KFR_ARCH_ARM && !defined(KFR_ARCH_NEON64)
     if constexpr (std::is_same_v<T, double>)
     {
-        return vec<T, N>(intr::simd_shuffle(intr::simd_t<T, N>{}, w.v, internal_generic::to_elements<k, perm>(),
-                                            overload_auto));
+        return vec<T, N>(intr::simd_shuffle(intr::simd_t<T, N>{}, w.v,
+                                            internal_generic::to_elements<k, perm>(), overload_auto));
     }
     else
 #endif

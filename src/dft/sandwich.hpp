@@ -355,13 +355,14 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_iterate_recursive(
             twiddle                    = saved_twiddle;
             const size_t process_width = std::min(slice_width, total_width - slice_offset);
             // Avoiding overhead of recursion
-            sandwich_iterate<traits, dir, half>(
-                l2fftsize,
-                [&]<uint8_t l2passradix, uint8_t l2bf, uint8_t l2bl>(
-                    const bfly_pass<l2passradix, l2bf, l2bl>& pass) KFR_INLINE_LAMBDA {
-                    twiddle =
-                        fn(pass, process_width, total_width, pass.blocks(), inout, slice_offset, twiddle);
-                });
+            sandwich_iterate<traits, dir, half>(l2fftsize,
+                                                [&]<uint8_t l2passradix, uint8_t l2bf, uint8_t l2bl>(
+                                                    const bfly_pass<l2passradix, l2bf, l2bl>& pass)
+                                                    KFR_INLINE_LAMBDA
+                                                {
+                                                    twiddle = fn(pass, process_width, total_width,
+                                                                 pass.blocks(), inout, slice_offset, twiddle);
+                                                });
             slice_offset += slice_width;
             if (slice_offset >= total_width)
                 break;

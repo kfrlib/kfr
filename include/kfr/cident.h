@@ -736,7 +736,6 @@
     } while (0)
 #endif
 
-
 #ifdef KFR_COMPILER_MSVC
 #define KFR_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
 #else
@@ -756,4 +755,3 @@
 #else
 #define KFR_CACHE_LINE_SIZE 64
 #endif
-

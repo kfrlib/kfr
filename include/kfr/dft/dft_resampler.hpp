@@ -60,7 +60,8 @@ struct dft_resampler_params
     fbase stopband_atten_db; ///< Desired stopband attenuation in dB (e.g. 144). Controls Kaiser beta.
     fbase transition_width; ///< Transition bandwidth normalised to the lower-rate Nyquist (0..1].
 
-    size_t input_block_size; ///< Computed FFT block size (power of two) satisfying the overlap-save constraint.
+    size_t
+        input_block_size; ///< Computed FFT block size (power of two) satisfying the overlap-save constraint.
 
     /// @brief Returns the absolute resampling factor (2^|shift|).
     size_t factor() const noexcept { return size_t(1) << std::abs(shift); }

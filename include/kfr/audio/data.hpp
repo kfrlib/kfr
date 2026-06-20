@@ -387,7 +387,7 @@ struct audiofile_format
 struct audio_stat
 {
     fbase peak; ///< Peak absolute sample value across all channels.
-    fbase rms;  ///< Root mean square of all samples across all channels.
+    fbase rms; ///< Root mean square of all samples across all channels.
 };
 
 namespace details
@@ -431,7 +431,7 @@ struct lambda_deallocator
 template <typename T>
 struct strided_channel
 {
-    T* data;     ///< Pointer to the first sample of the channel.
+    T* data; ///< Pointer to the first sample of the channel.
     size_t size; ///< Number of samples in the channel.
     size_t stride; ///< Stride (in elements) between successive samples.
 };
@@ -983,9 +983,11 @@ enum class audio_dithering
 struct audio_dithering_state
 {
     audio_dithering dithering; ///< Active dithering method.
-    fbase scale;               ///< Amplitude scale applied to the generated noise.
+    fbase scale; ///< Amplitude scale applied to the generated noise.
     mutable std::mt19937_64 rnd{ std::random_device{}() }; ///< Random number generator.
-    mutable std::uniform_real_distribution<fbase> dist{ fbase(-0.5), fbase(+0.5) }; ///< Uniform distribution in [-0.5, +0.5).
+    mutable std::uniform_real_distribution<fbase> dist{
+        fbase(-0.5), fbase(+0.5)
+    }; ///< Uniform distribution in [-0.5, +0.5).
     /**
      * @brief Generates one dither sample according to the configured method.
      * @return A dither noise value scaled by @ref scale; zero for audio_dithering::none.
