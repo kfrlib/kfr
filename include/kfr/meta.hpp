@@ -1813,9 +1813,41 @@ constexpr inline cvalseq_t<T, size, start, step> cvalseq{};
 template <size_t size, size_t start = 0, ptrdiff_t step = 1>
 constexpr inline cvalseq_t<size_t, size, start, step> csizeseq{};
 
+/// @brief Compile-time for loop helper that unrolls iteration over `[start, stop)`.
+///
+/// Assigning a lambda to a `cfor_t` instance invokes the lambda once per index `i`
+/// in the range `[start, stop)`, passing `csize<i>` as the argument. The loop is
+/// fully unrolled at compile time via pack expansion.
+///
+/// When `conditional` is `true`, iteration short-circuits as soon as the body
+/// returns a falsy value (logical AND fold). When `false`, all iterations are
+/// executed unconditionally (comma fold).
+///
+/// @tparam stop      past-the-last index (exclusive)
+/// @tparam start     first index (inclusive, default 0)
+/// @tparam conditional if `true`, stop on the first falsy body result
+///
+/// @code
+/// // `i` is a compile-time constant inside the body; the loop is unrolled.
+/// // Note: a semicolon is required after the closing brace (unlike a regular
+/// // for loop), because the macro expands to an assignment expression.
+/// KFR_FOR(i, 0, 3)
+/// {
+///     constexpr size_t j = i;
+///     std::printf("%zu\n", j);  // prints 0, 1, 2
+/// };
+///
+/// // Conditional: stops at the first index where the body returns false
+/// KFR_FORC(i, 0, 5)
+/// {
+///     return i < 2;  // only i == 0 and i == 1 are processed
+/// };
+/// @endcode
 template <size_t stop, size_t start, bool conditional = false>
 struct cfor_t
 {
+    /// @brief Invokes `fn` for each index in `[start, stop)`, passing `csize<i>`.
+    /// @tparam Fn body callable; return value is ignored unless `conditional` is `true`.
     template <typename Fn>
     constexpr KFR_MEM_INTRINSIC void operator=(Fn&& fn) const
     {
@@ -1834,10 +1866,41 @@ struct cfor_t
     }
 };
 
+/// @brief Constant instance of `cfor_t<stop, start, conditional>` used as the
+///        left-hand side of `KFR_FOR` / `KFR_FORC`.
+/// @relates cfor_t
 template <size_t stop, size_t start, bool conditional = false>
 constexpr inline cfor_t<stop, start, conditional> cfor_v{};
 
+/// @brief Compile-time for loop: `KFR_FOR(var, init, stop) { body }`
+///        Unrolls `body` for `var` in `[init, stop)`. The macro supplies the
+///        capture block, template argument list and argument list, so the body
+///        is just a brace-enclosed block in which `var` is a compile-time constant.
+/// @param var  loop variable name (a size_t non-type template parameter)
+/// @param init first index (inclusive)
+/// @param stop past-the-last index (exclusive)
+/// @code
+/// KFR_FOR(i, 0, 4)
+/// {
+///     constexpr size_t j = i;  // i is usable as a constant expression
+/// };  // semicolon required: macro expands to an assignment expression
+/// @endcode
 #define KFR_FOR(var, init, stop) cfor_v<stop, init> = [&]<size_t var>(csize_t<var>) KFR_INLINE_LAMBDA
+
+/// @brief Conditional compile-time for loop: `KFR_FORC(var, init, stop) { body }`
+///        Like @ref KFR_FOR, but stops as soon as `body` returns a falsy value.
+///        The macro supplies the capture block, template argument list and
+///        argument list; the body is a brace-enclosed block returning a value
+///        convertible to `bool`.
+/// @param var  loop variable name (a size_t non-type template parameter)
+/// @param init first index (inclusive)
+/// @param stop past-the-last index (exclusive)
+/// @code
+/// KFR_FORC(i, 0, 8)
+/// {
+///     return i < 3;  // stops after i == 0, 1, 2
+/// };  // semicolon required: macro expands to an assignment expression
+/// @endcode
 #define KFR_FORC(var, init, stop) cfor_v<stop, init, true> = [&]<size_t var>(csize_t<var>) KFR_INLINE_LAMBDA
 
 /// Constant instance of an int sequence with `size` elements starting at `start` with step `step`
@@ -2166,16 +2229,46 @@ struct special_value
     }
 };
 
+/// @brief Compile-time index transformer used to build shuffle/permutation tables.
+///
+/// Given a length `size` and a sequence of unary callables `Fn...`, `map_indices_impl`
+/// produces a `csizes_t` of length `size` whose element at position `i` is obtained by
+/// applying the functions to `i`.
+///
+/// The functions are applied in **reverse declaration order**: the last listed callable
+/// is applied first (innermost), and the first listed callable is applied last
+/// (outermost). For a pack `F0, F1, ..., Fn-1` the element at index `i` is
+/// `F0(F1(...(Fn-1(i))))`. This lets call sites list transforms in the order they are
+/// conceptually composed (leftmost = final/outermost), matching how the result is read.
+///
+/// Each `Fn` must be a constexpr-invocable entity (e.g. a captureless function pointer
+/// or a stateless functor) convertible to `size_t(size_t)`, since it is stored in a
+/// `constexpr std::tuple` and invoked during constant evaluation.
+///
+/// @tparam size number of output indices; the input sequence is `[0, size)`.
+/// @tparam Fn... unary callables `size_t -> size_t` applied right-to-left.
+///
+/// @code
+/// // Square then negate-listed-last-applied-first: result is {0, 1, 4, 9}
+/// using sq = map_indices_t<4, fn_return_constant<size_t, 0>>; // identity-like example
+/// @endcode
+///
+/// @see map_indices_t
+/// @see map_indices
 template <size_t size, auto... Fn>
 struct map_indices_impl
 {
     using input_type = csizeseq_t<size>;
 
 #if defined KFR_COMPILER_IS_MSVC
+    // MSVC workaround: a named static function is used instead of a local lambda so the
+    // fold expression over `J` can be expanded inside a constexpr member.
     template <size_t... J>
     static constexpr size_t apply_impl(size_t x, csizes_t<J...>) noexcept
     {
         constexpr auto fns = std::tuple{ Fn... };
+        // J = 0..n-1, so `sizeof...(Fn) - 1 - J` selects functions from last to first;
+        // the left-to-right comma fold therefore applies them in reverse declaration order.
         ((x = std::get<sizeof...(Fn) - 1 - J>(fns)(x)), ...);
         return x;
     }
@@ -2189,6 +2282,8 @@ struct map_indices_impl
     template <size_t... I>
     static constexpr auto helper(csizes_t<I...>)
     {
+        // For each input index `I`, build the output by threading `I` through the
+        // function pack in reverse order (last declared = first applied).
         constexpr auto apply = [](size_t x)
         {
             constexpr auto fns = std::tuple{ Fn... };
@@ -2204,15 +2299,64 @@ struct map_indices_impl
     using type = decltype(helper(input_type{}));
 };
 
+/// @brief Alias for the `csizes_t` produced by `map_indices_impl<size, Fn...>`.
+///
+/// Yields a compile-time list of `size` values where element `i` equals
+/// `F0(F1(...(Fn-1(i))))` — i.e. the functions are composed right-to-left so that the
+/// order written at the call site matches the order of conceptual application
+/// (leftmost transform is the outermost/last one applied).
+///
+/// Commonly used to build SIMD shuffle indices by composing primitive permute functions
+/// such as `interleave_permute`, `split_permute`, `ctranspose_permute` and `br_permute`
+/// (see `ngfft.hpp`'s `cread_group2` / `cwrite_group2`).
+///
+/// @tparam size length of the resulting index list.
+/// @tparam Fn... unary `size_t -> size_t` callables, applied right-to-left.
+///
+/// @code
+/// // Compose two permutes: br_permute is applied first, then split_permute, then
+/// // interleave_permute (leftmost = outermost).
+/// using Indices = map_indices_t<2 * R * N,
+///                               interleave_permute<in_split_width, U>,
+///                               split_permute<split_format ? N : 1, U>,
+///                               br_permute<R, N, bitrev>>;
+/// @endcode
 template <size_t size, auto... Fn>
 using map_indices_t = typename map_indices_impl<size, Fn...>::type;
 
+/// @brief Returns a value of `map_indices_t<size, Fn...>` for use in non-type contexts.
+///
+/// Convenience function form of @ref map_indices_t; equivalent to
+/// `map_indices_t<size, Fn...>{}`. Useful when an instance (rather than just the type)
+/// is required, e.g. to pass the computed index list to a function expecting a
+/// `csizes_t` value.
+///
+/// @tparam size length of the resulting index list.
+/// @tparam Fn... unary `size_t -> size_t` callables, applied right-to-left.
+/// @return a default-constructed `map_indices_t<size, Fn...>`.
 template <size_t size, auto... Fn>
 constexpr auto map_indices() -> map_indices_t<size, Fn...>
 {
     return {};
 }
 
+/// @brief Empty type tagged with a unique integer `tag`.
+///
+/// Because distinct specializations (`empty_struct<0>`, `empty_struct<1>`, ...)
+/// are different types, each occupies a separate address. This lets
+/// `[[no_unique_address]]` (KFR_NO_UNIQUE_ADDRESS) collapse multiple empty
+/// fields of a struct to zero size, while still allowing several such fields
+/// to coexist without aliasing one another.
+///
+/// @tparam tag unique identifier distinguishing one empty field from another
+///
+/// @code
+/// struct S {
+///     KFR_NO_UNIQUE_ADDRESS empty_struct<0> a; // 0 bytes
+///     KFR_NO_UNIQUE_ADDRESS empty_struct<1> b; // 0 bytes
+/// };
+/// static_assert(sizeof(S) == 1); // both empty fields compacted away
+/// @endcode
 template <int tag>
 struct empty_struct
 {
