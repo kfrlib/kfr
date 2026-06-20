@@ -45,19 +45,39 @@
 namespace kfr
 {
 
+/**
+ * @brief Parameters for constructing a @ref dft_resampler.
+ *
+ * The resampling factor is restricted to a power of two (positive for
+ * upsampling, negative for downsampling, zero for filter-only). The lowpass
+ * filter is designed with a Kaiser window from the desired stopband
+ * attenuation and transition width.
+ */
 struct dft_resampler_params
 {
-    int shift; /// Resampling factor expressed as a power of 2 (e.g. 1 for 2x, -1 for 0.5x, 0 for filter-only)
-    fbase cutoff; /// Normalised cutoff frequency (0..1], where 1.0 = Nyquist of the output rate.
-    fbase stopband_atten_db; /// Desired stopband attenuation in dB (e.g. 144). Controls Kaiser beta.
-    fbase transition_width; // Transition bandwidth normalised to the lower-rate Nyquist (0..1].
+    int shift; ///< Resampling factor as a power of 2 (e.g. 1 for 2x, -1 for 0.5x, 0 for filter-only).
+    fbase cutoff; ///< Normalised cutoff frequency (0..1], where 1.0 = Nyquist of the output rate.
+    fbase stopband_atten_db; ///< Desired stopband attenuation in dB (e.g. 144). Controls Kaiser beta.
+    fbase transition_width; ///< Transition bandwidth normalised to the lower-rate Nyquist (0..1].
 
-    size_t input_block_size;
+    size_t input_block_size; ///< Computed FFT block size (power of two) satisfying the overlap-save constraint.
 
+    /// @brief Returns the absolute resampling factor (2^|shift|).
     size_t factor() const noexcept { return size_t(1) << std::abs(shift); }
+    /// @brief Returns `true` if this is a downsampling configuration.
     bool is_downsampling() const noexcept { return shift < 0; }
+    /// @brief Returns the per-stage conversion ratio (>1 for upsampling, <1 for downsampling).
     double stage_factor() const noexcept { return is_downsampling() ? 1.0 / factor() : double(factor()); }
 
+    /**
+     * @brief Constructs resampler parameters.
+     * @param shift Resampling factor as a power of 2 (positive=up, negative=down, 0=filter-only).
+     * @param cutoff Normalised cutoff frequency (0..1] relative to the output Nyquist.
+     * @param stopband_atten_db Desired stopband attenuation in dB.
+     * @param transition_width Transition bandwidth normalised to the lower-rate Nyquist (0..1).
+     * @note `input_block_size` is computed from the Kaiser filter-length formula and
+     *       rounded up to the next power of two.
+     */
     dft_resampler_params(int shift, fbase cutoff = 1, fbase stopband_atten_db = 144,
                          fbase transition_width = 0.02) noexcept
         : shift(shift), cutoff(cutoff), stopband_atten_db(stopband_atten_db),
@@ -80,6 +100,24 @@ struct dft_resampler_params
     }
 };
 
+/**
+ * @brief FFT-based sample-rate converter and FIR filter using overlap-save.
+ *
+ * Performs power-of-two resampling (upsampling, downsampling, or filter-only
+ * when the factor is 1) of a real-valued signal. The lowpass anti-aliasing /
+ * anti-imaging filter is a Kaiser-windowed sinc designed from the requested
+ * stopband attenuation and transition width, pre-transformed into the
+ * frequency domain so that each frame only requires a forward real FFT,
+ * spectral shaping (gain multiplication and stopband zeroing, plus conjugate
+ * mirroring / truncation for up/downsampling), and an inverse real FFT.
+ *
+ * Processing is block-based (overlap-save): each frame consumes `input_hop()`
+ * new input samples and produces `output_hop()` valid output samples, with the
+ * circular-convolution artefacts discarded. Use `process()` for arbitrary-length
+ * streams, or `process_frame()` for explicit per-frame control.
+ *
+ * @tparam T Sample type (`float` or `double`).
+ */
 template <typename T>
 class dft_resampler
 {
@@ -110,8 +148,9 @@ private:
 
 public:
     /**
-     * @brief Computes Kaiser beta from desired stopband attenuation (dB).
-     * Uses the Kaiser formula (same as samplerate_converter::window_param).
+     * @brief Computes the Kaiser window beta from a desired stopband attenuation.
+     * @param att Desired stopband attenuation in dB.
+     * @return Kaiser beta parameter.
      */
     static T kaiser_beta_from_attenuation(T att)
     {
@@ -122,12 +161,19 @@ public:
         return 0;
     }
 
+    /// @brief Returns the input FFT block size $N$.
     size_t input_block_size() const noexcept { return m_input_block_size; }
+    /// @brief Returns the resampling factor (a power of two, >= 1).
     size_t factor() const noexcept { return m_factor; }
+    /// @brief Returns `true` if this resampler downsamples by `factor()`.
     bool is_downsampling() const noexcept { return m_is_downsampling; }
+    /// @brief Returns the designed filter length (in filter-rate samples).
     size_t filter_length() const noexcept { return m_filter_len; }
+    /// @brief Returns the output FFT block size $M$.
     size_t output_block_size() const noexcept { return m_output_block_size; }
+    /// @brief Returns the number of new input samples consumed per frame.
     size_t input_hop() const noexcept { return m_input_hop; }
+    /// @brief Returns the number of valid output samples produced per frame.
     size_t output_hop() const noexcept { return m_output_hop; }
 
     /**
@@ -142,8 +188,12 @@ public:
     }
 
     /**
-     * @brief Computes the minimal power-of-2 block size required for the given
+     * @brief Computes the minimal power-of-two block size required for the given
      *        filter parameters (Kaiser formula).
+     * @param upsample_factor The upsampling factor used in the transition-width scaling.
+     * @param stopband_atten_db Desired stopband attenuation in dB.
+     * @param transition_width Transition bandwidth normalised to the lower-rate Nyquist (0..1).
+     * @return The computed block size (a power of two).
      */
     static size_t compute_block_size(size_t upsample_factor, T stopband_atten_db, T transition_width)
     {
@@ -159,6 +209,12 @@ public:
     }
 
     /**
+     * @brief Constructs the resampler from the given parameters.
+     *
+     * Designs the Kaiser-windowed lowpass filter, transforms it into the
+     * frequency domain, and pre-computes the spectral gain and transition-band
+     * indices. The forward FFT plan has size `input_block_size` and the inverse
+     * FFT plan has size `output_block_size`.
      * @param params Resampler parameters.
      */
     explicit dft_resampler(const dft_resampler_params& params)
@@ -307,6 +363,19 @@ private:
     }
 
 public:
+    /**
+     * @brief Processes one frame in-place and returns a pointer to the valid output.
+     *
+     * Performs the forward real FFT of the `input_block_size()` samples at
+     * `input`, applies spectral shaping (mirroring/truncation, transition-band
+     * gain, stopband zeroing), and the inverse real FFT. The returned pointer
+     * references `output_hop()` valid samples inside the resampler's internal
+     * `m_fft_buffer`; the data is **not** normalised (caller must scale by
+     * `1/input_block_size()` if needed). The pointer is valid only until the
+     * next call to any processing function.
+     * @param input Pointer to `input_block_size()` input samples.
+     * @return Pointer to `output_hop()` valid (un-normalised) output samples.
+     */
     T* process_frame(const T* input)
     {
         // --- 1. Forward Real FFT (size N) of the sliding input buffer ---
@@ -360,9 +429,13 @@ public:
         return m_fft_buffer.data() + valid_start;
     }
     /**
-     * @brief Process one frame via overlap-save.
-     *        FFTs m_input_buffer, applies spectral shaping, IFFTs,
-     *        discards circular artefacts, writes valid output directly.
+     * @brief Processes one frame via overlap-save and writes normalised output.
+     *
+     * Equivalent to the pointer overload of @ref process_frame, but copies the
+     * `output_hop()` valid samples into `output` and applies the `1/N`
+     * normalisation so the result has unit passband gain.
+     * @param output Output buffer of at least `output_hop()` samples.
+     * @param input Pointer to `input_block_size()` input samples.
      */
     void process_frame(T* output, const T* input)
     {
@@ -372,9 +445,16 @@ public:
     }
 
     /**
-     * @brief Process arbitrary-sized input and produce resampled output.
-     * @param input  Input samples (any size).
-     * @param output Output buffer. Must be large enough for all frames produced.
+     * @brief Processes an arbitrary-length input stream and writes the resampled output.
+     *
+     * Internally accumulates input into `input_hop()`-sized hops and calls
+     * `process_frame()` for each complete hop. A fast path is taken when the
+     * overlap region and at least one full hop are available contiguously in
+     * the input span (avoiding internal copies); otherwise samples are copied
+     * into the sliding input buffer.
+     * @param output Output buffer. Must be large enough to hold all frames
+     *        produced (a logic check is performed per frame).
+     * @param input Input samples (any size).
      * @return Number of output samples actually written.
      */
     size_t process(std::span<T> output, std::span<const T> input)

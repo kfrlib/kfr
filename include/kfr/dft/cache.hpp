@@ -125,7 +125,20 @@ private:
 
 using dft_cache = dft_cache_impl<>;
 
-/// @brief Performs Direct DFT using cached plan
+/**
+ * @brief Performs the direct (forward) complex DFT using a cached plan.
+ *
+ * A `dft_plan<T>` for the requested size is obtained from the global
+ * @ref dft_cache (creating and caching it on first use), so repeated calls
+ * with the same size avoid plan-construction overhead. The scratch buffer is
+ * allocated internally for each call.
+ *
+ * @tparam T Floating-point type (`float` or `double`).
+ * @tparam Tag Storage tag of the input univector.
+ * @param input Input complex univector of $N$ samples.
+ * @return Output complex univector of $N$ samples.
+ * @note No scaling is applied.
+ */
 template <typename T, univector_tag Tag>
 univector<complex<T>> dft(const univector<complex<T>, Tag>& input)
 {
@@ -136,7 +149,20 @@ univector<complex<T>> dft(const univector<complex<T>, Tag>& input)
     return output;
 }
 
-/// @brief Performs Inverse DFT using cached plan
+/**
+ * @brief Performs the inverse complex DFT using a cached plan.
+ *
+ * A `dft_plan<T>` for the requested size is obtained from the global
+ * @ref dft_cache (creating and caching it on first use), so repeated calls
+ * with the same size avoid plan-construction overhead. The scratch buffer is
+ * allocated internally for each call.
+ *
+ * @tparam T Floating-point type (`float` or `double`).
+ * @tparam Tag Storage tag of the input univector.
+ * @param input Input complex univector of $N$ samples.
+ * @return Output complex univector of $N$ samples.
+ * @note No scaling is applied.
+ */
 template <typename T, univector_tag Tag>
 univector<complex<T>> idft(const univector<complex<T>, Tag>& input)
 {
@@ -147,7 +173,23 @@ univector<complex<T>> idft(const univector<complex<T>, Tag>& input)
     return output;
 }
 
-/// @brief Performs Real Direct DFT using cached plan
+/**
+ * @brief Performs the direct (forward) real-to-complex DFT using a cached plan.
+ *
+ * A `dft_plan_real<T>` for the requested size is obtained from the global
+ * @ref dft_cache (creating and caching it on first use), so repeated calls
+ * with the same size avoid plan-construction overhead. The scratch buffer is
+ * allocated internally for each call.
+ *
+ * The output uses the `CCs` (conjugate-symmetric) packing format and contains
+ * $\frac{N}{2}+1$ complex samples for $N$ real input samples.
+ *
+ * @tparam T Floating-point type (`float` or `double`).
+ * @tparam Tag Storage tag of the input univector.
+ * @param input Input real univector of $N$ samples.
+ * @return Output complex univector of $\frac{N}{2}+1$ samples (Hermitian-symmetric spectrum).
+ * @note No scaling is applied.
+ */
 template <typename T, univector_tag Tag>
 univector<complex<T>> realdft(const univector<T, Tag>& input)
 {
@@ -158,7 +200,24 @@ univector<complex<T>> realdft(const univector<T, Tag>& input)
     return output;
 }
 
-/// @brief Permorms Real Inverse DFT using cached plan
+/**
+ * @brief Performs the inverse complex-to-real DFT using a cached plan.
+ *
+ * A `dft_plan_real<T>` for the inferred real size is obtained from the global
+ * @ref dft_cache (creating and caching it on first use), so repeated calls
+ * with the same size avoid plan-construction overhead. The scratch buffer is
+ * allocated internally for each call.
+ *
+ * The input is expected to be a `CCs`-packed Hermitian-symmetric spectrum of
+ * $\frac{N}{2}+1$ complex samples; the real output size $N$ is inferred as
+ * `(input.size() - 1) * 2`.
+ *
+ * @tparam T Floating-point type (`float` or `double`).
+ * @tparam Tag Storage tag of the input univector.
+ * @param input Input complex univector of $\frac{N}{2}+1$ samples (CCs-packed spectrum).
+ * @return Output real univector of $N$ samples.
+ * @note No scaling is applied.
+ */
 template <typename T, univector_tag Tag>
 univector<T> irealdft(const univector<complex<T>, Tag>& input)
 {

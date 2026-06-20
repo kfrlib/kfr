@@ -53,26 +53,33 @@ namespace kfr
 
 #define DFT_MAX_STAGES 32
 
+/// @brief Tag type selecting the direct (forward) DFT direction.
 using cdirect_t = cfalse_t;
+/// @brief Tag type selecting the inverse DFT direction.
 using cinvert_t = ctrue_t;
 
-/// @brief Internal structure representing a single DFT stage
+/// @brief Base structure representing a single DFT stage.
+///
+/// A DFT plan is composed of one or more stages executed in sequence. Each stage
+/// performs a portion of the overall transform (e.g. a radix pass, a bit-reversal
+/// reorder, or a repacking step). Concrete stages derive from this class and
+/// implement `do_execute` for both direct and inverse directions.
 template <typename T>
 struct dft_stage
 {
-    size_t radix      = 0;
-    size_t stage_size = 0;
-    size_t data_size  = 0;
-    size_t temp_size  = 0;
-    u8* data          = nullptr;
-    size_t repeats    = 1;
-    size_t out_offset = 0;
-    size_t blocks     = 0;
-    size_t user       = 0;
-    const char* name  = nullptr;
-    bool recursion    = false;
-    bool can_inplace  = true;
-    bool need_reorder = true;
+    size_t radix      = 0; ///< Radix of the stage (number of butterfly arms).
+    size_t stage_size = 0; ///< Number of complex elements processed by this stage.
+    size_t data_size  = 0; ///< Size in bytes of the stage's internal data (e.g. twiddles).
+    size_t temp_size  = 0; ///< Size in bytes of scratch buffer required by this stage.
+    u8* data          = nullptr; ///< Pointer to the stage's internal data buffer.
+    size_t repeats    = 1; ///< Number of recursive repetitions used during execution.
+    size_t out_offset = 0; ///< Offset (in complex elements) between successive recursive outputs.
+    size_t blocks     = 0; ///< Number of independent blocks processed by the stage.
+    size_t user       = 0; ///< Stage-specific user value (e.g. log2 of the stage size).
+    const char* name  = nullptr; ///< Human-readable name of the stage (for `dump()`).
+    bool recursion    = false; ///< Whether the stage uses recursive execution.
+    bool can_inplace  = true; ///< Whether the stage can operate in-place.
+    bool need_reorder = true; ///< Whether the stage output requires bit-reversal reordering.
 
     inline static void* operator new(size_t size) noexcept
     {
@@ -96,24 +103,43 @@ struct dft_stage
 
     void initialize(size_t size) { do_initialize(size); }
 
+    /// @brief Prints the stage parameters to stdout for debugging.
     virtual void dump() const
     {
         printf("%s: %zu, %zu, %zu, %zu, %zu, %zu, %zu, %d, %d\n", name ? name : "unnamed", radix, stage_size,
                data_size, temp_size, repeats, out_offset, blocks, recursion, can_inplace);
     }
+    /// @brief Copies the input into the stage's working buffer.
+    /// @param invert Direction flag (true for inverse).
+    /// @param out Destination buffer.
+    /// @param in Source buffer.
+    /// @param size Number of complex elements to copy.
     virtual void copy_input(bool invert, complex<T>* out, const complex<T>* in, size_t size)
     {
         builtin_memcpy(out, in, sizeof(complex<T>) * size);
     }
 
+    /// @brief Executes the direct (forward) stage.
+    /// @param out Output buffer.
+    /// @param in Input buffer.
+    /// @param temp Scratch buffer (may be unused by the stage).
     KFR_MEM_INTRINSIC void execute(cdirect_t, complex<T>* out, const complex<T>* in, u8* temp)
     {
         do_execute(cdirect_t(), out, in, temp);
     }
+    /// @brief Executes the inverse stage.
+    /// @param out Output buffer.
+    /// @param in Input buffer.
+    /// @param temp Scratch buffer (may be unused by the stage).
     KFR_MEM_INTRINSIC void execute(cinvert_t, complex<T>* out, const complex<T>* in, u8* temp)
     {
         do_execute(cinvert_t(), out, in, temp);
     }
+    /// @brief Executes the stage in the requested direction.
+    /// @param inverse If true, executes the inverse stage; otherwise the direct stage.
+    /// @param out Output buffer.
+    /// @param in Input buffer.
+    /// @param temp Scratch buffer (may be unused by the stage).
     KFR_MEM_INTRINSIC void execute(bool inverse, complex<T>* out, const complex<T>* in, u8* temp)
     {
         if (inverse)
@@ -121,30 +147,36 @@ struct dft_stage
         else
             do_execute(cdirect_t(), out, in, temp);
     }
+    /// @brief Destructor.
     virtual ~dft_stage() {}
 
 protected:
+    /// @brief Initializes the stage's internal data for the given DFT size.
     virtual void do_initialize(size_t) {}
+    /// @brief Performs the direct stage execution (implemented by derived stages).
     virtual void do_execute(cdirect_t, complex<T>*, const complex<T>*, u8* temp) = 0;
+    /// @brief Performs the inverse stage execution (implemented by derived stages).
     virtual void do_execute(cinvert_t, complex<T>*, const complex<T>*, u8* temp) = 0;
 };
 
+/// @brief Direction(s) of DFT computation requested for a plan.
 enum class dft_type
 {
-    both,
-    direct,
-    inverse
+    both, ///< Both direct and inverse transforms.
+    direct, ///< Only the direct (forward) transform.
+    inverse, ///< Only the inverse transform.
 };
 
 /**
- * @brief Specifies the desired order for DFT output (and IDFT input)
+ * @brief Specifies the desired order for DFT output (and IDFT input).
  *
- * Currenly ignored.
+ * Currently ignored: the implementation always produces output in normal order
+ * (any internal digit-reversal is handled transparently by the plan).
  */
 enum class dft_order
 {
-    normal, // Normal order
-    internal, // possibly bit/digit-reversed, implementation-defined, may be faster to compute
+    normal, ///< Normal order
+    internal, ///< Possibly bit/digit-reversed, implementation-defined, may be faster to compute
 };
 
 /**
@@ -207,7 +239,7 @@ void dft_progressive_step(const dft_plan<T>& plan, typename dft_plan<T>::progres
 template <typename T>
 struct dft_plan
 {
-    /// The size of the DFT as passed to the contructor.
+    /// The size of the DFT as passed to the constructor.
     size_t size;
 
     /// The temporary (scratch) buffer size for the DFT plan.
@@ -260,7 +292,7 @@ struct dft_plan
      * @brief Constructs a DFT plan with the specified size and order.
      *
      * @param size The size of the DFT.
-     * @param order The order of the DFT samples. See `dft_order`.
+     * @param order The order of the DFT samples. See `dft_order` (currently ignored).
      * @param progressive_optimized If true, the plan will be optimized for progressive execution.
      */
     explicit dft_plan(size_t size, dft_order order = dft_order::normal, bool progressive_optimized = false)
@@ -280,8 +312,8 @@ struct dft_plan
      * @brief Execute the complex DFT on `in` and write the result to `out`.
      * @param out Pointer to the output data.
      * @param in Pointer to the input data.
-     * @param temp Temporary (scratch) buffer. If `NULL`, scratch buffer of size
-     * `plan->temp_size` will be allocated on stack or heap.
+     * @param temp Temporary (scratch) buffer. If `nullptr` and `temp_size > 0`, a scratch
+     * buffer of `temp_size` bytes is allocated (on stack or heap) for the duration of the call.
      * @param inverse If true, apply the inverse DFT.
      * @note No scaling is applied. This function reads $N$ complex values from `in` and writes $N$ complex
      * values to `out`, where $N$ is the size passed to the constructor.
@@ -298,7 +330,8 @@ struct dft_plan
     /**
      * @brief Destructor.
      *
-     * Deallocates internal data.
+     * Internal data (twiddle tables, stage objects) is released automatically through
+     * the member destructors (`autofree`, `std::vector`, `std::unique_ptr`).
      */
     ~dft_plan() {}
 
@@ -306,8 +339,8 @@ struct dft_plan
      * @brief Execute the complex DFT on `in` and write the result to `out`.
      * @param out Pointer to the output data.
      * @param in Pointer to the input data.
-     * @param temp Temporary (scratch) buffer. If `NULL`, scratch buffer of size
-     * `plan->temp_size` will be allocated on stack or heap.
+     * @param temp Temporary (scratch) buffer. If `nullptr` and `temp_size > 0`, a scratch
+     * buffer of `temp_size` bytes is allocated (on stack or heap) for the duration of the call.
      * @tparam inverse If true, apply the inverse DFT.
      * @note No scaling is applied. This function reads $N$ complex values from `in` and writes $N$ complex
      * values to `out`, where $N$ is the size passed to the constructor.
@@ -321,10 +354,10 @@ struct dft_plan
 
     /**
      * @brief Execute the complex DFT on `in` and write the result to `out`.
-     * @param out Pointer to the output data.
-     * @param in Pointer to the input data.
-     * @param temp Temporary (scratch) buffer. If `NULL`, scratch buffer of size
-     * `plan->temp_size` will be allocated on stack or heap.
+     * @param out Output univector.
+     * @param in Input univector.
+     * @param temp Temporary (scratch) buffer univector. If its storage is `nullptr` and
+     * `temp_size > 0`, a scratch buffer of `temp_size` bytes is allocated for the call.
      * @param inverse If true, apply the inverse DFT.
      * @note No scaling is applied. This function reads $N$ complex values from `in` and writes $N$ complex
      * values to `out`, where $N$ is the size passed to the constructor.
@@ -341,10 +374,10 @@ struct dft_plan
 
     /**
      * @brief Execute the complex DFT on `in` and write the result to `out`.
-     * @param out Pointer to the output data.
-     * @param in Pointer to the input data.
-     * @param temp Temporary (scratch) buffer. If `NULL`, scratch buffer of size
-     * `plan->temp_size` will be allocated on stack or heap.
+     * @param out Output univector.
+     * @param in Input univector.
+     * @param temp Temporary (scratch) buffer univector. If its storage is `nullptr` and
+     * `temp_size > 0`, a scratch buffer of `temp_size` bytes is allocated for the call.
      * @tparam inverse If true, apply the inverse DFT.
      * @note No scaling is applied. This function reads $N$ complex values from `in` and writes $N$ complex
      * values to `out`, where $N$ is the size passed to the constructor.
@@ -358,10 +391,10 @@ struct dft_plan
 
     /**
      * @brief Execute the complex DFT on `in` and write the result to `out`.
-     * @param out Pointer to the output data.
-     * @param in Pointer to the input data.
-     * @param temp Temporary (scratch) buffer. If `NULL`, scratch buffer of size
-     * `plan->temp_size` will be allocated on stack or heap.
+     * @param out Output univector.
+     * @param in Input univector.
+     * @param temp Temporary (scratch) buffer. If `nullptr` and `temp_size > 0`, a scratch
+     * buffer of `temp_size` bytes is allocated (on stack or heap) for the duration of the call.
      * @param inverse If true, apply the inverse DFT.
      * @note No scaling is applied. This function reads $N$ complex values from `in` and writes $N$ complex
      * values to `out`, where $N$ is the size passed to the constructor.
@@ -378,10 +411,10 @@ struct dft_plan
 
     /**
      * @brief Execute the complex DFT on `in` and write the result to `out`.
-     * @param out Pointer to the output data.
-     * @param in Pointer to the input data.
-     * @param temp Temporary (scratch) buffer. If `NULL`, scratch buffer of size
-     * `plan->temp_size` will be allocated on stack or heap.
+     * @param out Output univector.
+     * @param in Input univector.
+     * @param temp Temporary (scratch) buffer. If `nullptr` and `temp_size > 0`, a scratch
+     * buffer of `temp_size` bytes is allocated (on stack or heap) for the duration of the call.
      * @tparam inverse If true, apply the inverse DFT.
      * @note No scaling is applied. This function reads $N$ complex values from `in` and writes $N$ complex
      * values to `out`, where $N$ is the size passed to the constructor.
@@ -417,13 +450,13 @@ struct dft_plan
      */
     struct progressive
     {
-        bool inverse;
-        complex<T>* out;
-        const complex<T>* in;
-        u8* temp;
-        bitset disposition;
-        complex<T>* scratch;
-        size_t step = 0;
+        bool inverse; ///< Direction of the transform.
+        complex<T>* out; ///< Output buffer.
+        const complex<T>* in; ///< Input buffer.
+        u8* temp; ///< Scratch buffer.
+        bitset disposition; ///< In-place/out-of-place disposition bitmask.
+        complex<T>* scratch; ///< Internal scratch pointer.
+        size_t step = 0; ///< Current step index.
     };
 
     /// @brief Returns the number of steps for progressive execution of the DFT.
@@ -465,6 +498,7 @@ struct dft_plan
 #endif
 
 #ifdef KFR_DFT_MEASURE_STAGE_TIME
+    /// @brief Resets the accumulated per-stage timing counters to zero.
     void reset_time()
     {
         for (auto& stage : all_stages)
@@ -473,6 +507,11 @@ struct dft_plan
         }
     }
 
+    /**
+     * @brief Prints the accumulated per-stage timings to stdout.
+     * @param invocations Number of invocations to average the timings over.
+     * @param reset If true, resets the counters after printing.
+     */
     void dump_times(uint64_t invocations = 1, bool reset = true)
     {
         double sum = 0;
@@ -507,13 +546,27 @@ protected:
 
 #define KFR_DFT_SUPPORTS_ODD_REAL 1
 
-/// @brief Real-to-complex and Complex-to-real 1D DFT
+/**
+ * @brief Real-to-complex and complex-to-real 1D DFT plan.
+ *
+ * Specializes `dft_plan<T>` for real-valued input/output. The forward transform
+ * reads `size` real samples and produces `complex_size()` complex samples in the
+ * chosen packed format. The inverse transform reads the packed spectrum and
+ * produces `size` real samples. No scaling is applied in either direction.
+ *
+ * For odd sizes the transform is performed via a temporary complex buffer; for
+ * even sizes the underlying complex DFT of size `size/2` is reused together with
+ * a repacking stage.
+ *
+ * @tparam T Floating-point type (`float` or `double`).
+ */
 template <typename T>
 struct dft_plan_real : dft_plan<T>
 {
-    size_t size;
-    dft_pack_format fmt;
+    size_t size; ///< Number of real samples in the transform.
+    dft_pack_format fmt; ///< Packing format of the complex spectrum.
 
+    /// @brief Constructs an empty (uninitialized) real DFT plan.
     dft_plan_real() : size(0), fmt(dft_pack_format::CCs) {}
 
     dft_plan_real(const dft_plan_real&)            = delete;
@@ -521,14 +574,28 @@ struct dft_plan_real : dft_plan<T>
     dft_plan_real& operator=(const dft_plan_real&) = delete;
     dft_plan_real& operator=(dft_plan_real&&)      = default;
 
+    /// @brief Checks whether the plan is non-empty.
     bool is_initialized() const { return size != 0; }
 
+    /// @brief Returns the number of complex samples produced/consumed.
     size_t complex_size() const { return complex_size_for(size, fmt); }
+    /**
+     * @brief Returns the number of complex samples for a given real size and format.
+     * @param size Number of real samples.
+     * @param fmt Packing format.
+     * @return `size/2 + 1` for `CCs`, `(size+1)/2` for `Perm`.
+     */
     constexpr static size_t complex_size_for(size_t size, dft_pack_format fmt)
     {
         return fmt == dft_pack_format::CCs ? size / 2 + 1 : (size + 1) / 2;
     }
 
+    /**
+     * @brief Constructs a real DFT plan.
+     * @param size Number of real samples.
+     * @param fmt Packing format of the complex spectrum.
+     * @param progressive_optimized If true, optimize the plan for progressive execution.
+     */
     explicit dft_plan_real(size_t size, dft_pack_format fmt = dft_pack_format::CCs,
                            bool progressive_optimized = false)
         : dft_plan<T>(typename dft_plan<T>::noinit{}, size % 2 ? size : size / 2, dft_order::normal,
@@ -559,6 +626,12 @@ struct dft_plan_real : dft_plan<T>
     void execute(univector<complex<T>, Tag1>& out, const univector<complex<T>, Tag2>& in, u8* temp,
                  cbool_t<inverse> inv) const = delete;
 
+    /**
+     * @brief Executes the forward real-to-complex DFT.
+     * @param out Output complex buffer of `complex_size()` elements.
+     * @param in Input real buffer of `size` elements.
+     * @param temp Scratch buffer of at least `temp_size` bytes (may be `nullptr`).
+     */
     KFR_MEM_INTRINSIC void execute(complex<T>* out, const T* in, u8* temp, cdirect_t = {}) const
     {
         if (this->size % 2 == 0)
@@ -582,6 +655,12 @@ struct dft_plan_real : dft_plan<T>
                            });
         }
     }
+    /**
+     * @brief Executes the inverse complex-to-real DFT.
+     * @param out Output real buffer of `size` elements.
+     * @param in Input complex buffer of `complex_size()` elements.
+     * @param temp Scratch buffer of at least `temp_size` bytes (may be `nullptr`).
+     */
     KFR_MEM_INTRINSIC void execute(T* out, const complex<T>* in, u8* temp, cinvert_t = {}) const
     {
         if (this->size % 2 == 0)
@@ -606,12 +685,24 @@ struct dft_plan_real : dft_plan<T>
         }
     }
 
+    /**
+     * @brief Forward real-to-complex DFT using univector buffers with a scratch univector.
+     * @param out Output complex univector of `complex_size()` elements.
+     * @param in Input real univector of `size` elements.
+     * @param temp Scratch buffer univector of at least `temp_size` bytes.
+     */
     template <univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
     KFR_MEM_INTRINSIC void execute(univector<complex<T>, Tag1>& out, const univector<T, Tag2>& in,
                                    univector<u8, Tag3>& temp, cdirect_t = {}) const
     {
         this->execute(out.data(), in.data(), temp.data(), cdirect_t());
     }
+    /**
+     * @brief Inverse complex-to-real DFT using univector buffers with a scratch univector.
+     * @param out Output real univector of `size` elements.
+     * @param in Input complex univector of `complex_size()` elements.
+     * @param temp Scratch buffer univector of at least `temp_size` bytes.
+     */
     template <univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
     KFR_MEM_INTRINSIC void execute(univector<T, Tag1>& out, const univector<complex<T>, Tag2>& in,
                                    univector<u8, Tag3>& temp, cinvert_t = {}) const
@@ -619,12 +710,24 @@ struct dft_plan_real : dft_plan<T>
         this->execute(out.data(), in.data(), temp.data(), cinvert_t());
     }
 
+    /**
+     * @brief Forward real-to-complex DFT using univector buffers with a raw scratch pointer.
+     * @param out Output complex univector of `complex_size()` elements.
+     * @param in Input real univector of `size` elements.
+     * @param temp Scratch buffer of at least `temp_size` bytes (may be `nullptr`).
+     */
     template <univector_tag Tag1, univector_tag Tag2>
     KFR_MEM_INTRINSIC void execute(univector<complex<T>, Tag1>& out, const univector<T, Tag2>& in, u8* temp,
                                    cdirect_t = {}) const
     {
         this->execute(out.data(), in.data(), temp, cdirect_t());
     }
+    /**
+     * @brief Inverse complex-to-real DFT using univector buffers with a raw scratch pointer.
+     * @param out Output real univector of `size` elements.
+     * @param in Input complex univector of `complex_size()` elements.
+     * @param temp Scratch buffer of at least `temp_size` bytes (may be `nullptr`).
+     */
     template <univector_tag Tag1, univector_tag Tag2>
     KFR_MEM_INTRINSIC void execute(univector<T, Tag1>& out, const univector<complex<T>, Tag2>& in, u8* temp,
                                    cinvert_t = {}) const
@@ -651,6 +754,13 @@ public:
 #ifdef KFR_CLASSIC_FFT
     using progressive = typename dft_plan<T>::progressive;
 
+    /**
+     * @brief Initiates progressive execution of the inverse (complex-to-real) transform.
+     * @param out Output real buffer of `size` elements (filled after the final step).
+     * @param in Input complex buffer of `complex_size()` elements.
+     * @param temp Scratch buffer of at least `temp_size` bytes (must not be `nullptr` if `temp_size > 0`).
+     * @return A `progressive` state to advance with `progressive_step`.
+     */
     KFR_MEM_INTRINSIC progressive progressive_start(T* out, const complex<T>* in, u8* temp) const
     {
         KFR_LOGIC_CHECK(is_initialized(), "dft_plan_real is not initialized");
@@ -660,6 +770,13 @@ public:
         internal_generic::dft_progressive_start(*this, result, true, ptr_cast<complex<T>>(out), in, temp);
         return result;
     }
+    /**
+     * @brief Initiates progressive execution of the forward (real-to-complex) transform.
+     * @param out Output complex buffer of `complex_size()` elements (filled after the final step).
+     * @param in Input real buffer of `size` elements.
+     * @param temp Scratch buffer of at least `temp_size` bytes (must not be `nullptr` if `temp_size > 0`).
+     * @return A `progressive` state to advance with `progressive_step`.
+     */
     KFR_MEM_INTRINSIC progressive progressive_start(complex<T>* out, const T* in, u8* temp) const
     {
         KFR_LOGIC_CHECK(is_initialized(), "dft_plan_real is not initialized");
@@ -673,20 +790,32 @@ public:
 #endif
 };
 
-/// @brief Multidimensional DFT
+/**
+ * @brief Multidimensional complex DFT plan.
+ *
+ * Computes a separable DFT over all dimensions by applying a 1D `dft_plan<T>`
+ * along each axis, transposing the data between axes so that each axis is
+ * processed with unit stride. The same plan supports both forward and inverse
+ * transforms; no scaling is applied.
+ *
+ * @tparam T Floating-point type (`float` or `double`).
+ * @tparam Dims Number of dimensions, or `dynamic_shape` for a runtime rank.
+ */
 template <typename T, index_t Dims = dynamic_shape>
 struct dft_plan_md
 {
-    shape<Dims> size;
-    size_t temp_size;
+    shape<Dims> size; ///< Per-dimension sizes of the transform.
+    size_t temp_size; ///< Scratch buffer size in bytes required by `execute`.
 
     dft_plan_md(const dft_plan_md&)            = delete;
     dft_plan_md(dft_plan_md&&)                 = default;
     dft_plan_md& operator=(const dft_plan_md&) = delete;
     dft_plan_md& operator=(dft_plan_md&&)      = default;
 
+    /// @brief Checks whether the plan is non-empty.
     bool is_initialized() const { return size.product() != 0; }
 
+    /// @brief Dumps details of the underlying per-axis plans to stdout.
     void dump() const
     {
         for (const auto& d : dfts)
@@ -695,6 +824,8 @@ struct dft_plan_md
         }
     }
 
+    /// @brief Constructs a multidimensional DFT plan for the given shape.
+    /// @param size Per-dimension sizes of the transform.
     explicit dft_plan_md(shape<Dims> size) : size(std::move(size)), temp_size(0)
     {
         if constexpr (Dims == dynamic_shape)
@@ -709,6 +840,13 @@ struct dft_plan_md
         internal_generic::dft_initialize_transpose(transpose);
     }
 
+    /**
+     * @brief Executes the multidimensional DFT on raw pointers.
+     * @param out Output buffer of `size.product()` complex elements.
+     * @param in Input buffer of `size.product()` complex elements.
+     * @param temp Scratch buffer of at least `temp_size` bytes (may be `nullptr`).
+     * @param inverse If true, performs the inverse transform.
+     */
     void execute(complex<T>* out, const complex<T>* in, u8* temp, bool inverse = false) const
     {
         if (inverse)
@@ -717,6 +855,13 @@ struct dft_plan_md
             execute_dft(cfalse, out, in, temp);
     }
 
+    /**
+     * @brief Executes the multidimensional DFT on tensors.
+     * @param out Output tensor with shape equal to `size`.
+     * @param in Input tensor with shape equal to `size`.
+     * @param temp Scratch buffer of at least `temp_size` bytes (may be `nullptr`).
+     * @param inverse If true, performs the inverse transform.
+     */
     void execute(const tensor<complex<T>, Dims>& out, const tensor<complex<T>, Dims>& in, u8* temp,
                  bool inverse = false) const
         requires(Dims != dynamic_shape)
@@ -729,6 +874,13 @@ struct dft_plan_md
         else
             execute_dft(cfalse, out.data(), in.data(), temp);
     }
+    /**
+     * @brief Executes the multidimensional DFT with a compile-time direction.
+     * @tparam inverse If true, performs the inverse transform.
+     * @param out Output buffer of `size.product()` complex elements.
+     * @param in Input buffer of `size.product()` complex elements.
+     * @param temp Scratch buffer of at least `temp_size` bytes (may be `nullptr`).
+     */
     template <bool inverse = false>
     void execute(complex<T>* out, const complex<T>* in, u8* temp, cbool_t<inverse> = {}) const
     {
@@ -809,12 +961,24 @@ private:
     internal_generic::fn_transpose<T> transpose;
 };
 
-/// @brief Multidimensional DFT
+/**
+ * @brief Multidimensional real-to-complex / complex-to-real DFT plan.
+ *
+ * The forward transform reads a real tensor of shape `size` and produces a
+ * complex tensor of shape `complex_size()` (Hermitian-symmetric along the last
+ * axis). The inverse transform reads the packed complex tensor and produces the
+ * real tensor. No scaling is applied.
+ *
+ * @tparam T Floating-point type (`float` or `double`).
+ * @tparam Dims Number of dimensions, or `dynamic_shape` for a runtime rank.
+ */
 template <typename T, index_t Dims = dynamic_shape>
 struct dft_plan_md_real
 {
-    shape<Dims> size;
-    size_t temp_size;
+    shape<Dims> size; ///< Per-dimension sizes of the real transform.
+    size_t temp_size; ///< Scratch buffer size in bytes required by `execute`.
+    /// @brief If true, the inverse transform may write directly into the real
+    ///        output buffer without an extra complex working region.
     bool real_out_is_enough;
 
     dft_plan_md_real(const dft_plan_md_real&)            = delete;
@@ -822,8 +986,10 @@ struct dft_plan_md_real
     dft_plan_md_real& operator=(const dft_plan_md_real&) = delete;
     dft_plan_md_real& operator=(dft_plan_md_real&&)      = default;
 
+    /// @brief Checks whether the plan is non-empty.
     bool is_initialized() const { return size.product() != 0; }
 
+    /// @brief Dumps details of the underlying per-axis plans to stdout.
     void dump() const
     {
         for (const auto& d : dfts)
@@ -833,7 +999,9 @@ struct dft_plan_md_real
         dft_real.dump();
     }
 
+    /// @brief Returns the shape of the complex (packed) spectrum.
     shape<Dims> complex_size() const { return complex_size_for(size); }
+    /// @brief Returns the complex spectrum shape for a given real shape.
     constexpr static shape<Dims> complex_size_for(shape<Dims> size)
     {
         if (size.dims() > 0)
@@ -841,12 +1009,20 @@ struct dft_plan_md_real
         return size;
     }
 
+    /// @brief Returns the number of real elements needed to hold the inverse output.
     size_t real_out_size() const { return real_out_size_for(size); }
+    /// @brief Returns the real output element count for a given real shape.
     constexpr static size_t real_out_size_for(shape<Dims> size)
     {
         return complex_size_for(size).product() * 2;
     }
 
+    /**
+     * @brief Constructs a multidimensional real DFT plan.
+     * @param size Per-dimension sizes of the real transform.
+     * @param real_out_is_enough If true, the inverse transform may write directly
+     *        into the real output buffer without an extra complex working region.
+     */
     explicit dft_plan_md_real(shape<Dims> size, bool real_out_is_enough = false)
         : size(std::move(size)), temp_size(0), real_out_is_enough(real_out_is_enough)
     {
@@ -871,14 +1047,32 @@ struct dft_plan_md_real
         internal_generic::dft_initialize_transpose(transpose);
     }
 
+    /**
+     * @brief Forward transform: real input to packed complex output (raw pointers).
+     * @param out Output complex buffer of `complex_size().product()` elements.
+     * @param in Input real buffer of `size.product()` elements.
+     * @param temp Scratch buffer of at least `temp_size` bytes (may be `nullptr`).
+     */
     void execute(complex<T>* out, const T* in, u8* temp, cdirect_t = {}) const
     {
         execute_dft(cfalse, out, in, temp);
     }
+    /**
+     * @brief Inverse transform: packed complex input to real output (raw pointers).
+     * @param out Output real buffer of `size.product()` elements.
+     * @param in Input complex buffer of `complex_size().product()` elements.
+     * @param temp Scratch buffer of at least `temp_size` bytes (may be `nullptr`).
+     */
     void execute(T* out, const complex<T>* in, u8* temp, cinvert_t = {}) const
     {
         execute_dft(ctrue, out, in, temp);
     }
+    /**
+     * @brief Forward transform on tensors.
+     * @param out Output complex tensor with shape `complex_size()`.
+     * @param in Input real tensor with shape `size`.
+     * @param temp Scratch buffer of at least `temp_size` bytes (may be `nullptr`).
+     */
     void execute(const tensor<complex<T>, Dims>& out, const tensor<T, Dims>& in, u8* temp,
                  cdirect_t = {}) const
         requires(Dims != dynamic_shape)
@@ -889,6 +1083,12 @@ struct dft_plan_md_real
                         "dft_plan_md_real: tensors must be contiguous");
         execute_dft(cfalse, out.data(), in.data(), temp);
     }
+    /**
+     * @brief Inverse transform on tensors.
+     * @param out Output real tensor with shape `size`.
+     * @param in Input complex tensor with shape `complex_size()`.
+     * @param temp Scratch buffer of at least `temp_size` bytes (may be `nullptr`).
+     */
     void execute(const tensor<T, Dims>& out, const tensor<complex<T>, Dims>& in, u8* temp,
                  cinvert_t = {}) const
         requires(Dims != dynamic_shape)
@@ -899,11 +1099,25 @@ struct dft_plan_md_real
                         "dft_plan_md_real: tensors must be contiguous");
         execute_dft(ctrue, out.data(), in.data(), temp);
     }
+    /**
+     * @brief Forward transform selected by a runtime flag (raw pointers).
+     * @param out Output complex buffer of `complex_size().product()` elements.
+     * @param in Input real buffer of `size.product()` elements.
+     * @param temp Scratch buffer of at least `temp_size` bytes (may be `nullptr`).
+     * @param inverse Must be `false` for the forward transform.
+     */
     void execute(complex<T>* out, const T* in, u8* temp, bool inverse) const
     {
         KFR_LOGIC_CHECK(!inverse, "dft_plan_md_real: incorrect usage");
         execute_dft(cfalse, out, in, temp);
     }
+    /**
+     * @brief Inverse transform selected by a runtime flag (raw pointers).
+     * @param out Output real buffer of `size.product()` elements.
+     * @param in Input complex buffer of `complex_size().product()` elements.
+     * @param temp Scratch buffer of at least `temp_size` bytes (may be `nullptr`).
+     * @param inverse Must be `true` for the inverse transform.
+     */
     void execute(T* out, const complex<T>* in, u8* temp, bool inverse) const
     {
         KFR_LOGIC_CHECK(inverse, "dft_plan_md_real: incorrect usage");
@@ -1031,12 +1245,34 @@ private:
     internal_generic::fn_transpose<T> transpose;
 };
 
-/// @brief DCT type 2 (unscaled)
+/**
+ * @brief Plan for computing the Discrete Cosine Transform (DCT type 2, unscaled).
+ *
+ * The forward transform computes an unscaled DCT-II; the inverse transform
+ * computes the corresponding DCT-III (the transpose/inverse of DCT-II, also
+ * unscaled). Both directions are implemented by mirroring the real input into
+ * a complex buffer and reusing the complex `dft_plan` machinery.
+ *
+ * @note No scaling is applied in either direction. Apply the conventional
+ *       $\frac{2}{N}$ (or orthonormal) factor yourself if a normalized DCT is
+ *       required.
+ *
+ * @tparam T Floating-point type (`float` or `double`).
+ */
 template <typename T>
 struct dct_plan : dft_plan<T>
 {
+    /// @brief Constructs a DCT plan for the given size.
+    /// @param size Number of real samples in the transform.
     dct_plan(size_t size) : dft_plan<T>(size) { this->temp_size += sizeof(complex<T>) * size * 2; }
 
+    /**
+     * @brief Executes the DCT.
+     * @param out Output real buffer (size elements).
+     * @param in Input real buffer (size elements).
+     * @param temp Scratch buffer of at least `temp_size` bytes (may be `nullptr`).
+     * @param inverse If true, computes the inverse (DCT-III); otherwise DCT-II.
+     */
     KFR_MEM_INTRINSIC void execute(T* out, const T* in, u8* temp, bool inverse = false) const
     {
         const size_t size                  = this->size;
@@ -1077,6 +1313,13 @@ struct dct_plan : dft_plan<T>
         }
     }
 
+    /**
+     * @brief Executes the DCT using univector buffers.
+     * @param out Output real univector (size elements).
+     * @param in Input real univector (size elements).
+     * @param temp Scratch buffer univector of at least `temp_size` bytes.
+     * @param inverse If true, computes the inverse (DCT-III); otherwise DCT-II.
+     */
     template <univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
     KFR_MEM_INTRINSIC void execute(univector<T, Tag1>& out, const univector<T, Tag2>& in,
                                    univector<u8, Tag3>& temp, bool inverse = false) const
@@ -1088,6 +1331,18 @@ struct dct_plan : dft_plan<T>
 inline namespace KFR_ARCH_NAME
 {
 
+/**
+ * @brief Element-wise multiplication of two spectra (convolution in time domain).
+ *
+ * Computes `dest = src1 * src2` element-wise, with special handling of the
+ * DC/Nyquist bin when using the `Perm` packed format (where DC and Nyquist are
+ * packed together in a single complex value).
+ *
+ * @param dest Destination spectrum (also the result).
+ * @param src1 First operand spectrum.
+ * @param src2 Second operand spectrum.
+ * @param fmt Packing format of the spectra; only `Perm` triggers special bin-0 handling.
+ */
 template <typename T, univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
 void fft_multiply(univector<complex<T>, Tag1>& dest, const univector<complex<T>, Tag2>& src1,
                   const univector<complex<T>, Tag3>& src2, dft_pack_format fmt = dft_pack_format::CCs)
@@ -1100,6 +1355,17 @@ void fft_multiply(univector<complex<T>, Tag1>& dest, const univector<complex<T>,
         dest[0] = f0;
 }
 
+/**
+ * @brief Multiply-accumulate of two spectra into a destination.
+ *
+ * Computes `dest = dest + src1 * src2` element-wise, with special handling of
+ * the DC/Nyquist bin for the `Perm` packed format.
+ *
+ * @param dest Destination/accumulator spectrum.
+ * @param src1 First operand spectrum.
+ * @param src2 Second operand spectrum.
+ * @param fmt Packing format of the spectra; only `Perm` triggers special bin-0 handling.
+ */
 template <typename T, univector_tag Tag1, univector_tag Tag2, univector_tag Tag3>
 void fft_multiply_accumulate(univector<complex<T>, Tag1>& dest, const univector<complex<T>, Tag2>& src1,
                              const univector<complex<T>, Tag3>& src2,
@@ -1113,6 +1379,18 @@ void fft_multiply_accumulate(univector<complex<T>, Tag1>& dest, const univector<
     if (fmt == dft_pack_format::Perm)
         dest[0] = f0;
 }
+/**
+ * @brief Multiply-accumulate of two spectra with an addend into a destination.
+ *
+ * Computes `dest = src1 + src2 * src3` element-wise, with special handling of
+ * the DC/Nyquist bin for the `Perm` packed format.
+ *
+ * @param dest Destination/accumulator spectrum.
+ * @param src1 Addend spectrum.
+ * @param src2 First factor spectrum.
+ * @param src3 Second factor spectrum.
+ * @param fmt Packing format of the spectra; only `Perm` triggers special bin-0 handling.
+ */
 template <typename T, univector_tag Tag1, univector_tag Tag2, univector_tag Tag3, univector_tag Tag4>
 void fft_multiply_accumulate(univector<complex<T>, Tag1>& dest, const univector<complex<T>, Tag2>& src1,
                              const univector<complex<T>, Tag3>& src2, const univector<complex<T>, Tag4>& src3,
@@ -1179,35 +1457,75 @@ struct ngfft_plan
     complex<T>* twiddles = nullptr;
 };
 
+/// @brief Family of DFT algorithms (groups related algorithms).
 enum class dft_family
 {
-    fourstep,
+    fourstep, ///< Four-step FFT family.
 };
 
+/// @brief Concrete DFT/FFT algorithm selection.
 enum class dft_algorithm
 {
-    fourstep,
+    fourstep, ///< Four-step FFT algorithm.
 };
 
+/// @brief Decomposition direction for a butterfly pass.
 enum class dft_decomp : uint8_t
 {
     dif, ///< Decimation-in-frequency
     dit, ///< Decimation-in-time
 };
 
-/*
-    Returns the size of the internal data structure for the given FFT size and algorithm.
-*/
+/**
+ * @brief Returns the number of twiddle-factor elements required by the plan.
+ *
+ * The returned count is the size (in `complex<T>` elements) of the twiddle
+ * buffer that must be allocated and passed to `ngfft_initialize()`.
+ *
+ * @tparam T Floating-point scalar type.
+ * @tparam algo FFT algorithm.
+ * @param plan The plan whose `l2fftsize` is log2(fftsize).
+ * @return Number of twiddle elements, or `SIZE_MAX` for an invalid FFT size.
+ */
 template <typename T, dft_algorithm algo>
 size_t ngfft_twiddle_count(ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>);
 
+/**
+ * @brief Precomputes the twiddle factors into the plan's `twiddles` buffer.
+ *
+ * The caller must have allocated `plan.twiddles` with at least
+ * `ngfft_twiddle_count()` elements before calling this function.
+ *
+ * @tparam T Floating-point scalar type.
+ * @tparam algo FFT algorithm.
+ * @param plan The plan to initialize; `plan.twiddles` must point to a valid buffer.
+ * @return `true` on success; `false` if the FFT size is invalid or the required
+ *         twiddle buffer was not provided.
+ */
 template <typename T, dft_algorithm algo>
 bool ngfft_initialize(ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>);
 
+/**
+ * @brief Executes the FFT in-place on the given complex buffer.
+ *
+ * The transform is always performed in-place: the input buffer is overwritten
+ * with the result. No scaling is applied.
+ *
+ * @tparam T Floating-point scalar type.
+ * @tparam algo FFT algorithm.
+ * @tparam inverse If true, performs the inverse FFT; otherwise the forward FFT.
+ * @param plan The initialized plan.
+ * @param inout Input/output buffer of `2^plan.l2fftsize` complex elements.
+ */
 template <typename T, dft_algorithm algo, bool inverse>
 void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, cbool_t<inverse>,
                    complex<T>* inout);
 
+/**
+ * @brief Executes the FFT in-place with a runtime direction flag.
+ * @copydetails ngfft_execute(const ngfft_plan<T>&, cval_t<dft_algorithm,algo>, cbool_t<inverse>, complex<T>*)
+ * @param inverse If true, performs the inverse FFT; otherwise the forward FFT.
+ */
 template <typename T, dft_algorithm algo>
 inline void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, bool inverse,
                           complex<T>* inout)
@@ -1222,6 +1540,12 @@ inline void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>
     }
 }
 
+/**
+ * @brief Returns the twiddle-factor count for a runtime algorithm value.
+ * @param plan The plan whose `l2fftsize` selects the specialization.
+ * @param algo FFT algorithm (defaults to `fourstep`).
+ * @return Number of twiddle elements, or `SIZE_MAX` for an invalid FFT size.
+ */
 template <typename T>
 inline size_t ngfft_twiddle_count(ngfft_plan<T>& plan, dft_algorithm algo = dft_algorithm::fourstep)
 {
@@ -1234,6 +1558,13 @@ inline size_t ngfft_twiddle_count(ngfft_plan<T>& plan, dft_algorithm algo = dft_
     }
 }
 
+/**
+ * @brief Initializes the plan's twiddles for a runtime algorithm value.
+ * @param plan The plan to initialize; `plan.twiddles` must point to a valid buffer.
+ * @param algo FFT algorithm (defaults to `fourstep`).
+ * @return `true` on success; `false` if the FFT size is invalid or the required
+ *         twiddle buffer was not provided.
+ */
 template <typename T>
 inline bool ngfft_initialize(ngfft_plan<T>& plan, dft_algorithm algo = dft_algorithm::fourstep)
 {
@@ -1246,6 +1577,13 @@ inline bool ngfft_initialize(ngfft_plan<T>& plan, dft_algorithm algo = dft_algor
     }
 }
 
+/**
+ * @brief Executes the FFT in-place with a compile-time direction and runtime algorithm.
+ * @tparam inverse If true, performs the inverse FFT; otherwise the forward FFT.
+ * @param plan The initialized plan.
+ * @param inout Input/output buffer of `2^plan.l2fftsize` complex elements.
+ * @param algo FFT algorithm (defaults to `fourstep`).
+ */
 template <typename T, bool inverse>
 inline void ngfft_execute(const ngfft_plan<T>& plan, cbool_t<inverse>, complex<T>* inout,
                           dft_algorithm algo = dft_algorithm::fourstep)
@@ -1259,6 +1597,13 @@ inline void ngfft_execute(const ngfft_plan<T>& plan, cbool_t<inverse>, complex<T
     }
 }
 
+/**
+ * @brief Executes the FFT in-place with runtime direction and algorithm.
+ * @param plan The initialized plan.
+ * @param inverse If true, performs the inverse FFT; otherwise the forward FFT.
+ * @param inout Input/output buffer of `2^plan.l2fftsize` complex elements.
+ * @param algo FFT algorithm (defaults to `fourstep`).
+ */
 template <typename T>
 inline void ngfft_execute(const ngfft_plan<T>& plan, bool inverse, complex<T>* inout,
                           dft_algorithm algo = dft_algorithm::fourstep)
@@ -1270,8 +1615,11 @@ inline void ngfft_execute(const ngfft_plan<T>& plan, bool inverse, complex<T>* i
 }
 
 #ifdef KFR_CLASSIC_FFT
+/// @brief When true, the classic `dft_plan` uses the ngFFT algorithm for power-of-two sizes.
 extern bool fft_ng;
+/// @brief When true, the classic `dft_plan` prefers the autosort (no bit-reversal) FFT stages.
 extern bool fft_autosort;
+/// @brief Algorithm used by the ngFFT path of the classic `dft_plan`.
 extern dft_algorithm fft_ng_algorithm;
 #endif
 
