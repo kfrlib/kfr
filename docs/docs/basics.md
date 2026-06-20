@@ -67,7 +67,7 @@ vec(T&&...) -> vec<std::common_type_t<T...>, sizeof...(T)>;
     The class implementation is specific to the target cpu, so `vec` class definition resides in `kfr::KFR_ARCH_NAME` namespace. For avx2 architecture it's `kfr::avx2`. The architecture namespace is declared inline, you should not use it directly, `kfr::vec` as treated by compiler as an alias for `kfr::KFR_ARCH_NAME::vec`.
 
 
-Use can omit the template parameters and let compiler deduce them for you:
+You can omit the template parameters and let compiler deduce them for you:
 ```c++
 vec x{ 10, 5, 2.5, 1.25 }; // vec<double, 4>
 
@@ -75,6 +75,44 @@ some_function(vec{ 3, 2, 1 }); // vec<int, 3>
 ```
 
 Vectors can be nested. `vec<vec<float, 2>, 2>` is a valid declaration.
+
+#### Using `vec` directly
+
+`vec` is the building block of all KFR SIMD operations. While most KFR functions accept `univector`, `tensor` or any [expression](expressions.md) and operate on `vec` internally, you can also use `vec` directly for low-level, register-sized computations.
+
+```c++
+#include <kfr/base.hpp>
+
+using namespace kfr;
+
+// Construct from scalars (size and type deduced)
+vec<float, 4> a{ 1, 2, 3, 4 };
+vec<float, 4> b{ 10, 20, 30, 40 };
+
+// Broadcast a scalar to all lanes
+vec<float, 4> c = 0.5f;            // { 0.5, 0.5, 0.5, 0.5 }
+
+// Element-wise arithmetic maps to a single SIMD instruction
+vec<float, 4> sum  = a + b;        // { 11, 22, 33, 44 }
+vec<float, 4> prod = a * b;        // { 10, 40, 90, 160 }
+
+// Accessing individual elements (goes through a proxy)
+float first = a.front();
+a[2]        = 100.0f;
+
+// Concatenating smaller vectors into a larger one
+vec<float, 2> lo{ 1, 2 };
+vec<float, 2> hi{ 3, 4 };
+vec<float, 4> ab = concat(lo, hi); // { 1, 2, 3, 4 }
+
+// Implicit element-type conversion
+vec<double, 4> d = a;              // int/float -> double, widened
+```
+
+`vec` is also the type returned by KFR expression primitives such as `read<N>(ptr)`, `gather`, `scatter`, etc. When you write generic code that should operate on a single SIMD register, prefer taking/returning `vec<T, N>` rather than a raw pointer.
+
+!!! tip
+    `vec` size `N` should usually match the native SIMD width for the element type (e.g. 4 `double`s or 8 `float`s on AVX2), or be a small integer multiple of it (`2N`, `4N`, ...). As long as the total width fits within the target's overall register file (check `vector_capacity<T>`), no overhead is introduced — KFR simply unrolls the operation over the available registers. Sizes that are not a multiple of the native width, or that exceed the register file, may require extra shuffling or spilling.
 
 ### 1D array
 
@@ -100,12 +138,15 @@ For all specializations data is always contiguous in memory.
 
 #### Alignment
 
-For SIMD operations to be effective, data should be aligned to 16, 32 or 64 bytes boundary. Default STL allocator cannot provide such alignment, so holding data in `std::vector<T>` with defalt allocator may be suboptimal.
+For SIMD operations to be effective, data should be aligned to 16, 32 or 64 bytes boundary. Default STL allocator cannot provide such alignment, so holding data in `std::vector<T>` with default allocator may be suboptimal.
 
 KFR has its own STL-compatible allocator `kfr::data_allocator` that aligns memory to 64-bytes boundary. Using it with STL containers may increase performance.
 
 !!! note
     Define `KFR_USE_STD_ALLOCATION` macro to make `data_allocator` an alias for `std::allocator`. This makes `univector`s interchangeable with `std::vector`s
+
+!!! warning
+    Alignment is only guaranteed for memory **allocated** by a container. It is **not** guaranteed when a container wraps an external pointer (e.g. `univector<T, 0>`, `tensor` constructed from `T*`, `audio_data` constructed from external buffers) or when you obtain a subrange via `slice`/`truncate`/`operator()`. In those cases KFR will still work correctly, but unaligned loads/stores may be emitted, which can be slower on some targets.
 
 #### Passing 1D data to KFR functions
 
@@ -142,10 +183,14 @@ const float s2 = sum(v.slice(2, 50)); // Sum 50 elements starting from 2
 ```
 
 Result of the call to `slice` is always `univector<T, 0>`, a reference to external data.
-Not tat the lifetime of the reference is limited to the lifetime of the original data.
+Note that the lifetime of the reference is limited to the lifetime of the original data.
 
 !!! note
-    `univector` class is also [Expression](expressions.md) and can be used whereever expression is required.
+    `univector` class is also an [Expression](expressions.md) and can be used wherever an expression is required. This means you can pass a `univector` directly to any KFR function expecting an expression argument, and you can assign expressions back into a `univector`:
+    ```c++
+    univector<float> x = counter(0, 0.5f, 1.0f); // fill from an expression
+    univector<float> y = sin(x);                  // element-wise sin
+    ```
 
 ### Tensor (Multidimensional array)
 
@@ -322,6 +367,8 @@ tensor<double, 2> t2 = t(tstart(2), trange(2, 4));
 
 #### Constructing tensor from external data
 
+A `tensor` can either own its memory (allocated cache-aligned) or reference external storage. To take ownership of an existing container without copying its data, use `tensor_from_container`, which moves the container into a `memory_finalizer` so the underlying buffer stays alive as long as the `tensor` does:
+
 ```c++
 tensor<float, 1> fn(std::vector<float>&& v)
 {
@@ -331,4 +378,110 @@ tensor<float, 1> fn(std::vector<float>&& v)
     return t;
 }
 ```
+
+For full control (e.g. wrapping a buffer allocated by another library), construct a `tensor` directly from a pointer, shape, strides and a `memory_finalizer`. The finalizer is a `std::shared_ptr` whose destructor releases the storage:
+
+```c++
+// Wrap a foreign buffer and free it with a custom callback when the tensor is destroyed.
+float* foreign = static_cast<float*>(some_lib_alloc(1024 * sizeof(float)));
+tensor<float, 1> t(foreign, shape<1>{ 1024 },
+                   make_memory_finalizer([foreign] { some_lib_free(foreign); }));
+```
+
+!!! note
+    `tensor` uses reference counting for its finalizer, so copying a tensor only increments the counter — the underlying buffer is shared. Call `copy()` for a deep copy.
+
+### Audio data
+
+`audio_data` (defined in `<kfr/audio/data.hpp>`) is a container tailored for **multi-channel audio**. It simplifies audio I/O and inter-channel processing by bundling the sample buffers together with channel count, frame count and an optional position.
+
+```c++
+template <bool Interleaved = false>
+struct audio_data
+{
+    uint32_t channels;                 // number of channels
+    chan<fbase*, Interleaved> data;    // channel pointers (planar) or single buffer (interleaved)
+    size_t   size;                     // frames per channel
+    size_t   capacity;                 // allocated capacity per channel
+    int64_t  position;                 // position of the first sample
+    std::shared_ptr<void> deallocator; // optional ownership/finalizer
+    // ...
+};
+
+using audio_data_planar       = audio_data<false>;
+using audio_data_interleaved  = audio_data<true>;
+```
+
+Key properties:
+
+- **Floating point only.** `audio_data` always stores samples as `fbase` (`float` or `double`, depending on `KFR_USE_DOUBLE`). Integer PCM formats are handled by the `samples_load` / `samples_store` helpers (see below), which convert to/from `fbase`.
+- **Planar or interleaved.** The `Interleaved` template parameter selects the layout. `audio_data_planar` keeps one pointer per channel; `audio_data_interleaved` keeps a single contiguous buffer with samples interleaved (`L0 R0 L1 R1 ...`). A converting constructor lets you copy between the two layouts.
+- **Sample conversion.** `samples_load` / `samples_store` move data between `fbase` buffers and any PCM sample type (`i16`, `i24`, `i32`, `f32`, `f64`), with optional byte swapping and `audio_quantization` (bit depth + dithering). The `audio_sample_type`-based overloads dispatch on a runtime tag.
+- **Audio I/O.** All KFR audio readers/writers (`read_audio_file`, `write_audio_file`, ...) produce or consume `audio_data`. The accompanying `audiofile_format` carries container, codec, endianness, bit depth, sample rate, channel count, speaker arrangement and a `metadata_map` of arbitrary key/value pairs.
+- **Ownership.** Like `tensor`, `audio_data` may own its storage (allocated cache-aligned) or reference an external buffer via a custom deallocator (`std::shared_ptr<void>`). Copying is cheap — only the pointers and the shared deallocator are copied.
+- **Expressions.** `audio_data::channel(index)` returns a `univector_ref<fbase>` (planar) or a `strided_channel<fbase>` (interleaved), both of which are [expressions](expressions.md). This lets you apply any KFR expression per channel:
+
+```c++
+audio_data_planar audio = read_audio_file("input.wav").value();
+
+for (size_t ch = 0; ch < audio.channel_count(); ++ch)
+{
+    univector_ref<fbase> in = audio.channel(ch);
+    // Apply an expression and write back
+    in = in * 0.5f + sin(in * 3.14159f);
+}
+```
+
+#### Constructing `audio_data`
+
+```c++
+// Allocate a 2-channel, 44100-frame planar buffer (zero-initialized storage)
+audio_data_planar a(2, 44100);
+
+// Allocate and fill with a constant
+audio_data_planar b(2, 44100, 0.0f);
+
+// Wrap an external interleaved buffer (no ownership)
+float external[2 * 1024];
+audio_data_interleaved ref(external, 2, 1024);
+
+// Wrap an external buffer and take ownership via a custom deallocator
+float* buf = aligned_allocate<float>(2 * 1024, 64);
+audio_data_interleaved owned(buf, 2, 1024, [buf] { aligned_deallocate(buf); });
+```
+
+#### Slicing and appending
+
+`audio_data` provides `slice`, `truncate`, `slice_past_end`, `append`, `prepend` (with both same-layout and opposite-layout overloads), `resize`, `reserve` and `fill`, mirroring the convenience of `univector` but operating on every channel at once.
+
+```c++
+audio_data_planar a = read_audio_file("song.wav").value();
+
+// First 10 seconds (assuming a.sample_rate is known from audiofile_format)
+audio_data_planar intro = a.slice(0, 10 * sample_rate);
+
+// Concatenate two files with the same layout
+audio_data_planar combined;
+combined.append(a);
+combined.append(other);
+```
+
+### Choosing the right container
+
+KFR provides three main data containers. Pick the one that best matches your data shape and ownership needs:
+
+| Container     | Dimensionality | Element types                       | Layouts / Ownership                                          | Expressions |
+|---------------|----------------|-------------------------------------|--------------------------------------------------------------|-------------|
+| `univector`   | 1D             | any integer / float / boolean       | static (`std::array`-like), dynamic (`std::vector`-like) or span-like reference, all under one template name | yes (1D)    |
+| `tensor`      | N-D (fixed)    | any                                 | owns or references; custom strides; custom deallocator; can capture any container | yes (along one axis) |
+| `audio_data`  | multi-channel 1D | `fbase` only (float/double)       | planar or interleaved (template flag); owns or references; custom deallocator | yes (via `channel()`) |
+
+**Use `univector`** for the simplest 1D case. A single template name covers static, dynamic and reference storage, which makes it ideal for writing generic functions that should accept any 1D buffer. It supports any integer, floating point or boolean element type and is a full [expression](expressions.md), so it composes with all KFR math/DSP primitives.
+
+**Use `tensor`** when you need a powerful multidimensional container. It can own its data or reference it (with custom strides and a custom deallocator), and it can capture ownership of any STL-compatible container via `tensor_from_container`. Despite being N-dimensional it still supports template expressions, applied along a single axis. Use it for matrices, spectrograms, batched FFTs and similar workloads.
+
+**Use `audio_data`** to simplify multi-channel audio processing and I/O. It supports only floating-point samples (`fbase`), but ships with sample conversion helpers that handle any bit depth, channel count and endianness. Audio I/O functions read into and write from `audio_data`, and the accompanying `audiofile_format` carries metadata such as sample rate, speaker arrangement and a `std::map` of custom key/value pairs. Like `tensor`, it supports custom deallocation and optional ownership, and it exposes template expressions through its `channel()` member.
+
+!!! note
+    All three containers allocate **cache-aligned** memory (64-byte boundary) when they own their storage. However, none of them *guarantee* alignment in general, because any of them can wrap a user-supplied pointer, and the `slice` / `truncate` / `operator()` family of functions may return sub-buffers whose start address is not aligned. KFR always produces correct results on unaligned data, but for maximum throughput prefer owned storage and operate on whole buffers when possible.
 

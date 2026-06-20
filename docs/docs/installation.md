@@ -6,13 +6,17 @@ KFR is tested and supported on the following systems and architectures:
 
 **OS** • Windows • Linux • macOS • iOS • Android
 
-**CPU** • x86 • x86_64 • ARM • ARM64 (AArch64)
+**CPU** • x86 • x86_64 • ARM • ARM64 (AArch64) • RISC-V (RV64)
 
 **x86 extensions** • SSE2 • SSE3 • SSSE3 • SSE4.1 • SSE4.2 • AVX • AVX2 • FMA • AVX512
 
-**ARM extensions** • NEON
+**ARM extensions** • NEON (a.k.a. AdvSIMD)
 
-**Compiler** • GCC7+ • Clang 11+ • MSVC2019+ • Xcode 12+
+**RISC-V extensions** • RVV (Vector)
+
+**Compiler** • GCC7+ • Clang 11+ • MSVC2022+ • Xcode 12+
+
+Other operating systems, compilers and CPUs may also work but are not officially tested.
 
 ## Prerequisites
 
