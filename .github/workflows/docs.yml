@@ -34,7 +34,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install mkdocs mkdocs-material mkdocs-github-admonitions-plugin mkdocs-minify-plugin
-          pip install https://github.com/kfrlib/cxxdox/releases/download/v0.1.5/mkdocs_cxxdox-0.1.5-py3-none-manylinux_2_17_x86_64.whl
+          pip install https://github.com/kfrlib/cxxdox/releases/download/v0.1.6/mkdocs_cxxdox-0.1.6-py3-none-manylinux_2_17_x86_64.whl
 
       - name: Inject main.html
         env:
