@@ -43,7 +43,7 @@ See [how to install and setup Clang](clang.md)
 
 To obtain the full source code, including examples and tests, you can clone the git repository:
 
-```
+```bash
 git clone https://github.com/kfrlib/kfr.git
 ```
 
@@ -58,7 +58,7 @@ The repository default branch `main` is stable and passes all tests. Latest feat
 
 #### vcpkg on Windows
 
-```cmd
+```bash
 vcpkg install kfr
 ```
 

@@ -15,12 +15,12 @@ The latter may cause dangling references if the resulting expression is used out
 
 The following function creates Expression that represents a virtual 3-dimensional array with elements starting from 0 at $(0,0,0)$ index
 and incremented by $1$, $10$ and $100$ along each axis.
-```
+```c++
 counter(0, 1, 10, 100)
 ```
 
 To get a single element from Expression, call `get_element` function. It takes the expression itself and the index.
-```
+```c++
 get_element(counter(0, 1, 10, 100), {1, 2, 3}) == 321
 ```
 

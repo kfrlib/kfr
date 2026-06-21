@@ -75,7 +75,7 @@ cometa::is_invocable_r -> std::is_invocable_r_v
 ### All expressions and some classes have been moved out of `internal` namespace
 
 Examples of code changes:
-```
+```c++
 kfr::internal::biquad_state        -> kfr::biquad_state
 kfr::internal::expression_slice    -> kfr::expression_slice
 kfr::internal::expression_function -> kfr::expression_function
@@ -83,7 +83,7 @@ kfr::internal::expression_function -> kfr::expression_function
 
 ### Expressions 'pointers' have been renamed to 'handles'.
 
-```
+```c++
 expression_pointer -> expression_handle
 to_pointer -> to_handle
 ```

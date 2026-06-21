@@ -46,7 +46,7 @@ In this example, we assume that `KFR_ARCHS` is set to `sse2;avx;avx2` with SSE2 
 DFT and DSP modules are multiarchitecture-enabled while IO modules is not.
 
 KFR building produces the following static libraries:
-```
+```bash
 # DFT module, <kfr/dft.hpp>
 kfr_dft_sse2
 kfr_dft_avx
@@ -73,7 +73,7 @@ macOS:
 -force_load path/to/libkfr_dft_sse2.a -force_load path/to/libkfr_dsp_sse2.a
 ```
 Windows:
-```batch
+```shell
 /WHOLEARCHIVE:path\to\kfr_dft_sse2.lib /WHOLEARCHIVE:path\to\kfr_dsp_sse2.lib
 ```
 
@@ -87,7 +87,7 @@ Add the `/arch` or `-m` flag to select the appropriate architecture for your cod
 
 KFR building produces the following static libraries:
 
-```
+```bash
 # DFT module, <kfr/dft.hpp>
 kfr_dft
 # DSP module, <kfr/dsp.hpp>

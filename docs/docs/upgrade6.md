@@ -14,7 +14,7 @@ Since KFR6, multiarchitecture is controlled by the `KFR_ENABLE_MULTIARCH` (defau
 
 `KFR_ARCHS` CMake variable controls the list of the architectures for which the code will be generated.
 
-```
+```bash
 cmake ... -DKFR_ARCHS=sse2;avx;avx2
 ```
 
