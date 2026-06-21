@@ -24,7 +24,7 @@ univector<fbase, 1024> output;
 
 zpk filt              = iir_lowpass(bessel(24), 1000, 48000);
 iir_params<fbase> bqs = to_sos<fbase>(filt);
-output                = iir(unitimpulse(), bq);
+output                = iir(unitimpulse(), bqs);
 plot_save("bessel_lowpass24", output, options + ", title='24th-order Bessel filter, lowpass 1khz'");
 
 ```
@@ -43,7 +43,7 @@ univector<fbase, 1024> output;
 
 zpk filt              = iir_lowpass(bessel(12), 1000, 48000);
 iir_params<fbase> bqs = to_sos<fbase>(filt);
-output                = iir(unitimpulse(), bq);
+output                = iir(unitimpulse(), bqs);
 plot_save("bessel_lowpass12", output, options + ", title='12th-order Bessel filter, lowpass 1khz'");
 
 ```
@@ -61,7 +61,7 @@ univector<fbase, 1024> output;
 
 zpk filt              = iir_lowpass(bessel(6), 1000, 48000);
 iir_params<fbase> bqs = to_sos<fbase>(filt);
-output                = iir(unitimpulse(), bq);
+output                = iir(unitimpulse(), bqs);
 plot_save("bessel_lowpass6", output, options + ", title='6th-order Bessel filter, lowpass 1khz'");
 ```
 Result
@@ -78,7 +78,7 @@ univector<fbase, 1024> output;
 
 zpk filt              = iir_lowpass(butterworth(24), 1000, 48000);
 iir_params<fbase> bqs = to_sos<fbase>(filt);
-output                = iir(unitimpulse(), bq);
+output                = iir(unitimpulse(), bqs);
 plot_save("butterworth_lowpass24", output,
               options + ", title='24th-order Butterworth filter, lowpass 1khz'");
 ```
@@ -97,7 +97,7 @@ univector<fbase, 1024> output;
 
 zpk filt              = iir_lowpass(butterworth(12), 1000, 48000);
 iir_params<fbase> bqs = to_sos<fbase>(filt);
-output                = iir(unitimpulse(), bq);
+output                = iir(unitimpulse(), bqs);
 plot_save("butterworth_lowpass12", output,
               options + ", title='12th-order Butterworth filter, lowpass 1khz'");
 ```
@@ -115,7 +115,7 @@ univector<fbase, 1024> output;
 
 zpk filt              = iir_highpass(butterworth(12), 1000, 48000);
 iir_params<fbase> bqs = to_sos<fbase>(filt);
-output                = iir(unitimpulse(), bq);
+output                = iir(unitimpulse(), bqs);
 plot_save("butterworth_highpass12", output,
               options + ", title='12th-order Butterworth filter, highpass 1khz'");
 ```
@@ -133,7 +133,7 @@ univector<fbase, 1024> output;
 
 zpk filt              = iir_bandpass(butterworth(12), 0.1, 0.2);
 iir_params<fbase> bqs = to_sos<fbase>(filt);
-output                = iir(unitimpulse(), bq);
+output                = iir(unitimpulse(), bqs);
 plot_save("butterworth_bandpass12", output,
               options + ", title='12th-order Butterworth filter, bandpass'");
 ```
@@ -151,7 +151,7 @@ univector<fbase, 1024> output;
 
 zpk filt              = iir_bandstop(butterworth(12), 0.1, 0.2);
 iir_params<fbase> bqs = to_sos<fbase>(filt);
-output                = iir(unitimpulse(), bq);
+output                = iir(unitimpulse(), bqs);
 plot_save("butterworth_bandstop12", output,
               options + ", title='12th-order Butterworth filter, bandstop'");
 ```
@@ -169,7 +169,7 @@ univector<fbase, 1024> output;
 
 zpk filt              = iir_bandpass(butterworth(4), 0.005, 0.9);
 iir_params<fbase> bqs = to_sos<fbase>(filt);
-output                = iir(unitimpulse(), bq);
+output                = iir(unitimpulse(), bqs);
 plot_save("butterworth_bandpass4", output, options + ", title='4th-order Butterworth filter, bandpass'");
 ```
 Result
@@ -186,7 +186,7 @@ univector<fbase, 1024> output;
 
 zpk filt              = iir_lowpass(chebyshev1(8, 2), 0.09);
 iir_params<fbase> bqs = to_sos<fbase>(filt);
-output                = iir(unitimpulse(), bq);
+output                = iir(unitimpulse(), bqs);
 plot_save("chebyshev1_lowpass8", output,
               options + ", title='8th-order Chebyshev type I filter, lowpass'");
 ```
@@ -204,7 +204,7 @@ univector<fbase, 1024> output;
 
 zpk filt              = iir_lowpass(chebyshev2(8, 80), 0.09);
 iir_params<fbase> bqs = to_sos<fbase>(filt);
-output                = iir(unitimpulse(), bq);
+output                = iir(unitimpulse(), bqs);
 plot_save("chebyshev2_lowpass8", output,
               options + ", title='8th-order Chebyshev type II filter, lowpass'");
 ```
@@ -222,7 +222,7 @@ univector<fbase, 1024> output;
 
 zpk filt              = iir_lowpass(elliptic(10, 2, 60), 1000, 48000);
 iir_params<fbase> bqs = to_sos(filt);
-output                = iir(unitimpulse(), bq);
+output                = iir(unitimpulse(), bqs);
 plot_save("elliptic_lowpass10", output,
               options + ", title='10th-order Elliptic filter, lowpass'");
 ```

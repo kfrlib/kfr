@@ -57,12 +57,12 @@ univector<float> tmp3(stereo_audio[0].size());
 univector<float> tmp4(stereo_audio[0].size());
 
 // Apply convolution
-reverb_LL.apply(tmp1, audio[0]);
-reverb_RL.apply(tmp2, audio[1]);
-reverb_LR.apply(tmp3, audio[0]);
-reverb_RR.apply(tmp4, audio[1]);
+reverb_LL.apply(tmp1, stereo_audio[0]);
+reverb_RL.apply(tmp2, stereo_audio[1]);
+reverb_LR.apply(tmp3, stereo_audio[0]);
+reverb_RR.apply(tmp4, stereo_audio[1]);
 
 // final downmix
-audio[0] = tmp1 + tmp2;
-audio[1] = tmp3 + tmp4;
+stereo_audio[0] = tmp1 + tmp2;
+stereo_audio[1] = tmp3 + tmp4;
 ```

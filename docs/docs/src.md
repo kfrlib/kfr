@@ -107,3 +107,11 @@ encoder->close();
 This approach minimizes memory use, supports long recordings or live input, and maintains sample-rate accuracy by preserving converter state across chunks.
 
 [See also a gallery with results of applying various SRC presets](src_gallery.md)
+
+## Complete working example
+
+For a complete, ready-to-run example of audio resampling (reading an input file, resampling it chunk-by-chunk, and writing the result to an output file), see:
+
+**`tools/sample_rate_converter.cpp`**
+
+This tool demonstrates the full end-to-end workflow described above, including file I/O, multichannel handling, and chunked processing with `samplerate_converter`.
