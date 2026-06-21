@@ -256,7 +256,8 @@ KFR_FUNCTION double warp_freq(double frequency, double fs);
  * Butterworth lowpass at 1 kHz with 48 kHz sample rate.
  *
  * @param filter Analog lowpass prototype (butterworth, chebyshev1, chebyshev2, bessel, or elliptic).
- * @param frequency Cutoff frequency in Hz.
+ * @param frequency Cutoff frequency in Hz. If fs is omitted (left at its default of 2.0),
+ *                 frequency is interpreted as normalized to Nyquist, so the valid range is 0..1.
  * @param fs Sampling frequency in Hz (default 2.0, i.e. Nyquist = 1 Hz).
  * @return Digital lowpass filter in ZPK form.
  */
@@ -270,7 +271,8 @@ KFR_FUNCTION zpk iir_lowpass(const zpk& filter, double frequency, double fs = 2.
  * digital highpass filter.
  *
  * @param filter Analog lowpass prototype (butterworth, chebyshev1, chebyshev2, bessel, or elliptic).
- * @param frequency Cutoff frequency in Hz.
+ * @param frequency Cutoff frequency in Hz. If fs is omitted (left at its default of 2.0),
+ *                 frequency is interpreted as normalized to Nyquist, so the valid range is 0..1.
  * @param fs Sampling frequency in Hz (default 2.0, i.e. Nyquist = 1 Hz).
  * @return Digital highpass filter in ZPK form.
  */
@@ -284,8 +286,9 @@ KFR_FUNCTION zpk iir_highpass(const zpk& filter, double frequency, double fs = 2
  * bandwidth \f$ \omega_{high} - \omega_{low} \f$), and bilinear transform.
  *
  * @param filter Analog lowpass prototype (butterworth, chebyshev1, chebyshev2, bessel, or elliptic).
- * @param lowfreq Lower cutoff frequency in Hz.
- * @param highfreq Upper cutoff frequency in Hz.
+ * @param lowfreq Lower cutoff frequency in Hz. If fs is omitted (left at its default of 2.0),
+ *               frequencies are interpreted as normalized to Nyquist, so the valid range is 0..1.
+ * @param highfreq Upper cutoff frequency in Hz. See note on lowfreq.
  * @param fs Sampling frequency in Hz (default 2.0, i.e. Nyquist = 1 Hz).
  * @return Digital bandpass filter in ZPK form.
  */
@@ -298,8 +301,9 @@ KFR_FUNCTION zpk iir_bandpass(const zpk& filter, double lowfreq, double highfreq
  * and bilinear transform.
  *
  * @param filter Analog lowpass prototype (butterworth, chebyshev1, chebyshev2, bessel, or elliptic).
- * @param lowfreq Lower cutoff frequency in Hz.
- * @param highfreq Upper cutoff frequency in Hz.
+ * @param lowfreq Lower cutoff frequency in Hz. If fs is omitted (left at its default of 2.0),
+ *               frequencies are interpreted as normalized to Nyquist, so the valid range is 0..1.
+ * @param highfreq Upper cutoff frequency in Hz. See note on lowfreq.
  * @param fs Sampling frequency in Hz (default 2.0, i.e. Nyquist = 1 Hz).
  * @return Digital bandstop filter in ZPK form.
  */

@@ -65,6 +65,53 @@ directly through the same `iir` function used for `zpk` designs. See
 * **All-pass** — passes all magnitudes unchanged but shifts phase; used for
   phase equalization and delay compensation.
 
+### Frequency conventions in filter design
+
+KFR's filter design APIs accept two different frequency conventions:
+
+* **IIR design** (`iir_lowpass`, `iir_highpass`, `iir_bandpass`,
+  `iir_bandstop`) takes an explicit sampling frequency `fs` whose default is
+  `2.0`. If `fs` is omitted, the cutoff frequency is interpreted as
+  **normalized to Nyquist**, so the valid range is `0..1` (0 = DC, 1 =
+  Nyquist). Pass a real `fs` in Hz to specify cutoffs directly in Hz.
+* **FIR design** always uses frequency **normalized to the sampling
+  frequency** (cycles per sample), so the valid range is `0..0.5` (0 = DC,
+  0.5 = Nyquist). There is no `fs` parameter.
+
+## Frequency
+
+### Frequency (Hz)
+
+The number of cycles of a periodic signal per unit time, measured in **hertz**
+(Hz = cycles per second). For a sinusoid $x(t) = \sin(2\pi f t)$, $f$ is the
+ordinary frequency in Hz. In sampled systems the highest representable
+frequency is the **Nyquist frequency** $f_s/2$, where $f_s$ is the sampling
+rate in samples per second.
+
+### Normalized frequency
+
+A dimensionless ratio of a signal frequency to a reference frequency (usually
+the sampling rate $f_s$). Normalized frequency lets DSP math be written without
+committing to a specific sample rate. The two common conventions are:
+
+* **Cycles per sample** — $f' = f / f_s$, ranging over $[0, \tfrac{1}{2}]$ for
+  real signals (Nyquist at $\tfrac{1}{2}$). Some toolboxes instead normalize by
+  $f_s/2$, giving a range of $[0, 1]$ in *half-cycles per sample*.
+* **Frequency bins** — $f \cdot N / f_s$, used when sampling the spectrum at
+  $N$ points; the Nyquist bin sits at index $N/2$.
+
+For example, with $f = 1\text{ kHz}$ and $f_s = 44100\text{ Hz}$, the
+cycles-per-sample value is $1000/44100 \approx 0.02268$.
+
+### Angular frequency
+
+The rate of phase rotation, denoted $\omega$ and measured in **radians per
+second** (rad/s). It relates to ordinary frequency by $\omega = 2\pi f$. In
+discrete-time systems it is normalized to **radians per sample** as
+$\omega' = \omega / f_s = 2\pi f / f_s$, ranging over $[0, \pi]$ for real
+signals with the Nyquist frequency at $\pi$. This is the form that appears in
+the DFT kernel $e^{-j\omega' n}$ and in KFR's filter and oscillator APIs.
+
 ## Sample rate conversion
 
 ### Polyphase sample rate conversion
