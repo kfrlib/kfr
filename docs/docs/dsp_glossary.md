@@ -222,7 +222,7 @@ A function multiplied point-wise with a block of samples before an FFT to
 reduce spectral leakage caused by the block's finite extent. Common windows
 include Hann, Hamming, Blackman, and Kaiser, each trading main-lobe width
 against side-lobe level. KFR provides a range of windows; see the
-[window example](window.md).
+[window example](window_gallery.md).
 
 ### Goertzel algorithm
 
