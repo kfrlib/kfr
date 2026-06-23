@@ -395,6 +395,7 @@ set(
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/ebu.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/fir.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/goertzel.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/dsp/iir_design.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/mixdown.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/oscillators.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/sample_rate_conversion.cpp

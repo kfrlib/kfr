@@ -1099,27 +1099,22 @@ KFR_FUNCTION univector<complex<double>> cplxreal(const univector<complex<double>
 KFR_FUNCTION size_t nearest_real_or_complex(const univector<complex<double>>& list,
                                             const complex<double>& val, bool mustbereal = true)
 {
-    univector<complex<double>> filtered;
-    for (complex<double> v : list)
-    {
-        if (isreal(v) == mustbereal)
-        {
-            filtered.push_back(v);
-        }
-    }
-    KFR_ASSERT(!filtered.empty());
-    if (filtered.empty())
+    KFR_ASSERT(!list.empty());
+    if (list.empty())
         return std::numeric_limits<size_t>::max();
 
-    size_t minidx = 0;
-    double minval = cabs(val - filtered[0]);
-    for (size_t i = 1; i < filtered.size(); i++)
+    size_t minidx = std::numeric_limits<size_t>::max();
+    double minval = std::numeric_limits<double>::max();
+    for (size_t i = 0; i < list.size(); i++)
     {
-        double newminval = cabs(val - filtered[i]);
-        if (newminval < minval)
+        if (isreal(list[i]) == mustbereal)
         {
-            minval = newminval;
-            minidx = i;
+            double newminval = cabs(val - list[i]);
+            if (newminval < minval)
+            {
+                minval = newminval;
+                minidx = i;
+            }
         }
     }
     return minidx;
@@ -1195,7 +1190,7 @@ template <typename T>
 KFR_FUNCTION iir_params<T> to_sos(const zpk& filter)
 {
     if (filter.p.empty() && filter.z.empty())
-        return { biquad_section<T>(filter.k, T(0.), T(0.), T(1.), T(0.), 0) };
+        return { biquad_section<T>(T(1.), T(0.), T(0.), static_cast<T>(filter.k), T(0.), T(0.)) };
 
     zpk filt      = filter;
     size_t length = std::max(filter.p.size(), filter.z.size());
@@ -1284,7 +1279,7 @@ KFR_FUNCTION iir_params<T> to_sos(const zpk& filter)
                 if (!isreal(z1))
                 {
                     z2     = cconj(z1);
-                    p2_idx = internal::nearest_real_or_complex(filt.z, p1, true);
+                    p2_idx = internal::nearest_real_or_complex(filt.p, z1, true);
                     p2     = filt.p[p2_idx];
                     KFR_ASSERT(isreal(p2));
                 }
