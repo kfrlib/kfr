@@ -266,15 +266,15 @@ TEST_CASE("to_sos")
         // iir(signal, zpk) internally calls to_sos; verify it matches explicit to_sos path.
         constexpr size_t N = 32;
         univector<double, N> impulse(0.0);
-        impulse[0]             = 1.0;
-        zpk filt               = iir_lowpass(butterworth(4), 0.1);
-        iir_params<double> sos = to_sos<double>(filt);
+        impulse[0]            = 1.0;
+        zpk filt              = iir_lowpass(butterworth(4), 0.1);
+        iir_params<fbase> sos = to_sos<fbase>(filt);
 
-        univector<double, N> out_sos = iir(impulse, sos);
-        univector<double, N> out_zpk = truncate(iir(impulse, filt), N);
+        univector<fbase, N> out_sos = iir(impulse, sos);
+        univector<fbase, N> out_zpk = truncate(iir(impulse, filt), N);
 
         for (size_t i = 0; i < N; ++i)
-            CHECK(out_sos[i] == Approx(out_zpk[i]).margin(1e-12));
+            CHECK(out_sos[i] == Approx(out_zpk[i]).margin(choose_const<fbase>(1e-12f, 1e-6)));
     }
 
     SECTION("chebyshev1: ripple in passband, steep rolloff")
