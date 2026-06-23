@@ -95,18 +95,30 @@ void reference_dft_nonpo2(complex<T>* out, const complex<T>* in, size_t size, bo
     if (size < 2)
         return;
     {
+        // Kahan summation for improved accuracy
         complex<T> sum = 0;
+        complex<T> c   = 0;
         for (size_t j = 0; j < size; j++)
-            sum += in[j * in_delta];
+        {
+            const complex<T> y = in[j * in_delta] - c;
+            const complex<T> t = sum + y;
+            c                  = (t - sum) - y;
+            sum                = t;
+        }
         out[0] = sum;
     }
     for (size_t i = 1; i < size; i++)
     {
+        // Kahan summation for improved accuracy
         complex<T> sum = in[0];
+        complex<T> c   = 0;
         for (size_t j = 1; j < size; j++)
         {
-            complex<T> tw = std::exp(w * (static_cast<T>(i) * j / size));
-            sum += tw * in[j * in_delta];
+            const complex<T> tw = std::exp(w * (static_cast<T>(i) * j / size));
+            const complex<T> y  = tw * in[j * in_delta] - c;
+            const complex<T> t  = sum + y;
+            c                   = (t - sum) - y;
+            sum                 = t;
         }
         out[i * out_delta] = sum;
     }
