@@ -2956,7 +2956,7 @@ struct bfly_parallel_bfly_base<Radix, T, N, bfly_twiddles_type::vector>
 };
 
 template <size_t Radix, typename T, size_t N, bool inverse, bfly_twiddles_type twiddles, dft_decomp decomp,
-          bool in_split, bool out_split, size_t prefetch = 0>
+          bool in_split, bool out_split, size_t prefetch = 0, bool inplace = true>
 struct bfly_parallel_bfly : bfly_parallel_bfly_base<Radix, T, N, twiddles>
 {
     constexpr static bool split_format = in_split || out_split;
@@ -2975,12 +2975,23 @@ struct bfly_parallel_bfly : bfly_parallel_bfly_base<Radix, T, N, twiddles>
         }
     }
 
-    complex<T>* inout;
+    complex<T>* out;
+    const complex<T>* in;
     size_t stride;
 
-    KFR_MEM_INTRINSIC bfly_parallel_bfly(complex<T>* inout, size_t stride, const std::complex<T>* tw)
+    complex<T>* get_out() const noexcept { return out; }
+    const complex<T>* get_in() const noexcept
+    {
+        if constexpr (inplace)
+            return out;
+        else
+            return in;
+    }
+
+    KFR_MEM_INTRINSIC bfly_parallel_bfly(complex<T>* out, const complex<T>* in, size_t stride,
+                                         const std::complex<T>* tw)
         requires(twiddles != bfly_twiddles_type::none)
-        : inout(inout), stride(stride)
+        : out(out), in(in), stride(stride)
     {
         if constexpr (twiddles == bfly_twiddles_type::scalar)
         {
@@ -2993,9 +3004,9 @@ struct bfly_parallel_bfly : bfly_parallel_bfly_base<Radix, T, N, twiddles>
             this->tw = tw;
         }
     }
-    KFR_MEM_INTRINSIC bfly_parallel_bfly(complex<T>* inout, size_t stride)
+    KFR_MEM_INTRINSIC bfly_parallel_bfly(complex<T>* out, const complex<T>* in, size_t stride)
         requires(twiddles == bfly_twiddles_type::none)
-        : inout(inout), stride(stride)
+        : out(out), in(in), stride(stride)
     {
     }
 
@@ -3041,25 +3052,26 @@ struct bfly_parallel_bfly : bfly_parallel_bfly_base<Radix, T, N, twiddles>
         cvec<T, N> w;
         if constexpr (I == 0 && twiddles != bfly_twiddles_type::matrix)
         {
-            w = deinterleave(cread_prefetch<N, prefetch>(this->inout));
+            w = deinterleave(cread_prefetch<N, prefetch>(this->get_in()));
         }
         else if constexpr (decomp == dft_decomp::dit)
         {
             constexpr size_t J = br(I);
             if constexpr (twiddles != bfly_twiddles_type::none)
             {
-                w = cmuli<inverse>(cbool<split_format>,
-                                   deinterleave(cread_prefetch<N, prefetch>(this->inout + J * this->stride)),
-                                   get_tw<I>());
+                w = cmuli<inverse>(
+                    cbool<split_format>,
+                    deinterleave(cread_prefetch<N, prefetch>(this->get_in() + J * this->stride)),
+                    get_tw<I>());
             }
             else
             {
-                w = deinterleave(cread_prefetch<N, prefetch>(this->inout + J * this->stride));
+                w = deinterleave(cread_prefetch<N, prefetch>(this->get_in() + J * this->stride));
             }
         }
         else
         {
-            w = deinterleave(cread_prefetch<N, prefetch>(this->inout + I * this->stride));
+            w = deinterleave(cread_prefetch<N, prefetch>(this->get_in() + I * this->stride));
         }
         return w;
     }
@@ -3069,24 +3081,24 @@ struct bfly_parallel_bfly : bfly_parallel_bfly_base<Radix, T, N, twiddles>
     {
         if constexpr (I == 0 && twiddles != bfly_twiddles_type::matrix)
         {
-            cwrite<N, false>(this->inout, interleave(w));
+            cwrite<N, false>(this->get_out(), interleave(w));
         }
         else if constexpr (decomp == dft_decomp::dif)
         {
             constexpr size_t J = br(I);
             if constexpr (twiddles != bfly_twiddles_type::none)
             {
-                cwrite<N, false>(this->inout + J * this->stride,
+                cwrite<N, false>(this->get_out() + J * this->stride,
                                  interleave(cmuli<inverse>(cbool<split_format>, w, get_tw<I>())));
             }
             else
             {
-                cwrite<N, false>(this->inout + J * this->stride, interleave(w));
+                cwrite<N, false>(this->get_out() + J * this->stride, interleave(w));
             }
         }
         else
         {
-            cwrite<N, false>(this->inout + I * this->stride, interleave(w));
+            cwrite<N, false>(this->get_out() + I * this->stride, interleave(w));
         }
     }
 
@@ -3119,7 +3131,12 @@ struct bfly_parallel_bfly : bfly_parallel_bfly_base<Radix, T, N, twiddles>
 
     KFR_INLINE_MEMBER void begin() noexcept {}
     KFR_INLINE_MEMBER void end() noexcept {}
-    KFR_INLINE_MEMBER void advance() noexcept { this->inout += N; }
+    KFR_INLINE_MEMBER void advance() noexcept
+    {
+        if constexpr (!inplace)
+            this->in += N;
+        this->out += N;
+    }
 };
 
 } // namespace intr

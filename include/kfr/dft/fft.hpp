@@ -1506,6 +1506,23 @@ template <typename T, dft_algorithm algo>
 bool ngfft_initialize(ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>);
 
 /**
+ * @brief Executes the FFT with separate input and output buffers.
+ *
+ * The transform reads from the input buffer and writes the result to the output
+ * buffer. No scaling is applied.
+ *
+ * @tparam T Floating-point scalar type.
+ * @tparam algo FFT algorithm.
+ * @tparam inverse If true, performs the inverse FFT; otherwise the forward FFT.
+ * @param plan The initialized plan.
+ * @param out Output buffer of `2^plan.l2fftsize` complex elements.
+ * @param in Input buffer of `2^plan.l2fftsize` complex elements.
+ */
+template <typename T, dft_algorithm algo, bool inverse>
+void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, cbool_t<inverse>, complex<T>* out,
+                   const complex<T>* in);
+
+/**
  * @brief Executes the FFT in-place on the given complex buffer.
  *
  * The transform is always performed in-place: the input buffer is overwritten
@@ -1518,8 +1535,11 @@ bool ngfft_initialize(ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>);
  * @param inout Input/output buffer of `2^plan.l2fftsize` complex elements.
  */
 template <typename T, dft_algorithm algo, bool inverse>
-void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, cbool_t<inverse>,
-                   complex<T>* inout);
+KFR_INLINE void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, cbool_t<inverse>,
+                              complex<T>* inout)
+{
+    return ngfft_execute<T, algo, inverse>(plan, cval<dft_algorithm, algo>, cbool_t<inverse>(), inout, inout);
+}
 
 /**
  * @brief Executes the FFT in-place with a runtime direction flag.
@@ -1527,16 +1547,36 @@ void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, cbool
  * @param inverse If true, performs the inverse FFT; otherwise the forward FFT.
  */
 template <typename T, dft_algorithm algo>
-inline void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, bool inverse,
-                          complex<T>* inout)
+KFR_INLINE void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, bool inverse,
+                              complex<T>* inout)
 {
     if (inverse)
     {
-        return ngfft_execute<T, algo, true>(plan, cval<dft_algorithm, algo>, ctrue, inout);
+        return ngfft_execute<T, algo, true>(plan, cval<dft_algorithm, algo>, ctrue, inout, inout);
     }
     else
     {
-        return ngfft_execute<T, algo, false>(plan, cval<dft_algorithm, algo>, cfalse, inout);
+        return ngfft_execute<T, algo, false>(plan, cval<dft_algorithm, algo>, cfalse, inout, inout);
+    }
+}
+
+/**
+ * @brief Executes the FFT with separate input and output buffers and a runtime direction flag.
+ * @copydetails ngfft_execute(const ngfft_plan<T>&, cval_t<dft_algorithm,algo>, cbool_t<inverse>, complex<T>*,
+ * const complex<T>*)
+ * @param inverse If true, performs the inverse FFT; otherwise the forward FFT.
+ */
+template <typename T, dft_algorithm algo>
+KFR_INLINE void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, bool inverse,
+                              complex<T>* out, const complex<T>* in)
+{
+    if (inverse)
+    {
+        return ngfft_execute<T, algo, true>(plan, cval<dft_algorithm, algo>, ctrue, out, in);
+    }
+    else
+    {
+        return ngfft_execute<T, algo, false>(plan, cval<dft_algorithm, algo>, cfalse, out, in);
     }
 }
 
@@ -1585,13 +1625,36 @@ inline bool ngfft_initialize(ngfft_plan<T>& plan, dft_algorithm algo = dft_algor
  * @param algo FFT algorithm (defaults to `fourstep`).
  */
 template <typename T, bool inverse>
-inline void ngfft_execute(const ngfft_plan<T>& plan, cbool_t<inverse>, complex<T>* inout,
-                          dft_algorithm algo = dft_algorithm::fourstep)
+KFR_INLINE void ngfft_execute(const ngfft_plan<T>& plan, cbool_t<inverse>, complex<T>* inout,
+                              dft_algorithm algo = dft_algorithm::fourstep)
 {
     switch (algo)
     {
     case dft_algorithm::fourstep:
-        return ngfft_execute(plan, cval<dft_algorithm, dft_algorithm::fourstep>, cbool_t<inverse>(), inout);
+        return ngfft_execute(plan, cval<dft_algorithm, dft_algorithm::fourstep>, cbool_t<inverse>(), inout,
+                             inout);
+    default:
+        KFR_UNREACHABLE;
+    }
+}
+
+/**
+ * @brief Executes the FFT with separate input and output buffers, a compile-time direction and runtime
+ * algorithm.
+ * @tparam inverse If true, performs the inverse FFT; otherwise the forward FFT.
+ * @param plan The initialized plan.
+ * @param out Output buffer of `2^plan.l2fftsize` complex elements.
+ * @param in Input buffer of `2^plan.l2fftsize` complex elements.
+ * @param algo FFT algorithm (defaults to `fourstep`).
+ */
+template <typename T, bool inverse>
+KFR_INLINE void ngfft_execute(const ngfft_plan<T>& plan, cbool_t<inverse>, complex<T>* out,
+                              const complex<T>* in, dft_algorithm algo = dft_algorithm::fourstep)
+{
+    switch (algo)
+    {
+    case dft_algorithm::fourstep:
+        return ngfft_execute(plan, cval<dft_algorithm, dft_algorithm::fourstep>, cbool_t<inverse>(), out, in);
     default:
         KFR_UNREACHABLE;
     }
@@ -1605,13 +1668,31 @@ inline void ngfft_execute(const ngfft_plan<T>& plan, cbool_t<inverse>, complex<T
  * @param algo FFT algorithm (defaults to `fourstep`).
  */
 template <typename T>
-inline void ngfft_execute(const ngfft_plan<T>& plan, bool inverse, complex<T>* inout,
-                          dft_algorithm algo = dft_algorithm::fourstep)
+KFR_INLINE void ngfft_execute(const ngfft_plan<T>& plan, bool inverse, complex<T>* inout,
+                              dft_algorithm algo = dft_algorithm::fourstep)
 {
     if (inverse)
-        return ngfft_execute(plan, ctrue, inout, algo);
+        return ngfft_execute(plan, ctrue, inout, inout, algo);
     else
-        return ngfft_execute(plan, cfalse, inout, algo);
+        return ngfft_execute(plan, cfalse, inout, inout, algo);
+}
+
+/**
+ * @brief Executes the FFT with separate input and output buffers, runtime direction and algorithm.
+ * @param plan The initialized plan.
+ * @param inverse If true, performs the inverse FFT; otherwise the forward FFT.
+ * @param out Output buffer of `2^plan.l2fftsize` complex elements.
+ * @param in Input buffer of `2^plan.l2fftsize` complex elements.
+ * @param algo FFT algorithm (defaults to `fourstep`).
+ */
+template <typename T>
+KFR_INLINE void ngfft_execute(const ngfft_plan<T>& plan, bool inverse, complex<T>* out, const complex<T>* in,
+                              dft_algorithm algo = dft_algorithm::fourstep)
+{
+    if (inverse)
+        return ngfft_execute(plan, ctrue, out, in, algo);
+    else
+        return ngfft_execute(plan, cfalse, out, in, algo);
 }
 
 #ifdef KFR_CLASSIC_FFT

@@ -66,8 +66,8 @@ template <typename T, dft_algorithm algo>
 bool ngfft_initialize(ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>);
 
 template <typename T, dft_algorithm algo, bool inverse>
-void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, cbool_t<inverse>,
-                   complex<T>* inout);
+void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, cbool_t<inverse>, complex<T>* out,
+                   const complex<T>* in);
 
 } // namespace impl
 
@@ -329,10 +329,8 @@ struct fft_ng_stage_impl : dft_stage<T>
     template <bool inverse>
     KFR_MEM_INTRINSIC void do_execute(complex<T>* out, const complex<T>* in, u8*)
     {
-        if (in != out) [[unlikely]]
-            builtin_memcpy(out, in, sizeof(complex<T>) * this->stage_size);
         ngfft_plan<T> plan{ uint8_t(this->user), ptr_cast<complex<T>>(this->data) };
-        impl::ngfft_execute(plan, cval<dft_algorithm, algo>, cbool_t<inverse>(), out);
+        impl::ngfft_execute(plan, cval<dft_algorithm, algo>, cbool_t<inverse>(), out, in);
     }
 };
 

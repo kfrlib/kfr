@@ -41,7 +41,8 @@ template <typename T, dft_family family>
 using dft_initializer = void (*)(ngfft_plan<T>& plan, const dft_config<family>& cfg) noexcept;
 
 template <typename T>
-using dft_function = void (*)(const ngfft_plan<T>& plan, std::complex<T>* inout) noexcept;
+using dft_function = void (*)(const ngfft_plan<T>& plan, std::complex<T>* out,
+                              const std::complex<T>* in) noexcept;
 
 template <typename T, dft_family family>
 struct dft_specialization
@@ -75,9 +76,9 @@ constexpr uint8_t numfftsizes() noexcept
 } // namespace dft_internal
 
 template <uint8_t l2size, bool inverse, typename T>
-void ng_do_small_dft(const ngfft_plan<T>& plan, std::complex<T>* inout) noexcept
+void ng_do_small_dft(const ngfft_plan<T>& plan, std::complex<T>* out, const std::complex<T>* in) noexcept
 {
-    intr::bfly_small<l2size, inverse>(inout, inout);
+    intr::bfly_small<l2size, inverse>(out, in);
 }
 
 template <dft_traits traits, uint8_t numfftsizes = dft_internal::numfftsizes<traits>()>
@@ -238,7 +239,7 @@ bool ngfft_initialize_internal(ngfft_plan<typename traits::type>& plan)
 
 template <dft_traits traits, bool inverse>
 void ngfft_execute_internal(const ngfft_plan<typename traits::type>& plan, cbool_t<inverse>,
-                            complex<typename traits::type>* inout)
+                            complex<typename traits::type>* out, const complex<typename traits::type>* in)
 {
     using namespace dft_internal;
     if (plan.l2fftsize >= specs<traits>.size()) [[unlikely]]
@@ -247,9 +248,9 @@ void ngfft_execute_internal(const ngfft_plan<typename traits::type>& plan, cbool
     }
 
     if constexpr (inverse)
-        specs<traits>[plan.l2fftsize].backward(plan, inout);
+        specs<traits>[plan.l2fftsize].backward(plan, out, in);
     else
-        specs<traits>[plan.l2fftsize].forward(plan, inout);
+        specs<traits>[plan.l2fftsize].forward(plan, out, in);
 }
 
 template <dft_traits traits>
@@ -282,12 +283,12 @@ bool ngfft_initialize(ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>)
 }
 
 template <typename T, dft_algorithm algo, bool inverse>
-void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, cbool_t<inverse>,
-                   complex<T>* inout)
+void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, cbool_t<inverse>, complex<T>* out,
+                   const complex<T>* in)
 {
     using traits = ngfft_traits<algo, T>;
 
-    return ngfft_execute_internal<traits>(plan, cbool<inverse>, inout);
+    return ngfft_execute_internal<traits>(plan, cbool<inverse>, out, in);
 }
 
 } // namespace impl

@@ -339,8 +339,7 @@ void sandwich_prepare(complex<typename traits::type>* twiddles, uint8_t l2fftsiz
 
 template <dft_traits traits, dft_decomp dir, dft_sandwich_half half, typename Fn>
 KFR_INTRINSIC const complex<typename traits::type>* sandwich_iterate_recursive(
-    uint8_t l2fftsize, size_t total_width, complex<typename traits::type>* inout,
-    const complex<typename traits::type>* twiddle, Fn&& fn)
+    uint8_t l2fftsize, size_t total_width, const complex<typename traits::type>* twiddle, Fn&& fn)
 {
     using T                       = typename traits::type;
     constexpr uint8_t l2baseradix = traits::l2baseradix;
@@ -355,14 +354,10 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_iterate_recursive(
             twiddle                    = saved_twiddle;
             const size_t process_width = std::min(slice_width, total_width - slice_offset);
             // Avoiding overhead of recursion
-            sandwich_iterate<traits, dir, half>(l2fftsize,
-                                                [&]<uint8_t l2passradix, uint8_t l2bf, uint8_t l2bl>(
-                                                    const bfly_pass<l2passradix, l2bf, l2bl>& pass)
-                                                    KFR_INLINE_LAMBDA
-                                                {
-                                                    twiddle = fn(pass, process_width, total_width,
-                                                                 pass.blocks(), inout, slice_offset, twiddle);
-                                                });
+            sandwich_iterate<traits, dir, half>(
+                l2fftsize, [&]<uint8_t l2passradix, uint8_t l2bf, uint8_t l2bl>(
+                               const bfly_pass<l2passradix, l2bf, l2bl>& pass) KFR_INLINE_LAMBDA
+                { twiddle = fn(pass, process_width, total_width, pass.blocks(), slice_offset, twiddle); });
             slice_offset += slice_width;
             if (slice_offset >= total_width)
                 break;
@@ -388,16 +383,17 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_iterate_recursive(
                     const bfly_pass pass(cl2radix<half.l2remaining>{}, cl2butterflies<0>{},
                                          uint8_t(l2fftsize - half.l2remaining));
                     offset -= total_width << (l2baseradix + pass.l2block_size());
-                    twiddle = fn(pass, process_width, total_width, R, inout, offset, saved_twiddle);
+                    // DIT leaves are first-touch passes: they read fresh input data.
+                    twiddle = fn(pass, process_width, total_width, R, offset, saved_twiddle);
                 },
                 [&](uint8_t depth) KFR_INLINE_LAMBDA { // Non-leaf: one sub-problem at current depth
                     const uint8_t l2bl = uint8_t(depth * l2baseradix);
                     const bfly_pass pass(cl2radix<l2baseradix>{}, uint8_t(l2fmb - l2bl), l2bl);
-                    twiddle = fn(pass, process_width, total_width, 1, inout, offset, twiddle);
+                    twiddle = fn(pass, process_width, total_width, 1, offset, twiddle);
                 },
                 [&]() KFR_INLINE_LAMBDA { // Root: one block, all butterflies
                     const bfly_pass pass(cl2radix<l2baseradix>{}, l2fmb, cl2blocks<0>{});
-                    twiddle = fn(pass, process_width, total_width, 1, inout, offset, twiddle);
+                    twiddle = fn(pass, process_width, total_width, 1, offset, twiddle);
                 });
         }
         else // DIF
@@ -410,17 +406,18 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_iterate_recursive(
                 l2items,
                 [&]() KFR_INLINE_LAMBDA { // Root: one block, all butterflies
                     const bfly_pass pass(cl2radix<l2baseradix>{}, l2fmb, cl2blocks<0>{});
-                    twiddle = fn(pass, process_width, total_width, 1, inout, offset, twiddle);
+                    // DIF root is the first-touch pass: it reads fresh input data spanning all blocks.
+                    twiddle = fn(pass, process_width, total_width, 1, offset, twiddle);
                 },
                 [&](uint8_t depth) KFR_INLINE_LAMBDA { // Non-leaf: one sub-problem at current depth
                     const uint8_t l2bl = uint8_t(depth * l2baseradix);
                     const bfly_pass pass(cl2radix<l2baseradix>{}, uint8_t(l2fmb - l2bl), l2bl);
-                    twiddle = fn(pass, process_width, total_width, 1, inout, offset, twiddle);
+                    twiddle = fn(pass, process_width, total_width, 1, offset, twiddle);
                 },
                 [&](uint8_t levels_up) KFR_INLINE_LAMBDA { // Merged leaf: all R siblings at once
                     const bfly_pass pass(cl2radix<half.l2remaining>{}, cl2butterflies<0>{},
                                          uint8_t(l2fftsize - half.l2remaining));
-                    fn(pass, process_width, total_width, R, inout, offset, twiddle);
+                    fn(pass, process_width, total_width, R, offset, twiddle);
                     offset += total_width << (l2baseradix + pass.l2block_size());
                     if (levels_up < max_depth)
                     {
@@ -435,10 +432,10 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_iterate_recursive(
 }
 
 template <dft_traits traits, bool inverse = false, dft_decomp dir, dft_sandwich_half half,
-          bool matrix_twiddles, uint8_t l2fixedstride>
+          bool matrix_twiddles, uint8_t l2fixedstride, bool inplace>
 KFR_INTRINSIC const complex<typename traits::type>* sandwich_half(
-    uint8_t l2size, size_t stride, complex<typename traits::type>* inout,
-    const complex<typename traits::type>* twiddle)
+    uint8_t l2size, size_t stride, complex<typename traits::type>* out_,
+    const complex<typename traits::type>* in_, const complex<typename traits::type>* twiddle)
 {
     constexpr size_t prefetch = 0; // cfg.prefetch_offset;
     using namespace intr;
@@ -446,14 +443,21 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_half(
     using T = typename traits::type;
 
     return sandwich_iterate_recursive<traits, dir, half>(
-        l2size, stride, inout, twiddle,
-        [l2size]<uint8_t l2passradix, uint8_t l2bf, uint8_t l2bl>(
+        l2size, stride, twiddle,
+        [l2size, in_, out_]<uint8_t l2passradix, uint8_t l2bf, uint8_t l2bl>(
             const bfly_pass<l2passradix, l2bf, l2bl>& pass, size_t lane_width, size_t stride, size_t blocks,
-            complex<T>* inout, size_t offset, const complex<T>* twiddle) KFR_INLINE_LAMBDA
+            size_t offset, const complex<T>* twiddle) KFR_INLINE_LAMBDA
         {
-            inout += offset;
+            using pass_t = std::decay_t<decltype(pass)>;
+            // Only the first pass to touch a given region reads the (possibly separate) input buffer.
+            // Subsequent passes operate in place on the output buffer where the data now lives.
+            const complex<T>* in =
+                inplace
+                    ? out_ + offset
+                    : ((pass_t::pass_type(dir) & dft_pass_type::first) == dft_pass_type::first ? in_ : out_) +
+                          offset;
+            complex<T>* out = out_ + offset;
             KFR_ASSUME(blocks > 0);
-            using pass_t                 = std::decay_t<decltype(pass)>;
             constexpr size_t R           = pass_t::radix();
             constexpr uint8_t l2maxwidth = l2fixedstride ? l2fixedstride : traits::l2basewidth;
             constexpr size_t w           = 1ull << std::min(traits::l2basewidth, l2maxwidth);
@@ -482,13 +486,13 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_half(
                 bfly_loop<R, T, w, u>( //
                     lane_width, //
                     bfly_parallel_bfly<R, T, w, inverse, bfly_twiddles_type::none, dir, false, false,
-                                       prefetch>{ inout, stride });
+                                       prefetch, inplace>{ out, in, stride });
             }
             else if constexpr (pass_t::has_one_block())
             {
                 // DIF: first pass, DIT: last pass
                 const size_t pass_stride = stride << pass.l2stride();
-                complex<T>* io           = inout;
+                size_t offs              = 0;
 
                 size_t butterflies = pass.butterflies();
                 KFR_ASSUME(butterflies > 0);
@@ -497,9 +501,9 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_half(
                     bfly_loop<R, T, w, u>( //
                         lane_width, //
                         bfly_parallel_bfly<R, T, w, inverse, bfly_twiddles_type::none, dir,
-                                           dir == dft_decomp::dit, dir == dft_decomp::dif, prefetch>{
-                            io, pass_stride });
-                    io += stride;
+                                           dir == dft_decomp::dit, dir == dft_decomp::dif, prefetch, inplace>{
+                            out + offs, in + offs, pass_stride });
+                    offs += stride;
                 }
 
                 for (size_t e = 1; e < butterflies; ++e)
@@ -507,17 +511,17 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_half(
                     bfly_loop<R, T, w, u>( //
                         lane_width, //
                         bfly_parallel_bfly<R, T, w, inverse, bfly_twiddles_type::scalar, dir,
-                                           dir == dft_decomp::dit, dir == dft_decomp::dif, prefetch>{
-                            io, pass_stride, twiddle });
+                                           dir == dft_decomp::dit, dir == dft_decomp::dif, prefetch, inplace>{
+                            out + offs, in + offs, pass_stride, twiddle });
                     twiddle += R - 1;
-                    io += stride;
+                    offs += stride;
                 }
             }
             else if constexpr (pass_t::has_one_butterfly())
             {
                 // DIF: last pass, DIT: first pass
                 // 1 butterfly per block, no twiddles
-                complex<T>* io = inout;
+                size_t offs = 0;
                 KFR_ASSUME(blocks > 0);
 
                 if constexpr (matrix_twiddles)
@@ -530,13 +534,14 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_half(
                     for (size_t b = 0; b < blocks; ++b)
                     {
                         bfly_parallel_bfly<R, T, w, inverse, bfly_twiddles_type::matrix, dir, false, true,
-                                           prefetch>
-                            bf{ io, stride, twiddle + ((b + b_offset) * stride + lane_offset) * R };
+                                           prefetch, inplace>
+                            bf{ out + offs, in + offs, stride,
+                                twiddle + ((b + b_offset) * stride + lane_offset) * R };
 
                         bfly_loop<R, T, w, u>( //
                             lane_width, //
                             bf);
-                        io += stride << pass.l2block_size();
+                        offs += stride << pass.l2block_size();
                     }
                     twiddle += pass.blocks() * stride * R;
                 }
@@ -547,10 +552,10 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_half(
                         bfly_loop<R, T, w, u>( //
                             lane_width, //
                             bfly_parallel_bfly<R, T, w, inverse, bfly_twiddles_type::none, dir,
-                                               dir == dft_decomp::dif, dir == dft_decomp::dit, prefetch>{
-                                io, stride });
+                                               dir == dft_decomp::dif, dir == dft_decomp::dit, prefetch,
+                                               inplace>{ out + offs, in + offs, stride });
 
-                        io += stride << pass.l2block_size();
+                        offs += stride << pass.l2block_size();
                     }
                 }
             }
@@ -558,7 +563,7 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_half(
             {
                 // Middle pass
                 const size_t pass_stride = stride << pass.l2stride();
-                complex<T>* io           = inout;
+                size_t offs              = 0;
 
                 size_t butterflies = pass.butterflies();
                 KFR_ASSUME(butterflies > 0);
@@ -566,32 +571,36 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_half(
 
                 {
                     bfly_parallel_bfly<R, T, w, inverse, bfly_twiddles_type::none, dir, split_format,
-                                       split_format, prefetch>
-                        bfly{ io, pass_stride };
+                                       split_format, prefetch, inplace>
+                        bfly{ out + offs, in + offs, pass_stride };
                     for (size_t b = 0; b < blocks; ++b)
                     {
-                        bfly.inout = io + b * io_step;
+                        bfly.out = out + offs + b * io_step;
+                        if (!inplace)
+                            bfly.in = in + offs + b * io_step;
                         bfly_loop<R, T, w, u>( //
                             lane_width, //
                             bfly);
                     }
-                    io += stride;
+                    offs += stride;
                 }
 
                 for (size_t e = 1; e < butterflies; ++e)
                 {
                     bfly_parallel_bfly<R, T, w, inverse, bfly_twiddles_type::scalar, dir, split_format,
-                                       split_format, prefetch>
-                        bfly{ io, pass_stride, twiddle };
+                                       split_format, prefetch, inplace>
+                        bfly{ out + offs, in + offs, pass_stride, twiddle };
                     for (size_t b = 0; b < blocks; ++b)
                     {
-                        bfly.inout = io + b * io_step;
+                        bfly.out = out + offs + b * io_step;
+                        if (!inplace)
+                            bfly.in = in + offs + b * io_step;
                         bfly_loop<R, T, w, u>( //
                             lane_width, //
                             bfly);
                     }
                     twiddle += R - 1;
-                    io += stride;
+                    offs += stride;
                 }
             }
             return twiddle;
@@ -599,8 +608,8 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_half(
 }
 
 template <dft_traits traits, bool inverse = false, dft_config<dft_family::fourstep> cfg>
-KFR_NOINLINE void sandwich(complex<typename traits::type>* inout, uint8_t l2fftsize,
-                           const complex<typename traits::type>* twiddle)
+KFR_NOINLINE void sandwich(complex<typename traits::type>* out, const complex<typename traits::type>* in,
+                           uint8_t l2fftsize, const complex<typename traits::type>* twiddle)
 {
     using namespace intr;
 
@@ -620,15 +629,15 @@ KFR_NOINLINE void sandwich(complex<typename traits::type>* inout, uint8_t l2ffts
     constexpr uint8_t l2fixedstride2 = cfg.dit.l2size != UINT8_MAX ? cfg.dit.l2size : 0;
 
     // DIF
-    twiddle = sandwich_half<traits, inverse, dft_decomp::dif, cfg.dif, false, l2fixedstride2>(l2r1, r2, inout,
-                                                                                              twiddle);
+    twiddle = sandwich_half<traits, inverse, dft_decomp::dif, cfg.dif, false, l2fixedstride2, false>(
+        l2r1, r2, out, in, twiddle);
 
     const size_t fftsize = 1ull << l2fftsize;
 
     if constexpr (cfg.l2fftsize() != UINT8_MAX)
-        intr::br(std::span<complex<T>, (1ull << cfg.l2fftsize())>{ inout, 1ull << cfg.l2fftsize() });
+        intr::br(std::span<complex<T>, (1ull << cfg.l2fftsize())>{ out, 1ull << cfg.l2fftsize() });
     else
-        intr::br(std::span<complex<T>>{ inout, fftsize });
+        intr::br(std::span<complex<T>>{ out, fftsize });
 
     static_assert(!cfg.dit.single_pass || cfg.fixed_twiddles());
 
@@ -652,7 +661,7 @@ KFR_NOINLINE void sandwich(complex<typename traits::type>* inout, uint8_t l2ffts
             KFR_FOR(j, 0, r1 / w)
             {
                 constexpr size_t jj = j * w;
-                complex<T>* io      = inout + i * r1 + jj;
+                complex<T>* io      = out + i * r1 + jj;
                 cvec<T, w> v        = cread<w>(io);
                 v = cmuli<inverse>(cfalse, v, fixed_twiddle<T, w, r1 * r2, jj * ii, ii, false>());
                 cwrite<w>(io, v);
@@ -663,15 +672,15 @@ KFR_NOINLINE void sandwich(complex<typename traits::type>* inout, uint8_t l2ffts
     twiddle = align_up(twiddle, KFR_CACHE_LINE_SIZE);
 
     // DIT
-    sandwich_half<traits, inverse, dft_decomp::dit, cfg.dit, !twiddle_pass, l2fixedstride1>(l2r2, r1, inout,
-                                                                                            twiddle);
+    sandwich_half<traits, inverse, dft_decomp::dit, cfg.dit, !twiddle_pass, l2fixedstride1, true>(
+        l2r2, r1, out, out, twiddle);
 }
 
 template <dft_traits traits, dft_config<dft_family::fourstep> cfg, bool inverse>
-void ng_do_dft(const ngfft_plan<typename traits::type>& plan,
-               std::complex<typename traits::type>* inout) noexcept
+void ng_do_dft(const ngfft_plan<typename traits::type>& plan, std::complex<typename traits::type>* out,
+               const std::complex<typename traits::type>* in) noexcept
 {
-    sandwich<traits, inverse, cfg>(inout, plan.l2fftsize, plan.twiddles);
+    sandwich<traits, inverse, cfg>(out, in, plan.l2fftsize, plan.twiddles);
 }
 
 template <dft_traits traits>
@@ -688,10 +697,10 @@ constexpr size_t ng_twiddle_count(uint8_t l2fftsize, const dft_config<dft_family
 }
 
 template <dft_traits traits, dft_config<dft_family::fourstep> cfg, uint8_t l2fftsize, bool inverse>
-void ng_do_fixed_dft(const ngfft_plan<typename traits::type>& plan,
-                     std::complex<typename traits::type>* inout) noexcept
+void ng_do_fixed_dft(const ngfft_plan<typename traits::type>& plan, std::complex<typename traits::type>* out,
+                     const std::complex<typename traits::type>* in) noexcept
 {
-    sandwich<traits, inverse, cfg>(inout, l2fftsize, plan.twiddles);
+    sandwich<traits, inverse, cfg>(out, in, l2fftsize, plan.twiddles);
 }
 
 } // namespace KFR_ARCH_NAME

@@ -39,10 +39,10 @@ template size_t ngfft_twiddle_count<FLOAT>(ngfft_plan<FLOAT>&,
 template bool ngfft_initialize<FLOAT>(ngfft_plan<FLOAT>&, cval_t<dft_algorithm, dft_algorithm::fourstep>);
 
 template void ngfft_execute<FLOAT>(const ngfft_plan<FLOAT>&, cval_t<dft_algorithm, dft_algorithm::fourstep>,
-                                   cbool_t<false>, complex<FLOAT>*);
+                                   cbool_t<false>, complex<FLOAT>*, const complex<FLOAT>*);
 
 template void ngfft_execute<FLOAT>(const ngfft_plan<FLOAT>&, cval_t<dft_algorithm, dft_algorithm::fourstep>,
-                                   cbool_t<true>, complex<FLOAT>*);
+                                   cbool_t<true>, complex<FLOAT>*, const complex<FLOAT>*);
 } // namespace impl
 } // namespace KFR_ARCH_NAME
 } // namespace kfr
