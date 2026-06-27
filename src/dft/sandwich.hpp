@@ -74,7 +74,7 @@ KFR_INTRINSIC constexpr std::pair<uint8_t, uint8_t> sandwich_split_size(uint8_t 
     }
     else if (l2fftsize >= 6)
     {
-        return { l2fftsize - 4, 4 };
+        return { 4, l2fftsize - 4 };
     }
     else
     {
@@ -471,7 +471,8 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_half(
             constexpr size_t u0 = size_t(1) << std::max(int(l2fixedstride) - int(traits::l2basewidth), 0);
             constexpr size_t u  = u0 <= 4 ? u0 : 1;
 
-            constexpr bool split_format = true;
+            constexpr bool split_format      = true;
+            constexpr bool keep_split_format = false; //
 
             if constexpr (half.single_pass)
             {
@@ -533,8 +534,8 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_half(
 
                     for (size_t b = 0; b < blocks; ++b)
                     {
-                        bfly_parallel_bfly<R, T, w, inverse, bfly_twiddles_type::matrix, dir, false, true,
-                                           prefetch, inplace>
+                        bfly_parallel_bfly<R, T, w, inverse, bfly_twiddles_type::matrix, dir,
+                                           keep_split_format, true, prefetch, inplace>
                             bf{ out + offs, in + offs, stride,
                                 twiddle + ((b + b_offset) * stride + lane_offset) * R };
 
@@ -551,9 +552,10 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_half(
                     {
                         bfly_loop<R, T, w, u>( //
                             lane_width, //
-                            bfly_parallel_bfly<R, T, w, inverse, bfly_twiddles_type::none, dir,
-                                               dir == dft_decomp::dif, dir == dft_decomp::dit, prefetch,
-                                               inplace>{ out + offs, in + offs, stride });
+                            bfly_parallel_bfly < R, T, w, inverse, bfly_twiddles_type::none, dir,
+                            keep_split_format || dir == dft_decomp::dif,
+                            keep_split_format || dir == dft_decomp::dit, prefetch,
+                            inplace > { out + offs, in + offs, stride });
 
                         offs += stride << pass.l2block_size();
                     }
