@@ -114,11 +114,13 @@ void reference_dft_nonpo2(complex<T>* out, const complex<T>* in, size_t size, bo
         complex<T> c   = 0;
         for (size_t j = 1; j < size; j++)
         {
-            const complex<T> tw = std::exp(w * (static_cast<T>(i) * j / size));
-            const complex<T> y  = tw * in[j * in_delta] - c;
-            const complex<T> t  = sum + y;
-            c                   = (t - sum) - y;
-            sum                 = t;
+            unsigned long long phase_idx = (static_cast<unsigned long long>(i) * j) % size;
+            const complex<T> tw          = std::exp(w * (static_cast<T>(phase_idx) / size));
+
+            const complex<T> y = tw * in[j * in_delta] - c;
+            const complex<T> t = sum + y;
+            c                  = (t - sum) - y;
+            sum                = t;
         }
         out[i * out_delta] = sum;
     }
@@ -160,6 +162,23 @@ void reference_dft(complex<T>* out, const T* in, size_t size, size_t out_delta =
     reference_dft(tmpout.data(), tmpin.data(), size, false, 1, 1);
     for (index_t i = 0; i < size / 2 + 1; i++)
         out[i * out_delta] = tmpout[i];
+}
+
+/// @brief Performs Inverse Real DFT using reference implementation (slow, used for testing)
+template <typename T>
+void reference_dft(T* out, const complex<T>* in, size_t size, size_t out_delta = 1, size_t in_delta = 1)
+{
+    if (size < 1)
+        return;
+    std::vector<complex<T>> tmpin(size);
+    for (index_t i = 0; i < size / 2 + 1; i++)
+        tmpin[i] = in[i * in_delta];
+    for (index_t i = size / 2 + 1; i < size; i++)
+        tmpin[i] = std::conj(in[(size - i) * in_delta]);
+    std::vector<complex<T>> tmpout(size);
+    reference_dft(tmpout.data(), tmpin.data(), size, true, 1, 1);
+    for (index_t i = 0; i < size; i++)
+        out[i * out_delta] = tmpout[i].real() / size;
 }
 
 /// @brief Performs Multidimensional Complex DFT using reference implementation (slow, used for testing)
@@ -212,6 +231,30 @@ void reference_dft_md(complex<T>* out, const T* in, shape<dynamic_shape> shape, 
     for (index_t i = 0; i < std::max(index_t(1), shape.remove_back().product()); ++i)
         for (index_t j = 0; j < last; j++)
             out[(i * last + j) * out_delta] = tmpout[i * shape.back() + j];
+}
+
+/// @brief Performs Multidimensional Inverse Real DFT using reference implementation (slow, used for testing)
+template <typename T>
+void reference_dft_md(T* out, const complex<T>* in, shape<dynamic_shape> shape, bool inversion = true,
+                      size_t out_delta = 1, size_t in_delta = 1)
+{
+    index_t size = shape.product();
+    if (size < 1)
+        return;
+    index_t last = shape.back() / 2 + 1;
+    index_t rows = std::max(index_t(1), shape.remove_back().product());
+    std::vector<complex<T>> tmpin(size);
+    for (index_t i = 0; i < rows; ++i)
+    {
+        for (index_t j = 0; j < last; ++j)
+            tmpin[i * shape.back() + j] = in[(i * last + j) * in_delta];
+        for (index_t j = last; j < shape.back(); ++j)
+            tmpin[i * shape.back() + j] = std::conj(in[(i * last + (shape.back() - j)) * in_delta]);
+    }
+    std::vector<complex<T>> tmpout(size);
+    reference_dft_md(tmpout.data(), tmpin.data(), shape, inversion, 1, 1);
+    for (index_t i = 0; i < size; ++i)
+        out[i * out_delta] = tmpout[i].real() / size;
 }
 
 } // namespace kfr
