@@ -157,6 +157,12 @@ KFR_MULTI_PROTO(namespace impl {
     template <typename T, dft_algorithm algo, bool inverse>
     void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, cbool_t<inverse>,
                        complex<T>* out, const complex<T>* in);
+    template <typename T, dft_algorithm algo>
+    void ngfft_real_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, complex<T>* out,
+                            const T* in);
+    template <typename T, dft_algorithm algo>
+    void ngfft_real_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, T* out,
+                            const complex<T>* in);
 })
 
 #ifdef KFR_CLASSIC_FFT
@@ -238,8 +244,6 @@ template void dft_progressive_step(const dft_plan<double>& plan,
                                    typename dft_plan<double>::progressive& progressive);
 #endif
 
-} // namespace internal_generic
-
 template <typename T, dft_algorithm algo>
 size_t ngfft_twiddle_count(ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>)
 {
@@ -255,6 +259,18 @@ void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, cbool
                    const complex<T>* in)
 {
     KFR_MULTI_GATE(ns::impl::ngfft_execute(plan, cval<dft_algorithm, algo>, cbool<inverse>, out, in));
+}
+
+template <typename T, dft_algorithm algo>
+void ngfft_real_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, complex<T>* out, const T* in)
+{
+    KFR_MULTI_GATE(ns::impl::ngfft_real_execute(plan, cval<dft_algorithm, algo>, out, in));
+}
+
+template <typename T, dft_algorithm algo>
+void ngfft_real_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, T* out, const complex<T>* in)
+{
+    KFR_MULTI_GATE(ns::impl::ngfft_real_execute(plan, cval<dft_algorithm, algo>, out, in));
 }
 
 template size_t ngfft_twiddle_count<float, dft_algorithm::fourstep>(
@@ -275,6 +291,10 @@ template void ngfft_execute<float, dft_algorithm::fourstep, false>(
 template void ngfft_execute<float, dft_algorithm::fourstep, true>(
     const ngfft_plan<float>&, cval_t<dft_algorithm, dft_algorithm::fourstep>, cbool_t<true>, complex<float>*,
     const complex<float>*);
+template void ngfft_real_execute<float, dft_algorithm::fourstep>(
+    const ngfft_plan<float>&, cval_t<dft_algorithm, dft_algorithm::fourstep>, complex<float>*, const float*);
+template void ngfft_real_execute<float, dft_algorithm::fourstep>(
+    const ngfft_plan<float>&, cval_t<dft_algorithm, dft_algorithm::fourstep>, float*, const complex<float>*);
 
 template void ngfft_execute<double, dft_algorithm::fourstep, false>(
     const ngfft_plan<double>&, cval_t<dft_algorithm, dft_algorithm::fourstep>, cbool_t<false>,
@@ -282,6 +302,14 @@ template void ngfft_execute<double, dft_algorithm::fourstep, false>(
 template void ngfft_execute<double, dft_algorithm::fourstep, true>(
     const ngfft_plan<double>&, cval_t<dft_algorithm, dft_algorithm::fourstep>, cbool_t<true>,
     complex<double>*, const complex<double>*);
+template void ngfft_real_execute<double, dft_algorithm::fourstep>(
+    const ngfft_plan<double>&, cval_t<dft_algorithm, dft_algorithm::fourstep>, complex<double>*,
+    const double*);
+template void ngfft_real_execute<double, dft_algorithm::fourstep>(
+    const ngfft_plan<double>&, cval_t<dft_algorithm, dft_algorithm::fourstep>, double*,
+    const complex<double>*);
+
+} // namespace internal_generic
 
 #endif
 

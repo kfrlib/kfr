@@ -1457,6 +1457,13 @@ struct ngfft_plan
     complex<T>* twiddles = nullptr;
 };
 
+template <typename T>
+struct ngfft_plan_real : public ngfft_plan<T>
+{
+    ngfft_plan_real() noexcept = default;
+    ngfft_plan_real(uint8_t l2fftsize) noexcept { this->l2fftsize = l2fftsize - 1; }
+};
+
 /// @brief Family of DFT algorithms (groups related algorithms).
 enum class dft_family
 {
@@ -1469,6 +1476,8 @@ enum class dft_algorithm
     fourstep, ///< Four-step FFT algorithm.
 };
 
+constexpr inline dft_algorithm default_dft_algorithm = dft_algorithm::fourstep;
+
 /// @brief Decomposition direction for a butterfly pass.
 enum class dft_decomp : uint8_t
 {
@@ -1476,6 +1485,8 @@ enum class dft_decomp : uint8_t
     dit, ///< Decimation-in-time
 };
 
+namespace internal_generic
+{
 /**
  * @brief Returns the number of twiddle-factor elements required by the plan.
  *
@@ -1522,63 +1533,24 @@ template <typename T, dft_algorithm algo, bool inverse>
 void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, cbool_t<inverse>, complex<T>* out,
                    const complex<T>* in);
 
-/**
- * @brief Executes the FFT in-place on the given complex buffer.
- *
- * The transform is always performed in-place: the input buffer is overwritten
- * with the result. No scaling is applied.
- *
- * @tparam T Floating-point scalar type.
- * @tparam algo FFT algorithm.
- * @tparam inverse If true, performs the inverse FFT; otherwise the forward FFT.
- * @param plan The initialized plan.
- * @param inout Input/output buffer of `2^plan.l2fftsize` complex elements.
- */
-template <typename T, dft_algorithm algo, bool inverse>
-KFR_INLINE void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, cbool_t<inverse>,
-                              complex<T>* inout)
-{
-    return ngfft_execute<T, algo, inverse>(plan, cval<dft_algorithm, algo>, cbool_t<inverse>(), inout, inout);
-}
-
-/**
- * @brief Executes the FFT in-place with a runtime direction flag.
- * @copydetails ngfft_execute(const ngfft_plan<T>&, cval_t<dft_algorithm,algo>, cbool_t<inverse>, complex<T>*)
- * @param inverse If true, performs the inverse FFT; otherwise the forward FFT.
- */
 template <typename T, dft_algorithm algo>
-KFR_INLINE void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, bool inverse,
-                              complex<T>* inout)
-{
-    if (inverse)
-    {
-        return ngfft_execute<T, algo, true>(plan, cval<dft_algorithm, algo>, ctrue, inout, inout);
-    }
-    else
-    {
-        return ngfft_execute<T, algo, false>(plan, cval<dft_algorithm, algo>, cfalse, inout, inout);
-    }
-}
+void ngfft_real_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, complex<T>* out, const T* in);
 
-/**
- * @brief Executes the FFT with separate input and output buffers and a runtime direction flag.
- * @copydetails ngfft_execute(const ngfft_plan<T>&, cval_t<dft_algorithm,algo>, cbool_t<inverse>, complex<T>*,
- * const complex<T>*)
- * @param inverse If true, performs the inverse FFT; otherwise the forward FFT.
- */
 template <typename T, dft_algorithm algo>
-KFR_INLINE void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, bool inverse,
-                              complex<T>* out, const complex<T>* in)
-{
-    if (inverse)
-    {
-        return ngfft_execute<T, algo, true>(plan, cval<dft_algorithm, algo>, ctrue, out, in);
+void ngfft_real_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, algo>, T* out, const complex<T>* in);
+
+#define KFR_DFT_ALGO_SWITCH(algo, ...)                                                                       \
+    switch (algo)                                                                                            \
+    {                                                                                                        \
+    case dft_algorithm::fourstep:                                                                            \
+    {                                                                                                        \
+        constexpr cval_t<dft_algorithm, dft_algorithm::fourstep> calg{};                                     \
+        __VA_ARGS__                                                                                          \
+    }                                                                                                        \
+    default:                                                                                                 \
+        KFR_UNREACHABLE;                                                                                     \
     }
-    else
-    {
-        return ngfft_execute<T, algo, false>(plan, cval<dft_algorithm, algo>, cfalse, out, in);
-    }
-}
+} // namespace internal_generic
 
 /**
  * @brief Returns the twiddle-factor count for a runtime algorithm value.
@@ -1587,15 +1559,9 @@ KFR_INLINE void ngfft_execute(const ngfft_plan<T>& plan, cval_t<dft_algorithm, a
  * @return Number of twiddle elements, or `SIZE_MAX` for an invalid FFT size.
  */
 template <typename T>
-inline size_t ngfft_twiddle_count(ngfft_plan<T>& plan, dft_algorithm algo = dft_algorithm::fourstep)
+inline size_t ngfft_twiddle_count(ngfft_plan<T>& plan, dft_algorithm algo = default_dft_algorithm)
 {
-    switch (algo)
-    {
-    case dft_algorithm::fourstep:
-        return ngfft_twiddle_count(plan, cval<dft_algorithm, dft_algorithm::fourstep>);
-    default:
-        KFR_UNREACHABLE;
-    }
+    KFR_DFT_ALGO_SWITCH(algo, return internal_generic::ngfft_twiddle_count(plan, calg););
 }
 
 /**
@@ -1606,15 +1572,9 @@ inline size_t ngfft_twiddle_count(ngfft_plan<T>& plan, dft_algorithm algo = dft_
  *         twiddle buffer was not provided.
  */
 template <typename T>
-inline bool ngfft_initialize(ngfft_plan<T>& plan, dft_algorithm algo = dft_algorithm::fourstep)
+inline bool ngfft_initialize(ngfft_plan<T>& plan, dft_algorithm algo = default_dft_algorithm)
 {
-    switch (algo)
-    {
-    case dft_algorithm::fourstep:
-        return ngfft_initialize(plan, cval<dft_algorithm, dft_algorithm::fourstep>);
-    default:
-        KFR_UNREACHABLE;
-    }
+    KFR_DFT_ALGO_SWITCH(algo, return internal_generic::ngfft_initialize(plan, calg););
 }
 
 /**
@@ -1626,16 +1586,10 @@ inline bool ngfft_initialize(ngfft_plan<T>& plan, dft_algorithm algo = dft_algor
  */
 template <typename T, bool inverse>
 KFR_INLINE void ngfft_execute(const ngfft_plan<T>& plan, cbool_t<inverse>, complex<T>* inout,
-                              dft_algorithm algo = dft_algorithm::fourstep)
+                              dft_algorithm algo = default_dft_algorithm)
 {
-    switch (algo)
-    {
-    case dft_algorithm::fourstep:
-        return ngfft_execute(plan, cval<dft_algorithm, dft_algorithm::fourstep>, cbool_t<inverse>(), inout,
-                             inout);
-    default:
-        KFR_UNREACHABLE;
-    }
+    KFR_DFT_ALGO_SWITCH(
+        algo, return internal_generic::ngfft_execute(plan, calg, cbool_t<inverse>(), inout, inout););
 }
 
 /**
@@ -1649,15 +1603,10 @@ KFR_INLINE void ngfft_execute(const ngfft_plan<T>& plan, cbool_t<inverse>, compl
  */
 template <typename T, bool inverse>
 KFR_INLINE void ngfft_execute(const ngfft_plan<T>& plan, cbool_t<inverse>, complex<T>* out,
-                              const complex<T>* in, dft_algorithm algo = dft_algorithm::fourstep)
+                              const complex<T>* in, dft_algorithm algo = default_dft_algorithm)
 {
-    switch (algo)
-    {
-    case dft_algorithm::fourstep:
-        return ngfft_execute(plan, cval<dft_algorithm, dft_algorithm::fourstep>, cbool_t<inverse>(), out, in);
-    default:
-        KFR_UNREACHABLE;
-    }
+    KFR_DFT_ALGO_SWITCH(algo,
+                        return internal_generic::ngfft_execute(plan, calg, cbool_t<inverse>(), out, in););
 }
 
 /**
@@ -1669,12 +1618,11 @@ KFR_INLINE void ngfft_execute(const ngfft_plan<T>& plan, cbool_t<inverse>, compl
  */
 template <typename T>
 KFR_INLINE void ngfft_execute(const ngfft_plan<T>& plan, bool inverse, complex<T>* inout,
-                              dft_algorithm algo = dft_algorithm::fourstep)
+                              dft_algorithm algo = default_dft_algorithm)
 {
-    if (inverse)
-        return ngfft_execute(plan, ctrue, inout, inout, algo);
-    else
-        return ngfft_execute(plan, cfalse, inout, inout, algo);
+    KFR_DFT_ALGO_SWITCH(algo,
+                        if (inverse) return internal_generic::ngfft_execute(plan, calg, ctrue, inout, inout);
+                        else return internal_generic::ngfft_execute(plan, calg, cfalse, inout, inout););
 }
 
 /**
@@ -1687,12 +1635,38 @@ KFR_INLINE void ngfft_execute(const ngfft_plan<T>& plan, bool inverse, complex<T
  */
 template <typename T>
 KFR_INLINE void ngfft_execute(const ngfft_plan<T>& plan, bool inverse, complex<T>* out, const complex<T>* in,
-                              dft_algorithm algo = dft_algorithm::fourstep)
+                              dft_algorithm algo = default_dft_algorithm)
 {
-    if (inverse)
-        return ngfft_execute(plan, ctrue, out, in, algo);
-    else
-        return ngfft_execute(plan, cfalse, out, in, algo);
+    KFR_DFT_ALGO_SWITCH(algo, if (inverse) return internal_generic::ngfft_execute(plan, calg, ctrue, out, in);
+                        else return internal_generic::ngfft_execute(plan, calg, cfalse, out, in););
+}
+
+/**
+ * @brief Executes the forward real-to-complex FFT with a runtime algorithm.
+ * @param plan The initialized plan.
+ * @param out Output complex buffer of `2^plan.l2fftsize` complex elements.
+ * @param in Input real buffer of `2^(plan.l2fftsize+1)` real elements.
+ * @param algo FFT algorithm (defaults to `fourstep`).
+ */
+template <typename T>
+KFR_INLINE void ngfft_real_execute(const ngfft_plan<T>& plan, complex<T>* out, const T* in,
+                                   dft_algorithm algo = default_dft_algorithm)
+{
+    KFR_DFT_ALGO_SWITCH(algo, return internal_generic::ngfft_real_execute(plan, calg, out, in););
+}
+
+/**
+ * @brief Executes the inverse complex-to-real FFT with a runtime algorithm.
+ * @param plan The initialized plan.
+ * @param out Output real buffer of `2^(plan.l2fftsize+1)` real elements.
+ * @param in Input complex buffer of `2^plan.l2fftsize` complex elements.
+ * @param algo FFT algorithm (defaults to `fourstep`).
+ */
+template <typename T>
+KFR_INLINE void ngfft_real_execute(const ngfft_plan<T>& plan, T* out, const complex<T>* in,
+                                   dft_algorithm algo = default_dft_algorithm)
+{
+    KFR_DFT_ALGO_SWITCH(algo, return internal_generic::ngfft_real_execute(plan, calg, out, in););
 }
 
 #ifdef KFR_CLASSIC_FFT

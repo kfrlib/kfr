@@ -43,6 +43,14 @@ template void ngfft_execute<FLOAT>(const ngfft_plan<FLOAT>&, cval_t<dft_algorith
 
 template void ngfft_execute<FLOAT>(const ngfft_plan<FLOAT>&, cval_t<dft_algorithm, dft_algorithm::fourstep>,
                                    cbool_t<true>, complex<FLOAT>*, const complex<FLOAT>*);
+
+template void ngfft_real_execute<FLOAT>(const ngfft_plan<FLOAT>&,
+                                        cval_t<dft_algorithm, dft_algorithm::fourstep>, complex<FLOAT>*,
+                                        const FLOAT*);
+
+template void ngfft_real_execute<FLOAT>(const ngfft_plan<FLOAT>&,
+                                        cval_t<dft_algorithm, dft_algorithm::fourstep>, FLOAT*,
+                                        const complex<FLOAT>*);
 } // namespace impl
 } // namespace KFR_ARCH_NAME
 } // namespace kfr

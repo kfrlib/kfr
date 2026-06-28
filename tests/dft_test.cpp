@@ -396,6 +396,32 @@ TEST_CASE("fft_accuracy")
                         CHECK(rms_diff_inplace_progressive <= min_prec);
 #endif
                     }
+
+                    if (is_poweroftwo(size))
+                    {
+                        const uint8_t l2size = ilog2(size);
+                        ngfft_plan_real<float_type> plan{ l2size };
+                        size_t twiddle_count = ngfft_twiddle_count<float_type>(plan);
+                        if (twiddle_count != SIZE_MAX)
+                        {
+                            univector<complex<float_type>> out(size / 2 + 1);
+                            univector<complex<float_type>> refout = out;
+
+                            reference_dft(refout.data(), in.data(), size);
+
+                            univector<complex<float_type>> twiddles(twiddle_count);
+                            plan.twiddles = twiddles.data();
+                            ngfft_initialize<float_type>(plan);
+
+                            ngfft_real_execute(plan, out.data(), in.data());
+                            // convert packed spectrum to ccs
+                            out[size / 2] = complex<float_type>{ out[0].imag(), 0.f };
+                            out[0].imag(0);
+
+                            const float_type rms_diff_outofplace_ng = rms(cabs(refout - out));
+                            CHECK(rms_diff_outofplace_ng <= min_prec);
+                        }
+                    }
                 }
 
                 {
@@ -446,6 +472,31 @@ TEST_CASE("fft_accuracy")
                     {
                         // Out-of-place only for odd sizes (in-place ptr_cast not possible)
                         (void)out2;
+                    }
+
+                    if (is_poweroftwo(size))
+                    {
+                        const uint8_t l2size = ilog2(size);
+                        ngfft_plan_real<float_type> plan{ l2size };
+                        size_t twiddle_count = ngfft_twiddle_count<float_type>(plan);
+                        if (twiddle_count != SIZE_MAX)
+                        {
+                            univector<complex<float_type>> twiddles(twiddle_count);
+                            plan.twiddles = twiddles.data();
+                            ngfft_initialize<float_type>(plan);
+
+                            // Produce the packed spectrum with the forward real transform,
+                            // then reconstruct the real signal with the inverse transform.
+                            univector<complex<float_type>> spec(size / 2);
+                            ngfft_real_execute(plan, spec.data(), in.data());
+
+                            univector<float_type> out2(size);
+                            ngfft_real_execute(plan, out2.data(), spec.data());
+                            out2 = out2 / size;
+
+                            const float_type rms_diff_outofplace_ng = rms(in - out2);
+                            CHECK(rms_diff_outofplace_ng <= min_prec);
+                        }
                     }
                 }
             }
