@@ -108,27 +108,24 @@ inline u32 dig4rev_using_table(u32 x, size_t bits)
 }
 
 template <typename T, size_t N>
-KFR_INTRINSIC void br_simd(std::complex<T>* data)
+KFR_INTRINSIC void br_simd(complex<T>* data)
 {
     vec<T, N * 2> v = kfr::read<N * 2>(reinterpret_cast<T*>(data));
     v               = bitreverse<2>(v);
     write(reinterpret_cast<T*>(data), v);
 }
 
-template <typename T>
-constexpr inline size_t br_type_penalty = 1; // std::is_same_v<T, float> ? 2 : 1;
-
 template <typename T, size_t N>
-KFR_INTRINSIC void br_prefetch(std::complex<T>* data0, std::complex<T>* data1, size_t stride)
+KFR_INTRINSIC void br_prefetch(complex<T>* data0, complex<T>* data1, size_t stride)
 {
     cprefetch<N, N, T>(data0, stride);
     cprefetch<N, N, T>(data1, stride);
 }
 
 template <typename T, size_t N>
-KFR_INTRINSIC void br_simd_two(bool swap, std::complex<T>* data0, std::complex<T>* data1, size_t stride)
+KFR_INTRINSIC void br_simd_two(bool swap, complex<T>* data0, complex<T>* data1, size_t stride)
 {
-    if constexpr ((2 * N * N * 2 * br_type_penalty<T>) < vector_capacity<T>)
+    if constexpr ((N * N * 2) <= complex_vector_capacity<T>)
     {
         cvec<T, N * N> v0 = read_group<N, N, 2>(reinterpret_cast<const T*>(data0), stride);
         v0                = bitreverse<2>(v0);
@@ -154,18 +151,20 @@ KFR_INTRINSIC void br_simd_two(bool swap, std::complex<T>* data0, std::complex<T
 }
 
 template <typename T, size_t N>
-KFR_INTRINSIC void br_simd_one(std::complex<T>* data, size_t stride)
+KFR_INTRINSIC void br_simd_one(complex<T>* data, size_t stride)
 {
     constexpr size_t N2 = N / 2;
     br_simd_two<T, N2>(false, data, data + stride + N2, 2 * stride); //  0,  3
     br_simd_two<T, N2>(true, data + N2, data + stride, 2 * stride); //  1 <-> 2
 }
 
+constexpr inline size_t br_group_log2n_adjust = 0;
+
 template <typename T>
-constexpr inline size_t br_group_log2n = std::is_same_v<T, double> ? 2 : 3;
+constexpr inline size_t br_group_log2n = 3; //
 
 template <typename T, size_t Extent>
-KFR_INTRINSIC void br_small(uint32_t log2n, std::span<std::complex<T>, Extent> data)
+KFR_INTRINSIC void br_small(uint32_t log2n, std::span<complex<T>, Extent> data)
 {
     switch (log2n)
     {
@@ -205,107 +204,108 @@ KFR_INTRINSIC uint32_t tzcnt_u32(uint32_t x) noexcept
 #define tzcnt_u32(x) __builtin_ctz(x)
 #endif
 
-template <typename T, size_t Extent = std::dynamic_extent, bool large>
-void br_impl(uint32_t log2n, std::span<std::complex<T>, Extent> data, cbool_t<large>)
+template <typename T, size_t group_n>
+KFR_INTRINSIC void br_prefetch_idx(size_t i, size_t j, size_t numgroups_minus1, complex<T>* data,
+                                   size_t stride)
 {
-    constexpr uint32_t group_log2n = br_group_log2n<T>;
-    // log2n(N) in NxN group
-    constexpr size_t group_n           = size_t(1) << group_log2n; // N in NxN group
-    constexpr uint32_t group_log2narea = 2 * group_log2n; // log2n(N^2) in NxN group
+    const size_t a = i > j ? numgroups_minus1 ^ j : i;
+    const size_t b = i < j ? j : numgroups_minus1 ^ i;
+
+    br_prefetch<T, group_n>(data + a * group_n, data + b * group_n, stride);
+}
+
+template <typename T, size_t group_n>
+KFR_INTRINSIC void br_process_idx(size_t i, size_t j, size_t numgroups_minus1, complex<T>* data,
+                                  size_t stride)
+{
+    const bool distinct = i != j;
+    const size_t a      = i > j ? numgroups_minus1 ^ j : i;
+    const size_t b      = i < j ? j : numgroups_minus1 ^ i;
+
+    br_simd_two<T, group_n>(distinct, data + a * group_n, data + b * group_n, stride);
+}
+
+template <typename T, size_t Extent, bool large>
+void br_impl(uint32_t log2n, std::span<complex<T>, Extent> data, cbool_t<large>)
+{
+    constexpr uint32_t group_log2n     = br_group_log2n<T>;
+    constexpr size_t group_n           = size_t(1) << group_log2n;
+    constexpr uint32_t group_log2narea = 2 * group_log2n;
     if (log2n <= group_log2narea) [[unlikely]]
+        return;
+
+    const uint32_t m              = log2n - group_log2narea; // log2numgroups
+    const size_t numgroups        = size_t(1) << m;
+    const size_t numgroups_minus1 = numgroups - 1;
+    const size_t stride           = size_t(1) << (log2n - group_log2n);
+    complex<T>* const ptr         = data.data();
+
+    // block side in tiles: 32 for f32, 16 for f64  (≈1 MiB working set, fits L2 + STLB)
+    constexpr uint32_t beta = (sizeof(T) == 4) ? 5u : 4u;
+
+    // not enough middle bits to block
+    if (m < 2 * beta + 1) [[unlikely]]
     {
+        const size_t log2numgroups  = m;
+        const size_t half_numgroups = numgroups / 2;
+        if (half_numgroups < 4) [[unlikely]]
+            return;
+        const size_t numgroups_eighth = half_numgroups / 4;
+        br_process_idx<T, group_n>(0, 0, numgroups_minus1, data.data(), stride);
+        br_process_idx<T, group_n>(numgroups_eighth * 1, 4, numgroups_minus1, data.data(), stride);
+        br_process_idx<T, group_n>(numgroups_eighth * 2, 2, numgroups_minus1, data.data(), stride);
+        br_process_idx<T, group_n>(numgroups_eighth * 3, 6, numgroups_minus1, data.data(), stride);
+
+        uint32_t j          = 1u << (log2numgroups - 1); // bit-reversed index of i=1
+        const uint32_t mask = (1u << log2numgroups) - 1u;
+
+        for (uint32_t i = 1; i < numgroups_eighth; i++)
+        {
+            uint32_t bit    = 0x80000000u >> lzcnt_u32(mask ^ j);
+            uint32_t next_j = (j & (bit - 1u)) | bit;
+
+            br_process_idx<T, group_n>(i, j, numgroups_minus1, data.data(), stride);
+            br_process_idx<T, group_n>(i + numgroups_eighth * 1, j + 4, numgroups_minus1, data.data(),
+                                       stride);
+            br_process_idx<T, group_n>(i + numgroups_eighth * 2, j + 2, numgroups_minus1, data.data(),
+                                       stride);
+            br_process_idx<T, group_n>(i + numgroups_eighth * 3, j + 6, numgroups_minus1, data.data(),
+                                       stride);
+
+            j = next_j;
+        }
         return;
     }
-    uint32_t log2numgroups        = log2n - group_log2narea; // log2(num_groups)
-    size_t numgroups              = size_t(1) << log2numgroups; // num_groups
-    const size_t numgroups_minus1 = numgroups - 1;
-    size_t stride                 = size_t(1) << (log2n - group_log2n); // size / group_n
+    constexpr uint32_t B = 1u << beta;
 
-    size_t half_numgroups = numgroups / 2;
+    const uint32_t high_shift = m - 1 - beta; // hi -> top bits of i
+    const size_t lo_mid_count = size_t(1) << high_shift; // == 2^(m-1-beta)
 
-    auto prefetch = [&](size_t i, size_t j) KFR_INLINE_LAMBDA
+    uint32_t j_base     = 0;
+    const uint32_t mask = (1u << m) - 1u;
+
+    for (size_t lo_mid = 0; lo_mid < lo_mid_count; ++lo_mid)
     {
-        const size_t a = i > j ? numgroups_minus1 ^ j : i;
-        const size_t b = i < j ? j : numgroups_minus1 ^ i;
-
-        br_prefetch<T, group_n>(data.data() + a * group_n, data.data() + b * group_n, stride);
-    };
-
-    auto process = [&](size_t i, size_t j) KFR_INLINE_LAMBDA
-    {
-        const bool distinct = i != j;
-        const size_t a      = i > j ? numgroups_minus1 ^ j : i;
-        const size_t b      = i < j ? j : numgroups_minus1 ^ i;
-
-        br_simd_two<T, group_n>(distinct, data.data() + a * group_n, data.data() + b * group_n, stride);
-    };
-
-    if constexpr (!large)
-    {
-        if (half_numgroups == 1)
+        KFR_FOR(hi, 0, B) // unrolled; partner page-set fixed
         {
-            process(0, 0);
-            return;
-        }
-        else if (half_numgroups == 2)
-        {
-            process(0, 0);
-            process(1, 2);
-            return;
-        }
-        else if (half_numgroups == 4)
-        {
-            process(0, 0);
-            process(1, 4);
-            process(2, 2);
-            process(3, 6);
-            return;
-        }
-        else if (half_numgroups == 8)
-        {
-            process(0, 0);
-            process(1, 8);
-            process(2, 4);
-            process(3, 12);
-            process(4, 2);
-            process(5, 10);
-            process(6, 6);
-            process(7, 14);
-            return;
-        }
-    }
-    process(0, 0);
-    const size_t numgroups_eighth = half_numgroups / 4;
-    process(numgroups_eighth * 1, 4);
-    process(numgroups_eighth * 2, 2);
-    process(numgroups_eighth * 3, 6);
+            constexpr size_t hi_off = size_t(bitreverse<beta>(hi)) << 1;
+            const size_t i          = lo_mid | (size_t(hi) << high_shift);
+            br_process_idx<T, group_n>(i, size_t(j_base) | hi_off, numgroups_minus1, ptr, stride);
+        };
 
-    uint32_t j          = 1u << (log2numgroups - 1); // bit-reversed index of i=1
-    const uint32_t mask = (1u << log2numgroups) - 1u;
-
-    for (uint32_t i = 1; i < numgroups_eighth; i++)
-    {
-        uint32_t bit    = 0x80000000u >> lzcnt_u32(mask ^ j);
-        uint32_t next_j = (j & (bit - 1u)) | bit;
-
-        process(i, j);
-        process(i + numgroups_eighth * 1, j + 4);
-        process(i + numgroups_eighth * 2, j + 2);
-        process(i + numgroups_eighth * 3, j + 6);
-
-        j = next_j;
+        // advance reversed counter
+        const uint32_t bit = 0x80000000u >> lzcnt_u32(j_base ^ mask);
+        j_base             = (j_base & (bit - 1u)) | bit;
     }
 }
 
 template <typename T, size_t Extent = std::dynamic_extent>
-KFR_INTRINSIC void br(std::span<std::complex<T>, Extent> data)
+KFR_INTRINSIC void br(std::span<complex<T>, Extent> data)
 {
     if constexpr (Extent != std::dynamic_extent)
     {
         // Known at compile time
         constexpr uint32_t log2n = std::countr_zero(Extent);
-
-        constexpr size_t group_log2n = br_group_log2n<T>;
 
         if constexpr (log2n <= 6)
         {
@@ -313,15 +313,20 @@ KFR_INTRINSIC void br(std::span<std::complex<T>, Extent> data)
         }
         else
         {
-            constexpr bool large = log2n > 14;
-            if constexpr (large)
+            constexpr uint32_t group_log2n     = std::min(br_group_log2n<T>, size_t(log2n / 2));
+            constexpr size_t group_n           = size_t(1) << group_log2n;
+            constexpr uint32_t group_log2narea = 2 * group_log2n;
+            constexpr uint32_t log2numgroups   = log2n - group_log2narea;
+            constexpr size_t numgroups         = size_t(1) << log2numgroups;
+            constexpr size_t half_numgroups    = numgroups / 2;
+            const size_t numgroups_minus1      = numgroups - 1;
+            const size_t stride                = size_t(1) << (log2n - group_log2n);
+
+            KFR_FOR(i, 0, half_numgroups)
             {
-                br_impl<T, Extent>(log2n, data, cbool_t<true>());
-            }
-            else
-            {
-                br_impl<T, Extent>(log2n, data, cbool_t<false>());
-            }
+                constexpr size_t j = bitreverse<log2numgroups>(i);
+                br_process_idx<T, group_n>(i, j, numgroups_minus1, data.data(), stride);
+            };
         }
     }
     else
@@ -336,7 +341,8 @@ KFR_INTRINSIC void br(std::span<std::complex<T>, Extent> data)
         }
         else
         {
-            bool large = log2n > 14;
+            constexpr size_t l2elementsize = ilog2(sizeof(complex<T>));
+            bool large                     = log2n + l2elementsize > 14;
             if (large) [[unlikely]]
             {
                 br_impl<T, Extent>(log2n, data, cbool_t<true>());

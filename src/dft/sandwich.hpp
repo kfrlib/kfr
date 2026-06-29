@@ -69,16 +69,17 @@ namespace intr
 template <typename T>
 KFR_INTRINSIC constexpr std::pair<uint8_t, uint8_t> sandwich_split_size(uint8_t l2fftsize) noexcept
 {
-    constexpr uint8_t adjust = std::is_same_v<T, double> ? 1 : 0;
+    constexpr uint8_t adjust  = std::is_same_v<T, double> ? 1 : 0;
+    constexpr uint8_t adjust2 = std::is_same_v<T, double> ? 2 : 0;
 
     if (l2fftsize >= 10 - adjust)
     {
-        constexpr uint8_t l2maxsize = 6 - adjust;
+        constexpr uint8_t l2maxsize = 6 - adjust2;
         return { l2fftsize - l2maxsize, l2maxsize };
     }
     else if (l2fftsize >= 6 - adjust)
     {
-        constexpr uint8_t l2maxsize = 4 - adjust;
+        constexpr uint8_t l2maxsize = 4; // - adjust;
         return { l2maxsize, l2fftsize - l2maxsize };
     }
     else
@@ -90,7 +91,7 @@ KFR_INTRINSIC constexpr std::pair<uint8_t, uint8_t> sandwich_split_size(uint8_t 
 template <dft_traits traits>
 constexpr dft_sandwich_half get_sandwich_half(uint8_t l2size) noexcept
 {
-    constexpr uint8_t adjust    = std::is_same_v<typename traits::type, double> ? 1 : 0;
+    constexpr uint8_t adjust    = 0; // std::is_same_v<typename traits::type, double> ? 2 : 0;
     constexpr uint8_t l2maxsize = 6 - adjust;
 
     if (l2size <= traits::l2maxsingleradix)
@@ -296,8 +297,6 @@ void sandwich_prepare(complex<typename traits::type>* twiddles, uint8_t l2fftsiz
 
     if (!twiddle_pass)
     {
-        constexpr size_t complex_per_cacheline = KFR_CACHE_LINE_SIZE / sizeof(complex<T>);
-
         twiddles = align_up(twiddles, KFR_CACHE_LINE_SIZE);
 
         const size_t R = 1ull << cfg.dit.l2remaining;
@@ -616,8 +615,8 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_half(
 }
 
 template <dft_traits traits, bool inverse = false, dft_config<dft_family::fourstep> cfg>
-KFR_NOINLINE void sandwich(complex<typename traits::type>* out, const complex<typename traits::type>* in,
-                           uint8_t l2fftsize, const complex<typename traits::type>* twiddle)
+KFR_INLINE void sandwich(complex<typename traits::type>* out, const complex<typename traits::type>* in,
+                         uint8_t l2fftsize, const complex<typename traits::type>* twiddle)
 {
     using namespace intr;
 

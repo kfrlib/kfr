@@ -626,7 +626,6 @@ void init_dft(dft_plan<T>* self, size_t size, dft_order)
     }
     else
     {
-        constexpr size_t radices_count = dft_radices.back() + 1;
         uint32_t factors[32]           = { 0 };
         size_t factors_size            = factorize(static_cast<uint32_t>(size), factors);
 

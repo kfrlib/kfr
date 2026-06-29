@@ -742,7 +742,6 @@ private:
         // Output: N complex values (full spectrum with conjugate symmetry)
         //   tmp[k] = in[k]           for k = 0 .. (N-1)/2
         //   tmp[k] = conj(in[N-k])   for k = (N+1)/2 .. N-1
-        const size_t N     = this->size;
         const size_t csize = complex_size(); // (N+1)/2
         builtin_memcpy(tmp, in, sizeof(complex<T>) * csize);
         // Reconstruct the second half using Hermitian symmetry: X[N-k] = conj(X[k])
