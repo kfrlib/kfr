@@ -72,6 +72,18 @@ KFR_INTRINSIC constexpr std::pair<uint8_t, uint8_t> sandwich_split_size(uint8_t 
     constexpr uint8_t adjust  = std::is_same_v<T, double> ? 1 : 0;
     constexpr uint8_t adjust2 = std::is_same_v<T, double> ? 2 : 0;
 
+#ifdef KFR_ARCH_NEON
+    if (l2fftsize >= 8 - adjust)
+    {
+        constexpr uint8_t l2maxsize = 6 - adjust2;
+        return { l2fftsize - l2maxsize, l2maxsize };
+    }
+    else if (l2fftsize >= 6 - adjust)
+    {
+        constexpr uint8_t l2maxsize = 4;
+        return { l2fftsize - l2maxsize, l2maxsize };
+    }
+#else
     if (l2fftsize >= 10 - adjust)
     {
         constexpr uint8_t l2maxsize = 6 - adjust2;
@@ -82,6 +94,7 @@ KFR_INTRINSIC constexpr std::pair<uint8_t, uint8_t> sandwich_split_size(uint8_t 
         constexpr uint8_t l2maxsize = 4; // - adjust;
         return { l2maxsize, l2fftsize - l2maxsize };
     }
+#endif
     else
     {
         return { l2fftsize / 2, l2fftsize - l2fftsize / 2 };
