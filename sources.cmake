@@ -319,6 +319,8 @@ set(
     
 set(
     KFR_DFT_SRC
+    ${PROJECT_SOURCE_DIR}/src/dft/bitrev-impl-f32.cpp
+    ${PROJECT_SOURCE_DIR}/src/dft/bitrev-impl-f64.cpp
     ${PROJECT_SOURCE_DIR}/src/dft/convolution-impl.cpp
     ${PROJECT_SOURCE_DIR}/src/dft/dft-impl-f32.cpp
     ${PROJECT_SOURCE_DIR}/src/dft/dft-impl-f64.cpp
