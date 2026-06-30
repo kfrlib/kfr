@@ -1846,23 +1846,18 @@ constexpr inline cvalseq_t<size_t, size, start, step> csizeseq{};
 template <size_t stop, size_t start, bool conditional = false>
 struct cfor_t
 {
-    /// @brief Invokes `fn` for each index in `[start, stop)`, passing `csize<i>`.
+    /// @brief Invokes `fn` for each index in `[start, stop)`, passing i as template argument.
     /// @tparam Fn body callable; return value is ignored unless `conditional` is `true`.
     template <typename Fn>
     constexpr KFR_MEM_INTRINSIC void operator=(Fn&& fn) const
     {
-        if constexpr (conditional)
+        [&]<size_t... i>(std::index_sequence<i...>) KFR_INLINE_LAMBDA
         {
-            [&]<size_t... i>(csizes_t<i...>) KFR_INLINE_LAMBDA { //
-                std::ignore = (... && std::forward<Fn>(fn)(csize<i>));
-            }(csizeseq<stop - start, start>);
-        }
-        else
-        {
-            [&]<size_t... i>(csizes_t<i...>) KFR_INLINE_LAMBDA { //
-                ((std::forward<Fn>(fn)(csize<i>), void()), ...);
-            }(csizeseq<stop - start, start>);
-        }
+            if constexpr (conditional)
+                std::ignore = (... && fn.template operator()<start + i>());
+            else
+                (fn.template operator()<start + i>(), ...);
+        }(std::make_index_sequence<stop - start>{});
     }
 };
 
@@ -1885,7 +1880,7 @@ constexpr inline cfor_t<stop, start, conditional> cfor_v{};
 ///     constexpr size_t j = i;  // i is usable as a constant expression
 /// };  // semicolon required: macro expands to an assignment expression
 /// @endcode
-#define KFR_FOR(var, init, stop) cfor_v<stop, init> = [&]<size_t var>(csize_t<var>) KFR_INLINE_LAMBDA
+#define KFR_FOR(var, init, stop) cfor_v<stop, init> = [&]<size_t var>() KFR_INLINE_LAMBDA
 
 /// @brief Conditional compile-time for loop: `KFR_FORC(var, init, stop) { body }`
 ///        Like @ref KFR_FOR, but stops as soon as `body` returns a falsy value.
@@ -1901,7 +1896,7 @@ constexpr inline cfor_t<stop, start, conditional> cfor_v{};
 ///     return i < 3;  // stops after i == 0, 1, 2
 /// };  // semicolon required: macro expands to an assignment expression
 /// @endcode
-#define KFR_FORC(var, init, stop) cfor_v<stop, init, true> = [&]<size_t var>(csize_t<var>) KFR_INLINE_LAMBDA
+#define KFR_FORC(var, init, stop) cfor_v<stop, init, true> = [&]<size_t var>() KFR_INLINE_LAMBDA
 
 /// Constant instance of an int sequence with `size` elements starting at `start` with step `step`
 template <size_t size, int start = 0, ptrdiff_t step = 1>
