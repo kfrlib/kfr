@@ -6,86 +6,96 @@
 
 #include <kfr/base.hpp>
 #include <kfr/dsp.hpp>
-#include <kfr/io.hpp>
+#include <kfr/audio.hpp>
 
 using namespace kfr;
 
 int main(int argc, char** argv)
 {
-    if (argc < 3)
+    if (argc < 2)
     {
-        println("Usage: ebu_test INPUT_IN_F32_RAW_FORMAT CHANNEL_NUMBER");
+        println("Usage: ebu_test INPUT_FILE");
+        println("Supported input formats: WAV, RF64, BW64, W64, FLAC, MP3, AIFF, CAF");
         return 1;
     }
 
-    // Prepare
-    FILE* f                  = fopen(argv[1], "rb");
-    const int channel_number = atoi(argv[2]);
-    if (channel_number < 1 || channel_number > 6)
+    // Pick a decoder matching the file extension and open the input file.
+    std::unique_ptr<audio_decoder> decoder = create_decoder_for_file(argv[1]);
+    auto format                            = decoder->open(argv[1]);
+    if (!format)
     {
-        println("Incorrect number of channels");
-        return 1;
+        println("Error: cannot open input file: ", to_string(format.error()));
+        return 2;
     }
-    fseek(f, 0, SEEK_END);
-    uintmax_t size = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    if (size % (sizeof(float) * channel_number))
+
+    // Report the input file's layout, then reject channel counts outside the supported range.
+    const size_t channels = format->channels;
+    println("Input channels: ", channels);
+    println("Input sample rate: ", format->sample_rate);
+    println("Input bit depth: ", format->bit_depth);
+
+    if (channels < 1 || channels > 8)
     {
-        println("Incorrect file size");
+        println("Unsupported number of channels: ", channels);
         return 1;
     }
 
-    // Read file
-    const size_t length = size / (sizeof(float) * channel_number);
-    univector<float> interleaved(size / sizeof(float));
-    size_t read_len = fread(interleaved.data(), 1, size, f);
-    if (read_len != size)
-    {
-        println("Can't read file");
-        return 1;
-    }
+    // Build the EBU R128 meter: default 100 ms packets (10 Hz refresh), one ebu_channel per speaker.
+    ebu_r128<fbase> loudness(format->sample_rate, arrangement_speakers(arrangement_for_channels(channels)));
 
-    // Deinterleave
-    univector<univector<float>> data(channel_number, univector<float>(length));
-    for (size_t ch = 0; ch < channel_number; ++ch)
+    // Scratch buffers: interleaved sink for the decoder, planar buffer for per-channel packet views.
+    constexpr size_t chunk_size = 1 << 16;
+    audio_data_interleaved input_chunk_interleaved(channels, chunk_size);
+    audio_data input_chunk(channels, chunk_size);
+
+    // M, S, I, RL, RH hold the current measurements; maxM/maxS track the running peaks.
+    fbase M, S, I, RL, RH;
+    fbase maxM = -HUGE_VALF, maxS = -HUGE_VALF;
+
+    println("Processing...");
+    fflush(stdout);
+    for (;;)
     {
-        for (size_t i = 0; i < length; ++i)
+        // Pull the next block of decoded samples; end_of_file terminates the loop normally.
+        const auto frames_read = decoder->read_to(input_chunk_interleaved);
+        if (!frames_read)
         {
-            data[ch][i] = interleaved[i * channel_number + ch];
+            if (frames_read.error() == audiofile_error::end_of_file)
+                break;
+            println("Error: cannot read input file: ", to_string(frames_read.error()));
+            return 2;
         }
-    }
 
-    if (channel_number < 1 || channel_number > 8)
-    {
-        println("Unsupported number of channels: ", channel_number);
-        return 1;
-    }
+        // Convert interleaved -> planar and trim the buffer to the exact number of frames returned.
+        input_chunk = input_chunk_interleaved.truncate(*frames_read);
 
-    ebu_r128<float> loudness(48000, arrangement_speakers(arrangement_for_channels(channel_number)));
-
-    float M, S, I, RL, RH;
-    float maxM = -HUGE_VALF, maxS = -HUGE_VALF;
-    for (size_t i = 0; i < length / loudness.packet_size(); i++)
-    {
-        std::vector<univector_ref<float>> channels;
-        for (size_t ch = 0; ch < channel_number; ++ch)
+        // Feed the meter one packet at a time, tracking peaks after each update.
+        const size_t packet_size = loudness.packet_size();
+        for (size_t i = 0; i + packet_size <= *frames_read; i += packet_size)
         {
-            channels.push_back(data[ch].slice(i * loudness.packet_size(), loudness.packet_size()));
+            // Build per-channel packet views (zero-copy slices into the planar buffer).
+            std::vector<univector_ref<fbase>> ch_refs;
+            for (size_t ch = 0; ch < channels; ++ch)
+            {
+                ch_refs.push_back(input_chunk.channel(ch).slice(i, packet_size));
+            }
+            // Run K-weighting, accumulate momentary/short-term energy, and update integrated/LRA.
+            loudness.process_packet(ch_refs);
+            loudness.get_values(M, S, I, RL, RH);
+            maxM = std::max(maxM, M);
+            maxS = std::max(maxS, S);
         }
-        loudness.process_packet(channels);
-        loudness.get_values(M, S, I, RL, RH);
-        maxM = std::max(maxM, M);
-        maxS = std::max(maxS, S);
     }
 
     {
         // For file-based measurements, the signal should be followed by at least 1.5 s of silence
-        std::vector<univector_dyn<float>> channels(channel_number,
-                                                   univector_dyn<float>(loudness.packet_size()));
+        // so the short-term and integrated loudness windows can settle. Push 15 silence packets
+        // (~1.5 s at the default 100 ms packet size) to flush the buffers.
+        std::vector<univector_dyn<fbase>> ch_silence(channels, univector_dyn<fbase>(loudness.packet_size()));
         for (size_t i = 0; i < 15; ++i)
-            loudness.process_packet(channels);
-        float dummyM, dummyS, dummyI;
-        loudness.get_values(dummyM, dummyS, dummyI, RL, RH);
+            loudness.process_packet(ch_silence);
+        // Re-read the final measurements: the silence tail is what makes I (and LRA) settle.
+        loudness.get_values(M, S, I, RL, RH);
     }
 
     println(argv[1]);

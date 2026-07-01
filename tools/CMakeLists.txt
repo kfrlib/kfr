@@ -25,4 +25,4 @@ target_link_libraries(sample_rate_converter kfr kfr_dsp kfr_io kfr_audio
                       use_arch)
 
 add_executable(ebu_test ebu_test.cpp)
-target_link_libraries(ebu_test kfr kfr_io kfr_dsp use_arch)
+target_link_libraries(ebu_test kfr kfr_io kfr_dsp kfr_audio use_arch)
