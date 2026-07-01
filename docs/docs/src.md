@@ -115,3 +115,30 @@ For a complete, ready-to-run example of audio resampling (reading an input file,
 **`tools/sample_rate_converter.cpp`**
 
 This tool demonstrates the full end-to-end workflow described above, including file I/O, multichannel handling, and chunked processing with `samplerate_converter`.
+
+## FFT-based Resampling (`dft_resampler`)
+
+For scenarios where performance is critical and the resampling ratio is a power of two, KFR provides `dft_resampler`. This class uses an FFT-based overlap-save approach, which is significantly faster than polyphase resampling but restricted to power-of-two ratios.
+
+| Feature              | `samplerate_converter` | `dft_resampler`          |
+|:---------------------|:-----------------------|:-------------------------|
+| **Algorithm**        | Polyphase              | FFT-based (Overlap-Save) |
+| **Resampling Ratio** | Any                    | Power of two ($2^n$)     |
+| **Processing**       | Sample-based           | Block-based              |
+
+### Example
+
+```c++
+// 2x upsampling (shift = 1)
+dft_resampler_params params(1); 
+dft_resampler<float> resampler(params);
+
+// Input buffer must match resampler.input_block_size()
+univector<float> input(resampler.input_block_size());
+// Output buffer must match resampler.output_hop()
+univector<float> output(resampler.output_hop());
+
+// Process a block
+resampler.process_frame(output.data(), input.data());
+```
+

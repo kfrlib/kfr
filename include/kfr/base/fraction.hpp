@@ -31,10 +31,19 @@
 namespace kfr
 {
 
+/// @brief Exact rational number represented as a numerator/denominator pair.
+///
+/// Always stored in normalized form: denominator > 0, and numerator and
+/// denominator are coprime.
 struct fraction
 {
-    fraction(i64 num = 0, i64 den = 1) : numerator(num), denominator(den) { normalize(); }
-    void normalize()
+    /// @brief Construct a fraction from numerator and denominator.
+    /// @param num Numerator (default 0).
+    /// @param den Denominator (default 1); the fraction is normalized.
+    fraction(i64 num = 0, i64 den = 1) noexcept : numerator(num), denominator(den) { normalize(); }
+
+    /// @brief Reduce the fraction to lowest terms and enforce a positive denominator.
+    void normalize() noexcept
     {
         if (KFR_UNLIKELY(denominator < 0))
         {
@@ -46,74 +55,96 @@ struct fraction
         denominator /= z;
     }
 
+    /// @brief Numerator of the fraction.
     i64 numerator;
+    /// @brief Denominator of the fraction (always positive after normalization).
     i64 denominator;
 
-    fraction operator+() const { return *this; }
-    fraction operator-() const { return fraction(-numerator, denominator); }
+    /// @brief Unary plus.
+    fraction operator+() const noexcept { return *this; }
+    /// @brief Unary minus (negates the numerator).
+    fraction operator-() const noexcept { return fraction(-numerator, denominator); }
 
-    explicit operator bool() const { return numerator != 0; }
-    explicit operator double() const { return static_cast<double>(numerator) / denominator; }
-    explicit operator float() const { return static_cast<float>(numerator) / denominator; }
-    explicit operator i64() const { return static_cast<i64>(numerator) / denominator; }
+    /// @brief True if the fraction is non-zero.
+    explicit operator bool() const noexcept { return numerator != 0; }
+    /// @brief Convert to double (exact value).
+    explicit operator double() const noexcept { return static_cast<double>(numerator) / denominator; }
+    /// @brief Convert to float (exact value).
+    explicit operator float() const noexcept { return static_cast<float>(numerator) / denominator; }
+    /// @brief Convert to integer (truncates toward zero).
+    explicit operator i64() const noexcept { return static_cast<i64>(numerator) / denominator; }
 
-    friend fraction operator+(const fraction& x, const fraction& y)
+    /// @brief Add two fractions.
+    friend fraction operator+(const fraction& x, const fraction& y) noexcept
     {
         return fraction(x.numerator * y.denominator + y.numerator * x.denominator,
                         x.denominator * y.denominator);
     }
-    friend fraction operator-(const fraction& x, const fraction& y)
+    /// @brief Subtract two fractions.
+    friend fraction operator-(const fraction& x, const fraction& y) noexcept
     {
         return fraction(x.numerator * y.denominator - y.numerator * x.denominator,
                         x.denominator * y.denominator);
     }
-    friend fraction operator*(const fraction& x, const fraction& y)
+    /// @brief Multiply two fractions.
+    friend fraction operator*(const fraction& x, const fraction& y) noexcept
     {
         return fraction(x.numerator * y.numerator, x.denominator * y.denominator);
     }
-    friend fraction operator/(const fraction& x, const fraction& y)
+    /// @brief Divide two fractions.
+    friend fraction operator/(const fraction& x, const fraction& y) noexcept
     {
         return fraction(x.numerator * y.denominator, x.denominator * y.numerator);
     }
 
-    friend bool operator==(const fraction& x, const fraction& y)
+    /// @brief Equality comparison.
+    friend bool operator==(const fraction& x, const fraction& y) noexcept
     {
         return x.numerator == y.numerator && x.denominator == y.denominator;
     }
-    friend bool operator!=(const fraction& x, const fraction& y) { return !(operator==(x, y)); }
-    friend bool operator<(const fraction& x, const fraction& y)
+    /// @brief Inequality comparison.
+    friend bool operator!=(const fraction& x, const fraction& y) noexcept { return !(x == y); }
+    /// @brief Less-than comparison.
+    friend bool operator<(const fraction& x, const fraction& y) noexcept
     {
         return x.numerator * y.denominator < y.numerator * x.denominator;
     }
-    friend bool operator<=(const fraction& x, const fraction& y)
+    /// @brief Less-than-or-equal comparison.
+    friend bool operator<=(const fraction& x, const fraction& y) noexcept
     {
         return x.numerator * y.denominator <= y.numerator * x.denominator;
     }
-    friend bool operator>(const fraction& x, const fraction& y)
+    /// @brief Greater-than comparison.
+    friend bool operator>(const fraction& x, const fraction& y) noexcept
     {
         return x.numerator * y.denominator > y.numerator * x.denominator;
     }
-    friend bool operator>=(const fraction& x, const fraction& y)
+    /// @brief Greater-than-or-equal comparison.
+    friend bool operator>=(const fraction& x, const fraction& y) noexcept
     {
         return x.numerator * y.denominator >= y.numerator * x.denominator;
     }
 
-    fraction& operator+=(const fraction& y)
+    /// @brief Add-assign.
+    fraction& operator+=(const fraction& y) noexcept
     {
         *this = *this + y;
         return *this;
     }
-    fraction& operator-=(const fraction& y)
+    /// @brief Subtract-assign.
+    fraction& operator-=(const fraction& y) noexcept
     {
         *this = *this - y;
         return *this;
     }
-    fraction& operator*=(const fraction& y)
+    /// @brief Multiply-assign.
+    fraction& operator*=(const fraction& y) noexcept
     {
         *this = *this * y;
         return *this;
     }
-    fraction& operator/=(const fraction& y)
+    /// @brief Divide-assign.
+    fraction& operator/=(const fraction& y) noexcept
     {
         *this = *this / y;
         return *this;
