@@ -66,6 +66,36 @@ namespace intr
 {
 } // namespace intr
 
+/** @brief Splits a `l2fftsize`-bit (i.e. 2^l2fftsize point) four-step FFT into two
+ *  sub-transforms of size `2^n1` and `2^n2` (`n1 + n2 == l2fftsize`).
+ */
+template <typename T>
+constexpr std::pair<uint8_t, uint8_t> fourstep_split(uint8_t l2fftsize) noexcept
+{
+    constexpr uint8_t l2elembytes = static_cast<uint8_t>(ilog2(2 * sizeof(T)));
+
+    const uint8_t l2bytes = l2fftsize + l2elembytes;
+
+    uint8_t n2;
+
+    if (l2bytes >= 16) // memory-bound, 32KiB+
+    {
+        n2 = 8 - l2elembytes;
+    }
+    else if (l2bytes >= 12) // cache-bound, 4KiB+
+    {
+        n2 = 6;
+    }
+    else // compute-bound
+    {
+        n2 = (l2fftsize - 3) / 2 * 2;
+    }
+
+    n2 = std::clamp<uint8_t>(n2, 2, l2fftsize - 2);
+
+    return std::pair<uint8_t, uint8_t>{ uint8_t(l2fftsize - n2), n2 };
+}
+
 template <dft_traits traits>
 KFR_INTRINSIC constexpr std::pair<uint8_t, uint8_t> sandwich_split_size(uint8_t l2fftsize) noexcept
 {
@@ -78,6 +108,8 @@ KFR_INTRINSIC constexpr std::pair<uint8_t, uint8_t> sandwich_split_size(uint8_t 
 
     constexpr uint8_t adjust  = std::is_same_v<T, double> ? 1 : 0;
     constexpr uint8_t adjust2 = std::is_same_v<T, double> ? 2 : 0;
+    (void)adjust;
+    (void)adjust2;
 
 #ifdef KFR_ARCH_NEON
     if (l2fftsize >= 8 - adjust)
@@ -90,22 +122,13 @@ KFR_INTRINSIC constexpr std::pair<uint8_t, uint8_t> sandwich_split_size(uint8_t 
         constexpr uint8_t l2maxsize = 4;
         return { l2fftsize - l2maxsize, l2maxsize };
     }
-#else
-    if (l2fftsize >= 10 - adjust)
-    {
-        constexpr uint8_t l2maxsize = 6 - adjust2;
-        return { l2fftsize - l2maxsize, l2maxsize };
-    }
-    else if (l2fftsize >= 6 - adjust)
-    {
-        constexpr uint8_t l2maxsize = 4; // - adjust;
-        return { l2maxsize, l2fftsize - l2maxsize };
-    }
-#endif
     else
     {
         return { l2fftsize / 2, l2fftsize - l2fftsize / 2 };
     }
+#else
+    return fourstep_split<T>(l2fftsize);
+#endif
 }
 
 template <dft_traits traits>
@@ -151,7 +174,7 @@ KFR_INTRINSIC constexpr std::pair<uint8_t, uint8_t> sandwich_split_size_rt(uint8
     }
     else
     {
-        return sandwich_split_size<typename traits::type>(l2fftsize);
+        return sandwich_split_size<traits>(l2fftsize);
     }
 }
 
@@ -270,7 +293,7 @@ constexpr size_t sandwich_twiddle_size(uint8_t l2fftsize, const dft_config<dft_f
         [&]<uint8_t l2passradix, uint8_t l2bf, uint8_t l2bl>(const bfly_pass<l2passradix, l2bf, l2bl>& pass)
         { twiddle_count += (pass.radix() - 1) * (pass.butterflies() - 1); });
 
-    if (!cfg.dit.single_pass)
+    if (!(cfg.dit.single_pass && cfg.fixed_twiddles()))
     {
         constexpr size_t complex_per_cacheline = KFR_CACHE_LINE_SIZE / sizeof(complex<typename traits::type>);
         twiddle_count                          = align_up(twiddle_count, complex_per_cacheline);
@@ -313,7 +336,7 @@ void sandwich_prepare(complex<typename traits::type>* twiddles, uint8_t l2fftsiz
             }
         });
 
-    const bool twiddle_pass = cfg.dit.single_pass;
+    const bool twiddle_pass = cfg.dit.single_pass && cfg.fixed_twiddles();
 
     if (!twiddle_pass)
     {
@@ -496,10 +519,25 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_half(
             constexpr size_t u0 = size_t(1) << std::max(int(l2fixedstride) - int(traits::l2basewidth), 0);
             constexpr size_t u  = u0 <= 4 ? u0 : 1;
 
-            constexpr bool split_format      = true;
-            constexpr bool keep_split_format = false; //
+            constexpr bool split_format = true;
 
-            if constexpr (half.single_pass)
+            if constexpr (half.single_pass && matrix_twiddles)
+            {
+                static_assert(dir == dft_decomp::dit, "Matrix twiddles are only applied on the DIT half");
+                uint8_t l2stride         = countr_zero(stride);
+                const size_t b_offset    = offset >> (l2stride + pass.l2block_size());
+                const size_t lane_offset = offset & (stride - 1);
+
+                bfly_parallel_bfly<R, T, w, inverse, bfly_twiddles_type::matrix, dir, false, true, prefetch,
+                                   inplace>
+                    bf{ out, in, stride, twiddle + (b_offset * stride + lane_offset) * R };
+
+                bfly_loop<R, T, w, u>( //
+                    lane_width, //
+                    bf);
+                twiddle += pass.blocks() * stride * R;
+            }
+            else if constexpr (half.single_pass)
             {
                 static_assert(traits::l2basewidth + traits::l2baseradix >= l2passradix,
                               "Single pass should be large enough to benefit from parallelism");
@@ -559,8 +597,8 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_half(
 
                     for (size_t b = 0; b < blocks; ++b)
                     {
-                        bfly_parallel_bfly<R, T, w, inverse, bfly_twiddles_type::matrix, dir,
-                                           keep_split_format, true, prefetch, inplace>
+                        bfly_parallel_bfly<R, T, w, inverse, bfly_twiddles_type::matrix, dir, false, true,
+                                           prefetch, inplace>
                             bf{ out + offs, in + offs, stride,
                                 twiddle + ((b + b_offset) * stride + lane_offset) * R };
 
@@ -577,10 +615,9 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_half(
                     {
                         bfly_loop<R, T, w, u>( //
                             lane_width, //
-                            bfly_parallel_bfly < R, T, w, inverse, bfly_twiddles_type::none, dir,
-                            keep_split_format || dir == dft_decomp::dif,
-                            keep_split_format || dir == dft_decomp::dit, prefetch,
-                            inplace > { out + offs, in + offs, stride });
+                            bfly_parallel_bfly<R, T, w, inverse, bfly_twiddles_type::none, dir,
+                                               dir == dft_decomp::dif, dir == dft_decomp::dit, prefetch,
+                                               inplace>{ out + offs, in + offs, stride });
 
                         offs += stride << pass.l2block_size();
                     }
@@ -650,8 +687,6 @@ KFR_INLINE void sandwich(complex<typename traits::type>* out, const complex<type
     KFR_ASSUME(r2 > 0);
     constexpr size_t prefetch = 0; // cfg.prefetch_offset;
 
-    constexpr size_t split_width = 1ull << traits::l2basewidth;
-
     constexpr uint8_t l2fixedstride1 = cfg.dif.l2size != UINT8_MAX ? cfg.dif.l2size : 0;
     constexpr uint8_t l2fixedstride2 = cfg.dit.l2size != UINT8_MAX ? cfg.dit.l2size : 0;
 
@@ -666,9 +701,7 @@ KFR_INLINE void sandwich(complex<typename traits::type>* out, const complex<type
     else
         intr::br(std::span<complex<T>>{ out, fftsize });
 
-    static_assert(!cfg.dit.single_pass || cfg.fixed_twiddles());
-
-    constexpr bool twiddle_pass = cfg.dit.single_pass;
+    constexpr bool twiddle_pass = cfg.dit.single_pass && cfg.fixed_twiddles();
 
     if constexpr (twiddle_pass)
     {
