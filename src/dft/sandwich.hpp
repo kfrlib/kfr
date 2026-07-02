@@ -66,9 +66,16 @@ namespace intr
 {
 } // namespace intr
 
-template <typename T>
+template <dft_traits traits>
 KFR_INTRINSIC constexpr std::pair<uint8_t, uint8_t> sandwich_split_size(uint8_t l2fftsize) noexcept
 {
+    using T = typename traits::type;
+
+    if constexpr (requires { traits::override_sandwich_split; })
+    {
+        return { traits::override_sandwich_split, l2fftsize - traits::override_sandwich_split };
+    }
+
     constexpr uint8_t adjust  = std::is_same_v<T, double> ? 1 : 0;
     constexpr uint8_t adjust2 = std::is_same_v<T, double> ? 2 : 0;
 
@@ -127,7 +134,7 @@ constexpr dft_sandwich_half get_sandwich_half(uint8_t l2size) noexcept
     };
 }
 
-template <typename T, dft_config<dft_family::fourstep> cfg>
+template <dft_traits traits, dft_config<dft_family::fourstep> cfg>
 KFR_INTRINSIC constexpr std::pair<uint8_t, uint8_t> sandwich_split_size_rt(uint8_t l2fftsize) noexcept
 {
     if constexpr (cfg.dif.l2size != UINT8_MAX && cfg.dit.l2size != UINT8_MAX)
@@ -144,7 +151,7 @@ KFR_INTRINSIC constexpr std::pair<uint8_t, uint8_t> sandwich_split_size_rt(uint8
     }
     else
     {
-        return sandwich_split_size<T>(l2fftsize);
+        return sandwich_split_size<typename traits::type>(l2fftsize);
     }
 }
 
@@ -254,7 +261,7 @@ template <dft_traits traits>
 constexpr size_t sandwich_twiddle_size(uint8_t l2fftsize, const dft_config<dft_family::fourstep>& cfg)
 {
     size_t twiddle_count    = 0;
-    const auto [l2r1, l2r2] = sandwich_split_size<typename traits::type>(l2fftsize);
+    const auto [l2r1, l2r2] = sandwich_split_size<traits>(l2fftsize);
     const size_t r1         = 1ull << l2r1;
     const size_t r2         = 1ull << l2r2;
 
@@ -287,7 +294,7 @@ void sandwich_prepare(complex<typename traits::type>* twiddles, uint8_t l2fftsiz
     using T = typename traits::type;
     if (l2fftsize < 4) [[unlikely]]
         return;
-    auto [l2r1, l2r2] = sandwich_split_size<typename traits::type>(l2fftsize);
+    auto [l2r1, l2r2] = sandwich_split_size<traits>(l2fftsize);
     const size_t r1   = 1ull << l2r1;
     const size_t r2   = 1ull << l2r2;
 
@@ -636,7 +643,7 @@ KFR_INLINE void sandwich(complex<typename traits::type>* out, const complex<type
     using T = typename traits::type;
     if (l2fftsize < 4) [[unlikely]]
         return;
-    const auto [l2r1, l2r2] = sandwich_split_size_rt<typename traits::type, cfg>(l2fftsize);
+    const auto [l2r1, l2r2] = sandwich_split_size_rt<traits, cfg>(l2fftsize);
     const size_t r1         = 1ull << l2r1;
     const size_t r2         = 1ull << l2r2;
     KFR_ASSUME(r1 > 0);
@@ -729,7 +736,7 @@ template <dft_traits traits>
 constexpr dft_config<dft_family::fourstep> ng_config(cval_t<dft_family, dft_family::fourstep>,
                                                      uint8_t l2fftsize) noexcept
 {
-    const auto [l2r1, l2r2] = sandwich_split_size<typename traits::type>(l2fftsize);
+    const auto [l2r1, l2r2] = sandwich_split_size<traits>(l2fftsize);
 
     return {
         .dif = get_sandwich_half<traits>(l2r1),
