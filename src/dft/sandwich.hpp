@@ -62,40 +62,6 @@ struct dft_config<dft_family::fourstep>
 inline namespace KFR_ARCH_NAME
 {
 
-namespace intr
-{
-} // namespace intr
-
-/** @brief Splits a `l2fftsize`-bit (i.e. 2^l2fftsize point) four-step FFT into two
- *  sub-transforms of size `2^n1` and `2^n2` (`n1 + n2 == l2fftsize`).
- */
-template <typename T>
-constexpr std::pair<uint8_t, uint8_t> fourstep_split(uint8_t l2fftsize) noexcept
-{
-    constexpr uint8_t l2elembytes = static_cast<uint8_t>(ilog2(2 * sizeof(T)));
-
-    const uint8_t l2bytes = l2fftsize + l2elembytes;
-
-    uint8_t n2;
-
-    if (l2bytes >= 16) // memory-bound, 32KiB+
-    {
-        n2 = 8 - l2elembytes;
-    }
-    else if (l2bytes >= 12) // cache-bound, 4KiB+
-    {
-        n2 = 6;
-    }
-    else // compute-bound
-    {
-        n2 = (l2fftsize - 3) / 2 * 2;
-    }
-
-    n2 = std::clamp<uint8_t>(n2, 2, l2fftsize - 2);
-
-    return std::pair<uint8_t, uint8_t>{ uint8_t(l2fftsize - n2), n2 };
-}
-
 template <dft_traits traits>
 KFR_INTRINSIC constexpr std::pair<uint8_t, uint8_t> sandwich_split_size(uint8_t l2fftsize) noexcept
 {
@@ -106,36 +72,78 @@ KFR_INTRINSIC constexpr std::pair<uint8_t, uint8_t> sandwich_split_size(uint8_t 
         return { traits::override_sandwich_split, l2fftsize - traits::override_sandwich_split };
     }
 
-    constexpr uint8_t adjust  = std::is_same_v<T, double> ? 1 : 0;
-    constexpr uint8_t adjust2 = std::is_same_v<T, double> ? 2 : 0;
-    (void)adjust;
-    (void)adjust2;
+    constexpr uint8_t l2elemsize = static_cast<uint8_t>(ilog2(2 * sizeof(T)));
 
-#ifdef KFR_ARCH_NEON
-    if (l2fftsize >= 8 - adjust)
+#ifdef KFR_ARCH_AVX
+    if (l2fftsize + l2elemsize > 15) // memory-bound, 32KiB+
     {
-        constexpr uint8_t l2maxsize = 6 - adjust2;
-        return { l2fftsize - l2maxsize, l2maxsize };
+        uint8_t n2 = 8 - l2elemsize;
+        return { uint8_t(l2fftsize - n2), n2 };
     }
-    else if (l2fftsize >= 6 - adjust)
+    else // compute-bound, <32KiB
     {
-        constexpr uint8_t l2maxsize = 4;
-        return { l2fftsize - l2maxsize, l2maxsize };
+        if constexpr (std::is_same_v<T, float>)
+        {
+            constexpr uint8_t n1[]{
+                1, 1, 2, 2, 3, 4, 4, 3, 4, 4, 5, 6,
+            };
+            return { n1[l2fftsize - 1], l2fftsize - n1[l2fftsize - 1] };
+        }
+        else
+        {
+            constexpr uint8_t n1[]{
+                1, 1, 2, 2, 3, 4, 3, 2, 3, 4, 5,
+            };
+            return { n1[l2fftsize - 1], l2fftsize - n1[l2fftsize - 1] };
+        }
+    }
+#elif defined KFR_ARCH_NEON && defined KFR_OS_APPLE
+    if (l2fftsize + l2elemsize > 17) // memory-bound, 128KiB+
+    {
+        if constexpr (std::is_same_v<T, float>)
+        {
+            const uint8_t n2 = (l2fftsize & 1) ? 5 : 8;
+            return { uint8_t(l2fftsize - n2), n2 };
+        }
+        else
+        {
+            const uint8_t n2 = (l2fftsize & 1) ? 2 : 5;
+            return { uint8_t(l2fftsize - n2), n2 };
+        }
+    }
+    else
+    {
+        if constexpr (std::is_same_v<T, float>)
+        {
+            constexpr uint8_t n1[]{
+                1, 1, 2, 2, 3, 3, 2, 3, 3, 3, 3, 6, 3, 6,
+            };
+            return { n1[l2fftsize - 1], l2fftsize - n1[l2fftsize - 1] };
+        }
+        else
+        {
+            constexpr uint8_t n1[]{
+                1, 1, 2, 2, 3, 2, 3, 3, 3, 7, 8, 9, 10,
+            };
+            return { n1[l2fftsize - 1], l2fftsize - n1[l2fftsize - 1] };
+        }
+    }
+#else
+    if (l2fftsize >= 10)
+    {
+        return { uint8_t(l2fftsize - 6), 6 };
     }
     else
     {
         return { l2fftsize / 2, l2fftsize - l2fftsize / 2 };
     }
-#else
-    return fourstep_split<T>(l2fftsize);
 #endif
 }
 
 template <dft_traits traits>
 constexpr dft_sandwich_half get_sandwich_half(uint8_t l2size) noexcept
 {
-    constexpr uint8_t adjust    = 0; // std::is_same_v<typename traits::type, double> ? 2 : 0;
-    constexpr uint8_t l2maxsize = 6 - adjust;
+    constexpr uint8_t l2maxsize = 6;
 
     if (l2size <= traits::l2maxsingleradix)
     {
