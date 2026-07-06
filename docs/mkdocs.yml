@@ -7,6 +7,7 @@ theme:
     - navigation.top
     - content.code.copy
     - navigation.indexes
+    - navigation.prune
   palette:
     # Palette toggle for light mode
     - scheme: default
