@@ -393,6 +393,10 @@ void sandwich_prepare(complex<typename traits::type>* twiddles, uint8_t l2fftsiz
         });
 }
 
+template <dft_traits traits>
+constexpr size_t max_slice_width =
+    size_t(1) << (14 - l2elementsize<typename traits::type> - traits::l2baseradix); // 16KiB
+
 template <dft_traits traits, dft_decomp dir, dft_sandwich_half half, typename Fn>
 KFR_INTRINSIC const complex<typename traits::type>* sandwich_iterate_recursive(
     uint8_t l2fftsize, size_t total_width, const complex<typename traits::type>* twiddle, Fn&& fn)
@@ -402,19 +406,18 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_iterate_recursive(
 
     if constexpr (half.single_pass || (half.l2size <= half.l2remaining + 2 * l2baseradix))
     {
-        constexpr size_t slice_width    = size_t(1) << (14 - l2elementsize<T> - l2baseradix); // 16KiB
         const complex<T>* saved_twiddle = twiddle;
 
         for (size_t slice_offset = 0;;)
         {
             twiddle                    = saved_twiddle;
-            const size_t process_width = std::min(slice_width, total_width - slice_offset);
+            const size_t process_width = std::min(max_slice_width<traits>, total_width - slice_offset);
             // Avoiding overhead of recursion
             sandwich_iterate<traits, dir, half>(
                 l2fftsize, [&]<uint8_t l2passradix, uint8_t l2bf, uint8_t l2bl>(
                                const bfly_pass<l2passradix, l2bf, l2bl>& pass) KFR_INLINE_LAMBDA
                 { twiddle = fn(pass, process_width, total_width, pass.blocks(), slice_offset, twiddle); });
-            slice_offset += slice_width;
+            slice_offset += max_slice_width<traits>;
             if (slice_offset >= total_width)
                 break;
         }
@@ -679,6 +682,162 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_half(
         });
 }
 
+template <dft_traits traits, uint8_t l2passradix, uint8_t l2fixedstride>
+constexpr size_t sandwich_dif_bitrev_width() noexcept
+{
+    constexpr uint8_t l2maxwidth = l2fixedstride ? l2fixedstride : traits::l2basewidth;
+    return size_t(1) << std::min(uint8_t(traits::l2basewidth + traits::l2baseradix - l2passradix),
+                                 l2maxwidth);
+}
+
+template <typename T, size_t count, size_t N>
+struct stride_rw
+{
+    static_assert(std::has_single_bit(count), "count must be a power of 2");
+    static_assert(std::has_single_bit(N), "N must be a power of 2");
+
+    KFR_MEM_INTRINSIC stride_rw(size_t stride_) noexcept //
+        : stride(stride_), stride2(stride_ * 2)
+    {
+    }
+
+    KFR_MEM_INTRINSIC void read(const complex<T>* in, cvec<T, N> w[count]) noexcept
+    {
+        KFR_FOR(i, 0, count / 2)
+        {
+            w[i * 2]     = intr::cread<N>(in);
+            w[i * 2 + 1] = intr::cread<N>(in + stride);
+            in += stride2;
+        };
+    }
+    KFR_MEM_INTRINSIC void write(complex<T>* out, const cvec<T, N> w[count]) noexcept
+    {
+        KFR_FOR(i, 0, count / 2)
+        {
+            intr::cwrite<N>(out, w[i * 2]);
+            intr::cwrite<N>(out + stride, w[i * 2 + 1]);
+            out += stride2;
+        };
+    }
+
+    KFR_MEM_INTRINSIC cvec<T, N * count> read(const complex<T>* in) noexcept
+    {
+        cvec<T, N * count> result;
+        cvec<T, N> w[count];
+        read(in, w);
+        return concat_native(result, w);
+    }
+    KFR_MEM_INTRINSIC void write(complex<T>* out, const cvec<T, N * count>& w) noexcept
+    {
+        cvec<T, N> ws[count];
+        split_native(w, ws);
+        write(out, ws);
+    }
+
+private:
+    size_t stride;
+    size_t stride2;
+};
+
+template <typename T, size_t N>
+struct stride_rw<T, 1, N>
+{
+    static_assert(std::has_single_bit(N), "N must be a power of 2");
+
+    KFR_MEM_INTRINSIC stride_rw(size_t stride_) noexcept //
+    {
+    }
+    KFR_MEM_INTRINSIC void read(const complex<T>* in, cvec<T, N> w[1]) noexcept { w[0] = intr::cread<N>(in); }
+    KFR_MEM_INTRINSIC cvec<T, N * 1> read(const complex<T>* in) noexcept { return intr::cread<N>(in); }
+    KFR_MEM_INTRINSIC void write(complex<T>* out, const cvec<T, N> w[1]) noexcept
+    {
+        intr::cwrite<N>(out, w[0]);
+    }
+    KFR_MEM_INTRINSIC void write(complex<T>* out, const cvec<T, N * 1>& w) noexcept
+    {
+        intr::cwrite<N>(out, w);
+    }
+};
+
+template <typename T, bool inverse, size_t w, size_t R, uint8_t l2passradix, typename Reader, typename Writer>
+KFR_INTRINSIC void sandwich_dif_merged_bitrev_lane(Reader& reader, Writer& writer, const complex<T>* in,
+                                                   complex<T>* out)
+{
+    using namespace intr;
+    [&]<size_t... I>(csizes_t<I...>) KFR_INLINE_LAMBDA
+    {
+        cvec<T, w> ws[R];
+        reader.read(in, ws);
+        bfly<inverse, w>(cfalse, ws[I]...);
+        cvec<T, w * R> ww = concat(ws[bitreverse<l2passradix>(I)]...);
+        ww                = bitreverse<2>(ww);
+        writer.write(out, ww);
+    }(csizeseq<R>);
+}
+
+struct bitrev_generator
+{
+    uint32_t j;
+    uint32_t M;
+
+    bitrev_generator(uint8_t bits)
+    {
+        j = 0;
+        M = 1u << bits;
+    }
+
+    uint32_t next(uint32_t i)
+    {
+        uint32_t k = tzcnt_u32(i);
+        j ^= M - (M >> (k + 1));
+        return j;
+    }
+};
+
+template <dft_traits traits, bool inverse, dft_sandwich_half half, uint8_t l2fixedstride>
+KFR_INTRINSIC void sandwich_dif_merged_bitrev(size_t r2, complex<typename traits::type>* out,
+                                              const complex<typename traits::type>* in)
+{
+    using namespace intr;
+    using T = typename traits::type;
+
+    static_assert(half.single_pass, "sandwich_dif_merged_bitrev requires a single-pass DIF half");
+
+    constexpr uint8_t l2passradix = half.l2remaining;
+    constexpr size_t R            = size_t(1) << l2passradix;
+    constexpr size_t w            = sandwich_dif_bitrev_width<traits, l2passradix, l2fixedstride>();
+    constexpr uint8_t l2w         = static_cast<uint8_t>(ilog2(w));
+
+    KFR_ASSUME(r2 >= w);
+
+    const uint8_t l2r2      = l2fixedstride != 0 ? l2fixedstride : uint8_t(countr_zero(r2));
+    const uint8_t l2c_bits  = uint8_t(l2r2 - l2w);
+    const size_t row_stride = (r2 >> l2w) * R;
+    stride_rw<T, R, w> reader(r2);
+    stride_rw<T, w, R> writer(row_stride);
+
+    if (l2c_bits == 0) [[unlikely]]
+    {
+        sandwich_dif_merged_bitrev_lane<T, inverse, w, R, l2passradix>(reader, writer, in, out);
+    }
+    else
+    {
+        bitrev_generator gen(l2c_bits - 1);
+        uint32_t m = (1u << uint8_t(l2c_bits - 1));
+        uint32_t j = 0;
+        for (size_t i = 0; i < (r2 >> l2w);)
+        {
+            sandwich_dif_merged_bitrev_lane<T, inverse, w, R, l2passradix>(reader, writer, in + i * w,
+                                                                           out + j * R);
+            i++;
+            sandwich_dif_merged_bitrev_lane<T, inverse, w, R, l2passradix>(reader, writer, in + i * w,
+                                                                           out + (j + m) * R);
+            i++;
+            j = gen.next(uint32_t(i >> 1));
+        }
+    }
+}
+
 template <dft_traits traits, bool inverse = false, dft_config<dft_family::fourstep> cfg>
 KFR_INLINE void sandwich(complex<typename traits::type>* out, const complex<typename traits::type>* in,
                          uint8_t l2fftsize, const complex<typename traits::type>* twiddle)
@@ -699,15 +858,32 @@ KFR_INLINE void sandwich(complex<typename traits::type>* out, const complex<type
     constexpr uint8_t l2fixedstride2 = cfg.dit.l2size != UINT8_MAX ? cfg.dit.l2size : 0;
 
     // DIF
-    twiddle = sandwich_half<traits, inverse, dft_decomp::dif, cfg.dif, false, l2fixedstride2, false>(
-        l2r1, r2, out, in, twiddle);
+    bool dif_bitrev_merged = false;
+    if constexpr (cfg.dif.single_pass)
+    {
+        constexpr size_t dif_bitrev_w =
+            sandwich_dif_bitrev_width<traits, cfg.dif.l2remaining, l2fixedstride2>();
+        if (in != out && r2 >= dif_bitrev_w)
+        {
+            sandwich_dif_merged_bitrev<traits, inverse, cfg.dif, l2fixedstride2>(r2, out, in);
+            dif_bitrev_merged = true;
+        }
+    }
+    if (!dif_bitrev_merged)
+    {
+        twiddle = sandwich_half<traits, inverse, dft_decomp::dif, cfg.dif, false, l2fixedstride2, false>(
+            l2r1, r2, out, in, twiddle);
+    }
 
     const size_t fftsize = 1ull << l2fftsize;
 
-    if constexpr (cfg.l2fftsize() != UINT8_MAX)
-        intr::br(std::span<complex<T>, (1ull << cfg.l2fftsize())>{ out, 1ull << cfg.l2fftsize() });
-    else
-        intr::br(std::span<complex<T>>{ out, fftsize });
+    if (!dif_bitrev_merged)
+    {
+        if constexpr (cfg.l2fftsize() != UINT8_MAX)
+            intr::br(std::span<complex<T>, (1ull << cfg.l2fftsize())>{ out, 1ull << cfg.l2fftsize() });
+        else
+            intr::br(std::span<complex<T>>{ out, fftsize });
+    }
 
     constexpr bool twiddle_pass = cfg.dit.single_pass && cfg.fixed_twiddles();
 
@@ -724,7 +900,7 @@ KFR_INLINE void sandwich(complex<typename traits::type>* out, const complex<type
         // known at compile time
         KFR_FOR(i, 1, r2)
         {
-            constexpr size_t ii = bitreverse<32>(i) >> (32 - cfg.dit.l2size);
+            constexpr size_t ii = bitreverse<cfg.dit.l2size>(i);
 
             KFR_FOR(j, 0, r1 / w)
             {
