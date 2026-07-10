@@ -535,18 +535,12 @@ KFR_INTRINSIC const complex<typename traits::type>* sandwich_half(
             if constexpr (half.single_pass && matrix_twiddles)
             {
                 static_assert(dir == dft_decomp::dit, "Matrix twiddles are only applied on the DIT half");
-                uint8_t l2stride         = countr_zero(stride);
-                const size_t b_offset    = offset >> (l2stride + pass.l2block_size());
-                const size_t lane_offset = offset & (stride - 1);
-
-                bfly_parallel_bfly<R, T, w, inverse, bfly_twiddles_type::matrix, dir, false, true, prefetch,
-                                   inplace>
-                    bf{ out, in, stride, twiddle + (b_offset * stride + lane_offset) * R };
 
                 bfly_loop<R, T, w, u>( //
                     lane_width, //
-                    bf);
-                twiddle += pass.blocks() * stride * R;
+                    bfly_parallel_bfly<R, T, w, inverse, bfly_twiddles_type::matrix, dir, false, false,
+                                       prefetch, inplace, true>{ out, in, stride, twiddle + offset * R });
+                twiddle += lane_width * R;
             }
             else if constexpr (half.single_pass)
             {

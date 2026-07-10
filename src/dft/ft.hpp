@@ -2956,10 +2956,10 @@ struct bfly_parallel_bfly_base<Radix, T, N, bfly_twiddles_type::vector>
 };
 
 template <size_t Radix, typename T, size_t N, bool inverse, bfly_twiddles_type twiddles, dft_decomp decomp,
-          bool in_split, bool out_split, size_t prefetch = 0, bool inplace = true>
+          bool in_split, bool out_split, size_t prefetch = 0, bool inplace = true, bool force_split = false>
 struct bfly_parallel_bfly : bfly_parallel_bfly_base<Radix, T, N, twiddles>
 {
-    constexpr static bool split_format = in_split || out_split;
+    constexpr static bool split_format = in_split || out_split || force_split;
 
     template <size_t I>
     KFR_MEM_INTRINSIC static cvec<T, N> tw_read(const std::complex<T>* tw) noexcept
