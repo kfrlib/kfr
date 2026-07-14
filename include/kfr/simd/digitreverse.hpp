@@ -147,6 +147,16 @@ constexpr KFR_INTRINSIC u32 bitreverse(u32 x)
     return internal::digitreverse_impl<bits>(x, csize_t<2>());
 }
 
+/**
+ * @brief Reverses the lowest `bits` bits of the given unsigned integer at runtime.
+ *
+ * Computes the full 32-bit reversal of `x` and then shifts right by `32 - bits`,
+ * effectively reversing only the lowest `bits` bits while zeroing the rest.
+ *
+ * @param x The input 32-bit unsigned integer.
+ * @param bits Number of low bits to reverse (must be <= 32).
+ * @return The integer with its lowest `bits` bits reversed.
+ */
 constexpr KFR_INTRINSIC u32 bitreverse(u32 x, size_t bits)
 {
     return internal::digitreverse_impl<32>(x, csize_t<2>()) >> (32 - bits);

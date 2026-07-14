@@ -44,6 +44,7 @@ plugins:
   - cxxdox:
       title: KFR API Reference
       path_prefix: auto/
+      default_namespace: kfr
       input:
         - include:
             - ../include/kfr/all.hpp # relative to mkdocs.yml
@@ -88,6 +89,77 @@ plugins:
             - -std=c99
             - "-DDOCUMENTATION"
             - "-I../include"
+      groups:
+        - id: dsp
+          title: Digital Signal Processing
+          description: "Comprehensive DSP algorithms including filters, oscillators, and signal analysis tools."
+          file:
+            - dsp
+            - dsp.hpp
+        - id: dft
+          title: Discrete Fourier Transform
+          description: "High-performance FFT, convolution, and spectral analysis routines."
+          file:
+            - dft
+            - dft.hpp
+        - id: base
+          title: Base Utilities
+          description: "Core data structures and fundamental utilities for KFR."
+          file:
+            - base
+            - base.hpp
+        - id: math
+          title: Mathematical Functions
+          description: "High-performance mathematical operations and transcendental functions."
+          file:
+            - math
+            - math.hpp
+        - id: meta
+          title: Metaprogramming
+          description: "Template metaprogramming utilities and C++ type traits."
+          file:
+            - meta
+            - meta.hpp
+        - id: capi
+          title: C API
+          description: "C-compatible interface for accessing KFR functionality."
+          file:
+            - capi.h
+        - id: io
+          title: Input/Output
+          description: "File I/O, audio format support, and data visualization tools."
+          file:
+            - io
+            - io.hpp
+        - id: simd
+          title: SIMD Acceleration
+          description: "Cross-platform SIMD vector operations and hardware acceleration."
+          file:
+            - simd
+            - simd.hpp
+        - id: audio
+          title: Audio Processing
+          description: "Audio-specific processing, codecs, and format handling."
+          file:
+            - audio
+            - audio.hpp
+        - id: runtime
+          title: Runtime Environment
+          description: "Runtime CPU detection and environment configuration."
+          file:
+            - runtime
+            - runtime.hpp
+        - id: common
+          title: Common Headers
+          description: "Global configuration, versioning, and core library headers."
+          file:
+            - config.h
+            - cident.h
+            - kfr.h
+            - multiarch.h
+            - version.hpp
+            - except.hpp
+            - all.hpp
   - minify:
       minify_html: true
       htmlmin_opts:

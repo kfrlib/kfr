@@ -30,6 +30,12 @@
 namespace kfr
 {
 #ifndef KFR_CUSTOM_COMPLEX
+/**
+ * @brief Complex number type, aliased to `std::complex<T>` by default.
+ * @details Define `KFR_CUSTOM_COMPLEX` to substitute a user-provided
+ * complex type implementation.
+ * @tparam T The underlying real element type (e.g. `float`, `double`).
+ */
 template <typename T>
 using complex = std::complex<T>;
 #endif
@@ -38,20 +44,48 @@ using complex = std::complex<T>;
 
 namespace kfr
 {
+/**
+ * @brief String representation specialization for `kfr::complex<T>`.
+ * @details Renders a complex value as `"<real> + <imag>j"` using
+ * `as_string` for each component.
+ * @tparam T The underlying real element type.
+ */
 template <typename T>
 struct representation<kfr::complex<T>>
 {
+    /** Result type of the conversion. */
     using type = std::string;
+    /**
+     * @brief Converts a complex value to its string form.
+     * @param value The complex value to format.
+     * @return A string of the form `"<real> + <imag>j"`.
+     */
     static std::string get(const kfr::complex<T>& value)
     {
         return as_string(value.real()) + " + " + as_string(value.imag()) + "j";
     }
 };
 
+/**
+ * @brief String representation specialization for a formatted complex value.
+ * @details Applies the format specifier (`t`, `width`, `prec`) to both the
+ * real and imaginary parts before joining them as `"<real> + <imag>j"`.
+ * @tparam t Format character (see `fmt_t`).
+ * @tparam width Minimum field width.
+ * @tparam prec Precision specifier.
+ * @tparam T The underlying real element type.
+ */
 template <char t, int width, int prec, typename T>
 struct representation<fmt_t<kfr::complex<T>, t, width, prec>>
 {
+    /** Result type of the conversion. */
     using type = std::string;
+    /**
+     * @brief Converts a formatted complex value to its string form.
+     * @param value The formatted complex value to render.
+     * @return A string of the form `"<real> + <imag>j"` with each
+     * component formatted according to `t`, `width`, and `prec`.
+     */
     static std::string get(const fmt_t<kfr::complex<T>, t, width, prec>& value)
     {
         return as_string(kfr::fmt<t, width, prec>(value.value.real())) + " + " +

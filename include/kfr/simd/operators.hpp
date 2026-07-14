@@ -150,30 +150,35 @@ KFR_VEC_CMP_OPERATOR(<=, le)
 KFR_VEC_CMP_OPERATOR(>, gt)
 KFR_VEC_CMP_OPERATOR(<, lt)
 
+/** @brief Bitwise AND of two masks (bit-level, size must match). */
 template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>>
     requires(sizeof(T1) == sizeof(T2))
 KFR_INTRINSIC mask<C, N> operator&(const mask<T1, N>& x, const mask<T2, N>& y) noexcept
 {
     return mask<C, N>((bitcast<C>(vec<T1, N>(x.v)) & bitcast<C>(vec<T2, N>(y.v))).v);
 }
+/** @brief Bitwise OR of two masks (bit-level, size must match). */
 template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>>
     requires(sizeof(T1) == sizeof(T2))
 KFR_INTRINSIC mask<C, N> operator|(const mask<T1, N>& x, const mask<T2, N>& y) noexcept
 {
     return mask<C, N>((bitcast<C>(vec<T1, N>(x.v)) | bitcast<C>(vec<T2, N>(y.v))).v);
 }
+/** @brief Logical AND of two masks (bit-level conjunction, size must match). */
 template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>>
     requires(sizeof(T1) == sizeof(T2))
 KFR_INTRINSIC mask<C, N> operator&&(const mask<T1, N>& x, const mask<T2, N>& y) noexcept
 {
     return mask<C, N>((bitcast<C>(vec<T1, N>(x.v)) & bitcast<C>(vec<T2, N>(y.v))).v);
 }
+/** @brief Logical OR of two masks (bit-level disjunction, size must match). */
 template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>>
     requires(sizeof(T1) == sizeof(T2))
 KFR_INTRINSIC mask<C, N> operator||(const mask<T1, N>& x, const mask<T2, N>& y) noexcept
 {
     return mask<C, N>((bitcast<C>(vec<T1, N>(x.v)) | bitcast<C>(vec<T2, N>(y.v))).v);
 }
+/** @brief Bitwise XOR of two masks (bit-level, size must match). */
 template <typename T1, typename T2, size_t N, typename C = std::common_type_t<T1, T2>>
     requires(sizeof(T1) == sizeof(T2))
 KFR_INTRINSIC mask<C, N> operator^(const mask<T1, N>& x, const mask<T2, N>& y) noexcept
@@ -181,29 +186,46 @@ KFR_INTRINSIC mask<C, N> operator^(const mask<T1, N>& x, const mask<T2, N>& y) n
     return mask<C, N>((bitcast<C>(vec<T1, N>(x.v)) ^ bitcast<C>(vec<T2, N>(y.v))).v);
 }
 
+/** @brief Bitwise NOT of a mask. */
 template <typename T, size_t N>
 KFR_INTRINSIC mask<T, N> operator~(const mask<T, N>& x) noexcept
 {
     return mask<T, N>(~x.asvec());
 }
+/** @brief Logical NOT of a mask (equivalent to bitwise NOT). */
 template <typename T, size_t N>
 KFR_INTRINSIC mask<T, N> operator!(const mask<T, N>& x) noexcept
 {
     return mask<T, N>(~x.asvec());
 }
 
+/** @copydoc bitwisenot(const T1&) */
 KFR_INTRINSIC float bitwisenot(float x) { return fbitcast(~ubitcast(x)); }
+/** @copydoc bitwiseor(const T1&,const T2&) */
 KFR_INTRINSIC float bitwiseor(float x, float y) { return fbitcast(ubitcast(x) | ubitcast(y)); }
+/** @copydoc bitwiseand(const T1&,const T2&) */
 KFR_INTRINSIC float bitwiseand(float x, float y) { return fbitcast(ubitcast(x) & ubitcast(y)); }
+/** @copydoc bitwiseandnot(const T1&,const T2&) */
 KFR_INTRINSIC float bitwiseandnot(float x, float y) { return fbitcast(ubitcast(x) & ~ubitcast(y)); }
+/** @copydoc bitwisexor(const T1&,const T2&) */
 KFR_INTRINSIC float bitwisexor(float x, float y) { return fbitcast(ubitcast(x) ^ ubitcast(y)); }
+
+/** @copydoc bitwisenot(const T1&) */
 KFR_INTRINSIC double bitwisenot(double x) { return fbitcast(~ubitcast(x)); }
+/** @copydoc bitwiseor(const T1&,const T2&) */
 KFR_INTRINSIC double bitwiseor(double x, double y) { return fbitcast(ubitcast(x) | ubitcast(y)); }
+/** @copydoc bitwiseand(const T1&,const T2&) */
 KFR_INTRINSIC double bitwiseand(double x, double y) { return fbitcast(ubitcast(x) & ubitcast(y)); }
+/** @copydoc bitwiseandnot(const T1&,const T2&) */
 KFR_INTRINSIC double bitwiseandnot(double x, double y) { return fbitcast(ubitcast(x) & ~ubitcast(y)); }
+/** @copydoc bitwisexor(const T1&,const T2&) */
 KFR_INTRINSIC double bitwisexor(double x, double y) { return fbitcast(ubitcast(x) ^ ubitcast(y)); }
 
-/// @brief Bitwise Not
+/**
+ * @brief Bitwise NOT of `x`.
+ *
+ * Returns the one's complement of `x`, flipping every bit.
+ */
 template <typename T1>
 KFR_INTRINSIC T1 bitwisenot(const T1& x)
 {
@@ -211,12 +233,17 @@ KFR_INTRINSIC T1 bitwisenot(const T1& x)
 }
 KFR_FN(bitwisenot)
 
-/// @brief Bitwise And
+/**
+ * @brief Bitwise AND of `x` and `y`.
+ *
+ * Returns the bitwise conjunction of the two operands.
+ */
 template <typename T1, typename T2>
 KFR_INTRINSIC std::common_type_t<T1, T2> bitwiseand(const T1& x, const T2& y)
 {
     return x & y;
 }
+/** @brief Identity element for `bitwiseand` (returns all ones). */
 template <typename T>
 constexpr KFR_INTRINSIC T bitwiseand(initialvalue<T>)
 {
@@ -224,12 +251,17 @@ constexpr KFR_INTRINSIC T bitwiseand(initialvalue<T>)
 }
 KFR_FN(bitwiseand)
 
-/// @brief Bitwise And-Not
+/**
+ * @brief Bitwise AND-NOT of `x` and `y`.
+ *
+ * Returns `x & ~y`, i.e. the bits set in `x` that are not set in `y`.
+ */
 template <typename T1, typename T2>
 KFR_INTRINSIC std::common_type_t<T1, T2> bitwiseandnot(const T1& x, const T2& y)
 {
     return x & ~y;
 }
+/** @brief Identity element for `bitwiseandnot` (returns all ones). */
 template <typename T>
 constexpr inline T bitwiseandnot(initialvalue<T>)
 {
@@ -237,12 +269,17 @@ constexpr inline T bitwiseandnot(initialvalue<T>)
 }
 KFR_FN(bitwiseandnot)
 
-/// @brief Bitwise Or
+/**
+ * @brief Bitwise OR of `x` and `y`.
+ *
+ * Returns the bitwise disjunction of the two operands.
+ */
 template <typename T1, typename T2>
 KFR_INTRINSIC std::common_type_t<T1, T2> bitwiseor(const T1& x, const T2& y)
 {
     return x | y;
 }
+/** @brief Identity element for `bitwiseor` (returns zero). */
 template <typename T>
 constexpr KFR_INTRINSIC T bitwiseor(initialvalue<T>)
 {
@@ -250,12 +287,17 @@ constexpr KFR_INTRINSIC T bitwiseor(initialvalue<T>)
 }
 KFR_FN(bitwiseor)
 
-/// @brief Bitwise Xor (Exclusive Or)
+/**
+ * @brief Bitwise XOR (exclusive OR) of `x` and `y`.
+ *
+ * Returns the bits that differ between the two operands.
+ */
 template <typename T1, typename T2>
 KFR_INTRINSIC std::common_type_t<T1, T2> bitwisexor(const T1& x, const T2& y)
 {
     return x ^ y;
 }
+/** @brief Identity element for `bitwisexor` (returns zero). */
 template <typename T>
 constexpr KFR_INTRINSIC T bitwisexor(initialvalue<T>)
 {
@@ -263,7 +305,11 @@ constexpr KFR_INTRINSIC T bitwisexor(initialvalue<T>)
 }
 KFR_FN(bitwisexor)
 
-/// @brief Bitwise Left shift
+/**
+ * @brief Bitwise left shift.
+ *
+ * Returns `left` shifted left by `right` bits.
+ */
 template <typename T1, typename T2>
 KFR_INTRINSIC T1 shl(const T1& left, const T2& right)
 {
@@ -271,7 +317,11 @@ KFR_INTRINSIC T1 shl(const T1& left, const T2& right)
 }
 KFR_FN(shl)
 
-/// @brief Bitwise Right shift
+/**
+ * @brief Bitwise right shift.
+ *
+ * Returns `left` shifted right by `right` bits.
+ */
 template <typename T1, typename T2>
 KFR_INTRINSIC T1 shr(const T1& left, const T2& right)
 {
@@ -279,7 +329,12 @@ KFR_INTRINSIC T1 shr(const T1& left, const T2& right)
 }
 KFR_FN(shr)
 
-/// @brief Bitwise Left Rotate
+/**
+ * @brief Bitwise left rotate.
+ *
+ * Rotates the bits of `left` to the left by `right` positions, wrapping the
+ * high-order bits back to the low end.
+ */
 template <typename T1, typename T2>
 KFR_INTRINSIC T1 rol(const T1& left, const T2& right)
 {
@@ -287,7 +342,12 @@ KFR_INTRINSIC T1 rol(const T1& left, const T2& right)
 }
 KFR_FN(rol)
 
-/// @brief Bitwise Right Rotate
+/**
+ * @brief Bitwise right rotate.
+ *
+ * Rotates the bits of `left` to the right by `right` positions, wrapping the
+ * low-order bits back to the high end.
+ */
 template <typename T1, typename T2>
 KFR_INTRINSIC T1 ror(const T1& left, const T2& right)
 {
@@ -295,6 +355,7 @@ KFR_INTRINSIC T1 ror(const T1& left, const T2& right)
 }
 KFR_FN(ror)
 
+/** @brief Identity add (single argument). */
 template <typename T>
 constexpr KFR_INTRINSIC T add(const T& x)
 {
@@ -309,6 +370,7 @@ constexpr KFR_INTRINSIC std::common_type_t<T1, T2, Ts...> add(const T1& x, const
 {
     return x + add(y, rest...);
 }
+/** @brief Identity element for `add` (returns zero). */
 template <typename T>
 constexpr KFR_INTRINSIC T add(initialvalue<T>)
 {
@@ -316,11 +378,13 @@ constexpr KFR_INTRINSIC T add(initialvalue<T>)
 }
 KFR_FN(add)
 
+/** @brief Subtraction of two values. */
 template <typename T1, typename T2>
 constexpr KFR_INTRINSIC std::common_type_t<T1, T2> sub(const T1& x, const T2& y)
 {
     return x - y;
 }
+/** @brief Identity element for `sub` (returns zero). */
 template <typename T>
 constexpr KFR_INTRINSIC T sub(initialvalue<T>)
 {
@@ -328,6 +392,7 @@ constexpr KFR_INTRINSIC T sub(initialvalue<T>)
 }
 KFR_FN(sub)
 
+/** @brief Identity mul (single argument). */
 template <typename T1>
 constexpr KFR_INTRINSIC T1 mul(const T1& x)
 {
@@ -343,6 +408,7 @@ constexpr KFR_INTRINSIC std::common_type_t<T1, T2, Ts...> mul(const T1& x, const
     return x * mul(y, rest...);
 }
 
+/** @brief Identity element for `mul` (returns one). */
 template <typename T>
 constexpr KFR_INTRINSIC T mul(initialvalue<T>)
 {
@@ -370,24 +436,28 @@ constexpr inline T1 cub(const T1& x)
 }
 KFR_FN(cub)
 
+/** @brief Returns \f$ x^2 \f$. */
 template <numeric T>
 constexpr KFR_INTRINSIC T pow2(const T& x)
 {
     return sqr(x);
 }
 
+/** @brief Returns \f$ x^3 \f$. */
 template <numeric T>
 constexpr KFR_INTRINSIC T pow3(const T& x)
 {
     return cub(x);
 }
 
+/** @brief Returns \f$ x^4 \f$. */
 template <numeric T>
 constexpr KFR_INTRINSIC T pow4(const T& x)
 {
     return sqr(sqr(x));
 }
 
+/** @brief Returns \f$ x^5 \f$. */
 template <numeric T>
 constexpr KFR_INTRINSIC T pow5(const T& x)
 {
@@ -398,11 +468,15 @@ KFR_FN(pow3)
 KFR_FN(pow4)
 KFR_FN(pow5)
 
-/// Raise x to the power base \f$ x^{base} \f$
-/// @code
-/// CHECK( ipow( 10, 3 ) == 1000 );
-/// CHECK( ipow( 0.5, 2 ) == 0.25 );
-/// @endcode
+/**
+ * @brief Integer power.
+ *
+ * Returns \f$ x^{base} \f$ computed by repeated squaring.
+ * @code
+ * CHECK( ipow( 10, 3 ) == 1000 );
+ * CHECK( ipow( 0.5, 2 ) == 0.25 );
+ * @endcode
+ */
 template <typename T>
 constexpr inline T ipow(const T& x, int base)
 {
@@ -419,16 +493,21 @@ constexpr inline T ipow(const T& x, int base)
 }
 KFR_FN(ipow)
 
-/// Return square of the sum of all arguments
-/// @code
-/// CHECK(sqrsum(1,2,3) == 36);
-/// @endcode
+/**
+ * @brief Square of the sum of all arguments.
+ *
+ * Returns \f$ (x_0 + x_1 + \dots + x_n)^2 \f$.
+ * @code
+ * CHECK(sqrsum(1,2,3) == 36);
+ * @endcode
+ */
 template <typename T1, typename... Ts>
 constexpr inline std::common_type_t<T1, Ts...> sqrsum(const T1& x, const Ts&... rest)
 {
     return sqr(add(x, rest...));
 }
 
+/** @brief Returns square of the difference of two arguments. */
 template <typename T1, typename T2>
 constexpr inline std::common_type_t<T1, T2> sqrdiff(const T1& x, const T2& y)
 {
@@ -437,7 +516,11 @@ constexpr inline std::common_type_t<T1, T2> sqrdiff(const T1& x, const T2& y)
 KFR_FN(sqrsum)
 KFR_FN(sqrdiff)
 
-/// Division
+/**
+ * @brief Division of `x` by `y`.
+ *
+ * Returns the quotient of the two operands, cast to their common type.
+ */
 template <typename T1, typename T2, typename Tout = std::common_type_t<T1, T2>>
 KFR_INTRINSIC Tout div(const T1& x, const T2& y)
 {
@@ -445,14 +528,23 @@ KFR_INTRINSIC Tout div(const T1& x, const T2& y)
 }
 KFR_FN(div)
 
-/// Modulo
+/**
+ * @brief Modulo of `x` by `y`.
+ *
+ * Returns the remainder of the integer division of `x` by `y`, cast to their
+ * common type.
+ */
 template <typename T1, typename T2, typename Tout = std::common_type_t<T1, T2>>
 KFR_INTRINSIC Tout mod(const T1& x, const T2& y)
 {
     return static_cast<Tout>(x) % static_cast<Tout>(y);
 }
 KFR_FN(mod)
-/// Remainder
+/**
+ * @brief Remainder of `x` divided by `y`.
+ *
+ * Equivalent to `mod`; provided for naming symmetry with `std::remainder`.
+ */
 template <typename T1, typename T2, typename Tout = std::common_type_t<T1, T2>>
 KFR_INTRINSIC Tout rem(const T1& x, const T2& y)
 {
@@ -460,7 +552,11 @@ KFR_INTRINSIC Tout rem(const T1& x, const T2& y)
 }
 KFR_FN(rem)
 
-/// Negation
+/**
+ * @brief Arithmetic negation of `x`.
+ *
+ * Returns the additive inverse of `x`.
+ */
 template <typename T1>
 inline T1 neg(const T1& x)
 {
@@ -468,13 +564,21 @@ inline T1 neg(const T1& x)
 }
 KFR_FN(neg)
 
-/// @brief Fused Multiply-Add
+/**
+ * @brief Fused multiply-add.
+ *
+ * Returns `x * y + z`.
+ */
 template <typename T1, typename T2, typename T3>
 KFR_INTRINSIC constexpr std::common_type_t<T1, T2, T3> fmadd(const T1& x, const T2& y, const T3& z)
 {
     return x * y + z;
 }
-/// @brief Fused Multiply-Sub
+/**
+ * @brief Fused multiply-subtract.
+ *
+ * Returns `x * y - z`.
+ */
 template <typename T1, typename T2, typename T3>
 KFR_INTRINSIC constexpr std::common_type_t<T1, T2, T3> fmsub(const T1& x, const T2& y, const T3& z)
 {
@@ -483,15 +587,24 @@ KFR_INTRINSIC constexpr std::common_type_t<T1, T2, T3> fmsub(const T1& x, const 
 KFR_FN(fmadd)
 KFR_FN(fmsub)
 
-/// @brief Linear blend of `x` and `y` (`c` must be in the range 0...+1)
-/// Returns `x + ( y - x ) * c`
+/**
+ * @brief Linear blend of `x` and `y`.
+ *
+ * Returns `x + (y - x) * c`. The blend factor `c` must be in the range
+ * \f$ [0, 1] \f$, where `0` yields `x` and `1` yields `y`.
+ */
 template <numeric T1, numeric T2, numeric T3>
 KFR_INTRINSIC constexpr std::common_type_t<T1, T2, T3> mix(const T1& c, const T2& x, const T3& y)
 {
     return fmadd(c, y - x, x);
 }
 
-/// @brief Linear blend of `x` and `y` (`c` must be in the range -1...+1)
+/**
+ * @brief Signed linear blend of `x` and `y`.
+ *
+ * As `mix` but accepts a blend factor `c` in the range \f$ [-1, 1] \f$, mapping
+ * it to \f$ [0, 1] \f$ internally.
+ */
 template <numeric T1, numeric T2, numeric T3>
 KFR_INTRINSIC constexpr std::common_type_t<T1, T2, T3> mixs(const T1& c, const T2& x, const T3& y)
 {
@@ -575,8 +688,11 @@ constexpr KFR_INTRINSIC std::common_type_t<T1, Ts...> horner_odd(const T1& x, co
 }
 KFR_FN(horner_odd)
 
-/// @brief Calculate Multiplicative Inverse of `x`
-/// Returns `1/x`
+/**
+ * @brief Multiplicative inverse of `x`.
+ *
+ * Returns \f$ 1/x \f$. `T` must be a floating-point type.
+ */
 template <typename T>
 constexpr KFR_INTRINSIC T reciprocal(const T& x)
 {
@@ -585,6 +701,7 @@ constexpr KFR_INTRINSIC T reciprocal(const T& x)
 }
 KFR_FN(reciprocal)
 
+/** @brief Multiply `x` by the sign of `y` without a conditional branch. */
 template <typename T1, typename T2>
 KFR_INTRINSIC std::common_type_t<T1, T2> mulsign(const T1& x, const T2& y)
 {
@@ -592,13 +709,19 @@ KFR_INTRINSIC std::common_type_t<T1, T2> mulsign(const T1& x, const T2& y)
 }
 KFR_FN(mulsign)
 
+/** @brief Compose `x` with the magnitude of `x` and the sign of `y`. */
 template <typename T, size_t N>
 constexpr KFR_INTRINSIC vec<T, N> copysign(const vec<T, N>& x, const vec<T, N>& y)
 {
     return (x & special_constants<T>::highbitmask()) | (y & special_constants<T>::highbitmask());
 }
 
-/// @brief Swap byte order
+/**
+ * @brief Swap byte order of `x`.
+ *
+ * Reverses the bytes of `x` to convert between big-endian and little-endian
+ * representations.
+ */
 template <typename T>
 KFR_INTRINSIC T swapbyteorder(const T& x)
 {
@@ -606,12 +729,14 @@ KFR_INTRINSIC T swapbyteorder(const T& x)
 }
 KFR_FN(swapbyteorder)
 
+/** @brief Returns a vector with `a-b` in the low half and `a+b` in the high half. */
 template <typename T, size_t N>
     requires(N >= 2)
 KFR_INTRINSIC vec<T, N> subadd(const vec<T, N>& a, const vec<T, N>& b)
 {
     return blend<1, 0>(a + b, a - b);
 }
+/** @brief Returns a vector with `a+b` in the low half and `a-b` in the high half. */
 template <typename T, size_t N>
     requires(N >= 2)
 KFR_INTRINSIC vec<T, N> addsub(const vec<T, N>& a, const vec<T, N>& b)
@@ -621,17 +746,23 @@ KFR_INTRINSIC vec<T, N> addsub(const vec<T, N>& a, const vec<T, N>& b)
 KFR_FN(subadd)
 KFR_FN(addsub)
 
+/** @brief Negates the even-indexed lanes of `x`. */
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> negeven(const vec<T, N>& x)
 {
     return x ^ broadcast<N>(-T(), T());
 }
+/** @brief Negates the odd-indexed lanes of `x`. */
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> negodd(const vec<T, N>& x)
 {
     return x ^ broadcast<N>(T(), -T());
 }
 
+/**
+ * @brief Transposes and packs `sizeof...(Ns)+1` vectors of length `N1` into a
+ *        vector of vectors of length `N1`.
+ */
 template <typename T, size_t N1, size_t... Ns>
 vec<vec<T, sizeof...(Ns) + 1>, N1> packtranspose(const vec<T, N1>& x, const vec<T, Ns>&... rest)
 {

@@ -33,19 +33,52 @@ namespace kfr
 {
 
 #if KFR_COMPILER_GNU
+/**
+ * @brief Positive infinity as a `double`.
+ */
 constexpr double infinity = __builtin_inf();
+/**
+ * @brief Quiet NaN (Not-a-Number) as a `double`.
+ */
 constexpr double qnan     = __builtin_nan("");
 #else
+/**
+ * @brief Positive infinity as a `double`.
+ */
 constexpr double infinity = HUGE_VAL;
+/**
+ * @brief Quiet NaN (Not-a-Number) as a `double`.
+ */
 constexpr double qnan     = NAN;
 #endif
 KFR_PRAGMA_GNU(GCC diagnostic push)
 KFR_PRAGMA_GNU(GCC diagnostic ignored "-Woverflow")
 
+/**
+ * @brief Collection of mathematical and machine constants for the scalar type `T`.
+ *
+ * The constants are provided as `constexpr static` members so they can be used in
+ * compile-time contexts. SIMD vector types derive their constants from the
+ * corresponding scalar element type via `constants`.
+ *
+ * @tparam T The scalar numeric type (e.g. `float`, `double`).
+ */
 template <typename T>
 struct scalar_constants
 {
+    /**
+     * @brief Returns π scaled by `m / d`.
+     * @param m Numerator multiplier.
+     * @param d Denominator divisor (defaults to 1).
+     * @return `pi * m / d`.
+     */
     constexpr static T pi_s(int m, int d = 1) { return pi * m / d; }
+    /**
+     * @brief Returns the reciprocal of π scaled by `m / d`.
+     * @param m Numerator multiplier.
+     * @param d Denominator divisor (defaults to 1).
+     * @return `recip_pi * m / d`.
+     */
     constexpr static T recip_pi_s(int m, int d = 1) { return recip_pi * m / d; }
 
     /**
@@ -114,14 +147,28 @@ struct scalar_constants
      */
     constexpr static T sqrt_2 = static_cast<T>(1.4142135623730950488016887242097);
 
+    /**
+     * @brief Constant `π/2` used as the folding divisor in trigonometric argument reduction.
+     *
+     * Used by `trig_fold` to reduce an angle into the range `[0, π/2)`.
+     */
     constexpr static T fold_constant_div = choose_const<T>(
         KFR_FP(0x1.921fb6p-1f, 7.8539818525e-01f), KFR_FP(0x1.921fb54442d18p-1, 7.853981633974482790e-01));
 
+    /**
+     * @brief High part of the `π/2` folding constant (Cody-Waite reduction).
+     */
     constexpr static T fold_constant_hi = choose_const<T>(
         KFR_FP(0x1.922000p-1f, 7.8540039062e-01f), KFR_FP(0x1.921fb40000000p-1, 7.853981256484985352e-01));
+    /**
+     * @brief First remainder term of the `π/2` folding constant (Cody-Waite reduction).
+     */
     constexpr static T fold_constant_rem1 =
         choose_const<T>(KFR_FP(-0x1.2ae000p-19f, -2.2267922759e-06f),
                         KFR_FP(0x1.4442d00000000p-25, 3.774894707930798177e-08));
+    /**
+     * @brief Second remainder term of the `π/2` folding constant (Cody-Waite reduction).
+     */
     constexpr static T fold_constant_rem2 =
         choose_const<T>(KFR_FP(-0x1.de973ep-32f, -4.3527578764e-10f),
                         KFR_FP(0x1.8469898cc5170p-49, 2.695151429079059484e-15));
@@ -151,6 +198,14 @@ struct scalar_constants
     constexpr static T qnan = std::numeric_limits<T>::quiet_NaN();
 };
 
+/**
+ * @brief Constants for the SIMD type `T`, inheriting from the scalar constants of its element type.
+ *
+ * Provides access (via inheritance) to all members of `scalar_constants<subtype<T>>` for use in
+ * generic code parameterised on a vector type.
+ *
+ * @tparam T A SIMD vector type (e.g. `vec<float, 4>`) or a scalar type.
+ */
 template <typename T>
 struct constants : public scalar_constants<subtype<T>>
 {
@@ -158,6 +213,15 @@ public:
     using Tsub = subtype<T>;
 };
 
+/**
+ * @brief Forces a compile-time evaluation of the given `size_t` value.
+ *
+ * Used to ensure that an alignment value computed at compile time is treated as a constant
+ * expression by the compiler (e.g. inside `alignas(...)`), since some compilers reject
+ * `alignas` arguments that are not manifestly constant.
+ *
+ * @tparam Value The compile-time size value.
+ */
 template <size_t Value>
 constexpr inline size_t force_compiletime_size_t = Value;
 
