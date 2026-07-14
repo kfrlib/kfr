@@ -1,6 +1,3 @@
-/** @addtogroup meta
- *  @{
- */
 #pragma once
 
 #include "../meta.hpp"

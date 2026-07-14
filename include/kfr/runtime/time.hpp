@@ -1,6 +1,3 @@
-/** @addtogroup time
- *  @{
- */
 /*
   Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
@@ -53,6 +50,11 @@
 namespace kfr
 {
 
+/**
+ * @brief Reads the processor's cycle counter.
+ * @tparam fence If true, inserts serialization fences to ensure accurate measurement.
+ * @return The current cycle count.
+ */
 template <bool fence = true>
 KFR_INLINE uint64_t rdtsc() noexcept
 {
@@ -96,12 +98,20 @@ KFR_INLINE uint64_t rdtsc() noexcept
     return tsc;
 }
 
+/**
+ * @brief Returns the current time in nanoseconds since epoch using steady_clock.
+ * @return Current time in nanoseconds.
+ */
 inline std::chrono::nanoseconds steady_time()
 {
     return std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::steady_clock::now().time_since_epoch());
 }
 
+/**
+ * @brief Measures and returns the estimated cycle time in nanoseconds per tick for rdtsc.
+ * @return Nanoseconds per tick.
+ */
 inline double measure_rdtsc_cycle_time()
 {
 #if defined(__aarch64__)
@@ -189,9 +199,14 @@ struct timestamps
     }
     static inline uint64_t rdtsc_overhead = compute_rdtsc_overhead();
 
+    /** @brief Cycle count captured by @ref init or the most recent @ref record; used as the
+     *         reference point for the next duration measurement. */
     uint64_t last = 0;
+    /** @brief Per-checkpoint elapsed cycle counts (overhead-subtracted), indexed by record order. */
     uint64_t dur[max_count]{};
+    /** @brief Per-checkpoint labels, parallel to @ref dur. */
     const char* msg[max_count]{};
+    /** @brief Number of checkpoints currently stored in @ref dur / @ref msg. */
     size_t count = 0;
 
     /** @brief Reset the profiler, capturing the current cycle count as time zero. */
@@ -319,24 +334,41 @@ inline uint64_t clock_frequency() noexcept
 #endif
 }
 
+/**
+ * @brief Returns the elapsed time in seconds since @p start_time, based on @ref clock_now.
+ * @param start_time Tick count previously captured with @ref clock_now.
+ * @return Elapsed seconds as a floating-point value.
+ */
 inline double clock_elapsed(uint64_t start_time) noexcept
 {
     uint64_t now = clock_now();
     return static_cast<double>(now - start_time) / static_cast<double>(clock_frequency());
 }
 
+/**
+ * @brief RAII-style stopwatch measuring wall-clock elapsed time via @ref clock_now.
+ *
+ * Captures the clock tick and frequency at construction so that subsequent calls
+ * to @ref elapsed_s and the typed @ref elapsed variants report the interval since
+ * construction without re-querying the frequency.
+ */
 struct stopwatch
 {
+    /** @brief Tick count captured at construction. */
     uint64_t start_time;
+    /** @brief Tick frequency of the underlying clock, captured at construction. */
     uint64_t frequency;
     stopwatch() : start_time(clock_now()), frequency(clock_frequency()) {}
 
+    /** @brief Return the elapsed wall-clock time in seconds since construction. */
     double elapsed_s() const noexcept
     {
         uint64_t now = clock_now();
         return static_cast<double>(now - start_time) / static_cast<double>(frequency);
     }
 
+    /** @brief Return the elapsed time since construction cast to the requested @p Duration type.
+     * @tparam Duration A std::chrono duration type (e.g. std::chrono::milliseconds). */
     template <typename Duration>
     Duration elapsed() const noexcept
     {
@@ -344,8 +376,11 @@ struct stopwatch
         return std::chrono::duration_cast<Duration>(elapsed_seconds);
     }
 
+    /** @brief Convenience wrapper for @ref elapsed returning nanoseconds. */
     std::chrono::nanoseconds elapsed_ns() const noexcept { return elapsed<std::chrono::nanoseconds>(); }
+    /** @brief Convenience wrapper for @ref elapsed returning microseconds. */
     std::chrono::microseconds elapsed_us() const noexcept { return elapsed<std::chrono::microseconds>(); }
+    /** @brief Convenience wrapper for @ref elapsed returning milliseconds. */
     std::chrono::milliseconds elapsed_ms() const noexcept { return elapsed<std::chrono::milliseconds>(); }
 };
 

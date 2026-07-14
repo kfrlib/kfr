@@ -1,6 +1,3 @@
-/** @addtogroup meta
- *  @{
- */
 #pragma once
 
 #include "cident.h"

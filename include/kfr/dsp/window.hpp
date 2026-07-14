@@ -1,6 +1,3 @@
-/** @addtogroup window
- *  @{
- */
 /*
   Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR

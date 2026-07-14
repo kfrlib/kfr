@@ -1,6 +1,3 @@
-/** @addtogroup cpuid
- *  @{
- */
 /*
   Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
@@ -36,72 +33,81 @@
 namespace kfr
 {
 #if defined(KFR_ARCH_X86) && !defined(__wasm)
+/**
+ * @brief Detected x86 CPU capabilities and identifying strings.
+ *
+ * Populated by @ref internal_generic::detect_cpu from CPUID leaves 0, 1, 7 and
+ * the extended leaves 0x80000000–0x80000004. Each `has*` bitfield reports
+ * whether the corresponding instruction-set extension is available, and the
+ * `*OSSUPPORT` flags additionally require the OS to have enabled the relevant
+ * XCR0 bits (so AVX/AVX-512 state is actually usable from user mode).
+ */
 struct cpu_features
 {
-    u32 max;
-    u32 exmax;
-    u32 isIntel : 1;
-    u32 isAMD : 1;
-    u32 has3DNOW : 1;
-    u32 has3DNOWEXT : 1;
-    u32 hasABM : 1;
-    u32 hasADX : 1;
-    u32 hasAES : 1;
-    u32 hasAVX : 1;
-    u32 hasAVX2 : 1;
-    u32 hasAVXOSSUPPORT : 1;
-    u32 hasAVX512OSSUPPORT : 1;
-    u32 hasAVX512CD : 1;
-    u32 hasAVX512ER : 1;
-    u32 hasAVX512F : 1;
-    u32 hasAVX512DQ : 1;
-    u32 hasAVX512PF : 1;
-    u32 hasAVX512BW : 1;
-    u32 hasAVX512VL : 1;
-    u32 hasBMI1 : 1;
-    u32 hasBMI2 : 1;
-    u32 hasCLFSH : 1;
-    u32 hasCMOV : 1;
-    u32 hasCMPXCHG16B : 1;
-    u32 hasCX8 : 1;
-    u32 hasERMS : 1;
-    u32 hasF16C : 1;
-    u32 hasFMA : 1;
-    u32 hasFSGSBASE : 1;
-    u32 hasFXSR : 1;
-    u32 hasHLE : 1;
-    u32 hasINVPCID : 1;
-    u32 hasLAHF : 1;
-    u32 hasLZCNT : 1;
-    u32 hasMMX : 1;
-    u32 hasMMXEXT : 1;
-    u32 hasMONITOR : 1;
-    u32 hasMOVBE : 1;
-    u32 hasMSR : 1;
-    u32 hasOSXSAVE : 1;
-    u32 hasPCLMULQDQ : 1;
-    u32 hasPOPCNT : 1;
-    u32 hasPREFETCHWT1 : 1;
-    u32 hasRDRAND : 1;
-    u32 hasRDSEED : 1;
-    u32 hasRDTSCP : 1;
-    u32 hasRTM : 1;
-    u32 hasSEP : 1;
-    u32 hasSHA : 1;
-    u32 hasSSE : 1;
-    u32 hasSSE2 : 1;
-    u32 hasSSE3 : 1;
-    u32 hasSSE41 : 1;
-    u32 hasSSE42 : 1;
-    u32 hasSSE4a : 1;
-    u32 hasSSSE3 : 1;
-    u32 hasSYSCALL : 1;
-    u32 hasTBM : 1;
-    u32 hasXOP : 1;
-    u32 hasXSAVE : 1;
+    u32 max; ///< Highest supported standard CPUID leaf (leaf 0 EAX).
+    u32 exmax; ///< Highest supported extended CPUID leaf (leaf 0x80000000 EAX).
+    u32 isIntel : 1; ///< Vendor string is "GenuineIntel".
+    u32 isAMD : 1; ///< Vendor string is "AuthenticAMD".
+    u32 has3DNOW : 1; ///< AMD 3DNow! instructions.
+    u32 has3DNOWEXT : 1; ///< AMD 3DNow! extension instructions.
+    u32 hasABM : 1; ///< AMD Advanced Bit Manipulation (LZCNT + POPCNT on AMD).
+    u32 hasADX : 1; ///< ADX instruction set (arbitrary-precision add with carry).
+    u32 hasAES : 1; ///< AES instruction set.
+    u32 hasAVX : 1; ///< AVX instruction set (CPUID-reported, see hasAVXOSSUPPORT).
+    u32 hasAVX2 : 1; ///< AVX2 instruction set.
+    u32 hasAVXOSSUPPORT : 1; ///< AVX state enabled by the OS (XCR0[2:1] == 0b11).
+    u32 hasAVX512OSSUPPORT : 1; ///< AVX-512 state enabled by the OS (XCR0[7:5] == 0b111).
+    u32 hasAVX512CD : 1; ///< AVX-512 Conflict Detection.
+    u32 hasAVX512ER : 1; ///< AVX-512 Exponential and Reciprocal instructions.
+    u32 hasAVX512F : 1; ///< AVX-512 Foundation.
+    u32 hasAVX512DQ : 1; ///< AVX-512 Doubleword and Quadword.
+    u32 hasAVX512PF : 1; ///< AVX-512 Prefetch.
+    u32 hasAVX512BW : 1; ///< AVX-512 Byte and Word.
+    u32 hasAVX512VL : 1; ///< AVX-512 Vector Length extensions.
+    u32 hasBMI1 : 1; ///< Bit Manipulation Instructions 1.
+    u32 hasBMI2 : 1; ///< Bit Manipulation Instructions 2.
+    u32 hasCLFSH : 1; ///< CLFLUSH instruction.
+    u32 hasCMOV : 1; ///< CMOVcc conditional move.
+    u32 hasCMPXCHG16B : 1; ///< CMPXCHG16B (128-bit compare-exchange).
+    u32 hasCX8 : 1; ///< CMPXCHG8B (64-bit compare-exchange).
+    u32 hasERMS : 1; ///< Enhanced REP MOVSB/STOSB.
+    u32 hasF16C : 1; ///< F16C half-precision conversion.
+    u32 hasFMA : 1; ///< Fused Multiply-Add (FMA3).
+    u32 hasFSGSBASE : 1; ///< RDFSBASE/WRFSBASE instructions.
+    u32 hasFXSR : 1; ///< FXSAVE/FXRSTOR.
+    u32 hasHLE : 1; ///< Hardware Lock Elision (Intel only).
+    u32 hasINVPCID : 1; ///< INVPCID instruction.
+    u32 hasLAHF : 1; ///< LAHF/SAHF in 64-bit mode.
+    u32 hasLZCNT : 1; ///< LZCNT instruction (Intel only).
+    u32 hasMMX : 1; ///< MMX.
+    u32 hasMMXEXT : 1; ///< AMD MMX extensions.
+    u32 hasMONITOR : 1; ///< MONITOR/MWAIT.
+    u32 hasMOVBE : 1; ///< MOVBE (move byte-swap).
+    u32 hasMSR : 1; ///< Model-Specific Registers (RDMSR/WRMSR).
+    u32 hasOSXSAVE : 1; ///< OS enables XSAVE/XRSTOR (CPUID.1:ECX[27]).
+    u32 hasPCLMULQDQ : 1; ///< PCLMULQDQ carry-less multiplication.
+    u32 hasPOPCNT : 1; ///< POPCNT instruction.
+    u32 hasPREFETCHWT1 : 1; ///< PREFETCHWT1 (Intel Xeon Phi).
+    u32 hasRDRAND : 1; ///< RDRAND random number.
+    u32 hasRDSEED : 1; ///< RDSEED random seed.
+    u32 hasRDTSCP : 1; ///< RDTSCP instruction (Intel only).
+    u32 hasRTM : 1; ///< Restricted Transactional Memory (Intel only).
+    u32 hasSEP : 1; ///< SYSENTER/SYSEXIT.
+    u32 hasSHA : 1; ///< SHA instruction set.
+    u32 hasSSE : 1; ///< SSE.
+    u32 hasSSE2 : 1; ///< SSE2.
+    u32 hasSSE3 : 1; ///< SSE3.
+    u32 hasSSE41 : 1; ///< SSE4.1.
+    u32 hasSSE42 : 1; ///< SSE4.2.
+    u32 hasSSE4a : 1; ///< AMD SSE4a.
+    u32 hasSSSE3 : 1; ///< SSSE3.
+    u32 hasSYSCALL : 1; ///< SYSCALL/SYSRET (Intel only).
+    u32 hasTBM : 1; ///< AMD Trailing Bit Manipulation.
+    u32 hasXOP : 1; ///< AMD XOP.
+    u32 hasXSAVE : 1; ///< XSAVE/XRSTOR.
     u32 padding1 : 6;
-    alignas(int32_t) char vendor[17];
-    alignas(int32_t) char model[49];
+    alignas(int32_t) char vendor[17]; ///< NUL-terminated CPUID vendor string (leaf 0).
+    alignas(int32_t) char model[49]; ///< NUL-terminated CPUID model/brand string (leaves 0x80000002–4).
     alignas(int32_t) char padding2[2];
 };
 
@@ -303,11 +309,15 @@ cpu_t detect_cpu()
 } // namespace internal_generic
 #else
 
+namespace internal_generic
+{
+
 template <size_t = 0>
 cpu_t detect_cpu()
 {
     return cpu_t::native;
 }
+} // namespace internal_generic
 
 #endif
 } // namespace kfr

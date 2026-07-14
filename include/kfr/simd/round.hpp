@@ -1,6 +1,3 @@
-/** @addtogroup round
- *  @{
- */
 /*
   Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
@@ -184,4 +181,3 @@ KFR_INTRINSIC vec<T, N> rem(const vec<T, N>& x, const vec<T, N>& y)
 
 } // namespace KFR_ARCH_NAME
 } // namespace kfr
-/** @} */

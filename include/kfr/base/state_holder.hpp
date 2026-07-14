@@ -1,6 +1,3 @@
-/** @addtogroup filter
- *  @{
- */
 /**
  * KFR (https://www.kfrlib.com)
  * Copyright (C) 2016-2026 Dan Casarin

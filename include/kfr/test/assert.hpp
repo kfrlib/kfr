@@ -1,7 +1,4 @@
-﻿/** @addtogroup testo
- *  @{
- */
-#pragma once
+﻿#pragma once
 
 #include "comparison.hpp"
 

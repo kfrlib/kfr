@@ -1,6 +1,3 @@
-/** @addtogroup basic_math
- *  @{
- */
 /*
   Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
@@ -35,6 +32,8 @@ namespace kfr
 {
 
 #if defined(KFR_ARCH_RVV) || defined(KFR_ARCH_AVX512)
+/// @brief Disables the bit-shuffle permutation machinery on targets (RVV, AVX-512) that
+/// provide native arbitrary shuffles, where the generic fallback is preferable.
 #define KFR_DISABLE_BITSHUFFLE 1
 #endif
 
@@ -63,6 +62,15 @@ KFR_INTRINSIC void split_native(const vec<T, N>& in, V (&out)[count])
     { ((out[I] = static_cast<V>(slice<S * I, S>(in).v)), ...); }(csizeseq_t<count>{});
 }
 
+/**
+ * @brief Recursively concatenate @p count native register halves into a single vector.
+ * @tparam count Number of input native registers (must be a power of two).
+ * @tparam T Element type of the resulting vector.
+ * @tparam N Logical length of the resulting vector (must be a power of two).
+ * @tparam V Native vector register type.
+ * @param in Array of @p count native register halves to concatenate.
+ * @return The concatenated vector.
+ */
 template <size_t count, typename T, size_t N, typename V>
 KFR_INTRINSIC vec<T, N> concat_native_recursive(const V* in)
 {
@@ -73,6 +81,15 @@ KFR_INTRINSIC vec<T, N> concat_native_recursive(const V* in)
                       concat_native_recursive<count / 2, T, N / 2, V>(in + count / 2));
 }
 
+/**
+ * @brief Concatenate @p count native register halves into a vector.
+ * @tparam T Element type of the resulting vector.
+ * @tparam N Logical length of the resulting vector (must be a power of two).
+ * @tparam V Native vector register type.
+ * @tparam count Number of input native registers (must be a power of two).
+ * @param out Vector receiving the concatenated result.
+ * @param in Array of @p count native register halves to concatenate.
+ */
 template <typename T, size_t N, typename V, size_t count>
 KFR_INTRINSIC void concat_native(vec<T, N>& out, const V (&in)[count])
 {
@@ -83,21 +100,41 @@ KFR_INTRINSIC void concat_native(vec<T, N>& out, const V (&in)[count])
 
 #ifndef KFR_DISABLE_BITSHUFFLE
 
+/**
+ * @brief A single step of a bit-permutation plan.
+ *
+ * Describes one primitive register-pair permutation applied during the
+ * search-based construction of a bit permutation.
+ */
 struct bitperm_step
 {
-    int8_t op_idx       = -1;
-    int8_t pull_src_idx = -1;
+    int8_t op_idx       = -1; ///< Index into intr::bitperm_ops selecting the primitive permutation.
+    int8_t pull_src_idx = -1; ///< Index of the source register to pull into the working slot.
 };
 
+/**
+ * @brief Result of searching for a minimal sequence of primitive permutations that realizes a
+ * target bit permutation.
+ * @tparam T Element type, used to determine the native register width.
+ */
 template <typename T>
 struct bitperm_plan
 {
-    std::array<bitperm_step, intr::in_reg_bits<T>> steps{};
-    uint8_t count = 0;
-    bool found    = false;
-    bitperm<6> final_perm{};
+    std::array<bitperm_step, intr::in_reg_bits<T>> steps{}; ///< Ordered list of permutation steps.
+    uint8_t count = 0; ///< Number of valid steps used.
+    bool found    = false; ///< Whether a plan was found.
+    bitperm<6> final_perm{}; ///< Final register-level permutation applied after the steps.
 };
 
+/**
+ * @brief Apply a single primitive permutation step to a bit permutation state.
+ * @tparam T Element type, used to determine the native register width.
+ * @tparam N Bit width of the permutation.
+ * @param s Current permutation state.
+ * @param x_idx Index where the pulled element currently lives (>= in_reg_bits<T>).
+ * @param op_idx Index into intr::bitperm_ops selecting the primitive permutation.
+ * @return The updated permutation state.
+ */
 template <typename T, size_t N>
 constexpr bitperm<N> apply(bitperm<N> s, int x_idx, int op_idx)
 {
@@ -114,6 +151,14 @@ constexpr bitperm<N> apply(bitperm<N> s, int x_idx, int op_idx)
     return next;
 }
 
+/**
+ * @brief Check whether the first @p z entries of @p current match @p target_prefix.
+ * @tparam z Number of leading entries to compare.
+ * @tparam N Bit width of the permutations.
+ * @param current Current permutation state.
+ * @param target_prefix Target permutation prefix to compare against.
+ * @return true if the first @p z entries are equal.
+ */
 template <size_t z, size_t N>
 constexpr bool prefix_equal(const bitperm<N>& current, const bitperm<N>& target_prefix)
 {
@@ -125,6 +170,17 @@ constexpr bool prefix_equal(const bitperm<N>& current, const bitperm<N>& target_
     return true;
 }
 
+/**
+ * @brief Depth-limited search for a sequence of primitive permutations reaching @p target_prefix.
+ * @tparam T Element type, used to determine the native register width.
+ * @tparam N Bit width of the permutation.
+ * @param current Current permutation state.
+ * @param target_prefix Target permutation prefix to reach.
+ * @param depth Current search depth.
+ * @param limit Maximum search depth.
+ * @param plan Output plan filled in on success.
+ * @return true if a plan reaching the target was found within @p limit steps.
+ */
 template <typename T, size_t N>
 constexpr bool dls(bitperm<N> current, const bitperm<N>& target_prefix, int depth, int limit,
                    bitperm_plan<T>& plan)
@@ -168,6 +224,13 @@ constexpr bool dls(bitperm<N> current, const bitperm<N>& target_prefix, int dept
     return false;
 }
 
+/**
+ * @brief Find the minimal-length plan of primitive permutations realizing @p target_prefix.
+ * @tparam T Element type, used to determine the native register width.
+ * @tparam N Bit width of the permutation.
+ * @param target_prefix Target permutation prefix to reach.
+ * @return A bitperm_plan with the minimal step count; @c found is set on success.
+ */
 template <typename T, size_t N>
 consteval bitperm_plan<T> find_min_plan(bitperm<N> target_prefix)
 {
@@ -183,6 +246,14 @@ consteval bitperm_plan<T> find_min_plan(bitperm<N> target_prefix)
     return plan;
 }
 
+/**
+ * @brief Apply one bit-permutation step to a pair of native register arrays.
+ * @tparam step The permutation step (operator index and pull source) to apply.
+ * @tparam T Element type, used to determine the native register width.
+ * @tparam count Number of native registers (must be a power of two).
+ * @param out Output array of native registers.
+ * @param in Input array of native registers.
+ */
 template <bitperm_step step, typename T, size_t count>
 KFR_INTRINSIC void bitpermute_step(typename native_vector_type<T>::type (&out)[count],
                                    const typename native_vector_type<T>::type (&in)[count])
@@ -281,6 +352,16 @@ KFR_INTRINSIC vec<T, N> bitpermute(const vec<T, N>& w)
 }
 
 #ifdef KFR_DISABLE_OPTIMIZED_SHUFFLE
+/**
+ * @brief Optimized shuffle that uses a bit permutation when the requested element indices form one.
+ * @tparam I Element indices of the desired shuffle.
+ * @tparam T Element type.
+ * @tparam N Vector length (must be a power of two).
+ * @tparam k Log2 of the vector length (defaults to countr_zero(N)).
+ * @param w Input vector.
+ * @return The shuffled vector, using bitpermute when @p I form a bit permutation, otherwise a generic
+ * shuffle.
+ */
 template <size_t... I, typename T, size_t N, size_t k = std::countr_zero(N)>
 KFR_INTRINSIC vec<T, N> optimized_shuffle(const vec<T, N>& w, elements_t<I...>)
 {

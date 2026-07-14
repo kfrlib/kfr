@@ -1,6 +1,3 @@
-/** @addtogroup memory
- *  @{
- */
 #pragma once
 
 #include "numeric.hpp"

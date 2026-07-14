@@ -20,9 +20,6 @@
   disclosing the source code of your own applications.
   See https://www.kfrlib.com for details.
  */
-/** @addtogroup utility
- *  @{
- */
 #pragma once
 
 #include "config.h"
