@@ -41,6 +41,18 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
+namespace internal
+{
+
+/**
+ * @brief Split a vector into @p count native-sized register halves.
+ * @tparam count Number of output native registers (must be a power of two).
+ * @tparam T Element type of the input vector.
+ * @tparam N Logical length of the input vector (must be a power of two).
+ * @tparam V Native vector register type.
+ * @param in Vector to split.
+ * @param out Array receiving the @p count native register halves.
+ */
 template <size_t count, typename T, size_t N, typename V>
 KFR_INTRINSIC void split_native(const vec<T, N>& in, V (&out)[count])
 {
@@ -196,6 +208,22 @@ KFR_INTRINSIC void bitpermute_step(typename native_vector_type<T>::type (&out)[c
 
 #endif
 
+} // namespace internal
+
+/**
+ * @brief Permute the elements of a vector according to a bit permutation.
+ *
+ * The permutation is described by @p perm, a bit-level reindexing of the @p k-bit element index.
+ * On targets without native support the permutation is realized by a search-found sequence of
+ * primitive register-pair permutations; on targets with KFR_DISABLE_BITSHUFFLE a generic
+ * simd_shuffle fallback is used instead.
+ * @tparam k Log2 of the vector length.
+ * @tparam perm The bit permutation to apply.
+ * @tparam T Element type.
+ * @tparam N Vector length (defaults to 1 << k).
+ * @param w Input vector.
+ * @return The permuted vector.
+ */
 template <size_t k, bitperm<k> perm, typename T, size_t N = 1u << k>
 KFR_INTRINSIC vec<T, N> bitpermute(const vec<T, N>& w)
 {
@@ -213,7 +241,7 @@ KFR_INTRINSIC vec<T, N> bitpermute(const vec<T, N>& w)
 #endif
     {
         static_assert(ilog2(N) <= 8);
-        constexpr auto plan = find_min_plan<T>(perm);
+        constexpr auto plan = internal::find_min_plan<T>(perm);
         static_assert(plan.found, "No plan found for this permutation");
 
         using V                   = typename native_vector_type<T>::type;
@@ -224,29 +252,29 @@ KFR_INTRINSIC vec<T, N> bitpermute(const vec<T, N>& w)
         V y[count];
         if constexpr (plan.count % 2 == 0)
         {
-            split_native(w, y);
+            internal::split_native(w, y);
         }
         else
         {
-            split_native(w, x);
+            internal::split_native(w, x);
         }
 
         KFR_FOR(i, 0, plan.count)
         {
             if constexpr ((plan.count - 1 - i) % 2 == 0)
             {
-                bitpermute_step<plan.steps[i], T>(y, x);
+                internal::bitpermute_step<plan.steps[i], T>(y, x);
             }
             else
             {
-                bitpermute_step<plan.steps[i], T>(x, y);
+                internal::bitpermute_step<plan.steps[i], T>(x, y);
             }
         };
 
         KFR_FOR(i, 0, count) { x[i] = y[internal_generic::shuffle_bits(i, plan.final_perm)]; };
 
         vec<T, N> result;
-        concat_native(result, x);
+        internal::concat_native(result, x);
         return result;
     }
 #endif

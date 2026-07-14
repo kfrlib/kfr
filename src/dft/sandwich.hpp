@@ -719,12 +719,12 @@ struct stride_rw
         cvec<T, N * count> result;
         cvec<T, N> w[count];
         read(in, w);
-        return concat_native(result, w);
+        return internal::concat_native(result, w);
     }
     KFR_MEM_INTRINSIC void write(complex<T>* out, const cvec<T, N * count>& w) noexcept
     {
         cvec<T, N> ws[count];
-        split_native(w, ws);
+        internal::split_native(w, ws);
         write(out, ws);
     }
 

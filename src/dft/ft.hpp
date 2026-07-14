@@ -76,13 +76,13 @@ KFR_INTRINSIC void materialize(vec<T, N>& w)
     constexpr size_t elements = sizeof(V) / sizeof(T);
     constexpr size_t count    = N / elements;
     V x[count];
-    split_native(w, x);
+    internal::split_native(w, x);
     for (size_t i = 0; i < count; ++i)
     {
         // Ensure x[i] is in cpu register and not optimized away
         asm volatile("" : "+v"(x[i]));
     };
-    concat_native(w, x);
+    internal::concat_native(w, x);
 #endif
 }
 
