@@ -35,6 +35,8 @@
 #include <algorithm>
 #include <cinttypes>
 
+#ifndef KFR_DISALLOW_SYSTEM_HEADERS
+
 // Platform Detection
 #if defined(_WIN32)
 #define NOMINMAX 1
@@ -385,3 +387,5 @@ struct stopwatch
 };
 
 } // namespace kfr
+
+#endif // KFR_DISALLOW_SYSTEM_HEADERS
