@@ -108,3 +108,5 @@ lcov.info
 
 docs/site
 docs/out.json
+
+kfr_amalgamated.hpp
