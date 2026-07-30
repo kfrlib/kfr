@@ -450,6 +450,8 @@ public:
     void start() { m_running = true; }
     /** @brief Pause measurement: packets are still filtered but buffers are frozen. */
     void stop() { m_running = false; }
+    /** @brief Return whether the meter is currently running (see @ref start(), @ref stop()). */
+    bool running() const { return m_running; }
     /**
      * @brief Request a deferred reset of all channels and accumulators.
      *
