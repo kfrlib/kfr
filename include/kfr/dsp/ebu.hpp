@@ -326,6 +326,8 @@ public:
     }
     /** @brief Return the speaker role assigned to this channel. */
     speaker_type get_speaker() const { return m_speaker; }
+    /** @brief Return the number of samples per packet. */
+    size_t packet_size() const { return m_packet_size; }
 
 private:
     const int m_sample_rate;
