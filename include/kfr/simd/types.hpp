@@ -238,6 +238,126 @@ struct f16
 {
     /// @brief Raw bit representation of the half-precision value.
     u16 raw;
+
+    /// @brief Default constructor leaving the value uninitialized.
+    f16() noexcept = default;
+
+    static f16 from_raw(u16 raw) noexcept
+    {
+        f16 value;
+        value.raw = raw;
+        return value;
+    }
+
+    /**
+     * @brief Converts a single-precision value to IEEE 754 binary16.
+     *
+     * Uses F16C when the compilation target enables it; otherwise performs
+     * round-to-nearest, ties-to-even conversion in integer arithmetic.
+     */
+    f16(f32 value) noexcept
+    {
+#if defined(__F16C__)
+        raw = static_cast<u16>(_mm_cvtsi128_si32(
+            _mm_cvtps_ph(_mm_set_ss(value), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)));
+#else
+        raw = from_f32(value);
+#endif
+    }
+
+    /**
+     * @brief Converts this IEEE 754 binary16 value to single precision.
+     *
+     * Uses F16C when the compilation target enables it.  The software path
+     * exactly preserves zeros, infinities, NaN payloads, and subnormals.
+     */
+    operator f32() const noexcept
+    {
+#if defined(__F16C__)
+        return _mm_cvtss_f32(_mm_cvtph_ps(_mm_cvtsi32_si128(raw)));
+#else
+        return to_f32(raw);
+#endif
+    }
+
+private:
+    static u16 from_f32(f32 value) noexcept
+    {
+        const u32 bits     = bitcast_anything<u32>(value);
+        const u16 sign     = static_cast<u16>(bits >> 16) & 0x8000;
+        const u32 exponent = (bits >> 23) & 0xFF;
+        const u32 fraction = bits & 0x7FFFFF;
+
+        if (exponent == 0xFF)
+        {
+            if (fraction == 0)
+                return sign | 0x7C00;
+
+            // Preserve the most significant payload bits and quiet signaling NaNs.
+            return sign | 0x7C00 | static_cast<u16>((fraction >> 13) | 0x0200);
+        }
+
+        const i32 half_exponent = static_cast<i32>(exponent) - 127 + 15;
+        if (half_exponent <= 0)
+        {
+            if (half_exponent < -10)
+                return sign;
+
+            const u32 mantissa  = fraction | 0x800000;
+            const u32 shift     = static_cast<u32>(14 - half_exponent);
+            u32 half_fraction   = mantissa >> shift;
+            const u32 remainder = mantissa & ((u32(1) << shift) - 1);
+            const u32 midpoint  = u32(1) << (shift - 1);
+
+            // IEEE 754 round-to-nearest with ties going to the even result.
+            half_fraction += remainder > midpoint || (remainder == midpoint && (half_fraction & 1));
+            return sign | static_cast<u16>(half_fraction);
+        }
+
+        if (half_exponent >= 31)
+            return sign | 0x7C00;
+
+        // Retain ten fraction bits, rounding the discarded bits to nearest even.
+        // A carry can correctly turn the largest finite binary16 value into infinity.
+        u32 half = (static_cast<u32>(half_exponent) << 10) | (fraction >> 13);
+        const u32 remainder = fraction & 0x1FFF;
+        half += remainder > 0x1000 || (remainder == 0x1000 && (half & 1));
+        return sign | static_cast<u16>(half);
+    }
+
+    static f32 to_f32(u16 value) noexcept
+    {
+        const u32 sign     = static_cast<u32>(value & 0x8000) << 16;
+        const u32 exponent = (value >> 10) & 0x1F;
+        u32 fraction       = value & 0x03FF;
+
+        u32 bits;
+        if (exponent == 0)
+        {
+            if (fraction == 0)
+                bits = sign;
+            else
+            {
+                i32 normalized_exponent = -14;
+                while ((fraction & 0x0400) == 0)
+                {
+                    fraction <<= 1;
+                    --normalized_exponent;
+                }
+                bits = sign | (static_cast<u32>(normalized_exponent + 127) << 23) |
+                       ((fraction & 0x03FF) << 13);
+            }
+        }
+        else if (exponent == 0x1F)
+        {
+            bits = sign | 0x7F800000 | (fraction << 13);
+        }
+        else
+        {
+            bits = sign | ((exponent + 112) << 23) | (fraction << 13);
+        }
+        return bitcast_anything<f32>(bits);
+    }
 };
 
 /**
