@@ -275,6 +275,21 @@ template <size_t k, std::array<size_t, k> perm, typename T, size_t N = 1u << k>
 KFR_INTRINSIC vec<T, N> optimized_bitshuffle(const vec<T, N>& w) noexcept;
 
 /**
+ * @brief Rejected specialization for zero-sized vectors.
+ *
+ * `vec<T, 0>` is intentionally ill-formed. A vector must contain at least one
+ * element, so any attempt to instantiate this specialization triggers a
+ * `static_assert` with a descriptive message.
+ *
+ * @tparam T Element type (ignored).
+ */
+template <typename T>
+struct vec<T, 0>
+{
+    static_assert(sizeof(T) == 0, "vec<T, 0> is not allowed; vector size must be greater than zero");
+};
+
+/**
  * @brief Fixed-size SIMD vector.
  *
  * `vec<T, N>` stores `N` elements of type `T` in a register-friendly layout and
@@ -288,12 +303,9 @@ KFR_INTRINSIC vec<T, N> optimized_bitshuffle(const vec<T, N>& w) noexcept;
  * @tparam T   Element type. May itself be a `vec`, forming a nested vector.
  * @tparam N_  Number of elements (zero is rejected).
  */
-template <typename T, size_t N_>
-struct alignas(internal::vec_alignment<T, N_>) vec
+template <typename T, size_t N>
+struct alignas(internal::vec_alignment<T, N>) vec
 {
-    static_assert(N_ > 0, "vec<T, N>: vector width cannot be zero");
-
-    constexpr static inline size_t N = std::max(size_t(1), N_);
     /** @return A `vec_shape` describing this vector's type and size. */
     static constexpr vec_shape<T, N> shape() noexcept { return {}; }
 
