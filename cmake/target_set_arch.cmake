@@ -13,11 +13,12 @@ elseif (X86)
         set(ARCH_FLAGS_GNU_sse41 -msse4.1)
         set(ARCH_FLAGS_GNU_sse42 -msse4.2)
         set(ARCH_FLAGS_GNU_avx -msse4.2 -mavx)
-        set(ARCH_FLAGS_GNU_avx2 -msse4.2 -mavx2 -mfma)
+        set(ARCH_FLAGS_GNU_avx2 -msse4.2 -mavx2 -mfma -mf16c)
         set(ARCH_FLAGS_GNU_avx512
             -msse4.2
             -mavx2
             -mfma
+            -mf16c
             -mavx512f
             -mavx512cd
             -mavx512bw
