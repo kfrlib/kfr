@@ -454,15 +454,15 @@ using type_of = typename T::type;
 
 /// @brief Compile-time list of types.
 /// @tparam Types the packed types
-template <typename... Types>
+template <typename... Ts>
 struct ctypes_t
 {
     /// Number of types in the list
-    constexpr static size_t size() noexcept { return sizeof...(Types); }
+    constexpr static size_t size() noexcept { return sizeof...(Ts); }
 
     /// The type at position `index`
     template <size_t index>
-    using nth = typename details::get_nth_type<index, Types...>::type;
+    using nth = typename details::get_nth_type<index, Ts...>::type;
 
     /// Returns a ctype_t wrapping the type at position `index`
     template <size_t index>

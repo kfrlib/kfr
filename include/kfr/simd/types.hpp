@@ -47,6 +47,78 @@ KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wignored-qualifiers")
 
 namespace kfr
 {
+/**
+ * @brief Provides special bit-pattern constants for a scalar type.
+ *
+ * The default implementation is intended for integer types. Floating-point
+ * types use specializations that provide their corresponding IEEE 754 masks.
+ * @tparam T Scalar type for which the constants are provided.
+ */
+template <typename T>
+struct special_scalar_constants
+{
+    /// @brief Returns a value with only the most significant bit set.
+    constexpr static T highbitmask() { return static_cast<T>(1ull << (sizeof(T) * 8 - 1)); }
+    /// @brief Returns a value with all bits set.
+    constexpr static T allones() { return static_cast<T>(-1ll); }
+    /// @brief Returns a value with all bits cleared.
+    constexpr static T allzeros() { return T(0); }
+    /// @brief Returns a value with every bit except the most significant bit set.
+    constexpr static T invhighbitmask() { return static_cast<T>((1ull << (sizeof(T) * 8 - 1)) - 1); }
+};
+
+/**
+ * @brief Provides special bit-pattern constants for `float`.
+ *
+ * The masks are represented as floating-point values with the corresponding
+ * IEEE 754 bit patterns.
+ */
+template <>
+struct special_scalar_constants<float>
+{
+    /// @brief Returns negative zero, whose sign bit is set.
+    constexpr static float highbitmask() { return -0.f; }
+    /// @brief Returns a floating-point value with all bits set.
+    constexpr static float allones() noexcept { return internal_generic::allones_f32(); }
+    /// @brief Returns positive zero, whose bits are all cleared.
+    constexpr static float allzeros() { return 0.f; }
+    /// @brief Returns a floating-point value with every bit except the sign bit set.
+    constexpr static float invhighbitmask() { return internal_generic::invhighbit_f32(); }
+};
+
+/**
+ * @brief Provides special bit-pattern constants for `double`.
+ *
+ * The masks are represented as floating-point values with the corresponding
+ * IEEE 754 bit patterns.
+ */
+template <>
+struct special_scalar_constants<double>
+{
+    /// @brief Returns negative zero, whose sign bit is set.
+    constexpr static double highbitmask() { return -0.; }
+    /// @brief Returns a floating-point value with all bits set.
+    constexpr static double allones() noexcept { return internal_generic::allones_f64(); }
+    /// @brief Returns positive zero, whose bits are all cleared.
+    constexpr static double allzeros() { return 0.; }
+    /// @brief Returns a floating-point value with every bit except the sign bit set.
+    constexpr static double invhighbitmask() { return internal_generic::invhighbit_f64(); }
+};
+
+/**
+ * @brief Provides special constants for the scalar subtype of @p T.
+ *
+ * Inherits the appropriate scalar constant implementation, allowing scalar
+ * and compound SIMD types to use the same interface.
+ * @tparam T Type whose scalar subtype determines the constants.
+ */
+template <typename T>
+struct special_constants : public special_scalar_constants<subtype<T>>
+{
+public:
+    /// @brief The scalar subtype used to provide the constants.
+    using Tsub = subtype<T>;
+};
 
 /**
  * @brief Decays to the common type of the supplied arguments after decay.

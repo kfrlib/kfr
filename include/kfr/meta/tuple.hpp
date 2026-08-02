@@ -11,7 +11,7 @@ namespace kfr
 using std::ptrdiff_t;
 using std::size_t;
 
-template <typename T, T...>
+template <typename T, T... values>
 struct cvals_t;
 
 template <size_t... values>
