@@ -192,7 +192,7 @@ struct expression_random_uniform : expression_traits_defaults
     friend KFR_INTRINSIC vec<T, N> get_elements(const expression_random_uniform& self, shape<Dims>,
                                                 axis_params<VecAxis, N>)
     {
-        return random_uniform<N, T>(*self.state);
+        return random_uniform<T, N>(*self.state);
     }
 };
 
@@ -289,7 +289,7 @@ KFR_FUNCTION expression_random_uniform<T, Dims> gen_random_uniform(const random_
  * @return Expression generating uniform random values.
  */
 template <typename T, index_t Dims = 1>
-KFR_FUNCTION expression_random_range<T, Dims, true> gen_random_uniform(
+KFR_FUNCTION expression_random_uniform<T, Dims, true> gen_random_uniform(
     std::reference_wrapper<random_state> state)
 {
     return { {}, state };
@@ -305,7 +305,7 @@ KFR_FUNCTION expression_random_range<T, Dims, true> gen_random_uniform(
  * @return Expression generating uniform random values.
  */
 template <typename T, index_t Dims = 1>
-KFR_FUNCTION expression_random_range<T, Dims> gen_random_uniform()
+KFR_FUNCTION expression_random_uniform<T, Dims> gen_random_uniform()
 {
     return expression_random_uniform<T, Dims>{ random_init() };
 }

@@ -73,6 +73,14 @@ TEST_CASE("gen_random_range")
     // println(mean(v));
 }
 
+TEST_CASE("gen_random_uniform")
+{
+    random_state gen      = random_init(1, 2, 3, 4);
+    univector<fbase, 1000> v = gen_random_uniform<fbase>(std::ref(gen));
+    CHECK(minof(v) >= fbase(0));
+    CHECK(maxof(v) < fbase(1));
+}
+
 TEST_CASE("random_normal")
 {
     random_state gen = random_init(1, 2, 3, 4);
