@@ -261,8 +261,8 @@ struct ebu_r128;
  *
  * Applies the K-weighting filter to each packet, then accumulates the
  * filtered sum-of-squares into two ring buffers:
- *  - @ref m_momentary_sum_of_squares covers 400 ms (momentary loudness, M).
- *  - @ref m_short_sum_of_squares covers 3 s (short-term loudness, S).
+ *  - @c m_momentary_sum_of_squares covers 400 ms (momentary loudness, M).
+ *  - @c m_short_sum_of_squares covers 3 s (short-term loudness, S).
  *
  * Per-channel output gain accounts for the EBU channel weighting
  * (e.g. +1.5 dB for surrounds, 0 dB for LFE).
@@ -310,11 +310,11 @@ public:
     }
 
     /**
-     * @brief Process one packet of @ref m_packet_size samples.
+     * @brief Process one packet of @ref packet_size() samples.
      *
      * Filters the input through the K-filter and adds the resulting
      * sum-of-squares to both ring buffers (overwriting the oldest slot).
-     * @param src Pointer to @ref m_packet_size input samples.
+     * @param src Pointer to @ref packet_size() input samples.
      */
     void process_packet(const T* src)
     {
@@ -424,7 +424,7 @@ public:
      * Each entry of @c source must contain exactly @ref packet_size() samples
      * and correspond, in order, to the channels passed to the constructor.
      * Updates the momentary, short-term, integrated and LRA buffers while
-     * @ref m_running is true.
+     * @ref running() is true.
      */
     void process_packet(const std::initializer_list<univector_dyn<T>>& source)
     {

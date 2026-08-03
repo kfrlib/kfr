@@ -469,7 +469,7 @@ constexpr T partial_masks[] = { special_constants<T>::allones(),
 /**
  * @brief Returns a vector of @c N elements with @p index leading all-ones elements followed by zeros.
  * @tparam T Element type.
- * @tparam N Output vector length (must not exceed half of @ref partial_masks<T>).
+ * @tparam N Output vector length (must not exceed half of @ref partial_masks).
  * @param index Number of leading all-ones elements (0 to @c N).
  * @return A vector acting as a mask selecting the first @p index lanes.
  */

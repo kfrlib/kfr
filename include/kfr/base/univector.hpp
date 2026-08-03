@@ -88,7 +88,7 @@ struct abstract_vector<T, tag_array_ref> : array_ref<T>
  * some_function(make_univector(buffer, size));
  * @endcode
  */
-template <typename T, univector_tag Tag = tag_dynamic_vector>
+template <typename T, univector_tag Size = tag_dynamic_vector>
 struct univector;
 
 /// @brief Base class for all @ref univector specializations, providing common

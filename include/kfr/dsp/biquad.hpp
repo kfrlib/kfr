@@ -60,7 +60,10 @@ enum class biquad_type
  * @brief Structure for holding biquad filter coefficients.
  *
  * Represents a single second-order section in the Direct Form I/II representation:
- *   H(z) = (b0 + b1*z^-1 + b2*z^-2) / (a0 + a1*z^-1 + a2*z^-2)
+ * \f[
+ * H(z) = \frac{b_0 + b_1 z^{-1} + b_2 z^{-2}}
+ *              {a_0 + a_1 z^{-1} + a_2 z^{-2}}
+ * \f]
  * The coefficients are stored unnormalized; use normalized_a0()/normalized_b0() to
  * obtain a section with a0 == 1 or b0 == 1 respectively.
  *
