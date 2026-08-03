@@ -29,20 +29,44 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
-/// @brief Returns the approximate gamma function of an argument
+/**
+ * @brief Returns the approximate gamma function of an argument.
+ *
+ * Uses a rational approximation (Lanczos-like) valid for positive real
+ * arguments. The result is an approximation, not the exact value.
+ *
+ * @tparam T1 Scalar numeric type.
+ * @param x Argument to the gamma function.
+ * @return Approximation of Gamma(x), as a floating-point value.
+ */
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> gamma(const T1& x)
 {
     return intr::gamma(x);
 }
 
-/// @brief Returns the approximate factorial of an argument
+/**
+ * @brief Returns the approximate factorial of an argument.
+ *
+ * Computed as gamma(x + 1), which matches the factorial for non-negative
+ * integers. The result is an approximation.
+ *
+ * @tparam T1 Scalar numeric type.
+ * @param x Argument to the factorial.
+ * @return Approximation of x! as a floating-point value.
+ */
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> factorial_approx(const T1& x)
 {
     return intr::factorial_approx(x);
 }
 
+/**
+ * @brief Lookup table of exact factorial values for 0 <= n <= 20.
+ *
+ * factorial_table[n] equals n! for n in [0, 20]. Values above 20! no longer
+ * fit in uint64_t.
+ */
 constexpr inline uint64_t factorial_table[21] = {
     0,
     1,
@@ -67,7 +91,17 @@ constexpr inline uint64_t factorial_table[21] = {
     2432902008176640000,
 };
 
-/// @brief Returns the factorial of an argument. Returns max(uint64_t) if does not fit to uint64_t
+/**
+ * @brief Returns the exact factorial of an argument.
+ *
+ * Returns the precomputed exact value for n in [0, 20]. For negative n or
+ * n > 20 (values that do not fit in uint64_t) returns
+ * std::numeric_limits<uint64_t>::max().
+ *
+ * @param n Non-negative integer argument. Negative values are treated as out
+ *          of range and return the sentinel max value.
+ * @return n! for 0 <= n <= 20, otherwise max(uint64_t).
+ */
 constexpr uint64_t factorial(int n)
 {
     if (KFR_LIKELY(n < 0 || n > 20))

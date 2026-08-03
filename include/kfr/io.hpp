@@ -31,5 +31,10 @@
 
 namespace kfr
 {
+/**
+ * @brief Returns the full version string of the KFR IO module.
+ * @return A null-terminated string with the KFR version (e.g. from
+ *         @c KFR_VERSION_FULL).
+ */
 const char* library_version_io();
-}
+} // namespace kfr

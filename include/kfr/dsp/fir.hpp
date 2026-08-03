@@ -262,7 +262,8 @@ struct expression_short_fir : expression_with_traits<E1>
 
         vec<U, N> out = in * self.state->taps.front();
         cforeach(csizeseq<tapcount - 1, 1>,
-                 [&](auto I) {
+                 [&](auto I)
+                 {
                      out = out + concat_and_slice<tapcount - 1 - I, N>(self.state->delayline, in) *
                                      self.state->taps[I];
                  });

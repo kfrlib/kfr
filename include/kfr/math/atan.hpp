@@ -40,8 +40,11 @@ KFR_FUNCTION flt_type<T1> atan(const T1& x)
 }
 
 /**
- * @brief Returns the arc tangent of the x, expressed in degrees. The returned angle is in the range -90
+ * @brief Returns the arc tangent of x, expressed in degrees. The returned angle is in the range -90
  * through 90.
+ *
+ * @param x Input value.
+ * @return Arc tangent of @p x in degrees, in the range [-90, 90].
  */
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> atandeg(const T1& x)
@@ -50,7 +53,16 @@ KFR_FUNCTION flt_type<T1> atandeg(const T1& x)
 }
 
 /**
- * @brief Returns the arc tangent of y/x using the signs of arguments to determine the correct quadrant.
+ * @brief Returns the arc tangent of y/x using the signs of both arguments to determine the correct
+ * quadrant. The result is in the range \f$[-\pi, \pi]\f$.
+ *
+ * The first argument corresponds to the numerator (typically denoted y) and the second to the
+ * denominator (typically denoted x) of the underlying y/x ratio, matching the C/C++ @c atan2
+ * convention.
+ *
+ * @param x Numerator of the ratio (y component).
+ * @param y Denominator of the ratio (x component).
+ * @return Arc tangent of y/x, in radians, in the range \f$[-\pi, \pi]\f$.
  */
 template <numeric T1, numeric T2>
 KFR_FUNCTION std::common_type_t<T1, T2> atan2(const T1& x, const T2& y)
@@ -59,8 +71,16 @@ KFR_FUNCTION std::common_type_t<T1, T2> atan2(const T1& x, const T2& y)
 }
 
 /**
- * @brief Returns the arc tangent of y/x (expressed in degrees) using the signs of arguments to determine the
- * correct quadrant.
+ * @brief Returns the arc tangent of y/x (expressed in degrees) using the signs of both arguments
+ * to determine the correct quadrant. The result is in the range [-180, 180].
+ *
+ * The first argument corresponds to the numerator (typically denoted y) and the second to the
+ * denominator (typically denoted x) of the underlying y/x ratio, matching the C/C++ @c atan2
+ * convention.
+ *
+ * @param x Numerator of the ratio (y component).
+ * @param y Denominator of the ratio (x component).
+ * @return Arc tangent of y/x, in degrees, in the range [-180, 180].
  */
 template <numeric T1, numeric T2>
 KFR_FUNCTION std::common_type_t<T1, T2> atan2deg(const T1& x, const T2& y)

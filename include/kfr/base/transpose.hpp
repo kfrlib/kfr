@@ -633,8 +633,11 @@ void matrix_transpose(vec<T, N>* out, const vec<T, N>* in, shape<Dims> tshape)
  * The input matrix must be packed in memory (no padding between rows or columns).
  * In-place transpose (when in and out point to the same buffer) is supported.
  *
+ * For more than two dimensions, all axes are reversed (equivalent to reversing the
+ * dimension order). A one-dimensional shape is a no-op (plain copy if buffers differ).
+ *
  * @tparam T      Element type (scalar or compound).
- * @tparam Dims   Number of dimensions (2 or greater).
+ * @tparam Dims   Number of dimensions (1 or greater).
  * @param out     Output buffer (transposed matrix).
  * @param in      Input buffer (original matrix).
  * @param shape   Shape of the input matrix.

@@ -39,14 +39,20 @@ namespace kfr
 
 #ifndef KFR_32BIT_INDICES
 #if SIZE_MAX == UINT64_MAX
-using index_t        = uint64_t;
+/// @brief Unsigned integer type used for tensor indices and axis sizes.
+using index_t = uint64_t;
+/// @brief Signed integer type used for tensor indices and axis sizes.
 using signed_index_t = int64_t;
 #else
-using index_t        = uint32_t;
+/// @brief Unsigned integer type used for tensor indices and axis sizes.
+using index_t = uint32_t;
+/// @brief Signed integer type used for tensor indices and axis sizes.
 using signed_index_t = int32_t;
 #endif
 #else
-using index_t        = uint32_t;
+/// @brief Unsigned integer type used for tensor indices and axis sizes.
+using index_t = uint32_t;
+/// @brief Signed integer type used for tensor indices and axis sizes.
 using signed_index_t = int32_t;
 #endif
 /// @brief Maximum representable value of @ref index_t.
@@ -183,6 +189,7 @@ struct shape : static_array_base<index_t, csizeseq_t<Dims>>
     using base::base;
 
     /// @brief Construct a shape from a base static array.
+    /// @param a Source static array to copy from.
     constexpr shape(const base& a) : base(a) {}
 
     static_assert(Dims <= maximum_dims);
@@ -193,6 +200,7 @@ struct shape : static_array_base<index_t, csizeseq_t<Dims>>
     /// @brief Implicit conversion to @ref index_t for 1D shapes.
     ///
     /// Allows a 1D shape to be used wherever a single size is expected.
+    /// @tparam dummy Unused template parameter used to delay constraint checking.
     /// @return The size of the only axis.
     template <int dummy = 0>
         requires(Dims == 1)
@@ -284,6 +292,7 @@ struct shape : static_array_base<index_t, csizeseq_t<Dims>>
     /// @brief Add @p value to the axis selected by the template parameter.
     /// @tparam Axis Index of the axis to modify (compile-time constant).
     /// @param value Amount to add to @c Axis.
+    /// @param tag   Tag value selecting @c Axis (unused, for ADL dispatch).
     /// @return A new shape with axis @c Axis increased by @p value.
     template <index_t Axis>
     constexpr shape add_at(index_t value, cval_t<index_t, Axis> = {}) const
@@ -646,14 +655,18 @@ struct shape<0>
     constexpr bool has_infinity() const { return false; }
 
     /// @brief Flat offset for a scalar; the only valid offset is 0.
+    /// @param indices Multi-dimensional index (ignored for a scalar).
     /// @return 0.
     KFR_MEM_INTRINSIC size_t to_flat(const shape<0>& indices) const { return 0; }
     /// @brief Inverse of @ref to_flat: returns the empty shape.
+    /// @param index Flat linear offset (ignored for a scalar).
     /// @return The empty @ref shape<0>.
     KFR_MEM_INTRINSIC shape<0> from_flat(size_t index) const { return {}; }
 
     /// @brief Adapt any shape to a scalar; always returns the empty shape.
     /// @tparam odims Rank of the input shape.
+    /// @tparam stop  When @c true, the upper bound is inclusive (ignored here).
+    /// @param other  The source shape (ignored for a scalar).
     /// @return The empty @ref shape<0>.
     template <index_t odims, bool stop = false>
     KFR_MEM_INTRINSIC shape<0> adapt(const shape<odims>& other, cbool_t<stop> = {}) const
@@ -666,6 +679,7 @@ struct shape<0>
     index_t trailing_zeros() const { return 0; }
 
     /// @brief Dot product with another scalar shape; the empty product is 0.
+    /// @param other The other scalar shape (ignored).
     /// @return 0.
     KFR_MEM_INTRINSIC index_t dot(const shape& other) const { return 0; }
 
@@ -705,14 +719,20 @@ struct shape<0>
     }
 
     /// @brief Two scalar shapes are always equal.
+    /// @param other The other scalar shape (ignored).
     KFR_MEM_INTRINSIC constexpr bool operator==(const shape<0>& other) const { return true; }
     /// @brief Two scalar shapes are never unequal.
+    /// @param other The other scalar shape (ignored).
     KFR_MEM_INTRINSIC constexpr bool operator!=(const shape<0>& other) const { return false; }
 
     /// @brief Read an axis by its position from the back; always returns 1
     /// because there are no axes.
+    /// @param index Number of axes from the back (ignored for a scalar).
+    /// @return Always 1.
     KFR_MEM_INTRINSIC constexpr index_t revindex(size_t index) const { return 1; }
     /// @brief Set an axis by its position from the back; a no-op.
+    /// @param index Number of axes from the back (ignored for a scalar).
+    /// @param val   New value to store (ignored for a scalar).
     KFR_MEM_INTRINSIC void set_revindex(size_t index, index_t val) {}
 };
 
@@ -750,6 +770,7 @@ struct shape<dynamic_shape> : protected std::vector<index_t>
     }
 
     /// @brief Returns the number of dimensions at run time.
+    /// @return The current number of axes.
     size_t dims() const { return size(); }
 
     /// @brief Product of every axis size; 0 for an empty shape.
@@ -898,6 +919,7 @@ struct tensor_range
 /// @param start Optional starting index (inclusive).
 /// @param stop  Optional stopping index (exclusive).
 /// @param step  Optional step value.
+/// @return A @ref tensor_range holding the provided components.
 constexpr KFR_INTRINSIC tensor_range trange(std::optional<signed_index_t> start = std::nullopt,
                                             std::optional<signed_index_t> stop  = std::nullopt,
                                             std::optional<signed_index_t> step  = std::nullopt)
@@ -907,11 +929,13 @@ constexpr KFR_INTRINSIC tensor_range trange(std::optional<signed_index_t> start 
 
 /// @brief Build a range that spans the entire axis (defaults for all
 /// three components).
+/// @return A @ref tensor_range with all components unspecified.
 constexpr KFR_INTRINSIC tensor_range tall() { return trange(); }
 /// @brief Build a range that starts at @p start and continues to the
 /// end of the axis.
 /// @param start Starting index (inclusive).
 /// @param step  Step value (defaults to 1).
+/// @return A @ref tensor_range with the given start and step.
 constexpr KFR_INTRINSIC tensor_range tstart(signed_index_t start, signed_index_t step = 1)
 {
     return trange(start, std::nullopt, step);
@@ -919,6 +943,7 @@ constexpr KFR_INTRINSIC tensor_range tstart(signed_index_t start, signed_index_t
 /// @brief Build a range that stops at @p stop.
 /// @param stop Stopping index (exclusive).
 /// @param step Step value (defaults to 1).
+/// @return A @ref tensor_range with the given stop and step.
 constexpr KFR_INTRINSIC tensor_range tstop(signed_index_t stop, signed_index_t step = 1)
 {
     return trange(std::nullopt, stop, step);
@@ -926,6 +951,7 @@ constexpr KFR_INTRINSIC tensor_range tstop(signed_index_t stop, signed_index_t s
 /// @brief Build a range that uses the specified step but no explicit
 /// start or stop.
 /// @param step Step value (defaults to 1).
+/// @return A @ref tensor_range with the given step.
 constexpr KFR_INTRINSIC tensor_range tstep(signed_index_t step = 1)
 {
     return trange(std::nullopt, std::nullopt, step);
@@ -1315,10 +1341,14 @@ namespace kfr
 ///
 /// The format is @c "shape{a, b, c, ...}" for non-empty shapes and
 /// @c "shape{}" for @ref shape<0>.
+/// @tparam dims Rank of the shape.
 template <kfr::index_t dims>
 struct representation<kfr::shape<dims>>
 {
     using type = std::string;
+    /// @brief Returns the string representation of @p value.
+    /// @param value The shape to format.
+    /// @return The string representation.
     static std::string get(const kfr::shape<dims>& value)
     {
         if constexpr (dims == 0)

@@ -31,6 +31,11 @@
 
 namespace kfr
 {
+/**
+ * @brief Returns the full version string of the KFR audio module.
+ *
+ * @return const char*
+ */
 const char* library_version_audio();
 /**
  * @brief Returns a comma-separated list of enabled audio codecs.

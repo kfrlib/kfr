@@ -37,21 +37,38 @@ namespace kfr
 {
 
 #ifndef KFR_DISABLE_READCYCLECOUNTER
+/**
+ * @brief Tag type for seeding the random number generator from the CPU cycle counter.
+ */
 struct seed_from_rdtsc_t
 {
 };
 
+/**
+ * @brief Tag value used to seed the random number generator from the CPU cycle counter.
+ */
 constexpr seed_from_rdtsc_t seed_from_rdtsc{};
 #endif
 
+/**
+ * @brief Internal state of the pseudo-random number generator.
+ *
+ * Holds a 128-bit state stored as four 32-bit lanes. The state is advanced by
+ * `random_next` and consumed by `random_bits` and related generators.
+ */
 struct random_state
 {
+    /**
+     * @brief Default-constructs the state initialized to all zeros.
+     */
     constexpr random_state() : v{ 0, 0, 0, 0 } {}
     constexpr random_state(random_state&&)                 = default;
     constexpr random_state(const random_state&)            = default;
     constexpr random_state& operator=(random_state&&)      = default;
     constexpr random_state& operator=(const random_state&) = default;
-    // internal field
+    /**
+     * @brief Internal 128-bit state stored as four 32-bit lanes.
+     */
     portable_vec<u32, 4> v;
 };
 

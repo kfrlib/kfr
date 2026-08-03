@@ -35,6 +35,14 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
+/**
+ * @brief Finalizer for @ref mean.
+ *
+ * Divides the accumulated sum by the number of elements.
+ * @param value Accumulated sum.
+ * @param size Number of elements.
+ * @return The arithmetic mean.
+ */
 template <typename T>
 KFR_INTRINSIC T final_mean(T value, size_t size)
 {
@@ -42,6 +50,14 @@ KFR_INTRINSIC T final_mean(T value, size_t size)
 }
 KFR_FN(final_mean)
 
+/**
+ * @brief Finalizer for @ref rms.
+ *
+ * Divides the accumulated sum of squares by the number of elements and takes the square root.
+ * @param value Accumulated sum of squares.
+ * @param size Number of elements.
+ * @return The root mean square.
+ */
 template <typename T>
 KFR_INTRINSIC T final_rootmean(T value, size_t size)
 {
@@ -51,6 +67,13 @@ KFR_FN(final_rootmean)
 
 namespace internal
 {
+/**
+ * @brief Helper that invokes the finalizer function with or without the element count.
+ *
+ * If @p FinalFn is invocable with `(T, size_t)` it is called as `finalfn(value, size)`,
+ * otherwise it is called as `finalfn(value)`. This allows reducers to use finalizers
+ * that do not need the element count.
+ */
 struct reduce_final_helper
 {
     template <typename T, typename FinalFn>
@@ -64,6 +87,22 @@ struct reduce_final_helper
 };
 } // namespace internal
 
+/**
+ * @brief Expression that reduces an input expression to a single value.
+ *
+ * Applies @p TransformFn to each element, accumulates the result with @p ReduceFn, and
+ * applies @p FinalFn to the accumulated value via @ref internal::reduce_final_helper.
+ * The accumulator is kept as a vector of width `vector_width<Tin>` so that horizontal
+ * reduction is performed only once, in @ref get.
+ *
+ * @tparam Tout Return type after the finalizer.
+ * @tparam Dims Dimensionality of the input expression.
+ * @tparam Twork Working type used for the accumulator.
+ * @tparam Tin Input element type.
+ * @tparam ReduceFn Binary reduction functor.
+ * @tparam TransformFn Unary transform applied to each input element before reduction.
+ * @tparam FinalFn Finalizer applied to the accumulated value.
+ */
 template <typename Tout, index_t Dims, typename Twork, typename Tin, typename ReduceFn, typename TransformFn,
           typename FinalFn>
 struct expression_reduce : public expression_traits_defaults
@@ -75,12 +114,24 @@ struct expression_reduce : public expression_traits_defaults
 
     constexpr static size_t width = vector_width<Tin> * bitness_const(1, 2);
 
+    /**
+     * @brief Constructs the reducer.
+     * @param reducefn Binary reduction functor.
+     * @param transformfn Unary transform applied to each input element.
+     * @param finalfn Finalizer applied to the accumulated value.
+     */
     expression_reduce(ReduceFn&& reducefn, TransformFn&& transformfn, FinalFn&& finalfn)
         : counter(0), reducefn(std::move(reducefn)), transformfn(std::move(transformfn)),
           finalfn(std::move(finalfn)), value(resize<width>(make_vector(reducefn(initialvalue<Twork>{}))))
     {
     }
 
+    /**
+     * @brief Returns the reduced value.
+     *
+     * Horizontally reduces the internal accumulator vector and applies the finalizer.
+     * @return The final reduced value.
+     */
     KFR_MEM_INTRINSIC Tout get()
     {
         return internal::reduce_final_helper{}(finalfn, counter, horizontal(value, reducefn));
@@ -123,6 +174,23 @@ protected:
     mutable vec<Twork, width> value;
 };
 
+/**
+ * @brief Reduces an input expression to a single value.
+ *
+ * Iterates over @p e1, applying @p transformfn to each element, accumulating the result
+ * with @p reducefn, and finally applying @p finalfn to the accumulated value. The
+ * reduction is performed using @ref expression_reduce for SIMD-accelerated accumulation.
+ *
+ * @tparam ReduceFn Binary reduction functor.
+ * @tparam TransformFn Unary transform applied to each element (defaults to pass-through).
+ * @tparam FinalFn Finalizer applied to the accumulated value (defaults to pass-through).
+ * @tparam E1 Input expression type.
+ * @param e1 Sized input expression to reduce.
+ * @param reducefn Binary reduction functor.
+ * @param transformfn Unary transform applied to each element.
+ * @param finalfn Finalizer applied to the accumulated value.
+ * @return The reduced value.
+ */
 template <
     typename ReduceFn, typename TransformFn = fn_generic::pass_through,
     typename FinalFn = fn_generic::pass_through, input_expression E1,
@@ -143,6 +211,24 @@ KFR_INTRINSIC Tout reduce(const E1& e1, ReduceFn&& reducefn,
     return red.get();
 }
 
+/**
+ * @brief Reduces a range to a single value.
+ *
+ * Overload for non-expression ranges (e.g. standard containers). Iterates over @p e1,
+ * applying @p transformfn to each element, accumulating with @p reducefn, and applying
+ * @p finalfn to the result. Unlike the expression overload, this performs a scalar
+ * reduction without SIMD acceleration.
+ *
+ * @tparam ReduceFn Binary reduction functor.
+ * @tparam TransformFn Unary transform applied to each element (defaults to pass-through).
+ * @tparam FinalFn Finalizer applied to the accumulated value (defaults to pass-through).
+ * @tparam E1 Range type.
+ * @param e1 Range to reduce.
+ * @param reducefn Binary reduction functor.
+ * @param transformfn Unary transform applied to each element.
+ * @param finalfn Finalizer applied to the accumulated value.
+ * @return The reduced value.
+ */
 template <
     typename ReduceFn, typename TransformFn = fn_generic::pass_through,
     typename FinalFn = fn_generic::pass_through, typename E1, typename Tin = expression_value_type<E1>,
@@ -163,11 +249,29 @@ KFR_INTRINSIC Tout reduce(const E1& e1, ReduceFn&& reducefn,
     return internal::reduce_final_helper{}(finalfn, counter, result);
 }
 
+/**
+ * @brief Holds the bin counts for a histogram.
+ *
+ * Stores counts for values that fall below the range, above the range, and within each
+ * of the @p Bins bins. When @p Bins is 0 the number of bins is specified at runtime via
+ * the constructor; otherwise it is fixed at compile time.
+ *
+ * For floating-point inputs, values are expected in the range [0, 1] and are mapped to
+ * bins by scaling. For integer inputs, values are offset by 1 and clamped to the bin
+ * range.
+ *
+ * @tparam Bins Number of bins, or 0 for runtime-sized bins.
+ * @tparam TCount Integer type used for bin counts.
+ */
 template <size_t Bins = 0, typename TCount = uint32_t>
 struct histogram_data
 {
     using vector_type = univector<TCount, Bins == 0 ? tag_dynamic_vector : 2 + Bins>;
 
+    /**
+     * @brief Constructs a runtime-sized histogram.
+     * @param steps Number of bins. Only used when @p Bins is 0.
+     */
     KFR_MEM_INTRINSIC histogram_data(size_t steps)
     {
         if constexpr (Bins == 0)
@@ -176,17 +280,41 @@ struct histogram_data
         }
     }
 
+    /**
+     * @brief Returns the count in bin @p n.
+     * @param n Bin index, must be less than @ref size.
+     * @return The count in bin @p n.
+     */
     KFR_MEM_INTRINSIC TCount operator[](size_t n) const
     {
         KFR_LOGIC_CHECK(n < size(), "n is outside histogram size");
         return m_values[1 + n];
     }
+    /**
+     * @brief Returns the count of values that fell below the histogram range.
+     */
     KFR_MEM_INTRINSIC TCount below() const { return m_values.front(); }
+    /**
+     * @brief Returns the count of values that fell above the histogram range.
+     */
     KFR_MEM_INTRINSIC TCount above() const { return m_values.back(); }
+    /**
+     * @brief Returns the number of bins.
+     */
     KFR_MEM_INTRINSIC size_t size() const { return m_values.size() - 2; }
+    /**
+     * @brief Returns a reference to the bin counts, excluding the below/above counters.
+     */
     KFR_MEM_INTRINSIC univector_ref<const TCount> values() const { return m_values.slice(1, size()); }
+    /**
+     * @brief Returns the total number of values added to the histogram.
+     */
     KFR_MEM_INTRINSIC uint64_t total() const { return m_total; }
 
+    /**
+     * @brief Adds a vector of values to the histogram, incrementing the appropriate bins.
+     * @param value Vector of values to add. Floating-point values should be in [0, 1].
+     */
     template <typename T, size_t N>
     KFR_MEM_INTRINSIC void put(const vec<T, N>& value)
     {
@@ -207,6 +335,10 @@ struct histogram_data
             ++m_values[indices[i]];
         m_total += N;
     }
+    /**
+     * @brief Adds a single value to the histogram.
+     * @param value Value to add.
+     */
     template <typename T>
     KFR_MEM_INTRINSIC void put(T value)
     {
@@ -218,6 +350,17 @@ private:
     uint64_t m_total = 0;
 };
 
+/**
+ * @brief Expression that computes a histogram as data flows through it.
+ *
+ * Wraps an input expression @p E and, as elements are read from it, updates an internal
+ * @ref histogram_data with the bin counts. The expression is transparent: it returns the
+ * original values while accumulating the histogram as a side effect.
+ *
+ * @tparam Bins Number of bins, or 0 for runtime-sized bins.
+ * @tparam E Wrapped input expression type.
+ * @tparam TCount Integer type used for bin counts.
+ */
 template <size_t Bins, typename E, typename TCount = uint32_t>
 struct expression_histogram : public expression_with_traits<E>
 {
@@ -225,6 +368,11 @@ struct expression_histogram : public expression_with_traits<E>
 
     using expression_with_traits<E>::expression_with_traits;
 
+    /**
+     * @brief Constructs a runtime-sized histogram expression.
+     * @param e Input expression to wrap.
+     * @param steps Number of bins. Only used when @p Bins is 0.
+     */
     KFR_MEM_INTRINSIC expression_histogram(E&& e, size_t steps)
         : expression_with_traits<E>{ std::forward<E>(e) }, data(steps)
     {
@@ -388,6 +536,13 @@ KFR_FUNCTION T product(const E1& x)
 namespace internal
 {
 
+/**
+ * @brief Transform helper for @ref variance.
+ *
+ * For each input value @c x, returns a pair @c (x - k, (x - k)^2) where @c k is the
+ * reference value (typically the first element). The pair is packed so that a single
+ * reduction accumulates both the sum of deviations and the sum of squared deviations.
+ */
 template <typename T>
 struct variance_helper
 {
@@ -412,14 +567,13 @@ struct variance_helper
 /**
  * @brief Computes the variance of the given input expression.
  *
- * This function calculates the variance of the elements in the input expression `x`.
+ * Uses the shifted-data algorithm with the first element as the reference value @c k:
+ * @f[ \frac{1}{N}\sum_{i=0}^{N-1}(x_i - k)^2 - \left(\frac{1}{N}\sum_{i=0}^{N-1}(x_i - k)\right)^2 @f]
  *
  * @tparam E1 The type of the input expression.
  * @tparam T The value type of the expression elements.
- *
  * @param x The input expression for which the variance is to be computed.
  *          Must be a sized expression.
- *
  * @return The variance of the elements in the input expression.
  */
 template <input_expression E1, typename T = expression_value_type<E1>>
@@ -438,12 +592,12 @@ KFR_FUNCTION T variance(const E1& x)
 /**
  * @brief Computes the standard deviation of the given expression.
  *
- * This function calculates the standard deviation of the input expression `x`.
- * The input must be a sized expression.
+ * Returns the square root of @ref variance.
  *
- * @tparam T The return type of the standard deviation.
  * @tparam E1 The type of the input expression.
+ * @tparam T The value type of the expression elements.
  * @param x The input expression for which the standard deviation is computed.
+ *          Must be a sized expression.
  * @return The standard deviation of the input expression.
  */
 template <input_expression E1, typename T = expression_value_type<E1>>
@@ -454,8 +608,9 @@ KFR_FUNCTION T stddev(const E1& x)
 }
 
 /**
- * @brief Returns expression that computes histogram as data flows through it.
- * Number of bins defined at runtime
+ * @brief Creates an expression that computes a histogram as data flows through it.
+ *
+ * The number of bins is defined at runtime.
  */
 template <typename E, typename TCount = uint32_t>
 KFR_FUNCTION expression_histogram<0, E, TCount> histogram_expression(E&& expr, size_t bins)
@@ -464,8 +619,9 @@ KFR_FUNCTION expression_histogram<0, E, TCount> histogram_expression(E&& expr, s
 }
 
 /**
- * @brief Returns expression that computes histogram as data flows through it.
- * Number of bins defined at compile time
+ * @brief Creates an expression that computes a histogram as data flows through it.
+ *
+ * The number of bins is defined at compile time.
  */
 template <size_t Bins, typename E, typename TCount = uint32_t>
 KFR_FUNCTION expression_histogram<Bins, E, TCount> histogram_expression(E&& expr)
@@ -474,8 +630,9 @@ KFR_FUNCTION expression_histogram<Bins, E, TCount> histogram_expression(E&& expr
 }
 
 /**
- * @brief Returns histogram of the expression data.
- * Number of bins defined at runtime
+ * @brief Returns the histogram of the expression data.
+ *
+ * The number of bins is defined at runtime.
  */
 template <typename E, typename TCount = uint32_t>
 KFR_FUNCTION histogram_data<0, TCount> histogram(E&& expr, size_t bins)
@@ -484,8 +641,9 @@ KFR_FUNCTION histogram_data<0, TCount> histogram(E&& expr, size_t bins)
 }
 
 /**
- * @brief Returns histogram of the expression data.
- * Number of bins defined at compile time
+ * @brief Returns the histogram of the expression data.
+ *
+ * The number of bins is defined at compile time.
  */
 template <size_t Bins, typename E, typename TCount = uint32_t>
 KFR_FUNCTION histogram_data<Bins, TCount> histogram(E&& expr)

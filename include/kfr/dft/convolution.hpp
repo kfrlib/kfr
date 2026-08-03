@@ -156,7 +156,7 @@ struct dft_conv_plan<complex<T>> : public dft_plan<T>
  * The block size is rounded up to the next power of two. Real kernels use the
  * `Perm` packed real DFT; complex kernels use the full complex DFT.
  *
- * @par Multiarchitecture:
+ * #### Multiarchitecture:
  * When KFR is built with multiarchitecture support, the per-block processing
  * (`process_buffer`) is runtime-dispatched to the best implementation for the
  * current CPU.

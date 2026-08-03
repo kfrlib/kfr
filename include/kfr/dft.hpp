@@ -26,11 +26,16 @@
 
 #include "dft/cache.hpp"
 #include "dft/convolution.hpp"
+#include "dft/dft_resampler.hpp"
 #include "dft/fft.hpp"
 #include "dft/reference_dft.hpp"
-#include "dft/dft_resampler.hpp"
 
 namespace kfr
 {
+/**
+ * @brief Returns the full version string of the KFR DFT module.
+ * @return A null-terminated string with the KFR version (e.g. from
+ *         @c KFR_VERSION_FULL).
+ */
 const char* library_version_dft();
-}
+} // namespace kfr

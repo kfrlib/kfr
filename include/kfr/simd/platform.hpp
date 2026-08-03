@@ -493,7 +493,7 @@ constexpr static bool is_simd_size(size_t size)
 /**
  * @brief SIMD vector type of @p T elements with default width @ref vector_width.
  * @tparam T The element type.
- * @tparam N The vector width in elements (defaults to @ref vector_width<T>).
+ * @tparam N The vector width in elements (defaults to @ref vector_width).
  */
 template <typename T, size_t N = vector_width<T>>
 struct vec;
@@ -501,7 +501,7 @@ struct vec;
 /**
  * @brief SIMD mask type of @p T elements with default width @ref vector_width.
  * @tparam T The element type.
- * @tparam N The vector width in elements (defaults to @ref vector_width<T>).
+ * @tparam N The vector width in elements (defaults to @ref vector_width).
  */
 template <typename T, size_t N = vector_width<T>>
 using mask = vec<bit<T>, N>;
@@ -688,6 +688,13 @@ template <>
 struct native_vector_type<uint8_t>
 {
     using type = vuint8m1_t;
+};
+
+#else
+template <typename T>
+struct native_vector_type
+{
+    using type = T;
 };
 
 #endif

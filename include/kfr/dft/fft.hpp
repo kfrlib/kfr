@@ -1410,7 +1410,7 @@ void fft_multiply_accumulate(univector<complex<T>, Tag1>& dest, const univector<
  * buffer. This makes it suitable for environments where memory allocations must
  * be minimised or fully controlled by the caller.
  *
- * @par Key characteristics:
+ * #### Key characteristics:
  *  - **Always in-place** — the input buffer is overwritten with the result.
  *  - **No scratch buffer required** — unlike the general-purpose @ref dft_plan,
  *    ngFFT does not allocate or need a temporary working buffer.
@@ -1420,12 +1420,12 @@ void fft_multiply_accumulate(univector<complex<T>, Tag1>& dest, const univector<
  *    The twiddle buffer can be reused across executions for the same FFT size
  *    and algorithm.
  *
- * @par Lifetime & ownership:
+ * #### Lifetime & ownership:
  * The plan does **not** own the twiddle buffer. The caller is responsible for
  * allocating (with sufficient alignment) and deallocating it.
  *
- * @par Usage example:
- * @code{.cpp}
+ * #### Usage example:
+ * @code
  * ngfft_plan<float> plan{ 16 };          // log2 of FFT size → 2^16 = 65536
  * plan.twiddles = aligned_allocate<complex<float>>(ngfft_twiddle_count(plan));
  * ngfft_initialize(plan);                // precompute twiddle factors

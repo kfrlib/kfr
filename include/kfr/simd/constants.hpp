@@ -40,7 +40,7 @@ constexpr double infinity = __builtin_inf();
 /**
  * @brief Quiet NaN (Not-a-Number) as a `double`.
  */
-constexpr double qnan     = __builtin_nan("");
+constexpr double qnan = __builtin_nan("");
 #else
 /**
  * @brief Positive infinity as a `double`.
@@ -49,7 +49,7 @@ constexpr double infinity = HUGE_VAL;
 /**
  * @brief Quiet NaN (Not-a-Number) as a `double`.
  */
-constexpr double qnan     = NAN;
+constexpr double qnan = NAN;
 #endif
 KFR_PRAGMA_GNU(GCC diagnostic push)
 KFR_PRAGMA_GNU(GCC diagnostic ignored "-Woverflow")

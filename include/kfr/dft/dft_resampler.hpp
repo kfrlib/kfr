@@ -237,8 +237,8 @@ public:
         // cutoff is normalised to the *output* Nyquist (1.0 = output Nyquist).
         // Shift omega_c down by half the transition width so that the stopband
         // begins exactly at the specified cutoff frequency.
-        T omega_c = (m_is_downsampling ? c_pi<T> * params.cutoff / T(m_factor) : c_pi<T> * params.cutoff) -
-                    c_pi<T> * params.transition_width / (T(2) * T(m_factor));
+        T omega_c    = (m_is_downsampling ? c_pi<T> * params.cutoff / T(m_factor) : c_pi<T> * params.cutoff) -
+                       c_pi<T> * params.transition_width / (T(2) * T(m_factor));
         const T beta = kaiser_beta_from_attenuation(params.stopband_atten_db);
 
         // Filter length from Kaiser formula:

@@ -407,7 +407,7 @@ struct print_t
 /**
  * @brief User-defined literal returning a @ref format_t for the given string literal.
  *
- * Use @c '@' as a placeholder for each argument, e.g. @c "x=@, y=@\n"_format(x, y).
+ * Use `@` as a placeholder for each argument, e.g. `"x=@, y=@\n"_format(x, y)`.
  */
 template <typename Char, Char... chars>
 constexpr format_t<chars...> operator""_format()
@@ -418,7 +418,7 @@ constexpr format_t<chars...> operator""_format()
 /**
  * @brief User-defined literal returning a @ref print_t for the given string literal.
  *
- * Use @c '@' as a placeholder for each argument, e.g. @c "x=@, y=@\n"_print(x, y).
+ * Use `@` as a placeholder for each argument, e.g. `"x=@, y=@\n"_print(x, y)`.
  */
 template <typename Char, Char... chars>
 constexpr KFR_INLINE print_t<chars...> operator""_print()
@@ -644,7 +644,7 @@ inline std::string padcenter(size_t size, const std::string& text, char characte
  *
  * @tparam T Type of the value.
  * @param  x  Value to quote.
- * @return @c "\"" + as_string(x) + "\"".
+ * @return `"\"" + as_string(x) + "\""`.
  */
 template <typename T>
 inline std::string q(T x)

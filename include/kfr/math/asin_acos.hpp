@@ -31,6 +31,9 @@ inline namespace KFR_ARCH_NAME
 
 /**
  * @brief Returns the arc sine of x. The returned angle is in the range \f$-\pi/2\f$ through \f$\pi/2\f$.
+ *
+ * @param x Value whose arc sine is computed, in the range [-1, 1].
+ * @return Arc sine of @p x, in radians, in the range \f$[-\pi/2, \pi/2]\f$.
  */
 template <numeric T1>
 KFR_INTRINSIC flt_type<T1> asin(const T1& x)
@@ -39,6 +42,9 @@ KFR_INTRINSIC flt_type<T1> asin(const T1& x)
 }
 /**
  * @brief Returns the arc cosine of x. The returned angle is in the range 0 through \f$\pi\f$.
+ *
+ * @param x Value whose arc cosine is computed, in the range [-1, 1].
+ * @return Arc cosine of @p x, in radians, in the range \f$[0, \pi]\f$.
  */
 template <numeric T1>
 KFR_INTRINSIC flt_type<T1> acos(const T1& x)

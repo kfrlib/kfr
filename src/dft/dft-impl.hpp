@@ -626,8 +626,8 @@ void init_dft(dft_plan<T>* self, size_t size, dft_order)
     }
     else
     {
-        uint32_t factors[32]           = { 0 };
-        size_t factors_size            = factorize(static_cast<uint32_t>(size), factors);
+        uint32_t factors[32] = { 0 };
+        size_t factors_size  = factorize(static_cast<uint32_t>(size), factors);
 
         uint32_t largest_factor = factors[factors_size - 1];
 

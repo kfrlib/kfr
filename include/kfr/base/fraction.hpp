@@ -28,18 +28,24 @@
 namespace kfr
 {
 
-/// @brief Exact rational number represented as a numerator/denominator pair.
-///
-/// Always stored in normalized form: denominator > 0, and numerator and
-/// denominator are coprime.
+/**
+ * @brief Exact rational number represented as a numerator/denominator pair.
+ *
+ * Always stored in normalized form: the denominator is positive and the
+ * numerator and denominator are coprime.
+ */
 struct fraction
 {
-    /// @brief Construct a fraction from numerator and denominator.
-    /// @param num Numerator (default 0).
-    /// @param den Denominator (default 1); the fraction is normalized.
+    /**
+     * @brief Construct a fraction from a numerator and denominator.
+     * @param num Numerator (defaults to 0).
+     * @param den Denominator (defaults to 1); the result is normalized.
+     */
     fraction(i64 num = 0, i64 den = 1) noexcept : numerator(num), denominator(den) { normalize(); }
 
-    /// @brief Reduce the fraction to lowest terms and enforce a positive denominator.
+    /**
+     * @brief Reduce the fraction to lowest terms and enforce a positive denominator.
+     */
     void normalize() noexcept
     {
         if (KFR_UNLIKELY(denominator < 0))
@@ -57,7 +63,7 @@ struct fraction
     /// @brief Denominator of the fraction (always positive after normalization).
     i64 denominator;
 
-    /// @brief Unary plus.
+    /// @brief Unary plus (returns a copy of the fraction).
     fraction operator+() const noexcept { return *this; }
     /// @brief Unary minus (negates the numerator).
     fraction operator-() const noexcept { return fraction(-numerator, denominator); }
@@ -146,13 +152,17 @@ struct fraction
         *this = *this / y;
         return *this;
     }
-
-private:
 };
 } // namespace kfr
 
 namespace kfr
 {
+/**
+ * @brief String representation specialization for @ref fraction.
+ *
+ * Renders the fraction as @c "numerator" when the denominator is 1, or
+ * @c "numerator/denominator" otherwise.
+ */
 template <>
 struct representation<kfr::fraction>
 {

@@ -28,6 +28,10 @@
 #include "impl/backend.hpp"
 #include "impl/bitindex.hpp"
 
+struct kfr_vec_hpp
+{
+};
+
 /**
  *  @brief Internal macro for functions
  */
@@ -146,11 +150,6 @@ private:
 inline namespace KFR_ARCH_NAME
 {
 
-/**
- * @brief Primary template of the fixed-size SIMD vector.
- *
- * The full definition lives in the `KFR_ARCH_NAME` inline namespace below.
- */
 template <typename T, size_t N>
 struct vec;
 
@@ -176,7 +175,7 @@ constexpr inline size_t vec_rank = 0;
 template <typename T, size_t N>
 struct vec_halves
 {
-    vec<T, prev_poweroftwo(N - 1)> low;  ///< Lower (power-of-two) half.
+    vec<T, prev_poweroftwo(N - 1)> low; ///< Lower (power-of-two) half.
     vec<T, N - prev_poweroftwo(N - 1)> high; ///< Upper (remainder) half.
 };
 
@@ -271,7 +270,6 @@ constexpr inline bool is_vec = internal::is_vec_impl<T>::value;
 
 /**
  * @brief Internal ADL-provided implementation for bit-shuffle expressions.
- * @internal
  */
 template <size_t k, std::array<size_t, k> perm, typename T, size_t N = 1u << k>
 KFR_INTRINSIC vec<T, N> optimized_bitshuffle(const vec<T, N>& w) noexcept;
@@ -299,17 +297,17 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     /** @return A `vec_shape` describing this vector's type and size. */
     static constexpr vec_shape<T, N> shape() noexcept { return {}; }
 
-    // type and size
     using value_type = T; ///< The (possibly compound) element type.
 
     /** @return Number of top-level elements. */
     constexpr static size_t size() noexcept { return N; }
 
     using ST          = typename compound_type_traits<T>::deep_subtype; ///< Deepest scalar type.
-    using scalar_type = ST;                                              ///< Alias of `ST`.
+    using scalar_type = ST; ///< Alias of `ST`.
 
-    constexpr static inline size_t SW = compound_type_traits<T>::deep_width; ///< Width of one element in scalars.
-    constexpr static inline size_t SN = N * SW;                             ///< Total scalar count.
+    constexpr static inline size_t SW =
+        compound_type_traits<T>::deep_width; ///< Width of one element in scalars.
+    constexpr static inline size_t SN = N * SW; ///< Total scalar count.
 
     /** @return Total number of scalar elements (`N * SW`). */
     constexpr static size_t scalar_size() noexcept { return SN; }
@@ -320,48 +318,49 @@ struct alignas(internal::vec_alignment<T, N_>) vec
 
     using mask_t = mask<T, N>; ///< Corresponding mask type.
 
-    using simd_type    = intr::simd<ST, SN>; ///< Underlying native SIMD register type.
-    using uvalue_type  = utype<T>;          ///< Unsigned counterpart of `value_type`.
-    using iuvalue_type = std::conditional_t<is_i_class<T>, T, uvalue_type>; ///< Signed-or-unsigned value type.
+    using simd_type   = intr::simd<ST, SN>; ///< Underlying native SIMD register type.
+    using uvalue_type = utype<T>; ///< Unsigned counterpart of `value_type`.
+    using iuvalue_type =
+        std::conditional_t<is_i_class<T>, T, uvalue_type>; ///< Signed-or-unsigned value type.
 
-    using uscalar_type  = utype<ST>; ///< Unsigned counterpart of the scalar type.
-    using iuscalar_type = std::conditional_t<is_i_class<ST>, ST, uscalar_type>; ///< Signed-or-unsigned scalar type.
+    using uscalar_type = utype<ST>; ///< Unsigned counterpart of the scalar type.
+    using iuscalar_type =
+        std::conditional_t<is_i_class<ST>, ST, uscalar_type>; ///< Signed-or-unsigned scalar type.
 
-    using usimd_type  = intr::simd<uscalar_type, SN>;  ///< SIMD register over `uscalar_type`.
+    using usimd_type  = intr::simd<uscalar_type, SN>; ///< SIMD register over `uscalar_type`.
     using iusimd_type = intr::simd<iuscalar_type, SN>; ///< SIMD register over `iuscalar_type`.
 
-    // constructors and assignment
     /** @brief Construct from a native SIMD register. */
     KFR_MEM_INTRINSIC vec(const simd_type& simd) noexcept : v(simd) {}
     /** @brief Default constructor (elements are left uninitialized). */
     KFR_MEM_INTRINSIC constexpr vec() noexcept {}
 
 #ifdef KFR_COMPILER_IS_MSVC
-    // MSVC Internal Compiler Error workaround
-    // copy
+    /** @brief Workaround for an MSVC Internal Compiler Error. */
+    /** @brief Copy constructor. */
     KFR_MEM_INTRINSIC constexpr vec(const vec& value) noexcept : v(value.v) {}
-    // move
+    /** @brief Move constructor. */
     KFR_MEM_INTRINSIC constexpr vec(vec&& value) noexcept : v(value.v) {}
-    // assignment
+    /** @brief Copy assignment operator. */
     KFR_MEM_INTRINSIC constexpr vec& operator=(const vec& value) noexcept
     {
         v = value.v;
         return *this;
     }
-    // assignment
+    /** @brief Move assignment operator. */
     KFR_MEM_INTRINSIC constexpr vec& operator=(vec&& value) noexcept
     {
         v = value.v;
         return *this;
     }
 #else
-    // copy
+    /** @brief Copy constructor. */
     KFR_MEM_INTRINSIC constexpr vec(const vec&) noexcept = default;
-    // move
+    /** @brief Move constructor. */
     KFR_MEM_INTRINSIC constexpr vec(vec&&) noexcept = default;
-    // assignment
+    /** @brief Copy assignment operator. */
     KFR_MEM_INTRINSIC constexpr vec& operator=(const vec&) noexcept = default;
-    // assignment
+    /** @brief Move assignment operator. */
     KFR_MEM_INTRINSIC constexpr vec& operator=(vec&&) noexcept = default;
 #endif
 
@@ -383,7 +382,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     {
     }
 
-    /** @brief Construct from an initializer list of scalars (scalar element type). */
+    /** @brief Construct from two or more scalar values (scalar element type). */
     template <typename... Us>
         requires(sizeof...(Us) <= 1022 && compound_type_traits<T>::is_scalar)
     KFR_MEM_INTRINSIC vec(const value_type& s0, const value_type& s1, const Us&... rest) noexcept
@@ -391,7 +390,7 @@ struct alignas(internal::vec_alignment<T, N_>) vec
     {
     }
 
-    /** @brief Construct from an initializer list of compound values (non-scalar element type). */
+    /** @brief Construct from two or more compound values (non-scalar element type). */
     template <typename... Us>
         requires(sizeof...(Us) <= 1022 && !compound_type_traits<T>::is_scalar)
     KFR_MEM_INTRINSIC vec(const value_type& s0, const value_type& s1, const Us&... rest) noexcept
@@ -530,34 +529,60 @@ struct alignas(internal::vec_alignment<T, N_>) vec
             intr::simd_shuffle(intr::simd2_t<ST, SN, SN>{}, v, y.v, scale<SW>(i), overload_auto));
     }
 
-    // element access
     struct element; ///< Proxy type for mutable element access.
 
-    /** @brief Read element at `index` (lvalue). */
+    /**
+     * @brief Read element at `index` from a const lvalue vector.
+     * @return A copy of the element at `index`.
+     */
     KFR_MEM_INTRINSIC constexpr value_type operator[](size_t index) const& noexcept { return get(index); }
 
-    /** @brief Read element at `index` (rvalue). */
+    /**
+     * @brief Read element at `index` from an rvalue vector.
+     * @return A copy of the element at `index`.
+     */
     KFR_MEM_INTRINSIC constexpr value_type operator[](size_t index) && noexcept { return get(index); }
 
-    /** @brief Return a mutable proxy to element at `index`. */
+    /**
+     * @brief Access element at `index` from a non-const lvalue vector.
+     * @return A mutable `element` proxy referencing element `index` of `*this`.
+     */
     KFR_MEM_INTRINSIC constexpr element operator[](size_t index) & noexcept { return { *this, index }; }
 
-    /** @return First element (lvalue). */
+    /**
+     * @brief Read the first element from a const lvalue vector.
+     * @return A copy of element 0.
+     */
     KFR_MEM_INTRINSIC value_type front() const& noexcept { return get(csize<0>); }
 
-    /** @return Last element (lvalue). */
+    /**
+     * @brief Read the last element from a const lvalue vector.
+     * @return A copy of element `N - 1`.
+     */
     KFR_MEM_INTRINSIC value_type back() const& noexcept { return get(csize<N - 1>); }
 
-    /** @return First element (rvalue). */
+    /**
+     * @brief Read the first element from an rvalue vector.
+     * @return A copy of element 0.
+     */
     KFR_MEM_INTRINSIC value_type front() && noexcept { return get(csize<0>); }
 
-    /** @return Last element (rvalue). */
+    /**
+     * @brief Read the last element from an rvalue vector.
+     * @return A copy of element `N - 1`.
+     */
     KFR_MEM_INTRINSIC value_type back() && noexcept { return get(csize<N - 1>); }
 
-    /** @return Mutable proxy to the first element. */
+    /**
+     * @brief Access the first element of a non-const lvalue vector.
+     * @return A mutable `element` proxy referencing element 0 of `*this`.
+     */
     KFR_MEM_INTRINSIC element front() & noexcept { return { *this, 0 }; }
 
-    /** @return Mutable proxy to the last element. */
+    /**
+     * @brief Access the last element of a non-const lvalue vector.
+     * @return A mutable `element` proxy referencing element `N - 1` of `*this`.
+     */
     KFR_MEM_INTRINSIC element back() & noexcept { return { *this, N - 1 }; }
 
     /** @brief Get element at runtime `index` (scalar element type). */
@@ -740,11 +765,10 @@ struct alignas(internal::vec_alignment<T, N_>) vec
             return *this;
         }
 
-        vec& v;     ///< Owning vector.
+        vec& v; ///< Owning vector.
         size_t index; ///< Element index within `v`.
     };
 
-    // read/write
     /**
      * @brief Load from a memory location.
      * @tparam aligned If `true`, `src` must be aligned to the vector alignment.
@@ -783,17 +807,16 @@ struct alignas(internal::vec_alignment<T, N_>) vec
         return vec<unwrap_bit<T>, N>(v);
     }
 
-    constexpr static size_t simd_element_size  = std::min(vector_width<T>, N); ///< Native SIMD lane width in elements.
-    constexpr static size_t simd_element_count = N / simd_element_size;        ///< Number of native lanes.
-    using simd_element_type                    = simd<ST, simd_element_size>;  ///< Native lane register type.
+    constexpr static size_t simd_element_size =
+        std::min(vector_width<T>, N); ///< Native SIMD lane width in elements.
+    constexpr static size_t simd_element_count = N / simd_element_size; ///< Number of native lanes.
+    using simd_element_type                    = simd<ST, simd_element_size>; ///< Native lane register type.
 
 public:
     union
     {
         simd_type v;
         vec_halves<T, N> h;
-        // simd_element_type w[simd_element_count];
-        // T s[N];
     };
 };
 
@@ -1080,6 +1103,10 @@ KFR_INTRINSIC vec<To, Nout> bitcast(const vec<From, N>& value) noexcept
     return vec<To, Nout>::frombits(value);
 }
 
+/**
+ * @brief Reinterpret the bits of a scalar `value` as its unsigned counterpart type.
+ * @return `bitcast<utype<From>>(value)`.
+ */
 template <typename From, typename To = utype<From>>
     requires(!is_compound_type<From>)
 constexpr KFR_INTRINSIC To ubitcast(const From& value) noexcept
@@ -1087,6 +1114,10 @@ constexpr KFR_INTRINSIC To ubitcast(const From& value) noexcept
     return bitcast<To>(value);
 }
 
+/**
+ * @brief Reinterpret the bits of a scalar `value` as its signed counterpart type.
+ * @return `bitcast<itype<From>>(value)`.
+ */
 template <typename From, typename To = itype<From>>
     requires(!is_compound_type<From>)
 constexpr KFR_INTRINSIC To ibitcast(const From& value) noexcept
@@ -1094,6 +1125,10 @@ constexpr KFR_INTRINSIC To ibitcast(const From& value) noexcept
     return bitcast<To>(value);
 }
 
+/**
+ * @brief Reinterpret the bits of a scalar `value` as its floating-point counterpart type.
+ * @return `bitcast<ftype<From>>(value)`.
+ */
 template <typename From, typename To = ftype<From>>
     requires(!is_compound_type<From>)
 constexpr KFR_INTRINSIC To fbitcast(const From& value) noexcept
@@ -1101,6 +1136,10 @@ constexpr KFR_INTRINSIC To fbitcast(const From& value) noexcept
     return bitcast<To>(value);
 }
 
+/**
+ * @brief Reinterpret the bits of a scalar `value` as its unsigned-or-signed counterpart type.
+ * @return `bitcast<uitype<From>>(value)`.
+ */
 template <typename From, typename To = uitype<From>>
     requires(!is_compound_type<From>)
 constexpr KFR_INTRINSIC To uibitcast(const From& value) noexcept
@@ -1108,6 +1147,10 @@ constexpr KFR_INTRINSIC To uibitcast(const From& value) noexcept
     return bitcast<To>(value);
 }
 
+/**
+ * @brief Reinterpret the bits of a vector as a vector of its unsigned counterpart type.
+ * @return `vec<utype<From>, Nout>` where `Nout = size_of<From>() * N / size_of<To>()`.
+ */
 template <typename From, size_t N, typename To = utype<From>,
           size_t Nout = size_of<From>() * N / size_of<To>()>
 constexpr KFR_INTRINSIC vec<To, Nout> ubitcast(const vec<From, N>& value) noexcept
@@ -1115,6 +1158,10 @@ constexpr KFR_INTRINSIC vec<To, Nout> ubitcast(const vec<From, N>& value) noexce
     return vec<To, Nout>::frombits(value);
 }
 
+/**
+ * @brief Reinterpret the bits of a vector as a vector of its signed counterpart type.
+ * @return `vec<itype<From>, Nout>` where `Nout = size_of<From>() * N / size_of<To>()`.
+ */
 template <typename From, size_t N, typename To = itype<From>,
           size_t Nout = size_of<From>() * N / size_of<To>()>
 constexpr KFR_INTRINSIC vec<To, Nout> ibitcast(const vec<From, N>& value) noexcept
@@ -1122,6 +1169,10 @@ constexpr KFR_INTRINSIC vec<To, Nout> ibitcast(const vec<From, N>& value) noexce
     return vec<To, Nout>::frombits(value);
 }
 
+/**
+ * @brief Reinterpret the bits of a vector as a vector of its floating-point counterpart type.
+ * @return `vec<ftype<From>, Nout>` where `Nout = size_of<From>() * N / size_of<To>()`.
+ */
 template <typename From, size_t N, typename To = ftype<From>,
           size_t Nout = size_of<From>() * N / size_of<To>()>
 constexpr KFR_INTRINSIC vec<To, Nout> fbitcast(const vec<From, N>& value) noexcept
@@ -1129,6 +1180,10 @@ constexpr KFR_INTRINSIC vec<To, Nout> fbitcast(const vec<From, N>& value) noexce
     return vec<To, Nout>::frombits(value);
 }
 
+/**
+ * @brief Reinterpret the bits of a vector as a vector of its unsigned-or-signed counterpart type.
+ * @return `vec<uitype<From>, Nout>` where `Nout = size_of<From>() * N / size_of<To>()`.
+ */
 template <typename From, size_t N, typename To = uitype<From>,
           size_t Nout = size_of<From>() * N / size_of<To>()>
 constexpr KFR_INTRINSIC vec<To, Nout> uibitcast(const vec<From, N>& value) noexcept
@@ -1271,94 +1326,172 @@ constexpr KFR_INTRINSIC vec<SubType, N> pack(const Arg& x, const Args&... rest)
                                                static_cast<SubType>(rest)...);
 }
 
-using f32x1  = vec<f32, 1>;
-
 /**
- * @name Floating-point vector aliases
- * @brief `f32xN` and `f64xN` name `vec<f32, N>` and `vec<f64, N>` respectively.
- * @{
+ * @brief Short alias for `vec<T, N>`.
+ *
+ * `f32xN` and `f64xN` name `vec<f32, N>` and `vec<f64, N>` respectively;
+ * signed/unsigned integer vector aliases follow the same pattern
+ * (`i8xN`, `i16xN`, `i32xN`, `i64xN`, `u8xN`, `u16xN`, `u32xN`, `u64xN`).
  */
-using f32x2  = vec<f32, 2>;
-using f32x3  = vec<f32, 3>;
-using f32x4  = vec<f32, 4>;
-using f32x8  = vec<f32, 8>;
+using f32x1 = vec<f32, 1>;
+/** @copydoc f32x1 */
+using f32x2 = vec<f32, 2>;
+/** @copydoc f32x1 */
+using f32x3 = vec<f32, 3>;
+/** @copydoc f32x1 */
+using f32x4 = vec<f32, 4>;
+/** @copydoc f32x1 */
+using f32x8 = vec<f32, 8>;
+/** @copydoc f32x1 */
 using f32x16 = vec<f32, 16>;
+/** @copydoc f32x1 */
 using f32x32 = vec<f32, 32>;
+/** @copydoc f32x1 */
 using f32x64 = vec<f32, 64>;
-using f64x1  = vec<f64, 1>;
-using f64x2  = vec<f64, 2>;
-using f64x3  = vec<f64, 3>;
-using f64x4  = vec<f64, 4>;
-using f64x8  = vec<f64, 8>;
+/** @copydoc f32x1 */
+using f64x1 = vec<f64, 1>;
+/** @copydoc f32x1 */
+using f64x2 = vec<f64, 2>;
+/** @copydoc f32x1 */
+using f64x3 = vec<f64, 3>;
+/** @copydoc f32x1 */
+using f64x4 = vec<f64, 4>;
+/** @copydoc f32x1 */
+using f64x8 = vec<f64, 8>;
+/** @copydoc f32x1 */
 using f64x16 = vec<f64, 16>;
+/** @copydoc f32x1 */
 using f64x32 = vec<f64, 32>;
+/** @copydoc f32x1 */
 using f64x64 = vec<f64, 64>;
-using i8x1   = vec<i8, 1>;
-using i8x2   = vec<i8, 2>;
-using i8x3   = vec<i8, 3>;
-using i8x4   = vec<i8, 4>;
-using i8x8   = vec<i8, 8>;
-using i8x16  = vec<i8, 16>;
-using i8x32  = vec<i8, 32>;
-using i8x64  = vec<i8, 64>;
-using i16x1  = vec<i16, 1>;
-using i16x2  = vec<i16, 2>;
-using i16x3  = vec<i16, 3>;
-using i16x4  = vec<i16, 4>;
-using i16x8  = vec<i16, 8>;
+/** @copydoc f32x1 */
+using i8x1 = vec<i8, 1>;
+/** @copydoc f32x1 */
+using i8x2 = vec<i8, 2>;
+/** @copydoc f32x1 */
+using i8x3 = vec<i8, 3>;
+/** @copydoc f32x1 */
+using i8x4 = vec<i8, 4>;
+/** @copydoc f32x1 */
+using i8x8 = vec<i8, 8>;
+/** @copydoc f32x1 */
+using i8x16 = vec<i8, 16>;
+/** @copydoc f32x1 */
+using i8x32 = vec<i8, 32>;
+/** @copydoc f32x1 */
+using i8x64 = vec<i8, 64>;
+/** @copydoc f32x1 */
+using i16x1 = vec<i16, 1>;
+/** @copydoc f32x1 */
+using i16x2 = vec<i16, 2>;
+/** @copydoc f32x1 */
+using i16x3 = vec<i16, 3>;
+/** @copydoc f32x1 */
+using i16x4 = vec<i16, 4>;
+/** @copydoc f32x1 */
+using i16x8 = vec<i16, 8>;
+/** @copydoc f32x1 */
 using i16x16 = vec<i16, 16>;
+/** @copydoc f32x1 */
 using i16x32 = vec<i16, 32>;
+/** @copydoc f32x1 */
 using i16x64 = vec<i16, 64>;
-using i32x1  = vec<i32, 1>;
-using i32x2  = vec<i32, 2>;
-using i32x3  = vec<i32, 3>;
-using i32x4  = vec<i32, 4>;
-using i32x8  = vec<i32, 8>;
+/** @copydoc f32x1 */
+using i32x1 = vec<i32, 1>;
+/** @copydoc f32x1 */
+using i32x2 = vec<i32, 2>;
+/** @copydoc f32x1 */
+using i32x3 = vec<i32, 3>;
+/** @copydoc f32x1 */
+using i32x4 = vec<i32, 4>;
+/** @copydoc f32x1 */
+using i32x8 = vec<i32, 8>;
+/** @copydoc f32x1 */
 using i32x16 = vec<i32, 16>;
+/** @copydoc f32x1 */
 using i32x32 = vec<i32, 32>;
+/** @copydoc f32x1 */
 using i32x64 = vec<i32, 64>;
-using i64x1  = vec<i64, 1>;
-using i64x2  = vec<i64, 2>;
-using i64x3  = vec<i64, 3>;
-using i64x4  = vec<i64, 4>;
-using i64x8  = vec<i64, 8>;
+/** @copydoc f32x1 */
+using i64x1 = vec<i64, 1>;
+/** @copydoc f32x1 */
+using i64x2 = vec<i64, 2>;
+/** @copydoc f32x1 */
+using i64x3 = vec<i64, 3>;
+/** @copydoc f32x1 */
+using i64x4 = vec<i64, 4>;
+/** @copydoc f32x1 */
+using i64x8 = vec<i64, 8>;
+/** @copydoc f32x1 */
 using i64x16 = vec<i64, 16>;
+/** @copydoc f32x1 */
 using i64x32 = vec<i64, 32>;
+/** @copydoc f32x1 */
 using i64x64 = vec<i64, 64>;
-using u8x1   = vec<u8, 1>;
-using u8x2   = vec<u8, 2>;
-using u8x3   = vec<u8, 3>;
-using u8x4   = vec<u8, 4>;
-using u8x8   = vec<u8, 8>;
-using u8x16  = vec<u8, 16>;
-using u8x32  = vec<u8, 32>;
-using u8x64  = vec<u8, 64>;
-using u16x1  = vec<u16, 1>;
-using u16x2  = vec<u16, 2>;
-using u16x3  = vec<u16, 3>;
-using u16x4  = vec<u16, 4>;
-using u16x8  = vec<u16, 8>;
+/** @copydoc f32x1 */
+using u8x1 = vec<u8, 1>;
+/** @copydoc f32x1 */
+using u8x2 = vec<u8, 2>;
+/** @copydoc f32x1 */
+using u8x3 = vec<u8, 3>;
+/** @copydoc f32x1 */
+using u8x4 = vec<u8, 4>;
+/** @copydoc f32x1 */
+using u8x8 = vec<u8, 8>;
+/** @copydoc f32x1 */
+using u8x16 = vec<u8, 16>;
+/** @copydoc f32x1 */
+using u8x32 = vec<u8, 32>;
+/** @copydoc f32x1 */
+using u8x64 = vec<u8, 64>;
+/** @copydoc f32x1 */
+using u16x1 = vec<u16, 1>;
+/** @copydoc f32x1 */
+using u16x2 = vec<u16, 2>;
+/** @copydoc f32x1 */
+using u16x3 = vec<u16, 3>;
+/** @copydoc f32x1 */
+using u16x4 = vec<u16, 4>;
+/** @copydoc f32x1 */
+using u16x8 = vec<u16, 8>;
+/** @copydoc f32x1 */
 using u16x16 = vec<u16, 16>;
+/** @copydoc f32x1 */
 using u16x32 = vec<u16, 32>;
+/** @copydoc f32x1 */
 using u16x64 = vec<u16, 64>;
-using u32x1  = vec<u32, 1>;
-using u32x2  = vec<u32, 2>;
-using u32x3  = vec<u32, 3>;
-using u32x4  = vec<u32, 4>;
-using u32x8  = vec<u32, 8>;
+/** @copydoc f32x1 */
+using u32x1 = vec<u32, 1>;
+/** @copydoc f32x1 */
+using u32x2 = vec<u32, 2>;
+/** @copydoc f32x1 */
+using u32x3 = vec<u32, 3>;
+/** @copydoc f32x1 */
+using u32x4 = vec<u32, 4>;
+/** @copydoc f32x1 */
+using u32x8 = vec<u32, 8>;
+/** @copydoc f32x1 */
 using u32x16 = vec<u32, 16>;
+/** @copydoc f32x1 */
 using u32x32 = vec<u32, 32>;
+/** @copydoc f32x1 */
 using u32x64 = vec<u32, 64>;
-using u64x1  = vec<u64, 1>;
-using u64x2  = vec<u64, 2>;
-using u64x3  = vec<u64, 3>;
-using u64x4  = vec<u64, 4>;
-using u64x8  = vec<u64, 8>;
+/** @copydoc f32x1 */
+using u64x1 = vec<u64, 1>;
+/** @copydoc f32x1 */
+using u64x2 = vec<u64, 2>;
+/** @copydoc f32x1 */
+using u64x3 = vec<u64, 3>;
+/** @copydoc f32x1 */
+using u64x4 = vec<u64, 4>;
+/** @copydoc f32x1 */
+using u64x8 = vec<u64, 8>;
+/** @copydoc f32x1 */
 using u64x16 = vec<u64, 16>;
+/** @copydoc f32x1 */
 using u64x32 = vec<u64, 32>;
+/** @copydoc f32x1 */
 using u64x64 = vec<u64, 64>;
-
-/** @} */
 
 /**
  * @brief GLSL-compatible vector type aliases.
@@ -1525,21 +1658,21 @@ KFR_INTRINSIC vec<T, N> zerovector(vec<T, N>)
     return vec<T, N>(czeros);
 }
 
-/** @brief Return an all-ones vector of the given type and size. */
+/** @brief Return a vector of the given type and size with all bits set to 1. */
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> allonesvector()
 {
     return vec<T, N>(cones);
 }
 
-/** @brief Return an all-ones vector matching the given shape. */
+/** @brief Return a vector matching the given shape with all bits set to 1. */
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> allonesvector(vec_shape<T, N>)
 {
     return vec<T, N>(cones);
 }
 
-/** @brief Return an all-ones vector matching the type of the given vector. */
+/** @brief Return a vector matching the type of the given vector with all bits set to 1. */
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> allonesvector(vec<T, N>)
 {

@@ -24,16 +24,16 @@
 
 #include "base.hpp"
 
-#include "dsp/biquad_design.hpp"
 #include "dsp/biquad.hpp"
+#include "dsp/biquad_design.hpp"
 #include "dsp/dcremove.hpp"
 #include "dsp/delay.hpp"
 #include "dsp/ebu.hpp"
-#include "dsp/fir_design.hpp"
 #include "dsp/fir.hpp"
+#include "dsp/fir_design.hpp"
 #include "dsp/goertzel.hpp"
-#include "dsp/iir_design.hpp"
 #include "dsp/iir.hpp"
+#include "dsp/iir_design.hpp"
 #include "dsp/mixdown.hpp"
 #include "dsp/oscillators.hpp"
 #include "dsp/sample_rate_conversion.hpp"
@@ -46,5 +46,10 @@
 
 namespace kfr
 {
+/**
+ * @brief Returns the full version string of the KFR DSP module.
+ * @return A null-terminated string with the KFR version (e.g. from
+ *         @c KFR_VERSION_FULL).
+ */
 const char* library_version_dsp();
-}
+} // namespace kfr

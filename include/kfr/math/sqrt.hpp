@@ -30,7 +30,14 @@ inline namespace KFR_ARCH_NAME
 {
 
 /**
- * @brief Returns the positive square root of the x. \f$\sqrt{x}\f$
+ * @brief Returns the positive square root of x. \f$\sqrt{x}\f$
+ *
+ * For negative inputs the result is NaN. Applied element-wise for vector
+ * inputs.
+ *
+ * @tparam T1 Input numeric type.
+ * @param x Value whose square root is computed.
+ * @return \f$\sqrt{x}\f$ as @c flt_type<T1>.
  */
 template <numeric T1>
 KFR_INTRINSIC flt_type<T1> sqrt(const T1& x)

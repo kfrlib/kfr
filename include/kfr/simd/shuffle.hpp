@@ -976,7 +976,8 @@ KFR_INTRINSIC vec<T, N> rotateleft(const vec<T, N>& x, csize_t<amount> = csize_t
 KFR_FN(rotateleft)
 
 /**
- * @brief Inserts a scalar @p x at the high (right) end of @p y, shifting @p y one lane to the low (left) side.
+ * @brief Inserts a scalar @p x at the high (right) end of @p y, shifting @p y one lane to the low (left)
+ * side.
  * @details The lowest lane of @p y (index 0) is discarded; @p x occupies the highest lane.
  * Given @p y = [y0, y1, ..., y(N-1)], the result is [y1, ..., y(N-1), x].
  * @tparam T Element type of the vector.
@@ -993,7 +994,8 @@ KFR_INTRINSIC vec<T, N> inserthigh(T x, const vec<T, N>& y)
 KFR_FN(inserthigh)
 
 /**
- * @brief Inserts a scalar @p x at the low (left) end of @p y, shifting @p y one lane to the high (right) side.
+ * @brief Inserts a scalar @p x at the low (left) end of @p y, shifting @p y one lane to the high (right)
+ * side.
  * @details The highest lane of @p y (index N-1) is discarded; @p x occupies the lowest lane.
  * Given @p y = [y0, y1, ..., y(N-1)], the result is [x, y0, ..., y(N-2)].
  * @tparam T Element type of the vector.

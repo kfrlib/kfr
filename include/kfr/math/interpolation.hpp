@@ -33,7 +33,16 @@ inline namespace KFR_ARCH_NAME
 /**
  * @brief Nearest-neighbor interpolation.
  *
- * Returns x1 if mu < 0.5, else x2.
+ * Returns @p x1 when @p mu is below 0.5, otherwise returns @p x2. This is the
+ * simplest and cheapest interpolation scheme: it produces a step (hold) output
+ * with no smoothing between samples.
+ *
+ * @tparam T sample (value) type, also the return type.
+ * @tparam M interpolation-parameter type used for the comparison threshold.
+ * @param mu interpolation parameter in the range [0, 1].
+ * @param x1 value returned for @p mu < 0.5.
+ * @param x2 value returned for @p mu >= 0.5.
+ * @return @p x1 or @p x2 depending on the @p mu threshold.
  */
 template <typename T, typename M>
 KFR_FUNCTION T nearest(M mu, T x1, T x2)
@@ -44,7 +53,15 @@ KFR_FUNCTION T nearest(M mu, T x1, T x2)
 /**
  * @brief Linear interpolation.
  *
- * Linearly blends between x1 and x2 by mu.
+ * Linearly blends between @p x1 and @p x2 by @p mu: the result is
+ * (1 - mu) * x1 + mu * x2, i.e. @p x1 at @p mu == 0 and @p x2 at @p mu == 1.
+ *
+ * @tparam T sample (value) type, also the return type.
+ * @tparam M interpolation-parameter type.
+ * @param mu interpolation parameter; values outside [0, 1] extrapolate.
+ * @param x1 value at @p mu == 0.
+ * @param x2 value at @p mu == 1.
+ * @return the linearly interpolated value between @p x1 and @p x2.
  */
 template <typename T, typename M>
 KFR_FUNCTION T linear(M mu, T x1, T x2)
@@ -55,7 +72,17 @@ KFR_FUNCTION T linear(M mu, T x1, T x2)
 /**
  * @brief Cosine interpolation.
  *
- * Smooth interpolation between x1 and x2 using a cosine curve.
+ * Smoothly interpolates between @p x1 and @p x2 using a raised-cosine shape:
+ * the effective blend factor is (1 - cos(mu * pi)) / 2, which is 0 at
+ * @p mu == 0, 1 at @p mu == 1, and has zero first derivative at both ends.
+ * Useful as a low-pass / smooth-step alternative to linear interpolation.
+ *
+ * @tparam T sample (value) type, also the return type.
+ * @tparam M interpolation-parameter type.
+ * @param mu interpolation parameter in the range [0, 1].
+ * @param x1 value at @p mu == 0.
+ * @param x2 value at @p mu == 1.
+ * @return the cosine-interpolated value between @p x1 and @p x2.
  */
 template <typename T, typename M>
 KFR_FUNCTION T cosine(M mu, T x1, T x2)
@@ -66,7 +93,19 @@ KFR_FUNCTION T cosine(M mu, T x1, T x2)
 /**
  * @brief Cubic interpolation.
  *
- * Uses four points for smooth curve fitting.
+ * Fits a cubic polynomial through the four control points @p x0, @p x1,
+ * @p x2, @p x3 and evaluates it at @p mu. The curve passes through @p x1
+ * at @p mu == 0 and through @p x2 at @p mu == 1, with the outer points
+ * @p x0 and @p x3 controlling the tangent at the endpoints.
+ *
+ * @tparam T sample (value) type, also the return type.
+ * @tparam M interpolation-parameter type.
+ * @param mu interpolation parameter in the range [0, 1].
+ * @param x0 control point preceding @p x1 (used to shape the start tangent).
+ * @param x1 value at @p mu == 0.
+ * @param x2 value at @p mu == 1.
+ * @param x3 control point following @p x2 (used to shape the end tangent).
+ * @return the cubic-interpolated value at @p mu.
  */
 template <typename T, typename M>
 KFR_FUNCTION T cubic(M mu, T x0, T x1, T x2, T x3)
@@ -81,7 +120,20 @@ KFR_FUNCTION T cubic(M mu, T x0, T x1, T x2, T x3)
 /**
  * @brief Catmull-Rom spline interpolation.
  *
- * Smooth curve that passes through x1 and x2.
+ * Interpolating Catmull-Rom spline through the four control points @p x0,
+ * @p x1, @p x2, @p x3 evaluated at @p mu. The curve passes through @p x1
+ * at @p mu == 0 and through @p x2 at @p mu == 1, and the tangents at those
+ * points are estimated as (x2 - x0) / 2 and (x3 - x1) / 2 respectively,
+ * giving C^1 continuity when concatenated across a sample stream.
+ *
+ * @tparam T sample (value) type, also the return type.
+ * @tparam M interpolation-parameter type.
+ * @param mu interpolation parameter in the range [0, 1].
+ * @param x0 control point preceding @p x1.
+ * @param x1 value at @p mu == 0.
+ * @param x2 value at @p mu == 1.
+ * @param x3 control point following @p x2.
+ * @return the Catmull-Rom-interpolated value at @p mu.
  */
 template <typename T, typename M>
 KFR_FUNCTION T catmullrom(M mu, T x0, T x1, T x2, T x3)

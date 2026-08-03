@@ -28,6 +28,14 @@ namespace kfr
 {
 // ----------------------------------------------------------------------------
 
+/**
+ * @brief Expression that wraps a single scalar value of type @p T.
+ *
+ * The expression has zero dimensions and yields the same value regardless of
+ * the index passed to @ref get_elements.
+ *
+ * @tparam T scalar value type
+ */
 template <typename T>
 struct expression_scalar
 {
@@ -44,18 +52,35 @@ struct expression_traits<expression_scalar<T>> : expression_traits_defaults
     constexpr static shape<0> get_shape() { return {}; }
 };
 
+/**
+ * @brief Creates an expression that wraps a single value.
+ *
+ * @tparam T    value type (deduced from the argument)
+ * @param  value the scalar value to wrap
+ * @return an @ref expression_scalar holding @p value
+ */
 template <typename T>
 KFR_INTRINSIC expression_scalar<T> scalar(T value)
 {
     return { std::move(value) };
 }
 
+/**
+ * @brief Creates an expression that always evaluates to zero.
+ *
+ * @tparam T value type (defaults to @ref fbase)
+ */
 template <typename T = fbase>
 KFR_INTRINSIC expression_scalar<T> zeros()
 {
     return { static_cast<T>(0) };
 }
 
+/**
+ * @brief Creates an expression that always evaluates to one.
+ *
+ * @tparam T value type (defaults to @ref fbase)
+ */
 template <typename T = fbase>
 KFR_INTRINSIC expression_scalar<T> ones()
 {
@@ -64,6 +89,7 @@ KFR_INTRINSIC expression_scalar<T> ones()
 
 inline namespace KFR_ARCH_NAME
 {
+/** Internal ADL-provided implementation for `expression_scalar<T>` expressions */
 template <typename T, index_t Axis, size_t N>
 KFR_INTRINSIC vec<T, N> get_elements(const expression_scalar<T>& self, const shape<0>& index,
                                      const axis_params<Axis, N>&)
@@ -74,6 +100,16 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_scalar<T>& self, const sha
 
 // ----------------------------------------------------------------------------
 
+/**
+ * @brief Expression that produces a sequence of values
+ *        `start, start + step, start + 2*step, ...` for one or more dimensions.
+ *
+ * Each dimension has its own step; the produced value for an index is
+ * `start + sum(steps[i] * index[i])`.
+ *
+ * @tparam T     value type
+ * @tparam Dims  number of dimensions (1 or more)
+ */
 template <typename T, index_t Dims = 1>
 struct expression_counter
 {
@@ -97,12 +133,34 @@ struct expression_traits<expression_counter<T, Dims>> : expression_traits_defaul
     constexpr static shape<dims> get_shape() { return shape<dims>(infinite_size); }
 };
 
+/**
+ * @brief Creates a 1-D @ref expression_counter with step 1.
+ *
+ * @tparam T    integer value type (defaults to `int`)
+ * @tparam Tout output value type (defaults to T)
+ * @param  start starting value of the counter
+ * @return an @ref expression_counter producing `start, start+1, start+2, ...`
+ */
 template <typename T = int, typename Tout = T>
 KFR_INTRINSIC expression_counter<Tout, 1> counter(T start = 0)
 {
     return { static_cast<Tout>(std::move(start)), { static_cast<Tout>(1) } };
 }
 
+/**
+ * @brief Creates an N-dimensional @ref expression_counter with one step per dimension.
+ *
+ * The produced value is `start + step*index[0] + steps*index[1] + ...`.
+ *
+ * @tparam T    integer value type of @p start
+ * @tparam Arg  type of the first step
+ * @tparam Args types of the remaining steps
+ * @tparam Tout common value type used in the resulting expression
+ * @param  start starting value
+ * @param  step  step for the first dimension
+ * @param  steps steps for the remaining dimensions
+ * @return an @ref expression_counter
+ */
 template <typename T = int, typename Arg = T, typename... Args,
           typename Tout = std::common_type_t<T, Arg, Args...>>
 KFR_INTRINSIC expression_counter<Tout, 1 + sizeof...(Args)> counter(T start, Arg step, Args... steps)
@@ -114,6 +172,7 @@ KFR_INTRINSIC expression_counter<Tout, 1 + sizeof...(Args)> counter(T start, Arg
 inline namespace KFR_ARCH_NAME
 {
 
+/** Internal ADL-provided implementation for `expression_counter<T, 1>` expressions */
 template <typename T, index_t Axis, size_t N>
 KFR_INTRINSIC vec<T, N> get_elements(const expression_counter<T, 1>& self, const shape<1>& index,
                                      const axis_params<Axis, N>&)
@@ -122,6 +181,7 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_counter<T, 1>& self, const
     acc += static_cast<T>(index.back()) * self.back();
     return acc + enumerate(vec_shape<T, N>(), self.back());
 }
+/** Internal ADL-provided implementation for `expression_counter<T, dims>` expressions */
 template <typename T, index_t dims, index_t Axis, size_t N>
 KFR_INTRINSIC vec<T, N> get_elements(const expression_counter<T, dims>& self, const shape<dims>& index,
                                      const axis_params<Axis, N>&)
@@ -135,6 +195,14 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_counter<T, dims>& self, co
 
 // ----------------------------------------------------------------------------
 
+/**
+ * @brief Expression that exposes a sub-region of another expression.
+ *
+ * Access is forwarded to the wrapped expression with the index offset by
+ * @c start and clamped to @c size.
+ *
+ * @tparam Arg wrapped expression type
+ */
 template <typename Arg>
 struct expression_slice : public expression_with_arguments<Arg>
 {
@@ -165,6 +233,14 @@ struct expression_traits<expression_slice<Arg>> : expression_traits_defaults
     KFR_MEM_INTRINSIC constexpr static shape<dims> get_shape() { return shape<dims>(undefined_size); }
 };
 
+/**
+ * @brief Creates an expression that exposes a sub-region of another expression.
+ *
+ * @param  arg   the input expression
+ * @param  start starting offset of the slice
+ * @param  size  size of the slice (defaults to infinite_size)
+ * @return an @ref expression_slice
+ */
 template <expression_argument Arg, index_t Dims = expression_dims<Arg>>
 KFR_INTRINSIC expression_slice<Arg> slice(Arg&& arg, std::type_identity_t<shape<Dims>> start,
                                           std::type_identity_t<shape<Dims>> size = shape<Dims>(infinite_size))
@@ -173,6 +249,13 @@ KFR_INTRINSIC expression_slice<Arg> slice(Arg&& arg, std::type_identity_t<shape<
     return { std::forward<Arg>(arg), start, size };
 }
 
+/**
+ * @brief Creates an expression that exposes @p arg starting at the origin with the given @p size.
+ *
+ * @param  arg  the input expression
+ * @param  size size of the truncated region
+ * @return an @ref expression_slice
+ */
 template <expression_argument Arg, index_t Dims = expression_dims<Arg>>
 KFR_INTRINSIC expression_slice<Arg> truncate(Arg&& arg, std::type_identity_t<shape<Dims>> size)
 {
@@ -183,6 +266,7 @@ KFR_INTRINSIC expression_slice<Arg> truncate(Arg&& arg, std::type_identity_t<sha
 inline namespace KFR_ARCH_NAME
 {
 
+/** Internal ADL-provided implementation for `expression_slice<Arg>` expressions */
 template <typename Arg, index_t NDims, index_t Axis, size_t N,
           typename T = typename expression_traits<expression_slice<Arg>>::value_type>
 KFR_INTRINSIC vec<T, N> get_elements(const expression_slice<Arg>& self, const shape<NDims>& index,
@@ -191,6 +275,7 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_slice<Arg>& self, const sh
     return static_cast<vec<T, N>>(get_elements(self.first(), index.add(self.start), sh));
 }
 
+/** Internal ADL-provided implementation for `expression_slice<Arg>` expressions */
 template <output_expression Arg, index_t NDims, index_t Axis, size_t N,
           typename T = typename expression_traits<expression_slice<Arg>>::value_type>
 KFR_INTRINSIC void set_elements(const expression_slice<Arg>& self, const shape<NDims>& index,
@@ -202,6 +287,12 @@ KFR_INTRINSIC void set_elements(const expression_slice<Arg>& self, const shape<N
 
 // ----------------------------------------------------------------------------
 
+/**
+ * @brief Expression that converts the values of the wrapped expression to type @p T.
+ *
+ * @tparam T   target value type
+ * @tparam Arg wrapped expression type
+ */
 template <typename T, typename Arg>
 struct expression_cast : public expression_with_arguments<Arg>
 {
@@ -224,12 +315,28 @@ struct expression_traits<expression_cast<T, Arg>> : expression_traits_defaults
     KFR_MEM_INTRINSIC constexpr static shape<dims> get_shape() { return ArgTraits::get_shape(); }
 };
 
+/**
+ * @brief Creates an expression that converts the values of @p arg to type @p T.
+ *
+ * @tparam T   target value type
+ * @param  arg input expression
+ * @return an @ref expression_cast
+ */
 template <typename T, expression_argument Arg>
 KFR_INTRINSIC expression_cast<T, Arg> cast(Arg&& arg)
 {
     return { std::forward<Arg>(arg) };
 }
 
+/**
+ * @brief Creates an expression that converts the values of @p arg to type @p T.
+ *
+ * Overload accepting a @ref ctype_t tag for explicit type specification.
+ *
+ * @tparam T   target value type
+ * @param  arg input expression
+ * @return an @ref expression_cast
+ */
 template <typename T, expression_argument Arg>
 KFR_INTRINSIC expression_cast<T, Arg> cast(Arg&& arg, ctype_t<T>)
 {
@@ -239,6 +346,7 @@ KFR_INTRINSIC expression_cast<T, Arg> cast(Arg&& arg, ctype_t<T>)
 inline namespace KFR_ARCH_NAME
 {
 
+/** Internal ADL-provided implementation for `expression_cast<T, Arg>` expressions */
 template <typename T, typename Arg, index_t NDims, index_t Axis, size_t N>
 KFR_INTRINSIC vec<T, N> get_elements(const expression_cast<T, Arg>& self, const shape<NDims>& index,
                                      const axis_params<Axis, N>& sh)
@@ -246,6 +354,7 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_cast<T, Arg>& self, const 
     return static_cast<vec<T, N>>(get_elements(self.first(), index, sh));
 }
 
+/** Internal ADL-provided implementation for `expression_cast<T, Arg>` expressions */
 template <typename T, typename Arg, index_t NDims, index_t Axis, size_t N>
 KFR_INTRINSIC void set_elements(const expression_cast<T, Arg>& self, const shape<NDims>& index,
                                 const axis_params<Axis, N>& sh, const std::type_identity_t<vec<T, N>>& value)
@@ -256,6 +365,17 @@ KFR_INTRINSIC void set_elements(const expression_cast<T, Arg>& self, const shape
 
 // ----------------------------------------------------------------------------
 
+/**
+ * @brief Expression backed by a user-provided callable.
+ *
+ * The callable is invoked with the current index (and optionally an
+ * @ref axis_params) to produce values on demand.
+ *
+ * @tparam T     value type produced by the lambda
+ * @tparam Dims  number of dimensions
+ * @tparam Fn    callable type
+ * @tparam Rnd   whether the lambda supports random access
+ */
 template <typename T, index_t Dims, typename Fn, bool Rnd>
 struct expression_lambda
 {
@@ -276,17 +396,45 @@ struct expression_traits<expression_lambda<T, Dims, Fn, Rnd>> : expression_trait
     KFR_MEM_INTRINSIC constexpr static shape<Dims> get_shape() { return shape<Dims>(infinite_size); }
 };
 
+/**
+ * @brief Creates an expression backed by a callable.
+ *
+ * The callable may be invoked with `(shape<Dims>, axis_params<Axis, N>)`,
+ * `(shape<Dims>, csize_t<N>)`, `(shape<Dims>)` or `()`.
+ *
+ * @tparam T     value type produced by the lambda
+ * @tparam Dims  number of dimensions
+ * @param  fn    callable used to produce values
+ * @return an @ref expression_lambda
+ */
 template <typename T, index_t Dims = 1, typename Fn, bool RandomAccess = true>
 KFR_INTRINSIC expression_lambda<T, Dims, Fn, RandomAccess> lambda(Fn&& fn, cbool_t<RandomAccess> = {})
 {
     return { std::forward<Fn>(fn) };
 }
+/**
+ * @brief Creates an expression backed by a non-random-access callable.
+ *
+ * The resulting expression has @c random_access set to @c false.
+ *
+ * @tparam T     value type produced by the lambda
+ * @tparam Dims  number of dimensions
+ * @param  fn    callable used to produce values
+ * @return an @ref expression_lambda
+ */
 template <typename T, index_t Dims = 1, typename Fn>
 KFR_INTRINSIC expression_lambda<T, Dims, Fn, false> lambda_generator(Fn&& fn)
 {
     return { std::forward<Fn>(fn) };
 }
 
+/**
+ * @brief Creates an expression that cycles through the provided list of values.
+ *
+ * @tparam Ts  types of the values in @p list
+ * @param  list values to cycle through
+ * @return an @ref expression_lambda producing @c list[index % size]
+ */
 template <typename... Ts, typename T = std::common_type_t<Ts...>>
 KFR_INTRINSIC auto sequence(const Ts&... list)
 {
@@ -298,6 +446,7 @@ KFR_INTRINSIC auto sequence(const Ts&... list)
 inline namespace KFR_ARCH_NAME
 {
 
+/** Internal ADL-provided implementation for `expression_lambda<T, Dims, Fn, Rnd>` expressions */
 template <typename T, index_t Dims, typename Fn, bool Rnd, index_t Axis, size_t N>
 KFR_INTRINSIC vec<T, N> get_elements(const expression_lambda<T, Dims, Fn, Rnd>& self,
                                      const shape<Dims>& index, const axis_params<Axis, N>& sh)
@@ -333,6 +482,14 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_lambda<T, Dims, Fn, Rnd>& 
 
 // ----------------------------------------------------------------------------
 
+/**
+ * @brief Expression that extends another expression with a constant fill value.
+ *
+ * Out-of-range positions return @c fill_value; positions near the boundary are
+ * fetched element-wise from the wrapped expression.
+ *
+ * @tparam Arg wrapped expression type
+ */
 template <typename Arg>
 struct expression_padded : public expression_with_arguments<Arg>
 {
@@ -347,6 +504,13 @@ struct expression_padded : public expression_with_arguments<Arg>
     }
 };
 
+/**
+ * @brief Creates an expression that extends @p arg with a constant fill value.
+ *
+ * @param  arg        input expression
+ * @param  fill_value value used for out-of-range positions (defaults to a default-constructed value)
+ * @return an @ref expression_padded
+ */
 template <expression_argument Arg, typename T = expression_value_type<Arg>>
 KFR_INTRINSIC expression_padded<Arg> padded(Arg&& arg, T fill_value = T{})
 {
@@ -373,6 +537,7 @@ struct expression_traits<expression_padded<Arg>> : expression_traits_defaults
 inline namespace KFR_ARCH_NAME
 {
 
+/** Internal ADL-provided implementation for `expression_padded<Arg>` expressions */
 template <typename Arg, index_t Axis, size_t N, typename Traits = expression_traits<expression_padded<Arg>>,
           typename T = typename Traits::value_type>
 KFR_INTRINSIC vec<T, N> get_elements(const expression_padded<Arg>& self, const shape<Traits::dims>& index,
@@ -403,6 +568,11 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_padded<Arg>& self, const s
 
 // ----------------------------------------------------------------------------
 
+/**
+ * @brief Expression that exposes another expression with its trailing dimension reversed.
+ *
+ * @tparam Arg wrapped expression type (must have @c random_access)
+ */
 template <typename Arg>
 struct expression_reverse : public expression_with_arguments<Arg>
 {
@@ -416,6 +586,12 @@ struct expression_reverse : public expression_with_arguments<Arg>
     }
 };
 
+/**
+ * @brief Creates an expression that exposes @p arg with its trailing dimension reversed.
+ *
+ * @param  arg input expression
+ * @return an @ref expression_reverse
+ */
 template <expression_argument Arg>
 KFR_INTRINSIC expression_reverse<Arg> reverse(Arg&& arg)
 {
@@ -442,6 +618,7 @@ struct expression_traits<expression_reverse<Arg>> : expression_traits_defaults
 inline namespace KFR_ARCH_NAME
 {
 
+/** Internal ADL-provided implementation for `expression_reverse<Arg>` expressions */
 template <typename Arg, index_t Axis, size_t N, typename Traits = expression_traits<expression_reverse<Arg>>,
           typename T = typename Traits::value_type>
 KFR_INTRINSIC vec<T, N> get_elements(const expression_reverse<Arg>& self, const shape<Traits::dims>& index,
@@ -449,6 +626,7 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_reverse<Arg>& self, const 
 {
     return reverse(get_elements(self.first(), self.input_shape.sub(index).sub(shape<Traits::dims>(N)), sh));
 }
+/** Internal ADL-provided implementation for `expression_reverse<Arg>` expressions */
 template <typename Arg, index_t Axis, size_t N, typename Traits = expression_traits<expression_reverse<Arg>>,
           typename T = typename Traits::value_type>
 KFR_INTRINSIC void set_elements(expression_reverse<Arg>& self, const shape<Traits::dims>& index,
@@ -461,6 +639,11 @@ KFR_INTRINSIC void set_elements(expression_reverse<Arg>& self, const shape<Trait
 
 // ----------------------------------------------------------------------------
 
+/**
+ * @brief Type-level storage for a fixed @ref shape built from a list of constants.
+ *
+ * @tparam Values the dimensions of the fixed shape
+ */
 template <index_t... Values>
 struct fixed_shape_t
 {
@@ -468,9 +651,23 @@ struct fixed_shape_t
     constexpr static shape<sizeof...(Values)> get() { return { Values... }; }
 };
 
+/**
+ * @brief Convenience variable template for instantiating a @ref fixed_shape_t.
+ *
+ * @tparam Values the dimensions of the fixed shape
+ */
 template <index_t... Values>
 constexpr inline fixed_shape_t<Values...> fixed_shape{};
 
+/**
+ * @brief Expression that overrides the shape of another expression with a compile-time shape.
+ *
+ * The wrapped expression's trailing dimensions are trimmed to match the inner
+ * expression, while the result reports the dimensions given by @c Shape.
+ *
+ * @tparam Arg   wrapped expression type
+ * @tparam Shape compile-time shape descriptor (typically @ref fixed_shape_t)
+ */
 template <typename Arg, typename Shape>
 struct expression_fixshape : public expression_with_arguments<Arg>
 {
@@ -482,6 +679,14 @@ struct expression_fixshape : public expression_with_arguments<Arg>
     }
 };
 
+/**
+ * @brief Creates an expression that overrides the shape of @p arg with a compile-time shape.
+ *
+ * @tparam Arg          input expression type
+ * @tparam ShapeValues  dimension values of the fixed shape
+ * @param  arg          input expression
+ * @return an @ref expression_fixshape
+ */
 template <expression_argument Arg, index_t... ShapeValues>
 KFR_INTRINSIC expression_fixshape<Arg, fixed_shape_t<ShapeValues...>> fixshape(
     Arg&& arg, const fixed_shape_t<ShapeValues...>&)
@@ -512,6 +717,7 @@ struct expression_traits<expression_fixshape<Arg, fixed_shape_t<ShapeValues...>>
 inline namespace KFR_ARCH_NAME
 {
 
+/** Internal ADL-provided implementation for `expression_fixshape<Arg, Shape>` expressions */
 template <typename Arg, typename Shape, index_t Axis, size_t N,
           typename Traits = expression_traits<expression_fixshape<Arg, Shape>>,
           typename T      = typename Traits::value_type>
@@ -522,6 +728,7 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_fixshape<Arg, Shape>& self
     return get_elements(self.first(), index.template trim<ArgTraits::dims>(), sh);
 }
 
+/** Internal ADL-provided implementation for `expression_fixshape<Arg, Shape>` expressions */
 template <typename Arg, typename Shape, index_t Axis, size_t N,
           typename Traits = expression_traits<expression_fixshape<Arg, Shape>>,
           typename T      = typename Traits::value_type>
@@ -542,6 +749,15 @@ KFR_INTRINSIC void set_elements(expression_fixshape<Arg, Shape>& self, const sha
 
 // ----------------------------------------------------------------------------
 
+/**
+ * @brief Expression that exposes the same data as another expression with a different shape.
+ *
+ * Elements are addressed by flattening the output index into the input's
+ * flat layout and unflattening it back into the input's shape.
+ *
+ * @tparam Arg      wrapped expression type
+ * @tparam OutDims  number of dimensions of the result
+ */
 template <typename Arg, index_t OutDims>
 struct expression_reshape : public expression_with_arguments<Arg>
 {
@@ -556,6 +772,13 @@ struct expression_reshape : public expression_with_arguments<Arg>
     }
 };
 
+/**
+ * @brief Creates an expression that exposes the same data as @p arg with a different shape.
+ *
+ * @param  arg       input expression
+ * @param  out_shape desired output shape
+ * @return an @ref expression_reshape
+ */
 template <expression_argument Arg, index_t OutDims>
 KFR_INTRINSIC expression_reshape<Arg, OutDims> reshape(Arg&& arg, const shape<OutDims>& out_shape)
 {
@@ -581,6 +804,7 @@ struct expression_traits<expression_reshape<Arg, OutDims>> : expression_traits_d
 inline namespace KFR_ARCH_NAME
 {
 
+/** Internal ADL-provided implementation for `expression_reshape<Arg, outdims>` expressions */
 template <typename Arg, index_t outdims, index_t Axis, size_t N,
           typename Traits = expression_traits<expression_reshape<Arg, outdims>>,
           typename T      = typename Traits::value_type>
@@ -636,6 +860,7 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_reshape<Arg, outdims>& sel
     }
 }
 
+/** Internal ADL-provided implementation for `expression_reshape<Arg, outdims>` expressions */
 template <typename Arg, index_t outdims, index_t Axis, size_t N,
           typename Traits = expression_traits<expression_reshape<Arg, outdims>>,
           typename T      = typename Traits::value_type>
@@ -687,11 +912,20 @@ KFR_INTRINSIC void set_elements(expression_reshape<Arg, outdims>& self, const sh
 
 // ----------------------------------------------------------------------------
 
+/**
+ * @brief Tag type used to select the symmetric-linspace constructor of @ref expression_linspace.
+ */
 struct symmetric_linspace_t
 {
 };
 constexpr inline const symmetric_linspace_t symmetric_linspace{};
 
+/**
+ * @brief Expression that produces evenly spaced values from @c start to @c stop.
+ *
+ * @tparam T         value type
+ * @tparam truncated whether the expression has a fixed size or is infinite
+ */
 template <typename T, bool truncated = true>
 struct expression_linspace
 {
@@ -728,14 +962,16 @@ struct expression_traits<expression_linspace<T, truncated>> : expression_traits_
     }
 };
 
-/** @brief Returns evenly spaced numbers over a specified interval.
+/**
+ * @brief Creates an expression that returns evenly spaced numbers over a specified interval.
  *
- * @param start The starting value of the sequence
- * @param stop The end value of the sequence. if ``endpoint`` is ``false``, the last value is excluded
- * @param size Number of samples to generate
- * @param endpoint If ``true``, ``stop`` is the last sample. Otherwise, it is not included
- * @tparam truncated If ``true``, linspace returns exactly size elements, otherwise, returns infinite sequence
- * @tparam precise No longer used since KFR5, calculations are always precise
+ * @param  start    the starting value of the sequence
+ * @param  stop     the end value of the sequence; if ``endpoint`` is ``false``, the last value is excluded
+ * @param  size     number of samples to generate
+ * @param  endpoint if ``true``, ``stop`` is the last sample; otherwise, it is not included
+ * @tparam truncated if ``true``, linspace returns exactly size elements, otherwise, returns an infinite
+ * sequence
+ * @tparam precise   no longer used since KFR5; calculations are always precise
  */
 template <typename T = void, bool precise = false, bool truncated = false, typename T1, typename T2,
           typename Tout = or_type<T, ftype<std::common_type_t<T1, T2>>>>
@@ -745,12 +981,14 @@ KFR_INTRINSIC expression_linspace<Tout, truncated> linspace(T1 start, T2 stop, s
     return { static_cast<Tout>(start), static_cast<Tout>(stop), size, endpoint };
 }
 
-/** @brief Returns evenly spaced numbers over a specified interval.
+/**
+ * @brief Creates an expression that returns evenly spaced numbers over a symmetric interval.
  *
- * @param symsize The sequence will have interval [-symsize..symsize]
- * @param size Number of samples to generate
- * @tparam truncated If ``true``, linspace returns exactly size elements, otherwise, returns infinite sequence
- * @tparam precise No longer used since KFR5, calculations are always precise
+ * @param  symsize the resulting sequence spans `[-symsize, +symsize]`
+ * @param  size    number of samples to generate
+ * @tparam truncated if ``true``, symmlinspace returns exactly size elements, otherwise, returns an infinite
+ * sequence
+ * @tparam precise   no longer used since KFR5; calculations are always precise
  */
 template <typename T, bool precise = false, bool truncated = false, typename Tout = ftype<T>>
 KFR_INTRINSIC expression_linspace<Tout, truncated> symmlinspace(T symsize, size_t size,
@@ -759,6 +997,17 @@ KFR_INTRINSIC expression_linspace<Tout, truncated> symmlinspace(T symsize, size_
     return { symmetric_linspace, static_cast<Tout>(symsize), size, true };
 }
 
+/**
+ * @brief Creates an expression that returns values spanning `[start, stop)` with the given step.
+ *
+ * @tparam T         value type
+ * @tparam precise   unused, kept for backwards compatibility
+ * @tparam truncated always @c true for the result of @c arange
+ * @param  start     first value
+ * @param  stop      end value (exclusive)
+ * @param  step      step between consecutive values
+ * @return an @ref expression_linspace of exactly the right number of elements
+ */
 template <typename T, bool precise = false, bool truncated = false, typename Tout = ftype<T>>
 KFR_INTRINSIC expression_linspace<Tout, true> arange(T start, T stop, T step = 1, cbool_t<truncated> = {})
 {
@@ -766,6 +1015,15 @@ KFR_INTRINSIC expression_linspace<Tout, true> arange(T start, T stop, T step = 1
                                 ctrue);
 }
 
+/**
+ * @brief Creates an expression that returns integer values spanning `[0, stop)` with step 1.
+ *
+ * @tparam T         value type
+ * @tparam precise   unused, kept for backwards compatibility
+ * @tparam truncated always @c true for the result of @c arange
+ * @param  stop      end value (exclusive)
+ * @return an @ref expression_linspace containing the integers `[0, stop)`
+ */
 template <typename T, bool precise = false, bool truncated = false, typename Tout = ftype<T>>
 KFR_INTRINSIC expression_linspace<Tout, true> arange(T stop, cbool_t<truncated> = {})
 {
@@ -775,6 +1033,7 @@ KFR_INTRINSIC expression_linspace<Tout, true> arange(T stop, cbool_t<truncated> 
 inline namespace KFR_ARCH_NAME
 {
 
+/** Internal ADL-provided implementation for `expression_linspace<T, truncated>` expressions */
 template <typename T, bool truncated, size_t N>
 KFR_INTRINSIC vec<T, N> get_elements(const expression_linspace<T, truncated>& self, const shape<1>& index,
                                      const axis_params<0, N>&)
@@ -787,6 +1046,16 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_linspace<T, truncated>& se
 
 // ----------------------------------------------------------------------------
 
+/**
+ * @brief Expression that joins two expressions along a single axis.
+ *
+ * Indices in @c ConcatAxis below @c size1 are served by the first argument;
+ * indices at or above @c size1 are served by the second argument (offset by @c size1).
+ *
+ * @tparam Arg1         first wrapped expression type
+ * @tparam Arg2         second wrapped expression type
+ * @tparam ConcatAxis   axis along which the expressions are joined
+ */
 template <typename Arg1, typename Arg2, index_t ConcatAxis>
 struct expression_concatenate : public expression_with_arguments<Arg1, Arg2>
 {
@@ -832,6 +1101,14 @@ struct expression_traits<expression_concatenate<Arg1, Arg2, ConcatAxis>> : expre
     }
 };
 
+/**
+ * @brief Creates an expression that concatenates two input expressions along the given axis.
+ *
+ * @tparam ConcatAxis axis along which the expressions are joined (defaults to 0)
+ * @param  arg1       first input expression
+ * @param  arg2       second input expression
+ * @return an @ref expression_concatenate
+ */
 template <index_t ConcatAxis = 0, input_expression Arg1, input_expression Arg2>
     requires expression_arguments<Arg1, Arg2>
 KFR_INTRINSIC expression_concatenate<Arg1, Arg2, ConcatAxis> concatenate(Arg1&& arg1, Arg2&& arg2)
@@ -839,6 +1116,17 @@ KFR_INTRINSIC expression_concatenate<Arg1, Arg2, ConcatAxis> concatenate(Arg1&& 
     return { std::forward<Arg1>(arg1), std::forward<Arg2>(arg2) };
 }
 
+/**
+ * @brief Creates an expression that concatenates three input expressions along the given axis.
+ *
+ * Implemented as a left-associative concatenation: `concat(arg1, concat(arg2, arg3))`.
+ *
+ * @tparam ConcatAxis axis along which the expressions are joined (defaults to 0)
+ * @param  arg1       first input expression
+ * @param  arg2       second input expression
+ * @param  arg3       third input expression
+ * @return an @ref expression_concatenate
+ */
 template <index_t ConcatAxis = 0, input_expression Arg1, input_expression Arg2, input_expression Arg3>
     requires expression_arguments<Arg1, Arg2, Arg3>
 KFR_INTRINSIC expression_concatenate<Arg1, expression_concatenate<Arg2, Arg3, ConcatAxis>, ConcatAxis>
@@ -850,6 +1138,7 @@ concatenate(Arg1&& arg1, Arg2&& arg2, Arg3&& arg3)
 inline namespace KFR_ARCH_NAME
 {
 
+/** Internal ADL-provided implementation for `expression_concatenate<Arg1, Arg2, ConcatAxis>` expressions */
 template <typename Arg1, typename Arg2, index_t ConcatAxis, index_t NDims, index_t Axis, size_t N,
           typename T = typename expression_traits<expression_concatenate<Arg1, Arg2, ConcatAxis>>::value_type>
 KFR_INTRINSIC vec<T, N> get_elements(const expression_concatenate<Arg1, Arg2, ConcatAxis>& self,
@@ -889,9 +1178,25 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_concatenate<Arg1, Arg2, Co
 
 // ----------------------------------------------------------------------------
 
+/**
+ * @brief Type alias for the expression that packs several expressions into a single
+ *        vector-valued expression.
+ *
+ * Implemented as an @ref expression_make_function with the @c fn::packtranspose functor.
+ *
+ * @tparam Args wrapped expression types
+ */
 template <typename... Args>
 using expression_pack = expression_make_function<fn::packtranspose, Args...>;
 
+/**
+ * @brief Creates an expression that packs several input expressions into a single
+ *        vector-valued expression.
+ *
+ * @tparam Args input expression types
+ * @param  args input expressions
+ * @return an @ref expression_pack
+ */
 template <typename... Args>
     requires expression_arguments<Args...>
 KFR_INTRINSIC expression_pack<Args...> pack(Args&&... args)
@@ -901,6 +1206,7 @@ KFR_INTRINSIC expression_pack<Args...> pack(Args&&... args)
 
 namespace internal
 {
+/** Internal ADL-provided implementation for `expression_function<fn::packtranspose, Args...>` expressions */
 template <typename... Args, index_t Axis, size_t N,
           typename Tr = expression_traits<expression_function<fn::packtranspose, Args...>>, size_t... Indices>
 KFR_INTRINSIC void set_elements_packed(expression_function<fn::packtranspose, Args...>& self,
@@ -914,6 +1220,7 @@ KFR_INTRINSIC void set_elements_packed(expression_function<fn::packtranspose, Ar
 }
 } // namespace internal
 
+/** Internal ADL-provided implementation for `expression_function<fn::packtranspose, Args...>` expressions */
 template <typename... Args, index_t Axis, size_t N,
           typename Tr = expression_traits<expression_function<fn::packtranspose, Args...>>>
 KFR_INTRINSIC void set_elements(expression_function<fn::packtranspose, Args...>& self, shape<Tr::dims> index,
@@ -925,6 +1232,14 @@ KFR_INTRINSIC void set_elements(expression_function<fn::packtranspose, Args...>&
 
 // ----------------------------------------------------------------------------
 
+/**
+ * @brief Expression that writes a single vector-valued input into several output expressions.
+ *
+ * Each lane of the input vector is dispatched to the corresponding output
+ * expression via the @c set_elements path. Only supports being assigned to.
+ *
+ * @tparam E wrapped output expression types
+ */
 template <typename... E>
 struct expression_unpack : expression_with_arguments<E...>, expression_traits_defaults
 {
@@ -956,6 +1271,9 @@ struct expression_unpack : expression_with_arguments<E...>, expression_traits_de
         self.output(index, sh, x, csizeseq<count>);
     }
 
+    /**
+     * @brief Assigns the values of @p input to all wrapped output expressions.
+     */
     template <expression_argument Input>
     KFR_MEM_INTRINSIC expression_unpack& operator=(Input&& input)
     {
@@ -976,6 +1294,13 @@ private:
 
 // ----------------------------------------------------------------------------
 
+/**
+ * @brief Creates an expression that fans out a vector input into several output expressions.
+ *
+ * @tparam E output expression types
+ * @param  e output expressions
+ * @return an @ref expression_unpack
+ */
 template <output_expression... E>
 KFR_FUNCTION expression_unpack<E...> unpack(E&&... e)
 {
@@ -984,6 +1309,15 @@ KFR_FUNCTION expression_unpack<E...> unpack(E&&... e)
 
 // ----------------------------------------------------------------------------
 
+/**
+ * @brief Expression that applies a binary function to each value and its previous value.
+ *
+ * The previous value is carried between calls via the mutable @c data member
+ * (initialized to zero), so the expression is not random-access.
+ *
+ * @tparam Fn callable type (invoked as `fn(current, previous)`)
+ * @tparam E  wrapped expression type
+ */
 template <typename Fn, typename E>
 struct expression_adjacent : expression_with_traits<E>
 {
@@ -1010,7 +1344,13 @@ struct expression_adjacent : expression_with_traits<E>
 };
 
 /**
- * @brief Returns template expression that returns the result of calling \f$ fn(x_i, x_{i-1}) \f$
+ * @brief Creates an expression that returns the result of calling \f$ fn(x_i, x_{i-1}) \f$.
+ *
+ * @tparam Fn  binary callable applied to consecutive values
+ * @tparam E1  input expression type
+ * @param  fn  callable receiving `(current, previous)`
+ * @param  e1  input expression
+ * @return an @ref expression_adjacent
  */
 template <typename Fn, typename E1>
 KFR_INTRINSIC expression_adjacent<Fn, E1> adjacent(Fn&& fn, E1&& e1)
@@ -1020,6 +1360,14 @@ KFR_INTRINSIC expression_adjacent<Fn, E1> adjacent(Fn&& fn, E1&& e1)
 
 // ----------------------------------------------------------------------------
 
+/**
+ * @brief Expression that prints the requested values to the console for debugging purposes.
+ *
+ * Behaves as the identity for its value type and writes a one-line trace each
+ * time a block of values is requested.
+ *
+ * @tparam E wrapped expression type
+ */
 template <typename E>
 struct expression_trace : public expression_with_traits<E>
 {
@@ -1039,7 +1387,11 @@ struct expression_trace : public expression_with_traits<E>
 };
 
 /**
- * @brief Returns template expression that prints all processed values for debug
+ * @brief Creates an expression that prints the requested values to the console for debugging purposes.
+ *
+ * @tparam E1 input expression type
+ * @param  e1 input expression
+ * @return an @ref expression_trace
  */
 template <typename E1>
 KFR_INTRINSIC expression_trace<E1> trace(E1&& e1)
@@ -1049,6 +1401,15 @@ KFR_INTRINSIC expression_trace<E1> trace(E1&& e1)
 
 // ----------------------------------------------------------------------------
 
+/**
+ * @brief Expression that adjusts the dimensionality of another expression.
+ *
+ * Extra leading dimensions are added with @ref infinite_size and broadcast the
+ * underlying values when accessed along a new axis.
+ *
+ * @tparam Dims new dimensionality
+ * @tparam E    wrapped expression type
+ */
 template <index_t Dims, typename E>
 struct expression_dimensions : public expression_with_traits<E>
 {
@@ -1084,7 +1445,12 @@ struct expression_dimensions : public expression_with_traits<E>
 };
 
 /**
- * @brief Returns template expression with gien number of dimensions
+ * @brief Creates an expression that adjusts the dimensionality of another expression.
+ *
+ * @tparam Dims new dimensionality
+ * @tparam E1   input expression type
+ * @param  e1   input expression
+ * @return an @ref expression_dimensions
  */
 template <index_t Dims, typename E1>
 KFR_INTRINSIC expression_dimensions<Dims, E1> dimensions(E1&& e1)

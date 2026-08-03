@@ -45,17 +45,17 @@ template <typename T>
 struct compound_type_traits<std::complex<T>>
 {
     /// Number of immediate sub-elements (real and imaginary).
-    constexpr static size_t width      = 2;
+    constexpr static size_t width = 2;
     /// Width after fully recursing into the subtype.
     constexpr static size_t deep_width = width * compound_type_traits<T>::width;
     /// Scalar component type of the complex value.
-    using subtype                      = T;
+    using subtype = T;
     /// Deepest scalar component type after full recursion.
-    using deep_subtype                 = kfr::deep_subtype<T>;
+    using deep_subtype = kfr::deep_subtype<T>;
     /// @c false because a complex value is not a scalar.
-    constexpr static bool is_scalar    = false;
+    constexpr static bool is_scalar = false;
     /// Recursion depth of the compound type.
-    constexpr static size_t depth      = kfr::compound_type_traits<T>::depth + 1;
+    constexpr static size_t depth = kfr::compound_type_traits<T>::depth + 1;
     /// Rebinds the complex to hold values of type @c U.
     template <typename U>
     using rebind = std::complex<U>;

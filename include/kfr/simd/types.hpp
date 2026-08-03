@@ -451,7 +451,7 @@ template <typename T, bool A>
 struct struct_with_alignment
 {
     /// @brief Pointer to this wrapper type.
-    using pointer       = struct_with_alignment*;
+    using pointer = struct_with_alignment*;
     /// @brief Const pointer to this wrapper type.
     using const_pointer = const struct_with_alignment*;
     /// @brief The wrapped value.
@@ -467,7 +467,7 @@ template <typename T>
 struct struct_with_alignment<T, false>
 {
     /// @brief Pointer to this wrapper type.
-    using pointer       = struct_with_alignment*;
+    using pointer = struct_with_alignment*;
     /// @brief Const pointer to this wrapper type.
     using const_pointer = const struct_with_alignment*;
     /// @brief The wrapped value.
@@ -489,7 +489,6 @@ KFR_INTRINSIC void zeroize(T1& value)
     builtin_memset(static_cast<void*>(builtin_addressof(value)), 0, sizeof(T1));
 }
 
-/// @brief Used to determine the initial value for reduce functions
 /**
  * @brief Used to determine the initial value for reduce functions.
  *
@@ -576,7 +575,7 @@ constexpr czeros_t czeros{};
 constexpr cones_t cones{};
 
 /// @brief Compile-time boolean tag selecting aligned access.
-using caligned_t   = cbool_t<true>;
+using caligned_t = cbool_t<true>;
 /// @brief Compile-time boolean tag selecting unaligned access.
 using cunaligned_t = cbool_t<false>;
 

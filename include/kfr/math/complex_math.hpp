@@ -213,119 +213,170 @@ KFR_I_FN(cartesian)
 KFR_I_FN(csqrt)
 KFR_I_FN(csqr)
 
-/// @brief Returns the sine of the complex number x
+/**
+ * @brief Returns the sine of the complex number x
+ * @param x The input complex number
+ */
 template <numeric T1>
 KFR_FUNCTION T1 csin(const T1& x)
 {
     return intr::csin(x);
 }
 
-/// @brief Returns the hyperbolic sine of the complex number x
+/**
+ * @brief Returns the hyperbolic sine of the complex number x
+ * @param x The input complex number
+ */
 template <numeric T1>
 KFR_FUNCTION T1 csinh(const T1& x)
 {
     return intr::csinh(x);
 }
 
-/// @brief Returns the cosine of the complex number x
+/**
+ * @brief Returns the cosine of the complex number x
+ * @param x The input complex number
+ */
 template <numeric T1>
 KFR_FUNCTION T1 ccos(const T1& x)
 {
     return intr::ccos(x);
 }
 
-/// @brief Returns the hyperbolic cosine of the complex number x
+/**
+ * @brief Returns the hyperbolic cosine of the complex number x
+ * @param x The input complex number
+ */
 template <numeric T1>
 KFR_FUNCTION T1 ccosh(const T1& x)
 {
     return intr::ccosh(x);
 }
 
-/// @brief Returns the squared absolute value (magnitude squared) of the complex number x
+/**
+ * @brief Returns the squared absolute value (magnitude squared) of the complex number x
+ * @param x The input complex number
+ */
 template <numeric T1>
 KFR_FUNCTION realtype<T1> cabssqr(const T1& x)
 {
     return intr::cabssqr(x);
 }
 
-/// @brief Returns the absolute value (magnitude) of the complex number x
+/**
+ * @brief Returns the absolute value (magnitude) of the complex number x
+ * @param x The input complex number
+ */
 template <numeric T1>
 KFR_FUNCTION realtype<T1> cabs(const T1& x)
 {
     return intr::cabs(x);
 }
 
-/// @brief Returns the phase angle (argument) of the complex number x
+/**
+ * @brief Returns the phase angle (argument) of the complex number x
+ * @param x The input complex number
+ */
 template <numeric T1>
 KFR_FUNCTION realtype<T1> carg(const T1& x)
 {
     return intr::carg(x);
 }
 
-/// @brief Returns the natural logarithm of the complex number x
+/**
+ * @brief Returns the natural logarithm of the complex number x
+ * @param x The input complex number
+ */
 template <numeric T1>
 KFR_FUNCTION T1 clog(const T1& x)
 {
     return intr::clog(x);
 }
 
-/// @brief Returns the binary (base-2) logarithm of the complex number x
+/**
+ * @brief Returns the binary (base-2) logarithm of the complex number x
+ * @param x The input complex number
+ */
 template <numeric T1>
 KFR_FUNCTION T1 clog2(const T1& x)
 {
     return intr::clog2(x);
 }
 
-/// @brief Returns the common (base-10) logarithm of the complex number x
+/**
+ * @brief Returns the common (base-10) logarithm of the complex number x
+ * @param x The input complex number
+ */
 template <numeric T1>
 KFR_FUNCTION T1 clog10(const T1& x)
 {
     return intr::clog10(x);
 }
 
-/// @brief Returns \f$e\f$ raised to the complex number x
+/**
+ * @brief Returns e raised to the complex number x
+ * @param x The input complex number
+ */
 template <numeric T1>
 KFR_FUNCTION T1 cexp(const T1& x)
 {
     return intr::cexp(x);
 }
 
-/// @brief Returns 2 raised to the complex number x
+/**
+ * @brief Returns 2 raised to the complex number x
+ * @param x The input complex number
+ */
 template <numeric T1>
 KFR_FUNCTION T1 cexp2(const T1& x)
 {
     return intr::cexp2(x);
 }
 
-/// @brief Returns 10 raised to the complex number x
+/**
+ * @brief Returns 10 raised to the complex number x
+ * @param x The input complex number
+ */
 template <numeric T1>
 KFR_FUNCTION T1 cexp10(const T1& x)
 {
     return intr::cexp10(x);
 }
 
-/// @brief Converts complex number to polar
+/**
+ * @brief Converts a complex number to its polar representation (magnitude, phase)
+ * @param x The input complex number
+ */
 template <numeric T1>
 KFR_FUNCTION T1 polar(const T1& x)
 {
     return intr::polar(x);
 }
 
-/// @brief Converts complex number to cartesian
+/**
+ * @brief Converts a complex number from polar to cartesian representation
+ * @param x The input complex number in polar form (magnitude, phase)
+ */
 template <numeric T1>
 KFR_FUNCTION T1 cartesian(const T1& x)
 {
     return intr::cartesian(x);
 }
 
-/// @brief Returns square root of the complex number x
+/**
+ * @brief Returns square root of the complex number x
+ * @param x The input complex number
+ */
 template <numeric T1>
 KFR_FUNCTION T1 csqrt(const T1& x)
 {
     return intr::csqrt(x);
 }
 
-/// @brief Returns square of the complex number x
+/**
+ * @brief Returns square of the complex number x
+ * @param x The input complex number
+ */
 template <numeric T1>
 KFR_FUNCTION T1 csqr(const T1& x)
 {
