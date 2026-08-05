@@ -73,7 +73,9 @@ KFR_INTRINSIC void block_process(size_t size, csizes_t<widths...>, Fn&& fn)
 /**
  * @brief Reads a vector of @c N elements of type @c T from memory.
  * @tparam N Number of elements to read.
- * @tparam A When @c true, requires (and may exploit) an aligned source pointer.
+ * @tparam A When @c true, @c N must be a power of two and @p src must be aligned to
+ * `N * sizeof(T)` bytes. On x86, vectors no wider than 4096 bytes use this guarantee to perform
+ * a full-width load for a non-empty tail.
  * @tparam T Element type.
  * @param src Pointer to the first element to read.
  * @return A @ref vec holding the loaded elements.
@@ -97,6 +99,106 @@ template <bool A = false, size_t N, typename T>
 KFR_INTRINSIC void write(T* dest, const vec<T, N>& value)
 {
     intr::write(cbool<A>, ptr_cast<deep_subtype<T>>(dest), value.flatten());
+}
+
+/**
+ * @brief Reads up to @p count elements into a vector.
+ *
+ * Only the first `min(count, N)` elements are read from @p src; consequently, this function is
+ * safe to use for the final, incomplete vector of a range. Partial reads are always slower than
+ * their full-width counterparts. Use this function only for a loop tail, never in the main loop
+ * body.
+ *
+ * @tparam N Vector length.
+ * @tparam A When @c true, requires (and may exploit) an aligned source pointer.
+ * @tparam T Element type.
+ * @param src Pointer to the first element to read.
+ * @param count Number of elements to read. Must be greater than zero; values greater than @c N are clamped.
+ * @return A vector whose first `min(count, N)` elements were read from @p src. Remaining elements are
+ * unspecified.
+ */
+template <size_t N, bool A = false, typename T>
+KFR_INTRINSIC vec<T, N> partial_read(const T* src, size_t count)
+{
+    static_assert(!A || is_poweroftwo(N), "partial_read with A=true requires N to be a power of two");
+    static_assert(!A || is_poweroftwo(N * sizeof(T)),
+                  "partial_read with A=true requires N * sizeof(T) to be a power of two");
+
+    vec<T, N> result(czeros);
+    count = std::min(count, N);
+    if constexpr (A)
+    {
+        // vec byte sizes are limited to 4096 bytes. Since A requires src to be aligned to the full vector
+        // width, this full-width load stays within one minimum-sized page and is safe for a non-empty tail.
+        return read<N, A>(src);
+    }
+    else
+    {
+        cswitch(csizeseq_t<N, 1>{}, count,
+                [&](auto width)
+                {
+                    constexpr size_t width_ = KFR_CVAL(width);
+                    if constexpr (width_ == N)
+                        result = extend<N>(read<width_, A>(src));
+                    else
+                        result = extend<N>(read<width_>(src));
+                });
+    }
+    return result;
+}
+
+/**
+ * @brief Writes up to @p count leading elements of a vector to memory.
+ *
+ * Only the first `min(count, N)` elements of @p value are written to @p dest; consequently, this
+ * function is safe to use for the final, incomplete vector of a range. Partial writes are always
+ * slower than their full-width counterparts. Use this function only for a loop tail, never in the
+ * main loop body. With @p A set to @c true, a full aligned vector is read, its leading lanes are
+ * replaced, and the complete vector is written back.
+ *
+ * @tparam A When @c true, @c N must be a power of two and @p dest must be aligned to
+ * `N * sizeof(T)` bytes.
+ * @tparam N Vector length.
+ * @tparam T Element type.
+ * @param dest Pointer to the first element to write.
+ * @param value Vector containing the elements to store.
+ * @param count Number of leading elements to write. Must be greater than zero; values greater than @c N are
+ * clamped.
+ */
+template <bool A = false, size_t N, typename T>
+KFR_INTRINSIC void partial_write(T* dest, const vec<T, N>& value, size_t count)
+{
+    static_assert(!A || is_poweroftwo(N), "partial_write with A=true requires N to be a power of two");
+    static_assert(!A || is_poweroftwo(N * sizeof(T)),
+                  "partial_write with A=true requires N * sizeof(T) to be a power of two");
+
+    count = std::min(count, N);
+    if constexpr (A)
+    {
+        // vec byte sizes are limited to 4096 bytes. Since A requires dest to be aligned to the full vector
+        // width, this read-modify-write sequence stays within one minimum-sized page for a non-empty tail.
+        cswitch(csizeseq_t<N, 1>{}, count,
+                [&](auto width)
+                {
+                    constexpr size_t width_ = KFR_CVAL(width);
+                    if constexpr (width_ == N)
+                    {
+                        write<A>(dest, value);
+                    }
+                    else
+                    {
+                        const vec<T, N> original = read<N, A>(dest);
+                        write<A>(dest, concat(slice<0, width_>(value), slice<width_, N - width_>(original)));
+                    }
+                });
+        return;
+    }
+    cswitch(csizeseq_t<N, 1>{}, count,
+            [&](auto width)
+            {
+                constexpr size_t width_ = KFR_CVAL(width);
+                write(dest, slice<0, width_>(value));
+            });
 }
 
 namespace internal

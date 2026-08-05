@@ -327,6 +327,7 @@ struct alignas(internal::vec_alignment<T, N>) vec
     static_assert(is_simd_type<scalar_type>, "Invalid vector type");
 
     static_assert(scalar_size() > 0 && scalar_size() <= 1024, "Invalid vector size");
+    static_assert(sizeof(value_type) * N <= 4096, "Vector byte size must not exceed the minimum page size");
 
     using mask_t = mask<T, N>; ///< Corresponding mask type.
 

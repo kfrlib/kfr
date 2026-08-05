@@ -125,6 +125,48 @@ TEST_CASE("grouped runtime stride")
     CHECK_THAT(read<6>(result), DeepMatcher(vec<i32, 6>{ 20, 21, 0, 0, 30, 31 }));
 }
 
+TEST_CASE("partial read/write")
+{
+    constexpr size_t width = 7;
+    const i32 source[]     = { 10, 11, 12, 13, 14, 15, 16, 17 };
+
+    for (size_t count = 1; count <= width; ++count)
+    {
+        const vec<i32, width> value = partial_read<width>(source + 1, count);
+        for (size_t i = 0; i < count; ++i)
+            CHECK(value[i] == source[i + 1]);
+
+        i32 destination[width + 2];
+        std::fill(std::begin(destination), std::end(destination), -1);
+        partial_write(destination + 1, value, count);
+
+        CHECK(destination[0] == -1);
+        for (size_t i = 0; i < width; ++i)
+            CHECK(destination[i + 1] == (i < count ? source[i + 1] : -1));
+        CHECK(destination[width + 1] == -1);
+    }
+
+    CHECK_THAT(partial_read<width>(source + 1, width + 1),
+               DeepMatcher((vec<i32, width>{ 11, 12, 13, 14, 15, 16, 17 })));
+
+    i32 destination[width];
+    std::fill(std::begin(destination), std::end(destination), -1);
+    partial_write(destination, vec<i32, width>{ 11, 12, 13, 14, 15, 16, 17 }, width + 1);
+    CHECK_THAT(read<width>(destination),
+               DeepMatcher((vec<i32, width>{ 11, 12, 13, 14, 15, 16, 17 })));
+
+    alignas(8 * sizeof(i32)) const i32 aligned_source[] = { 20, 21, 22, 23, 24, 25, 26, 27 };
+    const vec<i32, 8> aligned_value                    = partial_read<8, true>(aligned_source, 3);
+    CHECK(aligned_value[0] == 20);
+    CHECK(aligned_value[1] == 21);
+    CHECK(aligned_value[2] == 22);
+
+    alignas(8 * sizeof(i32)) i32 aligned_destination[] = { -1, -1, -1, -1, -1, -1, -1, -1 };
+    partial_write<true>(aligned_destination, vec<i32, 8>{ 30, 31, 32, 33, 34, 35, 36, 37 }, 3);
+    CHECK_THAT((read<8, true>(aligned_destination)),
+               DeepMatcher((vec<i32, 8>{ 30, 31, 32, -1, -1, -1, -1, -1 })));
+}
+
 TEST_CASE("f16 round-trip test")
 {
     // Every single valid non-NaN f16 must round-trip through f32 without losing precision
