@@ -25,7 +25,6 @@
 #include "../simd/platform.hpp"
 #include "../simd/read_write.hpp"
 #include "../simd/shuffle.hpp"
-#include "../simd/types.hpp"
 #include "../simd/vec.hpp"
 #include "shape.hpp"
 
@@ -376,46 +375,6 @@ template <index_t Dims, typename U = unsigned_type<sizeof(index_t) * 8>>
 KFR_INTRINSIC vec<U, Dims> to_vec(const shape<Dims>& sh)
 {
     return read<Dims>(reinterpret_cast<const U*>(sh.data()));
-}
-
-namespace internal
-{
-/**
- * @brief Helper that processes a range in fixed-width blocks.
- *
- * Iterates from @p i up to the largest multiple of @p width not exceeding
- * @p size, invoking @p fn with the current offset and a compile-time width tag.
- * @param i Current position, updated in place.
- * @param size Total number of elements to process.
- * @param fn Callable invoked as `fn(offset, csize_t<width>{})`.
- * @tparam width Block width.
- * @tparam Fn Callable type.
- */
-template <size_t width, typename Fn>
-KFR_INTRINSIC void block_process_impl(size_t& i, size_t size, Fn&& fn)
-{
-    KFR_LOOP_NOUNROLL
-    for (; i < size / width * width; i += width)
-        fn(i, csize_t<width>());
-}
-} // namespace internal
-
-/**
- * @brief Processes a range using a sequence of decreasing block widths.
- *
- * The range `[0, size)` is processed by trying each width in @p widths in
- * order, so that the largest possible blocks are used first and the tail is
- * handled by smaller widths.
- * @param size Total number of elements to process.
- * @param fn Callable invoked as `fn(offset, csize_t<width>{})`.
- * @tparam widths Block widths to try, in descending order.
- * @tparam Fn Callable type.
- */
-template <size_t... widths, typename Fn>
-KFR_INTRINSIC void block_process(size_t size, csizes_t<widths...>, Fn&& fn)
-{
-    size_t i = 0;
-    swallow{ (internal::block_process_impl<widths>(i, size, std::forward<Fn>(fn)), 0)... };
 }
 
 /**

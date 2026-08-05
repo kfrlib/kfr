@@ -30,6 +30,46 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
+namespace internal
+{
+/**
+ * @brief Helper that processes a range in fixed-width blocks.
+ *
+ * Iterates from @p i up to the largest multiple of @p width not exceeding
+ * @p size, invoking @p fn with the current offset and a compile-time width tag.
+ * @param i Current position, updated in place.
+ * @param size Total number of elements to process.
+ * @param fn Callable invoked as `fn(offset, csize_t<width>{})`.
+ * @tparam width Block width.
+ * @tparam Fn Callable type.
+ */
+template <size_t width, typename Fn>
+KFR_INTRINSIC void block_process_impl(size_t& i, size_t size, Fn&& fn)
+{
+    KFR_LOOP_NOUNROLL
+    for (; i < size / width * width; i += width)
+        fn(i, csize_t<width>());
+}
+} // namespace internal
+
+/**
+ * @brief Processes a range using a sequence of decreasing block widths.
+ *
+ * The range `[0, size)` is processed by trying each width in @p widths in
+ * order, so that the largest possible blocks are used first and the tail is
+ * handled by smaller widths.
+ * @param size Total number of elements to process.
+ * @param fn Callable invoked as `fn(offset, csize_t<width>{})`.
+ * @tparam widths Block widths to try, in descending order.
+ * @tparam Fn Callable type.
+ */
+template <size_t... widths, typename Fn>
+KFR_INTRINSIC void block_process(size_t size, csizes_t<widths...>, Fn&& fn)
+{
+    size_t i = 0;
+    swallow{ (internal::block_process_impl<widths>(i, size, std::forward<Fn>(fn)), 0)... };
+}
+
 /**
  * @brief Reads a vector of @c N elements of type @c T from memory.
  * @tparam N Number of elements to read.
@@ -71,8 +111,7 @@ KFR_INTRINSIC vec<T, N * count> concat_read_chunks(const vec<T, N> (&chunks)[cou
 template <size_t group, size_t count, size_t N, bool A, typename T, size_t... indices>
 KFR_INTRINSIC vec<T, group * count * N> read_group_impl(const T* src, size_t stride, csizes_t<indices...>)
 {
-    const vec<T, group * N> chunks[] = { intr::read(cbool<A>, csize<N * group>,
-                                                    src + group * stride * indices)... };
+    const vec<T, group * N> chunks[] = { read<group * N, A>(src + group * stride * indices)... };
     return concat_read_chunks(chunks, csizes_t<indices...>());
 }
 template <size_t group, size_t count, size_t N, bool A, typename T, size_t... indices>
@@ -192,12 +231,6 @@ KFR_INTRINSIC vec<T, Nout> gather_stride(const T* base, csizes_t<Indices...>)
 {
     return make_vector(base[Indices * Stride]...);
 }
-template <size_t Nout, size_t groupsize, typename T, size_t... Indices>
-KFR_INTRINSIC vec<T, Nout> gather_stride_s(const T* base, size_t stride, csizes_t<Indices...>)
-{
-    const vec<T, groupsize> chunks[] = { read<groupsize>(base + Indices * groupsize * stride)... };
-    return concat_read_chunks(chunks, csizes_t<Indices...>());
-}
 } // namespace internal
 
 /**
@@ -226,15 +259,7 @@ KFR_INTRINSIC vec<T, N> gather(const T* base, const vec<u32, N>& indices)
 template <size_t Nout, size_t groupsize = 1, typename T>
 KFR_INTRINSIC vec<T, Nout * groupsize> gather_stride(const T* base, size_t stride)
 {
-    if constexpr (Nout > 2)
-    {
-        constexpr size_t Nlow = prev_poweroftwo(Nout - 1);
-        return concat(internal::gather_stride_s<Nlow, groupsize>(base, stride, csizeseq<Nlow>),
-                      internal::gather_stride_s<Nout - Nlow, groupsize>(base + Nlow * stride, stride,
-                                                                        csizeseq<Nout - Nlow>));
-    }
-    else
-        return internal::gather_stride_s<Nout, groupsize>(base, stride, csizeseq<Nout>);
+    return read_group<Nout, 1, groupsize>(base, stride);
 }
 
 /**
@@ -326,15 +351,8 @@ template <size_t groupsize = 1, typename T, size_t N>
 KFR_INTRINSIC void scatter_stride(T* base, const vec<T, N>& value, size_t stride)
 {
     constexpr size_t Nout = N / groupsize;
-    if constexpr (Nout > 2)
-    {
-        constexpr size_t Nlow = prev_poweroftwo(Nout - 1);
-        internal::scatter_helper_s<groupsize>(base, stride, slice<0, Nlow>(value), csizeseq<Nlow>);
-        internal::scatter_helper_s<groupsize>(base + Nlow * stride, stride, slice<Nlow, Nout - Nlow>(value),
-                                              csizeseq<(Nout - Nlow)>);
-    }
-    else
-        return internal::scatter_helper_s<groupsize>(base, stride, value, csizeseq<Nout>);
+    static_assert(N % groupsize == 0, "scatter_stride value size must be a multiple of groupsize");
+    return write_group<Nout, 1, groupsize>(base, stride, value);
 }
 
 /**
@@ -345,6 +363,12 @@ KFR_INTRINSIC void scatter_stride(T* base, const vec<T, N>& value, size_t stride
 template <typename T, size_t groupsize = 1>
 struct stride_pointer : public stride_pointer<const T, groupsize>
 {
+    using base_type = stride_pointer<const T, groupsize>;
+
+    stride_pointer(T* ptr, size_t stride) : base_type{ ptr, stride }, writable_ptr(ptr) {}
+
+    T* writable_ptr;
+
     /**
      * @brief Scatters @c N elements of @p val to the underlying pointer using the stored stride.
      * @tparam N Number of elements to write.
@@ -353,7 +377,8 @@ struct stride_pointer : public stride_pointer<const T, groupsize>
     template <size_t N>
     void write(const vec<T, N>& val, csize_t<N> = csize_t<N>())
     {
-        kfr::scatter_stride<N, groupsize>(this->ptr, val);
+        static_assert(N % groupsize == 0, "stride_pointer::write value size must be a multiple of groupsize");
+        kfr::scatter_stride<groupsize>(writable_ptr, val, this->stride);
     }
 };
 
@@ -376,7 +401,8 @@ struct stride_pointer<const T, groupsize>
     template <size_t N>
     vec<T, N> read(csize_t<N> = csize_t<N>())
     {
-        return kfr::gather_stride<N, groupsize>(ptr, stride);
+        static_assert(N % groupsize == 0, "stride_pointer::read value size must be a multiple of groupsize");
+        return kfr::gather_stride<N / groupsize, groupsize>(ptr, stride);
     }
 };
 

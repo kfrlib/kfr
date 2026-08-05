@@ -78,6 +78,9 @@ TEST_CASE("complex_read_write")
 
     CHECK_THAT(read<4>(buffer), DeepMatcher(make_vector(c32{ 1, 2 }, c32{ 3, 4 }, c32{ 5, 6 }, c32{ 7, 8 })));
     CHECK_THAT(read<3>(buffer + 1), DeepMatcher(make_vector(c32{ 3, 4 }, c32{ 5, 6 }, c32{ 7, 8 })));
+
+    CHECK_THAT(gather_stride<3>(buffer, 2), DeepMatcher(make_vector(c32{ 1, 2 }, c32{ 5, 6 }, c32{ 9, 10 })));
+
     write(buffer + 2, make_vector(c32{ 10, 11 }, c32{ 12, 13 }));
     CHECK_THAT(read<4>(buffer),
                DeepMatcher(make_vector(c32{ 1, 2 }, c32{ 3, 4 }, c32{ 10, 11 }, c32{ 12, 13 })));

@@ -92,6 +92,39 @@ TEST_CASE("f16 conversion")
     }
 }
 
+TEST_CASE("grouped runtime stride")
+{
+    const i32 values[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+
+    CHECK_THAT((gather_stride<3, 2>(values, 3)), DeepMatcher((vec<i32, 6>{ 0, 1, 6, 7, 12, 13 })));
+    CHECK_THAT((gather_stride<4, 2>(values, 2)), DeepMatcher((vec<i32, 8>{ 0, 1, 4, 5, 8, 9, 12, 13 })));
+    CHECK_THAT((gather_stride<3, 3>(values, 2)),
+               DeepMatcher((vec<i32, 9>{ 0, 1, 2, 6, 7, 8, 12, 13, 14 })));
+
+    i32 result[16]{};
+    scatter_stride<2>(result, vec<i32, 6>{ 20, 21, 30, 31, 40, 41 }, 3);
+    CHECK_THAT(read<14>(result),
+               DeepMatcher(vec<i32, 14>{ 20, 21, 0, 0, 0, 0, 30, 31, 0, 0, 0, 0, 40, 41 }));
+
+    std::fill(std::begin(result), std::end(result), 0);
+    scatter_stride<3>(result, vec<i32, 9>{ 20, 21, 22, 30, 31, 32, 40, 41, 42 }, 2);
+    CHECK_THAT(read<15>(result),
+               DeepMatcher(vec<i32, 15>{ 20, 21, 22, 0, 0, 0, 30, 31, 32, 0, 0, 0, 40, 41, 42 }));
+
+    std::fill(std::begin(result), std::end(result), 0);
+    scatter_stride<2>(result, vec<i32, 8>{ 20, 21, 30, 31, 40, 41, 50, 51 }, 2);
+    CHECK_THAT(read<14>(result),
+               DeepMatcher(vec<i32, 14>{ 20, 21, 0, 0, 30, 31, 0, 0, 40, 41, 0, 0, 50, 51 }));
+
+    stride_pointer<const i32, 2> reader{ values, 2 };
+    CHECK_THAT(reader.read<4>(), DeepMatcher((vec<i32, 4>{ 0, 1, 4, 5 })));
+
+    std::fill(std::begin(result), std::end(result), 0);
+    stride_pointer<i32, 2> writer{ result, 2 };
+    writer.write(vec<i32, 4>{ 20, 21, 30, 31 });
+    CHECK_THAT(read<6>(result), DeepMatcher(vec<i32, 6>{ 20, 21, 0, 0, 30, 31 }));
+}
+
 TEST_CASE("f16 round-trip test")
 {
     // Every single valid non-NaN f16 must round-trip through f32 without losing precision
