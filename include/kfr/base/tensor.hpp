@@ -245,6 +245,54 @@ public:
     /// @param ptr pointer returned by allocate().
     KFR_INTRINSIC static void deallocate(T* ptr) { aligned_deallocate(ptr); }
 
+    /// @brief Returns @c true if @p strides describe a packed layout in some axis order.
+    ///
+    /// Unit-length axes do not affect storage offsets and are ignored. This accepts row-major,
+    /// column-major, and other permutations of contiguous axes, but rejects padding and overlap.
+    KFR_MEM_INTRINSIC static bool has_contiguous_strides(const shape_type& shape, const shape_type& strides)
+    {
+        if constexpr (dims == 0)
+        {
+            return true;
+        }
+        else if (size_of_shape(shape) == 0)
+        {
+            return true;
+        }
+
+        index_t expected_stride = 1;
+        bool used[dims]         = {};
+        for (index_t count = 0; count < dims; ++count)
+        {
+            bool found = false;
+            for (index_t axis = 0; axis < dims; ++axis)
+            {
+                if (!used[axis] && shape[axis] > 1 && strides[axis] == expected_stride)
+                {
+                    used[axis] = true;
+                    expected_stride *= shape[axis];
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                for (index_t axis = 0; axis < dims; ++axis)
+                {
+                    if (!used[axis] && shape[axis] <= 1)
+                    {
+                        used[axis] = true;
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if (!found)
+                return false;
+        }
+        return true;
+    }
+
     /// @brief Constructs a tensor with the given shape and allocates memory for it.
     /// @param shape shape of the tensor.
     KFR_INTRINSIC explicit tensor(const shape_type& shape)
@@ -256,7 +304,10 @@ public:
         m_finalizer = make_memory_finalizer([ptr]() { deallocate(ptr); });
     }
 
-    /// @brief Constructs a tensor with the given shape and strides and allocates memory for it.
+    /// @brief Constructs a tensor with the given shape and a packed stride layout.
+    ///
+    /// The strides must describe row-major, column-major, or another packed permutation of the
+    /// axes. Padded, overlapping, and otherwise non-contiguous layouts require external storage.
     /// @param shape shape of the tensor.
     /// @param strides strides of the tensor.
     KFR_INTRINSIC tensor(const shape_type& shape, const shape_type& strides)
@@ -264,6 +315,8 @@ public:
           m_is_contiguous(strides == internal_generic::strides_for_shape(shape)), m_shape(shape),
           m_strides(strides)
     {
+        if (!has_contiguous_strides(shape, strides))
+            KFR_REPORT_LOGIC_ERROR("Allocated tensor requires contiguous strides");
         T* ptr      = allocate(m_size);
         m_data      = ptr;
         m_finalizer = make_memory_finalizer([ptr]() { deallocate(ptr); });
@@ -589,6 +642,9 @@ public:
         tstart = std::max(std::min(tstart, tsize), signed_index_t(0));
         if (tstep == 0)
         {
+            tstop = tstop < 0 ? tsize + tstop : tstop;
+            if (tstop < tstart || (tstop > tstart && tstart >= tsize))
+                KFR_REPORT_LOGIC_ERROR("Invalid zero-step tensor range");
             start = tstart;
             shape = tstop - tstart;
             step  = 0;
@@ -983,16 +1039,14 @@ public:
         using iterator_category = std::forward_iterator_tag;
         using difference_type   = std::ptrdiff_t;
         using value_type        = tensor<T, dims - 1>;
-        using pointer           = const value_type*;
-        using reference         = const value_type&;
+        using pointer           = void;
+        using reference         = value_type;
 
         const tensor* src;
         size_t index;
 
         /// @brief Dereferences the iterator to the sub-tensor at the current index.
         KFR_MEM_INTRINSIC value_type operator*() { return src->operator()(index); }
-        /// @brief Accesses the sub-tensor at the current index by pointer.
-        KFR_MEM_INTRINSIC pointer operator->() { return &operator*(); }
 
         /// @brief Prefix increment, advancing to the next sub-tensor.
         // prefix

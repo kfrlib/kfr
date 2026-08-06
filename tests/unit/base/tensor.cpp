@@ -55,6 +55,23 @@ TEST_CASE("tensor_base")
     CHECK(t3.finalizer() == t.finalizer());
 }
 
+TEST_CASE("tensor_allocated_strides")
+{
+    tensor<int, 2> row_major(shape{ 2, 3 }, shape{ 3, 1 });
+    tensor<int, 2> column_major(shape{ 2, 3 }, shape{ 1, 2 });
+    tensor<int, 3> permuted(shape{ 2, 2, 2 }, shape{ 1, 4, 2 });
+
+    row_major(1, 2)    = 12;
+    column_major(1, 2) = 12;
+    permuted(1, 1, 1)  = 7;
+
+    CHECK(row_major(1, 2) == 12);
+    CHECK(column_major(1, 2) == 12);
+    CHECK(permuted(1, 1, 1) == 7);
+    CHECK_THROWS(tensor<int, 2>(shape{ 2, 2 }, shape{ 3, 1 }));
+    CHECK_THROWS(tensor<int, 2>(shape{ 2, 2 }, shape{ 1, 1 }));
+}
+
 TEST_CASE("tensor_memory")
 {
     // reference
@@ -756,6 +773,8 @@ TEST_CASE("slices")
     CHECK(t1(trange(1, 0, -1)) == tensor<float, 1>{ 1 });
 
     CHECK(t1(trange(3, 3 + 12, 0)) == tensor<float, 1>{ 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3 });
+    CHECK_THROWS(t1(trange(8, 3, 0)));
+    CHECK_THROWS(t1(trange(12, 15, 0)));
 }
 
 TEST_CASE("complex_tensors")
