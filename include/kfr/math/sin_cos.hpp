@@ -57,6 +57,8 @@ KFR_FUNCTION flt_type<T1> cos(const T1& x)
  * @brief Returns a fast (lower-precision) approximation of the trigonometric sine of x.
  *
  * Lower accuracy than @ref sin, suitable for use cases where speed matters more than full precision.
+ * On the range [0, 2π], the measured maximum absolute error is approximately @c 1.216e-06 and
+ * the mean absolute error is approximately @c 4.738e-07 for both @c float and @c double.
  *
  * @tparam T1 Scalar or vector type. Integer arguments are promoted to a floating-point type.
  * @param x Angle in radians.
@@ -73,6 +75,8 @@ KFR_FUNCTION flt_type<T1> fastsin(const T1& x)
  * @brief Returns a fast (lower-precision) approximation of the trigonometric cosine of x.
  *
  * Lower accuracy than @ref cos, suitable for use cases where speed matters more than full precision.
+ * On the range [0, 2π], the measured maximum absolute error is approximately @c 1.222e-06 and
+ * the mean absolute error is approximately @c 4.550e-07 for both @c float and @c double.
  *
  * @tparam T1 Scalar or vector type. Integer arguments are promoted to a floating-point type.
  * @param x Angle in radians.
