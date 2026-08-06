@@ -1,6 +1,6 @@
 #pragma once
 
-#if defined(_M_IX86) || defined(__i386__) || defined(_M_X64) || defined(__x86_64__) || defined(__wasm)
+#if defined(_M_IX86) || defined(__i386__) || defined(_M_X64) || defined(__x86_64__) || defined(__wasm__)
 #define KFR_ARCH_X86 1
 #elif defined(__arm__) || defined(__arm64__) || defined(_M_ARM) || defined(__aarch64__)
 #define KFR_ARCH_ARM 1
@@ -9,7 +9,7 @@
 #endif
 
 #ifdef KFR_ARCH_X86
-#if defined(_M_X64) || defined(__x86_64__) || defined(__wasm64)
+#if defined(_M_X64) || defined(__x86_64__) || defined(__wasm64__)
 #define KFR_ARCH_X64 1
 #define KFR_ARCH_BITNESS_NAME "64-bit"
 #else
@@ -241,12 +241,6 @@
 #define KFR_EXPAND_IF_ARCH_sse41(...)
 #endif
 
-#ifdef KFR_ENABLE_SSE41
-#define KFR_EXPAND_IF_ARCH_sse41(...) __VA_ARGS__
-#else
-#define KFR_EXPAND_IF_ARCH_sse41(...)
-#endif
-
 #ifdef KFR_ENABLE_SSE42
 #define KFR_EXPAND_IF_ARCH_sse42(...) __VA_ARGS__
 #else
@@ -456,7 +450,7 @@
 
 #define KFR_PUBLIC_C KFR_EXTERN_C KFR_NOINLINE
 
-#ifdef KFR_ARCH_x86
+#ifdef KFR_ARCH_X86
 #ifdef KFR_OS_WIN
 #define KFR_CDECL __cdecl
 #else
@@ -532,15 +526,20 @@
 #define KFR_C_API KFR_DLL_IMPORT
 #endif
 
-#if KFR_COMPILER_GNU && !defined(__EXCEPTIONS)
-#define KFR_HAS_EXCEPTIONS 0
-#endif
-#if KFR_COMPILER_MSVC && !_HAS_EXCEPTIONS
-#define KFR_HAS_EXCEPTIONS 0
-#endif
-
-#ifndef KFR_HAS_EXCEPTIONS
+#ifdef KFR_COMPILER_MSVC
+// msvc or clang-cl, don't care which
+#if defined(_CPPUNWIND)
 #define KFR_HAS_EXCEPTIONS 1
+#else
+#define KFR_HAS_EXCEPTIONS 0
+#endif
+#else 
+// assume GNU-compatible (gcc or clang in non-msvc mode)
+#if defined(__EXCEPTIONS)
+#define KFR_HAS_EXCEPTIONS 1
+#else
+#define KFR_HAS_EXCEPTIONS 0
+#endif
 #endif
 
 #if defined __has_include
@@ -580,6 +579,8 @@
 #define KFR_LOOP_UNROLL
 #ifdef KFR_COMPILER_MSVC
 #define KFR_VEC_CC __vectorcall
+#else
+#define KFR_VEC_CC
 #endif
 #endif
 
@@ -621,7 +622,7 @@
 #define KFR_OS_NAME "ios"
 #elif defined KFR_OS_MAC
 #define KFR_OS_NAME "macos"
-#elif defined KFR_OS_ANDROIS
+#elif defined KFR_OS_ANDROID
 #define KFR_OS_NAME "android"
 #elif defined KFR_OS_LINUX
 #define KFR_OS_NAME "linux"
