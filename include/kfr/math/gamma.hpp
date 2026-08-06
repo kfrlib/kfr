@@ -68,7 +68,7 @@ KFR_FUNCTION flt_type<T1> factorial_approx(const T1& x)
  * fit in uint64_t.
  */
 constexpr inline uint64_t factorial_table[21] = {
-    0,
+    1,
     1,
     2,
     6,
