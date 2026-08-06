@@ -59,6 +59,38 @@ TEST_CASE("univector_ringbuf_empty_buffer")
     CHECK(value == 42);
 }
 
+TEST_CASE("spsc_ring_buffer_transfers")
+{
+    static_assert(std::is_same_v<lockfree_ring_buffer<int>, spsc_ring_buffer<int>>);
+
+    univector<int, 4> storage{ 0, 0, 0, 0 };
+    spsc_ring_buffer<int> queue;
+    const int input[] = { 1, 2, 3, 4, 5 };
+    int output[3]     = {};
+
+    CHECK(queue.try_enqueue(input, 3, storage) == 3u);
+    CHECK(queue.size() == 3u);
+    CHECK(queue.try_enqueue(input + 3, 2, storage) == 0u);
+    CHECK(queue.try_dequeue(output, 2, storage) == 2u);
+    CHECK(output[0] == 1);
+    CHECK(output[1] == 2);
+    CHECK(queue.try_enqueue(input + 3, 2, storage) == 2u);
+    CHECK(queue.try_dequeue(output, 3, storage) == 3u);
+    CHECK(output[0] == 3);
+    CHECK(output[1] == 4);
+    CHECK(output[2] == 5);
+    CHECK(queue.size() == 0u);
+}
+
+TEST_CASE("spsc_ring_buffer_empty_transfers")
+{
+    univector<int> storage;
+    spsc_ring_buffer<int> queue;
+
+    CHECK(queue.try_enqueue(nullptr, 0, storage) == 0u);
+    CHECK(queue.try_dequeue(nullptr, 0, storage) == 0u);
+}
+
 #ifdef KFR_USE_STD_ALLOCATION
 TEST_CASE("std_allocation")
 {

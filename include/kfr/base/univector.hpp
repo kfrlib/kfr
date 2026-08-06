@@ -722,23 +722,38 @@ KFR_INTRINSIC univector_ref<const T> make_univector(const T (&arr)[N])
     return univector_ref<const T>(arr, N);
 }
 
-/// @brief Single producer single consumer lock-free ring buffer.
+/// @brief Single-producer/single-consumer queue backed by an external @ref univector.
 ///
-/// The buffer itself is provided externally (as a @ref univector); this class only tracks
-/// the read and write cursors atomically and performs the circular copy. The @c front and
-/// @c tail indices are separated by a cache-line-sized filler to avoid false sharing between
-/// the producer and consumer threads.
+/// Exactly one producer thread may call @ref try_enqueue and exactly one consumer thread may call
+/// @ref try_dequeue. The backing buffer must be nonempty, dedicated to this queue, and remain alive,
+/// unmoved, and unchanged in size for the entire period of concurrent use. No thread may otherwise
+/// access its elements while the queue is active. Source and destination ranges must not overlap the
+/// backing buffer. This queue copies elements as bytes, so @p T must be trivially copyable.
+///
+/// The queue uses 64-bit monotonically increasing cursors and supports any nonzero buffer capacity.
+/// Cursors eventually wrap after $2^64$ transferred elements; for a capacity that does not divide
+/// $2^64$, continuing to use the queue after this wrap produces incorrect physical indices. Recreate
+/// the queue before that point. `std::atomic<uint64_t>` is not guaranteed to be lock-free on every
+/// target.
 /// @tparam T Element type stored in the buffer.
 template <typename T>
-struct lockfree_ring_buffer
+struct spsc_ring_buffer
 {
-    /// @brief Constructs an empty ring buffer with @c front and @c tail set to 0.
-    lockfree_ring_buffer() : front(0), tail(0) {}
+    static_assert(std::is_trivially_copyable_v<T>, "spsc_ring_buffer requires trivially copyable elements");
 
-    /// @brief Returns the number of elements currently available for dequeue.
+    /// @brief Constructs an empty queue with @c front and @c tail set to 0.
+    spsc_ring_buffer() : front(0), tail(0) {}
+
+    /// @brief Returns an approximate number of elements currently available for dequeue.
+    ///
+    /// This is not an atomic snapshot: concurrent producer or consumer activity can make the result
+    /// stale before it is returned. It is intended for observation, not for making synchronization
+    /// decisions; use @ref try_enqueue or @ref try_dequeue for those.
     size_t size() const
     {
-        return tail.load(std::memory_order_relaxed) - front.load(std::memory_order_relaxed);
+        const uint64_t cur_front = front.load(std::memory_order_acquire);
+        const uint64_t cur_tail  = tail.load(std::memory_order_acquire);
+        return static_cast<size_t>(cur_tail - cur_front);
     }
 
     /// @brief Attempts to enqueue @p size elements from @p source into @p buffer.
@@ -747,7 +762,7 @@ struct lockfree_ring_buffer
     /// @p size does not fit in the available space. When @p partial is @c true, as many elements
     /// as possible are written and the actual count is returned. The data is copied in up to two
     /// fragments to handle wrap-around at the end of the buffer.
-    /// @param source Pointer to the source data.
+    /// @param source Pointer to at least @p size source elements. Must not overlap @p buffer.
     /// @param size Number of elements to enqueue.
     /// @param buffer Backing storage (its @c size() defines the capacity).
     /// @param partial When @c true, allow writing fewer than @p size elements.
@@ -755,24 +770,26 @@ struct lockfree_ring_buffer
     template <univector_tag Tag>
     size_t try_enqueue(const T* source, size_t size, univector<T, Tag>& buffer, bool partial = false)
     {
-        const size_t cur_tail   = tail.load(std::memory_order_relaxed);
-        const size_t avail_size = buffer.size() - (cur_tail - front.load(std::memory_order_relaxed));
+        const size_t buffer_size = buffer.size();
+        if (size == 0 || buffer_size == 0)
+            return 0;
+
+        const uint64_t cur_tail  = tail.load(std::memory_order_relaxed);
+        const uint64_t cur_front = front.load(std::memory_order_acquire);
+        const size_t avail_size  = buffer_size - static_cast<size_t>(cur_tail - cur_front);
         if (size > avail_size)
         {
             if (!partial)
                 return 0;
             size = std::min(size, avail_size);
         }
-        std::atomic_thread_fence(std::memory_order_acquire);
 
-        const size_t real_tail  = cur_tail % buffer.size();
-        const size_t first_size = std::min(buffer.size() - real_tail, size);
+        const size_t real_tail  = static_cast<size_t>(cur_tail % buffer_size);
+        const size_t first_size = std::min(buffer_size - real_tail, size);
         builtin_memcpy(buffer.data() + real_tail, source, first_size * sizeof(T));
         builtin_memcpy(buffer.data(), source + first_size, (size - first_size) * sizeof(T));
 
-        std::atomic_thread_fence(std::memory_order_release);
-
-        tail.store(cur_tail + size, std::memory_order_relaxed);
+        tail.store(cur_tail + size, std::memory_order_release);
         return size;
     }
 
@@ -782,7 +799,7 @@ struct lockfree_ring_buffer
     /// elements are available. When @p partial is @c true, as many elements as available are read
     /// and the actual count is returned. The data is copied in up to two fragments to handle
     /// wrap-around at the end of the buffer.
-    /// @param dest Destination buffer.
+    /// @param dest Destination buffer with room for @p size elements. Must not overlap @p buffer.
     /// @param size Number of elements to dequeue.
     /// @param buffer Backing storage (its @c size() defines the capacity).
     /// @param partial When @c true, allow reading fewer than @p size elements.
@@ -790,32 +807,37 @@ struct lockfree_ring_buffer
     template <univector_tag Tag>
     size_t try_dequeue(T* dest, size_t size, const univector<T, Tag>& buffer, bool partial = false)
     {
-        const size_t cur_front  = front.load(std::memory_order_relaxed);
-        const size_t avail_size = tail.load(std::memory_order_relaxed) - cur_front;
+        const size_t buffer_size = buffer.size();
+        if (size == 0 || buffer_size == 0)
+            return 0;
+
+        const uint64_t cur_front = front.load(std::memory_order_relaxed);
+        const uint64_t cur_tail  = tail.load(std::memory_order_acquire);
+        const size_t avail_size  = static_cast<size_t>(cur_tail - cur_front);
         if (size > avail_size)
         {
             if (!partial)
                 return 0;
             size = std::min(size, avail_size);
         }
-        std::atomic_thread_fence(std::memory_order_acquire);
 
-        const size_t real_front = cur_front % buffer.size();
-        const size_t first_size = std::min(buffer.size() - real_front, size);
+        const size_t real_front = static_cast<size_t>(cur_front % buffer_size);
+        const size_t first_size = std::min(buffer_size - real_front, size);
         builtin_memcpy(dest, buffer.data() + real_front, first_size * sizeof(T));
         builtin_memcpy(dest + first_size, buffer.data(), (size - first_size) * sizeof(T));
 
-        std::atomic_thread_fence(std::memory_order_release);
-
-        front.store(cur_front + size, std::memory_order_relaxed);
+        front.store(cur_front + size, std::memory_order_release);
         return size;
     }
 
 private:
-    std::atomic<size_t> front;
-    char cacheline_filler[KFR_CACHE_LINE_SIZE - sizeof(std::atomic<size_t>)];
-    std::atomic<size_t> tail;
+    alignas(KFR_CACHE_LINE_SIZE) std::atomic<uint64_t> front;
+    alignas(KFR_CACHE_LINE_SIZE) std::atomic<uint64_t> tail;
 };
+
+/// @brief Backward-compatible alias for @ref spsc_ring_buffer.
+template <typename T>
+using lockfree_ring_buffer = spsc_ring_buffer<T>;
 inline namespace KFR_ARCH_NAME
 {
 
