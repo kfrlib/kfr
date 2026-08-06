@@ -99,6 +99,24 @@ TEST_CASE("histogram")
     CHECK(h2[7] == 0);
     CHECK(h2[8] == 1);
     CHECK(h2[9] == 2);
+
+    univector<double, 23> boundaries{ -0.001, 0.0,   0.099, 0.1,   0.199, 0.2,   0.299, 0.3,
+                                      0.399,  0.4,   0.499, 0.5,   0.599, 0.6,   0.699, 0.7,
+                                      0.799,  0.8,   0.899, 0.9,   0.999, 1.0,   1.001 };
+    auto h3 = histogram<10>(boundaries);
+    CHECK(h3.below() == 1);
+    CHECK(h3.above() == 1);
+#ifdef KFR_HISTOGRAM_OLD
+    CHECK(h3[0] == 1);
+    CHECK(h3[1] == 2);
+    for (size_t i = 2; i < 9; ++i)
+        CHECK(h3[i] == 2);
+    CHECK(h3[9] == 4);
+#else
+    for (size_t i = 0; i < 9; ++i)
+        CHECK(h3[i] == 2);
+    CHECK(h3[9] == 3);
+#endif
 }
 
 TEST_CASE("reduce_multidim")

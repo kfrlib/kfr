@@ -257,8 +257,9 @@ KFR_INTRINSIC Tout reduce(const E1& e1, ReduceFn&& reducefn,
  * the constructor; otherwise it is fixed at compile time.
  *
  * For floating-point inputs, values are expected in the range [0, 1] and are mapped to
- * bins by scaling. For integer inputs, values are offset by 1 and clamped to the bin
- * range.
+ * equal-width bins. Integer value @c i maps directly to bin @c i when
+ * @c 0 <= i < Bins; Define @c KFR_HISTOGRAM_OLD to
+ * restore the previous floating-point nearest-bin mapping.
  *
  * @tparam Bins Number of bins, or 0 for runtime-sized bins.
  * @tparam TCount Integer type used for bin counts.
@@ -322,7 +323,11 @@ struct histogram_data
         if constexpr (is_f_class<T>)
         {
             const vec<T, N> x = value * size();
+#ifdef KFR_HISTOGRAM_OLD
             indices           = cast<uint64_t>(round(clamp(x, 0, size() - 1)));
+#else
+            indices           = cast<uint64_t>(floor(clamp(x, 0, size() - 1)));
+#endif
             indices           = select(value < 0, 0, select(value > 1, size() + 1, 1 + indices));
         }
         else
