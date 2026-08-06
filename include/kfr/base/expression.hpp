@@ -86,6 +86,13 @@ template <typename T>
 constexpr inline size_t expression_dims = expression_traits<T>::dims;
 
 /**
+ * @brief Inline variable indicating whether an expression supports random access.
+ * @tparam T Expression type.
+ */
+template <typename T>
+constexpr inline bool expression_random_access = expression_traits<T>::random_access;
+
+/**
  * @brief Returns the shape of an expression instance.
  * @param expr Expression instance to query.
  * @tparam T Expression type.
