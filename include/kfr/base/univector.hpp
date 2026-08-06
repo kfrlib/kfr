@@ -93,6 +93,8 @@ struct univector;
 
 /// @brief Base class for all @ref univector specializations, providing common
 /// operations such as slicing, references and ring-buffer helpers.
+/// Ring-buffer helpers operate on caller-owned cursors and are intended for
+/// single-threaded use only; concurrent access requires external synchronization.
 /// @tparam T Element type of the vector.
 /// @tparam Class Concrete derived univector type (CRTP).
 /// @tparam is_expression Whether the derived type can act as an output expression.
@@ -190,13 +192,16 @@ struct univector_base<T, Class, true>
     {
         if (KFR_UNLIKELY(srcsize == 0))
             return;
-        // skip redundant data
         const size_t size = get_size();
+        if (KFR_UNLIKELY(size == 0))
+            return;
+
+        // Keep only the most recent data that fits in the buffer.
         T* data           = get_data();
         if (srcsize > size)
         {
-            src     = src + srcsize / size;
-            srcsize = srcsize % size;
+            src += srcsize - size;
+            srcsize = size;
         }
         const size_t fsize = size - cursor;
         // one fragment
@@ -224,6 +229,8 @@ struct univector_base<T, Class, true>
     /// @param value Value to write.
     void ringbuf_write(size_t& cursor, const T& value)
     {
+        if (KFR_UNLIKELY(get_size() == 0))
+            return;
         T* data      = get_data();
         data[cursor] = value;
         ringbuf_step(cursor, 1);
@@ -234,6 +241,8 @@ struct univector_base<T, Class, true>
     void ringbuf_step(size_t& cursor, size_t step) const
     {
         const size_t size = get_size();
+        if (KFR_UNLIKELY(size == 0))
+            return;
         cursor            = cursor + step;
         cursor            = cursor >= size ? cursor - size : cursor;
     }
@@ -242,6 +251,8 @@ struct univector_base<T, Class, true>
     /// @param value Output value.
     void ringbuf_read(size_t& cursor, T& value)
     {
+        if (KFR_UNLIKELY(get_size() == 0))
+            return;
         T* data = get_data();
         value   = data[cursor];
         ringbuf_step(cursor, 1);
@@ -266,13 +277,16 @@ struct univector_base<T, Class, true>
     {
         if (KFR_UNLIKELY(destsize == 0))
             return;
-        // skip redundant data
         const size_t size = get_size();
+        if (KFR_UNLIKELY(size == 0))
+            return;
+
+        // Fill only the most recent portion of the destination that fits.
         const T* data     = get_data();
         if (destsize > size)
         {
-            dest     = dest + destsize / size;
-            destsize = destsize % size;
+            dest += destsize - size;
+            destsize = size;
         }
         const size_t fsize = size - cursor;
         // one fragment
