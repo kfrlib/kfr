@@ -74,16 +74,14 @@ int main(int argc, char** argv)
     audio_data_interleaved input_chunk_interleaved(channels, input_chunk_size);
     audio_data input_chunk(channels, input_chunk_size);
 
-    bool first_chunk = true;
+    size_t input_delay    = input_delay_compensation;
+    size_t frames_to_read = resampler0.input_size_for_output(output_chunk_size + resampler0.get_delay());
     std::chrono::high_resolution_clock::duration resampling_time{};
     // Process audio in chunks
     println("Resampling...");
     fflush(stdout);
     for (;;)
     {
-        const size_t frames_to_read =
-            resampler0.input_size_for_output(output_chunk_size + (first_chunk ? resampler0.get_delay() : 0));
-
         // Read channels of audio
         const auto frames_read = decoder->read_to(input_chunk_interleaved.truncate(frames_to_read));
         if (!frames_read)
@@ -99,7 +97,12 @@ int main(int argc, char** argv)
         size_t frames_to_write = output_chunk_size;
         if (*frames_read < frames_to_read)
         {
-            frames_to_write = resampler0.output_size_for_input(*frames_read) + resampler0.get_delay();
+            if (*frames_read <= input_delay)
+            {
+                println("Error: input file is too short for delay compensation");
+                return 2;
+            }
+            frames_to_write = resampler0.output_size_for_input(*frames_read - input_delay);
         }
         if (frames_to_write <= resampler0.get_delay())
         {
@@ -113,14 +116,17 @@ int main(int argc, char** argv)
             auto& r       = resamplers[ch];
             auto&& output = output_chunk.channel(ch).truncate(frames_to_write).ref();
             auto&& input  = input_chunk.channel(ch).truncate(*frames_read);
-            if (first_chunk)
+            if (input_delay != 0)
             {
                 // Skip the first r.get_delay() samples (FIR filter delay).
-                r.skip(r.get_delay(), input);
+                const size_t skipped_input = r.skip(r.get_delay(), input);
+                r.process(output, input.slice(skipped_input));
             }
-
-            // Process new block of audio
-            r.process(output, input);
+            else
+            {
+                // Process new block of audio
+                r.process(output, input);
+            }
         }
         resampling_time += std::chrono::high_resolution_clock::now() - t1;
         output_chunk_interleaved = output_chunk.slice(0, frames_to_write);
@@ -132,7 +138,9 @@ int main(int argc, char** argv)
             println("Error: cannot write to output file: ", to_string(written.error()));
             return 2;
         }
-        first_chunk = false;
+
+        input_delay    = 0;
+        frames_to_read = resampler0.input_size_for_output(output_chunk_size);
     }
     auto closed = encoder->close();
     if (!closed)
