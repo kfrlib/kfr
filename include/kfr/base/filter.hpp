@@ -198,6 +198,13 @@ public:
      */
     explicit expression_filter(expression_handle<T, 1> filter_expr) : filter_expr(std::move(filter_expr)) {}
 
+    /** @brief Resets the state of the wrapped expression. */
+    void reset() override
+    {
+        using kfr::reset;
+        reset(filter_expr);
+    }
+
 protected:
     /** @brief Default-constructing constructor for subclasses. */
     expression_filter() = default;

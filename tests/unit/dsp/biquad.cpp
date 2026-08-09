@@ -121,6 +121,67 @@ TEST_CASE("iir_filter")
     float buf[256];
     f.apply(buf);
 }
+
+TEST_CASE("iir_reset")
+{
+    biquad_section<float> sections[2] = {
+        biquad_lowpass<float>(0.1f, 0.7f),
+        biquad_highpass<float>(0.2f, 0.6f),
+    };
+    iir_state<float, 2> state(iir_params<float, 2>{ sections, 2 });
+    const auto expected_params = state.params;
+
+    state.state.s1       = 1.f;
+    state.state.s2       = 2.f;
+    state.state.out      = 3.f;
+    state.saved_state.s1 = 4.f;
+    state.saved_state.s2 = 5.f;
+    state.saved_state.out = 6.f;
+    state.block_end      = 7;
+
+    univector<float, 1> input{ 0.f };
+    auto expression = iir(input, std::ref(state));
+    reset(expression);
+
+    for (size_t i = 0; i < 2; ++i)
+    {
+        CHECK(state.state.s1[i] == 0.f);
+        CHECK(state.state.s2[i] == 0.f);
+        CHECK(state.state.out[i] == 0.f);
+        CHECK(state.saved_state.s1[i] == 0.f);
+        CHECK(state.saved_state.s2[i] == 0.f);
+        CHECK(state.saved_state.out[i] == 0.f);
+
+        CHECK(state.params.a1[i] == expected_params.a1[i]);
+        CHECK(state.params.a2[i] == expected_params.a2[i]);
+        CHECK(state.params.b0[i] == expected_params.b0[i]);
+        CHECK(state.params.b1[i] == expected_params.b1[i]);
+        CHECK(state.params.b2[i] == expected_params.b2[i]);
+    }
+    CHECK(state.block_end == 0);
+
+    state.state.s1       = 1.f;
+    state.state.s2       = 2.f;
+    state.state.out      = 3.f;
+    state.saved_state.s1 = 4.f;
+    state.saved_state.s2 = 5.f;
+    state.saved_state.out = 6.f;
+    state.block_end      = 7;
+
+    expression_iir_l<2, float, decltype(input)&, true> lookahead(input, std::ref(state));
+    reset(lookahead);
+
+    for (size_t i = 0; i < 2; ++i)
+    {
+        CHECK(state.state.s1[i] == 0.f);
+        CHECK(state.state.s2[i] == 0.f);
+        CHECK(state.state.out[i] == 0.f);
+        CHECK(state.saved_state.s1[i] == 0.f);
+        CHECK(state.saved_state.s2[i] == 0.f);
+        CHECK(state.saved_state.out[i] == 0.f);
+    }
+    CHECK(state.block_end == 0);
+}
 } // namespace KFR_ARCH_NAME
 } // namespace kfr
 

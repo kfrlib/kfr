@@ -99,9 +99,9 @@ struct expression_goertzel : expression_traits_defaults
     complex<T>& result; ///< Output complex bin value (written on destruction).
     const T omega; ///< Target angular frequency [rad/sample].
     const T coeff; ///< Precomputed resonator coefficient `2*cos(omega)`.
-    T q0; ///< Current filter output (working state).
-    T q1; ///< Previous output sample (working state).
-    T q2; ///< Output sample two steps back (working state).
+    mutable T q0; ///< Current filter output (working state).
+    mutable T q1; ///< Previous output sample (working state).
+    mutable T q2; ///< Output sample two steps back (working state).
 };
 
 /**
@@ -176,10 +176,45 @@ struct expression_parallel_goertzel : expression_traits_defaults
     complex<T>* result; ///< Output array of `width` complex bin values.
     const vec<T, width> omega; ///< SIMD vector of target angular frequencies.
     const vec<T, width> coeff; ///< Precomputed coefficients `2*cos(omega)`.
-    vec<T, width> q0; ///< Current filter outputs (working state).
-    vec<T, width> q1; ///< Previous output samples (working state).
-    vec<T, width> q2; ///< Output samples two steps back (working state).
+    mutable vec<T, width> q0; ///< Current filter outputs (working state).
+    mutable vec<T, width> q1; ///< Previous output samples (working state).
+    mutable vec<T, width> q2; ///< Output samples two steps back (working state).
 };
+
+/**
+ * @brief Clears a Goertzel resonator's recursive state.
+ *
+ * Calling reset before destruction causes the expression to report an empty
+ * DFT bin when it is destroyed.
+ *
+ * @param self Goertzel expression to reset.
+ * @tparam T Sample and result type.
+ */
+template <typename T>
+KFR_INTRINSIC void reset(const expression_goertzel<T>& self)
+{
+    self.q0 = T(0);
+    self.q1 = T(0);
+    self.q2 = T(0);
+}
+
+/**
+ * @brief Clears all recursive states in a parallel Goertzel expression.
+ *
+ * Calling reset before destruction causes the expression to report empty DFT
+ * bins when it is destroyed.
+ *
+ * @param self Parallel Goertzel expression to reset.
+ * @tparam T Sample and result type.
+ * @tparam width Number of parallel resonators.
+ */
+template <typename T, size_t width>
+KFR_INTRINSIC void reset(const expression_parallel_goertzel<T, width>& self)
+{
+    self.q0 = vec<T, width>(0);
+    self.q1 = vec<T, width>(0);
+    self.q2 = vec<T, width>(0);
+}
 
 /**
  * @brief Create a single-bin Goertzel expression.

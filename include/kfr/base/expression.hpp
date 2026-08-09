@@ -406,6 +406,17 @@ KFR_INTRINSIC void end_pass(const internal_generic::anything&, shape<Dims> start
 }
 
 /**
+ * @brief No-op reset hook for the `anything` placeholder type.
+ *
+ * This overload allows `reset` to be called uniformly on any argument, including
+ * those that do not require reset notifications.
+ */
+template <int dummy = 0>
+KFR_INTRINSIC void reset(const internal_generic::anything&)
+{
+}
+
+/**
  * @brief Returns a scalar element broadcast to a vector.
  *
  * When the expression is a scalar element, reading any index simply returns
@@ -907,6 +918,12 @@ KFR_INTRINSIC void end_pass_args(const expression_with_arguments<Args...>& self,
     (end_pass(std::get<idx>(self.args), start, stop), ...);
 }
 
+template <typename... Args, size_t... idx>
+KFR_INTRINSIC void reset_args(const expression_with_arguments<Args...>& self, csizes_t<idx...>)
+{
+    (reset(std::get<idx>(self.args)), ...);
+}
+
 template <index_t outdims, typename Fn, typename... Args, index_t VecAxis, size_t N, index_t Dims, size_t idx,
           typename Traits = expression_traits<typename expression_function<Fn, Args...>::template nth<idx>>>
 KFR_MEM_INTRINSIC vec<typename Traits::value_type, N> get_arg(const expression_function<Fn, Args...>& self,
@@ -978,6 +995,18 @@ KFR_INTRINSIC void end_pass(const expression_with_arguments<Args...>& self, shap
                             shape<Dims> stop)
 {
     internal::end_pass_args(self, start, stop, indicesfor<Args...>);
+}
+
+/**
+ * @brief Resets all arguments of an `expression_with_arguments`.
+ * @param self Argument holder.
+ * @tparam Args Argument types.
+ * @tparam Dims Number of dimensions of the reset operation.
+ */
+template <typename... Args>
+KFR_INTRINSIC void reset(const expression_with_arguments<Args...>& self)
+{
+    internal::reset_args(self, indicesfor<Args...>);
 }
 
 /**

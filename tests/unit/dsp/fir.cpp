@@ -33,6 +33,61 @@ TEST_CASE("fir_state")
     }
 }
 
+TEST_CASE("fir_expression_reset")
+{
+    const univector<float, 3> taps{ 1.f, 2.f, 3.f };
+    univector<float, 1> input{ 0.f };
+
+    SECTION("short FIR")
+    {
+        short_fir_state<3, float> state(taps);
+        state.delayline = vec<float, 2>{ 4.f, 5.f };
+        const auto expected_taps = state.taps;
+
+        reset(short_fir(input, std::ref(state)));
+
+        CHECK(state.delayline[0] == 0.f);
+        CHECK(state.delayline[1] == 0.f);
+        CHECK(state.taps[0] == expected_taps[0]);
+        CHECK(state.taps[1] == expected_taps[1]);
+        CHECK(state.taps[2] == expected_taps[2]);
+    }
+
+    SECTION("generic FIR")
+    {
+        fir_state<float> state(taps);
+        state.delayline        = univector<float>{ 4.f, 5.f, 6.f };
+        state.delayline_cursor = 2;
+        const auto expected_taps = state.params.taps;
+
+        reset(fir(input, std::ref(state)));
+
+        CHECK(state.delayline_cursor == 0);
+        CHECK(state.delayline[0] == 0.f);
+        CHECK(state.delayline[1] == 0.f);
+        CHECK(state.delayline[2] == 0.f);
+        CHECK(state.params.taps[0] == expected_taps[0]);
+        CHECK(state.params.taps[1] == expected_taps[1]);
+        CHECK(state.params.taps[2] == expected_taps[2]);
+    }
+
+    SECTION("moving sum")
+    {
+        moving_sum_state<float> state(3);
+        state.delayline   = univector<float>{ 4.f, 5.f, 6.f };
+        state.head_cursor = 2;
+        state.tail_cursor = 0;
+
+        reset(moving_sum(input, std::ref(state)));
+
+        CHECK(state.delayline[0] == 0.f);
+        CHECK(state.delayline[1] == 0.f);
+        CHECK(state.delayline[2] == 0.f);
+        CHECK(state.head_cursor == 0);
+        CHECK(state.tail_cursor == 1);
+    }
+}
+
 TEST_CASE("fir")
 {
 #ifdef KFR_COMPILER_IS_MSVC

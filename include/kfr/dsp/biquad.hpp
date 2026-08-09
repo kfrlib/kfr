@@ -447,6 +447,39 @@ KFR_INTRINSIC vec<T, N> get_elements(const expression_iir_l<filters, T, E1, Stat
     return internal::biquad_process(*self.state, in);
 }
 
+/**
+ * @brief Clears an IIR cascade's delay-line state while preserving its coefficients.
+ *
+ * May be called only between processing passes. For referenced-state expressions,
+ * clears the externally owned state.
+ *
+ * @param self Look-ahead IIR expression to reset.
+ * @tparam filters Number of cascaded biquad sections.
+ * @tparam T Floating-point element type.
+ * @tparam E1 Type of the wrapped input expression.
+ * @tparam Stateless Whether the filter state is externally owned.
+ */
+template <size_t filters, typename T, typename E1, bool Stateless>
+KFR_INTRINSIC void reset(const expression_iir_l<filters, T, E1, Stateless>& self)
+{
+    reset(self.first());
+    self.state->state       = {};
+    self.state->saved_state = {};
+    self.state->block_end   = 0;
+}
+
+/**
+ * @copydoc reset(const expression_iir_l<filters, T, E1, Stateless>&)
+ */
+template <size_t filters, typename T, typename E1, bool Stateless>
+KFR_INTRINSIC void reset(const expression_iir<filters, T, E1, Stateless>& self)
+{
+    reset(self.first());
+    self.state->state       = {};
+    self.state->saved_state = {};
+    self.state->block_end   = 0;
+}
+
 /// Internal ADL-provided implementation for `expression_iir` expressions.
 template <typename T, typename E1, bool Stateless>
 KFR_INTRINSIC void begin_pass(const expression_iir<1, T, E1, Stateless>&, shape<1>, shape<1>)

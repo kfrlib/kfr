@@ -28,6 +28,35 @@ TEST_CASE("delay")
     CHECK_EXPRESSION(delay(v1, std::ref(state2)), 33, [](size_t i) { return i < 3 ? 0.f : (i - 3) + 100.f; });
 }
 
+TEST_CASE("delay_reset")
+{
+    univector<float, 1> input{ 0.f };
+
+    SECTION("one sample")
+    {
+        delay_state<float, 1> state;
+        state.data = 4.f;
+
+        reset(delay(input, std::ref(state)));
+
+        CHECK(state.data == 0.f);
+    }
+
+    SECTION("ring buffer")
+    {
+        delay_state<float, 3> state;
+        state.data   = univector<float, 3>{ 4.f, 5.f, 6.f };
+        state.cursor = 2;
+
+        reset(delay(input, std::ref(state)));
+
+        CHECK(state.data[0] == 0.f);
+        CHECK(state.data[1] == 0.f);
+        CHECK(state.data[2] == 0.f);
+        CHECK(state.cursor == 0);
+    }
+}
+
 TEST_CASE("fracdelay")
 {
     univector<double, 5> a({ 1, 2, 3, 4, 5 });

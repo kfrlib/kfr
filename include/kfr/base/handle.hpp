@@ -96,11 +96,14 @@ struct expression_vtable
     using func_substitute = bool (*)(void*, expression_handle<T, Dims>);
     /** @brief Signature of the begin_pass/end_pass callbacks. */
     using func_pass = void (*)(void*, shape<Dims>, shape<Dims>);
+    /** @brief Signature of the reset callback. */
+    using func_reset = void (*)(void*);
 
     func_shapeof fn_shapeof; ///< Shape query callback.
     func_substitute fn_substitute; ///< Placeholder substitution callback.
     func_pass fn_begin_pass; ///< begin_pass callback.
     func_pass fn_end_pass; ///< end_pass callback.
+    func_reset fn_reset; ///< reset callback.
     std::array<std::array<func_get, Nsizes>, Dims> fn_get_elements; ///< get_elements callbacks per axis/size.
     std::array<std::array<func_set, Nsizes>, Dims> fn_set_elements; ///< set_elements callbacks per axis/size.
 
@@ -115,6 +118,7 @@ struct expression_vtable
         fn_substitute = &static_substitute<Expression>;
         fn_begin_pass = &static_begin_pass<Expression>;
         fn_end_pass   = &static_end_pass<Expression>;
+        fn_reset      = &static_reset<Expression>;
         cforeach(csizeseq<Nsizes>,
                  [&](auto size_) KFR_INLINE_LAMBDA
                  {
@@ -172,6 +176,12 @@ struct expression_vtable
     static void static_end_pass(void* instance, shape<Dims> start, shape<Dims> stop)
     {
         end_pass(*static_cast<Expression*>(instance), start, stop);
+    }
+    /** @brief reset trampoline: forwards to @c reset for @c Expression. */
+    template <typename Expression>
+    static void static_reset(void* instance)
+    {
+        reset(*static_cast<Expression*>(instance));
     }
 };
 
@@ -296,6 +306,12 @@ template <typename T, index_t NDims>
 KFR_INTRINSIC void end_pass(const expression_handle<T, NDims>& self, shape<NDims> start, shape<NDims> stop)
 {
     self.vtable->fn_end_pass(self.instance, start, stop);
+}
+/** @brief Internal ADL-provided implementation for @ref expression_handle expressions. */
+template <typename T, index_t NDims>
+KFR_INTRINSIC void reset(const expression_handle<T, NDims>& self)
+{
+    self.vtable->fn_reset(self.instance);
 }
 
 /** @brief Internal ADL-provided implementation for @ref expression_handle expressions.

@@ -133,8 +133,8 @@ struct expression_delay<1, E, stateless, STag> : expression_with_arguments<E>, e
     using T = value_type;
     using expression_with_arguments<E>::expression_with_arguments;
 
-    expression_delay(E&& e, const delay_state<T, 1, STag>& state)
-        : expression_with_arguments<E>(std::forward<E>(e)), state(state)
+    expression_delay(E&& e, state_holder<delay_state<T, 1, STag>, stateless> state)
+        : expression_with_arguments<E>(std::forward<E>(e)), state(std::move(state))
     {
     }
 
@@ -149,6 +149,45 @@ struct expression_delay<1, E, stateless, STag> : expression_with_arguments<E>, e
     }
     mutable state_holder<delay_state<T, 1, STag>, stateless> state;
 };
+
+/**
+ * @brief Clears a multi-sample delay expression's ring buffer and cursor.
+ *
+ * May be called only between processing passes. For referenced-state expressions,
+ * clears the externally owned state.
+ *
+ * @param self Delay expression to reset.
+ * @tparam delay Delay length in samples.
+ * @tparam E Type of the wrapped input expression.
+ * @tparam stateless Whether the delay state is externally owned.
+ * @tparam STag Tag of the delay-line storage.
+ */
+template <size_t delay, typename E, bool stateless, univector_tag STag>
+    requires(delay != 1)
+KFR_INTRINSIC void reset(const expression_delay<delay, E, stateless, STag>& self)
+{
+    reset(self.first());
+    self.state->data   = scalar(0);
+    self.state->cursor = 0;
+}
+
+/**
+ * @brief Clears a one-sample delay expression's stored sample.
+ *
+ * May be called only between processing passes. For referenced-state expressions,
+ * clears the externally owned state.
+ *
+ * @param self Delay expression to reset.
+ * @tparam E Type of the wrapped input expression.
+ * @tparam stateless Whether the delay state is externally owned.
+ * @tparam STag Tag of the delay-line storage.
+ */
+template <typename E, bool stateless, univector_tag STag>
+KFR_INTRINSIC void reset(const expression_delay<1, E, stateless, STag>& self)
+{
+    reset(self.first());
+    self.state->data = typename expression_delay<1, E, stateless, STag>::value_type(0);
+}
 
 /**
  * @brief Returns template expression that applies delay to the input (uses ring buffer internally)

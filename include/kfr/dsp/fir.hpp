@@ -390,6 +390,67 @@ struct expression_moving_sum : expression_with_traits<E1>
 };
 
 /**
+ * @brief Clears a short FIR expression's delay line while preserving its taps.
+ *
+ * May be called only between processing passes. For referenced-state expressions,
+ * clears the externally owned state.
+ *
+ * @param self Short FIR expression to reset.
+ * @tparam tapcount Internal padded tap count.
+ * @tparam T Coefficient type.
+ * @tparam U Sample/value type.
+ * @tparam E1 Type of the wrapped input expression.
+ * @tparam stateless Whether the filter state is externally owned.
+ */
+template <size_t tapcount, typename T, typename U, typename E1, bool stateless>
+KFR_INTRINSIC void reset(const expression_short_fir<tapcount, T, U, E1, stateless>& self)
+{
+    reset(self.first());
+    self.state->delayline = vec<U, tapcount - 1>(0);
+}
+
+/**
+ * @brief Clears a generic FIR expression's delay line while preserving its taps.
+ *
+ * May be called only between processing passes. For referenced-state expressions,
+ * clears the externally owned state.
+ *
+ * @param self FIR expression to reset.
+ * @tparam T Coefficient type.
+ * @tparam U Sample/value type.
+ * @tparam E1 Type of the wrapped input expression.
+ * @tparam stateless Whether the filter state is externally owned.
+ */
+template <typename T, typename U, typename E1, bool stateless>
+KFR_INTRINSIC void reset(const expression_fir<T, U, E1, stateless>& self)
+{
+    reset(self.first());
+    self.state->delayline        = scalar(0);
+    self.state->delayline_cursor = 0;
+}
+
+/**
+ * @brief Clears a moving-sum expression's delay line and restores its cursors.
+ *
+ * May be called only between processing passes. For referenced-state expressions,
+ * clears the externally owned state.
+ *
+ * @param self Moving-sum expression to reset.
+ * @tparam U Sample/value type.
+ * @tparam E1 Type of the wrapped input expression.
+ * @tparam STag Tag of the delay-line storage.
+ * @tparam stateless Whether the filter state is externally owned.
+ */
+template <typename U, typename E1, univector_tag STag, bool stateless>
+KFR_INTRINSIC void reset(const expression_moving_sum<U, E1, STag, stateless>& self)
+{
+    reset(self.first());
+    self.state->delayline   = scalar(0);
+    self.state->head_cursor = 0;
+    self.state->tail_cursor = 1;
+}
+
+/**
  * @brief Returns template expression that applies FIR filter to the input.
  * @deprecated Use `fir(expr, fir_params{taps})` instead.
  * @param e1   An input expression.
