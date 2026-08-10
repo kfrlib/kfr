@@ -11,11 +11,61 @@
 }
 
 [data-md-color-scheme=slate] {
-    --md-default-bg-color: hsla(var(--md-hue), 15%, 9%, 1);
+    /*--md-default-bg-color: rgb(18, 31, 66);hsla(var(--md-hue), 15%, 9%, 1);*/
     --md-typeset-a-color: #7d8eef;
 }
 
 :root {
     --md-primary-fg-color: #4051b5;
     --md-accent-fg-color: #526cfe;
+}
+:root>* {
+    --md-code-bg-color: #F3F6FF;
+}
+
+details[name="symbols-index"] {
+    border: none !important;
+    box-shadow: none !important;
+    background-color: transparent !important;
+    font-size: inherit !important;
+}
+details[name="symbols-index"]>summary {
+    border: none !important;
+    box-shadow: none !important;
+    background-color: transparent !important;
+    padding-left: 0 !important;
+}
+details[name="symbols-index"]>summary::before {
+    display: none !important;
+}
+
+.md-typeset pre, .md-typeset code {
+    font-size: 0.92em !important;
+}
+
+.md-nav {
+    font-size: 0.66rem !important;
+}
+
+.md-typeset {
+    font-size: 0.77rem !important;
+}
+:root>* {
+    --md-primary-fg-color: rgb(12,41,121);
+    --md-primary-fg-color--light: rgb(133, 158, 227);
+    --md-primary-fg-color--dark: #031030;
+    --md-typeset-a-color: #4355cb;
+}
+
+[data-md-color-scheme=slate][data-md-color-primary=black], [data-md-color-scheme=slate][data-md-color-primary=blue-grey], [data-md-color-scheme=slate][data-md-color-primary=grey], [data-md-color-scheme=slate][data-md-color-primary=white] {
+    --md-typeset-a-color: #6b79e1;
+    --md-code-bg-color: #151d2f;
+}
+
+[data-md-color-primary=black] .md-header {
+    background-color: rgb(18, 31, 66);
+}
+
+.md-typeset code {
+    padding: 0.1em 0.3em;
 }
