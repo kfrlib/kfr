@@ -183,10 +183,11 @@ enum class dft_order
 enum class dft_pack_format
 {
     /// Packed format: {DC, Nyquist}, X[1], X[2], ..., X[N/2-1]
-    /// Number of complex samples is $\frac{N}{2}$ where N is the number of real samples
+    /// For even N, the number of complex samples is $\frac{N}{2}$.
+    /// For odd N, this format is equivalent to CCs and has $\frac{N+1}{2}$ samples.
     Perm,
     /// Conjugate-symmetric format: {DC, 0}, X[1], X[2], ..., X[N/2-1], {Nyquist, 0}
-    /// Number of complex samples is $\frac{N}{2}+1$ where N is the number of real samples
+    /// The number of complex samples is $\lfloor\frac{N}{2}\rfloor+1$.
     CCs,
 };
 
@@ -580,7 +581,8 @@ struct dft_plan_real : dft_plan<T>
      * @brief Returns the number of complex samples for a given real size and format.
      * @param size Number of real samples.
      * @param fmt Packing format.
-     * @return `size/2 + 1` for `CCs`, `(size+1)/2` for `Perm`.
+    * @return `floor(size / 2) + 1` for `CCs`; `ceil(size / 2)` (implemented
+    *         as `(size + 1) / 2`) for `Perm`.
      */
     constexpr static size_t complex_size_for(size_t size, dft_pack_format fmt)
     {
