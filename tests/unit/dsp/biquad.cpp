@@ -122,6 +122,43 @@ TEST_CASE("iir_filter")
     f.apply(buf);
 }
 
+TEST_CASE("filter_apply_zeros")
+{
+    const biquad_section<float> sections[] = { biquad_lowpass<float>(0.1f, 0.7f) };
+    const iir_params<float> params{ sections, 1 };
+    constexpr size_t tail_size = 2500;
+
+    iir_filter<float> reference(params);
+    float impulse[] = { 1.f };
+    reference.apply(impulse);
+    univector<float> expected(tail_size, 0.f);
+    reference.apply(expected);
+
+    iir_filter<float> filter(params);
+    const auto prime_filter = [&]
+    {
+        float input[] = { 1.f };
+        filter.apply(input);
+    };
+
+    prime_filter();
+    univector<float> vector_tail(tail_size);
+    filter.apply_zeros(vector_tail);
+    CHECK(absmaxof(vector_tail - expected) == 0.f);
+
+    filter.reset();
+    prime_filter();
+    univector<float> buffer_tail(tail_size);
+    filter.apply_zeros(buffer_tail.data(), buffer_tail.size());
+    CHECK(absmaxof(buffer_tail - expected) == 0.f);
+
+    filter.reset();
+    prime_filter();
+    float array_tail[128];
+    filter.apply_zeros(array_tail);
+    CHECK(absmaxof(make_univector(array_tail) - expected.truncate(128)) == 0.f);
+}
+
 TEST_CASE("iir_reset")
 {
     biquad_section<float> sections[2] = {

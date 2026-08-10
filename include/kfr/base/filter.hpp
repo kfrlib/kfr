@@ -116,6 +116,46 @@ public:
     void apply(T* dest, const T* src, size_t size) { process_buffer(dest, src, size); }
 
     /**
+     * @brief Feeds zero-valued samples to the filter and writes its tail to a fixed-size C array.
+     * @param output Destination array for the tail samples.
+     */
+    template <size_t Size>
+    void apply_zeros(T (&output)[Size])
+    {
+        apply_zeros(output, Size);
+    }
+
+    /**
+     * @brief Feeds zero-valued samples to the filter and writes its tail to a univector.
+     * @param output Destination vector for the tail samples.
+     */
+    template <univector_tag Tag>
+    void apply_zeros(univector<T, Tag>& output)
+    {
+        apply_zeros(output.data(), output.size());
+    }
+
+    /**
+     * @brief Feeds @p size zero-valued samples to the filter and writes the resulting tail.
+     *
+     * The input zeros are processed in bounded chunks, preserving the filter state between chunks.
+     * @param output Destination buffer for the tail samples.
+     * @param size   Number of tail samples to generate.
+     */
+    void apply_zeros(T* output, size_t size)
+    {
+        constexpr size_t zero_input_size = 1024 / sizeof(T);
+        const T zero_input[zero_input_size]{};
+        while (size > 0)
+        {
+            const size_t chunk_size = std::min(size, zero_input_size);
+            process_buffer(output, zero_input, chunk_size);
+            output += chunk_size;
+            size -= chunk_size;
+        }
+    }
+
+    /**
      * @brief Evaluates @p src into @p dest through the filter.
      * @param dest Destination univector.
      * @param src  Source expression handle.
