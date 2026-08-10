@@ -28,9 +28,9 @@
 namespace kfr
 {
 
-template <bool Interleaved>
-audio_data<Interleaved>::audio_data(std::span<fbase* const> pointers, size_t size)
-    requires(!Interleaved)
+template <bool IsInterleaved>
+audio_data<IsInterleaved>::audio_data(std::span<fbase* const> pointers, size_t size)
+    requires(!IsInterleaved)
     : channels(pointers.size()), data{}, size(size), capacity(size)
 {
     KFR_ASSERT(channels > 0);
@@ -38,27 +38,27 @@ audio_data<Interleaved>::audio_data(std::span<fbase* const> pointers, size_t siz
     std::copy(pointers.begin(), pointers.end(), data.begin());
 }
 
-template <bool Interleaved>
-audio_data<Interleaved>::audio_data(fbase* pointer, size_t channels, size_t size)
-    requires(Interleaved)
+template <bool IsInterleaved>
+audio_data<IsInterleaved>::audio_data(fbase* pointer, size_t channels, size_t size)
+    requires(IsInterleaved)
     : channels(channels), data(pointer), size(size), capacity(size)
 {
     KFR_ASSERT(channels > 0);
     KFR_ASSERT(channels <= max_audio_channels);
 }
 
-template <bool Interleaved>
-audio_data<Interleaved>::audio_data(size_t channels, size_t size)
+template <bool IsInterleaved>
+audio_data<IsInterleaved>::audio_data(size_t channels, size_t size)
     : channels(channels), size(size), capacity(size)
 {
     KFR_ASSERT(channels > 0);
     KFR_ASSERT(channels <= max_audio_channels);
     if (!empty())
     {
-        constexpr size_t sampleAlignment = Interleaved ? 1 : KFR_CACHE_LINE_SIZE / sizeof(fbase);
+        constexpr size_t sampleAlignment = IsInterleaved ? 1 : KFR_CACHE_LINE_SIZE / sizeof(fbase);
         std::shared_ptr<details::aligned_deallocator> dealloc(new details::aligned_deallocator{
             kfr::aligned_allocate<fbase>(channels * align_up(capacity, sampleAlignment)) });
-        if constexpr (Interleaved)
+        if constexpr (IsInterleaved)
         {
             data = dealloc->ptr;
         }
@@ -73,26 +73,26 @@ audio_data<Interleaved>::audio_data(size_t channels, size_t size)
     }
 }
 
-template <bool Interleaved>
-audio_data<Interleaved>::audio_data(size_t channels, size_t size, fbase value) : audio_data(channels, size)
+template <bool IsInterleaved>
+audio_data<IsInterleaved>::audio_data(size_t channels, size_t size, fbase value) : audio_data(channels, size)
 {
     fill(value);
 }
 
-template <bool Interleaved>
-size_t audio_data<Interleaved>::total_samples() const noexcept
+template <bool IsInterleaved>
+size_t audio_data<IsInterleaved>::total_samples() const noexcept
 {
     return size * channel_count();
 }
 
-template <bool Interleaved>
-void audio_data<Interleaved>::fill(fbase value)
+template <bool IsInterleaved>
+void audio_data<IsInterleaved>::fill(fbase value)
 {
     for_channel([value](univector_ref<fbase> data) { data = scalar(value); });
 }
 
-template <bool Interleaved>
-void audio_data<Interleaved>::multiply(fbase value)
+template <bool IsInterleaved>
+void audio_data<IsInterleaved>::multiply(fbase value)
 {
     if (value == fbase(1))
         return;
@@ -103,15 +103,15 @@ void audio_data<Interleaved>::multiply(fbase value)
     }
     for_channel([value](univector_ref<fbase> data) { data *= value; });
 }
-template <bool Interleaved>
-void audio_data<Interleaved>::clear()
+template <bool IsInterleaved>
+void audio_data<IsInterleaved>::clear()
 {
     size     = 0;
     position = 0;
 }
 
-template <bool Interleaved>
-void audio_data<Interleaved>::resize(size_t new_size)
+template <bool IsInterleaved>
+void audio_data<IsInterleaved>::resize(size_t new_size)
 {
     if (new_size <= capacity)
     {
@@ -122,14 +122,14 @@ void audio_data<Interleaved>::resize(size_t new_size)
     size = new_size;
 }
 
-template <bool Interleaved>
-void audio_data<Interleaved>::resize(size_t new_size, fbase value)
+template <bool IsInterleaved>
+void audio_data<IsInterleaved>::resize(size_t new_size, fbase value)
 {
     size_t old_size = size;
     resize(new_size);
     if (new_size > old_size)
     {
-        if constexpr (Interleaved)
+        if constexpr (IsInterleaved)
         {
             make_univector(data + old_size * channels, (new_size - old_size) * channels) = scalar(value);
         }
@@ -143,8 +143,8 @@ void audio_data<Interleaved>::resize(size_t new_size, fbase value)
     }
 }
 
-template <bool Interleaved>
-void audio_data<Interleaved>::reserve(size_t new_capacity)
+template <bool IsInterleaved>
+void audio_data<IsInterleaved>::reserve(size_t new_capacity)
 {
     if (new_capacity <= capacity)
     {
@@ -157,7 +157,7 @@ void audio_data<Interleaved>::reserve(size_t new_capacity)
     result.position = position;
     if (size > 0)
     {
-        if constexpr (Interleaved)
+        if constexpr (IsInterleaved)
         {
             if (result.data)
                 std::memcpy(result.data, data, size * channels * sizeof(fbase));
@@ -174,8 +174,8 @@ void audio_data<Interleaved>::reserve(size_t new_capacity)
     swap(result);
 }
 
-template <bool Interleaved>
-void audio_data<Interleaved>::append(const audio_data& other)
+template <bool IsInterleaved>
+void audio_data<IsInterleaved>::append(const audio_data& other)
 {
     if (empty())
     {
@@ -184,7 +184,7 @@ void audio_data<Interleaved>::append(const audio_data& other)
     }
     const size_t old_size = size;
     resize(size + other.size);
-    if constexpr (Interleaved)
+    if constexpr (IsInterleaved)
     {
         std::memcpy(data + old_size * channel_count(), other.data,
                     other.size * channel_count() * sizeof(fbase));
@@ -198,8 +198,8 @@ void audio_data<Interleaved>::append(const audio_data& other)
     }
 }
 
-template <bool Interleaved>
-void audio_data<Interleaved>::prepend(const audio_data& other)
+template <bool IsInterleaved>
+void audio_data<IsInterleaved>::prepend(const audio_data& other)
 {
     if (empty())
     {
@@ -208,7 +208,7 @@ void audio_data<Interleaved>::prepend(const audio_data& other)
     }
     const size_t old_size = size;
     resize(size + other.size);
-    if constexpr (Interleaved)
+    if constexpr (IsInterleaved)
     {
         std::memmove(data + other.size * channel_count(), data, old_size * channel_count() * sizeof(fbase));
         std::memcpy(data, other.data, other.size * channel_count() * sizeof(fbase));
@@ -234,8 +234,8 @@ void audio_data<Interleaved>::prepend(const audio_data& other)
     return result;
 }
 
-template <bool Interleaved>
-void audio_data<Interleaved>::append(const audio_data<!Interleaved>& other)
+template <bool IsInterleaved>
+void audio_data<IsInterleaved>::append(const audio_data<!IsInterleaved>& other)
 {
     if (empty())
     {
@@ -244,7 +244,7 @@ void audio_data<Interleaved>::append(const audio_data<!Interleaved>& other)
     }
     const size_t old_size = size;
     resize(size + other.size);
-    if constexpr (Interleaved)
+    if constexpr (IsInterleaved)
     {
         samples_store(data + old_size * channel_count(), other.pointers(), other.channel_count(), other.size);
     }
@@ -254,8 +254,8 @@ void audio_data<Interleaved>::append(const audio_data<!Interleaved>& other)
     }
 }
 
-template <bool Interleaved>
-void audio_data<Interleaved>::prepend(const audio_data<!Interleaved>& other)
+template <bool IsInterleaved>
+void audio_data<IsInterleaved>::prepend(const audio_data<!IsInterleaved>& other)
 {
     if (empty())
     {
@@ -264,7 +264,7 @@ void audio_data<Interleaved>::prepend(const audio_data<!Interleaved>& other)
     }
     const size_t old_size = size;
     resize(size + other.size);
-    if constexpr (Interleaved)
+    if constexpr (IsInterleaved)
     {
         std::memmove(data + other.size * channel_count(), data, old_size * channel_count() * sizeof(fbase));
         samples_store(data, other.pointers(), other.channel_count(), other.size);
@@ -280,8 +280,8 @@ void audio_data<Interleaved>::prepend(const audio_data<!Interleaved>& other)
     position -= other.size;
 }
 
-template <bool Interleaved>
-void audio_data<Interleaved>::swap(audio_data& other) noexcept
+template <bool IsInterleaved>
+void audio_data<IsInterleaved>::swap(audio_data& other) noexcept
 {
     std::swap(channels, other.channels);
     std::swap(data, other.data);
@@ -291,31 +291,31 @@ void audio_data<Interleaved>::swap(audio_data& other) noexcept
     std::swap(deallocator, other.deallocator);
 }
 
-template <bool Interleaved>
-void audio_data<Interleaved>::reset()
+template <bool IsInterleaved>
+void audio_data<IsInterleaved>::reset()
 {
-    *this = audio_data<Interleaved>{};
+    *this = audio_data<IsInterleaved>{};
 }
 
-template <bool Interleaved>
-size_t audio_data<Interleaved>::channel_count() const noexcept
+template <bool IsInterleaved>
+size_t audio_data<IsInterleaved>::channel_count() const noexcept
 {
     return channels;
 }
 
-template <bool Interleaved>
-audio_data<Interleaved> audio_data<Interleaved>::truncate(size_t length) const
+template <bool IsInterleaved>
+audio_data<IsInterleaved> audio_data<IsInterleaved>::truncate(size_t length) const
 {
     return slice(0, length);
 }
 
-template <bool Interleaved>
-audio_data<Interleaved> audio_data<Interleaved>::slice(size_t start, size_t length) const
+template <bool IsInterleaved>
+audio_data<IsInterleaved> audio_data<IsInterleaved>::slice(size_t start, size_t length) const
 {
     KFR_LOGIC_CHECK(start <= size, "Slice out of range");
     audio_data result = *this;
     result.size       = std::min(length, size - start);
-    if constexpr (Interleaved)
+    if constexpr (IsInterleaved)
     {
         result.data += start * channel_count();
     }
@@ -330,13 +330,13 @@ audio_data<Interleaved> audio_data<Interleaved>::slice(size_t start, size_t leng
     return result;
 }
 
-template <bool Interleaved>
-audio_data<Interleaved> audio_data<Interleaved>::slice_past_end(size_t length)
+template <bool IsInterleaved>
+audio_data<IsInterleaved> audio_data<IsInterleaved>::slice_past_end(size_t length)
 {
     reserve(details::round_capacity(size + length));
     audio_data result = *this;
     result.size       = length;
-    if constexpr (Interleaved)
+    if constexpr (IsInterleaved)
     {
         result.data += size * channel_count();
     }
@@ -351,8 +351,8 @@ audio_data<Interleaved> audio_data<Interleaved>::slice_past_end(size_t length)
     return result;
 }
 
-template <bool Interleaved>
-size_t audio_data<Interleaved>::find_peak() const noexcept
+template <bool IsInterleaved>
+size_t audio_data<IsInterleaved>::find_peak() const noexcept
 {
     size_t peakIndex = 0;
     fbase peakValue  = 0.0;
@@ -361,7 +361,7 @@ size_t audio_data<Interleaved>::find_peak() const noexcept
         fbase sum = fbase(0);
         for (size_t ch = 0; ch < channels; ++ch)
         {
-            if constexpr (Interleaved)
+            if constexpr (IsInterleaved)
             {
                 sum += std::abs(data[i * channels + ch]);
             }
@@ -379,15 +379,15 @@ size_t audio_data<Interleaved>::find_peak() const noexcept
     return peakIndex;
 }
 
-template <bool Interleaved>
-audio_stat audio_data<Interleaved>::stat() const noexcept
+template <bool IsInterleaved>
+audio_stat audio_data<IsInterleaved>::stat() const noexcept
 {
     audio_stat result{ 0, 0 };
     if (empty())
     {
         return result;
     }
-    if constexpr (Interleaved)
+    if constexpr (IsInterleaved)
     {
         result.peak = std::max(result.peak, absmaxof(interlaved()));
         result.rms  = rms(interlaved());
@@ -404,10 +404,10 @@ audio_stat audio_data<Interleaved>::stat() const noexcept
     return result;
 }
 
-template <bool Interleaved>
-bool audio_data<Interleaved>::is_silent(fbase threshold) const noexcept
+template <bool IsInterleaved>
+bool audio_data<IsInterleaved>::is_silent(fbase threshold) const noexcept
 {
-    if constexpr (Interleaved)
+    if constexpr (IsInterleaved)
     {
         for (size_t i = 0; i < size * channels; ++i)
         {

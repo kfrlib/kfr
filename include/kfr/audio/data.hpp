@@ -48,10 +48,10 @@ static_assert(max_audio_channels <= 64, "KFR_MAX_AUDIO_CHANNELS must be <= 64");
 /**
  * @brief Determines the channel type based on interleaving.
  * @tparam T Data type.
- * @tparam Interleaved Whether the data is interleaved.
+ * @tparam IsInterleaved Whether the data is interleaved.
  */
-template <typename T, size_t Interleaved>
-using chan = std::conditional_t<Interleaved, T, std::array<T, max_audio_channels>>;
+template <typename T, size_t IsInterleaved>
+using chan = std::conditional_t<IsInterleaved, T, std::array<T, max_audio_channels>>;
 
 /**
  * @brief Supported audio file container formats.
@@ -462,13 +462,13 @@ KFR_INTRINSIC void set_elements(strided_channel<T>& self, const shape<1>& index,
  * Stores multi-channel audio either as planar (separate channel buffers) or interleaved
  * (single strided buffer). Provides allocation, slicing, arithmetic, and traversal utilities.
  *
- * @tparam Interleaved If true, samples are interleaved; otherwise planar per-channel pointers.
+ * @tparam IsInterleaved If true, samples are interleaved; otherwise planar per-channel pointers.
  */
-template <bool Interleaved = false>
+template <bool IsInterleaved = false>
 struct audio_data
 {
     uint32_t channels = 0; /**< Number of channels. */
-    chan<fbase*, Interleaved> data{}; /**< Pointers to channel data. */
+    chan<fbase*, IsInterleaved> data{}; /**< Pointers to channel data. */
     size_t size; /**< Number of samples per channel. */
     size_t capacity; /**< Allocated capacity per channel. */
     int64_t position = 0; /**< Position of the first sample in the audio data. */
@@ -486,11 +486,11 @@ struct audio_data
      *
      * @param other Source buffer with the opposite interleaving layout.
      */
-    [[nodiscard]] audio_data(const audio_data<!Interleaved>& other) : audio_data(other.channels, other.size)
+    [[nodiscard]] audio_data(const audio_data<!IsInterleaved>& other) : audio_data(other.channels, other.size)
     {
         if (other.empty())
             return;
-        if constexpr (Interleaved)
+        if constexpr (IsInterleaved)
         {
             samples_store(data, other.pointers(), other.channel_count(), other.size);
         }
@@ -519,7 +519,7 @@ struct audio_data
      */
     template <std::invocable Fn>
     [[nodiscard]] audio_data(std::span<fbase* const> pointers, size_t size, Fn&& deallocator)
-        requires(!Interleaved)
+        requires(!IsInterleaved)
         : audio_data(pointers, size)
     {
         deallocator.reset(new details::lambda_deallocator<Fn>{ std::forward<Fn>(deallocator) });
@@ -537,7 +537,7 @@ struct audio_data
      * @pre pointers.size() > 0 && pointers.size() <= max_audio_channels
      */
     [[nodiscard]] audio_data(std::span<fbase* const> pointers, size_t size)
-        requires(!Interleaved);
+        requires(!IsInterleaved);
 
     /**
      * @brief Constructs an interleaved audio_data view from an external buffer.
@@ -552,7 +552,7 @@ struct audio_data
      * @pre channels > 0 && channels <= max_audio_channels
      */
     [[nodiscard]] audio_data(fbase* pointer, size_t channels, size_t size)
-        requires(Interleaved);
+        requires(IsInterleaved);
 
     /**
      * @brief Constructs an interleaved audio_data view from an external buffer with a custom deallocator.
@@ -569,7 +569,7 @@ struct audio_data
      */
     template <std::invocable Fn>
     [[nodiscard]] audio_data(fbase* pointer, size_t channels, size_t size, Fn&& deallocator)
-        requires(Interleaved)
+        requires(IsInterleaved)
         : audio_data(pointer, channels, size)
     {
         deallocator.reset(new details::lambda_deallocator<Fn>{ std::forward<Fn>(deallocator) });
@@ -715,7 +715,7 @@ struct audio_data
      *
      * @param other Source buffer with the opposite interleaving layout to append.
      */
-    void append(const audio_data<!Interleaved>& other);
+    void append(const audio_data<!IsInterleaved>& other);
 
     /**
      * @brief Prepends samples from a buffer with the opposite layout.
@@ -727,7 +727,7 @@ struct audio_data
      *
      * @param other Source buffer with the opposite interleaving layout to prepend.
      */
-    void prepend(const audio_data<!Interleaved>& other);
+    void prepend(const audio_data<!IsInterleaved>& other);
 
     /**
      * @brief Swaps two audio_data buffers.
@@ -755,7 +755,7 @@ struct audio_data
      *
      * This function returns a `univector_ref<fbase>` representing the audio data
      * for the specified channel index. It is only available when the audio data
-     * is not interleaved (i.e., `Interleaved` is false).
+    * is not interleaved (i.e., `IsInterleaved` is false).
      *
      * @param index The index of the channel to retrieve. Must be less than the
      *              total number of channels.
@@ -763,13 +763,13 @@ struct audio_data
      *
      */
     [[nodiscard]] univector_ref<fbase> channel(size_t index) const noexcept
-        requires(!Interleaved)
+        requires(!IsInterleaved)
     {
         KFR_ASSERT(index < channels);
         return univector_ref<fbase>(data[index], size);
     }
     [[nodiscard]] strided_channel<fbase> channel(size_t index) const noexcept
-        requires(Interleaved)
+        requires(IsInterleaved)
     {
         KFR_ASSERT(index < channels);
         return strided_channel<fbase>{ data + index, size, channels };
@@ -779,13 +779,13 @@ struct audio_data
      * @brief Returns a reference to the interleaved audio data.
      *
      * This function provides access to the interleaved audio data as a `univector_ref<fbase>`.
-     * It is only available when the audio data is interleaved (i.e., `Interleaved` is true).
+    * It is only available when the audio data is interleaved (i.e., `IsInterleaved` is true).
      *
      * @return A `univector_ref<fbase>` representing the interleaved audio data.
      *         The size of the returned reference is calculated as `size * channels`.
      */
     [[nodiscard]] univector_ref<fbase> interlaved() const noexcept
-        requires(Interleaved)
+        requires(IsInterleaved)
     {
         return univector_ref<fbase>(data, size * channels);
     }
@@ -795,12 +795,12 @@ struct audio_data
      *
      * This function returns a pointer to the underlying data array, which contains
      * pointers to the base type (`fbase*`). It is only available when the audio data
-     * is not interleaved (i.e., `Interleaved` is false).
+    * is not interleaved (i.e., `IsInterleaved` is false).
      *
      * @return A pointer to the array of `fbase*` representing the audio data.
      */
     [[nodiscard]] fbase* const* pointers() const noexcept
-        requires(!Interleaved)
+        requires(!IsInterleaved)
     {
         return data.data();
     }
@@ -890,7 +890,7 @@ struct audio_data
     template <std::invocable<fbase*> Fn>
     void for_channel(Fn&& fn)
     {
-        if constexpr (Interleaved)
+        if constexpr (IsInterleaved)
         {
             fn(data);
         }
@@ -923,7 +923,7 @@ struct audio_data
     template <std::invocable<univector_ref<fbase>> Fn>
     void for_channel(Fn&& fn)
     {
-        if constexpr (Interleaved)
+        if constexpr (IsInterleaved)
         {
             fn(make_univector(data, size * channels));
         }
