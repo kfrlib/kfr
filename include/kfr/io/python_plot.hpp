@@ -21,50 +21,34 @@
   See https://www.kfrlib.com for details.
  */
 #pragma once
+#include "../meta/array.hpp"
 #include "../meta/string.hpp"
-#include "../simd/vec.hpp"
-#include <cstdlib>
-
-#ifdef KFR_OS_WIN
-#include <direct.h>
-#define cross_getcwd _getcwd
-#else
-#include <unistd.h>
-#define cross_getcwd getcwd
-#endif
 
 namespace kfr
 {
 namespace internal_generic
 {
-KFR_PRAGMA_GNU(GCC diagnostic push)
-KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wdeprecated-declarations")
-KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wunused-result")
+/// @brief Write and execute a generated Python plotting script.
+/// @return @c true when the script completed successfully.
+bool python(const std::string& name, const std::string& code);
 
-template <int = 0>
-void python(const std::string& name, const std::string& code)
+inline std::string python_string(const std::string& value)
 {
-    std::string filename;
+    std::string result = "'";
+    for (char ch : value)
     {
-        char curdir[1024];
-        (void)cross_getcwd(curdir, (int)std::size(curdir));
-        filename = curdir;
+        switch (ch)
+        {
+        case '\\': result += "\\\\"; break;
+        case '\'': result += "\\'"; break;
+        case '\n': result += "\\n"; break;
+        case '\r': result += "\\r"; break;
+        case '\t': result += "\\t"; break;
+        default: result += ch; break;
+        }
     }
-#ifdef KFR_OS_WIN
-    const char* slash = "\\";
-#else
-    const char* slash = "/";
-#endif
-    filename = filename + slash + name + ".py";
-
-    FILE* f = fopen(filename.c_str(), "w");
-    fwrite(code.c_str(), 1, code.size(), f);
-    fclose(f);
-#ifndef KFR_OS_MOBILE
-    (void)std::system(("python \"" + filename + "\"").c_str());
-#endif
+    return result + "'";
 }
-KFR_PRAGMA_GNU(GCC diagnostic pop)
 
 template <typename T>
 inline T flush_to_zero(T value)
@@ -90,8 +74,11 @@ inline std::string python_prologue()
     return "#!/usr/bin/env python\n"
            "import sys\n"
            "import os\n"
-           "sys.path.append(os.path.abspath(__file__ + '/../../../../dspplot/dspplot'))\n"
-           "sys.path.append(os.path.abspath(__file__ + '/../../../dspplot/dspplot'))\n"
+           "script_dir = os.path.dirname(os.path.abspath(__file__))\n"
+           "for level in range(4):\n"
+           "    path = os.path.join(script_dir, *(['..'] * level), 'dspplot', 'dspplot')\n"
+           "    if os.path.isdir(path):\n"
+           "        sys.path.append(path)\n"
            "import dspplotting as dspplot\n\n";
 }
 
@@ -100,10 +87,9 @@ void plot_show(const std::string& name, const std::string& wavfile, const std::s
 {
     print(name, "...");
     std::string ss;
-    ss += python_prologue() + "dspplot.plot(" + concat_args("r'" + wavfile + "'", options) + ")\n";
+    ss += python_prologue() + "dspplot.plot(" + concat_args(internal_generic::python_string(wavfile), options) + ")\n";
 
-    internal_generic::python(name, ss);
-    print("done\n");
+    print(internal_generic::python(name, ss) ? "done\n" : "failed\n");
 }
 
 template <int = 0>
@@ -126,15 +112,14 @@ void plot_show(const std::string& name, const T& x, const std::string& options =
 
     ss += "dspplot.plot(" + concat_args("data", options) + ")\n";
 
-    internal_generic::python(name, ss);
-    print("done\n");
+    print(internal_generic::python(name, ss) ? "done\n" : "failed\n");
 }
 
 /// @brief Plot data using python and save to file
 template <typename T>
 void plot_save(const std::string& name, const T& x, const std::string& options = "")
 {
-    plot_show(name, x, concat_args(options, "file='../svg/" + name + ".svg'"));
+    plot_show(name, x, concat_args(options, "file=" + internal_generic::python_string("../svg/" + name + ".svg")));
 }
 
 template <typename T1, typename T2>
@@ -160,20 +145,19 @@ void perfplot_show(const std::string& name, T1&& data, T2&& labels, const std::s
     for (size_t i = 0; i < labels_array.size(); i++)
     {
         const std::string label = labels_array[i];
-        ss += "    '" + label + "',";
+        ss += "    " + internal_generic::python_string(label) + ",";
     }
     ss += "]\n";
 
     ss += "dspplot.perfplot(" + concat_args("data, labels", options) + ")\n";
 
-    internal_generic::python(name, ss);
-    print("done\n");
+    print(internal_generic::python(name, ss) ? "done\n" : "failed\n");
 }
 
 template <typename T1, typename T2>
 void perfplot_save(const std::string& name, T1&& data, T2&& labels, const std::string& options = "")
 {
     perfplot_show(name, std::forward<T1>(data), std::forward<T2>(labels),
-                  concat_args(options, "file='../perf/" + name + ".svg'"));
+                  concat_args(options, "file=" + internal_generic::python_string("../perf/" + name + ".svg")));
 }
 } // namespace kfr

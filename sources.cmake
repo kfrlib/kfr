@@ -348,6 +348,7 @@ set(
     KFR_IO_SRC
     ${PROJECT_SOURCE_DIR}/src/io/audiofile-impl.cpp
     ${PROJECT_SOURCE_DIR}/src/io/file.cpp
+    ${PROJECT_SOURCE_DIR}/src/io/python_plot.cpp
     ${PROJECT_SOURCE_DIR}/src/io/version.cpp
 )
 
