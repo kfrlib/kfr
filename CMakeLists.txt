@@ -240,6 +240,7 @@ option(
     OFF)
 option(KFR_USE_STD_FILESYSTEM "Use std::filesystem for path arguments" OFF)
 option(KFR_CLASSIC_FFT "Use classic pre-7.1 FFT algorithm" OFF)
+option(KFR_BASETYPE_F32 "Use float as KFR's default scalar type" OFF)
 mark_as_advanced(KFR_ENABLE_ASMTEST)
 mark_as_advanced(KFR_REGENERATE_TESTS)
 mark_as_advanced(KFR_DISABLE_CLANG_EXTENSIONS)
@@ -458,6 +459,10 @@ endif ()
 if (KFR_MANAGED_ALLOCATION)
     target_compile_definitions(
         kfr INTERFACE $<BUILD_INTERFACE:KFR_MANAGED_ALLOCATION=1>)
+endif ()
+
+if (KFR_BASETYPE_F32)
+    target_compile_definitions(kfr INTERFACE $<BUILD_INTERFACE:KFR_BASETYPE_F32=1>)
 endif ()
 
 set(KFR_DEBUG_INSTALL_SUFFIX
