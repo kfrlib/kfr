@@ -29,6 +29,8 @@
 #include <complex.h>
 #endif
 
+#include "config.h"
+
 /** @cond INTERNAL */
 
 /* Architecture detection */
