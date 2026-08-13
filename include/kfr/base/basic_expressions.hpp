@@ -1011,8 +1011,12 @@ KFR_INTRINSIC expression_linspace<Tout, truncated> symmlinspace(T symsize, size_
 template <typename T, bool precise = false, bool truncated = false, typename Tout = ftype<T>>
 KFR_INTRINSIC expression_linspace<Tout, true> arange(T start, T stop, T step = 1, cbool_t<truncated> = {})
 {
-    return linspace<T, precise>(start, stop, static_cast<size_t>(std::ceil((stop - start) / step)), false,
-                                ctrue);
+    const Tout tstart = static_cast<Tout>(start);
+    const Tout tstep  = static_cast<Tout>(step);
+    const size_t size = static_cast<size_t>(std::ceil((static_cast<Tout>(stop) - tstart) / tstep));
+    // expression_linspace divides [start, computed_stop) into `size` equal parts, so pick
+    // computed_stop such that each part has length `step`, matching NumPy's arange semantics.
+    return linspace<Tout, precise>(tstart, tstart + static_cast<Tout>(size) * tstep, size, false, ctrue);
 }
 
 /**
@@ -1027,7 +1031,8 @@ KFR_INTRINSIC expression_linspace<Tout, true> arange(T start, T stop, T step = 1
 template <typename T, bool precise = false, bool truncated = false, typename Tout = ftype<T>>
 KFR_INTRINSIC expression_linspace<Tout, true> arange(T stop, cbool_t<truncated> = {})
 {
-    return linspace<T, precise>(static_cast<T>(0), stop, static_cast<size_t>(std::ceil(stop)), false, ctrue);
+    const size_t size = static_cast<size_t>(std::ceil(static_cast<Tout>(stop)));
+    return linspace<Tout, precise>(static_cast<Tout>(0), static_cast<Tout>(size), size, false, ctrue);
 }
 
 inline namespace KFR_ARCH_NAME
