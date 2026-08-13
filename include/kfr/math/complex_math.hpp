@@ -119,7 +119,7 @@ KFR_INTRINSIC vec<complex<T>, N> polar(const vec<complex<T>, N>& x)
 template <typename T, size_t N>
 KFR_INTRINSIC vec<complex<T>, N> cartesian(const vec<complex<T>, N>& x)
 {
-    return cdupreal(x) * ccomp(cossin(cdecom(cdupimag(x))));
+    return ccomp(cdecom(cdupreal(x)) * cossin(cdecom(cdupimag(x))));
 }
 
 template <typename T, size_t N>
