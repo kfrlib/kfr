@@ -426,7 +426,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif ()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-Wno-c++1z-extensions -Wno-psabi
-                        -Wno-unknown-warning-option)
+                        -Wno-unknown-warning-option -Wno-nan-infinity-disabled)
 endif ()
 if (MSVC)
     add_compile_options(/wd4141)
