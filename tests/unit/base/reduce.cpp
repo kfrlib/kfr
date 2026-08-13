@@ -19,29 +19,29 @@ TEST_CASE("reduce")
     epsilon_scope<void> e(100);
     {
         univector<float, 6> a({ 1, 2, 3, 4, 5, -9 });
-        CHECK_THAT((sum(a)), DeepMatcher(6));
-        CHECK_THAT((mean(a)), DeepMatcher(1));
-        CHECK_THAT((minof(a)), DeepMatcher(-9));
-        CHECK_THAT((maxof(a)), DeepMatcher(5));
-        CHECK_THAT((absminof(a)), DeepMatcher(1));
-        CHECK_THAT((absmaxof(a)), DeepMatcher(9));
-        CHECK_THAT((sumsqr(a)), DeepMatcher(136));
+        CHECK_THAT((sum(a)), DeepMatcher(6.0f));
+        CHECK_THAT((mean(a)), DeepMatcher(1.0f));
+        CHECK_THAT((minof(a)), DeepMatcher(-9.0f));
+        CHECK_THAT((maxof(a)), DeepMatcher(5.0f));
+        CHECK_THAT((absminof(a)), DeepMatcher(1.0f));
+        CHECK_THAT((absmaxof(a)), DeepMatcher(9.0f));
+        CHECK_THAT((sumsqr(a)), DeepMatcher(136.0f));
         CHECK_THAT((rms(a)), DeepMatcher(4.760952285695233f));
-        CHECK_THAT((product(a)), DeepMatcher(-1080));
+        CHECK_THAT((product(a)), DeepMatcher(-1080.0f));
         CHECK_THAT((variance(a)), DeepMatcher(21.66666666f));
         CHECK_THAT((stddev(a)), DeepMatcher(4.654746681256314f));
     }
     {
         univector<double, 6> a({ 1, 2, 3, 4, 5, -9 });
-        CHECK_THAT((sum(a)), DeepMatcher(6));
-        CHECK_THAT((mean(a)), DeepMatcher(1));
-        CHECK_THAT((minof(a)), DeepMatcher(-9));
-        CHECK_THAT((maxof(a)), DeepMatcher(5));
-        CHECK_THAT((absminof(a)), DeepMatcher(1));
-        CHECK_THAT((absmaxof(a)), DeepMatcher(9));
-        CHECK_THAT((sumsqr(a)), DeepMatcher(136));
+        CHECK_THAT((sum(a)), DeepMatcher(6.0));
+        CHECK_THAT((mean(a)), DeepMatcher(1.0));
+        CHECK_THAT((minof(a)), DeepMatcher(-9.0));
+        CHECK_THAT((maxof(a)), DeepMatcher(5.0));
+        CHECK_THAT((absminof(a)), DeepMatcher(1.0));
+        CHECK_THAT((absmaxof(a)), DeepMatcher(9.0));
+        CHECK_THAT((sumsqr(a)), DeepMatcher(136.0));
         CHECK_THAT((rms(a)), DeepMatcher(4.760952285695233));
-        CHECK_THAT((product(a)), DeepMatcher(-1080));
+        CHECK_THAT((product(a)), DeepMatcher(-1080.0));
         CHECK_THAT((variance(a)), DeepMatcher(21.666666666666668));
         CHECK_THAT((stddev(a)), DeepMatcher(4.654746681256314));
     }
@@ -62,7 +62,7 @@ TEST_CASE("dotproduct")
 {
     univector<float, 177> v1 = counter();
     univector<float, 177> v2 = counter() * 2 + 10;
-    CHECK_THAT((dotproduct(v1, v2)), DeepMatcher(3821312));
+    CHECK_THAT((dotproduct(v1, v2)), DeepMatcher(3821312.0f));
 }
 
 TEST_CASE("histogram")
