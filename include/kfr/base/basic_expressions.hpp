@@ -1081,7 +1081,7 @@ struct expression_traits<expression_concatenate<Arg1, Arg2, ConcatAxis>> : expre
     constexpr static size_t dims        = ArgTraits1::dims;
     constexpr static bool random_access = ArgTraits1::random_access && ArgTraits2::random_access;
 
-    KFR_INTRINSIC static shape<dims> concat_shape(const shape<dims>& sh1, const shape<dims>& sh2)
+    KFR_INTRINSIC constexpr static shape<dims> concat_shape(const shape<dims>& sh1, const shape<dims>& sh2)
     {
         shape<dims> result = min(sh1, sh2);
         shape<dims> sum    = add_shape_undef(sh1, sh2);
