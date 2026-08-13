@@ -104,6 +104,7 @@ jobs:
         "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "%TMP_DIR%/sde.zip"
         call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
         set CXXFLAGS=-m32
+        set CFLAGS=-m32
         set PATH=C:\sde;%PATH%
         vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
         ci\run.cmd build-release -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x86-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_MULTIARCH=ON -DCMAKE_C_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
