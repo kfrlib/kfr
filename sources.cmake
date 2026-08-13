@@ -415,6 +415,7 @@ set(
     ${PROJECT_SOURCE_DIR}/tests/unit/math/sqrt.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/tan.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/abs.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/simd/comparison.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/complex.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/logical.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/min_max.cpp
