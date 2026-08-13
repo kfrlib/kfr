@@ -1739,6 +1739,7 @@ struct DeepMatcher : Catch::Matchers::MatcherGenericBase
     template <typename T2>
     bool match(const T2& other) const
     {
+        static_assert(std::is_same_v<T1, T2>, "DeepMatcher: Type mismatch");
         return deep_is_equal(value, other);
     }
 
