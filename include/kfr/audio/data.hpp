@@ -572,7 +572,7 @@ struct audio_data
         requires(IsInterleaved)
         : audio_data(pointer, channels, size)
     {
-        deallocator.reset(new details::lambda_deallocator<Fn>{ std::forward<Fn>(deallocator) });
+        this->deallocator.reset(new details::lambda_deallocator<Fn>{ std::forward<Fn>(deallocator) });
     }
 
     /**
@@ -755,7 +755,7 @@ struct audio_data
      *
      * This function returns a `univector_ref<fbase>` representing the audio data
      * for the specified channel index. It is only available when the audio data
-    * is not interleaved (i.e., `IsInterleaved` is false).
+     * is not interleaved (i.e., `IsInterleaved` is false).
      *
      * @param index The index of the channel to retrieve. Must be less than the
      *              total number of channels.
@@ -779,7 +779,7 @@ struct audio_data
      * @brief Returns a reference to the interleaved audio data.
      *
      * This function provides access to the interleaved audio data as a `univector_ref<fbase>`.
-    * It is only available when the audio data is interleaved (i.e., `IsInterleaved` is true).
+     * It is only available when the audio data is interleaved (i.e., `IsInterleaved` is true).
      *
      * @return A `univector_ref<fbase>` representing the interleaved audio data.
      *         The size of the returned reference is calculated as `size * channels`.
@@ -795,7 +795,7 @@ struct audio_data
      *
      * This function returns a pointer to the underlying data array, which contains
      * pointers to the base type (`fbase*`). It is only available when the audio data
-    * is not interleaved (i.e., `IsInterleaved` is false).
+     * is not interleaved (i.e., `IsInterleaved` is false).
      *
      * @return A pointer to the array of `fbase*` representing the audio data.
      */
