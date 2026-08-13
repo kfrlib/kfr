@@ -93,7 +93,7 @@ string(REPLACE ";" "." KFR_VERSION "${KFR_VERSION_MATCH}")
 project(
     kfr
     VERSION ${KFR_VERSION}
-    LANGUAGES CXX)
+    LANGUAGES C CXX)
 
 if (DEBUG_CMAKE)
     get_cmake_property(VARS VARIABLES)

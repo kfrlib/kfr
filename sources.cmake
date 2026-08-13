@@ -159,6 +159,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/test/comparison.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/test/double_double.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/test/test.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/test/mini_catch.h
     ${PROJECT_SOURCE_DIR}/include/kfr/thirdparty/catch/catch_amalgamated.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/thirdparty/expected/expected.hpp
 )

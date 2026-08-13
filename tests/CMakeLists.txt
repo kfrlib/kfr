@@ -146,6 +146,45 @@ endif ()
 
 target_link_libraries(all_tests kfr_io)
 
+# Snippets extracted from documentation (tests/snippets/**/*.md.cpp and
+# tests/snippets/**/*.md.c). C++ snippets use Catch2; C API snippets use
+# mini_catch and link to kfr_capi. Each snippet is a standalone executable.
+file(GLOB_RECURSE KFR_SNIPPET_FILES CONFIGURE_DEPENDS
+    ${CMAKE_CURRENT_SOURCE_DIR}/snippets/*.md.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/snippets/*.md.c)
+
+set(KFR_SNIPPET_TESTS)
+foreach (SNIPPET_FILE ${KFR_SNIPPET_FILES})
+    file(RELATIVE_PATH SNIPPET_REL ${CMAKE_CURRENT_SOURCE_DIR}/snippets
+         ${SNIPPET_FILE})
+    string(REGEX REPLACE "\\.md\\.(cpp|c)$" "" SNIPPET_NAME ${SNIPPET_REL})
+    string(REPLACE "/" "_" SNIPPET_NAME ${SNIPPET_NAME})
+    set(SNIPPET_TARGET snippet_${SNIPPET_NAME})
+
+    if (SNIPPET_FILE MATCHES "\\.md\\.c$")
+        add_executable(${SNIPPET_TARGET} ${SNIPPET_FILE}
+                       "${CMAKE_SOURCE_DIR}/include/kfr/test/mini_catch.c")
+        target_include_directories(${SNIPPET_TARGET} PUBLIC ${CMAKE_SOURCE_DIR}/include)
+        target_link_libraries(${SNIPPET_TARGET} PRIVATE kfr_capi)
+    else ()
+        add_executable(${SNIPPET_TARGET} ${SNIPPET_FILE}
+                       "${CMAKE_SOURCE_DIR}/src/thirdparty/catch/catch_amalgamated.cpp")
+        target_include_directories(
+            ${SNIPPET_TARGET} PUBLIC ${CMAKE_SOURCE_DIR}/include
+                                     ${CMAKE_SOURCE_DIR}/include/kfr/thirdparty/catch)
+        target_link_libraries(${SNIPPET_TARGET} PRIVATE kfr use_arch kfr_dsp
+                                                        kfr_io kfr_audio)
+        if (KFR_ENABLE_DFT)
+            target_link_libraries(${SNIPPET_TARGET} PRIVATE kfr_dft)
+        endif ()
+    endif ()
+    if (CMAKE_SYSTEM_NAME STREQUAL "Android")
+        target_link_libraries(${SNIPPET_TARGET} PRIVATE log)
+    endif ()
+
+    list(APPEND KFR_SNIPPET_TESTS ${SNIPPET_TARGET})
+endforeach ()
+
 option(KFR_NO_PERF_TESTS "Disable performance tests" OFF)
 
 if (KFR_NO_PERF_TESTS)
@@ -256,4 +295,9 @@ if (NOT KFR_SKIP_TESTS)
 
     add_test(NAME audio_test COMMAND ${EMULATOR}
                                      ${PROJECT_BINARY_DIR}/bin/audio_test)
+
+    foreach (SNIPPET_TARGET ${KFR_SNIPPET_TESTS})
+        add_test(NAME ${SNIPPET_TARGET}
+                 COMMAND ${EMULATOR} $<TARGET_FILE:${SNIPPET_TARGET}>)
+    endforeach ()
 endif ()
