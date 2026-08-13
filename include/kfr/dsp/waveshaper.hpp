@@ -43,7 +43,9 @@ inline namespace KFR_ARCH_NAME
 template <typename E1>
 inline auto waveshaper_hardclip(E1&& input, double clip_level)
 {
-    return clamp(input, -clip_level, +clip_level);
+    using T = flt_type<expression_value_type<E1>>;
+    const T level = static_cast<T>(clip_level);
+    return clamp(input, -level, +level);
 }
 
 /**
@@ -59,7 +61,9 @@ inline auto waveshaper_hardclip(E1&& input, double clip_level)
 template <typename E1>
 inline auto waveshaper_tanh(E1&& input, double saturation)
 {
-    return tanh(saturation * input) * (coth(saturation));
+    using T = flt_type<expression_value_type<E1>>;
+    const T drive = static_cast<T>(saturation);
+    return tanh(drive * input) * coth(drive);
 }
 
 /**
@@ -100,7 +104,7 @@ KFR_FN(saturate_II)
  * @return Expression yielding saturated values.
  */
 template <expression_argument E1>
-KFR_FUNCTION expression_function<fn::saturate_II, E1> saturate_I(E1&& x)
+KFR_FUNCTION expression_function<fn::saturate_I, E1> saturate_I(E1&& x)
 {
     return { fn::saturate_I(), std::forward<E1>(x) };
 }
@@ -131,7 +135,9 @@ KFR_FUNCTION expression_function<fn::saturate_II, E1> saturate_II(E1&& x)
 template <typename E1>
 inline auto waveshaper_saturate_I(E1&& input, double saturation)
 {
-    return saturate_I(saturation * input) / (saturate_I(saturation));
+    using T = flt_type<expression_value_type<E1>>;
+    const T drive = static_cast<T>(saturation);
+    return saturate_I(drive * input) / saturate_I(drive);
 }
 
 /**
@@ -147,7 +153,9 @@ inline auto waveshaper_saturate_I(E1&& input, double saturation)
 template <typename E1>
 inline auto waveshaper_saturate_II(E1&& input, double saturation)
 {
-    return saturate_II(saturation * input) / (saturate_II(saturation));
+    using T = flt_type<expression_value_type<E1>>;
+    const T drive = static_cast<T>(saturation);
+    return saturate_II(drive * input) / saturate_II(drive);
 }
 
 /**
