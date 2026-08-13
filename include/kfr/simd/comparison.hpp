@@ -154,7 +154,7 @@ KFR_INTRINSIC mask<T, N> isfinite(const vec<T, N>& x)
 template <typename T, size_t N>
 KFR_INTRINSIC mask<T, N> isnegative(const vec<T, N>& x)
 {
-    return (x & special_constants<T>::highbitmask()) != 0;
+    return mask<T, N>((ubitcast(x) & special_constants<utype<T>>::highbitmask()) != 0);
 }
 
 /**
