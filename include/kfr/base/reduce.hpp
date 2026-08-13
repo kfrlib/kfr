@@ -120,7 +120,7 @@ struct expression_reduce : public expression_traits_defaults
      * @param transformfn Unary transform applied to each input element.
      * @param finalfn Finalizer applied to the accumulated value.
      */
-    expression_reduce(ReduceFn&& reducefn, TransformFn&& transformfn, FinalFn&& finalfn)
+        expression_reduce(ReduceFn reducefn, TransformFn transformfn, FinalFn finalfn)
         : counter(0), reducefn(std::move(reducefn)), transformfn(std::move(transformfn)),
           finalfn(std::move(finalfn)), value(resize<width>(make_vector(reducefn(initialvalue<Twork>{}))))
     {
