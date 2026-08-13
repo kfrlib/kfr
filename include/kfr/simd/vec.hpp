@@ -140,6 +140,8 @@ struct alignas(next_poweroftwo(sizeof(T)) * next_poweroftwo(N)) portable_vec
     constexpr T back() const { return elem[N - 1]; }
     constexpr T& back() { return elem[N - 1]; }
 
+    constexpr bool operator==(const portable_vec& other) const noexcept = default;
+
 private:
     template <size_t... indices>
     constexpr portable_vec(csizes_t<indices...>, T value) : elem{ (static_cast<void>(indices), value)... }
