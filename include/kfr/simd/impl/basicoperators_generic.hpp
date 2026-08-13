@@ -547,8 +547,8 @@ KFR_INTRINSIC __m256i _mm256_highbit_epi64() { return _mm256_set1_epi64x(0x80000
 
 KFR_INTRINSIC f32avx eq(const f32avx& x, const f32avx& y) { return _mm256_cmp_ps(x.v, y.v, _CMP_EQ_OQ); }
 KFR_INTRINSIC f64avx eq(const f64avx& x, const f64avx& y) { return _mm256_cmp_pd(x.v, y.v, _CMP_EQ_OQ); }
-KFR_INTRINSIC f32avx ne(const f32avx& x, const f32avx& y) { return _mm256_cmp_ps(x.v, y.v, _CMP_NEQ_OQ); }
-KFR_INTRINSIC f64avx ne(const f64avx& x, const f64avx& y) { return _mm256_cmp_pd(x.v, y.v, _CMP_NEQ_OQ); }
+KFR_INTRINSIC f32avx ne(const f32avx& x, const f32avx& y) { return _mm256_cmp_ps(x.v, y.v, _CMP_NEQ_UQ); }
+KFR_INTRINSIC f64avx ne(const f64avx& x, const f64avx& y) { return _mm256_cmp_pd(x.v, y.v, _CMP_NEQ_UQ); }
 KFR_INTRINSIC f32avx lt(const f32avx& x, const f32avx& y) { return _mm256_cmp_ps(x.v, y.v, _CMP_LT_OQ); }
 KFR_INTRINSIC f64avx lt(const f64avx& x, const f64avx& y) { return _mm256_cmp_pd(x.v, y.v, _CMP_LT_OQ); }
 KFR_INTRINSIC f32avx gt(const f32avx& x, const f32avx& y) { return _mm256_cmp_ps(x.v, y.v, _CMP_GT_OQ); }
@@ -1034,11 +1034,11 @@ KFR_INTRINSIC f64avx512 eq(const f64avx512& x, const f64avx512& y)
 }
 KFR_INTRINSIC f32avx512 ne(const f32avx512& x, const f32avx512& y)
 {
-    return _mm512_castsi512_ps(_mm512_movm_epi32(_mm512_cmp_ps_mask(x.v, y.v, _CMP_NEQ_OQ)));
+    return _mm512_castsi512_ps(_mm512_movm_epi32(_mm512_cmp_ps_mask(x.v, y.v, _CMP_NEQ_UQ)));
 }
 KFR_INTRINSIC f64avx512 ne(const f64avx512& x, const f64avx512& y)
 {
-    return _mm512_castsi512_pd(_mm512_movm_epi64(_mm512_cmp_pd_mask(x.v, y.v, _CMP_NEQ_OQ)));
+    return _mm512_castsi512_pd(_mm512_movm_epi64(_mm512_cmp_pd_mask(x.v, y.v, _CMP_NEQ_UQ)));
 }
 KFR_INTRINSIC f32avx512 lt(const f32avx512& x, const f32avx512& y)
 {
