@@ -1319,7 +1319,7 @@ constexpr KFR_INTRINSIC vec<T, N> make_vector(const vec<T, N>& x)
  * @return `vec<T, sizeof...(Values)>`.
  */
 template <typename T, T... Values, size_t N = sizeof...(Values)>
-constexpr KFR_INTRINSIC vec<T, N> make_vector(cvals_t<T, Values...>)
+constexpr KFR_INTRINSIC vec<fix_type<T>, N> make_vector(cvals_t<T, Values...>)
 {
     return make_vector<T>(Values...);
 }
