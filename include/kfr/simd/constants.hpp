@@ -291,7 +291,7 @@ constexpr inline subtype<T> c_e = subtype<T>(2.718281828459045235360287471352662
  * @tparam T The numeric type.
  */
 template <typename T>
-constexpr inline unsigned c_mantissa_bits = sizeof(subtype<T>) == 32 ? 23 : 52;
+constexpr inline unsigned c_mantissa_bits = sizeof(subtype<T>) == 4 ? 23 : 52;
 
 /**
  * @brief The bitmask for the mantissa of the floating-point representation.
