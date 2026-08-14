@@ -68,9 +68,25 @@ Compiler support:
 
 KFR has no external dependencies except for a C++20-compatible standard C++ library. CMake is used as the build system.
 
-Clang is highly recommended and proven to provide the best performance for KFR. You can use Clang as a drop-in replacement for both GCC on Linux and MSVC on Windows. On macOS, Clang is the default compiler and included in the official Xcode toolchain.
+KFR supports all major compilers, as covered by CI tests. Clang and GCC provide the best performance; performance may be lower with MSVC.
 
-_Note_: ARM/AArch64/RISC-V support and building the DFT module currently requires Clang due to internal compiler errors and a lack of some optimizations in GCC and MSVC.
+Clang can be used to build Visual Studio projects, either for selected targets or as the primary compiler, while maintaining full compatibility with code built by Visual Studio.
+
+ARM, ARM64, and RISC-V targets require Clang or GCC.
+
+| Platform | ABI / compiler   | Compiler command | Support             | Performance         |
+|----------|------------------|------------------|---------------------|---------------------|
+| Linux    | GCC              | `g++`            | ✅ Supported         | ✅ Full performance  |
+| Linux    | Clang            | `clang++`        | ✅ Supported         | ✅ Full performance  |
+| macOS    | Clang            | `clang++`        | ✅ Supported         | ✅ Full performance  |
+| Android  | Clang            | `clang++`        | ✅ Supported         | ✅ Full performance  |
+| iOS      | Clang            | `clang++`        | ✅ Supported         | ✅ Full performance  |
+| Windows  | MSVC ABI / MSVC  | `cl.exe`         | ✅ Supported on x86* | ⚠️ Lower performance |
+| Windows  | MSVC ABI / Clang | `clang-cl.exe`   | ✅ Supported         | ✅ Full performance  |
+| Windows  | MinGW / GCC      | `g++.exe`        | ✅ Supported         | ✅ Full performance  |
+| Windows  | MinGW / Clang    | `clang++.exe`    | ✅ Supported         | ✅ Full performance  |
+
+\* MSVC support is limited to x86 and x86-64 targets.
 
 :arrow_right: See [Installation](docs/docs/installation.md) docs for more details
 
