@@ -126,7 +126,7 @@ or `OFF` during configuration, for example
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `KFR_ENABLE_DSP` | `ON` | Build and export `kfr_dsp`, which provides filters, resampling, and other DSP algorithms. |
-| `KFR_ENABLE_DFT` | `ON` with Clang; `OFF` otherwise | Build and export `kfr_dft`, including FFT, DFT, convolution, and related algorithms. |
+| `KFR_ENABLE_DFT` | `ON` with Clang or GCC; `OFF` with MSVC | Build and export `kfr_dft`, including FFT, DFT, convolution, and related algorithms. |
 | `KFR_ENABLE_IO` | `ON` | Build and export `kfr_io`. |
 | `KFR_ENABLE_AUDIO` | `ON` | Build and export `kfr_audio`. It requires both DSP and I/O to be enabled. |
 | `KFR_ENABLE_CAPI_BUILD` | `OFF` | Build and install the `kfr_capi` shared C API library. It requires `KFR_ENABLE_DFT=ON`. |

@@ -1,8 +1,9 @@
 # Building KFR with Clang
 
-Clang is the recommended compiler for KFR. It provides the best-supported path
-for the DFT module and is the compiler used by KFR's Linux and Windows CI builds.
-KFR requires a compiler with C++20 support; Clang 11 or newer is supported.
+Since KFR 7.1, KFR supports Clang, GCC, and MSVC. Clang is recommended when
+maximum performance is required, particularly for DFT and other complex
+algorithms; MSVC builds may provide lower performance for these workloads.
+KFR requires a compiler with C++20 support; Clang 12 or newer is supported.
 
 This page explains how to install Clang and make CMake select it reliably. For
 complete KFR build, installation, and integration instructions, see
@@ -286,9 +287,10 @@ configure a clean build directory, and select `clang-cl` for both C and C++.
 
 ### The DFT module is disabled
 
-`KFR_ENABLE_DFT` defaults to `ON` for Clang builds and `OFF` for other
-compilers. Confirm that CMake detected Clang, then configure explicitly with
-`-DKFR_ENABLE_DFT=ON` when you want the DFT, FFT, and convolution targets.
+DFT is supported with Clang, GCC, and MSVC since KFR 7.1. `KFR_ENABLE_DFT`
+defaults to `ON` for Clang and GCC builds and `OFF` for MSVC builds. Configure
+explicitly with `-DKFR_ENABLE_DFT=ON` when you want the DFT, FFT, and
+convolution targets.
 
 ### A cross build cannot find headers or libraries
 

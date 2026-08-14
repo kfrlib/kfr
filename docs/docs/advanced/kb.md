@@ -122,14 +122,11 @@ When using CMake, `CMAKE_POSITION_INDEPENDENT_CODE` should be set to `ON`.
 Configure PIC for source builds whenever the resulting static libraries will be
 linked into a shared library.
 
-### Building KFR DFT fails with vcpkg on Linux
+### DFT compiler support
 
-KFR's DFT module is supported with Clang. GCC and MSVC have compiler limitations
-that affect this code path.
-
-#### Solution
-
-[See Building with Clang on Linux via vcpkg](#building-with-clang-on-linux-via-vcpkg) for a workaround.
+Since KFR 7.1, the DFT module supports Clang, GCC, and MSVC. MSVC builds may
+provide lower performance, particularly for DFT and other complex algorithms.
+Use Clang or GCC when maximum performance is required.
 
 ### Build fails on Windows with Unknown Compile Options or "could not open stdc++.lib"
 
