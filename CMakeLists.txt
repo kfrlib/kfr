@@ -212,7 +212,7 @@ endif ()
 option(ENABLE_TESTS "Enable KFR tests" OFF)
 cmake_dependent_option(ENABLE_EXAMPLES "Enable KFR examples" ON "ENABLE_TESTS"
                        OFF)
-if (CLANG)
+if (NOT MSVC OR CLANG)
     option(KFR_ENABLE_DFT "Enable DFT and related algorithms." ON)
 else ()
     option(KFR_ENABLE_DFT "Enable DFT and related algorithms." OFF)
