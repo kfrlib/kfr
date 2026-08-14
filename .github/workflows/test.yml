@@ -180,7 +180,7 @@ jobs:
         set PATH=C:\sde;%PATH%
         ci\run.cmd build-release -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_MULTIARCH=ON -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release
 
-  windows2025-vs2026-amd64:
+  windows2025-msvc2026-x86_64:
     runs-on: windows-2025-vs2026
     steps:
     - name: Checkout
