@@ -1757,7 +1757,7 @@ KFR_INTRINSIC simd<double, 4> simd_vec_shuffle(simd_t<double, 4>, const simd<dou
             universal_shuffle(simd_t<double, 2>{}, simd_get_low(simd_t<double, 4>{}, x), csizes<I0, I1>);
         return simd_from_halves(simd_t<double, 4>{}, tmp, tmp);
     }
-    else if constexpr (cmaxof(csizes<I0, I1>) < 4 && cminof(csizes<I2, I3>) >= 4)
+    else if constexpr (cmaxof(csizes<I0, I1>) < 2 && cminof(csizes<I2, I3>) >= 2)
     {
         if constexpr (csizes<I0, I1, I2, I3>.equal(csizes<I0, I1, I2 + 2, I3 + 2>))
         {
@@ -1769,7 +1769,7 @@ KFR_INTRINSIC simd<double, 4> simd_vec_shuffle(simd_t<double, 4>, const simd<dou
                 simd_t<double, 4>{},
                 universal_shuffle(simd_t<double, 2>{}, simd_get_low(simd_t<double, 4>{}, x), csizes<I0, I1>),
                 universal_shuffle(simd_t<double, 2>{}, simd_get_high(simd_t<double, 4>{}, x),
-                                  csizes<I2, I3>));
+                                  csizes<I2 - 2, I3 - 2>));
         }
     }
     else
