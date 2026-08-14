@@ -28,6 +28,7 @@
 KFR_PRAGMA_GNU(GCC diagnostic push)
 KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wimplicit-fallthrough")
 KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wunused-function")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wdeprecated-declarations")
 
 #ifndef KFR_DISABLE_WAV
 #define DR_WAV_NO_STDIO
