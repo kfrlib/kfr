@@ -180,6 +180,62 @@ TEST_CASE("shr")
         });
 }
 
+TEST_CASE("byte shifts preserve lane semantics")
+{
+    // The byte implementations use 16-bit shifts internally. These values
+    // exercise both bytes of every 16-bit word and negative signed operands.
+    const vec<u8, 16> unsigned_value(u8(0x81));
+    const vec<i8, 16> signed_value(i8(-1));
+    const vec<i8, 16> signed_left_value(i8(1));
+
+    for (unsigned shift = 0; shift < 8; ++shift)
+    {
+        CHECK_THAT((unsigned_value << shift),
+                   DeepMatcher(vec<u8, 16>(u8(u8(0x81) << shift))));
+        CHECK_THAT((unsigned_value >> shift),
+                   DeepMatcher(vec<u8, 16>(u8(u8(0x81) >> shift))));
+        CHECK_THAT((signed_left_value << shift),
+               DeepMatcher(vec<i8, 16>(i8(u8(1u << shift)))));
+        CHECK_THAT((signed_value >> shift), DeepMatcher(vec<i8, 16>(i8(-1))));
+    }
+
+    // A signed byte must remain sign-filled once the shift reaches the lane
+    // width. This specifically catches implementations that derive the sign
+    // mask by shifting a 16-bit 0x8080 pattern.
+    CHECK_THAT((signed_value >> unsigned(8)), DeepMatcher(vec<i8, 16>(i8(-1))));
+}
+
+TEST_CASE("signed 64-bit right shift keeps the signed result type")
+{
+    const vec<i64, 2> value(i64(-3));
+    CHECK_THAT((value >> unsigned(1)), DeepMatcher(vec<i64, 2>(i64(-2))));
+}
+
+TEST_CASE("integer division and modulo by zero are defined")
+{
+    const vec<i32, 4> value(7);
+    const vec<i32, 4> zero(0);
+    CHECK_THAT((value / zero), DeepMatcher(vec<i32, 4>(0)));
+    CHECK_THAT((value % zero), DeepMatcher(vec<i32, 4>(0)));
+}
+
+TEST_CASE("integer arithmetic wraps at the element width")
+{
+    const vec<u8, 16> umax_value((u8)255);
+    const vec<u8, 16> one((u8)1);
+    CHECK_THAT((umax_value + one), DeepMatcher(vec<u8, 16>((u8)0)));
+
+    const vec<i32, 4> imax_value(std::numeric_limits<i32>::max());
+    CHECK_THAT((imax_value + vec<i32, 4>(1)), DeepMatcher(vec<i32, 4>(std::numeric_limits<i32>::min())));
+}
+
+TEST_CASE("integer shifts at or above the element width produce zero")
+{
+    const vec<u8, 16> value((u8)0xff);
+    CHECK_THAT((value << unsigned(8)), DeepMatcher(vec<u8, 16>((u8)0)));
+    CHECK_THAT((value >> unsigned(8)), DeepMatcher(vec<u8, 16>((u8)0)));
+}
+
 TEST_CASE("eq")
 {
     test_function2(

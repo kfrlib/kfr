@@ -298,5 +298,69 @@ TEST_CASE("test_basic")
     CHECK_THAT((inrange(pack(1, 2, 3), 1, 2)), DeepMatcher(make_mask<int>(true, true, false)));
     CHECK_THAT((inrange(pack(1, 2, 3), 1, 1)), DeepMatcher(make_mask<int>(true, false, false)));
 }
+
+#ifndef KFR_VEC_EXT
+#if defined(KFR_ARCH_AVX)
+
+// Directly exercises intr::simd_vec_shuffle(simd_t<float, 8>, ...) (backend_generic.hpp, AVX -> AVX float8).
+// All four constexpr branches of that overload are covered:
+//   * branch 1: low half duplicated (cmaxof(low)<4 && low.equal(high))
+//   * branch 2a: in-lane _mm256_shuffle_ps (cmaxof(low)<4 && cminof(high)>=4 && equal(I,I+4))
+//   * branch 2b: independent low/high shuffles (cmaxof(low)<4 && cminof(high)>=4 && !equal)
+//   * branch 3: cross-lane permute2f128+permutevar+blend (else)
+TEST_CASE("simd_vec_shuffle float8 direct")
+{
+    const vec<float, 8> x{ 0, 1, 2, 3, 4, 5, 6, 7 };
+
+    // branch 1: duplicate the low-half shuffle into both lanes
+    CHECK_THAT((vec<float, 8>(
+                   intr::simd_vec_shuffle(intr::simd_t<float, 8>{}, x.v, csizes<0, 1, 2, 3, 0, 1, 2, 3>))),
+               DeepMatcher(vec<float, 8>{ 0, 1, 2, 3, 0, 1, 2, 3 }));
+
+    // branch 2a: in-lane _mm256_shuffle_ps (high == low + 4)
+    CHECK_THAT((vec<float, 8>(
+                   intr::simd_vec_shuffle(intr::simd_t<float, 8>{}, x.v, csizes<1, 0, 3, 2, 5, 4, 7, 6>))),
+               DeepMatcher(vec<float, 8>{ 1, 0, 3, 2, 5, 4, 7, 6 }));
+
+    // branch 2b: independent low/high shuffles (high indices >= 4 but not low + 4)
+    CHECK_THAT((vec<float, 8>(
+                   intr::simd_vec_shuffle(intr::simd_t<float, 8>{}, x.v, csizes<0, 1, 2, 3, 5, 4, 7, 6>))),
+               DeepMatcher(vec<float, 8>{ 0, 1, 2, 3, 5, 4, 7, 6 }));
+
+    // branch 3: cross-lane (low indices reach into the high lane)
+    CHECK_THAT((vec<float, 8>(
+                   intr::simd_vec_shuffle(intr::simd_t<float, 8>{}, x.v, csizes<4, 5, 6, 7, 0, 1, 2, 3>))),
+               DeepMatcher(vec<float, 8>{ 4, 5, 6, 7, 0, 1, 2, 3 }));
+}
+
+// Directly exercises intr::simd_vec_shuffle(simd_t<double, 4>, ...) (backend_generic.hpp, AVX -> AVX
+// double4). All four constexpr branches of that overload are covered:
+//   * branch 1: low half duplicated (cmaxof(low)<2 && low.equal(high))
+//   * branch 2a: in-lane _mm256_shuffle_pd (cmaxof(low)<2 && cminof(high)>=2 && equal(I,I+2))
+//   * branch 2b: independent low/high shuffles (cmaxof(low)<2 && cminof(high)>=2 && !equal)
+//   * branch 3: cross-lane permute2f128+permutevar+blend (else)
+TEST_CASE("simd_vec_shuffle double4 direct")
+{
+    const vec<double, 4> x{ 0, 1, 2, 3 };
+
+    // branch 1: duplicate the low-half shuffle into both lanes
+    CHECK_THAT((vec<double, 4>(intr::simd_vec_shuffle(intr::simd_t<double, 4>{}, x.v, csizes<0, 1, 0, 1>))),
+               DeepMatcher(vec<double, 4>{ 0, 1, 0, 1 }));
+
+    // branch 2a: in-lane _mm256_shuffle_pd (high == low + 2)
+    CHECK_THAT((vec<double, 4>(intr::simd_vec_shuffle(intr::simd_t<double, 4>{}, x.v, csizes<1, 0, 3, 2>))),
+               DeepMatcher(vec<double, 4>{ 1, 0, 3, 2 }));
+
+    // branch 2b: independent low/high shuffles (high indices >= 2 but not low + 2)
+    CHECK_THAT((vec<double, 4>(intr::simd_vec_shuffle(intr::simd_t<double, 4>{}, x.v, csizes<0, 1, 3, 2>))),
+               DeepMatcher(vec<double, 4>{ 0, 1, 3, 2 }));
+
+    // branch 3: cross-lane (low indices reach into the high lane)
+    CHECK_THAT((vec<double, 4>(intr::simd_vec_shuffle(intr::simd_t<double, 4>{}, x.v, csizes<2, 3, 0, 1>))),
+               DeepMatcher(vec<double, 4>{ 2, 3, 0, 1 }));
+}
+
+#endif // KFR_ARCH_AVX
+#endif // KFR_VEC_EXT
 } // namespace KFR_ARCH_NAME
 } // namespace kfr
