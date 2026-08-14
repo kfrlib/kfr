@@ -782,7 +782,7 @@ struct bitrev_generator
 
     uint32_t next(uint32_t i)
     {
-        uint32_t k = tzcnt_u32(i);
+        uint32_t k = intr::tzcnt_u32(i);
         j ^= M - (M >> (k + 1));
         return j;
     }

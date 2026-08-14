@@ -186,23 +186,26 @@ KFR_INTRINSIC void br_small(uint32_t log2n, std::span<complex<T>, Extent> data)
     }
 }
 
-#if defined(_MSC_VER) && !defined(__clang__)
 KFR_INTRINSIC uint32_t lzcnt_u32(uint32_t x) noexcept
 {
+#if defined(_MSC_VER) && !defined(__clang__)
     unsigned long index;
     _BitScanReverse(&index, x);
     return 31 - (unsigned int)index;
+#else
+    return __builtin_clz(x);
+#endif
 }
 KFR_INTRINSIC uint32_t tzcnt_u32(uint32_t x) noexcept
 {
+#if defined(_MSC_VER) && !defined(__clang__)
     unsigned long index;
     _BitScanForward(&index, x);
     return (uint32_t)index;
-}
 #else
-#define lzcnt_u32(x) __builtin_clz(x)
-#define tzcnt_u32(x) __builtin_ctz(x)
+    return __builtin_ctz(x);
 #endif
+}
 
 template <typename T, size_t group_n>
 KFR_INTRINSIC void br_process_idx(size_t i, size_t j, size_t numgroups_minus1, complex<T>* data,

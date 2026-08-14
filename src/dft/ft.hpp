@@ -3145,7 +3145,7 @@ template <std::unsigned_integral T>
 KFR_INTRINSIC int countr_zero(T x) noexcept
 {
 #if defined(__GNUC__) || defined(__clang__)
-    __builtin_assume(x != 0); // Caller must ensure x is non-zero
+    KFR_ASSUME(x != 0);
     if constexpr (sizeof(T) <= sizeof(unsigned int))
         return __builtin_ctz(static_cast<unsigned int>(x));
     else if constexpr (sizeof(T) <= sizeof(unsigned long))
