@@ -189,7 +189,7 @@ KFR_INTRINSIC i32sse shr(const i32sse& x, unsigned y) { return _mm_srai_epi32(x.
 
 KFR_INTRINSIC u8sse shl(const u8sse& x, unsigned y)
 {
-#ifdef __SSE3__
+#ifdef KFR_ARCH_SSSE3
     __m128i cnt  = _mm_cvtsi32_si128((int)y);
     __m128i x0   = _mm_sll_epi16(x.v, cnt);
     __m128i mask = _mm_sll_epi16(_mm_set1_epi32(-1), cnt);
