@@ -152,6 +152,8 @@ KFR_INTRINSIC void write(cunaligned_t, f32* ptr, const f32x2& x)
 #endif
 }
 
+#if !defined(KFR_COMPILER_GCC)
+
 KFR_INTRINSIC void write(cunaligned_t, u8* ptr, const u8x2& x) { *reinterpret_cast<u16*>(ptr) = x.v.whole; }
 KFR_INTRINSIC void write(cunaligned_t, i8* ptr, const i8x2& x) { *reinterpret_cast<u16*>(ptr) = x.v.whole; }
 KFR_INTRINSIC void write(cunaligned_t, u8* ptr, const u8x4& x) { *reinterpret_cast<u32*>(ptr) = x.v.whole; }
@@ -164,6 +166,8 @@ KFR_INTRINSIC void write(cunaligned_t, u16* ptr, const u16x4& x) { *reinterpret_
 KFR_INTRINSIC void write(cunaligned_t, i16* ptr, const i16x4& x) { *reinterpret_cast<u64*>(ptr) = x.v.whole; }
 KFR_INTRINSIC void write(cunaligned_t, u32* ptr, const u32x2& x) { *reinterpret_cast<u64*>(ptr) = x.v.whole; }
 KFR_INTRINSIC void write(cunaligned_t, i32* ptr, const i32x2& x) { *reinterpret_cast<u64*>(ptr) = x.v.whole; }
+
+#endif
 
 KFR_INTRINSIC void write(cunaligned_t, f32* ptr, const f32sse& x) { _mm_storeu_ps(ptr, x.v); }
 KFR_INTRINSIC void write(cunaligned_t, f64* ptr, const f64sse& x) { _mm_storeu_pd(ptr, x.v); }
