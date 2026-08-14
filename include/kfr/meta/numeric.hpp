@@ -171,7 +171,7 @@ using utype =
     typename compound_type_traits<T>::template deep_rebind<unsigned_type<typebits<deep_subtype<T>>::bits>>;
 
 template <typename T>
-using uitype = std::conditional_t<is_i_class<deep_subtype<T>>, T, utype<T>>;
+using uitype = std::conditional_t<is_f_class<deep_subtype<T>>, utype<T>, T>;
 
 template <typename T>
 using fsubtype = ftype<subtype<T>>;
