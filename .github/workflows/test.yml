@@ -180,6 +180,24 @@ jobs:
         set PATH=C:\sde;%PATH%
         ci\run.cmd build-release -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_MULTIARCH=ON -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release
 
+  windows2025-vs2026-amd64:
+    runs-on: windows-2025-vs2026
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Tests
+      env:
+        SDE_WINDOWS: ${{ secrets.SDE_WINDOWS }}
+        TMP_DIR: ${{ runner.temp }}
+      shell: cmd
+      run: |
+        choco install ninja --no-progress -y
+        curl -o "%TMP_DIR%/sde.zip" -L %SDE_WINDOWS%
+        "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "%TMP_DIR%/sde.zip"
+        call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        set PATH=C:\sde;%PATH%
+        ci\run.cmd build-release -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_MULTIARCH=ON -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release
+
   windows2022-clang-android-arm:
     runs-on: windows-2022
     steps:
