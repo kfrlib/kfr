@@ -8,6 +8,8 @@ add_kfr_library(
 function (dft_compile_options LIB)
     if (MSVC AND CLANG)
         target_compile_options(${LIB} PRIVATE SHELL:-Xclang -ffp-contract=fast)
+    elseif (MSVC)
+        target_compile_options(${LIB} PRIVATE /fp:contract)
     else ()
         target_compile_options(${LIB} PRIVATE -ffp-contract=fast)
     endif ()
