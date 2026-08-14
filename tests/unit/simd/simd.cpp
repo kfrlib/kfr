@@ -132,6 +132,7 @@ TEST_CASE("partial read/write")
 
     for (size_t count = 1; count <= width; ++count)
     {
+        CAPTURE(count);
         const vec<i32, width> value = partial_read<width>(source + 1, count);
         for (size_t i = 0; i < count; ++i)
             CHECK(value[i] == source[i + 1]);
@@ -141,8 +142,10 @@ TEST_CASE("partial read/write")
         partial_write(destination + 1, value, count);
 
         CHECK(destination[0] == -1);
-        for (size_t i = 0; i < width; ++i)
+        for (size_t i = 0; i < width; ++i) {
+            CAPTURE(i);
             CHECK(destination[i + 1] == (i < count ? source[i + 1] : -1));
+        }
         CHECK(destination[width + 1] == -1);
     }
 

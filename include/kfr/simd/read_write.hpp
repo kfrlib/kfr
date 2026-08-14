@@ -193,12 +193,15 @@ KFR_INTRINSIC void partial_write(T* dest, const vec<T, N>& value, size_t count)
                 });
         return;
     }
-    cswitch(csizeseq_t<N, 1>{}, count,
-            [&](auto width)
-            {
-                constexpr size_t width_ = KFR_CVAL(width);
-                write(dest, slice<0, width_>(value));
-            });
+    else
+    {
+        cswitch(csizeseq_t<N, 1>{}, count,
+                [&](auto width)
+                {
+                    constexpr size_t width_ = KFR_CVAL(width);
+                    write(dest, slice<0, width_>(value));
+                });
+    }
 }
 
 namespace internal
