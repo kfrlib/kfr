@@ -37,6 +37,20 @@ jobs:
           pip install mkdocs mkdocs-material mkdocs-github-admonitions-plugin mkdocs-minify-plugin mkdocs-redirects
           pip install https://github.com/kfrlib/cxxdox/releases/download/v0.2.0/mkdocs_cxxdox-0.2.0-py3-none-manylinux_2_17_x86_64.whl
 
+      # The libclang bundled in the cxxdox wheel has no resource directory, so
+      # clang's builtin headers (stddef.h, stdarg.h, ...) are missing and every
+      # header that pulls in <cstddef>/<cstdio> fails to parse. Install the
+      # matching LLVM 21 builtin headers and expose them via CPATH.
+      - name: Install clang builtin headers
+        run: |
+          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key \
+            | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc > /dev/null
+          echo "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-21 main" \
+            | sudo tee /etc/apt/sources.list.d/llvm-21.list
+          sudo apt-get update
+          sudo apt-get install -y libclang-common-21-dev
+          echo "CPATH=$(echo /usr/lib/llvm-21/lib/clang/21*/include)" >> "$GITHUB_ENV"
+
       - name: Inject main.html
         env:
           MKDOCS_MAIN: ${{ secrets.MKDOCS_MAIN }}
