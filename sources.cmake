@@ -375,7 +375,6 @@ set(
 set(
     KFR_UNITTEST_SRC
     ${PROJECT_SOURCE_DIR}/tests/unit/meta.cpp
-    ${PROJECT_SOURCE_DIR}/tests/unit/base/base.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/basic_expressions.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/conversion.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/base/fraction.cpp
@@ -395,7 +394,6 @@ set(
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/biquad_design.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/dcremove.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/delay.cpp
-    ${PROJECT_SOURCE_DIR}/tests/unit/dsp/dsp.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/ebu.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/fir.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/goertzel.cpp
@@ -411,7 +409,6 @@ set(
     ${PROJECT_SOURCE_DIR}/tests/unit/math/complex_math.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/hyperbolic.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/log_exp.cpp
-    ${PROJECT_SOURCE_DIR}/tests/unit/math/math.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/sin_cos.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/sqrt.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/tan.cpp

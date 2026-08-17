@@ -5,7 +5,7 @@
  */
 
 #include <kfr/base/fraction.hpp>
-#include <kfr/io.hpp>
+#include <kfr/io/tostring.hpp>
 
 namespace kfr
 {

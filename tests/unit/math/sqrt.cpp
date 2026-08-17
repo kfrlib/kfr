@@ -4,7 +4,6 @@
  * See LICENSE.txt for details
  */
 
-#include <kfr/test/test.hpp>
 
 #include <kfr/math/sqrt.hpp>
 

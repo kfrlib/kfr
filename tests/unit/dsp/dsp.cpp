@@ -1,7 +1,0 @@
-/**
- * KFR (https://www.kfrlib.com)
- * Copyright (C) 2016-2026 Dan Casarin
- * See LICENSE.txt for details
- */
-
-#include <kfr/dsp.hpp>

@@ -4,7 +4,7 @@
  * See LICENSE.txt for details
  */
 
-#include "kfr/base/tensor.hpp"
+#include <kfr/base/tensor.hpp>
 #include <kfr/base/reduce.hpp>
 #include <kfr/base/simd_expressions.hpp>
 #include <kfr/base/univector.hpp>

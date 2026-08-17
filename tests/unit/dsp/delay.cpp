@@ -4,9 +4,8 @@
  * See LICENSE.txt for details
  */
 
-#include <kfr/test/test.hpp>
 
-#include <kfr/base.hpp>
+#include <kfr/base/univector.hpp>
 #include <kfr/dsp/delay.hpp>
 
 using namespace kfr;

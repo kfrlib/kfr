@@ -4,11 +4,16 @@
  * See LICENSE.txt for details
  */
 
-#include <kfr/test/test.hpp>
 
-#include <kfr/base.hpp>
+#include <kfr/base/basic_expressions.hpp>
+#include <kfr/base/generators.hpp>
+#include <kfr/base/math_expressions.hpp>
+#include <kfr/base/reduce.hpp>
+#include <kfr/base/simd_expressions.hpp>
+#include <kfr/base/univector.hpp>
 #include <kfr/dsp/dcremove.hpp>
-#include <kfr/audio.hpp>
+#include <kfr/dsp/oscillators.hpp>
+#include <kfr/math/sin_cos.hpp>
 
 using namespace kfr;
 

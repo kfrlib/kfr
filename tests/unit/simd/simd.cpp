@@ -4,7 +4,8 @@
  * See LICENSE.txt for details
  */
 
-#include <kfr/simd.hpp>
+#include <kfr/simd/vec.hpp>
+#include <kfr/simd/read_write.hpp>
 
 namespace kfr
 {

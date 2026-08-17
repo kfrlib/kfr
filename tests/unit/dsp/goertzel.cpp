@@ -4,10 +4,14 @@
  * See LICENSE.txt for details
  */
 
-#include <kfr/test/test.hpp>
 
-#include <kfr/base.hpp>
-#include <kfr/dsp.hpp>
+#include <kfr/base/generators.hpp>
+#include <kfr/base/univector.hpp>
+#include <kfr/dsp/goertzel.hpp>
+#include <kfr/dsp/oscillators.hpp>
+#include <kfr/math/complex_math.hpp>
+#include <kfr/simd/complex.hpp>
+#include <kfr/simd/constants.hpp>
 
 using namespace kfr;
 

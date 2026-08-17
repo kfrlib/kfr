@@ -4,8 +4,7 @@
  * See LICENSE.txt for details
  */
 
-#include <kfr/dsp.hpp>
-#include <kfr/test/test.hpp>
+#include <kfr/dsp/iir_design.hpp>
 
 #include <cmath>
 

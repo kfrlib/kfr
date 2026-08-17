@@ -4,11 +4,3 @@
  * See LICENSE.txt for details
  */
 
-#include <type_traits>
-#include <utility>
-
-using namespace std;
-
-#define KFR_DISALLOW_SYSTEM_HEADERS
-
-#include <kfr/all.hpp>

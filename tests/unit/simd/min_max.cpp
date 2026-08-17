@@ -6,7 +6,7 @@
 
 #include <kfr/simd/min_max.hpp>
 
-#include <kfr/io.hpp>
+#include <kfr/io/tostring.hpp>
 
 KFR_PRAGMA_MSVC(warning(push))
 KFR_PRAGMA_MSVC(warning(disable : 4146))

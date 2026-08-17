@@ -4,7 +4,11 @@
  * See LICENSE.txt for details
  */
 
-#include <kfr/io.hpp>
+#include <kfr/io/tostring.hpp>
+#include <kfr/simd/comparison.hpp>
+#include <kfr/simd/digitreverse.hpp>
+#include <kfr/simd/horizontal.hpp>
+#include <kfr/simd/read_write.hpp>
 #include <kfr/simd/shuffle.hpp>
 
 namespace kfr

@@ -4,9 +4,11 @@
  * See LICENSE.txt for details
  */
 
-#include <kfr/test/test.hpp>
 
-#include <kfr/base.hpp>
+#include <kfr/base/generators.hpp>
+#include <kfr/base/math_expressions.hpp>
+#include <kfr/base/reduce.hpp>
+#include <kfr/base/univector.hpp>
 #include <kfr/dsp/oscillators.hpp>
 
 using namespace kfr;

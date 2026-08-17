@@ -7,8 +7,10 @@
 #include <thread>
 
 #include <kfr/io/audiofile.hpp>
-#include <kfr/test/test.hpp>
-#include <kfr/base.hpp>
+#include <kfr/base/generators.hpp>
+#include <kfr/base/math_expressions.hpp>
+#include <kfr/base/reduce.hpp>
+#include <kfr/base/univector.hpp>
 
 #ifdef KFR_COMPILER_IS_MSVC
 #pragma warning(push)

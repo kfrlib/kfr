@@ -11,7 +11,7 @@
 #include <kfr/base/simd_expressions.hpp>
 #include <kfr/base/tensor.hpp>
 #include <kfr/io/tostring.hpp>
-#include <kfr/simd.hpp>
+#include <kfr/simd/vec.hpp>
 
 KFR_PRAGMA_MSVC(warning(push))
 KFR_PRAGMA_MSVC(warning(disable : 5051))

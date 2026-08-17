@@ -4,8 +4,8 @@
  * See LICENSE.txt for details
  */
 
-#include <kfr/base.hpp>
 #include <kfr/base/npy.hpp>
+#include <kfr/base/basic_expressions.hpp>
 #include <kfr/io/file.hpp>
 #include <kfr/io/tostring.hpp>
 
