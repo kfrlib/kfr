@@ -6,7 +6,7 @@ find_package(KFR CONFIG REQUIRED CMAKE_FIND_ROOT_PATH_BOTH)
 
 add_executable(kfr-app kfr-app.cpp)
 
-target_link_libraries(kfr-app kfr kfr_dsp kfr_dft kfr_io kfr_audio)
+target_link_libraries(kfr-app PRIVATE kfr kfr_dsp kfr_dft kfr_io kfr_audio)
 
 enable_testing()
 

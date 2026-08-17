@@ -36,9 +36,9 @@ if (KFR_ENABLE_DFT)
 endif ()
 
 if (MSVC)
-    link_libraries(-DEBUG)
+    add_link_options(/DEBUG)
 else ()
-    add_compile_options(-g)
+    add_compile_options(-g1)
 endif ()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -52,17 +52,22 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${PROJECT_BINARY_DIR}/bin)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/tests/cmake/")
 
+add_library(kfr_catch OBJECT
+            "${CMAKE_SOURCE_DIR}/src/thirdparty/catch/catch_amalgamated.cpp")
+target_include_directories(
+    kfr_catch PUBLIC ${CMAKE_SOURCE_DIR}/include
+                     ${CMAKE_SOURCE_DIR}/include/kfr/thirdparty/catch)
+target_compile_definitions(kfr_catch PRIVATE CATCH_AMALGAMATED_CUSTOM_MAIN)
+
 macro (add_test_executable NAME)
-    add_executable(
-        ${NAME}
-        ${ARGN}
-        "${CMAKE_SOURCE_DIR}/src/thirdparty/catch/catch_amalgamated.cpp")
+    add_executable(${NAME} ${ARGN})
     target_include_directories(
         ${NAME} PUBLIC ${CMAKE_SOURCE_DIR}/include
                        ${CMAKE_SOURCE_DIR}/include/kfr/thirdparty/catch)
-    target_compile_definitions(${NAME} PRIVATE CATCH_AMALGAMATED_CUSTOM_MAIN)
     if (CMAKE_SYSTEM_NAME STREQUAL "Android")
-        target_link_libraries(${NAME} log)
+        target_link_libraries(${NAME} PRIVATE kfr_catch log)
+    else ()
+        target_link_libraries(${NAME} PRIVATE kfr_catch)
     endif ()
 endmacro ()
 
@@ -76,7 +81,7 @@ endif ()
 
 if (KFR_ENABLE_ASMTEST)
     add_test_executable(asm_test internal/asm_test.cpp)
-    target_link_libraries(asm_test kfr)
+    target_link_libraries(asm_test PRIVATE kfr)
     target_set_arch(asm_test PRIVATE avx2)
     target_compile_definitions(asm_test PRIVATE KFR_SHOW_NOT_OPTIMIZED)
     target_compile_definitions(asm_test PRIVATE KFR_FUNCTION_IS_INTRINSIC)
@@ -100,11 +105,11 @@ if (KFR_ENABLE_DFT)
     list(APPEND ALL_TESTS_CPP dft_test.cpp)
 
     add_test_executable(dft_test dft_test.cpp)
-    target_link_libraries(dft_test kfr_dft use_arch)
+    target_link_libraries(dft_test PRIVATE kfr_dft use_arch)
 endif ()
 
 add_test_executable(audio_test audio_test.cpp)
-target_link_libraries(audio_test kfr_audio use_arch)
+target_link_libraries(audio_test PRIVATE kfr_audio use_arch)
 
 if (KFR_REGENERATE_TESTS)
     find_package(MPFR)
@@ -112,10 +117,10 @@ if (KFR_REGENERATE_TESTS)
 
     if (MPFR_FOUND AND GMP_FOUND)
         add_test_executable(generate_data internal/generate_data.cpp)
-        target_link_libraries(generate_data kfr)
         target_include_directories(generate_data PRIVATE ${MPFR_INCLUDE_DIR}
                                                          ${GMP_INCLUDE_DIR})
-        target_link_libraries(generate_data ${MPFR_LIBRARIES} ${GMP_LIBRARIES})
+        target_link_libraries(generate_data PRIVATE kfr ${MPFR_LIBRARIES}
+                              ${GMP_LIBRARIES})
         if (KFR_REGENERATE_TESTS)
             add_custom_command(
                 TARGET generate_data
@@ -129,9 +134,9 @@ endif ()
 
 add_test_executable(all_tests all_tests.cpp ${ALL_TESTS_CPP})
 target_compile_definitions(all_tests PRIVATE KFR_NO_MAIN)
-target_link_libraries(all_tests kfr use_arch kfr_dsp)
+target_link_libraries(all_tests PRIVATE kfr use_arch kfr_dsp kfr_io)
 if (KFR_ENABLE_DFT)
-    target_link_libraries(all_tests kfr_dft)
+    target_link_libraries(all_tests PRIVATE kfr_dft)
 endif ()
 
 if (NOT TARGET kfr_dsp)
@@ -143,8 +148,6 @@ endif ()
 if (NOT TARGET kfr_audio)
     message(FATAL_ERROR "KFR Audio module is not built, cannot build tests")
 endif ()
-
-target_link_libraries(all_tests kfr_io)
 
 # Snippets extracted from documentation (tests/snippets/**/*.md.cpp and
 # tests/snippets/**/*.md.c). C++ snippets use Catch2; C API snippets use
@@ -167,13 +170,12 @@ foreach (SNIPPET_FILE ${KFR_SNIPPET_FILES})
         target_include_directories(${SNIPPET_TARGET} PUBLIC ${CMAKE_SOURCE_DIR}/include)
         target_link_libraries(${SNIPPET_TARGET} PRIVATE kfr_capi)
     else ()
-        add_executable(${SNIPPET_TARGET} ${SNIPPET_FILE}
-                       "${CMAKE_SOURCE_DIR}/src/thirdparty/catch/catch_amalgamated.cpp")
+        add_executable(${SNIPPET_TARGET} ${SNIPPET_FILE} snippet_main.cpp)
         target_include_directories(
             ${SNIPPET_TARGET} PUBLIC ${CMAKE_SOURCE_DIR}/include
                                      ${CMAKE_SOURCE_DIR}/include/kfr/thirdparty/catch)
-        target_link_libraries(${SNIPPET_TARGET} PRIVATE kfr use_arch kfr_dsp
-                                                        kfr_io kfr_audio)
+        target_link_libraries(${SNIPPET_TARGET} PRIVATE kfr_catch kfr use_arch
+                                                        kfr_dsp kfr_io kfr_audio)
         if (KFR_ENABLE_DFT)
             target_link_libraries(${SNIPPET_TARGET} PRIVATE kfr_dft)
         endif ()
@@ -199,7 +201,7 @@ function (add_x86_test ARCH)
     if (KFR_ENABLE_DFT)
         target_sources(all_tests_${NAME} PRIVATE ${KFR_DFT_SRC})
     endif ()
-    target_link_libraries(all_tests_${NAME} kfr)
+    target_link_libraries(all_tests_${NAME} PRIVATE kfr)
     target_set_arch(all_tests_${NAME} PRIVATE ${ARCH})
     target_compile_definitions(all_tests_${NAME} PRIVATE KFR_NO_MAIN)
     target_compile_definitions(all_tests_${NAME} PUBLIC KFR_ENABLE_FLAC=1)

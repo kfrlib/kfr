@@ -49,6 +49,7 @@ if (EXISTS ${kfr_dsp_DBG_LIBRARY}
 
     target_link_libraries(
         kfr-app
+        PRIVATE
         debug
         ${kfr_dsp_DBG_LIBRARY}
         debug
@@ -72,6 +73,7 @@ if (EXISTS ${kfr_dsp_LIBRARY}
 
     target_link_libraries(
         kfr-app
+        PRIVATE
         optimized
         ${kfr_dsp_LIBRARY}
         optimized

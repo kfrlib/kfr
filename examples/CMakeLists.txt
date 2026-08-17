@@ -24,29 +24,29 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${PROJECT_BINARY_DIR}/bin)
 file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/svg)
 
 add_executable(biquads biquads.cpp)
-target_link_libraries(biquads kfr kfr_dsp kfr_io use_arch)
+target_link_libraries(biquads PRIVATE kfr kfr_dsp kfr_io use_arch)
 
 add_executable(iir iir.cpp)
-target_link_libraries(iir kfr kfr_dsp kfr_io use_arch)
+target_link_libraries(iir PRIVATE kfr kfr_dsp kfr_io use_arch)
 
 add_executable(window window.cpp)
-target_link_libraries(window kfr kfr_io use_arch)
+target_link_libraries(window PRIVATE kfr kfr_io use_arch)
 
 add_executable(fir fir.cpp)
-target_link_libraries(fir kfr kfr_dsp kfr_io use_arch)
+target_link_libraries(fir PRIVATE kfr kfr_dsp kfr_io use_arch)
 
 if (KFR_ENABLE_DFT)
-    target_link_libraries(fir kfr_dft use_arch)
+    target_link_libraries(fir PRIVATE kfr_dft use_arch)
     target_compile_definitions(fir PRIVATE -DHAVE_DFT)
 endif ()
 
 add_executable(sample_rate_conversion sample_rate_conversion.cpp)
-target_link_libraries(sample_rate_conversion kfr kfr_io kfr_dsp kfr_audio
+target_link_libraries(sample_rate_conversion PRIVATE kfr kfr_io kfr_dsp kfr_audio
                       use_arch)
 
 if (KFR_ENABLE_DFT)
     add_executable(dft dft.cpp)
-    target_link_libraries(dft kfr kfr_dft use_arch)
+    target_link_libraries(dft PRIVATE kfr kfr_dft use_arch)
     add_executable(ccv ccv.cpp)
-    target_link_libraries(ccv kfr kfr_dft use_arch)
+    target_link_libraries(ccv PRIVATE kfr kfr_dft use_arch)
 endif ()
