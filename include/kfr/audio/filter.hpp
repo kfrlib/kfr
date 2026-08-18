@@ -28,7 +28,9 @@
 
 #include <kfr/audio/data.hpp>
 #include <kfr/base/filter.hpp>
+#ifdef KFR_HAVE_DFT
 #include <kfr/dft/convolution.hpp>
+#endif
 #include <kfr/dsp/biquad.hpp>
 #include <kfr/dsp/fir.hpp>
 
@@ -80,6 +82,7 @@ public:
      */
     static audio_filter fir(size_t channels, const fir_params<fbase>& taps);
 
+  #ifdef KFR_HAVE_DFT
     /**
      * @brief Creates an audio filter using streaming overlap-add FFT convolution for all channels.
      * @param channels Number of audio channels.
@@ -89,6 +92,7 @@ public:
      */
     static audio_filter convolution(size_t channels, const univector_ref<const fbase>& impulse_response,
                                     size_t block_size = 1024);
+  #endif
 
     /**
      * @brief Resets the internal state of all per-channel filter instances.

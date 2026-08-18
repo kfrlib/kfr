@@ -52,12 +52,14 @@ audio_filter audio_filter::fir(size_t channels, const fir_params<fbase>& taps)
     return audio_filter(channels, [&](size_t) { return std::make_unique<fir_filter<fbase>>(taps); });
 }
 
+#ifdef KFR_HAVE_DFT
 audio_filter audio_filter::convolution(size_t channels, const univector_ref<const fbase>& impulse_response,
                                        size_t block_size)
 {
     return audio_filter(channels, [&](size_t)
                         { return std::make_unique<convolve_filter<fbase>>(impulse_response, block_size); });
 }
+#endif
 
 void audio_filter::reset()
 {

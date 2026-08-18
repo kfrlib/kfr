@@ -1324,6 +1324,7 @@ TEST_CASE("audio_filter operations")
         f.reset();
     }
 
+#ifdef KFR_HAVE_DFT
     // Convolution audio filter test
     {
         univector<fbase, 4> ir{ 1.0, 0.0, 0.0, 0.0 };
@@ -1338,6 +1339,7 @@ TEST_CASE("audio_filter operations")
 
         f.reset();
     }
+#endif
 }
 
 #ifndef KFR_NO_MAIN
