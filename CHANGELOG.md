@@ -1,5 +1,50 @@
 # Changelog
 
+## 7.1.0
+
+#### Added
+
+* `ngfft`: new low-overhead FFT API with manual memory management
+* GCC and MSVC support for DFT
+* `filter::apply_zeros` function
+* `operator==` for `portable_vec`
+* `reset()` support for stateful DSP expressions
+* `KFR_BASETYPE_F32` cmake option for 32-bit `fbase`
+* Automatic snippet testing via cxxdox
+* Additional tests, including generic backend
+
+#### Changed
+
+* FFT performance for power-of-two sizes has been improved by up to 40%
+* FFT performance for sizes with many prime factors has been improved by switching to a more optimized algorithm
+* Compiler support information updated
+* Code documentation (Doxygen-style) now has near 100% coverage
+* Major documentation update with dozens of new articles and automatically tested code examples
+* MSVC: Handle DFT compilation options correctly
+* Refactor Python plotting functionality
+* `expression_reduce` now accepts parameters by value
+* [Breaking change] `uitype` meaning changed to convert only from float to unsigned integer
+* Update cxxdox to 0.2.1
+
+#### Fixed
+
+* Fix bugs and improve performance in generic backend
+* Avoid unaligned integer access in SIMD operations
+* Fix signed/unsigned shift
+* Fix NaN handling in generic backend
+* Fix return type in `make_vector` function to use `fix_type`
+* Fix `arange` function
+* Fix `isnegative` function
+* Fix `cartesian` function
+* Fix `expression_concatenate`
+* Fix `audio_data` interleaved constructor
+* Fix incorrect comparison in `c_mantissa_bits`
+* Add missing `config.h` include in `capi.h`
+* Fix `sample_rate_converter`; add tests
+* Don't emit deprecation warning for template instantiation
+* Add `-Wno-nan-infinity-disabled` compiler flag for compatibility
+* Remove Windows build script for CAPI (use CMake only)
+
 ## 7.0.1
 
 #### Added
