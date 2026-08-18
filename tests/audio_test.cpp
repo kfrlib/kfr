@@ -6,11 +6,14 @@
 
 #include <thread>
 
+#include <kfr/dsp/biquad_design.hpp>
+#include <kfr/dsp/fir_design.hpp>
 #include <kfr/dsp/oscillators.hpp>
 #include <kfr/dsp/units.hpp>
 #include <kfr/test/test.hpp>
 #include <kfr/audio/decoder.hpp>
 #include <kfr/audio/encoder.hpp>
+#include <kfr/audio/filter.hpp>
 
 namespace Catch
 {
@@ -1269,6 +1272,71 @@ TEST_CASE("encode and decode")
                 }
             }
         }
+    }
+}
+
+TEST_CASE("audio_filter operations")
+{
+    using Catch::Approx;
+
+    // FIR audio filter test
+    {
+        univector<fbase, 3> taps{ 0.25, 0.5, 0.25 };
+        audio_filter f = audio_filter::fir(2, taps);
+
+        audio_data_planar input(2, 4, fbase(0.0));
+        input.channel(0)[0] = 1.0;
+        input.channel(1)[0] = 2.0;
+
+        audio_data_planar output = input.clone();
+        f.apply(output);
+
+        CHECK(output.channel(0)[0] == Approx(0.25));
+        CHECK(output.channel(0)[1] == Approx(0.5));
+        CHECK(output.channel(0)[2] == Approx(0.25));
+        CHECK(output.channel(0)[3] == Approx(0.0));
+
+        CHECK(output.channel(1)[0] == Approx(0.5));
+        CHECK(output.channel(1)[1] == Approx(1.0));
+        CHECK(output.channel(1)[2] == Approx(0.5));
+        CHECK(output.channel(1)[3] == Approx(0.0));
+
+        // Test reset
+        f.reset();
+        audio_data_planar out2 = input.clone();
+        f.apply(out2);
+        CHECK(out2.channel(0)[0] == Approx(0.25));
+        CHECK(out2.channel(0)[1] == Approx(0.5));
+    }
+
+    // IIR audio filter test
+    {
+        biquad_section<fbase> bq = biquad_lowpass<fbase>(0.1, 0.7);
+        audio_filter f           = audio_filter::iir(2, bq);
+
+        audio_data_planar input(2, 16, fbase(1.0));
+        audio_data_planar output = input.clone();
+        f.apply(output);
+        CHECK(output.channels == 2);
+        CHECK(output.size == 16);
+        CHECK(output.channel(0)[0] == Approx(output.channel(1)[0]));
+
+        f.reset();
+    }
+
+    // Convolution audio filter test
+    {
+        univector<fbase, 4> ir{ 1.0, 0.0, 0.0, 0.0 };
+        audio_filter f = audio_filter::convolution(2, ir.slice(), 128);
+
+        audio_data_planar input(2, 8, fbase(1.0));
+        audio_data_planar output = input.clone();
+        f.apply(output);
+        CHECK(output.channel(0)[0] == Approx(1.0));
+        CHECK(output.channel(0)[1] == Approx(1.0));
+        CHECK(output.channel(1)[0] == Approx(1.0));
+
+        f.reset();
     }
 }
 

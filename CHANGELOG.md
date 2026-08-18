@@ -11,6 +11,7 @@
 * `reset()` support for stateful DSP expressions
 * `KFR_BASETYPE_F32` cmake option for 32-bit `fbase`
 * New member functions and type aliases for `audio_data`: `apply_gain_dB`, `normalize`, `clamp`, `to_mono`, `to_interleaved`, `to_planar`, `select_channel`, `select_channels`, and `clone`
+* `audio_filter` for independent multi-channel FIR, IIR, and convolution filtering of planar `audio_data`
 * Automatic snippet testing via cxxdox
 * Additional tests, including generic backend
 

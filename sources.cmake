@@ -24,6 +24,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/audio/data.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/audio/decoder.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/audio/encoder.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/audio/filter.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/audio/io.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/basic_expressions.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/base/conversion.hpp
@@ -306,6 +307,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include/kfr/audio/data.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/audio/decoder.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/audio/encoder.hpp
+    ${PROJECT_SOURCE_DIR}/include/kfr/audio/filter.hpp
     ${PROJECT_SOURCE_DIR}/include/kfr/audio/io.hpp
 )
 
@@ -361,6 +363,7 @@ set(
     ${PROJECT_SOURCE_DIR}/src/audio/data.cpp
     ${PROJECT_SOURCE_DIR}/src/audio/decoder.cpp
     ${PROJECT_SOURCE_DIR}/src/audio/encoder.cpp
+    ${PROJECT_SOURCE_DIR}/src/audio/filter.cpp
     ${PROJECT_SOURCE_DIR}/src/audio/flac_coder.cpp
     ${PROJECT_SOURCE_DIR}/src/audio/io.cpp
     ${PROJECT_SOURCE_DIR}/src/audio/mf_coder.cpp

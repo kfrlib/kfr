@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 add_kfr_library(
     NAME kfr_audio
     SOURCES ${KFR_AUDIO_SRC}
-    PUBLIC_LIBRARIES kfr_io kfr_dsp)
+    PUBLIC_LIBRARIES kfr_io kfr_dsp kfr_dft)
 
 target_include_directories(kfr_audio
                            PRIVATE ${PROJECT_SOURCE_DIR}/src/thirdparty)

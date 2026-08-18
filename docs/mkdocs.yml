@@ -345,6 +345,7 @@ nav:
       - Convolution filter details: dft/convolution.md
   - Audio & I/O:
       - Audio buffers and formats: audio_io/audio_data.md
+      - Multi-channel audio filtering: audio_io/audio_filter.md
       - audio_io/read_audio.md
       - audio_io/file_support.md
       - audio_io/plot.md

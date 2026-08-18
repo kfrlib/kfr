@@ -169,29 +169,9 @@ IIR states expose internal delay registers, but KFR does not provide a public â€
 L0, R0, L1, R1, ...
 ```
 
-which mixes channel histories and is incorrect for independent channel filtering. Use one independent filter or state object per channel. Process planar channel buffers, then interleave them again if required:
+which mixes channel histories and is incorrect for independent channel filtering.
 
-```c++
-|||TEST_CASE("filters.md/multichannel filtering")
-|||{
-|||univector<float> taps{ 0.25f, 0.5f, 0.25f };
-|||size_t frames = 4;
-|||univector<float> interleaved{ 1, 10, 2, 20, 3, 30, 4, 40 };
-|||univector<float> left(frames), right(frames);
-float* channels[] = { left.data(), right.data() };
-deinterleave(channels, interleaved.data(), 2, frames);
-
-filter_fir<float> left_filter{ taps };
-filter_fir<float> right_filter{ taps };
-left_filter.apply(left);
-right_filter.apply(right);
-
-const float* processed[] = { left.data(), right.data() };
-interleave(interleaved.data(), processed, 2, frames);
-|||}
-```
-
-Retain one filter instance per channel across streaming blocks. This preserves each channel's history without coupling it to the other channels. See [Audio utilities](misc.md) for planar/interleaved conversion details.
+For planar [[`audio_data_planar`:nosig]], use the audio module's [[`audio_filter`:nosig]], which creates and retains one independent filter per channel. See [Multi-channel audio filtering](../audio_io/audio_filter.md). For custom layouts or scalar DSP code, retain one independent [[`filter<T>`:nosig]] instance or state object per channel. See [Audio utilities](misc.md) for planar/interleaved conversion details.
 
 ## See also
 

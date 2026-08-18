@@ -179,6 +179,46 @@ each logical channel. For interleaved data they call it **once** for the whole
 interleaved buffer, not once per channel. Use [[`audio_data<IsInterleaved>::channel`:noscope]]
 when an operation must address individual interleaved channels.
 
+## Processing, mixing, and copies
+
+[[`audio_data<IsInterleaved>::apply_gain_dB`:noscope]] applies an amplitude gain
+specified in decibels, and [[`audio_data<IsInterleaved>::normalize(fbase)`:noscope]]
+scales every sample so the buffer's absolute peak reaches a requested value
+(1.0 by default). Normalization leaves an empty or silent buffer unchanged.
+[[`audio_data<IsInterleaved>::clamp(fbase, fbase)`:noscope]] limits every sample
+to an inclusive range; pass an ordered minimum and maximum.
+
+[[`audio_data<IsInterleaved>::to_mono`:noscope]] returns a newly allocated
+one-channel buffer whose frames are the arithmetic mean of the input channels.
+It does not clip the result. A one-channel input is returned as an independent
+copy. [[`audio_data<IsInterleaved>::to_interleaved`:noscope]] and
+[[`audio_data<IsInterleaved>::to_planar`:noscope]] similarly return independent
+copies, converting the layout when necessary. Use
+[[`audio_data<IsInterleaved>::clone`:noscope]] when an independent copy with the
+same layout is required; unlike an ordinary same-layout copy, it does not share
+sample storage.
+
+```c++
+|||TEST_CASE("audio_data.md/processing mixing and copies")
+|||{
+audio_data_planar stereo(2, 3, 0.0f);
+stereo.channel(0) = univector<fbase>{ 0.25f, -0.5f, 1.0f };
+stereo.channel(1) = univector<fbase>{ 0.75f, 0.5f, -1.0f };
+
+audio_data_planar mono = stereo.to_mono();
+mono.normalize();
+mono.clamp(-0.75f, 0.75f);
+
+audio_data_interleaved interleaved = stereo.to_interleaved();
+audio_data_planar copy = stereo.clone();
+copy.fill(0.0f); // Does not change stereo.
+|||CHECK(mono.channel_count() == 1);
+|||CHECK(mono.stat().peak == 0.75f);
+|||CHECK(interleaved.total_samples() == stereo.total_samples());
+|||CHECK(!stereo.is_silent());
+|||}
+```
+
 ## Views, capacity, and stream assembly
 
 [[`audio_data<IsInterleaved>::slice(size_t, size_t)`:noscope]] returns a shallow
@@ -201,6 +241,14 @@ audio_data_planar next_100_ms  = recording.slice(4800, 4800);
 |||CHECK(next_100_ms.size == 4800);
 |||}
 ```
+
+For planar buffers, [[`audio_data<IsInterleaved>::select_channel(size_t)`:noscope]]
+and [[`audio_data<IsInterleaved>::select_channels(size_t, size_t)`:noscope]]
+return shallow views of one channel or an inclusive channel range. Their sample
+pointers and ownership state are shared with the source, so writing through a
+selected view changes the original buffer. They are unavailable for interleaved
+buffers; both selected indices must be valid, and `min_ch` must not exceed
+`max_ch`.
 
 Growing [[`audio_data<IsInterleaved>::resize(size_t)`:noscope]] or
 [[`audio_data<IsInterleaved>::reserve`:noscope]] can reallocate the backing store,
