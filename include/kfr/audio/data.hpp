@@ -467,6 +467,16 @@ KFR_INTRINSIC void set_elements(strided_channel<T>& self, const shape<1>& index,
 template <bool IsInterleaved = false>
 struct audio_data
 {
+    using value_type      = fbase; ///< Element type.
+    using pointer         = fbase*; ///< Pointer to element.
+    using const_pointer   = const fbase*; ///< Pointer to constant element.
+    using reference       = fbase&; ///< Reference to element.
+    using const_reference = const fbase&; ///< Reference to constant element.
+    using size_type       = size_t; ///< Size type.
+    using difference_type = ptrdiff_t; ///< Difference type.
+
+    static constexpr bool is_interleaved = IsInterleaved; ///< Whether samples are interleaved.
+
     uint32_t channels = 0; /**< Number of channels. */
     chan<fbase*, IsInterleaved> data{}; /**< Pointers to channel data. */
     size_t size; /**< Number of samples per channel. */
@@ -641,6 +651,82 @@ struct audio_data
      * @param value The scalar value to multiply the audio data by.
      */
     void multiply(fbase value);
+
+    /**
+     * @brief Applies a gain in decibels (dB) in place.
+     * @param gain_db Gain in decibels.
+     */
+    void apply_gain_dB(fbase gain_db);
+
+    /**
+     * @brief Normalizes the audio data to a target peak amplitude.
+     *
+     * Finds the peak sample magnitude across all channels and scales the data
+     * so that the peak becomes @p target_peak. If peak is zero, does nothing.
+     *
+     * @param target_peak Target absolute peak amplitude (default: 1.0).
+     */
+    void normalize(fbase target_peak = fbase(1.0));
+
+    /**
+     * @brief Clamps all samples to the range [min_val, max_val] in place.
+     *
+     * @param min_val Minimum allowed sample value (default: -1.0).
+     * @param max_val Maximum allowed sample value (default: +1.0).
+     */
+    void clamp(fbase min_val = fbase(-1.0), fbase max_val = fbase(1.0));
+
+    /**
+     * @brief Downmixes all channels to a single mono channel by averaging.
+     *
+     * Computes the mean across all channels for each frame. Returns a 1-channel audio_data.
+     *
+     * @return A new 1-channel audio_data containing the downmixed audio.
+     */
+    [[nodiscard]] audio_data to_mono() const;
+
+    /**
+     * @brief Returns an interleaved copy of this audio data.
+     *
+     * If the audio data is already interleaved, creates a deep copy.
+     */
+    [[nodiscard]] audio_data<true> to_interleaved() const;
+
+    /**
+     * @brief Returns a planar copy of this audio data.
+     *
+     * If the audio data is already planar, creates a deep copy.
+     */
+    [[nodiscard]] audio_data<false> to_planar() const;
+
+    /**
+     * @brief Selects a single channel view, referencing the original data and retaining the deallocator.
+     *
+     * @param ch Channel index to select.
+     * @return A 1-channel audio_data referencing the selected channel.
+     */
+    [[nodiscard]] audio_data select_channel(size_t ch) const
+        requires(!IsInterleaved);
+
+    /**
+     * @brief Selects a range of channels [min_ch, max_ch], referencing the original data and retaining the
+     * deallocator.
+     *
+     * @param min_ch Starting channel index (inclusive).
+     * @param max_ch Ending channel index (inclusive).
+     * @return An audio_data view containing the selected channel range.
+     */
+    [[nodiscard]] audio_data select_channels(size_t min_ch, size_t max_ch) const
+        requires(!IsInterleaved);
+
+    /**
+     * @brief Creates an independent deep copy of this audio data.
+     *
+     * Allocates new storage and copies all sample values into the new buffer.
+     *
+     * @return A deep copy of this audio_data.
+     */
+    [[nodiscard]] audio_data clone() const;
 
     /**
      * Clears all audio data, leaving the container empty (size == 0).

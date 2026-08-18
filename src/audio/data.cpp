@@ -24,6 +24,7 @@
   See https://www.kfrlib.com for details.
  */
 #include <kfr/audio/data.hpp>
+#include <kfr/dsp/units.hpp>
 
 namespace kfr
 {
@@ -103,6 +104,170 @@ void audio_data<IsInterleaved>::multiply(fbase value)
     }
     for_channel([value](univector_ref<fbase> data) { data *= value; });
 }
+
+template <bool IsInterleaved>
+void audio_data<IsInterleaved>::apply_gain_dB(fbase gain_db)
+{
+    multiply(dB_to_amp(gain_db));
+}
+
+template <bool IsInterleaved>
+void audio_data<IsInterleaved>::normalize(fbase target_peak)
+{
+    if (empty())
+        return;
+    audio_stat s = stat();
+    if (s.peak > fbase(0))
+    {
+        multiply(target_peak / s.peak);
+    }
+}
+
+template <bool IsInterleaved>
+void audio_data<IsInterleaved>::clamp(fbase min_val, fbase max_val)
+{
+    for_channel([min_val, max_val](univector_ref<fbase> data) { data = kfr::clamp(data, min_val, max_val); });
+}
+
+template <bool IsInterleaved>
+audio_data<IsInterleaved> audio_data<IsInterleaved>::to_mono() const
+{
+    if (empty()) [[unlikely]]
+        return audio_data<IsInterleaved>(1, 0);
+    if (channels == 1) [[unlikely]]
+        return clone();
+
+    audio_data<IsInterleaved> result(1, size);
+    result.position = position;
+
+    if constexpr (IsInterleaved)
+    {
+        if (channels == 2) [[likely]]
+        {
+            block_process( //
+                size, csizes<vector_width<fbase>, 1>,
+                [in = this->data, out = result.data]<size_t w>(size_t offset, csize_t<w>) KFR_INLINE_LAMBDA
+                {
+                    vec<fbase, 2 * w> stereo = read<2 * w>(in + offset * 2);
+                    vec<fbase, w> mono       = (even(stereo) + odd(stereo)) * fbase(0.5f);
+                    write(out + offset, mono);
+                });
+            return result;
+        }
+
+        for (size_t i = 0; i < size; ++i)
+        {
+            fbase sum = fbase(0);
+            for (size_t ch = 0; ch < channels; ++ch)
+            {
+                sum += data[i * channels + ch];
+            }
+            result.data[i] = sum / static_cast<fbase>(channels);
+        }
+    }
+    else
+    {
+        if (channels == 2) [[likely]]
+        {
+            block_process( //
+                size, csizes<vector_width<fbase>, 1>,
+                [left = this->data[0], right = this->data[1],
+                 out = result.data[0]]<size_t w>(size_t offset, csize_t<w>) KFR_INLINE_LAMBDA
+                {
+                    vec<fbase, w> l    = read<w>(left + offset);
+                    vec<fbase, w> r    = read<w>(right + offset);
+                    vec<fbase, w> mono = (l + r) * fbase(0.5f);
+                    write(out + offset, mono);
+                });
+            return result;
+        }
+
+        const fbase scale                    = fbase(1) / static_cast<fbase>(channels);
+        make_univector(result.data[0], size) = make_univector(data[0], size) * scale;
+        for (size_t ch = 1; ch < channels; ++ch)
+        {
+            make_univector(result.data[0], size) += make_univector(data[ch], size) * scale;
+        }
+    }
+    return result;
+}
+
+template <bool IsInterleaved>
+audio_data<true> audio_data<IsInterleaved>::to_interleaved() const
+{
+    if constexpr (IsInterleaved)
+    {
+        return clone();
+    }
+    else
+    {
+        return audio_data<true>(*this);
+    }
+}
+
+template <bool IsInterleaved>
+audio_data<false> audio_data<IsInterleaved>::to_planar() const
+{
+    if constexpr (!IsInterleaved)
+    {
+        return clone();
+    }
+    else
+    {
+        return audio_data<false>(*this);
+    }
+}
+
+template <bool IsInterleaved>
+audio_data<IsInterleaved> audio_data<IsInterleaved>::select_channel(size_t ch) const
+    requires(!IsInterleaved)
+{
+    return select_channels(ch, ch);
+}
+
+template <bool IsInterleaved>
+audio_data<IsInterleaved> audio_data<IsInterleaved>::select_channels(size_t min_ch, size_t max_ch) const
+    requires(!IsInterleaved)
+{
+    KFR_LOGIC_CHECK(min_ch <= max_ch, "min_ch must be <= max_ch");
+    KFR_LOGIC_CHECK(max_ch < channels, "max_ch must be < channels");
+
+    size_t count = max_ch - min_ch + 1;
+    audio_data<false> result;
+    result.channels    = static_cast<uint32_t>(count);
+    result.size        = size;
+    result.capacity    = capacity;
+    result.position    = position;
+    result.deallocator = deallocator;
+    for (size_t i = 0; i < count; ++i)
+    {
+        result.data[i] = data[min_ch + i];
+    }
+    return result;
+}
+
+template <bool IsInterleaved>
+audio_data<IsInterleaved> audio_data<IsInterleaved>::clone() const
+{
+    if (empty())
+        return audio_data<IsInterleaved>(channels, size);
+
+    audio_data<IsInterleaved> result(channels, size);
+    result.position = position;
+    if constexpr (IsInterleaved)
+    {
+        std::memcpy(result.data, data, size * channels * sizeof(fbase));
+    }
+    else
+    {
+        for (size_t ch = 0; ch < channels; ++ch)
+        {
+            std::memcpy(result.data[ch], data[ch], size * sizeof(fbase));
+        }
+    }
+    return result;
+}
+
 template <bool IsInterleaved>
 void audio_data<IsInterleaved>::clear()
 {

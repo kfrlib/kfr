@@ -860,6 +860,113 @@ TEST_CASE("Each channel is cache-aligned")
     }
 }
 
+TEST_CASE("audio_data new member operations")
+{
+    using Catch::Approx;
+
+    // multiply, apply_gain_dB
+    {
+        audio_data_planar a(2, 4, fbase(1.0));
+        a.multiply(fbase(2.5));
+        CHECK(a.channel(0)[0] == Approx(2.5));
+        CHECK(a.channel(1)[3] == Approx(2.5));
+
+        a.apply_gain_dB(fbase(6.020599913279624)); // ~ +6 dB -> 2x
+        CHECK(a.channel(0)[0] == Approx(5.0).margin(1e-4));
+    }
+
+    // normalize & clamp
+    {
+        audio_data_planar a(2, 4);
+        a.channel(0) = univector<fbase, 4>{ -0.5, 0.2, -2.0, 1.0 };
+        a.channel(1) = univector<fbase, 4>{ 0.1, 0.5, -1.0, 0.0 };
+
+        a.normalize(fbase(1.0)); // peak was 2.0, should scale by 0.5
+        CHECK(a.channel(0)[2] == Approx(-1.0));
+        CHECK(a.channel(0)[0] == Approx(-0.25));
+
+        a.channel(0) = univector<fbase, 4>{ -3.0, -0.5, 0.5, 3.0 };
+        a.clamp(fbase(-1.0), fbase(1.0));
+        CHECK(a.channel(0)[0] == Approx(-1.0));
+        CHECK(a.channel(0)[1] == Approx(-0.5));
+        CHECK(a.channel(0)[2] == Approx(0.5));
+        CHECK(a.channel(0)[3] == Approx(1.0));
+    }
+
+    // to_mono
+    {
+        audio_data_planar a(2, 3);
+        a.channel(0)     = univector<fbase, 3>{ 1.0, 2.0, 3.0 };
+        a.channel(1)     = univector<fbase, 3>{ 3.0, 4.0, 5.0 };
+        auto mono_planar = a.to_mono();
+        CHECK(mono_planar.channels == 1);
+        CHECK(mono_planar.size == 3);
+        CHECK(mono_planar.channel(0)[0] == Approx(2.0));
+        CHECK(mono_planar.channel(0)[1] == Approx(3.0));
+        CHECK(mono_planar.channel(0)[2] == Approx(4.0));
+
+        audio_data_interleaved b = a.to_interleaved();
+        auto mono_interleaved    = b.to_mono();
+        CHECK(mono_interleaved.channels == 1);
+        CHECK(mono_interleaved.size == 3);
+        CHECK(mono_interleaved.interleaved()[0] == Approx(2.0));
+        CHECK(mono_interleaved.interleaved()[1] == Approx(3.0));
+        CHECK(mono_interleaved.interleaved()[2] == Approx(4.0));
+    }
+
+    // to_interleaved, to_planar, clone
+    {
+        audio_data_planar a(2, 2);
+        a.channel(0) = univector<fbase, 2>{ 1.0, 2.0 };
+        a.channel(1) = univector<fbase, 2>{ 3.0, 4.0 };
+
+        audio_data_interleaved ai = a.to_interleaved();
+        CHECK(ai.channels == 2);
+        CHECK(ai.size == 2);
+        CHECK(ai.interleaved()[0] == Approx(1.0));
+        CHECK(ai.interleaved()[1] == Approx(3.0));
+        CHECK(ai.interleaved()[2] == Approx(2.0));
+        CHECK(ai.interleaved()[3] == Approx(4.0));
+
+        audio_data_planar ap = ai.to_planar();
+        CHECK(ap.channels == 2);
+        CHECK(ap.size == 2);
+        CHECK(ap.channel(0)[0] == Approx(1.0));
+        CHECK(ap.channel(1)[1] == Approx(4.0));
+
+        audio_data_planar a_cloned = a.clone();
+        CHECK(a_cloned.channels == a.channels);
+        CHECK(a_cloned.size == a.size);
+        CHECK(a_cloned.channel(0).data() != a.channel(0).data()); // independent buffer
+        CHECK(a_cloned.channel(0)[0] == Approx(1.0));
+    }
+
+    // select_channel, select_channels
+    {
+        audio_data_planar a(4, 3);
+        for (size_t ch = 0; ch < 4; ++ch)
+        {
+            a.channel(ch) = scalar(fbase(ch + 1));
+        }
+
+        auto ch2 = a.select_channel(2);
+        CHECK(ch2.channels == 1);
+        CHECK(ch2.size == 3);
+        CHECK(ch2.channel(0).data() == a.channel(2).data()); // references original buffer
+        CHECK(ch2.deallocator == a.deallocator); // retains finalizer
+        CHECK(ch2.channel(0)[0] == Approx(3.0));
+
+        auto ch1_2 = a.select_channels(1, 2);
+        CHECK(ch1_2.channels == 2);
+        CHECK(ch1_2.size == 3);
+        CHECK(ch1_2.channel(0).data() == a.channel(1).data());
+        CHECK(ch1_2.channel(1).data() == a.channel(2).data());
+        CHECK(ch1_2.deallocator == a.deallocator);
+        CHECK(ch1_2.channel(0)[0] == Approx(2.0));
+        CHECK(ch1_2.channel(1)[0] == Approx(3.0));
+    }
+}
+
 TEST_CASE("encoders")
 {
     CHECK(create_wave_encoder() != nullptr);
