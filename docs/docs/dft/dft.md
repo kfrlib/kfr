@@ -11,6 +11,12 @@ four-step, or Bluestein implementation as appropriate for the requested size.
 For a fixed power-of-two transform with caller-owned twiddles and no execution 
 scratch storage, see the [low-level ngFFT API](ngfft.md).
 
+> [!note]
+> The DFT module is enabled by default with Clang and GCC, but disabled by
+> default with MSVC. Enable it explicitly in an MSVC build with
+> `-DKFR_ENABLE_DFT=ON`. MSVC DFT performance may be lower than with Clang or
+> GCC, particularly for complex algorithms.
+
 ## Transform convention and normalization
 
 For a complex sequence $x[n]$ of length $N$, KFR's direct (forward) transform

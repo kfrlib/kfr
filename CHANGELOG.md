@@ -20,6 +20,7 @@
 
 * FFT performance for power-of-two sizes has been improved by up to 40%
 * FFT performance for sizes with many prime factors has been improved by switching to a more optimized algorithm
+* Bit-index permutation optimizations for Clang and the generic backend
 * Compiler support information updated
 * Code documentation (Doxygen-style) now has near 100% coverage
 * Major documentation update with dozens of new articles and automatically tested code examples

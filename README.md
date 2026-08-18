@@ -12,25 +12,22 @@
 
 https://www.kfrlib.com
 
-KFR is an open source C++ DSP framework that contains high performance building blocks for DSP, audio, scientific and other applications. It is distributed under dual GPLv2/v3 and [commercial license](https://kfrlib.com/purchase).
+KFR is an open source C++ DSP framework that contains high performance building blocks for DSP, audio, scientific and other applications. It is distributed under GPLv2+ and a [commercial license](https://kfrlib.com/purchase).
 
 :star2: **New**: Explore benchmark results from the LIGO, Virgo, and KAGRA collaborations, comparing KFR performance against FFTW for signal processing in gravitational-wave research: https://ar5iv.labs.arxiv.org/html/2503.14292
 
 ## KFR 7 - What's New
 
+* KFR 7.1 additions:
+  * `ngfft`: low-overhead FFT API with manual memory management
+  * Up to 40% faster power-of-two FFTs and faster FFTs for sizes with many prime factors
+  * DFT support for GCC and MSVC
+  * `audio_filter` for independent multi-channel FIR, IIR, and convolution filtering of planar `audio_data`
+  * Core Audio decoding on macOS and iOS
+  * Bit-index permutation optimizations for Clang and the generic backend
 * Elliptic filter design
 * Zero-Phase IIR Filter (`filtfilt`)
-* Audio encoding/decoding with support for:
-    * Wave (WAV)
-    * W64
-    * RF64/BW64
-    * AIFF
-    * FLAC
-    * Apple CAF
-    * ALAC
-    * MP3 (decoding only)
-    * Raw PCM
-    * decoding AAC and other formats using MediaFoundation (Windows only)
+* Audio encoding/decoding: WAV, W64, RF64/BW64, AIFF, FLAC, CAF, ALAC, MP3 (decoding only), raw PCM, and AAC/other Media Foundation formats (Windows) or Core Audio formats (Apple platforms)
 * Universal macOS Binaries (Intel + Apple Silicon)
 * Basic RISC-V support
     * Only CPUs with VLEN >= 128 are supported
@@ -45,7 +42,7 @@ KFR is an open source C++ DSP framework that contains high performance building 
     * DFT performance improved by up to 80% on ARM and ARM64
     * New Android x86/x64 and Linux ARM/AArch64 builds
     * Matrix transpose up to 30% faster
-* [More](docs/docs/whatsnew7.md)
+* [More](docs/docs/getting-started/whatsnew7.md)
 
 ## Our other projects
 
@@ -53,7 +50,7 @@ KFR is an open source C++ DSP framework that contains high performance building 
 
 [**🟣 Brisk**](https://github.com/brisklib/brisk) is a cross-platform C++20 GUI framework featuring MVVM architecture, reactive capabilities, and scalable, accelerated GPU rendering. *(GPL/Commercial)*
 
-[**🟢 CxxDox**](https://github.com/kfrlib/cxxdox) — C++ documentation generator. *(MIT)*
+[**🟢 CxxDox**](https://github.com/kfrlib/cxxdox) — C++ documentation generator. *(Apache-2.0)*
 
 </div>
 
@@ -66,11 +63,11 @@ Compiler support:
 ![MSVC 2022](https://img.shields.io/badge/MSVC-2022%2B-brightgreen.svg?style=flat-square)
 ![Xcode 13+](https://img.shields.io/badge/Xcode-13%2B-brightgreen.svg?style=flat-square)
 
-KFR has no external dependencies except for a C++20-compatible standard C++ library. CMake is used as the build system.
+KFR has no external C++ dependencies beyond a C++20-compatible standard library. CMake is used as the build system.
 
-Since KFR 7.1, KFR supports Clang, GCC, and MSVC. MSVC builds may provide
-lower performance, especially for DFT and other complex algorithms; use Clang
-or GCC when maximum performance is required.
+Since KFR 7.1, KFR provides the same level of support for Clang, GCC, and MSVC.
+MSVC builds may provide lower performance, especially for DFT and other complex
+algorithms; use Clang or GCC when maximum performance is required.
 
 Clang can be used to build Visual Studio projects, either for selected targets or as the primary compiler, while maintaining full compatibility with code built by Visual Studio.
 
@@ -87,10 +84,13 @@ ARM, ARM64, and RISC-V targets require Clang or GCC.
 | Windows  | MSVC ABI / Clang | `clang-cl.exe`   | ✅ Supported         | ✅ Full performance  |
 | Windows  | MinGW / GCC      | `g++.exe`        | ✅ Supported         | ✅ Full performance  |
 | Windows  | MinGW / Clang    | `clang++.exe`    | ✅ Supported         | ✅ Full performance  |
+| WebAssembly | Emscripten    | `em++`           | ✅ Supported         | ✅ Full performance  |
 
 \* MSVC support is limited to x86 and x86-64 targets.
 
-:arrow_right: See [Installation](docs/docs/installation.md) docs for more details
+Other operating systems, compilers, and CPUs may work but are outside the regular test matrix.
+
+:arrow_right: See [Installation](docs/docs/getting-started/installation.md) docs for more details
 
 ## Features
 
@@ -103,7 +103,7 @@ ARM, ARM64, and RISC-V targets require Clang or GCC.
 * Convolution using FFT
 * Convolution filter
 
-:arrow_right: See also [How to apply FFT](docs/docs/dft.md) with KFR
+:arrow_right: See also [How to apply FFT](docs/docs/dft/dft.md) with KFR
 
 ### DSP
 
@@ -163,13 +163,14 @@ ARM, ARM64, and RISC-V targets require Clang or GCC.
     * ALAC
     * MP3 (decoding only)
     * Raw PCM
-    * decoding AAC and other formats using MediaFoundation (Windows only)
+    * decoding AAC and other formats using Media Foundation (Windows) or Core Audio (Apple platforms)
 
 ### Multiarchitecture
 
 The multiarchitecture mode enables building algorithms for multiple architectures with runtime dispatch to detect the CPU of the target machine and select the best code path
 
 * Multiarchitecture for DFT, resampling, FIR and IIR filters.
+* Runtime dispatch is available on x86; it is disabled on non-x86, Android, and Emscripten builds.
 
 ### C API
 
@@ -229,6 +230,6 @@ Built with
 
 ## License
 
-KFR is dual-licensed, available under both commercial and open-source GPL 2+ license.
+KFR is dual-licensed, available under both commercial and open-source GPLv2+ license.
 
 If you want to use KFR in a commercial product or a closed-source project, you need to [purchase a Commercial License](https://kfrlib.com/purchase-license).

@@ -5,6 +5,10 @@ API directly. It exposes complex and real DFTs, DCT-II/DCT-III, and stateful
 FIR, FFT-convolution, and IIR filters through C declarations in
 `<kfr/capi.h>`, so it can be used from C and from any language with a C FFI.
 
+The C API library is disabled by default. Build it with
+`-DKFR_ENABLE_CAPI_BUILD=ON`; it also requires the DFT module, so MSVC builds
+must additionally enable it with `-DKFR_ENABLE_DFT=ON`.
+
 The surface is intentionally small: fixed-width scalar aliases, opaque plan
 handles, caller-provided buffers, and global `kfr_`-prefixed symbols. No C++
 containers, templates, exceptions, callbacks, or object layouts cross the ABI

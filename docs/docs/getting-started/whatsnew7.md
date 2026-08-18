@@ -2,6 +2,21 @@
 
 KFR 7 introduces a range of new capabilities, platform support, and performance improvements for modern audio and signal processing workflows.
 
+## KFR 7.1 Highlights
+
+* `ngfft` is a new low-overhead FFT API that gives applications manual control over memory management.
+* Power-of-two FFTs are up to 40% faster, and FFTs whose sizes have many prime factors also use a more optimized algorithm.
+* DFT is now supported with GCC and MSVC, in addition to Clang.
+* Bit-index permutation operations are optimized for Clang and the generic backend.
+
+## Multi-Channel Audio Filtering
+
+The new `audio_filter` processes planar `audio_data` with independent filters for each channel. It supports FIR, IIR, and convolution filtering, making multi-channel processing simpler without coupling channel state.
+
+## Core Audio Decoding
+
+KFR can decode audio with Core Audio on macOS and iOS, with `binary_reader` input, floating-point output, and precise frame seeking.
+
 ## Reworked Audio I/O
 
 Audio input and output have been completely reworked.

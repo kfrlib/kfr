@@ -3,7 +3,7 @@
 Since KFR 7.1, KFR supports Clang, GCC, and MSVC. Clang is recommended when
 maximum performance is required, particularly for DFT and other complex
 algorithms; MSVC builds may provide lower performance for these workloads.
-KFR requires a compiler with C++20 support; Clang 12 or newer is supported.
+KFR requires a compiler with C++20 support; Clang 16 or newer is supported.
 
 This page explains how to install Clang and make CMake select it reliably. For
 complete KFR build, installation, and integration instructions, see

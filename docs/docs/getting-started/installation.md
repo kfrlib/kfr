@@ -15,7 +15,7 @@ configured and built as part of your own project.
 
 KFR is tested and supported on the following systems and architectures:
 
-**OS** • Windows • Linux • macOS • iOS • Android
+**OS** • Windows • Linux • macOS • iOS • Android • WebAssembly (Emscripten)
 
 **CPU** • x86 • x86_64 • ARM • ARM64 (AArch64) • RISC-V (RV64)
 
@@ -25,7 +25,7 @@ KFR is tested and supported on the following systems and architectures:
 
 **RISC-V extensions** • RVV (Vector)
 
-**Compiler** • GCC 10+ • Clang 12+ • MSVC 2022 (19.30+)+ • Xcode 13+
+**Compiler** • GCC 11+ • Clang 16+ • MSVC 2022 (19.30+)+ • Xcode 13+
 
 Since KFR 7.1, KFR supports Clang, GCC, and MSVC. MSVC builds may provide
 lower performance, especially for DFT and other complex algorithms; use Clang
@@ -33,6 +33,9 @@ or GCC when maximum performance is required.
 
 KFR itself and applications using it require C++20. Other operating systems,
 compilers, and CPUs may work but are not part of the regular test matrix.
+
+Emscripten builds support WebAssembly (`wasm` and `wasm64`), but do not use
+multiarchitecture runtime dispatch.
 
 ## Prerequisites
 
