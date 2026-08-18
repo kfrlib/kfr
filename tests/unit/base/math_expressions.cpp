@@ -4,7 +4,6 @@
  * See LICENSE.txt for details
  */
 
-
 #include <kfr/base/simd_expressions.hpp>
 #include <kfr/base/math_expressions.hpp>
 #include <kfr/base/univector.hpp>

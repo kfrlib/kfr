@@ -581,8 +581,8 @@ struct dft_plan_real : dft_plan<T>
      * @brief Returns the number of complex samples for a given real size and format.
      * @param size Number of real samples.
      * @param fmt Packing format.
-    * @return `floor(size / 2) + 1` for `CCs`; `ceil(size / 2)` (implemented
-    *         as `(size + 1) / 2`) for `Perm`.
+     * @return `floor(size / 2) + 1` for `CCs`; `ceil(size / 2)` (implemented
+     *         as `(size + 1) / 2`) for `Perm`.
      */
     constexpr static size_t complex_size_for(size_t size, dft_pack_format fmt)
     {

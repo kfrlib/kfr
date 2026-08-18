@@ -99,13 +99,11 @@ TEST_CASE("grouped runtime stride")
 
     CHECK_THAT((gather_stride<3, 2>(values, 3)), DeepMatcher((vec<i32, 6>{ 0, 1, 6, 7, 12, 13 })));
     CHECK_THAT((gather_stride<4, 2>(values, 2)), DeepMatcher((vec<i32, 8>{ 0, 1, 4, 5, 8, 9, 12, 13 })));
-    CHECK_THAT((gather_stride<3, 3>(values, 2)),
-               DeepMatcher((vec<i32, 9>{ 0, 1, 2, 6, 7, 8, 12, 13, 14 })));
+    CHECK_THAT((gather_stride<3, 3>(values, 2)), DeepMatcher((vec<i32, 9>{ 0, 1, 2, 6, 7, 8, 12, 13, 14 })));
 
     i32 result[16]{};
     scatter_stride<2>(result, vec<i32, 6>{ 20, 21, 30, 31, 40, 41 }, 3);
-    CHECK_THAT(read<14>(result),
-               DeepMatcher(vec<i32, 14>{ 20, 21, 0, 0, 0, 0, 30, 31, 0, 0, 0, 0, 40, 41 }));
+    CHECK_THAT(read<14>(result), DeepMatcher(vec<i32, 14>{ 20, 21, 0, 0, 0, 0, 30, 31, 0, 0, 0, 0, 40, 41 }));
 
     std::fill(std::begin(result), std::end(result), 0);
     scatter_stride<3>(result, vec<i32, 9>{ 20, 21, 22, 30, 31, 32, 40, 41, 42 }, 2);
@@ -143,7 +141,8 @@ TEST_CASE("partial read/write")
         partial_write(destination + 1, value, count);
 
         CHECK(destination[0] == -1);
-        for (size_t i = 0; i < width; ++i) {
+        for (size_t i = 0; i < width; ++i)
+        {
             CAPTURE(i);
             CHECK(destination[i + 1] == (i < count ? source[i + 1] : -1));
         }
@@ -156,11 +155,10 @@ TEST_CASE("partial read/write")
     i32 destination[width];
     std::fill(std::begin(destination), std::end(destination), -1);
     partial_write(destination, vec<i32, width>{ 11, 12, 13, 14, 15, 16, 17 }, width + 1);
-    CHECK_THAT(read<width>(destination),
-               DeepMatcher((vec<i32, width>{ 11, 12, 13, 14, 15, 16, 17 })));
+    CHECK_THAT(read<width>(destination), DeepMatcher((vec<i32, width>{ 11, 12, 13, 14, 15, 16, 17 })));
 
     alignas(8 * sizeof(i32)) const i32 aligned_source[] = { 20, 21, 22, 23, 24, 25, 26, 27 };
-    const vec<i32, 8> aligned_value                    = partial_read<8, true>(aligned_source, 3);
+    const vec<i32, 8> aligned_value                     = partial_read<8, true>(aligned_source, 3);
     CHECK(aligned_value[0] == 20);
     CHECK(aligned_value[1] == 21);
     CHECK(aligned_value[2] == 22);

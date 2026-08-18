@@ -43,7 +43,8 @@ bool run_python(const char* executable, const std::string& filename, bool& not_f
     std::string command = std::string(executable) + " \"" + filename + "\"";
     STARTUPINFOA startup{ sizeof(startup) };
     PROCESS_INFORMATION process{};
-    if (!CreateProcessA(nullptr, command.data(), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startup, &process))
+    if (!CreateProcessA(nullptr, command.data(), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startup,
+                        &process))
     {
         const DWORD error = GetLastError();
         not_found         = error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND;
@@ -53,7 +54,7 @@ bool run_python(const char* executable, const std::string& filename, bool& not_f
     }
 
     WaitForSingleObject(process.hProcess, INFINITE);
-    DWORD exit_code = EXIT_FAILURE;
+    DWORD exit_code    = EXIT_FAILURE;
     const bool success = GetExitCodeProcess(process.hProcess, &exit_code) && exit_code == EXIT_SUCCESS;
     CloseHandle(process.hThread);
     CloseHandle(process.hProcess);
@@ -66,7 +67,7 @@ bool run_python(const char* executable, const std::string& filename, bool& not_f
 {
     pid_t process;
     char* const arguments[] = { const_cast<char*>(executable), const_cast<char*>(filename.c_str()), nullptr };
-    const int error = posix_spawnp(&process, executable, nullptr, nullptr, arguments, environ);
+    const int error         = posix_spawnp(&process, executable, nullptr, nullptr, arguments, environ);
     if (error != 0)
     {
         not_found = error == ENOENT;

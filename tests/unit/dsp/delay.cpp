@@ -4,7 +4,6 @@
  * See LICENSE.txt for details
  */
 
-
 #include <kfr/base/univector.hpp>
 #include <kfr/dsp/delay.hpp>
 

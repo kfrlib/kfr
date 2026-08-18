@@ -391,7 +391,7 @@ private:
 
         // Retain ten fraction bits, rounding the discarded bits to nearest even.
         // A carry can correctly turn the largest finite binary16 value into infinity.
-        u32 half = (static_cast<u32>(half_exponent) << 10) | (fraction >> 13);
+        u32 half            = (static_cast<u32>(half_exponent) << 10) | (fraction >> 13);
         const u32 remainder = fraction & 0x1FFF;
         half += remainder > 0x1000 || (remainder == 0x1000 && (half & 1));
         return sign | static_cast<u16>(half);
@@ -416,8 +416,8 @@ private:
                     fraction <<= 1;
                     --normalized_exponent;
                 }
-                bits = sign | (static_cast<u32>(normalized_exponent + 127) << 23) |
-                       ((fraction & 0x03FF) << 13);
+                bits =
+                    sign | (static_cast<u32>(normalized_exponent + 127) << 23) | ((fraction & 0x03FF) << 13);
             }
         }
         else if (exponent == 0x1F)

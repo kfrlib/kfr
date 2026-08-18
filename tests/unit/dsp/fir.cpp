@@ -41,7 +41,7 @@ TEST_CASE("fir_expression_reset")
     SECTION("short FIR")
     {
         short_fir_state<3, float> state(taps);
-        state.delayline = vec<float, 2>{ 4.f, 5.f };
+        state.delayline          = vec<float, 2>{ 4.f, 5.f };
         const auto expected_taps = state.taps;
 
         reset(short_fir(input, std::ref(state)));
@@ -56,8 +56,8 @@ TEST_CASE("fir_expression_reset")
     SECTION("generic FIR")
     {
         fir_state<float> state(taps);
-        state.delayline        = univector<float>{ 4.f, 5.f, 6.f };
-        state.delayline_cursor = 2;
+        state.delayline          = univector<float>{ 4.f, 5.f, 6.f };
+        state.delayline_cursor   = 2;
         const auto expected_taps = state.params.taps;
 
         reset(fir(input, std::ref(state)));

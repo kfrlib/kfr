@@ -106,24 +106,24 @@ TEST_CASE("add")
 {
     test_function2(
         test_catogories::vectors, [](auto x, auto y) { return x + y; },
-    [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)> { return x + y; },
-    safe_addition{});
+        [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)> { return x + y; },
+        safe_addition{});
 }
 
 TEST_CASE("sub")
 {
     test_function2(
         test_catogories::vectors, [](auto x, auto y) { return x - y; },
-    [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)> { return x - y; },
-    safe_subtraction{});
+        [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)> { return x - y; },
+        safe_subtraction{});
 }
 
 TEST_CASE("mul")
 {
     test_function2(
         test_catogories::vectors, [](auto x, auto y) { return x * y; },
-    [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)> { return x * y; },
-    safe_multiplication{});
+        [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)> { return x * y; },
+        safe_multiplication{});
 }
 
 template <typename T>
@@ -262,15 +262,11 @@ TEST_CASE("byte shifts preserve lane semantics")
 
     for (unsigned shift = 0; shift < 8; ++shift)
     {
-        CHECK_THAT((unsigned_value << shift),
-                   DeepMatcher(vec<u8, 16>(u8(u8(0x81) << shift))));
-        CHECK_THAT((unsigned_value >> shift),
-                   DeepMatcher(vec<u8, 16>(u8(u8(0x81) >> shift))));
-        CHECK_THAT((signed_left_value << shift),
-               DeepMatcher(vec<i8, 16>(i8(u8(1u << shift)))));
+        CHECK_THAT((unsigned_value << shift), DeepMatcher(vec<u8, 16>(u8(u8(0x81) << shift))));
+        CHECK_THAT((unsigned_value >> shift), DeepMatcher(vec<u8, 16>(u8(u8(0x81) >> shift))));
+        CHECK_THAT((signed_left_value << shift), DeepMatcher(vec<i8, 16>(i8(u8(1u << shift)))));
         CHECK_THAT((signed_value >> shift), DeepMatcher(vec<i8, 16>(i8(-1))));
     }
-
 }
 
 TEST_CASE("signed 64-bit right shift keeps the signed result type")
@@ -284,7 +280,6 @@ TEST_CASE("integer arithmetic wraps at the element width")
     const vec<u8, 16> umax_value((u8)255);
     const vec<u8, 16> one((u8)1);
     CHECK_THAT((umax_value + one), DeepMatcher(vec<u8, 16>((u8)0)));
-
 }
 
 TEST_CASE("eq")

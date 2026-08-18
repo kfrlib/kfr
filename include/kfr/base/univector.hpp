@@ -197,7 +197,7 @@ struct univector_base<T, Class, true>
             return;
 
         // Keep only the most recent data that fits in the buffer.
-        T* data           = get_data();
+        T* data = get_data();
         if (srcsize > size)
         {
             src += srcsize - size;
@@ -243,8 +243,8 @@ struct univector_base<T, Class, true>
         const size_t size = get_size();
         if (KFR_UNLIKELY(size == 0))
             return;
-        cursor            = cursor + step;
-        cursor            = cursor >= size ? cursor - size : cursor;
+        cursor = cursor + step;
+        cursor = cursor >= size ? cursor - size : cursor;
     }
     /// @brief Reads a single element from the ring buffer at @p cursor into @p value and advances the cursor.
     /// @param cursor Read cursor into the buffer (updated in place).
@@ -282,7 +282,7 @@ struct univector_base<T, Class, true>
             return;
 
         // Fill only the most recent portion of the destination that fits.
-        const T* data     = get_data();
+        const T* data = get_data();
         if (destsize > size)
         {
             dest += destsize - size;

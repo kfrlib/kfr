@@ -282,7 +282,7 @@ public:
                     if (!used[axis] && shape[axis] <= 1)
                     {
                         used[axis] = true;
-                        found = true;
+                        found      = true;
                         break;
                     }
                 }

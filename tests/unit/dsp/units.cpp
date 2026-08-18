@@ -25,7 +25,8 @@ TEST_CASE("hertz_to_note")
 {
     epsilon_scope<void> eps(1000);
     CHECK_THAT((kfr::hertz_to_note(fbase(261.6255653005986346778499935233))), DeepMatcher(fbase(60)));
-    CHECK_THAT((kfr::hertz_to_note(pack(fbase(261.6255653005986346778499935233)))), DeepMatcher(pack(fbase(60))));
+    CHECK_THAT((kfr::hertz_to_note(pack(fbase(261.6255653005986346778499935233)))),
+               DeepMatcher(pack(fbase(60))));
 
     CHECK_THAT((kfr::hertz_to_note(fbase(440))), DeepMatcher(fbase(69)));
     CHECK_THAT((kfr::hertz_to_note(pack(fbase(440)))), DeepMatcher(pack(fbase(69))));

@@ -39,12 +39,24 @@ inline std::string python_string(const std::string& value)
     {
         switch (ch)
         {
-        case '\\': result += "\\\\"; break;
-        case '\'': result += "\\'"; break;
-        case '\n': result += "\\n"; break;
-        case '\r': result += "\\r"; break;
-        case '\t': result += "\\t"; break;
-        default: result += ch; break;
+        case '\\':
+            result += "\\\\";
+            break;
+        case '\'':
+            result += "\\'";
+            break;
+        case '\n':
+            result += "\\n";
+            break;
+        case '\r':
+            result += "\\r";
+            break;
+        case '\t':
+            result += "\\t";
+            break;
+        default:
+            result += ch;
+            break;
         }
     }
     return result + "'";
@@ -87,7 +99,8 @@ void plot_show(const std::string& name, const std::string& wavfile, const std::s
 {
     print(name, "...");
     std::string ss;
-    ss += python_prologue() + "dspplot.plot(" + concat_args(internal_generic::python_string(wavfile), options) + ")\n";
+    ss += python_prologue() + "dspplot.plot(" +
+          concat_args(internal_generic::python_string(wavfile), options) + ")\n";
 
     print(internal_generic::python(name, ss) ? "done\n" : "failed\n");
 }
@@ -119,7 +132,8 @@ void plot_show(const std::string& name, const T& x, const std::string& options =
 template <typename T>
 void plot_save(const std::string& name, const T& x, const std::string& options = "")
 {
-    plot_show(name, x, concat_args(options, "file=" + internal_generic::python_string("../svg/" + name + ".svg")));
+    plot_show(name, x,
+              concat_args(options, "file=" + internal_generic::python_string("../svg/" + name + ".svg")));
 }
 
 template <typename T1, typename T2>
@@ -157,7 +171,8 @@ void perfplot_show(const std::string& name, T1&& data, T2&& labels, const std::s
 template <typename T1, typename T2>
 void perfplot_save(const std::string& name, T1&& data, T2&& labels, const std::string& options = "")
 {
-    perfplot_show(name, std::forward<T1>(data), std::forward<T2>(labels),
-                  concat_args(options, "file=" + internal_generic::python_string("../perf/" + name + ".svg")));
+    perfplot_show(
+        name, std::forward<T1>(data), std::forward<T2>(labels),
+        concat_args(options, "file=" + internal_generic::python_string("../perf/" + name + ".svg")));
 }
 } // namespace kfr

@@ -533,7 +533,7 @@
 #else
 #define KFR_HAS_EXCEPTIONS 0
 #endif
-#else 
+#else
 // assume GNU-compatible (gcc or clang in non-msvc mode)
 #if defined(__EXCEPTIONS)
 #define KFR_HAS_EXCEPTIONS 1

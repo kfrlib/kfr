@@ -120,7 +120,7 @@ struct expression_reduce : public expression_traits_defaults
      * @param transformfn Unary transform applied to each input element.
      * @param finalfn Finalizer applied to the accumulated value.
      */
-        expression_reduce(ReduceFn reducefn, TransformFn transformfn, FinalFn finalfn)
+    expression_reduce(ReduceFn reducefn, TransformFn transformfn, FinalFn finalfn)
         : counter(0), reducefn(std::move(reducefn)), transformfn(std::move(transformfn)),
           finalfn(std::move(finalfn)), value(resize<width>(make_vector(reducefn(initialvalue<Twork>{}))))
     {
@@ -324,11 +324,11 @@ struct histogram_data
         {
             const vec<T, N> x = value * size();
 #ifdef KFR_HISTOGRAM_OLD
-            indices           = cast<uint64_t>(round(clamp(x, 0, size() - 1)));
+            indices = cast<uint64_t>(round(clamp(x, 0, size() - 1)));
 #else
-            indices           = cast<uint64_t>(floor(clamp(x, 0, size() - 1)));
+            indices = cast<uint64_t>(floor(clamp(x, 0, size() - 1)));
 #endif
-            indices           = select(value < 0, 0, select(value > 1, size() + 1, 1 + indices));
+            indices = select(value < 0, 0, select(value > 1, size() + 1, 1 + indices));
         }
         else
         {

@@ -4,7 +4,6 @@
  * See LICENSE.txt for details
  */
 
-
 #include <kfr/math/sqrt.hpp>
 
 using namespace kfr;

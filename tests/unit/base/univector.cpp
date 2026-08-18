@@ -27,7 +27,7 @@ TEST_CASE("univector_ringbuf_oversized_transfers")
 {
     univector<int, 4> buffer{ 0, 0, 0, 0 };
     const int source[] = { 1, 2, 3, 4, 5, 6 };
-    size_t cursor       = 2;
+    size_t cursor      = 2;
 
     buffer.ringbuf_write(cursor, source, std::size(source));
     CHECK(cursor == 2u);

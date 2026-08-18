@@ -4,7 +4,6 @@
  * See LICENSE.txt for details
  */
 
-
 #include <kfr/base/generators.hpp>
 #include <kfr/base/univector.hpp>
 #include <kfr/dsp/goertzel.hpp>
@@ -47,9 +46,9 @@ TEST_CASE("goertzel_reset")
     {
         complex<float> result;
         auto expression = goertzel(result, omega);
-        expression.q0  = 1.f;
-        expression.q1  = 2.f;
-        expression.q2  = 3.f;
+        expression.q0   = 1.f;
+        expression.q1   = 2.f;
+        expression.q2   = 3.f;
 
         reset(expression);
 
@@ -63,10 +62,10 @@ TEST_CASE("goertzel_reset")
     {
         complex<float> result[2];
         const float omegas[2] = { omega, omega };
-        auto expression = goertzel(result, omegas);
-        expression.q0  = vec<float, 2>{ 1.f, 2.f };
-        expression.q1  = vec<float, 2>{ 3.f, 4.f };
-        expression.q2  = vec<float, 2>{ 5.f, 6.f };
+        auto expression       = goertzel(result, omegas);
+        expression.q0         = vec<float, 2>{ 1.f, 2.f };
+        expression.q1         = vec<float, 2>{ 3.f, 4.f };
+        expression.q2         = vec<float, 2>{ 5.f, 6.f };
 
         reset(expression);
 

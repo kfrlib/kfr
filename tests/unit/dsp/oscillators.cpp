@@ -4,7 +4,6 @@
  * See LICENSE.txt for details
  */
 
-
 #include <kfr/base/generators.hpp>
 #include <kfr/base/math_expressions.hpp>
 #include <kfr/base/reduce.hpp>

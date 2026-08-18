@@ -168,13 +168,13 @@ TEST_CASE("iir_reset")
     iir_state<float, 2> state(iir_params<float, 2>{ sections, 2 });
     const auto expected_params = state.params;
 
-    state.state.s1       = 1.f;
-    state.state.s2       = 2.f;
-    state.state.out      = 3.f;
-    state.saved_state.s1 = 4.f;
-    state.saved_state.s2 = 5.f;
+    state.state.s1        = 1.f;
+    state.state.s2        = 2.f;
+    state.state.out       = 3.f;
+    state.saved_state.s1  = 4.f;
+    state.saved_state.s2  = 5.f;
     state.saved_state.out = 6.f;
-    state.block_end      = 7;
+    state.block_end       = 7;
 
     univector<float, 1> input{ 0.f };
     auto expression = iir(input, std::ref(state));
@@ -197,13 +197,13 @@ TEST_CASE("iir_reset")
     }
     CHECK(state.block_end == 0);
 
-    state.state.s1       = 1.f;
-    state.state.s2       = 2.f;
-    state.state.out      = 3.f;
-    state.saved_state.s1 = 4.f;
-    state.saved_state.s2 = 5.f;
+    state.state.s1        = 1.f;
+    state.state.s2        = 2.f;
+    state.state.out       = 3.f;
+    state.saved_state.s1  = 4.f;
+    state.saved_state.s2  = 5.f;
     state.saved_state.out = 6.f;
-    state.block_end      = 7;
+    state.block_end       = 7;
 
     expression_iir_l<2, float, decltype(input)&, true> lookahead(input, std::ref(state));
     reset(lookahead);
