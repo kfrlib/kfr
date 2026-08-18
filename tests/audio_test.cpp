@@ -722,6 +722,40 @@ TEST_CASE("os_decoder_unsupported")
 }
 #endif
 
+#ifdef KFR_OS_APPLE
+TEST_CASE("coreaudio_decoder")
+{
+    auto decoder = create_coreaudio_decoder({ { .read_metadata = true } });
+    REQUIRE(decoder != nullptr);
+    auto r = decoder->open(KFR_SRC_DIR "/tests/test-audio/testdata_2c_pcm_s24le.wav");
+    REQUIRE(r.has_value());
+    CHECK(r->container == audiofile_container::unknown);
+    CHECK(r->codec == audiofile_codec::unknown);
+    CHECK(r->endianness == audiofile_endianness::little);
+    CHECK(r->bit_depth == 24);
+
+    test_audiodata(*decoder);
+}
+
+TEST_CASE("coreaudio_decoder_no_file")
+{
+    auto decoder = create_coreaudio_decoder();
+    REQUIRE(decoder != nullptr);
+    auto r = decoder->open("this_file_does_not_exist.wav");
+    REQUIRE(!r.has_value());
+    CHECK(r.error() == audiofile_error::not_found);
+}
+
+TEST_CASE("coreaudio_decoder_unsupported")
+{
+    auto decoder = create_coreaudio_decoder();
+    REQUIRE(decoder != nullptr);
+    auto r = decoder->open(KFR_SRC_DIR "/tests/test-audio/not_audio");
+    REQUIRE(!r.has_value());
+    CHECK(r.error() == audiofile_error::format_error);
+}
+#endif
+
 TEST_CASE("decoder_for_file")
 {
     auto decoder = create_decoder_for_file(KFR_SRC_DIR "/tests/test-audio/testdata_2c_pcm_s24le.wav");
@@ -1197,6 +1231,13 @@ TEST_CASE("decoding sequence 2")
     {
         INFO("mediafoundation");
         sequence_2(create_mediafoundation_decoder(),
+                   KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/testdata_2c_pcm_s24le.wav"));
+    }
+#endif
+#ifdef KFR_OS_MACOS
+    {
+        INFO("coreaudio");
+        sequence_2(create_coreaudio_decoder(),
                    KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/testdata_2c_pcm_s24le.wav"));
     }
 #endif

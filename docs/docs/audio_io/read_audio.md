@@ -4,7 +4,7 @@ KFR provides decoder and encoder classes for reading and writing audio files acr
 
 ### Supported Formats
 
-KFR reads WAV (including RF64 and BW64 for files over 4 GB), W64, AIFF, CAF, FLAC, and MP3 (decode-only), and writes WAV (with automatic RF64 fallback for large files), W64, AIFF, CAF, and FLAC. CAF additionally supports the ALAC codec when built with the ALAC library. On Windows, an optional Media Foundation decoder extends support to additional formats. FLAC and ALAC support depend on external libraries enabled at build time via CMake. See [Audio Format Support](file_support.md) for the full breakdown of codecs, bit depths, and container capabilities.
+KFR reads WAV (including RF64 and BW64 for files over 4 GB), W64, AIFF, CAF, FLAC, and MP3 (decode-only), and writes WAV (with automatic RF64 fallback for large files), W64, AIFF, CAF, and FLAC. CAF additionally supports the ALAC codec when built with the ALAC library. On Windows, the optional Media Foundation decoder and, on Apple platforms, the Core Audio decoder extend support to additional system-supported formats. FLAC and ALAC support depend on external libraries enabled at build time via CMake. See [Audio Format Support](file_support.md) for the full breakdown of codecs, bit depths, and container capabilities.
 
 ### Key Concepts
 

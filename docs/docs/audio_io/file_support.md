@@ -40,6 +40,15 @@ KFR provides support for both raw and encoded audio formats. It handles a range 
 
 * Decoding only
 
+### System Codecs
+
+Proprietary or otherwise platform-specific formats, including AAC where supported by the operating system, can be decoded with the platform system decoder:
+
+* On Windows, use [[`create_mediafoundation_decoder`]] (Media Foundation).
+* On Apple platforms, use [[`create_coreaudio_decoder`]] (Core Audio).
+
+These decoders are created explicitly rather than selected by [[`create_decoder_for_file`]], and the exact supported formats depend on the installed operating-system codecs.
+
 ---
 
 ## Raw Audio

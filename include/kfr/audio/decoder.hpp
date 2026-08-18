@@ -364,6 +364,24 @@ struct mediafoundation_decoding_options : public audio_decoding_options
     const mediafoundation_decoding_options& options = {});
 #endif
 
+#ifdef KFR_OS_APPLE
+/**
+ * @brief Options for decoding audio using Core Audio.
+ */
+struct coreaudio_decoding_options : public audio_decoding_options
+{
+};
+
+/**
+ * @brief Creates a Core Audio-based audio decoder.
+ *
+ * @param options Optional Core Audio decoding options.
+ * @return A unique pointer to the created decoder.
+ */
+[[nodiscard]] std::unique_ptr<audio_decoder> create_coreaudio_decoder(
+    const coreaudio_decoding_options& options = {});
+#endif
+
 /**
  * @brief Decodes an audio file and returns the audio data in an interleaved format.
  *

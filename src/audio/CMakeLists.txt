@@ -79,6 +79,11 @@ if (WIN32)
     target_link_libraries(kfr_audio PUBLIC mf mfplat mfreadwrite mfuuid propsys)
 endif ()
 
+if (APPLE)
+    find_library(AUDIOTOOLBOX_FRAMEWORK AudioToolbox REQUIRED)
+    target_link_libraries(kfr_audio PUBLIC ${AUDIOTOOLBOX_FRAMEWORK})
+endif ()
+
 if (KFR_INSTALL_LIBRARIES)
     install(
         TARGETS kfr_audio

@@ -360,6 +360,7 @@ set(
     KFR_AUDIO_SRC
     ${PROJECT_SOURCE_DIR}/src/audio/aiff_coder.cpp
     ${PROJECT_SOURCE_DIR}/src/audio/caff_coder.cpp
+    ${PROJECT_SOURCE_DIR}/src/audio/coreaudio_coder.cpp
     ${PROJECT_SOURCE_DIR}/src/audio/data.cpp
     ${PROJECT_SOURCE_DIR}/src/audio/decoder.cpp
     ${PROJECT_SOURCE_DIR}/src/audio/encoder.cpp
