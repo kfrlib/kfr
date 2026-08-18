@@ -1,6 +1,6 @@
 # Multi-channel Audio Filtering
 
-[[`audio_filter`:nosig]] applies a stateful FIR, IIR, or convolution filter independently to every channel of planar [[`audio_data_planar`:nosig]]. It owns one [[`filter<fbase>`:nosig]] instance per channel, so channel histories remain isolated while streaming audio blocks are processed.
+[[`audio_filter`:nosig]] applies a stateful FIR, IIR, or convolution filter independently to every channel of planar [[`audio_data_planar`:nosig]]. It owns one [[`filter`:nosig]] instance per channel, so channel histories remain isolated while streaming audio blocks are processed.
 
 Include `<kfr/audio.hpp>` for the audio filtering API.
 
