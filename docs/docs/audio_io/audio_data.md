@@ -155,19 +155,19 @@ operations, but it is not contiguous.
 |||TEST_CASE("audio_data.md/accessing interleaved channels")
 |||{
 audio_data_interleaved stereo(2, 4, 0.0f);
-stereo.interlaved() = univector<fbase>{ 1, 10, 2, 20, 3, 30, 4, 40 };
+stereo.interleaved() = univector<fbase>{ 1, 10, 2, 20, 3, 30, 4, 40 };
 
 // Left and right are strided views: { 1, 2, 3, 4 } and { 10, 20, 30, 40 }.
 stereo.channel(0) *= 0.5f;
 stereo.channel(1) *= 0.25f;
-|||CHECK(stereo.interlaved()[0] == 0.5f);
-|||CHECK(stereo.interlaved()[1] == 2.5f);
-|||CHECK(stereo.interlaved()[6] == 2.0f);
-|||CHECK(stereo.interlaved()[7] == 10.0f);
+|||CHECK(stereo.interleaved()[0] == 0.5f);
+|||CHECK(stereo.interleaved()[1] == 2.5f);
+|||CHECK(stereo.interleaved()[6] == 2.0f);
+|||CHECK(stereo.interleaved()[7] == 10.0f);
 |||}
 ```
 
-[[`audio_data<IsInterleaved>::interlaved`:noscope]] is available only for the
+[[`audio_data<IsInterleaved>::interleaved`:noscope]] is available only for the
 interleaved layout and returns a contiguous view containing `size * channels`
 scalars. [[`audio_data<IsInterleaved>::pointers`:noscope]] is available only for
 the planar layout and returns the per-channel pointer array for APIs that need

@@ -784,7 +784,7 @@ struct audio_data
      * @return A `univector_ref<fbase>` representing the interleaved audio data.
      *         The size of the returned reference is calculated as `size * channels`.
      */
-    [[nodiscard]] univector_ref<fbase> interlaved() const noexcept
+    [[nodiscard]] univector_ref<fbase> interleaved() const noexcept
         requires(IsInterleaved)
     {
         return univector_ref<fbase>(data, size * channels);

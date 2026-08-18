@@ -389,8 +389,8 @@ audio_stat audio_data<IsInterleaved>::stat() const noexcept
     }
     if constexpr (IsInterleaved)
     {
-        result.peak = std::max(result.peak, absmaxof(interlaved()));
-        result.rms  = rms(interlaved());
+        result.peak = std::max(result.peak, absmaxof(interleaved()));
+        result.rms  = rms(interleaved());
     }
     else
     {
