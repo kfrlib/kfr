@@ -228,6 +228,7 @@ option(KFR_EXTENDED_TESTS "Extended tests (up to hour)" OFF)
 option(KFR_SKIP_TESTS "Build tests but don't run tests" OFF)
 option(KFR_ENABLE_CAPI_BUILD "Enable KFR C API building" OFF)
 option(KFR_INSTALL_HEADERS "Include headers in installation" ON)
+option(KFR_INSTALL_LICENSE "Install LICENSE and README" ON)
 option(KFR_INSTALL_LIBRARIES "Include libraries in installation" ON)
 option(KFR_MANAGED_ALLOCATION
        "Use KFR managed memory (copy-free aligned reallocation, ref counting)"
@@ -549,8 +550,6 @@ if (KFR_INSTALL_HEADERS)
 endif ()
 
 include(GNUInstallDirs)
-
-option(KFR_INSTALL_LICENSE "Install LICENSE and README" ON)
 
 if (KFR_INSTALL_LICENSE)
     install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt
