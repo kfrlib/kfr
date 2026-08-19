@@ -228,6 +228,7 @@ option(KFR_EXTENDED_TESTS "Extended tests (up to hour)" OFF)
 option(KFR_SKIP_TESTS "Build tests but don't run tests" OFF)
 option(KFR_ENABLE_CAPI_BUILD "Enable KFR C API building" OFF)
 option(KFR_INSTALL_HEADERS "Include headers in installation" ON)
+option(KFR_INSTALL_LICENSE "Include LICENSE and README in installation" ON)
 option(KFR_INSTALL_LIBRARIES "Include libraries in installation" ON)
 option(KFR_MANAGED_ALLOCATION
        "Use KFR managed memory (copy-free aligned reallocation, ref counting)"
@@ -548,9 +549,13 @@ if (KFR_INSTALL_HEADERS)
         RENAME config.h)
 endif ()
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt
-              ${CMAKE_CURRENT_SOURCE_DIR}/README.md
-        DESTINATION .)
+include(GNUInstallDirs)
+
+if (KFR_INSTALL_LICENSE)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt
+                  ${CMAKE_CURRENT_SOURCE_DIR}/README.md
+            DESTINATION ${CMAKE_INSTALL_DOCDIR})
+endif ()
 
 # uninstall target
 if (NOT TARGET uninstall)
@@ -565,7 +570,6 @@ if (NOT TARGET uninstall)
                 ${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake)
 endif ()
 
-include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 write_basic_package_version_file(
