@@ -548,9 +548,15 @@ if (KFR_INSTALL_HEADERS)
         RENAME config.h)
 endif ()
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt
-              ${CMAKE_CURRENT_SOURCE_DIR}/README.md
-        DESTINATION .)
+include(GNUInstallDirs)
+
+option(KFR_INSTALL_LICENSE "Install LICENSE and README" ON)
+
+if (KFR_INSTALL_LICENSE)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt
+                  ${CMAKE_CURRENT_SOURCE_DIR}/README.md
+            DESTINATION ${CMAKE_INSTALL_DOCDIR})
+endif ()
 
 # uninstall target
 if (NOT TARGET uninstall)
@@ -565,7 +571,6 @@ if (NOT TARGET uninstall)
                 ${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake)
 endif ()
 
-include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 write_basic_package_version_file(
