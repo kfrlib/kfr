@@ -380,15 +380,12 @@ by KFR I/O and audio APIs. Without it, KFR uses `std::string` on non-Windows
 platforms and `std::wstring` on Windows; Windows builds also provide UTF-8
 `std::string` convenience overloads in that default mode.
 
-The project exposes `KFR_USE_STD_FILESYSTEM` as a CMake cache option, but the
-current build scripts do not propagate that option to a C++
-`KFR_USE_STD_FILESYSTEM` definition. Until that wiring is added, supply the
-definition while compiling KFR and every consumer. For a source-tree build,
-set it before KFR targets are created:
+The project exposes `KFR_USE_STD_FILESYSTEM` as a CMake cache option and
+propagates the corresponding `KFR_USE_STD_FILESYSTEM=1` definition to KFR and
+its consumers. For a source-tree build, enable it before adding KFR:
 
 ```cmake
 set(KFR_USE_STD_FILESYSTEM ON CACHE BOOL "" FORCE)
-add_compile_definitions(KFR_USE_STD_FILESYSTEM=1)
 add_subdirectory(external/kfr)
 ```
 

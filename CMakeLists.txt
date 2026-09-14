@@ -465,6 +465,10 @@ if (KFR_BASETYPE_F32)
     target_compile_definitions(kfr INTERFACE $<BUILD_INTERFACE:KFR_BASETYPE_F32=1>)
 endif ()
 
+if (KFR_USE_STD_FILESYSTEM)
+    target_compile_definitions(kfr INTERFACE $<BUILD_INTERFACE:KFR_USE_STD_FILESYSTEM=1>)
+endif ()
+
 set(KFR_DEBUG_INSTALL_SUFFIX
     "/debug"
     CACHE STRING "")

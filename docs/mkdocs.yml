@@ -143,6 +143,7 @@ plugins:
             - "-DKFR_FORCE_GENERIC_CPU=1"
             - "-DKFR_HAVE_ELLIPTIC=1"
             - "-DKFR_AUDIO_FLAC=1"
+            - "-DKFR_USE_STD_FILESYSTEM=1"
             - "-I../include"
           inline_namespaces:
             - kfr::generic
