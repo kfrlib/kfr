@@ -133,6 +133,7 @@ or `OFF` during configuration, for example
 | `ENABLE_TESTS` | `OFF` | Add the KFR test suite to the build. |
 | `ENABLE_EXAMPLES` | `ON` when tests are enabled; otherwise `OFF` | Build the examples and tools. This is a dependent option controlled by `ENABLE_TESTS`. |
 | `KFR_INSTALL_HEADERS` | `ON` | Install public headers and the generated `kfr/config.h`. |
+| `KFR_INSTALL_LICENSE` | `ON` | Install `LICENSE.txt` and `README.md` to `CMAKE_INSTALL_DOCDIR`. |
 | `KFR_INSTALL_LIBRARIES` | `ON` | Install the enabled compiled module libraries. |
 | `KFR_DEBUG_INSTALL_SUFFIX` | `/debug` | Installation subdirectory suffix for Debug libraries. |
 | `KFR_INSTALL_CMAKEDIR` | `lib/cmake/kfr` | Installation directory for `KFRConfig.cmake` and exported targets. |
