@@ -44,6 +44,8 @@ jobs:
           echo "$MKDOCS_MAIN" >> custom/main.html
 
       - name: Build site
+        env:
+          DISABLE_MKDOCS_2_WARNING: 1
         run: |
           mkdocs build --clean
 

@@ -55,7 +55,7 @@ public:
      */
     [[nodiscard]] expected<audiofile_format, audiofile_error> open(const file_path& path);
 
-#if defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM
+#if (defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM) || defined DOCUMENTATION
     /**
      * @brief Opens an audio file using a UTF-8 encoded string path (Windows-specific).
      * @param path UTF-8 encoded file path.
@@ -208,7 +208,7 @@ struct audio_decoding_options
 [[nodiscard]] std::unique_ptr<audio_decoder> create_decoder_for_file(
     const file_path& path, const audio_decoding_options& options = {});
 
-#if defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM
+#if (defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM) || defined DOCUMENTATION
 /**
  * @brief Creates an audio decoder from a file header.
  * @param header Audio file header.
@@ -314,7 +314,7 @@ struct caff_decoding_options : public audio_decoding_options
  */
 [[nodiscard]] std::unique_ptr<audio_decoder> create_caff_decoder(const caff_decoding_options& options = {});
 
-#ifdef KFR_AUDIO_FLAC
+#if defined KFR_AUDIO_FLAC || defined DOCUMENTATION
 /**
  * @brief Options for decoding FLAC audio files.
  */
@@ -346,7 +346,7 @@ struct mp3_decoding_options : public audio_decoding_options
  */
 [[nodiscard]] std::unique_ptr<audio_decoder> create_mp3_decoder(const mp3_decoding_options& options = {});
 
-#ifdef KFR_OS_WIN
+#if defined KFR_OS_WIN || defined DOCUMENTATION
 /**
  * @brief Options for decoding audio using Media Foundation.
  */
@@ -364,7 +364,7 @@ struct mediafoundation_decoding_options : public audio_decoding_options
     const mediafoundation_decoding_options& options = {});
 #endif
 
-#ifdef KFR_OS_APPLE
+#if defined KFR_OS_APPLE || defined DOCUMENTATION
 /**
  * @brief Options for decoding audio using Core Audio.
  */
@@ -394,7 +394,7 @@ struct coreaudio_decoding_options : public audio_decoding_options
     const file_path& path, audiofile_format* out_format = nullptr,
     const audio_decoding_options& options = {});
 
-#if defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM
+#if (defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM) || defined DOCUMENTATION
 [[nodiscard]] expected<audio_data_interleaved, audiofile_error> decode_audio_file(
     const std::string& path, audiofile_format* out_format = nullptr,
     const audio_decoding_options& options = {});

@@ -6,29 +6,30 @@ Accurate DFT benchmarking requires careful control of optimizations, CPU archite
 > A robust FFT benchmark suite implementing all these techniques is published at https://github.com/kfrlib/fft-benchmark
 
 - Ensure that the optimized version of each library is used. If the vendor provides prebuilt binaries, use them.
-  - For KFR, the official binaries can be found at: https://github.com/kfrlib/kfr/releases.
-  - To verify that KFR is optimized for maximum performance, call:
+- For KFR, the official binaries can be found at: https://github.com/kfrlib/kfr/releases.
+- To verify that KFR is optimized for maximum performance, call:
 
-  ```c++
-  ||||||||||
-  library_version()
-  ||||||||||
-  ```
-  Example output:
-  ```
-  KFR 6.1.1 optimized sse2 [sse2, sse41, avx, avx2, avx512] 64-bit (clang-msvc-19.1.0/windows) +in +ve
-  ```
-  The output must include the `optimized` flag and must not contain the `debug` flag.
+```c++
+||||||||||
+library_version()
+||||||||||
+```
+
+Example output:
+```
+KFR 6.1.1 optimized sse2 [sse2, sse41, avx, avx2, avx512] 64-bit (clang-msvc-19.1.0/windows) +in +ve
+```
+The output must include the `optimized` flag and must not contain the `debug` flag.
 
 - For libraries that support dynamic CPU dispatch, ensure that the best available architecture for your CPU is selected at runtime. Refer to the library documentation to learn how to verify this.
-  - For KFR, call:
+- For KFR, call:
 
-  ```c++
-  ||||||||||
-  cpu_runtime()
-  ||||||||||
-  ```
-  This function returns the selected architecture, such as `avx2`, `avx512`, or `neon`/`neon64` (for ARM).
+```c++
+||||||||||
+cpu_runtime()
+||||||||||
+```
+This function returns the selected architecture, such as `avx2`, `avx512`, or `neon`/`neon64` (for ARM).
 
 - Ensure that no emulation is involved. For example, use native `arm64` binaries for Apple M-series CPUs.
 

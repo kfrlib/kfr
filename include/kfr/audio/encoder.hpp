@@ -65,7 +65,7 @@ public:
     [[nodiscard]] expected<void, audiofile_error> open(const file_path& path, const audiofile_format& format,
                                                        audio_decoder* copyMetadataFrom = nullptr);
 
-#if defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM
+#if (defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM) || defined DOCUMENTATION
 
     /// @brief Opens the encoder with a string path and format (Windows-specific).
     /// @param path String path to the file to open.
@@ -168,7 +168,7 @@ struct aiff_encoding_options : public audio_encoding_options
  */
 std::unique_ptr<audio_encoder> create_aiff_encoder(const aiff_encoding_options& options = {});
 
-#ifdef KFR_AUDIO_FLAC
+#if defined KFR_AUDIO_FLAC || defined DOCUMENTATION
 /**
  * @brief Represents options for FLAC audio encoding.
  */
@@ -213,7 +213,7 @@ std::unique_ptr<audio_encoder> create_caff_encoder(const caff_encoding_options& 
                                                                 audio_decoder* copyMetadataFrom = nullptr,
                                                                 const audio_encoding_options& options = {});
 
-#if defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM
+#if (defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM) || defined DOCUMENTATION
 /**
  * @brief Encodes interleaved audio data and writes it to a file (Windows-specific overload).
  * @param path The file path for the encoded audio.
@@ -245,7 +245,7 @@ std::unique_ptr<audio_encoder> create_caff_encoder(const caff_encoding_options& 
                                                                 audio_decoder* copyMetadataFrom = nullptr,
                                                                 const audio_encoding_options& options = {});
 
-#if defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM
+#if (defined KFR_OS_WIN && !defined KFR_USE_STD_FILESYSTEM) || defined DOCUMENTATION
 /**
  * @brief Encodes planar audio data and writes it to a file (Windows-specific overload).
  * @param path The file path for the encoded audio.
