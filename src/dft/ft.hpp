@@ -54,6 +54,19 @@ static KFR_NOINLINE void expose_types()
 inline namespace KFR_ARCH_NAME
 {
 
+#ifdef __AVX__
+template <>
+KFR_INTRINSIC vec<float, 8> swap<2, float, 8>(const vec<float, 8>& x)
+{
+    return vec<float, 8>(_mm256_permute_ps(x.v, _MM_SHUFFLE(2, 3, 0, 1)));
+}
+template <>
+KFR_INTRINSIC vec<double, 4> swap<2, double, 4>(const vec<double, 4>& x)
+{
+    return vec<double, 4>(_mm256_permute_pd(x.v, 0x5));
+}
+#endif
+
 template <typename T, size_t N>
 using cvec = vec<T, N * 2>;
 
@@ -89,73 +102,132 @@ KFR_INTRINSIC void materialize(vec<T, N>&... w)
     (materialize(w), ...);
 }
 
-template <typename T, size_t N>
-    requires(N >= 2)
-KFR_INTRINSIC vec<T, N> cmul_impl(const vec<T, N>& x, const vec<T, N>& y)
-{
-    return subadd(x * dupeven(y), swap<2>(x) * dupodd(y));
-}
-template <typename T, size_t N>
-    requires(N > 2)
-KFR_INTRINSIC vec<T, N> cmul_impl(const vec<T, N>& x, const vec<T, 2>& y)
-{
-    vec<T, N> yy = resize<N>(y);
-    return cmul_impl(x, yy);
-}
-template <typename T, size_t N>
-    requires(N > 2)
-KFR_INTRINSIC vec<T, N> cmul_impl(const vec<T, 2>& x, const vec<T, N>& y)
-{
-    vec<T, N> xx = resize<N>(x);
-    return cmul_impl(xx, y);
-}
-
 /// Complex Multiplication
-template <typename T, size_t N1, size_t N2>
+template <bool conj = false, typename T, size_t N1, size_t N2>
 KFR_INTRINSIC vec<T, std::max(N1, N2)> cmul(const vec<T, N1>& x, const vec<T, N2>& y)
 {
-    return intr::cmul_impl(x, y);
+    static_assert(N1 >= 2 && N2 >= 2, "Complex multiplication requires at least one complex value");
+
+    constexpr size_t Nmax = std::max(N1, N2);
+    vec<T, Nmax> xx;
+    vec<T, Nmax> yy;
+
+    if constexpr (Nmax == N1)
+        xx = x;
+    else
+        xx = resize<Nmax>(x);
+
+    if constexpr (Nmax == N2)
+        yy = y;
+    else
+        yy = resize<Nmax>(y);
+
+    if constexpr (conj)
+        return swap<2>(subadd(swap<2>(xx) * dupeven(yy), xx * dupodd(yy)));
+    else
+        return subadd(xx * dupeven(yy), swap<2>(xx) * dupodd(yy));
 }
 
-template <typename T, size_t N>
-    requires(N >= 2)
-KFR_INTRINSIC vec<T, N> cmul_conj(const vec<T, N>& x, const vec<T, N>& y)
+#ifdef __AVX__
+template <bool conj>
+KFR_INTRINSIC __m256 cmul_avx2(const __m256 x, float yreal, float yimag) noexcept
 {
-    return swap<2>(subadd(swap<2>(x) * dupeven(y), x * dupodd(y)));
+    const __m256 yrealv = _mm256_set1_ps(yreal);
+    const __m256 yimagv = _mm256_set1_ps(conj ? -yimag : yimag);
+    const __m256 xswap  = _mm256_permute_ps(x, _MM_SHUFFLE(2, 3, 0, 1));
+    return _mm256_addsub_ps(_mm256_mul_ps(x, yrealv), _mm256_mul_ps(xswap, yimagv));
 }
-template <typename T, size_t N>
-    requires(N >= 2)
-KFR_INTRINSIC vec<T, N> cmul_2conj(const vec<T, N>& in0, const vec<T, N>& in1, const vec<T, N>& tw)
+
+template <bool conj>
+KFR_INTRINSIC __m256d cmul_avx2(const __m256d x, double yreal, double yimag) noexcept
 {
-    return (in0 + in1) * dupeven(tw) + swap<2>(cnegimag(in0 - in1)) * dupodd(tw);
+    const __m256d yrealv = _mm256_set1_pd(yreal);
+    const __m256d yimagv = _mm256_set1_pd(conj ? -yimag : yimag);
+    const __m256d xswap  = _mm256_permute_pd(x, 0x5);
+    return _mm256_addsub_pd(_mm256_mul_pd(x, yrealv), _mm256_mul_pd(xswap, yimagv));
 }
-template <typename T, size_t N>
-    requires(N >= 2)
-KFR_INTRINSIC void cmul_2conj(vec<T, N>& out0, vec<T, N>& out1, const vec<T, 2>& in0, const vec<T, 2>& in1,
-                              const vec<T, N>& tw)
+
+template <bool conj>
+KFR_INTRINSIC vec<float, 8> cmul_avx2(const vec<float, 8>& x, const vec<float, 2>& y)
 {
-    const vec<T, N> twr   = dupeven(tw);
-    const vec<T, N> twi   = dupodd(tw);
-    const vec<T, 2> sum   = (in0 + in1);
-    const vec<T, 2> dif   = swap<2>(negodd(in0 - in1));
-    const vec<T, N> sumtw = resize<N>(sum) * twr;
-    const vec<T, N> diftw = resize<N>(dif) * twi;
-    out0 += sumtw + diftw;
-    out1 += sumtw - diftw;
+    return vec<float, 8>(cmul_avx2<conj>(x.v, y[0], y[1]));
 }
-template <typename T, size_t N>
-    requires(N > 2)
-KFR_INTRINSIC vec<T, N> cmul_conj(const vec<T, N>& x, const vec<T, 2>& y)
+
+template <bool conj>
+KFR_INTRINSIC vec<float, 16> cmul_avx2(const vec<float, 16>& x, const vec<float, 2>& y)
 {
-    vec<T, N> yy = resize<N>(y);
-    return cmul_conj(x, yy);
+    const vec<float, 8> low  = x.h.low;
+    const vec<float, 8> high = x.h.high;
+    return vec<float, 16>(cmul_avx2<conj>(low, y), cmul_avx2<conj>(high, y));
 }
-template <typename T, size_t N>
-    requires(N > 2)
-KFR_INTRINSIC vec<T, N> cmul_conj(const vec<T, 2>& x, const vec<T, N>& y)
+
+template <bool conj>
+KFR_INTRINSIC vec<double, 4> cmul_avx2(const vec<double, 4>& x, const vec<double, 2>& y)
 {
-    vec<T, N> xx = resize<N>(x);
-    return cmul_conj(xx, y);
+    return vec<double, 4>(cmul_avx2<conj>(x.v, y[0], y[1]));
+}
+
+template <bool conj>
+KFR_INTRINSIC vec<double, 8> cmul_avx2(const vec<double, 8>& x, const vec<double, 2>& y)
+{
+    const vec<double, 4> low  = x.h.low;
+    const vec<double, 4> high = x.h.high;
+    return vec<double, 8>(cmul_avx2<conj>(low, y), cmul_avx2<conj>(high, y));
+}
+
+template <>
+KFR_INTRINSIC vec<float, 8> cmul<false, float, 8, 2>(const vec<float, 8>& x, const vec<float, 2>& y)
+{
+    return cmul_avx2<false>(x, y);
+}
+
+template <>
+KFR_INTRINSIC vec<float, 8> cmul<true, float, 8, 2>(const vec<float, 8>& x, const vec<float, 2>& y)
+{
+    return cmul_avx2<true>(x, y);
+}
+
+template <>
+KFR_INTRINSIC vec<float, 16> cmul<false, float, 16, 2>(const vec<float, 16>& x, const vec<float, 2>& y)
+{
+    return cmul_avx2<false>(x, y);
+}
+
+template <>
+KFR_INTRINSIC vec<float, 16> cmul<true, float, 16, 2>(const vec<float, 16>& x, const vec<float, 2>& y)
+{
+    return cmul_avx2<true>(x, y);
+}
+
+template <>
+KFR_INTRINSIC vec<double, 4> cmul<false, double, 4, 2>(const vec<double, 4>& x, const vec<double, 2>& y)
+{
+    return cmul_avx2<false>(x, y);
+}
+
+template <>
+KFR_INTRINSIC vec<double, 4> cmul<true, double, 4, 2>(const vec<double, 4>& x, const vec<double, 2>& y)
+{
+    return cmul_avx2<true>(x, y);
+}
+
+template <>
+KFR_INTRINSIC vec<double, 8> cmul<false, double, 8, 2>(const vec<double, 8>& x, const vec<double, 2>& y)
+{
+    return cmul_avx2<false>(x, y);
+}
+
+template <>
+KFR_INTRINSIC vec<double, 8> cmul<true, double, 8, 2>(const vec<double, 8>& x, const vec<double, 2>& y)
+{
+    return cmul_avx2<true>(x, y);
+}
+#endif
+
+template <typename T, size_t N1, size_t N2>
+KFR_INTRINSIC vec<T, std::max(N1, N2)> cmul_conj(const vec<T, N1>& x, const vec<T, N2>& y)
+{
+    return cmul<true>(x, y);
 }
 
 /// Complex Multiplication with optional conjugation of the second operand
@@ -177,6 +249,27 @@ KFR_INTRINSIC vec<T, N> cmuli(ctrue_t, const vec<T, N>& x, const vec<T, N>& y)
     else
         return concat(/*re:*/ low(x) * low(y) - high(x) * high(y),
                       /*im:*/ low(x) * high(y) + high(x) * low(y));
+}
+
+template <typename T, size_t N>
+    requires(N >= 2)
+KFR_INTRINSIC vec<T, N> cmul_2conj(const vec<T, N>& in0, const vec<T, N>& in1, const vec<T, N>& tw)
+{
+    return (in0 + in1) * dupeven(tw) + swap<2>(cnegimag(in0 - in1)) * dupodd(tw);
+}
+template <typename T, size_t N>
+    requires(N >= 2)
+KFR_INTRINSIC void cmul_2conj(vec<T, N>& out0, vec<T, N>& out1, const vec<T, 2>& in0, const vec<T, 2>& in1,
+                              const vec<T, N>& tw)
+{
+    const vec<T, N> twr   = dupeven(tw);
+    const vec<T, N> twi   = dupodd(tw);
+    const vec<T, 2> sum   = (in0 + in1);
+    const vec<T, 2> dif   = swap<2>(negodd(in0 - in1));
+    const vec<T, N> sumtw = resize<N>(sum) * twr;
+    const vec<T, N> diftw = resize<N>(dif) * twi;
+    out0 += sumtw + diftw;
+    out1 += sumtw - diftw;
 }
 
 template <size_t N, bool A = false, typename T>
@@ -485,12 +578,22 @@ constexpr KFR_INTRINSIC T chsign(T x)
     return b ? -x : x;
 }
 
+// Twiddle values as a constexpr array: guaranteed constant evaluation, independent of inlining.
+template <typename T, size_t size, size_t start, size_t step, bool inverse, size_t... indices>
+constexpr inline T fixed_twiddle_values[sizeof...(indices)] = { (
+    indices & 1 ? chsign<inverse>(-sin_using_table<T>(size, (indices / 2 * step + start)))
+                : cos_using_table<T>(size, (indices / 2 * step + start)))... };
+
 template <typename T, size_t N, size_t size, size_t start, size_t step, bool inverse = false,
           size_t... indices>
 constexpr KFR_INTRINSIC cvec<T, N> get_fixed_twiddle_helper(csizes_t<indices...>)
 {
-    return make_vector((indices & 1 ? chsign<inverse>(-sin_using_table<T>(size, (indices / 2 * step + start)))
-                                    : cos_using_table<T>(size, (indices / 2 * step + start)))...);
+    constexpr const T(&tw)[sizeof...(indices)] =
+        fixed_twiddle_values<T, size, start, step, inverse, indices...>;
+    if (std::is_constant_evaluated())
+        return make_vector(tw[indices]...);
+    else
+        return kfr::read<sizeof...(indices)>(tw); // single vector load from .rdata
 }
 
 template <typename T, size_t width, size_t... indices>
@@ -572,7 +675,7 @@ KFR_INTRINSIC vec<T, width> cmul_by_twiddle(const vec<T, width>& x)
     }
     else
     {
-        return cmul(x, resize<width>(fixed_twiddle<T, 1, size, kk>()));
+        return cmul(x, fixed_twiddle<T, 1, size, kk>());
     }
 }
 

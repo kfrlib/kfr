@@ -1844,6 +1844,85 @@ KFR_INTRINSIC simd<double, 4> simd_vec_shuffle(simd_t<double, 2>, const simd<dou
 
 #endif
 
+template <size_t... m>
+constexpr unsigned blend_immediate(csizes_t<m...>)
+{
+    unsigned r = 0, i = 0;
+    ((r |= (m ? 1u : 0u) << i++), ...);
+    return r;
+}
+
+// Per-lane select: lane i = m[i] ? y[i] : x[i]. Uses single blend instruction where available.
+template <typename T, size_t N, size_t... m>
+KFR_INTRINSIC simd<T, N> simd_blend_lanes(const simd<T, N>& x, const simd<T, N>& y, csizes_t<m...>)
+{
+    constexpr unsigned imm = blend_immediate(csizes<m...>);
+    if constexpr (((m == 0) && ...))
+        return x;
+    else if constexpr (((m != 0) && ...))
+        return y;
+#ifdef KFR_ARCH_AVX512
+    else if constexpr (std::is_same_v<T, float> && N == 16)
+        return _mm512_mask_blend_ps(static_cast<__mmask16>(imm), x, y);
+    else if constexpr (std::is_same_v<T, double> && N == 8)
+        return _mm512_mask_blend_pd(static_cast<__mmask8>(imm), x, y);
+#endif
+#ifdef KFR_ARCH_AVX
+    else if constexpr (std::is_same_v<T, float> && N == 8)
+        return _mm256_blend_ps(x, y, imm);
+    else if constexpr (std::is_same_v<T, double> && N == 4)
+        return _mm256_blend_pd(x, y, imm);
+#endif
+#ifdef KFR_ARCH_SSE41
+    else if constexpr (std::is_same_v<T, float> && N == 4)
+        return _mm_blend_ps(x, y, imm);
+    else if constexpr (std::is_same_v<T, double> && N == 2)
+        return _mm_blend_pd(x, y, imm);
+#endif
+    else
+    {
+        not_optimized(KFR_FUNC_SIGNATURE);
+        const simd_array<T, N> xx = to_simd_array<T, N>(x);
+        const simd_array<T, N> yy = to_simd_array<T, N>(y);
+        simd_array<T, N> r{};
+        size_t i = 0;
+        ((r.val[i] = m ? yy.val[i] : xx.val[i], ++i), ...);
+        return from_simd_array<T, N>(r);
+    }
+}
+
+// Extract Nout-sized block number `block` from simd<T, Nin> via low/high halving (register moves only)
+template <typename T, size_t Nin, size_t Nout, size_t block>
+KFR_INTRINSIC simd<T, Nout> simd_get_block(const simd<T, Nin>& x)
+{
+    if constexpr (Nin == Nout)
+        return x;
+    else if constexpr (block * Nout < Nin / 2)
+        return simd_get_block<T, Nin / 2, Nout, block>(simd_get_low(simd_t<T, Nin>{}, x));
+    else
+        return simd_get_block<T, Nin / 2, Nout, block - Nin / 2 / Nout>(simd_get_high(simd_t<T, Nin>{}, x));
+}
+
+template <size_t Nout, size_t... indices>
+constexpr size_t shuffle_first_block()
+{
+    size_t r = size_t(-1);
+    ((indices != index_undefined && indices / Nout < r ? (r = indices / Nout) : 0), ...);
+    return r == size_t(-1) ? 0 : r;
+}
+template <size_t Nout, size_t b0, size_t... indices>
+constexpr size_t shuffle_second_block()
+{
+    size_t r = b0;
+    ((indices != index_undefined && indices / Nout != b0 ? (r = indices / Nout) : 0), ...);
+    return r;
+}
+template <size_t Nout, size_t b0, size_t b1, size_t... indices>
+constexpr bool shuffle_within_two_blocks()
+{
+    return ((indices == index_undefined || indices / Nout == b0 || indices / Nout == b1) && ...);
+}
+
 template <typename T, size_t Nin, size_t... indices, size_t Nout>
 KFR_INTRINSIC simd<T, Nout> universal_shuffle(simd_t<T, Nin>, const simd<T, Nin>& x, csizes_t<indices...>)
 {
@@ -1929,6 +2008,30 @@ KFR_INTRINSIC simd<T, Nout> universal_shuffle(simd_t<T, Nin>, const simd<T, Nin>
     else if constexpr (Nin >= minwidth && Nin <= maxwidth && Nout >= minwidth && Nout <= maxwidth)
     {
         return simd_vec_shuffle(simd_t<T, Nin>{}, x, Indices{});
+    }
+    else if constexpr (Nin > Nout && Nout >= minwidth && Nout <= maxwidth &&
+                       ((indices == index_undefined || indices < Nin) && ...) &&
+                       shuffle_within_two_blocks<Nout, shuffle_first_block<Nout, indices...>(),
+                                                 shuffle_second_block<Nout, shuffle_first_block<Nout, indices...>(),
+                                                                      indices...>(),
+                                                 indices...>())
+    {
+        // Shuffle drawing from at most two register-sized blocks of a wide input
+        // (e.g. blend/subadd or shuffle(x, y, ...)): permute each block, merge with one blend.
+        constexpr size_t b0 = shuffle_first_block<Nout, indices...>();
+        constexpr size_t b1 = shuffle_second_block<Nout, b0, indices...>();
+        constexpr csizes_t<(indices == index_undefined ? 0 : indices % Nout)...> perm{};
+        constexpr csizes_t<(indices != index_undefined && indices / Nout == b1 && b1 != b0 ? 1 : 0)...> sel{};
+        const simd<T, Nout> p0 =
+            universal_shuffle(simd_t<T, Nout>{}, simd_get_block<T, Nin, Nout, b0>(x), perm);
+        if constexpr (b0 == b1)
+            return p0;
+        else
+        {
+            const simd<T, Nout> p1 =
+                universal_shuffle(simd_t<T, Nout>{}, simd_get_block<T, Nin, Nout, b1>(x), perm);
+            return simd_blend_lanes<T, Nout>(p0, p1, sel);
+        }
     }
     else
     {
