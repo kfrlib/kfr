@@ -5,6 +5,8 @@
  */
 
 #include <bit>
+#include <cmath>
+#include <limits>
 #include <kfr/simd/vec.hpp>
 
 #include <kfr/io/tostring.hpp>
@@ -56,6 +58,16 @@ TEST_CASE("vec_broadcast")
 template <typename Tout, typename Tin>
 bool is_in_range_of(Tin x)
 {
+    if constexpr (std::is_floating_point_v<Tin> && std::is_integral_v<Tout>)
+    {
+        if (!std::isfinite(x))
+            return false;
+
+        if (static_cast<long double>(x) < static_cast<long double>(std::numeric_limits<Tout>::lowest()) ||
+            static_cast<long double>(x) >= static_cast<long double>(std::numeric_limits<Tout>::max()) + 1)
+            return false;
+    }
+
     return (is_f_class<Tin> && is_f_class<Tout>) || static_cast<Tin>(static_cast<Tout>(x)) == x;
 }
 
