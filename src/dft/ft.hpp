@@ -3159,7 +3159,17 @@ KFR_INTRINSIC int countr_zero(T x) noexcept
     else
     {
         unsigned long index;
+#if defined(_WIN64)
         _BitScanForward64(&index, static_cast<unsigned __int64>(x));
+#else
+        // _BitScanForward64 is not available when targeting 32-bit x86
+        const unsigned __int64 v = static_cast<unsigned __int64>(x);
+        if (!_BitScanForward(&index, static_cast<unsigned long>(v)))
+        {
+            _BitScanForward(&index, static_cast<unsigned long>(v >> 32));
+            index += 32;
+        }
+#endif
         return static_cast<int>(index);
     }
 #endif
