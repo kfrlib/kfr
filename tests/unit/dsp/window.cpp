@@ -14,6 +14,7 @@ KFR_PRAGMA_MSVC(warning(push))
 KFR_PRAGMA_MSVC(warning(disable : 4305))
 KFR_PRAGMA_MSVC(warning(disable : 4244))
 
+using Catch::Approx;
 namespace kfr
 {
 inline namespace KFR_ARCH_NAME
@@ -202,6 +203,39 @@ TEST_CASE("window")
     win<w::planck_taper, f32>(8, 0.25, s::periodic, u{ 0, 0.5, 1, 1, 1, 1, 1, 0.5 });
     win<w::tukey, f32>(8, 0.5, s::periodic, u{ 0., 0.5, 1., 1., 1., 1., 1., 0.5 });
     // clang-format on
+}
+template <window_type type>
+void single_sample(window_symmetry sym)
+{
+    univector<f64> calc = render(window(1, cval_t<window_type, type>{}, 0.25, sym, kfr::ctype<f64>));
+    INFO("win=" << wins[static_cast<int>(type)] << " sym=" << (sym == window_symmetry::symmetric));
+    REQUIRE(calc.size() == 1);
+    CHECK(calc[0] == Approx(1.0).margin(1e-6));
+}
+
+TEST_CASE("window_single_sample")
+{
+    using w = window_type;
+    for (window_symmetry sym : { window_symmetry::symmetric, window_symmetry::periodic })
+    {
+        single_sample<w::rectangular>(sym);
+        single_sample<w::triangular>(sym);
+        single_sample<w::bartlett>(sym);
+        single_sample<w::cosine>(sym);
+        single_sample<w::hann>(sym);
+        single_sample<w::bartlett_hann>(sym);
+        single_sample<w::hamming>(sym);
+        single_sample<w::bohman>(sym);
+        single_sample<w::blackman>(sym);
+        single_sample<w::blackman_harris>(sym);
+        single_sample<w::kaiser>(sym);
+        single_sample<w::flattop>(sym);
+        single_sample<w::gaussian>(sym);
+        single_sample<w::lanczos>(sym);
+        single_sample<w::cosine_np>(sym);
+        single_sample<w::planck_taper>(sym);
+        single_sample<w::tukey>(sym);
+    }
 }
 } // namespace KFR_ARCH_NAME
 } // namespace kfr
