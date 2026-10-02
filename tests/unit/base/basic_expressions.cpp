@@ -21,6 +21,7 @@ TEST_CASE("linspace")
     CHECK_EXPRESSION_LIST(linspace(0.0, 1.0, 4, false, ctrue), { 0.0, 0.25, 0.50, 0.75 });
     CHECK(get_shape(linspace(0.0, 1.0, 5, true, cfalse)) == shape{ infinite_size });
     CHECK_EXPRESSION_LIST(linspace(0.0, 1.0, 4, false, ctrue), { 0.0, 0.25, 0.50, 0.75 });
+    CHECK_EXPRESSION_LIST(linspace(2.0, 5.0, 1, true, ctrue), { 2.0 });
     CHECK_EXPRESSION_LIST(symmlinspace(3.0, 4, ctrue), { -3.0, -1.00, 1.00, 3.00 });
 
     CHECK_EXPRESSION_LIST(linspace(1, 21, 4, false, ctrue), { 1, 6, 11, 16 });

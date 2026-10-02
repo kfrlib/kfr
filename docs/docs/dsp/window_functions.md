@@ -40,6 +40,8 @@ The returned window has the requested length and no evolving processing state, s
 
 For the ordinary window grids, a periodic window of length $N$ is the first $N$ values of the corresponding symmetric window of length $N + 1$. For example, symmetric seven-sample Hann coefficients are `{ 0, 0.25, 0.75, 1, 0.75, 0.25, 0 }`; the periodic eight-sample form is `{ 0, 0.14644661, 0.5, 0.85355339, 1, 0.85355339, 0.5, 0.14644661 }`. Thus an even symmetric centred window commonly has two equal peak-adjacent values below one, while an even periodic one can contain the single centre value one.
 
+A window of length 1 is the exception: it is `{ 1 }` for every window type and both symmetry modes, as in NumPy and SciPy.
+
 Only the named Blackman, Blackman-Harris, Planck-taper, and Tukey functions expose a symmetry argument. The remaining named constructors create symmetric windows. Use the compile-time generic [[`window(size_t, cval_t<window_type, type>, std::type_identity_t<T>, window_symmetry, ctype_t<T>)`:nosig]] API for a periodic form of any other family:
 
 ```c++
