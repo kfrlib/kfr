@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
     - name: Build
       run: |
         set -e
@@ -33,7 +33,7 @@ jobs:
         cmake --build build-test2
         ctest --test-dir build-test2 -V -C Release
     - name: Binaries
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: kfr-linux-x86_64
         path: ${{ github.workspace }}/dist
@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
     - name: Build
       run: |
         set -e
@@ -64,7 +64,7 @@ jobs:
         cmake --build build-test2
         ctest --test-dir build-test2 -V -C Release
     - name: Binaries
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: kfr-linux-arm
         path: ${{ github.workspace }}/dist
@@ -73,7 +73,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
     - name: Build
       run: |
         set -e
@@ -95,7 +95,7 @@ jobs:
         cmake --build build-test2
         ctest --test-dir build-test2 -V -C Release
     - name: Binaries
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: kfr-linux-arm64
         path: ${{ github.workspace }}/dist
@@ -104,7 +104,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
     - name: Build
       run: |
         set -e
@@ -126,7 +126,7 @@ jobs:
         cmake --build build-test2
         ctest --test-dir build-test2 -V -C Release
     - name: Binaries
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: kfr-linux-riscv64
         path: ${{ github.workspace }}/dist
@@ -135,7 +135,7 @@ jobs:
     runs-on: windows-2022
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
     - name: Build
       shell: cmd
       run: |
@@ -162,7 +162,7 @@ jobs:
         cmake --build build-test2 --config Release
         ctest --test-dir build-test2 -V -C Release
     - name: Binaries
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: kfr-windows-x86
         path: ${{ github.workspace }}/dist
@@ -171,7 +171,7 @@ jobs:
     runs-on: windows-2022
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
     - name: Build
       shell: cmd
       run: |
@@ -196,7 +196,7 @@ jobs:
         cmake --build build-test2 --config Release
         ctest --test-dir build-test2 -V -C Release
     - name: Binaries
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: kfr-windows-x86_64
         path: ${{ github.workspace }}/dist
@@ -205,7 +205,7 @@ jobs:
     runs-on: windows-11-arm
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
     - name: Build
       shell: cmd
       run: |
@@ -232,7 +232,7 @@ jobs:
         cmake --build build-test2 --config Release
         ctest --test-dir build-test2 -V -C Release
     - name: Binaries
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: kfr-windows-arm64
         path: ${{ github.workspace }}/dist
@@ -241,7 +241,7 @@ jobs:
     runs-on: windows-2022
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
     - name: Build
       shell: cmd
       run: |
@@ -262,7 +262,7 @@ jobs:
         cmake -B build-test2 -S tests/usage-manual -GNinja -DKFR_DIR=${{ github.workspace }}/dist -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=armeabi-v7a -DANDROID_ARM_NEON=TRUE
         cmake --build build-test2
     - name: Binaries
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: kfr-android-armeabi-v7a
         path: ${{ github.workspace }}/dist
@@ -271,7 +271,7 @@ jobs:
     runs-on: windows-2022
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
     - name: Build
       shell: cmd
       run: |
@@ -292,7 +292,7 @@ jobs:
         cmake -B build-test2 -S tests/usage-manual -GNinja -DKFR_DIR=${{ github.workspace }}/dist -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=arm64-v8a
         cmake --build build-test2
     - name: Binaries
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: kfr-android-arm64-v8a
         path: ${{ github.workspace }}/dist
@@ -301,7 +301,7 @@ jobs:
     runs-on: windows-2022
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
     - name: Build
       shell: cmd
       run: |
@@ -322,7 +322,7 @@ jobs:
         cmake -B build-test2 -S tests/usage-manual -GNinja -DKFR_DIR=${{ github.workspace }}/dist -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86
         cmake --build build-test2
     - name: Binaries
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: kfr-android-x86
         path: ${{ github.workspace }}/dist
@@ -331,7 +331,7 @@ jobs:
     runs-on: windows-2022
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
     - name: Build
       shell: cmd
       run: |
@@ -352,7 +352,7 @@ jobs:
         cmake -B build-test2 -S tests/usage-manual -GNinja -DKFR_DIR=${{ github.workspace }}/dist -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86_64
         cmake --build build-test2
     - name: Binaries
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: kfr-android-x86_64
         path: ${{ github.workspace }}/dist
@@ -361,7 +361,7 @@ jobs:
     runs-on: macos-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
     - name: Build
       run: |
         brew install ninja
@@ -381,7 +381,7 @@ jobs:
         cmake --build build-test2 --config Release
         ctest --test-dir build-test2 -V -C Release
     - name: Binaries
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: kfr-macos-x86_64
         path: ${{ github.workspace }}/dist
@@ -390,7 +390,7 @@ jobs:
     runs-on: macos-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
     - name: Build
       run: |
         brew install ninja
@@ -414,7 +414,7 @@ jobs:
         arch -x86_64 build-test2/Release/kfr-app
         arch -arm64 build-test2/Release/kfr-app
     - name: Binaries
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: kfr-macos-universal
         path: ${{ github.workspace }}/dist
@@ -423,7 +423,7 @@ jobs:
     runs-on: macos-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
     - name: Build
       run: |
         brew install ninja
@@ -443,7 +443,7 @@ jobs:
         cmake --build build-test2 --config Release
         ctest --test-dir build-test2 -V -C Release
     - name: Binaries
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: kfr-macos-arm64
         path: ${{ github.workspace }}/dist
@@ -470,9 +470,9 @@ jobs:
       - binaries-windows-x86_64
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
     - name: Download artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
     - name: Release
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
