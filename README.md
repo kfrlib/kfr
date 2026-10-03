@@ -10,9 +10,9 @@
 ![License](https://img.shields.io/github/license/kfrlib/kfr.svg?style=flat-square&label=License)
 ![Release](https://img.shields.io/github/release-date/kfrlib/kfr?style=flat-square&label=Latest+release)
 
-https://www.kfrlib.com
+https://kfr.dev https://docs.kfr.dev
 
-KFR is an open source C++ DSP framework that contains high performance building blocks for DSP, audio, scientific and other applications. It is distributed under GPLv2+ and a [commercial license](https://kfrlib.com/purchase).
+KFR is an open source C++ DSP framework that contains high performance building blocks for DSP, audio, scientific and other applications. It is distributed under GPLv2+ and a [commercial license](https://kfr.dev/purchase/).
 
 :star2: **New**: Explore benchmark results from the LIGO, Virgo, and KAGRA collaborations, comparing KFR performance against FFTW for signal processing in gravitational-wave research: https://ar5iv.labs.arxiv.org/html/2503.14292
 
@@ -42,7 +42,7 @@ KFR is an open source C++ DSP framework that contains high performance building 
     * DFT performance improved by up to 80% on ARM and ARM64
     * New Android x86/x64 and Linux ARM/AArch64 builds
     * Matrix transpose up to 30% faster
-* [More](docs/docs/getting-started/whatsnew7.md)
+* [More](https://docs.kfr.dev/getting-started/whatsnew7/)
 
 ## Our other projects
 
@@ -66,8 +66,8 @@ Compiler support:
 KFR has no external C++ dependencies beyond a C++20-compatible standard library. CMake is used as the build system.
 
 Since KFR 7.1, KFR provides the same level of support for Clang, GCC, and MSVC.
-MSVC builds may provide lower performance, especially for DFT and other complex
-algorithms; use Clang or GCC when maximum performance is required.
+MSVC 2022 builds may provide lower performance, especially for DFT and other complex
+algorithms; use Clang (better), MSVC 2026 or GCC when maximum performance is required.
 
 Clang can be used to build Visual Studio projects, either for selected targets or as the primary compiler, while maintaining full compatibility with code built by Visual Studio.
 
@@ -90,7 +90,7 @@ ARM, ARM64, and RISC-V targets require Clang or GCC.
 
 Other operating systems, compilers, and CPUs may work but are outside the regular test matrix.
 
-:arrow_right: See [Installation](docs/docs/getting-started/installation.md) docs for more details
+:arrow_right: See [Installation](https://docs.kfr.dev/getting-started/installation/) docs for more details
 
 ## Features
 
@@ -103,7 +103,7 @@ Other operating systems, compilers, and CPUs may work but are outside the regula
 * Convolution using FFT
 * Convolution filter
 
-:arrow_right: See also [How to apply FFT](docs/docs/dft/dft.md) with KFR
+:arrow_right: See also [How to apply FFT](https://docs.kfr.dev/dft/dft/) with KFR
 
 ### DSP
 
@@ -209,11 +209,9 @@ See [fft benchmark](https://github.com/kfrlib/fft-benchmark) for details about b
 
 ## Documentation
 
-KFR 7 (latest)
-https://www.kfrlib.com/docs/latest/
+Documentation homepage: https://docs.kfr.dev/
 
-KFR 6
-https://www.kfrlib.com/docs/v6/
+Symbol reference: https://docs.kfr.dev/_gen/
 
 Built with
 * [cxxdox - generates markdown docs from C++](https://github.com/kfrlib/cxxdox)
@@ -232,4 +230,4 @@ Built with
 
 KFR is dual-licensed, available under both commercial and open-source GPLv2+ license.
 
-If you want to use KFR in a commercial product or a closed-source project, you need to [purchase a Commercial License](https://kfrlib.com/purchase-license).
+If you want to use KFR in a commercial product or a closed-source project, you need to [purchase a Commercial License](https://kfr.dev/purchase/).
