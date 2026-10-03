@@ -92,19 +92,16 @@ Other operating systems, compilers, and CPUs may work but are outside the regula
 
 :arrow_right: See [Installation](https://docs.kfr.dev/getting-started/installation/) docs for more details
 
-#### Vcpkg
+## Package Managers
 
-You can build and install kfr using [vcpkg](https://github.com/Microsoft/vcpkg/) dependency manager:
 
-```bash
-git clone https://github.com/Microsoft/vcpkg.git
-cd vcpkg
-./bootstrap-vcpkg.sh
-./vcpkg integrate install
-./vcpkg install kfr
-```
-
-The kfr port in vcpkg is kept up to date by Microsoft team members and community contributors. If the version is out of date, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
+| Package manager | Package name | Version | Command | Comments |
+|---|---|---|---|---|
+| Homebrew | [kfr](https://formulae.brew.sh/formula/kfr) | 7.1.0 | `brew install kfr` | **Prebuilt**. Bottles exist for macOS on Apple Silicon (Golden Gate, Tahoe, Sequoia, Sonoma), macOS on Intel (Sonoma only), and Linux ARM64 and x86_64. Boost and CMake are needed only when building from source. |
+| vcpkg | [kfr](https://vcpkg.io/en/package/kfr.html) | 6.3.1 (the page may lag behind the registry) | `vcpkg install kfr` (classic mode) or `vcpkg add port kfr` (manifest mode) | **Built from source** (no binary cache by default). Optional features: `dft` and `capi`. Supported on Windows, Linux and macOS, except Windows ARM64 and Xbox. |
+| pacman (Arch Linux, official `extra` repo) | [kfr](https://archlinux.org/packages/extra/x86_64/kfr/) | 7.1.0-1 | `sudo pacman -S kfr` | **Prebuilt.** x86_64 only. Depends only on glibc. |
+| FreeBSD pkg / ports | [math/kfr](https://www.freshports.org/math/kfr) | 6.3.1 | `pkg install kfr` (or build with `cd /usr/ports/math/kfr && make install clean`) | **Prebuilt** packages for aarch64 and amd64 on FreeBSD 13–16. Only armv7 on FreeBSD 14 has older builds (6.3.0 on `latest`, 6.2.0 on `quarterly`). |
+| Conda (community channel `hep-forge`) | [kfrlib](https://anaconda.org/hep-forge/kfrlib) | 7.0.1 | `conda install hep-forge::kfrlib` | **Prebuilt**, but only for linux-64. Not an official or conda-forge package, and the channel is community-run. |
 
 ## Features
 
