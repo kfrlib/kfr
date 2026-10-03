@@ -1,0 +1,128 @@
+/**
+ * KFR (https://www.kfrlib.com)
+ * Copyright (C) 2016-2026 Dan Casarin
+ * See LICENSE.txt for details
+ */
+
+#include <kfr/simd/saturation.hpp>
+
+namespace kfr
+{
+inline namespace KFR_ARCH_NAME
+{
+
+template <typename T>
+bool builtin_add_overflow(T x, T y, T* r)
+{
+#if KFR_HAS_BUILTIN(__builtin_add_overflow) || defined KFR_COMPILER_GCC
+    return __builtin_add_overflow(x, y, r);
+#else
+    *r = x + y;
+    return static_cast<long long>(x) + static_cast<long long>(y) != static_cast<long long>(*r);
+#endif
+}
+template <>
+bool builtin_add_overflow<u64>(u64 x, u64 y, u64* r)
+{
+#if KFR_HAS_BUILTIN(__builtin_uaddll_overflow) || defined KFR_COMPILER_GCC
+    return __builtin_uaddll_overflow(x, y, reinterpret_cast<unsigned long long*>(r));
+#else
+    *r = x + y;
+    return x > 0xFFFFFFFFFFFFFFFFull - y;
+#endif
+}
+template <>
+bool builtin_add_overflow<i64>(i64 x, i64 y, i64* r)
+{
+#if KFR_HAS_BUILTIN(__builtin_saddll_overflow) || defined KFR_COMPILER_GCC
+    return __builtin_saddll_overflow(x, y, reinterpret_cast<long long*>(r));
+#else
+    *r = x + y;
+    return !((x ^ y) & 0x8000000000000000ull) && ((*r ^ x) & 0x8000000000000000ull);
+#endif
+}
+template <typename T>
+bool builtin_sub_overflow(T x, T y, T* r)
+{
+#if KFR_HAS_BUILTIN(__builtin_sub_overflow) || defined KFR_COMPILER_GCC
+    return __builtin_sub_overflow(x, y, r);
+#else
+    *r = x - y;
+    return static_cast<long long>(x) - static_cast<long long>(y) != static_cast<long long>(*r);
+#endif
+}
+template <>
+bool builtin_sub_overflow<u64>(u64 x, u64 y, u64* r)
+{
+#if KFR_HAS_BUILTIN(__builtin_usubll_overflow) || defined KFR_COMPILER_GCC
+    return __builtin_usubll_overflow(x, y, reinterpret_cast<unsigned long long*>(r));
+#else
+    *r = x - y;
+    return x < y;
+#endif
+}
+template <>
+bool builtin_sub_overflow<i64>(i64 x, i64 y, i64* r)
+{
+#if KFR_HAS_BUILTIN(__builtin_ssubll_overflow) || defined KFR_COMPILER_GCC
+    return __builtin_ssubll_overflow(x, y, reinterpret_cast<long long*>(r));
+#else
+    *r = x - y;
+    return ((x ^ y) & 0x8000000000000000ull) && ((*r ^ x) & 0x8000000000000000ull);
+#endif
+}
+template <typename T>
+inline T ref_satadd(T x, T y)
+{
+    T result;
+    if (builtin_add_overflow(x, y, &result))
+        return x < 0 ? std::numeric_limits<T>::min() : std::numeric_limits<T>::max();
+    else
+        return result;
+}
+
+template <typename T>
+inline T ref_satsub(T x, T y)
+{
+    T result;
+    if (builtin_sub_overflow(x, y, &result))
+        return x < y ? std::numeric_limits<T>::min() : std::numeric_limits<T>::max();
+    else
+        return result;
+}
+
+TEST_CASE("intrin_satadd_satsub")
+{
+#if defined KFR_COMPILER_IS_MSVC && defined KFR_ARCH_X32
+    println("Skipping saturation tests on MSVC x86 due to compiler optimization error");
+#else
+    test_matrix(
+        named("type") = cconcat(signed_vector_types<vec>, unsigned_vector_types<vec>),
+        [](auto type)
+        {
+            using T     = typename decltype(type)::type;
+            using Tsub  = subtype<T>;
+            const T min = std::numeric_limits<Tsub>::min();
+            const T max = std::numeric_limits<Tsub>::max();
+            CHECK_THAT(kfr::satadd(min, min), DeepMatcher(apply([](auto x, auto y) -> decltype(x)
+                                                                { return ref_satadd(x, y); }, min, min)));
+            CHECK_THAT(kfr::satadd(max, max), DeepMatcher(apply([](auto x, auto y) -> decltype(x)
+                                                                { return ref_satadd(x, y); }, max, max)));
+            CHECK_THAT(kfr::satadd(min, max), DeepMatcher(apply([](auto x, auto y) -> decltype(x)
+                                                                { return ref_satadd(x, y); }, min, max)));
+            CHECK_THAT(kfr::satadd(max, min), DeepMatcher(apply([](auto x, auto y) -> decltype(x)
+                                                                { return ref_satadd(x, y); }, max, min)));
+
+            CHECK_THAT(kfr::satsub(min, min), DeepMatcher(apply([](auto x, auto y) -> decltype(x)
+                                                                { return ref_satsub(x, y); }, min, min)));
+            CHECK_THAT(kfr::satsub(max, max), DeepMatcher(apply([](auto x, auto y) -> decltype(x)
+                                                                { return ref_satsub(x, y); }, max, max)));
+            CHECK_THAT(kfr::satsub(min, max), DeepMatcher(apply([](auto x, auto y) -> decltype(x)
+                                                                { return ref_satsub(x, y); }, min, max)));
+            CHECK_THAT(kfr::satsub(max, min), DeepMatcher(apply([](auto x, auto y) -> decltype(x)
+                                                                { return ref_satsub(x, y); }, max, min)));
+        });
+#endif
+}
+} // namespace KFR_ARCH_NAME
+} // namespace kfr

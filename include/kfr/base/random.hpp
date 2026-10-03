@@ -1,8 +1,5 @@
-/** @addtogroup random
- *  @{
- */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -25,214 +22,400 @@
  */
 #pragma once
 
-#include "../simd/impl/function.hpp"
-#include "../simd/operators.hpp"
-#include "../simd/shuffle.hpp"
-#include "../simd/vec.hpp"
-#include <functional>
-
-#ifdef CMT_ARCH_ARM
-#define KFR_DISABLE_READCYCLECOUNTER
-#endif
+#include "../math/log_exp.hpp"
+#include "../math/sin_cos.hpp"
+#include "../math/sqrt.hpp"
+#include "random_bits.hpp"
+#include "state_holder.hpp"
 
 namespace kfr
 {
 
-#ifndef KFR_DISABLE_READCYCLECOUNTER
-struct seed_from_rdtsc_t
-{
-};
-
-constexpr seed_from_rdtsc_t seed_from_rdtsc{};
-#endif
-
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
-using random_state = u32x4;
-
-#ifndef KFR_DISABLE_READCYCLECOUNTER
-#ifdef CMT_COMPILER_CLANG
-#define KFR_builtin_readcyclecounter()                                                                       \
-    static_cast<u64>(__builtin_readcyclecounter()) // Intel C++ requires cast here
-#else
-#define KFR_builtin_readcyclecounter() static_cast<u64>(__rdtsc())
-#endif
-#endif
-
-struct random_bit_generator
+/**
+ * @brief Generates a vector of uniformly distributed integers by reinterpreting raw random bits.
+ *
+ * @tparam T Integral type of the result.
+ * @tparam N Number of values to generate.
+ * @param state Reference to the random number generator state.
+ * @return Vector of N uniformly distributed integers.
+ */
+template <std::integral T, size_t N>
+KFR_INTRINSIC vec<T, N> random_uniform(random_state& state)
 {
-#ifndef KFR_DISABLE_READCYCLECOUNTER
-    KFR_MEM_INTRINSIC random_bit_generator(seed_from_rdtsc_t) CMT_NOEXCEPT
-        : state(bitcast<u32>(make_vector(KFR_builtin_readcyclecounter(),
-                                         (KFR_builtin_readcyclecounter() << 11) ^ 0x710686d615e2257bull)))
-    {
-        (void)operator()();
-    }
-#endif
-    KFR_MEM_INTRINSIC random_bit_generator(u32 x0, u32 x1, u32 x2, u32 x3) CMT_NOEXCEPT
-        : state(x0, x1, x2, x3)
-    {
-        (void)operator()();
-    }
-    KFR_MEM_INTRINSIC random_bit_generator(u64 x0, u64 x1) CMT_NOEXCEPT
-        : state(bitcast<u32>(make_vector(x0, x1)))
-    {
-        (void)operator()();
-    }
-
-    KFR_MEM_INTRINSIC random_state operator()()
-    {
-        const static random_state mul{ 214013u, 17405u, 214013u, 69069u };
-        const static random_state add{ 2531011u, 10395331u, 13737667u, 1u };
-        state = bitcast<u32>(rotateright<3>(bitcast<u8>(fmadd(state, mul, add))));
-        return state;
-    }
-
-protected:
-    random_state state;
-};
-
-static_assert(sizeof(random_state) == 16, "sizeof(random_state) == 16");
-
-template <size_t N, KFR_ENABLE_IF(N <= sizeof(random_state))>
-KFR_INTRINSIC vec<u8, N> random_bits(random_bit_generator& gen)
-{
-    return narrow<N>(bitcast<u8>(gen()));
+    return bitcast<T>(random_bits<N * sizeof(T)>(state));
 }
 
-template <size_t N, KFR_ENABLE_IF(N > sizeof(random_state))>
-KFR_INTRINSIC vec<u8, N> random_bits(random_bit_generator& gen)
+/**
+ * @brief Generates a vector of f32 values with mantissas in [1.0, 2.0).
+ *
+ * The raw bits are masked to keep only the mantissa bits and to force the
+ * exponent to that of 1.0, producing values in [1.0, 2.0).
+ *
+ * @tparam T Must be f32.
+ * @tparam N Number of values to generate.
+ * @param state Reference to the random number generator state.
+ * @return Vector of N floats in [1.0, 2.0).
+ */
+template <std::same_as<f32> T, size_t N>
+KFR_INTRINSIC vec<f32, N> randommantissa(random_state& state)
 {
-    constexpr size_t N2         = prev_poweroftwo(N - 1);
-    const vec<u8, N2> bits1     = random_bits<N2>(gen);
-    const vec<u8, N - N2> bits2 = random_bits<N - N2>(gen);
-    return concat(bits1, bits2);
+    return bitcast<f32>((random_uniform<u32, N>(state) & u32(0x7FFFFFu)) | u32(0x3f800000u)) + 0.0f;
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_integral<T>)>
-KFR_INTRINSIC vec<T, N> random_uniform(random_bit_generator& gen)
+/**
+ * @brief Generates a vector of f64 values with mantissas in [1.0, 2.0).
+ *
+ * The raw bits are masked to keep only the mantissa bits and to force the
+ * exponent to that of 1.0, producing values in [1.0, 2.0).
+ *
+ * @tparam T Must be f64.
+ * @tparam N Number of values to generate.
+ * @param state Reference to the random number generator state.
+ * @return Vector of N doubles in [1.0, 2.0).
+ */
+template <std::same_as<f64> T, size_t N>
+KFR_INTRINSIC vec<f64, N> randommantissa(random_state& state)
 {
-    return bitcast<T>(random_bits<N * sizeof(T)>(gen));
-}
-
-template <typename T, size_t N, KFR_ENABLE_IF(is_same<T, f32>)>
-KFR_INTRINSIC vec<f32, N> randommantissa(random_bit_generator& gen)
-{
-    return bitcast<f32>((random_uniform<u32, N>(gen) & u32(0x7FFFFFu)) | u32(0x3f800000u)) + 0.0f;
-}
-
-template <typename T, size_t N, KFR_ENABLE_IF(is_same<T, f64>)>
-KFR_INTRINSIC vec<f64, N> randommantissa(random_bit_generator& gen)
-{
-    return bitcast<f64>((random_uniform<u64, N>(gen) & u64(0x000FFFFFFFFFFFFFull)) |
+    return bitcast<f64>((random_uniform<u64, N>(state) & u64(0x000FFFFFFFFFFFFFull)) |
                         u64(0x3FF0000000000000ull)) +
            0.0;
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
-KFR_INTRINSIC vec<T, N> random_uniform(random_bit_generator& gen)
+/**
+ * @brief Generates a vector of uniformly distributed floating-point numbers in [0.0, 1.0).
+ *
+ * Derived by generating mantissas in [1.0, 2.0) and subtracting 1.0.
+ *
+ * @tparam T Floating-point type (f32 or f64).
+ * @tparam N Number of random floats to generate.
+ * @param state Reference to the random number generator state.
+ * @return Vector of N floats in the range [0.0, 1.0).
+ */
+template <f_class T, size_t N>
+KFR_INTRINSIC vec<T, N> random_uniform(random_state& state)
 {
-    return randommantissa<T, N>(gen) - 1.f;
+    return randommantissa<T, N>(state) - 1.f;
 }
 
-template <size_t N, typename T, KFR_ENABLE_IF(is_f_class<T>)>
-KFR_INTRINSIC vec<T, N> random_range(random_bit_generator& gen, T min, T max)
+/**
+ * @brief Generates random values uniformly distributed in the range [min, max) for floating-point types.
+ *
+ * @tparam N Number of values to generate.
+ * @tparam T Floating-point type.
+ * @param state Reference to the random number generator state.
+ * @param min Lower bound of range.
+ * @param max Upper bound of range.
+ * @return Vector of N values in the range [min, max).
+ */
+template <size_t N, f_class T>
+KFR_INTRINSIC vec<T, N> random_range(random_state& state, T min, T max)
 {
-    return mix(random_uniform<T, N>(gen), min, max);
+    return mix(random_uniform<T, N>(state), min, max);
 }
 
-template <size_t N, typename T, KFR_ENABLE_IF(!is_f_class<T>)>
-KFR_INTRINSIC vec<T, N> random_range(random_bit_generator& gen, T min, T max)
+/**
+ * @brief Generates random values uniformly distributed in the range [min, max) for integral types.
+ *
+ * Uses integer scaling and rounding for range generation.
+ *
+ * @tparam N Number of values to generate.
+ * @tparam T Integral type.
+ * @param state Reference to the random number generator state.
+ * @param min Lower bound of range.
+ * @param max Upper bound of range.
+ * @return Vector of N values in the range [min, max).
+ */
+template <size_t N, not_f_class T>
+KFR_INTRINSIC vec<T, N> random_range(random_state& state, T min, T max)
 {
     using big_type = findinttype<sqr(std::numeric_limits<T>::min()), sqr(std::numeric_limits<T>::max())>;
 
-    vec<T, N> u                = random_uniform<T, N>(gen);
+    vec<T, N> u                = random_uniform<T, N>(state);
     const vec<big_type, N> tmp = u;
     return (tmp * (max - min) + min) >> typebits<T>::bits;
 }
 
-namespace internal
+/**
+ * @brief Generates N normally distributed (Gaussian) random values using Box-Muller transform.
+ *
+ * Uses 2x uniform samples to generate normal values, rounded to the nearest power-of-two vector length.
+ *
+ * @tparam N Number of normal values to generate.
+ * @tparam T Floating-point type.
+ * @param state Reference to the random number generator state.
+ * @param mu Mean of the distribution.
+ * @param sigma Standard deviation of the distribution.
+ * @return Vector of N values from N(mu, sigma^2).
+ */
+template <size_t N, typename T>
+KFR_INTRINSIC vec<T, N> random_normal(random_state& state, T mu, T sigma)
 {
-template <typename T, typename Gen = random_bit_generator>
-struct expression_random_uniform : input_expression
-{
-    using value_type = T;
-    constexpr expression_random_uniform(Gen gen) CMT_NOEXCEPT : gen(gen) {}
-    template <size_t N>
-    friend vec<T, N> get_elements(const expression_random_uniform& self, cinput_t, size_t, vec_shape<T, N>)
-    {
-        return random_uniform<T, N>(self.gen);
-    }
-    mutable Gen gen;
-};
+    static_assert(std::is_floating_point_v<T>, "random_normal requires floating point type");
 
-template <typename T, typename Gen = random_bit_generator>
-struct expression_random_range : input_expression
-{
-    using value_type = T;
-    constexpr expression_random_range(Gen gen, T min, T max) CMT_NOEXCEPT : gen(gen), min(min), max(max) {}
+    constexpr size_t M = align_up(N, 2); // round up to 2
 
-    template <size_t N>
-    friend vec<T, N> get_elements(const expression_random_range& self, cinput_t, size_t, vec_shape<T, N>)
-    {
-        return random_range<N, T>(self.gen, self.min, self.max);
-    }
-    mutable Gen gen;
-    const T min;
-    const T max;
-};
-} // namespace internal
+    vec<T, M> u = random_uniform<T, M>(state);
 
-/// @brief Returns expression that returns pseudo random values. Copies the given generator
-template <typename T>
-KFR_FUNCTION internal::expression_random_uniform<T> gen_random_uniform(const random_bit_generator& gen)
-{
-    return internal::expression_random_uniform<T>(gen);
+    vec<T, M / 2> mag = sigma * sqrt(T(-2.0) * log(even(u)));
+    vec<T, M> z       = dup(mag) * cossin(c_pi<T, 2> * dupodd(u)) + mu;
+    return slice<0, N>(z);
 }
 
-/// @brief Returns expression that returns pseudo random values. References the given
-/// generator. Use std::ref(gen) to force this overload
-template <typename T>
-KFR_FUNCTION internal::expression_random_uniform<T, std::reference_wrapper<random_bit_generator>>
-gen_random_uniform(std::reference_wrapper<random_bit_generator> gen)
+/**
+ * @brief Expression that produces uniformly distributed random values in [0, 1).
+ *
+ * The expression has infinite size along all dimensions. The generator state is
+ * advanced each time samples are requested.
+ *
+ * @tparam T Value type of the generated samples.
+ * @tparam Dims Number of dimensions of the expression.
+ * @tparam Reference When true, holds a reference to the state; otherwise holds a copy.
+ */
+template <typename T, index_t Dims, bool Reference = false>
+struct expression_random_uniform : expression_traits_defaults
 {
-    return internal::expression_random_uniform<T, std::reference_wrapper<random_bit_generator>>(gen);
+    using value_type             = T;
+    constexpr static size_t dims = Dims;
+    constexpr static shape<dims> get_shape(const expression_random_uniform&)
+    {
+        return shape<dims>(infinite_size);
+    }
+    constexpr static shape<dims> get_shape() { return shape<dims>(infinite_size); }
+
+    mutable state_holder<random_state, Reference> state;
+
+    /// Internal ADL-provided implementation for `expression_random_uniform` expressions
+    template <size_t N, index_t VecAxis>
+    friend KFR_INTRINSIC vec<T, N> get_elements(const expression_random_uniform& self, shape<Dims>,
+                                                axis_params<VecAxis, N>)
+    {
+        return random_uniform<T, N>(*self.state);
+    }
+};
+
+/**
+ * @brief Expression that produces uniformly distributed random values in [min, max).
+ *
+ * The expression has infinite size along all dimensions. The generator state is
+ * advanced each time samples are requested.
+ *
+ * @tparam T Value type of the generated samples.
+ * @tparam Dims Number of dimensions of the expression.
+ * @tparam Reference When true, holds a reference to the state; otherwise holds a copy.
+ */
+template <typename T, index_t Dims, bool Reference = false>
+struct expression_random_range : expression_traits_defaults
+{
+    using value_type             = T;
+    constexpr static size_t dims = Dims;
+    constexpr static shape<dims> get_shape(const expression_random_range&)
+    {
+        return shape<dims>(infinite_size);
+    }
+    constexpr static shape<dims> get_shape() { return shape<dims>(infinite_size); }
+
+    mutable state_holder<random_state, Reference> state;
+    T min;
+    T max;
+
+    /// Internal ADL-provided implementation for `expression_random_range` expressions
+    template <size_t N, index_t VecAxis>
+    friend KFR_INTRINSIC vec<T, N> get_elements(const expression_random_range& self, shape<Dims>,
+                                                axis_params<VecAxis, N>)
+    {
+        return random_range<N, T>(*self.state, self.min, self.max);
+    }
+};
+
+/**
+ * @brief Expression that produces normally distributed (Gaussian) random values.
+ *
+ * The expression has infinite size along all dimensions. The generator state is
+ * advanced each time samples are requested.
+ *
+ * @tparam T Value type of the generated samples.
+ * @tparam Dims Number of dimensions of the expression.
+ * @tparam Reference When true, holds a reference to the state; otherwise holds a copy.
+ */
+template <typename T, index_t Dims, bool Reference = false>
+struct expression_random_normal : expression_traits_defaults
+{
+    using value_type             = T;
+    constexpr static size_t dims = Dims;
+    constexpr static shape<dims> get_shape(const expression_random_normal&)
+    {
+        return shape<dims>(infinite_size);
+    }
+    constexpr static shape<dims> get_shape() { return shape<dims>(infinite_size); }
+
+    mutable state_holder<random_state, Reference> state;
+    T sigma{ 1 };
+    T mu{ 0 };
+
+    /// Internal ADL-provided implementation for `expression_random_normal` expressions
+    template <size_t N, index_t VecAxis>
+    friend KFR_INTRINSIC vec<T, N> get_elements(const expression_random_normal& self, shape<Dims>,
+                                                axis_params<VecAxis, N>)
+    {
+        return random_normal<N, T>(*self.state, self.mu, self.sigma);
+    }
+};
+
+/**
+ * @brief Creates an expression that produces uniform pseudorandom values in [0, 1) using a copied state.
+ *
+ * @tparam T Value type of the generated samples.
+ * @tparam Dims Number of dimensions of the expression.
+ * @param state Random generator state to copy into the expression.
+ * @return Expression generating uniform random values.
+ */
+template <typename T, index_t Dims = 1>
+KFR_FUNCTION expression_random_uniform<T, Dims> gen_random_uniform(const random_state& state)
+{
+    return { {}, state };
+}
+
+/**
+ * @brief Creates an expression that produces uniform pseudorandom values in [0, 1) using a referenced state.
+ *
+ * Use std::ref(state) to select this overload.
+ *
+ * @tparam T Value type of the generated samples.
+ * @tparam Dims Number of dimensions of the expression.
+ * @param state Reference wrapper to the random generator state.
+ * @return Expression generating uniform random values.
+ */
+template <typename T, index_t Dims = 1>
+KFR_FUNCTION expression_random_uniform<T, Dims, true> gen_random_uniform(
+    std::reference_wrapper<random_state> state)
+{
+    return { {}, state };
 }
 
 #ifndef KFR_DISABLE_READCYCLECOUNTER
-/// @brief Returns expression that returns pseudo random values
-template <typename T>
-KFR_FUNCTION internal::expression_random_uniform<T> gen_random_uniform()
+/**
+ * @brief Creates an expression that produces uniform pseudorandom values in [0, 1) seeded from the cycle
+ * counter.
+ *
+ * @tparam T Value type of the generated samples.
+ * @tparam Dims Number of dimensions of the expression.
+ * @return Expression generating uniform random values.
+ */
+template <typename T, index_t Dims = 1>
+KFR_FUNCTION expression_random_uniform<T, Dims> gen_random_uniform()
 {
-    return internal::expression_random_uniform<T>(random_bit_generator(seed_from_rdtsc));
+    return expression_random_uniform<T, Dims>{ random_init() };
 }
 #endif
 
-/// @brief Returns expression that returns pseudo random values of the given range. Copies the given generator
-template <typename T>
-KFR_FUNCTION internal::expression_random_range<T> gen_random_range(const random_bit_generator& gen, T min,
-                                                                   T max)
+/**
+ * @brief Creates an expression that produces random values in [min, max) using a copied state.
+ *
+ * @tparam T Value type of the generated samples.
+ * @tparam Dims Number of dimensions of the expression.
+ * @param state Random generator state to copy into the expression.
+ * @param min Lower bound of the range (inclusive).
+ * @param max Upper bound of the range (exclusive).
+ * @return Expression generating random values in [min, max).
+ */
+template <typename T, index_t Dims = 1>
+KFR_FUNCTION expression_random_range<T, Dims> gen_random_range(const random_state& state, T min, T max)
 {
-    return internal::expression_random_range<T>(gen, min, max);
+    return { {}, state, min, max };
 }
 
-/// @brief Returns expression that returns pseudo random values of the given range. References the given
-/// generator. Use std::ref(gen) to force this overload
-template <typename T>
-KFR_FUNCTION internal::expression_random_range<T, std::reference_wrapper<random_bit_generator>>
-gen_random_range(std::reference_wrapper<random_bit_generator> gen, T min, T max)
+/**
+ * @brief Creates an expression that produces random values in [min, max) using a referenced state.
+ *
+ * Use std::ref(state) to select this overload.
+ *
+ * @tparam T Value type of the generated samples.
+ * @tparam Dims Number of dimensions of the expression.
+ * @param state Reference wrapper to the random generator state.
+ * @param min Lower bound of the range (inclusive).
+ * @param max Upper bound of the range (exclusive).
+ * @return Expression generating random values in [min, max).
+ */
+template <typename T, index_t Dims = 1>
+KFR_FUNCTION expression_random_range<T, Dims, true> gen_random_range(
+    std::reference_wrapper<random_state> state, T min, T max)
 {
-    return internal::expression_random_range<T, std::reference_wrapper<random_bit_generator>>(gen, min, max);
+    return { {}, state, min, max };
 }
 
 #ifndef KFR_DISABLE_READCYCLECOUNTER
-/// @brief Returns expression that returns pseudo random values of the given range
-template <typename T>
-KFR_FUNCTION internal::expression_random_range<T> gen_random_range(T min, T max)
+/**
+ * @brief Creates an expression that produces random values in [min, max) seeded from the cycle counter.
+ *
+ * @tparam T Value type of the generated samples.
+ * @tparam Dims Number of dimensions of the expression.
+ * @param min Lower bound of the range (inclusive).
+ * @param max Upper bound of the range (exclusive).
+ * @return Expression generating random values in [min, max).
+ */
+template <typename T, index_t Dims = 1>
+KFR_FUNCTION expression_random_range<T, Dims> gen_random_range(T min, T max)
 {
-    return internal::expression_random_range<T>(random_bit_generator(seed_from_rdtsc), min, max);
+    return { {}, random_init(), min, max };
 }
 #endif
-} // namespace CMT_ARCH_NAME
+
+/**
+ * @brief Creates an expression that produces normally distributed values using a copied state.
+ *
+ * @tparam T Value type of the generated samples.
+ * @tparam Dims Number of dimensions of the expression.
+ * @param state Random generator state to copy into the expression.
+ * @param sigma Standard deviation of the distribution.
+ * @param mu Mean of the distribution.
+ * @return Expression generating values from N(mu, sigma^2).
+ */
+template <typename T, index_t Dims = 1>
+KFR_FUNCTION expression_random_normal<T, Dims> gen_random_normal(const random_state& state, T sigma = 1,
+                                                                 T mu = 0)
+{
+    return { {}, state, sigma, mu };
+}
+
+/**
+ * @brief Creates an expression that produces normally distributed values using a referenced state.
+ *
+ * Use std::ref(state) to select this overload.
+ *
+ * @tparam T Value type of the generated samples.
+ * @tparam Dims Number of dimensions of the expression.
+ * @param state Reference wrapper to the random generator state.
+ * @param sigma Standard deviation of the distribution.
+ * @param mu Mean of the distribution.
+ * @return Expression generating values from N(mu, sigma^2).
+ */
+template <typename T, index_t Dims = 1>
+KFR_FUNCTION expression_random_normal<T, Dims, true> gen_random_normal(
+    std::reference_wrapper<random_state> state, T sigma = 1, T mu = 0)
+{
+    return { {}, state, sigma, mu };
+}
+
+#ifndef KFR_DISABLE_READCYCLECOUNTER
+/**
+ * @brief Creates an expression that produces normally distributed values seeded from the cycle counter.
+ *
+ * @tparam T Value type of the generated samples.
+ * @tparam Dims Number of dimensions of the expression.
+ * @param sigma Standard deviation of the distribution.
+ * @param mu Mean of the distribution.
+ * @return Expression generating values from N(mu, sigma^2).
+ */
+template <typename T, index_t Dims = 1>
+KFR_FUNCTION expression_random_normal<T, Dims> gen_random_normal(T sigma = 1, T mu = 0)
+{
+    return { {}, random_init(), sigma, mu };
+}
+#endif
+
+} // namespace KFR_ARCH_NAME
+
 } // namespace kfr

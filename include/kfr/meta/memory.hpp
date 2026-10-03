@@ -1,0 +1,346 @@
+#pragma once
+
+#include "numeric.hpp"
+#include <algorithm>
+#include <atomic>
+#include <cstdint>
+#include <memory>
+
+namespace kfr
+{
+
+namespace details
+{
+
+struct memory_statistics
+{
+    std::atomic_uintptr_t allocation_count{ 0 };
+    std::atomic_uintptr_t allocation_size{ 0 };
+    std::atomic_uintptr_t deallocation_count{ 0 };
+    std::atomic_uintptr_t deallocation_size{ 0 };
+};
+
+inline memory_statistics& get_memory_statistics()
+{
+    static memory_statistics ms;
+    return ms;
+}
+
+#pragma pack(push, 1)
+
+struct mem_header
+{
+    u16 offset;
+    u16 alignment;
+    unsigned int references_uint;
+    size_t size;
+
+    KFR_MEM_INTRINSIC std::atomic_uint& references()
+    {
+        return reinterpret_cast<std::atomic_uint&>(references_uint);
+    }
+}
+#ifdef KFR_GNU_ATTRIBUTES
+__attribute__((__packed__))
+#endif
+;
+
+static_assert(sizeof(mem_header) == sizeof(size_t) + 2 * sizeof(u16) + sizeof(unsigned int),
+              "Wrong mem_header layout");
+
+#pragma pack(pop)
+
+inline mem_header* aligned_header(void* ptr) { return ptr_cast<mem_header>(ptr) - 1; }
+
+#ifdef KFR_MANAGED_ALLOCATION
+inline size_t aligned_size(void* ptr) { return aligned_header(ptr)->size; }
+#endif
+
+inline void* aligned_malloc(size_t size, size_t alignment)
+{
+    if (alignment == 0 || alignment > 32768)
+        return nullptr;
+
+#ifdef KFR_MANAGED_ALLOCATION
+    get_memory_statistics().allocation_count++;
+    get_memory_statistics().allocation_size += size;
+    void* ptr = malloc(size + (alignment - 1) + sizeof(mem_header));
+    if (ptr == nullptr)
+        return nullptr;
+    void* aligned_ptr                         = advance(ptr, sizeof(mem_header));
+    aligned_ptr                               = align_up(aligned_ptr, alignment);
+    aligned_header(aligned_ptr)->alignment    = static_cast<u16>(alignment);
+    aligned_header(aligned_ptr)->offset       = static_cast<u16>(distance(aligned_ptr, ptr));
+    aligned_header(aligned_ptr)->references() = 1;
+    aligned_header(aligned_ptr)->size         = size;
+    return aligned_ptr;
+#else
+#if defined(_WIN32)
+    return _aligned_malloc(align_up(size, alignment), alignment);
+#else
+    void* ptr = nullptr;
+    if (posix_memalign(&ptr, alignment, align_up(size, alignment)) != 0)
+        return nullptr;
+    return ptr;
+#endif
+#endif
+}
+
+#ifdef KFR_MANAGED_ALLOCATION
+inline void aligned_force_free(void* ptr)
+{
+    get_memory_statistics().deallocation_count++;
+    get_memory_statistics().deallocation_size += aligned_size(ptr);
+    free(advance(ptr, -static_cast<ptrdiff_t>(aligned_header(ptr)->offset)));
+}
+
+inline void aligned_add_ref(void* ptr) { aligned_header(ptr)->references()++; }
+#endif
+
+inline void aligned_free(void* ptr)
+{
+#ifdef KFR_MANAGED_ALLOCATION
+    if (--aligned_header(ptr)->references() == 0)
+        aligned_force_free(ptr);
+#else
+#if defined(_WIN32)
+    return _aligned_free(ptr);
+#else
+    return std::free(ptr);
+#endif
+#endif
+}
+
+#ifdef KFR_MANAGED_ALLOCATION
+inline void aligned_release(void* ptr) { aligned_free(ptr); }
+
+inline void* aligned_reallocate(void* ptr, size_t new_size, size_t alignment)
+{
+    if (ptr)
+    {
+        if (new_size)
+        {
+            void* new_ptr   = aligned_malloc(new_size, alignment);
+            size_t old_size = aligned_size(ptr);
+            memcpy(new_ptr, ptr, std::min(old_size, new_size));
+            aligned_release(ptr);
+            return new_ptr;
+        }
+        else
+        {
+            aligned_release(ptr);
+            return nullptr;
+        }
+    }
+    else
+    {
+        if (new_size)
+        {
+            return details::aligned_malloc(new_size, alignment);
+        }
+        else
+        {
+            return nullptr; // do nothing
+        }
+    }
+}
+#endif
+} // namespace details
+
+constexpr inline size_t default_memory_alignment = KFR_CACHE_LINE_SIZE;
+
+/// @brief Allocates aligned memory
+template <typename T = void, size_t alignment = default_memory_alignment>
+KFR_INTRINSIC T* aligned_allocate(size_t size = 1)
+{
+    T* ptr = static_cast<T*>(KFR_ASSUME_ALIGNED(
+        details::aligned_malloc(std::max(alignment, size * details::elementsize<T>()), alignment),
+        alignment));
+    return ptr;
+}
+/// @brief Allocates aligned memory
+template <typename T = void>
+KFR_INTRINSIC T* aligned_allocate(size_t size, size_t alignment)
+{
+    T* ptr = static_cast<T*>(
+        details::aligned_malloc(std::max(alignment, size * details::elementsize<T>()), alignment));
+    return ptr;
+}
+
+/// @brief Deallocates aligned memory
+template <typename T = void>
+KFR_INTRINSIC void aligned_deallocate(T* ptr)
+{
+    return details::aligned_free(ptr);
+}
+
+namespace details
+{
+template <typename T>
+struct aligned_deleter
+{
+    KFR_MEM_INTRINSIC void operator()(T* ptr) const { aligned_deallocate(ptr); }
+};
+} // namespace details
+
+/// @brief Smart pointer for aligned memory with automatic deallocation.
+template <typename T>
+struct autofree
+{
+    /// @brief Default constructor.
+    KFR_MEM_INTRINSIC autofree() {}
+
+    /// @brief Allocates aligned memory for given size.
+    explicit KFR_MEM_INTRINSIC autofree(size_t size) : ptr(aligned_allocate<T>(size)) {}
+
+    autofree(const autofree&)                = delete;
+    autofree& operator=(const autofree&)     = delete;
+    autofree(autofree&&) noexcept            = default;
+    autofree& operator=(autofree&&) noexcept = default;
+
+    /// @brief Access element at index.
+    KFR_MEM_INTRINSIC T& operator[](size_t index) noexcept { return ptr[index]; }
+
+    /// @brief Const access to element at index.
+    KFR_MEM_INTRINSIC const T& operator[](size_t index) const noexcept { return ptr[index]; }
+
+    /// @brief Returns pointer to underlying data.
+    template <typename U = T>
+    KFR_MEM_INTRINSIC U* data() noexcept
+    {
+        return ptr_cast<U>(ptr.get());
+    }
+
+    /// @brief Returns const pointer to underlying data.
+    template <typename U = T>
+    KFR_MEM_INTRINSIC const U* data() const noexcept
+    {
+        return ptr_cast<U>(ptr.get());
+    }
+
+    /// @brief Unique pointer with custom deleter for aligned memory.
+    std::unique_ptr<T[], details::aligned_deleter<T>> ptr;
+};
+
+#ifdef KFR_USE_STD_ALLOCATION
+
+template <typename T>
+using data_allocator = std::allocator<T>;
+
+#else
+
+/// @brief Aligned allocator
+template <typename T>
+struct data_allocator
+{
+    using value_type      = T;
+    using pointer         = T*;
+    using const_pointer   = const T*;
+    using reference       = T&;
+    using const_reference = const T&;
+    using size_type       = std::size_t;
+    using difference_type = std::ptrdiff_t;
+
+    template <typename U>
+    struct rebind
+    {
+        using other = data_allocator<U>;
+    };
+    constexpr data_allocator() noexcept                      = default;
+    constexpr data_allocator(const data_allocator&) noexcept = default;
+    template <typename U>
+    constexpr data_allocator(const data_allocator<U>&) noexcept
+    {
+    }
+    pointer allocate(size_type n) const
+    {
+        pointer result = aligned_allocate<value_type>(n);
+        if (!result)
+            KFR_THROW(std::bad_alloc());
+        return result;
+    }
+    void deallocate(pointer p, size_type) { aligned_deallocate(p); }
+};
+
+template <typename T1, typename T2>
+constexpr inline bool operator==(const data_allocator<T1>&, const data_allocator<T2>&) noexcept
+{
+    return true;
+}
+template <typename T1, typename T2>
+constexpr inline bool operator!=(const data_allocator<T1>&, const data_allocator<T2>&) noexcept
+{
+    return false;
+}
+
+#endif
+
+struct aligned_new
+{
+    inline static void* operator new(size_t size) noexcept { return aligned_allocate(size); }
+    inline static void operator delete(void* ptr) noexcept { return aligned_deallocate(ptr); }
+
+#ifdef __cpp_aligned_new
+    inline static void* operator new(size_t size, std::align_val_t al) noexcept
+    {
+        return details::aligned_malloc(size,
+                                       std::max(size_t(default_memory_alignment), static_cast<size_t>(al)));
+    }
+    inline static void operator delete(void* ptr, std::align_val_t al) noexcept
+    {
+        return details::aligned_free(ptr);
+    }
+#endif
+};
+
+#define KFR_CLASS_REFCOUNT(cl)                                                                               \
+                                                                                                             \
+public:                                                                                                      \
+    void addref() const { m_refcount++; }                                                                    \
+    void release() const                                                                                     \
+    {                                                                                                        \
+        if (--m_refcount == 0)                                                                               \
+        {                                                                                                    \
+            delete this;                                                                                     \
+        }                                                                                                    \
+    }                                                                                                        \
+                                                                                                             \
+private:                                                                                                     \
+    mutable std::atomic_uintptr_t m_refcount = ATOMIC_VAR_INIT(0);
+
+namespace details
+{
+
+template <typename T, typename Fn>
+KFR_INLINE static void call_with_temp_heap(size_t temp_size, Fn&& fn)
+{
+    autofree<T> temp(temp_size);
+    fn(temp.data());
+}
+
+template <size_t stack_size, typename T, typename Fn>
+KFR_NOINLINE static void call_with_temp_stack(size_t temp_size, Fn&& fn)
+{
+    alignas(default_memory_alignment) T temp[stack_size];
+    fn(&temp[0]);
+}
+
+} // namespace details
+
+/**
+ * @brief Calls a function with a temporary buffer, allocated on the stack if small enough, otherwise on the
+ * heap.
+ * @tparam stack_size Maximum size to use stack allocation (in elements).
+ * @tparam T Type of temporary buffer elements (default: u8).
+ * @tparam Fn Callable type.
+ * @param temp_size Number of elements requested.
+ * @param fn Function to call with a pointer to the buffer.
+ */
+template <size_t stack_size = 4096, typename T = u8, typename Fn>
+KFR_INLINE static void call_with_temp(size_t temp_size, Fn&& fn)
+{
+    if (temp_size <= stack_size)
+        return details::call_with_temp_stack<stack_size, T>(temp_size, std::forward<Fn>(fn));
+    return details::call_with_temp_heap<T>(temp_size, std::forward<Fn>(fn));
+}
+} // namespace kfr

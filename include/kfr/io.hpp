@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -28,3 +28,13 @@
 #include "io/file.hpp"
 #include "io/python_plot.hpp"
 #include "io/tostring.hpp"
+
+namespace kfr
+{
+/**
+ * @brief Returns the full version string of the KFR IO module.
+ * @return A null-terminated string with the KFR version (e.g. from
+ *         @c KFR_VERSION_FULL).
+ */
+const char* library_version_io();
+} // namespace kfr

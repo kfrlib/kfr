@@ -1,8 +1,5 @@
-/** @addtogroup utility
- *  @{
- */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -29,8 +26,12 @@
 
 namespace kfr
 {
-
-/// @brief Returns string representation of the KFR version (including target architecture)
+/// @brief Returns the string representation of the KFR library version, including target architecture.
+/// @return A constant character pointer to the version string.
 inline static const char* library_version() { return KFR_VERSION_FULL; }
+
+/// @brief Returns the current CPU name at runtime.
+/// @return A constant character pointer to the name of the current CPU.
 inline static const char* cpu_runtime() { return cpu_name(get_cpu()); }
+
 } // namespace kfr

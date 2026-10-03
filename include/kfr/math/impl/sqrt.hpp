@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -26,13 +26,13 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
-#if defined CMT_ARCH_SSE2 && defined KFR_NATIVE_INTRINSICS
+#if defined KFR_ARCH_SSE2 && defined KFR_NATIVE_INTRINSICS
 
 KFR_INTRINSIC f32x1 sqrt(const f32x1& x) { return slice<0, 1>(f32x4(_mm_sqrt_ss(extend<4>(x).v))); }
 KFR_INTRINSIC f64x1 sqrt(const f64x1& x)
@@ -42,12 +42,12 @@ KFR_INTRINSIC f64x1 sqrt(const f64x1& x)
 KFR_INTRINSIC f32sse sqrt(const f32sse& x) { return _mm_sqrt_ps(x.v); }
 KFR_INTRINSIC f64sse sqrt(const f64sse& x) { return _mm_sqrt_pd(x.v); }
 
-#if defined CMT_ARCH_AVX
+#if defined KFR_ARCH_AVX
 KFR_INTRINSIC f32avx sqrt(const f32avx& x) { return _mm256_sqrt_ps(x.v); }
 KFR_INTRINSIC f64avx sqrt(const f64avx& x) { return _mm256_sqrt_pd(x.v); }
 #endif
 
-#if defined CMT_ARCH_AVX512
+#if defined KFR_ARCH_AVX512
 KFR_INTRINSIC f32avx512 sqrt(const f32avx512& x) { return _mm512_sqrt_ps(x.v); }
 KFR_INTRINSIC f64avx512 sqrt(const f64avx512& x) { return _mm512_sqrt_pd(x.v); }
 #endif
@@ -57,7 +57,7 @@ KFR_HANDLE_ALL_SIZES_1_IF(sqrt, is_f_class<T>)
 #else
 
 // fallback
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
+template <f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> sqrt(const vec<T, N>& x)
 {
     return apply([](T x) { return std::sqrt(x); }, x);
@@ -66,7 +66,7 @@ KFR_INTRINSIC vec<T, N> sqrt(const vec<T, N>& x)
 KFR_HANDLE_SCALAR_1_T(sqrt, flt_type<T>)
 
 KFR_HANDLE_NOT_F_1(sqrt)
-} // namespace intrinsics
+} // namespace intr
 KFR_I_FN(sqrt)
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

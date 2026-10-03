@@ -1,8 +1,5 @@
-/** @addtogroup trigonometric
- *  @{
- */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -29,258 +26,211 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 /**
- * @brief Returns the trigonometric sine of x.
+ * @brief Returns the trigonometric sine of x, evaluated in radians.
+ * @tparam T1 Scalar or vector type. Integer arguments are promoted to a floating-point type.
+ * @param x Angle in radians.
+ * @return Sine of @p x, in the same floating-point type as @p x (or its element type for vectors).
  */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> sin(const T1& x)
 {
-    return intrinsics::sin(x);
+    return intr::sin(x);
 }
 
 /**
- * @brief Returns the trigonometric sine of x. Accepts and returns expressions.
+ * @brief Returns the trigonometric cosine of x, evaluated in radians.
+ * @tparam T1 Scalar or vector type. Integer arguments are promoted to a floating-point type.
+ * @param x Angle in radians.
+ * @return Cosine of @p x, in the same floating-point type as @p x (or its element type for vectors).
  */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::sin, E1> sin(E1&& x)
-{
-    return { fn::sin(), std::forward<E1>(x) };
-}
-
-/**
- * @brief Returns the trigonometric cosine of x.
- */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> cos(const T1& x)
 {
-    return intrinsics::cos(x);
+    return intr::cos(x);
 }
 
 /**
- * @brief Returns the trigonometric cosine of x. Accepts and returns expressions.
+ * @brief Returns a fast (lower-precision) approximation of the trigonometric sine of x.
+ *
+ * Lower accuracy than @ref sin, suitable for use cases where speed matters more than full precision.
+ * On the range [0, 2π], the measured maximum absolute error is approximately @c 1.216e-06 and
+ * the mean absolute error is approximately @c 4.738e-07 for both @c float and @c double.
+ *
+ * @tparam T1 Scalar or vector type. Integer arguments are promoted to a floating-point type.
+ * @param x Angle in radians.
+ * @return Approximate sine of @p x, in the same floating-point type as @p x (or its element type for
+ * vectors).
  */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::cos, E1> cos(E1&& x)
-{
-    return { fn::cos(), std::forward<E1>(x) };
-}
-
-/**
- * @brief Returns an approximation of the trigonometric sine of x.
- */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> fastsin(const T1& x)
 {
-    return intrinsics::fastsin(x);
+    return intr::fastsin(x);
 }
 
 /**
- * @brief Returns an approximation of the trigonometric sine of x. Accepts and returns expressions.
+ * @brief Returns a fast (lower-precision) approximation of the trigonometric cosine of x.
+ *
+ * Lower accuracy than @ref cos, suitable for use cases where speed matters more than full precision.
+ * On the range [0, 2π], the measured maximum absolute error is approximately @c 1.222e-06 and
+ * the mean absolute error is approximately @c 4.550e-07 for both @c float and @c double.
+ *
+ * @tparam T1 Scalar or vector type. Integer arguments are promoted to a floating-point type.
+ * @param x Angle in radians.
+ * @return Approximate cosine of @p x, in the same floating-point type as @p x (or its element type for
+ * vectors).
  */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::fastsin, E1> fastsin(E1&& x)
-{
-    return { fn::fastsin(), std::forward<E1>(x) };
-}
-
-/**
- * @brief Returns an approximation of the trigonometric cosine of x.
- */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> fastcos(const T1& x)
 {
-    return intrinsics::fastcos(x);
+    return intr::fastcos(x);
 }
 
 /**
- * @brief Returns an approximation of the trigonometric cosine of x. Accepts and returns expressions.
+ * @brief Returns the trigonometric sine of the even elements of @p x and cosine of the odd elements.
+ *
+ * @p x must be a vector with at least two elements; the result is a vector of the same size in which
+ * element @c 2*i holds @c sin(x[2*i]) and element @c 2*i+1 holds @c cos(x[2*i+1]).
+ *
+ * @tparam T1 Vector type with at least two elements.
+ * @param x Vector of angles in radians.
+ * @return Vector with interleaved sine/cosine values.
  */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::fastcos, E1> fastcos(E1&& x)
-{
-    return { fn::fastcos(), std::forward<E1>(x) };
-}
-
-/**
- * @brief Returns the trigonometric sine of the even elements of the x and cosine of the odd elements. x must
- * be a vector.
- */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> sincos(const T1& x)
 {
-    return intrinsics::sincos(x);
+    return intr::sincos(x);
 }
 
 /**
- * @brief Returns the trigonometric sine of the even elements of the x and
- * cosine of the odd elements. x must be a vector. Accepts and returns expressions.
+ * @brief Returns the trigonometric cosine of the even elements of @p x and sine of the odd elements.
+ *
+ * @p x must be a vector with at least two elements; the result is a vector of the same size in which
+ * element @c 2*i holds @c cos(x[2*i]) and element @c 2*i+1 holds @c sin(x[2*i+1]).
+ *
+ * @tparam T1 Vector type with at least two elements.
+ * @param x Vector of angles in radians.
+ * @return Vector with interleaved cosine/sine values.
  */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::sincos, E1> sincos(E1&& x)
-{
-    return { fn::sincos(), std::forward<E1>(x) };
-}
-
-/**
- * @brief Returns the trigonometric cosine of the even elements of the x and sine of the odd elements. x must
- * be a vector.
- */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> cossin(const T1& x)
 {
-    return intrinsics::cossin(x);
+    return intr::cossin(x);
 }
 
 /**
- * @brief Returns the trigonometric cosine of the even elements of the x and
- * sine of the odd elements. x must be a vector. Accepts and returns expressions.
+ * @brief Returns the trigonometric sine of the angle expressed in degrees.
+ * @tparam T1 Scalar or vector type. Integer arguments are promoted to a floating-point type.
+ * @param x Angle in degrees.
+ * @return Sine of @p x, in the same floating-point type as @p x (or its element type for vectors).
  */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::cossin, E1> cossin(E1&& x)
-{
-    return { fn::cossin(), std::forward<E1>(x) };
-}
-
-/**
- * @brief Returns the trigonometric sine of the x (expressed in degrees).
- */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> sindeg(const T1& x)
 {
-    return intrinsics::sindeg(x);
+    return intr::sindeg(x);
 }
 
 /**
- * @brief Returns the trigonometric sine of the x (expressed in degrees). Accepts and returns expressions.
+ * @brief Returns the trigonometric cosine of the angle expressed in degrees.
+ * @tparam T1 Scalar or vector type. Integer arguments are promoted to a floating-point type.
+ * @param x Angle in degrees.
+ * @return Cosine of @p x, in the same floating-point type as @p x (or its element type for vectors).
  */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::sindeg, E1> sindeg(E1&& x)
-{
-    return { fn::sindeg(), std::forward<E1>(x) };
-}
-
-/**
- * @brief Returns the trigonometric cosine of the x (expressed in degrees).
- */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> cosdeg(const T1& x)
 {
-    return intrinsics::cosdeg(x);
+    return intr::cosdeg(x);
 }
 
 /**
- * @brief Returns the trigonometric cosine of the x (expressed in degrees). Accepts and returns expressions.
+ * @brief Returns a fast (lower-precision) approximation of the trigonometric sine of the angle expressed in
+ * degrees.
+ * @tparam T1 Scalar or vector type. Integer arguments are promoted to a floating-point type.
+ * @param x Angle in degrees.
+ * @return Approximate sine of @p x, in the same floating-point type as @p x (or its element type for
+ * vectors).
  */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::cosdeg, E1> cosdeg(E1&& x)
-{
-    return { fn::cosdeg(), std::forward<E1>(x) };
-}
-
-/**
- * @brief Returns an approximation of the trigonometric sine of the x (expressed in degrees).
- */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> fastsindeg(const T1& x)
 {
-    return intrinsics::fastsindeg(x);
+    return intr::fastsindeg(x);
 }
 
 /**
- * @brief Returns an approximation of the trigonometric sine of the x
- * (expressed in degrees). Accepts and returns expressions.
+ * @brief Returns a fast (lower-precision) approximation of the trigonometric cosine of the angle expressed in
+ * degrees.
+ * @tparam T1 Scalar or vector type. Integer arguments are promoted to a floating-point type.
+ * @param x Angle in degrees.
+ * @return Approximate cosine of @p x, in the same floating-point type as @p x (or its element type for
+ * vectors).
  */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::fastsindeg, E1> fastsindeg(E1&& x)
-{
-    return { fn::fastsindeg(), std::forward<E1>(x) };
-}
-
-/**
- * @brief Returns an approximation of the trigonometric cosine of the x (expressed in degrees).
- */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> fastcosdeg(const T1& x)
 {
-    return intrinsics::fastcosdeg(x);
+    return intr::fastcosdeg(x);
 }
 
 /**
- * @brief Returns an approximation of the trigonometric cosine of the x
- * (expressed in degrees). Accepts and returns expressions.
+ * @brief Returns the trigonometric sine of the even elements and cosine of the odd elements of @p x,
+ * where @p x is a vector of angles expressed in degrees.
+ *
+ * @tparam T1 Vector type with at least two elements.
+ * @param x Vector of angles in degrees.
+ * @return Vector with interleaved sine/cosine values.
  */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::fastcosdeg, E1> fastcosdeg(E1&& x)
-{
-    return { fn::fastcosdeg(), std::forward<E1>(x) };
-}
-
-/**
- * @brief Returns the trigonometric sine of the even elements of the x and cosine of the odd elements. x must
- * be a vector and expressed in degrees.
- */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> sincosdeg(const T1& x)
 {
-    return intrinsics::sincosdeg(x);
+    return intr::sincosdeg(x);
 }
 
 /**
- * @brief Returns the trigonometric sine of the even elements of the x and
- * cosine of the odd elements. x must be expressed in degrees. Accepts and returns expressions.
+ * @brief Returns the trigonometric cosine of the even elements and sine of the odd elements of @p x,
+ * where @p x is a vector of angles expressed in degrees.
+ *
+ * @tparam T1 Vector type with at least two elements.
+ * @param x Vector of angles in degrees.
+ * @return Vector with interleaved cosine/sine values.
  */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::sincosdeg, E1> sincosdeg(E1&& x)
-{
-    return { fn::sincosdeg(), std::forward<E1>(x) };
-}
-
-/**
- * @brief Returns the trigonometric cosine of the even elements of the x and sine of the odd elements. x must
- * be a vector and expressed in degrees.
- */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> cossindeg(const T1& x)
 {
-    return intrinsics::cossindeg(x);
+    return intr::cossindeg(x);
 }
 
 /**
- * @brief Returns the trigonometric cosine of the even elements of the x and
- * sine of the odd elements. x must be expressed in degrees. Accepts and returns expressions.
- */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::cossindeg, E1> cossindeg(E1&& x)
-{
-    return { fn::cossindeg(), std::forward<E1>(x) };
-}
-
-/**
- * @brief Returns the sinc function of x.
+ * @brief Returns the (normalized) sinc function of @p x.
+ *
  * \f[
- * sinc(x) = \frac{sin(x)}{x}
+ * sinc(x) = \begin{cases} \frac{\sin(x)}{x} & |x| > \varepsilon \\ 1 & |x| \le \varepsilon \end{cases}
  * \f]
+ *
+ * The value at @c x = 0 is defined as the limit @c 1 to avoid division by zero; the same
+ * convention is used element-wise for vector arguments.
+ *
+ * @tparam T1 Scalar or vector type. Integer arguments are promoted to a floating-point type.
+ * @param x Argument in radians.
+ * @return Sinc of @p x, in the same floating-point type as @p x (or its element type for vectors).
  */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> sinc(const T1& x)
 {
-    return intrinsics::sinc(x);
+    return intr::sinc(x);
 }
 
 /**
- * @brief Returns the sinc function of x. Accepts and returns expressions.
- */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::sinc, E1> sinc(E1&& x)
-{
-    return { fn::sinc(), std::forward<E1>(x) };
-}
-
-/**
- * @brief Returns the trigonometric sine of the angle 2x using sin(x) and cos(x).
+ * @brief Returns @c sin(2x) from already computed @c sin(x) and @c cos(x).
+ *
+ * Uses the identity @c sin(2x) = 2*sin(x)*cos(x); computing @c sin(x) and @c cos(x) once
+ * and deriving the rest with these helpers is cheaper than evaluating each angle separately.
+ *
+ * @tparam T Scalar or vector type.
+ * @param sinx Value of @c sin(x).
+ * @param cosx Value of @c cos(x).
+ * @return @c sin(2x).
  */
 template <typename T>
 KFR_INTRINSIC T sin2x(const T& sinx, const T& cosx)
@@ -289,7 +239,14 @@ KFR_INTRINSIC T sin2x(const T& sinx, const T& cosx)
 }
 
 /**
- * @brief Returns the trigonometric sine of the angle 3x using already computed sin(x) and cos(x).
+ * @brief Returns @c sin(3x) from already computed @c sin(x) and @c cos(x).
+ *
+ * Uses the identity @c sin(3x) = sin(x) * (4*cos^2(x) - 1).
+ *
+ * @tparam T Scalar or vector type.
+ * @param sinx Value of @c sin(x).
+ * @param cosx Value of @c cos(x).
+ * @return @c sin(3x).
  */
 template <typename T>
 KFR_INTRINSIC T sin3x(const T& sinx, const T& cosx)
@@ -298,7 +255,14 @@ KFR_INTRINSIC T sin3x(const T& sinx, const T& cosx)
 }
 
 /**
- * @brief Returns the trigonometric cosine of the angle 2x using already computed sin(x) and cos(x).
+ * @brief Returns @c cos(2x) from already computed @c sin(x) and @c cos(x).
+ *
+ * Uses the identity @c cos(2x) = cos^2(x) - sin^2(x).
+ *
+ * @tparam T Scalar or vector type.
+ * @param sinx Value of @c sin(x).
+ * @param cosx Value of @c cos(x).
+ * @return @c cos(2x).
  */
 template <typename T>
 KFR_INTRINSIC T cos2x(const T& sinx, const T& cosx)
@@ -307,12 +271,19 @@ KFR_INTRINSIC T cos2x(const T& sinx, const T& cosx)
 }
 
 /**
- * @brief Returns the trigonometric cosine of the angle 3x using already computed sin(x) and cos(x).
+ * @brief Returns @c cos(3x) from already computed @c sin(x) and @c cos(x).
+ *
+ * Uses the identity @c cos(3x) = cos(x) * (1 - 4*sin^2(x)).
+ *
+ * @tparam T Scalar or vector type.
+ * @param sinx Value of @c sin(x).
+ * @param cosx Value of @c cos(x).
+ * @return @c cos(3x).
  */
 template <typename T>
 KFR_INTRINSIC T cos3x(const T& sinx, const T& cosx)
 {
     return cosx * (1 - 4 * sqr(sinx));
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

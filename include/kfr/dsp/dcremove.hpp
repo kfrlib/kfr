@@ -1,8 +1,5 @@
-/** @addtogroup biquad
- *  @{
- */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -30,14 +27,34 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
-{
 
-template <typename E1, typename T = flt_type<value_type_of<E1>>>
-KFR_INTRINSIC internal::expression_biquads<1, T, E1> dcremove(E1&& e1, double cutoff = 0.00025)
+template <typename E1, typename T = flt_type<expression_value_type<E1>>>
+[[deprecated("Use dcremove(e, cutoff, fs) overload")]] KFR_INTRINSIC expression_iir<1, T, E1> dcremove(
+    E1&& e1, double cutoff = 0.00025)
 {
-    const biquad_params<T> bqs[1] = { biquad_highpass(cutoff, 0.5) };
-    return internal::expression_biquads<1, T, E1>(bqs, std::forward<E1>(e1));
+    const biquad_section<T> bqs[1] = { biquad_highpass(cutoff, 0.5) };
+    return expression_iir<1, T, E1>(std::forward<E1>(e1), iir_state<T, 1>{ bqs });
 }
-} // namespace CMT_ARCH_NAME
+
+/**
+ * @brief Applies a DC removal filter to the given input expression.
+ *
+ * This function designs a 2nd order Butterworth high-pass filter to remove
+ * the DC component from the input signal. The filter is implemented as a
+ * single biquad section with a cutoff frequency specified by `cutoff_hz`.
+ *
+ * @tparam T The data type used for the filter coefficients.
+ * @tparam E1 The type of the input expression.
+ * @param e1 The input expression to be filtered.
+ * @param cutoff_hz The cutoff frequency of the high-pass filter in Hz.
+ * @param fs_hz The sampling frequency of the input signal in Hz.
+ * @return An expression representing the filtered signal.
+ */
+template <typename E1, typename T = flt_type<expression_value_type<E1>>>
+KFR_INTRINSIC expression_iir<1, T, E1> dcremove(E1&& e1, double cutoff_hz, double fs_hz)
+{
+    const biquad_section<T> bqs[1] = { biquad_highpass(cutoff_hz / fs_hz, 0.707) };
+    return expression_iir<1, T, E1>(std::forward<E1>(e1), iir_state<T, 1>{ bqs });
+}
+
 } // namespace kfr

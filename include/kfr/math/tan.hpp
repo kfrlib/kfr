@@ -1,8 +1,5 @@
-/** @addtogroup trigonometric
- *  @{
- */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -29,31 +26,34 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+/**
+ * @brief Computes the tangent of the input (in radians).
+ *
+ * @tparam T1 The type of the input.
+ * @param x Input value in radians.
+ * @return The tangent of the input.
+ */
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> tan(const T1& x)
 {
-    return intrinsics::tan(x);
+    return intr::tan(x);
 }
 
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::tan, E1> tan(E1&& x)
-{
-    return { fn::tan(), std::forward<E1>(x) };
-}
-
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+/**
+ * @brief Computes the tangent of the input (in degrees).
+ *
+ * @tparam T1 The type of the input.
+ * @param x Input value in degrees.
+ * @return The tangent of the input.
+ */
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> tandeg(const T1& x)
 {
-    return intrinsics::tandeg(x);
+    return intr::tandeg(x);
 }
 
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::tandeg, E1> tandeg(E1&& x)
-{
-    return { fn::tandeg(), std::forward<E1>(x) };
-}
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

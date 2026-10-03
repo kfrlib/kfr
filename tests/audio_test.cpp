@@ -1,0 +1,1395 @@
+/**
+ * KFR (https://www.kfrlib.com)
+ * Copyright (C) 2016-2026 Dan Casarin
+ * See LICENSE.txt for details
+ */
+
+#include <thread>
+
+#include <kfr/dsp/biquad_design.hpp>
+#include <kfr/dsp/fir_design.hpp>
+#include <kfr/dsp/oscillators.hpp>
+#include <kfr/dsp/units.hpp>
+#include <kfr/test/test.hpp>
+#include <kfr/audio/decoder.hpp>
+#include <kfr/audio/encoder.hpp>
+#include <kfr/audio/filter.hpp>
+
+namespace Catch
+{
+// Convert expected<T, E> to string for logging
+template <typename T, typename E>
+struct StringMaker<tl::expected<T, E>>
+{
+    static std::string convert(const tl::expected<T, E>& exp)
+    {
+        if (exp)
+            return StringMaker<T>::convert(exp.value());
+        else
+            return StringMaker<E>::convert(exp.error());
+    }
+};
+template <typename E>
+struct StringMaker<tl::expected<void, E>>
+{
+    static std::string convert(const tl::expected<void, E>& exp)
+    {
+        if (exp)
+            return "(void)";
+        else
+            return StringMaker<E>::convert(exp.error());
+    }
+};
+// Convert audiofile_error to string for logging
+template <>
+struct StringMaker<kfr::audiofile_error>
+{
+    static std::string convert(const kfr::audiofile_error& err) { return kfr::to_string(err); }
+};
+template <>
+struct StringMaker<kfr::audio_sample_type>
+{
+    static std::string convert(const kfr::audio_sample_type& s)
+    {
+        if (kfr::audio_sample_is_float(s))
+            return "f" + std::to_string(kfr::audio_sample_bit_depth(s));
+        else
+            return "i" + std::to_string(kfr::audio_sample_bit_depth(s));
+    }
+};
+template <>
+struct StringMaker<kfr::audiofile_endianness>
+{
+    static std::string convert(const kfr::audiofile_endianness& e)
+    {
+        switch (e)
+        {
+        case kfr::audiofile_endianness::little:
+            return "little";
+        case kfr::audiofile_endianness::big:
+            return "big";
+        default:
+            return "unknown";
+        }
+    }
+};
+} // namespace Catch
+
+using namespace kfr;
+
+struct ErrorDesc
+{
+    std::string msg;
+    operator bool() const { return false; }
+    friend std::ostream& operator<<(std::ostream& os, const ErrorDesc& v)
+    {
+        os << v.msg;
+        return os;
+    }
+};
+
+static void testAudioEquality(const audio_data_interleaved& test, const audio_data_interleaved& reference);
+
+[[maybe_unused]] static void testRandomReads(const std::unique_ptr<audio_decoder>& decoder,
+                                             const audio_data_interleaved& reference)
+{
+    std::mt19937_64 rnd(12345);
+    std::uniform_int_distribution<int64_t> dist(0, reference.size);
+    for (size_t i = 0; i < 20; i++)
+    {
+        int64_t start;
+        int64_t end;
+        do
+        {
+            start = dist(rnd);
+            end   = dist(rnd);
+        } while (std::abs(start - end) < 10 || std::abs(start - end) > 44100);
+        if (start > end)
+            std::swap(start, end);
+        CAPTURE(start);
+        CAPTURE(end);
+        // fmt::print(stderr, "{}..{}\n", start, end);
+        if (auto e = decoder->seek(start); !e)
+        {
+            CHECK(ErrorDesc{ "Cannot seek due to " + to_string(e.error()) });
+            continue;
+        }
+        audio_data_interleaved data(reference.channels, end - start);
+        auto sizeRead = decoder->read_to(data);
+        if (!sizeRead)
+        {
+            CHECK(ErrorDesc{ "Cannot read fragment due to " + to_string(sizeRead.error()) });
+            continue;
+        }
+        data.resize(*sizeRead);
+        testAudioEquality(data, reference.slice(start, end - start));
+    }
+}
+
+static fbase rmsThresholdDefault = kfr::dB_to_amp(-84.0);
+static fbase rmsThreshold        = rmsThresholdDefault; // 2.0 / 32768.0;
+static fbase rmsThresholdHigh    = kfr::dB_to_amp(-30.0);
+
+fbase fastrmsdiff(const fbase* x, const fbase* y, size_t sz)
+{
+    fbase sum = 0;
+#pragma clang loop vectorize(enable)
+    for (size_t i = 0; i < sz; ++i)
+    {
+        fbase diff = x[i] - y[i];
+        sum += diff * diff;
+    }
+    return std::sqrt(sum / sz);
+}
+
+static void testAudioEquality(const audio_data_interleaved& test, const audio_data_interleaved& reference)
+{
+    CHECK(test.channels == reference.channels);
+    CHECK(test.size == reference.size);
+
+    double errRMS =
+        fastrmsdiff(test.data, reference.data, std::min(test.total_samples(), reference.total_samples()));
+    CHECK(errRMS < rmsThreshold);
+
+    if (errRMS >= rmsThreshold)
+    {
+        audiofile_format fmt;
+        fmt.container   = audiofile_container::wave;
+        fmt.codec       = audiofile_codec::lpcm;
+        fmt.endianness  = audiofile_endianness::little;
+        fmt.bit_depth   = 24;
+        fmt.sample_rate = 44100;
+        fmt.channels    = test.channels;
+        auto enc        = create_wave_encoder();
+        std::ignore     = enc->open(std::to_string(std::random_device{}()) + ".wav", fmt);
+        std::ignore     = enc->write(test);
+        std::ignore     = enc->close();
+    }
+}
+
+[[maybe_unused]] static void testAudioEqualityCompressed(const audio_data_interleaved& test,
+                                                         const audio_data_interleaved& reference)
+{
+    ptrdiff_t sizeDiff = static_cast<ptrdiff_t>(test.size) - static_cast<ptrdiff_t>(reference.size);
+    if (sizeDiff == 0)
+    {
+        // same size, just compare
+        double errRMS =
+            fastrmsdiff(test.data, reference.data, std::min(test.total_samples(), reference.total_samples()));
+        if (errRMS < rmsThreshold)
+        {
+            return; // all good
+        }
+    }
+    else if (sizeDiff > 0)
+    {
+        // test is longer than reference
+        double errRMS = fastrmsdiff(test.slice(sizeDiff).data, reference.data, reference.total_samples());
+        if (errRMS < rmsThreshold)
+        {
+            return; // all good
+        }
+        errRMS = fastrmsdiff(test.truncate(reference.size).data, reference.data, reference.total_samples());
+        if (errRMS < rmsThreshold)
+        {
+            return; // all good
+        }
+    }
+    else
+    {
+        // reference is longer than test, truncate
+        double errRMS = fastrmsdiff(test.data, reference.slice(-sizeDiff).data, test.total_samples());
+        if (errRMS < rmsThreshold)
+        {
+            return; // all good
+        }
+        errRMS = fastrmsdiff(test.data, reference.truncate(test.size).data, test.total_samples());
+        if (errRMS < rmsThreshold)
+        {
+            return; // all good
+        }
+    }
+
+    size_t peakTest      = test.find_peak();
+    size_t peakReference = reference.find_peak();
+    ptrdiff_t peakDiff   = static_cast<ptrdiff_t>(peakTest) - static_cast<ptrdiff_t>(peakReference);
+    CHECK(peakDiff >= -2000);
+    CHECK(peakDiff <= 2000);
+
+    // Align peaks
+    audio_data_interleaved testAligned = test;
+    audio_data_interleaved refAligned  = reference;
+    if (peakDiff > 0)
+    {
+        testAligned = testAligned.slice(peakDiff);
+    }
+    else if (peakDiff < 0)
+    {
+        refAligned = refAligned.slice(-peakDiff);
+    }
+    // truncate to the shortest length
+    testAligned = testAligned.truncate(std::min(testAligned.size, refAligned.size));
+    refAligned  = refAligned.truncate(std::min(testAligned.size, refAligned.size));
+
+    testAudioEquality(testAligned, refAligned);
+}
+
+#ifdef KFR_USE_STD_FILESYSTEM
+
+static bool disable_random_reads = false;
+
+static void testFormat(const std::filesystem::path& dir, bool expectedToFail, bool useOSDecoder = false)
+{
+    for (auto f : std::filesystem::directory_iterator(dir))
+    {
+        if (!f.is_regular_file())
+            continue;
+        std::string ext = f.path().extension().string();
+        if (ext == ".txt" || ext == ".raw")
+            continue;
+        println(f.path().string());
+        fflush(stdout);
+        INFO(f.path().string());
+
+        std::unique_ptr<audio_decoder> decoder;
+#ifdef KFR_OS_WIN
+        if (useOSDecoder)
+            decoder = create_mediafoundation_decoder();
+        else
+#endif
+            decoder = create_decoder_for_file(f.path());
+        if (!decoder)
+        {
+            if (!expectedToFail)
+                CHECK(ErrorDesc{ "Cannot detect format" });
+            continue;
+        }
+        auto info = decoder->open(f.path());
+        if (!info)
+        {
+            if (!expectedToFail)
+                CHECK(ErrorDesc{ "Cannot read format due to " + to_string(info.error()) });
+            continue;
+        }
+        if (auto e = decoder->seek(0); !e)
+        {
+            CHECK(ErrorDesc{ "Cannot seek due to " + to_string(e.error()) });
+            continue;
+        }
+        auto audio = decoder->read_all();
+        if (!audio)
+        {
+            CHECK(ErrorDesc{ "Cannot read audio due to " + to_string(audio.error()) });
+            continue;
+        }
+
+        raw_decoding_options rawOptions;
+        rawOptions.raw.channels               = info->channels;
+        rawOptions.raw.bit_depth              = 16;
+        rawOptions.raw.codec                  = audiofile_codec::lpcm;
+        rawOptions.raw.endianness             = audiofile_endianness::little;
+        std::unique_ptr<audio_decoder> rawDec = create_raw_decoder(rawOptions);
+        auto rawInfo                          = rawDec->open(f.path().string() + ".raw");
+        if (!rawInfo)
+        {
+            CHECK(ErrorDesc{ "Cannot read raw audio due to " + to_string(rawInfo.error()) });
+            continue;
+        }
+        auto rawAudio = rawDec->read_all();
+        if (!rawAudio)
+        {
+            CHECK(ErrorDesc{ "Cannot read raw audio due to " + to_string(rawAudio.error()) });
+            continue;
+        }
+
+        if (useOSDecoder || decoder->format()->codec == audiofile_codec::mp3 ||
+            decoder->format()->codec == audiofile_codec::alac)
+        {
+            testAudioEqualityCompressed(*audio, *rawAudio);
+        }
+        else
+        {
+            testAudioEquality(*audio, *rawAudio);
+        }
+
+        if (!disable_random_reads)
+            testRandomReads(decoder, *rawAudio);
+    }
+}
+
+namespace fs = std::filesystem;
+
+TEST_CASE("audio_format_wav")
+{
+    if (!std::getenv("TEST_IN_DIR"))
+        return;
+    testFormat(fs::path(std::getenv("TEST_IN_DIR")) / "format" / "wav", false);
+}
+#if 0
+TEST_CASE("audio_format_wav_unsupported")
+{
+    if (!std::getenv("TEST_IN_DIR")) return;
+    testFormat(fs::path(std::getenv("TEST_IN_DIR")) / "format" / "wav" / "unsupported", true);
+}
+#endif
+
+TEST_CASE("audio_format_flac")
+{
+    if (!std::getenv("TEST_IN_DIR"))
+        return;
+    testFormat(fs::path(std::getenv("TEST_IN_DIR")) / "format" / "flac", false);
+}
+#if 0
+TEST_CASE("audio_format_flac_unsupported")
+{
+    if (!std::getenv("TEST_IN_DIR")) return;
+    testFormat(fs::path(std::getenv("TEST_IN_DIR")) / "format" / "flac" / "unsupported", true);
+}
+#endif
+
+TEST_CASE("audio_format_aiff")
+{
+    if (!std::getenv("TEST_IN_DIR"))
+        return;
+    testFormat(fs::path(std::getenv("TEST_IN_DIR")) / "format" / "aiff", false);
+}
+#if 0
+TEST_CASE("audio_format_aiff_unsupported")
+{
+    if (!std::getenv("TEST_IN_DIR")) return;
+    testFormat(fs::path(std::getenv("TEST_IN_DIR")) / "format" / "aiff" / "unsupported", true);
+}
+#endif
+
+TEST_CASE("audio_format_caf")
+{
+    if (!std::getenv("TEST_IN_DIR"))
+        return;
+    testFormat(fs::path(std::getenv("TEST_IN_DIR")) / "format" / "caf", false);
+}
+#if 0
+TEST_CASE("audio_format_caf_unsupported")
+{
+    if (!std::getenv("TEST_IN_DIR")) return;
+    testFormat(fs::path(std::getenv("TEST_IN_DIR")) / "format" / "caf" / "unsupported", true);
+}
+#endif
+
+TEST_CASE("audio_format_alac")
+{
+    if (!std::getenv("TEST_IN_DIR"))
+        return;
+    testFormat(fs::path(std::getenv("TEST_IN_DIR")) / "format" / "alac", false);
+}
+#if 0
+TEST_CASE("audio_format_alac_unsupported")
+{
+    if (!std::getenv("TEST_IN_DIR")) return;
+    testFormat(fs::path(std::getenv("TEST_IN_DIR")) / "format" / "alac" / "unsupported", true);
+}
+#endif
+
+TEST_CASE("audio_format_mp3")
+{
+    if (!std::getenv("TEST_IN_DIR"))
+        return;
+    // disable_random_reads          = true;
+    rmsThreshold = kfr::dB_to_amp(-35.0);
+    testFormat(fs::path(std::getenv("TEST_IN_DIR")) / "format" / "mp3", false);
+    // disable_random_reads          = false;
+    rmsThreshold = rmsThresholdDefault;
+}
+#if 0
+TEST_CASE("audio_format_mp3_unsupported")
+{
+    if (!std::getenv("TEST_IN_DIR")) return;
+    testFormat(fs::path(std::getenv("TEST_IN_DIR")) / "format" / "mp3" / "unsupported", true);
+}
+#endif
+
+#ifdef KFR_OS_WIN
+TEST_CASE("audio_format_mediafoundation")
+{
+    if (!std::getenv("TEST_IN_DIR"))
+        return;
+    disable_random_reads = true;
+    rmsThreshold         = kfr::dB_to_amp(-35.0);
+    testFormat(fs::path(std::getenv("TEST_IN_DIR")) / "format" / "os", false, true);
+    disable_random_reads = false;
+    rmsThreshold         = rmsThresholdDefault;
+}
+#if 0
+TEST_CASE("audio_format_os_unsupported")
+{
+    if (!std::getenv("TEST_IN_DIR")) return;
+    disable_random_reads = true;
+    rmsThreshold         = kfr::dB_to_amp(-35.0);
+    testFormat(fs::path(std::getenv("TEST_IN_DIR")) / "format" / "os" / "unsupported", true, true);
+    disable_random_reads = false;
+    rmsThreshold         = rmsThresholdDefault;
+}
+#endif
+#endif
+
+#endif
+
+static auto data_generator(size_t size, uint32_t ch, double scale)
+{
+    return scale * truncate(sinenorm(counter() * ((ch + 4) / 300.f)), size);
+}
+
+static audio_data_planar generate_test_audio(size_t size, uint32_t channels, double scale)
+{
+    audio_data_planar data(channels, size);
+    for (uint32_t ch = 0; ch < channels; ++ch)
+    {
+        data.channel(ch) = data_generator(size, ch, scale);
+    }
+    return data;
+}
+
+static void test_audiodata(audio_decoder& decoder, bool allowLengthMismatch = false,
+                           double threshold = 0.0001, double scale = dB_to_amp(-3))
+{
+    REQUIRE(decoder.format().has_value());
+    const audiofile_format& r = *decoder.format();
+    CHECK(r.channels == 2);
+    CHECK(r.sample_rate == 44100);
+    if (allowLengthMismatch)
+        CHECK(r.total_frames >= 44100);
+    else
+        CHECK(r.total_frames == 44100);
+
+    auto data = decoder.read_all();
+    REQUIRE(data.has_value());
+    CHECK(data->size == 44100);
+
+    for (size_t ch = 0; ch < r.channels; ++ch)
+    {
+        double err = absmaxof(data->channel(ch) - data_generator(44100, ch, scale));
+        CHECK(err < threshold);
+    }
+}
+
+TEST_CASE("wave_decoder")
+{
+    auto decoder = create_wave_decoder({ { .read_metadata = true } });
+    REQUIRE(decoder != nullptr);
+    auto r = decoder->open(KFR_SRC_DIR "/tests/test-audio/testdata_2c_pcm_s24le.wav");
+    REQUIRE(r.has_value());
+    CHECK(r->container == audiofile_container::wave);
+    CHECK(r->codec == audiofile_codec::lpcm);
+    CHECK(r->endianness == audiofile_endianness::little);
+    CHECK(r->bit_depth == 24);
+
+    test_audiodata(*decoder);
+
+    REQUIRE(r->metadata.find("ISFT") != r->metadata.end());
+    CHECK(r->metadata.at("ISFT") == "KFR 7.0.0 debug avx2 64-bit (clang-msvc-20.1.3/windows) +in +ve");
+}
+
+TEST_CASE("w64_decoder")
+{
+    auto decoder = create_w64_decoder({ { .read_metadata = true } });
+    REQUIRE(decoder != nullptr);
+    auto r = decoder->open(KFR_SRC_DIR "/tests/test-audio/testdata_2c_s16.w64");
+    REQUIRE(r);
+    CHECK(r->container == audiofile_container::w64);
+    CHECK(r->codec == audiofile_codec::lpcm);
+    CHECK(r->endianness == audiofile_endianness::little);
+    CHECK(r->bit_depth == 16);
+
+    test_audiodata(*decoder);
+}
+
+TEST_CASE("aiff_decoder")
+{
+    auto decoder = create_aiff_decoder({ { .read_metadata = true } });
+    REQUIRE(decoder != nullptr);
+    auto r = decoder->open(KFR_SRC_DIR "/tests/test-audio/testdata_2c_s16.aiff");
+    REQUIRE(r.has_value());
+    CHECK(r->container == audiofile_container::aiff);
+    CHECK(r->codec == audiofile_codec::lpcm);
+    CHECK(r->endianness == audiofile_endianness::big);
+    CHECK(r->bit_depth == 16);
+
+    test_audiodata(*decoder);
+}
+
+TEST_CASE("raw_decoder: le")
+{
+    raw_decoding_options info{};
+    info.format.codec       = audiofile_codec::ieee_float;
+    info.format.endianness  = audiofile_endianness::little;
+    info.format.bit_depth   = 32;
+    info.format.channels    = 2;
+    info.format.sample_rate = 44100;
+
+    auto decoder = create_raw_decoder(info);
+    REQUIRE(decoder != nullptr);
+    auto r = decoder->open(KFR_SRC_DIR "/tests/test-audio/testdata_2c.f32le");
+    REQUIRE(r.has_value());
+    CHECK(r->container == audiofile_container::unknown);
+    CHECK(r->codec == audiofile_codec::ieee_float);
+    CHECK(r->endianness == audiofile_endianness::little);
+    CHECK(r->bit_depth == 32);
+
+    test_audiodata(*decoder);
+}
+
+TEST_CASE("raw_decoder: be24")
+{
+    raw_decoding_options info{};
+    info.format.codec       = audiofile_codec::lpcm;
+    info.format.endianness  = audiofile_endianness::big;
+    info.format.bit_depth   = 24;
+    info.format.channels    = 2;
+    info.format.sample_rate = 44100;
+
+    auto decoder = create_raw_decoder(info);
+    REQUIRE(decoder != nullptr);
+    auto r = decoder->open(KFR_SRC_DIR "/tests/test-audio/testdata_2c.s24be");
+    REQUIRE(r.has_value());
+    CHECK(r->container == audiofile_container::unknown);
+    CHECK(r->codec == audiofile_codec::lpcm);
+    CHECK(r->endianness == audiofile_endianness::big);
+    CHECK(r->bit_depth == 24);
+
+    test_audiodata(*decoder);
+}
+
+TEST_CASE("raw_encoder: s32")
+{
+    std::string name = "temp" + std::to_string(std::random_device{}()) + ".raw";
+
+    audiofile_format info{};
+    info.codec       = audiofile_codec::lpcm;
+    info.endianness  = audiofile_endianness::little;
+    info.bit_depth   = 32;
+    info.channels    = 2;
+    info.sample_rate = 44100;
+
+    auto encoder = create_raw_encoder({});
+    REQUIRE(encoder != nullptr);
+    auto r = encoder->open(name, info);
+    REQUIRE(r);
+
+    audio_data data(info.channels, 44100);
+    data.channel(0) = data_generator(data.size, 0, dB_to_amp(-3));
+    data.channel(1) = data_generator(data.size, 1, dB_to_amp(-3));
+
+    auto e = encoder->write(data);
+    REQUIRE(e);
+    auto closed = encoder->close();
+    REQUIRE(closed);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100)); // wait for file to be written
+
+    auto decoder = create_raw_decoder({ {}, info });
+    REQUIRE(decoder != nullptr);
+    auto r2 = decoder->open(name);
+    REQUIRE(r2);
+    CHECK(r2->container == audiofile_container::unknown);
+    CHECK(r2->codec == audiofile_codec::lpcm);
+    CHECK(r2->endianness == audiofile_endianness::little);
+    CHECK(r2->bit_depth == 32);
+
+    test_audiodata(*decoder);
+}
+
+#ifdef KFR_AUDIO_FLAC
+TEST_CASE("flac_decoder")
+{
+    auto decoder = create_flac_decoder({ { .read_metadata = true } });
+    REQUIRE(decoder != nullptr);
+    auto r = decoder->open(KFR_SRC_DIR "/tests/test-audio/testdata_2c_s16.flac");
+    REQUIRE(r.has_value());
+    CHECK(r->container == audiofile_container::flac);
+    CHECK(r->codec == audiofile_codec::flac);
+    CHECK(r->endianness == audiofile_endianness::little);
+    CHECK(r->bit_depth == 16);
+
+    test_audiodata(*decoder);
+
+    REQUIRE(r->metadata.find("encoder") != r->metadata.end());
+    CHECK(r->metadata.at("encoder") == "Lavf60.4.101");
+}
+#endif
+
+TEST_CASE("mp3_decoder")
+{
+    auto decoder = create_mp3_decoder();
+    REQUIRE(decoder != nullptr);
+    auto r = decoder->open(KFR_SRC_DIR "/tests/test-audio/testdata_2c.mp3");
+    REQUIRE(r.has_value());
+    CHECK(r->container == audiofile_container::mp3);
+    CHECK(r->codec == audiofile_codec::mp3);
+    CHECK(r->endianness == audiofile_endianness::little);
+    CHECK(r->bit_depth == 0);
+
+    test_audiodata(*decoder, false, 0.01, dB_to_amp(-3.445));
+}
+
+TEST_CASE("caff_decoder")
+{
+    auto decoder = create_caff_decoder();
+    REQUIRE(decoder != nullptr);
+    auto r = decoder->open(KFR_SRC_DIR "/tests/test-audio/testdata_2c_f32be.caf");
+    REQUIRE(r.has_value());
+    CHECK(r->container == audiofile_container::caf);
+    CHECK(r->codec == audiofile_codec::ieee_float);
+    CHECK(r->endianness == audiofile_endianness::big);
+    CHECK(r->bit_depth == 32);
+
+    test_audiodata(*decoder);
+}
+
+TEST_CASE("caff_decoder 16bit")
+{
+    auto decoder = create_caff_decoder();
+    REQUIRE(decoder != nullptr);
+    auto r = decoder->open(KFR_SRC_DIR "/tests/test-audio/testdata_2c_s16.caf");
+    REQUIRE(r.has_value());
+    CHECK(r->container == audiofile_container::caf);
+    CHECK(r->codec == audiofile_codec::lpcm);
+    CHECK(r->endianness == audiofile_endianness::little);
+    CHECK(r->bit_depth == 16);
+
+    test_audiodata(*decoder);
+}
+
+#ifdef KFR_AUDIO_ALAC
+TEST_CASE("caff_decoder alac s24")
+{
+    auto decoder = create_caff_decoder();
+    REQUIRE(decoder != nullptr);
+    auto r = decoder->open(KFR_SRC_DIR "/tests/test-audio/testdata_2c_alac_s24.caf");
+    REQUIRE(r.has_value());
+    CHECK(r->container == audiofile_container::caf);
+    CHECK(r->codec == audiofile_codec::alac);
+    CHECK(r->endianness == audiofile_endianness::little);
+    CHECK(r->bit_depth == 24);
+
+    test_audiodata(*decoder, true);
+}
+
+TEST_CASE("caff_decoder alac s16")
+{
+    auto decoder = create_caff_decoder();
+    REQUIRE(decoder != nullptr);
+    auto r = decoder->open(KFR_SRC_DIR "/tests/test-audio/testdata_2c_alac_s16.caf");
+    REQUIRE(r.has_value());
+    CHECK(r->container == audiofile_container::caf);
+    CHECK(r->codec == audiofile_codec::alac);
+    CHECK(r->endianness == audiofile_endianness::little);
+    CHECK(r->bit_depth == 16);
+
+    test_audiodata(*decoder, true);
+}
+#endif
+
+#ifdef KFR_OS_WIN
+TEST_CASE("mediafoundation_decoder")
+{
+    auto decoder = create_mediafoundation_decoder({ { .read_metadata = true } });
+    REQUIRE(decoder != nullptr);
+    auto r = decoder->open(KFR_SRC_DIR "/tests/test-audio/testdata_2c_pcm_s24le.wav");
+    REQUIRE(r.has_value());
+    CHECK(r->container == audiofile_container::unknown);
+    CHECK(r->codec == audiofile_codec::unknown);
+    CHECK(r->endianness == audiofile_endianness::little);
+    CHECK(r->bit_depth == 24);
+
+    test_audiodata(*decoder);
+}
+
+TEST_CASE("os_decoder_no_file")
+{
+    auto decoder = create_mediafoundation_decoder();
+    REQUIRE(decoder != nullptr);
+    auto r = decoder->open("this_file_does_not_exist.wav");
+    REQUIRE(!r.has_value());
+    CHECK(r.error() == audiofile_error::not_found);
+}
+
+TEST_CASE("os_decoder_unsupported")
+{
+    auto decoder = create_mediafoundation_decoder();
+    REQUIRE(decoder != nullptr);
+    auto r = decoder->open(KFR_SRC_DIR "/tests/test-audio/not_audio");
+    REQUIRE(!r.has_value());
+    CHECK(r.error() == audiofile_error::format_error);
+}
+#endif
+
+#ifdef KFR_OS_APPLE
+TEST_CASE("coreaudio_decoder")
+{
+    auto decoder = create_coreaudio_decoder({ { .read_metadata = true } });
+    REQUIRE(decoder != nullptr);
+    auto r = decoder->open(KFR_SRC_DIR "/tests/test-audio/testdata_2c_pcm_s24le.wav");
+    REQUIRE(r.has_value());
+    CHECK(r->container == audiofile_container::unknown);
+    CHECK(r->codec == audiofile_codec::unknown);
+    CHECK(r->endianness == audiofile_endianness::little);
+    CHECK(r->bit_depth == 24);
+
+    test_audiodata(*decoder);
+}
+
+TEST_CASE("coreaudio_decoder_no_file")
+{
+    auto decoder = create_coreaudio_decoder();
+    REQUIRE(decoder != nullptr);
+    auto r = decoder->open("this_file_does_not_exist.wav");
+    REQUIRE(!r.has_value());
+    CHECK(r.error() == audiofile_error::not_found);
+}
+
+TEST_CASE("coreaudio_decoder_unsupported")
+{
+    auto decoder = create_coreaudio_decoder();
+    REQUIRE(decoder != nullptr);
+    auto r = decoder->open(KFR_SRC_DIR "/tests/test-audio/not_audio");
+    REQUIRE(!r.has_value());
+    CHECK(r.error() == audiofile_error::format_error);
+}
+#endif
+
+TEST_CASE("decoder_for_file")
+{
+    auto decoder = create_decoder_for_file(KFR_SRC_DIR "/tests/test-audio/testdata_2c_pcm_s24le.wav");
+    REQUIRE(decoder != nullptr);
+    auto r = decoder->open(KFR_SRC_DIR "/tests/test-audio/testdata_2c_pcm_s24le.wav");
+    REQUIRE(r.has_value());
+    CHECK(r->container == audiofile_container::wave);
+    CHECK(r->codec == audiofile_codec::lpcm);
+    CHECK(r->endianness == audiofile_endianness::little);
+    CHECK(r->bit_depth == 24);
+
+    test_audiodata(*decoder);
+}
+
+TEST_CASE("decoder_for_file_unsupported")
+{
+    auto decoder = create_decoder_for_file(KFR_SRC_DIR "/tests/test-audio/not_audio");
+    REQUIRE(decoder == nullptr);
+}
+
+TEST_CASE("read_audiofile_header")
+{
+    using details::header_is;
+
+    auto h = read_audiofile_header(KFR_SRC_DIR "/tests/test-audio/testdata_2c_pcm_s24le.wav");
+    REQUIRE(h.has_value());
+    CHECK(header_is(*h, "RIFF....WAVEJUNK"));
+    h = read_audiofile_header(KFR_SRC_DIR "/tests/test-audio/testdata_2c_s16.aiff");
+    REQUIRE(h.has_value());
+    CHECK(header_is(*h, "FORM....AIFFCOMM"));
+    h = read_audiofile_header(KFR_SRC_DIR "/tests/test-audio/testdata_2c_s16.caf");
+    REQUIRE(h.has_value());
+    CHECK(header_is(*h, "caff............"));
+    h = read_audiofile_header(KFR_SRC_DIR "/tests/test-audio/testdata_2c_s16.flac");
+    REQUIRE(h.has_value());
+    CHECK(header_is(*h, "fLaC............"));
+    h = read_audiofile_header("this_file_does_not_exist.wav");
+    REQUIRE(!h.has_value());
+    CHECK(h.error() == std::errc::no_such_file_or_directory);
+}
+
+TEST_CASE("audiofile_container_from_extension")
+{
+    CHECK(audiofile_container_from_extension(".wav") == audiofile_container::wave);
+    CHECK(audiofile_container_from_extension(".WAV") == audiofile_container::wave);
+    CHECK(audiofile_container_from_extension(".wave") == audiofile_container::wave);
+    CHECK(audiofile_container_from_extension(".WAVE") == audiofile_container::wave);
+    CHECK(audiofile_container_from_extension(".aif") == audiofile_container::aiff);
+    CHECK(audiofile_container_from_extension(".AIF") == audiofile_container::aiff);
+    CHECK(audiofile_container_from_extension(".aiff") == audiofile_container::aiff);
+    CHECK(audiofile_container_from_extension(".AIFF") == audiofile_container::aiff);
+    CHECK(audiofile_container_from_extension(".aifc") == audiofile_container::aiff);
+    CHECK(audiofile_container_from_extension(".AIFC") == audiofile_container::aiff);
+    CHECK(audiofile_container_from_extension(".caf") == audiofile_container::caf);
+    CHECK(audiofile_container_from_extension(".CAF") == audiofile_container::caf);
+    CHECK(audiofile_container_from_extension(".flac") == audiofile_container::flac);
+    CHECK(audiofile_container_from_extension(".FLAC") == audiofile_container::flac);
+    CHECK(audiofile_container_from_extension(".mp3") == audiofile_container::mp3);
+    CHECK(audiofile_container_from_extension(".MP3") == audiofile_container::mp3);
+    CHECK(audiofile_container_from_extension(".unknown") == audiofile_container::unknown);
+    CHECK(audiofile_container_from_extension("") == audiofile_container::unknown);
+}
+
+TEST_CASE("create_decoder_for_container")
+{
+    CHECK(create_decoder_for_container(audiofile_container::wave) != nullptr);
+    CHECK(create_decoder_for_container(audiofile_container::aiff) != nullptr);
+    CHECK(create_decoder_for_container(audiofile_container::caf) != nullptr);
+#ifdef KFR_AUDIO_FLAC
+    CHECK(create_decoder_for_container(audiofile_container::flac) != nullptr);
+#endif
+    CHECK(create_decoder_for_container(audiofile_container::mp3) != nullptr);
+    CHECK(create_decoder_for_container(audiofile_container::unknown) == nullptr);
+}
+
+TEST_CASE("every decoder must report io_error for non-existing file")
+{
+    for (auto c : {
+             audiofile_container::wave,
+             audiofile_container::aiff,
+             audiofile_container::caf,
+#ifdef KFR_AUDIO_FLAC
+             audiofile_container::flac,
+#endif
+             audiofile_container::mp3,
+         })
+    {
+        auto decoder = create_decoder_for_container(c);
+        REQUIRE(decoder != nullptr);
+        auto r = decoder->open("this_file_does_not_exist.wav");
+        REQUIRE(!r.has_value());
+        CHECK(r.error() == audiofile_error::not_found);
+    }
+}
+
+TEST_CASE("wave encoder")
+{
+    std::string name = "temp" + std::to_string(std::random_device{}()) + ".wav";
+
+    auto enc = create_wave_encoder({ {}, /* .switch_to_rf64_if_over_4gb = */ false });
+    REQUIRE(enc != nullptr);
+    audiofile_format info{};
+    info.container    = audiofile_container::wave;
+    info.codec        = audiofile_codec::lpcm;
+    info.endianness   = audiofile_endianness::little;
+    info.bit_depth    = 16;
+    info.channels     = 2;
+    info.sample_rate  = 44100;
+    info.total_frames = 44100;
+    auto e            = enc->open(name, info);
+    REQUIRE(e);
+    audio_data data(info.channels, 44100);
+    for (size_t ch = 0; ch < info.channels; ++ch)
+        data.channel(ch) = data_generator(data.size, ch, dB_to_amp(-3));
+    e = enc->write(data);
+    REQUIRE(e);
+    auto closed = enc->close();
+    REQUIRE(closed);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100)); // wait for file to be closed
+
+    auto dec = create_wave_decoder();
+    REQUIRE(dec != nullptr);
+    auto r = dec->open(name);
+    REQUIRE(r);
+    CHECK(r->container == audiofile_container::wave);
+    CHECK(r->codec == audiofile_codec::lpcm);
+    CHECK(r->endianness == audiofile_endianness::little);
+    CHECK(r->bit_depth == 16);
+    test_audiodata(*dec);
+}
+
+TEST_CASE("Each channel is cache-aligned")
+{
+    audio_data data(16, 1);
+    for (size_t ch = 0; ch < data.channels; ++ch)
+    {
+        CHECK((reinterpret_cast<uintptr_t>(data.channel(ch).data()) % KFR_CACHE_LINE_SIZE) == 0);
+    }
+}
+
+TEST_CASE("audio_data new member operations")
+{
+    using Catch::Approx;
+
+    // multiply, apply_gain_dB
+    {
+        audio_data_planar a(2, 4, fbase(1.0));
+        a.multiply(fbase(2.5));
+        CHECK(a.channel(0)[0] == Approx(2.5));
+        CHECK(a.channel(1)[3] == Approx(2.5));
+
+        a.apply_gain_dB(fbase(6.020599913279624)); // ~ +6 dB -> 2x
+        CHECK(a.channel(0)[0] == Approx(5.0).margin(1e-4));
+    }
+
+    // normalize & clamp
+    {
+        audio_data_planar a(2, 4);
+        a.channel(0) = univector<fbase, 4>{ -0.5, 0.2, -2.0, 1.0 };
+        a.channel(1) = univector<fbase, 4>{ 0.1, 0.5, -1.0, 0.0 };
+
+        a.normalize(fbase(1.0)); // peak was 2.0, should scale by 0.5
+        CHECK(a.channel(0)[2] == Approx(-1.0));
+        CHECK(a.channel(0)[0] == Approx(-0.25));
+
+        a.channel(0) = univector<fbase, 4>{ -3.0, -0.5, 0.5, 3.0 };
+        a.clamp(fbase(-1.0), fbase(1.0));
+        CHECK(a.channel(0)[0] == Approx(-1.0));
+        CHECK(a.channel(0)[1] == Approx(-0.5));
+        CHECK(a.channel(0)[2] == Approx(0.5));
+        CHECK(a.channel(0)[3] == Approx(1.0));
+    }
+
+    // to_mono
+    {
+        audio_data_planar a(2, 3);
+        a.channel(0)     = univector<fbase, 3>{ 1.0, 2.0, 3.0 };
+        a.channel(1)     = univector<fbase, 3>{ 3.0, 4.0, 5.0 };
+        auto mono_planar = a.to_mono();
+        CHECK(mono_planar.channels == 1);
+        CHECK(mono_planar.size == 3);
+        CHECK(mono_planar.channel(0)[0] == Approx(2.0));
+        CHECK(mono_planar.channel(0)[1] == Approx(3.0));
+        CHECK(mono_planar.channel(0)[2] == Approx(4.0));
+
+        audio_data_interleaved b = a.to_interleaved();
+        auto mono_interleaved    = b.to_mono();
+        CHECK(mono_interleaved.channels == 1);
+        CHECK(mono_interleaved.size == 3);
+        CHECK(mono_interleaved.interleaved()[0] == Approx(2.0));
+        CHECK(mono_interleaved.interleaved()[1] == Approx(3.0));
+        CHECK(mono_interleaved.interleaved()[2] == Approx(4.0));
+    }
+
+    // to_interleaved, to_planar, clone
+    {
+        audio_data_planar a(2, 2);
+        a.channel(0) = univector<fbase, 2>{ 1.0, 2.0 };
+        a.channel(1) = univector<fbase, 2>{ 3.0, 4.0 };
+
+        audio_data_interleaved ai = a.to_interleaved();
+        CHECK(ai.channels == 2);
+        CHECK(ai.size == 2);
+        CHECK(ai.interleaved()[0] == Approx(1.0));
+        CHECK(ai.interleaved()[1] == Approx(3.0));
+        CHECK(ai.interleaved()[2] == Approx(2.0));
+        CHECK(ai.interleaved()[3] == Approx(4.0));
+
+        audio_data_planar ap = ai.to_planar();
+        CHECK(ap.channels == 2);
+        CHECK(ap.size == 2);
+        CHECK(ap.channel(0)[0] == Approx(1.0));
+        CHECK(ap.channel(1)[1] == Approx(4.0));
+
+        audio_data_planar a_cloned = a.clone();
+        CHECK(a_cloned.channels == a.channels);
+        CHECK(a_cloned.size == a.size);
+        CHECK(a_cloned.channel(0).data() != a.channel(0).data()); // independent buffer
+        CHECK(a_cloned.channel(0)[0] == Approx(1.0));
+    }
+
+    // select_channel, select_channels
+    {
+        audio_data_planar a(4, 3);
+        for (size_t ch = 0; ch < 4; ++ch)
+        {
+            a.channel(ch) = scalar(fbase(ch + 1));
+        }
+
+        auto ch2 = a.select_channel(2);
+        CHECK(ch2.channels == 1);
+        CHECK(ch2.size == 3);
+        CHECK(ch2.channel(0).data() == a.channel(2).data()); // references original buffer
+        CHECK(ch2.deallocator == a.deallocator); // retains finalizer
+        CHECK(ch2.channel(0)[0] == Approx(3.0));
+
+        auto ch1_2 = a.select_channels(1, 2);
+        CHECK(ch1_2.channels == 2);
+        CHECK(ch1_2.size == 3);
+        CHECK(ch1_2.channel(0).data() == a.channel(1).data());
+        CHECK(ch1_2.channel(1).data() == a.channel(2).data());
+        CHECK(ch1_2.deallocator == a.deallocator);
+        CHECK(ch1_2.channel(0)[0] == Approx(2.0));
+        CHECK(ch1_2.channel(1)[0] == Approx(3.0));
+    }
+}
+
+TEST_CASE("encoders")
+{
+    CHECK(create_wave_encoder() != nullptr);
+    CHECK(create_w64_encoder() != nullptr);
+    CHECK(create_raw_encoder({}) != nullptr);
+#ifdef KFR_AUDIO_FLAC
+    CHECK(create_flac_encoder() != nullptr);
+#endif
+    CHECK(create_caff_encoder() != nullptr);
+}
+
+static void test_encode_and_decode(const audio_data_interleaved& audio, const audiofile_format& fmt,
+                                   audio_encoder& encoder, audio_decoder& decoder)
+{
+    std::string name = "temp" + std::to_string(std::random_device{}()) + ".tmp";
+
+    auto e = encoder.open(name, fmt);
+    CHECK(e);
+    if (!e)
+        return;
+
+    e = encoder.write(audio);
+    CHECK(e);
+    if (!e)
+        return;
+
+    auto closed = encoder.close();
+    CHECK(closed);
+    if (!closed)
+        return;
+
+    auto r = decoder.open(name);
+    CHECK(r);
+    if (!r)
+        return;
+
+    auto decoded = decoder.read_all();
+    CHECK(decoded);
+    if (!decoded)
+        return;
+    if (fmt.codec == audiofile_codec::mp3 || fmt.codec == audiofile_codec::alac)
+        testAudioEqualityCompressed(*decoded, audio);
+    else
+        testAudioEquality(*decoded, audio);
+}
+
+TEST_CASE("encode and decode raw")
+{
+    audiofile_format rawFormat{};
+    rawFormat.endianness  = audiofile_endianness::little;
+    rawFormat.sample_rate = 44100;
+    for (uint32_t channels : { 1, 2, 6, (int)max_audio_channels })
+    {
+        if (channels > max_audio_channels)
+            continue;
+        CAPTURE(channels);
+        rawFormat.channels = channels;
+
+        auto audio = generate_test_audio(44100, channels, dB_to_amp(-3));
+
+        for (audio_sample_type smp_type :
+             { audio_sample_type::f32, audio_sample_type::f64, audio_sample_type::i16, audio_sample_type::i24,
+               audio_sample_type::i32 })
+        {
+            CAPTURE(smp_type);
+            rawFormat.bit_depth = audio_sample_bit_depth(smp_type);
+            rawFormat.codec =
+                audio_sample_is_float(smp_type) ? audiofile_codec::ieee_float : audiofile_codec::lpcm;
+
+            for (audiofile_endianness endianness :
+                 { audiofile_endianness::little, audiofile_endianness::big })
+            {
+                CAPTURE(endianness);
+                rawFormat.endianness = endianness;
+                test_encode_and_decode(audio, rawFormat, *create_raw_encoder({}),
+                                       *create_raw_decoder({ {}, rawFormat }));
+            }
+        }
+    }
+}
+
+static void sequence_1(std::unique_ptr<audio_encoder>&& e, const audiofile_format& format)
+{
+    REQUIRE(e != nullptr);
+    std::string name1 = "temp" + std::to_string(std::random_device{}()) + ".tmp";
+    std::string name2 = "temp" + std::to_string(std::random_device{}()) + ".tmp";
+
+    auto opened = e->open(name1, format);
+    CHECK(opened);
+
+    auto closed = e->close();
+    CHECK(!closed);
+    CHECK(closed.error() == audiofile_error::empty_file);
+
+    auto written = e->write({}); // writing without opening
+    CHECK(!written);
+    CHECK(written.error() == audiofile_error::closed);
+
+    opened = e->open(name2, format);
+    CHECK(opened);
+
+    closed = e->close();
+    CHECK(!closed);
+    CHECK(closed.error() == audiofile_error::empty_file);
+}
+
+TEST_CASE("encoding sequence 1")
+{
+    audiofile_format format{};
+    format.sample_rate = 44100;
+    format.channels    = 2;
+    format.bit_depth   = 16;
+    format.codec       = audiofile_codec::lpcm;
+    format.endianness  = audiofile_endianness::little;
+    {
+        INFO("wave");
+        sequence_1(create_wave_encoder(), format);
+    }
+    {
+        INFO("aiff");
+        sequence_1(create_aiff_encoder(), format);
+    }
+    {
+        INFO("w64");
+        sequence_1(create_w64_encoder(), format);
+    }
+    {
+        INFO("caff");
+        sequence_1(create_caff_encoder(), format);
+    }
+#ifdef KFR_AUDIO_FLAC
+    {
+        auto flacFormat  = format;
+        flacFormat.codec = audiofile_codec::flac;
+        INFO("flac");
+        sequence_1(create_flac_encoder(), flacFormat);
+    }
+#endif
+    {
+        INFO("raw");
+        sequence_1(create_raw_encoder({}), format);
+    }
+}
+
+static void sequence_2(std::unique_ptr<audio_decoder>&& d, const file_path& file)
+{
+    REQUIRE(d != nullptr);
+
+    auto read = d->read(1000);
+    CHECK(!read);
+    CHECK(read.error() == audiofile_error::closed);
+
+    CHECK(d->format() == std::nullopt);
+    CHECK(d->reader() == nullptr);
+
+    auto opened = d->open("this_file_does_not_exist");
+    CHECK(!opened);
+    CHECK(opened.error() == audiofile_error::not_found);
+
+    read = d->read(1000);
+    CHECK(!read);
+    CHECK(read.error() == audiofile_error::closed);
+
+    auto seek = d->seek(0);
+    CHECK(!seek);
+    CHECK(seek.error() == audiofile_error::closed);
+
+    CHECK(d->format() == std::nullopt);
+    CHECK(d->reader() == nullptr);
+
+    opened = d->open(file);
+    CHECK(opened);
+    CHECK(opened->valid());
+    CHECK(d->format());
+    CHECK(*d->format() == *opened);
+    CHECK(d->reader() != nullptr);
+
+    d->close();
+    CHECK(d->format() == std::nullopt);
+    CHECK(d->reader() == nullptr);
+    d->close();
+}
+
+TEST_CASE("decoding sequence 2")
+{
+    {
+        INFO("wave");
+        sequence_2(create_wave_decoder(),
+                   KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/testdata_2c_pcm_s24le.wav"));
+    }
+    {
+        INFO("aiff");
+        sequence_2(create_aiff_decoder(), KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/testdata_2c_s16.aiff"));
+    }
+    {
+        INFO("w64");
+        sequence_2(create_w64_decoder(), KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/testdata_2c_s16.w64"));
+    }
+    {
+        INFO("caff");
+        sequence_2(create_caff_decoder(),
+                   KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/testdata_2c_f32be.caf"));
+    }
+#ifdef KFR_AUDIO_FLAC
+    {
+        INFO("flac");
+        sequence_2(create_flac_decoder(), KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/testdata_2c_s16.flac"));
+    }
+#endif
+    {
+        INFO("mp3");
+        sequence_2(create_mp3_decoder(), KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/testdata_2c.mp3"));
+    }
+    {
+        INFO("raw");
+        raw_decoding_options rawOptions{};
+        rawOptions.format.sample_rate = 44100;
+        rawOptions.format.channels    = 2;
+        rawOptions.format.bit_depth   = 32;
+        rawOptions.format.codec       = audiofile_codec::ieee_float;
+        sequence_2(create_raw_decoder(rawOptions),
+                   KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/testdata_2c.f32le"));
+    }
+#ifdef KFR_OS_WIN
+    {
+        INFO("mediafoundation");
+        sequence_2(create_mediafoundation_decoder(),
+                   KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/testdata_2c_pcm_s24le.wav"));
+    }
+#endif
+#ifdef KFR_OS_MACOS
+    {
+        INFO("coreaudio");
+        sequence_2(create_coreaudio_decoder(),
+                   KFR_FILEPATH(KFR_SRC_DIR "/tests/test-audio/testdata_2c_pcm_s24le.wav"));
+    }
+#endif
+}
+
+TEST_CASE("encode and decode")
+{
+    audiofile_format format{};
+    format.sample_rate = 44100;
+
+    for (uint32_t channels : { 1, 2, 6, (int)max_audio_channels })
+    {
+        if (channels > max_audio_channels)
+            continue;
+        CAPTURE(channels);
+        format.channels = channels;
+
+        auto audio = generate_test_audio(44100, channels, dB_to_amp(-3));
+
+        for (audio_sample_type smp_type :
+             { audio_sample_type::f32, audio_sample_type::f64, audio_sample_type::i16, audio_sample_type::i24,
+               audio_sample_type::i32 })
+        {
+            CAPTURE(smp_type);
+            format.bit_depth = audio_sample_bit_depth(smp_type);
+            format.codec =
+                audio_sample_is_float(smp_type) ? audiofile_codec::ieee_float : audiofile_codec::lpcm;
+            format.endianness = audiofile_endianness::little;
+
+            {
+                INFO("wave");
+                test_encode_and_decode(audio, format, *create_wave_encoder(), *create_wave_decoder());
+            }
+            {
+                INFO("w64");
+                test_encode_and_decode(audio, format, *create_w64_encoder(), *create_w64_decoder());
+            }
+
+            if (format.codec == audiofile_codec::lpcm)
+            {
+#ifdef KFR_AUDIO_ALAC
+                if (format.channels <= 8)
+                {
+                    INFO("alac");
+                    audiofile_format formatAlac = format;
+                    formatAlac.codec            = audiofile_codec::alac;
+                    test_encode_and_decode(audio, formatAlac, *create_caff_encoder(), *create_caff_decoder());
+                }
+#endif
+#ifdef KFR_AUDIO_FLAC
+                if (format.channels <= 8)
+                {
+                    INFO("flac");
+                    audiofile_format formatFlac = format;
+                    formatFlac.codec            = audiofile_codec::flac;
+                    test_encode_and_decode(audio, formatFlac, *create_flac_encoder(), *create_flac_decoder());
+                }
+#endif
+            }
+            for (audiofile_endianness endianness :
+                 { audiofile_endianness::little, audiofile_endianness::big })
+            {
+                CAPTURE(endianness);
+                format.endianness = endianness;
+                {
+                    INFO("caff");
+                    test_encode_and_decode(audio, format, *create_caff_encoder(), *create_caff_decoder());
+                }
+                if (format.codec == audiofile_codec::lpcm || format.endianness == audiofile_endianness::big)
+                {
+                    INFO("aiff");
+                    test_encode_and_decode(audio, format, *create_aiff_encoder(), *create_aiff_decoder());
+                }
+            }
+        }
+    }
+}
+
+TEST_CASE("audio_filter operations")
+{
+    using Catch::Approx;
+
+    // FIR audio filter test
+    {
+        univector<fbase, 3> taps{ 0.25, 0.5, 0.25 };
+        audio_filter f = audio_filter::fir(2, taps);
+
+        audio_data_planar input(2, 4, fbase(0.0));
+        input.channel(0)[0] = 1.0;
+        input.channel(1)[0] = 2.0;
+
+        audio_data_planar output = input.clone();
+        f.apply(output);
+
+        CHECK(output.channel(0)[0] == Approx(0.25));
+        CHECK(output.channel(0)[1] == Approx(0.5));
+        CHECK(output.channel(0)[2] == Approx(0.25));
+        CHECK(output.channel(0)[3] == Approx(0.0));
+
+        CHECK(output.channel(1)[0] == Approx(0.5));
+        CHECK(output.channel(1)[1] == Approx(1.0));
+        CHECK(output.channel(1)[2] == Approx(0.5));
+        CHECK(output.channel(1)[3] == Approx(0.0));
+
+        // Test reset
+        f.reset();
+        audio_data_planar out2 = input.clone();
+        f.apply(out2);
+        CHECK(out2.channel(0)[0] == Approx(0.25));
+        CHECK(out2.channel(0)[1] == Approx(0.5));
+    }
+
+    // IIR audio filter test
+    {
+        biquad_section<fbase> bq = biquad_lowpass<fbase>(0.1, 0.7);
+        audio_filter f           = audio_filter::iir(2, bq);
+
+        audio_data_planar input(2, 16, fbase(1.0));
+        audio_data_planar output = input.clone();
+        f.apply(output);
+        CHECK(output.channels == 2);
+        CHECK(output.size == 16);
+        CHECK(output.channel(0)[0] == Approx(output.channel(1)[0]));
+
+        f.reset();
+    }
+
+#ifdef KFR_HAVE_DFT
+    // Convolution audio filter test
+    {
+        univector<fbase, 4> ir{ 1.0, 0.0, 0.0, 0.0 };
+        audio_filter f = audio_filter::convolution(2, ir.slice(), 128);
+
+        audio_data_planar input(2, 8, fbase(1.0));
+        audio_data_planar output = input.clone();
+        f.apply(output);
+        CHECK(output.channel(0)[0] == Approx(1.0));
+        CHECK(output.channel(0)[1] == Approx(1.0));
+        CHECK(output.channel(1)[0] == Approx(1.0));
+
+        f.reset();
+    }
+#endif
+}
+
+#ifndef KFR_NO_MAIN
+int main(int argc, char* argv[])
+{
+    println(library_version(), " running on ", cpu_runtime());
+
+    int result = Catch::Session().run(argc, argv);
+
+    return result;
+}
+#endif

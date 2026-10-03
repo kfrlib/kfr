@@ -1,8 +1,5 @@
-/** @addtogroup cpuid
- *  @{
- */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -55,8 +52,29 @@ static char dummyvar = init_dummyvar();
 } // namespace internal_generic
 
 /**
- * @brief Returns cpu instruction set detected at runtime.
+ * @brief Returns the CPU instruction set selected for use at runtime.
+ *
+ * The value is initialized once at static-init time from
+ * @ref internal_generic::detect_cpu and may afterwards be changed with
+ * @ref override_cpu.
  */
-KFR_FUNCTION cpu_t get_cpu() { return internal_generic::cpu_v(); }
+inline cpu_t get_cpu() { return internal_generic::cpu_v(); }
+
+/**
+ * @brief Overrides the CPU instruction set used by KFR at runtime.
+ *
+ * @param cpu The instruction set level to install.
+ * @return The previously selected instruction set level.
+ *
+ * Useful for forcing a lower (or higher, if the host supports it) target than
+ * the auto-detected one. Dispatchers that query @ref get_cpu after this call
+ * will observe the new value.
+ */
+inline cpu_t override_cpu(cpu_t cpu)
+{
+    cpu_t previous            = internal_generic::cpu_v();
+    internal_generic::cpu_v() = cpu;
+    return previous;
+}
 
 } // namespace kfr

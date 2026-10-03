@@ -102,3 +102,15 @@ temp_audio_file.wav
 *.profdata
 *.lcov
 lcov.info
+
+# clangd
+.cache
+
+docs/site
+docs/out.json
+
+kfr_amalgamated.hpp
+
+tests/snippets
+
+snippet_build_errors.txt

@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -31,8 +31,8 @@
 #include "dsp/ebu.hpp"
 #include "dsp/fir.hpp"
 #include "dsp/fir_design.hpp"
-#include "dsp/fracdelay.hpp"
 #include "dsp/goertzel.hpp"
+#include "dsp/iir.hpp"
 #include "dsp/iir_design.hpp"
 #include "dsp/mixdown.hpp"
 #include "dsp/oscillators.hpp"
@@ -43,3 +43,13 @@
 #include "dsp/waveshaper.hpp"
 #include "dsp/weighting.hpp"
 #include "dsp/window.hpp"
+
+namespace kfr
+{
+/**
+ * @brief Returns the full version string of the KFR DSP module.
+ * @return A null-terminated string with the KFR version (e.g. from
+ *         @c KFR_VERSION_FULL).
+ */
+const char* library_version_dsp();
+} // namespace kfr

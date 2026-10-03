@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -22,20 +22,20 @@
  */
 #pragma once
 
-#include "../../math/abs.hpp"
-#include "../../math/log_exp.hpp"
-#include "../../math/min_max.hpp"
-#include "../../math/select.hpp"
+#include "../../simd/abs.hpp"
 #include "../../simd/constants.hpp"
 #include "../../simd/impl/function.hpp"
+#include "../../simd/min_max.hpp"
 #include "../../simd/operators.hpp"
+#include "../../simd/select.hpp"
+#include "../log_exp.hpp"
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 template <typename T, size_t N, typename Tout = flt_type<T>>
@@ -88,12 +88,12 @@ KFR_HANDLE_SCALAR_1_T(tanh, flt_type<T>)
 KFR_HANDLE_SCALAR_1_T(coth, flt_type<T>)
 KFR_HANDLE_SCALAR_1_T(sinhcosh, flt_type<T>)
 KFR_HANDLE_SCALAR_1_T(coshsinh, flt_type<T>)
-} // namespace intrinsics
+} // namespace intr
 KFR_I_FN(sinh)
 KFR_I_FN(cosh)
 KFR_I_FN(tanh)
 KFR_I_FN(coth)
 KFR_I_FN(sinhcosh)
 KFR_I_FN(coshsinh)
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

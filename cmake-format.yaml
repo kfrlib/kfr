@@ -63,3 +63,16 @@ encode:
   output_encoding: utf-8
 misc:
   per_command: {}
+additional_commands:
+  add_kfr_library:
+    flags:
+      MULTIARCH: ''
+    kwargs:
+      NAME: '*'
+      SOURCES: '*'
+      LIBRARIES: '*'
+      PUBLIC_LIBRARIES: '*'
+      DEFINITIONS: '*'
+      PUBLIC_DEFINITIONS: '*'
+      INCLUDE_DIRECTORIES: '*'
+      OPTIONS: '*'

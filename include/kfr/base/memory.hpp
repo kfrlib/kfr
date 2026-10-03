@@ -1,8 +1,5 @@
-/** @addtogroup memory
- *  @{
- */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -25,5 +22,5 @@
  */
 #pragma once
 
-#include "../cometa/memory.hpp"
+#include "../meta/memory.hpp"
 #include "../simd/types.hpp"

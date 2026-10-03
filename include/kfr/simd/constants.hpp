@@ -1,8 +1,5 @@
-/** @addtogroup constants
- *  @{
- */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -28,59 +25,187 @@
 #include "types.hpp"
 #include <limits>
 
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 4309))
-CMT_PRAGMA_MSVC(warning(disable : 4146))
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 4309))
+KFR_PRAGMA_MSVC(warning(disable : 4146))
 
 namespace kfr
 {
 
-#if CMT_COMPILER_GNU
+#if KFR_COMPILER_GNU
+/**
+ * @brief Positive infinity as a `double`.
+ */
 constexpr double infinity = __builtin_inf();
-constexpr double qnan     = __builtin_nan("");
+/**
+ * @brief Quiet NaN (Not-a-Number) as a `double`.
+ */
+constexpr double qnan = __builtin_nan("");
 #else
+/**
+ * @brief Positive infinity as a `double`.
+ */
 constexpr double infinity = HUGE_VAL;
-constexpr double qnan     = NAN;
+/**
+ * @brief Quiet NaN (Not-a-Number) as a `double`.
+ */
+constexpr double qnan = NAN;
 #endif
-CMT_PRAGMA_GNU(GCC diagnostic push)
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Woverflow")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Woverflow")
 
+/**
+ * @brief Collection of mathematical and machine constants for the scalar type `T`.
+ *
+ * The constants are provided as `constexpr static` members so they can be used in
+ * compile-time contexts. SIMD vector types derive their constants from the
+ * corresponding scalar element type via `constants`.
+ *
+ * @tparam T The scalar numeric type (e.g. `float`, `double`).
+ */
 template <typename T>
 struct scalar_constants
 {
+    /**
+     * @brief Returns π scaled by `m / d`.
+     * @param m Numerator multiplier.
+     * @param d Denominator divisor (defaults to 1).
+     * @return `pi * m / d`.
+     */
     constexpr static T pi_s(int m, int d = 1) { return pi * m / d; }
+    /**
+     * @brief Returns the reciprocal of π scaled by `m / d`.
+     * @param m Numerator multiplier.
+     * @param d Denominator divisor (defaults to 1).
+     * @return `recip_pi * m / d`.
+     */
     constexpr static T recip_pi_s(int m, int d = 1) { return recip_pi * m / d; }
 
-    constexpr static T pi           = static_cast<T>(3.1415926535897932384626433832795);
-    constexpr static T sqr_pi       = static_cast<T>(9.8696044010893586188344909998762);
-    constexpr static T recip_pi     = static_cast<T>(0.31830988618379067153776752674503);
-    constexpr static T degtorad     = static_cast<T>(pi / 180);
-    constexpr static T radtodeg     = static_cast<T>(pi * 180);
-    constexpr static T e            = static_cast<T>(2.718281828459045235360287471352662);
-    constexpr static T recip_log_2  = static_cast<T>(1.442695040888963407359924681001892137426645954);
+    /**
+     * @brief The mathematical constant π (pi).
+     * @tparam T The numeric type.
+     */
+    constexpr static T pi = static_cast<T>(3.1415926535897932384626433832795);
+
+    /**
+     * @brief The square of π (pi²).
+     * @tparam T The numeric type.
+     */
+    constexpr static T sqr_pi = static_cast<T>(9.8696044010893586188344909998762);
+
+    /**
+     * @brief The reciprocal of π (1/π).
+     * @tparam T The numeric type.
+     */
+    constexpr static T recip_pi = static_cast<T>(0.31830988618379067153776752674503);
+
+    /**
+     * @brief Degrees to radians conversion factor (π / 180).
+     * @tparam T The numeric type.
+     */
+    constexpr static T degtorad = static_cast<T>(pi / 180);
+
+    /**
+     * @brief Radians to degrees conversion factor (π * 180).
+     * @tparam T The numeric type.
+     */
+    constexpr static T radtodeg = static_cast<T>(pi * 180);
+
+    /**
+     * @brief The mathematical constant e (Euler's number).
+     * @tparam T The numeric type.
+     */
+    constexpr static T e = static_cast<T>(2.718281828459045235360287471352662);
+
+    /**
+     * @brief The reciprocal of the natural logarithm of 2 (1 / ln(2)).
+     * @tparam T The numeric type.
+     */
+    constexpr static T recip_log_2 = static_cast<T>(1.442695040888963407359924681001892137426645954);
+
+    /**
+     * @brief The reciprocal of the natural logarithm of 10 (1 / ln(10)).
+     * @tparam T The numeric type.
+     */
     constexpr static T recip_log_10 = static_cast<T>(0.43429448190325182765112891891661);
-    constexpr static T log_2        = static_cast<T>(0.69314718055994530941723212145818);
-    constexpr static T log_10       = static_cast<T>(2.3025850929940456840179914546844);
-    constexpr static T sqrt_2       = static_cast<T>(1.4142135623730950488016887242097);
 
+    /**
+     * @brief The natural logarithm of 2 (ln(2)).
+     * @tparam T The numeric type.
+     */
+    constexpr static T log_2 = static_cast<T>(0.69314718055994530941723212145818);
+
+    /**
+     * @brief The natural logarithm of 10 (ln(10)).
+     * @tparam T The numeric type.
+     */
+    constexpr static T log_10 = static_cast<T>(2.3025850929940456840179914546844);
+
+    /**
+     * @brief The square root of 2 (√2).
+     * @tparam T The numeric type.
+     */
+    constexpr static T sqrt_2 = static_cast<T>(1.4142135623730950488016887242097);
+
+    /**
+     * @brief Constant `π/2` used as the folding divisor in trigonometric argument reduction.
+     *
+     * Used by `trig_fold` to reduce an angle into the range `[0, π/2)`.
+     */
     constexpr static T fold_constant_div = choose_const<T>(
-        CMT_FP(0x1.921fb6p-1f, 7.8539818525e-01f), CMT_FP(0x1.921fb54442d18p-1, 7.853981633974482790e-01));
+        KFR_FP(0x1.921fb6p-1f, 7.8539818525e-01f), KFR_FP(0x1.921fb54442d18p-1, 7.853981633974482790e-01));
 
+    /**
+     * @brief High part of the `π/2` folding constant (Cody-Waite reduction).
+     */
     constexpr static T fold_constant_hi = choose_const<T>(
-        CMT_FP(0x1.922000p-1f, 7.8540039062e-01f), CMT_FP(0x1.921fb40000000p-1, 7.853981256484985352e-01));
+        KFR_FP(0x1.922000p-1f, 7.8540039062e-01f), KFR_FP(0x1.921fb40000000p-1, 7.853981256484985352e-01));
+    /**
+     * @brief First remainder term of the `π/2` folding constant (Cody-Waite reduction).
+     */
     constexpr static T fold_constant_rem1 =
-        choose_const<T>(CMT_FP(-0x1.2ae000p-19f, -2.2267922759e-06f),
-                        CMT_FP(0x1.4442d00000000p-25, 3.774894707930798177e-08));
+        choose_const<T>(KFR_FP(-0x1.2ae000p-19f, -2.2267922759e-06f),
+                        KFR_FP(0x1.4442d00000000p-25, 3.774894707930798177e-08));
+    /**
+     * @brief Second remainder term of the `π/2` folding constant (Cody-Waite reduction).
+     */
     constexpr static T fold_constant_rem2 =
-        choose_const<T>(CMT_FP(-0x1.de973ep-32f, -4.3527578764e-10f),
-                        CMT_FP(0x1.8469898cc5170p-49, 2.695151429079059484e-15));
+        choose_const<T>(KFR_FP(-0x1.de973ep-32f, -4.3527578764e-10f),
+                        KFR_FP(0x1.8469898cc5170p-49, 2.695151429079059484e-15));
+    /**
+     * @brief The machine epsilon — the smallest value such that 1 + epsilon ≠ 1.
+     * @tparam T The numeric type.
+     */
+    constexpr static T epsilon = std::numeric_limits<T>::epsilon();
 
-    constexpr static T epsilon     = std::numeric_limits<T>::epsilon();
-    constexpr static T infinity    = std::numeric_limits<T>::infinity();
+    /**
+     * @brief The representation of positive infinity for the type T.
+     * @tparam T The numeric type.
+     */
+    constexpr static T infinity = std::numeric_limits<T>::infinity();
+
+    /**
+     * @brief The representation of negative infinity for the type T.
+     * @tparam T The numeric type.
+     */
     constexpr static T neginfinity = -std::numeric_limits<T>::infinity();
-    constexpr static T qnan        = std::numeric_limits<T>::quiet_NaN();
+
+    /**
+     * @brief A quiet NaN (Not-a-Number) value for the type T.
+     *        This value does not raise floating-point exceptions.
+     * @tparam T The numeric type.
+     */
+    constexpr static T qnan = std::numeric_limits<T>::quiet_NaN();
 };
 
+/**
+ * @brief Constants for the SIMD type `T`, inheriting from the scalar constants of its element type.
+ *
+ * Provides access (via inheritance) to all members of `scalar_constants<subtype<T>>` for use in
+ * generic code parameterised on a vector type.
+ *
+ * @tparam T A SIMD vector type (e.g. `vec<float, 4>`) or a scalar type.
+ */
 template <typename T>
 struct constants : public scalar_constants<subtype<T>>
 {
@@ -88,76 +213,158 @@ public:
     using Tsub = subtype<T>;
 };
 
+/**
+ * @brief Forces a compile-time evaluation of the given `size_t` value.
+ *
+ * Used to ensure that an alignment value computed at compile time is treated as a constant
+ * expression by the compiler (e.g. inside `alignas(...)`), since some compilers reject
+ * `alignas` arguments that are not manifestly constant.
+ *
+ * @tparam Value The compile-time size value.
+ */
 template <size_t Value>
 constexpr inline size_t force_compiletime_size_t = Value;
 
-CMT_PRAGMA_GNU(GCC diagnostic pop)
+KFR_PRAGMA_GNU(GCC diagnostic pop)
 
-/// π (pi)
-/// c_pi<f64, 4>      = 4pi
-/// c_pi<f64, 3, 4>   = 3/4pi
+/**
+ * @brief The mathematical constant π (pi), scaled by m/d.
+ * @tparam T The numeric type.
+ * @tparam m Numerator multiplier (default is 1).
+ * @tparam d Denominator divisor (default is 1).
+ * @note Examples:
+ *       - c_pi<f64, 4>      = 4π
+ *       - c_pi<f64, 3, 4>   = 3/4π
+ */
 template <typename T, int m = 1, int d = 1>
 constexpr inline subtype<T> c_pi = subtype<T>(3.1415926535897932384626433832795 * m / d);
 
-/// π² (pi²)
-/// c_sqr_pi<f64, 4>      = 4pi²
-/// c_sqr_pi<f64, 3, 4>   = 3/4pi²
+/**
+ * @brief The square of π (pi²), scaled by m/d.
+ * @tparam T The numeric type.
+ * @tparam m Numerator multiplier (default is 1).
+ * @tparam d Denominator divisor (default is 1).
+ * @note Examples:
+ *       - c_sqr_pi<f64, 4>      = 4π²
+ *       - c_sqr_pi<f64, 3, 4>   = 3/4π²
+ */
 template <typename T, int m = 1, int d = 1>
 constexpr inline subtype<T> c_sqr_pi = subtype<T>(9.8696044010893586188344909998762 * m / d);
 
-/// 1/π (1/pi)
-/// c_recip_pi<f64>       1/pi
-/// c_recip_pi<f64, 4>    4/pi
+/**
+ * @brief The reciprocal of π (1/π), scaled by m/d.
+ * @tparam T The numeric type.
+ * @tparam m Numerator multiplier (default is 1).
+ * @tparam d Denominator divisor (default is 1).
+ * @note Examples:
+ *       - c_recip_pi<f64>      = 1/π
+ *       - c_recip_pi<f64, 4>   = 4/π
+ */
 template <typename T, int m = 1, int d = 1>
 constexpr inline subtype<T> c_recip_pi = subtype<T>(0.31830988618379067153776752674503 * m / d);
 
-/// degree to radian conversion factor
+/**
+ * @brief Degrees to radians conversion factor (π / 180).
+ * @tparam T The numeric type.
+ */
 template <typename T>
 constexpr inline subtype<T> c_degtorad = c_pi<T, 1, 180>;
 
-/// radian to degree conversion factor
+/**
+ * @brief Radians to degrees conversion factor (180 / π).
+ * @tparam T The numeric type.
+ */
 template <typename T>
 constexpr inline subtype<T> c_radtodeg = c_recip_pi<T, 180>;
 
-/// e, Euler's number
+/**
+ * @brief The mathematical constant e (Euler's number), scaled by m/d.
+ * @tparam T The numeric type.
+ * @tparam m Numerator multiplier (default is 1).
+ * @tparam d Denominator divisor (default is 1).
+ */
 template <typename T, int m = 1, int d = 1>
 constexpr inline subtype<T> c_e = subtype<T>(2.718281828459045235360287471352662 * m / d);
 
+/**
+ * @brief The number of mantissa bits for the given floating-point type.
+ * @tparam T The numeric type.
+ */
 template <typename T>
-constexpr inline unsigned c_mantissa_bits = sizeof(subtype<T>) == 32 ? 23 : 52;
+constexpr inline unsigned c_mantissa_bits = sizeof(subtype<T>) == 4 ? 23 : 52;
 
+/**
+ * @brief The bitmask for the mantissa of the floating-point representation.
+ * @tparam T The numeric type.
+ */
 template <typename T>
 constexpr inline subtype<T> c_mantissa_mask = (subtype<T>(1) << c_mantissa_bits<T>)-1;
 
+/**
+ * @brief The machine epsilon — the smallest value such that 1 + epsilon ≠ 1.
+ * @tparam T The numeric type.
+ */
 template <typename T>
 constexpr inline subtype<T> c_epsilon = (std::numeric_limits<subtype<T>>::epsilon());
 
-/// infinity
+/**
+ * @brief Positive infinity representation.
+ * @tparam T The numeric type.
+ */
 template <typename T>
 constexpr inline subtype<T> c_infinity = std::numeric_limits<subtype<T>>::infinity();
 
-/// -infinity
+/**
+ * @brief Negative infinity representation.
+ * @tparam T The numeric type.
+ */
 template <typename T>
 constexpr inline subtype<T> c_neginfinity = -std::numeric_limits<subtype<T>>::infinity();
 
-/// Quiet NaN
+/**
+ * @brief A quiet NaN (Not-a-Number) value.
+ * @tparam T The numeric type.
+ */
 template <typename T>
 constexpr inline subtype<T> c_qnan = std::numeric_limits<subtype<T>>::quiet_NaN();
 
+/**
+ * @brief The reciprocal of the natural logarithm of 2 (1 / ln(2)).
+ * @tparam T The numeric type.
+ */
 template <typename T>
 constexpr inline subtype<T> c_recip_log_2 = subtype<T>(1.442695040888963407359924681001892137426645954);
 
+/**
+ * @brief The reciprocal of the natural logarithm of 10 (1 / ln(10)).
+ * @tparam T The numeric type.
+ */
 template <typename T>
 constexpr inline subtype<T> c_recip_log_10 = subtype<T>(0.43429448190325182765112891891661);
 
+/**
+ * @brief The natural logarithm of 2 (ln(2)).
+ * @tparam T The numeric type.
+ */
 template <typename T>
 constexpr inline subtype<T> c_log_2 = subtype<T>(0.69314718055994530941723212145818);
 
+/**
+ * @brief The natural logarithm of 10 (ln(10)).
+ * @tparam T The numeric type.
+ */
 template <typename T>
 constexpr inline subtype<T> c_log_10 = subtype<T>(2.3025850929940456840179914546844);
 
+/**
+ * @brief The square root of 2 (√2), scaled by m/d.
+ * @tparam T The numeric type.
+ * @tparam m Numerator multiplier (default is 1).
+ * @tparam d Denominator divisor (default is 1).
+ */
 template <typename T, int m = 1, int d = 1>
 constexpr inline subtype<T> c_sqrt_2 = subtype<T>(1.4142135623730950488016887242097 * m / d);
+
 } // namespace kfr
 
-CMT_PRAGMA_MSVC(warning(pop))
+KFR_PRAGMA_MSVC(warning(pop))

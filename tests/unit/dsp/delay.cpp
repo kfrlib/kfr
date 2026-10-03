@@ -1,0 +1,74 @@
+/**
+ * KFR (https://www.kfrlib.com)
+ * Copyright (C) 2016-2026 Dan Casarin
+ * See LICENSE.txt for details
+ */
+
+#include <kfr/base/univector.hpp>
+#include <kfr/dsp/delay.hpp>
+
+using namespace kfr;
+
+namespace KFR_ARCH_NAME
+{
+
+TEST_CASE("delay")
+{
+    const univector<float, 33> v1 = counter() + 100;
+    CHECK_EXPRESSION(delay(v1), 33, [](size_t i) { return i < 1 ? 0.f : (i - 1) + 100.f; });
+
+    CHECK_EXPRESSION(delay<3>(v1), 33, [](size_t i) { return i < 3 ? 0.f : (i - 3) + 100.f; });
+
+    delay_state<float, 3> state1;
+    CHECK_EXPRESSION(delay(v1, std::ref(state1)), 33, [](size_t i) { return i < 3 ? 0.f : (i - 3) + 100.f; });
+
+    delay_state<float, 3, tag_dynamic_vector> state2;
+    CHECK_EXPRESSION(delay(v1, std::ref(state2)), 33, [](size_t i) { return i < 3 ? 0.f : (i - 3) + 100.f; });
+}
+
+TEST_CASE("delay_reset")
+{
+    univector<float, 1> input{ 0.f };
+
+    SECTION("one sample")
+    {
+        delay_state<float, 1> state;
+        state.data = 4.f;
+
+        reset(delay(input, std::ref(state)));
+
+        CHECK(state.data == 0.f);
+    }
+
+    SECTION("ring buffer")
+    {
+        delay_state<float, 3> state;
+        state.data   = univector<float, 3>{ 4.f, 5.f, 6.f };
+        state.cursor = 2;
+
+        reset(delay(input, std::ref(state)));
+
+        CHECK(state.data[0] == 0.f);
+        CHECK(state.data[1] == 0.f);
+        CHECK(state.data[2] == 0.f);
+        CHECK(state.cursor == 0);
+    }
+}
+
+TEST_CASE("fracdelay")
+{
+    univector<double, 5> a({ 1, 2, 3, 4, 5 });
+    univector<double, 5> b = fracdelay(a, 0.5);
+    CHECK(rms(b - univector<double>({ 0.5, 1.5, 2.5, 3.5, 4.5 })) < constants<double>::epsilon * 5);
+
+    b = fracdelay(a, 0.1);
+    CHECK(rms(b - univector<double>({ 0.9, 1.9, 2.9, 3.9, 4.9 })) < constants<double>::epsilon * 5);
+
+    b = fracdelay(a, 0.0);
+    CHECK(rms(b - univector<double>({ 1, 2, 3, 4, 5 })) < constants<double>::epsilon * 5);
+
+    b = fracdelay(a, 1.0);
+    CHECK(rms(b - univector<double>({ 0, 1, 2, 3, 4 })) < constants<double>::epsilon * 5);
+}
+
+} // namespace KFR_ARCH_NAME

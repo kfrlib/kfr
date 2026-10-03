@@ -1,8 +1,5 @@
-/** @addtogroup convolution
- *  @{
- */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -35,81 +32,178 @@
 #include "cache.hpp"
 #include "fft.hpp"
 
-CMT_PRAGMA_GNU(GCC diagnostic push)
-#if CMT_HAS_WARNING("-Wshadow")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+#if KFR_HAS_WARNING("-Wshadow")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
 #endif
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
-{
 
-namespace intrinsics
+namespace internal_generic
 {
 template <typename T>
-univector<T> convolve(const univector_ref<const T>& src1, const univector_ref<const T>& src2);
-template <typename T>
-univector<T> correlate(const univector_ref<const T>& src1, const univector_ref<const T>& src2);
-template <typename T>
-univector<T> autocorrelate(const univector_ref<const T>& src1);
-} // namespace intrinsics
-
-/// @brief Convolution
-template <typename T, univector_tag Tag1, univector_tag Tag2>
-univector<T> convolve(const univector<T, Tag1>& src1, const univector<T, Tag2>& src2)
-{
-    return intrinsics::convolve(src1.slice(), src2.slice());
+univector<T> convolve(const univector_ref<const T>& src1, const univector_ref<const T>& src2,
+                      bool correlate = false);
 }
 
-/// @brief Correlation
-template <typename T, univector_tag Tag1, univector_tag Tag2>
-univector<T> correlate(const univector<T, Tag1>& src1, const univector<T, Tag2>& src2)
+/**
+ * @brief Computes the linear convolution of two real or complex signals.
+ *
+ * The result has length `src1.size() + src2.size() - 1`. The convolution is
+ * performed via the FFT: both inputs are zero-padded to the next power of two
+ * of the result length, transformed, multiplied in the frequency domain, and
+ * transformed back. The output is scaled by `1/N` to compensate for the
+ * unscaled forward/inverse DFTs.
+ *
+ * @tparam T1 Element type of the first input (may be const-qualified).
+ * @tparam T2 Element type of the second input (may be const-qualified).
+ * @tparam Tag1 Storage tag of the first input univector.
+ * @tparam Tag2 Storage tag of the second input univector.
+ * @param src1 First input signal.
+ * @param src2 Second input signal.
+ * @return The convolved signal of length `src1.size() + src2.size() - 1`.
+ * @note `T1` and `T2` must be the same type (ignoring const). Supports `float`,
+ *       `double`, `complex<float>` and `complex<double>`.
+ * @note When KFR is built with multiarchitecture support, this function is
+ *       runtime-dispatched to the best implementation for the current CPU.
+ */
+template <typename T1, typename T2, univector_tag Tag1, univector_tag Tag2>
+    requires(std::is_same_v<std::remove_const_t<T1>, std::remove_const_t<T2>>)
+univector<std::remove_const_t<T1>> convolve(const univector<T1, Tag1>& src1, const univector<T2, Tag2>& src2)
 {
-    return intrinsics::correlate(src1.slice(), src2.slice());
+    return internal_generic::convolve(src1.slice(), src2.slice());
 }
 
-/// @brief Auto-correlation
+/**
+ * @brief Computes the linear correlation of two real or complex signals.
+ *
+ * Correlation is implemented as the convolution of `src1` with the time-reversed
+ * `src2`. The result has length `src1.size() + src2.size() - 1`.
+ *
+ * @tparam T1 Element type of the first input (may be const-qualified).
+ * @tparam T2 Element type of the second input (may be const-qualified).
+ * @tparam Tag1 Storage tag of the first input univector.
+ * @tparam Tag2 Storage tag of the second input univector.
+ * @param src1 First input signal.
+ * @param src2 Second input signal (correlated against `src1`).
+ * @return The correlated signal of length `src1.size() + src2.size() - 1`.
+ * @note `T1` and `T2` must be the same type (ignoring const). Supports `float`,
+ *       `double`, `complex<float>` and `complex<double>`.
+ * @note When KFR is built with multiarchitecture support, this function is
+ *       runtime-dispatched to the best implementation for the current CPU.
+ */
+template <typename T1, typename T2, univector_tag Tag1, univector_tag Tag2>
+    requires(std::is_same_v<std::remove_const_t<T1>, std::remove_const_t<T2>>)
+univector<std::remove_const_t<T1>> correlate(const univector<T1, Tag1>& src1, const univector<T2, Tag2>& src2)
+{
+    return internal_generic::convolve(src1.slice(), src2.slice(), true);
+}
+
+/**
+ * @brief Computes the auto-correlation of a real or complex signal.
+ *
+ * Implemented as the correlation of `src` with itself. The full correlation
+ * result is symmetric about its midpoint; this function returns only the
+ * second (non-negative-lag) half, of length `src.size()`.
+ *
+ * @tparam T Element type of the input (may be const-qualified).
+ * @tparam Tag1 Storage tag of the input univector.
+ * @param src Input signal.
+ * @return The auto-correlation of `src` for non-negative lags (length `src.size()`).
+ * @note When KFR is built with multiarchitecture support, this function is
+ *       runtime-dispatched to the best implementation for the current CPU.
+ */
 template <typename T, univector_tag Tag1>
-univector<T> autocorrelate(const univector<T, Tag1>& src)
+univector<std::remove_const_t<T>> autocorrelate(const univector<T, Tag1>& src)
 {
-    return intrinsics::autocorrelate(src.slice());
+    univector<std::remove_const_t<T>> result = internal_generic::convolve(src.slice(), src.slice(), true);
+    result                                   = result.slice(result.size() / 2);
+    return result;
 }
 
-namespace internal
+namespace internal_generic
 {
 /// @brief Utility class to abstract real/complex differences
 template <typename T>
-struct dft_conv_plan: public dft_plan_real<T>
+struct dft_conv_plan : public dft_plan_real<T>
 {
     dft_conv_plan(size_t size) : dft_plan_real<T>(size, dft_pack_format::Perm) {}
-    
+
     size_t csize() const { return this->size / 2; }
 };
 
 template <typename T>
-struct dft_conv_plan<complex<T>>: public dft_plan<T>
+struct dft_conv_plan<complex<T>> : public dft_plan<T>
 {
     dft_conv_plan(size_t size) : dft_plan<T>(size) {}
-    
+
     size_t csize() const { return this->size; }
 };
-} // namespace internal
+} // namespace internal_generic
 
-/// @brief Convolution using Filter API
+/**
+ * @brief Streaming convolution filter using the overlap-add (block convolution) method.
+ *
+ * This class implements convolution as a `filter<T>` so that arbitrarily long
+ * input streams can be processed in fixed-size blocks without needing to hold
+ * the entire input in memory. The filter kernel (impulse response) is split
+ * into FFT-sized blocks and transformed once via `set_data()`; each input
+ * block is then transformed, multiplied against the pre-transformed kernel
+ * blocks (with overlap-add accumulation across history segments), and
+ * transformed back.
+ *
+ * The block size is rounded up to the next power of two. Real kernels use the
+ * `Perm` packed real DFT; complex kernels use the full complex DFT.
+ *
+ * #### Multiarchitecture:
+ * When KFR is built with multiarchitecture support, the per-block processing
+ * (`process_buffer`) is runtime-dispatched to the best implementation for the
+ * current CPU.
+ *
+ * @tparam T Sample type: `float`, `double`, `complex<float>` or `complex<double>`.
+ */
 template <typename T>
 class convolve_filter : public filter<T>
 {
 public:
+    /**
+     * @brief Constructs a filter with a kernel of the given length (initially zero).
+     * @param size Length (in samples) of the filter kernel.
+     * @param block_size Processing block size in samples; rounded up to the next
+     *        power of two. Larger blocks reduce per-sample overhead at the cost
+     *        of more memory and latency.
+     */
     explicit convolve_filter(size_t size, size_t block_size = 1024);
+    /**
+     * @brief Constructs a filter and initializes its kernel from `data`.
+     * @param data The filter kernel (impulse response).
+     * @param block_size Processing block size in samples; rounded up to the next
+     *        power of two.
+     */
     explicit convolve_filter(const univector_ref<const T>& data, size_t block_size = 1024);
+    /**
+     * @brief Sets (replaces) the filter kernel.
+     *
+     * Re-transforms the kernel into frequency-domain blocks and resets the
+     * internal state. The number of history segments is resized to match the
+     * new kernel length.
+     * @param data The new filter kernel (impulse response).
+     */
     void set_data(const univector_ref<const T>& data);
+    /// @brief Resets the filter state (clears input history and overlap buffers).
     void reset() final;
-    /// Apply filter to multiples of returned block size for optimal processing efficiency.
+    /**
+     * @brief Returns the processing block size.
+     *
+     * For optimal efficiency, drive the filter with input lengths that are
+     * multiples of this value.
+     * @return The block size in samples.
+     */
     size_t input_block_size() const { return block_size; }
 
 protected:
-    void process_expression(T* dest, const expression_pointer<T>& src, size_t size) final
+    void process_expression(T* dest, const expression_handle<T>& src, size_t size) final
     {
         univector<T> input = truncate(src, size);
         process_buffer(dest, input.data(), input.size());
@@ -117,8 +211,8 @@ protected:
     void process_buffer(T* output, const T* input, size_t size) final;
 
     using ST                       = subtype<T>;
-    static constexpr auto real_fft = !std::is_same<T, complex<ST>>::value;
-    using plan_t = internal::dft_conv_plan<T>;
+    constexpr static bool real_fft = !std::is_same_v<T, complex<ST>>;
+    using plan_t                   = internal_generic::dft_conv_plan<T>;
 
     // Length of filter data.
     size_t data_size;
@@ -147,17 +241,6 @@ protected:
     // Overlap saved from previous block to add into current block.
     univector<T> overlap;
 };
-} // namespace CMT_ARCH_NAME
 
-CMT_MULTI_PROTO(template <typename T>
-                filter<T>* make_convolve_filter(const univector_ref<const T>& taps, size_t block_size);)
-
-#ifdef CMT_MULTI
-template <typename T>
-KFR_FUNCTION filter<T>* make_convolve_filter(cpu_t cpu, const univector_ref<const T>& taps, size_t block_size)
-{
-    CMT_MULTI_PROTO_GATE(make_convolve_filter<T>(taps, block_size))
-}
-#endif
 } // namespace kfr
-CMT_PRAGMA_GNU(GCC diagnostic pop)
+KFR_PRAGMA_GNU(GCC diagnostic pop)

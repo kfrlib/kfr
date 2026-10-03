@@ -1,13 +1,13 @@
 /**
- * KFR (http://kfrlib.com)
- * Copyright (C) 2016  D Levin
+ * KFR (https://www.kfrlib.com)
+ * Copyright (C) 2016-2026 Dan Casarin
  * See LICENSE.txt for details
  */
 
 #include <chrono>
 #include <kfr/base.hpp>
 #include <kfr/dsp.hpp>
-#include <kfr/io.hpp>
+#include <kfr/audio.hpp>
 
 // Example: Command line sample rate converter
 
@@ -19,73 +19,138 @@ int main(int argc, char** argv)
     if (argc < 4)
     {
         println("Usage: sample_rate_converter <INPUT_FILE> <OUTPUT_FILE> <TARGET_SAMPLE_RATE>");
-        println("Supported formats: WAV/W64, 16, 24, 32-bit PCM, 32, 64-bit IEEE");
+        println("Supported input formats: WAV, RF64, BW64, W64, FLAC, MP3, AIFF, CAF");
+        println("Output format: WAV/RF64, 16, 24, 32-bit PCM, 32, 64-bit IEEE");
         return 1;
     }
 
     // Get output sample rate from the command line
     const size_t output_sr = std::atol(argv[3]);
 
-    // Initialize WAV reader and get file sample rate
-    audio_reader_wav<double> reader(open_file_for_reading(argv[1]));
-    const size_t input_sr = reader.format().samplerate;
-
-    // Read channels of audio
-    univector2d<double> input_channels = reader.read_channels(reader.format().length);
-
-    // Prepare conversion
-    univector2d<double> output_channels;
-    println("Input channels: ", reader.format().channels);
-    println("Input sample rate: ", reader.format().samplerate);
-    println("Input bit depth: ", audio_sample_bit_depth(reader.format().type));
-
-    for (size_t ch = 0; ch < input_channels.size(); ++ch)
+    std::unique_ptr<audio_decoder> decoder = create_decoder_for_file(argv[1]);
+    auto format                            = decoder->open(argv[1]);
+    if (!format)
     {
-        println("Processing ", ch, " of ", reader.format().channels);
-        const univector<double>& input = input_channels[ch];
-
-        // Initialize resampler
-        auto r = resampler<double>(resample_quality::high, output_sr, input_sr);
-
-        // Calculate output size and initialize output buffer
-        const size_t output_size = input.size() * output_sr / input_sr;
-        univector<double> output(output_size);
-
-        // Skip the first r.get_delay() samples (FIR filter delay). Returns new input pos
-        size_t input_pos = r.skip(r.get_delay(), input.slice());
-
-        std::chrono::high_resolution_clock::time_point start_time = std::chrono::high_resolution_clock::now();
-        size_t output_pos                                         = 0;
-        for (;;)
-        {
-            const size_t block_size = std::min(size_t(16384), output.size() - output_pos);
-            if (block_size == 0)
-                break;
-
-            // Process new block of audio
-            input_pos += r.process(output.slice(output_pos, block_size).ref(), input.slice(input_pos));
-            output_pos += block_size;
-        }
-
-        std::chrono::high_resolution_clock::duration time =
-            std::chrono::high_resolution_clock::now() - start_time;
-        const double duration = static_cast<double>(output.size()) / output_sr;
-        println("time: ",
-                fmt<'f', 6, 2>(std::chrono::duration_cast<std::chrono::microseconds>(time).count() /
-                               duration * 0.001),
-                "ms per 1 second of audio");
-
-        // Place buffer to the list of output channels
-        output_channels.push_back(std::move(output));
+        println("Error: cannot open input file: ", to_string(format.error()));
+        return 2;
     }
 
-    // Initialize WAV writer
-    audio_writer_wav<double> writer(
-        open_file_for_writing(argv[2]),
-        audio_format{ reader.format().channels, reader.format().type, kfr::fmax(output_sr) });
+    const size_t channels = format->channels;
+    const size_t input_sr = static_cast<size_t>(format->sample_rate);
 
-    // Write audio
-    writer.write_channels(output_channels);
+    println("Input channels: ", channels);
+    println("Input sample rate: ", format->sample_rate);
+    println("Input bit depth: ", format->bit_depth);
+
+    std::unique_ptr<audio_encoder> encoder =
+        create_wave_encoder({ {}, /* .switch_to_rf64_if_over_4gb = */ true });
+    audiofile_format out_format{};
+    if (format->codec == audiofile_codec::ieee_float || format->codec == audiofile_codec::lpcm)
+        out_format = *format; // copy input format if available
+
+    out_format.sample_rate = static_cast<uint32_t>(output_sr);
+    out_format.container   = audiofile_container::wave;
+    out_format.endianness  = audiofile_endianness::little;
+    auto opened            = encoder->open(argv[2], out_format);
+    if (!opened)
+    {
+        println("Error: cannot open output file: ", to_string(opened.error()));
+        return 2;
+    }
+
+    std::vector<samplerate_converter<fbase>> resamplers(channels);
+    for (size_t ch = 0; ch < channels; ++ch)
+    {
+        resamplers[ch] = resampler<fbase>(resample_quality::high, output_sr, input_sr);
+    }
+    auto& resampler0 = resamplers.front();
+
+    constexpr size_t output_chunk_size = 16384;
+    audio_data output_chunk(channels, output_chunk_size);
+    audio_data_interleaved output_chunk_interleaved(channels, output_chunk_size);
+
+    const size_t input_delay_compensation = resampler0.input_size_for_output(resampler0.get_delay());
+    const size_t input_chunk_size = output_chunk_size * input_sr / output_sr + 1 + input_delay_compensation;
+    audio_data_interleaved input_chunk_interleaved(channels, input_chunk_size);
+    audio_data input_chunk(channels, input_chunk_size);
+
+    size_t input_delay    = input_delay_compensation;
+    size_t frames_to_read = resampler0.input_size_for_output(output_chunk_size + resampler0.get_delay());
+    std::chrono::high_resolution_clock::duration resampling_time{};
+    // Process audio in chunks
+    println("Resampling...");
+    fflush(stdout);
+    for (;;)
+    {
+        // Read channels of audio
+        const auto frames_read = decoder->read_to(input_chunk_interleaved.truncate(frames_to_read));
+        if (!frames_read)
+        {
+            if (frames_read.error() == audiofile_error::end_of_file)
+                break;
+            println("Error: cannot read input file: ", to_string(frames_read.error()));
+            return 2;
+        }
+        // Deinterleave
+        input_chunk = input_chunk_interleaved.truncate(*frames_read);
+
+        size_t frames_to_write = output_chunk_size;
+        if (*frames_read < frames_to_read)
+        {
+            if (*frames_read <= input_delay)
+            {
+                println("Error: input file is too short for delay compensation");
+                return 2;
+            }
+            frames_to_write = resampler0.output_size_for_input(*frames_read - input_delay);
+        }
+        if (frames_to_write <= resampler0.get_delay())
+        {
+            println("Error: input file is too short for resampling");
+            return 2;
+        }
+
+        const std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+        for (size_t ch = 0; ch < channels; ++ch)
+        {
+            auto& r       = resamplers[ch];
+            auto&& output = output_chunk.channel(ch).truncate(frames_to_write).ref();
+            auto&& input  = input_chunk.channel(ch).truncate(*frames_read);
+            if (input_delay != 0)
+            {
+                // Skip the first r.get_delay() samples (FIR filter delay).
+                const size_t skipped_input = r.skip(r.get_delay(), input);
+                r.process(output, input.slice(skipped_input));
+            }
+            else
+            {
+                // Process new block of audio
+                r.process(output, input);
+            }
+        }
+        resampling_time += std::chrono::high_resolution_clock::now() - t1;
+        output_chunk_interleaved = output_chunk.slice(0, frames_to_write);
+
+        // Write audio
+        auto written = encoder->write(output_chunk_interleaved);
+        if (!written)
+        {
+            println("Error: cannot write to output file: ", to_string(written.error()));
+            return 2;
+        }
+
+        input_delay    = 0;
+        frames_to_read = resampler0.input_size_for_output(output_chunk_size);
+    }
+    auto closed = encoder->close();
+    if (!closed)
+    {
+        println("Error: cannot finalize output file: ", to_string(closed.error()));
+        return 2;
+    }
+    double duration = std::chrono::duration_cast<std::chrono::nanoseconds>(resampling_time).count() / 1e9;
+    double length   = double(*closed) / format->sample_rate;
+    println("done in ", duration, " seconds", " (", fmt<'f', 4, 1>(length / duration), "x real-time)");
 
     return 0;
 }

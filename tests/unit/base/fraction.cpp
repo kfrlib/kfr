@@ -1,18 +1,18 @@
 /**
- * KFR (http://kfrlib.com)
- * Copyright (C) 2016  D Levin
+ * KFR (https://www.kfrlib.com)
+ * Copyright (C) 2016-2026 Dan Casarin
  * See LICENSE.txt for details
  */
 
 #include <kfr/base/fraction.hpp>
-#include <kfr/io.hpp>
+#include <kfr/io/tostring.hpp>
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
-TEST(fraction)
+TEST_CASE("fraction")
 {
     fraction f = 1;
     f          = f / 3;
@@ -45,5 +45,5 @@ TEST(fraction)
 
     CHECK(fraction{ 100, 200 } == fraction{ 1, 2 });
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

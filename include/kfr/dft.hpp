@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -24,6 +24,18 @@
 
 #include "base.hpp"
 
+#include "dft/cache.hpp"
 #include "dft/convolution.hpp"
+#include "dft/dft_resampler.hpp"
 #include "dft/fft.hpp"
 #include "dft/reference_dft.hpp"
+
+namespace kfr
+{
+/**
+ * @brief Returns the full version string of the KFR DFT module.
+ * @return A null-terminated string with the KFR version (e.g. from
+ *         @c KFR_VERSION_FULL).
+ */
+const char* library_version_dft();
+} // namespace kfr

@@ -1,8 +1,5 @@
-/** @addtogroup trigonometric
- *  @{
- */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -29,43 +26,31 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 /**
  * @brief Returns the arc sine of x. The returned angle is in the range \f$-\pi/2\f$ through \f$\pi/2\f$.
+ *
+ * @param x Value whose arc sine is computed, in the range [-1, 1].
+ * @return Arc sine of @p x, in radians, in the range \f$[-\pi/2, \pi/2]\f$.
  */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_INTRINSIC flt_type<T1> asin(const T1& x)
 {
-    return intrinsics::asin(x);
-}
-
-/**
- * @brief Returns template expression that returns the arc sine of x.
- */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_INTRINSIC internal::expression_function<fn::asin, E1> asin(E1&& x)
-{
-    return { fn::asin(), std::forward<E1>(x) };
+    return intr::asin(x);
 }
 /**
  * @brief Returns the arc cosine of x. The returned angle is in the range 0 through \f$\pi\f$.
+ *
+ * @param x Value whose arc cosine is computed, in the range [-1, 1].
+ * @return Arc cosine of @p x, in radians, in the range \f$[0, \pi]\f$.
  */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_INTRINSIC flt_type<T1> acos(const T1& x)
 {
-    return intrinsics::acos(x);
+    return intr::acos(x);
 }
-
-/**
- * @brief Returns template expression that returns the arc cosine of x.
- */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_INTRINSIC internal::expression_function<fn::acos, E1> acos(E1&& x)
-{
-    return { fn::acos(), std::forward<E1>(x) };
-}
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 } // namespace kfr

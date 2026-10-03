@@ -1,8 +1,5 @@
-/** @addtogroup complex
- *  @{
- */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -27,166 +24,57 @@
 #include "constants.hpp"
 #include "impl/function.hpp"
 #include "operators.hpp"
-
-#ifdef KFR_STD_COMPLEX
 #include <complex>
-#endif
 
-CMT_PRAGMA_MSVC(warning(push))
-CMT_PRAGMA_MSVC(warning(disable : 4814))
+KFR_PRAGMA_MSVC(warning(push))
+KFR_PRAGMA_MSVC(warning(disable : 4814))
 
 namespace kfr
 {
-#ifdef KFR_STD_COMPLEX
 
-template <typename T>
-using complex = std::complex<T>;
-
-#else
-#ifndef KFR_CUSTOM_COMPLEX
-
+} // namespace kfr
+namespace kfr
+{
 /**
- * @brief Represents the complex numbers. If KFR_STD_COMPLEX is defined, then kfr::complex is an alias for
- * std::complex.
+ * @brief Traits specialization for @c std::complex<T> enabling KFR's compound-type machinery.
+ *
+ * Exposes @c std::complex as a 2-element compound type whose subtype is @c T, so that KFR
+ * vectors can interoperate with @c std::complex values.
  */
 template <typename T>
-struct complex
+struct compound_type_traits<std::complex<T>>
 {
-    static_assert(is_simd_type<T>, "Incorrect type for complex");
-    constexpr static bool is_pod     = true;
-    constexpr complex() CMT_NOEXCEPT = default;
-    KFR_MEM_INTRINSIC constexpr complex(T re) CMT_NOEXCEPT : re(re), im(0) {}
-    KFR_MEM_INTRINSIC constexpr complex(T re, T im) CMT_NOEXCEPT : re(re), im(im) {}
-    constexpr complex(const complex&) CMT_NOEXCEPT = default;
-    constexpr complex(complex&&) CMT_NOEXCEPT      = default;
-    template <typename U>
-    KFR_MEM_INTRINSIC constexpr complex(const complex<U>& other) CMT_NOEXCEPT : re(static_cast<T>(other.real())),
-                                                                                im(static_cast<T>(other.imag()))
-    {
-    }
-    template <typename U>
-    KFR_MEM_INTRINSIC constexpr complex(complex<U>&& other) CMT_NOEXCEPT : re(std::move(other.real())),
-                                                                           im(std::move(other.imag()))
-    {
-    }
-#ifdef CMT_COMPILER_GNU
-    constexpr complex& operator=(const complex&) CMT_NOEXCEPT = default;
-    constexpr complex& operator=(complex&&) CMT_NOEXCEPT = default;
-#else
-    complex& operator=(const complex&) = default;
-    complex& operator=(complex&&) = default;
-#endif
-    KFR_MEM_INTRINSIC constexpr const T& real() const CMT_NOEXCEPT { return re; }
-    KFR_MEM_INTRINSIC constexpr const T& imag() const CMT_NOEXCEPT { return im; }
-    KFR_MEM_INTRINSIC constexpr void real(T value) CMT_NOEXCEPT { re = value; }
-    KFR_MEM_INTRINSIC constexpr void imag(T value) CMT_NOEXCEPT { im = value; }
-private:
-    T re;
-    T im;
-};
-
-inline namespace CMT_ARCH_NAME
-{
-
-template <typename T>
-KFR_INTRINSIC complex<T> operator+(const complex<T>& x, const complex<T>& y)
-{
-    return (make_vector(x) + make_vector(y))[0];
-}
-template <typename T>
-KFR_INTRINSIC complex<T> operator-(const complex<T>& x, const complex<T>& y)
-{
-    return (make_vector(x) - make_vector(y))[0];
-}
-template <typename T>
-KFR_INTRINSIC complex<T> operator*(const complex<T>& x, const complex<T>& y)
-{
-    return (make_vector(x) * make_vector(y))[0];
-}
-template <typename T>
-KFR_INTRINSIC complex<T> operator/(const complex<T>& x, const complex<T>& y)
-{
-    return (make_vector(x) / make_vector(y))[0];
-}
-
-template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = common_type<complex<T>, U>>
-KFR_INTRINSIC C operator+(const complex<T>& x, const U& y)
-{
-    return static_cast<C>(x) + static_cast<C>(y);
-}
-template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = common_type<complex<T>, U>>
-KFR_INTRINSIC C operator-(const complex<T>& x, const U& y)
-{
-    return static_cast<C>(x) - static_cast<C>(y);
-}
-template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = common_type<complex<T>, U>>
-KFR_INTRINSIC C operator*(const complex<T>& x, const U& y)
-{
-    return static_cast<C>(x) * static_cast<C>(y);
-}
-template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = common_type<complex<T>, U>>
-KFR_INTRINSIC C operator/(const complex<T>& x, const U& y)
-{
-    return static_cast<C>(x) / static_cast<C>(y);
-}
-
-template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = common_type<complex<T>, U>>
-KFR_INTRINSIC C operator+(const U& x, const complex<T>& y)
-{
-    return static_cast<C>(x) + static_cast<C>(y);
-}
-template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = common_type<complex<T>, U>>
-KFR_INTRINSIC C operator-(const U& x, const complex<T>& y)
-{
-    return static_cast<C>(x) - static_cast<C>(y);
-}
-template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = common_type<complex<T>, U>>
-KFR_INTRINSIC C operator*(const U& x, const complex<T>& y)
-{
-    return static_cast<C>(x) * static_cast<C>(y);
-}
-template <typename T, typename U, KFR_ENABLE_IF(is_number<U>), typename C = common_type<complex<T>, U>>
-KFR_INTRINSIC C operator/(const U& x, const complex<T>& y)
-{
-    return static_cast<C>(x) / static_cast<C>(y);
-}
-template <typename T>
-KFR_INTRINSIC complex<T> operator-(const complex<T>& x)
-{
-    return (-make_vector(x))[0];
-}
-template <typename T>
-KFR_INTRINSIC complex<T> operator+(const complex<T>& x)
-{
-    return x;
-}
-
-} // namespace CMT_ARCH_NAME
-#endif
-#endif
-} // namespace kfr
-namespace cometa
-{
-template <typename T>
-struct compound_type_traits<kfr::complex<T>>
-{
-    constexpr static size_t width      = 2;
+    /// Number of immediate sub-elements (real and imaginary).
+    constexpr static size_t width = 2;
+    /// Width after fully recursing into the subtype.
     constexpr static size_t deep_width = width * compound_type_traits<T>::width;
-    using subtype                      = T;
-    using deep_subtype                 = cometa::deep_subtype<T>;
-    constexpr static bool is_scalar    = false;
-    constexpr static size_t depth      = cometa::compound_type_traits<T>::depth + 1;
+    /// Scalar component type of the complex value.
+    using subtype = T;
+    /// Deepest scalar component type after full recursion.
+    using deep_subtype = kfr::deep_subtype<T>;
+    /// @c false because a complex value is not a scalar.
+    constexpr static bool is_scalar = false;
+    /// Recursion depth of the compound type.
+    constexpr static size_t depth = kfr::compound_type_traits<T>::depth + 1;
+    /// Rebinds the complex to hold values of type @c U.
     template <typename U>
-    using rebind = kfr::complex<U>;
+    using rebind = std::complex<U>;
+    /// Rebinds the complex to hold values of the deep-rebound subtype of @c U.
     template <typename U>
-    using deep_rebind = kfr::complex<typename compound_type_traits<subtype>::template deep_rebind<U>>;
+    using deep_rebind = std::complex<typename compound_type_traits<subtype>::template deep_rebind<U>>;
 
-    static constexpr subtype at(const kfr::complex<T>& value, size_t index)
+    /**
+     * @brief Returns the real (@p index == 0) or imaginary (@p index == 1) part of @p value.
+     * @param value The complex value to access.
+     * @param index 0 for the real part, 1 for the imaginary part.
+     * @return The requested scalar component.
+     */
+    static constexpr subtype at(const std::complex<T>& value, size_t index)
     {
         return index == 0 ? value.real() : value.imag();
     }
 };
-} // namespace cometa
+} // namespace kfr
 namespace kfr
 {
 
@@ -199,10 +87,10 @@ using c64 = complex<f64>;
 /// @brief Alias for complex<fbase>
 using cbase = complex<fbase>;
 
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 template <typename T>
 constexpr inline complex<T> vcomplex(const vec<T, 2>& v)
@@ -217,38 +105,58 @@ constexpr inline vec<T, 2> vcomplex(const complex<T>& v)
 template <typename T>
 constexpr inline simd<T, 2> vvcomplex(const complex<T>& v)
 {
-    return intrinsics::simd_make(ctype<T>, v.real(), v.imag());
+    return intr::simd_make(kfr::ctype<T>, v.real(), v.imag());
 }
-} // namespace intrinsics
+} // namespace intr
 
+/**
+ * @brief Shuffles the complex elements of @p x according to @p indices.
+ * @param x Source vector of complex values.
+ * @return Vector of complex values reordered by the given indices.
+ */
 template <typename T, size_t N, size_t... indices>
 KFR_INTRINSIC vec<complex<T>, sizeof...(indices)> shufflevector(const vec<complex<T>, N>& x,
-                                                                csizes_t<indices...>) CMT_NOEXCEPT
+                                                                csizes_t<indices...>) noexcept
 {
-    return intrinsics::simd_shuffle(intrinsics::simd_t<unwrap_bit<T>, N>{}, x.v, scale<2, indices...>(),
-                                    overload_auto);
+    return intr::simd_shuffle(intr::simd_t<unwrap_bit<T>, N>{}, x.v, scale<2, indices...>(), overload_auto);
 }
+/**
+ * @brief Shuffles complex elements from two vectors @p x and @p y according to @p indices.
+ * @param x First source vector of complex values.
+ * @param y Second source vector of real values.
+ * @return Vector of complex values selected from the concatenated sources.
+ */
 template <typename T, size_t N, size_t... indices>
 KFR_INTRINSIC vec<complex<T>, sizeof...(indices)> shufflevectors(const vec<complex<T>, N>& x,
                                                                  const vec<T, N>& y,
-                                                                 csizes_t<indices...>) CMT_NOEXCEPT
+                                                                 csizes_t<indices...>) noexcept
 {
-    return intrinsics::simd_shuffle(intrinsics::simd2_t<unwrap_bit<T>, N, N>{}, x.v, y.v,
-                                    scale<2, indices...>(), overload_auto);
+    return intr::simd_shuffle(intr::simd2_t<unwrap_bit<T>, N, N>{}, x.v, y.v, scale<2, indices...>(),
+                              overload_auto);
 }
 namespace internal
 {
+/**
+ * @brief Compound-cast helper for a single @c complex<T> value.
+ */
 template <typename T>
 struct compoundcast<complex<T>>
 {
+    /// Flattens a complex value into a 2-element vector [real, imag].
     static vec<T, 2> to_flat(const complex<T>& x) { return { x.real(), x.imag() }; }
+    /// Reconstructs a complex value from a flattened 2-element vector.
     static complex<T> from_flat(const vec<T, 2>& x) { return { x.front(), x.back() }; }
 };
 
+/**
+ * @brief Compound-cast helper for a vector of @c complex<T> values.
+ */
 template <typename T, size_t N>
 struct compoundcast<vec<complex<T>, N>>
 {
+    /// Flattens a vector of N complex values into a 2N-element real vector.
     static vec<T, N * 2> to_flat(const vec<complex<T>, N>& x) { return x.flatten(); }
+    /// Reconstructs N/2 complex values from a flattened N-element real vector.
     static vec<complex<T>, N / 2> from_flat(const vec<T, N>& x)
     {
         return vec<complex<T>, N / 2>::from_flatten(x);
@@ -256,12 +164,22 @@ struct compoundcast<vec<complex<T>, N>>
 };
 } // namespace internal
 
+/**
+ * @brief Composes a vector of @c N/2 complex values from a flattened @c N-element real vector.
+ * @param x Real vector of interleaved [real, imag, real, imag, ...] values.
+ * @return Vector of complex values.
+ */
 template <typename T, size_t N>
 constexpr KFR_INTRINSIC vec<complex<T>, N / 2> ccomp(const vec<T, N>& x)
 {
     return vec<complex<T>, N / 2>::from_flatten(x);
 }
 
+/**
+ * @brief Decomposes a vector of @c N complex values into a flattened @c 2N-element real vector.
+ * @param x Vector of complex values.
+ * @return Interleaved real vector [real, imag, real, imag, ...].
+ */
 template <typename T, size_t N>
 constexpr KFR_INTRINSIC vec<T, N * 2> cdecom(const vec<complex<T>, N>& x)
 {
@@ -318,6 +236,9 @@ KFR_FN(isreal)
 
 namespace internal
 {
+/**
+ * @brief Type trait: @c true_type only for @c complex<T> specializations.
+ */
 template <typename T>
 struct is_complex_impl : std::false_type
 {
@@ -327,24 +248,44 @@ struct is_complex_impl<complex<T>> : std::true_type
 {
 };
 
+/**
+ * @brief Conversion between two vectors of complex values of the same length.
+ * @tparam conv Conversion kind (saturation/rounding behavior).
+ */
 // vector<complex> to vector<complex>
-template <typename To, typename From, size_t N>
-struct conversion<vec<complex<To>, N>, vec<complex<From>, N>>
+template <typename To, typename From, size_t N, conv_t conv>
+struct conversion<1, 1, vec<complex<To>, N>, vec<complex<From>, N>, conv>
 {
-    static_assert(!is_compound<To>, "");
-    static_assert(!is_compound<From>, "");
+    static_assert(!is_compound_type<To>, "");
+    static_assert(!is_compound_type<From>, "");
+    /**
+     * @brief Casts each component of @p value from @c From to @c To.
+     * @param value Source vector of complex values.
+     * @return Vector of complex values with the converted component type.
+     */
     static vec<complex<To>, N> cast(const vec<complex<From>, N>& value)
     {
         return vec<To, N * 2>(value.flatten()).v;
     }
 };
 
+/**
+ * @brief Conversion from a real vector to a vector of complex values.
+ *
+ * Each real element becomes the real part of a complex value whose imaginary part is zero.
+ * @tparam conv Conversion kind (saturation/rounding behavior).
+ */
 // vector to vector<complex>
-template <typename To, typename From, size_t N>
-struct conversion<vec<complex<To>, N>, vec<From, N>>
+template <typename To, typename From, size_t N, conv_t conv>
+struct conversion<1, 1, vec<complex<To>, N>, vec<From, N>, conv>
 {
-    static_assert(!is_compound<To>, "");
-    static_assert(!is_compound<From>, "");
+    static_assert(!is_compound_type<To>, "");
+    static_assert(!is_compound_type<From>, "");
+    /**
+     * @brief Casts @p value to the target real type and interleaves with zeros to form complex values.
+     * @param value Source real vector.
+     * @return Vector of complex values with zero imaginary parts.
+     */
     static vec<complex<To>, N> cast(const vec<From, N>& value)
     {
         const vec<To, N> casted = static_cast<vec<To, N>>(value);
@@ -355,7 +296,7 @@ struct conversion<vec<complex<To>, N>, vec<From, N>>
 } // namespace internal
 
 /// @brief Returns the real part of the complex value
-template <typename T, KFR_ENABLE_IF(is_numeric<T>)>
+template <numeric T>
 constexpr KFR_INTRINSIC T real(const T& value)
 {
     return value;
@@ -368,26 +309,25 @@ constexpr KFR_INTRINSIC T real(const complex<T>& value)
     return value.real();
 }
 
-/// @brief Returns the real part of the complex value
+/**
+ * @brief Returns the real parts of a vector of complex values.
+ * @param value Vector of complex values.
+ * @return Vector of the real components.
+ */
 template <typename T, size_t N>
 constexpr KFR_INTRINSIC vec<T, N> real(const vec<complex<T>, N>& value)
 {
     return even(cdecom(value));
 }
 
+/// @brief Alias for @c decltype(kfr::real(std::declval<T>()))
 template <typename T>
 using realtype = decltype(kfr::real(std::declval<T>()));
+/// @brief Alias for @c ftype<decltype(kfr::real(std::declval<T>()))>
 template <typename T>
 using realftype = ftype<decltype(kfr::real(std::declval<T>()))>;
 
 KFR_FN(real)
-
-/// @brief Returns the real part of the complex value
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_INTRINSIC internal::expression_function<fn::real, E1> real(E1&& x)
-{
-    return { fn::real{}, std::forward<E1>(x) };
-}
 
 /// @brief Returns the imaginary part of the complex value
 template <typename T>
@@ -396,7 +336,11 @@ constexpr KFR_INTRINSIC T imag(const complex<T>& value)
     return value.imag();
 }
 
-/// @brief Returns the imaginary part of the complex value
+/**
+ * @brief Returns the imaginary parts of a vector of complex values.
+ * @param value Vector of complex values.
+ * @return Vector of the imaginary components.
+ */
 template <typename T, size_t N>
 constexpr KFR_INTRINSIC vec<T, N> imag(const vec<complex<T>, N>& value)
 {
@@ -404,38 +348,33 @@ constexpr KFR_INTRINSIC vec<T, N> imag(const vec<complex<T>, N>& value)
 }
 KFR_FN(imag)
 
-/// @brief Returns the imaginary part of the complex value
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_INTRINSIC internal::expression_function<fn::imag, E1> imag(E1&& x)
-{
-    return { fn::imag{}, std::forward<E1>(x) };
-}
-
-/// @brief Constructs complex value from real and imaginary parts
-template <typename T1, typename T2 = T1, size_t N, typename T = common_type<T1, T2>>
+/**
+ * @brief Constructs a vector of complex values from real and imaginary vectors.
+ * @param real Vector of real parts.
+ * @param imag Vector of imaginary parts (defaults to zero).
+ * @return Interleaved vector of complex values.
+ */
+template <typename T1, typename T2 = T1, size_t N, typename T = flt_type<std::common_type_t<T1, T2>>>
 constexpr KFR_INTRINSIC vec<complex<T>, N> make_complex(const vec<T1, N>& real,
                                                         const vec<T2, N>& imag = T2(0))
 {
-    return ccomp(interleave(innercast<T>(real), innercast<T>(imag)));
+    return ccomp(interleave(promoteto<T>(real), promoteto<T>(imag)));
 }
 
-/// @brief Constructs complex value from real and imaginary parts
-template <typename T1, typename T2 = T1, typename T = common_type<T1, T2>,
-          KFR_ENABLE_IF(is_numeric_args<T1, T2>)>
+/**
+ * @brief Constructs a complex value from real and imaginary scalars.
+ * @param real Real part.
+ * @param imag Imaginary part (defaults to zero).
+ * @return The constructed complex value.
+ */
+template <numeric T1, numeric T2 = T1, typename T = flt_type<std::common_type_t<T1, T2>>>
 constexpr KFR_INTRINSIC complex<T> make_complex(T1 real, T2 imag = T2(0))
 {
-    return complex<T>(innercast<T>(real), innercast<T>(imag));
+    return complex<T>(promoteto<T>(real), promoteto<T>(imag));
 }
 KFR_FN(make_complex)
 
-/// @brief Constructs complex value from real and imaginary parts
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
-KFR_INTRINSIC internal::expression_function<fn::make_complex, E1, E2> make_complex(E1&& re, E2&& im)
-{
-    return { fn::make_complex{}, std::forward<E1>(re), std::forward<E2>(im) };
-}
-
-namespace intrinsics
+namespace intr
 {
 template <typename T, size_t N>
 KFR_INTRINSIC vec<complex<T>, N> cconj(const vec<complex<T>, N>& x)
@@ -444,68 +383,76 @@ KFR_INTRINSIC vec<complex<T>, N> cconj(const vec<complex<T>, N>& x)
 }
 
 KFR_HANDLE_SCALAR(cconj)
-} // namespace intrinsics
+} // namespace intr
 KFR_I_FN(cconj)
 
 /// @brief Returns the complex conjugate of the complex number x
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_INTRINSIC T1 cconj(const T1& x)
 {
-    return intrinsics::cconj(x);
+    return intr::cconj(x);
 }
 
-/// @brief Returns template expression that returns the complex conjugate of the complex number x
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::cconj, E1> cconj(E1&& x)
-{
-    return { fn::cconj(), std::forward<E1>(x) };
-}
-
+/**
+ * @brief Helper that maps a scalar component type @c T to @c vec<complex<T>, N>.
+ * @tparam N Length of the resulting complex vector.
+ */
 template <size_t N>
 struct vec_of_complex
 {
+    /// The complex vector type for component type @c T.
     template <typename T>
     using type = vec<complex<T>, N>;
 };
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
-template <typename T1, typename T2>
-struct common_type_impl<kfr::complex<T1>, kfr::complex<T2>> : common_type_from_subtypes<T1, T2, kfr::complex>
-{
-};
-template <typename T1, typename T2>
-struct common_type_impl<kfr::complex<T1>, T2> : common_type_from_subtypes<T1, T2, kfr::complex>
-{
-};
-template <typename T1, typename T2>
-struct common_type_impl<T1, kfr::complex<T2>> : common_type_from_subtypes<T1, T2, kfr::complex>
-{
-};
-template <typename T1, typename T2, size_t N>
-struct common_type_impl<kfr::complex<T1>, kfr::vec<kfr::complex<T2>, N>>
-    : common_type_from_subtypes<T1, T2, kfr::vec_of_complex<N>::template type>
-{
-};
-template <typename T1, typename T2, size_t N>
-struct common_type_impl<kfr::vec<kfr::complex<T1>, N>, kfr::vec<kfr::complex<T2>, N>>
-    : common_type_from_subtypes<T1, T2, kfr::vec_of_complex<N>::template type>
-{
-};
-template <typename T1, typename T2, size_t N>
-struct common_type_impl<kfr::vec<kfr::complex<T1>, N>, kfr::complex<T2>>
-    : common_type_from_subtypes<T1, T2, kfr::vec_of_complex<N>::template type>
-{
-};
-template <typename T1, typename T2, size_t N>
-struct common_type_impl<kfr::complex<T1>, kfr::vec<T2, N>>
-    : common_type_from_subtypes<T1, T2, kfr::vec_of_complex<N>::template type>
-{
-};
-template <typename T1, typename T2, size_t N>
-struct common_type_impl<kfr::vec<T1, N>, kfr::complex<T2>>
-    : common_type_from_subtypes<T1, T2, kfr::vec_of_complex<N>::template type>
-{
-};
+/// @brief Variable template: @c true if @c T is a @c complex specialization.
+template <typename T>
+constexpr bool is_complex = internal::is_complex_impl<T>::value;
+
 } // namespace kfr
 
-CMT_PRAGMA_MSVC(warning(pop))
+namespace std
+{
+
+/**
+ * @brief @c common_type of two @c kfr::complex values.
+ */
+template <typename T1, typename T2>
+struct common_type<kfr::complex<T1>, kfr::complex<T2>>
+    : kfr::construct_common_type<std::common_type<T1, T2>, kfr::complex>
+{
+};
+/**
+ * @brief @c common_type of a @c kfr::complex and a scalar.
+ */
+template <typename T1, typename T2>
+struct common_type<kfr::complex<T1>, T2> : kfr::construct_common_type<std::common_type<T1, T2>, kfr::complex>
+{
+};
+/**
+ * @brief @c common_type of a scalar and a @c kfr::complex.
+ */
+template <typename T1, typename T2>
+struct common_type<T1, kfr::complex<T2>> : kfr::construct_common_type<std::common_type<T1, T2>, kfr::complex>
+{
+};
+/**
+ * @brief @c common_type of a @c kfr::complex and a @c kfr::vec.
+ */
+template <typename T1, typename T2, size_t N>
+struct common_type<kfr::complex<T1>, kfr::vec<T2, N>>
+    : kfr::construct_common_type<std::common_type<T1, T2>, kfr::vec_of_complex<N>::template type>
+{
+};
+/**
+ * @brief @c common_type of a @c kfr::vec and a @c kfr::complex.
+ */
+template <typename T1, typename T2, size_t N>
+struct common_type<kfr::vec<T1, N>, kfr::complex<T2>>
+    : kfr::construct_common_type<std::common_type<T1, T2>, kfr::vec_of_complex<N>::template type>
+{
+};
+} // namespace std
+
+KFR_PRAGMA_MSVC(warning(pop))

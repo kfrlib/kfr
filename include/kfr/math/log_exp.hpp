@@ -1,8 +1,5 @@
-/** @addtogroup exponential
- *  @{
- */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -29,204 +26,225 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
-/// @brief Returns e raised to the given power x.
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+/**
+ * @brief Returns e raised to the given power x.
+ *
+ * Applied element-wise for vector inputs. Negative infinity input yields
+ * zero; +infinity yields +infinity.
+ *
+ * @tparam T1 Input numeric type.
+ * @param x Power to which e is raised.
+ * @return e^x as @c flt_type<T1>.
+ */
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> exp(const T1& x)
 {
-    return intrinsics::exp(x);
+    return intr::exp(x);
 }
 
-/// @brief Returns e raised to the given power x. Accepts and returns expressions.
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::exp, E1> exp(E1&& x)
-{
-    return { fn::exp(), std::forward<E1>(x) };
-}
-
-/// @brief Returns 2 raised to the given power x.
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+/**
+ * @brief Returns 2 raised to the given power x.
+ *
+ * @tparam T1 Input numeric type.
+ * @param x Power to which 2 is raised.
+ * @return 2^x as @c flt_type<T1>.
+ */
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> exp2(const T1& x)
 {
-    return intrinsics::exp2(x);
+    return intr::exp2(x);
 }
 
-/// @brief Returns 2 raised to the given power x. Accepts and returns expressions.
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::exp2, E1> exp2(E1&& x)
-{
-    return { fn::exp2(), std::forward<E1>(x) };
-}
-
-/// @brief Returns 10 raised to the given power x.
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+/**
+ * @brief Returns 10 raised to the given power x.
+ *
+ * @tparam T1 Input numeric type.
+ * @param x Power to which 10 is raised.
+ * @return 10^x as @c flt_type<T1>.
+ */
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> exp10(const T1& x)
 {
-    return intrinsics::exp10(x);
+    return intr::exp10(x);
 }
 
-/// @brief Returns 10 raised to the given power x. Accepts and returns expressions.
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::exp10, E1> exp10(E1&& x)
-{
-    return { fn::exp10(), std::forward<E1>(x) };
-}
-
-/// @brief Returns the natural logarithm of the x.
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+/**
+ * @brief Returns the natural logarithm of x.
+ *
+ * @tparam T1 Input numeric type.
+ * @param x Value whose natural logarithm is computed (must be non-negative).
+ * @return ln(x) as @c flt_type<T1>.
+ */
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> log(const T1& x)
 {
-    return intrinsics::log(x);
+    return intr::log(x);
 }
 
-/// @brief Returns the natural logarithm of the x. Accepts and returns expressions.
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::log, E1> log(E1&& x)
-{
-    return { fn::log(), std::forward<E1>(x) };
-}
-
-/// @brief Returns the binary (base-2) logarithm of the x.
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+/**
+ * @brief Returns the binary (base-2) logarithm of x.
+ *
+ * @tparam T1 Input numeric type.
+ * @param x Value whose base-2 logarithm is computed (must be non-negative).
+ * @return log2(x) as @c flt_type<T1>.
+ */
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> log2(const T1& x)
 {
-    return intrinsics::log2(x);
+    return intr::log2(x);
 }
 
-/// @brief Returns the binary (base-2) logarithm of the x. Accepts and returns expressions.
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::log2, E1> log2(E1&& x)
-{
-    return { fn::log2(), std::forward<E1>(x) };
-}
-
-/// @brief Returns the common (base-10) logarithm of the x.
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+/**
+ * @brief Returns the common (base-10) logarithm of x.
+ *
+ * @tparam T1 Input numeric type.
+ * @param x Value whose base-10 logarithm is computed (must be non-negative).
+ * @return log10(x) as @c flt_type<T1>.
+ */
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> log10(const T1& x)
 {
-    return intrinsics::log10(x);
+    return intr::log10(x);
 }
 
-/// @brief Returns the common (base-10) logarithm of the x. Accepts and returns expressions.
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::log10, E1> log10(E1&& x)
-{
-    return { fn::log10(), std::forward<E1>(x) };
-}
-
-/// @brief Returns the rounded binary (base-2) logarithm of the x.
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+/**
+ * @brief Returns the unbiased exponent of x as a floating-point value
+ * (equivalent to @c std::logb).
+ *
+ * For x equal to zero the result is negative infinity.
+ *
+ * @tparam T1 Input numeric type.
+ * @param x Input value.
+ * @return The exponent of x as @c flt_type<T1>.
+ */
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> logb(const T1& x)
 {
-    return intrinsics::logb(x);
+    return intr::logb(x);
 }
 
-/// @brief Returns the rounded binary (base-2) logarithm of the x. Version that accepts and returns
-/// expressions.
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::logb, E1> logb(E1&& x)
+/**
+ * @brief Returns the logarithm of x with base y.
+ *
+ * @tparam T1 Type of the argument x.
+ * @tparam T2 Type of the base y.
+ * @param x Value whose logarithm is computed.
+ * @param y Base of the logarithm.
+ * @return log_y(x) as @c flt_type<std::common_type_t<T1, T2>>.
+ */
+template <numeric T1, numeric T2>
+KFR_FUNCTION flt_type<std::common_type_t<T1, T2>> logn(const T1& x, const T2& y)
 {
-    return { fn::logb(), std::forward<E1>(x) };
+    return intr::logn(x, y);
 }
 
-/// @brief Returns the logarithm of the x with base y.
-template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>)>
-KFR_FUNCTION flt_type<common_type<T1, T2>> logn(const T1& x, const T2& y)
+/**
+ * @brief Returns log(x) * m.
+ *
+ * @tparam T1 Type of the argument x.
+ * @tparam T2 Type of the multiplier m.
+ * @param x Value whose natural logarithm is computed.
+ * @param y Multiplier (m) applied to the logarithm.
+ * @return log(x) * m as @c flt_type<std::common_type_t<T1, T2>>.
+ */
+template <numeric T1, numeric T2>
+KFR_FUNCTION flt_type<std::common_type_t<T1, T2>> logm(const T1& x, const T2& y)
 {
-    return intrinsics::logn(x, y);
+    return intr::logm(x, y);
 }
 
-/// @brief Returns the logarithm of the x with base y. Accepts and returns expressions.
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
-KFR_FUNCTION internal::expression_function<fn::logn, E1, E2> logn(E1&& x, E2&& y)
+/**
+ * @brief Returns exp(x * m + a).
+ *
+ * Computes the exponential of a fused multiply-add expression in a single
+ * call, which may be more efficient than evaluating the two operations
+ * separately.
+ *
+ * @tparam T1 Type of the argument x.
+ * @tparam T2 Type of the multiplier m.
+ * @tparam T3 Type of the addend a.
+ * @param x Input value.
+ * @param y Multiplier (m).
+ * @param z Addend (a).
+ * @return exp(x * m + a) as @c flt_type<std::common_type_t<T1, T2, T3>>.
+ */
+template <numeric T1, numeric T2, numeric T3>
+KFR_FUNCTION flt_type<std::common_type_t<T1, T2, T3>> exp_fmadd(const T1& x, const T2& y, const T3& z)
 {
-    return { fn::logn(), std::forward<E1>(x), std::forward<E2>(y) };
+    return intr::exp_fmadd(x, y, z);
 }
 
-/// @brief Returns log(x) * y.
-template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>)>
-KFR_FUNCTION flt_type<common_type<T1, T2>> logm(const T1& x, const T2& y)
+/**
+ * @brief Returns log(x) * m + a.
+ *
+ * Computes a fused multiply-add on the logarithm of x.
+ *
+ * @tparam T1 Type of the argument x.
+ * @tparam T2 Type of the multiplier m.
+ * @tparam T3 Type of the addend a.
+ * @param x Input value (must be non-negative).
+ * @param y Multiplier (m).
+ * @param z Addend (a).
+ * @return log(x) * m + a as @c flt_type<std::common_type_t<T1, T2, T3>>.
+ */
+template <numeric T1, numeric T2, numeric T3>
+KFR_FUNCTION flt_type<std::common_type_t<T1, T2, T3>> log_fmadd(const T1& x, const T2& y, const T3& z)
 {
-    return intrinsics::logm(x, y);
+    return intr::log_fmadd(x, y, z);
 }
 
-/// @brief Returns log(x) * y. Accepts and returns expressions.
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
-KFR_FUNCTION internal::expression_function<fn::logm, E1, E2> logm(E1&& x, E2&& y)
+/**
+ * @brief Returns x raised to the given power y.
+ *
+ * For non-integer y the result is defined only for x >= 0. When x is
+ * negative and y is a non-integer the result is NaN.
+ *
+ * @tparam T1 Type of the base x.
+ * @tparam T2 Type of the exponent y.
+ * @param x Base value.
+ * @param y Exponent.
+ * @return x^y as @c flt_type<std::common_type_t<T1, T2>>.
+ */
+template <numeric T1, numeric T2>
+KFR_FUNCTION flt_type<std::common_type_t<T1, T2>> pow(const T1& x, const T2& y)
 {
-    return { fn::logm(), std::forward<E1>(x), std::forward<E2>(y) };
+    return intr::pow(x, y);
 }
 
-/// @brief Returns exp(x * m + a).
-template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>)>
-KFR_FUNCTION flt_type<common_type<T1, T2, T3>> exp_fmadd(const T1& x, const T2& y, const T3& z)
+/**
+ * @brief Returns the real y-th root of x.
+ *
+ * For odd integer y, root(-x, y) is the negative of root(x, y). For
+ * non-integer y the result is defined only for x >= 0.
+ *
+ * @tparam T1 Type of the value x.
+ * @tparam T2 Type of the root degree y.
+ * @param x Value whose y-th root is computed.
+ * @param y Root degree.
+ * @return y-th root of x as @c flt_type<std::common_type_t<T1, T2>>.
+ */
+template <numeric T1, numeric T2>
+KFR_FUNCTION flt_type<std::common_type_t<T1, T2>> root(const T1& x, const T2& y)
 {
-    return intrinsics::exp_fmadd(x, y, z);
+    return intr::root(x, y);
 }
 
-/// @brief Returns exp(x * m + a). Accepts and returns expressions.
-template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2, E3>)>
-KFR_FUNCTION internal::expression_function<fn::exp_fmadd, E1, E2, E3> exp_fmadd(E1&& x, E2&& y, E3&& z)
-{
-    return { fn::exp_fmadd(), std::forward<E1>(x), std::forward<E2>(y), std::forward<E3>(z) };
-}
-
-/// @brief Returns log(x) * m + a.
-template <typename T1, typename T2, typename T3, KFR_ENABLE_IF(is_numeric_args<T1, T2, T3>)>
-KFR_FUNCTION flt_type<common_type<T1, T2, T3>> log_fmadd(const T1& x, const T2& y, const T3& z)
-{
-    return intrinsics::log_fmadd(x, y, z);
-}
-
-/// @brief Returns log(x) * m + a. Accepts and returns expressions.
-template <typename E1, typename E2, typename E3, KFR_ENABLE_IF(is_input_expressions<E1, E2, E3>)>
-KFR_FUNCTION internal::expression_function<fn::log_fmadd, E1, E2, E3> log_fmadd(E1&& x, E2&& y, E3&& z)
-{
-    return { fn::log_fmadd(), std::forward<E1>(x), std::forward<E2>(y), std::forward<E3>(z) };
-}
-
-/// @brief Returns the x raised to the given power y.
-template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>)>
-KFR_FUNCTION flt_type<common_type<T1, T2>> pow(const T1& x, const T2& y)
-{
-    return intrinsics::pow(x, y);
-}
-
-/// @brief Returns the x raised to the given power y. Accepts and returns expressions.
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
-KFR_FUNCTION internal::expression_function<fn::pow, E1, E2> pow(E1&& x, E2&& y)
-{
-    return { fn::pow(), std::forward<E1>(x), std::forward<E2>(y) };
-}
-
-/// @brief Returns the real nth root of the x.
-template <typename T1, typename T2, KFR_ENABLE_IF(is_numeric_args<T1, T2>)>
-KFR_FUNCTION flt_type<common_type<T1, T2>> root(const T1& x, const T2& y)
-{
-    return intrinsics::root(x, y);
-}
-
-/// @brief Returns the real nth root of the x. Accepts and returns expressions.
-template <typename E1, typename E2, KFR_ENABLE_IF(is_input_expressions<E1, E2>)>
-KFR_FUNCTION internal::expression_function<fn::root, E1, E2> root(E1&& x, E2&& y)
-{
-    return { fn::root(), std::forward<E1>(x), std::forward<E2>(y) };
-}
-
-/// @brief Returns the cube root of the x.
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+/**
+ * @brief Returns the cube root of x.
+ *
+ * Defined for negative x (returns a negative result).
+ *
+ * @tparam T1 Input numeric type.
+ * @param x Value whose cube root is computed.
+ * @return cbrt(x) as @c flt_type<T1>.
+ */
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> cbrt(const T1& x)
 {
-    return intrinsics::cbrt(x);
+    return intr::cbrt(x);
 }
-
-/// @brief Returns the cube root of the x. Accepts and returns expressions.
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::cbrt, E1> cbrt(E1&& x)
-{
-    return { fn::cbrt(), std::forward<E1>(x) };
-}
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

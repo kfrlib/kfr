@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -22,25 +22,25 @@
  */
 #pragma once
 
-#include "../../math/abs.hpp"
-#include "../../math/min_max.hpp"
-#include "../../math/round.hpp"
-#include "../../math/select.hpp"
+#include "../../simd/abs.hpp"
 #include "../../simd/constants.hpp"
 #include "../../simd/impl/function.hpp"
+#include "../../simd/min_max.hpp"
 #include "../../simd/operators.hpp"
+#include "../../simd/round.hpp"
+#include "../../simd/select.hpp"
 #include "../../simd/shuffle.hpp"
 
-#if CMT_HAS_WARNING("-Wc99-extensions")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wc99-extensions")
+#if KFR_HAS_WARNING("-Wc99-extensions")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wc99-extensions")
 #endif
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 template <typename T, size_t N>
@@ -62,12 +62,11 @@ KFR_INTRINSIC vec<T, N> trig_fold(const vec<T, N>& x, vec<itype<T>, N>& quadrant
     const vec<T, N> xabs = abs(x);
     constexpr T div      = constants<T>::fold_constant_div;
     vec<T, N> y          = floor(xabs / div);
-    quadrant             = innercast<itype<T>>(innercast<int>(y - floor(y * T(1.0 / 16.0)) * T(16.0)));
+    quadrant             = broadcastto<itype<T>>(broadcastto<int>(y - floor(y * T(1.0 / 16.0)) * T(16.0)));
 
-    const mask<T, N> msk = (quadrant & 1) != 0;
-    quadrant             = kfr::select(msk, quadrant + 1, quadrant);
-    y                    = select(msk, y + T(1.0), y);
-    quadrant             = quadrant & 7;
+    const vec<itype<T>, N> odd = (quadrant & 1);
+    quadrant                   = (quadrant + odd) & itype<T>(7);
+    y                          = y + cast<T>(odd);
 
     constexpr T hi   = constants<T>::fold_constant_hi;
     constexpr T rem1 = constants<T>::fold_constant_rem1;
@@ -85,16 +84,16 @@ KFR_INTRINSIC vec<T, N> fold_range(const vec<T, N>& x)
 template <size_t N>
 KFR_INTRINSIC vec<f32, N> trig_sincos(const vec<f32, N>& folded, const mask<f32, N>& cosmask)
 {
-    constexpr f32 sin_c2  = CMT_FP(-0x2.aaaaacp-4f, -1.6666667163e-01f);
-    constexpr f32 sin_c4  = CMT_FP(0x2.222334p-8f, 8.3333970979e-03f);
-    constexpr f32 sin_c6  = CMT_FP(-0xd.0566ep-16f, -1.9868623349e-04f);
-    constexpr f32 sin_c8  = CMT_FP(0x3.64cc1cp-20f, 3.2365221614e-06f);
-    constexpr f32 sin_c10 = CMT_FP(-0x5.6c4a4p-24f, -3.2323646337e-07f);
-    constexpr f32 cos_c2  = CMT_FP(-0x8.p-4f, -5.0000000000e-01f);
-    constexpr f32 cos_c4  = CMT_FP(0xa.aaaabp-8f, 4.1666667908e-02f);
-    constexpr f32 cos_c6  = CMT_FP(-0x5.b05d48p-12f, -1.3888973044e-03f);
-    constexpr f32 cos_c8  = CMT_FP(0x1.a065f8p-16f, 2.4819273676e-05f);
-    constexpr f32 cos_c10 = CMT_FP(-0x4.cd156p-24f, -2.8616830150e-07f);
+    constexpr f32 sin_c2  = KFR_FP(-0x2.aaaaacp-4f, -1.6666667163e-01f);
+    constexpr f32 sin_c4  = KFR_FP(0x2.222334p-8f, 8.3333970979e-03f);
+    constexpr f32 sin_c6  = KFR_FP(-0xd.0566ep-16f, -1.9868623349e-04f);
+    constexpr f32 sin_c8  = KFR_FP(0x3.64cc1cp-20f, 3.2365221614e-06f);
+    constexpr f32 sin_c10 = KFR_FP(-0x5.6c4a4p-24f, -3.2323646337e-07f);
+    constexpr f32 cos_c2  = KFR_FP(-0x8.p-4f, -5.0000000000e-01f);
+    constexpr f32 cos_c4  = KFR_FP(0xa.aaaabp-8f, 4.1666667908e-02f);
+    constexpr f32 cos_c6  = KFR_FP(-0x5.b05d48p-12f, -1.3888973044e-03f);
+    constexpr f32 cos_c8  = KFR_FP(0x1.a065f8p-16f, 2.4819273676e-05f);
+    constexpr f32 cos_c10 = KFR_FP(-0x4.cd156p-24f, -2.8616830150e-07f);
 
     const vec<f32, N> x2 = folded * folded;
 
@@ -108,22 +107,22 @@ KFR_INTRINSIC vec<f32, N> trig_sincos(const vec<f32, N>& folded, const mask<f32,
 template <size_t N>
 KFR_INTRINSIC vec<f64, N> trig_sincos(const vec<f64, N>& folded, const mask<f64, N>& cosmask)
 {
-    constexpr f64 sin_c2  = CMT_FP(-0x2.aaaaaaaaaaaaap-4, -1.666666666666666574e-01);
-    constexpr f64 sin_c4  = CMT_FP(0x2.22222222220cep-8, 8.333333333333038315e-03);
-    constexpr f64 sin_c6  = CMT_FP(-0xd.00d00cffd6618p-16, -1.984126984092335463e-04);
-    constexpr f64 sin_c8  = CMT_FP(0x2.e3bc744fb879ep-20, 2.755731902164406591e-06);
-    constexpr f64 sin_c10 = CMT_FP(-0x6.b99034c1467a4p-28, -2.505204327429436704e-08);
-    constexpr f64 sin_c12 = CMT_FP(0xb.0711ea8fe8ee8p-36, 1.604729496525771112e-10);
-    constexpr f64 sin_c14 = CMT_FP(-0xb.7e010897e55dp-44, -6.532561241665605726e-13);
-    constexpr f64 sin_c16 = CMT_FP(-0xb.64eac07f1d6bp-48, -4.048035517573349688e-14);
-    constexpr f64 cos_c2  = CMT_FP(-0x8.p-4, -5.000000000000000000e-01);
-    constexpr f64 cos_c4  = CMT_FP(0xa.aaaaaaaaaaaa8p-8, 4.166666666666666435e-02);
-    constexpr f64 cos_c6  = CMT_FP(-0x5.b05b05b05ad28p-12, -1.388888888888844490e-03);
-    constexpr f64 cos_c8  = CMT_FP(0x1.a01a01a0022e6p-16, 2.480158730125666056e-05);
-    constexpr f64 cos_c10 = CMT_FP(-0x4.9f93ed845de2cp-24, -2.755731909937878141e-07);
-    constexpr f64 cos_c12 = CMT_FP(0x8.f76bc015abe48p-32, 2.087673146642573010e-09);
-    constexpr f64 cos_c14 = CMT_FP(-0xc.9bf2dbe00379p-40, -1.146797738558921387e-11);
-    constexpr f64 cos_c16 = CMT_FP(0xd.1232ac32f7258p-48, 4.643782497495272199e-14);
+    constexpr f64 sin_c2  = KFR_FP(-0x2.aaaaaaaaaaaaap-4, -1.666666666666666574e-01);
+    constexpr f64 sin_c4  = KFR_FP(0x2.22222222220cep-8, 8.333333333333038315e-03);
+    constexpr f64 sin_c6  = KFR_FP(-0xd.00d00cffd6618p-16, -1.984126984092335463e-04);
+    constexpr f64 sin_c8  = KFR_FP(0x2.e3bc744fb879ep-20, 2.755731902164406591e-06);
+    constexpr f64 sin_c10 = KFR_FP(-0x6.b99034c1467a4p-28, -2.505204327429436704e-08);
+    constexpr f64 sin_c12 = KFR_FP(0xb.0711ea8fe8ee8p-36, 1.604729496525771112e-10);
+    constexpr f64 sin_c14 = KFR_FP(-0xb.7e010897e55dp-44, -6.532561241665605726e-13);
+    constexpr f64 sin_c16 = KFR_FP(-0xb.64eac07f1d6bp-48, -4.048035517573349688e-14);
+    constexpr f64 cos_c2  = KFR_FP(-0x8.p-4, -5.000000000000000000e-01);
+    constexpr f64 cos_c4  = KFR_FP(0xa.aaaaaaaaaaaa8p-8, 4.166666666666666435e-02);
+    constexpr f64 cos_c6  = KFR_FP(-0x5.b05b05b05ad28p-12, -1.388888888888844490e-03);
+    constexpr f64 cos_c8  = KFR_FP(0x1.a01a01a0022e6p-16, 2.480158730125666056e-05);
+    constexpr f64 cos_c10 = KFR_FP(-0x4.9f93ed845de2cp-24, -2.755731909937878141e-07);
+    constexpr f64 cos_c12 = KFR_FP(0x8.f76bc015abe48p-32, 2.087673146642573010e-09);
+    constexpr f64 cos_c14 = KFR_FP(-0xc.9bf2dbe00379p-40, -1.146797738558921387e-11);
+    constexpr f64 cos_c16 = KFR_FP(0xd.1232ac32f7258p-48, 4.643782497495272199e-14);
 
     vec<f64, N> x2 = folded * folded;
     vec<f64, N> formula =
@@ -134,7 +133,8 @@ KFR_INTRINSIC vec<f64, N> trig_sincos(const vec<f64, N>& folded, const mask<f64,
     return formula;
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(N > 1)>
+template <typename T, size_t N>
+    requires(N > 1)
 KFR_INTRINSIC vec<T, N> sincos_mask(const vec<T, N>& x_full, const mask<T, N>& cosmask)
 {
     vec<itype<T>, N> quadrant;
@@ -156,7 +156,7 @@ KFR_INTRINSIC vec<T, N> sincos_mask(const vec<T, N>& x_full, const mask<T, N>& c
     return formula;
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
+template <f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> sin(const vec<T, N>& x)
 {
     vec<itype<T>, N> quadrant;
@@ -172,7 +172,7 @@ KFR_INTRINSIC vec<T, N> sin(const vec<T, N>& x)
     return formula;
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
+template <f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> cos(const vec<T, N>& x)
 {
     vec<itype<T>, N> quadrant;
@@ -188,7 +188,7 @@ KFR_INTRINSIC vec<T, N> cos(const vec<T, N>& x)
     return formula;
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
+template <f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> fastsin(const vec<T, N>& x)
 {
     const vec<T, N> msk = broadcast<N>(special_constants<T>::highbitmask());
@@ -213,7 +213,7 @@ KFR_INTRINSIC vec<T, N> fastsin(const vec<T, N>& x)
     return formula;
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
+template <f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> fastcos(const vec<T, N>& x)
 {
     x += c_pi<T, 1, 2>;
@@ -221,19 +221,21 @@ KFR_INTRINSIC vec<T, N> fastcos(const vec<T, N>& x)
     return fastsin(x);
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(N > 1 && is_f_class<T>)>
+template <f_class T, size_t N>
+    requires(N > 1)
 KFR_INTRINSIC vec<T, N> sincos(const vec<T, N>& x)
 {
     return sincos_mask(x, internal::oddmask<T, N>());
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(N > 1 && is_f_class<T>)>
+template <f_class T, size_t N>
+    requires(N > 1)
 KFR_INTRINSIC vec<T, N> cossin(const vec<T, N>& x)
 {
     return sincos_mask(x, internal::evenmask<T, N>());
 }
 
-template <typename T, size_t N, KFR_ENABLE_IF(is_f_class<T>)>
+template <f_class T, size_t N>
 KFR_INTRINSIC vec<T, N> sinc(const vec<T, N>& x)
 {
     return select(abs(x) <= constants<T>::epsilon, T(1), sin(x) / x);
@@ -290,7 +292,7 @@ KFR_INTRINSIC Tout cossindeg(const T& x)
 {
     return cossin(x * constants<Tout>::degtorad);
 }
-} // namespace intrinsics
+} // namespace intr
 
 KFR_I_FN(sin)
 KFR_I_FN(cos)
@@ -307,5 +309,5 @@ KFR_I_FN(sincosdeg)
 KFR_I_FN(cossindeg)
 
 KFR_I_FN(sinc)
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

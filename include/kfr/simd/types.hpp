@@ -1,8 +1,5 @@
-/** @addtogroup types
- *  @{
- */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -36,129 +33,163 @@
 #include <limits>
 #include <random>
 
-CMT_PRAGMA_GNU(GCC diagnostic push)
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wignored-qualifiers")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wshadow")
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wignored-qualifiers")
 
 #ifdef KFR_TESTING
-#include "../cometa/function.hpp"
-#include "../testo/testo.hpp"
+#include "../meta/function.hpp"
+#include "../test/test.hpp"
 #endif
 
-#include "../cometa.hpp"
-#include "../cometa/numeric.hpp"
+#include "../meta.hpp"
+#include "../meta/numeric.hpp"
 
 namespace kfr
 {
-
-// Include all from CoMeta library
-using namespace cometa;
-
-using cometa::fbase;
-using cometa::fmax;
-
-// primary template (used for zero types)
-template <typename... T>
-struct common_type_impl
-{
-};
-
-template <typename... T>
-using decay_common = decay<common_type_impl<T...>>;
-
-template <typename T1, typename T2, template <typename TT> class result_type, typename = void>
-struct common_type_from_subtypes
-{
-};
-
-template <typename T1, typename T2, template <typename TT> class result_type>
-struct common_type_from_subtypes<T1, T2, result_type, void_t<typename common_type_impl<T1, T2>::type>>
-{
-    using type = result_type<typename common_type_impl<T1, T2>::type>;
-};
-
+/**
+ * @brief Provides special bit-pattern constants for a scalar type.
+ *
+ * The default implementation is intended for integer types. Floating-point
+ * types use specializations that provide their corresponding IEEE 754 masks.
+ * @tparam T Scalar type for which the constants are provided.
+ */
 template <typename T>
-struct common_type_impl<T>
+struct special_scalar_constants
 {
-    using type = decay<T>;
+    /// @brief Returns a value with only the most significant bit set.
+    constexpr static T highbitmask() { return static_cast<T>(1ull << (sizeof(T) * 8 - 1)); }
+    /// @brief Returns a value with all bits set.
+    constexpr static T allones() { return static_cast<T>(-1ll); }
+    /// @brief Returns a value with all bits cleared.
+    constexpr static T allzeros() { return T(0); }
+    /// @brief Returns a value with every bit except the most significant bit set.
+    constexpr static T invhighbitmask() { return static_cast<T>((1ull << (sizeof(T) * 8 - 1)) - 1); }
 };
 
-template <typename T1, typename T2>
-using common_for_two = decltype(false ? std::declval<T1>() : std::declval<T2>());
-
-template <typename T1, typename T2, typename = void>
-struct common_type_2_default
+/**
+ * @brief Provides special bit-pattern constants for `float`.
+ *
+ * The masks are represented as floating-point values with the corresponding
+ * IEEE 754 bit patterns.
+ */
+template <>
+struct special_scalar_constants<float>
 {
+    /// @brief Returns negative zero, whose sign bit is set.
+    constexpr static float highbitmask() { return -0.f; }
+    /// @brief Returns a floating-point value with all bits set.
+    constexpr static float allones() noexcept { return internal_generic::allones_f32(); }
+    /// @brief Returns positive zero, whose bits are all cleared.
+    constexpr static float allzeros() { return 0.f; }
+    /// @brief Returns a floating-point value with every bit except the sign bit set.
+    constexpr static float invhighbitmask() { return internal_generic::invhighbit_f32(); }
 };
 
-template <typename T1, typename T2>
-struct common_type_2_default<T1, T2, void_t<common_for_two<T1, T2>>>
+/**
+ * @brief Provides special bit-pattern constants for `double`.
+ *
+ * The masks are represented as floating-point values with the corresponding
+ * IEEE 754 bit patterns.
+ */
+template <>
+struct special_scalar_constants<double>
 {
-    using type = std::decay_t<common_for_two<T1, T2>>;
+    /// @brief Returns negative zero, whose sign bit is set.
+    constexpr static double highbitmask() { return -0.; }
+    /// @brief Returns a floating-point value with all bits set.
+    constexpr static double allones() noexcept { return internal_generic::allones_f64(); }
+    /// @brief Returns positive zero, whose bits are all cleared.
+    constexpr static double allzeros() { return 0.; }
+    /// @brief Returns a floating-point value with every bit except the sign bit set.
+    constexpr static double invhighbitmask() { return internal_generic::invhighbit_f64(); }
 };
 
-template <typename T1, typename T2, typename D1 = decay<T1>, typename D2 = decay<T2>>
-struct common_type_2_impl : common_type_impl<D1, D2>
+/**
+ * @brief Provides special constants for the scalar subtype of @p T.
+ *
+ * Inherits the appropriate scalar constant implementation, allowing scalar
+ * and compound SIMD types to use the same interface.
+ * @tparam T Type whose scalar subtype determines the constants.
+ */
+template <typename T>
+struct special_constants : public special_scalar_constants<subtype<T>>
 {
+public:
+    /// @brief The scalar subtype used to provide the constants.
+    using Tsub = subtype<T>;
 };
 
-template <typename D1, typename D2>
-struct common_type_2_impl<D1, D2, D1, D2> : common_type_2_default<D1, D2>
-{
-};
-
-template <typename T1, typename T2>
-struct common_type_impl<T1, T2> : common_type_2_impl<T1, T2>
-{
-};
-
-template <typename AlwaysVoid, typename T1, typename T2, typename... R>
-struct common_type_multi_impl
-{
-};
-
-template <typename T1, typename T2, typename... R>
-struct common_type_multi_impl<void_t<typename common_type_impl<T1, T2>::type>, T1, T2, R...>
-    : common_type_impl<typename common_type_impl<T1, T2>::type, R...>
-{
-};
-
-template <typename T1, typename T2, typename... R>
-struct common_type_impl<T1, T2, R...> : common_type_multi_impl<void, T1, T2, R...>
-{
-};
-
+/**
+ * @brief Decays to the common type of the supplied arguments after decay.
+ * @tparam T... Argument types.
+ */
 template <typename... T>
-using common_type = typename common_type_impl<T...>::type;
+using decay_common = std::decay_t<std::common_type_t<T...>>;
 
+/**
+ * @brief Helper that maps a common-type result onto a single-argument template.
+ *
+ * If the common type @p CT exposes a nested `type` member, the specialization
+ * exposes `type` as `Tpl<typename CT::type>`.
+ * @tparam CT Common type carrier.
+ * @tparam Tpl Unary template to wrap the resolved type with.
+ */
+template <typename CT, template <typename T> typename Tpl>
+struct construct_common_type
+{
+};
+template <typename CT, template <typename T> typename Tpl>
+    requires requires { typename CT::type; }
+struct construct_common_type<CT, Tpl>
+{
+    using type = Tpl<typename CT::type>;
+};
+
+/// @brief Type list of all signed integer element types.
 constexpr ctypes_t<i8, i16, i32, i64> signed_types{};
+/// @brief Type list of all unsigned integer element types.
 constexpr ctypes_t<u8, u16, u32, u64> unsigned_types{};
+/// @brief Type list of all integer element types (signed and unsigned).
 constexpr ctypes_t<i8, i16, i32, i64, u8, u16, u32, u64> integer_types{};
+/// @brief Type list of all floating-point element types supported by the target.
 constexpr ctypes_t<f32
-#ifdef CMT_NATIVE_F64
+#ifdef KFR_NATIVE_F64
                    ,
                    f64
 #endif
                    >
     float_types{};
+/// @brief Type list of all numeric element types (integer and floating-point).
 constexpr ctypes_t<i8, i16, i32, i64, u8, u16, u32, u64, f32
-#ifdef CMT_NATIVE_F64
+#ifdef KFR_NATIVE_F64
                    ,
                    f64
 #endif
                    >
     numeric_types{};
 
+/// @brief Set of vector sizes used by the test harness.
 constexpr csizes_t<1, 2, 3, 4, 8, 16, 32, 64> test_vector_sizes{};
 
-#ifdef CMT_ARCH_AVX512
+#ifdef KFR_ARCH_AVX512
+/// @brief Maximum vector size (in elements) exercised by the test suite for the current architecture.
 constexpr size_t max_test_size = 128;
-#elif defined CMT_ARCH_AVX
+#elif defined KFR_ARCH_AVX
+/// @brief Maximum vector size (in elements) exercised by the test suite for the current architecture.
 constexpr size_t max_test_size = 64;
 #else
+/// @brief Maximum vector size (in elements) exercised by the test suite for the current architecture.
 constexpr size_t max_test_size = 32;
 #endif
 
+/**
+ * @brief Builds a type list of vector instantiations of @p vec_tpl for element
+ *        type @p T over the test vector sizes.
+ * @tparam vec_tpl Template taking an element type and a size.
+ * @tparam T       Element type.
+ * @tparam sizes    Compile-time list of vector sizes to instantiate.
+ */
 template <template <typename, size_t> class vec_tpl, typename T,
           typename sizes =
 #ifdef KFR_EXTENDED_TESTS
@@ -170,159 +201,350 @@ template <template <typename, size_t> class vec_tpl, typename T,
           >
 struct vector_types_for_size_t_impl;
 
+/**
+ * @brief Specialization that expands the size list into a `ctypes_t` of vector types.
+ */
 template <template <typename, size_t> class vec_tpl, typename T, size_t... sizes>
 struct vector_types_for_size_t_impl<vec_tpl, T, csizes_t<sizes...>>
 {
     using type = ctypes_t<vec_tpl<T, sizes>...>;
 };
 
+/// @brief Convenience alias for the type list produced by vector_types_for_size_t_impl.
 template <template <typename, size_t> class vec_tpl, typename T>
 using vector_types_for_size_t = typename vector_types_for_size_t_impl<vec_tpl, T>::type;
 
+/// @brief Type list of signed-integer vector instantiations for the test sizes.
 template <template <typename, size_t> class vec_tpl>
 using signed_vector_types_t =
     concat_lists<vector_types_for_size_t<vec_tpl, i8>, vector_types_for_size_t<vec_tpl, i16>,
                  vector_types_for_size_t<vec_tpl, i32>, vector_types_for_size_t<vec_tpl, i64>>;
 
+/// @brief Instance of signed_vector_types_t for use as a value parameter pack.
 template <template <typename, size_t> class vec_tpl>
 constexpr signed_vector_types_t<vec_tpl> signed_vector_types{};
 
+/// @brief Type list of unsigned-integer vector instantiations for the test sizes.
 template <template <typename, size_t> class vec_tpl>
 using unsigned_vector_types_t =
     concat_lists<vector_types_for_size_t<vec_tpl, u8>, vector_types_for_size_t<vec_tpl, u16>,
                  vector_types_for_size_t<vec_tpl, u32>, vector_types_for_size_t<vec_tpl, u64>>;
 
+/// @brief Instance of unsigned_vector_types_t for use as a value parameter pack.
 template <template <typename, size_t> class vec_tpl>
 constexpr unsigned_vector_types_t<vec_tpl> unsigned_vector_types{};
 
+/// @brief Type list of all integer vector instantiations for the test sizes.
 template <template <typename, size_t> class vec_tpl>
 using integer_vector_types_t = concat_lists<signed_vector_types_t<vec_tpl>, unsigned_vector_types_t<vec_tpl>>;
 
+/// @brief Instance of integer_vector_types_t for use as a value parameter pack.
 template <template <typename, size_t> class vec_tpl>
 constexpr integer_vector_types_t<vec_tpl> integer_vector_types{};
 
+/// @brief Type list of floating-point vector instantiations for the test sizes.
 template <template <typename, size_t> class vec_tpl>
 using float_vector_types_t = concat_lists<vector_types_for_size_t<vec_tpl, f32>
-#ifdef CMT_NATIVE_F64
+#ifdef KFR_NATIVE_F64
                                           ,
                                           vector_types_for_size_t<vec_tpl, f64>
 #endif
                                           >;
 
+/// @brief Instance of float_vector_types_t for use as a value parameter pack.
 template <template <typename, size_t> class vec_tpl>
 constexpr float_vector_types_t<vec_tpl> float_vector_types{};
 
+/// @brief Instance combining integer and floating-point vector types for use as a value parameter pack.
 template <template <typename, size_t> class vec_tpl>
 constexpr concat_lists<integer_vector_types_t<vec_tpl>, float_vector_types_t<vec_tpl>> numeric_vector_types{};
 
+/**
+ * @brief Unsigned 24-bit integer stored in three bytes (little-endian).
+ */
 struct u24
 {
+    /// @brief Raw byte storage.
     u8 raw[3];
 };
 
+/**
+ * @brief Signed 24-bit integer stored in three bytes (little-endian).
+ */
 struct i24
 {
+    /// @brief Raw byte storage.
     u8 raw[3];
 
-    constexpr i24(i32 x) CMT_NOEXCEPT : raw{}
+    /// @brief Default constructor leaving the value uninitialized.
+    i24() noexcept {}
+
+    /**
+     * @brief Construct from a 32-bit signed integer, truncating to 24 bits.
+     */
+    i24(i32 x) noexcept
     {
         raw[0] = x & 0xFF;
         raw[1] = (x >> 8) & 0xFF;
         raw[2] = (x >> 16) & 0xFF;
     }
 
-    constexpr i32 as_int() const CMT_NOEXCEPT
+    /**
+     * @brief Reconstructs the signed 32-bit value, sign-extending from bit 23.
+     * @return The value as a signed 32-bit integer.
+     */
+    i32 as_int() const noexcept
     {
         return static_cast<i32>(raw[0]) | static_cast<i32>(raw[1] << 8) |
                (static_cast<i32>(raw[2] << 24) >> 8);
     }
 
-    operator int() const CMT_NOEXCEPT { return as_int(); }
+    /// @brief Implicit conversion to `int` via as_int().
+    operator int() const noexcept { return as_int(); }
 };
 
+/**
+ * @brief 16-bit half-precision floating-point value stored as raw bits.
+ */
 struct f16
 {
+    /// @brief Raw bit representation of the half-precision value.
     u16 raw;
+
+    /// @brief Default constructor leaving the value uninitialized.
+    f16() noexcept = default;
+
+    static f16 from_raw(u16 raw) noexcept
+    {
+        f16 value;
+        value.raw = raw;
+        return value;
+    }
+
+    /**
+     * @brief Converts a single-precision value to IEEE 754 binary16.
+     *
+     * Uses F16C when the compilation target enables it; otherwise performs
+     * round-to-nearest, ties-to-even conversion in integer arithmetic.
+     */
+    f16(f32 value) noexcept
+    {
+#if defined(__F16C__)
+        raw = static_cast<u16>(_mm_cvtsi128_si32(
+            _mm_cvtps_ph(_mm_set_ss(value), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)));
+#else
+        raw = from_f32(value);
+#endif
+    }
+
+    /**
+     * @brief Converts this IEEE 754 binary16 value to single precision.
+     *
+     * Uses F16C when the compilation target enables it.  The software path
+     * exactly preserves zeros, infinities, NaN payloads, and subnormals.
+     */
+    operator f32() const noexcept
+    {
+#if defined(__F16C__)
+        return _mm_cvtss_f32(_mm_cvtph_ps(_mm_cvtsi32_si128(raw)));
+#else
+        return to_f32(raw);
+#endif
+    }
+
+private:
+    static u16 from_f32(f32 value) noexcept
+    {
+        const u32 bits     = bitcast_anything<u32>(value);
+        const u16 sign     = static_cast<u16>(bits >> 16) & 0x8000;
+        const u32 exponent = (bits >> 23) & 0xFF;
+        const u32 fraction = bits & 0x7FFFFF;
+
+        if (exponent == 0xFF)
+        {
+            if (fraction == 0)
+                return sign | 0x7C00;
+
+            // Preserve the most significant payload bits and quiet signaling NaNs.
+            return sign | 0x7C00 | static_cast<u16>((fraction >> 13) | 0x0200);
+        }
+
+        const i32 half_exponent = static_cast<i32>(exponent) - 127 + 15;
+        if (half_exponent <= 0)
+        {
+            if (half_exponent < -10)
+                return sign;
+
+            const u32 mantissa  = fraction | 0x800000;
+            const u32 shift     = static_cast<u32>(14 - half_exponent);
+            u32 half_fraction   = mantissa >> shift;
+            const u32 remainder = mantissa & ((u32(1) << shift) - 1);
+            const u32 midpoint  = u32(1) << (shift - 1);
+
+            // IEEE 754 round-to-nearest with ties going to the even result.
+            half_fraction += remainder > midpoint || (remainder == midpoint && (half_fraction & 1));
+            return sign | static_cast<u16>(half_fraction);
+        }
+
+        if (half_exponent >= 31)
+            return sign | 0x7C00;
+
+        // Retain ten fraction bits, rounding the discarded bits to nearest even.
+        // A carry can correctly turn the largest finite binary16 value into infinity.
+        u32 half            = (static_cast<u32>(half_exponent) << 10) | (fraction >> 13);
+        const u32 remainder = fraction & 0x1FFF;
+        half += remainder > 0x1000 || (remainder == 0x1000 && (half & 1));
+        return sign | static_cast<u16>(half);
+    }
+
+    static f32 to_f32(u16 value) noexcept
+    {
+        const u32 sign     = static_cast<u32>(value & 0x8000) << 16;
+        const u32 exponent = (value >> 10) & 0x1F;
+        u32 fraction       = value & 0x03FF;
+
+        u32 bits;
+        if (exponent == 0)
+        {
+            if (fraction == 0)
+                bits = sign;
+            else
+            {
+                i32 normalized_exponent = -14;
+                while ((fraction & 0x0400) == 0)
+                {
+                    fraction <<= 1;
+                    --normalized_exponent;
+                }
+                bits =
+                    sign | (static_cast<u32>(normalized_exponent + 127) << 23) | ((fraction & 0x03FF) << 13);
+            }
+        }
+        else if (exponent == 0x1F)
+        {
+            bits = sign | 0x7F800000 | (fraction << 13);
+        }
+        else
+        {
+            bits = sign | ((exponent + 112) << 23) | (fraction << 13);
+        }
+        return bitcast_anything<f32>(bits);
+    }
 };
 
+/**
+ * @brief Holds an unsigned integer wide enough to store @p bits bits.
+ * @tparam bits Number of bits required.
+ */
 template <size_t bits>
 struct bitmask
 {
-    using type = conditional<(bits > 32), uint64_t,
-                             conditional<(bits > 16), uint32_t, conditional<(bits > 8), uint16_t, uint8_t>>>;
+    /// @brief The unsigned integer type selected for the requested width.
+    using type = std::conditional_t<
+        (bits > 32), uint64_t,
+        std::conditional_t<(bits > 16), uint32_t, std::conditional_t<(bits > 8), uint16_t, uint8_t>>>;
 
+    /// @brief Construct from a value of the underlying type.
     bitmask(type val) : value(val) {}
 
+    /// @brief The stored bit value.
     type value;
 };
 
+/**
+ * @brief Returns all-ones or all-zeros of type @p T depending on @p value.
+ * @tparam T Target element type.
+ * @param value When true, all bits are set; otherwise all bits are cleared.
+ * @return The mask value.
+ */
 template <typename T>
 constexpr inline T maskbits(bool value)
 {
     return value ? special_constants<T>::allones() : special_constants<T>::allzeros();
 }
-
+/**
+ * @brief Interprets @p value as a signed integer and tests the sign bit.
+ * @tparam T Source element type.
+ * @param value Mask value to test.
+ * @return True when the most significant bit is set.
+ */
 template <typename T>
-struct bit_value;
+constexpr inline bool from_maskbits(T value)
+{
+    return bitcast_anything<itype<T>>(value) < 0;
+}
 
+/**
+ * @brief Boolean value stored as a mask of type @p T (all-ones for true, all-zeros for false).
+ *
+ * The stored mask is interpreted by examining the sign bit of the corresponding
+ * signed integer type, so any value with the high bit set reads as true.
+ * @tparam T Underlying element type used to hold the mask bits.
+ */
 template <typename T>
 struct bit
 {
-    alignas(T) bool value;
-    bit() CMT_NOEXCEPT = default;
-
-    constexpr bit(const bit_value<T>& value) CMT_NOEXCEPT : value(static_cast<bool>(value)) {}
-
-    constexpr explicit bit(T value) CMT_NOEXCEPT : value(bitcast_anything<itype<T>>(value) < 0) {}
-    constexpr bit(bool value) CMT_NOEXCEPT : value(value) {}
-
-    template <typename U>
-    constexpr bit(const bit<U>& value) CMT_NOEXCEPT : value(value.value)
-    {
-    }
-
-    constexpr operator bool() const CMT_NOEXCEPT { return value; }
-    constexpr explicit operator T() const CMT_NOEXCEPT { return maskbits<T>(value); }
-};
-
-template <typename T>
-struct bit_value
-{
+    /// @brief The raw mask value.
     T value;
-    bit_value() CMT_NOEXCEPT = default;
 
-    constexpr bit_value(const bit<T>& value) CMT_NOEXCEPT : bit_value(value.value) {}
+    /// @brief Default constructor leaving the value uninitialized.
+    bit() noexcept = default;
 
-    constexpr bit_value(T value) CMT_NOEXCEPT : value(value) {}
-    constexpr bit_value(bool value) CMT_NOEXCEPT : value(maskbits<T>(value)) {}
+    /// @brief Construct from a bool, storing all-ones or all-zeros.
+    constexpr bit(bool value) noexcept : value(maskbits<T>(value)) {}
 
+    /**
+     * @brief Convert a bit of another element type to this one.
+     */
     template <typename U>
-    constexpr bit_value(const bit_value<U>& value) CMT_NOEXCEPT : bit_value(value.operator bool())
+    constexpr bit(const bit<U>& value) noexcept : value(value.operator bool())
     {
     }
 
-    constexpr operator bool() const CMT_NOEXCEPT { return bitcast_anything<itype<T>>(value) < 0; }
-    constexpr explicit operator T() const CMT_NOEXCEPT { return value; }
+    /// @brief Converts to bool by testing the sign bit of the stored mask.
+    constexpr operator bool() const noexcept { return bitcast_anything<itype<T>>(value) < 0; }
+
+    constexpr bit(T value) noexcept       = delete;
+    constexpr operator T() const noexcept = delete;
+
+    /// @brief Equality comparison between two bit values.
+    constexpr bool operator==(const bit& other) const noexcept
+    {
+        return operator bool() == other.operator bool();
+    }
+    /// @brief Inequality comparison between two bit values.
+    constexpr bool operator!=(const bit& other) const noexcept { return !operator==(other); }
+    /// @brief Equality comparison against a plain bool.
+    constexpr bool operator==(bool other) const noexcept { return operator bool() == other; }
+    /// @brief Inequality comparison against a plain bool.
+    constexpr bool operator!=(bool other) const noexcept { return !operator==(other); }
 };
 
+/**
+ * @brief Special scalar constants for `bit<T>`.
+ */
 template <typename T>
 struct special_scalar_constants<bit<T>>
 {
+    /// @brief Mask with only the most significant bit set, expressed as a bit.
     constexpr static bit<T> highbitmask() { return true; }
+    /// @brief All bits set (true).
     constexpr static bit<T> allones() noexcept { return true; }
+    /// @brief All bits cleared (false).
     constexpr static bit<T> allzeros() { return false; }
+    /// @brief Inverse of highbitmask, i.e. all bits except the high bit set.
     constexpr static bit<T> invhighbitmask() { return false; }
 };
 
 namespace internal_generic
 {
 template <typename T>
-struct unwrap_bit
+struct unwrap_bit_impl
 {
     using type = T;
 };
 template <typename T>
-struct unwrap_bit<bit<T>>
+struct unwrap_bit_impl<bit<T>>
 {
     using type = T;
 };
@@ -330,61 +552,127 @@ struct unwrap_bit<bit<T>>
 } // namespace internal_generic
 
 template <typename T>
-using unwrap_bit = typename internal_generic::unwrap_bit<T>::type;
+using unwrap_bit = typename internal_generic::unwrap_bit_impl<T>::type;
 
+/// @brief True when @p T is a `bit<U>` specialization.
 template <typename T>
 constexpr inline bool is_bit = false;
+/// @brief Specialization marking `bit<T>` as a bit type.
 template <typename T>
 constexpr inline bool is_bit<bit<T>> = true;
 
+/**
+ * @brief Returns the underlying mask value of a bit, or the value itself for non-bit types.
+ * @tparam T Argument type.
+ * @param value Value to unwrap.
+ * @return For `bit<T>` the stored mask; otherwise @p value unchanged.
+ */
+template <typename T>
+KFR_INTRINSIC T unwrap_bit_value(const T& value)
+{
+    return value;
+}
+/**
+ * @brief Overload unwrapping a `bit<T>` to its underlying mask value.
+ */
+template <typename T>
+KFR_INTRINSIC T unwrap_bit_value(const bit<T>& value)
+{
+    return value.value;
+}
+
+/**
+ * @brief Wraps a raw mask value into a `bit<T>`.
+ * @tparam T Must be a `bit<U>` type.
+ * @param value Raw mask value to wrap.
+ * @return A `bit` whose stored mask is @p value.
+ */
+template <typename T>
+    requires(is_bit<T>)
+KFR_INTRINSIC T wrap_bit_value(const unwrap_bit<T>& value)
+{
+    T result;
+    result.value = value;
+    return result;
+}
+
+/**
+ * @brief Pass-through overload of wrap_bit_value for non-bit types.
+ */
+template <typename T>
+    requires(!is_bit<T>)
+KFR_INTRINSIC T wrap_bit_value(const T& value)
+{
+    return value;
+}
+
 namespace fn_generic
 {
-///@copybrief cometa::pass_through
-using pass_through = cometa::fn_pass_through;
+///@copybrief kfr::pass_through
+using pass_through = kfr::fn_pass_through;
 
-///@copybrief cometa::noop
-using noop = cometa::fn_noop;
+///@copybrief kfr::noop
+using noop = kfr::fn_noop;
 
-///@copybrief cometa::get_first
-using get_first = cometa::fn_get_first;
+///@copybrief kfr::get_first
+using get_first = kfr::fn_get_first;
 
-///@copybrief cometa::get_second
-using get_second = cometa::fn_get_second;
+///@copybrief kfr::get_second
+using get_second = kfr::fn_get_second;
 
-///@copybrief cometa::get_third
-using get_third = cometa::fn_get_third;
+///@copybrief kfr::get_third
+using get_third = kfr::fn_get_third;
 
-///@copybrief cometa::returns
+///@copybrief kfr::returns
 template <typename T>
-using returns = cometa::fn_returns<T>;
+using returns = kfr::fn_returns<T>;
 } // namespace fn_generic
 
-CMT_PRAGMA_GNU(GCC diagnostic push)
-CMT_PRAGMA_GNU(GCC diagnostic ignored "-Wattributes")
+KFR_PRAGMA_GNU(GCC diagnostic push)
+KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wattributes")
 
+/**
+ * @brief Wrapper exposing a member of type @p T with the requested alignment.
+ *
+ * The aligned specialization is used to obtain a pointer with guaranteed alignment
+ * for SIMD load/store operations; the unaligned specialization is packed.
+ * @tparam T Member type.
+ * @tparam A When true the member is over-aligned; when false the struct is packed.
+ */
 template <typename T, bool A>
 struct struct_with_alignment
 {
-    using pointer       = struct_with_alignment*;
+    /// @brief Pointer to this wrapper type.
+    using pointer = struct_with_alignment*;
+    /// @brief Const pointer to this wrapper type.
     using const_pointer = const struct_with_alignment*;
+    /// @brief The wrapped value.
     T value;
+    /// @brief Assigns a new value to the wrapped member.
     KFR_MEM_INTRINSIC void operator=(T value) { this->value = value; }
 };
 
+/**
+ * @brief Packed, unaligned specialization of struct_with_alignment.
+ */
 template <typename T>
 struct struct_with_alignment<T, false>
 {
-    using pointer       = struct_with_alignment*;
+    /// @brief Pointer to this wrapper type.
+    using pointer = struct_with_alignment*;
+    /// @brief Const pointer to this wrapper type.
     using const_pointer = const struct_with_alignment*;
+    /// @brief The wrapped value.
     T value;
+    /// @brief Assigns a new value to the wrapped member.
     KFR_MEM_INTRINSIC void operator=(T value) { this->value = value; }
 }
-#ifdef CMT_GNU_ATTRIBUTES
+#ifdef KFR_GNU_ATTRIBUTES
 __attribute__((__packed__, __may_alias__)) //
 #endif
 ;
 
-CMT_PRAGMA_GNU(GCC diagnostic pop)
+KFR_PRAGMA_GNU(GCC diagnostic pop)
 
 /// @brief Fills a value with zeros
 template <typename T1>
@@ -393,55 +681,101 @@ KFR_INTRINSIC void zeroize(T1& value)
     builtin_memset(static_cast<void*>(builtin_addressof(value)), 0, sizeof(T1));
 }
 
-/// @brief Used to determine the initial value for reduce functions
+/**
+ * @brief Used to determine the initial value for reduce functions.
+ *
+ * Specializations provide the identity element for a given type @p T.
+ * @tparam T Element type.
+ */
 template <typename T>
 struct initialvalue
 {
 };
 
+/// @brief True when @p T is one of the scalar types usable as a SIMD element.
 template <typename T>
 constexpr inline bool is_simd_type =
-    is_same<T, float> || is_same<T, double> || is_same<T, signed char> || is_same<T, unsigned char> ||
-    is_same<T, short> || is_same<T, unsigned short> || is_same<T, int> || is_same<T, unsigned int> ||
-    is_same<T, long> || is_same<T, unsigned long> || is_same<T, long long> || is_same<T, unsigned long long>;
+    std::is_same_v<T, float> || std::is_same_v<T, double> || std::is_same_v<T, signed char> ||
+    std::is_same_v<T, unsigned char> || std::is_same_v<T, short> || std::is_same_v<T, unsigned short> ||
+    std::is_same_v<T, int> || std::is_same_v<T, unsigned int> || std::is_same_v<T, long> ||
+    std::is_same_v<T, unsigned long> || std::is_same_v<T, long long> || std::is_same_v<T, unsigned long long>;
 
+/// @brief True when @p T is a floating-point SIMD element type.
+template <typename T>
+constexpr inline bool is_simd_float_type = std::is_same_v<T, float> || std::is_same_v<T, double>;
+
+/// @brief True when @p T is an integer SIMD element type.
+template <typename T>
+constexpr inline bool is_simd_int_type =
+    std::is_same_v<T, signed char> || std::is_same_v<T, unsigned char> || std::is_same_v<T, short> ||
+    std::is_same_v<T, unsigned short> || std::is_same_v<T, int> || std::is_same_v<T, unsigned int> ||
+    std::is_same_v<T, long> || std::is_same_v<T, unsigned long> || std::is_same_v<T, long long> ||
+    std::is_same_v<T, unsigned long long>;
+
+/// @brief Propagates is_simd_type through `bit<T>`.
 template <typename T>
 constexpr inline bool is_simd_type<bit<T>> = is_simd_type<T>;
+/// @brief Propagates is_simd_float_type through `bit<T>`.
+template <typename T>
+constexpr inline bool is_simd_float_type<bit<T>> = is_simd_float_type<T>;
+/// @brief Propagates is_simd_int_type through `bit<T>`.
+template <typename T>
+constexpr inline bool is_simd_int_type<bit<T>> = is_simd_int_type<T>;
 
+/// @brief Concept satisfied by scalar types usable as SIMD elements.
+template <typename T>
+concept simd_compat = is_simd_type<T>;
+
+/**
+ * @brief Describes the shape of a SIMD vector of @p N elements of type @p T.
+ *
+ * Provides the element type, the element count and the total scalar count,
+ * accounting for compound element types.
+ * @tparam T Element type.
+ * @tparam N Number of elements.
+ */
 template <typename T, size_t N>
 struct vec_shape
 {
+    /// @brief The element type stored in the vector.
     using value_type = T;
-    constexpr static size_t size() CMT_NOEXCEPT { return N; }
-    constexpr vec_shape() CMT_NOEXCEPT = default;
+    /// @brief Number of elements in the vector.
+    constexpr static size_t size() noexcept { return N; }
+    /// @brief Default constructor.
+    constexpr vec_shape() noexcept = default;
 
+    /// @brief Scalar component type of the element.
     using scalar_type = subtype<T>;
-    constexpr static size_t scalar_size() CMT_NOEXCEPT { return N * compound_type_traits<T>::width; }
+    /// @brief Total number of scalar components, including compound element widths.
+    constexpr static size_t scalar_size() noexcept { return N * compound_type_traits<T>::width; }
 };
 
+/// @brief Sentinel index value meaning "no index".
 constexpr size_t index_undefined = static_cast<size_t>(-1);
 
+/// @brief Tag type selecting zero-initialization.
 struct czeros_t
 {
 };
+/// @brief Tag type selecting all-ones initialization.
 struct cones_t
 {
 };
+/// @brief Instance of czeros_t.
 constexpr czeros_t czeros{};
+/// @brief Instance of cones_t.
 constexpr cones_t cones{};
 
-using caligned_t   = cbool_t<true>;
+/// @brief Compile-time boolean tag selecting aligned access.
+using caligned_t = cbool_t<true>;
+/// @brief Compile-time boolean tag selecting unaligned access.
 using cunaligned_t = cbool_t<false>;
 
+/// @brief Instance of caligned_t.
 constexpr caligned_t caligned{};
+/// @brief Instance of cunaligned_t.
 constexpr cunaligned_t cunaligned{};
-
-#ifdef CMT_INTRINSICS_IS_CONSTEXPR
-#define KFR_I_CE constexpr
-#else
-#define KFR_I_CE
-#endif
 
 } // namespace kfr
 
-CMT_PRAGMA_GNU(GCC diagnostic pop)
+KFR_PRAGMA_GNU(GCC diagnostic pop)

@@ -1,8 +1,5 @@
-/** @addtogroup hyperbolic
- *  @{
- */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -29,95 +26,97 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
-/// @brief Returns the hyperbolic sine of the x
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+/**
+ * @brief Returns the hyperbolic sine of x.
+ *
+ * Computes (exp(x) - exp(-x)) / 2 element-wise.
+ *
+ * @param x Input value or SIMD vector of values.
+ * @return Hyperbolic sine of x, with the floating-point type derived from the input.
+ */
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> sinh(const T1& x)
 {
-    return intrinsics::sinh(x);
+    return intr::sinh(x);
 }
 
-/// @brief Returns template expression that returns the hyperbolic sine of the x
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::sinh, E1> sinh(E1&& x)
-{
-    return { fn::sinh(), std::forward<E1>(x) };
-}
-
-/// @brief Returns the hyperbolic cosine of the x
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+/**
+ * @brief Returns the hyperbolic cosine of x.
+ *
+ * Computes (exp(x) + exp(-x)) / 2 element-wise.
+ *
+ * @param x Input value or SIMD vector of values.
+ * @return Hyperbolic cosine of x, with the floating-point type derived from the input.
+ */
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> cosh(const T1& x)
 {
-    return intrinsics::cosh(x);
+    return intr::cosh(x);
 }
 
-/// @brief Returns template expression that returns the hyperbolic cosine of the x
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::cosh, E1> cosh(E1&& x)
-{
-    return { fn::cosh(), std::forward<E1>(x) };
-}
-
-/// @brief Returns the hyperbolic tangent of the x
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+/**
+ * @brief Returns the hyperbolic tangent of x.
+ *
+ * Computes (exp(2x) - 1) / (exp(2x) + 1) element-wise.
+ *
+ * @param x Input value or SIMD vector of values.
+ * @return Hyperbolic tangent of x, with the floating-point type derived from the input.
+ */
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> tanh(const T1& x)
 {
-    return intrinsics::tanh(x);
+    return intr::tanh(x);
 }
 
-/// @brief Returns template expression that returns the hyperbolic tangent of the x
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::tanh, E1> tanh(E1&& x)
-{
-    return { fn::tanh(), std::forward<E1>(x) };
-}
-
-/// @brief Returns the hyperbolic cotangent of the x
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+/**
+ * @brief Returns the hyperbolic cotangent of x.
+ *
+ * Computes (exp(2x) + 1) / (exp(2x) - 1) element-wise. The result is undefined where x is 0.
+ *
+ * @param x Input value or SIMD vector of values (must be nonzero).
+ * @return Hyperbolic cotangent of x, with the floating-point type derived from the input.
+ */
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> coth(const T1& x)
 {
-    return intrinsics::coth(x);
+    return intr::coth(x);
 }
 
-/// @brief Returns template expression that returns the hyperbolic cotangent of the x
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::coth, E1> coth(E1&& x)
-{
-    return { fn::coth(), std::forward<E1>(x) };
-}
-
-/// @brief Returns the hyperbolic sine of the even elements of the x and the hyperbolic cosine of the odd
-/// elements of the x
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+/**
+ * @brief Computes sinh and cosh of x in a single pass and interleaves the results.
+ *
+ * The result is a SIMD vector whose even lanes hold sinh of the corresponding input lane
+ * and whose odd lanes hold cosh of the corresponding input lane. Useful for SIMD-friendly
+ * evaluation of sinh/cosh pairs.
+ *
+ * @param x Input value or SIMD vector of values.
+ * @return Vector with sinh at even lanes and cosh at odd lanes, of the floating-point type derived from the
+ * input.
+ */
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> sinhcosh(const T1& x)
 {
-    return intrinsics::sinhcosh(x);
+    return intr::sinhcosh(x);
 }
 
-/// @brief Returns template expression that returns the hyperbolic sine of the even elements of the x and the
-/// hyperbolic cosine of the odd elements of the x
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::sinhcosh, E1> sinhcosh(E1&& x)
-{
-    return { fn::sinhcosh(), std::forward<E1>(x) };
-}
-
-/// @brief Returns the hyperbolic cosine of the even elements of the x and the hyperbolic sine of the odd
-/// elements of the x
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+/**
+ * @brief Computes cosh and sinh of x in a single pass and interleaves the results.
+ *
+ * The result is a SIMD vector whose even lanes hold cosh of the corresponding input lane
+ * and whose odd lanes hold sinh of the corresponding input lane. This is the lane-swapped
+ * counterpart of sinhcosh.
+ *
+ * @param x Input value or SIMD vector of values.
+ * @return Vector with cosh at even lanes and sinh at odd lanes, of the floating-point type derived from the
+ * input.
+ */
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> coshsinh(const T1& x)
 {
-    return intrinsics::coshsinh(x);
+    return intr::coshsinh(x);
 }
-
-/// @brief Returns template expression that returns the hyperbolic cosine of the even elements of the x and
-/// the hyperbolic sine of the odd elements of the x
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::coshsinh, E1> coshsinh(E1&& x)
-{
-    return { fn::coshsinh(), std::forward<E1>(x) };
-}
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

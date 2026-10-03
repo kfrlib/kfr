@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -22,17 +22,17 @@
  */
 #pragma once
 
-#include "../../math/atan.hpp"
-#include "../../math/select.hpp"
-#include "../../math/sqrt.hpp"
 #include "../../simd/impl/function.hpp"
+#include "../../simd/select.hpp"
+#include "../atan.hpp"
+#include "../sqrt.hpp"
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 template <typename T, size_t N, typename Tout = flt_type<T>>
@@ -50,9 +50,9 @@ KFR_INTRINSIC vec<Tout, N> acos(const vec<T, N>& x)
 }
 KFR_HANDLE_SCALAR(asin)
 KFR_HANDLE_SCALAR(acos)
-} // namespace intrinsics
+} // namespace intr
 KFR_I_FN(asin)
 KFR_I_FN(acos)
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 
 } // namespace kfr

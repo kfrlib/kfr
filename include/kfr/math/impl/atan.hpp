@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -21,19 +21,20 @@
   See https://www.kfrlib.com for details.
  */
 #pragma once
-#include "../../math/abs.hpp"
-#include "../../math/select.hpp"
-#include "../../math/sin_cos.hpp"
+#include "../../simd/abs.hpp"
 #include "../../simd/constants.hpp"
 #include "../../simd/impl/function.hpp"
 #include "../../simd/operators.hpp"
+#include "../../simd/comparison.hpp"
+#include "../../simd/select.hpp"
+#include "../sin_cos.hpp"
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 template <size_t N>
 KFR_INTRINSIC vec<f32, N> atan2k(const vec<f32, N>& yy, const vec<f32, N>& xx)
@@ -59,7 +60,7 @@ KFR_INTRINSIC vec<f32, N> atan2k(const vec<f32, N>& yy, const vec<f32, N>& xx)
     u = fmadd(u, t, 0.199926957488059997558594f);
     u = fmadd(u, t, -0.333331018686294555664062f);
     t = u * t * s + s;
-    t = innercast<f32>(q) * 1.5707963267948966192313216916398f + t;
+    t = broadcastto<f32>(q) * 1.5707963267948966192313216916398f + t;
     return t;
 }
 
@@ -98,7 +99,7 @@ KFR_INTRINSIC vec<f64, N> atan2k(const vec<f64, N>& yy, const vec<f64, N>& xx)
     u = fmadd(u, t, 0.199999999996591265594148);
     u = fmadd(u, t, -0.333333333333311110369124);
     t = u * t * s + s;
-    t = innercast<f64>(q) * 1.5707963267948966192313216916398 + t;
+    t = broadcastto<f64>(q) * 1.5707963267948966192313216916398 + t;
     return t;
 }
 
@@ -217,10 +218,10 @@ KFR_HANDLE_SCALAR(atan)
 KFR_HANDLE_SCALAR(atan2)
 KFR_HANDLE_SCALAR(atandeg)
 KFR_HANDLE_SCALAR(atan2deg)
-} // namespace intrinsics
+} // namespace intr
 KFR_I_FN(atan)
 KFR_I_FN(atandeg)
 KFR_I_FN(atan2)
 KFR_I_FN(atan2deg)
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

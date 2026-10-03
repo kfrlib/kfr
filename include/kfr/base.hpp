@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -26,15 +26,23 @@
 
 #include "base/basic_expressions.hpp"
 #include "base/conversion.hpp"
+#include "base/endianness.hpp"
 #include "base/expression.hpp"
 #include "base/filter.hpp"
 #include "base/fraction.hpp"
-#include "base/function_expressions.hpp"
 #include "base/generators.hpp"
+#include "base/handle.hpp"
+#include "base/inline_vector.hpp"
+#include "base/math_expressions.hpp"
 #include "base/memory.hpp"
-#include "base/pointer.hpp"
+#include "base/npy.hpp"
 #include "base/random.hpp"
+#include "base/random_bits.hpp"
 #include "base/reduce.hpp"
+#include "base/shape.hpp"
+#include "base/simd_expressions.hpp"
 #include "base/small_buffer.hpp"
-#include "base/sort.hpp"
+#include "base/state_holder.hpp"
+#include "base/tensor.hpp"
+#include "base/transpose.hpp"
 #include "base/univector.hpp"

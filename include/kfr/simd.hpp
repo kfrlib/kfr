@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -22,15 +22,25 @@
  */
 #pragma once
 
+#include "simd/abs.hpp"
+#include "simd/bitshuffle.hpp"
+#include "simd/clamp.hpp"
 #include "simd/comparison.hpp"
 #include "simd/complex.hpp"
+#include "simd/complex_type.hpp"
 #include "simd/constants.hpp"
 #include "simd/digitreverse.hpp"
 #include "simd/horizontal.hpp"
+#include "simd/logical.hpp"
 #include "simd/mask.hpp"
+#include "simd/min_max.hpp"
 #include "simd/operators.hpp"
 #include "simd/platform.hpp"
 #include "simd/read_write.hpp"
+#include "simd/round.hpp"
+#include "simd/saturation.hpp"
+#include "simd/select.hpp"
 #include "simd/shuffle.hpp"
+#include "simd/sort.hpp"
 #include "simd/types.hpp"
 #include "simd/vec.hpp"

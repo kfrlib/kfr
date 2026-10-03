@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -24,22 +24,15 @@
 
 #include "simd.hpp"
 
-#include "math/abs.hpp"
 #include "math/asin_acos.hpp"
 #include "math/atan.hpp"
-#include "math/clamp.hpp"
 #include "math/compiletime.hpp"
 #include "math/complex_math.hpp"
 #include "math/gamma.hpp"
 #include "math/hyperbolic.hpp"
 #include "math/interpolation.hpp"
 #include "math/log_exp.hpp"
-#include "math/logical.hpp"
-#include "math/min_max.hpp"
 #include "math/modzerobessel.hpp"
-#include "math/round.hpp"
-#include "math/saturation.hpp"
-#include "math/select.hpp"
 #include "math/sin_cos.hpp"
 #include "math/sqrt.hpp"
 #include "math/tan.hpp"

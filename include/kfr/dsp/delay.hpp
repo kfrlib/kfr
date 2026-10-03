@@ -1,8 +1,5 @@
-/** @addtogroup fir
- *  @{
- */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -27,112 +24,170 @@
 
 #include "../base/basic_expressions.hpp"
 #include "../base/expression.hpp"
+#include "../base/state_holder.hpp"
 #include "../base/univector.hpp"
-#include "state_holder.hpp"
+#include "fir.hpp"
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <typename T, size_t samples, univector_tag Tag = samples>
 struct delay_state
 {
-    template <size_t S2 = samples, KFR_ENABLE_IF(S2 == Tag)>
-    delay_state() : data({ 0 }), cursor(0)
+    delay_state()
+        requires(samples == Tag)
+        : data({ 0 }), cursor(0)
     {
     }
 
-    template <size_t S2 = samples, KFR_ENABLE_IF(S2 != Tag)>
-    delay_state() : data(samples), cursor(0)
+    delay_state()
+        requires(samples != Tag)
+        : data(samples), cursor(0)
     {
     }
 
-    mutable univector<T, Tag> data;
-    mutable size_t cursor;
+    univector<T, Tag> data;
+    size_t cursor;
 };
 
 template <typename T>
 struct delay_state<T, 1, 1>
 {
-    mutable T data = T(0);
+    T data = T(0);
 };
-
-namespace internal
-{
 
 template <size_t delay, typename E, bool stateless, univector_tag STag>
-struct expression_delay : expression_with_arguments<E>
+struct expression_delay : expression_with_arguments<E>, public expression_traits_defaults
 {
-    using value_type = value_type_of<E>;
-    using T          = value_type;
+    using ArgTraits = expression_traits<E>;
+    static_assert(ArgTraits::dims == 1, "expression_delay requires argument with dims == 1");
+    using value_type             = typename ArgTraits::value_type;
+    constexpr static size_t dims = 1;
+    constexpr static shape<dims> get_shape(const expression_delay& self)
+    {
+        return ArgTraits::get_shape(self.first());
+    }
+    constexpr static shape<dims> get_shape() { return ArgTraits::get_shape(); }
+    constexpr static inline bool random_access = false;
+
+    using T = value_type;
     using expression_with_arguments<E>::expression_with_arguments;
 
-    expression_delay(E&& e, const delay_state<T, delay, STag>& state)
-        : expression_with_arguments<E>(std::forward<E>(e)), state(state)
-    {
-    }
-
-    template <size_t N, KFR_ENABLE_IF(N <= delay)>
-    friend KFR_INTRINSIC vec<T, N> get_elements(const expression_delay& self, cinput_t cinput, size_t index,
-                                                vec_shape<T, N>)
-    {
-        vec<T, N> out;
-        size_t c = self.state.s.cursor;
-        self.state.s.data.ringbuf_read(c, out);
-        const vec<T, N> in = self.argument_first(cinput, index, vec_shape<T, N>());
-        self.state.s.data.ringbuf_write(self.state.s.cursor, in);
-        return out;
-    }
-    friend vec<T, 1> get_elements(const expression_delay& self, cinput_t cinput, size_t index,
-                                  vec_shape<T, 1>)
-    {
-        T out;
-        size_t c = self.state.s.cursor;
-        self.state.s.data.ringbuf_read(c, out);
-        const T in = self.argument_first(cinput, index, vec_shape<T, 1>())[0];
-        self.state.s.data.ringbuf_write(self.state.s.cursor, in);
-        return out;
-    }
-    template <size_t N, KFR_ENABLE_IF(N > delay)>
-    friend vec<T, N> get_elements(const expression_delay& self, cinput_t cinput, size_t index,
-                                  vec_shape<T, N>)
-    {
-        vec<T, delay> out;
-        size_t c = self.state.s.cursor;
-        self.state.s.data.ringbuf_read(c, out);
-        const vec<T, N> in = self.argument_first(cinput, index, vec_shape<T, N>());
-        self.state.s.data.ringbuf_write(self.state.s.cursor, slice<N - delay, delay>(in));
-        return concat_and_slice<0, N>(out, in);
-    }
-
-    state_holder<delay_state<T, delay, STag>, stateless> state;
-};
-
-template <typename E, bool stateless, univector_tag STag>
-struct expression_delay<1, E, stateless, STag> : expression_with_arguments<E>
-{
-    using value_type = value_type_of<E>;
-    using T          = value_type;
-    using expression_with_arguments<E>::expression_with_arguments;
-
-    expression_delay(E&& e, const delay_state<T, 1, STag>& state)
-        : expression_with_arguments<E>(std::forward<E>(e)), state(state)
+    expression_delay(E&& e, state_holder<delay_state<T, delay, STag>, stateless> state)
+        : expression_with_arguments<E>(std::forward<E>(e)), state(std::move(state))
     {
     }
 
     template <size_t N>
-    friend KFR_INTRINSIC vec<T, N> get_elements(const expression_delay& self, cinput_t cinput, size_t index,
-                                                vec_shape<T, N>)
+        requires(N <= delay)
+    friend KFR_INTRINSIC vec<T, N> get_elements(const expression_delay& self, shape<1> index,
+                                                axis_params<0, N> sh)
     {
-        const vec<T, N> in  = self.argument_first(cinput, index, vec_shape<T, N>());
-        const vec<T, N> out = insertleft(self.state.s.data, in);
-        self.state.s.data   = in[N - 1];
+        vec<T, N> out;
+        size_t c = self.state->cursor;
+        self.state->data.ringbuf_read(c, out);
+        const vec<T, N> in = get_elements(self.first(), index, sh);
+        self.state->data.ringbuf_write(self.state->cursor, in);
         return out;
     }
-    state_holder<delay_state<T, 1, STag>, stateless> state;
+    friend vec<T, 1> get_elements(const expression_delay& self, shape<1> index, axis_params<0, 1> sh)
+    {
+        T out;
+        size_t c = self.state->cursor;
+        self.state->data.ringbuf_read(c, out);
+        const T in = get_elements(self.first(), index, sh).front();
+        self.state->data.ringbuf_write(self.state->cursor, in);
+        return out;
+    }
+    template <size_t N>
+        requires(N > delay)
+    friend vec<T, N> get_elements(const expression_delay& self, shape<1> index, axis_params<0, N> sh)
+    {
+        vec<T, delay> out;
+        size_t c = self.state->cursor;
+        self.state->data.ringbuf_read(c, out);
+        const vec<T, N> in = get_elements(self.first(), index, sh);
+        self.state->data.ringbuf_write(self.state->cursor, slice<N - delay, delay>(in));
+        return concat_and_slice<0, N>(out, in);
+    }
+
+    mutable state_holder<delay_state<T, delay, STag>, stateless> state;
 };
-} // namespace internal
+
+template <typename E, bool stateless, univector_tag STag>
+struct expression_delay<1, E, stateless, STag> : expression_with_arguments<E>, expression_traits_defaults
+{
+    using ArgTraits = expression_traits<E>;
+    static_assert(ArgTraits::dims == 1, "expression_delay requires argument with dims == 1");
+    using value_type             = typename ArgTraits::value_type;
+    constexpr static size_t dims = 1;
+    constexpr static shape<dims> get_shape(const expression_delay& self)
+    {
+        return ArgTraits::get_shape(self.first());
+    }
+    constexpr static shape<dims> get_shape() { return ArgTraits::get_shape(); }
+    constexpr static inline bool random_access = false;
+
+    using T = value_type;
+    using expression_with_arguments<E>::expression_with_arguments;
+
+    expression_delay(E&& e, state_holder<delay_state<T, 1, STag>, stateless> state)
+        : expression_with_arguments<E>(std::forward<E>(e)), state(std::move(state))
+    {
+    }
+
+    template <size_t N>
+    friend KFR_INTRINSIC vec<T, N> get_elements(const expression_delay& self, shape<1> index,
+                                                axis_params<0, N> sh)
+    {
+        const vec<T, N> in  = get_elements(self.first(), index, sh);
+        const vec<T, N> out = insertleft(self.state->data, in);
+        self.state->data    = in[N - 1];
+        return out;
+    }
+    mutable state_holder<delay_state<T, 1, STag>, stateless> state;
+};
+
+/**
+ * @brief Clears a multi-sample delay expression's ring buffer and cursor.
+ *
+ * May be called only between processing passes. For referenced-state expressions,
+ * clears the externally owned state.
+ *
+ * @param self Delay expression to reset.
+ * @tparam delay Delay length in samples.
+ * @tparam E Type of the wrapped input expression.
+ * @tparam stateless Whether the delay state is externally owned.
+ * @tparam STag Tag of the delay-line storage.
+ */
+template <size_t delay, typename E, bool stateless, univector_tag STag>
+    requires(delay != 1)
+KFR_INTRINSIC void reset(const expression_delay<delay, E, stateless, STag>& self)
+{
+    reset(self.first());
+    self.state->data   = scalar(0);
+    self.state->cursor = 0;
+}
+
+/**
+ * @brief Clears a one-sample delay expression's stored sample.
+ *
+ * May be called only between processing passes. For referenced-state expressions,
+ * clears the externally owned state.
+ *
+ * @param self Delay expression to reset.
+ * @tparam E Type of the wrapped input expression.
+ * @tparam stateless Whether the delay state is externally owned.
+ * @tparam STag Tag of the delay-line storage.
+ */
+template <typename E, bool stateless, univector_tag STag>
+KFR_INTRINSIC void reset(const expression_delay<1, E, stateless, STag>& self)
+{
+    reset(self.first());
+    self.state->data = typename expression_delay<1, E, stateless, STag>::value_type(0);
+}
 
 /**
  * @brief Returns template expression that applies delay to the input (uses ring buffer internally)
@@ -143,12 +198,29 @@ struct expression_delay<1, E, stateless, STag> : expression_with_arguments<E>
  * auto d = delay(v, csize<4>);
  * @endcode
  */
-template <size_t samples = 1, typename E1, typename T = value_type_of<E1>>
-KFR_INTRINSIC internal::expression_delay<samples, E1, false, samples> delay(E1&& e1)
+template <size_t samples = 1, typename E1, typename T = expression_value_type<E1>>
+KFR_INTRINSIC expression_delay<samples, E1, false, samples> delay(E1&& e1)
 {
     static_assert(samples >= 1 && samples < 1024, "");
-    return internal::expression_delay<samples, E1, false, samples>(std::forward<E1>(e1),
-                                                                   delay_state<T, samples>());
+    return expression_delay<samples, E1, false, samples>(std::forward<E1>(e1), delay_state<T, samples>());
+}
+
+/**
+ * @brief Returns template expression that applies delay to the input (uses ring buffer in state)
+ * @param state delay filter state (taken by reference)
+ * @param e1 an input expression
+ * @code
+ * univector<double, 10> v = counter();
+ * delay_state<double, 4> state;
+ * auto d = delay(state, v);
+ * @endcode
+ */
+template <size_t samples, typename T, typename E1, univector_tag STag>
+KFR_INTRINSIC expression_delay<samples, E1, true, STag> delay(
+    E1&& e1, std::reference_wrapper<delay_state<T, samples, STag>> state)
+{
+    static_assert(STag == tag_dynamic_vector || (samples >= 1 && samples < 1024), "");
+    return expression_delay<samples, E1, true, STag>(std::forward<E1>(e1), state);
 }
 
 /**
@@ -162,11 +234,27 @@ KFR_INTRINSIC internal::expression_delay<samples, E1, false, samples> delay(E1&&
  * @endcode
  */
 template <size_t samples, typename T, typename E1, univector_tag STag>
-KFR_INTRINSIC internal::expression_delay<samples, E1, true, STag> delay(delay_state<T, samples, STag>& state,
-                                                                        E1&& e1)
+[[deprecated("delay(state, expr) is deprecated. Use delay(expr, std::ref(state))")]] KFR_INTRINSIC
+    expression_delay<samples, E1, true, STag>
+    delay(delay_state<T, samples, STag>& state, E1&& e1)
 {
     static_assert(STag == tag_dynamic_vector || (samples >= 1 && samples < 1024), "");
-    return internal::expression_delay<samples, E1, true, STag>(std::forward<E1>(e1), state);
+    return expression_delay<samples, E1, true, STag>(std::forward<E1>(e1), std::ref(state));
 }
-} // namespace CMT_ARCH_NAME
+
+/**
+ * @brief Returns template expression that applies a fractional delay to the input
+ * @param e1 an input expression
+ * @param e1 a fractional delay in range 0..1
+ */
+template <typename T, typename E1>
+KFR_INTRINSIC expression_short_fir<2, T, expression_value_type<E1>, E1> fracdelay(E1&& e1, T delay)
+{
+    if (KFR_UNLIKELY(delay < 0))
+        delay = 0;
+    univector<T, 2> taps({ 1 - delay, delay });
+    return expression_short_fir<2, T, expression_value_type<E1>, E1>(
+        std::forward<E1>(e1), short_fir_state<2, T, expression_value_type<E1>>{ taps });
+}
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

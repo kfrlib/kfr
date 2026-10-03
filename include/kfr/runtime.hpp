@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -24,3 +24,4 @@
 
 #include "runtime/cpuid.hpp"
 #include "runtime/cpuid_auto.hpp"
+#include "runtime/time.hpp"

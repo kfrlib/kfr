@@ -1,6 +1,6 @@
 /**
- * KFR (http://kfrlib.com)
- * Copyright (C) 2016  D Levin
+ * KFR (https://www.kfrlib.com)
+ * Copyright (C) 2016-2026 Dan Casarin
  * See LICENSE.txt for details
  */
 
@@ -10,19 +10,19 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 template <typename T, size_t N>
-static void test_random(kfr::random_bit_generator& gen, const vec<T, N>& value)
+static void test_random(random_state& state, const vec<T, N>& value)
 {
-    const vec<T, N> r = kfr::random_uniform<T, N>(gen);
-    CHECK(r == value);
+    const vec<T, N> r = kfr::random_uniform<T, N>(state);
+    CHECK_THAT((r), DeepMatcher(value));
 }
 
-TEST(random_bit_generator)
+TEST_CASE("random_bit_generator")
 {
-    kfr::random_bit_generator gen(1, 2, 3, 4);
+    random_state gen = random_init(1, 2, 3, 4);
     test_random(gen, pack<u8>(21, 62, 88, 30, 46, 234, 205, 29, 41, 190, 212, 81, 217, 135, 218, 227));
     test_random(gen, pack<u16>(48589, 33814, 55928, 14799, 26904, 18521, 20808, 50888));
     test_random(gen, pack<u32>(1554764222, 1538765785, 2072590063, 2837641155));
@@ -64,13 +64,45 @@ TEST(random_bit_generator)
                           0.80028288039450723));
 }
 
-TEST(gen_random_range)
+TEST_CASE("gen_random_range")
 {
-    random_bit_generator gen(1, 2, 3, 4);
-    univector<fbase, 1000> v = kfr::gen_random_range<fbase>(std::ref(gen), -1.0, 1.0);
-    CHECK(kfr::minof(v) >= fbase(-1.0));
-    CHECK(kfr::maxof(v) <= fbase(1.0));
-    println(kfr::mean(v));
+    random_state gen         = random_init(1, 2, 3, 4);
+    univector<fbase, 1000> v = gen_random_range<fbase>(std::ref(gen), -1.0, 1.0);
+    CHECK(minof(v) >= fbase(-1.0));
+    CHECK(maxof(v) <= fbase(1.0));
+    // println(mean(v));
 }
-} // namespace CMT_ARCH_NAME
+
+TEST_CASE("gen_random_uniform")
+{
+    random_state gen         = random_init(1, 2, 3, 4);
+    univector<fbase, 1000> v = gen_random_uniform<fbase>(std::ref(gen));
+    CHECK(minof(v) >= fbase(0));
+    CHECK(maxof(v) < fbase(1));
+}
+
+TEST_CASE("random_normal")
+{
+    random_state gen = random_init(1, 2, 3, 4);
+    vec<fbase, 12> r = random_normal<12, fbase>(gen, 0.0, 1.0);
+    println(r);
+    r                 = random_normal<12, fbase>(gen, 0.0, 1.0);
+    vec<fbase, 11> r2 = random_normal<11, fbase>(gen, 0.0, 1.0);
+    println(r2);
+
+    expression_histogram h = histogram_expression<20>(gen_random_normal<double>(std::ref(gen)) * 0.15 + 0.5);
+    sink(truncate(h, 1000));
+    println(h.data.below());
+    println(h.data.values());
+    println(h.data.above());
+    sink(truncate(h, 10000));
+    println(h.data.below());
+    println(h.data.values());
+    println(h.data.above());
+    auto hh = histogram(truncate(h, 100000), 20);
+    println(hh.below());
+    println(hh.values());
+    println(hh.above());
+}
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

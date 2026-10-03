@@ -1,8 +1,5 @@
-/** @addtogroup basic_math
- *  @{
- */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -29,25 +26,23 @@
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
 /**
- * @brief Returns the positive square root of the x. \f$\sqrt{x}\f$
+ * @brief Returns the positive square root of x. \f$\sqrt{x}\f$
+ *
+ * For negative inputs the result is NaN. Applied element-wise for vector
+ * inputs.
+ *
+ * @tparam T1 Input numeric type.
+ * @param x Value whose square root is computed.
+ * @return \f$\sqrt{x}\f$ as @c flt_type<T1>.
  */
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+template <numeric T1>
 KFR_INTRINSIC flt_type<T1> sqrt(const T1& x)
 {
-    return intrinsics::sqrt(x);
+    return intr::sqrt(x);
 }
-
-/**
- * @brief Returns template expression that returns the positive square root of the x. \f$\sqrt{x}\f$
- */
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_INTRINSIC internal::expression_function<fn::sqrt, E1> sqrt(E1&& x)
-{
-    return { fn::sqrt(), std::forward<E1>(x) };
-}
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

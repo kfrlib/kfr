@@ -1,8 +1,5 @@
-/** @addtogroup dsp_extra
- *  @{
- */
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -26,21 +23,22 @@
 #pragma once
 
 #include "../base/basic_expressions.hpp"
-#include "../math/abs.hpp"
 #include "../math/log_exp.hpp"
+#include "../simd/abs.hpp"
 #include "../simd/vec.hpp"
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
+/** @brief Sample rate expressed in Hertz. */
 using sample_rate_t = double;
 
-namespace intrinsics
+namespace intr
 {
 template <typename T1, typename T2>
-KFR_INTRINSIC common_type<T1, T2> fix_nans(const T1& val, const T2& replacement)
+KFR_INTRINSIC std::common_type_t<T1, T2> fix_nans(const T1& val, const T2& replacement)
 {
     return select(val != val, replacement, val);
 }
@@ -86,7 +84,7 @@ KFR_INTRINSIC Tout power_to_dB(const T& x)
 template <typename T, typename Tout = flt_type<T>>
 KFR_INTRINSIC Tout dB_to_power(const T& x)
 {
-    if (x == -c_infinity<Tout>)
+    if (KFR_UNLIKELY(x == -c_infinity<Tout>))
         return 0.0;
     else
         return exp(x * (c_log_10<Tout> / 10.0));
@@ -97,7 +95,7 @@ KFR_INTRINSIC TF note_to_hertz(const T& note)
 {
     const subtype<TF> offset = 2.1011784386926213177653145771814;
 
-    return intrinsics::exp_fmadd(note, subtype<TF>(0.05776226504666210911810267678818), offset);
+    return intr::exp_fmadd(note, subtype<TF>(0.05776226504666210911810267678818), offset);
 }
 
 template <typename T, typename TF = flt_type<T>>
@@ -105,25 +103,25 @@ KFR_INTRINSIC TF hertz_to_note(const T& hertz)
 {
     const subtype<TF> offset = -36.376316562295915248836189714583;
 
-    return intrinsics::log_fmadd(hertz, subtype<TF>(17.312340490667560888319096172023), offset);
+    return intr::log_fmadd(hertz, subtype<TF>(17.312340490667560888319096172023), offset);
 }
 
-template <typename T1, typename T2, typename T3, typename Tc = flt_type<common_type<T1, T2, T3, f32>>>
+template <typename T1, typename T2, typename T3, typename Tc = flt_type<std::common_type_t<T1, T2, T3, f32>>>
 KFR_INTRINSIC Tc note_to_hertz(const T1& note, const T2& tunenote, const T3& tunehertz)
 {
     const Tc offset = log(tunehertz) - tunenote * subtype<Tc>(0.05776226504666210911810267678818);
 
-    return intrinsics::exp_fmadd(note, subtype<Tc>(0.05776226504666210911810267678818), offset);
+    return intr::exp_fmadd(note, subtype<Tc>(0.05776226504666210911810267678818), offset);
 }
 
-template <typename T1, typename T2, typename T3, typename Tc = flt_type<common_type<T1, T2, T3, f32>>>
+template <typename T1, typename T2, typename T3, typename Tc = flt_type<std::common_type_t<T1, T2, T3, f32>>>
 KFR_INTRINSIC Tc hertz_to_note(const T1& hertz, const T2& tunenote, const T3& tunehertz)
 {
     const Tc offset = tunenote - log(tunehertz) * subtype<Tc>(17.312340490667560888319096172023);
 
-    return intrinsics::log_fmadd(hertz, subtype<Tc>(17.312340490667560888319096172023), offset);
+    return intr::log_fmadd(hertz, subtype<Tc>(17.312340490667560888319096172023), offset);
 }
-} // namespace intrinsics
+} // namespace intr
 KFR_I_FN(note_to_hertz)
 KFR_I_FN(hertz_to_note)
 KFR_I_FN(amp_to_dB)
@@ -131,76 +129,158 @@ KFR_I_FN(dB_to_amp)
 KFR_I_FN(power_to_dB)
 KFR_I_FN(dB_to_power)
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+/**
+ * @brief Convert a MIDI note number to frequency in Hertz.
+ *
+ * Uses A4 (note 69) = 440 Hz as the reference tuning. NaNs in the result are
+ * replaced with -infinity.
+ *
+ * @param x MIDI note number (60 = middle C).
+ * @return Frequency in Hertz.
+ */
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> note_to_hertz(const T1& x)
 {
-    return intrinsics::note_to_hertz(x);
+    return intr::note_to_hertz(x);
 }
 
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::note_to_hertz, E1> note_to_hertz(E1&& x)
+/**
+ * @brief Convert a MIDI note number expression to frequency in Hertz.
+ *
+ * @param x Expression yielding MIDI note numbers (60 = middle C).
+ * @return Expression yielding frequencies in Hertz.
+ */
+template <expression_argument E1>
+KFR_FUNCTION expression_function<fn::note_to_hertz, E1> note_to_hertz(E1&& x)
 {
     return { fn::note_to_hertz(), std::forward<E1>(x) };
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+/**
+ * @brief Convert a frequency in Hertz to a MIDI note number.
+ *
+ * Uses A4 (note 69) = 440 Hz as the reference tuning.
+ *
+ * @param x Frequency in Hertz.
+ * @return MIDI note number (fractional for non-standard frequencies).
+ */
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> hertz_to_note(const T1& x)
 {
-    return intrinsics::hertz_to_note(x);
+    return intr::hertz_to_note(x);
 }
 
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::hertz_to_note, E1> hertz_to_note(E1&& x)
+/**
+ * @brief Convert a frequency expression in Hertz to MIDI note numbers.
+ *
+ * @param x Expression yielding frequencies in Hertz.
+ * @return Expression yielding MIDI note numbers.
+ */
+template <expression_argument E1>
+KFR_FUNCTION expression_function<fn::hertz_to_note, E1> hertz_to_note(E1&& x)
 {
     return { fn::hertz_to_note(), std::forward<E1>(x) };
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+/**
+ * @brief Convert an amplitude value to decibels (20*log10).
+ *
+ * The conversion is based on the absolute value, so the sign of the input is
+ * ignored. An input of 0 yields -infinity.
+ *
+ * @param x Amplitude (1.0 corresponds to 0 dB).
+ * @return Level in decibels.
+ */
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> amp_to_dB(const T1& x)
 {
-    return intrinsics::amp_to_dB(x);
+    return intr::amp_to_dB(x);
 }
 
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_INTRINSIC internal::expression_function<fn::amp_to_dB, E1> amp_to_dB(E1&& x)
+/**
+ * @brief Convert an amplitude expression to decibels (20*log10).
+ *
+ * @param x Expression yielding amplitudes (1.0 corresponds to 0 dB).
+ * @return Expression yielding levels in decibels.
+ */
+template <expression_argument E1>
+KFR_FUNCTION expression_function<fn::amp_to_dB, E1> amp_to_dB(E1&& x)
 {
     return { fn::amp_to_dB(), std::forward<E1>(x) };
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+/**
+ * @brief Convert a level in decibels to an amplitude (10^(dB/20)).
+ *
+ * @param x Level in decibels (0 dB corresponds to amplitude 1.0).
+ * @return Amplitude.
+ */
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> dB_to_amp(const T1& x)
 {
-    return intrinsics::dB_to_amp(x);
+    return intr::dB_to_amp(x);
 }
 
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::dB_to_amp, E1> dB_to_amp(E1&& x)
+/**
+ * @brief Convert a decibel level expression to amplitudes (10^(dB/20)).
+ *
+ * @param x Expression yielding levels in decibels (0 dB corresponds to amplitude 1.0).
+ * @return Expression yielding amplitudes.
+ */
+template <expression_argument E1>
+KFR_FUNCTION expression_function<fn::dB_to_amp, E1> dB_to_amp(E1&& x)
 {
     return { fn::dB_to_amp(), std::forward<E1>(x) };
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+/**
+ * @brief Convert a power value to decibels (10*log10).
+ *
+ * @param x Power (1.0 corresponds to 0 dB).
+ * @return Power level in decibels.
+ */
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> power_to_dB(const T1& x)
 {
-    return intrinsics::power_to_dB(x);
+    return intr::power_to_dB(x);
 }
 
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::power_to_dB, E1> power_to_dB(E1&& x)
+/**
+ * @brief Convert a power expression to decibels (10*log10).
+ *
+ * @param x Expression yielding power values (1.0 corresponds to 0 dB).
+ * @return Expression yielding power levels in decibels.
+ */
+template <expression_argument E1>
+KFR_FUNCTION expression_function<fn::power_to_dB, E1> power_to_dB(E1&& x)
 {
     return { fn::power_to_dB(), std::forward<E1>(x) };
 }
 
-template <typename T1, KFR_ENABLE_IF(is_numeric<T1>)>
+/**
+ * @brief Convert a power level in decibels to a power value (10^(dB/10)).
+ *
+ * An input of -infinity yields 0.
+ *
+ * @param x Power level in decibels (0 dB corresponds to power 1.0).
+ * @return Power.
+ */
+template <numeric T1>
 KFR_FUNCTION flt_type<T1> dB_to_power(const T1& x)
 {
-    return intrinsics::dB_to_power(x);
+    return intr::dB_to_power(x);
 }
 
-template <typename E1, KFR_ENABLE_IF(is_input_expression<E1>)>
-KFR_FUNCTION internal::expression_function<fn::dB_to_power, E1> dB_to_power(E1&& x)
+/**
+ * @brief Convert a power level expression in decibels to power values (10^(dB/10)).
+ *
+ * @param x Expression yielding power levels in decibels (0 dB corresponds to power 1.0).
+ * @return Expression yielding power values.
+ */
+template <expression_argument E1>
+KFR_FUNCTION expression_function<fn::dB_to_power, E1> dB_to_power(E1&& x)
 {
     return { fn::dB_to_power(), std::forward<E1>(x) };
 }
-} // namespace CMT_ARCH_NAME
+} // namespace KFR_ARCH_NAME
 } // namespace kfr

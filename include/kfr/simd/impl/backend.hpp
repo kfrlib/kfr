@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2016 D Levin (https://www.kfrlib.com)
+  Copyright (C) 2016-2026 Dan Casarin (https://www.kfrlib.com)
   This file is part of KFR
 
   KFR is free software: you can redistribute it and/or modify
@@ -23,18 +23,18 @@
 #pragma once
 
 #include "simd.hpp"
-#ifdef CMT_CLANG_EXT
-#include "backend_clang.hpp"
+#ifdef KFR_VEC_EXT
+#include "backend_vecext.hpp"
 #else
 #include "backend_generic.hpp"
 #endif
 
 namespace kfr
 {
-inline namespace CMT_ARCH_NAME
+inline namespace KFR_ARCH_NAME
 {
 
-namespace intrinsics
+namespace intr
 {
 
 #ifdef KFR_AUTOTESTS
@@ -72,8 +72,8 @@ template struct check_sizes<int32_t>;
 template struct check_sizes<int64_t>;
 
 #endif
-} // namespace intrinsics
-} // namespace CMT_ARCH_NAME
+} // namespace intr
+} // namespace KFR_ARCH_NAME
 
-using CMT_ARCH_NAME::intrinsics::simd;
+using KFR_ARCH_NAME::intr::simd;
 } // namespace kfr
