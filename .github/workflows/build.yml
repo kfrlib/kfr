@@ -35,7 +35,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-linux-x86_64
+        name: kfr-linux-x86_64-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
         path: ${{ github.workspace }}/dist
 
   binaries-linux-arm:
@@ -66,7 +66,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-linux-arm
+        name: kfr-linux-arm-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
         path: ${{ github.workspace }}/dist
 
   binaries-linux-arm64:
@@ -97,7 +97,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-linux-arm64
+        name: kfr-linux-arm64-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
         path: ${{ github.workspace }}/dist
 
   binaries-linux-riscv64:
@@ -128,7 +128,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-linux-riscv64
+        name: kfr-linux-riscv64-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
         path: ${{ github.workspace }}/dist
 
   binaries-windows-x86:
@@ -164,7 +164,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-windows-x86
+        name: kfr-windows-x86-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
         path: ${{ github.workspace }}/dist
 
   binaries-windows-x86_64:
@@ -198,7 +198,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-windows-x86_64
+        name: kfr-windows-x86_64-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
         path: ${{ github.workspace }}/dist
 
   binaries-windows-arm64:
@@ -234,7 +234,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-windows-arm64
+        name: kfr-windows-arm64-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
         path: ${{ github.workspace }}/dist
 
   binaries-android-armeabi-v7a:
@@ -264,7 +264,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-android-armeabi-v7a
+        name: kfr-android-armeabi-v7a-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
         path: ${{ github.workspace }}/dist
 
   binaries-android-arm64-v8a:
@@ -294,7 +294,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-android-arm64-v8a
+        name: kfr-android-arm64-v8a-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
         path: ${{ github.workspace }}/dist
 
   binaries-android-x86:
@@ -324,7 +324,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-android-x86
+        name: kfr-android-x86-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
         path: ${{ github.workspace }}/dist
 
   binaries-android-x86_64:
@@ -354,7 +354,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-android-x86_64
+        name: kfr-android-x86_64-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
         path: ${{ github.workspace }}/dist
 
   binaries-macos-x86_64:
@@ -383,7 +383,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-macos-x86_64
+        name: kfr-macos-x86_64-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
         path: ${{ github.workspace }}/dist
 
   binaries-macos-universal:
@@ -416,7 +416,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-macos-universal
+        name: kfr-macos-universal-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
         path: ${{ github.workspace }}/dist
 
   binaries-macos-arm64:
@@ -445,7 +445,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-macos-arm64
+        name: kfr-macos-arm64-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
         path: ${{ github.workspace }}/dist
 
   upload-release:
@@ -480,18 +480,18 @@ jobs:
         set -e
         ls -laR ${{github.workspace}}
         sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends zip
-        zip -r kfr-android-arm64-v8a.zip   kfr-android-arm64-v8a
-        zip -r kfr-android-armeabi-v7a.zip kfr-android-armeabi-v7a
-        zip -r kfr-android-x86.zip         kfr-android-x86
-        zip -r kfr-android-x86_64.zip      kfr-android-x86_64
-        zip -r kfr-linux-arm.zip           kfr-linux-arm
-        zip -r kfr-linux-arm64.zip         kfr-linux-arm64
-        zip -r kfr-linux-x86_64.zip        kfr-linux-x86_64
-        zip -r kfr-linux-riscv64.zip       kfr-linux-riscv64
-        zip -r kfr-macos-arm64.zip         kfr-macos-arm64
-        zip -r kfr-macos-x86_64.zip        kfr-macos-x86_64
-        zip -r kfr-macos-universal.zip     kfr-macos-universal
-        zip -r kfr-windows-arm64.zip       kfr-windows-arm64
-        zip -r kfr-windows-x86.zip         kfr-windows-x86
-        zip -r kfr-windows-x86_64.zip      kfr-windows-x86_64
+        zip -r kfr-android-arm64-v8a-${{ github.ref_name }}.zip   kfr-android-arm64-v8a-${{ github.ref_name }}
+        zip -r kfr-android-armeabi-v7a-${{ github.ref_name }}.zip kfr-android-armeabi-v7a-${{ github.ref_name }}
+        zip -r kfr-android-x86-${{ github.ref_name }}.zip         kfr-android-x86-${{ github.ref_name }}
+        zip -r kfr-android-x86_64-${{ github.ref_name }}.zip      kfr-android-x86_64-${{ github.ref_name }}
+        zip -r kfr-linux-arm-${{ github.ref_name }}.zip           kfr-linux-arm-${{ github.ref_name }}
+        zip -r kfr-linux-arm64-${{ github.ref_name }}.zip         kfr-linux-arm64-${{ github.ref_name }}
+        zip -r kfr-linux-x86_64-${{ github.ref_name }}.zip        kfr-linux-x86_64-${{ github.ref_name }}
+        zip -r kfr-linux-riscv64-${{ github.ref_name }}.zip       kfr-linux-riscv64-${{ github.ref_name }}
+        zip -r kfr-macos-arm64-${{ github.ref_name }}.zip         kfr-macos-arm64-${{ github.ref_name }}
+        zip -r kfr-macos-x86_64-${{ github.ref_name }}.zip        kfr-macos-x86_64-${{ github.ref_name }}
+        zip -r kfr-macos-universal-${{ github.ref_name }}.zip     kfr-macos-universal-${{ github.ref_name }}
+        zip -r kfr-windows-arm64-${{ github.ref_name }}.zip       kfr-windows-arm64-${{ github.ref_name }}
+        zip -r kfr-windows-x86-${{ github.ref_name }}.zip         kfr-windows-x86-${{ github.ref_name }}
+        zip -r kfr-windows-x86_64-${{ github.ref_name }}.zip      kfr-windows-x86_64-${{ github.ref_name }}
         gh release create --draft --notes "Draft Release" --title "KFR ${{github.ref_name}}" ${{github.ref_name}} *.zip
