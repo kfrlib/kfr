@@ -197,7 +197,7 @@ jobs:
         curl -o "%TMP_DIR%\sde.tar.xz" -L %SDE_WINDOWS2%
         mkdir C:\sde
         tar -C C:\sde -xf "%TMP_DIR%\sde.tar.xz" --strip-components=1
-        call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+        call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvarsamd64_x86.bat"
         set PATH=C:\sde;%PATH%
         ci\run.cmd build-release -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_MULTIARCH=ON -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release
 
