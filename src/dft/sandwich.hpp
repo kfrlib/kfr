@@ -813,8 +813,9 @@ KFR_INTRINSIC void sandwich_dif_merged_bitrev(size_t r2, complex<typename traits
     }
     else
     {
-        bitrev_generator gen(l2c_bits - 1);
-        uint32_t m = (1u << uint8_t(l2c_bits - 1));
+        const uint8_t bitrev_bits = std::clamp<uint8_t>(l2c_bits, 1, 32) - 1;
+        bitrev_generator gen(bitrev_bits);
+        uint32_t m = (1u << bitrev_bits);
         uint32_t j = 0;
         for (size_t i = 0; i < (r2 >> l2w);)
         {
