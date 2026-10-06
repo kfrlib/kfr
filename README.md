@@ -66,8 +66,8 @@ Compiler support:
 KFR has no external C++ dependencies beyond a C++20-compatible standard library. CMake is used as the build system.
 
 Since KFR 7.1, KFR provides the same level of support for Clang, GCC, and MSVC.
-MSVC 2022 builds may provide lower performance, especially for DFT and other complex
-algorithms; use Clang (better), MSVC 2026 or GCC when maximum performance is required.
+DFT can be slower with MSVC 2022, while MSVC 2026 generally provides good
+performance. Use Clang or GCC when maximum performance is required.
 
 Clang can be used to build Visual Studio projects, either for selected targets or as the primary compiler, while maintaining full compatibility with code built by Visual Studio.
 

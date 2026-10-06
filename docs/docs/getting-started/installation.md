@@ -27,9 +27,9 @@ KFR is tested and supported on the following systems and architectures:
 
 **Compiler** • GCC 11+ • Clang 16+ • MSVC 2022 (19.30+)+ • Xcode 13+
 
-Since KFR 7.1, KFR supports Clang, GCC, and MSVC. MSVC builds may provide
-lower performance, especially for DFT and other complex algorithms; use Clang
-or GCC when maximum performance is required.
+Since KFR 7.1, KFR supports Clang, GCC, and MSVC. DFT can be slower with MSVC
+2022, while MSVC 2026 generally provides good performance. Use Clang or GCC
+when maximum performance is required.
 
 KFR itself and applications using it require C++20. Other operating systems,
 compilers, and CPUs may work but are not part of the regular test matrix.
@@ -161,7 +161,7 @@ the optional compiled modules:
 | Option | Default | Target when enabled | Purpose |
 | --- | --- | --- | --- |
 | `KFR_ENABLE_DSP` | `ON` | `kfr_dsp` | Filters, resampling, and other DSP algorithms. |
-| `KFR_ENABLE_DFT` | compiler-dependent | `kfr_dft` | DFT, FFT, convolution, and related algorithms. Supported with Clang, GCC, and MSVC since KFR 7.1; it defaults to `ON` with Clang or GCC and `OFF` with MSVC. |
+| `KFR_ENABLE_DFT` | `ON` | `kfr_dft` | DFT, FFT, convolution, and related algorithms. Supported with Clang, GCC, and MSVC since KFR 7.1. |
 | `KFR_ENABLE_IO` | `ON` | `kfr_io` | File and data I/O facilities. |
 | `KFR_ENABLE_AUDIO` | `ON` | `kfr_audio` | Audio file and audio-processing support. Requires both DSP and I/O. |
 | `KFR_ENABLE_CAPI_BUILD` | `OFF` | `kfr_capi` | Build the C API shared library; this also requires DFT. |

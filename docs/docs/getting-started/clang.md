@@ -2,7 +2,8 @@
 
 Since KFR 7.1, KFR supports Clang, GCC, and MSVC. Clang is recommended when
 maximum performance is required, particularly for DFT and other complex
-algorithms; MSVC builds may provide lower performance for these workloads.
+algorithms. DFT can be slower with MSVC 2022, while MSVC 2026 generally
+provides good performance.
 KFR requires a compiler with C++20 support; Clang 16 or newer is supported.
 
 This page explains how to install Clang and make CMake select it reliably. For
@@ -288,9 +289,9 @@ configure a clean build directory, and select `clang-cl` for both C and C++.
 ### The DFT module is disabled
 
 DFT is supported with Clang, GCC, and MSVC since KFR 7.1. `KFR_ENABLE_DFT`
-defaults to `ON` for Clang and GCC builds and `OFF` for MSVC builds. Configure
-explicitly with `-DKFR_ENABLE_DFT=ON` when you want the DFT, FFT, and
-convolution targets.
+defaults to `ON` for all supported compilers. If it was disabled explicitly,
+configure with `-DKFR_ENABLE_DFT=ON` to build the DFT, FFT, and convolution
+targets.
 
 ### A cross build cannot find headers or libraries
 

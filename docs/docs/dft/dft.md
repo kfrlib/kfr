@@ -12,10 +12,8 @@ For a fixed power-of-two transform with caller-owned twiddles and no execution
 scratch storage, see the [low-level ngFFT API](ngfft.md).
 
 > [!note]
-> The DFT module is enabled by default with Clang and GCC, but disabled by
-> default with MSVC. Enable it explicitly in an MSVC build with
-> `-DKFR_ENABLE_DFT=ON`. MSVC DFT performance may be lower than with Clang or
-> GCC, particularly for complex algorithms.
+> The DFT module is enabled by default with all supported compilers. DFT can be
+> slower with MSVC 2022, while MSVC 2026 generally provides good performance.
 
 ## Transform convention and normalization
 

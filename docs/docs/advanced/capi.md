@@ -6,8 +6,7 @@ FIR, FFT-convolution, and IIR filters through C declarations in
 `<kfr/capi.h>`, so it can be used from C and from any language with a C FFI.
 
 The C API library is disabled by default. Build it with
-`-DKFR_ENABLE_CAPI_BUILD=ON`; it also requires the DFT module, so MSVC builds
-must additionally enable it with `-DKFR_ENABLE_DFT=ON`.
+`-DKFR_ENABLE_CAPI_BUILD=ON`; it also requires the DFT module to be enabled.
 
 The surface is intentionally small: fixed-width scalar aliases, opaque plan
 handles, caller-provided buffers, and global `kfr_`-prefixed symbols. No C++
