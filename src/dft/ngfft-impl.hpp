@@ -26,6 +26,7 @@
 #include "sandwich.hpp"
 
 #include "kfr/runtime/time.hpp"
+#include <limits>
 #include <kfr/simd/bitshuffle.hpp>
 #ifdef KFR_DFT_MEASURE_STAGE_TIME
 #include <kfr/runtime/time.hpp>
@@ -138,7 +139,10 @@ static void ng_post_real_forward(const ngfft_plan<typename traits::type>& plan,
     }
     else
     {
-        constexpr size_t width = l2fftsize == UINT8_MAX ? vector_width<T> * 2 : (size_t(1) << l2fftsize) / 2;
+        constexpr size_t width =
+            l2fftsize == UINT8_MAX
+                ? vector_width<T> * 2
+                : (size_t(1) << std::min<size_t>(l2fftsize, std::numeric_limits<size_t>::digits - 1)) / 2;
         const size_t real_size = (size_t(1) << (l2fftsize == UINT8_MAX ? plan.l2fftsize : l2fftsize)) * 2;
         auto* rtwiddle         = plan.twiddles;
 
@@ -195,7 +199,10 @@ static void ng_pre_real_backward(const ngfft_plan<typename traits::type>& plan,
     }
     else
     {
-        constexpr size_t width = l2fftsize == UINT8_MAX ? vector_width<T> * 2 : (size_t(1) << l2fftsize) / 2;
+        constexpr size_t width =
+            l2fftsize == UINT8_MAX
+                ? vector_width<T> * 2
+                : (size_t(1) << std::min<size_t>(l2fftsize, std::numeric_limits<size_t>::digits - 1)) / 2;
 
         const size_t real_size = (size_t(1) << (l2fftsize == UINT8_MAX ? plan.l2fftsize : l2fftsize)) * 2;
         auto* rtwiddle         = plan.twiddles;
