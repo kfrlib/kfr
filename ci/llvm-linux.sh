@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-ver=21
+ver=23
 
 wget -O - https://apt.llvm.org/llvm.sh | sudo bash -s - $ver
 sudo apt install -y llvm-$ver

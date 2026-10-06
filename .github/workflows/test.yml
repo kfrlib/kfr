@@ -1,7 +1,7 @@
 name: Test
 on: push
 jobs:
-  ubuntu22-clang21-x86_64:
+  ubuntu22-clang23-x86_64:
     runs-on: ubuntu-24.04
     steps:
     - name: Checkout
@@ -21,7 +21,7 @@ jobs:
         vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
         ci/run.sh build-release -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DKFR_ARCH=avx2 -DKFR_USE_SDE=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release
 
-  ubuntu22-clang21-arm:
+  ubuntu22-clang23-arm:
     runs-on: ubuntu-24.04
     steps:
     - name: Checkout
@@ -33,7 +33,7 @@ jobs:
         ci/llvm-linux.sh
         ci/run.sh build-release -DENABLE_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
 
-  ubuntu22-clang21-arm64:
+  ubuntu22-clang23-arm64:
     runs-on: ubuntu-24.04
     steps:
     - name: Checkout
@@ -45,7 +45,7 @@ jobs:
         ci/llvm-linux.sh
         ci/run.sh build-release -DENABLE_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
 
-  ubuntu24-clang21-riscv64:
+  ubuntu24-clang23-riscv64:
     runs-on: ubuntu-24.04
     steps:
     - name: Checkout
@@ -85,8 +85,8 @@ jobs:
         vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
         ci/run.sh build-release -DCMAKE_PREFIX_PATH=/usr/local/share/vcpkg/installed/arm64-linux -DKFR_ARCH=target -DENABLE_EXAMPLES=OFF -DCMAKE_C_COMPILER=clang-19 -DCMAKE_CXX_COMPILER=clang++-19 -DCMAKE_BUILD_TYPE=Release
 
-  windows2022-clang21-x86:
-    runs-on: windows-2022
+  windows2025-clang23-x86:
+    runs-on: windows-2025-vs2026
     steps:
     - name: Checkout
       uses: actions/checkout@v7
@@ -98,19 +98,20 @@ jobs:
         VCPKG_HOST_TRIPLET: x86-windows-static-md
       shell: cmd
       run: |
-        choco install llvm --version 21.1.0 --no-progress -y
+        curl -L --fail --retry 3 -o "%TEMP%\LLVM-23.1.0-win64.msi" https://github.com/llvm/llvm-project/releases/download/llvmorg-23.1.0/LLVM-23.1.0-win64.msi
+        msiexec /i "%TEMP%\LLVM-23.1.0-win64.msi" /quiet /norestart
         choco install ninja --no-progress -y
         curl -o "%TMP_DIR%/sde.zip" -L %SDE_WINDOWS%
         "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "%TMP_DIR%/sde.zip"
-        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+        call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
         set CXXFLAGS=-m32
         set CFLAGS=-m32
         set PATH=C:\sde;%PATH%
         vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
         ci\run.cmd build-release -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x86-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_MULTIARCH=ON -DCMAKE_C_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
 
-  windows2022-clang21-x86_64:
-    runs-on: windows-2022
+  windows2025-clang23-x86_64:
+    runs-on: windows-2025-vs2026
     steps:
     - name: Checkout
       uses: actions/checkout@v7
@@ -122,48 +123,50 @@ jobs:
         VCPKG_HOST_TRIPLET: x64-windows-static-md
       shell: cmd
       run: |
-        choco install llvm --version 21.1.0 --no-progress -y
+        curl -L --fail --retry 3 -o "%TEMP%\LLVM-23.1.0-win64.msi" https://github.com/llvm/llvm-project/releases/download/llvmorg-23.1.0/LLVM-23.1.0-win64.msi
+        msiexec /i "%TEMP%\LLVM-23.1.0-win64.msi" /quiet /norestart
         choco install ninja --no-progress -y
         curl -o "%TMP_DIR%/sde.zip" -L %SDE_WINDOWS%
         "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "%TMP_DIR%/sde.zip"
-        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
         set PATH=C:\sde;%PATH%
         vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
         ci\run.cmd build-release -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x64-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_MULTIARCH=ON -DCMAKE_C_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
 
-  windows2022-clang21-arm64:
-    runs-on: windows-2022
+  windows2025-clang23-arm64:
+    runs-on: windows-2025-vs2026
     steps:
     - name: Checkout
       uses: actions/checkout@v7
     - name: Tests
       shell: cmd
       run: |
-        choco install llvm --version 21.1.0 --no-progress -y
+        curl -L --fail --retry 3 -o "%TEMP%\LLVM-23.1.0-win64.msi" https://github.com/llvm/llvm-project/releases/download/llvmorg-23.1.0/LLVM-23.1.0-win64.msi
+        msiexec /i "%TEMP%\LLVM-23.1.0-win64.msi" /quiet /norestart
         choco install ninja --no-progress -y
-        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsamd64_arm64.bat"
+        call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvarsamd64_arm64.bat"
         ci\run.cmd build-release -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_C_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_C_COMPILER_TARGET=arm64-pc-windows-msvc -DCMAKE_CXX_COMPILER_TARGET=arm64-pc-windows-msvc -DKFR_ARCH=target -DKFR_SKIP_TESTS=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
 
-  windows2022-msvc2022-x86:
-    runs-on: windows-2022
+  windows11-clang-arm64:
+    runs-on: windows-11-arm
     steps:
     - name: Checkout
       uses: actions/checkout@v7
     - name: Tests
       env:
-        SDE_WINDOWS: ${{ secrets.SDE_WINDOWS }}
-        TMP_DIR: ${{ runner.temp }}
+        VCPKG_DEFAULT_TRIPLET: arm64-windows-static-md
+        VCPKG_HOST_TRIPLET: arm64-windows-static-md
       shell: cmd
       run: |
+        curl -L --fail --retry 3 -o "%TEMP%\LLVM-23.1.0-woa64.msi" https://github.com/llvm/llvm-project/releases/download/llvmorg-23.1.0/LLVM-23.1.0-woa64.msi
+        msiexec /i "%TEMP%\LLVM-23.1.0-woa64.msi" /quiet /norestart
         choco install ninja --no-progress -y
-        curl -o "%TMP_DIR%/sde.zip" -L %SDE_WINDOWS%
-        "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "%TMP_DIR%/sde.zip"
-        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
-        set PATH=C:\sde;%PATH%
-        ci\run.cmd build-release -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_MULTIARCH=ON -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release
+        vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
+        call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
+        ci\run.cmd build-release -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/arm64-windows-static-md -DCMAKE_C_COMPILER_TARGET=arm64-pc-windows-msvc -DCMAKE_CXX_COMPILER_TARGET=arm64-pc-windows-msvc -DCMAKE_C_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DKFR_ARCH=neon -DCMAKE_BUILD_TYPE=Release -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
 
-  windows2022-msvc2022-x86_64:
-    runs-on: windows-2022
+  windows2025-msvc2026-x86:
+    runs-on: windows-2025-vs2026
     steps:
     - name: Checkout
       uses: actions/checkout@v7
@@ -176,7 +179,7 @@ jobs:
         choco install ninja --no-progress -y
         curl -o "%TMP_DIR%/sde.zip" -L %SDE_WINDOWS%
         "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "%TMP_DIR%/sde.zip"
-        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
         set PATH=C:\sde;%PATH%
         ci\run.cmd build-release -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_MULTIARCH=ON -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release
 
@@ -186,10 +189,28 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v7
     - name: Tests
+      env:
+        SDE_WINDOWS: ${{ secrets.SDE_WINDOWS }}
+        TMP_DIR: ${{ runner.temp }}
       shell: cmd
       run: |
         choco install ninja --no-progress -y
+        curl -o "%TMP_DIR%/sde.zip" -L %SDE_WINDOWS%
+        "C:\Program Files\7-Zip\7z.exe" x -oC:\sde "%TMP_DIR%/sde.zip"
         call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        set PATH=C:\sde;%PATH%
+        ci\run.cmd build-release -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_MULTIARCH=ON -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release
+
+  windows2022-msvc2022-x86_64:
+    runs-on: windows-2022
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+    - name: Tests
+      shell: cmd
+      run: |
+        choco install ninja --no-progress -y
+        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
         ci\run.cmd build-release -DCMAKE_BUILD_TYPE=Release
 
   windows2022-clang-android-arm:
