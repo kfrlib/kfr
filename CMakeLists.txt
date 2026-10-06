@@ -219,7 +219,7 @@ option(KFR_ENABLE_DSP "Enable DSP module" ON)
 
 option(KFR_ENABLE_ASMTEST "Enable writing disassembly" OFF)
 option(KFR_REGENERATE_TESTS "Regenerate auto tests" OFF)
-option(KFR_DISABLE_CLANG_EXTENSIONS "Disable Clang vector extensions" OFF)
+option(KFR_DISABLE_CLANG_EXTENSIONS "Disable compiler vector extensions" OFF)
 option(KFR_EXTENDED_TESTS "Extended tests (up to hour)" OFF)
 option(KFR_SKIP_TESTS "Build tests but don't run tests" OFF)
 option(KFR_ENABLE_CAPI_BUILD "Enable KFR C API building" OFF)

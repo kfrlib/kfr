@@ -85,6 +85,18 @@ jobs:
         vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
         ci/run.sh build-release -DCMAKE_PREFIX_PATH=/usr/local/share/vcpkg/installed/arm64-linux -DKFR_ARCH=target -DENABLE_EXAMPLES=OFF -DCMAKE_C_COMPILER=clang-19 -DCMAKE_CXX_COMPILER=clang++-19 -DCMAKE_BUILD_TYPE=Release
 
+  ubuntu24-gcc-arm64:
+    runs-on: ubuntu-24.04-arm
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+    - name: Tests
+      run: |
+        set -e
+        sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends build-essential cmake ninja-build
+        vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
+        ci/run.sh build-release -DCMAKE_PREFIX_PATH=/usr/local/share/vcpkg/installed/arm64-linux -DKFR_ARCH=target -DENABLE_EXAMPLES=OFF -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=Release
+
   windows2025-clang23-x86:
     runs-on: windows-2025-vs2026
     steps:

@@ -150,7 +150,7 @@ as described in [Installation](../getting-started/installation.md).
 | `KFR_ARCH` | `target` | Baseline CPU architecture. See [Select a CPU architecture](#select-a-cpu-architecture). |
 | `KFR_ENABLE_MULTIARCH` | `ON` on x86; forced `OFF` elsewhere | Build x86 architecture variants with runtime dispatch. |
 | `KFR_ARCHS` | platform-dependent | Semicolon-separated architecture list for a multiarchitecture x86 build. The non-Apple default is `sse2;sse41;avx;avx2;avx512`; the Apple default omits `sse2`. |
-| `KFR_DISABLE_CLANG_EXTENSIONS` | `OFF` | Disable KFR's automatic Clang vector-extension backend and use the generic SIMD backend instead. This is an advanced compatibility/code-generation switch. |
+| `KFR_DISABLE_CLANG_EXTENSIONS` | `OFF` | Disable KFR's automatic Clang vector-extension backend, including GCC on non-x86, and use the generic SIMD backend instead. This is an advanced compatibility/code-generation switch. |
 | `KFR_CLASSIC_FFT` | `OFF` | Select the classic, pre-7.1 FFT implementation. Enable only for compatibility, comparison, or regression investigation. |
 | `KFR_BASETYPE_F32` | `OFF` | Use `float` instead of `double` as KFR's default scalar type. See [`KFR_BASETYPE_F32`](#kfr_basetype_f32). |
 | `KFR_MANAGED_ALLOCATION` | `OFF` | Use KFR managed aligned allocation with refcounting and copy-free aligned reallocation. See [Allocation configuration](#allocation-configuration). |
@@ -292,9 +292,9 @@ linker errors. Rebuild KFR and all consumers after changing this option.
 #### `KFR_VEC_EXT`
 
 `KFR_VEC_EXT` selects KFR's vector-extension SIMD backend. KFR defines it
-automatically for Clang unless `KFR_DISABLE_CLANG_EXT` is defined. In a CMake
-build, use the supported switch below rather than defining `KFR_VEC_EXT`
-yourself:
+automatically for Clang and for GCC on non-x86 targets unless
+`KFR_DISABLE_CLANG_EXT` is defined. In a CMake build, use the supported switch
+below rather than defining `KFR_VEC_EXT` yourself:
 
 ```shell
 cmake -S . -B build -DKFR_DISABLE_CLANG_EXTENSIONS=ON
@@ -304,7 +304,8 @@ That option defines `KFR_DISABLE_CLANG_EXT` and forces KFR's generic SIMD
 backend. This may be useful when investigating compiler-specific code
 generation or a compiler compatibility problem, but it can change performance
 and should be tested on the actual target. Do not force `KFR_VEC_EXT` for a
-compiler that KFR does not automatically support.
+compiler that KFR does not automatically support. GCC and Clang are supported
+for ARM, AArch64, and RISC-V builds.
 
 #### `KFR_DISABLE_OPTIMIZED_SHUFFLE`
 

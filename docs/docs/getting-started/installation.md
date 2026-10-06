@@ -29,7 +29,9 @@ KFR is tested and supported on the following systems and architectures:
 
 Since KFR 7.1, KFR supports Clang, GCC, and MSVC. DFT can be slower with MSVC
 2022, while MSVC 2026 generally provides good performance. Use Clang or GCC
-when maximum performance is required.
+when maximum performance is required. GCC and Clang support the ARM, AArch64,
+and RISC-V targets listed above; non-x86 builds use a single explicitly
+selected architecture rather than runtime multiarchitecture dispatch.
 
 KFR itself and applications using it require C++20. Other operating systems,
 compilers, and CPUs may work but are not part of the regular test matrix.

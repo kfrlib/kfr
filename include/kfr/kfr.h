@@ -49,7 +49,8 @@
 
 #define KFR_NATIVE_INTRINSICS 1
 
-#if defined KFR_COMPILER_CLANG && !defined KFR_DISABLE_CLANG_EXT
+#if !defined KFR_DISABLE_CLANG_EXT &&                                                                            \
+    (defined KFR_COMPILER_CLANG || (defined KFR_COMPILER_GCC && !defined KFR_ARCH_X86))
 #define KFR_VEC_EXT
 #endif
 
@@ -109,8 +110,8 @@ constexpr inline const char version_full[] = KFR_VERSION_FULL;
     "ARM builds require NEON support. Add -march=native for native build or skip the check with KFR_FORCE_GENERIC_CPU=1"
 #endif
 
-#if !defined KFR_ARCH_X86 && !defined KFR_COMPILER_CLANG
-#error "Non-x86 builds require Clang compiler"
+#if !defined KFR_ARCH_X86 && !defined KFR_COMPILER_CLANG && !defined KFR_COMPILER_GCC
+#error "Non-x86 builds require Clang or GCC compiler"
 #endif
 
 #if defined KFR_ENABLE_EXPOSE && (defined __GNUC__ || defined __clang__)
