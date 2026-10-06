@@ -40,10 +40,29 @@ template <typename TT, size_t NN>
 using simd = unwrap_bit<TT> __attribute__((ext_vector_type(NN)));
 #else
 
+template <std::unsigned_integral T>
+constexpr inline T next_poweroftwo_gcc(T x) noexcept
+{
+    if (x <= 1)
+        return 1;
+
+    --x;
+    x |= x >> 1;
+    x |= x >> 2;
+    x |= x >> 4;
+    x |= x >> 8;
+    x |= x >> 16;
+
+    if constexpr (sizeof(T) > 4)
+        x |= x >> 32;
+
+    return x + 1;
+}
+
 template <typename TT, size_t NN>
 struct simd_
 {
-    typedef unwrap_bit<TT> __attribute__((vector_size(sizeof(TT) * next_poweroftwo(NN)))) type;
+    typedef unwrap_bit<TT> __attribute__((vector_size(sizeof(TT) * next_poweroftwo_gcc(NN)))) type;
 };
 
 template <typename TT, size_t NN>
