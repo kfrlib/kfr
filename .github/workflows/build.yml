@@ -12,14 +12,23 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Build
+    - name: Install OS prerequisites
       run: |
         set -e
         sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends ninja-build
         ci/llvm-linux.sh
+    - name: Build vcpkg dependencies
+      run: |
+        set -e
         vcpkg install --triplet=x64-linux libflac minimp3
+    - name: Configure KFR
+      run: |
+        set -e
         cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse2 -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse2 -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+    - name: Build KFR
+      run: |
+        set -e
         ninja -C build-release install
         ninja -C build-debug install
     - name: Quick test 1
@@ -43,14 +52,23 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Build
+    - name: Install OS prerequisites
       run: |
         set -e
         sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends ninja-build g++-arm-linux-gnueabihf
         ci/llvm-linux.sh
+    - name: Build vcpkg dependencies
+      run: |
+        set -e
         vcpkg install --triplet=arm-linux libflac minimp3
+    - name: Configure KFR
+      run: |
+        set -e
         cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/arm-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/arm-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
+    - name: Build KFR
+      run: |
+        set -e
         ninja -C build-release install
         ninja -C build-debug install
     - name: Quick test 1
@@ -74,14 +92,23 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Build
+    - name: Install OS prerequisites
       run: |
         set -e
         sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends ninja-build g++-aarch64-linux-gnu
         ci/llvm-linux.sh
+    - name: Build vcpkg dependencies
+      run: |
+        set -e
         vcpkg install --triplet=arm64-linux libflac minimp3
+    - name: Configure KFR
+      run: |
+        set -e
         cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/arm64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/arm64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
+    - name: Build KFR
+      run: |
+        set -e
         ninja -C build-release install
         ninja -C build-debug install
     - name: Quick test 1
@@ -105,14 +132,23 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Build
+    - name: Install OS prerequisites
       run: |
         set -e
         sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends ninja-build g++-riscv64-linux-gnu
         ci/llvm-linux.sh
+    - name: Build vcpkg dependencies
+      run: |
+        set -e
         vcpkg install --triplet=riscv64-linux libflac minimp3
+    - name: Configure KFR
+      run: |
+        set -e
         cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/riscv64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=rvv -DCMAKE_TOOLCHAIN_FILE=../cmake/riscv64.cmake
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/riscv64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=rvv -DCMAKE_TOOLCHAIN_FILE=../cmake/riscv64.cmake
+    - name: Build KFR
+      run: |
+        set -e
         ninja -C build-release install
         ninja -C build-debug install
     - name: Quick test 1
@@ -136,17 +172,28 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Build
+    - name: Install OS prerequisites
       shell: cmd
       run: |
         choco install llvm --version 21.1.0 --no-progress -y
         choco install ninja --no-progress -y
+    - name: Build vcpkg dependencies
+      shell: cmd
+      run: |
         vcpkg install --triplet=x86-windows-static-md libflac minimp3
+    - name: Configure KFR
+      shell: cmd
+      env:
+        CXXFLAGS: -m32
+        CFLAGS: -m32
+      run: |
         call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
-        set CXXFLAGS=-m32
-        set CFLAGS=-m32
         cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x86-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=sse2 -DCMAKE_C_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x86-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=sse2 -DCMAKE_C_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
+    - name: Build KFR
+      shell: cmd
+      run: |
+        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
         ninja -C build-release install
         ninja -C build-debug install
     - name: Quick test 1
@@ -172,15 +219,25 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Build
+    - name: Install OS prerequisites
       shell: cmd
       run: |
         choco install llvm --version 21.1.0 --no-progress -y
         choco install ninja --no-progress -y
+    - name: Build vcpkg dependencies
+      shell: cmd
+      run: |
         vcpkg install --triplet=x64-windows-static-md libflac minimp3
+    - name: Configure KFR
+      shell: cmd
+      run: |
         call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
         cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x64-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=sse2 -DCMAKE_C_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x64-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=sse2 -DCMAKE_C_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
+    - name: Build KFR
+      shell: cmd
+      run: |
+        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
         ninja -C build-release install
         ninja -C build-debug install
     - name: Quick test 1
@@ -206,15 +263,25 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Build
+    - name: Install OS prerequisites
       shell: cmd
       run: |
         choco install llvm --version 21.1.0 --no-progress -y
         choco install ninja --no-progress -y
+    - name: Build vcpkg dependencies
+      shell: cmd
+      run: |
         vcpkg install --triplet=arm64-windows-static-md libflac minimp3
+    - name: Configure KFR
+      shell: cmd
+      run: |
         call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
         cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/arm64-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=target -DCMAKE_C_COMPILER_TARGET=arm64-pc-windows-msvc -DCMAKE_CXX_COMPILER_TARGET=arm64-pc-windows-msvc -DCMAKE_C_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/arm64-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ARCH=target -DCMAKE_C_COMPILER_TARGET=arm64-pc-windows-msvc -DCMAKE_CXX_COMPILER_TARGET=arm64-pc-windows-msvc -DCMAKE_C_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
+    - name: Build KFR
+      shell: cmd
+      run: |
+        call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
         ninja -C build-release install
         ninja -C build-debug install
     - name: Quick test 1
@@ -242,13 +309,22 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Build
+    - name: Install OS prerequisites
       shell: cmd
       run: |
         choco install ninja --no-progress -y
+    - name: Build vcpkg dependencies
+      shell: cmd
+      run: |
         vcpkg install --triplet=arm-neon-android libflac minimp3
+    - name: Configure KFR
+      shell: cmd
+      run: |
         cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/arm-neon-android -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=armeabi-v7a -DANDROID_ARM_NEON=TRUE
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/arm-neon-android -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=armeabi-v7a -DANDROID_ARM_NEON=TRUE
+    - name: Build KFR
+      shell: cmd
+      run: |
         ninja -C build-release install
         ninja -C build-debug install
     - name: Quick test 1
@@ -272,13 +348,22 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Build
+    - name: Install OS prerequisites
       shell: cmd
       run: |
         choco install ninja --no-progress -y
+    - name: Build vcpkg dependencies
+      shell: cmd
+      run: |
         vcpkg install --triplet=arm64-android libflac minimp3
+    - name: Configure KFR
+      shell: cmd
+      run: |
         cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/arm64-android -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=arm64-v8a -DANDROID_ARM_NEON=TRUE
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/arm64-android -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=arm64-v8a -DANDROID_ARM_NEON=TRUE
+    - name: Build KFR
+      shell: cmd
+      run: |
         ninja -C build-release install
         ninja -C build-debug install
     - name: Quick test 1
@@ -302,13 +387,22 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Build
+    - name: Install OS prerequisites
       shell: cmd
       run: |
         choco install ninja --no-progress -y
+    - name: Build vcpkg dependencies
+      shell: cmd
+      run: |
         vcpkg install --triplet=x86-android libflac minimp3
+    - name: Configure KFR
+      shell: cmd
+      run: |
         cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x86-android -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=ssse3 -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x86-android -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=ssse3 -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86
+    - name: Build KFR
+      shell: cmd
+      run: |
         ninja -C build-release install
         ninja -C build-debug install
     - name: Quick test 1
@@ -332,13 +426,22 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Build
+    - name: Install OS prerequisites
       shell: cmd
       run: |
         choco install ninja --no-progress -y
+    - name: Build vcpkg dependencies
+      shell: cmd
+      run: |
         vcpkg install --triplet=x64-android libflac minimp3
+    - name: Configure KFR
+      shell: cmd
+      run: |
         cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x64-android -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse42 -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86_64
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x64-android -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse42 -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\lib\ninja\tools\ninja.exe -DCMAKE_TOOLCHAIN_FILE="%ANDROID_NDK%\build\cmake\android.toolchain.cmake" -DANDROID_ABI=x86_64
+    - name: Build KFR
+      shell: cmd
+      run: |
         ninja -C build-release install
         ninja -C build-debug install
     - name: Quick test 1
@@ -362,12 +465,22 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Build
+    - name: Install OS prerequisites
       run: |
+        set -e
         brew install ninja
+    - name: Build vcpkg dependencies
+      run: |
+        set -e
         vcpkg install --triplet=x64-osx libflac minimp3
+    - name: Configure KFR
+      run: |
+        set -e
         cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-osx -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse41
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-osx -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse41
+    - name: Build KFR
+      run: |
+        set -e
         ninja -C build-release install
         ninja -C build-debug install
     - name: Quick test 1
@@ -391,14 +504,24 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Build
+    - name: Install OS prerequisites
       run: |
+        set -e
         brew install ninja
+    - name: Build vcpkg dependencies
+      run: |
+        set -e
         vcpkg install --triplet=x64-osx libflac minimp3
         vcpkg install --triplet=arm64-osx libflac minimp3
         cmake -DDIR_ARM64=$VCPKG_INSTALLATION_ROOT/installed/arm64-osx -DDIR_X64=$VCPKG_INSTALLATION_ROOT/installed/x64-osx -DDIR_OUT=$VCPKG_INSTALLATION_ROOT/installed/uni-osx -DPREFER_X64="spdx.json$;vcpkg_abi_info.txt$" -P ${{ github.workspace }}/cmake/macos-merge-binaries.cmake
+    - name: Configure KFR
+      run: |
+        set -e
         cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/uni-osx -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse41
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/uni-osx -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=sse41
+    - name: Build KFR
+      run: |
+        set -e
         ninja -C build-release install
         ninja -C build-debug install
     - name: Quick test 1
@@ -424,12 +547,22 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Build
+    - name: Install OS prerequisites
       run: |
+        set -e
         brew install ninja
+    - name: Build vcpkg dependencies
+      run: |
+        set -e
         vcpkg install --triplet=arm64-osx libflac minimp3
+    - name: Configure KFR
+      run: |
+        set -e
         cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/arm64-osx -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target
         cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/arm64-osx -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target
+    - name: Build KFR
+      run: |
+        set -e
         ninja -C build-release install
         ninja -C build-debug install
     - name: Quick test 1
