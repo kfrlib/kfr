@@ -1800,6 +1800,7 @@ void test_function1(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
                     if (isapplicable(kfr::ctype<T>, value))
                     {
                         const T x(value);
+                        INFO(as_string("value = ", x, ", type = ", type));
 #if !defined(_MSC_VER) || defined(__clang__)
                         // Supress ICE in MSVC
                         using RefFnTy = decltype(std::declval<RefFn>()(std::declval<subtype<T>>()));
@@ -1817,7 +1818,9 @@ void test_function1(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
                 {
                     using T   = typename decltype(type)::type;
                     const T x = test_enumerate(T::shape(), csizeseq<T::size()>, 0);
-                    CHECK_THAT(fn(x), DeepMatcher(apply(reffn, x)));
+                    const auto actual   = fn(x);
+                    const auto expected = apply(reffn, x);
+                    CHECK_THAT(actual, DeepMatcher(expected));
                 });
 }
 
@@ -1827,25 +1830,26 @@ void test_function2(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
                     IsDefined&& = IsDefined{})
 {
 
-    test_matrix(
-        named("value1") = special_values(), //
-        named("value2") = special_values(), named("type") = test_catogories::types(cat),
-        [&](special_value value1, special_value value2, auto type)
-        {
-            using T = typename decltype(type)::type;
-            if constexpr (IsDefined{}(kfr::ctype<T>))
-            {
-                const T x1(value1);
-                const T x2(value2);
-                if (isapplicable(kfr::ctype<T>, value1, value2))
-                {
-                    CHECK(std::is_same_v<decltype(fn(x1, x2)),
-                                         typename compound_type_traits<T>::template rebind<decltype(reffn(
-                                             std::declval<subtype<T>>(), std::declval<subtype<T>>()))>>);
-                    CHECK_THAT(fn(x1, x2), DeepMatcher(apply(reffn, x1, x2)));
-                }
-            }
-        });
+    cforeach(special_values(), special_values(), test_catogories::types(cat),
+             [&](special_value value1, special_value value2, auto type)
+             {
+                 using T = typename decltype(type)::type;
+                 if constexpr (IsDefined{}(kfr::ctype<T>))
+                 {
+                     const T x1(value1);
+                     const T x2(value2);
+                     if (isapplicable(kfr::ctype<T>, value1, value2))
+                     {
+                         INFO(as_string("value1 = ", x1, ", value2 = ", x2, ", type = ", type));
+                         CHECK(std::is_same_v<decltype(fn(x1, x2)),
+                                              typename compound_type_traits<T>::template rebind<decltype(reffn(
+                                                  std::declval<subtype<T>>(), std::declval<subtype<T>>()))>>);
+                         const auto actual   = fn(x1, x2);
+                         const auto expected = apply(reffn, x1, x2);
+                         CHECK_THAT(actual, DeepMatcher(expected));
+                     }
+                 }
+             });
 
     test_matrix(named("type") = test_catogories::types(cint<Cat & ~1>),
                 [&](auto type)
@@ -1855,7 +1859,9 @@ void test_function2(cint_t<Cat> cat, Fn&& fn, RefFn&& reffn, IsApplicable&& isap
                     const T x2 = test_enumerate(T::shape(), csizeseq<T::size()>, 100, -1);
                     if constexpr (IsDefined{}(kfr::ctype<T>))
                     {
-                        CHECK_THAT(fn(x1, x2), DeepMatcher(apply(reffn, x1, x2)));
+                        const auto actual   = fn(x1, x2);
+                        const auto expected = apply(reffn, x1, x2);
+                        CHECK_THAT(actual, DeepMatcher(expected));
                     }
                 });
 }

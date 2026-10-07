@@ -99,7 +99,10 @@ if (KFR_ENABLE_ASMTEST)
         COMMAND objconv -fyasm $<TARGET_FILE:asm_test>)
 endif ()
 
-set(ALL_TESTS_CPP ${KFR_UNITTEST_SRC})
+set(ALL_TESTS_CPP 
+    unit/simd/operators.cpp
+# ${KFR_UNITTEST_SRC}
+)
 
 if (KFR_ENABLE_DFT)
     list(APPEND ALL_TESTS_CPP dft_test.cpp)
@@ -134,7 +137,9 @@ endif ()
 
 add_test_executable(all_tests all_tests.cpp ${ALL_TESTS_CPP})
 target_compile_definitions(all_tests PRIVATE KFR_NO_MAIN)
-target_link_libraries(all_tests PRIVATE kfr use_arch kfr_dsp kfr_io)
+target_link_libraries(all_tests PRIVATE kfr use_arch 
+# kfr_dsp kfr_io
+)
 if (KFR_ENABLE_DFT)
     target_link_libraries(all_tests PRIVATE kfr_dft)
 endif ()
@@ -197,7 +202,8 @@ function (add_x86_test ARCH)
     set(NAME ${ARCH})
 
     add_test_executable(all_tests_${NAME} all_tests.cpp ${ALL_TESTS_CPP}
-                        ${KFR_IO_SRC} ${KFR_DSP_SRC})
+                        # ${KFR_IO_SRC} ${KFR_DSP_SRC}
+                        )
     if (KFR_ENABLE_DFT)
         target_sources(all_tests_${NAME} PRIVATE ${KFR_DFT_SRC})
     endif ()

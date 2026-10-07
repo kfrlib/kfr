@@ -134,6 +134,8 @@ inline bool is_safe_division(T x, T y)
 
 TEST_CASE("div")
 {
+    CHECK(kfr::as_string(kfr::special_value(kfr::special_constant::min)) == "min");
+    
     test_function2(
         test_catogories::vectors, [](auto x, auto y)
         { return is_safe_division<subtype<decltype(x)>>(x.front(), y.front()) ? x / y : 0; },
