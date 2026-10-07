@@ -228,7 +228,7 @@ KFR_INTRINSIC vec<T, N> select(const vec<bit<T>, N>& a, const T& b, const vec<T,
 
 KFR_INTRINSIC f32neon select(const mf32neon& m, const f32neon& x, const f32neon& y)
 {
-    return vbslq_f32(m.v, x.v, y.v);
+    return vbslq_f32(vreinterpretq_u32_f32(m.v), x.v, y.v);
 }
 KFR_INTRINSIC i8neon select(const mi8neon& m, const i8neon& x, const i8neon& y)
 {
@@ -266,7 +266,7 @@ KFR_INTRINSIC u64neon select(const mu64neon& m, const u64neon& x, const u64neon&
 #ifdef KFR_ARCH_NEON64
 KFR_INTRINSIC f64neon select(const mf64neon& m, const f64neon& x, const f64neon& y)
 {
-    return vbslq_f64(m.v, x.v, y.v);
+    return vbslq_f64(vreinterpretq_u64_f64(m.v), x.v, y.v);
 }
 #else
 KFR_INTRINSIC f64neon select(const mf64neon& m, const f64neon& x, const f64neon& y)
