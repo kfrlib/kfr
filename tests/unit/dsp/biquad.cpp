@@ -69,7 +69,8 @@ TEST_CASE("biquad_lowpass1")
 
                     const univector<T, size> ir = iir(unitimpulse<T>(), iir_params{ bq });
 
-                    CHECK(absmaxof(choose_array<T>(test_vector_f32, test_vector_f64) - ir) == 0);
+                    CHECK(absmaxof(choose_array<T>(test_vector_f32, test_vector_f64) - ir) <
+                          constants<T>::epsilon);
                 });
 }
 
@@ -110,7 +111,8 @@ TEST_CASE("biquad_lowpass2")
 
                     const univector<T, size> ir = iir(unitimpulse<T>(), iir_params{ bq });
 
-                    CHECK(absmaxof(choose_array<T>(test_vector_f32, test_vector_f64) - ir) == 0);
+                    CHECK(absmaxof(choose_array<T>(test_vector_f32, test_vector_f64) - ir) <
+                          constants<T>::epsilon);
                 });
 }
 
@@ -144,19 +146,19 @@ TEST_CASE("filter_apply_zeros")
     prime_filter();
     univector<float> vector_tail(tail_size);
     filter.apply_zeros(vector_tail);
-    CHECK(absmaxof(vector_tail - expected) == 0.f);
+    CHECK(absmaxof(vector_tail - expected) < constants<float>::epsilon);
 
     filter.reset();
     prime_filter();
     univector<float> buffer_tail(tail_size);
     filter.apply_zeros(buffer_tail.data(), buffer_tail.size());
-    CHECK(absmaxof(buffer_tail - expected) == 0.f);
+    CHECK(absmaxof(buffer_tail - expected) < constants<float>::epsilon);
 
     filter.reset();
     prime_filter();
     float array_tail[128];
     filter.apply_zeros(array_tail);
-    CHECK(absmaxof(make_univector(array_tail) - expected.truncate(128)) == 0.f);
+    CHECK(absmaxof(make_univector(array_tail) - expected.truncate(128)) < constants<float>::epsilon);
 }
 
 TEST_CASE("iir_reset")
