@@ -114,13 +114,13 @@ struct simd_halves
 } // namespace KFR_ARCH_NAME
 
 #define KFR_COMPONENTWISE_RET(code)                                                                          \
-    vec<T, N> result;                                                                                        \
+    vec<T, N> result(czeros);                                                                                \
     for (size_t i = 0; i < N; i++)                                                                           \
         code;                                                                                                \
     return result;
 
 #define KFR_COMPONENTWISE_RET_I(Tvec, code)                                                                  \
-    Tvec result;                                                                                             \
+    Tvec result(czeros);                                                                                     \
     for (size_t i = 0; i < result.size(); i++)                                                               \
         code;                                                                                                \
     return result;
