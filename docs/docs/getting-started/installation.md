@@ -72,6 +72,11 @@ matches both the target operating system and architecture. A package built for
 one platform, ABI, compiler runtime, or CPU architecture cannot be reused for
 another.
 
+For x86 prebuilt packages, the AVX-512 runtime-dispatch variant is included only
+in 64-bit builds. Due to the 32-bit architectural limit of eight ZMM registers,
+AVX-512 has limited practical value there, so 32-bit x86 builds include
+runtime-dispatch variants only through AVX2.
+
 ## Download a GitHub Releases package
 
 1. Open [GitHub Releases](https://github.com/kfrlib/kfr/releases) and download
