@@ -47,11 +47,23 @@ constexpr inline static bool fft_reorder_aligned = false;
 
 constexpr inline static size_t bitrev_table_log2N = ilog2(std::size(data::bitrev_table));
 
+#ifdef KFR_ARCH_NEON
+KFR_INTRINSIC u32 neon_rbit(u32 x)
+{
+#if defined(__aarch64__)
+    asm("rbit %w0, %w0" : "+r"(x));
+#else
+    asm("rbit %0, %0" : "+r"(x));
+#endif
+    return x;
+}
+#endif
+
 template <size_t Bits>
 inline u32 bitrev_using_table(u32 x)
 {
 #ifdef KFR_ARCH_NEON
-    return __builtin_bitreverse32(x) >> (32 - Bits);
+    return neon_rbit(x) >> (32 - Bits);
 #else
     if constexpr (Bits > bitrev_table_log2N)
         return bitreverse<Bits>(x);
@@ -64,7 +76,7 @@ template <bool use_table>
 inline u32 bitrev_using_table(u32 x, size_t bits, cbool_t<use_table>)
 {
 #ifdef KFR_ARCH_NEON
-    return __builtin_bitreverse32(x) >> (32 - bits);
+    return neon_rbit(x) >> (32 - bits);
 #else
     if constexpr (use_table)
     {
@@ -84,7 +96,7 @@ inline u32 bitrev_using_table(u32 x, size_t bits, cbool_t<use_table>)
 inline u32 dig4rev_using_table(u32 x, size_t bits)
 {
 #ifdef KFR_ARCH_NEON
-    x = __builtin_bitreverse32(x);
+    x = neon_rbit(x);
     x = (((x & 0xaaaaaaaa) >> 1) | ((x & 0x55555555) << 1));
     x = x >> (32 - bits);
     return x;

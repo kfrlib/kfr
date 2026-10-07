@@ -25,7 +25,9 @@
 #include "simd.hpp"
 
 KFR_PRAGMA_GNU(GCC diagnostic push)
+#if KFR_HAS_WARNING("-Wc99-extensions")
 KFR_PRAGMA_GNU(GCC diagnostic ignored "-Wc99-extensions")
+#endif
 
 namespace kfr
 {
