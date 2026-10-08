@@ -936,7 +936,8 @@ struct expression_linspace
     T invsize;
 
     expression_linspace(T start, T stop, size_t size, bool endpoint = false)
-        : start(start), stop(stop), size(size), invsize(T(1.0) / T(endpoint ? size - 1 : size))
+        : start(start), stop(stop), size(size),
+          invsize(endpoint ? (size > 1 ? T(1.0) / T(size - 1) : T(0)) : T(1.0) / T(size))
     {
     }
 

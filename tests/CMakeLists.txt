@@ -36,7 +36,7 @@ if (KFR_ENABLE_DFT)
 endif ()
 
 if (MSVC)
-    add_link_options(/DEBUG)
+    add_link_options(/DEBUG /INCREMENTAL:NO /OPT:REF /OPT:ICF)
 else ()
     add_compile_options(-g1)
 endif ()

@@ -403,11 +403,7 @@
 #elif defined(KFR_MSVC_ATTRIBUTES)
 
 #ifndef KFR_NO_FORCE_INLINE
-#if _MSC_VER >= 1927 && _MSVC_LANG >= 202002L
-#define KFR_ALWAYS_INLINE [[msvc::forceinline]]
-#else
 #define KFR_ALWAYS_INLINE __forceinline
-#endif
 #else
 #define KFR_ALWAYS_INLINE
 #endif
