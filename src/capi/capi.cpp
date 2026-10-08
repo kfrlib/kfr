@@ -420,6 +420,137 @@ static void one_shot_filtfilt(const biquad_section<T>* sos, size_t sos_count, T*
     filtfilt(arr, iir_params{ sos, sos_count });
 }
 
+static bool check_samplerate_handle(const void* converter)
+{
+    if (converter != nullptr)
+        return true;
+    set_error("kfr_samplerate_converter: converter must not be NULL");
+    return false;
+}
+
+static bool check_samplerate_quality(int quality)
+{
+    switch (quality)
+    {
+    case KFR_SRC_DRAFT:
+    case KFR_SRC_LOW:
+    case KFR_SRC_NORMAL:
+    case KFR_SRC_HIGH:
+    case KFR_SRC_PERFECT:
+        return true;
+    default:
+        set_error("kfr_samplerate_converter: unknown quality preset");
+        return false;
+    }
+}
+
+static bool check_samplerate_factors(int64_t interpolation_factor, int64_t decimation_factor)
+{
+    if (interpolation_factor > 0 && decimation_factor > 0)
+        return true;
+    set_error("kfr_samplerate_converter: interpolation and decimation factors must be greater than zero");
+    return false;
+}
+
+static bool check_samplerate_taps(int taps)
+{
+    if (taps > 0)
+        return true;
+    set_error("kfr_samplerate_converter: taps must be greater than zero");
+    return false;
+}
+
+template <typename T>
+static samplerate_converter<T>* samplerate_create(KFR_SRC_QUALITY quality, int64_t interpolation_factor,
+                                                  int64_t decimation_factor, T scale, T cutoff)
+{
+    if (!check_samplerate_quality(quality) ||
+        !check_samplerate_factors(interpolation_factor, decimation_factor))
+        return nullptr;
+    return try_fn(
+        [&]()
+        {
+            return new samplerate_converter<T>(static_cast<sample_rate_conversion_quality>(quality),
+                                               interpolation_factor, decimation_factor, scale, cutoff);
+        },
+        nullptr);
+}
+
+template <typename T>
+static samplerate_converter<T>* samplerate_create_explicit(int taps, int64_t interpolation_factor,
+                                                           int64_t decimation_factor, T scale, T cutoff,
+                                                           T sidelobe_attenuation, T transition_width)
+{
+    if (!check_samplerate_taps(taps) || !check_samplerate_factors(interpolation_factor, decimation_factor))
+        return nullptr;
+    return try_fn(
+        [&]()
+        {
+            return new samplerate_converter<T>(taps, interpolation_factor, decimation_factor, scale, cutoff,
+                                               sidelobe_attenuation, transition_width);
+        },
+        nullptr);
+}
+
+template <typename T>
+static bool check_samplerate_input(const samplerate_converter<T>* converter, size_t output_size,
+                                   const T* input, size_t input_size)
+{
+    if (!check_samplerate_handle(converter))
+        return false;
+    const i64 required = converter->input_size_for_output(static_cast<i64>(output_size));
+    if (static_cast<i64>(input_size) < required)
+    {
+        set_error("kfr_samplerate_converter: input_size is smaller than required for output_size");
+        return false;
+    }
+    if (input == nullptr && required > 0)
+    {
+        set_error("kfr_samplerate_converter: input must not be NULL");
+        return false;
+    }
+    return true;
+}
+
+template <typename T>
+static size_t samplerate_process(samplerate_converter<T>* converter, T* output, size_t output_size,
+                                 const T* input, size_t input_size)
+{
+    if (output == nullptr && output_size > 0)
+    {
+        set_error("kfr_samplerate_converter: output must not be NULL");
+        return 0;
+    }
+    if (!check_samplerate_input(converter, output_size, input, input_size))
+        return 0;
+    return try_fn(
+        [&]()
+        {
+            auto out = make_univector(output, output_size);
+            return converter->process(out, make_univector(input, input_size));
+        },
+        size_t(0));
+}
+
+template <typename T>
+static size_t samplerate_skip(samplerate_converter<T>* converter, size_t output_size, const T* input,
+                              size_t input_size)
+{
+    if (!check_samplerate_input(converter, output_size, input, input_size))
+        return 0;
+    return try_fn([&]() { return converter->skip(output_size, make_univector(input, input_size)); },
+                  size_t(0));
+}
+
+template <typename T, typename R, typename Fn>
+static R samplerate_query(const void* converter, R fallback, Fn&& fn)
+{
+    if (!check_samplerate_handle(converter))
+        return fallback;
+    return try_fn([&]() { return fn(*reinterpret_cast<const samplerate_converter<T>*>(converter)); },
+                  fallback);
+}
+
 extern "C"
 {
 KFR_API_SPEC const char* kfr_version_string()
@@ -1130,6 +1261,204 @@ KFR_API_SPEC void kfr_filtfilt_f64(const kfr_f64* sos, size_t sos_count, kfr_f64
     try_fn(
         [&]()
         { one_shot_filtfilt(reinterpret_cast<const biquad_section<double>*>(sos), sos_count, data, size); });
+}
+
+KFR_API_SPEC size_t kfr_src_filter_order(KFR_SRC_QUALITY quality)
+{
+    if (!check_samplerate_quality(quality))
+        return 0;
+    reset_error();
+    return samplerate_converter<double>::filter_order(static_cast<sample_rate_conversion_quality>(quality));
+}
+KFR_API_SPEC kfr_f64 kfr_src_sidelobe_attenuation(KFR_SRC_QUALITY quality)
+{
+    if (!check_samplerate_quality(quality))
+        return 0;
+    reset_error();
+    return samplerate_converter<double>::sidelobe_attenuation(
+        static_cast<sample_rate_conversion_quality>(quality));
+}
+KFR_API_SPEC kfr_f64 kfr_src_transition_width(KFR_SRC_QUALITY quality)
+{
+    if (!check_samplerate_quality(quality))
+        return 0;
+    reset_error();
+    return samplerate_converter<double>::transition_width(
+        static_cast<sample_rate_conversion_quality>(quality));
+}
+KFR_API_SPEC kfr_f64 kfr_src_window_param_from_quality(KFR_SRC_QUALITY quality)
+{
+    if (!check_samplerate_quality(quality))
+        return 0;
+    reset_error();
+    return samplerate_converter<double>::window_param(static_cast<sample_rate_conversion_quality>(quality));
+}
+KFR_API_SPEC kfr_f64 kfr_src_window_param_from_attenuation(kfr_f64 attenuation)
+{
+    reset_error();
+    return samplerate_converter<double>::window_param(static_cast<fbase>(attenuation));
+}
+
+KFR_API_SPEC KFR_SRC_F32* kfr_src_create_f32(KFR_SRC_QUALITY quality, int64_t interpolation_factor,
+                                             int64_t decimation_factor, kfr_f32 scale, kfr_f32 cutoff)
+{
+    return reinterpret_cast<KFR_SRC_F32*>(
+        samplerate_create<float>(quality, interpolation_factor, decimation_factor, scale, cutoff));
+}
+KFR_API_SPEC KFR_SRC_F64* kfr_src_create_f64(KFR_SRC_QUALITY quality, int64_t interpolation_factor,
+                                             int64_t decimation_factor, kfr_f64 scale, kfr_f64 cutoff)
+{
+    return reinterpret_cast<KFR_SRC_F64*>(
+        samplerate_create<double>(quality, interpolation_factor, decimation_factor, scale, cutoff));
+}
+KFR_API_SPEC KFR_SRC_F32* kfr_src_create_explicit_f32(int taps, int64_t interpolation_factor,
+                                                      int64_t decimation_factor, kfr_f32 scale,
+                                                      kfr_f32 cutoff, kfr_f32 sidelobe_attenuation,
+                                                      kfr_f32 transition_width)
+{
+    return reinterpret_cast<KFR_SRC_F32*>(
+        samplerate_create_explicit<float>(taps, interpolation_factor, decimation_factor, scale, cutoff,
+                                          sidelobe_attenuation, transition_width));
+}
+KFR_API_SPEC KFR_SRC_F64* kfr_src_create_explicit_f64(int taps, int64_t interpolation_factor,
+                                                      int64_t decimation_factor, kfr_f64 scale,
+                                                      kfr_f64 cutoff, kfr_f64 sidelobe_attenuation,
+                                                      kfr_f64 transition_width)
+{
+    return reinterpret_cast<KFR_SRC_F64*>(
+        samplerate_create_explicit<double>(taps, interpolation_factor, decimation_factor, scale, cutoff,
+                                           sidelobe_attenuation, transition_width));
+}
+
+KFR_API_SPEC void kfr_src_delete_f32(KFR_SRC_F32* converter)
+{
+    try_fn([&]() { delete reinterpret_cast<samplerate_converter<float>*>(converter); });
+}
+KFR_API_SPEC void kfr_src_delete_f64(KFR_SRC_F64* converter)
+{
+    try_fn([&]() { delete reinterpret_cast<samplerate_converter<double>*>(converter); });
+}
+
+KFR_API_SPEC void kfr_src_reset_f32(KFR_SRC_F32* converter)
+{
+    if (!check_samplerate_handle(converter))
+        return;
+    try_fn([&]() { reinterpret_cast<samplerate_converter<float>*>(converter)->reset(); });
+}
+KFR_API_SPEC void kfr_src_reset_f64(KFR_SRC_F64* converter)
+{
+    if (!check_samplerate_handle(converter))
+        return;
+    try_fn([&]() { reinterpret_cast<samplerate_converter<double>*>(converter)->reset(); });
+}
+
+KFR_API_SPEC size_t kfr_src_process_f32(KFR_SRC_F32* converter, kfr_f32* output, size_t output_size,
+                                        const kfr_f32* input, size_t input_size)
+{
+    return samplerate_process(reinterpret_cast<samplerate_converter<float>*>(converter), output, output_size,
+                              input, input_size);
+}
+KFR_API_SPEC size_t kfr_src_process_f64(KFR_SRC_F64* converter, kfr_f64* output, size_t output_size,
+                                        const kfr_f64* input, size_t input_size)
+{
+    return samplerate_process(reinterpret_cast<samplerate_converter<double>*>(converter), output, output_size,
+                              input, input_size);
+}
+
+KFR_API_SPEC size_t kfr_src_skip_f32(KFR_SRC_F32* converter, size_t output_size, const kfr_f32* input,
+                                     size_t input_size)
+{
+    return samplerate_skip(reinterpret_cast<samplerate_converter<float>*>(converter), output_size, input,
+                           input_size);
+}
+KFR_API_SPEC size_t kfr_src_skip_f64(KFR_SRC_F64* converter, size_t output_size, const kfr_f64* input,
+                                     size_t input_size)
+{
+    return samplerate_skip(reinterpret_cast<samplerate_converter<double>*>(converter), output_size, input,
+                           input_size);
+}
+
+KFR_API_SPEC int64_t kfr_src_input_position_to_intermediate_f32(const KFR_SRC_F32* converter,
+                                                                int64_t position)
+{
+    return samplerate_query<float>(converter, int64_t(0),
+                                   [&](const auto& c) { return c.input_position_to_intermediate(position); });
+}
+KFR_API_SPEC int64_t kfr_src_input_position_to_intermediate_f64(const KFR_SRC_F64* converter,
+                                                                int64_t position)
+{
+    return samplerate_query<double>(converter, int64_t(0), [&](const auto& c)
+                                    { return c.input_position_to_intermediate(position); });
+}
+KFR_API_SPEC int64_t kfr_src_output_position_to_intermediate_f32(const KFR_SRC_F32* converter,
+                                                                 int64_t position)
+{
+    return samplerate_query<float>(converter, int64_t(0), [&](const auto& c)
+                                   { return c.output_position_to_intermediate(position); });
+}
+KFR_API_SPEC int64_t kfr_src_output_position_to_intermediate_f64(const KFR_SRC_F64* converter,
+                                                                 int64_t position)
+{
+    return samplerate_query<double>(converter, int64_t(0), [&](const auto& c)
+                                    { return c.output_position_to_intermediate(position); });
+}
+KFR_API_SPEC int64_t kfr_src_input_position_to_output_f32(const KFR_SRC_F32* converter, int64_t position)
+{
+    return samplerate_query<float>(converter, int64_t(0),
+                                   [&](const auto& c) { return c.input_position_to_output(position); });
+}
+KFR_API_SPEC int64_t kfr_src_input_position_to_output_f64(const KFR_SRC_F64* converter, int64_t position)
+{
+    return samplerate_query<double>(converter, int64_t(0),
+                                    [&](const auto& c) { return c.input_position_to_output(position); });
+}
+KFR_API_SPEC int64_t kfr_src_output_position_to_input_f32(const KFR_SRC_F32* converter, int64_t position)
+{
+    return samplerate_query<float>(converter, int64_t(0),
+                                   [&](const auto& c) { return c.output_position_to_input(position); });
+}
+KFR_API_SPEC int64_t kfr_src_output_position_to_input_f64(const KFR_SRC_F64* converter, int64_t position)
+{
+    return samplerate_query<double>(converter, int64_t(0),
+                                    [&](const auto& c) { return c.output_position_to_input(position); });
+}
+KFR_API_SPEC int64_t kfr_src_output_size_for_input_f32(const KFR_SRC_F32* converter, int64_t input_size)
+{
+    return samplerate_query<float>(converter, int64_t(0),
+                                   [&](const auto& c) { return c.output_size_for_input(input_size); });
+}
+KFR_API_SPEC int64_t kfr_src_output_size_for_input_f64(const KFR_SRC_F64* converter, int64_t input_size)
+{
+    return samplerate_query<double>(converter, int64_t(0),
+                                    [&](const auto& c) { return c.output_size_for_input(input_size); });
+}
+KFR_API_SPEC int64_t kfr_src_input_size_for_output_f32(const KFR_SRC_F32* converter, int64_t output_size)
+{
+    return samplerate_query<float>(converter, int64_t(0),
+                                   [&](const auto& c) { return c.input_size_for_output(output_size); });
+}
+KFR_API_SPEC int64_t kfr_src_input_size_for_output_f64(const KFR_SRC_F64* converter, int64_t output_size)
+{
+    return samplerate_query<double>(converter, int64_t(0),
+                                    [&](const auto& c) { return c.input_size_for_output(output_size); });
+}
+KFR_API_SPEC kfr_f64 kfr_src_get_fractional_delay_f32(const KFR_SRC_F32* converter)
+{
+    return samplerate_query<float>(converter, kfr_f64(0),
+                                   [&](const auto& c) { return c.get_fractional_delay(); });
+}
+KFR_API_SPEC kfr_f64 kfr_src_get_fractional_delay_f64(const KFR_SRC_F64* converter)
+{
+    return samplerate_query<double>(converter, kfr_f64(0),
+                                    [&](const auto& c) { return c.get_fractional_delay(); });
+}
+KFR_API_SPEC size_t kfr_src_get_delay_f32(const KFR_SRC_F32* converter)
+{
+    return samplerate_query<float>(converter, size_t(0), [&](const auto& c) { return c.get_delay(); });
+}
+KFR_API_SPEC size_t kfr_src_get_delay_f64(const KFR_SRC_F64* converter)
+{
+    return samplerate_query<double>(converter, size_t(0), [&](const auto& c) { return c.get_delay(); });
 }
 }
 

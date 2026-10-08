@@ -29,6 +29,7 @@ boundary.
 | IIR design | [[`::kfr_iir_design_f32`:nosig]]: Butterworth, Bessel, Chebyshev I and II, and elliptic prototypes as second-order sections |
 | FIR design | [[`::kfr_fir_design_f32`:nosig]]: linear-phase low-pass, high-pass, band-pass, and band-stop taps by the window method |
 | Filters | Stateful real FIR, FFT convolution, and IIR (biquad cascade) filters; one-shot [[`::kfr_convolve_f32`:nosig]] and zero-phase [[`::kfr_filtfilt_f32`:nosig]] |
+| Sample rate conversion | [[`::kfr_src_create_f32`:nosig]] and [[`::kfr_src_create_explicit_f32`:nosig]]: stateful real-valued rational resampling with streaming, skip, and position helpers |
 
 Every documented entry point has C linkage and a `kfr_` name. Other symbols
 visible in a binary are C++ implementation details and are not part of this ABI.
@@ -229,6 +230,16 @@ either input is empty. [[`::kfr_filtfilt_f32`:nosig]] applies zero-phase
 forward-backward filtering in place to `data`, using `sos_count` second-order
 sections in the same six-scalar layout as the IIR plan. Neither function takes a
 plan handle, so each call is independent of the others.
+
+## Sample rate conversion
+
+[[`::kfr_src_create_f32`:nosig]] and [[`::kfr_src_create_f64`:nosig]] build a converter that resamples a real signal by `interpolation_factor / decimation_factor`. The `quality` argument (`KFR_SRC_QUALITY`) selects the filter order and Kaiser window. `scale` sets the output gain, and `cutoff` sets the low-pass cutoff as a fraction of the Nyquist frequency. [[`::kfr_src_create_explicit_f32`:nosig]] and its `_f64` counterpart take the tap count and stopband attenuation directly. Their `transition_width` argument is accepted for parity with the C++ constructor but is currently unused, so the filter length is determined by `taps` alone.
+
+Only real-valued signals are supported. A converter is stateful: [[`::kfr_src_process_f32`:nosig]] reads input and writes output in blocks, and consecutive calls produce the same samples as one call over the concatenated input. The input buffer must hold at least [[`::kfr_src_input_size_for_output_f32`:nosig]] samples for the requested output size. If it does not, the call returns 0 and sets [[`::kfr_last_error`:nosig]]. [[`::kfr_src_output_size_for_input_f32`:nosig]] gives the reverse count. Both counts depend on the current position, so query them before each call.
+
+[[`::kfr_src_skip_f32`:nosig]] advances the converter over output that is not needed, consuming the matching input without writing it. This is useful for discarding startup transients. [[`::kfr_src_reset_f32`:nosig]] restores the initial state without releasing the handle.
+
+The position helpers convert between input, output, and intermediate (interpolated) positions. Negative positions round toward negative infinity. [[`::kfr_src_get_fractional_delay_f32`:nosig]] and [[`::kfr_src_get_delay_f32`:nosig]] report the filter's group delay as a fraction and as whole samples.
 
 ## Design helpers
 

@@ -207,6 +207,9 @@ KFR_OPAQUE_STRUCT(KFR_FILTER_F64)
 KFR_OPAQUE_STRUCT(KFR_FILTER_C32)
 KFR_OPAQUE_STRUCT(KFR_FILTER_C64)
 
+KFR_OPAQUE_STRUCT(KFR_SRC_F32)
+KFR_OPAQUE_STRUCT(KFR_SRC_F64)
+
 /** Default alignment, in bytes, applied by `kfr_allocate`. */
 #define KFR_DEFAULT_ALIGNMENT 64
 
@@ -1426,6 +1429,346 @@ KFR_API_SPEC void kfr_filtfilt_f32(const kfr_f32* sos, size_t sos_count, kfr_f32
  * @param size Number of samples in `data`.
  */
 KFR_API_SPEC void kfr_filtfilt_f64(const kfr_f64* sos, size_t sos_count, kfr_f64* data, size_t size);
+
+/**
+ * @brief Quality preset for sample rate conversion. The filter order is 2^(value + 1).
+ */
+typedef enum KFR_SRC_QUALITY
+{
+    KFR_SRC_DRAFT   = 4, /**< Draft quality (lowest, fastest). */
+    KFR_SRC_LOW     = 6, /**< Low quality. */
+    KFR_SRC_NORMAL  = 8, /**< Normal quality (balanced). */
+    KFR_SRC_HIGH    = 10, /**< High quality. */
+    KFR_SRC_PERFECT = 12 /**< Perfect quality (highest, slowest). */
+} KFR_SRC_QUALITY;
+
+/**
+ * @brief Returns the filter order for a quality preset.
+ *
+ * @param quality Quality preset.
+ * @return Filter order, or 0 on error. See kfr_last_error().
+ */
+KFR_API_SPEC size_t kfr_src_filter_order(KFR_SRC_QUALITY quality);
+
+/**
+ * @brief Returns the stopband attenuation in dB for a quality preset.
+ *
+ * @param quality Quality preset.
+ * @return Sidelobe attenuation in dB, or 0 on error. See kfr_last_error().
+ */
+KFR_API_SPEC kfr_f64 kfr_src_sidelobe_attenuation(KFR_SRC_QUALITY quality);
+
+/**
+ * @brief Returns the transition width in radians for a quality preset.
+ *
+ * @param quality Quality preset.
+ * @return Transition width, or 0 on error. See kfr_last_error().
+ */
+KFR_API_SPEC kfr_f64 kfr_src_transition_width(KFR_SRC_QUALITY quality);
+
+/**
+ * @brief Returns the Kaiser window parameter for a quality preset.
+ *
+ * @param quality Quality preset.
+ * @return Kaiser window parameter (beta), or 0 on error. See kfr_last_error().
+ */
+KFR_API_SPEC kfr_f64 kfr_src_window_param_from_quality(KFR_SRC_QUALITY quality);
+
+/**
+ * @brief Returns the Kaiser window parameter for a stopband attenuation.
+ *
+ * @param attenuation Stopband attenuation in dB.
+ * @return Kaiser window parameter (beta).
+ */
+KFR_API_SPEC kfr_f64 kfr_src_window_param_from_attenuation(kfr_f64 attenuation);
+
+/**
+ * @brief Creates a single-precision sample rate converter from a quality preset.
+ *
+ * @param quality Quality preset.
+ * @param interpolation_factor Interpolation factor. Must be greater than zero.
+ * @param decimation_factor Decimation factor. Must be greater than zero.
+ * @param scale Output scale factor.
+ * @param cutoff Cutoff frequency as a fraction of the Nyquist frequency.
+ * @return New converter, or NULL on error. Release it with kfr_src_delete_f32().
+ */
+KFR_API_SPEC KFR_SRC_F32* kfr_src_create_f32(KFR_SRC_QUALITY quality, int64_t interpolation_factor,
+                                             int64_t decimation_factor, kfr_f32 scale, kfr_f32 cutoff);
+
+/**
+ * @brief Creates a double-precision sample rate converter from a quality preset.
+ *
+ * @param quality Quality preset.
+ * @param interpolation_factor Interpolation factor. Must be greater than zero.
+ * @param decimation_factor Decimation factor. Must be greater than zero.
+ * @param scale Output scale factor.
+ * @param cutoff Cutoff frequency as a fraction of the Nyquist frequency.
+ * @return New converter, or NULL on error. Release it with kfr_src_delete_f64().
+ */
+KFR_API_SPEC KFR_SRC_F64* kfr_src_create_f64(KFR_SRC_QUALITY quality, int64_t interpolation_factor,
+                                             int64_t decimation_factor, kfr_f64 scale, kfr_f64 cutoff);
+
+/**
+ * @brief Creates a single-precision sample rate converter from explicit filter parameters.
+ *
+ * @param taps Number of filter taps. Must be greater than zero.
+ * @param interpolation_factor Interpolation factor. Must be greater than zero.
+ * @param decimation_factor Decimation factor. Must be greater than zero.
+ * @param scale Output scale factor.
+ * @param cutoff Cutoff frequency as a fraction of the Nyquist frequency.
+ * @param sidelobe_attenuation Stopband attenuation in dB used to derive the Kaiser window.
+ * @param transition_width Accepted for parity with the C++ constructor. Currently unused.
+ * @return New converter, or NULL on error. Release it with kfr_src_delete_f32().
+ */
+KFR_API_SPEC KFR_SRC_F32* kfr_src_create_explicit_f32(int taps, int64_t interpolation_factor,
+                                                      int64_t decimation_factor, kfr_f32 scale,
+                                                      kfr_f32 cutoff, kfr_f32 sidelobe_attenuation,
+                                                      kfr_f32 transition_width);
+
+/**
+ * @brief Creates a double-precision sample rate converter from explicit filter parameters.
+ *
+ * @param taps Number of filter taps. Must be greater than zero.
+ * @param interpolation_factor Interpolation factor. Must be greater than zero.
+ * @param decimation_factor Decimation factor. Must be greater than zero.
+ * @param scale Output scale factor.
+ * @param cutoff Cutoff frequency as a fraction of the Nyquist frequency.
+ * @param sidelobe_attenuation Stopband attenuation in dB used to derive the Kaiser window.
+ * @param transition_width Accepted for parity with the C++ constructor. Currently unused.
+ * @return New converter, or NULL on error. Release it with kfr_src_delete_f64().
+ */
+KFR_API_SPEC KFR_SRC_F64* kfr_src_create_explicit_f64(int taps, int64_t interpolation_factor,
+                                                      int64_t decimation_factor, kfr_f64 scale,
+                                                      kfr_f64 cutoff, kfr_f64 sidelobe_attenuation,
+                                                      kfr_f64 transition_width);
+
+/**
+ * @brief Releases a single-precision sample rate converter.
+ *
+ * @param converter Converter created by kfr_src_create_f32() or
+ * kfr_src_create_explicit_f32().
+ */
+KFR_API_SPEC void kfr_src_delete_f32(KFR_SRC_F32* converter);
+
+/**
+ * @brief Releases a double-precision sample rate converter.
+ *
+ * @param converter Converter created by kfr_src_create_f64() or
+ * kfr_src_create_explicit_f64().
+ */
+KFR_API_SPEC void kfr_src_delete_f64(KFR_SRC_F64* converter);
+
+/**
+ * @brief Resets the input and output positions and the delay line. Filter coefficients are kept.
+ *
+ * @param converter Single-precision converter.
+ */
+KFR_API_SPEC void kfr_src_reset_f32(KFR_SRC_F32* converter);
+
+/**
+ * @brief Resets the input and output positions and the delay line. Filter coefficients are kept.
+ *
+ * @param converter Double-precision converter.
+ */
+KFR_API_SPEC void kfr_src_reset_f64(KFR_SRC_F64* converter);
+
+/**
+ * @brief Resamples input into output and advances the converter state.
+ *
+ * @param converter Single-precision converter.
+ * @param output Destination buffer for output_size samples.
+ * @param output_size Number of output samples to produce.
+ * @param input Source samples. Must hold at least kfr_src_input_size_for_output_f32(output_size) samples.
+ * @param input_size Number of input samples available.
+ * @return Number of input samples consumed, or 0 on error. See kfr_last_error().
+ */
+KFR_API_SPEC size_t kfr_src_process_f32(KFR_SRC_F32* converter, kfr_f32* output, size_t output_size,
+                                        const kfr_f32* input, size_t input_size);
+
+/**
+ * @brief Resamples input into output and advances the converter state.
+ *
+ * @param converter Double-precision converter.
+ * @param output Destination buffer for output_size samples.
+ * @param output_size Number of output samples to produce.
+ * @param input Source samples. Must hold at least kfr_src_input_size_for_output_f64(output_size) samples.
+ * @param input_size Number of input samples available.
+ * @return Number of input samples consumed, or 0 on error. See kfr_last_error().
+ */
+KFR_API_SPEC size_t kfr_src_process_f64(KFR_SRC_F64* converter, kfr_f64* output, size_t output_size,
+                                        const kfr_f64* input, size_t input_size);
+
+/**
+ * @brief Advances the converter by output_size output samples without producing output.
+ *
+ * Use this to discard the leading samples of a stream.
+ *
+ * @param converter Single-precision converter.
+ * @param output_size Number of output samples to skip.
+ * @param input Source samples. Must hold at least kfr_src_input_size_for_output_f32(output_size) samples.
+ * @param input_size Number of input samples available.
+ * @return Number of input samples consumed, or 0 on error. See kfr_last_error().
+ */
+KFR_API_SPEC size_t kfr_src_skip_f32(KFR_SRC_F32* converter, size_t output_size, const kfr_f32* input,
+                                     size_t input_size);
+
+/**
+ * @brief Advances the converter by output_size output samples without producing output.
+ *
+ * Use this to discard the leading samples of a stream.
+ *
+ * @param converter Double-precision converter.
+ * @param output_size Number of output samples to skip.
+ * @param input Source samples. Must hold at least kfr_src_input_size_for_output_f64(output_size) samples.
+ * @param input_size Number of input samples available.
+ * @return Number of input samples consumed, or 0 on error. See kfr_last_error().
+ */
+KFR_API_SPEC size_t kfr_src_skip_f64(KFR_SRC_F64* converter, size_t output_size, const kfr_f64* input,
+                                     size_t input_size);
+
+/**
+ * @brief Converts an input position to the intermediate (interpolated) rate.
+ *
+ * @param converter Single-precision converter.
+ * @param position Input position.
+ * @return Intermediate position.
+ */
+KFR_API_SPEC int64_t kfr_src_input_position_to_intermediate_f32(const KFR_SRC_F32* converter,
+                                                                int64_t position);
+
+/**
+ * @brief Converts an input position to the intermediate (interpolated) rate.
+ *
+ * @param converter Double-precision converter.
+ * @param position Input position.
+ * @return Intermediate position.
+ */
+KFR_API_SPEC int64_t kfr_src_input_position_to_intermediate_f64(const KFR_SRC_F64* converter,
+                                                                int64_t position);
+
+/**
+ * @brief Converts an output position to the intermediate (interpolated) rate.
+ *
+ * @param converter Single-precision converter.
+ * @param position Output position.
+ * @return Intermediate position.
+ */
+KFR_API_SPEC int64_t kfr_src_output_position_to_intermediate_f32(const KFR_SRC_F32* converter,
+                                                                 int64_t position);
+
+/**
+ * @brief Converts an output position to the intermediate (interpolated) rate.
+ *
+ * @param converter Double-precision converter.
+ * @param position Output position.
+ * @return Intermediate position.
+ */
+KFR_API_SPEC int64_t kfr_src_output_position_to_intermediate_f64(const KFR_SRC_F64* converter,
+                                                                 int64_t position);
+
+/**
+ * @brief Converts an input position to the output position that consumes it (floor division).
+ *
+ * @param converter Single-precision converter.
+ * @param position Input position.
+ * @return Output position.
+ */
+KFR_API_SPEC int64_t kfr_src_input_position_to_output_f32(const KFR_SRC_F32* converter, int64_t position);
+
+/**
+ * @brief Converts an input position to the output position that consumes it (floor division).
+ *
+ * @param converter Double-precision converter.
+ * @param position Input position.
+ * @return Output position.
+ */
+KFR_API_SPEC int64_t kfr_src_input_position_to_output_f64(const KFR_SRC_F64* converter, int64_t position);
+
+/**
+ * @brief Converts an output position to the input position needed to produce it (floor division).
+ *
+ * @param converter Single-precision converter.
+ * @param position Output position.
+ * @return Input position.
+ */
+KFR_API_SPEC int64_t kfr_src_output_position_to_input_f32(const KFR_SRC_F32* converter, int64_t position);
+
+/**
+ * @brief Converts an output position to the input position needed to produce it (floor division).
+ *
+ * @param converter Double-precision converter.
+ * @param position Output position.
+ * @return Input position.
+ */
+KFR_API_SPEC int64_t kfr_src_output_position_to_input_f64(const KFR_SRC_F64* converter, int64_t position);
+
+/**
+ * @brief Returns the number of output samples produced for a number of input samples.
+ *
+ * @param converter Single-precision converter.
+ * @param input_size Number of input samples.
+ * @return Number of output samples.
+ */
+KFR_API_SPEC int64_t kfr_src_output_size_for_input_f32(const KFR_SRC_F32* converter, int64_t input_size);
+
+/**
+ * @brief Returns the number of output samples produced for a number of input samples.
+ *
+ * @param converter Double-precision converter.
+ * @param input_size Number of input samples.
+ * @return Number of output samples.
+ */
+KFR_API_SPEC int64_t kfr_src_output_size_for_input_f64(const KFR_SRC_F64* converter, int64_t input_size);
+
+/**
+ * @brief Returns the number of input samples required to produce a number of output samples.
+ *
+ * @param converter Single-precision converter.
+ * @param output_size Number of output samples.
+ * @return Number of input samples.
+ */
+KFR_API_SPEC int64_t kfr_src_input_size_for_output_f32(const KFR_SRC_F32* converter, int64_t output_size);
+
+/**
+ * @brief Returns the number of input samples required to produce a number of output samples.
+ *
+ * @param converter Double-precision converter.
+ * @param output_size Number of output samples.
+ * @return Number of input samples.
+ */
+KFR_API_SPEC int64_t kfr_src_input_size_for_output_f64(const KFR_SRC_F64* converter, int64_t output_size);
+
+/**
+ * @brief Returns the fractional group delay in output samples.
+ *
+ * @param converter Single-precision converter.
+ * @return Group delay in output samples.
+ */
+KFR_API_SPEC kfr_f64 kfr_src_get_fractional_delay_f32(const KFR_SRC_F32* converter);
+
+/**
+ * @brief Returns the fractional group delay in output samples.
+ *
+ * @param converter Double-precision converter.
+ * @return Group delay in output samples.
+ */
+KFR_API_SPEC kfr_f64 kfr_src_get_fractional_delay_f64(const KFR_SRC_F64* converter);
+
+/**
+ * @brief Returns the integer delay in output samples (leading output samples to discard).
+ *
+ * @param converter Single-precision converter.
+ * @return Delay in output samples.
+ */
+KFR_API_SPEC size_t kfr_src_get_delay_f32(const KFR_SRC_F32* converter);
+
+/**
+ * @brief Returns the integer delay in output samples (leading output samples to discard).
+ *
+ * @param converter Double-precision converter.
+ * @return Delay in output samples.
+ */
+KFR_API_SPEC size_t kfr_src_get_delay_f64(const KFR_SRC_F64* converter);
 
 #ifdef __cplusplus
 }

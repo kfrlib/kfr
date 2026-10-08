@@ -283,24 +283,26 @@ void test_iir_f64()
 #define REF_TOL_F64 1e-9
 
 // Reference values from scipy.signal at fs = 48000 Hz. IIR sections use KFR order (a0, a1, a2, b0, b1, b2).
-static const double ref_butter2_lp_sos[6] = { 1.0,
-                                              -1.815341082704568,
-                                              0.8310055893467575,
-                                              0.0039161266605473692,
-                                              0.0078322533210947384,
-                                              0.0039161266605473692 };
-static const double ref_butter2_lp_gain_1k    = 0.70710678118654702;
-static const double ref_cheby1_4_lp_gain[3]   = { 0.96476846740354505, 0.89125093813374912,
+static const double ref_butter2_lp_sos[6]   = { 1.0,
+                                                -1.815341082704568,
+                                                0.8310055893467575,
+                                                0.0039161266605473692,
+                                                0.0078322533210947384,
+                                                0.0039161266605473692 };
+static const double ref_butter2_lp_gain_1k  = 0.70710678118654702;
+static const double ref_cheby1_4_lp_gain[3] = { 0.96476846740354505, 0.89125093813374912,
                                                 0.0027846751465542539 };
-static const double ref_fir_lp11[11]          = { 0.01374731529858713,  0.029613366989267531, 0.071629337393071646,
-                                                  0.12459353610695942,  0.16804038774446348,  0.18475211293530147,
-                                                  0.16804038774446348,  0.12459353610695942,  0.071629337393071646,
-                                                  0.029613366989267531, 0.01374731529858713 };
-static const double ref_hann_sym9[9]          = { 0.0, 0.14644660940672627, 0.5, 0.85355339059327373, 1.0,
-                                                  0.85355339059327373, 0.5, 0.14644660940672627, 0.0 };
-static const double ref_hamming_per8[8]       = { 0.080000000000000071, 0.21473088065418822, 0.54000000000000004,
-                                                  0.86526911934581197, 1.0, 0.86526911934581197,
-                                                  0.54000000000000004, 0.21473088065418822 };
+static const double ref_fir_lp11[11]    = { 0.01374731529858713,  0.029613366989267531, 0.071629337393071646,
+                                            0.12459353610695942,  0.16804038774446348,  0.18475211293530147,
+                                            0.16804038774446348,  0.12459353610695942,  0.071629337393071646,
+                                            0.029613366989267531, 0.01374731529858713 };
+static const double ref_hann_sym9[9]    = { 0.0, 0.14644660940672627, 0.5, 0.85355339059327373,
+                                            1.0, 0.85355339059327373, 0.5, 0.14644660940672627,
+                                            0.0 };
+static const double ref_hamming_per8[8] = {
+    0.080000000000000071, 0.21473088065418822, 0.54000000000000004, 0.86526911934581197, 1.0,
+    0.86526911934581197,  0.54000000000000004, 0.21473088065418822
+};
 
 static void check_near(const char* what, size_t index, double got, double expected, double tol)
 {
@@ -344,8 +346,8 @@ void test_reference_iir_f32()
     kfr_f32 sos32[6 * 4];
     double sos[6 * 4];
 
-    size_t n = kfr_iir_design_f32(KFR_IIR_BUTTERWORTH, KFR_IIR_LOWPASS, 2, 1.f, 1.f, 1000.f, 0.f, 48000.f,
-                                  sos32, 4);
+    size_t n =
+        kfr_iir_design_f32(KFR_IIR_BUTTERWORTH, KFR_IIR_LOWPASS, 2, 1.f, 1.f, 1000.f, 0.f, 48000.f, sos32, 4);
     CHECK(n == 1, "IIR butterworth: expected 1 section, got %zu (%s)", n, kfr_last_error());
     if (n == 1)
     {
@@ -372,7 +374,8 @@ void test_reference_iir_f64()
     printf("[TEST] IIR design vs scipy f64\n");
     kfr_f64 sos[6 * 4];
 
-    size_t n = kfr_iir_design_f64(KFR_IIR_BUTTERWORTH, KFR_IIR_LOWPASS, 2, 1.0, 1.0, 1000.0, 0.0, 48000.0, sos, 4);
+    size_t n =
+        kfr_iir_design_f64(KFR_IIR_BUTTERWORTH, KFR_IIR_LOWPASS, 2, 1.0, 1.0, 1000.0, 0.0, 48000.0, sos, 4);
     CHECK(n == 1, "IIR butterworth: expected 1 section, got %zu (%s)", n, kfr_last_error());
     if (n == 1)
     {
@@ -396,7 +399,8 @@ void test_reference_fir_f32()
 {
     printf("[TEST] FIR design vs scipy f32\n");
     kfr_f32 taps[11];
-    kfr_bool ok = kfr_fir_design_f32(KFR_FIR_LOWPASS, KFR_WINDOW_HAMMING, 0.54f, 1000.f, 0.f, 48000.f, 1, taps, 11);
+    kfr_bool ok =
+        kfr_fir_design_f32(KFR_FIR_LOWPASS, KFR_WINDOW_HAMMING, 0.54f, 1000.f, 0.f, 48000.f, 1, taps, 11);
     CHECK(ok, "FIR lowpass f32: design failed (%s)", kfr_last_error());
     if (ok)
         for (size_t i = 0; i < 11; i++)
@@ -407,7 +411,8 @@ void test_reference_fir_f64()
 {
     printf("[TEST] FIR design vs scipy f64\n");
     kfr_f64 taps[11];
-    kfr_bool ok = kfr_fir_design_f64(KFR_FIR_LOWPASS, KFR_WINDOW_HAMMING, 0.54, 1000.0, 0.0, 48000.0, 1, taps, 11);
+    kfr_bool ok =
+        kfr_fir_design_f64(KFR_FIR_LOWPASS, KFR_WINDOW_HAMMING, 0.54, 1000.0, 0.0, 48000.0, 1, taps, 11);
     CHECK(ok, "FIR lowpass f64: design failed (%s)", kfr_last_error());
     if (ok)
         for (size_t i = 0; i < 11; i++)
@@ -440,6 +445,260 @@ void test_reference_window_f64()
         check_near("hamming periodic f64", i, hamming[i], ref_hamming_per8[i], REF_TOL_F64);
 }
 
+#define SRC_INPUT_SIZE ((size_t)2048)
+#define SRC_OUTPUT_SIZE ((size_t)1024)
+
+static void fill_samplerate_input_f32(kfr_f32* data, size_t size)
+{
+    for (size_t i = 0; i < size; i++)
+        data[i] = (kfr_f32)((i * 37) % 101) / 101.0f;
+}
+
+static void fill_samplerate_input_f64(kfr_f64* data, size_t size)
+{
+    for (size_t i = 0; i < size; i++)
+        data[i] = (kfr_f64)((i * 37) % 101) / 101.0;
+}
+
+static void test_samplerate_quality_queries()
+{
+    printf("[TEST] Sample rate conversion quality queries\n");
+    CHECK(kfr_src_filter_order(KFR_SRC_DRAFT) == 32, "SRC filter_order(draft): got %zu",
+          kfr_src_filter_order(KFR_SRC_DRAFT));
+    CHECK(kfr_src_filter_order(KFR_SRC_NORMAL) == 512, "SRC filter_order(normal): got %zu",
+          kfr_src_filter_order(KFR_SRC_NORMAL));
+    CHECK(kfr_src_filter_order(KFR_SRC_PERFECT) == 8192, "SRC filter_order(perfect): got %zu",
+          kfr_src_filter_order(KFR_SRC_PERFECT));
+
+    // Static attenuation and window values are computed in fbase, which may be float.
+    check_near("SRC sidelobe_attenuation(draft)", 0, kfr_src_sidelobe_attenuation(KFR_SRC_DRAFT), 20.0,
+               REF_TOL_F32);
+    check_near("SRC sidelobe_attenuation(normal)", 0, kfr_src_sidelobe_attenuation(KFR_SRC_NORMAL), 100.0,
+               REF_TOL_F32);
+    check_near("SRC transition_width(normal)", 0, kfr_src_transition_width(KFR_SRC_NORMAL),
+               (100.0 - 8.0) / 511.0 / 2.285, REF_TOL_F32);
+    check_near("SRC window_param(normal)", 0, kfr_src_window_param_from_quality(KFR_SRC_NORMAL),
+               0.1102 * (100.0 - 8.7), REF_TOL_F32);
+    check_near("SRC window_param(att 100)", 0, kfr_src_window_param_from_attenuation(100.0),
+               0.1102 * (100.0 - 8.7), REF_TOL_F32);
+    check_near("SRC window_param(att 30)", 0, kfr_src_window_param_from_attenuation(30.0),
+               0.5842 * pow(9.0, 0.4) + 0.07886 * 9.0, REF_TOL_F32);
+    check_near("SRC window_param(att 10)", 0, kfr_src_window_param_from_attenuation(10.0), 0.0, REF_TOL_F32);
+}
+
+static void check_samplerate_positions_f32(const KFR_SRC_F32* conv)
+{
+    CHECK(kfr_src_input_position_to_intermediate_f32(conv, 3) == 3,
+          "SRC f32 input_position_to_intermediate(3): got %lld",
+          (long long)kfr_src_input_position_to_intermediate_f32(conv, 3));
+    CHECK(kfr_src_output_position_to_intermediate_f32(conv, 3) == 6,
+          "SRC f32 output_position_to_intermediate(3): got %lld",
+          (long long)kfr_src_output_position_to_intermediate_f32(conv, 3));
+    CHECK(kfr_src_input_position_to_output_f32(conv, 3) == 1, "SRC f32 input_position_to_output(3): got %lld",
+          (long long)kfr_src_input_position_to_output_f32(conv, 3));
+    CHECK(kfr_src_output_position_to_input_f32(conv, 3) == 6, "SRC f32 output_position_to_input(3): got %lld",
+          (long long)kfr_src_output_position_to_input_f32(conv, 3));
+    CHECK(kfr_src_output_size_for_input_f32(conv, 4) == 2, "SRC f32 output_size_for_input(4): got %lld",
+          (long long)kfr_src_output_size_for_input_f32(conv, 4));
+    CHECK(kfr_src_input_size_for_output_f32(conv, 2) == 4, "SRC f32 input_size_for_output(2): got %lld",
+          (long long)kfr_src_input_size_for_output_f32(conv, 2));
+}
+
+static void check_samplerate_positions_f64(const KFR_SRC_F64* conv)
+{
+    CHECK(kfr_src_input_position_to_intermediate_f64(conv, 3) == 3,
+          "SRC f64 input_position_to_intermediate(3): got %lld",
+          (long long)kfr_src_input_position_to_intermediate_f64(conv, 3));
+    CHECK(kfr_src_output_position_to_intermediate_f64(conv, 3) == 6,
+          "SRC f64 output_position_to_intermediate(3): got %lld",
+          (long long)kfr_src_output_position_to_intermediate_f64(conv, 3));
+    CHECK(kfr_src_input_position_to_output_f64(conv, 3) == 1, "SRC f64 input_position_to_output(3): got %lld",
+          (long long)kfr_src_input_position_to_output_f64(conv, 3));
+    CHECK(kfr_src_output_position_to_input_f64(conv, 3) == 6, "SRC f64 output_position_to_input(3): got %lld",
+          (long long)kfr_src_output_position_to_input_f64(conv, 3));
+    CHECK(kfr_src_output_size_for_input_f64(conv, 4) == 2, "SRC f64 output_size_for_input(4): got %lld",
+          (long long)kfr_src_output_size_for_input_f64(conv, 4));
+    CHECK(kfr_src_input_size_for_output_f64(conv, 2) == 4, "SRC f64 input_size_for_output(2): got %lld",
+          (long long)kfr_src_input_size_for_output_f64(conv, 2));
+}
+
+static void test_samplerate_f32()
+{
+    printf("[TEST] Sample rate conversion f32\n");
+    kfr_f32 input[SRC_INPUT_SIZE];
+    kfr_f32 whole[SRC_OUTPUT_SIZE];
+    kfr_f32 parts[SRC_OUTPUT_SIZE];
+    fill_samplerate_input_f32(input, SRC_INPUT_SIZE);
+
+    KFR_SRC_F32* conv = kfr_src_create_f32(KFR_SRC_NORMAL, 1, 2, 1.0f, 0.5f);
+    CHECK(conv != NULL, "SRC f32: create failed: %s", kfr_last_error());
+    if (conv == NULL)
+        return;
+
+    check_near("SRC f32 fractional delay", 0, kfr_src_get_fractional_delay_f32(conv), 127.75, REF_TOL_F32);
+    CHECK(kfr_src_get_delay_f32(conv) == 127, "SRC f32 delay: got %zu", kfr_src_get_delay_f32(conv));
+    check_samplerate_positions_f32(conv);
+
+    size_t consumed = kfr_src_process_f32(conv, whole, SRC_OUTPUT_SIZE, input, SRC_INPUT_SIZE);
+    CHECK(consumed == SRC_INPUT_SIZE, "SRC f32 process: consumed %zu inputs, expected 2048: %s", consumed,
+          kfr_last_error());
+
+    // Streaming in two blocks after reset must match the single call.
+    kfr_src_reset_f32(conv);
+    size_t first  = kfr_src_process_f32(conv, parts, 512, input, 1024);
+    size_t second = kfr_src_process_f32(conv, parts + 512, 512, input + 1024, 1024);
+    CHECK(first == 1024 && second == 1024, "SRC f32 streaming: consumed %zu and %zu inputs, expected 1024",
+          first, second);
+    for (size_t i = 0; i < SRC_OUTPUT_SIZE; i++)
+        check_near("SRC f32 streaming after reset", i, parts[i], whole[i], REF_TOL_F32);
+
+    // Skipping 512 outputs must leave the converter in the same state as streaming past them.
+    KFR_SRC_F32* skipper = kfr_src_create_f32(KFR_SRC_NORMAL, 1, 2, 1.0f, 0.5f);
+    CHECK(skipper != NULL, "SRC f32 skip: create failed: %s", kfr_last_error());
+    if (skipper != NULL)
+    {
+        size_t skipped = kfr_src_skip_f32(skipper, 512, input, 1024);
+        CHECK(skipped == 1024, "SRC f32 skip: consumed %zu inputs, expected 1024", skipped);
+        size_t after = kfr_src_process_f32(skipper, parts, 512, input + 1024, 1024);
+        CHECK(after == 1024, "SRC f32 process after skip: consumed %zu inputs, expected 1024", after);
+        for (size_t i = 0; i < 512; i++)
+            check_near("SRC f32 skip then process", i, parts[i], whole[512 + i], REF_TOL_F32);
+        kfr_src_delete_f32(skipper);
+    }
+
+    kfr_src_delete_f32(conv);
+}
+
+static void test_samplerate_f64()
+{
+    printf("[TEST] Sample rate conversion f64\n");
+    kfr_f64 input[SRC_INPUT_SIZE];
+    kfr_f64 whole[SRC_OUTPUT_SIZE];
+    kfr_f64 parts[SRC_OUTPUT_SIZE];
+    fill_samplerate_input_f64(input, SRC_INPUT_SIZE);
+
+    KFR_SRC_F64* conv = kfr_src_create_f64(KFR_SRC_NORMAL, 1, 2, 1.0, 0.5);
+    CHECK(conv != NULL, "SRC f64: create failed: %s", kfr_last_error());
+    if (conv == NULL)
+        return;
+
+    check_near("SRC f64 fractional delay", 0, kfr_src_get_fractional_delay_f64(conv), 127.75, REF_TOL_F64);
+    CHECK(kfr_src_get_delay_f64(conv) == 127, "SRC f64 delay: got %zu", kfr_src_get_delay_f64(conv));
+    check_samplerate_positions_f64(conv);
+
+    size_t consumed = kfr_src_process_f64(conv, whole, SRC_OUTPUT_SIZE, input, SRC_INPUT_SIZE);
+    CHECK(consumed == SRC_INPUT_SIZE, "SRC f64 process: consumed %zu inputs, expected 2048: %s", consumed,
+          kfr_last_error());
+
+    // Streaming in two blocks after reset must match the single call.
+    kfr_src_reset_f64(conv);
+    size_t first  = kfr_src_process_f64(conv, parts, 512, input, 1024);
+    size_t second = kfr_src_process_f64(conv, parts + 512, 512, input + 1024, 1024);
+    CHECK(first == 1024 && second == 1024, "SRC f64 streaming: consumed %zu and %zu inputs, expected 1024",
+          first, second);
+    for (size_t i = 0; i < SRC_OUTPUT_SIZE; i++)
+        check_near("SRC f64 streaming after reset", i, parts[i], whole[i], REF_TOL_F64);
+
+    // Skipping 512 outputs must leave the converter in the same state as streaming past them.
+    KFR_SRC_F64* skipper = kfr_src_create_f64(KFR_SRC_NORMAL, 1, 2, 1.0, 0.5);
+    CHECK(skipper != NULL, "SRC f64 skip: create failed: %s", kfr_last_error());
+    if (skipper != NULL)
+    {
+        size_t skipped = kfr_src_skip_f64(skipper, 512, input, 1024);
+        CHECK(skipped == 1024, "SRC f64 skip: consumed %zu inputs, expected 1024", skipped);
+        size_t after = kfr_src_process_f64(skipper, parts, 512, input + 1024, 1024);
+        CHECK(after == 1024, "SRC f64 process after skip: consumed %zu inputs, expected 1024", after);
+        for (size_t i = 0; i < 512; i++)
+            check_near("SRC f64 skip then process", i, parts[i], whole[512 + i], REF_TOL_F64);
+        kfr_src_delete_f64(skipper);
+    }
+
+    kfr_src_delete_f64(conv);
+}
+
+static void test_samplerate_explicit_f32()
+{
+    printf("[TEST] Sample rate conversion explicit parameters f32\n");
+    kfr_f32 ones[256];
+    kfr_f32 out[192];
+    for (size_t i = 0; i < 256; i++)
+        ones[i] = 1.0f;
+
+    KFR_SRC_F32* conv = kfr_src_create_explicit_f32(64, 1, 1, 1.0f, 0.5f, 60.0f, 0.1f);
+    CHECK(conv != NULL, "SRC explicit f32: create failed: %s", kfr_last_error());
+    if (conv == NULL)
+        return;
+
+    CHECK(kfr_src_get_delay_f32(conv) == 31, "SRC explicit f32 delay: got %zu", kfr_src_get_delay_f32(conv));
+    size_t consumed = kfr_src_process_f32(conv, out, 192, ones, 192);
+    CHECK(consumed == 192, "SRC explicit f32: consumed %zu inputs, expected 192", consumed);
+    // Coefficients are normalized to unit DC gain, so a constant input settles to the same constant.
+    for (size_t i = 64; i < 192; i++)
+        check_near("SRC explicit f32 DC gain", i, out[i], 1.0, REF_TOL_F32);
+
+    kfr_src_delete_f32(conv);
+}
+
+static void test_samplerate_explicit_f64()
+{
+    printf("[TEST] Sample rate conversion explicit parameters f64\n");
+    kfr_f64 ones[256];
+    kfr_f64 out[192];
+    for (size_t i = 0; i < 256; i++)
+        ones[i] = 1.0;
+
+    KFR_SRC_F64* conv = kfr_src_create_explicit_f64(64, 1, 1, 1.0, 0.5, 60.0, 0.1);
+    CHECK(conv != NULL, "SRC explicit f64: create failed: %s", kfr_last_error());
+    if (conv == NULL)
+        return;
+
+    CHECK(kfr_src_get_delay_f64(conv) == 31, "SRC explicit f64 delay: got %zu", kfr_src_get_delay_f64(conv));
+    size_t consumed = kfr_src_process_f64(conv, out, 192, ones, 192);
+    CHECK(consumed == 192, "SRC explicit f64: consumed %zu inputs, expected 192", consumed);
+    for (size_t i = 64; i < 192; i++)
+        check_near("SRC explicit f64 DC gain", i, out[i], 1.0, REF_TOL_F64);
+
+    kfr_src_delete_f64(conv);
+}
+
+static void test_samplerate_errors()
+{
+    printf("[TEST] Sample rate conversion error handling\n");
+
+    KFR_SRC_F32* conv = kfr_src_create_f32((KFR_SRC_QUALITY)5, 1, 1, 1.0f, 0.5f);
+    CHECK(conv == NULL, "SRC: unknown quality accepted: %p", (void*)conv);
+    CHECK(kfr_last_error()[0] != '\0', "SRC: no error set for unknown quality: %s", kfr_last_error());
+    CHECK(kfr_src_filter_order((KFR_SRC_QUALITY)5) == 0, "SRC filter_order: unknown quality returned %zu",
+          kfr_src_filter_order((KFR_SRC_QUALITY)5));
+
+    conv = kfr_src_create_f32(KFR_SRC_NORMAL, 0, 1, 1.0f, 0.5f);
+    CHECK(conv == NULL, "SRC: zero interpolation factor accepted: %p", (void*)conv);
+
+    KFR_SRC_F64* conv64 = kfr_src_create_f64(KFR_SRC_NORMAL, 1, 0, 1.0, 0.5);
+    CHECK(conv64 == NULL, "SRC: zero decimation factor accepted: %p", (void*)conv64);
+
+    conv = kfr_src_create_explicit_f32(0, 1, 1, 1.0f, 0.5f, 60.0f, 0.1f);
+    CHECK(conv == NULL, "SRC: zero taps accepted: %p", (void*)conv);
+    CHECK(kfr_last_error()[0] != '\0', "SRC: no error set for zero taps: %s", kfr_last_error());
+
+    CHECK(kfr_src_get_delay_f32(NULL) == 0, "SRC: NULL converter returned a delay");
+    CHECK(kfr_last_error()[0] != '\0', "SRC: no error set for NULL converter: %s", kfr_last_error());
+
+    conv = kfr_src_create_f32(KFR_SRC_NORMAL, 1, 2, 1.0f, 0.5f);
+    CHECK(conv != NULL, "SRC: valid create failed: %s", kfr_last_error());
+    CHECK(kfr_last_error()[0] == '\0', "SRC: error not cleared after successful create: %s",
+          kfr_last_error());
+    if (conv != NULL)
+    {
+        kfr_f32 short_input[10] = { 0 };
+        kfr_f32 output[16];
+        size_t consumed = kfr_src_process_f32(conv, output, 16, short_input, 10);
+        CHECK(consumed == 0, "SRC: short input accepted, consumed %zu inputs", consumed);
+        CHECK(kfr_last_error()[0] != '\0', "SRC: no error set for short input: %s", kfr_last_error());
+        kfr_src_delete_f32(conv);
+    }
+}
+
 int main()
 {
     CHECK(KFR_HEADERS_VERSION <= kfr_version(), "Dynamic library is too old. At least %d required",
@@ -460,6 +719,12 @@ int main()
     test_reference_fir_f64();
     test_reference_window_f32();
     test_reference_window_f64();
+    test_samplerate_quality_queries();
+    test_samplerate_f32();
+    test_samplerate_explicit_f32();
+    test_samplerate_f64();
+    test_samplerate_explicit_f64();
+    test_samplerate_errors();
 
     if (failures == 0)
         printf("[PASSED]\n");
