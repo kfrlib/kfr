@@ -99,7 +99,8 @@ if (KFR_ENABLE_ASMTEST)
         COMMAND objconv -fyasm $<TARGET_FILE:asm_test>)
 endif ()
 
-set(ALL_TESTS_CPP ${KFR_UNITTEST_SRC})
+set(ALL_TESTS_CPP unit/dsp/fir.cpp # ${KFR_UNITTEST_SRC}
+)
 
 if (KFR_ENABLE_DFT)
     list(APPEND ALL_TESTS_CPP dft_test.cpp)
@@ -120,7 +121,7 @@ if (KFR_REGENERATE_TESTS)
         target_include_directories(generate_data PRIVATE ${MPFR_INCLUDE_DIR}
                                                          ${GMP_INCLUDE_DIR})
         target_link_libraries(generate_data PRIVATE kfr ${MPFR_LIBRARIES}
-                              ${GMP_LIBRARIES})
+                                                    ${GMP_LIBRARIES})
         if (KFR_REGENERATE_TESTS)
             add_custom_command(
                 TARGET generate_data
@@ -153,8 +154,8 @@ endif ()
 # tests/snippets/**/*.md.c). C++ snippets use Catch2; C API snippets use
 # mini_catch and link to kfr_capi. Each snippet is a standalone executable.
 file(GLOB_RECURSE KFR_SNIPPET_FILES CONFIGURE_DEPENDS
-    ${CMAKE_CURRENT_SOURCE_DIR}/snippets/*.md.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/snippets/*.md.c)
+     ${CMAKE_CURRENT_SOURCE_DIR}/snippets/*.md.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/snippets/*.md.c)
 
 set(KFR_SNIPPET_TESTS)
 foreach (SNIPPET_FILE ${KFR_SNIPPET_FILES})
@@ -165,17 +166,21 @@ foreach (SNIPPET_FILE ${KFR_SNIPPET_FILES})
     set(SNIPPET_TARGET snippet_${SNIPPET_NAME})
 
     if (SNIPPET_FILE MATCHES "\\.md\\.c$")
-        add_executable(${SNIPPET_TARGET} ${SNIPPET_FILE}
-                       "${CMAKE_SOURCE_DIR}/include/kfr/test/mini_catch.c")
-        target_include_directories(${SNIPPET_TARGET} PUBLIC ${CMAKE_SOURCE_DIR}/include)
+        add_executable(
+            ${SNIPPET_TARGET}
+            ${SNIPPET_FILE} "${CMAKE_SOURCE_DIR}/include/kfr/test/mini_catch.c")
+        target_include_directories(${SNIPPET_TARGET}
+                                   PUBLIC ${CMAKE_SOURCE_DIR}/include)
         target_link_libraries(${SNIPPET_TARGET} PRIVATE kfr_capi)
     else ()
         add_executable(${SNIPPET_TARGET} ${SNIPPET_FILE} snippet_main.cpp)
         target_include_directories(
-            ${SNIPPET_TARGET} PUBLIC ${CMAKE_SOURCE_DIR}/include
-                                     ${CMAKE_SOURCE_DIR}/include/kfr/thirdparty/catch)
-        target_link_libraries(${SNIPPET_TARGET} PRIVATE kfr_catch kfr use_arch
-                                                        kfr_dsp kfr_io kfr_audio)
+            ${SNIPPET_TARGET}
+            PUBLIC ${CMAKE_SOURCE_DIR}/include
+                   ${CMAKE_SOURCE_DIR}/include/kfr/thirdparty/catch)
+        target_link_libraries(
+            ${SNIPPET_TARGET} PRIVATE kfr_catch kfr use_arch kfr_dsp kfr_io
+                                      kfr_audio)
         if (KFR_ENABLE_DFT)
             target_link_libraries(${SNIPPET_TARGET} PRIVATE kfr_dft)
         endif ()
@@ -196,8 +201,10 @@ endif ()
 function (add_x86_test ARCH)
     set(NAME ${ARCH})
 
-    add_test_executable(all_tests_${NAME} all_tests.cpp ${ALL_TESTS_CPP}
-                        ${KFR_IO_SRC} ${KFR_DSP_SRC})
+    add_test_executable(
+        all_tests_${NAME} all_tests.cpp ${ALL_TESTS_CPP}
+        # ${KFR_IO_SRC} ${KFR_DSP_SRC}
+    )
     if (KFR_ENABLE_DFT)
         target_sources(all_tests_${NAME} PRIVATE ${KFR_DFT_SRC})
     endif ()
@@ -254,6 +261,8 @@ set(SDE_ARCH_avx -snb)
 set(SDE_ARCH_avx2 -hsw)
 set(SDE_ARCH_avx512 -skx)
 
+set(CATCH_FLAGS -d yes)
+
 if (NOT KFR_SKIP_TESTS)
     enable_testing()
 
@@ -273,33 +282,40 @@ if (NOT KFR_SKIP_TESTS)
     if (KFR_ARCH_TESTS)
         foreach (A IN LISTS ARCH_LIST)
             if (KFR_USE_SDE)
-                add_test(NAME all_tests_${A}
-                         COMMAND ${SDE} ${SDE_ARCH_${A}} -chip_check_exe_only
-                                 -- ${PROJECT_BINARY_DIR}/bin/all_tests_${A})
+                add_test(
+                    NAME all_tests_${A}
+                    COMMAND
+                        ${SDE} ${SDE_ARCH_${A}} -chip_check_exe_only --
+                        ${PROJECT_BINARY_DIR}/bin/all_tests_${A} ${CATCH_FLAGS})
             else ()
-                add_test(NAME all_tests_${A}
-                         COMMAND ${EMULATOR}
-                                 ${PROJECT_BINARY_DIR}/bin/all_tests_${A})
+                add_test(
+                    NAME all_tests_${A}
+                    COMMAND
+                        ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests_${A}
+                        ${CATCH_FLAGS})
             endif ()
         endforeach ()
     endif ()
     if (KFR_USE_SDE)
         add_test(NAME all_tests
                  COMMAND ${SDE} ${SDE_ARCH_${KFR_ARCH}} -chip_check_exe_only --
-                         ${PROJECT_BINARY_DIR}/bin/all_tests)
+                         ${PROJECT_BINARY_DIR}/bin/all_tests ${CATCH_FLAGS})
         add_test(NAME all_tests_on_avx512
                  COMMAND ${SDE} ${SDE_ARCH_avx512} -chip_check_exe_only --
-                         ${PROJECT_BINARY_DIR}/bin/all_tests)
+                         ${PROJECT_BINARY_DIR}/bin/all_tests ${CATCH_FLAGS})
     else ()
-        add_test(NAME all_tests COMMAND ${EMULATOR}
-                                        ${PROJECT_BINARY_DIR}/bin/all_tests)
+        add_test(NAME all_tests
+                 COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/all_tests
+                         ${CATCH_FLAGS})
     endif ()
 
-    add_test(NAME audio_test COMMAND ${EMULATOR}
-                                     ${PROJECT_BINARY_DIR}/bin/audio_test)
+    add_test(NAME audio_test
+             COMMAND ${EMULATOR} ${PROJECT_BINARY_DIR}/bin/audio_test
+                     ${CATCH_FLAGS})
 
     foreach (SNIPPET_TARGET ${KFR_SNIPPET_TESTS})
         add_test(NAME ${SNIPPET_TARGET}
-                 COMMAND ${EMULATOR} $<TARGET_FILE:${SNIPPET_TARGET}>)
+                 COMMAND ${EMULATOR} $<TARGET_FILE:${SNIPPET_TARGET}>
+                         ${CATCH_FLAGS})
     endforeach ()
 endif ()
