@@ -10,5 +10,5 @@ echo Running ninja...
 ninja %JOBS% || exit /b
 ninja install || exit /b
 echo Running tests...
-cd tests && ctest -V || exit /b
+cd tests && ctest -V --parallel 4 || exit /b
 popd
