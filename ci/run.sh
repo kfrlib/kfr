@@ -14,5 +14,5 @@ echo Running ninja...
 ninja
 ninja install
 echo Running tests...
-cd tests && ctest -V
+cd tests && ctest -V --parallel 4
 popd
