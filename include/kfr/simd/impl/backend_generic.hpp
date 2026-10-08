@@ -1885,8 +1885,9 @@ KFR_INTRINSIC simd<T, N> simd_blend_lanes(const simd<T, N>& x, const simd<T, N>&
         const simd_array<T, N> xx = to_simd_array<T, N>(x);
         const simd_array<T, N> yy = to_simd_array<T, N>(y);
         simd_array<T, N> r{};
-        size_t i = 0;
-        ((r.val[i] = m ? yy.val[i] : xx.val[i], ++i), ...);
+
+        [&]<size_t... i>(csizes_t<i...>) KFR_INLINE_LAMBDA
+        { ((r.val[i] = m ? yy.val[i] : xx.val[i]), ...); }(csizeseq<N>);
         return from_simd_array<T, N>(r);
     }
 }
@@ -2011,10 +2012,10 @@ KFR_INTRINSIC simd<T, Nout> universal_shuffle(simd_t<T, Nin>, const simd<T, Nin>
     }
     else if constexpr (Nin > Nout && Nout >= minwidth && Nout <= maxwidth &&
                        ((indices == index_undefined || indices < Nin) && ...) &&
-                       shuffle_within_two_blocks<Nout, shuffle_first_block<Nout, indices...>(),
-                                                 shuffle_second_block<Nout, shuffle_first_block<Nout, indices...>(),
-                                                                      indices...>(),
-                                                 indices...>())
+                       shuffle_within_two_blocks<
+                           Nout, shuffle_first_block<Nout, indices...>(),
+                           shuffle_second_block<Nout, shuffle_first_block<Nout, indices...>(), indices...>(),
+                           indices...>())
     {
         // Shuffle drawing from at most two register-sized blocks of a wide input
         // (e.g. blend/subadd or shuffle(x, y, ...)): permute each block, merge with one blend.
