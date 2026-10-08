@@ -15,7 +15,8 @@ jobs:
     - name: Install OS prerequisites
       run: |
         set -e
-        sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends ninja-build
+        sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+        sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends ninja-build gcc-13 g++-13
         ci/llvm-linux.sh
     - name: Build vcpkg dependencies
       run: |
@@ -33,12 +34,12 @@ jobs:
         ninja -C build-debug install
     - name: Quick test 1
       run: |
-        cmake -B build-test1 -S tests/usage-config -DCMAKE_PREFIX_PATH=${{ github.workspace }}/dist
+        cmake -B build-test1 -S tests/usage-config -DCMAKE_PREFIX_PATH=${{ github.workspace }}/dist -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13
         cmake --build build-test1
         ctest --test-dir build-test1 -V -C Release
     - name: Quick test 2
       run: |
-        cmake -B build-test2 -S tests/usage-manual -DKFR_DIR=${{ github.workspace }}/dist
+        cmake -B build-test2 -S tests/usage-manual -DKFR_DIR=${{ github.workspace }}/dist -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13
         cmake --build build-test2
         ctest --test-dir build-test2 -V -C Release
     - name: Print capi glibc requirements
