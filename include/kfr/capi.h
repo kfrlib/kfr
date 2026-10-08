@@ -736,6 +736,78 @@ KFR_API_SPEC void kfr_dft_real_delete_plan_f32(KFR_DFT_REAL_PLAN_F32* plan);
 KFR_API_SPEC void kfr_dft_real_delete_plan_f64(KFR_DFT_REAL_PLAN_F64* plan);
 
 /**
+ * Computes the forward complex DFT in one call (single precision). No scaling is applied.
+ *
+ * @param out Output buffer of `size` complex values. May point to the same memory as `in`.
+ * @param in Input buffer of `size` complex values.
+ * @param size Number of complex samples.
+ */
+KFR_API_SPEC void kfr_dft_f32(kfr_c32* out, const kfr_c32* in, size_t size);
+
+/**
+ * Computes the forward complex DFT in one call (double precision). No scaling is applied.
+ *
+ * @param out Output buffer of `size` complex values. May point to the same memory as `in`.
+ * @param in Input buffer of `size` complex values.
+ * @param size Number of complex samples.
+ */
+KFR_API_SPEC void kfr_dft_f64(kfr_c64* out, const kfr_c64* in, size_t size);
+
+/**
+ * Computes the inverse complex DFT in one call (single precision). No scaling is applied.
+ *
+ * @param out Output buffer of `size` complex values. May point to the same memory as `in`.
+ * @param in Input buffer of `size` complex values.
+ * @param size Number of complex samples.
+ */
+KFR_API_SPEC void kfr_idft_f32(kfr_c32* out, const kfr_c32* in, size_t size);
+
+/**
+ * Computes the inverse complex DFT in one call (double precision). No scaling is applied.
+ *
+ * @param out Output buffer of `size` complex values. May point to the same memory as `in`.
+ * @param in Input buffer of `size` complex values.
+ * @param size Number of complex samples.
+ */
+KFR_API_SPEC void kfr_idft_f64(kfr_c64* out, const kfr_c64* in, size_t size);
+
+/**
+ * Computes the forward real DFT in one call (single precision). No scaling is applied.
+ *
+ * @param out Output buffer of `size / 2 + 1` complex values (`CCs` format).
+ * @param in Input buffer of `size` real samples.
+ * @param size Number of real samples.
+ */
+KFR_API_SPEC void kfr_realdft_f32(kfr_c32* out, const kfr_f32* in, size_t size);
+
+/**
+ * Computes the forward real DFT in one call (double precision). No scaling is applied.
+ *
+ * @param out Output buffer of `size / 2 + 1` complex values (`CCs` format).
+ * @param in Input buffer of `size` real samples.
+ * @param size Number of real samples.
+ */
+KFR_API_SPEC void kfr_realdft_f64(kfr_c64* out, const kfr_f64* in, size_t size);
+
+/**
+ * Computes the inverse real DFT in one call (single precision). No scaling is applied.
+ *
+ * @param out Output buffer of `size` real samples.
+ * @param in Input buffer of `size / 2 + 1` complex values (`CCs` format).
+ * @param size Number of real output samples.
+ */
+KFR_API_SPEC void kfr_irealdft_f32(kfr_f32* out, const kfr_c32* in, size_t size);
+
+/**
+ * Computes the inverse real DFT in one call (double precision). No scaling is applied.
+ *
+ * @param out Output buffer of `size` real samples.
+ * @param in Input buffer of `size / 2 + 1` complex values (`CCs` format).
+ * @param size Number of real output samples.
+ */
+KFR_API_SPEC void kfr_irealdft_f64(kfr_f64* out, const kfr_c64* in, size_t size);
+
+/**
  * Creates a DCT-II plan (single precision).
  *
  * @param size Size of the DCT. Must be even.
@@ -1006,15 +1078,15 @@ KFR_API_SPEC void kfr_biquad_highshelf_f64(kfr_f64 frequency, kfr_f64 gain_db, k
  */
 typedef enum KFR_WINDOW_TYPE
 {
-    KFR_WINDOW_RECTANGULAR     = 1,  /**< Rectangular window. */
-    KFR_WINDOW_TRIANGULAR      = 2,  /**< Triangular window. */
-    KFR_WINDOW_BARTLETT        = 3,  /**< Bartlett window. */
-    KFR_WINDOW_COSINE          = 4,  /**< Cosine window. */
-    KFR_WINDOW_HANN            = 5,  /**< Hann window. */
-    KFR_WINDOW_BARTLETT_HANN   = 6,  /**< Bartlett-Hann window. */
-    KFR_WINDOW_HAMMING         = 7,  /**< Hamming window. Uses `param` as alpha. */
-    KFR_WINDOW_BOHMAN          = 8,  /**< Bohman window. */
-    KFR_WINDOW_BLACKMAN        = 9,  /**< Blackman window. Uses `param` as alpha. */
+    KFR_WINDOW_RECTANGULAR     = 1, /**< Rectangular window. */
+    KFR_WINDOW_TRIANGULAR      = 2, /**< Triangular window. */
+    KFR_WINDOW_BARTLETT        = 3, /**< Bartlett window. */
+    KFR_WINDOW_COSINE          = 4, /**< Cosine window. */
+    KFR_WINDOW_HANN            = 5, /**< Hann window. */
+    KFR_WINDOW_BARTLETT_HANN   = 6, /**< Bartlett-Hann window. */
+    KFR_WINDOW_HAMMING         = 7, /**< Hamming window. Uses `param` as alpha. */
+    KFR_WINDOW_BOHMAN          = 8, /**< Bohman window. */
+    KFR_WINDOW_BLACKMAN        = 9, /**< Blackman window. Uses `param` as alpha. */
     KFR_WINDOW_BLACKMAN_HARRIS = 10, /**< Blackman-Harris window. */
     KFR_WINDOW_KAISER          = 11, /**< Kaiser window. Uses `param` as beta. */
     KFR_WINDOW_FLATTOP         = 12, /**< Flat-top window. */
@@ -1022,7 +1094,7 @@ typedef enum KFR_WINDOW_TYPE
     KFR_WINDOW_LANCZOS         = 14, /**< Lanczos window. */
     KFR_WINDOW_COSINE_NP       = 15, /**< Non-periodic cosine window. */
     KFR_WINDOW_PLANCK_TAPER    = 16, /**< Planck-taper window. Uses `param` as epsilon. */
-    KFR_WINDOW_TUKEY           = 17  /**< Tukey window. Uses `param` as alpha. */
+    KFR_WINDOW_TUKEY           = 17 /**< Tukey window. Uses `param` as alpha. */
 } KFR_WINDOW_TYPE;
 
 /**
@@ -1180,6 +1252,50 @@ KFR_API_SPEC void kfr_filter_delete_plan_f32(KFR_FILTER_F32* plan);
  * @param plan Pointer to the filter plan. May be `NULL`.
  */
 KFR_API_SPEC void kfr_filter_delete_plan_f64(KFR_FILTER_F64* plan);
+
+/**
+ * Computes the linear convolution of two signals (single precision).
+ *
+ * @param out Output buffer of `a_size + b_size - 1` samples. Nothing is written if either input is empty.
+ * @param a First input signal.
+ * @param a_size Number of samples in `a`.
+ * @param b Second input signal.
+ * @param b_size Number of samples in `b`.
+ */
+KFR_API_SPEC void kfr_convolve_f32(kfr_f32* out, const kfr_f32* a, size_t a_size, const kfr_f32* b,
+                                   size_t b_size);
+
+/**
+ * Computes the linear convolution of two signals (double precision).
+ *
+ * @param out Output buffer of `a_size + b_size - 1` samples. Nothing is written if either input is empty.
+ * @param a First input signal.
+ * @param a_size Number of samples in `a`.
+ * @param b Second input signal.
+ * @param b_size Number of samples in `b`.
+ */
+KFR_API_SPEC void kfr_convolve_f64(kfr_f64* out, const kfr_f64* a, size_t a_size, const kfr_f64* b,
+                                   size_t b_size);
+
+/**
+ * Applies zero-phase forward-backward IIR filtering in place (single precision).
+ *
+ * @param sos Pointer to `sos_count` second-order sections, 6 scalars each `(a0, a1, a2, b0, b1, b2)`.
+ * @param sos_count Number of second-order sections.
+ * @param data Signal to filter, modified in place.
+ * @param size Number of samples in `data`.
+ */
+KFR_API_SPEC void kfr_filtfilt_f32(const kfr_f32* sos, size_t sos_count, kfr_f32* data, size_t size);
+
+/**
+ * Applies zero-phase forward-backward IIR filtering in place (double precision).
+ *
+ * @param sos Pointer to `sos_count` second-order sections, 6 scalars each `(a0, a1, a2, b0, b1, b2)`.
+ * @param sos_count Number of second-order sections.
+ * @param data Signal to filter, modified in place.
+ * @param size Number of samples in `data`.
+ */
+KFR_API_SPEC void kfr_filtfilt_f64(const kfr_f64* sos, size_t sos_count, kfr_f64* data, size_t size);
 
 #ifdef __cplusplus
 }

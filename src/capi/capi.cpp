@@ -198,6 +198,46 @@ static void generate_window(int type, size_t size, T param, bool symmetric, T* o
     make_univector(output, size) = window<T>(size, static_cast<window_type>(type), param, sym);
 }
 
+template <typename T>
+static void one_shot_dft(complex<T>* out, const complex<T>* in, size_t size, bool inverse)
+{
+    dft_plan_ptr<T> plan = dft_cache::instance().get(ctype_t<T>(), size);
+    if (inverse)
+        plan->execute(out, in, nullptr, ctrue);
+    else
+        plan->execute(out, in, nullptr, cfalse);
+}
+
+template <typename T>
+static void one_shot_realdft(complex<T>* out, const T* in, size_t size)
+{
+    dft_plan_real_ptr<T> plan = dft_cache::instance().getreal(ctype_t<T>(), size);
+    plan->execute(out, in, nullptr);
+}
+
+template <typename T>
+static void one_shot_irealdft(T* out, const complex<T>* in, size_t size)
+{
+    dft_plan_real_ptr<T> plan = dft_cache::instance().getreal(ctype_t<T>(), size);
+    plan->execute(out, in, nullptr, ctrue);
+}
+
+template <typename T>
+static void one_shot_convolve(T* out, const T* a, size_t a_size, const T* b, size_t b_size)
+{
+    if (a_size == 0 || b_size == 0)
+        return;
+    univector<T> result = convolve(make_univector(a, a_size), make_univector(b, b_size));
+    std::copy_n(result.data(), result.size(), out);
+}
+
+template <typename T>
+static void one_shot_filtfilt(const biquad_section<T>* sos, size_t sos_count, T* data, size_t size)
+{
+    auto arr = make_univector(data, size);
+    filtfilt(arr, iir_params{ sos, sos_count });
+}
+
 extern "C"
 {
 KFR_API_SPEC const char* kfr_version_string()
@@ -517,6 +557,62 @@ KFR_API_SPEC void kfr_dft_real_delete_plan_f64(KFR_DFT_REAL_PLAN_F64* plan)
     try_fn([&]() { delete reinterpret_cast<var_dft_plan<double>*>(plan); });
 }
 
+// One-shot transforms
+
+KFR_API_SPEC void kfr_dft_f32(kfr_c32* out, const kfr_c32* in, size_t size)
+{
+    try_fn(
+        [&]()
+        {
+            one_shot_dft(reinterpret_cast<complex<float>*>(out), reinterpret_cast<const complex<float>*>(in),
+                         size, false);
+        });
+}
+KFR_API_SPEC void kfr_dft_f64(kfr_c64* out, const kfr_c64* in, size_t size)
+{
+    try_fn(
+        [&]()
+        {
+            one_shot_dft(reinterpret_cast<complex<double>*>(out),
+                         reinterpret_cast<const complex<double>*>(in), size, false);
+        });
+}
+KFR_API_SPEC void kfr_idft_f32(kfr_c32* out, const kfr_c32* in, size_t size)
+{
+    try_fn(
+        [&]()
+        {
+            one_shot_dft(reinterpret_cast<complex<float>*>(out), reinterpret_cast<const complex<float>*>(in),
+                         size, true);
+        });
+}
+KFR_API_SPEC void kfr_idft_f64(kfr_c64* out, const kfr_c64* in, size_t size)
+{
+    try_fn(
+        [&]()
+        {
+            one_shot_dft(reinterpret_cast<complex<double>*>(out),
+                         reinterpret_cast<const complex<double>*>(in), size, true);
+        });
+}
+
+KFR_API_SPEC void kfr_realdft_f32(kfr_c32* out, const kfr_f32* in, size_t size)
+{
+    try_fn([&]() { one_shot_realdft(reinterpret_cast<complex<float>*>(out), in, size); });
+}
+KFR_API_SPEC void kfr_realdft_f64(kfr_c64* out, const kfr_f64* in, size_t size)
+{
+    try_fn([&]() { one_shot_realdft(reinterpret_cast<complex<double>*>(out), in, size); });
+}
+KFR_API_SPEC void kfr_irealdft_f32(kfr_f32* out, const kfr_c32* in, size_t size)
+{
+    try_fn([&]() { one_shot_irealdft(out, reinterpret_cast<const complex<float>*>(in), size); });
+}
+KFR_API_SPEC void kfr_irealdft_f64(kfr_f64* out, const kfr_c64* in, size_t size)
+{
+    try_fn([&]() { one_shot_irealdft(out, reinterpret_cast<const complex<double>*>(in), size); });
+}
+
 // Discrete Cosine Transform
 
 KFR_API_SPEC KFR_DCT_PLAN_F32* kfr_dct_create_plan_f32(size_t size)
@@ -758,6 +854,32 @@ KFR_API_SPEC void kfr_filter_delete_plan_f32(KFR_FILTER_F32* plan)
 KFR_API_SPEC void kfr_filter_delete_plan_f64(KFR_FILTER_F64* plan)
 {
     try_fn([&]() { delete reinterpret_cast<filter<f64>*>(plan); });
+}
+
+// One-shot convolution and filtfilt
+
+KFR_API_SPEC void kfr_convolve_f32(kfr_f32* out, const kfr_f32* a, size_t a_size, const kfr_f32* b,
+                                   size_t b_size)
+{
+    try_fn([&]() { one_shot_convolve(out, a, a_size, b, b_size); });
+}
+KFR_API_SPEC void kfr_convolve_f64(kfr_f64* out, const kfr_f64* a, size_t a_size, const kfr_f64* b,
+                                   size_t b_size)
+{
+    try_fn([&]() { one_shot_convolve(out, a, a_size, b, b_size); });
+}
+
+KFR_API_SPEC void kfr_filtfilt_f32(const kfr_f32* sos, size_t sos_count, kfr_f32* data, size_t size)
+{
+    try_fn(
+        [&]()
+        { one_shot_filtfilt(reinterpret_cast<const biquad_section<float>*>(sos), sos_count, data, size); });
+}
+KFR_API_SPEC void kfr_filtfilt_f64(const kfr_f64* sos, size_t sos_count, kfr_f64* data, size_t size)
+{
+    try_fn(
+        [&]()
+        { one_shot_filtfilt(reinterpret_cast<const biquad_section<double>*>(sos), sos_count, data, size); });
 }
 }
 
