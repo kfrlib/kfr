@@ -100,7 +100,7 @@ if (KFR_ENABLE_ASMTEST)
 endif ()
 
 set(ALL_TESTS_CPP 
-    unit/simd/operators.cpp
+    unit/dsp/fir.cpp
 # ${KFR_UNITTEST_SRC}
 )
 
