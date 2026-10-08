@@ -45,6 +45,8 @@
 #define KFR_ARCH_IS_RISCV 1
 #endif
 
+#ifndef KFR_CDECL
+
 /* Calling convention definition */
 #if defined KFR_ARCH_IS_X86
 #if defined(_M_X64) || defined(__x86_64__)
@@ -59,6 +61,8 @@
 #endif
 #else
 #define KFR_CDECL
+#endif
+
 #endif
 
 /** @endcond */
@@ -866,6 +870,136 @@ KFR_API_SPEC void kfr_dct_delete_plan_f32(KFR_DCT_PLAN_F32* plan);
  * @param plan Pointer to the DCT plan. May be `NULL`.
  */
 KFR_API_SPEC void kfr_dct_delete_plan_f64(KFR_DCT_PLAN_F64* plan);
+
+/**
+ * Designs an all-pass biquad section (single precision).
+ * @param frequency Normalized frequency (Hz / sample rate).
+ * @param Q Q factor.
+ * @param sos Output buffer receiving 6 scalars `(a0, a1, a2, b0, b1, b2)`.
+ */
+KFR_API_SPEC void kfr_biquad_allpass_f32(kfr_f32 frequency, kfr_f32 Q, kfr_f32* sos);
+
+/**
+ * Designs an all-pass biquad section (double precision).
+ * @param frequency Normalized frequency (Hz / sample rate).
+ * @param Q Q factor.
+ * @param sos Output buffer receiving 6 scalars `(a0, a1, a2, b0, b1, b2)`.
+ */
+KFR_API_SPEC void kfr_biquad_allpass_f64(kfr_f64 frequency, kfr_f64 Q, kfr_f64* sos);
+
+/**
+ * Designs a low-pass biquad section (single precision).
+ * @param frequency Normalized frequency (Hz / sample rate).
+ * @param Q Q factor.
+ * @param sos Output buffer receiving 6 scalars `(a0, a1, a2, b0, b1, b2)`.
+ */
+KFR_API_SPEC void kfr_biquad_lowpass_f32(kfr_f32 frequency, kfr_f32 Q, kfr_f32* sos);
+
+/**
+ * Designs a low-pass biquad section (double precision).
+ * @param frequency Normalized frequency (Hz / sample rate).
+ * @param Q Q factor.
+ * @param sos Output buffer receiving 6 scalars `(a0, a1, a2, b0, b1, b2)`.
+ */
+KFR_API_SPEC void kfr_biquad_lowpass_f64(kfr_f64 frequency, kfr_f64 Q, kfr_f64* sos);
+
+/**
+ * Designs a high-pass biquad section (single precision).
+ * @param frequency Normalized frequency (Hz / sample rate).
+ * @param Q Q factor.
+ * @param sos Output buffer receiving 6 scalars `(a0, a1, a2, b0, b1, b2)`.
+ */
+KFR_API_SPEC void kfr_biquad_highpass_f32(kfr_f32 frequency, kfr_f32 Q, kfr_f32* sos);
+
+/**
+ * Designs a high-pass biquad section (double precision).
+ * @param frequency Normalized frequency (Hz / sample rate).
+ * @param Q Q factor.
+ * @param sos Output buffer receiving 6 scalars `(a0, a1, a2, b0, b1, b2)`.
+ */
+KFR_API_SPEC void kfr_biquad_highpass_f64(kfr_f64 frequency, kfr_f64 Q, kfr_f64* sos);
+
+/**
+ * Designs a band-pass biquad section (single precision).
+ * @param frequency Normalized frequency (Hz / sample rate).
+ * @param Q Q factor.
+ * @param sos Output buffer receiving 6 scalars `(a0, a1, a2, b0, b1, b2)`.
+ */
+KFR_API_SPEC void kfr_biquad_bandpass_f32(kfr_f32 frequency, kfr_f32 Q, kfr_f32* sos);
+
+/**
+ * Designs a band-pass biquad section (double precision).
+ * @param frequency Normalized frequency (Hz / sample rate).
+ * @param Q Q factor.
+ * @param sos Output buffer receiving 6 scalars `(a0, a1, a2, b0, b1, b2)`.
+ */
+KFR_API_SPEC void kfr_biquad_bandpass_f64(kfr_f64 frequency, kfr_f64 Q, kfr_f64* sos);
+
+/**
+ * Designs a notch biquad section (single precision).
+ * @param frequency Normalized frequency (Hz / sample rate).
+ * @param Q Q factor.
+ * @param sos Output buffer receiving 6 scalars `(a0, a1, a2, b0, b1, b2)`.
+ */
+KFR_API_SPEC void kfr_biquad_notch_f32(kfr_f32 frequency, kfr_f32 Q, kfr_f32* sos);
+
+/**
+ * Designs a notch biquad section (double precision).
+ * @param frequency Normalized frequency (Hz / sample rate).
+ * @param Q Q factor.
+ * @param sos Output buffer receiving 6 scalars `(a0, a1, a2, b0, b1, b2)`.
+ */
+KFR_API_SPEC void kfr_biquad_notch_f64(kfr_f64 frequency, kfr_f64 Q, kfr_f64* sos);
+
+/**
+ * Designs a peaking EQ biquad section (single precision).
+ * @param frequency Normalized frequency (Hz / sample rate).
+ * @param Q Q factor.
+ * @param gain_db Gain in dB.
+ * @param sos Output buffer receiving 6 scalars `(a0, a1, a2, b0, b1, b2)`.
+ */
+KFR_API_SPEC void kfr_biquad_peak_f32(kfr_f32 frequency, kfr_f32 Q, kfr_f32 gain_db, kfr_f32* sos);
+
+/**
+ * Designs a peaking EQ biquad section (double precision).
+ * @param frequency Normalized frequency (Hz / sample rate).
+ * @param Q Q factor.
+ * @param gain_db Gain in dB.
+ * @param sos Output buffer receiving 6 scalars `(a0, a1, a2, b0, b1, b2)`.
+ */
+KFR_API_SPEC void kfr_biquad_peak_f64(kfr_f64 frequency, kfr_f64 Q, kfr_f64 gain_db, kfr_f64* sos);
+
+/**
+ * Designs a low-shelf biquad section (single precision).
+ * @param frequency Normalized frequency (Hz / sample rate).
+ * @param gain_db Gain in dB.
+ * @param sos Output buffer receiving 6 scalars `(a0, a1, a2, b0, b1, b2)`.
+ */
+KFR_API_SPEC void kfr_biquad_lowshelf_f32(kfr_f32 frequency, kfr_f32 gain_db, kfr_f32* sos);
+
+/**
+ * Designs a low-shelf biquad section (double precision).
+ * @param frequency Normalized frequency (Hz / sample rate).
+ * @param gain_db Gain in dB.
+ * @param sos Output buffer receiving 6 scalars `(a0, a1, a2, b0, b1, b2)`.
+ */
+KFR_API_SPEC void kfr_biquad_lowshelf_f64(kfr_f64 frequency, kfr_f64 gain_db, kfr_f64* sos);
+
+/**
+ * Designs a high-shelf biquad section (single precision).
+ * @param frequency Normalized frequency (Hz / sample rate).
+ * @param gain_db Gain in dB.
+ * @param sos Output buffer receiving 6 scalars `(a0, a1, a2, b0, b1, b2)`.
+ */
+KFR_API_SPEC void kfr_biquad_highshelf_f32(kfr_f32 frequency, kfr_f32 gain_db, kfr_f32* sos);
+
+/**
+ * Designs a high-shelf biquad section (double precision).
+ * @param frequency Normalized frequency (Hz / sample rate).
+ * @param gain_db Gain in dB.
+ * @param sos Output buffer receiving 6 scalars `(a0, a1, a2, b0, b1, b2)`.
+ */
+KFR_API_SPEC void kfr_biquad_highshelf_f64(kfr_f64 frequency, kfr_f64 gain_db, kfr_f64* sos);
 
 /**
  * Creates a FIR filter plan (single precision).

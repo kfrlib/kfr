@@ -446,11 +446,17 @@
 
 #define KFR_PUBLIC_C KFR_EXTERN_C KFR_NOINLINE
 
-#ifdef KFR_ARCH_X86
-#ifdef KFR_OS_WIN
+/* Calling convention definition */
+#if defined KFR_ARCH_IS_X86
+#if defined(_M_X64) || defined(__x86_64__)
+/* 64-bit systems use the same calling convention */
+#define KFR_CDECL
+#else
+#if defined(_MSC_VER)
 #define KFR_CDECL __cdecl
 #else
 #define KFR_CDECL __attribute__((cdecl))
+#endif
 #endif
 #else
 #define KFR_CDECL

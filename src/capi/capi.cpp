@@ -174,6 +174,13 @@ public:
     }
 };
 
+template <typename T>
+static void store_biquad(T* sos, const biquad_section<T>& bq)
+{
+    const T coeffs[6] = { bq.a0, bq.a1, bq.a2, bq.b0, bq.b1, bq.b2 };
+    std::copy_n(coeffs, 6, sos);
+}
+
 extern "C"
 {
 KFR_API_SPEC const char* kfr_version_string()
@@ -557,6 +564,80 @@ KFR_API_SPEC void kfr_dct_delete_plan_f32(KFR_DCT_PLAN_F32* plan)
 KFR_API_SPEC void kfr_dct_delete_plan_f64(KFR_DCT_PLAN_F64* plan)
 {
     try_fn([&]() { delete reinterpret_cast<dct_plan<double>*>(plan); });
+}
+
+// Biquad design
+
+KFR_API_SPEC void kfr_biquad_allpass_f32(kfr_f32 frequency, kfr_f32 Q, kfr_f32* sos)
+{
+    try_fn([&]() { store_biquad(sos, biquad_allpass<float>(frequency, Q)); });
+}
+KFR_API_SPEC void kfr_biquad_allpass_f64(kfr_f64 frequency, kfr_f64 Q, kfr_f64* sos)
+{
+    try_fn([&]() { store_biquad(sos, biquad_allpass<double>(frequency, Q)); });
+}
+
+KFR_API_SPEC void kfr_biquad_lowpass_f32(kfr_f32 frequency, kfr_f32 Q, kfr_f32* sos)
+{
+    try_fn([&]() { store_biquad(sos, biquad_lowpass<float>(frequency, Q)); });
+}
+KFR_API_SPEC void kfr_biquad_lowpass_f64(kfr_f64 frequency, kfr_f64 Q, kfr_f64* sos)
+{
+    try_fn([&]() { store_biquad(sos, biquad_lowpass<double>(frequency, Q)); });
+}
+
+KFR_API_SPEC void kfr_biquad_highpass_f32(kfr_f32 frequency, kfr_f32 Q, kfr_f32* sos)
+{
+    try_fn([&]() { store_biquad(sos, biquad_highpass<float>(frequency, Q)); });
+}
+KFR_API_SPEC void kfr_biquad_highpass_f64(kfr_f64 frequency, kfr_f64 Q, kfr_f64* sos)
+{
+    try_fn([&]() { store_biquad(sos, biquad_highpass<double>(frequency, Q)); });
+}
+
+KFR_API_SPEC void kfr_biquad_bandpass_f32(kfr_f32 frequency, kfr_f32 Q, kfr_f32* sos)
+{
+    try_fn([&]() { store_biquad(sos, biquad_bandpass<float>(frequency, Q)); });
+}
+KFR_API_SPEC void kfr_biquad_bandpass_f64(kfr_f64 frequency, kfr_f64 Q, kfr_f64* sos)
+{
+    try_fn([&]() { store_biquad(sos, biquad_bandpass<double>(frequency, Q)); });
+}
+
+KFR_API_SPEC void kfr_biquad_notch_f32(kfr_f32 frequency, kfr_f32 Q, kfr_f32* sos)
+{
+    try_fn([&]() { store_biquad(sos, biquad_notch<float>(frequency, Q)); });
+}
+KFR_API_SPEC void kfr_biquad_notch_f64(kfr_f64 frequency, kfr_f64 Q, kfr_f64* sos)
+{
+    try_fn([&]() { store_biquad(sos, biquad_notch<double>(frequency, Q)); });
+}
+
+KFR_API_SPEC void kfr_biquad_peak_f32(kfr_f32 frequency, kfr_f32 Q, kfr_f32 gain_db, kfr_f32* sos)
+{
+    try_fn([&]() { store_biquad(sos, biquad_peak<float>(frequency, Q, gain_db)); });
+}
+KFR_API_SPEC void kfr_biquad_peak_f64(kfr_f64 frequency, kfr_f64 Q, kfr_f64 gain_db, kfr_f64* sos)
+{
+    try_fn([&]() { store_biquad(sos, biquad_peak<double>(frequency, Q, gain_db)); });
+}
+
+KFR_API_SPEC void kfr_biquad_lowshelf_f32(kfr_f32 frequency, kfr_f32 gain_db, kfr_f32* sos)
+{
+    try_fn([&]() { store_biquad(sos, biquad_lowshelf<float>(frequency, gain_db)); });
+}
+KFR_API_SPEC void kfr_biquad_lowshelf_f64(kfr_f64 frequency, kfr_f64 gain_db, kfr_f64* sos)
+{
+    try_fn([&]() { store_biquad(sos, biquad_lowshelf<double>(frequency, gain_db)); });
+}
+
+KFR_API_SPEC void kfr_biquad_highshelf_f32(kfr_f32 frequency, kfr_f32 gain_db, kfr_f32* sos)
+{
+    try_fn([&]() { store_biquad(sos, biquad_highshelf<float>(frequency, gain_db)); });
+}
+KFR_API_SPEC void kfr_biquad_highshelf_f64(kfr_f64 frequency, kfr_f64 gain_db, kfr_f64* sos)
+{
+    try_fn([&]() { store_biquad(sos, biquad_highshelf<double>(frequency, gain_db)); });
 }
 
 // Filters
