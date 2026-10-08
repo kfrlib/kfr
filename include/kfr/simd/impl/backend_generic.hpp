@@ -1847,8 +1847,9 @@ KFR_INTRINSIC simd<double, 4> simd_vec_shuffle(simd_t<double, 2>, const simd<dou
 template <size_t... m>
 constexpr unsigned blend_immediate(csizes_t<m...>)
 {
-    unsigned r = 0, i = 0;
-    ((r |= (m ? 1u : 0u) << i++), ...);
+    constexpr unsigned N = sizeof...(m);
+    unsigned r           = 0;
+    ((r = (r >> 1) | ((m ? 1u : 0u) << (N - 1))), ...);
     return r;
 }
 
@@ -1873,7 +1874,7 @@ KFR_INTRINSIC simd<T, N> simd_blend_lanes(const simd<T, N>& x, const simd<T, N>&
     else if constexpr (std::is_same_v<T, double> && N == 4)
         return _mm256_blend_pd(x, y, imm);
 #endif
-#ifdef KFR_ARCH_SSE41
+#if defined KFR_ARCH_SSE41 && !defined(KFR_COMPILER_IS_MSVC)
     else if constexpr (std::is_same_v<T, float> && N == 4)
         return _mm_blend_ps(x, y, imm);
     else if constexpr (std::is_same_v<T, double> && N == 2)
