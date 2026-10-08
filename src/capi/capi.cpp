@@ -181,6 +181,23 @@ static void store_biquad(T* sos, const biquad_section<T>& bq)
     std::copy_n(coeffs, 6, sos);
 }
 
+template <typename T>
+static void generate_window(int type, size_t size, T param, bool symmetric, T* output)
+{
+    if (size == 0)
+    {
+        set_error("kfr_window: size must be greater than zero");
+        return;
+    }
+    if (type < static_cast<int>(window_type::rectangular) || type > static_cast<int>(window_type::tukey))
+    {
+        set_error("kfr_window: unknown window type");
+        return;
+    }
+    const window_symmetry sym    = symmetric ? window_symmetry::symmetric : window_symmetry::periodic;
+    make_univector(output, size) = window<T>(size, static_cast<window_type>(type), param, sym);
+}
+
 extern "C"
 {
 KFR_API_SPEC const char* kfr_version_string()
@@ -638,6 +655,19 @@ KFR_API_SPEC void kfr_biquad_highshelf_f32(kfr_f32 frequency, kfr_f32 gain_db, k
 KFR_API_SPEC void kfr_biquad_highshelf_f64(kfr_f64 frequency, kfr_f64 gain_db, kfr_f64* sos)
 {
     try_fn([&]() { store_biquad(sos, biquad_highshelf<double>(frequency, gain_db)); });
+}
+
+// Windows
+
+KFR_API_SPEC void kfr_window_f32(KFR_WINDOW_TYPE type, size_t size, kfr_f32 param, kfr_bool symmetric,
+                                 kfr_f32* output)
+{
+    try_fn([&]() { generate_window<float>(static_cast<int>(type), size, param, symmetric, output); });
+}
+KFR_API_SPEC void kfr_window_f64(KFR_WINDOW_TYPE type, size_t size, kfr_f64 param, kfr_bool symmetric,
+                                 kfr_f64* output)
+{
+    try_fn([&]() { generate_window<double>(static_cast<int>(type), size, param, symmetric, output); });
 }
 
 // Filters

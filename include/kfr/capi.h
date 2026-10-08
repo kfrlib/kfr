@@ -1002,6 +1002,56 @@ KFR_API_SPEC void kfr_biquad_highshelf_f32(kfr_f32 frequency, kfr_f32 gain_db, k
 KFR_API_SPEC void kfr_biquad_highshelf_f64(kfr_f64 frequency, kfr_f64 gain_db, kfr_f64* sos);
 
 /**
+ * Window function type. Values match the `kfr::window_type` enumeration.
+ */
+typedef enum KFR_WINDOW_TYPE
+{
+    KFR_WINDOW_RECTANGULAR     = 1,  /**< Rectangular window. */
+    KFR_WINDOW_TRIANGULAR      = 2,  /**< Triangular window. */
+    KFR_WINDOW_BARTLETT        = 3,  /**< Bartlett window. */
+    KFR_WINDOW_COSINE          = 4,  /**< Cosine window. */
+    KFR_WINDOW_HANN            = 5,  /**< Hann window. */
+    KFR_WINDOW_BARTLETT_HANN   = 6,  /**< Bartlett-Hann window. */
+    KFR_WINDOW_HAMMING         = 7,  /**< Hamming window. Uses `param` as alpha. */
+    KFR_WINDOW_BOHMAN          = 8,  /**< Bohman window. */
+    KFR_WINDOW_BLACKMAN        = 9,  /**< Blackman window. Uses `param` as alpha. */
+    KFR_WINDOW_BLACKMAN_HARRIS = 10, /**< Blackman-Harris window. */
+    KFR_WINDOW_KAISER          = 11, /**< Kaiser window. Uses `param` as beta. */
+    KFR_WINDOW_FLATTOP         = 12, /**< Flat-top window. */
+    KFR_WINDOW_GAUSSIAN        = 13, /**< Gaussian window. Uses `param` as alpha. */
+    KFR_WINDOW_LANCZOS         = 14, /**< Lanczos window. */
+    KFR_WINDOW_COSINE_NP       = 15, /**< Non-periodic cosine window. */
+    KFR_WINDOW_PLANCK_TAPER    = 16, /**< Planck-taper window. Uses `param` as epsilon. */
+    KFR_WINDOW_TUKEY           = 17  /**< Tukey window. Uses `param` as alpha. */
+} KFR_WINDOW_TYPE;
+
+/**
+ * Generates a window function (single precision).
+ *
+ * @param type Window type.
+ * @param size Number of samples to generate.
+ * @param param Window-specific parameter (alpha, beta or epsilon, see `KFR_WINDOW_TYPE`).
+ *        Ignored by windows without a parameter.
+ * @param symmetric Non-zero for a symmetric window, zero for a periodic window.
+ * @param output Output buffer receiving `size` samples. Must hold at least `size` elements.
+ */
+KFR_API_SPEC void kfr_window_f32(KFR_WINDOW_TYPE type, size_t size, kfr_f32 param, kfr_bool symmetric,
+                                 kfr_f32* output);
+
+/**
+ * Generates a window function (double precision).
+ *
+ * @param type Window type.
+ * @param size Number of samples to generate.
+ * @param param Window-specific parameter (alpha, beta or epsilon, see `KFR_WINDOW_TYPE`).
+ *        Ignored by windows without a parameter.
+ * @param symmetric Non-zero for a symmetric window, zero for a periodic window.
+ * @param output Output buffer receiving `size` samples. Must hold at least `size` elements.
+ */
+KFR_API_SPEC void kfr_window_f64(KFR_WINDOW_TYPE type, size_t size, kfr_f64 param, kfr_bool symmetric,
+                                 kfr_f64* output);
+
+/**
  * Creates a FIR filter plan (single precision).
  *
  * @param taps Pointer to filter taps.
