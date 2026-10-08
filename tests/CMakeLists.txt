@@ -100,8 +100,9 @@ if (KFR_ENABLE_ASMTEST)
 endif ()
 
 set(ALL_TESTS_CPP 
-    unit/dsp/fir.cpp
-# ${KFR_UNITTEST_SRC}
+    # unit/dsp/fir.cpp
+    # unit/simd/vec.cpp
+${KFR_UNITTEST_SRC}
 )
 
 if (KFR_ENABLE_DFT)
@@ -138,7 +139,7 @@ endif ()
 add_test_executable(all_tests all_tests.cpp ${ALL_TESTS_CPP})
 target_compile_definitions(all_tests PRIVATE KFR_NO_MAIN)
 target_link_libraries(all_tests PRIVATE kfr use_arch 
-# kfr_dsp kfr_io
+kfr_dsp kfr_io
 )
 if (KFR_ENABLE_DFT)
     target_link_libraries(all_tests PRIVATE kfr_dft)
@@ -202,7 +203,7 @@ function (add_x86_test ARCH)
     set(NAME ${ARCH})
 
     add_test_executable(all_tests_${NAME} all_tests.cpp ${ALL_TESTS_CPP}
-                        # ${KFR_IO_SRC} ${KFR_DSP_SRC}
+                        ${KFR_IO_SRC} ${KFR_DSP_SRC}
                         )
     if (KFR_ENABLE_DFT)
         target_sources(all_tests_${NAME} PRIVATE ${KFR_DFT_SRC})
