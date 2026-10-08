@@ -515,20 +515,20 @@ KFR_API_SPEC void kfr_dct_dump_f64(KFR_DCT_PLAN_F64* plan)
 
 KFR_API_SPEC size_t kfr_dct_get_size_f32(KFR_DCT_PLAN_F32* plan)
 {
-    return try_fn([&]() { return reinterpret_cast<dft_plan<float>*>(plan)->size; }, 0);
+    return try_fn([&]() { return reinterpret_cast<dct_plan<float>*>(plan)->size; }, 0);
 }
 KFR_API_SPEC size_t kfr_dct_get_size_f64(KFR_DCT_PLAN_F64* plan)
 {
-    return try_fn([&]() { return reinterpret_cast<dft_plan<double>*>(plan)->size; }, 0);
+    return try_fn([&]() { return reinterpret_cast<dct_plan<double>*>(plan)->size; }, 0);
 }
 
 KFR_API_SPEC size_t kfr_dct_get_temp_size_f32(KFR_DCT_PLAN_F32* plan)
 {
-    return try_fn([&]() { return reinterpret_cast<dft_plan<float>*>(plan)->temp_size; }, 0);
+    return try_fn([&]() { return reinterpret_cast<dct_plan<float>*>(plan)->temp_size; }, 0);
 }
 KFR_API_SPEC size_t kfr_dct_get_temp_size_f64(KFR_DCT_PLAN_F64* plan)
 {
-    return try_fn([&]() { return reinterpret_cast<dft_plan<double>*>(plan)->temp_size; }, 0);
+    return try_fn([&]() { return reinterpret_cast<dct_plan<double>*>(plan)->temp_size; }, 0);
 }
 
 KFR_API_SPEC void kfr_dct_execute_f32(KFR_DCT_PLAN_F32* plan, float* out, const float* in, uint8_t* temp)
