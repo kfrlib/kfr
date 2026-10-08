@@ -437,6 +437,8 @@ if (MSVC)
     add_compile_options(/wd4141)
     target_compile_options(kfr INTERFACE $<$<CXX_COMPILER_ID:MSVC>:/Zc:lambda>)
 endif ()
+  
+add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/cgthreads1>)
 
 if (KFR_ENABLE_DFT)
     target_compile_definitions(kfr INTERFACE $<BUILD_INTERFACE:KFR_HAVE_DFT>)
