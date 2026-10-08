@@ -5,6 +5,7 @@
  */
 
 #include <bit>
+#include <cmath>
 #include <limits>
 #include <kfr/simd/vec.hpp>
 

@@ -106,30 +106,39 @@ struct window_linspace : expression_linspace<T>
 {
     window_linspace(cval_t<window_metrics, window_metrics::metrics_0_1>, size_t size,
                     window_symmetry symmetry)
-        : expression_linspace<T>{ 0, 1, size, symmetry == window_symmetry::symmetric }
+        : expression_linspace<T>{ make(0, 1, size, symmetry) }
     {
     }
     window_linspace(cval_t<window_metrics, window_metrics::metrics_m1_1>, size_t size,
                     window_symmetry symmetry)
-        : expression_linspace<T>{ -1, 1, size, symmetry == window_symmetry::symmetric }
+        : expression_linspace<T>{ make(-1, 1, size, symmetry) }
     {
     }
     window_linspace(cval_t<window_metrics, window_metrics::metrics_mpi_pi>, size_t size,
                     window_symmetry symmetry)
-        : expression_linspace<T>{ -c_pi<T>, +c_pi<T>, size, symmetry == window_symmetry::symmetric }
+        : expression_linspace<T>{ make(-c_pi<T>, +c_pi<T>, size, symmetry) }
     {
     }
     window_linspace(cval_t<window_metrics, window_metrics::metrics_m1_1_trunc>, size_t size,
                     window_symmetry symmetry)
-        : expression_linspace<T>{ symmetric_linspace, calc_p(size, symmetry == window_symmetry::symmetric),
-                                  size, symmetry == window_symmetry::symmetric }
+        : expression_linspace<T>{ make(-calc_p(size, symmetry == window_symmetry::symmetric),
+                                       +calc_p(size, symmetry == window_symmetry::symmetric), size,
+                                       symmetry) }
     {
     }
     window_linspace(cval_t<window_metrics, window_metrics::metrics_m1_1_trunc2>, size_t size,
                     window_symmetry symmetry)
-        : expression_linspace<T>{ symmetric_linspace, calc_p2(size, symmetry == window_symmetry::symmetric),
-                                  size, symmetry == window_symmetry::symmetric }
+        : expression_linspace<T>{ make(-calc_p2(size, symmetry == window_symmetry::symmetric),
+                                       +calc_p2(size, symmetry == window_symmetry::symmetric), size,
+                                       symmetry) }
     {
+    }
+    // A one-sample window is always 1, the value at the center of the range, in both modes
+    static expression_linspace<T> make(T start, T stop, size_t size, window_symmetry symmetry)
+    {
+        if (size == 1)
+            return expression_linspace<T>{ (start + stop) / 2, (start + stop) / 2, size, false };
+        return expression_linspace<T>{ start, stop, size, symmetry == window_symmetry::symmetric };
     }
     static T calc_p(size_t size, bool sym)
     {
