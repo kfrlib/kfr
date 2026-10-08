@@ -1,9 +1,10 @@
 # KFR C API
 
 `kfr_capi` is KFR's shared-library interface for code that cannot use the C++
-API directly. It exposes complex and real DFTs, DCT-II/DCT-III, and stateful
-FIR, FFT-convolution, and IIR filters through C declarations in
-`<kfr/capi.h>`, so it can be used from C and from any language with a C FFI.
+API directly. It exposes complex and real DFTs, DCT-II/DCT-III, window functions,
+biquad, IIR, and FIR design, stateful FIR, FFT-convolution, and IIR filters, and one-shot
+convolution and zero-phase filtering, through C declarations in `<kfr/capi.h>`, so
+it can be used from C and from any language with a C FFI.
 
 The C API library is disabled by default. Build it with
 `-DKFR_ENABLE_CAPI_BUILD=ON`; it also requires the DFT module to be enabled.
@@ -22,7 +23,12 @@ boundary.
 | Complex DFT | Reusable 1D, 2D, 3D, and N-dimensional plans in `f32` and `f64` |
 | Real DFT | Real-to-complex and complex-to-real plans, with `Perm` or `CCs` packing for 1D |
 | DCT | DCT-II plans and their DCT-III inverse |
-| Filters | Stateful real FIR, FFT convolution, and IIR (biquad cascade) filters |
+| One-shot transforms | [[`::kfr_dft_f32`:nosig]], [[`::kfr_idft_f32`:nosig]], [[`::kfr_realdft_f32`:nosig]], [[`::kfr_irealdft_f32`:nosig]]: single-call DFTs without a plan handle |
+| Windows | [[`::kfr_window_f32`:nosig]], [[`::kfr_window_f64`:nosig]]: 17 window types selected by `KFR_WINDOW_TYPE` |
+| Biquad design | [[`::kfr_biquad_lowpass_f32`:nosig]] and the other `kfr_biquad_*` designs: one second-order section each |
+| IIR design | [[`::kfr_iir_design_f32`:nosig]]: Butterworth, Bessel, Chebyshev I and II, and elliptic prototypes as second-order sections |
+| FIR design | [[`::kfr_fir_design_f32`:nosig]]: linear-phase low-pass, high-pass, band-pass, and band-stop taps by the window method |
+| Filters | Stateful real FIR, FFT convolution, and IIR (biquad cascade) filters; one-shot [[`::kfr_convolve_f32`:nosig]] and zero-phase [[`::kfr_filtfilt_f32`:nosig]] |
 
 Every documented entry point has C linkage and a `kfr_` name. Other symbols
 visible in a binary are C++ implementation details and are not part of this ABI.
@@ -153,18 +159,29 @@ operate on the product of them; arrange values in row-major order.
 in [DFT data layout](../dft/dft_layout.md).
 [[`::kfr_dct_create_plan_f32`:nosig]] also requires an even size.
 
+The one-shot functions [[`::kfr_dft_f32`:nosig]], [[`::kfr_idft_f32`:nosig]],
+[[`::kfr_realdft_f32`:nosig]], and [[`::kfr_irealdft_f32`:nosig]] run a single
+transform with no plan handle and no `temp` argument. They share an internal plan
+cache keyed by precision and size, so repeated calls at one size do not rebuild the plan. Complex
+transforms take `size` complex values. Real transforms take `size` real samples and
+`size / 2 + 1` complex values in `CCs` format. Use an explicit plan with a
+caller-owned `temp` buffer in realtime paths.
+
 ### Filters
 
 Three filter kinds share one handle type and one processing function:
 
 * [[`::kfr_filter_create_fir_plan_f32`:nosig]] — direct FIR from taps in
-  natural order $h[0], h[1], \ldots$. Simplest choice for short filters.
+  natural order $h[0], h[1], \ldots$. Simplest choice for short filters. Taps
+  from [FIR design](#fir-design) can be passed directly.
 * [[`::kfr_filter_create_convolution_plan_f32`:nosig]] — same response computed
   with FFT overlap-add, preferable for a long fixed impulse response.
   `block_size` must be a power of two; zero selects 1024.
 * [[`::kfr_filter_create_iir_plan_f32`:nosig]] — cascade of second-order
   sections, each six consecutive scalars `(a0, a1, a2, b0, b1, b2)` matching
-  KFR's `biquad_section` layout.
+  KFR's `biquad_section` layout. Section arrays from
+  [biquad design](#biquad-sections) or [IIR design](#iir-design) can be passed
+  directly.
 
 ```c
 #include <kfr/capi.h>
@@ -203,6 +220,124 @@ but partial overlap is not.
 
 Every function has an `_f64` counterpart. Benchmark a realistic workload before
 fixing a crossover point between direct FIR and convolution.
+
+### One-shot convolution and filtfilt
+
+[[`::kfr_convolve_f32`:nosig]] writes the full linear convolution of `a` and `b`
+to `out`, which must hold `a_size + b_size - 1` samples. Nothing is written if
+either input is empty. [[`::kfr_filtfilt_f32`:nosig]] applies zero-phase
+forward-backward filtering in place to `data`, using `sos_count` second-order
+sections in the same six-scalar layout as the IIR plan. Neither function takes a
+plan handle, so each call is independent of the others.
+
+## Design helpers
+
+### Windows
+
+[[`::kfr_window_f32`:nosig]] and [[`::kfr_window_f64`:nosig]] write `size` samples
+of the window selected by `KFR_WINDOW_TYPE` into `output`. Hamming, Blackman,
+Gaussian, and Tukey read `param` as alpha, Kaiser reads it as beta, and
+Planck-taper reads it as epsilon. Other windows ignore it. Pass a non-zero
+`symmetric` for a symmetric window, or zero for a periodic window.
+
+### Biquad sections
+
+The `kfr_biquad_*_f32` and `kfr_biquad_*_f64` functions design one second-order
+section and write its six scalars `(a0, a1, a2, b0, b1, b2)` to `sos`. They take no
+size, so the buffer must hold six scalars. Frequencies are normalized, meaning Hz
+divided by the sample rate: a 1 kHz cutoff at 48 kHz is passed as
+`1000.0 / 48000.0`.
+
+The all-pass, low-pass, high-pass, band-pass, and notch designs take `frequency`
+and `Q`. The peak design also takes `gain_db`. The low-shelf and high-shelf
+designs take `frequency` and `gain_db` instead of `Q`. A single section can be
+passed to [[`::kfr_filter_create_iir_plan_f32`:nosig]] with a `sos_count` of 1.
+
+### IIR design
+
+[[`::kfr_iir_design_f32`:nosig]] and [[`::kfr_iir_design_f64`:nosig]] design a
+digital IIR filter and return it as second-order sections, in the layout accepted
+by [[`::kfr_filter_create_iir_plan_f32`:nosig]] and
+[[`::kfr_filtfilt_f32`:nosig]]. `prototype` selects Butterworth, Bessel,
+Chebyshev I, Chebyshev II, or elliptic (`KFR_IIR_PROTOTYPE`). `response` selects
+low-pass, high-pass, band-pass, or band-stop (`KFR_IIR_RESPONSE`). Frequencies and
+`fs` are in Hz. Elliptic prototypes require a build with Boost.Math enabled
+(`KFR_USE_BOOST_MATH`).
+
+* `order` must be 1 to 24 for Butterworth and Bessel, and at least 1 for the
+  others.
+* `rp` (passband ripple in dB) applies to Chebyshev I and elliptic. `rs`
+  (stopband attenuation in dB) applies to Chebyshev II and elliptic. Each must be
+  greater than zero where it applies. Pass 0 otherwise.
+* Low-pass and high-pass require `0 < frequency < fs / 2`. Band-pass and band-stop
+  also require `frequency < high_frequency < fs / 2`.
+
+Pass `NULL` for `sos` to get the section count. Then allocate `count * 6` scalars
+and call again with `sos_capacity` set to the count. Nothing is written when `sos`
+is `NULL` or the capacity is smaller than the count. The return value is 0 on
+error; read [[`::kfr_last_error`:nosig]] for the message.
+
+```c
+#include <kfr/capi.h>
+#include <stdio.h>
+
+int main(void)|||TEST_CASE("advanced/capi.md/IIR design and filtering")
+{
+    kfr_f32 input[1024];
+    kfr_f32 output[1024];
+    kfr_f32* sos;
+    KFR_FILTER_F32* filter;
+    size_t sections;
+    size_t i;
+
+    /* Fourth-order Butterworth low-pass, 1 kHz cutoff at 48 kHz. Query the section count first. */
+    sections = kfr_iir_design_f32(KFR_IIR_BUTTERWORTH, KFR_IIR_LOWPASS, 4, 0, 0, 1000, 0, 48000, NULL, 0);
+    sos = (kfr_f32*)kfr_allocate(sections * 6 * sizeof(kfr_f32));
+    kfr_iir_design_f32(KFR_IIR_BUTTERWORTH, KFR_IIR_LOWPASS, 4, 0, 0, 1000, 0, 48000, sos, sections);
+
+    filter = kfr_filter_create_iir_plan_f32(sos, sections);
+    kfr_deallocate(sos);
+    if (filter == NULL)
+    {
+        fprintf(stderr, "KFR: %s\n", kfr_last_error());
+|||REQUIRE(0);
+      return 1;|||return;
+    }
+
+    for (i = 0; i < 1024; ++i)
+        input[i] = 1.0f; /* A constant input settles to the filter's unit DC gain. */
+    kfr_filter_process_f32(filter, output, input, 1024);
+    kfr_filter_delete_plan_f32(filter);
+|||CHECK(output[1023] > 0.999f && output[1023] < 1.001f);
+    return 0;|||
+}
+```
+
+Plan creation copies the coefficients, so the `sos` buffer can be released as soon
+as the plan exists.
+
+### FIR design
+
+[[`::kfr_fir_design_f32`:nosig]] and [[`::kfr_fir_design_f64`:nosig]] design a
+linear-phase FIR filter by the window method and write `size` taps to `taps`. They
+are the C counterparts of `kfr::fir_lowpass()`, `kfr::fir_highpass()`,
+`kfr::fir_bandpass()`, and `kfr::fir_bandstop()`. `response` selects low-pass,
+high-pass, band-pass, or band-stop (`KFR_FIR_RESPONSE`). `type` and `param` select
+the window as described in [Windows](#windows). The window is always symmetric,
+which keeps the taps linear-phase. Frequencies and `fs` are in Hz.
+
+* `size` is the number of taps and must be greater than zero. The filter order is
+  `size - 1`. With an odd `size`, the group delay is `(size - 1) / 2` samples.
+* Low-pass and high-pass require `0 < frequency < fs / 2`. Band-pass and band-stop
+  also require `frequency < high_frequency < fs / 2`.
+* `normalize` scales the taps the same way as the C++ `kfr::fir_*()` family. Low-pass
+  and band-stop then have unit DC gain. High-pass and band-pass use the C++ scaling,
+  which leaves their gains only approximately 0 and 1.
+
+The return value is non-zero on success and 0 on error. Validation runs before the
+design, so `taps` is left unchanged on error; read
+[[`::kfr_last_error`:nosig]] for the message. Pass the taps to
+[[`::kfr_filter_create_fir_plan_f32`:nosig]] to filter with them.
 
 ## Next steps
 

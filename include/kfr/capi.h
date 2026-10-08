@@ -1197,6 +1197,63 @@ KFR_API_SPEC void kfr_window_f64(KFR_WINDOW_TYPE type, size_t size, kfr_f64 para
                                  kfr_f64* output);
 
 /**
+ * Response type for FIR design. Values match the `KFR_IIR_RESPONSE` enumeration.
+ */
+typedef enum KFR_FIR_RESPONSE
+{
+    KFR_FIR_LOWPASS  = 1, /**< Low-pass. Uses `frequency`. */
+    KFR_FIR_HIGHPASS = 2, /**< High-pass. Uses `frequency`. */
+    KFR_FIR_BANDPASS = 3, /**< Band-pass. Uses `frequency` and `high_frequency`. */
+    KFR_FIR_BANDSTOP = 4 /**< Band-stop. Uses `frequency` and `high_frequency`. */
+} KFR_FIR_RESPONSE;
+
+/**
+ * Designs a linear-phase FIR filter by the window method (single precision).
+ *
+ * The taps are the windowed ideal impulse response. The window is always symmetric, which makes the
+ * taps linear-phase. The taps can be passed to `kfr_filter_create_fir_plan_f32()`.
+ *
+ * @param response Filter response type (see `KFR_FIR_RESPONSE`).
+ * @param type Window function applied to the impulse response (see `KFR_WINDOW_TYPE`).
+ * @param param Window-specific parameter (alpha, beta or epsilon, see `KFR_WINDOW_TYPE`).
+ *        Ignored by windows without a parameter.
+ * @param frequency Cutoff frequency in Hz for low-pass and high-pass, or lower edge for band-pass and
+ *        band-stop. Must satisfy `0 < frequency < fs / 2`.
+ * @param high_frequency Upper edge in Hz for band-pass and band-stop. Must satisfy
+ *        `frequency < high_frequency < fs / 2`. Ignored otherwise.
+ * @param fs Sample rate in Hz. Must be greater than zero.
+ * @param normalize Non-zero to normalize the taps the same way as the C++ `kfr::fir_*()` family does.
+ *        Low-pass and band-stop then have unit DC gain. High-pass and band-pass use the C++ scaling.
+ * @param taps Output buffer receiving `size` taps. Must hold at least `size` elements.
+ * @param size Number of taps. Must be greater than zero. The filter order is `size - 1`.
+ * @return Non-zero on success, or 0 on error (see `kfr_last_error()`).
+ */
+KFR_API_SPEC kfr_bool kfr_fir_design_f32(KFR_FIR_RESPONSE response, KFR_WINDOW_TYPE type, kfr_f32 param,
+                                         kfr_f32 frequency, kfr_f32 high_frequency, kfr_f32 fs,
+                                         kfr_bool normalize, kfr_f32* taps, size_t size);
+
+/**
+ * Designs a linear-phase FIR filter by the window method (double precision).
+ *
+ * See `kfr_fir_design_f32()` for parameter details.
+ *
+ * @param response Filter response type (see `KFR_FIR_RESPONSE`).
+ * @param type Window function applied to the impulse response (see `KFR_WINDOW_TYPE`).
+ * @param param Window-specific parameter (alpha, beta or epsilon, see `KFR_WINDOW_TYPE`).
+ * @param frequency Cutoff frequency in Hz, or lower edge for band-pass and band-stop.
+ * @param high_frequency Upper edge in Hz for band-pass and band-stop. Ignored otherwise.
+ * @param fs Sample rate in Hz. Must be greater than zero.
+ * @param normalize Non-zero to normalize the taps the same way as the C++ `kfr::fir_*()` family does.
+ *        Low-pass and band-stop then have unit DC gain. High-pass and band-pass use the C++ scaling.
+ * @param taps Output buffer receiving `size` taps. Must hold at least `size` elements.
+ * @param size Number of taps. Must be greater than zero. The filter order is `size - 1`.
+ * @return Non-zero on success, or 0 on error (see `kfr_last_error()`).
+ */
+KFR_API_SPEC kfr_bool kfr_fir_design_f64(KFR_FIR_RESPONSE response, KFR_WINDOW_TYPE type, kfr_f64 param,
+                                         kfr_f64 frequency, kfr_f64 high_frequency, kfr_f64 fs,
+                                         kfr_bool normalize, kfr_f64* taps, size_t size);
+
+/**
  * Creates a FIR filter plan (single precision).
  *
  * @param taps Pointer to filter taps.

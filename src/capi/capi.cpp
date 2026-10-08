@@ -194,8 +194,9 @@ static void generate_window(int type, size_t size, T param, bool symmetric, T* o
         set_error("kfr_window: unknown window type");
         return;
     }
-    const window_symmetry sym    = symmetric ? window_symmetry::symmetric : window_symmetry::periodic;
-    make_univector(output, size) = window<T>(size, static_cast<window_type>(type), param, sym);
+    const window_symmetry sym = symmetric ? window_symmetry::symmetric : window_symmetry::periodic;
+    try_fn([&]()
+           { make_univector(output, size) = window<T>(size, static_cast<window_type>(type), param, sym); });
 }
 
 // Validates IIR design arguments before try_fn so that the error is not cleared by reset_error().
@@ -306,6 +307,77 @@ static size_t design_iir(int prototype, int response, int order, double rp, doub
             store_biquad(sos + 6 * i, params[i]);
     }
     return count;
+}
+
+// Validates FIR design arguments before try_fn so that the error is not cleared by reset_error().
+static bool check_fir_design(int response, int type, double frequency, double high_frequency, double fs,
+                             const void* taps, size_t size)
+{
+    if (response < KFR_FIR_LOWPASS || response > KFR_FIR_BANDSTOP)
+    {
+        set_error("kfr_fir: unknown response type");
+        return false;
+    }
+    if (type < KFR_WINDOW_RECTANGULAR || type > KFR_WINDOW_TUKEY)
+    {
+        set_error("kfr_fir: unknown window type");
+        return false;
+    }
+    if (taps == nullptr)
+    {
+        set_error("kfr_fir: taps must not be NULL");
+        return false;
+    }
+    if (size == 0)
+    {
+        set_error("kfr_fir: size must be greater than zero");
+        return false;
+    }
+    if (!(fs > 0))
+    {
+        set_error("kfr_fir: fs must be greater than zero");
+        return false;
+    }
+    const double nyquist = fs / 2;
+    if (response == KFR_FIR_BANDPASS || response == KFR_FIR_BANDSTOP)
+    {
+        if (!(frequency > 0 && frequency < high_frequency && high_frequency < nyquist))
+        {
+            set_error("kfr_fir: band edges must satisfy 0 < frequency < high_frequency < fs / 2");
+            return false;
+        }
+    }
+    else if (!(frequency > 0 && frequency < nyquist))
+    {
+        set_error("kfr_fir: frequency must satisfy 0 < frequency < fs / 2");
+        return false;
+    }
+    return true;
+}
+
+template <typename T>
+static void design_fir(int response, int type, T param, double frequency, double high_frequency, double fs,
+                       bool normalize, T* taps, size_t size)
+{
+    const expression_handle<T> win = window<T>(size, static_cast<window_type>(type), param);
+    auto out                       = make_univector(taps, size);
+    const T f1                     = static_cast<T>(frequency / fs);
+    const T f2                     = static_cast<T>(high_frequency / fs);
+    switch (static_cast<KFR_FIR_RESPONSE>(response))
+    {
+    case KFR_FIR_HIGHPASS:
+        fir_highpass(out, f1, win, normalize);
+        break;
+    case KFR_FIR_BANDPASS:
+        fir_bandpass(out, f1, f2, win, normalize);
+        break;
+    case KFR_FIR_BANDSTOP:
+        fir_bandstop(out, f1, f2, win, normalize);
+        break;
+    default: // KFR_FIR_LOWPASS; the response was validated by check_fir_design
+        fir_lowpass(out, f1, win, normalize);
+        break;
+    }
 }
 
 template <typename T>
@@ -901,12 +973,47 @@ KFR_API_SPEC size_t kfr_iir_design_f64(KFR_IIR_PROTOTYPE prototype, KFR_IIR_RESP
 KFR_API_SPEC void kfr_window_f32(KFR_WINDOW_TYPE type, size_t size, kfr_f32 param, kfr_bool symmetric,
                                  kfr_f32* output)
 {
-    try_fn([&]() { generate_window<float>(static_cast<int>(type), size, param, symmetric, output); });
+    generate_window<float>(static_cast<int>(type), size, param, symmetric, output);
 }
 KFR_API_SPEC void kfr_window_f64(KFR_WINDOW_TYPE type, size_t size, kfr_f64 param, kfr_bool symmetric,
                                  kfr_f64* output)
 {
-    try_fn([&]() { generate_window<double>(static_cast<int>(type), size, param, symmetric, output); });
+    generate_window<double>(static_cast<int>(type), size, param, symmetric, output);
+}
+
+// FIR design
+
+KFR_API_SPEC kfr_bool kfr_fir_design_f32(KFR_FIR_RESPONSE response, KFR_WINDOW_TYPE type, kfr_f32 param,
+                                         kfr_f32 frequency, kfr_f32 high_frequency, kfr_f32 fs,
+                                         kfr_bool normalize, kfr_f32* taps, size_t size)
+{
+    if (!check_fir_design(static_cast<int>(response), static_cast<int>(type), frequency, high_frequency, fs,
+                          taps, size))
+        return false;
+    return try_fn(
+        [&]()
+        {
+            design_fir<float>(static_cast<int>(response), static_cast<int>(type), param, frequency,
+                              high_frequency, fs, normalize, taps, size);
+            return true;
+        },
+        false);
+}
+KFR_API_SPEC kfr_bool kfr_fir_design_f64(KFR_FIR_RESPONSE response, KFR_WINDOW_TYPE type, kfr_f64 param,
+                                         kfr_f64 frequency, kfr_f64 high_frequency, kfr_f64 fs,
+                                         kfr_bool normalize, kfr_f64* taps, size_t size)
+{
+    if (!check_fir_design(static_cast<int>(response), static_cast<int>(type), frequency, high_frequency, fs,
+                          taps, size))
+        return false;
+    return try_fn(
+        [&]()
+        {
+            design_fir<double>(static_cast<int>(response), static_cast<int>(type), param, frequency,
+                               high_frequency, fs, normalize, taps, size);
+            return true;
+        },
+        false);
 }
 
 // Filters
