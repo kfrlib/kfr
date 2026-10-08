@@ -1074,6 +1074,79 @@ KFR_API_SPEC void kfr_biquad_highshelf_f32(kfr_f32 frequency, kfr_f32 gain_db, k
 KFR_API_SPEC void kfr_biquad_highshelf_f64(kfr_f64 frequency, kfr_f64 gain_db, kfr_f64* sos);
 
 /**
+ * Analog prototype family for IIR design. Values match the `kfr::zpk` prototype functions.
+ */
+typedef enum KFR_IIR_PROTOTYPE
+{
+    KFR_IIR_BUTTERWORTH = 1, /**< Butterworth. `order` must be 1..24. */
+    KFR_IIR_BESSEL      = 2, /**< Bessel/Thomson. `order` must be 1..24. */
+    KFR_IIR_CHEBYSHEV1  = 3, /**< Chebyshev type I. Uses `rp`. */
+    KFR_IIR_CHEBYSHEV2  = 4, /**< Chebyshev type II. Uses `rs`. */
+    KFR_IIR_ELLIPTIC    = 5 /**< Elliptic (Cauer). Uses `rp` and `rs`. Requires a build with Boost.Math. */
+} KFR_IIR_PROTOTYPE;
+
+/**
+ * IIR filter response type.
+ */
+typedef enum KFR_IIR_RESPONSE
+{
+    KFR_IIR_LOWPASS  = 1, /**< Low-pass. Uses `frequency`. */
+    KFR_IIR_HIGHPASS = 2, /**< High-pass. Uses `frequency`. */
+    KFR_IIR_BANDPASS = 3, /**< Band-pass. Uses `frequency` and `high_frequency`. */
+    KFR_IIR_BANDSTOP = 4 /**< Band-stop. Uses `frequency` and `high_frequency`. */
+} KFR_IIR_RESPONSE;
+
+/**
+ * Designs a digital IIR filter and returns it as second-order sections (single precision).
+ *
+ * The design runs the analog prototype, frequency transform, bilinear transform and
+ * conversion to SOS. The section count is returned, so call with `sos` set to `NULL` to
+ * query the number of sections before allocating the output buffer.
+ *
+ * @param prototype Analog prototype family (see `KFR_IIR_PROTOTYPE`).
+ * @param response Filter response type (see `KFR_IIR_RESPONSE`).
+ * @param order Prototype order. Must be 1..24 for Butterworth and Bessel, and at least 1 otherwise.
+ * @param rp Passband ripple in dB. Used by Chebyshev I and elliptic only. Must be greater than zero.
+ * @param rs Stopband attenuation in dB. Used by Chebyshev II and elliptic only. Must be greater than zero.
+ * @param frequency Cutoff frequency in Hz for low-pass and high-pass, or lower edge for band-pass and
+ *        band-stop. Must satisfy `0 < frequency < fs / 2`.
+ * @param high_frequency Upper edge in Hz for band-pass and band-stop. Must satisfy
+ *        `frequency < high_frequency < fs / 2`. Ignored otherwise.
+ * @param fs Sample rate in Hz. Must be greater than zero.
+ * @param sos Output buffer receiving `6 * sections` scalars `(a0, a1, a2, b0, b1, b2)`, one group per
+ * section. May be `NULL`. Nothing is written if `NULL` or if `sos_capacity` is smaller than the returned
+ * count.
+ * @param sos_capacity Capacity of `sos` in biquad sections.
+ * @return Number of biquad sections, or 0 on error (see `kfr_last_error()`).
+ */
+KFR_API_SPEC size_t kfr_iir_design_f32(KFR_IIR_PROTOTYPE prototype, KFR_IIR_RESPONSE response, int order,
+                                       kfr_f32 rp, kfr_f32 rs, kfr_f32 frequency, kfr_f32 high_frequency,
+                                       kfr_f32 fs, kfr_f32* sos, size_t sos_capacity);
+
+/**
+ * Designs a digital IIR filter and returns it as second-order sections (double precision).
+ *
+ * See `kfr_iir_design_f32()` for parameter details.
+ *
+ * @param prototype Analog prototype family (see `KFR_IIR_PROTOTYPE`).
+ * @param response Filter response type (see `KFR_IIR_RESPONSE`).
+ * @param order Prototype order. Must be 1..24 for Butterworth and Bessel, and at least 1 otherwise.
+ * @param rp Passband ripple in dB. Used by Chebyshev I and elliptic only. Must be greater than zero.
+ * @param rs Stopband attenuation in dB. Used by Chebyshev II and elliptic only. Must be greater than zero.
+ * @param frequency Cutoff frequency in Hz, or lower edge for band-pass and band-stop.
+ * @param high_frequency Upper edge in Hz for band-pass and band-stop. Ignored otherwise.
+ * @param fs Sample rate in Hz. Must be greater than zero.
+ * @param sos Output buffer receiving `6 * sections` scalars `(a0, a1, a2, b0, b1, b2)`, one group per
+ * section. May be `NULL`. Nothing is written if `NULL` or if `sos_capacity` is smaller than the returned
+ * count.
+ * @param sos_capacity Capacity of `sos` in biquad sections.
+ * @return Number of biquad sections, or 0 on error (see `kfr_last_error()`).
+ */
+KFR_API_SPEC size_t kfr_iir_design_f64(KFR_IIR_PROTOTYPE prototype, KFR_IIR_RESPONSE response, int order,
+                                       kfr_f64 rp, kfr_f64 rs, kfr_f64 frequency, kfr_f64 high_frequency,
+                                       kfr_f64 fs, kfr_f64* sos, size_t sos_capacity);
+
+/**
  * Window function type. Values match the `kfr::window_type` enumeration.
  */
 typedef enum KFR_WINDOW_TYPE

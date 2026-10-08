@@ -198,6 +198,116 @@ static void generate_window(int type, size_t size, T param, bool symmetric, T* o
     make_univector(output, size) = window<T>(size, static_cast<window_type>(type), param, sym);
 }
 
+// Validates IIR design arguments before try_fn so that the error is not cleared by reset_error().
+static bool check_iir_design(int prototype, int response, int order, double rp, double rs, double frequency,
+                             double high_frequency, double fs)
+{
+    if (prototype < KFR_IIR_BUTTERWORTH || prototype > KFR_IIR_ELLIPTIC)
+    {
+        set_error("kfr_iir: unknown prototype");
+        return false;
+    }
+    if (response < KFR_IIR_LOWPASS || response > KFR_IIR_BANDSTOP)
+    {
+        set_error("kfr_iir: unknown response type");
+        return false;
+    }
+#ifndef KFR_HAVE_ELLIPTIC
+    if (prototype == KFR_IIR_ELLIPTIC)
+    {
+        set_error("kfr_iir: elliptic prototype requires a build with Boost.Math");
+        return false;
+    }
+#endif
+    const bool order_limited = prototype == KFR_IIR_BUTTERWORTH || prototype == KFR_IIR_BESSEL;
+    if (order < 1 || (order_limited && order > 24))
+    {
+        set_error("kfr_iir: order must be 1..24 for Butterworth and Bessel, and at least 1 otherwise");
+        return false;
+    }
+    if ((prototype == KFR_IIR_CHEBYSHEV1 || prototype == KFR_IIR_ELLIPTIC) && !(rp > 0))
+    {
+        set_error("kfr_iir: rp must be greater than zero");
+        return false;
+    }
+    if ((prototype == KFR_IIR_CHEBYSHEV2 || prototype == KFR_IIR_ELLIPTIC) && !(rs > 0))
+    {
+        set_error("kfr_iir: rs must be greater than zero");
+        return false;
+    }
+    if (!(fs > 0))
+    {
+        set_error("kfr_iir: fs must be greater than zero");
+        return false;
+    }
+    const double nyquist = fs / 2;
+    if (response == KFR_IIR_BANDPASS || response == KFR_IIR_BANDSTOP)
+    {
+        if (!(frequency > 0 && frequency < high_frequency && high_frequency < nyquist))
+        {
+            set_error("kfr_iir: band edges must satisfy 0 < frequency < high_frequency < fs / 2");
+            return false;
+        }
+    }
+    else if (!(frequency > 0 && frequency < nyquist))
+    {
+        set_error("kfr_iir: frequency must satisfy 0 < frequency < fs / 2");
+        return false;
+    }
+    return true;
+}
+
+static zpk iir_prototype_zpk(int prototype, int order, double rp, double rs)
+{
+    switch (static_cast<KFR_IIR_PROTOTYPE>(prototype))
+    {
+    case KFR_IIR_BESSEL:
+        return bessel(order);
+    case KFR_IIR_CHEBYSHEV1:
+        return chebyshev1(order, rp);
+    case KFR_IIR_CHEBYSHEV2:
+        return chebyshev2(order, rs);
+#ifdef KFR_HAVE_ELLIPTIC
+    case KFR_IIR_ELLIPTIC:
+        return elliptic(order, rp, rs);
+#endif
+    default: // KFR_IIR_BUTTERWORTH; the prototype was validated by check_iir_design
+        return butterworth(order);
+    }
+}
+
+static zpk iir_response_zpk(const zpk& prototype, int response, double frequency, double high_frequency,
+                            double fs)
+{
+    switch (static_cast<KFR_IIR_RESPONSE>(response))
+    {
+    case KFR_IIR_HIGHPASS:
+        return iir_highpass(prototype, frequency, fs);
+    case KFR_IIR_BANDPASS:
+        return iir_bandpass(prototype, frequency, high_frequency, fs);
+    case KFR_IIR_BANDSTOP:
+        return iir_bandstop(prototype, frequency, high_frequency, fs);
+    default: // KFR_IIR_LOWPASS; the response was validated by check_iir_design
+        return iir_lowpass(prototype, frequency, fs);
+    }
+}
+
+template <typename T>
+static size_t design_iir(int prototype, int response, int order, double rp, double rs, double frequency,
+                         double high_frequency, double fs, T* sos, size_t sos_capacity)
+{
+    const zpk analog           = iir_prototype_zpk(prototype, order, rp, rs);
+    const zpk digital          = iir_response_zpk(analog, response, frequency, high_frequency, fs);
+    const iir_params<T> params = to_sos<T>(digital);
+    const size_t count         = params.size();
+    if (sos != nullptr && sos_capacity >= count)
+    {
+        for (size_t i = 0; i < count; i++)
+            store_biquad(sos + 6 * i, params[i]);
+    }
+    return count;
+}
+
 template <typename T>
 static void one_shot_dft(complex<T>* out, const complex<T>* in, size_t size, bool inverse)
 {
@@ -751,6 +861,39 @@ KFR_API_SPEC void kfr_biquad_highshelf_f32(kfr_f32 frequency, kfr_f32 gain_db, k
 KFR_API_SPEC void kfr_biquad_highshelf_f64(kfr_f64 frequency, kfr_f64 gain_db, kfr_f64* sos)
 {
     try_fn([&]() { store_biquad(sos, biquad_highshelf<double>(frequency, gain_db)); });
+}
+
+// IIR design
+
+KFR_API_SPEC size_t kfr_iir_design_f32(KFR_IIR_PROTOTYPE prototype, KFR_IIR_RESPONSE response, int order,
+                                       kfr_f32 rp, kfr_f32 rs, kfr_f32 frequency, kfr_f32 high_frequency,
+                                       kfr_f32 fs, kfr_f32* sos, size_t sos_capacity)
+{
+    if (!check_iir_design(static_cast<int>(prototype), static_cast<int>(response), order, rp, rs, frequency,
+                          high_frequency, fs))
+        return 0;
+    return try_fn(
+        [&]()
+        {
+            return design_iir<float>(static_cast<int>(prototype), static_cast<int>(response), order, rp, rs,
+                                     frequency, high_frequency, fs, sos, sos_capacity);
+        },
+        size_t(0));
+}
+KFR_API_SPEC size_t kfr_iir_design_f64(KFR_IIR_PROTOTYPE prototype, KFR_IIR_RESPONSE response, int order,
+                                       kfr_f64 rp, kfr_f64 rs, kfr_f64 frequency, kfr_f64 high_frequency,
+                                       kfr_f64 fs, kfr_f64* sos, size_t sos_capacity)
+{
+    if (!check_iir_design(static_cast<int>(prototype), static_cast<int>(response), order, rp, rs, frequency,
+                          high_frequency, fs))
+        return 0;
+    return try_fn(
+        [&]()
+        {
+            return design_iir<double>(static_cast<int>(prototype), static_cast<int>(response), order, rp, rs,
+                                      frequency, high_frequency, fs, sos, sos_capacity);
+        },
+        size_t(0));
 }
 
 // Windows
