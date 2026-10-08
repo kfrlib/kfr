@@ -254,6 +254,8 @@ set(SDE_ARCH_avx -snb)
 set(SDE_ARCH_avx2 -hsw)
 set(SDE_ARCH_avx512 -skx)
 
+set(CATCH_FLAGS -d yes)
+
 if (NOT KFR_SKIP_TESTS)
     enable_testing()
 
@@ -275,31 +277,31 @@ if (NOT KFR_SKIP_TESTS)
             if (KFR_USE_SDE)
                 add_test(NAME all_tests_${A}
                          COMMAND ${SDE} ${SDE_ARCH_${A}} -chip_check_exe_only
-                                 -- ${PROJECT_BINARY_DIR}/bin/all_tests_${A})
+                                 -- ${PROJECT_BINARY_DIR}/bin/all_tests_${A} ${CATCH_FLAGS})
             else ()
                 add_test(NAME all_tests_${A}
                          COMMAND ${EMULATOR}
-                                 ${PROJECT_BINARY_DIR}/bin/all_tests_${A})
+                                 ${PROJECT_BINARY_DIR}/bin/all_tests_${A} ${CATCH_FLAGS})
             endif ()
         endforeach ()
     endif ()
     if (KFR_USE_SDE)
         add_test(NAME all_tests
                  COMMAND ${SDE} ${SDE_ARCH_${KFR_ARCH}} -chip_check_exe_only --
-                         ${PROJECT_BINARY_DIR}/bin/all_tests)
+                         ${PROJECT_BINARY_DIR}/bin/all_tests ${CATCH_FLAGS})
         add_test(NAME all_tests_on_avx512
                  COMMAND ${SDE} ${SDE_ARCH_avx512} -chip_check_exe_only --
-                         ${PROJECT_BINARY_DIR}/bin/all_tests)
+                         ${PROJECT_BINARY_DIR}/bin/all_tests ${CATCH_FLAGS})
     else ()
         add_test(NAME all_tests COMMAND ${EMULATOR}
-                                        ${PROJECT_BINARY_DIR}/bin/all_tests)
+                                        ${PROJECT_BINARY_DIR}/bin/all_tests ${CATCH_FLAGS})
     endif ()
 
     add_test(NAME audio_test COMMAND ${EMULATOR}
-                                     ${PROJECT_BINARY_DIR}/bin/audio_test)
+                                     ${PROJECT_BINARY_DIR}/bin/audio_test ${CATCH_FLAGS})
 
     foreach (SNIPPET_TARGET ${KFR_SNIPPET_TESTS})
         add_test(NAME ${SNIPPET_TARGET}
-                 COMMAND ${EMULATOR} $<TARGET_FILE:${SNIPPET_TARGET}>)
+                 COMMAND ${EMULATOR} $<TARGET_FILE:${SNIPPET_TARGET}> ${CATCH_FLAGS})
     endforeach ()
 endif ()
