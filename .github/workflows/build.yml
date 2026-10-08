@@ -8,7 +8,7 @@ on:
 
 jobs:
   binaries-linux-x86_64:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Checkout
       uses: actions/checkout@v7
@@ -41,6 +41,9 @@ jobs:
         cmake -B build-test2 -S tests/usage-manual -DKFR_DIR=${{ github.workspace }}/dist
         cmake --build build-test2
         ctest --test-dir build-test2 -V -C Release
+    - name: Print capi glibc requirements
+      run: |
+        objdump -T ${{ github.workspace }}/dist/lib/libkfr_capi.so | grep -o 'GLIBC_[0-9.]*' | sort -uV
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
@@ -48,7 +51,7 @@ jobs:
         path: ${{ github.workspace }}/dist
 
   binaries-linux-arm:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Checkout
       uses: actions/checkout@v7
@@ -81,6 +84,9 @@ jobs:
         cmake -B build-test2 -S tests/usage-manual -DKFR_DIR=${{ github.workspace }}/dist -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
         cmake --build build-test2
         ctest --test-dir build-test2 -V -C Release
+    - name: Print capi glibc requirements
+      run: |
+        objdump -T ${{ github.workspace }}/dist/lib/libkfr_capi.so | grep -o 'GLIBC_[0-9.]*' | sort -uV
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
@@ -88,7 +94,7 @@ jobs:
         path: ${{ github.workspace }}/dist
 
   binaries-linux-arm64:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Checkout
       uses: actions/checkout@v7
@@ -121,6 +127,9 @@ jobs:
         cmake -B build-test2 -S tests/usage-manual -DKFR_DIR=${{ github.workspace }}/dist -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
         cmake --build build-test2
         ctest --test-dir build-test2 -V -C Release
+    - name: Print capi glibc requirements
+      run: |
+        objdump -T ${{ github.workspace }}/dist/lib/libkfr_capi.so | grep -o 'GLIBC_[0-9.]*' | sort -uV
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
@@ -128,7 +137,7 @@ jobs:
         path: ${{ github.workspace }}/dist
 
   binaries-linux-riscv64:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Checkout
       uses: actions/checkout@v7
@@ -161,6 +170,9 @@ jobs:
         cmake -B build-test2 -S tests/usage-manual -DKFR_DIR=${{ github.workspace }}/dist -DCMAKE_TOOLCHAIN_FILE=../cmake/riscv64.cmake
         cmake --build build-test2
         ctest --test-dir build-test2 -V -C Release
+    - name: Print capi glibc requirements
+      run: |
+        objdump -T ${{ github.workspace }}/dist/lib/libkfr_capi.so | grep -o 'GLIBC_[0-9.]*' | sort -uV
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
