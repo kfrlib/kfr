@@ -118,6 +118,45 @@ that were enabled for that release build. They are intended for use with a
 matching target platform; they are not a substitute for a cross-compilation
 toolchain.
 
+### iOS: `kfr-xcframework-*` package
+
+iOS releases additionally include a `kfr.xcframework`, combining arm64 device
+and arm64/x86_64 simulator slices of `kfr_dsp`, `kfr_dft`, `kfr_io`, and
+`kfr_audio` merged into a single static `libkfr.a` per platform with
+`libtool -static`. Use it directly from Xcode (add it under **Frameworks,
+Libraries, and Embedded Content**) or from CMake with a multi-config Xcode
+generator:
+
+```cmake
+add_executable(my_app main.cpp)
+target_link_libraries(my_app PRIVATE /path/to/kfr.xcframework)
+```
+
+This only works with `-GXcode`; other generators do not understand
+`.xcframework` paths passed to `target_link_libraries`.
+
+> [!warning]
+> Because `libtool -static` merges the module libraries into a single
+> archive, the result is a plain file path, not a CMake (imported) target. It
+> therefore carries none of the usage requirements (include directories,
+> transitive link libraries) that `find_package(KFR CONFIG)` provides. In
+> particular, `kfr_audio` requires `AudioToolbox.framework` on Apple
+> platforms (see `src/audio/CMakeLists.txt`), but that requirement is **not**
+> propagated by the xcframework. If your application uses `kfr_audio`
+> functionality, add the framework yourself:
+>
+> ```cmake
+> target_link_libraries(my_app PRIVATE /path/to/kfr.xcframework "-framework AudioToolbox")
+> ```
+>
+> The `kfr-xcframework-*` package also only contains a Release build (no
+> Debug slice), and does not include FLAC/ALAC codec support, since those are
+> not currently enabled for the iOS release builds. For Debug libraries, or
+> for a package that preserves `find_package(KFR CONFIG)` usage requirements
+> (including the `AudioToolbox.framework` dependency), use the separate
+> `kfr-ios-iphoneos-*`/`kfr-ios-iphonesimulator-*` packages or build from
+> source for iOS instead, as described below.
+
 ## Build and install from source
 
 Building from source is the right choice for custom CPU targets, cross builds,
