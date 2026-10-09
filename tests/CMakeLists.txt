@@ -72,11 +72,10 @@ macro (add_test_executable NAME)
 endmacro ()
 
 if (KFR_ENABLE_CAPI_BUILD)
-    add_test_executable(capi_test capi_test.cpp)
-    target_include_directories(capi_test
-                               PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+    add_executable(capi_test capi_test.c)
+    target_include_directories(capi_test PUBLIC ${CMAKE_SOURCE_DIR}/include)
     target_link_libraries(capi_test PRIVATE kfr_capi)
-    target_compile_features(capi_test PRIVATE cxx_std_14)
+    target_compile_features(capi_test PRIVATE c_std_11)
 endif ()
 
 if (KFR_ENABLE_ASMTEST)
