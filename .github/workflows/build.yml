@@ -594,6 +594,154 @@ jobs:
         name: kfr-macos-arm64-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
         path: ${{ github.workspace }}/dist
 
+  # These two jobs cross-compile KFR for iOS using CMake's native iOS support
+  # (CMAKE_SYSTEM_NAME=iOS), rather than the third-party cmake/ios.cmake
+  # toolchain file. This avoids a dependency on an externally maintained
+  # toolchain.
+  #
+  # They use -GNinja rather than -GXcode, matching the binaries-macos-universal
+  # job's fat-binary approach: with a single-config generator, CMake/Clang
+  # compiles multi-arch builds (e.g. arm64+x86_64 for the simulator) with one
+  # "clang -arch arm64 -arch x86_64 ..." invocation per translation unit, and
+  # Clang only warns (rather than errors) about x86-only flags like
+  # -mno-sse3/-msse2 that target_set_arch.cmake adds whenever x86_64 is among
+  # CMAKE_OSX_ARCHITECTURES. The Xcode generator instead compiles each
+  # architecture as its own single-target invocation, where Clang hard-errors
+  # on flags unsupported by that single target (e.g. "unsupported option
+  # '-msse2' for target 'arm64-apple-ios11.0-simulator'" when building the
+  # arm64 slice of the simulator library). The Xcode generator is kept only
+  # for the xcframework consumer smoke test below, which must link the
+  # resulting .xcframework path directly.
+  binaries-ios-iphoneos:
+    runs-on: macos-15
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+    - name: Install OS prerequisites
+      run: |
+        set -e
+        brew install ninja
+    - name: Configure KFR
+      run: |
+        set -e
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_SYSROOT=iphoneos -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_MAKE_PROGRAM=$(brew --prefix ninja)/bin/ninja -DKFR_ENABLE_MULTIARCH=OFF -DKFR_SKIP_TESTS=ON -DKFR_ENABLE_CAPI_BUILD=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_SYSROOT=iphoneos -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_MAKE_PROGRAM=$(brew --prefix ninja)/bin/ninja -DKFR_ENABLE_MULTIARCH=OFF -DKFR_SKIP_TESTS=ON -DKFR_ENABLE_CAPI_BUILD=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target
+    - name: Build KFR
+      run: |
+        set -e
+        ninja -C build-release install
+        ninja -C build-debug install
+    - name: Verify architectures
+      run: |
+        set -e
+        for library in dist/lib/*.a dist/lib/debug/*.a; do
+          test "$(lipo -archs "$library")" = "arm64"
+        done
+    - name: Binaries
+      uses: actions/upload-artifact@v7
+      with:
+        name: kfr-ios-iphoneos-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        path: ${{ github.workspace }}/dist
+
+  binaries-ios-iphonesimulator:
+    runs-on: macos-15
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+    - name: Install OS prerequisites
+      run: |
+        set -e
+        brew install ninja
+    - name: Configure KFR
+      run: |
+        set -e
+        cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_SYSROOT=iphonesimulator '-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64' -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_MAKE_PROGRAM=$(brew --prefix ninja)/bin/ninja -DKFR_ENABLE_MULTIARCH=OFF -DKFR_SKIP_TESTS=ON -DKFR_ENABLE_CAPI_BUILD=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target
+        cmake -B build-debug   -S . -DCMAKE_BUILD_TYPE=Debug   -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_SYSROOT=iphonesimulator '-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64' -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist -GNinja -DCMAKE_MAKE_PROGRAM=$(brew --prefix ninja)/bin/ninja -DKFR_ENABLE_MULTIARCH=OFF -DKFR_SKIP_TESTS=ON -DKFR_ENABLE_CAPI_BUILD=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target
+    - name: Build KFR
+      run: |
+        set -e
+        ninja -C build-release install
+        ninja -C build-debug install
+    - name: Verify architectures
+      run: |
+        set -e
+        for library in dist/lib/*.a dist/lib/debug/*.a; do
+          archs=$(lipo -archs "$library")
+          [[ " $archs " == *" arm64 "* && " $archs " == *" x86_64 "* ]]
+        done
+    - name: Binaries
+      uses: actions/upload-artifact@v7
+      with:
+        name: kfr-ios-iphonesimulator-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        path: ${{ github.workspace }}/dist
+
+  # Packages a static-library kfr.xcframework for iOS device + simulator.
+  #
+  # Limitations of this package, relative to a regular find_package(KFR)
+  # installation (documented in docs/docs/getting-started/installation.md):
+  #  - Only the Release build is packaged; no Debug slice is included.
+  #  - FLAC/ALAC codec support in kfr_audio is not enabled here (no vcpkg
+  #    step installs them for iOS), so it is not part of libkfr.a. If FLAC/
+  #    ALAC support is added for iOS, their static libraries must also be
+  #    merged into libkfr.a below.
+  #  - Merging the module libraries with `libtool -static` discards target
+  #    metadata, so link requirements such as kfr_audio's dependency on
+  #    AudioToolbox.framework are NOT propagated automatically the way
+  #    find_package(KFR CONFIG) + target_link_libraries would. Consumers of
+  #    this xcframework must add AudioToolbox.framework to their target
+  #    themselves, exactly as tests/usage-xcframework does below.
+  package-ios-xcframework:
+    runs-on: macos-15
+    needs:
+      - binaries-ios-iphoneos
+      - binaries-ios-iphonesimulator
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+    - name: Download iOS device artifact
+      uses: actions/download-artifact@v8
+      with:
+        name: kfr-ios-iphoneos-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        path: iphoneos
+    - name: Download iOS simulator artifact
+      uses: actions/download-artifact@v8
+      with:
+        name: kfr-ios-iphonesimulator-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        path: iphonesimulator
+    - name: Build XCFramework
+      run: |
+        set -e
+        mkdir -p package/iphoneos package/iphonesimulator
+        xcrun -sdk iphoneos libtool -static -o package/iphoneos/libkfr.a \
+          iphoneos/lib/libkfr_dsp.a \
+          iphoneos/lib/libkfr_dft.a \
+          iphoneos/lib/libkfr_io.a \
+          iphoneos/lib/libkfr_audio.a
+        xcrun -sdk iphonesimulator libtool -static -o package/iphonesimulator/libkfr.a \
+          iphonesimulator/lib/libkfr_dsp.a \
+          iphonesimulator/lib/libkfr_dft.a \
+          iphonesimulator/lib/libkfr_io.a \
+          iphonesimulator/lib/libkfr_audio.a
+        xcodebuild -create-xcframework \
+          -library package/iphoneos/libkfr.a -headers iphoneos/include \
+          -library package/iphonesimulator/libkfr.a -headers iphonesimulator/include \
+          -output kfr.xcframework
+        mkdir -p kfr-xcframework-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        mv kfr.xcframework kfr-xcframework-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}/
+    - name: Quick test XCFramework
+      # Also links AudioToolbox.framework explicitly, since it is required
+      # by kfr_audio but is not propagated by the merged static xcframework.
+      # See tests/usage-xcframework/CMakeLists.txt.
+      run: |
+        set -e
+        cmake -B build-xcframework-test -S tests/usage-xcframework -GXcode -DKFR_XCFRAMEWORK=${{ github.workspace }}/kfr-xcframework-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}/kfr.xcframework -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_SYSROOT=iphonesimulator -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED=NO -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED=NO
+        cmake --build build-xcframework-test --config Release
+    - name: XCFramework
+      uses: actions/upload-artifact@v7
+      with:
+        name: kfr-xcframework-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        path: ${{ github.workspace }}/kfr-xcframework-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+
   upload-release:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-24.04
@@ -611,6 +759,9 @@ jobs:
       - binaries-macos-arm64
       - binaries-macos-x86_64
       - binaries-macos-universal
+      - binaries-ios-iphoneos
+      - binaries-ios-iphonesimulator
+      - package-ios-xcframework
       - binaries-windows-arm64
       - binaries-windows-x86
       - binaries-windows-x86_64
@@ -637,6 +788,9 @@ jobs:
         zip -r kfr-macos-arm64-${{ github.ref_name }}.zip         kfr-macos-arm64-${{ github.ref_name }}
         zip -r kfr-macos-x86_64-${{ github.ref_name }}.zip        kfr-macos-x86_64-${{ github.ref_name }}
         zip -r kfr-macos-universal-${{ github.ref_name }}.zip     kfr-macos-universal-${{ github.ref_name }}
+        zip -r kfr-ios-iphoneos-${{ github.ref_name }}.zip        kfr-ios-iphoneos-${{ github.ref_name }}
+        zip -r kfr-ios-iphonesimulator-${{ github.ref_name }}.zip kfr-ios-iphonesimulator-${{ github.ref_name }}
+        zip -r kfr-xcframework-${{ github.ref_name }}.zip         kfr-xcframework-${{ github.ref_name }}
         zip -r kfr-windows-arm64-${{ github.ref_name }}.zip       kfr-windows-arm64-${{ github.ref_name }}
         zip -r kfr-windows-x86-${{ github.ref_name }}.zip         kfr-windows-x86-${{ github.ref_name }}
         zip -r kfr-windows-x86_64-${{ github.ref_name }}.zip      kfr-windows-x86_64-${{ github.ref_name }}
