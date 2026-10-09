@@ -1,5 +1,41 @@
 # Changelog
 
+## 7.2.0
+
+#### Added
+
+* C API for biquad filter design, window functions, complex and real DFT, convolution and filtering, IIR and FIR filter design, and sample rate conversion
+* `KFR_INSTALL_LICENSE` CMake option to control installation of `LICENSE.txt` and `README.md`
+* `KFR_FORCE_INLINE_MSVC` CMake option to enable force inlining with MSVC
+* iOS build jobs and `kfr.xcframework` packaging in the release workflow
+* C API tests are now written in C (`capi_test.c`)
+
+#### Changed
+
+* [Breaking change] `KFR_ENABLE_DFT` is now enabled by default for MSVC, as for all other compilers
+* [Breaking change] `LICENSE.txt` and `README.md` are installed to `CMAKE_INSTALL_DOCDIR` instead of the installation prefix root
+* [Breaking change] `cmake/ios.cmake` toolchain file removed; iOS is detected with `CMAKE_SYSTEM_NAME=iOS`
+* [Breaking change] Default `KFR_ARCHS` includes `avx512` on 64-bit x86 only
+* GCC is supported for non-x86 builds and uses the vector extension backend unless `KFR_DISABLE_CLANG_EXTENSIONS` is set
+* `KFR_USE_STD_FILESYSTEM` is propagated to consumers as a compile definition
+* MSVC: DFT is compiled with `/fp:contract /Ob3 /GS-` and code generation uses a single thread (`/cgthreads1`)
+* DFT complex multiplication has AVX and AVX2 specializations
+* Bit reversal uses `rbit` on arm64
+
+#### Fixed
+
+* One-sample windows return `1` for all window types and symmetry modes; symmetric mode previously returned NaN
+* `linspace` with `endpoint` and size 1 returns `start` instead of NaN
+* `countr_zero` for 64-bit values on 32-bit MSVC targets
+* NEON `select` mask type casting
+* NEON bit reversal
+* Component-wise return vectors are initialized with `czeros`
+* Fallback shuffler for MSVC
+* Blend functions for SSE4.1 on MSVC
+* SIMD fixes for GCC
+* MSVC warnings in DFT sources
+* C API: DCT plan type references in size and temporary-size functions
+
 ## 7.1.0
 
 #### Added

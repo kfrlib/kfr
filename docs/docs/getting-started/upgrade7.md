@@ -158,3 +158,47 @@ Fixed typo: `convert_endianess` → `convert_endianness`
 In multiarch builds, the base architecture is now named exactly as the module itself (was: `kfr_dsp_sse2`, `kfr_dsp_avx2`; now: `kfr_dsp`, `kfr_dsp_avx2`).
 If you're manually linking against KFR libraries, please use the new names.
 
+## Upgrade to 7.2.0
+
+### DFT is enabled by default on MSVC
+
+`KFR_ENABLE_DFT` now defaults to ON on all compilers. MSVC builds that previously excluded DFT now build it. To keep DFT disabled:
+
+```bash
+cmake -B build -DKFR_ENABLE_DFT=OFF
+```
+
+### `LICENSE.txt` and `README.md` installation location
+
+These files are now installed to `CMAKE_INSTALL_DOCDIR` instead of the installation prefix root. Update scripts that reference the old location. To skip installing them:
+
+```bash
+cmake -B build -DKFR_INSTALL_LICENSE=OFF
+```
+
+### `cmake/ios.cmake` removed
+
+The iOS toolchain file has been removed. Configure iOS builds with CMake's built-in iOS support instead:
+
+```diff
+- cmake -B build -DCMAKE_TOOLCHAIN_FILE=cmake/ios.cmake -DIOS_PLATFORM=OS64 -DIOS_ARCH=arm64
++ cmake -B build -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_SYSROOT=iphoneos \
++   -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0
+```
+
+Release iOS builds use a deployment target of 12.0.
+
+### Default `KFR_ARCHS` on 32-bit x86
+
+The default `KFR_ARCHS` includes `avx512` only on 64-bit x86 builds. 32-bit builds no longer include the AVX-512 variant by default. Set `KFR_ARCHS` explicitly if you need it.
+
+### GCC on non-x86 targets
+
+GCC builds for ARM, AArch64, and RISC-V are now supported and use the vector extension backend.
+
+### One-sample windows and `linspace`
+
+A window of size 1 now returns `1` for every window type and symmetry mode, matching NumPy and SciPy. Previously, symmetric mode returned NaN and periodic mode returned an edge value (for example, 0 for `hann`).
+
+`linspace` with `endpoint` set and size 1 now returns `start` instead of NaN. Code that depends on the previous values must be updated.
+
