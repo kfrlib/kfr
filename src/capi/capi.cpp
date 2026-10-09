@@ -380,6 +380,81 @@ static void design_fir(int response, int type, T param, double frequency, double
     }
 }
 
+// Validates one-shot DFT arguments before try_fn so that the error is not cleared by reset_error().
+static bool check_oneshot_dft(const void* out, const void* in, size_t size)
+{
+    if (out == nullptr)
+    {
+        set_error("kfr_dft: out must not be NULL");
+        return false;
+    }
+    if (in == nullptr)
+    {
+        set_error("kfr_dft: in must not be NULL");
+        return false;
+    }
+    if (size == 0)
+    {
+        set_error("kfr_dft: size must be greater than zero");
+        return false;
+    }
+    return true;
+}
+
+// Validates one-shot convolution arguments before try_fn so that the error is not cleared by
+// reset_error().
+static bool check_oneshot_convolve(const void* out, const void* a, size_t a_size, const void* b,
+                                   size_t b_size)
+{
+    if (out == nullptr)
+    {
+        set_error("kfr_convolve: out must not be NULL");
+        return false;
+    }
+    if (a == nullptr)
+    {
+        set_error("kfr_convolve: a must not be NULL");
+        return false;
+    }
+    if (b == nullptr)
+    {
+        set_error("kfr_convolve: b must not be NULL");
+        return false;
+    }
+    if (a_size == 0 || b_size == 0)
+    {
+        set_error("kfr_convolve: a_size and b_size must be greater than zero");
+        return false;
+    }
+    return true;
+}
+
+// Validates one-shot filtfilt arguments before try_fn so that the error is not cleared by reset_error().
+static bool check_oneshot_filtfilt(const void* sos, size_t sos_count, const void* data, size_t size)
+{
+    if (sos == nullptr)
+    {
+        set_error("kfr_filtfilt: sos must not be NULL");
+        return false;
+    }
+    if (data == nullptr)
+    {
+        set_error("kfr_filtfilt: data must not be NULL");
+        return false;
+    }
+    if (sos_count == 0)
+    {
+        set_error("kfr_filtfilt: sos_count must be greater than zero");
+        return false;
+    }
+    if (size == 0)
+    {
+        set_error("kfr_filtfilt: size must be greater than zero");
+        return false;
+    }
+    return true;
+}
+
 template <typename T>
 static void one_shot_dft(complex<T>* out, const complex<T>* in, size_t size, bool inverse)
 {
@@ -407,8 +482,6 @@ static void one_shot_irealdft(T* out, const complex<T>* in, size_t size)
 template <typename T>
 static void one_shot_convolve(T* out, const T* a, size_t a_size, const T* b, size_t b_size)
 {
-    if (a_size == 0 || b_size == 0)
-        return;
     univector<T> result = convolve(make_univector(a, a_size), make_univector(b, b_size));
     std::copy_n(result.data(), result.size(), out);
 }
@@ -874,6 +947,8 @@ KFR_API_SPEC void kfr_dft_real_delete_plan_f64(KFR_DFT_REAL_PLAN_F64* plan)
 
 KFR_API_SPEC void kfr_dft_f32(kfr_c32* out, const kfr_c32* in, size_t size)
 {
+    if (!check_oneshot_dft(out, in, size))
+        return;
     try_fn(
         [&]()
         {
@@ -883,6 +958,8 @@ KFR_API_SPEC void kfr_dft_f32(kfr_c32* out, const kfr_c32* in, size_t size)
 }
 KFR_API_SPEC void kfr_dft_f64(kfr_c64* out, const kfr_c64* in, size_t size)
 {
+    if (!check_oneshot_dft(out, in, size))
+        return;
     try_fn(
         [&]()
         {
@@ -892,6 +969,8 @@ KFR_API_SPEC void kfr_dft_f64(kfr_c64* out, const kfr_c64* in, size_t size)
 }
 KFR_API_SPEC void kfr_idft_f32(kfr_c32* out, const kfr_c32* in, size_t size)
 {
+    if (!check_oneshot_dft(out, in, size))
+        return;
     try_fn(
         [&]()
         {
@@ -901,6 +980,8 @@ KFR_API_SPEC void kfr_idft_f32(kfr_c32* out, const kfr_c32* in, size_t size)
 }
 KFR_API_SPEC void kfr_idft_f64(kfr_c64* out, const kfr_c64* in, size_t size)
 {
+    if (!check_oneshot_dft(out, in, size))
+        return;
     try_fn(
         [&]()
         {
@@ -911,18 +992,26 @@ KFR_API_SPEC void kfr_idft_f64(kfr_c64* out, const kfr_c64* in, size_t size)
 
 KFR_API_SPEC void kfr_realdft_f32(kfr_c32* out, const kfr_f32* in, size_t size)
 {
+    if (!check_oneshot_dft(out, in, size))
+        return;
     try_fn([&]() { one_shot_realdft(reinterpret_cast<complex<float>*>(out), in, size); });
 }
 KFR_API_SPEC void kfr_realdft_f64(kfr_c64* out, const kfr_f64* in, size_t size)
 {
+    if (!check_oneshot_dft(out, in, size))
+        return;
     try_fn([&]() { one_shot_realdft(reinterpret_cast<complex<double>*>(out), in, size); });
 }
 KFR_API_SPEC void kfr_irealdft_f32(kfr_f32* out, const kfr_c32* in, size_t size)
 {
+    if (!check_oneshot_dft(out, in, size))
+        return;
     try_fn([&]() { one_shot_irealdft(out, reinterpret_cast<const complex<float>*>(in), size); });
 }
 KFR_API_SPEC void kfr_irealdft_f64(kfr_f64* out, const kfr_c64* in, size_t size)
 {
+    if (!check_oneshot_dft(out, in, size))
+        return;
     try_fn([&]() { one_shot_irealdft(out, reinterpret_cast<const complex<double>*>(in), size); });
 }
 
@@ -1242,22 +1331,30 @@ KFR_API_SPEC void kfr_filter_delete_plan_f64(KFR_FILTER_F64* plan)
 KFR_API_SPEC void kfr_convolve_f32(kfr_f32* out, const kfr_f32* a, size_t a_size, const kfr_f32* b,
                                    size_t b_size)
 {
+    if (!check_oneshot_convolve(out, a, a_size, b, b_size))
+        return;
     try_fn([&]() { one_shot_convolve(out, a, a_size, b, b_size); });
 }
 KFR_API_SPEC void kfr_convolve_f64(kfr_f64* out, const kfr_f64* a, size_t a_size, const kfr_f64* b,
                                    size_t b_size)
 {
+    if (!check_oneshot_convolve(out, a, a_size, b, b_size))
+        return;
     try_fn([&]() { one_shot_convolve(out, a, a_size, b, b_size); });
 }
 
 KFR_API_SPEC void kfr_filtfilt_f32(const kfr_f32* sos, size_t sos_count, kfr_f32* data, size_t size)
 {
+    if (!check_oneshot_filtfilt(sos, sos_count, data, size))
+        return;
     try_fn(
         [&]()
         { one_shot_filtfilt(reinterpret_cast<const biquad_section<float>*>(sos), sos_count, data, size); });
 }
 KFR_API_SPEC void kfr_filtfilt_f64(const kfr_f64* sos, size_t sos_count, kfr_f64* data, size_t size)
 {
+    if (!check_oneshot_filtfilt(sos, sos_count, data, size))
+        return;
     try_fn(
         [&]()
         { one_shot_filtfilt(reinterpret_cast<const biquad_section<double>*>(sos), sos_count, data, size); });
