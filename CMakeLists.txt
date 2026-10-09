@@ -384,7 +384,7 @@ if (WIN32)
 endif ()
 
 set(STD_LIB)
-if (NOT IOS AND NOT ANDROID)
+if (NOT CMAKE_SYSTEM_NAME STREQUAL "iOS" AND NOT ANDROID)
     set(STD_LIB stdc++)
 endif ()
 
