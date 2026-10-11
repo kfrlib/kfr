@@ -4,6 +4,10 @@
  * See LICENSE.txt for details
  */
 
+#include <algorithm>
+#include <array>
+#include <ctime>
+
 #include <kfr/base/reduce.hpp>
 #include <kfr/base/simd_expressions.hpp>
 #include <kfr/base/univector.hpp>
@@ -30,6 +34,91 @@ template <typename T, typename T2, typename... Ts, univector_tag Tag>
 inline const univector<T, Tag>& choose_array(const univector<T2, Tag>&, const univector<Ts, Tag>&... arrays)
 {
     return choose_array<T>(arrays...);
+}
+
+namespace
+{
+struct scalar_biquad
+{
+    float a1, a2, b0, b1, b2;
+};
+
+void scalar_apply(const scalar_biquad& f, float* data, size_t len)
+{
+    float z1 = 0, z2 = 0;
+    for (size_t i = 0; i < len; ++i)
+    {
+        float out = f.b0 * data[i] + z1;
+        z1        = f.b1 * data[i] - f.a1 * out + z2;
+        z2        = f.b2 * data[i] - f.a2 * out;
+        data[i]   = out;
+    }
+}
+
+constexpr scalar_biquad scalar_params{ -1.407505f, 0.546649f, 0.738539f, -1.477077f, 0.738539f };
+constexpr biquad_section<float> single_section{
+    1.f, scalar_params.a1, scalar_params.a2, scalar_params.b0, scalar_params.b1, scalar_params.b2
+};
+} // namespace
+
+TEST_CASE("iir_single_section_streaming")
+{
+    univector<float, 33> input;
+    for (size_t i = 0; i < input.size(); ++i)
+        input[i] = float(int(i % 17) - 8) / 8.f;
+    auto expected = input;
+    scalar_apply(scalar_params, expected.data(), expected.size());
+
+    for (size_t chunk_size : { 1u, 3u, 16u, 17u, 33u })
+    {
+        INFO("chunk size = " << chunk_size);
+        iir_filter<float> filter{ iir_params<float>{ single_section } };
+        for (size_t pass = 0; pass < 2; ++pass)
+        {
+            filter.reset();
+            auto actual = input;
+            for (size_t offset = 0; offset < actual.size(); offset += chunk_size)
+                filter.apply(actual.data() + offset, std::min(chunk_size, actual.size() - offset));
+            CHECK(absmaxof(actual - expected) < 1e-6f);
+        }
+    }
+}
+
+TEST_CASE("iir_single_section_performance", "[.performance]")
+{
+    constexpr size_t size       = 100000;
+    constexpr size_t iterations = 321;
+    std::array<double, 3> scalar_times, iir_times;
+    univector<float> input(size);
+    for (size_t i = 0; i < input.size(); ++i)
+        input[i] = float(int(i % 17) - 8) / 8.f;
+
+    for (size_t run = 0; run < scalar_times.size(); ++run)
+    {
+        auto scalar_data        = input;
+        const auto scalar_start = std::clock();
+        for (size_t i = 0; i < iterations; ++i)
+            scalar_apply(scalar_params, scalar_data.data(), scalar_data.size());
+        scalar_times[run] = double(std::clock() - scalar_start) / CLOCKS_PER_SEC;
+
+        auto iir_data = input;
+        iir_state<float, 1> state{ iir_params<float, 1>{ single_section } };
+        auto expression      = iir(iir_data, std::ref(state));
+        const auto iir_start = std::clock();
+        for (size_t i = 0; i < iterations; ++i)
+        {
+            reset(expression);
+            iir_data = expression;
+        }
+        iir_times[run] = double(std::clock() - iir_start) / CLOCKS_PER_SEC;
+        CHECK(absmaxof(iir_data - scalar_data) < 1e-5f);
+    }
+
+    std::sort(scalar_times.begin(), scalar_times.end());
+    std::sort(iir_times.begin(), iir_times.end());
+    INFO("scalar CPU seconds = " << scalar_times[1]);
+    INFO("IIR CPU seconds = " << iir_times[1]);
+    CHECK(iir_times[1] < scalar_times[1] * 1.5);
 }
 
 TEST_CASE("biquad_lowpass1")

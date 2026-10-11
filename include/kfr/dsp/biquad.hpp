@@ -413,6 +413,29 @@ template <size_t filters, typename T, size_t N>
 KFR_INTRINSIC vec<T, N> biquad_process(iir_state<T, filters>& state, const vec<T, N>& in,
                                        size_t save_state_after = static_cast<size_t>(-1))
 {
+    if constexpr (filters == 1 && N > 0)
+    {
+        if (save_state_after == static_cast<size_t>(-1))
+        {
+            const vec<T, 1> a1 = state.params.a1, a2 = state.params.a2;
+            const vec<T, 1> b0 = state.params.b0, b1 = state.params.b1, b2 = state.params.b2;
+            vec<T, 1> s1 = state.state.s1, s2 = state.state.s2;
+            const portable_vec<T, N> input = in;
+            portable_vec<T, N> output;
+            for (size_t i = 0; i < N; ++i)
+            {
+                const vec<T, 1> sample = input[i];
+                const vec<T, 1> result = b0 * sample + s1;
+                s1                     = s2 + b1 * sample - a1 * result;
+                s2                     = b2 * sample - a2 * result;
+                output[i]              = result[0];
+            }
+            state.state.s1  = s1;
+            state.state.s2  = s2;
+            state.state.out = output[N - 1];
+            return vec<T, N>(output);
+        }
+    }
     vec<T, N> out;
     if (KFR_LIKELY(save_state_after == static_cast<size_t>(-1)))
     {
