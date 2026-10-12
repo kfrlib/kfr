@@ -2,6 +2,15 @@
 
 KFR 7 introduces a range of new capabilities, platform support, and performance improvements for modern audio and signal processing workflows.
 
+## KFR 7.2 Highlights
+
+* The C API now covers biquad filter design, window functions, complex and real DFT, convolution and filtering, IIR and FIR filter design, and sample rate conversion.
+* iOS build jobs and `kfr.xcframework` packaging are included in the release workflow.
+* `KFR_ENABLE_DFT` is enabled by default for MSVC, as for all other compilers.
+* GCC is supported for non-x86 builds and uses the vector extension backend.
+* New CMake options: `KFR_INSTALL_LICENSE` and `KFR_FORCE_INLINE_MSVC`.
+* Breaking changes: `LICENSE.txt` and `README.md` are installed to `CMAKE_INSTALL_DOCDIR`, the `cmake/ios.cmake` toolchain file is removed, and the default `KFR_ARCHS` doesn't include `avx512` on 32-bit x86.
+
 ## KFR 7.1 Highlights
 
 * `ngfft` is a new low-overhead FFT API that gives applications manual control over memory management.
