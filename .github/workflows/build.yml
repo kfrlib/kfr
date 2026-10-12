@@ -48,7 +48,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-linux-x86_64-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        name: KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-Linux-x86_64
         path: ${{ github.workspace }}/dist
 
   binaries-linux-arm:
@@ -91,7 +91,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-linux-arm-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        name: KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-Linux-ARM
         path: ${{ github.workspace }}/dist
 
   binaries-linux-arm64:
@@ -134,7 +134,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-linux-arm64-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        name: KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-Linux-ARM64
         path: ${{ github.workspace }}/dist
 
   binaries-linux-riscv64:
@@ -177,7 +177,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-linux-riscv64-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        name: KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-Linux-RISCV64
         path: ${{ github.workspace }}/dist
 
   binaries-windows-x86:
@@ -224,7 +224,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-windows-x86-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        name: KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-Windows-x86
         path: ${{ github.workspace }}/dist
 
   binaries-windows-x86_64:
@@ -268,7 +268,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-windows-x86_64-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        name: KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-Windows-x86_64
         path: ${{ github.workspace }}/dist
 
   binaries-windows-arm64:
@@ -314,7 +314,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-windows-arm64-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        name: KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-Windows-ARM64
         path: ${{ github.workspace }}/dist
 
   binaries-android-armeabi-v7a:
@@ -353,7 +353,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-android-armeabi-v7a-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        name: KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-Android-armeabi-v7a
         path: ${{ github.workspace }}/dist
 
   binaries-android-arm64-v8a:
@@ -392,7 +392,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-android-arm64-v8a-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        name: KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-Android-arm64-v8a
         path: ${{ github.workspace }}/dist
 
   binaries-android-x86:
@@ -431,7 +431,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-android-x86-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        name: KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-Android-x86
         path: ${{ github.workspace }}/dist
 
   binaries-android-x86_64:
@@ -470,7 +470,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-android-x86_64-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        name: KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-Android-x86_64
         path: ${{ github.workspace }}/dist
 
   binaries-macos-x86_64:
@@ -509,7 +509,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-macos-x86_64-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        name: KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-macOS-x86_64
         path: ${{ github.workspace }}/dist
 
   binaries-macos-universal:
@@ -552,7 +552,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-macos-universal-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        name: KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-macOS-Universal
         path: ${{ github.workspace }}/dist
 
   binaries-macos-arm64:
@@ -591,7 +591,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-macos-arm64-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        name: KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-macOS-ARM64
         path: ${{ github.workspace }}/dist
 
   # These two jobs cross-compile KFR for iOS using CMake's native iOS support
@@ -625,7 +625,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-ios-iphoneos-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        name: KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-iOS-iPhoneOS
         path: ${{ github.workspace }}/dist
 
   binaries-ios-iphonesimulator:
@@ -657,7 +657,7 @@ jobs:
     - name: Binaries
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-ios-iphonesimulator-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        name: KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-iOS-iPhoneSimulator
         path: ${{ github.workspace }}/dist
 
   # Packages a static-library kfr.xcframework for iOS device + simulator.
@@ -672,12 +672,12 @@ jobs:
     - name: Download iOS device artifact
       uses: actions/download-artifact@v8
       with:
-        name: kfr-ios-iphoneos-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        name: KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-iOS-iPhoneOS
         path: iphoneos
     - name: Download iOS simulator artifact
       uses: actions/download-artifact@v8
       with:
-        name: kfr-ios-iphonesimulator-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        name: KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-iOS-iPhoneSimulator
         path: iphonesimulator
     - name: Build XCFramework
       run: |
@@ -697,21 +697,21 @@ jobs:
           -library package/iphoneos/libkfr.a -headers iphoneos/include \
           -library package/iphonesimulator/libkfr.a -headers iphonesimulator/include \
           -output kfr.xcframework
-        mkdir -p kfr-xcframework-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
-        mv kfr.xcframework kfr-xcframework-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}/
+        mkdir -p KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-iOS-XCFramework
+        mv kfr.xcframework KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-iOS-XCFramework/
     - name: Quick test XCFramework
       # Also links AudioToolbox.framework explicitly, since it is required
       # by kfr_audio but is not propagated by the merged static xcframework.
       # See tests/usage-xcframework/CMakeLists.txt.
       run: |
         set -e
-        cmake -B build-xcframework-test -S tests/usage-xcframework -GXcode -DKFR_XCFRAMEWORK=${{ github.workspace }}/kfr-xcframework-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}/kfr.xcframework -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_SYSROOT=iphonesimulator -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED=NO -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED=NO
+        cmake -B build-xcframework-test -S tests/usage-xcframework -GXcode -DKFR_XCFRAMEWORK=${{ github.workspace }}/KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-iOS-XCFramework/kfr.xcframework -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_SYSROOT=iphonesimulator -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED=NO -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED=NO
         cmake --build build-xcframework-test --config Release
     - name: XCFramework
       uses: actions/upload-artifact@v7
       with:
-        name: kfr-xcframework-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
-        path: ${{ github.workspace }}/kfr-xcframework-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        name: KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-iOS-XCFramework
+        path: ${{ github.workspace }}/KFR-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-iOS-XCFramework
 
   upload-release:
     if: startsWith(github.ref, 'refs/tags/')
@@ -748,21 +748,21 @@ jobs:
         set -e
         ls -laR ${{github.workspace}}
         sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends zip
-        zip -r kfr-android-arm64-v8a-${{ github.ref_name }}.zip   kfr-android-arm64-v8a-${{ github.ref_name }}
-        zip -r kfr-android-armeabi-v7a-${{ github.ref_name }}.zip kfr-android-armeabi-v7a-${{ github.ref_name }}
-        zip -r kfr-android-x86-${{ github.ref_name }}.zip         kfr-android-x86-${{ github.ref_name }}
-        zip -r kfr-android-x86_64-${{ github.ref_name }}.zip      kfr-android-x86_64-${{ github.ref_name }}
-        zip -r kfr-linux-arm-${{ github.ref_name }}.zip           kfr-linux-arm-${{ github.ref_name }}
-        zip -r kfr-linux-arm64-${{ github.ref_name }}.zip         kfr-linux-arm64-${{ github.ref_name }}
-        zip -r kfr-linux-x86_64-${{ github.ref_name }}.zip        kfr-linux-x86_64-${{ github.ref_name }}
-        zip -r kfr-linux-riscv64-${{ github.ref_name }}.zip       kfr-linux-riscv64-${{ github.ref_name }}
-        zip -r kfr-macos-arm64-${{ github.ref_name }}.zip         kfr-macos-arm64-${{ github.ref_name }}
-        zip -r kfr-macos-x86_64-${{ github.ref_name }}.zip        kfr-macos-x86_64-${{ github.ref_name }}
-        zip -r kfr-macos-universal-${{ github.ref_name }}.zip     kfr-macos-universal-${{ github.ref_name }}
-        zip -r kfr-ios-iphoneos-${{ github.ref_name }}.zip        kfr-ios-iphoneos-${{ github.ref_name }}
-        zip -r kfr-ios-iphonesimulator-${{ github.ref_name }}.zip kfr-ios-iphonesimulator-${{ github.ref_name }}
-        zip -r kfr-xcframework-${{ github.ref_name }}.zip         kfr-xcframework-${{ github.ref_name }}
-        zip -r kfr-windows-arm64-${{ github.ref_name }}.zip       kfr-windows-arm64-${{ github.ref_name }}
-        zip -r kfr-windows-x86-${{ github.ref_name }}.zip         kfr-windows-x86-${{ github.ref_name }}
-        zip -r kfr-windows-x86_64-${{ github.ref_name }}.zip      kfr-windows-x86_64-${{ github.ref_name }}
+        zip -r KFR-${{ github.ref_name }}-Android-arm64-v8a.zip      KFR-${{ github.ref_name }}-Android-arm64-v8a
+        zip -r KFR-${{ github.ref_name }}-Android-armeabi-v7a.zip    KFR-${{ github.ref_name }}-Android-armeabi-v7a
+        zip -r KFR-${{ github.ref_name }}-Android-x86.zip            KFR-${{ github.ref_name }}-Android-x86
+        zip -r KFR-${{ github.ref_name }}-Android-x86_64.zip         KFR-${{ github.ref_name }}-Android-x86_64
+        zip -r KFR-${{ github.ref_name }}-Linux-ARM.zip              KFR-${{ github.ref_name }}-Linux-ARM
+        zip -r KFR-${{ github.ref_name }}-Linux-ARM64.zip            KFR-${{ github.ref_name }}-Linux-ARM64
+        zip -r KFR-${{ github.ref_name }}-Linux-x86_64.zip           KFR-${{ github.ref_name }}-Linux-x86_64
+        zip -r KFR-${{ github.ref_name }}-Linux-RISCV64.zip          KFR-${{ github.ref_name }}-Linux-RISCV64
+        zip -r KFR-${{ github.ref_name }}-macOS-ARM64.zip            KFR-${{ github.ref_name }}-macOS-ARM64
+        zip -r KFR-${{ github.ref_name }}-macOS-x86_64.zip           KFR-${{ github.ref_name }}-macOS-x86_64
+        zip -r KFR-${{ github.ref_name }}-macOS-Universal.zip        KFR-${{ github.ref_name }}-macOS-Universal
+        zip -r KFR-${{ github.ref_name }}-iOS-iPhoneOS.zip           KFR-${{ github.ref_name }}-iOS-iPhoneOS
+        zip -r KFR-${{ github.ref_name }}-iOS-iPhoneSimulator.zip    KFR-${{ github.ref_name }}-iOS-iPhoneSimulator
+        zip -r KFR-${{ github.ref_name }}-iOS-XCFramework.zip        KFR-${{ github.ref_name }}-iOS-XCFramework
+        zip -r KFR-${{ github.ref_name }}-Windows-ARM64.zip          KFR-${{ github.ref_name }}-Windows-ARM64
+        zip -r KFR-${{ github.ref_name }}-Windows-x86.zip            KFR-${{ github.ref_name }}-Windows-x86
+        zip -r KFR-${{ github.ref_name }}-Windows-x86_64.zip         KFR-${{ github.ref_name }}-Windows-x86_64
         gh release create --draft --notes "Draft Release" --title "KFR ${{github.ref_name}}" ${{github.ref_name}} *.zip
