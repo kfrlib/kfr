@@ -1260,9 +1260,14 @@ private:
 template <typename T>
 struct dct_plan : dft_plan<T>
 {
+    size_t temp_size; ///< Scratch buffer size including the DCT working buffers.
+
     /// @brief Constructs a DCT plan for the given size.
     /// @param size Number of real samples in the transform.
-    dct_plan(size_t size) : dft_plan<T>(size) { this->temp_size += sizeof(complex<T>) * size * 2; }
+    dct_plan(size_t size)
+        : dft_plan<T>(size), temp_size(dft_plan<T>::temp_size + sizeof(complex<T>) * size * 2)
+    {
+    }
 
     /**
      * @brief Executes the DCT.

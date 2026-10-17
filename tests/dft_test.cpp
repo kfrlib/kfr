@@ -532,6 +532,38 @@ TEST_CASE("dct")
     CHECK(rms(refoutinv - outinv) < 0.00001f);
 }
 
+TEST_CASE("dct_scratch")
+{
+    test_matrix( //
+        named("type") = dft_float_types, //
+        named("size") = std::array<size_t, 3>{ 6, 8, 1000 }, //
+        [](auto type, size_t size)
+        {
+            using T = type_of<decltype(type)>;
+            dct_plan<T> plan(size);
+            univector<T> in(size, T(0)), out(size);
+            in[0] = T(1);
+            in[1] = T(2);
+            const double pi       = std::acos(-1.0);
+            const double min_prec = std::is_same_v<T, float> ? 1e-4 : 1e-10;
+            for (bool inverse : { false, true })
+            {
+                INFO((inverse ? "DCT-III" : "DCT-II"));
+                univector<u8> temp(plan.temp_size, u8(0));
+                plan.execute(out, in, temp, inverse);
+                for (size_t k = 0; k < size; ++k)
+                {
+                    INFO(as_string("k = ", k));
+                    // Direct DCT sums for input { 1, 2, 0, ... }.
+                    const double angle    = pi * k / (2 * size);
+                    const double expected = inverse ? 0.5 + 2 * std::cos(pi * (k + 0.5) / size)
+                                                    : std::cos(angle) + 2 * std::cos(3 * angle);
+                    CHECK(std::abs(out[k] - expected) < min_prec);
+                }
+            }
+        });
+}
+
 template <typename T, index_t Dims, typename dft_type, typename dft_real_type>
 static void test_dft_md_t(random_state& gen, shape<Dims> shape)
 {
