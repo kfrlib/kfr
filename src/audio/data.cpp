@@ -412,7 +412,9 @@ void audio_data<IsInterleaved>::append(const audio_data<!IsInterleaved>& other)
     }
     else
     {
-        samples_load(pointers() + old_size, other.data, other.channel_count(), other.size);
+        // Offset every channel pointer, not the pointer to the channel array
+        const chan<fbase*, false> dest = data + old_size;
+        samples_load(dest.data(), other.data, other.channel_count(), other.size);
     }
 }
 

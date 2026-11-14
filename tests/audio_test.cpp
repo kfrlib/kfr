@@ -1004,6 +1004,80 @@ TEST_CASE("audio_data new member operations")
     }
 }
 
+TEST_CASE("audio_data append with the opposite layout")
+{
+    using Catch::Approx;
+
+    const uint32_t channels = 2;
+    const size_t chunk      = 5;
+    const size_t chunks     = 4;
+
+    // sample value encodes channel and frame, so misplaced samples are detected
+    const auto value = [](size_t ch, size_t frame) { return fbase(ch * 1000 + frame); };
+
+    audio_data_planar planar(channels);
+    audio_data_interleaved interleaved(channels);
+    for (size_t n = 0; n < chunks; ++n)
+    {
+        audio_data_planar p(channels, chunk);
+        for (size_t ch = 0; ch < channels; ++ch)
+        {
+            for (size_t k = 0; k < chunk; ++k)
+            {
+                p.channel(ch)[k] = value(ch, n * chunk + k);
+            }
+        }
+        const audio_data_interleaved i = p.to_interleaved();
+
+        planar.append(i); // planar += interleaved
+        interleaved.append(p); // interleaved += planar
+    }
+
+    REQUIRE(planar.size == chunk * chunks);
+    REQUIRE(interleaved.size == chunk * chunks);
+    for (size_t ch = 0; ch < channels; ++ch)
+    {
+        for (size_t k = 0; k < chunk * chunks; ++k)
+        {
+            CHECK(planar.channel(ch)[k] == Approx(value(ch, k)));
+            CHECK(interleaved.interleaved()[k * channels + ch] == Approx(value(ch, k)));
+        }
+    }
+}
+
+TEST_CASE("read_all_planar reads more than one buffer")
+{
+    const size_t frames = default_audio_frames_to_read * 2 + 123;
+
+    audiofile_format format;
+    format.container   = audiofile_container::wave;
+    format.codec       = audiofile_codec::lpcm;
+    format.bit_depth   = 24;
+    format.channels    = 2;
+    format.sample_rate = 44100;
+
+    const audio_data_planar reference = generate_test_audio(frames, format.channels, 0.5);
+
+    std::string name = "temp" + std::to_string(std::random_device{}()) + ".wav";
+    {
+        auto encoder = create_wave_encoder();
+        REQUIRE(encoder->open(name, format));
+        REQUIRE(encoder->write(reference));
+        REQUIRE(encoder->close());
+    }
+
+    auto decoder = create_wave_decoder();
+    REQUIRE(decoder->open(name));
+    auto planar = decoder->read_all_planar();
+    REQUIRE(planar.has_value());
+    REQUIRE(planar->channels == format.channels);
+    REQUIRE(planar->size == frames);
+    for (size_t ch = 0; ch < format.channels; ++ch)
+    {
+        CHECK(absmaxof(planar->channel(ch) - reference.channel(ch)) < 0.0001);
+    }
+}
+
 TEST_CASE("encoders")
 {
     CHECK(create_wave_encoder() != nullptr);
