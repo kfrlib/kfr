@@ -166,6 +166,24 @@ TEST_CASE("test_complex_correlate")
     CHECK(rms(cabs(c - univector<fbase>({ 1.5, 1., 1.5, 2.5, 3.75, -4., 7.75, 3.5, 1.25 }))) < 0.0001);
 }
 
+TEST_CASE("test_complex_convolution_imaginary")
+{
+    test_matrix(named("type") = dft_float_types,
+                [](auto type)
+                {
+                    using T = complex<type_of<decltype(type)>>;
+                    univector<T> a({ T(1, 1), T(2, -1) });
+                    univector<T> b({ T(1, 0), T(2, 0) });
+                    univector<T> c = convolve(a, b);
+                    REQUIRE(c.size() == 3u);
+                    CHECK(rms(cabs(c - univector<T>({ T(1, 1), T(4, 1), T(4, -2) }))) < 0.0001);
+
+                    univector<T> r = correlate(a, b);
+                    REQUIRE(r.size() == 3u);
+                    CHECK(rms(cabs(r - univector<T>({ T(2, 2), T(5, -1), T(2, -1) }))) < 0.0001);
+                });
+}
+
 #if !defined KFR_ARCH_X86 || !defined NDEBUG
 constexpr size_t fft_stopsize = 12;
 #ifndef KFR_DFT_NO_NPo2

@@ -121,7 +121,10 @@ univector<T> convolve(const univector_ref<const T>& src1, const univector_ref<co
     src1padded = src1padded * src2padded;
     dft->execute(src1padded, src1padded, temp, true);
     const ST invsize = reciprocal<ST>(static_cast<ST>(size));
-    return truncate(real(src1padded), src1.size() + src2.size() - 1) * invsize;
+    if constexpr (is_complex<T>)
+        return truncate(src1padded, src1.size() + src2.size() - 1) * invsize;
+    else
+        return truncate(real(src1padded), src1.size() + src2.size() - 1) * invsize;
 }
 template univector<f32> convolve<f32>(const univector_ref<const f32>&, const univector_ref<const f32>&, bool);
 template univector<f64> convolve<f64>(const univector_ref<const f64>&, const univector_ref<const f64>&, bool);
