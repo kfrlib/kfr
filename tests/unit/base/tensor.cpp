@@ -771,6 +771,9 @@ TEST_CASE("slices")
     CHECK(t1(trange(_, _, -1)) == tensor<float, 1>{ 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 });
     CHECK(t1(trange(5, _, -1)) == tensor<float, 1>{ 5, 4, 3, 2, 1, 0 });
     CHECK(t1(trange(1, 0, -1)) == tensor<float, 1>{ 1 });
+    auto reverse_large_step = t1(trange(_, _, std::numeric_limits<signed_index_t>::min()));
+    CHECK(reverse_large_step.shape() == shape{ 1 });
+    CHECK(reverse_large_step(0) == 9);
 
     CHECK(t1(trange(3, 3 + 12, 0)) == tensor<float, 1>{ 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3 });
     CHECK_THROWS(t1(trange(8, 3, 0)));

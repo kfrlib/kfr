@@ -663,7 +663,9 @@ public:
             else
             {
                 tstart = std::max(tstart, tstop);
-                shape  = (tstart - tstop + -tstep - 1) / -tstep;
+                const index_t step_magnitude = static_cast<index_t>(-(tstep + 1)) + 1;
+                const index_t distance       = static_cast<index_t>(tstart - tstop);
+                shape                        = (distance + step_magnitude - 1) / step_magnitude;
                 start  = tstart - 1;
                 step   = tstep;
             }
