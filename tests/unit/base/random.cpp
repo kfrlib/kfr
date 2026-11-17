@@ -73,6 +73,25 @@ TEST_CASE("gen_random_range")
     // println(mean(v));
 }
 
+TEST_CASE("random_range_signed_integers")
+{
+    random_state gen = random_init(1, 2, 3, 4);
+    const auto values = random_range<64, i32>(gen, -10, 20);
+    for (size_t i = 0; i < 64; ++i)
+    {
+        CHECK(values[i] >= -10);
+        CHECK(values[i] < 20);
+    }
+}
+
+TEST_CASE("random_range_integral_degenerate_range")
+{
+    random_state gen = random_init(1, 2, 3, 4);
+    const auto values = random_range<8, i32>(gen, 42, 42);
+    for (size_t i = 0; i < 8; ++i)
+        CHECK(values[i] == 42);
+}
+
 TEST_CASE("gen_random_uniform")
 {
     random_state gen         = random_init(1, 2, 3, 4);

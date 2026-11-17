@@ -131,11 +131,15 @@ KFR_INTRINSIC vec<T, N> random_range(random_state& state, T min, T max)
 template <size_t N, not_f_class T>
 KFR_INTRINSIC vec<T, N> random_range(random_state& state, T min, T max)
 {
-    using big_type = findinttype<sqr(std::numeric_limits<T>::min()), sqr(std::numeric_limits<T>::max())>;
+    using unsigned_type = kfr::unsigned_type<typebits<T>::bits>;
 
-    vec<T, N> u                = random_uniform<T, N>(state);
-    const vec<big_type, N> tmp = u;
-    return (tmp * (max - min) + min) >> typebits<T>::bits;
+    const vec<unsigned_type, N> random = random_uniform<unsigned_type, N>(state);
+    const unsigned_type span = static_cast<unsigned_type>(max) - static_cast<unsigned_type>(min);
+    if (span == 0)
+        return vec<T, N>(min);
+
+    const vec<unsigned_type, N> values = random % span + static_cast<unsigned_type>(min);
+    return bitcast<T>(values);
 }
 
 /**
