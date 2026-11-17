@@ -635,11 +635,20 @@ public:
         }
         else
         {
-            tstart = iidx.start ? *iidx.start + 1 : tsize;
-            tstop  = iidx.stop ? *iidx.stop + 1 : 0;
+            const auto reverse_endpoint = [tsize](signed_index_t value)
+            {
+                if (value < 0)
+                    return value < -tsize ? signed_index_t(0) : tsize + value + 1;
+                return value >= tsize ? tsize : value + 1;
+            };
+            tstart = iidx.start ? reverse_endpoint(*iidx.start) : tsize;
+            tstop  = iidx.stop ? reverse_endpoint(*iidx.stop) : 0;
         }
-        tstart = tstart < 0 ? tsize + tstart : tstart;
-        tstart = std::max(std::min(tstart, tsize), signed_index_t(0));
+        if (tstep >= 0)
+        {
+            tstart = tstart < 0 ? tsize + tstart : tstart;
+            tstart = std::max(std::min(tstart, tsize), signed_index_t(0));
+        }
         if (tstep == 0)
         {
             tstop = tstop < 0 ? tsize + tstop : tstop;
@@ -651,23 +660,24 @@ public:
         }
         else
         {
-            tstop = tstop < 0 ? tsize + tstop : tstop;
-            tstop = std::max(std::min(tstop, tsize), signed_index_t(0));
             if (tstep >= 0)
             {
-                tstop = std::max(tstop, tstart);
-                start = tstart;
-                shape = (tstop - tstart + tstep - 1) / tstep;
-                step  = tstep;
+                tstop                         = tstop < 0 ? tsize + tstop : tstop;
+                tstop                         = std::max(std::min(tstop, tsize), signed_index_t(0));
+                tstop                         = std::max(tstop, tstart);
+                start                         = tstart;
+                const signed_index_t distance = tstop - tstart;
+                shape                         = distance / tstep + (distance % tstep != 0);
+                step                          = tstep;
             }
             else
             {
-                tstart = std::max(tstart, tstop);
+                tstart                       = std::max(tstart, tstop);
                 const index_t step_magnitude = static_cast<index_t>(-(tstep + 1)) + 1;
                 const index_t distance       = static_cast<index_t>(tstart - tstop);
                 shape                        = (distance + step_magnitude - 1) / step_magnitude;
-                start  = tstart - 1;
-                step   = tstep;
+                start                        = tstart - 1;
+                step                         = tstep;
             }
         }
     }
@@ -717,7 +727,7 @@ public:
         shape_type strides = *step * *m_strides;
         // shape_type absstep = abs(*step);
 
-        T* data = m_data + calc_index(start);
+        T* data = size_of_shape(shape) == 0 ? m_data : m_data + calc_index(start);
         // shape_type shape = ((*stop - *start) + (*absstep - 1)) / *absstep;
 
         return tensor<T, ndimOut>{

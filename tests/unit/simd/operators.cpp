@@ -91,6 +91,69 @@ TEST_CASE("neg")
         [](auto x) -> decltype(x) { return -x; }, safe_negation{});
 }
 
+TEST_CASE("copysign preserves magnitude and copies only the sign bit")
+{
+    const vec<u32, 8> xbits{ 0x40400000u, 0xc0200000u, 0u, 0x80000000u,
+                             0x7f800000u, 0xff800000u, 0x7fc12345u, 0xffc12345u };
+    const vec<u32, 8> ybits{ 0x80000000u, 0u, 0x80000000u, 0u,
+                             0x80000000u, 0u, 0x80000000u, 0u };
+    const vec<u32, 8> expected{ 0xc0400000u, 0x40200000u, 0x80000000u, 0u,
+                                0xff800000u, 0x7f800000u, 0xffc12345u, 0x7fc12345u };
+    CHECK_THAT(ubitcast(copysign(bitcast<f32>(xbits), bitcast<f32>(ybits))), DeepMatcher(expected));
+
+    const vec<u64, 3> dx{ 0xc004000000000000ull, 0x7ff8000000001234ull, 0x8000000000000000ull };
+    const vec<u64, 3> dy{ 0ull, 0x8000000000000000ull, 0ull };
+    const vec<u64, 3> de{ 0x4004000000000000ull, 0xfff8000000001234ull, 0ull };
+    CHECK_THAT(ubitcast(copysign(bitcast<f64>(dx), bitcast<f64>(dy))), DeepMatcher(de));
+
+    const vec<u32, 1> ix{ 0x80000025u };
+    const vec<u32, 1> iy{ 0u };
+    CHECK_THAT(copysign(ix, iy), DeepMatcher(vec<u32, 1>{ 0x25u }));
+
+    CHECK(kfr::copysign(3.f, -1.f) == -3.f);
+    CHECK(kfr::copysign(-2.5, 1.0) == 2.5);
+    CHECK(ubitcast(kfr::copysign(0.f, -1.f)) == 0x80000000u);
+    CHECK(ubitcast(kfr::copysign(-0.0, 1.0)) == 0ull);
+    CHECK(ubitcast(kfr::copysign(bitcast_anything<f32>(u32{ 0x7fc12345u }), -1.f)) == 0xffc12345u);
+    CHECK(ubitcast(kfr::copysign(bitcast_anything<f64>(u64{ 0xfff8000000001234ull }), 1.0)) ==
+          0x7ff8000000001234ull);
+    CHECK(kfr::copysign(u32{ 0x80000025u }, u32{ 0 }) == u32{ 0x25u });
+    CHECK(kfr::copysign(i32{ 37 }, i32{ -1 }) == std::numeric_limits<i32>::min() + 37);
+}
+
+TEST_CASE("alternating negation handles integer and floating-point lanes")
+{
+    const vec<i32, 5> signed_values{ 1, -2, std::numeric_limits<i32>::min(), 0, 7 };
+    CHECK_THAT(negeven(signed_values),
+               DeepMatcher(vec<i32, 5>{ -1, -2, std::numeric_limits<i32>::min(), 0, -7 }));
+    CHECK_THAT(negodd(signed_values),
+               DeepMatcher(vec<i32, 5>{ 1, 2, std::numeric_limits<i32>::min(), 0, 7 }));
+
+    const vec<u8, 5> unsigned_values{ 1, 2, 128, 255, 0 };
+    CHECK_THAT(negeven(unsigned_values), DeepMatcher(vec<u8, 5>{ 255, 2, 128, 255, 0 }));
+    CHECK_THAT(negodd(unsigned_values), DeepMatcher(vec<u8, 5>{ 1, 254, 128, 1, 0 }));
+    const vec<i64, 1> single{ std::numeric_limits<i64>::min() };
+    CHECK_THAT(negeven(single), DeepMatcher(single));
+    CHECK_THAT(negodd(single), DeepMatcher(single));
+    const vec<i8, 16> bytes{ 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6, 7, -7, -128, -128 };
+    CHECK_THAT(negeven(bytes),
+               DeepMatcher(vec<i8, 16>{ -1, -1, -2, -2, -3, -3, -4, -4, -5, -5, -6, -6, -7, -7, -128, -128 }));
+    CHECK_THAT(negodd(bytes),
+               DeepMatcher(vec<i8, 16>{ 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, -128, -128 }));
+
+    const vec<u32, 5> bits{ 0u, 0x80000000u, 0x7fc12345u, 0xff800000u, 0x3f800000u };
+    const auto floats = bitcast<f32>(bits);
+    CHECK_THAT(ubitcast(negeven(floats)),
+               DeepMatcher(vec<u32, 5>{ 0x80000000u, 0x80000000u, 0xffc12345u, 0xff800000u, 0xbf800000u }));
+    CHECK_THAT(ubitcast(negodd(floats)),
+               DeepMatcher(vec<u32, 5>{ 0u, 0u, 0x7fc12345u, 0x7f800000u, 0x3f800000u }));
+    const vec<u64, 2> dbits{ 0x8000000000000000ull, 0x7ff8000000001234ull };
+    const auto doubles = bitcast<f64>(dbits);
+    CHECK_THAT(ubitcast(negeven(doubles)), DeepMatcher(vec<u64, 2>{ 0ull, 0x7ff8000000001234ull }));
+    CHECK_THAT(ubitcast(negodd(doubles)),
+               DeepMatcher(vec<u64, 2>{ 0x8000000000000000ull, 0xfff8000000001234ull }));
+}
+
 TEST_CASE("bnot")
 {
     test_function1(

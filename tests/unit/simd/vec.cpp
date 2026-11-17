@@ -7,6 +7,7 @@
 #include <bit>
 #include <limits>
 #include <kfr/simd/vec.hpp>
+#include <kfr/simd/complex.hpp>
 
 #include <kfr/io/tostring.hpp>
 
@@ -260,6 +261,45 @@ TEST_CASE("vec2d_element")
     CHECK(v[0][1] == 2);
     CHECK(v[1][0] == 3);
     CHECK(v[1][1] == 4);
+}
+
+TEST_CASE("vec_compound_compile_time_set")
+{
+    vec<vec<i32, 3>, 3> v{ vec<i32, 3>{ 1, 2, 3 }, vec<i32, 3>{ 4, 5, 6 },
+                            vec<i32, 3>{ 7, 8, 9 } };
+
+    v.set(csize<1>, vec<i32, 3>{ 10, 11, 12 });
+    CHECK_THAT(v.flatten(), DeepMatcher((vec<i32, 9>{ 1, 2, 3, 10, 11, 12, 7, 8, 9 })));
+    CHECK_THAT(v.get(csize<1>), DeepMatcher((vec<i32, 3>{ 10, 11, 12 })));
+
+    v.set(csize<0>, vec<i32, 3>{ 13, 14, 15 });
+    v.set(csize<2>, vec<i32, 3>{ 16, 17, 18 });
+    CHECK_THAT(v.flatten(), DeepMatcher((vec<i32, 9>{ 13, 14, 15, 10, 11, 12, 16, 17, 18 })));
+
+    vec<vec<i32, 1>, 1> single{ vec<i32, 1>{ 1 } };
+    single.set(csize<0>, vec<i32, 1>{ 2 });
+    CHECK_THAT(single.flatten(), DeepMatcher((vec<i32, 1>{ 2 })));
+
+    vec<complex<f32>, 2> complex_values{ complex<f32>{ 1.f, 2.f }, complex<f32>{ 3.f, 4.f } };
+    complex_values.set(csize<1>, complex<f32>{ 5.f, 6.f });
+    CHECK_THAT(complex_values.flatten(), DeepMatcher((f32x4{ 1.f, 2.f, 5.f, 6.f })));
+}
+
+TEST_CASE("vec_element_postfix")
+{
+    i32x4 v{ 10, 20, 30, 40 };
+    const i32 incremented = v[1]++;
+    CHECK(incremented == 20);
+    CHECK_THAT(v, DeepMatcher(i32x4{ 10, 21, 30, 40 }));
+
+    const i32 decremented = v[2]--;
+    CHECK(decremented == 30);
+    CHECK_THAT(v, DeepMatcher(i32x4{ 10, 21, 29, 40 }));
+
+    vec<u8, 2> bytes{ 255, 0 };
+    CHECK(bytes[0]++ == 255);
+    CHECK(bytes[1]-- == 0);
+    CHECK_THAT(bytes, DeepMatcher((vec<u8, 2>{ 0, 255 })));
 }
 
 } // namespace KFR_ARCH_NAME

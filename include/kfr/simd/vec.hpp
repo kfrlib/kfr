@@ -680,7 +680,16 @@ struct alignas(internal::vec_alignment<T, N>) vec
         requires(index < 1024 && !compound_type_traits<T>::is_scalar)
     KFR_MEM_INTRINSIC constexpr void set(csize_t<index>, const value_type& s) noexcept
     {
-        this->v[index] = s;
+        static_assert(index < N, "element index must be less than vector size");
+        const auto flat = internal::compoundcast<T>::to_flat(s);
+        v = [&]<size_t... i>(csizes_t<i...>)
+        {
+            return intr::simd_shuffle(intr::simd2_t<unwrap_bit<ST>, SN, SW>{}, v, flat.v,
+                                      csizes<(i >= index * SW && i < (index + 1) * SW
+                                                  ? SN + i - index * SW
+                                                  : i)...>,
+                                      overload_auto);
+        }(csizeseq<SN>);
     }
 
     /**
@@ -750,18 +759,18 @@ struct alignas(internal::vec_alignment<T, N>) vec
             v.set(index, v.get(index) - 1);
             return *this;
         }
-        /** @brief Post-increment. */
+        /** @brief Post-increment, returning the previous value. */
         KFR_MEM_INTRINSIC value_type operator++(int) noexcept
         {
-            value_type val = v.get(index) + 1;
-            v.set(index, val);
+            value_type val = v.get(index);
+            v.set(index, val + 1);
             return val;
         }
-        /** @brief Post-decrement. */
+        /** @brief Post-decrement, returning the previous value. */
         KFR_MEM_INTRINSIC value_type operator--(int) noexcept
         {
-            value_type val = v.get(index) - 1;
-            v.set(index, val);
+            value_type val = v.get(index);
+            v.set(index, val - 1);
             return val;
         }
 

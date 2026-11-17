@@ -45,7 +45,7 @@ KFR_INTRINSIC vec<T, N> saturated_signed_add(const vec<T, N>& a, const vec<T, N>
     const vec<UT, N> sum   = aa + bb;
     aa                     = (aa >> shift) + static_cast<UT>(std::numeric_limits<T>::max());
 
-    return select(bitcast<T>((aa ^ bb) | ~(bb ^ sum)) >= T(), a, bitcast<T>(sum));
+    return select(bitcast<T>((aa ^ bb) | ~(bb ^ sum)) >= T(), bitcast<T>(aa), bitcast<T>(sum));
 }
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> saturated_signed_sub(const vec<T, N>& a, const vec<T, N>& b)
@@ -57,7 +57,7 @@ KFR_INTRINSIC vec<T, N> saturated_signed_sub(const vec<T, N>& a, const vec<T, N>
     const vec<UT, N> diff  = aa - bb;
     aa                     = (aa >> shift) + static_cast<UT>(std::numeric_limits<T>::max());
 
-    return select(bitcast<T>((aa ^ bb) & (aa ^ diff)) < T(), a, bitcast<T>(diff));
+    return select(bitcast<T>((aa ^ bb) & (aa ^ diff)) < T(), bitcast<T>(aa), bitcast<T>(diff));
 }
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> saturated_unsigned_add(const vec<T, N>& a, const vec<T, N>& b)

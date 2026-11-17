@@ -51,6 +51,27 @@ TEST_CASE("reverse")
     CHECK_THAT((reverse(pack(0, 1, 2, 3, 4, 5, 6, 7))), DeepMatcher(pack(7, 6, 5, 4, 3, 2, 1, 0)));
     CHECK_THAT((reverse<2>(pack(0, 1, 2, 3, 4, 5, 6, 7))), DeepMatcher(pack(6, 7, 4, 5, 2, 3, 0, 1)));
     CHECK_THAT((reverse<4>(pack(0, 1, 2, 3, 4, 5, 6, 7))), DeepMatcher(pack(4, 5, 6, 7, 0, 1, 2, 3)));
+
+    const auto nested = pack(pack(0, 1), pack(2, 3), pack(4, 5), pack(6, 7));
+    CHECK_THAT(reverse(nested).flatten(), DeepMatcher(pack(6, 7, 4, 5, 2, 3, 0, 1)));
+    CHECK_THAT(reverse<2>(nested).flatten(), DeepMatcher(pack(4, 5, 6, 7, 0, 1, 2, 3)));
+    CHECK_THAT(fn::reverse{}(nested).flatten(), DeepMatcher(pack(1, 0, 3, 2, 5, 4, 7, 6)));
+    CHECK_THAT(fn::reverse{}(pack(pack(1, 2, 3), pack(4, 5, 6))).flatten(),
+               DeepMatcher(pack(3, 2, 1, 6, 5, 4)));
+    CHECK_THAT(reverse(pack(pack(0, 1, 2), pack(3, 4, 5), pack(6, 7, 8))).flatten(),
+               DeepMatcher(pack(6, 7, 8, 3, 4, 5, 0, 1, 2)));
+}
+
+TEST_CASE("bitreverse zero bits")
+{
+    constexpr u32 value = 0x87654321u;
+    static_assert(bitreverse<0>(value) == value);
+    static_assert(digitreverse4<0>(value) == value);
+    CHECK(bitreverse(value, 0) == value);
+    CHECK(bitreverse<0>(value) == value);
+    CHECK(digitreverse4<0>(value) == value);
+    CHECK(bitreverse(value, 4) == 8);
+    CHECK(bitreverse(value, 32) == bitreverse<32>(value));
 }
 
 TEST_CASE("shuffle")

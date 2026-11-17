@@ -124,6 +124,16 @@ TEST_CASE("grouped runtime stride")
     CHECK_THAT(read<6>(result), DeepMatcher(vec<i32, 6>{ 20, 21, 0, 0, 30, 31 }));
 }
 
+TEST_CASE("compile-time scatter")
+{
+    i32 destination[5]{};
+    scatter<3>(destination, vec<i32, 1>{ 7 });
+    CHECK(destination[3] == 7);
+
+    scatter<4, 1, 4>(destination, vec<i32, 3>{ 10, 20, 30 });
+    CHECK_THAT(read<5>(destination), DeepMatcher((vec<i32, 5>{ 0, 20, 0, 7, 30 })));
+}
+
 TEST_CASE("partial read/write")
 {
     constexpr size_t width = 7;

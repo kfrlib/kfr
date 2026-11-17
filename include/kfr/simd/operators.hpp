@@ -713,7 +713,16 @@ KFR_FN(mulsign)
 template <typename T, size_t N>
 constexpr KFR_INTRINSIC vec<T, N> copysign(const vec<T, N>& x, const vec<T, N>& y)
 {
-    return (x & special_constants<T>::highbitmask()) | (y & special_constants<T>::highbitmask());
+    return (x & special_constants<T>::invhighbitmask()) | (y & special_constants<T>::highbitmask());
+}
+
+/** @brief Compose a scalar from the magnitude bits of `x` and the sign bit of `y`. */
+template <typename T>
+    requires(is_simd_type<T> && std::is_arithmetic_v<T> && !std::is_same_v<T, bool>)
+KFR_INTRINSIC T copysign(const T& x, const T& y)
+{
+    return bitwiseor(bitwiseand(x, special_constants<T>::invhighbitmask()),
+                     bitwiseand(y, special_constants<T>::highbitmask()));
 }
 
 /**
@@ -750,13 +759,19 @@ KFR_FN(addsub)
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> negeven(const vec<T, N>& x)
 {
-    return x ^ broadcast<N>(-T(), T());
+    if constexpr (is_f_class<T>)
+        return x ^ broadcast<N>(-T(), T());
+    else
+        return blend<1, 0>(x, bitcast<T>(-ubitcast(x)));
 }
 /** @brief Negates the odd-indexed lanes of `x`. */
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> negodd(const vec<T, N>& x)
 {
-    return x ^ broadcast<N>(T(), -T());
+    if constexpr (is_f_class<T>)
+        return x ^ broadcast<N>(T(), -T());
+    else
+        return blend<0, 1>(x, bitcast<T>(-ubitcast(x)));
 }
 
 /**

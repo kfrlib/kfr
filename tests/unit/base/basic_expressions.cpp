@@ -48,6 +48,15 @@ TEST_CASE("pack")
                      [](float i) { return f32x2{ (1 + i) * 11, 1 + i }; });
 }
 
+TEST_CASE("reverse packed expression")
+{
+    const univector<float, 5> v1{ 1, 2, 3, 4, 5 };
+    const univector<float, 5> v2{ 11, 22, 33, 44, 55 };
+    CHECK_EXPRESSION(reverse(pack(v1, v2)), 5, [](size_t i) { return f32x2{ float(5 - i), float(55 - i * 11) }; });
+    CHECK_EXPRESSION(reverse(bind_expression(fn::reverse(), pack(v1, v2))), 5,
+                     [](size_t i) { return f32x2{ float(55 - i * 11), float(5 - i) }; });
+}
+
 TEST_CASE("adjacent")
 {
     CHECK_EXPRESSION(adjacent(fn::mul(), counter()), infinite_size,

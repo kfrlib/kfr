@@ -91,6 +91,31 @@ inline T ref_satsub(T x, T y)
         return result;
 }
 
+template <typename T>
+void check_signed_saturation_boundaries()
+{
+    const T min = std::numeric_limits<T>::min();
+    const T max = std::numeric_limits<T>::max();
+
+    const vec<T, 8> add_a{ max - 1, min + 1, max - 1, min + 1, min, max, -20, 40 };
+    const vec<T, 8> add_b{ 5, -5, 1, -1, max, min, 7, -10 };
+    const vec<T, 8> add_expected{ max, min, max, min, -1, -1, -13, 30 };
+    CHECK_THAT(kfr::satadd(add_a, add_b), DeepMatcher(add_expected));
+    CHECK_THAT(intr::saturated_signed_add(add_a, add_b), DeepMatcher(add_expected));
+
+    const vec<T, 8> sub_a{ max - 1, min + 1, max - 1, min + 1, max, min, -20, 40 };
+    const vec<T, 8> sub_b{ -5, 5, -1, 1, max, min, 7, -10 };
+    const vec<T, 8> sub_expected{ max, min, max, min, 0, 0, -27, 50 };
+    CHECK_THAT(kfr::satsub(sub_a, sub_b), DeepMatcher(sub_expected));
+    CHECK_THAT(intr::saturated_signed_sub(sub_a, sub_b), DeepMatcher(sub_expected));
+}
+
+TEST_CASE("signed saturation clamps overflow to the correct bounds")
+{
+    check_signed_saturation_boundaries<i32>();
+    check_signed_saturation_boundaries<i64>();
+}
+
 TEST_CASE("intrin_satadd_satsub")
 {
 #if defined KFR_COMPILER_IS_MSVC && defined KFR_ARCH_X32

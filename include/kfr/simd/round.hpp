@@ -138,7 +138,10 @@ KFR_INTRINSIC itype<T1> itrunc(const T1& x)
 }
 
 /**
- * @brief Returns the floating-point remainder of dividing @p x by @p y.
+ * @brief Approximates the floating-point remainder of dividing @p x by @p y.
+ * @details Uses `x - trunc(x / y) * y` and copies the dividend's sign to the result.
+ *          Quotient overflow, zero divisors, infinities and NaNs are not handled with 
+ *          @c std::fmod semantics.
  * @tparam T Floating-point type.
  * @param x Dividend.
  * @param y Divisor.
@@ -147,7 +150,8 @@ KFR_INTRINSIC itype<T1> itrunc(const T1& x)
 template <f_class T>
 KFR_INTRINSIC T fmod(const T& x, const T& y)
 {
-    return x - trunc(x / y) * y;
+    const T remainder = x - trunc(x / y) * y;
+    return copysign(remainder, x);
 }
 KFR_FN(fmod)
 
@@ -167,6 +171,7 @@ constexpr KFR_INTRINSIC vec<T, N> rem(const vec<T, N>& x, const vec<T, N>& y)
 
 /**
  * @brief Returns the element-wise floating-point remainder of vectors @p x and @p y.
+ * @details Uses @ref fmod and has the same accuracy and special-value limitations.
  * @tparam T Floating-point type.
  * @tparam N Number of elements in the vector.
  * @param x Dividend vector.

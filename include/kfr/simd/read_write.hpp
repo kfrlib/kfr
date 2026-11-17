@@ -313,15 +313,16 @@ KFR_INTRINSIC vec<T, Nout> gather(const T* base)
  * @tparam Indices Remaining compile-time destination indices.
  * @tparam T Element type.
  * @tparam N Input vector length.
- * @tparam InIndex Position within @p value to write next (defaults to 0).
  * @param base Pointer to the destination array.
  * @param value Vector whose elements are written to @c base[Index], @c base[Indices]... in order.
  */
-template <size_t Index, size_t... Indices, typename T, size_t N, size_t InIndex = 0>
-KFR_INTRINSIC void scatter(const T* base, const vec<T, N>& value)
+template <size_t Index, size_t... Indices, typename T, size_t N>
+KFR_INTRINSIC void scatter(T* base, const vec<T, N>& value)
 {
-    base[Index] = value[InIndex];
-    scatter<Indices..., T, N, InIndex + 1>(base, value);
+    static_assert(1 + sizeof...(Indices) <= N, "Too many scatter indices for vector");
+    size_t input_index = 0;
+    base[Index] = value[input_index++];
+    ((base[Indices] = value[input_index++]), ...);
 }
 
 namespace internal

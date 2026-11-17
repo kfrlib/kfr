@@ -1343,8 +1343,9 @@ KFR_INTRINSIC vec<T, N> reverse(const vec<T, N>& x)
 }
 /**
  * @brief Reverses the order of inner vectors in a vector of vectors.
- * @details The outer order of inner vectors is reversed; the order within each inner vector is
- *          preserved.
+ * @details The outer order of inner vectors is reversed, optionally in groups of @p group;
+ *          the order within each inner vector is preserved.
+ * @tparam group Number of outer lanes in each reversed group.
  * @tparam T Element type of the inner vector.
  * @tparam N1 Length of each inner vector.
  * @tparam N2 Number of inner vectors.
@@ -1354,9 +1355,28 @@ KFR_INTRINSIC vec<T, N> reverse(const vec<T, N>& x)
 template <size_t group = 1, typename T, size_t N1, size_t N2>
 KFR_INTRINSIC vec<vec<T, N1>, N2> reverse(const vec<vec<T, N1>, N2>& x)
 {
-    return swap<N1>(x.flatten()).v;
+    constexpr size_t size = N2 / group;
+    return x.shuffle(scale<group>(csizeseq_t<size, size - 1, -1>()));
 }
-KFR_FN(reverse)
+namespace fn
+{
+/** @brief Reverses each vector-valued lane of a vectorized expression. */
+struct reverse
+{
+    template <typename T, size_t N1, size_t N2>
+    KFR_INTRINSIC vec<vec<T, N1>, N2> operator()(const vec<vec<T, N1>, N2>& x) const
+    {
+        return vec<vec<T, N1>, N2>::from_flatten(kfr::reverse<N1>(kfr::reverse(x.flatten())));
+    }
+
+    template <typename Arg>
+        requires(!is_vec<std::remove_cvref_t<subtype<std::remove_cvref_t<Arg>>>>)
+    KFR_INLINE_MEMBER decltype(::kfr::reverse(std::declval<Arg>())) operator()(Arg&& arg) const
+    {
+        return ::kfr::reverse(std::forward<Arg>(arg));
+    }
+};
+} // namespace fn
 
 /**
  * @brief Combines two vectors by selecting lanes from @p x or @p y based on index.

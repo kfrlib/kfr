@@ -1,5 +1,21 @@
 # Changelog
 
+## 7.3.0
+
+#### Added
+
+* Scalar overload of `copysign`
+
+#### Fixed
+
+* Tensor reverse-slice endpoint normalization, slice-length overflow with large positive steps, and invalid pointer arithmetic for empty slices
+* Signed `satadd` and `satsub` overflow saturation bounds
+* SIMD `copysign` magnitude preservation and integer `negeven` and `negodd`
+* Floating-point `fmod` and `rem` preserve the dividend's sign, including signed zero; accuracy and special-value limitations are documented
+* Reversal of nested vectors and zero-bit integer digit reversal
+* Compile-time `scatter` and compound-vector element setters
+* Postfix increment and decrement on vector elements return the previous value
+
 ## 7.2.0
 
 #### Added

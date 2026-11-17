@@ -49,7 +49,9 @@ constexpr KFR_INTRINSIC u32 digitreverse_impl(u32 x, csize_t<2>)
 {
     constexpr cvals_t<u32, 0x55555555, 1, 0x33333333, 2, 0x0f0f0f0f, 4, 0x00ff00ff, 8, 0x0000ffff, 16>
         steps{};
-    if constexpr (bits > 16)
+    if constexpr (bits == 0)
+        return x;
+    else if constexpr (bits > 16)
         return bit_permute_step_impl(x, steps) >> (32 - bits);
     else if constexpr (bits > 8)
         return bit_permute_step_impl(x, steps[csizeseq<8>]) >> (16 - bits);
@@ -61,7 +63,9 @@ template <size_t bits>
 constexpr KFR_INTRINSIC u32 digitreverse_impl(u32 x, csize_t<4>)
 {
     constexpr cvals_t<u32, 0x33333333, 2, 0x0f0f0f0f, 4, 0x00ff00ff, 8, 0x0000ffff, 16> steps{};
-    if constexpr (bits > 16)
+    if constexpr (bits == 0)
+        return x;
+    else if constexpr (bits > 16)
         return bit_permute_step_impl(x, steps) >> (32 - bits);
     else if constexpr (bits > 8)
         return bit_permute_step_impl(x, steps[csizeseq<6>]) >> (16 - bits);
@@ -137,7 +141,7 @@ KFR_INTRINSIC vec<T, N> digitreverse4(const vec<T, N>& x)
 /**
  * @brief Reverses the lowest `bits` bits of the given unsigned integer.
  *
- * @tparam bits Number of bits to reverse.
+ * @tparam bits Number of bits to reverse; zero leaves the input unchanged.
  * @param x The input 32-bit unsigned integer.
  * @return The bit-reversed integer.
  */
@@ -150,25 +154,24 @@ constexpr KFR_INTRINSIC u32 bitreverse(u32 x)
 /**
  * @brief Reverses the lowest `bits` bits of the given unsigned integer at runtime.
  *
- * Computes the full 32-bit reversal of `x` and then shifts right by `32 - bits`,
- * effectively reversing only the lowest `bits` bits while zeroing the rest.
+ * For nonzero `bits`, computes the full 32-bit reversal of `x` and then shifts right by
+ * `32 - bits`, effectively reversing only the lowest `bits` bits while zeroing the rest.
  *
  * @param x The input 32-bit unsigned integer.
- * @param bits Number of low bits to reverse (must be <= 32).
+ * @param bits Number of low bits to reverse (must be <= 32); zero leaves the input unchanged.
  * @return The integer with its lowest `bits` bits reversed.
  */
 constexpr KFR_INTRINSIC u32 bitreverse(u32 x, size_t bits)
 {
-    return internal::digitreverse_impl<32>(x, csize_t<2>()) >> (32 - bits);
+    return bits == 0 ? x : internal::digitreverse_impl<32>(x, csize_t<2>()) >> (32 - bits);
 }
 
 /**
- * @brief Reverses the digits of the given unsigned integer in base-4 (quaternary), using the lowest `bits`
- * digits.
+ * @brief Reverses the base-4 digits in the lowest `bits` bits of the given unsigned integer.
  *
  * Useful for radix-4 FFT or similar algorithms.
  *
- * @tparam bits Number of base-4 digits to reverse.
+ * @tparam bits Number of low bits to use; zero leaves the input unchanged.
  * @param x The input 32-bit unsigned integer.
  * @return The base-4 digit-reversed integer.
  */

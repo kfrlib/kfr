@@ -763,6 +763,10 @@ TEST_CASE("slices")
     CHECK(t1(trange(1, _, 2)) == tensor<float, 1>{ 1, 3, 5, 7, 9 });
     CHECK(t1(trange(1, _, 5)) == tensor<float, 1>{ 1, 6 });
     CHECK(t1(trange(1, _, 12)) == tensor<float, 1>{ 1 });
+    auto forward_large_step = t1(trange(_, _, std::numeric_limits<signed_index_t>::max()));
+    CHECK(forward_large_step.shape() == shape{ 1 });
+    CHECK(forward_large_step(0) == 0);
+    CHECK(t1(trange(3, 3, std::numeric_limits<signed_index_t>::max())).empty());
 
     CHECK(t1(tstep(2))(tstep(2)) == tensor<float, 1>{ 0, 4, 8 });
     CHECK(t1(tstep(2))(tstep(2))(tstep(2)) == tensor<float, 1>{ 0, 8 });
@@ -771,9 +775,40 @@ TEST_CASE("slices")
     CHECK(t1(trange(_, _, -1)) == tensor<float, 1>{ 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 });
     CHECK(t1(trange(5, _, -1)) == tensor<float, 1>{ 5, 4, 3, 2, 1, 0 });
     CHECK(t1(trange(1, 0, -1)) == tensor<float, 1>{ 1 });
+    CHECK(t1(trange(-1, _, -1)) == tensor<float, 1>{ 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 });
+    CHECK(t1(trange(-10, _, -1)) == tensor<float, 1>{ 0 });
+    CHECK(t1(trange(-11, _, -1)).empty());
+    CHECK(t1(trange(_, -1, -1)).empty());
+    CHECK(t1(trange(_, -10, -1)) == tensor<float, 1>{ 9, 8, 7, 6, 5, 4, 3, 2, 1 });
+    CHECK(t1(trange(_, -11, -1)) == tensor<float, 1>{ 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 });
+    CHECK(t1(trange(-2, -9, -2)) == tensor<float, 1>{ 8, 6, 4, 2 });
+    CHECK(t1(trange(_, _, -2))(trange(_, _, -1)) == tensor<float, 1>{ 1, 3, 5, 7, 9 });
+    CHECK(t1(trange(std::numeric_limits<signed_index_t>::min(), _, -1)).empty());
+    CHECK(t1(trange(_, std::numeric_limits<signed_index_t>::min(), -1)) ==
+          tensor<float, 1>{ 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 });
+
     auto reverse_large_step = t1(trange(_, _, std::numeric_limits<signed_index_t>::min()));
     CHECK(reverse_large_step.shape() == shape{ 1 });
     CHECK(reverse_large_step(0) == 9);
+    CHECK(t1(trange(std::numeric_limits<signed_index_t>::max(), _, -1)) ==
+          tensor<float, 1>{ 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 });
+    CHECK(t1(trange(_, std::numeric_limits<signed_index_t>::max(), -1)) == tensor<float, 1>{});
+
+    auto before_begin = t1(trange(-11, _, -1));
+    CHECK(before_begin.empty());
+    CHECK(before_begin.data() == t1.data());
+    CHECK(before_begin(trange(_, _, -1)).empty());
+    tensor<float, 1> empty;
+    CHECK(empty(trange(_, _, -1)).empty());
+
+    tensor<float, 2> matrix{ { 0, 1, 2 }, { 3, 4, 5 } };
+    CHECK(matrix(trange(-1, _, -1), trange(-1, _, -1)) == tensor<float, 2>{ { 5, 4, 3 }, { 2, 1, 0 } });
+    auto empty_rows = matrix(trange(-3, _, -1), tall());
+    CHECK(empty_rows.empty());
+    CHECK(empty_rows.data() == matrix.data());
+    auto empty_first_row = matrix(0, trange(-4, _, -1));
+    CHECK(empty_first_row.empty());
+    CHECK(empty_first_row.data() == matrix.data());
 
     CHECK(t1(trange(3, 3 + 12, 0)) == tensor<float, 1>{ 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3 });
     CHECK_THROWS(t1(trange(8, 3, 0)));
