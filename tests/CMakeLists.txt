@@ -50,8 +50,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${PROJECT_BINARY_DIR}/bin)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/tests/cmake/")
-
 add_library(kfr_catch OBJECT
             "${CMAKE_SOURCE_DIR}/src/thirdparty/catch/catch_amalgamated.cpp")
 target_include_directories(
@@ -110,25 +108,17 @@ endif ()
 add_test_executable(audio_test audio_test.cpp)
 target_link_libraries(audio_test PRIVATE kfr_audio use_arch)
 
-if (KFR_REGENERATE_TESTS)
-    find_package(MPFR)
-    find_package(GMP)
-
-    if (MPFR_FOUND AND GMP_FOUND)
-        add_test_executable(generate_data internal/generate_data.cpp)
-        target_include_directories(generate_data PRIVATE ${MPFR_INCLUDE_DIR}
-                                                         ${GMP_INCLUDE_DIR})
-        target_link_libraries(generate_data PRIVATE kfr ${MPFR_LIBRARIES}
-                              ${GMP_LIBRARIES})
-        if (KFR_REGENERATE_TESTS)
-            add_custom_command(
-                TARGET generate_data
-                POST_BUILD
-                COMMENT "Generating tests..."
-                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/data
-                COMMAND generate_data)
-        endif ()
+if (KFR_ENABLE_ACCURACY_TESTS)
+    set(LIBBF_DIR "${PROJECT_SOURCE_DIR}/src/thirdparty/libbf")
+    add_library(kfr_test_libbf STATIC ${LIBBF_DIR}/libbf.c ${LIBBF_DIR}/cutils.c)
+    target_include_directories(kfr_test_libbf PUBLIC ${LIBBF_DIR})
+    target_compile_features(kfr_test_libbf PRIVATE c_std_11)
+    if (UNIX AND NOT APPLE)
+        target_link_libraries(kfr_test_libbf PRIVATE m)
     endif ()
+
+    add_executable(math_accuracy math_accuracy.cpp)
+    target_link_libraries(math_accuracy PRIVATE kfr use_arch kfr_test_libbf)
 endif ()
 
 add_test_executable(all_tests all_tests.cpp ${ALL_TESTS_CPP})
@@ -256,8 +246,6 @@ set(SDE_ARCH_avx512 -skx)
 set(CATCH_FLAGS -d yes)
 
 if (NOT KFR_SKIP_TESTS)
-    enable_testing()
-
     if (KFR_ENABLE_CAPI_BUILD)
         add_test(NAME capi_test COMMAND ${EMULATOR}
                                         ${PROJECT_BINARY_DIR}/bin/capi_test)
@@ -294,6 +282,11 @@ if (NOT KFR_SKIP_TESTS)
     else ()
         add_test(NAME all_tests COMMAND ${EMULATOR}
                                         ${PROJECT_BINARY_DIR}/bin/all_tests ${CATCH_FLAGS})
+    endif ()
+
+    if (TARGET math_accuracy)
+        add_test(NAME math_accuracy COMMAND ${EMULATOR} $<TARGET_FILE:math_accuracy>
+                 "${CMAKE_CURRENT_BINARY_DIR}/math-accuracy.json")
     endif ()
 
     add_test(NAME audio_test COMMAND ${EMULATOR}

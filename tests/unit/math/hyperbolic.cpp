@@ -4,7 +4,7 @@
  * See LICENSE.txt for details
  */
 
-#include "../numeric_tests.hpp"
+#include <kfr/test/test.hpp>
 
 #include <kfr/math/hyperbolic.hpp>
 
@@ -12,11 +12,6 @@ namespace kfr
 {
 inline namespace KFR_ARCH_NAME
 {
-KFR_AUTO_TEST_1(sinh, narrow, 114, 2.5)
-KFR_AUTO_TEST_1(cosh, narrow, 7, 2.5)
-KFR_AUTO_TEST_1(tanh, narrow, 45, 1)
-KFR_AUTO_TEST_1(coth, narrow, 85, 1)
-
 TEST_CASE("sinh preserves tiny finite inputs")
 {
     const vec<f32, 4> xf{ 1e-10f, -1e-10f, 0.01f, -0.01f };

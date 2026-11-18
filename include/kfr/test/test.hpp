@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "comparison.hpp"
 
@@ -161,23 +161,6 @@ void assert_is_same_decay()
 {
     static_assert(std::is_same_v<std::decay_t<T1>, std::decay_t<T2>>, "");
 }
-
-/**
- * @brief A single row of tabulated test data.
- *
- * Stores @p NArgs input arguments together with the expected @p result, used
- * to drive table-driven tests where a function is exercised against a fixed
- * set of input/output pairs.
- *
- * @tparam T     Value type shared by all arguments and the result.
- * @tparam NArgs Number of input arguments stored in @ref arguments.
- */
-template <typename T, size_t NArgs>
-struct test_data_entry
-{
-    T arguments[NArgs]; /**< Input arguments for the test row. */
-    T result; /**< Expected result for the test row. */
-};
 
 } // namespace kfr
 

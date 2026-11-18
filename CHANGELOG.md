@@ -5,6 +5,7 @@
 #### Added
 
 * Scalar overload of `copysign`
+* Opt-in LibBF-backed math accuracy tests with JSON reporting, replacing generated reference fixtures.
 
 #### Fixed
 

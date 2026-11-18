@@ -38,6 +38,7 @@ inline namespace KFR_ARCH_NAME
  * @tparam T1 Input numeric type.
  * @param x Power to which e is raised.
  * @return e^x as @c flt_type<T1>.
+ * @note Measured maximum error (AVX2): 1 ULP for float, 4 ULP for double.
  */
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> exp(const T1& x)
@@ -51,6 +52,7 @@ KFR_FUNCTION flt_type<T1> exp(const T1& x)
  * @tparam T1 Input numeric type.
  * @param x Power to which 2 is raised.
  * @return 2^x as @c flt_type<T1>.
+ * @note Measured maximum error (AVX2): 5 ULP for float, 5 ULP for double.
  */
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> exp2(const T1& x)
@@ -64,6 +66,7 @@ KFR_FUNCTION flt_type<T1> exp2(const T1& x)
  * @tparam T1 Input numeric type.
  * @param x Power to which 10 is raised.
  * @return 10^x as @c flt_type<T1>.
+ * @note Measured maximum error (AVX2): 21 ULP for float, 42 ULP for double.
  */
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> exp10(const T1& x)
@@ -77,6 +80,7 @@ KFR_FUNCTION flt_type<T1> exp10(const T1& x)
  * @tparam T1 Input numeric type.
  * @param x Value whose natural logarithm is computed (must be non-negative).
  * @return ln(x) as @c flt_type<T1>.
+ * @note Measured maximum error (AVX2): 2 ULP for float, 2 ULP for double.
  */
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> log(const T1& x)
@@ -90,6 +94,7 @@ KFR_FUNCTION flt_type<T1> log(const T1& x)
  * @tparam T1 Input numeric type.
  * @param x Value whose base-2 logarithm is computed (must be non-negative).
  * @return log2(x) as @c flt_type<T1>.
+ * @note Measured maximum error (AVX2): 3 ULP for float, 3 ULP for double.
  */
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> log2(const T1& x)
@@ -103,6 +108,7 @@ KFR_FUNCTION flt_type<T1> log2(const T1& x)
  * @tparam T1 Input numeric type.
  * @param x Value whose base-10 logarithm is computed (must be non-negative).
  * @return log10(x) as @c flt_type<T1>.
+ * @note Measured maximum error (AVX2): 3 ULP for float, 3 ULP for double.
  */
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> log10(const T1& x)
@@ -207,6 +213,7 @@ KFR_FUNCTION flt_type<std::common_type_t<T1, T2, T3>> log_fmadd(const T1& x, con
  * @param x Base value.
  * @param y Exponent.
  * @return x^y as @c flt_type<std::common_type_t<T1, T2>>.
+ * @note Measured maximum error (AVX2): 29 ULP for float, 32 ULP for double.
  */
 template <numeric T1, numeric T2>
 KFR_FUNCTION flt_type<std::common_type_t<T1, T2>> pow(const T1& x, const T2& y)
@@ -240,6 +247,7 @@ KFR_FUNCTION flt_type<std::common_type_t<T1, T2>> root(const T1& x, const T2& y)
  * @tparam T1 Input numeric type.
  * @param x Value whose cube root is computed.
  * @return cbrt(x) as @c flt_type<T1>.
+ * @note Measured maximum error (AVX2): 4 ULP for float, 4 ULP for double.
  */
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> cbrt(const T1& x)

@@ -19,7 +19,7 @@ including:
 * [Sample-rate conversion](dsp/src.md) with configurable quality and linear phase
 * [Convolution](advanced/dsp_glossary.md#convolution) and [convolution reverb](advanced/dsp_glossary.md#convolution-reverb)
 * Audio file reading and writing for many common formats
-* Mathematical functions, statistics, random number generation and tensors
+* Mathematical functions with [measured accuracy](core-math/math/accuracy.md), statistics, random number generation and tensors
 * A [SIMD](advanced/dsp_glossary.md#simd-single-instruction-multiple-data) abstraction layer that scales from scalar code up to AVX-512 and NEON
 
 Everything is written in modern C++20 and is built with CMake. KFR has no

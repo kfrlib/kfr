@@ -22,9 +22,13 @@
  */
 #pragma once
 
+#include "../logical.hpp"
 #include "../operators.hpp"
 #include "abs.hpp"
 #include "function.hpp"
+
+#include <cmath>
+#include <limits>
 
 namespace kfr
 {
@@ -242,6 +246,96 @@ KFR_HANDLE_SCALAR(ifloor)
 KFR_HANDLE_SCALAR(iceil)
 KFR_HANDLE_SCALAR(iround)
 KFR_HANDLE_SCALAR(itrunc)
+
+template <f_class T>
+KFR_INTRINSIC T fmod_residual(const T& a, const T& q, const T& b)
+{
+    using S = subtype<T>;
+    // For a small integer quotient, both products with the split divisor are exact.
+    constexpr int half           = std::numeric_limits<S>::digits / 2;
+    constexpr utype<S> high_mask = ~((utype<S>(1) << half) - 1);
+    const T bhi                  = fbitcast(ubitcast(b) & high_mask);
+    return (a - q * bhi) - q * (b - bhi);
+}
+
+#if defined KFR_ARCH_FMA || defined KFR_ARCH_NEON64
+template <f_class T>
+    requires std::is_floating_point_v<T>
+KFR_INTRINSIC T fmod_residual(const T& a, const T& q, const T& b)
+{
+    return std::fma(-q, b, a);
+}
+#endif
+
+#if defined KFR_ARCH_FMA && defined KFR_NATIVE_INTRINSICS
+KFR_INTRINSIC f32sse fmod_residual(const f32sse& a, const f32sse& q, const f32sse& b)
+{
+    return _mm_fnmadd_ps(q.v, b.v, a.v);
+}
+KFR_INTRINSIC f64sse fmod_residual(const f64sse& a, const f64sse& q, const f64sse& b)
+{
+    return _mm_fnmadd_pd(q.v, b.v, a.v);
+}
+KFR_INTRINSIC f32avx fmod_residual(const f32avx& a, const f32avx& q, const f32avx& b)
+{
+    return _mm256_fnmadd_ps(q.v, b.v, a.v);
+}
+KFR_INTRINSIC f64avx fmod_residual(const f64avx& a, const f64avx& q, const f64avx& b)
+{
+    return _mm256_fnmadd_pd(q.v, b.v, a.v);
+}
+#if defined KFR_ARCH_AVX512
+KFR_INTRINSIC f32avx512 fmod_residual(const f32avx512& a, const f32avx512& q, const f32avx512& b)
+{
+    return _mm512_fnmadd_ps(q.v, b.v, a.v);
+}
+KFR_INTRINSIC f64avx512 fmod_residual(const f64avx512& a, const f64avx512& q, const f64avx512& b)
+{
+    return _mm512_fnmadd_pd(q.v, b.v, a.v);
+}
+#endif
+#endif
+
+#if defined KFR_ARCH_NEON64 && defined KFR_NATIVE_INTRINSICS
+KFR_INTRINSIC f32neon fmod_residual(const f32neon& a, const f32neon& q, const f32neon& b)
+{
+    return vfmsq_f32(a.v, q.v, b.v);
+}
+KFR_INTRINSIC f64neon fmod_residual(const f64neon& a, const f64neon& q, const f64neon& b)
+{
+    return vfmsq_f64(a.v, q.v, b.v);
+}
+#endif
+
+template <f_class T>
+KFR_INTRINSIC T fmod(const T& x, const T& y)
+{
+    using S   = subtype<T>;
+    const T a = intr::abs(x), b = intr::abs(y);
+    const T q          = intr::trunc(a / b);
+    constexpr int half = std::numeric_limits<S>::digits / 2;
+    const T r          = fmod_residual(a, q, b);
+
+    // Division may round across an integer boundary; retry only lanes outside the fast path.
+    constexpr S quotient_limit = S(utype<S>(1) << half);
+    const auto retry = !(q < quotient_limit) | !(r >= S(0)) | !(r < b) | (b < std::numeric_limits<S>::min());
+    if constexpr (std::is_floating_point_v<T>)
+    {
+        return retry ? std::fmod(x, y) : copysign(r, x);
+    }
+    else
+    {
+        T result = copysign(r, x);
+        if (any(retry))
+        {
+            const auto lanes = retry.asvec();
+            for (size_t i = 0; i < T::size(); ++i)
+                if (ubitcast(lanes[i]) != 0)
+                    result.set(i, std::fmod(x[i], y[i]));
+        }
+        return result;
+    }
+}
 } // namespace intr
 KFR_I_FN(floor)
 KFR_I_FN(ceil)

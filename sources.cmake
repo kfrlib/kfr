@@ -409,13 +409,10 @@ set(
     ${PROJECT_SOURCE_DIR}/tests/unit/dsp/window.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/io/audiofile.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/asin_acos.cpp
-    ${PROJECT_SOURCE_DIR}/tests/unit/math/atan.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/complex_math.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/hyperbolic.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/log_exp.cpp
-    ${PROJECT_SOURCE_DIR}/tests/unit/math/sin_cos.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/sqrt.cpp
-    ${PROJECT_SOURCE_DIR}/tests/unit/math/tan.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/abs.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/comparison.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/complex.cpp

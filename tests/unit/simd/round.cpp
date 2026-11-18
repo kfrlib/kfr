@@ -6,6 +6,7 @@
 
 #include <kfr/simd/round.hpp>
 #include <cmath>
+#include <limits>
 
 namespace kfr
 {
@@ -79,10 +80,26 @@ void check_fmod_regressions()
     CHECK(std::signbit(kfr::fmod(T(-6), T(3))));
     CHECK(std::signbit(kfr::fmod(T(-0.0), T(3))));
 
-    const T divisor        = T(0.1);
-    const T below_multiple = std::nextafter(divisor * T(3), T(0));
-    CHECK(std::signbit(kfr::fmod(below_multiple, divisor)) == false);
-    CHECK(std::signbit(kfr::fmod(-below_multiple, divisor)) == true);
+    const T divisor  = T(0.1);
+    const T multiple = divisor * T(5);
+    const T below    = std::nextafter(multiple, T(0));
+    const T above    = std::nextafter(multiple, T(1));
+    const T inf      = std::numeric_limits<T>::infinity();
+    const vec<T, 8> xs{ below, -below, above, -above, T(1), T(1), T(1), T(1) };
+    const vec<T, 8> ys{
+        divisor, divisor, divisor, -divisor, divisor, std::numeric_limits<T>::min(), inf, T(0)
+    };
+    const auto f = kfr::fmod(xs, ys);
+    const auto r = kfr::rem(xs, ys);
+    for (size_t i = 0; i < 7; ++i)
+    {
+        const T expected = std::fmod(xs[i], ys[i]);
+        CHECK(kfr::fmod(xs[i], ys[i]) == expected);
+        CHECK(f[i] == expected);
+        CHECK(r[i] == expected);
+    }
+    CHECK(std::isnan(f[7]));
+    CHECK(std::isnan(r[7]));
 }
 
 TEST_CASE("fmod finite remainders and signed zeros")

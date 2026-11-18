@@ -36,6 +36,7 @@ inline namespace KFR_ARCH_NAME
  *
  * @param x Input value or SIMD vector of values.
  * @return Hyperbolic sine of x, with the floating-point type derived from the input.
+ * @note Measured maximum error (AVX2): 14 ULP for float, 15 ULP for double.
  */
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> sinh(const T1& x)
@@ -50,6 +51,7 @@ KFR_FUNCTION flt_type<T1> sinh(const T1& x)
  *
  * @param x Input value or SIMD vector of values.
  * @return Hyperbolic cosine of x, with the floating-point type derived from the input.
+ * @note Measured maximum error (AVX2): 1 ULP for float, 7 ULP for double.
  */
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> cosh(const T1& x)
@@ -64,6 +66,7 @@ KFR_FUNCTION flt_type<T1> cosh(const T1& x)
  *
  * @param x Input value or SIMD vector of values.
  * @return Hyperbolic tangent of x, with the floating-point type derived from the input.
+ * @note Measured maximum error (AVX2): 9 ULP for float, 9 ULP for double.
  */
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> tanh(const T1& x)
@@ -78,6 +81,7 @@ KFR_FUNCTION flt_type<T1> tanh(const T1& x)
  *
  * @param x Input value or SIMD vector of values (must be nonzero).
  * @return Hyperbolic cotangent of x, with the floating-point type derived from the input.
+ * @note Measured maximum error (AVX2): 7 ULP for float, 6 ULP for double.
  */
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> coth(const T1& x)

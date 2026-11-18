@@ -310,6 +310,7 @@ nav:
       - core-math/simd/horizontal_operations.md
     - Mathematics and Complex Arithmetic:
       - core-math/math/mathematical_functions.md
+      - core-math/math/accuracy.md
   - Expressions & Containers:
       - Overview: expressions/expressions.md
       - Expression fundamentals: expressions/fundamentals.md

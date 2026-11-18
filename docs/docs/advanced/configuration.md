@@ -178,7 +178,17 @@ resulting build does not expose the elliptic IIR design API.
 | `KFR_ARCH_TESTS` | unset | Comma-separated architecture list used by the test build to choose ISA test variants. |
 | `KFR_USE_SDE` | unset | Run selected x86 ISA tests through Intel SDE. Intended for KFR's CI infrastructure. |
 | `KFR_ENABLE_ASMTEST` | `OFF` | Generate disassembly-oriented tests; an advanced option. |
-| `KFR_REGENERATE_TESTS` | `OFF` | Regenerate automatic test data; an advanced option. |
+| `KFR_ENABLE_ACCURACY_TESTS` | `OFF` | With `ENABLE_TESTS=ON`, build the LibBF-backed math accuracy suite. |
+
+The `math_accuracy` test compares 65,536 deterministic samples per function,
+type, and lane count with 256-bit LibBF references, including composed references.
+It prints the report path after writing `tests/math-accuracy.json` under the
+build directory. The report includes sampling bounds in argument order, sample
+counts, and average and maximum errors per function, type, and lane count. ULP
+error is the number of representable steps from the rounded reference; absolute
+and relative errors are measured against the unrounded reference. Relative error
+excludes zero reference values, and nonfinite mismatches are counted separately.
+See [Math function accuracy](../core-math/math/accuracy.md) for the measurement table.
 
 KFR's CI enables extended tests in its normal test drivers. It cross-builds ARM,
 AArch64, RISC-V, Android, iOS, and Windows ARM64 configurations; some targets

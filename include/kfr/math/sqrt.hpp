@@ -38,6 +38,7 @@ inline namespace KFR_ARCH_NAME
  * @tparam T1 Input numeric type.
  * @param x Value whose square root is computed.
  * @return \f$\sqrt{x}\f$ as @c flt_type<T1>.
+ * @note Measured maximum error (AVX2): 0 ULP for float, 0 ULP for double.
  */
 template <numeric T1>
 KFR_INTRINSIC flt_type<T1> sqrt(const T1& x)

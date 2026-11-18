@@ -16,6 +16,8 @@ KFR is an open source C++ DSP framework that contains high performance building 
 
 :star2: **New**: Explore benchmark results from the LIGO, Virgo, and KAGRA collaborations, comparing KFR performance against FFTW for signal processing in gravitational-wave research: https://ar5iv.labs.arxiv.org/html/2503.14292
 
+See [Math function accuracy](docs/docs/core-math/math/accuracy.md) for measured ULP, relative, and absolute error across scalar and SIMD functions.
+
 ## KFR 7 - What's New
 
 * KFR 7.1 additions:

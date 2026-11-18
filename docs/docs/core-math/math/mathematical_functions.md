@@ -22,6 +22,8 @@ KFR prioritizes speed over full IEEE 754 compliance. Unless a function documents
 otherwise, behavior is not guaranteed for every edge case, including NaNs,
 infinities, signed zero, and subnormal values. If an application relies on a
 specific result for those inputs, handle them explicitly before calling KFR.
+See [Math function accuracy](accuracy.md) for measured errors and input ranges
+for the real scalar and SIMD functions.
 
 Almost every function listed here also has a lazy expression overload. Pass an
 expression, such as a [[`univector<T, Size>`:nosig]], [[`counter(T)`:nosig]], or arithmetic

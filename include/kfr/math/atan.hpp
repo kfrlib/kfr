@@ -32,6 +32,7 @@ inline namespace KFR_ARCH_NAME
 /**
  * @brief Returns the arc tangent of x. The returned angle is in the range \f$-\pi/2\f$ through
  * \f$\pi/2\f$.
+ * @note Measured maximum error (AVX2): 2 ULP for float, 2 ULP for double.
  */
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> atan(const T1& x)
@@ -63,6 +64,7 @@ KFR_FUNCTION flt_type<T1> atandeg(const T1& x)
  * @param x Numerator of the ratio (y component).
  * @param y Denominator of the ratio (x component).
  * @return Arc tangent of y/x, in radians, in the range \f$[-\pi, \pi]\f$.
+ * @note Measured maximum error (AVX2): 2 ULP for float, 2 ULP for double.
  */
 template <numeric T1, numeric T2>
 KFR_FUNCTION std::common_type_t<T1, T2> atan2(const T1& x, const T2& y)

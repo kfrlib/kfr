@@ -3,22 +3,26 @@
  * Copyright (C) 2016-2026 Dan Casarin
  * See LICENSE.txt for details
  */
-#include "../numeric_tests.hpp"
+#include <kfr/test/test.hpp>
 
+#include <kfr/math/gamma.hpp>
 #include <kfr/math/log_exp.hpp>
 
 namespace kfr
 {
 inline namespace KFR_ARCH_NAME
 {
-KFR_AUTO_TEST_1(gamma, narrow, 2200, 321)
-KFR_AUTO_TEST_1(exp, narrow, 4, 2)
-KFR_AUTO_TEST_1(exp2, narrow, 5, 2)
-KFR_AUTO_TEST_1(exp10, narrow, 40, 10)
-KFR_AUTO_TEST_1(log, narrow, 2, 1)
-KFR_AUTO_TEST_1(log2, narrow, 2, 1)
-KFR_AUTO_TEST_1(log10, narrow, 3, 1)
-KFR_AUTO_TEST_1(cbrt, narrow, 5, 1)
+TEST_CASE("gamma_known_values")
+{
+    CHECK(kfr::gamma(0.5f) == Catch::Approx(1.772453850905516).epsilon(2e-4));
+    CHECK(kfr::gamma(0.5) == Catch::Approx(1.772453850905516).epsilon(1e-12));
+    const vec<f64, 4> inputs{ 1.0, 2.0, 3.0, 6.0 };
+    const auto result = kfr::gamma(inputs);
+    CHECK(result[0] == Catch::Approx(1.0).epsilon(1e-12));
+    CHECK(result[1] == Catch::Approx(1.0).epsilon(1e-12));
+    CHECK(result[2] == Catch::Approx(2.0).epsilon(1e-12));
+    CHECK(result[3] == Catch::Approx(120.0).epsilon(1e-12));
+}
 
 TEST_CASE("gamma_finite_after_intermediate_overflow")
 {
