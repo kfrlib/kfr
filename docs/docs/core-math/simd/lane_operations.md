@@ -126,7 +126,7 @@ one that describes the fill policy you need.
 |-----------|----------------------|-----------------------|
 | [[`repeat`:nosig]] | Repeats the whole input pattern a requested number of times. | Not applicable. |
 | [[`resize`:nosig]] | Repeats the input pattern cyclically. | Keeps the leading lanes. |
-| [[`extend`:nosig]] | Keeps source lanes and fills remaining lanes with zero (except a one-lane input, whose value repeats). | Keeps the leading lanes. |
+| [[`extend`:nosig]] | Keeps source lanes; added lanes are implementation-dependent. A one-lane input is broadcast to every lane. | Keeps the leading lanes. |
 | [[`padhigh`:nosig]] / [[`padlow`:nosig]] | Appends or prepends zeros, or a supplied value. | Not applicable. |
 | [[`widen`:nosig]] | Appends zeros or a supplied value. | Not applicable. |
 | [[`narrow`:nosig]] | Not applicable. | Keeps the leading lanes. |
@@ -142,12 +142,16 @@ const auto repeated = resize<8>(rgb);
 // { 1, 2, 3, 1, 2, 3, 1, 2 }
 
 const auto extended = extend<8>(rgb);
+// The first three lanes are { 1, 2, 3 }; do not rely on the other lanes.
+
+const auto zero_padded = padhigh<5>(rgb);
 // { 1, 2, 3, 0, 0, 0, 0, 0 }
 
 const auto padded = padhigh<2>(rgb, -1);
 // { 1, 2, 3, -1, -1 }
 |||CHECK_THAT(repeated, DeepMatcher(vec<i32, 8>{ 1, 2, 3, 1, 2, 3, 1, 2 }));
-|||CHECK_THAT(extended, DeepMatcher(vec<i32, 8>{ 1, 2, 3, 0, 0, 0, 0, 0 }));
+|||CHECK_THAT((slice<0, 3>(extended)), DeepMatcher(rgb));
+|||CHECK_THAT(zero_padded, DeepMatcher(vec<i32, 8>{ 1, 2, 3, 0, 0, 0, 0, 0 }));
 |||CHECK_THAT(padded, DeepMatcher(vec<i32, 5>{ 1, 2, 3, -1, -1 }));
 |||}
 ```

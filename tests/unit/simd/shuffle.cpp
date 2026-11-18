@@ -38,6 +38,16 @@ TEST_CASE("concat18")
     CHECK_THAT((r), DeepMatcher(pack<float>(1, 11, 2, 22, 3, 33, 4, 44, 5, 55, 6, 66, 7, 77, 8, 88, 9, 99)));
 }
 
+TEST_CASE("extend preserves leading lanes and pad fills with zeros")
+{
+    const auto input = pack(1, 2, 3);
+    CHECK_THAT((slice<0, 3>(extend<8>(input))), DeepMatcher(input));
+    CHECK_THAT(padhigh<2>(input), DeepMatcher(pack(1, 2, 3, 0, 0)));
+    CHECK_THAT(padlow<2>(input), DeepMatcher(pack(0, 0, 1, 2, 3)));
+    CHECK_THAT(extend<2>(input), DeepMatcher(pack(1, 2)));
+    CHECK_THAT(extend<4>(pack(7)), DeepMatcher(pack(7, 7, 7, 7)));
+}
+
 TEST_CASE("split18")
 {
     vec<float, 18> r{ 1, 11, 2, 22, 3, 33, 4, 44, 5, 55, 6, 66, 7, 77, 8, 88, 9, 99 };

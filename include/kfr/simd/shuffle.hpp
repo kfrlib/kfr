@@ -283,7 +283,10 @@ KFR_FN(broadcast)
 template <size_t Ncount, typename T, size_t N>
 KFR_INTRINSIC vec<T, N + Ncount> padhigh(const vec<T, N>& x)
 {
-    return x.shuffle(csizeseq<N + Ncount>);
+    if constexpr (Ncount == 0)
+        return x;
+    else
+        return concat(x, broadcast<Ncount, T>(T{}));
 }
 /**
  * @brief Pads @p x with @p Ncount copies of @p newvalue on the high side.
@@ -315,7 +318,10 @@ KFR_FN(padhigh)
 template <size_t Ncount, typename T, size_t N>
 KFR_INTRINSIC vec<T, N + Ncount> padlow(const vec<T, N>& x)
 {
-    return x.shuffle(csizeseq<N + Ncount, 0 - Ncount>);
+    if constexpr (Ncount == 0)
+        return x;
+    else
+        return concat(broadcast<Ncount, T>(T{}), x);
 }
 /**
  * @brief Pads @p x with @p Ncount copies of @p newvalue on the low side.
@@ -349,8 +355,9 @@ KFR_INTRINSIC vec<T, Nout> extend(const vec<T, 1>& x)
     return repeat<Nout>(vec<T, 1>(x.front()));
 }
 /**
- * @brief Resizes a multi-element vector to length @p Nout by cyclic repetition or truncation.
- * @details Active when @p N != @p Nout and @p N > 1.
+ * @brief Resizes a multi-element vector to length @p Nout, preserving the leading lanes.
+ * @details Added lanes have implementation-dependent values. Use padhigh() or widen() if their
+ *          values matter. Active when @p N != @p Nout and @p N > 1.
  * @tparam Nout Desired output length.
  * @tparam T Element type of the vector.
  * @tparam N Input vector length.
