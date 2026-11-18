@@ -342,7 +342,8 @@ auto phase = phasor<float>(0.01f); // 0.01 cycles per sample
 univector<float, 256> triangle_wave = trianglenorm(phase);
 univector<float, 256> saw_wave = sawtoothnorm(phase);
 |||CHECK(triangle_wave[0] == 0.0f);
-|||CHECK(abs(saw_wave[100] + 1.0f) < 1e-5f);
+|||CHECK(abs(saw_wave[99] + 0.98f) < 1e-5f);
+|||CHECK(abs(saw_wave[101] - 0.98f) < 1e-5f);
 |||}
 ```
 

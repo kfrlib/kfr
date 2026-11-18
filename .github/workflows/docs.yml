@@ -37,6 +37,21 @@ jobs:
           pip install mkdocs mkdocs-material mkdocs-github-admonitions-plugin mkdocs-minify-plugin mkdocs-redirects
           pip install https://github.com/kfrlib/cxxdox/releases/download/v0.2.1/mkdocs_cxxdox-0.2.1-py3-none-manylinux_2_17_x86_64.whl
 
+      - name: Extract documentation snippets
+        run: cxxdox-snippets docs ../tests/snippets
+
+      - name: Build and run documentation snippets
+        working-directory: .
+        run: |
+          cmake -S . -B build-doc-snippets -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DENABLE_TESTS=ON -DENABLE_EXAMPLES=OFF \
+            -DKFR_ENABLE_CAPI_BUILD=ON -DKFR_ENABLE_MULTIARCH=OFF
+          cmake --build build-doc-snippets --target doc_snippets --parallel 2
+          ctest --test-dir build-doc-snippets -R '^snippet_' --output-on-failure --no-tests=error
+
       - name: Inject main.html
         env:
           MKDOCS_MAIN: ${{ secrets.MKDOCS_MAIN }}

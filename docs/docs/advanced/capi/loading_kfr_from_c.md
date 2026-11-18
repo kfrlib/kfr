@@ -32,6 +32,7 @@ independently of the program:
 ```c
 #include <kfr/capi.h>
 #include <stdio.h>
+|||#include <kfr/test/mini_catch.h>
 
 static int kfr_is_compatible(void)
 {
@@ -143,6 +144,31 @@ int open_kfr(void** out_library, version_fn* out_version,
   return 1;
 }
 #endif
+|||TEST_CASE("C API compatibility and dynamic loading")
+|||{
+|||    REQUIRE(kfr_is_compatible());
+|||#if defined(_WIN32) || defined(__linux__) || defined(__APPLE__)
+|||#ifdef _WIN32
+|||    HMODULE library;
+|||#else
+|||    void* library;
+|||#endif
+|||    version_fn version;
+|||    create_dft_f32_fn create;
+|||    delete_dft_f32_fn destroy;
+|||    REQUIRE(open_kfr(&library, &version, &create, &destroy));
+|||    CHECK(version() == kfr_version());
+|||    KFR_DFT_PLAN_F32* plan = create(16);
+|||    CHECK(plan != NULL);
+|||    if (plan != NULL)
+|||        destroy(plan);
+|||#ifdef _WIN32
+|||    FreeLibrary(library);
+|||#else
+|||    dlclose(library);
+|||#endif
+|||#endif
+|||}
 ```
 
 Keep the module loaded until every plan has been deleted, all calls have

@@ -154,10 +154,13 @@ foreach (SNIPPET_FILE ${KFR_SNIPPET_FILES})
     set(SNIPPET_TARGET snippet_${SNIPPET_NAME})
 
     if (SNIPPET_FILE MATCHES "\\.md\\.c$")
+        if (NOT TARGET kfr_capi)
+            continue()
+        endif ()
         add_executable(${SNIPPET_TARGET} ${SNIPPET_FILE}
                        "${CMAKE_SOURCE_DIR}/include/kfr/test/mini_catch.c")
         target_include_directories(${SNIPPET_TARGET} PUBLIC ${CMAKE_SOURCE_DIR}/include)
-        target_link_libraries(${SNIPPET_TARGET} PRIVATE kfr_capi)
+        target_link_libraries(${SNIPPET_TARGET} PRIVATE kfr_capi ${CMAKE_DL_LIBS})
     else ()
         add_executable(${SNIPPET_TARGET} ${SNIPPET_FILE} snippet_main.cpp)
         target_include_directories(
@@ -175,6 +178,8 @@ foreach (SNIPPET_FILE ${KFR_SNIPPET_FILES})
 
     list(APPEND KFR_SNIPPET_TESTS ${SNIPPET_TARGET})
 endforeach ()
+
+add_custom_target(doc_snippets DEPENDS ${KFR_SNIPPET_TESTS})
 
 option(KFR_NO_PERF_TESTS "Disable performance tests" OFF)
 
