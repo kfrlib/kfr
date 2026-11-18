@@ -147,12 +147,16 @@ KFR_INTRINSIC vec<f64, N> ceil(const vec<f64, N>& x)
 template <size_t N>
 KFR_INTRINSIC vec<f32, N> trunc(const vec<f32, N>& x)
 {
-    return select(abs(x) >= fp_precision_limit<f32>, x, broadcastto<f32>(broadcastto<i32>(x)));
+    const auto convert = abs(x) < fp_precision_limit<f32>;
+    const auto safe    = select(convert, x, 0.f);
+    return select(convert, copysign(broadcastto<f32>(broadcastto<i32>(safe)), x), x);
 }
 template <size_t N>
 KFR_INTRINSIC vec<f64, N> trunc(const vec<f64, N>& x)
 {
-    return select(abs(x) >= fp_precision_limit<f64>, x, broadcastto<f64>(broadcastto<i64>(x)));
+    const auto convert = abs(x) < fp_precision_limit<f64>;
+    const auto safe    = select(convert, x, 0.);
+    return select(convert, copysign(broadcastto<f64>(broadcastto<i64>(safe)), x), x);
 }
 template <size_t N>
 KFR_INTRINSIC vec<f32, N> fract(const vec<f32, N>& x)

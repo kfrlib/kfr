@@ -62,6 +62,32 @@ TEST_CASE("round half ties and adjacent values")
     check.template operator()<f64>();
 }
 
+TEST_CASE("trunc handles mixed finite and nonfinite lanes")
+{
+    const auto check = []<typename T>()
+    {
+        const T inf = std::numeric_limits<T>::infinity();
+        const T nan = std::numeric_limits<T>::quiet_NaN();
+        const vec<T, 8> input{ T(-0.5), T(1.75), inf, -inf, nan,
+                               std::numeric_limits<T>::max(), -std::numeric_limits<T>::max(), T(-2.75) };
+        const auto result = kfr::trunc(input);
+        for (size_t i = 0; i < 8; ++i)
+        {
+            CAPTURE(i);
+            const T expected = std::trunc(input[i]);
+            if (std::isnan(expected))
+                CHECK(std::isnan(result[i]));
+            else
+            {
+                CHECK(result[i] == expected);
+                CHECK(std::signbit(result[i]) == std::signbit(expected));
+            }
+        }
+    };
+    check.template operator()<f32>();
+    check.template operator()<f64>();
+}
+
 template <typename T>
 void check_fmod_regressions()
 {
