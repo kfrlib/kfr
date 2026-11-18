@@ -33,7 +33,7 @@ inline namespace KFR_ARCH_NAME
  * @brief Returns e raised to the given power x.
  *
  * Applied element-wise for vector inputs. Negative infinity input yields
- * zero; +infinity yields +infinity.
+ * zero; +infinity yields +infinity, and NaN remains NaN.
  *
  * @tparam T1 Input numeric type.
  * @param x Power to which e is raised.

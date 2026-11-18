@@ -147,8 +147,11 @@ KFR_INTRINSIC vec<Tout, N> log10(const vec<T, N>& x)
 }
 
 template <size_t N>
-KFR_INTRINSIC vec<f32, N> exp(const vec<f32, N>& d)
+KFR_INTRINSIC vec<f32, N> exp(const vec<f32, N>& input)
 {
+    // Non-finite lanes must not reach the float-to-integer range reduction.
+    const auto finite   = abs(input) < constants<f32>::infinity;
+    const vec<f32, N> d = select(finite, input, 0.f);
     const f32 ln2_part1 = 0.6931457519f;
     const f32 ln2_part2 = 1.4286067653e-6f;
 
@@ -174,14 +177,14 @@ KFR_INTRINSIC vec<f32, N> exp(const vec<f32, N>& d)
     u = s * s * u + s + 1.0f;
     u = vldexpk(u, q);
 
-    u = select(d == constants<f32>::neginfinity, 0.f, u);
-
-    return u;
+    return select(finite, u, select(input == constants<f32>::neginfinity, 0.f, input));
 }
 
 template <size_t N>
-KFR_INTRINSIC vec<f64, N> exp(const vec<f64, N>& d)
+KFR_INTRINSIC vec<f64, N> exp(const vec<f64, N>& input)
 {
+    const auto finite   = abs(input) < constants<f64>::infinity;
+    const vec<f64, N> d = select(finite, input, 0.0);
     const f64 ln2_part1 = 0.69314717501401901245;
     const f64 ln2_part2 = 5.545926273775592108e-009;
 
@@ -215,9 +218,7 @@ KFR_INTRINSIC vec<f64, N> exp(const vec<f64, N>& d)
     u = s * s * u + s + 1.0;
     u = vldexpk(u, q);
 
-    u = select(d == constants<f64>::neginfinity, 0.0, u);
-
-    return u;
+    return select(finite, u, select(input == constants<f64>::neginfinity, 0.0, input));
 }
 template <typename T, size_t N, typename Tout = flt_type<T>>
 KFR_INTRINSIC vec<Tout, N> exp2(const vec<T, N>& x)

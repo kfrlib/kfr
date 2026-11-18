@@ -47,9 +47,6 @@ TEST_CASE("amp_to_dB")
 
 TEST_CASE("dB_to_amp")
 {
-#if defined __clang__ && defined(KFR_ARCH_ARM) && __clang_major__ >= 13
-    // Clang 13+ compiler bug on ARM
-#else
     epsilon_scope<void> eps(1000);
 
     CHECK_THAT((kfr::exp(fbase(-HUGE_VAL))), DeepMatcher(fbase(0.0)));
@@ -60,7 +57,6 @@ TEST_CASE("dB_to_amp")
     CHECK_THAT((kfr::dB_to_amp(fbase(0.0))), DeepMatcher(fbase(1.0)));
     CHECK_THAT((kfr::dB_to_amp(fbase(6.0205999132796239042747778944899))), DeepMatcher(fbase(2.0)));
     CHECK_THAT((kfr::dB_to_amp(fbase(-6.0205999132796239042747778944899))), DeepMatcher(fbase(0.5)));
-#endif
 }
 
 TEST_CASE("decibel_minimum_integer_magnitude")

@@ -12,6 +12,20 @@ namespace kfr
 {
 inline namespace KFR_ARCH_NAME
 {
+TEST_CASE("exp_nonfinite_mixed_lanes")
+{
+    const auto check = []<typename T>()
+    {
+        const auto result = kfr::exp(pack(-c_infinity<T>, T(0), c_infinity<T>, c_qnan<T>));
+        CHECK(result[0] == T(0));
+        CHECK(result[1] == T(1));
+        CHECK(result[2] == c_infinity<T>);
+        CHECK(std::isnan(result[3]));
+    };
+    check.operator()<float>();
+    check.operator()<double>();
+}
+
 TEST_CASE("gamma_known_values")
 {
     CHECK(kfr::gamma(0.5f) == Catch::Approx(1.772453850905516).epsilon(2e-4));
