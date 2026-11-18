@@ -560,8 +560,8 @@ TEST_CASE("dct_scratch")
             using T = type_of<decltype(type)>;
             dct_plan<T> plan(size);
             univector<T> in(size, T(0)), out(size);
-            in[0] = T(1);
-            in[1] = T(2);
+            in[0]                 = T(1);
+            in[1]                 = T(2);
             const double pi       = std::acos(-1.0);
             const double min_prec = std::is_same_v<T, float> ? 1e-4 : 1e-10;
             for (bool inverse : { false, true })
@@ -671,6 +671,36 @@ static void test_dft_md(random_state& gen, shape<Dims> shape)
         INFO("runtime dims");
         test_dft_md_t<T, Dims, dft_plan_md<T, dynamic_shape>, dft_plan_md_real<T, dynamic_shape>>(gen, shape);
     }
+}
+
+TEST_CASE("dft_md_real_singleton_last_axis")
+{
+    const dft_plan_md_real<double, 2> dft(shape{ 2, 1 });
+    const univector<double> in{ 2.0, 3.0 };
+    univector<complex<double>> out(2, complex<double>{ 0.0, 7.0 });
+    univector<u8> temp(dft.temp_size);
+
+    dft.execute(out.data(), in.data(), temp.data());
+
+    CHECK(out[0].real() == 5.0);
+    CHECK(out[0].imag() == 0.0);
+    CHECK(out[1].real() == -1.0);
+    CHECK(out[1].imag() == 0.0);
+}
+
+TEST_CASE("reference_dft_md_real_inverse_hermitian")
+{
+    const shape<dynamic_shape> dims = shape{ 3, 4 };
+    univector<double> in(12, 0.0);
+    univector<double> out(12, 0.0);
+    univector<complex<double>> spectrum(9);
+    in[5] = 1.0;
+
+    reference_dft_md(spectrum.data(), in.data(), dims);
+    reference_dft_md(out.data(), spectrum.data(), dims);
+
+    for (size_t i = 0; i < in.size(); ++i)
+        CHECK(std::abs(out[i] - in[i]) < 1e-12);
 }
 
 TEST_CASE("dft_md")

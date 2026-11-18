@@ -44,6 +44,12 @@ KFR_INTRINSIC vec<T, N> clamp(const vec<T, N>& x, const vec<T, N>& lo, const vec
     return max(min(x, hi), lo);
 }
 
+template <typename T>
+KFR_INTRINSIC T clamp(const T& x, const T& hi)
+{
+    return clamp(x, T{ 0 }, hi);
+}
+
 template <typename T, size_t N>
 KFR_INTRINSIC vec<T, N> clamp(const vec<T, N>& x, const vec<T, N>& hi)
 {

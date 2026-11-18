@@ -54,7 +54,7 @@ KFR_INTRINSIC T1 ceil(const T1& x)
 }
 
 /**
- * @brief Returns the nearest integer value to @p x.
+ * @brief Returns the nearest integer value to @p x, rounding halfway cases away from zero.
  * @tparam T1 Numeric type.
  * @param x Input value.
  * @return The nearest integer value to @p x.
@@ -140,7 +140,7 @@ KFR_INTRINSIC itype<T1> itrunc(const T1& x)
 /**
  * @brief Approximates the floating-point remainder of dividing @p x by @p y.
  * @details Uses `x - trunc(x / y) * y` and copies the dividend's sign to the result.
- *          Quotient overflow, zero divisors, infinities and NaNs are not handled with 
+ *          Quotient overflow, zero divisors, infinities and NaNs are not handled with
  *          @c std::fmod semantics.
  * @tparam T Floating-point type.
  * @param x Dividend.

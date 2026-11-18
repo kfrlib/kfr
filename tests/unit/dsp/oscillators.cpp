@@ -29,4 +29,22 @@ TEST_CASE("phasor")
     univector<fbase, 100> v2 = sin(constants<fbase>::pi_s(2) * counter(0, 15000 / sr));
     CHECK(rms(v1 - v2) < 1.e-5);
 }
+TEST_CASE("phasor_normalized_preserves_precision")
+{
+    constexpr double step = 0.125 + 0x1p-40;
+    const auto ramp = phasor<double>(step);
+    static_assert(std::is_same_v<value_type_of<decltype(ramp)>, double>);
+    univector<double, 2> samples = ramp;
+    CHECK(samples[1] == step);
+}
+
+TEST_CASE("trianglenorm_preserves_offset_for_large_phases")
+{
+    constexpr double cycles = 0x1p52;
+    CHECK(trianglenorm(cycles) == 0.0);
+    CHECK(trianglenorm(-cycles) == 0.0);
+    CHECK(trianglenorm(cycles / 2 + 0.5) == 0.0);
+    CHECK(trianglenorm(0.25) == 1.0);
+    CHECK(trianglenorm(0.75) == -1.0);
+}
 } // namespace KFR_ARCH_NAME

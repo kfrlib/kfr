@@ -63,5 +63,22 @@ TEST_CASE("dB_to_amp")
 #endif
 }
 
+TEST_CASE("decibel_minimum_integer_magnitude")
+{
+    const auto minimum         = std::numeric_limits<int>::min();
+    const double log_magnitude = std::log10(-static_cast<double>(minimum));
+    CHECK(std::abs(kfr::amp_to_dB(minimum) - 20 * log_magnitude) < 1e-4);
+    CHECK(std::abs(kfr::power_to_dB(minimum) - 10 * log_magnitude) < 1e-4);
+}
+
+TEST_CASE("decibel_power_mixed_lanes")
+{
+    const auto power = kfr::dB_to_power(pack(-c_infinity<double>, 0.0, 10.0, -10.0));
+    CHECK(power[0] == 0.0);
+    CHECK(std::abs(power[1] - 1.0) < 1e-12);
+    CHECK(std::abs(power[2] - 10.0) < 1e-12);
+    CHECK(std::abs(power[3] - 0.1) < 1e-12);
+}
+
 } // namespace KFR_ARCH_NAME
 } // namespace kfr

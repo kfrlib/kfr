@@ -1186,14 +1186,20 @@ private:
         expand(ptr_cast<T>(out), in_real, size.remove_back().product(), size.back());
         for (;;)
         {
-            if (size[axis] > 1)
+            if (axis == size.dims() - 1)
             {
-                if (axis == size.dims() - 1)
-                    for (index_t o = 0; o < total; o += sh.back())
+                for (index_t o = 0; o < total; o += sh.back())
+                {
+                    if (size[axis] == 1)
+                        out[o] = complex<T>{ out[o].real(), T(0) };
+                    else
                         dft_real.execute(out + o, ptr_cast<T>(out + o), temp, cfalse);
-                else
-                    for (index_t o = 0; o < total; o += sh.back())
-                        dfts[axis].execute(out + o, out + o, temp, cfalse);
+                }
+            }
+            else if (size[axis] > 1)
+            {
+                for (index_t o = 0; o < total; o += sh.back())
+                    dfts[axis].execute(out + o, out + o, temp, cfalse);
             }
 
             transpose(out, out, shape{ sh.remove_back().product(), sh.back() });

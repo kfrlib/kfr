@@ -5,6 +5,7 @@
  */
 
 #include <kfr/base/basic_expressions.hpp>
+#include <kfr/base/small_buffer.hpp>
 #include <kfr/base/univector.hpp>
 #include <kfr/io/tostring.hpp>
 
@@ -12,6 +13,31 @@ namespace kfr
 {
 inline namespace KFR_ARCH_NAME
 {
+
+TEST_CASE("small_buffer_append_own_element")
+{
+    small_buffer<int, 1> buffer;
+    buffer.push_back(42);
+    buffer.push_back(buffer.front());
+    buffer.push_back(buffer.back());
+    REQUIRE(buffer.size() == 3);
+    CHECK(buffer[0] == 42);
+    CHECK(buffer[1] == 42);
+    CHECK(buffer[2] == 42);
+}
+
+TEST_CASE("small_buffer_self_assign_preserves_storage")
+{
+    small_buffer<int, 1> buffer;
+    buffer.push_back(42);
+    buffer.push_back(17);
+    const auto before = reinterpret_cast<std::uintptr_t>(buffer.data());
+    buffer.assign(std::as_const(buffer));
+    CHECK(reinterpret_cast<std::uintptr_t>(buffer.data()) == before);
+    REQUIRE(buffer.size() == 2);
+    CHECK(buffer[0] == 42);
+    CHECK(buffer[1] == 17);
+}
 
 TEST_CASE("univector_assignment")
 {

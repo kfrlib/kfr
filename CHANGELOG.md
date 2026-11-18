@@ -8,13 +8,13 @@
 
 #### Fixed
 
-* Tensor reverse-slice endpoint normalization, slice-length overflow with large positive steps, and invalid pointer arithmetic for empty slices
-* Signed `satadd` and `satsub` overflow saturation bounds
-* SIMD `copysign` magnitude preservation and integer `negeven` and `negodd`
-* Floating-point `fmod` and `rem` preserve the dividend's sign, including signed zero; accuracy and special-value limitations are documented
-* Reversal of nested vectors and zero-bit integer digit reversal
-* Compile-time `scatter` and compound-vector element setters
-* Postfix increment and decrement on vector elements return the previous value
+* Fixed tensor slicing and made `small_buffer` safe when appending its own elements or assigning to itself.
+* Corrected SIMD saturation, sign handling, signed averages, scalar clamping, and rounding; `fmod` and `rem` preserve the sign of the dividend.
+* Fixed nested-vector and digit reversal, compile-time scatter, compound-vector setters, and postfix element updates.
+* Fixed automatic uniform random seeding and prevented non-finite Gaussian samples from zero uniform inputs.
+* Improved numerical stability in hyperbolic functions, inverse trigonometric functions, gamma, waveshapers, and decibel conversions; fixed complex square root at zero.
+* Corrected FIR center-tap windowing, all-pass biquad coefficients, oscillator precision and phase wrapping, and upsampling phase at unaligned SIMD offsets.
+* Corrected Goertzel phase and prevented stale imaginary values in multidimensional real DFTs with a length-one final axis; fixed Hermitian reconstruction in the inverse reference DFT.
 
 ## 7.2.0
 

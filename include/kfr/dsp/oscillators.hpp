@@ -65,7 +65,7 @@ KFR_FUNCTION static auto phasor(std::type_identity_t<T> frequency, std::type_ide
 template <typename T = fbase>
 KFR_FUNCTION static auto phasor(std::type_identity_t<T> frequency)
 {
-    return phasor(frequency, 1, 0);
+    return phasor<T>(frequency, T(1), T(0));
 }
 
 namespace intr
@@ -137,7 +137,8 @@ KFR_INTRINSIC T rawtriangle(const T& x)
 template <typename T>
 KFR_INTRINSIC T trianglenorm(const T& x)
 {
-    return intr::rawtriangle(fract(x + 0.25));
+    const T phase = fract(x);
+    return intr::rawtriangle(select(phase < T(0.75), phase + T(0.25), phase - T(0.75)));
 }
 template <typename T>
 KFR_INTRINSIC T triangle(const T& x)
@@ -327,7 +328,7 @@ KFR_FUNCTION expression_function<fn::rawtriangle, E1> rawtriangle(E1&& x)
 /**
  * @brief Triangle wave of a phase in radians.
  *
- * Equivalent to @ref rawtriangle applied to `x / (2*pi)`.
+ * Equivalent to @ref trianglenorm applied to `x / (2*pi)`.
  *
  * @param x Phase in radians.
  * @return Triangle value in [-1, 1].
@@ -349,7 +350,9 @@ KFR_FUNCTION expression_function<fn::triangle, E1> triangle(E1&& x)
 }
 
 /**
- * @brief Triangle wave of a phase ramp in [0, 1) cycles (alias of @ref rawtriangle).
+ * @brief Triangle wave with a rising zero crossing at phase zero.
+ *
+ * Applies @ref rawtriangle after shifting the phase forward by a quarter cycle and wrapping.
  *
  * @param x Phase in normalized cycles ([0, 1) corresponds to one full cycle).
  * @return Triangle value in [-1, 1].

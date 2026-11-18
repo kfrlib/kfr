@@ -202,7 +202,10 @@ KFR_FN(hdot)
 template <typename T, size_t N>
 KFR_INTRINSIC T havg(const vec<T, N>& value)
 {
-    return hadd(value) / N;
+    if constexpr (std::is_integral_v<T> && std::is_signed_v<T>)
+        return hadd(value) / static_cast<std::ptrdiff_t>(N);
+    else
+        return hadd(value) / N;
 }
 KFR_FN(havg)
 

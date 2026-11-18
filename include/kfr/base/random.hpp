@@ -134,7 +134,7 @@ KFR_INTRINSIC vec<T, N> random_range(random_state& state, T min, T max)
     using unsigned_type = kfr::unsigned_type<typebits<T>::bits>;
 
     const vec<unsigned_type, N> random = random_uniform<unsigned_type, N>(state);
-    const unsigned_type span = static_cast<unsigned_type>(max) - static_cast<unsigned_type>(min);
+    const unsigned_type span           = static_cast<unsigned_type>(max) - static_cast<unsigned_type>(min);
     if (span == 0)
         return vec<T, N>(min);
 
@@ -163,7 +163,9 @@ KFR_INTRINSIC vec<T, N> random_normal(random_state& state, T mu, T sigma)
 
     vec<T, M> u = random_uniform<T, M>(state);
 
-    vec<T, M / 2> mag = sigma * sqrt(T(-2.0) * log(even(u)));
+    const vec<T, M / 2> radius = even(u);
+    // Map zero to one so the logarithm uses samples in (0, 1].
+    vec<T, M / 2> mag = sigma * sqrt(T(-2.0) * log(select(radius == T(0), T(1), radius)));
     vec<T, M> z       = dup(mag) * cossin(c_pi<T, 2> * dupodd(u)) + mu;
     return slice<0, N>(z);
 }
@@ -311,7 +313,7 @@ KFR_FUNCTION expression_random_uniform<T, Dims, true> gen_random_uniform(
 template <typename T, index_t Dims = 1>
 KFR_FUNCTION expression_random_uniform<T, Dims> gen_random_uniform()
 {
-    return expression_random_uniform<T, Dims>{ random_init() };
+    return { {}, random_init() };
 }
 #endif
 

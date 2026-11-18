@@ -5,6 +5,7 @@
  */
 
 #include <kfr/io/tostring.hpp>
+#include <kfr/simd/clamp.hpp>
 #include <kfr/simd/horizontal.hpp>
 #include <kfr/simd/operators.hpp>
 
@@ -84,6 +85,19 @@ struct safe_multiplication
     }
 };
 
+TEST_CASE("signed horizontal average preserves negative sums")
+{
+    CHECK(havg(vec<i32, 3>{ -7, 2, -3 }) == -2);
+    CHECK(havg(vec<i64, 2>{ -6, 1 }) == -2);
+}
+
+TEST_CASE("two-argument clamp supports scalar bounds")
+{
+    CHECK(kfr::clamp(-3, 5) == 0);
+    CHECK(kfr::clamp(2.5, 4.0) == 2.5);
+    CHECK(kfr::clamp(7, 5) == 5);
+}
+
 TEST_CASE("neg")
 {
     test_function1(
@@ -93,10 +107,9 @@ TEST_CASE("neg")
 
 TEST_CASE("copysign preserves magnitude and copies only the sign bit")
 {
-    const vec<u32, 8> xbits{ 0x40400000u, 0xc0200000u, 0u, 0x80000000u,
+    const vec<u32, 8> xbits{ 0x40400000u, 0xc0200000u, 0u,          0x80000000u,
                              0x7f800000u, 0xff800000u, 0x7fc12345u, 0xffc12345u };
-    const vec<u32, 8> ybits{ 0x80000000u, 0u, 0x80000000u, 0u,
-                             0x80000000u, 0u, 0x80000000u, 0u };
+    const vec<u32, 8> ybits{ 0x80000000u, 0u, 0x80000000u, 0u, 0x80000000u, 0u, 0x80000000u, 0u };
     const vec<u32, 8> expected{ 0xc0400000u, 0x40200000u, 0x80000000u, 0u,
                                 0xff800000u, 0x7f800000u, 0xffc12345u, 0x7fc12345u };
     CHECK_THAT(ubitcast(copysign(bitcast<f32>(xbits), bitcast<f32>(ybits))), DeepMatcher(expected));
@@ -136,8 +149,8 @@ TEST_CASE("alternating negation handles integer and floating-point lanes")
     CHECK_THAT(negeven(single), DeepMatcher(single));
     CHECK_THAT(negodd(single), DeepMatcher(single));
     const vec<i8, 16> bytes{ 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6, 7, -7, -128, -128 };
-    CHECK_THAT(negeven(bytes),
-               DeepMatcher(vec<i8, 16>{ -1, -1, -2, -2, -3, -3, -4, -4, -5, -5, -6, -6, -7, -7, -128, -128 }));
+    CHECK_THAT(negeven(bytes), DeepMatcher(vec<i8, 16>{ -1, -1, -2, -2, -3, -3, -4, -4, -5, -5, -6, -6, -7,
+                                                        -7, -128, -128 }));
     CHECK_THAT(negodd(bytes),
                DeepMatcher(vec<i8, 16>{ 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, -128, -128 }));
 

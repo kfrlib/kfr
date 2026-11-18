@@ -76,8 +76,14 @@ inline auto waveshaper_tanh(E1&& input, double saturation)
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> saturate_I(const T1& x)
 {
-    const flt_type<T1> xx = -1 / (abs(static_cast<flt_type<T1>>(x)) + 1) + 1;
-    return mulsign(xx, static_cast<flt_type<T1>>(x));
+    const flt_type<T1> input = static_cast<flt_type<T1>>(x);
+    const auto magnitude     = abs(input);
+    const auto inverse       = 1 / (magnitude + 1);
+    // Avoid cancellation near zero without introducing an infinity-over-infinity case.
+    if constexpr (std::is_arithmetic_v<flt_type<T1>>)
+        return mulsign(magnitude <= 1 ? magnitude * inverse : 1 - inverse, input);
+    else
+        return mulsign(select(magnitude <= 1, magnitude * inverse, 1 - inverse), input);
 }
 KFR_FN(saturate_I)
 
@@ -91,8 +97,18 @@ KFR_FN(saturate_I)
 template <numeric T1>
 KFR_FUNCTION flt_type<T1> saturate_II(const T1& x)
 {
-    const flt_type<T1> xx = sqr(abs(static_cast<flt_type<T1>>(x)) + 1);
-    return mulsign((xx - 1) / (xx + 1), static_cast<flt_type<T1>>(x));
+    const flt_type<T1> input = static_cast<flt_type<T1>>(x);
+    const auto magnitude     = abs(input);
+    const auto inverse       = 1 / (magnitude + 1);
+    // Factor the difference of squares for small inputs; use reciprocal scaling for large inputs.
+    const auto ratio = [&]
+    {
+        if constexpr (std::is_arithmetic_v<flt_type<T1>>)
+            return magnitude <= 1 ? magnitude * inverse : 1 - inverse;
+        else
+            return select(magnitude <= 1, magnitude * inverse, 1 - inverse);
+    }();
+    return mulsign((ratio * (1 + inverse)) / (1 + sqr(inverse)), input);
 }
 KFR_FN(saturate_II)
 
@@ -127,6 +143,7 @@ KFR_FUNCTION expression_function<fn::saturate_II, E1> saturate_II(E1&& x)
  * @note For demonstration only; musically pleasing saturation requires careful modelling.
  *
  * The output is normalized by `saturate_I(saturation)` so that an input of 1 maps to 1.
+ * At zero drive, the output equals the input.
  *
  * @param input Input signal expression.
  * @param saturation Drive amount.
@@ -137,7 +154,13 @@ inline auto waveshaper_saturate_I(E1&& input, double saturation)
 {
     using T       = flt_type<expression_value_type<E1>>;
     const T drive = static_cast<T>(saturation);
-    return saturate_I(drive * input) / saturate_I(drive);
+    return bind_expression(
+        [drive, scale = saturate_I(drive)](const auto& samples)
+        {
+            const auto values = cast<T>(samples);
+            return drive == T(0) ? values : saturate_I(drive * values) / scale;
+        },
+        std::forward<E1>(input));
 }
 
 /**
@@ -145,6 +168,7 @@ inline auto waveshaper_saturate_I(E1&& input, double saturation)
  * @note For demonstration only; musically pleasing saturation requires careful modelling.
  *
  * The output is normalized by `saturate_II(saturation)` so that an input of 1 maps to 1.
+ * At zero drive, the output equals the input.
  *
  * @param input Input signal expression.
  * @param saturation Drive amount.
@@ -155,7 +179,13 @@ inline auto waveshaper_saturate_II(E1&& input, double saturation)
 {
     using T       = flt_type<expression_value_type<E1>>;
     const T drive = static_cast<T>(saturation);
-    return saturate_II(drive * input) / saturate_II(drive);
+    return bind_expression(
+        [drive, scale = saturate_II(drive)](const auto& samples)
+        {
+            const auto values = cast<T>(samples);
+            return drive == T(0) ? values : saturate_II(drive * values) / scale;
+        },
+        std::forward<E1>(input));
 }
 
 /**

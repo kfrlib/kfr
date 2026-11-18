@@ -75,6 +75,10 @@ TEST_CASE("complex_functions")
 {
     CHECK_THAT((csqr(complex<f32>(4.f, 0.f))), DeepMatcher(c32{ 16.f, 0.f }));
     CHECK_THAT((csqrt(complex<f32>(16.f, 0.f))), DeepMatcher(c32{ 4.f, 0.f }));
+    CHECK(csqrt(c32{ 0.f, 0.f }) == c32{ 0.f, 0.f });
+    const auto roots = csqrt(vec<c32, 2>{ c32{ 0.f, 0.f }, c32{ -15.f, 8.f } });
+    CHECK(c32(roots[0]) == c32{ 0.f, 0.f });
+    CHECK_THAT(c32(roots[1]), DeepMatcher(c32{ 1.f, 4.f }));
 
     CHECK_THAT((csqr(complex<f32>(1.f, 4.f))), DeepMatcher(c32{ -15.f, 8.f }));
 

@@ -75,7 +75,7 @@ TEST_CASE("gen_random_range")
 
 TEST_CASE("random_range_signed_integers")
 {
-    random_state gen = random_init(1, 2, 3, 4);
+    random_state gen  = random_init(1, 2, 3, 4);
     const auto values = random_range<64, i32>(gen, -10, 20);
     for (size_t i = 0; i < 64; ++i)
     {
@@ -86,7 +86,7 @@ TEST_CASE("random_range_signed_integers")
 
 TEST_CASE("random_range_integral_degenerate_range")
 {
-    random_state gen = random_init(1, 2, 3, 4);
+    random_state gen  = random_init(1, 2, 3, 4);
     const auto values = random_range<8, i32>(gen, 42, 42);
     for (size_t i = 0; i < 8; ++i)
         CHECK(values[i] == 42);
@@ -98,6 +98,25 @@ TEST_CASE("gen_random_uniform")
     univector<fbase, 1000> v = gen_random_uniform<fbase>(std::ref(gen));
     CHECK(minof(v) >= fbase(0));
     CHECK(maxof(v) < fbase(1));
+}
+
+#ifndef KFR_DISABLE_READCYCLECOUNTER
+TEST_CASE("gen_random_uniform_auto_seed")
+{
+    const univector<fbase, 64> values = gen_random_uniform<fbase>();
+    CHECK(minof(values) >= fbase(0));
+    CHECK(maxof(values) < fbase(1));
+}
+#endif
+
+TEST_CASE("random_normal_zero_uniform_sample")
+{
+    random_state gen;
+    // The next generator state is all zeros.
+    gen.v             = portable_vec<u32, 4>{ 2708534849u, 525858369u, 2913596993u, 1511872763u };
+    const auto values = random_normal<2, float>(gen, 0.f, 1.f);
+    CHECK(std::isfinite(values[0]));
+    CHECK(std::isfinite(values[1]));
 }
 
 TEST_CASE("random_normal")

@@ -415,8 +415,9 @@ struct expression_upsample<2, E> : expression_with_arguments<E>, expression_trai
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_upsample& self, index_t index,
                                                 axis_params<0, N>)
     {
-        const vec<T, N / 2> x = get_elements(self.first(), index / 2, axis_params<0, N / 2>());
-        return interleave(x, zerovector(x));
+        const size_t phase    = index & 1;
+        const vec<T, N / 2> x = get_elements(self.first(), index / 2 + phase, axis_params<0, N / 2>());
+        return phase ? interleave(zerovector(x), x) : interleave(x, zerovector(x));
     }
     KFR_INTRINSIC friend vec<T, 1> get_elements(const expression_upsample& self, index_t index,
                                                 axis_params<0, 1>)
@@ -441,9 +442,22 @@ struct expression_upsample<4, E> : expression_with_arguments<E>
     KFR_INTRINSIC friend vec<T, N> get_elements(const expression_upsample& self, index_t index,
                                                 axis_params<0, N>) noexcept
     {
-        const vec<T, N / 4> x  = get_elements(self.first(), index / 4, axis_params<0, N / 4>());
+        // An unaligned block starts with zeros before the next input sample.
+        const size_t phase    = index & 3;
+        const vec<T, N / 4> x = get_elements(self.first(), index / 4 + (phase != 0), axis_params<0, N / 4>());
         const vec<T, N / 2> xx = interleave(x, zerovector(x));
-        return interleave(xx, zerovector(xx));
+        const auto result      = interleave(xx, zerovector(xx));
+        switch (phase)
+        {
+        case 1:
+            return rotateright<3>(result);
+        case 2:
+            return rotateright<2>(result);
+        case 3:
+            return rotateright<1>(result);
+        default:
+            return result;
+        }
     }
     KFR_INTRINSIC friend vec<T, 2> get_elements(const expression_upsample& self, index_t index,
                                                 axis_params<0, 2>) noexcept
@@ -453,7 +467,8 @@ struct expression_upsample<4, E> : expression_with_arguments<E>
         case 0:
             return interleave(get_elements(self.first(), index / 4, axis_params<0, 1>()), zerovector<T, 1>());
         case 3:
-            return interleave(zerovector<T, 1>(), get_elements(self.first(), index / 4, axis_params<0, 1>()));
+            return interleave(zerovector<T, 1>(),
+                              get_elements(self.first(), index / 4 + 1, axis_params<0, 1>()));
         default:
             return 0;
         }

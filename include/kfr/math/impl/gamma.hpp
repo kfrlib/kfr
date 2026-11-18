@@ -51,8 +51,13 @@ KFR_INTRINSIC vec<T, N> gamma(const vec<T, N>& z)
     KFR_LOOP_UNROLL
     for (size_t k = 1; k < Count; k++)
         accm += gamma_precalc<T>[k] / (z + broadcastto<utype<T>>(k));
-    accm *= exp(-(z + Count)) * pow(z + Count, z + 0.5);
-    return accm / z;
+    const auto base = z + T(Count);
+    const auto shift = z + T(0.5);
+    const auto power = shift * log(base);
+    // Combine the exponents before the power term can overflow on its own.
+    const auto combine = power > T(80);
+    const auto scale = exp(select(combine, power - base, -base)) * exp(select(combine, T(0), power));
+    return (accm * scale) / z;
 }
 
 template <typename T, size_t N>

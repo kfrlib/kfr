@@ -23,6 +23,17 @@ namespace kfr
 inline namespace KFR_ARCH_NAME
 {
 
+TEST_CASE("biquad_allpass_design")
+{
+    const auto section = biquad_allpass<double>(0.25, 2.0);
+    CHECK(std::abs(section.a0 - 1.0) < 1e-12);
+    CHECK(std::abs(section.a1) < 1e-12);
+    CHECK(std::abs(section.a2 - 0.6) < 1e-12);
+    CHECK(std::abs(section.b0 - 0.6) < 1e-12);
+    CHECK(std::abs(section.b1) < 1e-12);
+    CHECK(std::abs(section.b2 - 1.0) < 1e-12);
+}
+
 template <typename T, typename... Ts, univector_tag Tag>
 inline const univector<T, Tag>& choose_array(const univector<T, Tag>& array, const univector<Ts, Tag>&...)
 {

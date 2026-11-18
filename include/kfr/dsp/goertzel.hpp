@@ -76,8 +76,18 @@ struct expression_goertzel : expression_traits_defaults
      */
     ~expression_goertzel()
     {
-        result.real(q1 - q2 * cos(omega));
-        result.imag(q2 * sin(omega));
+        if (sample_count == 0)
+        {
+            result = complex<T>(0, 0);
+            return;
+        }
+        const T phase = -static_cast<T>(sample_count - 1) * omega;
+        const T re    = q1 - q2 * cos(omega);
+        const T im    = q2 * sin(omega);
+        const T c     = cos(phase);
+        const T s     = sin(phase);
+        result.real(re * c - im * s);
+        result.imag(re * s + im * c);
     }
 
     /**
@@ -88,6 +98,7 @@ struct expression_goertzel : expression_traits_defaults
                                            const std::type_identity_t<vec<T, N>>& x)
     {
         vec<T, N> in = x;
+        self.sample_count += N;
         KFR_LOOP_UNROLL
         for (size_t i = 0; i < N; i++)
         {
@@ -99,6 +110,7 @@ struct expression_goertzel : expression_traits_defaults
     complex<T>& result; ///< Output complex bin value (written on destruction).
     const T omega; ///< Target angular frequency [rad/sample].
     const T coeff; ///< Precomputed resonator coefficient `2*cos(omega)`.
+    mutable size_t sample_count = 0;
     mutable T q0; ///< Current filter output (working state).
     mutable T q1; ///< Previous output sample (working state).
     mutable T q2; ///< Output sample two steps back (working state).
@@ -149,12 +161,15 @@ struct expression_parallel_goertzel : expression_traits_defaults
      */
     ~expression_parallel_goertzel()
     {
-        const vec<T, width> re = q1 - q2 * cos(omega);
-        const vec<T, width> im = q2 * sin(omega);
+        const vec<T, width> phase = -static_cast<T>(sample_count ? sample_count - 1 : 0) * omega;
+        const vec<T, width> re    = q1 - q2 * cos(omega);
+        const vec<T, width> im    = q2 * sin(omega);
+        const vec<T, width> c     = cos(phase);
+        const vec<T, width> s     = sin(phase);
         for (size_t i = 0; i < width; i++)
         {
-            result[i].real(re[i]);
-            result[i].imag(im[i]);
+            result[i].real(sample_count ? re[i] * c[i] - im[i] * s[i] : T(0));
+            result[i].imag(sample_count ? re[i] * s[i] + im[i] * c[i] : T(0));
         }
     }
     /**
@@ -165,6 +180,7 @@ struct expression_parallel_goertzel : expression_traits_defaults
                                            axis_params<VecAxis, N>, const std::type_identity_t<vec<T, N>>& x)
     {
         const vec<T, N> in = x;
+        self.sample_count += N;
         KFR_LOOP_UNROLL
         for (size_t i = 0; i < N; i++)
         {
@@ -176,6 +192,7 @@ struct expression_parallel_goertzel : expression_traits_defaults
     complex<T>* result; ///< Output array of `width` complex bin values.
     const vec<T, width> omega; ///< SIMD vector of target angular frequencies.
     const vec<T, width> coeff; ///< Precomputed coefficients `2*cos(omega)`.
+    mutable size_t sample_count = 0;
     mutable vec<T, width> q0; ///< Current filter outputs (working state).
     mutable vec<T, width> q1; ///< Previous output samples (working state).
     mutable vec<T, width> q2; ///< Output samples two steps back (working state).
@@ -193,9 +210,10 @@ struct expression_parallel_goertzel : expression_traits_defaults
 template <typename T>
 KFR_INTRINSIC void reset(const expression_goertzel<T>& self)
 {
-    self.q0 = T(0);
-    self.q1 = T(0);
-    self.q2 = T(0);
+    self.sample_count = 0;
+    self.q0           = T(0);
+    self.q1           = T(0);
+    self.q2           = T(0);
 }
 
 /**
@@ -211,9 +229,10 @@ KFR_INTRINSIC void reset(const expression_goertzel<T>& self)
 template <typename T, size_t width>
 KFR_INTRINSIC void reset(const expression_parallel_goertzel<T, width>& self)
 {
-    self.q0 = vec<T, width>(0);
-    self.q1 = vec<T, width>(0);
-    self.q2 = vec<T, width>(0);
+    self.sample_count = 0;
+    self.q0           = vec<T, width>(0);
+    self.q1           = vec<T, width>(0);
+    self.q2           = vec<T, width>(0);
 }
 
 /**

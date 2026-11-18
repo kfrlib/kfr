@@ -39,14 +39,14 @@ template <typename T, size_t N, typename Tout = flt_type<T>>
 KFR_INTRINSIC vec<Tout, N> asin(const vec<T, N>& x)
 {
     const vec<Tout, N> xx = x;
-    return atan2(xx, sqrt(Tout(1) - xx * xx));
+    return atan2(xx, sqrt((Tout(1) - xx) * (Tout(1) + xx)));
 }
 
 template <typename T, size_t N, typename Tout = flt_type<T>>
 KFR_INTRINSIC vec<Tout, N> acos(const vec<T, N>& x)
 {
     const vec<Tout, N> xx = x;
-    return atan2(sqrt(Tout(1) - xx * xx), xx);
+    return atan2(sqrt((Tout(1) - xx) * (Tout(1) + xx)), xx);
 }
 KFR_HANDLE_SCALAR(asin)
 KFR_HANDLE_SCALAR(acos)

@@ -18,6 +18,11 @@ and logarithmic functions operate on real scalar or vector values, while the
 processed lane by lane, and scalar operands broadcast naturally when mixed with
 vectors.
 
+KFR prioritizes speed over full IEEE 754 compliance. Unless a function documents
+otherwise, behavior is not guaranteed for every edge case, including NaNs,
+infinities, signed zero, and subnormal values. If an application relies on a
+specific result for those inputs, handle them explicitly before calling KFR.
+
 Almost every function listed here also has a lazy expression overload. Pass an
 expression, such as a [[`univector<T, Size>`:nosig]], [[`counter(T)`:nosig]], or arithmetic
 expression, and it builds a template expression instead of immediately
@@ -189,6 +194,11 @@ const f32 cube_root = cbrt(-8.f); // -2
 ```
 
 ## Hyperbolic and special functions
+
+For large finite magnitudes, `sinh` and `cosh` (including the interleaved
+`sinhcosh` and `coshsinh` variants) can overflow before the mathematical result
+exceeds the floating-point range because an intermediate exponential is larger
+than the final result.
 
 The hyperbolic family comprises [[`sinh(const T1 &)`:nosig]], [[`cosh(const T1 &)`:nosig]], [[`tanh(const T1 &)`:nosig]], and
 [[`coth(const T1 &)`:nosig]]. [[`coth(const T1 &)`:nosig]] is undefined at zero. The interleaved vector functions

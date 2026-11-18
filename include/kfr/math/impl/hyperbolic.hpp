@@ -38,48 +38,70 @@ inline namespace KFR_ARCH_NAME
 namespace intr
 {
 
+template <typename T, size_t N>
+KFR_INTRINSIC vec<T, N> sinh_small(const vec<T, N>& x)
+{
+    const auto x2 = sqr(x);
+    return x * (T(1) + x2 * (T(1.0 / 6) + x2 * (T(1.0 / 120) + x2 * T(1.0 / 5040))));
+}
+
+template <typename T, size_t N>
+KFR_INTRINSIC vec<T, N> cosh_small(const vec<T, N>& x)
+{
+    const auto x2 = sqr(x);
+    return T(1) + x2 * (T(0.5) + x2 * (T(1.0 / 24) + x2 * (T(1.0 / 720) + x2 * T(1.0 / 40320))));
+}
+
 template <typename T, size_t N, typename Tout = flt_type<T>>
 KFR_INTRINSIC vec<Tout, N> sinh(const vec<T, N>& x)
 {
     const vec<Tout, N> xx = static_cast<vec<Tout, N>>(x);
-    return (exp(xx) - exp(-xx)) * Tout(0.5);
+    const auto small      = sinh_small(xx);
+    return select(abs(xx) < Tout(0.05), small, (exp(xx) - exp(-xx)) * Tout(0.5));
 }
 
 template <typename T, size_t N, typename Tout = flt_type<T>>
 KFR_INTRINSIC vec<Tout, N> cosh(const vec<T, N>& x)
 {
     const vec<Tout, N> xx = static_cast<vec<Tout, N>>(x);
-    return (exp(xx) + exp(-xx)) * Tout(0.5);
+    return select(abs(xx) < Tout(0.05), cosh_small(xx), (exp(xx) + exp(-xx)) * Tout(0.5));
 }
 
 template <typename T, size_t N, typename Tout = flt_type<T>>
 KFR_INTRINSIC vec<Tout, N> tanh(const vec<T, N>& x)
 {
-    const vec<Tout, N> a = exp(2 * x);
-    return (a - 1) / (a + 1);
+    const vec<Tout, N> xx = static_cast<vec<Tout, N>>(x);
+    // Both ratios round to ±1 beyond this bound, before exp can overflow.
+    const auto bounded = select(abs(xx) > Tout(20), copysign(vec<Tout, N>(Tout(20)), xx), xx);
+    const auto a       = exp(Tout(2) * bounded);
+    const auto small   = abs(xx) < Tout(0.05);
+    const auto t       = sinh_small(xx) / cosh_small(xx);
+    return select(small, t, (a - Tout(1)) / (a + Tout(1)));
 }
 
 template <typename T, size_t N, typename Tout = flt_type<T>>
 KFR_INTRINSIC vec<Tout, N> coth(const vec<T, N>& x)
 {
-    const vec<Tout, N> a = exp(2 * x);
-    return (a + 1) / (a - 1);
+    const vec<Tout, N> xx = static_cast<vec<Tout, N>>(x);
+    const auto bounded    = select(abs(xx) > Tout(20), copysign(vec<Tout, N>(Tout(20)), xx), xx);
+    const auto a          = exp(Tout(2) * bounded);
+    return select(abs(xx) < Tout(0.05), cosh_small(xx) / sinh_small(xx), (a + Tout(1)) / (a - Tout(1)));
 }
 
 template <typename T, size_t N, typename Tout = flt_type<T>>
 KFR_INTRINSIC vec<Tout, N> sinhcosh(const vec<T, N>& x)
 {
-    const vec<Tout, N> a = exp(x);
-    const vec<Tout, N> b = exp(-x);
-    return subadd(a, b) * Tout(0.5);
+    const vec<Tout, N> xx = static_cast<vec<Tout, N>>(x);
+    const auto small      = select(internal::evenmask<Tout, N>(), sinh_small(xx), cosh_small(xx));
+    return select(abs(xx) < Tout(0.05), small, subadd(exp(xx), exp(-xx)) * Tout(0.5));
 }
 
 template <typename T, size_t N, typename Tout = flt_type<T>>
 KFR_INTRINSIC vec<Tout, N> coshsinh(const vec<T, N>& x)
 {
-    const vec<Tout, N> a = exp(x);
-    const vec<Tout, N> b = exp(-x);
-    return addsub(a, b) * Tout(0.5);
+    const vec<Tout, N> xx = static_cast<vec<Tout, N>>(x);
+    const auto small      = select(internal::oddmask<Tout, N>(), sinh_small(xx), cosh_small(xx));
+    return select(abs(xx) < Tout(0.05), small, addsub(exp(xx), exp(-xx)) * Tout(0.5));
 }
 
 KFR_HANDLE_SCALAR_1_T(sinh, flt_type<T>)

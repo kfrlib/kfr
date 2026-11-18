@@ -38,6 +38,24 @@ TEST_CASE("goertzel")
     CHECK_THAT(cabs(cs[2]), DeepMatcher(8.f));
 }
 
+TEST_CASE("goertzel_complex_phase")
+{
+    const univector<double, 4> input{ 0.0, 1.0, 0.0, 0.0 };
+    const double frequencies[] = { 0.4, -0.7 };
+    complex<double> single;
+    complex<double> parallel[2];
+    process(goertzel(single, frequencies[0]), input);
+    process(goertzel(parallel, frequencies), input);
+
+    CHECK(std::abs(single.real() - std::cos(frequencies[0])) < 1e-10);
+    CHECK(std::abs(single.imag() + std::sin(frequencies[0])) < 1e-10);
+    for (size_t i = 0; i < 2; ++i)
+    {
+        CHECK(std::abs(parallel[i].real() - std::cos(frequencies[i])) < 1e-10);
+        CHECK(std::abs(parallel[i].imag() + std::sin(frequencies[i])) < 1e-10);
+    }
+}
+
 TEST_CASE("goertzel_reset")
 {
     const float omega = c_pi<float, 2> * 0.125f;

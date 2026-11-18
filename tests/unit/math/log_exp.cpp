@@ -20,6 +20,19 @@ KFR_AUTO_TEST_1(log2, narrow, 2, 1)
 KFR_AUTO_TEST_1(log10, narrow, 3, 1)
 KFR_AUTO_TEST_1(cbrt, narrow, 5, 1)
 
+TEST_CASE("gamma_finite_after_intermediate_overflow")
+{
+    const vec<f32, 2> xf(5.f, 30.f);
+    const auto yf = kfr::gamma(xf);
+    CHECK(yf[0] == Catch::Approx(std::tgamma(5.f)).epsilon(0.001));
+    CHECK(yf[1] == Catch::Approx(std::tgamma(30.f)).epsilon(0.001));
+
+    const vec<f64, 2> xd(5.0, 150.0);
+    const auto yd = kfr::gamma(xd);
+    CHECK(yd[0] == Catch::Approx(std::tgamma(5.0)).epsilon(1e-10));
+    CHECK(yd[1] == Catch::Approx(std::tgamma(150.0)).epsilon(1e-10));
+}
+
 TEST_CASE("cbrt")
 {
     CHECK(kfr::cbrt(27.f) == 3.f);

@@ -92,6 +92,8 @@ public:
      */
     void assign(const small_buffer<T, Capacity>& other)
     {
+        if (this == &other)
+            return;
         resize(other.m_size);
         std::copy_n(other.m_data, m_size, m_data);
     }
@@ -167,8 +169,10 @@ public:
      */
     void push_back(const T& value)
     {
+        T saved{};
+        saved = value;
         resize(m_size + 1);
-        m_data[m_size - 1] = value;
+        m_data[m_size - 1] = saved;
     }
 
 protected:

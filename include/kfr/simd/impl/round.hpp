@@ -35,16 +35,10 @@ namespace intr
 {
 
 #define KFR_mm_trunc_ps(V) _mm_round_ps((V), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC)
-#define KFR_mm_roundnearest_ps(V) _mm_round_ps((V), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)
 #define KFR_mm_trunc_pd(V) _mm_round_pd((V), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC)
-#define KFR_mm_roundnearest_pd(V) _mm_round_pd((V), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)
 
 #define KFR_mm_trunc_ss(V) _mm_round_ss(_mm_setzero_ps(), (V), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC)
-#define KFR_mm_roundnearest_ss(V)                                                                            \
-    _mm_round_ss(_mm_setzero_ps(), (V), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)
 #define KFR_mm_trunc_sd(V) _mm_round_sd(_mm_setzero_pd(), (V), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC)
-#define KFR_mm_roundnearest_sd(V)                                                                            \
-    _mm_round_sd(_mm_setzero_pd(), (V), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)
 
 #define KFR_mm_floor_ss(V) _mm_floor_ss(_mm_setzero_ps(), (V))
 #define KFR_mm_floor_sd(V) _mm_floor_sd(_mm_setzero_pd(), (V))
@@ -52,20 +46,16 @@ namespace intr
 #define KFR_mm_ceil_sd(V) _mm_ceil_sd(_mm_setzero_pd(), (V))
 
 #define KFR_mm256_trunc_ps(V) _mm256_round_ps((V), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC)
-#define KFR_mm256_roundnearest_ps(V) _mm256_round_ps((V), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)
 #define KFR_mm256_trunc_pd(V) _mm256_round_pd((V), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC)
-#define KFR_mm256_roundnearest_pd(V) _mm256_round_pd((V), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)
 
 #if defined KFR_ARCH_SSE41 && defined KFR_NATIVE_INTRINSICS
 
 KFR_INTRINSIC f32sse floor(const f32sse& value) { return _mm_floor_ps(value.v); }
 KFR_INTRINSIC f32sse ceil(const f32sse& value) { return _mm_ceil_ps(value.v); }
 KFR_INTRINSIC f32sse trunc(const f32sse& value) { return KFR_mm_trunc_ps(value.v); }
-KFR_INTRINSIC f32sse round(const f32sse& value) { return KFR_mm_roundnearest_ps(value.v); }
 KFR_INTRINSIC f64sse floor(const f64sse& value) { return _mm_floor_pd(value.v); }
 KFR_INTRINSIC f64sse ceil(const f64sse& value) { return _mm_ceil_pd(value.v); }
 KFR_INTRINSIC f64sse trunc(const f64sse& value) { return KFR_mm_trunc_pd(value.v); }
-KFR_INTRINSIC f64sse round(const f64sse& value) { return KFR_mm_roundnearest_pd(value.v); }
 KFR_INTRINSIC f32sse fract(const f32sse& x) { return x - floor(x); }
 KFR_INTRINSIC f64sse fract(const f64sse& x) { return x - floor(x); }
 
@@ -74,11 +64,9 @@ KFR_INTRINSIC f64sse fract(const f64sse& x) { return x - floor(x); }
 KFR_INTRINSIC f32avx floor(const f32avx& value) { return _mm256_floor_ps(value.v); }
 KFR_INTRINSIC f32avx ceil(const f32avx& value) { return _mm256_ceil_ps(value.v); }
 KFR_INTRINSIC f32avx trunc(const f32avx& value) { return KFR_mm256_trunc_ps(value.v); }
-KFR_INTRINSIC f32avx round(const f32avx& value) { return KFR_mm256_roundnearest_ps(value.v); }
 KFR_INTRINSIC f64avx floor(const f64avx& value) { return _mm256_floor_pd(value.v); }
 KFR_INTRINSIC f64avx ceil(const f64avx& value) { return _mm256_ceil_pd(value.v); }
 KFR_INTRINSIC f64avx trunc(const f64avx& value) { return KFR_mm256_trunc_pd(value.v); }
-KFR_INTRINSIC f64avx round(const f64avx& value) { return KFR_mm256_roundnearest_pd(value.v); }
 KFR_INTRINSIC f32avx fract(const f32avx& x) { return x - floor(x); }
 KFR_INTRINSIC f64avx fract(const f64avx& x) { return x - floor(x); }
 
@@ -98,10 +86,6 @@ KFR_INTRINSIC f32avx512 trunc(const f32avx512& value)
 {
     return _mm512_roundscale_ps(value.v, _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
 }
-KFR_INTRINSIC f32avx512 round(const f32avx512& value)
-{
-    return _mm512_roundscale_ps(value.v, _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC);
-}
 KFR_INTRINSIC f64avx512 floor(const f64avx512& value)
 {
     return _mm512_roundscale_pd(value.v, _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC);
@@ -114,17 +98,12 @@ KFR_INTRINSIC f64avx512 trunc(const f64avx512& value)
 {
     return _mm512_roundscale_pd(value.v, _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
 }
-KFR_INTRINSIC f64avx512 round(const f64avx512& value)
-{
-    return _mm512_roundscale_pd(value.v, _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC);
-}
 KFR_INTRINSIC f32avx512 fract(const f32avx512& x) { return x - floor(x); }
 KFR_INTRINSIC f64avx512 fract(const f64avx512& x) { return x - floor(x); }
 #endif
 
 KFR_HANDLE_ALL_SIZES_1_IF(floor, is_f_class<T>)
 KFR_HANDLE_ALL_SIZES_1_IF(ceil, is_f_class<T>)
-KFR_HANDLE_ALL_SIZES_1_IF(round, is_f_class<T>)
 KFR_HANDLE_ALL_SIZES_1_IF(trunc, is_f_class<T>)
 KFR_HANDLE_ALL_SIZES_1_IF(fract, is_f_class<T>)
 
@@ -162,18 +141,6 @@ KFR_INTRINSIC vec<f64, N> ceil(const vec<f64, N>& x)
     return select(abs(x) >= fp_precision_limit<f64>, x, t + select(x > t, 1., 0.));
 }
 template <size_t N>
-KFR_INTRINSIC vec<f32, N> round(const vec<f32, N>& x)
-{
-    return select(abs(x) >= fp_precision_limit<f32>, x,
-                  broadcastto<f32>(broadcastto<i32>(x + mulsign(broadcast<N>(0.5f), x))));
-}
-template <size_t N>
-KFR_INTRINSIC vec<f64, N> round(const vec<f64, N>& x)
-{
-    return select(abs(x) >= fp_precision_limit<f64>, x,
-                  broadcastto<f64>(broadcastto<i64>(x + mulsign(broadcast<N>(0.5), x))));
-}
-template <size_t N>
 KFR_INTRINSIC vec<f32, N> trunc(const vec<f32, N>& x)
 {
     return select(abs(x) >= fp_precision_limit<f32>, x, broadcastto<f32>(broadcastto<i32>(x)));
@@ -192,6 +159,30 @@ template <size_t N>
 KFR_INTRINSIC vec<f64, N> fract(const vec<f64, N>& x)
 {
     return x - floor(x);
+}
+#endif
+
+#if defined KFR_ARCH_NEON64 && defined KFR_NATIVE_INTRINSICS
+KFR_INTRINSIC f32neon round(const f32neon& x) { return vrndaq_f32(x.v); }
+KFR_INTRINSIC f64neon round(const f64neon& x) { return vrndaq_f64(x.v); }
+KFR_HANDLE_ALL_SIZES_1_IF(round, is_f_class<T>)
+#else
+template <f_class T, size_t N>
+KFR_INTRINSIC vec<T, N> round(const vec<T, N>& x)
+{
+#if defined KFR_ARCH_SSE41 && defined KFR_NATIVE_INTRINSICS
+    // Native truncation handles large and non-finite lanes without integer conversion.
+    const auto t      = trunc(x);
+    const auto adjust = abs(x - t) >= T(0.5);
+    return select(adjust, t + copysign(vec<T, N>(T(1)), x), t);
+#else
+    const auto magnitude  = abs(x);
+    const auto fractional = magnitude < T(1ULL << (std::numeric_limits<T>::digits - 1));
+    const auto input      = select(fractional, magnitude, T(0));
+    const auto t          = trunc(input);
+    const auto increment  = select(input - t >= T(0.5), T(1), T(0));
+    return select(fractional, copysign(t + increment, x), x);
+#endif
 }
 #endif
 
@@ -265,18 +256,12 @@ KFR_I_FN(itrunc)
 } // namespace kfr
 
 #undef KFR_mm_trunc_ps
-#undef KFR_mm_roundnearest_ps
 #undef KFR_mm_trunc_pd
-#undef KFR_mm_roundnearest_pd
 #undef KFR_mm_trunc_ss
-#undef KFR_mm_roundnearest_ss
 #undef KFR_mm_trunc_sd
-#undef KFR_mm_roundnearest_sd
 #undef KFR_mm_floor_ss
 #undef KFR_mm_floor_sd
 #undef KFR_mm_ceil_ss
 #undef KFR_mm_ceil_sd
 #undef KFR_mm256_trunc_ps
-#undef KFR_mm256_roundnearest_ps
 #undef KFR_mm256_trunc_pd
-#undef KFR_mm256_roundnearest_pd

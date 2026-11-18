@@ -235,5 +235,36 @@ TEST_CASE("sample rate conversion logarithmic sweep")
 
 TEST_CASE("sample rate conversion chunked chirp") { check_chunked_chirp_resampling(); }
 
+TEST_CASE("upsample2 preserves phase at odd vector offsets")
+{
+    const univector<float> input{ 11, 22, 33 };
+    const auto expr   = upsample2(input);
+    const auto result = get_elements(expr, 1, axis_params<0, 4>());
+    CHECK(result[0] == 0);
+    CHECK(result[1] == 22);
+    CHECK(result[2] == 0);
+    CHECK(result[3] == 33);
+}
+
+TEST_CASE("upsample4 preserves phase at unaligned vector offsets")
+{
+    const univector<float> input{ 11, 22, 33 };
+    const auto expr = upsample4(input);
+    for (index_t start = 0; start < 4; ++start)
+    {
+        CAPTURE(start);
+        const auto result = get_elements(expr, start, axis_params<0, 8>());
+        for (index_t lane = 0; lane < 8; ++lane)
+        {
+            CAPTURE(lane);
+            const auto index = start + lane;
+            CHECK(result[lane] == (index % 4 == 0 ? input[index / 4] : 0));
+        }
+    }
+    const auto pair = get_elements(expr, 3, axis_params<0, 2>());
+    CHECK(pair[0] == 0);
+    CHECK(pair[1] == 22);
+}
+
 } // namespace KFR_ARCH_NAME
 } // namespace kfr

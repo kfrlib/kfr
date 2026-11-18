@@ -132,8 +132,9 @@ KFR_INTRINSIC vec<T, N> cabsdup(const vec<T, N>& x)
 template <typename T, size_t N>
 KFR_INTRINSIC vec<complex<T>, N> csqrt(const vec<complex<T>, N>& x)
 {
+    const mask<T, N> iszero  = (real(x) == T(0)) & (imag(x) == T(0));
     const vec<T, N> s        = sqrt((abs(real(x)) + cabs(x)) * 0.5);
-    const vec<T, N> d        = abs(imag(x)) * 0.5 / s;
+    const vec<T, N> d        = abs(imag(x)) * 0.5 / select(iszero, vec<T, N>(T(1)), s);
     const mask<T, N> posreal = real(x) >= T(0);
     const vec<T, N> imagsign = imag(x) & special_constants<T>::highbitmask();
     return make_complex(select(posreal, s, d), select(posreal, d ^ imagsign, s ^ imagsign));

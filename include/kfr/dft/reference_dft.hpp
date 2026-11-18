@@ -245,8 +245,20 @@ void reference_dft_md(T* out, const complex<T>* in, shape<dynamic_shape> shape, 
     {
         for (index_t j = 0; j < last; ++j)
             tmpin[i * shape.back() + j] = in[(i * last + j) * in_delta];
+        // Hermitian symmetry negates the frequency index on every axis.
+        index_t mirrored_row = 0;
+        index_t stride = 1;
+        index_t row = i;
+        for (index_t axis = shape.dims() - 1; axis > 0; --axis)
+        {
+            const index_t extent = shape[axis - 1];
+            mirrored_row += ((extent - row % extent) % extent) * stride;
+            row /= extent;
+            stride *= extent;
+        }
         for (index_t j = last; j < shape.back(); ++j)
-            tmpin[i * shape.back() + j] = std::conj(in[(i * last + (shape.back() - j)) * in_delta]);
+            tmpin[i * shape.back() + j] =
+                std::conj(in[(mirrored_row * last + (shape.back() - j)) * in_delta]);
     }
     std::vector<complex<T>> tmpout(size);
     reference_dft_md(tmpout.data(), tmpin.data(), shape, inversion, 1, 1);

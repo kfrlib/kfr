@@ -6,11 +6,62 @@
 
 #include <complex>
 #include <kfr/dsp/fir.hpp>
+#include <kfr/dsp/fir_design.hpp>
+#include <kfr/dsp/waveshaper.hpp>
 
 namespace kfr
 {
 inline namespace KFR_ARCH_NAME
 {
+
+TEST_CASE("waveshaper_zero_drive_is_identity")
+{
+    const univector<float, 4> input{ -1.f, -0.25f, 0.f, 0.5f };
+    const univector<float, 4> result_i  = waveshaper_saturate_I(input, 0.0);
+    const univector<float, 4> result_ii = waveshaper_saturate_II(input, -0.0);
+    for (size_t i = 0; i < input.size(); ++i)
+    {
+        CHECK(result_i[i] == input[i]);
+        CHECK(result_ii[i] == input[i]);
+    }
+}
+
+TEST_CASE("saturate_I_extreme_inputs")
+{
+    constexpr float tiny     = 0x1p-30f;
+    constexpr float infinity = std::numeric_limits<float>::infinity();
+    CHECK(saturate_I(tiny) == tiny);
+    const auto values = saturate_I(vec<float, 4>{ -tiny, 1.f, -infinity, infinity });
+    CHECK(values[0] == -tiny);
+    CHECK(values[1] == 0.5f);
+    CHECK(values[2] == -1.f);
+    CHECK(values[3] == 1.f);
+}
+
+TEST_CASE("saturate_II_extreme_inputs")
+{
+    constexpr float tiny = 0x1p-30f;
+    CHECK(saturate_II(tiny) == tiny);
+    const auto values = saturate_II(vec<float, 4>{ -tiny, 1.f, -1e30f, 1e30f });
+    CHECK(values[0] == -tiny);
+    CHECK(values[1] == 0.6f);
+    CHECK(values[2] == -1.f);
+    CHECK(values[3] == 1.f);
+}
+
+TEST_CASE("fir_design_center_tap_uses_window")
+{
+    univector<float, 3> taps;
+    const auto window = to_handle(dimensions<1>(0.5f));
+    fir_lowpass(taps, 0.125f, window, false);
+    CHECK(taps[1] == 0.125f);
+    fir_highpass(taps, 0.125f, window, false);
+    CHECK(taps[1] == 0.375f);
+    fir_bandpass(taps, 0.125f, 0.25f, window, false);
+    CHECK(taps[1] == 0.125f);
+    fir_bandstop(taps, 0.125f, 0.25f, window, false);
+    CHECK(taps[1] == 0.375f);
+}
 
 TEST_CASE("fir_state")
 {

@@ -46,8 +46,8 @@ KFR_INTRINSIC std::common_type_t<T1, T2> fix_nans(const T1& val, const T2& repla
 template <typename T, typename TF = flt_type<T>>
 KFR_INTRINSIC TF amp_to_dB(const T& amp)
 {
-    return fix_nans(log(static_cast<TF>(abs(amp))) * subtype<TF>(8.6858896380650365530225783783322),
-                    -c_infinity<T>);
+    return fix_nans(log(abs(static_cast<TF>(amp))) * subtype<TF>(8.6858896380650365530225783783322),
+                    -c_infinity<TF>);
     // return T( 20.0 ) * log10( level );
 }
 
@@ -62,8 +62,8 @@ template <typename T, typename TF = flt_type<T>>
 KFR_INTRINSIC TF amp_to_dB(const T& amp, const T& offset)
 {
     return fix_nans(
-        log_fmadd(static_cast<TF>(abs(amp)), subtype<TF>(8.6858896380650365530225783783322), offset),
-        -c_infinity<T>);
+        log_fmadd(abs(static_cast<TF>(amp)), subtype<TF>(8.6858896380650365530225783783322), offset),
+        -c_infinity<TF>);
     // return T( 20.0 ) * log10( level );
 }
 
@@ -78,16 +78,13 @@ KFR_INTRINSIC TF dB_to_amp(const T& dB, const T& offset)
 template <typename T, typename Tout = flt_type<T>>
 KFR_INTRINSIC Tout power_to_dB(const T& x)
 {
-    return log(static_cast<Tout>(abs(x))) * (10 * c_recip_log_10<Tout>);
+    return log(abs(static_cast<Tout>(x))) * (10 * c_recip_log_10<subtype<Tout>>);
 }
 
 template <typename T, typename Tout = flt_type<T>>
 KFR_INTRINSIC Tout dB_to_power(const T& x)
 {
-    if (KFR_UNLIKELY(x == -c_infinity<Tout>))
-        return 0.0;
-    else
-        return exp(x * (c_log_10<Tout> / 10.0));
+    return exp(static_cast<Tout>(x) * (c_log_10<subtype<Tout>> / subtype<Tout>(10)));
 }
 
 template <typename T, typename TF = flt_type<T>>
