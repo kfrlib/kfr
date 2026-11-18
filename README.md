@@ -1,4 +1,4 @@
-# KFR - Fast, modern C++ DSP framework
+# KFR - A cross-platform C++ DSP library
 
 <p align="center">
   <img width="300" height="auto" src="img/KFR1.png">
@@ -10,51 +10,13 @@
 ![License](https://img.shields.io/github/license/kfrlib/kfr.svg?style=flat-square&label=License)
 ![Release](https://img.shields.io/github/release-date/kfrlib/kfr?style=flat-square&label=Latest+release)
 
-https://kfr.dev https://docs.kfr.dev
+KFR is a C++ library for digital signal processing, with SIMD-optimized FFTs, FIR and IIR filters, convolution, and sample-rate conversion. It has been open source since 2016 and is used in shipping products, including audio plugins, software-defined radios, and medical devices, as well as in scientific research. The [LIGO, Virgo, and KAGRA collaborations](https://ar5iv.labs.arxiv.org/html/2503.14292) compared KFR's FFT performance with FFTW for gravitational-wave data analysis.
 
-KFR is an open source C++ DSP framework that contains high performance building blocks for DSP, audio, scientific and other applications. It is distributed under GPLv2+ and a [commercial license](https://kfr.dev/purchase/).
+KFR provides the same DSP API across x86, Arm, and RISC-V targets, from desktop systems to devices ([see support details](https://kfr.dev/platforms/)). For numerical accuracy, see the [scalar and SIMD math accuracy measurements](docs/docs/core-math/math/accuracy.md).
 
-:star2: **New**: Explore benchmark results from the LIGO, Virgo, and KAGRA collaborations, comparing KFR performance against FFTW for signal processing in gravitational-wave research: https://ar5iv.labs.arxiv.org/html/2503.14292
+KFR 7 requires C++20; [KFR 6](https://github.com/kfrlib/kfr/tree/v6) supports C++17. KFR is available under GPLv2+ and a commercial license for proprietary distribution.
 
-See [Math function accuracy](docs/docs/core-math/math/accuracy.md) for measured ULP, relative, and absolute error across scalar and SIMD functions.
-
-## KFR 7 - What's New
-
-* KFR 7.1 additions:
-  * `ngfft`: low-overhead FFT API with manual memory management
-  * Up to 40% faster power-of-two FFTs and faster FFTs for sizes with many prime factors
-  * DFT support for GCC and MSVC
-  * `audio_filter` for independent multi-channel FIR, IIR, and convolution filtering of planar `audio_data`
-  * Core Audio decoding on macOS and iOS
-  * Bit-index permutation optimizations for Clang and the generic backend
-* Elliptic filter design
-* Zero-Phase IIR Filter (`filtfilt`)
-* Audio encoding/decoding: WAV, W64, RF64/BW64, AIFF, FLAC, CAF, ALAC, MP3 (decoding only), raw PCM, and AAC/other Media Foundation formats (Windows) or Core Audio formats (Apple platforms)
-* Universal macOS Binaries (Intel + Apple Silicon)
-* Basic RISC-V support
-    * Only CPUs with VLEN >= 128 are supported
-    * Linux only, clang required
-* C++20
-* New optimized functions
-* Performance improvements
-* Broader GCC support
-* Tests are migrated to Catch2 framework
-* Progress since KFR 6:
-    * Multidimensional DFT via the C API
-    * DFT performance improved by up to 80% on ARM and ARM64
-    * New Android x86/x64 and Linux ARM/AArch64 builds
-    * Matrix transpose up to 30% faster
-* [More](https://docs.kfr.dev/getting-started/whatsnew7/)
-
-## Our other projects
-
-<div align="center">
-
-[**🟣 Brisk**](https://github.com/brisklib/brisk) is a cross-platform C++20 GUI framework featuring MVVM architecture, reactive capabilities, and scalable, accelerated GPU rendering. *(GPL/Commercial)*
-
-[**🟢 CxxDox**](https://github.com/kfrlib/cxxdox) — C++ documentation generator. *(Apache-2.0)*
-
-</div>
+[Get started](https://kfr.dev/getting-started/) · [See who uses KFR](https://kfr.dev/customers/) · [View benchmarks](https://kfr.dev/benchmark/) · [Commercial licensing and pricing](https://kfr.dev/purchase/)
 
 ## KFR Installation
 
@@ -195,9 +157,11 @@ C API is available and includes a subset of KFR features including FFT and filte
 
 ### DFT
 
-Powers of 2, from 16 to 16777216 (*Higher is better*)
+In-place forward real FFT: single precision on AVX2 and double precision on NEON. KFR is shown in red; higher is better.
 
-![FFT Performance](img/powers2_double_16_16777216.png)
+![AVX2 single-precision forward real FFT benchmark, in-place](https://kfr.dev/benchmark/AVX2/Float%20Real%20Forward%20In-place%20FFT.svg)
+
+![NEON double-precision forward real FFT benchmark, in-place](https://www.kfrlib.com/benchmark/NEON/Double%20Real%20Forward%20In-place%20FFT.svg)
 
 Prime numbers from 17 to 127 (*Higher is better*)
 
@@ -220,6 +184,34 @@ See [fft benchmark](https://github.com/kfrlib/fft-benchmark) for details about b
 
 ![Biquad Performance](img/biquad.svg)
 
+## KFR 7 - What's New
+
+* KFR 7.1 additions:
+  * `ngfft`: low-overhead FFT API with manual memory management
+  * Up to 40% faster power-of-two FFTs and faster FFTs for sizes with many prime factors
+  * DFT support for GCC and MSVC
+  * `audio_filter` for independent multi-channel FIR, IIR, and convolution filtering of planar `audio_data`
+  * Core Audio decoding on macOS and iOS
+  * Bit-index permutation optimizations for Clang and the generic backend
+* Elliptic filter design
+* Zero-Phase IIR Filter (`filtfilt`)
+* Audio encoding/decoding: WAV, W64, RF64/BW64, AIFF, FLAC, CAF, ALAC, MP3 (decoding only), raw PCM, and AAC/other Media Foundation formats (Windows) or Core Audio formats (Apple platforms)
+* Universal macOS Binaries (Intel + Apple Silicon)
+* Basic RISC-V support
+    * Only CPUs with VLEN >= 128 are supported
+    * Linux only, clang required
+* C++20
+* New optimized functions
+* Performance improvements
+* Broader GCC support
+* Tests are migrated to Catch2 framework
+* Progress since KFR 6:
+    * Multidimensional DFT via the C API
+    * DFT performance improved by up to 80% on ARM and ARM64
+    * New Android x86/x64 and Linux ARM/AArch64 builds
+    * Matrix transpose up to 30% faster
+* [More](https://docs.kfr.dev/getting-started/whatsnew7/)
+
 ## Documentation
 
 Documentation homepage: https://docs.kfr.dev/
@@ -231,16 +223,24 @@ Built with
 * [mkdocs - static documentation generator](https://www.mkdocs.org/)
 * [mkdocs-material - material theme for mkdocs](https://squidfunk.github.io/mkdocs-material/)
 
+## Our other projects
+
+<div align="center">
+
+[**🟣 Brisk**](https://github.com/brisklib/brisk) is a cross-platform C++20 GUI framework featuring MVVM architecture, reactive capabilities, and scalable, accelerated GPU rendering. *(GPL/Commercial)*
+
+[**🟢 CxxDox**](https://github.com/kfrlib/cxxdox) — C++ documentation generator. *(Apache-2.0)*
+
+</div>
+
 ## Branches
 
 `dev` - current development version. Pull requests should go to `dev`.
 
 `main` - current stable version passing all compiler/architecture tests.
 
-`v6` - previous version of KFR (no new features, fixes only)
+`v6` - previous version of KFR; requires only C++17 (fixes only, no new features)
 
 ## License
 
-KFR is dual-licensed, available under both commercial and open-source GPLv2+ license.
-
-If you want to use KFR in a commercial product or a closed-source project, you need to [purchase a Commercial License](https://kfr.dev/purchase/).
+KFR is dual-licensed under GPLv2+ and a commercial license. If you distribute software linked with KFR under GPLv2+, you must make the complete corresponding source code, including your application's source code, available to recipients under the GPL. To distribute proprietary software that links to KFR without the GPL's source-code obligations, use a [commercial license](https://kfr.dev/purchase/). If you ship KFR as part of a hardware product, see the [licensing FAQ](https://kfr.dev/licensing/) for hardware distribution terms.

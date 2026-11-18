@@ -384,6 +384,19 @@ blocks that are multiples of the selected block size for best throughput. See
 for streaming behavior, overlap state, and end-of-stream tail handling with
 [[`filter<T>::apply_zeros`:nosig]].
 
+## FFT performance
+
+These benchmarks show in-place forward real FFT performance for
+single precision on AVX2 and double precision on NEON. KFR is shown in red;
+higher is better.
+
+![AVX2 single-precision forward real FFT benchmark, in-place](https://kfr.dev/benchmark/AVX2/Float%20Real%20Forward%20In-place%20FFT.svg)
+
+![NEON double-precision forward real FFT benchmark, in-place](https://www.kfrlib.com/benchmark/NEON/Double%20Real%20Forward%20In-place%20FFT.svg)
+
+See the [FFT benchmark project](https://github.com/kfrlib/fft-benchmark) for
+benchmark methodology.
+
 ## See also
 
 - [DFT and FFT in KFR](dft_introduction.md) — module overview and API choices.
