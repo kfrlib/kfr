@@ -6,19 +6,27 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Tests
+    - name: Install OS prerequisites
+      run: |
+        sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends ninja-build
+    - name: Install LLVM
+      run: |
+        ci/llvm-linux.sh
+    - name: Set up Intel SDE
       env:
         SDE_LINUX: ${{ secrets.SDE_LINUX }}
         TMP_DIR: ${{ runner.temp }}
       run: |
         set -e
-        sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends ninja-build
-        ci/llvm-linux.sh
         curl -o "$TMP_DIR/sde.tar.xz" -L "$SDE_LINUX"
         mkdir "$TMP_DIR/sde-bin"
         tar -C "$TMP_DIR/sde-bin" -xJf "$TMP_DIR/sde.tar.xz" --strip 1
         sudo ln -s $TMP_DIR/sde-bin/sde64 /usr/bin/sde
+    - name: Build vcpkg dependencies
+      run: |
         vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
+    - name: Build & Test
+      run: |
         ci/run.sh build-release -DKFR_ENABLE_ACCURACY_TESTS=ON -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-linux -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,sse3,sse41,avx,avx2,avx512 -DKFR_ARCH=avx2 -DKFR_USE_SDE=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release
     - name: Upload math accuracy report
       if: ${{ !cancelled() }}
@@ -32,11 +40,14 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Tests
+    - name: Install OS prerequisites
       run: |
-        set -e
         sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends ninja-build g++-arm-linux-gnueabihf qemu-system-arm qemu-user
+    - name: Install LLVM
+      run: |
         ci/llvm-linux.sh
+    - name: Build & Test
+      run: |
         ci/run.sh build-release -DKFR_ENABLE_ACCURACY_TESTS=ON -DENABLE_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/arm.cmake
     - name: Upload math accuracy report
       if: ${{ !cancelled() }}
@@ -50,11 +61,14 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Tests
+    - name: Install OS prerequisites
       run: |
-        set -e
         sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends ninja-build g++-aarch64-linux-gnu qemu-system-arm qemu-user
+    - name: Install LLVM
+      run: |
         ci/llvm-linux.sh
+    - name: Build & Test
+      run: |
         ci/run.sh build-release -DENABLE_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64.cmake
 
   ubuntu24-clang23-riscv64:
@@ -62,11 +76,14 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Tests
+    - name: Install OS prerequisites
       run: |
-        set -e
         sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends llvm ninja-build qemu-system-riscv64 qemu-user gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
+    - name: Install LLVM
+      run: |
         ci/llvm-linux.sh
+    - name: Build & Test
+      run: |
         ci/run.sh build-release -DKFR_ENABLE_ACCURACY_TESTS=ON -DKFR_ENABLE_DFT=OFF -DENABLE_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/riscv64.cmake
     - name: Upload math accuracy report
       if: ${{ !cancelled() }}
@@ -80,16 +97,21 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Tests
+    - name: Install OS prerequisites
+      run: |
+        sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends ninja-build g++-14
+    - name: Set up Intel SDE
       env:
         SDE_LINUX: ${{ secrets.SDE_LINUX }}
         TMP_DIR: ${{ runner.temp }}
       run: |
-        sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends ninja-build g++-14
+        set -e
         curl -o "$TMP_DIR/sde.tar.xz" -L "$SDE_LINUX"
         mkdir "$TMP_DIR/sde-bin"
         tar -C "$TMP_DIR/sde-bin" -xJf "$TMP_DIR/sde.tar.xz" --strip 1
         sudo ln -s $TMP_DIR/sde-bin/sde64 /usr/bin/sde
+    - name: Build & Test
+      run: |
         ci/run.sh build-release -DKFR_ARCH=target -DCMAKE_CXX_COMPILER=g++-14 -DKFR_ARCH_TESTS=sse2,sse3,avx,avx2,avx512 -DCMAKE_BUILD_TYPE=Release -DKFR_USE_SDE=ON
 
   ubuntu24-clang19-arm:
@@ -97,10 +119,14 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Tests
+    - name: Install OS prerequisites
       run: |
         sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends build-essential cmake ninja-build clang-19
+    - name: Build vcpkg dependencies
+      run: |
         vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
+    - name: Build & Test
+      run: |
         ci/run.sh build-release -DKFR_ENABLE_ACCURACY_TESTS=ON -DCMAKE_PREFIX_PATH=/usr/local/share/vcpkg/installed/arm64-linux -DKFR_ARCH=target -DENABLE_EXAMPLES=OFF -DCMAKE_C_COMPILER=clang-19 -DCMAKE_CXX_COMPILER=clang++-19 -DCMAKE_BUILD_TYPE=Release
     - name: Upload math accuracy report
       if: ${{ !cancelled() }}
@@ -114,14 +140,18 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Tests
+    - name: Install OS prerequisites
       run: |
         set -e
         sudo apt-get update -qq
         sudo apt-get install -y -q --no-install-recommends software-properties-common
         sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
         sudo apt-get update -qq && sudo apt-get install -y -q --no-install-recommends build-essential cmake ninja-build gcc-16 g++-16
+    - name: Build vcpkg dependencies
+      run: |
         vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
+    - name: Build & Test
+      run: |
         ci/run.sh build-release -DCMAKE_PREFIX_PATH=/usr/local/share/vcpkg/installed/arm64-linux -DKFR_ARCH=target -DENABLE_EXAMPLES=OFF -DCMAKE_C_COMPILER=gcc-16 -DCMAKE_CXX_COMPILER=g++-16 -DCMAKE_BUILD_TYPE=Release
 
   windows2025-clang23-x86:
@@ -129,24 +159,40 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Tests
+    - name: Install OS prerequisites
+      shell: cmd
+      run: |
+        choco install ninja --no-progress -y || exit /b 1
+    - name: Install LLVM
+      shell: cmd
+      run: |
+        choco install llvm --version 23.1.3 --no-progress -y || exit /b 1
+    - name: Set up Intel SDE
       env:
         SDE_WINDOWS2: ${{ secrets.SDE_WINDOWS2 }}
         TMP_DIR: ${{ runner.temp }}
+      shell: cmd
+      run: |
+        curl -o "%TMP_DIR%\sde.tar.xz" -L %SDE_WINDOWS2% || exit /b 1
+        mkdir C:\sde || exit /b 1
+        tar -C C:\sde -xf "%TMP_DIR%\sde.tar.xz" --strip-components=1 || exit /b 1
+    - name: Build vcpkg dependencies
+      env:
         VCPKG_DEFAULT_TRIPLET: x86-windows-static-md
         VCPKG_HOST_TRIPLET: x86-windows-static-md
       shell: cmd
       run: |
-        choco install llvm --version 23.1.3 --no-progress -y
-        choco install ninja --no-progress -y
-        curl -o "%TMP_DIR%\sde.tar.xz" -L %SDE_WINDOWS2%
-        mkdir C:\sde
-        tar -C C:\sde -xf "%TMP_DIR%\sde.tar.xz" --strip-components=1
-        call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+        call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars32.bat" || exit /b 1
+        set CXXFLAGS=-m32
+        set CFLAGS=-m32
+        vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
+    - name: Build & Test
+      shell: cmd
+      run: |
+        call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars32.bat" || exit /b 1
         set CXXFLAGS=-m32
         set CFLAGS=-m32
         set PATH=C:\sde;%PATH%
-        vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
         ci\run.cmd build-release -DKFR_ENABLE_ACCURACY_TESTS=ON -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x86-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2 -DKFR_ENABLE_MULTIARCH=ON -DCMAKE_C_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
     - name: Upload math accuracy report
       if: ${{ !cancelled() }}
@@ -160,22 +206,36 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Tests
+    - name: Install OS prerequisites
+      shell: cmd
+      run: |
+        choco install ninja --no-progress -y || exit /b 1
+    - name: Install LLVM
+      shell: cmd
+      run: |
+        choco install llvm --version 23.1.3 --no-progress -y || exit /b 1
+    - name: Set up Intel SDE
       env:
         SDE_WINDOWS2: ${{ secrets.SDE_WINDOWS2 }}
         TMP_DIR: ${{ runner.temp }}
+      shell: cmd
+      run: |
+        curl -o "%TMP_DIR%\sde.tar.xz" -L %SDE_WINDOWS2% || exit /b 1
+        mkdir C:\sde || exit /b 1
+        tar -C C:\sde -xf "%TMP_DIR%\sde.tar.xz" --strip-components=1 || exit /b 1
+    - name: Build vcpkg dependencies
+      env:
         VCPKG_DEFAULT_TRIPLET: x64-windows-static-md
         VCPKG_HOST_TRIPLET: x64-windows-static-md
       shell: cmd
       run: |
-        choco install llvm --version 23.1.3 --no-progress -y
-        choco install ninja --no-progress -y
-        curl -o "%TMP_DIR%\sde.tar.xz" -L %SDE_WINDOWS2%
-        mkdir C:\sde
-        tar -C C:\sde -xf "%TMP_DIR%\sde.tar.xz" --strip-components=1
-        call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-        set PATH=C:\sde;%PATH%
+        call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars64.bat" || exit /b 1
         vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
+    - name: Build & Test
+      shell: cmd
+      run: |
+        call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars64.bat" || exit /b 1
+        set PATH=C:\sde;%PATH%
         ci\run.cmd build-release -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/x64-windows-static-md -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2,avx512 -DKFR_ENABLE_MULTIARCH=ON -DCMAKE_C_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
 
 
@@ -184,16 +244,25 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Tests
+    - name: Install OS prerequisites
+      shell: cmd
+      run: |
+        choco install ninja --no-progress -y || exit /b 1
+    - name: Install LLVM
+      shell: cmd
+      run: |
+        choco install llvm --version 23.1.3 --no-progress -y || exit /b 1
+    - name: Build vcpkg dependencies
       env:
         VCPKG_DEFAULT_TRIPLET: arm64-windows-static-md
         VCPKG_HOST_TRIPLET: arm64-windows-static-md
       shell: cmd
       run: |
-        choco install llvm --version 23.1.3 --no-progress -y
-        choco install ninja --no-progress -y
         vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
-        call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
+    - name: Build & Test
+      shell: cmd
+      run: |
+        call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64 || exit /b 1
         ci\run.cmd build-release -DCMAKE_PREFIX_PATH=%VCPKG_INSTALLATION_ROOT%/installed/arm64-windows-static-md -DCMAKE_C_COMPILER_TARGET=arm64-pc-windows-msvc -DCMAKE_CXX_COMPILER_TARGET=arm64-pc-windows-msvc -DCMAKE_C_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_LINKER="C:/Program Files/LLVM/bin/lld-link.exe" -DKFR_ARCH=neon -DCMAKE_BUILD_TYPE=Release -DCMAKE_AR="C:/Program Files/LLVM/bin/llvm-lib.exe"
 
   windows2025-msvc2026-x86:
@@ -201,17 +270,23 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Tests
+    - name: Install OS prerequisites
+      shell: cmd
+      run: |
+        choco install ninja --no-progress -y || exit /b 1
+    - name: Set up Intel SDE
       env:
         SDE_WINDOWS2: ${{ secrets.SDE_WINDOWS2 }}
         TMP_DIR: ${{ runner.temp }}
       shell: cmd
       run: |
-        choco install ninja --no-progress -y
-        curl -o "%TMP_DIR%\sde.tar.xz" -L %SDE_WINDOWS2%
-        mkdir C:\sde
-        tar -C C:\sde -xf "%TMP_DIR%\sde.tar.xz" --strip-components=1
-        call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvarsamd64_x86.bat"
+        curl -o "%TMP_DIR%\sde.tar.xz" -L %SDE_WINDOWS2% || exit /b 1
+        mkdir C:\sde || exit /b 1
+        tar -C C:\sde -xf "%TMP_DIR%\sde.tar.xz" --strip-components=1 || exit /b 1
+    - name: Build & Test
+      shell: cmd
+      run: |
+        call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvarsamd64_x86.bat" || exit /b 1
         set PATH=C:\sde;%PATH%
         ci\run.cmd build-release -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2 -DKFR_ENABLE_MULTIARCH=ON -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release
 
@@ -220,17 +295,23 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Tests
+    - name: Install OS prerequisites
+      shell: cmd
+      run: |
+        choco install ninja --no-progress -y || exit /b 1
+    - name: Set up Intel SDE
       env:
         SDE_WINDOWS2: ${{ secrets.SDE_WINDOWS2 }}
         TMP_DIR: ${{ runner.temp }}
       shell: cmd
       run: |
-        choco install ninja --no-progress -y
-        curl -o "%TMP_DIR%\sde.tar.xz" -L %SDE_WINDOWS2%
-        mkdir C:\sde
-        tar -C C:\sde -xf "%TMP_DIR%\sde.tar.xz" --strip-components=1
-        call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        curl -o "%TMP_DIR%\sde.tar.xz" -L %SDE_WINDOWS2% || exit /b 1
+        mkdir C:\sde || exit /b 1
+        tar -C C:\sde -xf "%TMP_DIR%\sde.tar.xz" --strip-components=1 || exit /b 1
+    - name: Build & Test
+      shell: cmd
+      run: |
+        call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars64.bat" || exit /b 1
         set PATH=C:\sde;%PATH%
         ci\run.cmd build-release -DKFR_ARCH_TESTS=sse2,ssse3,sse42,avx,avx2 -DKFR_ENABLE_MULTIARCH=ON -DKFR_USE_SDE=ON -DKFR_ARCH=sse2 -DCMAKE_BUILD_TYPE=Release
 
@@ -239,11 +320,14 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Tests
+    - name: Install OS prerequisites
       shell: cmd
       run: |
-        choco install ninja --no-progress -y
-        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        choco install ninja --no-progress -y || exit /b 1
+    - name: Build & Test
+      shell: cmd
+      run: |
+        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" || exit /b 1
         ci\run.cmd build-release -DCMAKE_BUILD_TYPE=Release
 
 
@@ -252,20 +336,22 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Tests
+    - name: Build vcpkg dependencies
       run: |
-        set -e
         vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
-        ci/run.sh build-release -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-osx -DCMAKE_OSX_ARCHITECTURES=x86_64 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse42,avx -DKFR_ARCH=target -DCMAKE_BUILD_TYPE=Release      
+    - name: Build & Test
+      run: |
+        ci/run.sh build-release -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-osx -DCMAKE_OSX_ARCHITECTURES=x86_64 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH_TESTS=sse42,avx -DKFR_ARCH=target -DCMAKE_BUILD_TYPE=Release
 
   macos26-xcode26-arm64:
     runs-on: macos-26
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Tests
+    - name: Build vcpkg dependencies
       run: |
-        set -e
         vcpkg install --overlay-ports=cmake/ports libflac minimp3 alac
+    - name: Build & Test
+      run: |
         ci/run.sh build-release -DCMAKE_PREFIX_PATH=$VCPKG_INSTALLATION_ROOT/installed/arm64-osx -DCMAKE_OSX_ARCHITECTURES=arm64 -DKFR_ENABLE_CAPI_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKFR_ARCH=target -DCMAKE_BUILD_TYPE=Release
 
