@@ -114,7 +114,7 @@ KFR_FUNCTION T cubic(M mu, T x0, T x1, T x2, T x3)
     const T a1 = x0 - x1 - a0;
     const T a2 = x2 - x0;
     const T a3 = x1;
-    return horner(mu, a0, a1, a2, a3);
+    return horner(mu, a3, a2, a1, a0);
 }
 
 /**
@@ -142,7 +142,7 @@ KFR_FUNCTION T catmullrom(M mu, T x0, T x1, T x2, T x3)
     const T a1 = x0 - T(2.5) * x1 + T(2) * x2 - T(0.5) * x3;
     const T a2 = T(0.5) * (x2 - x0);
     const T a3 = x1;
-    return horner(mu, a0, a1, a2, a3);
+    return horner(mu, a3, a2, a1, a0);
 }
 
 } // namespace KFR_ARCH_NAME

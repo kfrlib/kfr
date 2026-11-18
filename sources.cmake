@@ -411,6 +411,7 @@ set(
     ${PROJECT_SOURCE_DIR}/tests/unit/math/asin_acos.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/complex_math.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/hyperbolic.cpp
+    ${PROJECT_SOURCE_DIR}/tests/unit/math/interpolation.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/log_exp.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/math/sqrt.cpp
     ${PROJECT_SOURCE_DIR}/tests/unit/simd/abs.cpp
