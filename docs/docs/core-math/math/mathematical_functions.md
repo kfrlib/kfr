@@ -265,7 +265,7 @@ complex value whose real part is magnitude and imaginary part is phase.
 const c32 z = make_complex(3.f, 4.f);
 const f32 magnitude = cabs(z); // 5
 const f32 phase = carg(z);
-const c32 magnitude_phase = polar(z);
+const c32 magnitude_phase = kfr::polar(z);
 const c32 restored = cartesian(magnitude_phase);
 |||CHECK_THAT(magnitude, DeepMatcher(5.f));
 |||epsilon_scope<void> eps(5);
