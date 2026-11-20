@@ -37,6 +37,19 @@ template <typename E1, typename T = flt_type<expression_value_type<E1>>>
 }
 
 /**
+ * @brief Designs a single-section DC removal filter for use with iir_state.
+ * @tparam T Floating-point coefficient type.
+ * @param cutoff_hz High-pass cutoff frequency in Hz.
+ * @param fs_hz Sampling frequency in Hz.
+ * @return Coefficients for a second-order Butterworth high-pass filter.
+ */
+template <typename T = double>
+KFR_INTRINSIC iir_params<T, 1> dcremove_params(double cutoff_hz, double fs_hz)
+{
+    return iir_params<T, 1>{ biquad_section<T>(biquad_highpass(cutoff_hz / fs_hz, 0.707)) };
+}
+
+/**
  * @brief Applies a DC removal filter to the given input expression.
  *
  * This function designs a 2nd order Butterworth high-pass filter to remove
@@ -53,8 +66,8 @@ template <typename E1, typename T = flt_type<expression_value_type<E1>>>
 template <typename E1, typename T = flt_type<expression_value_type<E1>>>
 KFR_INTRINSIC expression_iir<1, T, E1> dcremove(E1&& e1, double cutoff_hz, double fs_hz)
 {
-    const biquad_section<T> bqs[1] = { biquad_highpass(cutoff_hz / fs_hz, 0.707) };
-    return expression_iir<1, T, E1>(std::forward<E1>(e1), iir_state<T, 1>{ bqs });
+    return expression_iir<1, T, E1>(std::forward<E1>(e1),
+                                    iir_state<T, 1>{ dcremove_params<T>(cutoff_hz, fs_hz) });
 }
 
 } // namespace kfr

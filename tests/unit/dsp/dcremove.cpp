@@ -25,6 +25,14 @@ TEST_CASE("dcremove")
     univector<fbase> withdc = orig + 0.5f;
     univector<fbase> v2     = dcremove(withdc, 10, 48000);
     CHECK(rms(slice(v2, 24000) - slice(orig, 24000)) < 0.01f);
+
+    iir_state<fbase, 1> state{ dcremove_params<fbase>(10, 48000) };
+    univector<fbase> streamed(withdc.size());
+    auto first = streamed.slice(0, 137);
+    first = iir(withdc.slice(0, 137), std::ref(state));
+    auto rest = streamed.slice(137);
+    rest = iir(withdc.slice(137), std::ref(state));
+    CHECK(absmaxof(streamed - v2) < 1e-6f);
 }
 
 } // namespace KFR_ARCH_NAME

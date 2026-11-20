@@ -227,7 +227,7 @@ univector<float> corrected = dcremove(samples, 10.0, fs);
 |||}
 ```
 
-The resulting expression uses the same stateful IIR mechanism as [[`iir(E1 &&, iir_params<T, filters>)`:nosig]]. Materializing one expression is suitable for a finite buffer. For continuous blocks, retain an [[`iir_state<T, filters>`:nosig]] built from [[`biquad_highpass`:nosig]] and use the state-sharing `iir` overload instead. The older `dcremove(expression, cutoff)` overload, which accepts a normalized cutoff without a sample rate, is deprecated.
+The resulting expression uses the same stateful IIR mechanism as [[`iir(E1 &&, iir_params<T, filters>)`:nosig]]. Materializing one expression is suitable for a finite buffer. For continuous blocks, retain an [[`iir_state<T, filters>`:nosig]] built from `dcremove_params<float>(cutoff_hz, fs)` and use the state-sharing `iir` overload instead. The older `dcremove(expression, cutoff)` overload, which accepts a normalized cutoff without a sample rate, is deprecated.
 
 ## See also
 
