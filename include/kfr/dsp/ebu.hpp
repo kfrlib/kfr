@@ -22,6 +22,11 @@
  */
 #pragma once
 
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstdint>
+#include <functional>
 #include <vector>
 
 #include "../base.hpp"
@@ -68,189 +73,188 @@ KFR_INTRINSIC T loudness_to_energy(T loudness)
 }
 
 /**
- * @brief Buffer of momentary mean-square energies used to compute the
- *        integrated (program) loudness per EBU R128 §3560.
+ * @brief Fixed-memory histogram of absolutely gated mean-square energies.
  *
- * Samples below -70 LUFS are discarded on push. The integrated value is
- * computed lazily and cached: it is the mean of the energies that lie above
- * a relative gate set 10 LU below the ungated mean.
+ * 10,000 regular bins span -70 to +30 LUFS at 0.01 LU resolution, plus a
+ * final bin for +30 LUFS and above. Such high levels are not expected in a
+ * normal audio workflow. Gating includes the bin containing the gate; gated
+ * averages and percentile positions use the bin's lower-edge loudness. The
+ * ungated mean uses the original energies.
  */
 template <typename T>
-struct integrated_vec : public univector<T>
+class loudness_histogram
 {
-private:
-    /** @brief Compute and cache the integrated loudness from the stored energies. */
-    void compute() const
-    {
-        const T z_total = mean(static_cast<const univector<T>&>(*this));
-        T relative_gate = energy_to_loudness(z_total) - 10;
+    static constexpr size_t regular_bins = 10000;
 
-        T z        = 0;
-        size_t num = 0;
-        for (T v : *this)
+    static size_t bin_index(double loudness)
+    {
+        if (loudness <= -70.0)
+            return 0;
+        if (loudness >= 30.0)
+            return regular_bins;
+        return static_cast<size_t>((loudness + 70.0) * 100.0);
+    }
+
+    static double bin_loudness(size_t index)
+    {
+        return -70.0 + static_cast<double>(index) * 0.01;
+    }
+
+public:
+    void push(T mean_square)
+    {
+        const double energy = static_cast<double>(mean_square);
+        if (!std::isfinite(energy) || energy <= 0)
+            return;
+        const double loudness = energy_to_loudness(energy);
+        if (loudness < -70.0)
+            return;
+        ++bins[bin_index(loudness)];
+        total_energy += energy;
+        ++total_count;
+    }
+
+    void reset()
+    {
+        bins.fill(0);
+        total_energy = 0;
+        total_count = 0;
+    }
+
+    T integrated() const
+    {
+        if (total_count == 0)
+            return -c_infinity<T>;
+        const double threshold = energy_to_loudness(total_energy / static_cast<double>(total_count)) - 10.0;
+        double energy = 0;
+        uint64_t count = 0;
+        for (size_t i = bin_index(threshold); i < bins.size(); ++i)
         {
-            T lk = energy_to_loudness(v);
-            if (lk >= relative_gate)
+            if (bins[i] != 0)
             {
-                z += v;
-                num++;
+                energy += loudness_to_energy(bin_loudness(i)) * static_cast<double>(bins[i]);
+                count += bins[i];
             }
         }
-        z /= num;
-        if (num >= 1)
-        {
-            m_integrated = energy_to_loudness(z);
-        }
-        else
-        {
-            m_integrated = -c_infinity<T>;
-        }
-
-        m_integrated_cached = true;
+        return count ? static_cast<T>(energy_to_loudness(energy / static_cast<double>(count))) : -c_infinity<T>;
     }
 
-public:
-    integrated_vec() : m_integrated(-c_infinity<T>), m_integrated_cached(false) {}
-    /**
-     * @brief Append a momentary mean-square energy sample.
-     *
-     * Samples whose loudness is below -70 LUFS (absolute gate) are rejected.
-     * @param mean_square Momentary mean-square energy for one 400 ms window.
-     */
-    void push(T mean_square)
+    void range(T& low, T& high) const
     {
-        T lk = energy_to_loudness(mean_square);
-        if (lk >= T(-70.))
+        low = high = T(-70);
+        if (total_count == 0)
+            return;
+        const double threshold = energy_to_loudness(total_energy / static_cast<double>(total_count)) - 20.0;
+        const size_t first_bin = bin_index(threshold);
+        uint64_t count = 0;
+        for (size_t i = first_bin; i < bins.size(); ++i)
+            count += bins[i];
+        if (count == 0)
+            return;
+        const uint64_t low_rank = static_cast<uint64_t>(std::round((count - 1) * 0.10));
+        const uint64_t high_rank = static_cast<uint64_t>(std::round((count - 1) * 0.95));
+        uint64_t seen = 0;
+        bool found_low = false;
+        for (size_t i = first_bin; i < bins.size(); ++i)
         {
-            this->push_back(mean_square);
-            m_integrated_cached = false;
+            if (!bins[i])
+                continue;
+            const uint64_t end = seen + bins[i];
+            const T value = static_cast<T>(bin_loudness(i));
+            if (!found_low && low_rank < end)
+            {
+                low = value;
+                found_low = true;
+            }
+            if (high_rank < end)
+            {
+                high = value;
+                return;
+            }
+            seen = end;
         }
     }
-    /** @brief Clear the buffer and invalidate the cached result. */
-    void reset()
-    {
-        m_integrated_cached = false;
-        this->clear();
-    }
-    /** @brief Return the integrated loudness in LUFS, recomputing if needed. */
+
+private:
+    std::array<uint64_t, regular_bins + 1> bins{};
+    double total_energy = 0;
+    uint64_t total_count = 0;
+};
+
+/** @brief Fixed-memory integrated loudness accumulator; gated values are approximated by histogram bins. */
+template <typename T>
+struct integrated_vec
+{
+    void push(T mean_square) { histogram.push(mean_square); cached = false; }
+    void reset() { histogram.reset(); cached = false; }
     T get() const
     {
-        if (!m_integrated_cached)
+        if (!cached)
         {
-            compute();
+            value = histogram.integrated();
+            cached = true;
         }
-        return m_integrated;
+        return value;
     }
 
 private:
-    mutable T m_integrated;
-    mutable bool m_integrated_cached;
+    loudness_histogram<T> histogram;
+    mutable T value = -c_infinity<T>;
+    mutable bool cached = false;
 };
 
-/**
- * @brief Sorted buffer of short-term mean-square energies used to compute the
- *        Loudness Range (LRA) per EBU R128 / ITU-R BS.1770.
- *
- * Samples below -70 LUFS are rejected on push; the rest are kept in ascending
- * order so that percentile lookups are O(log n). LRA is the difference between
- * the 95 % and 10 % percentiles of the loudness distribution above a relative
- * gate set 20 LU below the ungated mean.
- */
+/** @brief Fixed-memory short-term loudness histogram for LRA percentiles. */
 template <typename T>
-struct lra_vec : public univector<T>
+struct lra_vec
 {
-private:
-    /** @brief Compute and cache the 10 % / 95 % percentile loudness values. */
-    void compute() const
-    {
-        m_range_high            = -70;
-        m_range_low             = -70;
-        static const T PRC_LOW  = T(0.10);
-        static const T PRC_HIGH = T(0.95);
-
-        const T z_total       = mean(static_cast<const univector<T>&>(*this));
-        const T relative_gate = energy_to_loudness(z_total) - 20;
-
-        if (this->size() < 2)
-            return;
-
-        const size_t start_index =
-            std::upper_bound(this->begin(), this->end(), loudness_to_energy(relative_gate)) - this->begin();
-        if (this->size() - start_index < 2)
-            return;
-        const size_t end_index = this->size() - 1;
-
-        const size_t low_index =
-            static_cast<size_t>(std::llround(start_index + (end_index - start_index) * PRC_LOW));
-        const size_t high_index =
-            static_cast<size_t>(std::llround(start_index + (end_index - start_index) * PRC_HIGH));
-        m_range_low  = energy_to_loudness((*this)[low_index]);
-        m_range_high = energy_to_loudness((*this)[high_index]);
-
-        m_lra_cached = true;
-    }
-
-public:
-    lra_vec() : m_range_low(-70), m_range_high(-70), m_lra_cached(false) {}
-    /**
-     * @brief Insert a short-term mean-square energy sample, keeping the buffer sorted.
-     *
-     * Samples whose loudness is below -70 LUFS are rejected.
-     * @param mean_square Short-term mean-square energy for one 3 s window.
-     */
-    void push(T mean_square)
-    {
-        const T lk = energy_to_loudness(mean_square);
-        if (lk >= -70)
-        {
-            auto it = std::upper_bound(this->begin(), this->end(), mean_square);
-            this->insert(it, mean_square);
-            m_lra_cached = false;
-        }
-    }
-    /** @brief Clear the buffer and invalidate the cached result. */
-    void reset()
-    {
-        m_lra_cached = false;
-        this->clear();
-    }
-    /**
-     * @brief Return the LRA percentile loudness bounds.
-     * @param low  Out: 10 % percentile loudness in LUFS.
-     * @param high Out: 95 % percentile loudness in LUFS.
-     * @note LRA = @c high - @c low.
-     */
+    void push(T mean_square) { histogram.push(mean_square); cached = false; }
+    void reset() { histogram.reset(); cached = false; }
     void get(T& low, T& high) const
     {
-        if (!m_lra_cached)
-            compute();
-        low  = m_range_low;
-        high = m_range_high;
+        if (!cached)
+        {
+            histogram.range(low_value, high_value);
+            cached = true;
+        }
+        low = low_value;
+        high = high_value;
     }
 
 private:
-    mutable T m_range_low;
-    mutable T m_range_high;
-    mutable bool m_lra_cached;
+    loudness_histogram<T> histogram;
+    mutable T low_value = T(-70), high_value = T(-70);
+    mutable bool cached = false;
 };
 
 /**
- * @brief Build the EBU R128 K-weighting pre-filter as an IIR expression handle.
+ * @brief Build the coefficients for the EBU R128 K-weighting pre-filter.
  *
  * The K-filter is a +4 dB high-shelf at 1681.81 Hz followed by a high-pass at
  * 38.1106678 Hz (Q = 0.5, normalized). It must be applied to each channel
  * before measuring energy.
  * @param samplerate Sample rate in Hz.
- * @return Expression handle accepting one input sample block.
+ * @return Coefficients for the two-section K-weighting filter.
  */
 template <typename T>
-KFR_INTRINSIC expression_handle<T, 1> make_kfilter(int samplerate)
+KFR_INTRINSIC iir_params<T, 2> make_kfilter_params(int samplerate)
 {
-    const biquad_section<T> bq[] = {
-        biquad_highshelf(T(1681.81 / samplerate), T(+4.0)),
-        biquad_highpass(T(38.1106678246655 / samplerate), T(0.5)).normalized_all()
+    // BS.1770 K-weighting parameters, transformed to the requested sample rate.
+    const double k = std::tan(c_pi<double> * 1681.974450955533 / samplerate);
+    const double q = 0.7071752369554196;
+    const double vh = std::pow(10.0, 3.999843853973347 / 20.0);
+    const double vb = std::pow(vh, 0.4996667741545416);
+    const double denom = 1.0 + k / q + k * k;
+    const biquad_section<T> shelf{
+        T(1), T(2 * (k * k - 1) / denom), T((1 - k / q + k * k) / denom),
+        T((vh + vb * k / q + k * k) / denom), T(2 * (k * k - vh) / denom),
+        T((vh - vb * k / q + k * k) / denom)
     };
-    return to_handle(iir(placeholder<T>(), iir_params{ bq }));
+    auto highpass = biquad_highpass<T>(T(38.13547087602444 / samplerate), T(0.5003270373238773));
+    highpass.b0 = T(1);
+    highpass.b1 = T(-2);
+    highpass.b2 = T(1);
+    const biquad_section<T> sections[] = { shelf, highpass };
+    return iir_params{ sections };
 }
 
 template <typename T>
@@ -281,7 +285,7 @@ public:
      */
     ebu_channel(int sample_rate, speaker_type speaker, int packet_size_factor = 1, T input_gain = 1)
         : m_sample_rate(sample_rate), m_speaker(speaker), m_input_gain(input_gain),
-          m_packet_size(sample_rate / 10 / packet_size_factor), m_kfilter(make_kfilter<T>(sample_rate)),
+          m_packet_size(sample_rate / 10 / packet_size_factor), m_kfilter(make_kfilter_params<T>(sample_rate)),
           m_short_sum_of_squares(3000 / 100 * packet_size_factor),
           m_momentary_sum_of_squares(400 / 100 * packet_size_factor), m_output_energy_gain(1.0),
           m_buffer_cursor(0), m_short_sum_of_squares_cursor(0), m_momentary_sum_of_squares_cursor(0)
@@ -302,11 +306,16 @@ public:
         reset();
     }
 
-    /** @brief Zero the momentary and short-term sum-of-squares ring buffers. */
+    /** @brief Reset the K-filter and the momentary and short-term energy histories. */
     void reset()
     {
+        m_kfilter.state = {};
+        m_kfilter.saved_state = {};
+        m_kfilter.block_end = 0;
         std::fill(m_short_sum_of_squares.begin(), m_short_sum_of_squares.end(), T(0));
         std::fill(m_momentary_sum_of_squares.begin(), m_momentary_sum_of_squares.end(), T(0));
+        m_short_sum_of_squares_cursor = 0;
+        m_momentary_sum_of_squares_cursor = 0;
     }
 
     /**
@@ -318,11 +327,8 @@ public:
      */
     void process_packet(const T* src)
     {
-        substitute(m_kfilter, to_handle(make_univector(src, m_packet_size) * m_input_gain));
-        const T filtered_sum_of_squares = sumsqr(truncate(m_kfilter, m_packet_size));
-
-        m_short_sum_of_squares.ringbuf_write(m_short_sum_of_squares_cursor, filtered_sum_of_squares);
-        m_momentary_sum_of_squares.ringbuf_write(m_momentary_sum_of_squares_cursor, filtered_sum_of_squares);
+        const auto input = make_univector(src, m_packet_size) * m_input_gain;
+        process_input(input);
     }
     /** @brief Return the speaker role assigned to this channel. */
     speaker_type get_speaker() const { return m_speaker; }
@@ -330,11 +336,24 @@ public:
     size_t packet_size() const { return m_packet_size; }
 
 private:
+    template <typename Input>
+    void process_input(const Input& input)
+    {
+        const T energy = sumsqr(iir(input, std::ref(m_kfilter)));
+        m_short_sum_of_squares.ringbuf_write(m_short_sum_of_squares_cursor, energy);
+        m_momentary_sum_of_squares.ringbuf_write(m_momentary_sum_of_squares_cursor, energy);
+    }
+
+    void process_silence()
+    {
+        process_input(truncate(counter<T>(T(0), T(0)), m_packet_size));
+    }
+
     const int m_sample_rate;
     const speaker_type m_speaker;
     const T m_input_gain;
     const size_t m_packet_size;
-    expression_handle<T, 1> m_kfilter;
+    iir_state<T, 2> m_kfilter;
     univector<T> m_short_sum_of_squares;
     univector<T> m_momentary_sum_of_squares;
     T m_output_energy_gain;
@@ -352,7 +371,13 @@ private:
  * EBU Tech 3341 / R128 s2 and EBU R128 s3 (LRA).
  *
  * Packets are @c sample_rate/10/ @c packet_size_factor samples long, i.e. the
- * measurement refresh rate is @c 10 * packet_size_factor Hz.
+ * measurement refresh rate is @c 10 * packet_size_factor Hz. Packet processing
+ * uses fixed-size histograms and does not allocate. Integrated and LRA results
+ * use 0.01 LU bins and include the entire bin containing the relative gate;
+ * errors can be larger near a populated gate. Loudness above +30 LUFS, not
+ * expected in normal audio workflows, is clamped; non-finite energies are
+ * ignored. Reading an uncached integrated
+ * or LRA value scans the histograms.
  */
 template <typename T>
 struct ebu_r128
@@ -368,7 +393,7 @@ public:
      */
     ebu_r128(int sample_rate, std::span<const speaker_type> channels, int packet_size_factor = 1)
         : m_sample_rate(sample_rate), m_running(true), m_need_reset(false),
-          m_packet_size(sample_rate / 10 / packet_size_factor)
+          m_packet_size(sample_rate / 10 / packet_size_factor), m_packet_size_factor(packet_size_factor)
     {
         KFR_LOGIC_CHECK(!channels.empty(), "channels must not be empty");
         KFR_LOGIC_CHECK(sample_rate > 0, "sample_rate must be greater than 0");
@@ -446,6 +471,19 @@ public:
         process_packet_impl<tag_array_ref>(source);
     }
 
+    /**
+     * @brief Process @p num_packets of silence on every channel.
+     *
+     * Equivalent to processing zero-filled packets: the K-filter's decay, window
+     * histories, gating and deferred reset are preserved. No input buffers are allocated.
+     * @param num_packets Number of packets, each @ref packet_size() samples long.
+     */
+    void process_silence_packets(size_t num_packets)
+    {
+        for (size_t i = 0; i < num_packets; ++i)
+            process_channels([](ebu_channel<T>& channel, size_t) { channel.process_silence(); });
+    }
+
     /** @brief (Re)start measurement: subsequent packets update the buffers. */
     void start() { m_running = true; }
     /** @brief Pause measurement: packets are still filtered but buffers are frozen. */
@@ -455,8 +493,8 @@ public:
     /**
      * @brief Request a deferred reset of all channels and accumulators.
      *
-     * The reset is applied at the start of the next @ref process_packet call,
-     * so that the in-flight packet is not lost.
+     * The reset is applied at the start of the next processed packet, including
+     * one supplied by @ref process_silence_packets.
      */
     void reset() { m_need_reset = true; }
 
@@ -472,22 +510,18 @@ private:
     template <univector_tag Tag>
     void process_packet_impl(std::span<const univector<T, Tag>> source)
     {
+        process_channels([&](ebu_channel<T>& channel, size_t ch)
+                         {
+                             KFR_ASSERT(source[ch].size() == m_packet_size);
+                             channel.process_packet(source[ch].data());
+                         });
+    }
+
+    template <typename ProcessChannel>
+    void process_channels(ProcessChannel&& process_channel)
+    {
         T momentary = 0;
         T shortterm = 0;
-        for (size_t ch = 0; ch < m_channels.size(); ch++)
-        {
-            KFR_ASSERT(source[ch].size() == m_packet_size);
-            ebu_channel<T>& chan = m_channels[ch];
-            chan.process_packet(source[ch].data());
-            if (m_running)
-            {
-                momentary += mean(m_channels[ch].m_momentary_sum_of_squares) / m_packet_size *
-                             m_channels[ch].m_output_energy_gain;
-                shortterm += mean(m_channels[ch].m_short_sum_of_squares) / m_packet_size *
-                             m_channels[ch].m_output_energy_gain;
-            }
-        }
-
         if (m_need_reset)
         {
             m_need_reset = false;
@@ -497,17 +531,37 @@ private:
             }
             m_integrated_buffer.reset();
             m_lra_buffer.reset();
+            m_packets_seen = 0;
         }
+        for (size_t ch = 0; ch < m_channels.size(); ch++)
+        {
+            ebu_channel<T>& chan = m_channels[ch];
+            process_channel(chan, ch);
+            if (m_running)
+            {
+                momentary += mean(m_channels[ch].m_momentary_sum_of_squares) / m_packet_size *
+                             m_channels[ch].m_output_energy_gain;
+                shortterm += mean(m_channels[ch].m_short_sum_of_squares) / m_packet_size *
+                             m_channels[ch].m_output_energy_gain;
+            }
+        }
+        if (m_packets_seen < 30 * static_cast<size_t>(m_packet_size_factor))
+            ++m_packets_seen;
         if (m_running)
         {
-            m_integrated_buffer.push(momentary);
-            m_lra_buffer.push(shortterm);
+            // Only complete 400 ms and 3 s windows contribute to the histograms.
+            if (m_packets_seen >= 4 * static_cast<size_t>(m_packet_size_factor))
+                m_integrated_buffer.push(momentary);
+            if (m_packets_seen >= 30 * static_cast<size_t>(m_packet_size_factor))
+                m_lra_buffer.push(shortterm);
         }
     }
     int m_sample_rate;
     bool m_running;
     bool m_need_reset;
     size_t m_packet_size;
+    int m_packet_size_factor;
+    size_t m_packets_seen = 0;
     std::vector<ebu_channel<T>> m_channels;
     integrated_vec<T> m_integrated_buffer;
     lra_vec<T> m_lra_buffer;

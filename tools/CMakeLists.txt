@@ -24,5 +24,5 @@ add_executable(sample_rate_converter sample_rate_converter.cpp)
 target_link_libraries(sample_rate_converter PRIVATE kfr kfr_dsp kfr_io kfr_audio
                       use_arch)
 
-add_executable(ebu_test ebu_test.cpp)
-target_link_libraries(ebu_test PRIVATE kfr kfr_io kfr_dsp kfr_audio use_arch)
+add_executable(ebu_loudness ebu_loudness.cpp)
+target_link_libraries(ebu_loudness PRIVATE kfr kfr_io kfr_dsp kfr_audio use_arch)

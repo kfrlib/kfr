@@ -124,6 +124,9 @@ endif ()
 add_test_executable(all_tests all_tests.cpp ${ALL_TESTS_CPP})
 target_compile_definitions(all_tests PRIVATE KFR_NO_MAIN)
 target_link_libraries(all_tests PRIVATE kfr use_arch kfr_dsp kfr_io)
+
+add_test_executable(ebu_official_test ebu_official_test.cpp all_tests.cpp)
+target_link_libraries(ebu_official_test PRIVATE kfr kfr_audio use_arch)
 if (KFR_ENABLE_DFT)
     target_link_libraries(all_tests PRIVATE kfr_dft)
 endif ()
@@ -288,6 +291,10 @@ if (NOT KFR_SKIP_TESTS)
         add_test(NAME all_tests COMMAND ${EMULATOR}
                                         ${PROJECT_BINARY_DIR}/bin/all_tests ${CATCH_FLAGS})
     endif ()
+
+    add_test(NAME ebu_official_signals COMMAND ${EMULATOR} $<TARGET_FILE:ebu_official_test>
+             ${CATCH_FLAGS})
+    set_tests_properties(ebu_official_signals PROPERTIES SKIP_REGULAR_EXPRESSION "SKIPPED")
 
     if (TARGET math_accuracy)
         add_test(NAME math_accuracy COMMAND ${EMULATOR} $<TARGET_FILE:math_accuracy>

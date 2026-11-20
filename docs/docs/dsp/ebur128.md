@@ -49,7 +49,9 @@ loudness.process_packet({ left, right }); // stereo example
 |||}
 ```
 
-Each channel is supplied as a [[`univector_ref`]] or similar slice of contiguous samples. For file-based use, ensure data is deinterleaved before passing.
+Each channel is supplied as a [[`univector_ref`]] or similar slice of contiguous samples. For file-based use, ensure data is deinterleaved before passing. To feed silence without creating input buffers, call `loudness.process_silence_packets(num_packets)`. Each packet has `packet_size()` frames; filter decay and meter state are processed exactly as for zero-filled input.
+
+Allocate the input buffers and construct the meter before starting an audio callback. Packet processing reuses filter state and fixed-size histograms; it does not allocate or grow with stream duration. Use borrowed slices rather than copying audio into new owning vectors in the callback. Construct, reset, and read the meter on the same thread, or synchronize access externally.
 
 ---
 
@@ -80,13 +82,30 @@ loudness.get_values(M, S, I, RL, RH);
 * **RL**, **RH** — 10th and 95th percentile loudness, the LRA boundaries
 * **LRA = RH − RL**
 
+Integrated loudness and LRA use 10,000 fixed-size 0.01 LU histogram bins from
+−70 to +30 LUFS, plus a top bin for +30 LUFS and above. Such extreme loudness is
+not expected in a normal audio workflow. Higher finite levels are clamped to the
+top bin, while relative gates use the original mean energy and include the entire
+bin containing the gate. Gated averages and percentiles use bin lower edges.
+Results can differ from exact stored-block measurements when many blocks are near a 
+gate, or when levels exceed the histogram range. Non-finite  energies are ignored.
+Reading a changed integrated or LRA value scans the bins; do that work outside a
+time-critical callback if necessary. Only complete 400 ms and 3 s windows enter
+the respective histograms. Reset clears the histories and filter state at the
+start of the next packet.
+
+This implementation uses FFmpeg-style 0.01 LU binning but retains KFR's packet
+cadence and percentile calculation; it is not bit-for-bit identical to FFmpeg or
+libebur128. The `integrated_vec` and `lra_vec` accumulator types no longer expose
+the inherited `univector` interface; use `push`, `get`, and `reset` instead.
+
 EBU R128 measurements settle only after the signal ends; append at least 1.5 s of silence (roughly 15 packets at the default packet size) before reading the final `I` and LRA values.
 
 ---
 
 ### 4. Example (Command-Line Tool)
 
-`tools/ebu_test.cpp` is a full working example: `ebu_test INPUT_FILE`. It opens the file with [[`create_decoder_for_file`:nosig]] (so it accepts WAV, RF64, BW64, W64, FLAC, MP3, AIFF, or CAF), builds an [[`ebu_r128`:nosig]] meter sized for the file's channel count via `arrangement_speakers(arrangement_for_channels(channels))`, feeds it packet-by-packet as the file is decoded, appends 1.5 s of silence at the end, and prints the final measurements together with the running peak M and S values:
+`tools/ebu_loudness.cpp` is a full working example: `ebu_loudness INPUT_FILE`. It opens the file with [[`create_decoder_for_file`:nosig]] (so it accepts WAV, RF64, BW64, W64, FLAC, MP3, AIFF, or CAF), builds an [[`ebu_r128`:nosig]] meter sized for the file's channel count via `arrangement_speakers(arrangement_for_channels(channels))`, feeds it packet-by-packet as the file is decoded, appends 1.5 s of silence at the end, and prints the final measurements together with the running peak M and S values:
 
 ```
 M = -23.0
@@ -101,4 +120,4 @@ maxS = -21.2
 
 ### 5. Verification
 
-`tests/unit/dsp/ebu.cpp` checks measured values against reference numbers for stereo and 5-channel inputs at 44.1 kHz and 48 kHz, within ±0.05 LU for stereo and ±0.1 LU for multichannel.
+`tests/unit/dsp/ebu.cpp` checks measured values against reference numbers for stereo and 5-channel inputs at 44.1 kHz and 48 kHz. The standalone `ebu_official_test` executable checks the official EBU Tech 3341 and 3342 test signals when the `LOUDNESS_TEST_SIGNALS` environment variable points to the root of the EBU loudness test set v05. The external-file tests are skipped when the variable is unset and fail if a required file is missing.

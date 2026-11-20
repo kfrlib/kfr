@@ -14,7 +14,7 @@ int main(int argc, char** argv)
 {
     if (argc < 2)
     {
-        println("Usage: ebu_test INPUT_FILE");
+        println("Usage: ebu_loudness INPUT_FILE");
         println("Supported input formats: WAV, RF64, BW64, W64, FLAC, MP3, AIFF, CAF");
         return 1;
     }
@@ -47,6 +47,8 @@ int main(int argc, char** argv)
     constexpr size_t chunk_size = 1 << 16;
     audio_data_interleaved input_chunk_interleaved(channels, chunk_size);
     audio_data input_chunk(channels, chunk_size);
+    std::vector<univector_ref<fbase>> ch_refs;
+    ch_refs.reserve(channels);
 
     // M, S, I, RL, RH hold the current measurements; maxM/maxS track the running peaks.
     fbase M, S, I, RL, RH;
@@ -73,8 +75,8 @@ int main(int argc, char** argv)
         const size_t packet_size = loudness.packet_size();
         for (size_t i = 0; i + packet_size <= *frames_read; i += packet_size)
         {
-            // Build per-channel packet views (zero-copy slices into the planar buffer).
-            std::vector<univector_ref<fbase>> ch_refs;
+            // Reuse the vector while rebinding zero-copy views into the current packet.
+            ch_refs.clear();
             for (size_t ch = 0; ch < channels; ++ch)
             {
                 ch_refs.push_back(input_chunk.channel(ch).slice(i, packet_size));
@@ -91,9 +93,7 @@ int main(int argc, char** argv)
         // For file-based measurements, the signal should be followed by at least 1.5 s of silence
         // so the short-term and integrated loudness windows can settle. Push 15 silence packets
         // (~1.5 s at the default 100 ms packet size) to flush the buffers.
-        std::vector<univector_dyn<fbase>> ch_silence(channels, univector_dyn<fbase>(loudness.packet_size()));
-        for (size_t i = 0; i < 15; ++i)
-            loudness.process_packet(ch_silence);
+        loudness.process_silence_packets(15);
         // Re-read the final measurements: the silence tail is what makes I (and LRA) settle.
         loudness.get_values(M, S, I, RL, RH);
     }
