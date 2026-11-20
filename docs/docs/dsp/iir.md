@@ -151,7 +151,7 @@ The executable cascade accepts at most [[`maximum_biquad_count`:nosig]] sections
 
 ## Applying the resulting cascade
 
-Pass the SOS result to [[`iir(E1 &&, iir_params<T, filters>)`:nosig]] for a lazy expression, or construct an [[`iir_filter<T>`:nosig]] for streaming. The common [Stateful filtering](filters.md) guide covers state continuity, buffer and expression input, reset behavior, and multichannel processing.
+Pass the SOS result to [[`iir(E1 &&, iir_params<T, filters>)`:nosig]] for a lazy expression, or construct an [[`iir_filter<T>`:nosig]] for streaming. For a caller-owned fixed-size `iir_state`, call `state.reset()` to clear the active and saved delay registers and block bookkeeping without changing coefficients. The common [Stateful filtering](filters.md) guide covers state continuity, buffer and expression input, reset behavior, and multichannel processing.
 
 The convenience overload [[`iir(E1 &&, const zpk &)`:nosig]] accepts a ZPK design directly:
 

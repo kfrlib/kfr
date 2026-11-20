@@ -296,6 +296,14 @@ struct iir_state
     {
     }
 
+    /** @brief Clear the delay registers and block bookkeeping, preserving the coefficients. */
+    void reset()
+    {
+        state       = {};
+        saved_state = {};
+        block_end   = 0;
+    }
+
     biquad_state<T, filters> state; ///< Active delay-line state.
     biquad_state<T, filters> saved_state; ///< Snapshot used for block-based processing.
     size_t block_end = 0; ///< End index of the current processing block.
@@ -486,9 +494,7 @@ template <size_t filters, typename T, typename E1, bool Stateless>
 KFR_INTRINSIC void reset(const expression_iir_l<filters, T, E1, Stateless>& self)
 {
     reset(self.first());
-    self.state->state       = {};
-    self.state->saved_state = {};
-    self.state->block_end   = 0;
+    self.state->reset();
 }
 
 /**
@@ -498,9 +504,7 @@ template <size_t filters, typename T, typename E1, bool Stateless>
 KFR_INTRINSIC void reset(const expression_iir<filters, T, E1, Stateless>& self)
 {
     reset(self.first());
-    self.state->state       = {};
-    self.state->saved_state = {};
-    self.state->block_end   = 0;
+    self.state->reset();
 }
 
 /// Internal ADL-provided implementation for `expression_iir` expressions.

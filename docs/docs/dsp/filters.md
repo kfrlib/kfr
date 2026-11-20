@@ -105,6 +105,8 @@ univector<float> output2 = fir(input_block2, std::ref(state));
 |||}
 ```
 
+Call `state.reset()` on a caller-owned `fir_state`, `short_fir_state`, or fixed-size `iir_state` to clear its history while preserving coefficients. FIR reset also rewinds the ring-buffer cursor; IIR reset clears both active and saved registers and block bookkeeping. This does not reset any upstream input expression.
+
 Copying an expression with owned state copies the state. Copying an expression built with `std::ref(state)` copies the reference, so both expressions mutate the same underlying state. The term `Stateless` in the implementation means *non-owning*; it does not mean that filtering has no state.
 
 ## Reusable expression filters

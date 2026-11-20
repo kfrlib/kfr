@@ -80,6 +80,9 @@ struct short_fir_state
         : taps(widen<tapcount>(read<N>(taps.data()), T(0))), delayline(0)
     {
     }
+    /** @brief Clear the delay line, preserving the coefficients. */
+    void reset() { delayline = vec<U, tapcount - 1>(0); }
+
     vec<T, tapcount> taps; ///< Filter coefficients (zero-padded).
     vec<U, tapcount - 1> delayline; ///< Delay line holding the last `tapcount - 1` samples.
 };
@@ -168,6 +171,12 @@ struct fir_state
     template <has_data_size Cont>
     fir_state(Cont&& taps) : params(std::move(taps)), delayline(params.taps.size(), U(0)), delayline_cursor(0)
     {
+    }
+    /** @brief Clear the delay line and rewind its cursor, preserving the coefficients. */
+    void reset()
+    {
+        delayline        = scalar(0);
+        delayline_cursor = 0;
     }
     /**
      * @brief Append samples to the delay line ring buffer.
@@ -406,7 +415,7 @@ template <size_t tapcount, typename T, typename U, typename E1, bool stateless>
 KFR_INTRINSIC void reset(const expression_short_fir<tapcount, T, U, E1, stateless>& self)
 {
     reset(self.first());
-    self.state->delayline = vec<U, tapcount - 1>(0);
+    self.state->reset();
 }
 
 /**
@@ -425,8 +434,7 @@ template <typename T, typename U, typename E1, bool stateless>
 KFR_INTRINSIC void reset(const expression_fir<T, U, E1, stateless>& self)
 {
     reset(self.first());
-    self.state->delayline        = scalar(0);
-    self.state->delayline_cursor = 0;
+    self.state->reset();
 }
 
 /**
@@ -678,8 +686,7 @@ public:
     /// Reset internal filter state
     void reset() final
     {
-        state.delayline        = scalar(0);
-        state.delayline_cursor = 0;
+        state.reset();
     }
 
 protected:

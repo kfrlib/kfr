@@ -125,7 +125,7 @@ The general FIR, short FIR, and runtime [[`fir_filter<T, U>`:nosig]] all support
 
 ### Owned and referenced state
 
-[[`fir(E1 &&, fir_params<T>)`:nosig]] owns a fresh FIR state and is suitable for a finite signal. To retain history across blocks, pass an externally owned [[`fir_state<T, U>`:nosig]] with [[`fir(E1 &&, std::reference_wrapper<fir_state<T, U>>)`:nosig]]. See [Stateful filtering](filters.md) for the ownership, lifetime, reset, and initial-history rules shared by KFR filters.
+[[`fir(E1 &&, fir_params<T>)`:nosig]] owns a fresh FIR state and is suitable for a finite signal. To retain history across blocks, pass an externally owned [[`fir_state<T, U>`:nosig]] with [[`fir(E1 &&, std::reference_wrapper<fir_state<T, U>>)`:nosig]]. Call `state.reset()` to clear its delay line and rewind the cursor without changing the taps. See [Stateful filtering](filters.md) for the ownership, lifetime, reset, and initial-history rules shared by KFR filters.
 
 ## Short FIR filters
 
@@ -141,7 +141,7 @@ univector<float> output = short_fir(input, taps);
 |||}
 ```
 
-For streaming, retain a [[`short_fir_state<tapcount, T, U>`:nosig]] and use the referenced overload. The state type's first template argument is the padded internal count, not always the visible tap count. For example, six taps use `short_fir_state<9, float>`:
+For streaming, retain a [[`short_fir_state<tapcount, T, U>`:nosig]] and use the referenced overload. Call `state.reset()` to clear its delay line without changing the taps. The state type's first template argument is the padded internal count, not always the visible tap count. For example, six taps use `short_fir_state<9, float>`:
 
 ```c++
 |||TEST_CASE("dsp/fir.md/streaming short FIR")

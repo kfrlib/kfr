@@ -280,7 +280,7 @@ TEST_CASE("iir_reset")
 
     univector<float, 1> input{ 0.f };
     auto expression = iir(input, std::ref(state));
-    reset(expression);
+    state.reset();
 
     for (size_t i = 0; i < 2; ++i)
     {
@@ -297,6 +297,14 @@ TEST_CASE("iir_reset")
         CHECK(state.params.b1[i] == expected_params.b1[i]);
         CHECK(state.params.b2[i] == expected_params.b2[i]);
     }
+    CHECK(state.block_end == 0);
+
+    state.state.s1 = 1.f;
+    state.saved_state.s2 = 2.f;
+    state.block_end = 7;
+    reset(expression);
+    CHECK(state.state.s1[0] == 0.f);
+    CHECK(state.saved_state.s2[0] == 0.f);
     CHECK(state.block_end == 0);
 
     state.state.s1        = 1.f;

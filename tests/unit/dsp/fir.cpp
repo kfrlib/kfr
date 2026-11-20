@@ -84,6 +84,31 @@ TEST_CASE("fir_state")
     }
 }
 
+TEST_CASE("short_fir_state_reset")
+{
+    const univector<float, 3> taps{ 1.f, 2.f, 3.f };
+    short_fir_state<3, float, complex<float>> state(taps);
+    univector<complex<float>> input{ { 1.f, 2.f }, { 3.f, 4.f } };
+    univector<complex<float>> before = short_fir(input, std::ref(state));
+    state.reset();
+    univector<complex<float>> after = short_fir(input, std::ref(state));
+    for (size_t i = 0; i < input.size(); ++i)
+        CHECK(after[i] == before[i]);
+}
+
+TEST_CASE("fir_state_reset")
+{
+    const univector<float, 3> taps{ 1.f, 2.f, 3.f };
+    fir_state<float, complex<float>> state(taps);
+    univector<complex<float>> input{ { 1.f, 2.f }, { 3.f, 4.f } };
+    univector<complex<float>> before = fir(input, std::ref(state));
+    state.reset();
+    CHECK(state.delayline_cursor == 0);
+    univector<complex<float>> after = fir(input, std::ref(state));
+    for (size_t i = 0; i < input.size(); ++i)
+        CHECK(after[i] == before[i]);
+}
+
 TEST_CASE("fir_expression_reset")
 {
     const univector<float, 3> taps{ 1.f, 2.f, 3.f };
