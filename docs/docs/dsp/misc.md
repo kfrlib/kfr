@@ -333,6 +333,10 @@ univector<float, 480> sine_440 =
 |||}
 ```
 
+For block processing, `phasor_step<T>(phase, frequency, sample_rate, samples)` returns the wrapped phase of the next sample. Pass it as the initial phase of the next `phasor` block. It uses the same frequency and sample-rate units as `phasor`.
+
+`sinenorm` uses the `fastsin` polynomial approximation. For double precision, its maximum absolute approximation error is approximately $1.12 \times 10^{-6}$, or about $-119$ dB relative to unit amplitude. Floating-point rounding may add error, particularly for large unwrapped phase values.
+
 The waveform functions operate element-wise on phases. The radian forms are [[`sine(E1 &&)`:nosig]], [[`square(E1 &&)`:nosig]], [[`triangle(E1 &&)`:nosig]], [[`sawtooth(E1 &&)`:nosig]], and [[`isawtooth(E1 &&)`:nosig]]. Their normalized-cycle counterparts are [[`sinenorm(E1 &&)`:nosig]], [[`squarenorm(E1 &&)`:nosig]], [[`trianglenorm(E1 &&)`:nosig]], [[`sawtoothnorm(E1 &&)`:nosig]], and [[`isawtoothnorm(E1 &&)`:nosig]]. The normalized forms wrap their phase into $[0,1)$; use the radian forms when the input is already in radians.
 
 ```c++

@@ -38,6 +38,16 @@ TEST_CASE("phasor_normalized_preserves_precision")
     CHECK(samples[1] == step);
 }
 
+TEST_CASE("phasor_step")
+{
+    CHECK(phasor_step<double>(0.75, 1.0, 4.0, 2) == 0.25);
+    CHECK(phasor_step<double>(0.25, -1.0, 4.0, 2) == 0.75);
+    CHECK(phasor_step<double>(0.25, 1.0, 4.0, 0) == 0.25);
+    const double phase = phasor_step<double>(0.125, 3.0, 16.0, 5);
+    univector<double, 6> whole = phasor<double>(3.0, 16.0, 0.125);
+    CHECK(phase == whole[5]);
+}
+
 TEST_CASE("trianglenorm_preserves_offset_for_large_phases")
 {
     constexpr double cycles = 0x1p52;

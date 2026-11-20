@@ -68,6 +68,21 @@ KFR_FUNCTION static auto phasor(std::type_identity_t<T> frequency)
     return phasor<T>(frequency, T(1), T(0));
 }
 
+/**
+ * @brief Advance a normalized phase by a number of samples, wrapping into [0, 1).
+ * @param phase Current phase in cycles.
+ * @param frequency Oscillator frequency in Hz.
+ * @param sample_rate Sample rate in Hz.
+ * @param samples Number of samples to advance.
+ * @return Phase of the next sample in cycles.
+ */
+template <typename T = fbase>
+KFR_FUNCTION T phasor_step(std::type_identity_t<T> phase, std::type_identity_t<T> frequency,
+                           std::type_identity_t<T> sample_rate, size_t samples)
+{
+    return fract(phase + static_cast<T>(samples) * (frequency / sample_rate));
+}
+
 namespace intr
 {
 template <typename T>
@@ -212,7 +227,10 @@ KFR_FUNCTION expression_function<fn::sine, E1> sine(E1&& x)
 }
 
 /**
- * @brief Sine of a phase ramp in [0, 1) cycles (alias of @ref rawsine).
+ * @brief Approximate sine of a phase in normalized cycles, wrapped into [0, 1).
+ *
+ * The double-precision fastsin polynomial has a maximum absolute error of approximately
+ * 1.12e-6 (about -119 dB relative to unit amplitude). Floating-point rounding may add error.
  *
  * @param x Phase in normalized cycles ([0, 1) corresponds to one full cycle).
  * @return Sine value in [-1, 1].
