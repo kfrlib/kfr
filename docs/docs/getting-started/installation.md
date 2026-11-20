@@ -329,6 +329,20 @@ Set KFR options before `add_subdirectory`; cache entries created afterward may
 be too late because KFR has already configured its targets. Usually KFR tests
 are disabled in a parent build. If you enable them, examples are enabled by
 default; set `-DENABLE_EXAMPLES=OFF` when they are not wanted.
+ 
+ 
+The `spectrogram` tool is available when audio and DFT support are enabled:
+
+```sh
+spectrogram "input.wav" 1200x600 4096 hann
+```
+
+It writes `input.tga` next to the input file, replacing any existing output.
+Time runs left to right, and frequency runs from DC at the bottom to Nyquist
+at the top on a linear axis. Each bin uses the strongest channel. Magnitudes
+from −120 to 0 dBFS map from black through red and yellow to white. Supported
+windows are `rectangular`, `hann`, `hamming`, `blackman`, `blackman_harris`, and
+`flattop`.
 
 ## Fetch KFR with `FetchContent`
 

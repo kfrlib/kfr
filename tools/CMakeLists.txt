@@ -26,3 +26,8 @@ target_link_libraries(sample_rate_converter PRIVATE kfr kfr_dsp kfr_io kfr_audio
 
 add_executable(ebu_loudness ebu_loudness.cpp)
 target_link_libraries(ebu_loudness PRIVATE kfr kfr_io kfr_dsp kfr_audio use_arch)
+
+if (KFR_ENABLE_AUDIO AND KFR_ENABLE_DFT)
+    add_executable(spectrogram spectrogram.cpp)
+    target_link_libraries(spectrogram PRIVATE kfr kfr_audio kfr_dft use_arch)
+endif ()
