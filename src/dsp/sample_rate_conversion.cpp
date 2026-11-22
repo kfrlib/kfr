@@ -157,7 +157,10 @@ KFR_NOINLINE static T safe_dotproduct(univector_ref<const T> a, univector_ref<co
 template <typename T>
 size_t samplerate_converter<T>::process_impl(univector_ref<T> output, univector_ref<const T> input)
 {
-    const itype required_input_size = this->input_size_for_output(output.size());
+    const itype required_input_size =
+        static_cast<itype>(output.size()) == this->output_size_for_input(input.size())
+            ? static_cast<itype>(input.size())
+            : this->input_size_for_output(output.size());
 
     // printf("Interpolation factor: %lld, Decimation factor: %lld\n", this->interpolation_factor,
     //    this->decimation_factor);

@@ -226,6 +226,33 @@ TEST_CASE("sample rate conversion")
     check_resampling(32000, 48000, 6000);
 }
 
+TEST_CASE("sample rate conversion push chunks")
+{
+    const univector<fbase> input(1536, fbase(1));
+    auto converter           = sample_rate_converter<fbase>(resample_quality::normal, 32000, 48000);
+    auto reference_converter = sample_rate_converter<fbase>(resample_quality::normal, 32000, 48000);
+    univector<fbase> reference(1024);
+    CHECK(reference_converter.process(reference, input) == input.size());
+
+    univector<fbase> output(reference.size());
+    size_t output_position = 0;
+    for (size_t input_position = 0; input_position < input.size(); input_position += 512)
+    {
+        const auto input_chunk        = input.slice(input_position, 512);
+        const size_t requested_output = converter.output_size_for_input(input_chunk.size());
+        univector<fbase> output_chunk(requested_output);
+
+        CAPTURE(input_position, requested_output);
+        CHECK(converter.process(output_chunk, input_chunk) == input_chunk.size());
+        REQUIRE(output_position + requested_output <= output.size());
+        output.slice(output_position, requested_output) = output_chunk;
+        output_position += requested_output;
+    }
+
+    CHECK(output_position == output.size());
+    CHECK(absmaxof(output - reference) < 0.000001);
+}
+
 TEST_CASE("sample rate conversion logarithmic sweep")
 {
     check_chirp_resampling(44100, 48000);

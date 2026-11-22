@@ -334,10 +334,11 @@ public:
      * @brief Processes input data to produce resampled output (pull or push method).
      *
      * Reads samples from `input`, advances the internal input/output positions,
-     * and writes the resampled result to `output`. The number of input samples
-     * consumed is given by `input_size_for_output(output.size())`; the number of
-     * output samples produced equals `output.size()`. The delay line is updated
-     * so that consecutive calls operate on a contiguous stream.
+     * and writes the resampled result to `output`. If `output.size()` equals
+     * `output_size_for_input(input.size())`, all input samples are consumed (push).
+     * Otherwise, the consumed count is `input_size_for_output(output.size())` (pull).
+     * The number of output samples produced equals `output.size()`. The delay line
+     * is updated so that consecutive calls operate on a contiguous stream.
      * @tparam Tag Type tag for the univector output.
      * @param output Output buffer to write resampled data.
      * @param input Input buffer to read samples from.
