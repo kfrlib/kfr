@@ -39,16 +39,14 @@ inline namespace KFR_ARCH_NAME
 template <typename T = fbase>
 KFR_FUNCTION biquad_section<T> biquad_allpass(std::type_identity_t<T> frequency, std::type_identity_t<T> Q)
 {
-    const T alpha = std::sin(frequency) / 2.0 * Q;
-    const T cs    = std::cos(frequency);
+    const T omega = 2 * c_pi<T, 1> * frequency;
+    const T alpha = std::sin(omega) / (2 * Q);
+    const T cs    = std::cos(omega);
 
-    const T b0 = 1.0 / (1.0 + alpha);
-    const T b1 = -2.0 * cs * b0;
-    const T b2 = (1.0 - alpha) * b0;
-    const T a0 = (1.0 - alpha) * b0;
-    const T a1 = -2.0 * cs * b0;
-    const T a2 = (1.0 + alpha) * b0;
-    return { b0, b1, b2, a0, a1, a2 };
+    const T norm = 1.0 / (1.0 + alpha);
+    const T a1   = -2.0 * cs * norm;
+    const T a2   = (1.0 - alpha) * norm;
+    return { 1.0, a1, a2, a2, a1, 1.0 };
 }
 
 /**
