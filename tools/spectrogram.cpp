@@ -126,7 +126,7 @@ int spectrogram(const char* audio_path, std::size_t width, std::size_t height, s
         const auto half         = fft_size / 2;
         const auto first_sample = center >= half ? center - half : 0;
         const auto first_slot   = center >= half ? 0 : half - center;
-        const auto count        = kfr::min(fft_size - first_slot, frames - first_sample);
+        const auto count        = std::min(fft_size - first_slot, frames - first_sample);
         magnitudes              = kfr::scalar(0);
 
         for (std::size_t channel = 0; channel < channels; ++channel)
@@ -158,7 +158,7 @@ int spectrogram(const char* audio_path, std::size_t width, std::size_t height, s
                                   : static_cast<std::size_t>(kfr::ceil((0.5 * fft_size * (y + 1)) / height));
             const auto nearest = static_cast<std::size_t>(kfr::round((0.5 * fft_size * (y + 0.5)) / height));
             const double magnitude = low < high ? kfr::maxof(magnitudes.slice(low, high - low))
-                                                : magnitudes[kfr::min(nearest, magnitudes.size() - 1)];
+                                                : magnitudes[std::min(nearest, magnitudes.size() - 1)];
             image[(height - 1 - y) * width + x] = color(magnitude);
         }
     }
