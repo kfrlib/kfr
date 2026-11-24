@@ -755,3 +755,8 @@
 #else
 #define KFR_CACHE_LINE_SIZE 64
 #endif
+
+#if defined KFR_COMPILER_IS_MSVC && _MSC_VER >= 1952
+#define KFR_f32x2_array
+// This prevents ICE on MSVC 19.52+
+#endif
