@@ -29,6 +29,43 @@ TEST_CASE("max")
         [](auto x, auto y) -> std::common_type_t<decltype(x), decltype(y)> { return x >= y ? x : y; });
 }
 
+TEST_CASE("min max and scalar apply preserve all byte lanes")
+{
+    auto check = []<typename T>()
+    {
+        const vec<T, 16> x{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+        const vec<T, 16> y{ 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
+        const vec<T, 16> z{ 1 };
+        const auto scalar_min = [](T a, T b) { return a <= b ? a : b; };
+        const auto scalar_max = [](T a, T b) { return a >= b ? a : b; };
+        const auto min_result = kfr::min(x, y);
+        const auto max_result = kfr::max(x, y);
+        const auto min_ref    = apply(scalar_min, x, y);
+        const auto max_ref    = apply(scalar_max, x, y);
+        const auto with_three = apply([](T a, T b, T c) { return static_cast<T>(a + b + c); }, x, y, z);
+        for (size_t i = 0; i < 16; ++i)
+        {
+            INFO("index = " << i << ", signed = " << std::is_signed_v<T>);
+            CHECK(min_result[i] == scalar_min(x[i], y[i]));
+            CHECK(max_result[i] == scalar_max(x[i], y[i]));
+            CHECK(min_ref[i] == scalar_min(x[i], y[i]));
+            CHECK(max_ref[i] == scalar_max(x[i], y[i]));
+            CHECK(with_three[i] == static_cast<T>(x[i] + y[i] + z[i]));
+        }
+    };
+    check.template operator()<i8>();
+    check.template operator()<u8>();
+}
+
+TEST_CASE("scalar apply byte lanes with a converted result")
+{
+    const i32x16 x{ -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7 };
+    const auto convert = [](i32 value) { return static_cast<i8>(value * 2); };
+    const auto result = apply(convert, x);
+    for (size_t i = 0; i < 16; ++i)
+        CHECK(result[i] == convert(x[i]));
+}
+
 struct IsNotMinInt
 {
     template <typename T>

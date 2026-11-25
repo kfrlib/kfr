@@ -355,8 +355,24 @@ KFR_INTRIN_MAKE(4, u32, KFR_mm_setr_epi32)
 KFR_INTRIN_MAKE(4, f32, _mm_setr_ps)
 KFR_INTRIN_MAKE(8, i16, _mm_setr_epi16)
 KFR_INTRIN_MAKE(8, u16, _mm_setr_epi16)
+#if defined(KFR_COMPILER_IS_MSVC) && _MSC_VER >= 1952
+#define KFR_BYTE_PAIR(first, second)                                                                         \
+    static_cast<i16>(static_cast<u8>(arg##first) | (static_cast<u16>(static_cast<u8>(arg##second)) << 8))
+#define KFR_INTRIN_MAKE_BYTES(ty)                                                                            \
+    KFR_INTRINSIC simd<ty, 16> simd_make(ctype_t<ty>, KFR_GEN_LIST(16, KFR_GEN_arg_def, ty)) noexcept        \
+    {                                                                                                        \
+        return _mm_setr_epi16(KFR_BYTE_PAIR(0, 1), KFR_BYTE_PAIR(2, 3), KFR_BYTE_PAIR(4, 5),                  \
+                              KFR_BYTE_PAIR(6, 7), KFR_BYTE_PAIR(8, 9), KFR_BYTE_PAIR(10, 11),                \
+                              KFR_BYTE_PAIR(12, 13), KFR_BYTE_PAIR(14, 15));                                 \
+    }
+KFR_INTRIN_MAKE_BYTES(i8)
+KFR_INTRIN_MAKE_BYTES(u8)
+#undef KFR_INTRIN_MAKE_BYTES
+#undef KFR_BYTE_PAIR
+#else
 KFR_INTRIN_MAKE(16, i8, _mm_setr_epi8)
 KFR_INTRIN_MAKE(16, u8, _mm_setr_epi8)
+#endif
 
 #define KFR_INTRIN_BITCAST(Tout, Tin, N, ...)                                                                \
     KFR_INTRINSIC simd<Tout, N> simd_bitcast(simd_cvt_t<Tout, Tin, N>, const simd<Tin, N>& x) noexcept       \
@@ -457,7 +473,7 @@ KFR_INTRINSIC simd<double, Nout> simd_shuffle(simd2_t<double, N, N>, const simd<
 KFR_INTRINSIC __m128 KFR_swap_ps(__m128 x) { return _mm_shuffle_ps(x, x, _MM_SHUFFLE(2, 3, 0, 1)); }
 
 #ifndef KFR_f32x2_array
-// KFR_INTRIN_SHUFFLE_CONCAT(f32, 2, _mm_castpd_ps(_mm_setr_pd(x.whole, y.whole)))
+KFR_INTRIN_SHUFFLE_CONCAT(f32, 2, _mm_castpd_ps(_mm_setr_pd(x.whole, y.whole)))
 KFR_INTRIN_SHUFFLE_SWAP(f32, 2,
                         _mm_cvtsd_f64(_mm_castps_pd(KFR_swap_ps(_mm_castpd_ps(_mm_set1_pd(x.whole))))))
 #else
@@ -532,10 +548,11 @@ KFR_INTRIN_SHUFFLE_LINEAR(i64, 1, 2, _mm_cvtsi128_si64(x))
 #endif
 KFR_INTRIN_SHUFFLE_LINEAR(u64, 1, 2, _mm_cvtsi128_si64(x))
 KFR_INTRIN_SHUFFLE_LINEAR(f32, 1, 4, _mm_cvtss_f32(x))
-KFR_INTRIN_SHUFFLE_LINEAR(f32, 2, 4, bitcast_anything<simd<float, 2>>(_mm_cvtsd_f64(_mm_castps_pd(x))))
 #ifndef KFR_f32x2_array
+KFR_INTRIN_SHUFFLE_LINEAR(f32, 2, 4, bitcast_anything<simd<float, 2>>(_mm_cvtsd_f64(_mm_castps_pd(x))))
 KFR_INTRIN_SHUFFLE_LINEAR(f32, 4, 2, _mm_castpd_ps(_mm_set_sd(x.whole)))
 #else
+KFR_INTRIN_SHUFFLE_LINEAR(f32, 2, 4, simd<f32, 2>{ KFR_f32sse_INDEX(x, 0), KFR_f32sse_INDEX(x, 1) })
 KFR_INTRIN_SHUFFLE_LINEAR(f32, 4, 2, _mm_unpacklo_ps(_mm_set_ss(x.low), _mm_set_ss(x.high)))
 #endif
 KFR_INTRIN_SHUFFLE_LINEAR(f64, 1, 2, _mm_cvtsd_f64(x))
@@ -765,15 +782,31 @@ KFR_INTRIN_SHUFFLE_LINEAR(u16, 8, 16, _mm256_castsi256_si128(x))
 KFR_INTRIN_SHUFFLE_LINEAR(u32, 4, 8, _mm256_castsi256_si128(x))
 KFR_INTRIN_SHUFFLE_LINEAR(u64, 2, 4, _mm256_castsi256_si128(x))
 
+#ifndef KFR_f32x2_array
 KFR_INTRIN_SHUFFLE_LINEAR(f32, 2, 8, _mm_cvtsd_f64(_mm_castps_pd(_mm256_castps256_ps128(x))))
 KFR_INTRIN_SHUFFLE_LINEAR_START(f32, 2, 8, 2, take_hi_sd(_mm_castps_pd(_mm256_castps256_ps128(x))))
 KFR_INTRIN_SHUFFLE_LINEAR_START(f32, 2, 8, 4, _mm_cvtsd_f64(_mm_castps_pd(_mm256_extractf128_ps(x, 1))))
 KFR_INTRIN_SHUFFLE_LINEAR_START(f32, 2, 8, 6, take_hi_sd(_mm_castps_pd(_mm256_extractf128_ps(x, 1))))
+#else
+KFR_INTRIN_SHUFFLE_LINEAR(f32, 2, 8, simd<f32, 2>{ KFR_f32sse_INDEX(_mm256_castps256_ps128(x), 0),
+                                                    KFR_f32sse_INDEX(_mm256_castps256_ps128(x), 1) })
+KFR_INTRIN_SHUFFLE_LINEAR_START(f32, 2, 8, 2, simd<f32, 2>{ KFR_f32sse_INDEX(_mm256_castps256_ps128(x), 2),
+                                                             KFR_f32sse_INDEX(_mm256_castps256_ps128(x), 3) })
+KFR_INTRIN_SHUFFLE_LINEAR_START(f32, 2, 8, 4, simd<f32, 2>{ KFR_f32sse_INDEX(_mm256_extractf128_ps(x, 1), 0),
+                                                             KFR_f32sse_INDEX(_mm256_extractf128_ps(x, 1), 1) })
+KFR_INTRIN_SHUFFLE_LINEAR_START(f32, 2, 8, 6, simd<f32, 2>{ KFR_f32sse_INDEX(_mm256_extractf128_ps(x, 1), 2),
+                                                             KFR_f32sse_INDEX(_mm256_extractf128_ps(x, 1), 3) })
+#endif
 
 // extend
 KFR_INTRIN_SHUFFLE_LINEAR(f32, 4 * 2, 4, _mm256_castps128_ps256(x))
 KFR_INTRIN_SHUFFLE_LINEAR(f64, 2 * 2, 2, _mm256_castpd128_pd256(x))
+#ifndef KFR_f32x2_array
 KFR_INTRIN_SHUFFLE_LINEAR(f32, 4 * 2, 2, _mm256_castps128_ps256(_mm_castpd_ps(_mm_set_sd(x.whole))))
+#else
+KFR_INTRIN_SHUFFLE_LINEAR(f32, 4 * 2, 2,
+                          _mm256_castps128_ps256(_mm_unpacklo_ps(_mm_set_ss(x.low), _mm_set_ss(x.high))))
+#endif
 
 // high
 KFR_INTRIN_SHUFFLE_LINEAR_START(f32, 4, 8, 4, _mm256_extractf128_ps(x, 1))

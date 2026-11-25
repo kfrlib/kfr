@@ -334,8 +334,91 @@ TEST_CASE("test_basic")
     CHECK_THAT((inrange(pack(1, 2, 3), 1, 1)), DeepMatcher(make_mask<int>(true, false, false)));
 }
 
+TEST_CASE("uchar16")
+{
+    const vec<u8, 16> iota = enumerate<u8, 16>();
+    CHECK(hsum(iota) == 120);
+
+    CHECK_THAT(iota, DeepMatcher(vec<u8, 16>{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 }));
+
+    const vec<u8, 16> a = apply([](u8 x) -> u8 { return x; }, iota);
+    CHECK(hsum(a) == 120);
+    CHECK_THAT(a, DeepMatcher(iota));
+
+    const vec<u8, 16> b = apply([](u8 x, u8 y) -> u8 { return x <= y ? x : y; }, iota, iota);
+    CHECK(hsum(b) == 120);
+    CHECK_THAT(b, DeepMatcher(iota));
+
+    const vec<u8, 16> high_values = iota + u8(240);
+    const vec<u8, 16> unsigned_min =
+        apply([](u8 x, u8 y) -> u8 { return x <= y ? x : y; }, high_values, reverse(high_values));
+    CHECK_THAT(unsigned_min, DeepMatcher(vec<u8, 16>{ 240, 241, 242, 243, 244, 245, 246, 247,
+                                                      247, 246, 245, 244, 243, 242, 241, 240 }));
+
+    const vec<i8, 16> signed_values{ -128, -100, -50, -10, -1, 0, 1, 2, 3, 4, 10, 50, 100, 120, 126, 127 };
+    const vec<i8, 16> signed_min =
+        apply([](i8 x, i8 y) -> i8 { return x <= y ? x : y; }, signed_values, reverse(signed_values));
+    CHECK_THAT(signed_min, DeepMatcher(vec<i8, 16>{ -128, -100, -50, -10, -1, 0, 1, 2,
+                                                    2, 1, 0, -1, -10, -50, -100, -128 }));
+}
+
+#if !defined(KFR_VEC_EXT) && defined(KFR_ARCH_SSE2)
+TEST_CASE("float2 intrinsic shuffles")
+{
+    const vec<f32, 2> pair{ -1.f, 2.f };
+    const vec<f32, 2> other{ 3.f, -4.f };
+    const vec<f32, 4> four{ 1.f, 2.f, 3.f, 4.f };
+
+    CHECK_THAT((vec<f32, 2>(
+                   intr::simd_shuffle(intr::simd_t<f32, 2>{}, pair.v, csizes<1, 0>, overload_priority<9>{}))),
+               DeepMatcher(vec<f32, 2>{ 2.f, -1.f }));
+    CHECK_THAT((vec<f32, 4>(intr::simd_shuffle(intr::simd2_t<f32, 2, 2>{}, pair.v, other.v,
+                                               csizes<0, 1, 2, 3>, overload_priority<9>{}))),
+               DeepMatcher(vec<f32, 4>{ -1.f, 2.f, 3.f, -4.f }));
+    CHECK_THAT((vec<f32, 2>(
+                   intr::simd_shuffle(intr::simd_t<f32, 4>{}, four.v, csizes<0, 1>, overload_priority<9>{}))),
+               DeepMatcher(vec<f32, 2>{ 1.f, 2.f }));
+    CHECK_THAT((vec<f32, 2>(
+                   intr::simd_shuffle(intr::simd_t<f32, 4>{}, four.v, csizes<2, 3>, overload_priority<9>{}))),
+               DeepMatcher(vec<f32, 2>{ 3.f, 4.f }));
+    CHECK_THAT((slice<0, 2>(vec<f32, 4>(intr::simd_shuffle(intr::simd_t<f32, 2>{}, pair.v, csizes<0, 1, 2, 3>,
+                                                           overload_priority<9>{})))),
+               DeepMatcher(pair));
+}
+#endif
+
 #ifndef KFR_VEC_EXT
 #if defined(KFR_ARCH_AVX)
+TEST_CASE("float2 AVX intrinsic slices and extension")
+{
+    const vec<f32, 8> eight{ 1.f, -2.f, 3.f, -4.f, 5.f, -6.f, 7.f, -8.f };
+    const vec<f32, 2> pair{ -1.f, 2.f };
+
+    CHECK_THAT((vec<f32, 2>(intr::simd_shuffle(intr::simd_t<f32, 8>{}, eight.v, csizes<0, 1>,
+                                               overload_priority<9>{}))),
+               DeepMatcher(vec<f32, 2>{ 1.f, -2.f }));
+    CHECK_THAT((vec<f32, 2>(intr::simd_shuffle(intr::simd_t<f32, 8>{}, eight.v, csizes<2, 3>,
+                                               overload_priority<9>{}))),
+               DeepMatcher(vec<f32, 2>{ 3.f, -4.f }));
+    CHECK_THAT((vec<f32, 2>(intr::simd_shuffle(intr::simd_t<f32, 8>{}, eight.v, csizes<4, 5>,
+                                               overload_priority<9>{}))),
+               DeepMatcher(vec<f32, 2>{ 5.f, -6.f }));
+    CHECK_THAT((vec<f32, 2>(intr::simd_shuffle(intr::simd_t<f32, 8>{}, eight.v, csizes<6, 7>,
+                                               overload_priority<9>{}))),
+               DeepMatcher(vec<f32, 2>{ 7.f, -8.f }));
+    CHECK_THAT((slice<0, 2>(vec<f32, 8>(intr::simd_shuffle(
+                   intr::simd_t<f32, 2>{}, pair.v, csizes<0, 1, 2, 3, 4, 5, 6, 7>, overload_priority<9>{})))),
+               DeepMatcher(pair));
+
+    const f32x8 bits = bitcast<f32>(u32x8{ 0x80000000u, 0x7fc12345u, 0xff800000u, 0x00000001u, 0x3f800000u,
+                                           0xc0000000u, 0x40400000u, 0xc0800000u });
+    const f32x2 extracted(
+        intr::simd_shuffle(intr::simd_t<f32, 8>{}, bits.v, csizes<0, 1>, overload_priority<9>{}));
+    CHECK_THAT(bitcast<u32>(extracted), DeepMatcher(u32x2{ 0x80000000u, 0x7fc12345u }));
+    const f32x8 extended(intr::simd_shuffle(intr::simd_t<f32, 2>{}, extracted.v,
+                                            csizes<0, 1, 2, 3, 4, 5, 6, 7>, overload_priority<9>{}));
+    CHECK_THAT((bitcast<u32>(slice<0, 2>(extended))), DeepMatcher(u32x2{ 0x80000000u, 0x7fc12345u }));
+}
 
 // Directly exercises intr::simd_vec_shuffle(simd_t<float, 8>, ...) (backend_generic.hpp, AVX -> AVX float8).
 // All four constexpr branches of that overload are covered:

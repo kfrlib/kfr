@@ -39,6 +39,26 @@ TEST_CASE("comparison binary functions")
         { return maskbits<subtype<decltype(x)>>(x >= y); });
 }
 
+TEST_CASE("scalar byte comparison masks preserve all lanes")
+{
+    auto check = []<typename T>()
+    {
+        const vec<T, 16> values{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+        const vec<T, 16> mixed{ 0, 0, 2, 0, 4, 0, 6, 0, 8, 0, 10, 0, 12, 0, 14, 0 };
+        const auto scalar_equal = [](T left, T right) { return maskbits<T>(left == right); };
+        const auto all_true = apply(scalar_equal, values, values);
+        const auto alternating = apply(scalar_equal, values, mixed);
+        for (size_t index = 0; index < 16; ++index)
+        {
+            INFO("index = " << index << ", signed = " << std::is_signed_v<T>);
+            CHECK(all_true[index] == maskbits<T>(true));
+            CHECK(alternating[index] == maskbits<T>(index % 2 == 0));
+        }
+    };
+    check.template operator()<i8>();
+    check.template operator()<u8>();
+}
+
 TEST_CASE("comparison classification functions")
 {
     const vec<f32, 8> x{ 0.0f,

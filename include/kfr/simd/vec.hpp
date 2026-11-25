@@ -682,13 +682,12 @@ struct alignas(internal::vec_alignment<T, N>) vec
     {
         static_assert(index < N, "element index must be less than vector size");
         const auto flat = internal::compoundcast<T>::to_flat(s);
-        v = [&]<size_t... i>(csizes_t<i...>)
+        v               = [&]<size_t... i>(csizes_t<i...>)
         {
-            return intr::simd_shuffle(intr::simd2_t<unwrap_bit<ST>, SN, SW>{}, v, flat.v,
-                                      csizes<(i >= index * SW && i < (index + 1) * SW
-                                                  ? SN + i - index * SW
-                                                  : i)...>,
-                                      overload_auto);
+            return intr::simd_shuffle(
+                intr::simd2_t<unwrap_bit<ST>, SN, SW>{}, v, flat.v,
+                csizes<(i >= index * SW && i < (index + 1) * SW ? SN + i - index * SW : i)...>,
+                overload_auto);
         }(csizeseq<SN>);
     }
 
